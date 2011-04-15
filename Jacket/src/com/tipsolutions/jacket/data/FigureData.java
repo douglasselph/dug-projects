@@ -1,4 +1,4 @@
-package com.tipsolutions.slice;
+package com.tipsolutions.jacket.data;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -21,11 +21,11 @@ public class FigureData {
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
 	
-	ByteBuffer mNormalBuf = null;
-	ByteBuffer mVertexBuf = null;
-	ByteBuffer mIndexBuf = null;
-	ByteBuffer mColorBuffer = null;
-	int mIndexCount = 0;
+	protected ByteBuffer mNormalBuf = null;
+	protected ByteBuffer mVertexBuf = null;
+	protected ByteBuffer mIndexBuf = null;
+	protected ByteBuffer mColorBuffer = null;
+	protected int mIndexCount = 0;
 	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
@@ -152,11 +152,11 @@ public class FigureData {
 	public float getMaxY() { return 0; }
 	public float getMaxZ() { return 0; }
 	
-	ShortData getIndexData() { return null; }
-	FloatData getNormalData() { return null; }
-	FloatData getVertexData() { return null; }
+	protected ShortData getIndexData() { return null; }
+	protected FloatData getNormalData() { return null; }
+	protected FloatData getVertexData() { return null; }
 	
-	ByteBuffer readBuffer(DataInputStream dataStream, int size) throws IOException {
+	protected ByteBuffer readBuffer(DataInputStream dataStream, int size) throws IOException {
 		ByteBuffer vbb = ByteBuffer.allocateDirect(size);
         vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
         if (vbb.hasArray()) {
@@ -210,7 +210,7 @@ public class FigureData {
     	}
 	}
 	
-	void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
+	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
 		dataStream.writeInt(eleType);
 		dataStream.writeInt(dataType);
 		dataStream.writeInt(vbb.limit());

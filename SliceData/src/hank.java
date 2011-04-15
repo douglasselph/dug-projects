@@ -2,6 +2,8 @@
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+
+import com.tipsolutions.jacket.data.FigureData;
 class hank extends FigureData {
 	@Override public float getMinX() { return -2.722488f; }
 	@Override public float getMaxX() { return 2.722488f; }
@@ -11,7 +13,7 @@ class hank extends FigureData {
 	@Override public float getMaxZ() { return 6.700549f; }
 
 	@Override
-	FloatData getVertexData() {
+	protected FloatData getVertexData() {
 		class VertexData implements FloatData {
 			public int size() { return 5097; }
 
@@ -1721,7 +1723,7 @@ class hank extends FigureData {
 	};
 
 	@Override
-	FloatData getNormalData() {
+	protected FloatData getNormalData() {
 		class NormalData implements FloatData {
 			public int size() { return 5097; }
 
@@ -3431,7 +3433,7 @@ class hank extends FigureData {
 	};
 
 	@Override
-	ShortData getIndexData() {
+	protected ShortData getIndexData() {
 		class IndexData implements ShortData {
 			public int size() { return 10152; }
 

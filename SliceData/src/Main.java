@@ -1,3 +1,4 @@
+import com.tipsolutions.jacket.data.FigureData;
 
 public class Main {
 	

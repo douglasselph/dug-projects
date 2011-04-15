@@ -18,15 +18,16 @@ package com.tipsolutions.slice;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import com.tipsolutions.jacket.data.FigureData;
 import com.tipsolutions.jacket.math.Rotate;
-import com.tipsolutions.jacket.math.Vertex3;
+import com.tipsolutions.jacket.math.Vector3f;
 
 /**
  * A vertex shaded cube.
  */
 class Figure extends FigureData
 {
-	Vertex3 mLoc = new Vertex3();
+	Vector3f mLoc = new Vector3f();
 	Rotate mRotate = new Rotate();
 	
     public Figure() {
@@ -67,8 +68,8 @@ class Figure extends FigureData
 	public float getLenY() { return getMaxY()-getMinY(); }
 	public float getLenZ() { return getMaxZ()-getMinZ(); }
 	
-	public void setLocation(Vertex3 x) { mLoc = x; }
+	public void setLocation(Vector3f x) { mLoc = x; }
 	public void setRotation(Rotate x) { mRotate = x; }
 	
-	public final Vertex3 getLocation() { return mLoc; }
+	public final Vector3f getLocation() { return mLoc; }
 }

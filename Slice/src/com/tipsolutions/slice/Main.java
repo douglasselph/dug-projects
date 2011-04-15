@@ -3,13 +3,14 @@ package com.tipsolutions.slice;
 import java.io.InputStream;
 
 import android.app.Activity;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.tipsolutions.view.ControlSurfaceView;
+
 public class Main extends Activity {
 	
-    GLSurfaceView mGLSurfaceView;
+    ControlSurfaceView mSurfaceView;
     final String HankFile = "hank.data";
     
     /** Called when the activity is first created. */
@@ -25,9 +26,9 @@ public class Main extends Activity {
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
         }
-        mGLSurfaceView = new GLSurfaceView(this);
-        mGLSurfaceView.setRenderer(new MyRenderer(figure, false));
-        setContentView(mGLSurfaceView);
+        mSurfaceView = new ControlSurfaceView(this);
+        mSurfaceView.setRenderer(new MyRenderer(figure, false));
+        setContentView(mSurfaceView);
     }
     
     @Override
@@ -35,7 +36,7 @@ public class Main extends Activity {
         // Ideally a game should implement onResume() and onPause()
         // to take appropriate action when the activity looses focus
         super.onResume();
-        mGLSurfaceView.onResume();
+        mSurfaceView.onResume();
     }
 
     @Override
@@ -43,6 +44,6 @@ public class Main extends Activity {
         // Ideally a game should implement onResume() and onPause()
         // to take appropriate action when the activity looses focus
         super.onPause();
-        mGLSurfaceView.onPause();
+        mSurfaceView.onPause();
     }
 }

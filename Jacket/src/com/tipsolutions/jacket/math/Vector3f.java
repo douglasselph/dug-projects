@@ -2,56 +2,56 @@ package com.tipsolutions.jacket.math;
 
 import android.util.FloatMath;
 
-public class Vertex3 {
+public class Vector3f {
 	
 	protected float mX = 0;
 	protected float mY = 0;
 	protected float mZ = 0;
 	
-	public Vertex3() {
+	public Vector3f() {
 	}
 	
-	public Vertex3(float x, float y, float z) {
+	public Vector3f(float x, float y, float z) {
 		mX = x;
 		mY = y;
 		mZ = z;
 	}
 	
-	public Vertex3(final Vertex3 v) {
+	public Vector3f(final Vector3f v) {
 		mX = v.mX;
 		mY = v.mY;
 		mZ = v.mZ;
 	}
 	
-	public Vertex3 add(float x, float y, float z) {
+	public Vector3f add(float x, float y, float z) {
 		mX += x;
 		mY += y;
 		mZ += z;
 		return this;
 	}
 	
-	public Vertex3 add(final Vertex3 v) {
+	public Vector3f add(final Vector3f v) {
 		mX += v.mX;
 		mY += v.mY;
 		mZ += v.mZ;
 		return this;
 	}
 	
-	public Vertex3 divide(float scalar) {
+	public Vector3f divide(float scalar) {
 		mX /= scalar;
 		mY /= scalar;
 		mZ /= scalar;
 		return this;
 	}
 	
-	public Vertex3 divide(float x, float y, float z) {
+	public Vector3f divide(float x, float y, float z) {
 		mX /= x;
 		mY /= y;
 		mZ /= z;
 		return this;
 	}
 	
-	public Vertex3 divide(final Vertex3 v) {
+	public Vector3f divide(final Vector3f v) {
 		mX /= v.mX;
 		mY /= v.mY;
 		mZ /= v.mZ;
@@ -66,32 +66,32 @@ public class Vertex3 {
 		return getX() * getX() + getY() * getY() + getZ() * getZ();
 	}
 	
-	public Vertex3 multiply(float scalar) {
+	public Vector3f multiply(float scalar) {
 		mX *= scalar;
 		mY *= scalar;
 		mZ *= scalar;
 		return this;
 	}
 	
-	public Vertex3 multiply(float x, float y, float z) {
+	public Vector3f multiply(float x, float y, float z) {
 		mX *= x;
 		mY *= y;
 		mZ *= z;
 		return this;
 	}
 	
-	public Vertex3 multiply(final Vertex3 v) {
+	public Vector3f multiply(final Vector3f v) {
 		mX *= v.mX;
 		mY *= v.mY;
 		mZ *= v.mZ;
 		return this;
 	}
 	
-	public Vertex3 negate() {
+	public Vector3f negate() {
 		return multiply(-1f);
 	}
 	
-	public Vertex3 normalize() {
+	public Vector3f normalize() {
 		final double lengthSq = lengthSquared();
 		if (Math.abs(lengthSq) > MathUtils.EPSILON) {
 			return multiply((float) MathUtils.inverseSqrt(lengthSq));
@@ -99,14 +99,14 @@ public class Vertex3 {
 		return this;
 	}
 	
-	public Vertex3 subtract(float x, float y, float z) {
+	public Vector3f subtract(float x, float y, float z) {
 		mX -= x;
 		mY -= y;
 		mZ -= z;
 		return this;
 	}
 	
-	public Vertex3 subtract(final Vertex3 v) {
+	public Vector3f subtract(final Vector3f v) {
 		mX -= v.mX;
 		mY -= v.mY;
 		mZ -= v.mZ;

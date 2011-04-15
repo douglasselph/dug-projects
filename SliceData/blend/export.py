@@ -60,7 +60,7 @@ def write_obj(filename):
 
 			out.write('\n')
 			out.write('\t@Override\n')
-			out.write('\tFloatData getVertexData() {\n');
+			out.write('\tprotected FloatData getVertexData() {\n');
 			out.write('\t\tclass VertexData implements FloatData {\n')
 			out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*3))
 			out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
@@ -94,7 +94,7 @@ def write_obj(filename):
 
 			# Write out normals
 			out.write('\t@Override\n')
-			out.write('\tFloatData getNormalData() {\n');
+			out.write('\tprotected FloatData getNormalData() {\n');
 			out.write('\t\tclass NormalData implements FloatData {\n')
  			out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*3))
 			out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
@@ -125,7 +125,7 @@ def write_obj(filename):
 
 			# Write out indexes
 			out.write('\t@Override\n')
-			out.write('\tShortData getIndexData() {\n');
+			out.write('\tprotected ShortData getIndexData() {\n');
 			out.write('\t\tclass IndexData implements ShortData {\n');
 
 			max = int(max/3)
@@ -175,7 +175,7 @@ def write_obj(filename):
 				count = len(mesh.faces)
 
 				out.write('\t@Override\n')
-				out.write('\tShortData getColorData() {\n');
+				out.write('\tprotected ShortData getColorData() {\n');
 				out.write('\t\tclass ColorData implements ShortData {\n');
 				out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*4))
 				out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');

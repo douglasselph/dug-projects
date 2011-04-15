@@ -20,9 +20,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
-import android.opengl.GLU;
 
-import com.tipsolutions.jacket.math.Vertex3;
+import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.view.Camera;
 
 /**
  * Render a pair of tumbling cubes.
@@ -32,7 +32,8 @@ class MyRenderer implements GLSurfaceView.Renderer {
 	
     boolean mTranslucentBackground;
     Figure mFigure;
-    float mAngle;
+    Camera mCamera = new Camera();
+    boolean mCameraAdjusted = true;
 
     public MyRenderer(Figure figure, boolean useTranslucentBackground) {
         mTranslucentBackground = useTranslucentBackground;
@@ -51,21 +52,15 @@ class MyRenderer implements GLSurfaceView.Renderer {
 //        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
         mFigure.draw(gl);
-
-        mAngle += 1.2f;
+        
+        if (mCameraAdjusted) {
+        	cameraSet(gl);
+        	mCameraAdjusted = false;
+        }
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-         gl.glViewport(0, 0, width, height);
-         /*
-          * Set our projection matrix. This doesn't have to be done
-          * each time we draw, but usually a new projection needs to
-          * be set when the viewport is resized.
-          */
-         float ratio = (float) width / height;
-         gl.glMatrixMode(GL10.GL_PROJECTION);
-         gl.glLoadIdentity();
-         gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
     }
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -90,16 +85,26 @@ class MyRenderer implements GLSurfaceView.Renderer {
          gl.glShadeModel(GL10.GL_SMOOTH);
          gl.glEnable(GL10.GL_DEPTH_TEST);
          
-         setCamera(gl);
+         cameraInit(gl);
     }
     
-    void setCamera(GL10 gl) {
-    	Vertex3 center = new Vertex3(mFigure.getLocation());
-    	Vertex3 camera = new Vertex3(center);
-    	camera.add(0, 0, -mFigure.getLenZ());
-        GLU.gluLookAt(gl, 
-        		camera.getX(), camera.getY(), camera.getZ(), 
-        		center.getX(), center.getY(), center.getZ(), 
-        		0, 1, 0);
+    void cameraInit(GL10 gl) {
+    	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
+    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
+    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ());
+    }
+    
+    void cameraSet(GL10 gl) {
+    	mCamera.applyLookAt(gl);
+    }
+    
+    public void cameraAdjustLookAt(Vector3f amt) {
+    	mCamera.getLookAt().add(amt);
+    	mCameraAdjusted = true;
+    }
+    
+    public void cameraAdjustCenter(Vector3f amt) {
+    	mCamera.getLocation().add(amt);
+    	mCameraAdjusted = true;
     }
 }
