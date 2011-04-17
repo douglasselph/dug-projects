@@ -6,11 +6,14 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.tipsolutions.jacket.view.Camera;
+import com.tipsolutions.jacket.view.CameraControl;
 import com.tipsolutions.view.ControlSurfaceView;
 
 public class Main extends Activity {
 	
     ControlSurfaceView mSurfaceView;
+    CameraControl mCamera;
     final String HankFile = "hank.data";
     
     /** Called when the activity is first created. */
@@ -26,8 +29,9 @@ public class Main extends Activity {
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
         }
-        mSurfaceView = new ControlSurfaceView(this);
-        mSurfaceView.setRenderer(new MyRenderer(figure, false));
+        mCamera = new CameraControl();
+        mSurfaceView = new ControlSurfaceView(this, mCamera);
+        mSurfaceView.setRenderer(new MyRenderer(figure, mCamera, false));
         setContentView(mSurfaceView);
     }
     

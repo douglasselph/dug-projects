@@ -22,7 +22,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLSurfaceView;
 
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.view.Camera;
+import com.tipsolutions.jacket.view.CameraControl;
 
 /**
  * Render a pair of tumbling cubes.
@@ -32,12 +32,12 @@ class MyRenderer implements GLSurfaceView.Renderer {
 	
     boolean mTranslucentBackground;
     Figure mFigure;
-    Camera mCamera = new Camera();
-    boolean mCameraAdjusted = true;
+    final CameraControl mCamera;
 
-    public MyRenderer(Figure figure, boolean useTranslucentBackground) {
+    public MyRenderer(Figure figure, CameraControl camera, boolean useTranslucentBackground) {
         mTranslucentBackground = useTranslucentBackground;
         mFigure = figure;
+        mCamera = camera;
     }
     
     public void onDrawFrame(GL10 gl) {
@@ -52,11 +52,7 @@ class MyRenderer implements GLSurfaceView.Renderer {
 //        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
         mFigure.draw(gl);
-        
-        if (mCameraAdjusted) {
-        	cameraSet(gl);
-        	mCameraAdjusted = false;
-        }
+        mCamera.onDraw();
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -92,19 +88,5 @@ class MyRenderer implements GLSurfaceView.Renderer {
     	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
     	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
     	mCamera.getLocation().add(0, 0, -mFigure.getLenZ());
-    }
-    
-    void cameraSet(GL10 gl) {
-    	mCamera.applyLookAt(gl);
-    }
-    
-    public void cameraAdjustLookAt(Vector3f amt) {
-    	mCamera.getLookAt().add(amt);
-    	mCameraAdjusted = true;
-    }
-    
-    public void cameraAdjustCenter(Vector3f amt) {
-    	mCamera.getLocation().add(amt);
-    	mCameraAdjusted = true;
     }
 }

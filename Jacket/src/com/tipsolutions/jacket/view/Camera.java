@@ -64,4 +64,9 @@ public class Camera {
 		mHeight = height;
 		return this;
 	}
+
+	public Vector3f getDirection() {
+		Vector3f dir = new Vector3f(mLookAtPos);
+		return dir.subtract(mCameraPos).normalize();
+	}
 }
