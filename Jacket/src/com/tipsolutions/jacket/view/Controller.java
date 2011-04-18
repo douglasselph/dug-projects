@@ -39,6 +39,7 @@ public class Controller {
 		mStartTime = System.currentTimeMillis();
 		mMoveStartTime = mStartTime;
 		mMoveOkay = true;
+		mControlled.touchStart();
 	}
 	
 	public void pressMove(float x, float y) {
@@ -95,5 +96,6 @@ public class Controller {
 		if (timePassed < MOVE_TRIGGER_MILLI) {
 			mControlled.centerShort();
 		}
+		mControlled.touchEnd();
 	}
 }

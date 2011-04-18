@@ -12,4 +12,6 @@ public interface IControl {
 	void slideRight(int times);
 	void slideUp(int times);
 	void slideDown(int times);
+	void touchStart();
+	void touchEnd();
 }

@@ -52,7 +52,7 @@ class MyRenderer implements GLSurfaceView.Renderer {
 //        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 
         mFigure.draw(gl);
-        mCamera.onDraw();
+        mCamera.onDraw(gl);
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
