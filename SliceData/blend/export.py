@@ -21,6 +21,7 @@ def write_obj(filename):
 			
 			out.write('import java.nio.FloatBuffer;\n')
 			out.write('import java.nio.ShortBuffer;\n')
+			out.write('import com.tipsolutions.jacket.data.FigureData;\n')
 			out.write
 			out.write('class %s extends FigureData {\n' % name)
 
@@ -56,24 +57,26 @@ def write_obj(filename):
 			out.write('\t@Override public float getMaxZ() { return %ff; }\n' % maxz);
 
 			# Write out vertexes
-			count = len(mesh.verts)
+			numverts = len(mesh.verts)
 
 			out.write('\n')
 			out.write('\t@Override\n')
 			out.write('\tprotected FloatData getVertexData() {\n');
 			out.write('\t\tclass VertexData implements FloatData {\n')
-			out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*3))
+		
 			out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 		
 			megaMax = 1700
 			max = megaMax
-			if count > max:
-				num = int(math.ceil(count / max))
+			
+			if numverts > max:
+				num = int(math.ceil(numverts / max))
 				
 				for x in range(num):
 					out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
 				out.write('\t\t\t}\n')
 				out.write
+				count = 0
 				for x in range(num):
 					out.write
 					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
@@ -81,12 +84,16 @@ def write_obj(filename):
 					end = start + max
 					for vert in mesh.verts[start:end]:
 						out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, vert.index))
+						count = count + 3
  					out.write('\t\t\t};\n')
 			else:
 				for vert in mesh.verts:
 					out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, vert.index))
  				out.write('\t\t\t};\n')
+				count = numverts * 3
 
+			out.write
+			out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 			out.write('\t\t};\n')
 			out.write('\t\treturn new VertexData();\n')
 			out.write('\t};\n')
@@ -96,16 +103,17 @@ def write_obj(filename):
 			out.write('\t@Override\n')
 			out.write('\tprotected FloatData getNormalData() {\n');
 			out.write('\t\tclass NormalData implements FloatData {\n')
- 			out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*3))
+ 			
 			out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 
-			if count > max:
-				num = int(math.ceil(count / max))
+			if numverts > max:
+				num = int(math.ceil(numverts / max))
 				
 				for x in range(num):
 					out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
 				out.write('\t\t\t}\n')
 				out.write
+				count = 0
 				for x in range(num):
 					out.write
 					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
@@ -113,11 +121,16 @@ def write_obj(filename):
 					end = start + max
 					for vert in mesh.verts[start:end]:
 						out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, vert.index))
+						count = count + 3
  					out.write('\t\t\t};\n')
 			else:
 				for vert in mesh.verts:
 					out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, vert.index))
  				out.write('\t\t\t};\n')
+				count = numverts * 3
+
+			out.write
+			out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 			out.write('\t\t};\n')
 			out.write('\t\treturn new NormalData();\n')
 			out.write('\t};\n')
@@ -129,19 +142,19 @@ def write_obj(filename):
 			out.write('\t\tclass IndexData implements ShortData {\n');
 
 			max = int(max/3)
-			count = len(mesh.faces)
-
-			out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*3))
+			numfaces = len(mesh.faces)
+			
 			out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
 
-			if count > max:
-				num = int(math.ceil(float(count) / float(max)))
+			if numfaces > max:
+				num = int(math.ceil(float(numfaces) / float(max)))
 				for x in range(num):
 					out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
 				out.write('\t\t\t}\n')
 				out.write
 
-				cCount = 0
+				count = 0
+				i = 0
 				for x in range(num):
 					out.write
 					out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
@@ -151,19 +164,24 @@ def write_obj(filename):
 						out.write('\t\t\t\tbuf')
 						for vert in face.v:
 							out.write('.put((short)%d)' % vert.index)
-						out.write('; /* %d */\n' % (cCount))
-						cCount = cCount + 1
+							count = count + 1
+						out.write('; /* %d */\n' % i)
+						i = i + 1
 					out.write('\t\t\t};\n')
 			else:
-				cCount = 0
+				count = 0
+				i = 0
 				for face in mesh.faces:
 					out.write('\t\t\t\tbuf')
 					for vert in face.v:
 						out.write('.put((short)%d)' % vert.index)
-					out.write('; /* %d */\n' % (cCount))
-					cCount = cCount + 1
+						count = count + 1
+					out.write('; /* %d */\n' % i)
+					i = i + 1
       				out.write('\t\t\t};\n')
 
+			out.write
+			out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 			out.write('\t\t};\n')
 			out.write('\t\treturn new IndexData();\n')
 			out.write('\t};\n')
@@ -172,22 +190,23 @@ def write_obj(filename):
 			# Write out colors
 			if mesh.hasVertexColours():
 				max = int(megaMax/4)
-				count = len(mesh.faces)
+				numfaces = len(mesh.faces)
 
 				out.write('\t@Override\n')
 				out.write('\tprotected ShortData getColorData() {\n');
 				out.write('\t\tclass ColorData implements ShortData {\n');
-				out.write('\t\t\tpublic int size() { return %d; }\n\n' % (count*4))
+				
 				out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
 
-				if count > max:
-					num = int(math.ceil(float(count) / float(max)))
+				if numfaces > max:
+					num = int(math.ceil(float(numfaces) / float(max)))
 					for x in range(num):
 						out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
 					out.write('\t\t\t}\n')
 					out.write
 
-					cCount = 0
+					count = 0
+					i = 0
 					for x in range(num):
 						out.write
 						out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
@@ -196,21 +215,25 @@ def write_obj(filename):
 						for face in mesh.faces[start:end]:
 							for col in mesh.col:
 								out.write('\t\t\t\tbuf.put((short)%d).put((short)%d).put((short)%d).put((short)%d); /* %d */\n' % 
-									(col.r, col.g, col.b, col.a, cCount))
-								cCount = cCount + 1
+									(col.r, col.g, col.b, col.a, i))
+								i = i + 1
 						out.write('\t\t\t};\n')
 				else:
-					cCount = 0
+					i = 0
 					for face in mesh.faces:
 						for col in mesh.col:
 							out.write('\t\t\t\tbuf.put((short)%d).put((short)%d).put((short)%d).put((short)%d); /* %d */\n' % 
-								(col.r, col.g, col.b, col.a, cCount))
-							cCount = cCount + 1
+								(col.r, col.g, col.b, col.a, i))
+							i = i + 1
       					out.write('\t\t\t};\n')
 
+				count = i * 4
+				out.write
+				out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 				out.write('\t\t};\n')
 				out.write('\t\treturn new ColorData();\n')
 				out.write('\t};\n')
+				
 			out.write('};\n')
        
 			#for name in mesh.getVertGroupNames():

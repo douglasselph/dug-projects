@@ -2,9 +2,9 @@
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
 import com.tipsolutions.jacket.data.FigureData;
 class hank extends FigureData {
+
 	@Override public float getMinX() { return -2.722488f; }
 	@Override public float getMaxX() { return 2.722488f; }
 	@Override public float getMinY() { return -0.590432f; }
@@ -15,8 +15,6 @@ class hank extends FigureData {
 	@Override
 	protected FloatData getVertexData() {
 		class VertexData implements FloatData {
-			public int size() { return 5097; }
-
 			public void fill(FloatBuffer buf) {
 				buf.put(0.097645f).put(-0.504889f).put(5.532807f); /* 0 */
 				buf.put(-0.076270f).put(-0.544087f).put(6.077470f); /* 1 */
@@ -1718,6 +1716,8 @@ class hank extends FigureData {
 				buf.put(-0.417685f).put(0.259357f).put(4.594151f); /* 1697 */
 				buf.put(-0.445951f).put(0.449981f).put(4.483463f); /* 1698 */
 			};
+			public int size() { return 5097; }
+
 		};
 		return new VertexData();
 	};
@@ -1725,8 +1725,6 @@ class hank extends FigureData {
 	@Override
 	protected FloatData getNormalData() {
 		class NormalData implements FloatData {
-			public int size() { return 5097; }
-
 			public void fill(FloatBuffer buf) {
 				buf.put(-0.203772f).put(0.966948f).put(0.153111f); /* 0 */
 				buf.put(0.282998f).put(0.950163f).put(-0.130619f); /* 1 */
@@ -3428,6 +3426,8 @@ class hank extends FigureData {
 				buf.put(0.638295f).put(0.684347f).put(0.352428f); /* 1697 */
 				buf.put(0.749870f).put(-0.003906f).put(0.661519f); /* 1698 */
 			};
+			public int size() { return 5097; }
+
 		};
 		return new NormalData();
 	};
@@ -3435,8 +3435,6 @@ class hank extends FigureData {
 	@Override
 	protected ShortData getIndexData() {
 		class IndexData implements ShortData {
-			public int size() { return 10152; }
-
 			public void fill(ShortBuffer buf) {
 				fill1(buf);
 				fill2(buf);
@@ -6841,6 +6839,8 @@ class hank extends FigureData {
 				buf.put((short)0).put((short)420).put((short)412); /* 3382 */
 				buf.put((short)0).put((short)564).put((short)2); /* 3383 */
 			};
+			public int size() { return 10152; }
+
 		};
 		return new IndexData();
 	};

@@ -5,30 +5,27 @@ public class Main {
 	static final String HankFile = "hank.data";
 	
 	public static void main(String[] args) throws Exception {
-		System.out.println("Writing " + HankFile);
-		hank hw = writeData(HankFile);
-		System.out.println("Reading " + HankFile);
-		hank hr = readData(HankFile);
-		System.out.println("Comparing results");
-		hw.compare(hr, new FigureData.MessageWriter() {
+		
+		ProcessData process = new ProcessData();
+		process.run("hank.data", new ProcessData.ICreate() {
 			@Override
-			public void msg(String msg) {
-				System.out.println(msg);
+			public FigureData create() {
+				return new hank();
+			}
+		});
+		process.run("cube.data", new ProcessData.ICreate() {
+			@Override
+			public FigureData create() {
+				return new cube();
+			}
+		});
+		process.run("susan.data", new ProcessData.ICreate() {
+			@Override
+			public FigureData create() {
+				return new susan();
 			}
 		});
 	}
 	
-	static hank writeData(String filename) {
-		hank h = new hank();
-		h.fill();
-		h.writeData(filename);
-		return h;
-	}
-	
-	static hank readData(String filename) {
-		hank h = new hank();
-		h.readData(filename);
-		return h;
-	}
 
 }
