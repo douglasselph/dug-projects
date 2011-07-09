@@ -67,12 +67,12 @@ def write_boundaries(out, mesh):
 			maxz = vert.co.z
 
 	out.write('\n')
-	out.write('\t@Override public float getMinX() { return %ff; }\n' % minx);
-	out.write('\t@Override public float getMaxX() { return %ff; }\n' % maxx);
-	out.write('\t@Override public float getMinY() { return %ff; }\n' % miny);
-	out.write('\t@Override public float getMaxY() { return %ff; }\n' % maxy);
-	out.write('\t@Override public float getMinZ() { return %ff; }\n' % minz);
-	out.write('\t@Override public float getMaxZ() { return %ff; }\n' % maxz);
+	out.write('\t@Override public float _getMinX() { return %ff; }\n' % minx);
+	out.write('\t@Override public float _getMaxX() { return %ff; }\n' % maxx);
+	out.write('\t@Override public float _getMinY() { return %ff; }\n' % miny);
+	out.write('\t@Override public float _getMaxY() { return %ff; }\n' % maxy);
+	out.write('\t@Override public float _getMinZ() { return %ff; }\n' % minz);
+	out.write('\t@Override public float _getMaxZ() { return %ff; }\n' % maxz);
 
 def write_vertexes(out, mesh):
 	global megaMax
@@ -185,19 +185,15 @@ def write_indexes(out, mesh):
 		i = 0
 		x = 0
 		header = True
-		writeEnd = False
 		start = 0
 		end = max-1
 		
 		for face in mesh.faces:
 			if header:
-				if writeEnd:
-					out.write('\t\t\t};\n')
 				out.write
 				out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
 				x = x + 1
 				header = False
-				writeEnd = True
 			elif i == end:
 				start = start + max
 				end = end + max
@@ -210,7 +206,10 @@ def write_indexes(out, mesh):
 			out.write('; /* %d */\n' % i)
 			i = i + 1
 			
-		if writeEnd:
+			if header:
+				out.write('\t\t\t};\n')
+				header = False
+		if header:
 			out.write('\t\t\t};\n')
 	else:
 		count = 0

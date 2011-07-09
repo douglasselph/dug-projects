@@ -39,54 +39,69 @@ class MyRenderer implements GLSurfaceView.Renderer {
         mFigure = figure;
         mCamera = camera;
     }
+
+    // DEBUG
+    float _red = 0.9f;
+    float _green = 0.2f;
+    float _blue = 0.2f;
+    public void setColor(float r, float g, float b) {
+        _red = r;
+        _green = g;
+        _blue = b;
+    }
     
     public void onDrawFrame(GL10 gl) {
-        /*
-         * Usually, the first thing one might want to do is to clear
-         * the screen. The most efficient way of doing this is to use
-         * glClear().
-         */
-		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-//        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-
-        mFigure.draw(gl);
-        mCamera.onDraw(gl);
+    	 // define the color we want to be displayed as the "clipping wall"
+        gl.glClearColor(_red, _green, _blue, 1.0f);
+        // clear the color buffer to show the ClearColor we called above...
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+//        /*
+//         * Usually, the first thing one might want to do is to clear
+//         * the screen. The most efficient way of doing this is to use
+//         * glClear().
+//         */
+//		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+//
+//        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+////        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+//
+//        mFigure.draw(gl);
+//        mCamera.onDraw(gl);
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
+//    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
+    	gl.glViewport(0, 0, width, height);
     }
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        /*
-         * By default, OpenGL enables features that improve quality
-         * but reduce performance. One might want to tweak that
-         * especially on software renderer.
-         */
-        gl.glDisable(GL10.GL_DITHER);
-        /*
-         * Some one-time OpenGL initialization can be made here
-         * probably based on features of this particular context
-         */
-         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
-
-         if (mTranslucentBackground) {
-             gl.glClearColor(0,0,0,0);
-         } else {
-             gl.glClearColor(1,1,1,1);
-         }
-         gl.glEnable(GL10.GL_CULL_FACE);
-         gl.glShadeModel(GL10.GL_SMOOTH);
-         gl.glEnable(GL10.GL_DEPTH_TEST);
-         
-         cameraInit(gl);
+//        /*
+//         * By default, OpenGL enables features that improve quality
+//         * but reduce performance. One might want to tweak that
+//         * especially on software renderer.
+//         */
+//        gl.glDisable(GL10.GL_DITHER);
+//        /*
+//         * Some one-time OpenGL initialization can be made here
+//         * probably based on features of this particular context
+//         */
+//         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
+//
+//         if (mTranslucentBackground) {
+//             gl.glClearColor(0,0,0,0);
+//         } else {
+//             gl.glClearColor(1,1,1,1);
+//         }
+//         gl.glEnable(GL10.GL_CULL_FACE);
+//         gl.glShadeModel(GL10.GL_SMOOTH);
+//         gl.glEnable(GL10.GL_DEPTH_TEST);
+//         
+//         cameraInit(gl);
     }
     
-    void cameraInit(GL10 gl) {
-    	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
-    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
-    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ()*4);
-    }
+//    void cameraInit(GL10 gl) {
+//    	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
+//    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
+//    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ()*4);
+//    }
 }

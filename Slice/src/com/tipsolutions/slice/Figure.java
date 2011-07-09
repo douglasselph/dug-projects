@@ -65,9 +65,9 @@ class Figure extends FigureData
         	gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
             gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
         }
-        if (mColorBuffer != null) {
+        if (mColorBuf != null) {
         	gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-            gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuffer.asShortBuffer());
+            gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
         }
         if (mIndexBuf != null) {
             gl.glDrawElements(GL10.GL_TRIANGLES, mIndexCount, GL10.GL_UNSIGNED_SHORT, mIndexBuf.asShortBuffer());

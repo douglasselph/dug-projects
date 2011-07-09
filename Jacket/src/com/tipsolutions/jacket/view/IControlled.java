@@ -1,6 +1,6 @@
 package com.tipsolutions.jacket.view;
 
-public interface IControl {
+public interface IControlled {
 	void sideLeft();
 	void sideRight();
 	void sideUp();

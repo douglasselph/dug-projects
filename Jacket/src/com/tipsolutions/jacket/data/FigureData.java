@@ -14,10 +14,11 @@ import java.nio.ShortBuffer;
 
 public class FigureData {
 
-	public static final int ELE_VERTEX = 1;
-	public static final int ELE_NORMAL = 2;
-	public static final int ELE_INDEX = 3;
-	public static final int ELE_BOUNDS = 4;
+	public static final int ELE_BOUNDS = 1;
+	public static final int ELE_VERTEX = 2;
+	public static final int ELE_NORMAL = 3;
+	public static final int ELE_INDEX = 4;
+	public static final int ELE_COLOR = 5;
 	
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
@@ -25,7 +26,7 @@ public class FigureData {
 	protected ByteBuffer mNormalBuf = null;
 	protected ByteBuffer mVertexBuf = null;
 	protected ByteBuffer mIndexBuf = null;
-	protected ByteBuffer mColorBuffer = null;
+	protected ByteBuffer mColorBuf = null;
 	protected int mIndexCount = 0;
 	float mMinX = 0;
 	float mMaxX = 0;
@@ -189,9 +190,13 @@ public class FigureData {
 		mVertexBuf = fill(getVertexData());
 		mNormalBuf = fill(getNormalData());
 		mIndexBuf = fill(getIndexData());
+		mColorBuf = fill(getColorData());
 	}
 	
 	ByteBuffer fill(FloatData data) {
+		if (data == null) {
+			return null;
+		}
 		ByteBuffer vbb = ByteBuffer.allocateDirect(data.size()*4);
         vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
         FloatBuffer buf = vbb.asFloatBuffer();
@@ -200,6 +205,9 @@ public class FigureData {
 	}
 	
 	ByteBuffer fill(ShortData data) {
+		if (data == null) {
+			return null;
+		}
 		ByteBuffer vbb = ByteBuffer.allocateDirect(data.size()*2);
         vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
         ShortBuffer buf = vbb.asShortBuffer();
@@ -207,6 +215,7 @@ public class FigureData {
         return vbb;
 	}
 	
+	// These values are computed in this class:
 	public float getMinX() { return mMinX; }
 	public float getMinY() { return mMinY; }
 	public float getMinZ() { return mMinZ; }
@@ -214,9 +223,19 @@ public class FigureData {
 	public float getMaxY() { return mMaxY; }
 	public float getMaxZ() { return mMaxZ; }
 	
+	// These values come from the blender file computation
+	// (They are overridden in the super class):
+	public float _getMinX() { return 0; }
+	public float _getMinY() { return 0; }
+	public float _getMinZ() { return 0; }
+	public float _getMaxX() { return 0; }
+	public float _getMaxY() { return 0; }
+	public float _getMaxZ() { return 0; }
+	
 	protected ShortData getIndexData() { return null; }
 	protected FloatData getNormalData() { return null; }
 	protected FloatData getVertexData() { return null; }
+	protected ShortData getColorData() { return null; }
 	
 	protected ByteBuffer readBuffer(DataInputStream dataStream, int size) throws IOException {
 		ByteBuffer vbb = ByteBuffer.allocateDirect(size);
@@ -258,6 +277,8 @@ public class FigureData {
             			mNormalBuf = vbb;
             		} else if (eleType == ELE_INDEX) {
             			mIndexBuf = vbb;
+            		} else if (eleType == ELE_COLOR) {
+            			mColorBuf = vbb;
             		}
         		}
         	}
@@ -287,17 +308,19 @@ public class FigureData {
 	}
 	
 	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
-		dataStream.writeInt(eleType);
-		dataStream.writeInt(dataType);
-		dataStream.writeInt(vbb.limit());
-		if (vbb.hasArray()) {
-    		dataStream.write(vbb.array(), 0, vbb.limit());
-		} else {
-			vbb.rewind();
-			byte [] dst = new byte[vbb.limit()];
-			vbb.get(dst);
-    		dataStream.write(dst, 0, vbb.limit());
-    		vbb.rewind();
+		if (vbb != null) {
+    		dataStream.writeInt(eleType);
+    		dataStream.writeInt(dataType);
+    		dataStream.writeInt(vbb.limit());
+    		if (vbb.hasArray()) {
+        		dataStream.write(vbb.array(), 0, vbb.limit());
+    		} else {
+    			vbb.rewind();
+    			byte [] dst = new byte[vbb.limit()];
+    			vbb.get(dst);
+        		dataStream.write(dst, 0, vbb.limit());
+        		vbb.rewind();
+    		}
 		}
 	}
 	
@@ -322,6 +345,7 @@ public class FigureData {
         	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf);
         	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf);
         	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf);
+        	writeBuffer(dataStream, ELE_COLOR, TYPE_SHORT, mColorBuf);
         	
         	dataStream.close();
     	} catch (Exception ex) {

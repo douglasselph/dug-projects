@@ -5,12 +5,12 @@ import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.data.FigureData;
 class susan extends FigureData {
 
-	@Override public float getMinX() { return -1.367188f; }
-	@Override public float getMaxX() { return 1.367188f; }
-	@Override public float getMinY() { return -0.984375f; }
-	@Override public float getMaxY() { return 0.984375f; }
-	@Override public float getMinZ() { return -0.851563f; }
-	@Override public float getMaxZ() { return 0.851563f; }
+	@Override public float _getMinX() { return -1.367188f; }
+	@Override public float _getMaxX() { return 1.367188f; }
+	@Override public float _getMinY() { return -0.984375f; }
+	@Override public float _getMaxY() { return 0.984375f; }
+	@Override public float _getMinZ() { return -0.851563f; }
+	@Override public float _getMaxZ() { return 0.851563f; }
 
 	@Override
 	protected FloatData getVertexData() {

@@ -8,7 +8,7 @@ public class Controller {
 	static final float BOUNDARY_TRIGGER_PERCENT = .15f;
 	static final float SWIPE_TRIGGER_PERCENT = .40f;
 	
-	final IControl mControlled;
+	final IControlled mControlled;
 	final IView mView;
 	final int mTriggerTurn;
 	
@@ -22,7 +22,7 @@ public class Controller {
 	int mTriggerLower;
 	boolean mMoveOkay = true;
 	
-	public Controller(IControl controlled, IView view) {
+	public Controller(IControlled controlled, IView view) {
 		mControlled = controlled;
 		mView = view;
 		mTriggerTurn = (int) (view.getWidth() * BOUNDARY_TRIGGER_PERCENT);
