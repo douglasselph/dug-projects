@@ -6,15 +6,17 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.tipsolutions.jacket.view.Camera;
 import com.tipsolutions.jacket.view.CameraControl;
 import com.tipsolutions.view.ControlSurfaceView;
 
 public class Main extends Activity {
 	
+	public static final boolean LOG = true;
+	public static final String TAG = "Slice";
+	
     ControlSurfaceView mSurfaceView;
     CameraControl mCamera;
-    final String HankFile = "hank.data";
+    final String FigureFile = "cube.data";
     
     /** Called when the activity is first created. */
     @Override
@@ -24,7 +26,7 @@ public class Main extends Activity {
         Figure figure = new Figure();
         
         try {
-            InputStream inputStream = getAssets().open(HankFile);
+            InputStream inputStream = getAssets().open(FigureFile);
             figure.readData(inputStream);
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
@@ -33,20 +35,18 @@ public class Main extends Activity {
         mSurfaceView = new ControlSurfaceView(this, mCamera);
         mSurfaceView.setRenderer(new MyRenderer(figure, mCamera, false));
         setContentView(mSurfaceView);
+        mSurfaceView.requestFocus();
+        mSurfaceView.setFocusableInTouchMode(true);
     }
     
     @Override
     protected void onResume() {
-        // Ideally a game should implement onResume() and onPause()
-        // to take appropriate action when the activity looses focus
         super.onResume();
         mSurfaceView.onResume();
     }
 
     @Override
     protected void onPause() {
-        // Ideally a game should implement onResume() and onPause()
-        // to take appropriate action when the activity looses focus
         super.onPause();
         mSurfaceView.onPause();
     }

@@ -14,10 +14,11 @@ import java.nio.ShortBuffer;
 
 public class FigureData {
 
-	public static final int ELE_INDEX = 3;
-	public static final int ELE_NORMAL = 2;
-	
 	public static final int ELE_VERTEX = 1;
+	public static final int ELE_NORMAL = 2;
+	public static final int ELE_INDEX = 3;
+	public static final int ELE_BOUNDS = 4;
+	
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
 	
@@ -26,6 +27,12 @@ public class FigureData {
 	protected ByteBuffer mIndexBuf = null;
 	protected ByteBuffer mColorBuffer = null;
 	protected int mIndexCount = 0;
+	float mMinX = 0;
+	float mMaxX = 0;
+	float mMinY = 0;
+	float mMaxY = 0;
+	float mMinZ = 0;
+	float mMaxZ = 0;
 	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
@@ -72,6 +79,7 @@ public class FigureData {
 		}
 		return numDiffs;
 	}
+	
     static int compare(ShortBuffer buf1, ShortBuffer buf2, String who, MessageWriter msg) {
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
@@ -104,6 +112,20 @@ public class FigureData {
 		}
 		return numDiffs;
 	}
+    
+    static boolean compare(MessageWriter msg, String name, float val1, float val2) {
+		if (val1 != val2) {
+			StringBuffer sbuf = new StringBuffer();
+			sbuf.append(name);
+			sbuf.append(":");
+			sbuf.append(val1);
+			sbuf.append(" != ");
+			sbuf.append(val2);
+			msg.msg(sbuf.toString());
+			return false;
+		}
+		return true;
+    }
 
 	public void compare(FigureData other, MessageWriter msg) {
 		mVertexBuf.rewind();
@@ -120,6 +142,46 @@ public class FigureData {
 		}
 		if (compare(mIndexBuf.asShortBuffer(), other.mIndexBuf.asShortBuffer(), "Index", msg) == 0) {
 			msg.msg("Index buffer identical");
+		}
+		compare(msg, "MinX", mMinX, other.mMinX);
+		compare(msg, "MinY", mMinY, other.mMinY);
+		compare(msg, "MinZ", mMinZ, other.mMinZ);
+		compare(msg, "MaxX", mMaxX, other.mMaxX);
+		compare(msg, "MaxY", mMaxY, other.mMaxY);
+		compare(msg, "MaxZ", mMaxZ, other.mMaxZ);
+	}
+	
+	public void computeBounds() {
+		FloatBuffer buf = mVertexBuf.asFloatBuffer();
+		buf.rewind();
+		mMinX = buf.get();
+		mMinY = buf.get();
+		mMinZ = buf.get();
+		mMaxX = mMinX;
+		mMaxY = mMinY;
+		mMaxZ = mMinZ;
+		
+		float x, y, z;
+		
+		while (buf.position() < buf.limit()) {
+			x = buf.get();
+			y = buf.get();
+			z = buf.get();
+			if (x < mMinX) {
+				mMinX = x;
+			} else if (x > mMaxX) {
+				mMaxX = x;
+			}
+			if (y < mMinY) {
+				mMinY = y;
+			} else if (y > mMaxY) {
+				mMaxY = y;
+			}
+			if (z < mMinZ) {
+				mMinZ = z;
+			} else if (z > mMaxZ) {
+				mMaxZ = z;
+			}
 		}
 	}
 	
@@ -145,12 +207,12 @@ public class FigureData {
         return vbb;
 	}
 	
-	public float getMinX() { return 0; }
-	public float getMinY() { return 0; }
-	public float getMinZ() { return 0; }
-	public float getMaxX() { return 0; }
-	public float getMaxY() { return 0; }
-	public float getMaxZ() { return 0; }
+	public float getMinX() { return mMinX; }
+	public float getMinY() { return mMinY; }
+	public float getMinZ() { return mMinZ; }
+	public float getMaxX() { return mMaxX; }
+	public float getMaxY() { return mMaxY; }
+	public float getMaxZ() { return mMaxZ; }
 	
 	protected ShortData getIndexData() { return null; }
 	protected FloatData getNormalData() { return null; }
@@ -181,17 +243,22 @@ public class FigureData {
         	
         	while (dataStream.available() > 0) {
         		eleType = dataStream.readInt();
-        		type = dataStream.readInt();
-        		size = dataStream.readInt();
         		
-        		vbb = readBuffer(dataStream, size);
-        		
-        		if (eleType == ELE_VERTEX) {
-        			mVertexBuf = vbb;
-        		} else if (eleType == ELE_NORMAL) {
-        			mNormalBuf = vbb;
-        		} else if (eleType == ELE_INDEX) {
-        			mIndexBuf = vbb;
+        		if (eleType == ELE_BOUNDS) {
+        			readBounds(dataStream);
+        		} else {
+            		type = dataStream.readInt();
+            		size = dataStream.readInt();
+            		
+            		vbb = readBuffer(dataStream, size);
+            		
+            		if (eleType == ELE_VERTEX) {
+            			mVertexBuf = vbb;
+            		} else if (eleType == ELE_NORMAL) {
+            			mNormalBuf = vbb;
+            		} else if (eleType == ELE_INDEX) {
+            			mIndexBuf = vbb;
+            		}
         		}
         	}
         	dataStream.close();
@@ -199,6 +266,15 @@ public class FigureData {
     		System.out.println(ex.getMessage());
     	}
 	};
+	
+	protected void readBounds(DataInputStream dataStream) throws IOException {
+		mMinX = dataStream.readFloat();
+		mMinY = dataStream.readFloat();
+		mMinZ = dataStream.readFloat();
+		mMaxX = dataStream.readFloat();
+		mMaxY = dataStream.readFloat();
+		mMaxZ = dataStream.readFloat();
+	}
 	
 	public void readData(String filename) {
 		File file = new File(filename);
@@ -225,6 +301,16 @@ public class FigureData {
 		}
 	}
 	
+	protected void writeBounds(DataOutputStream dataStream) throws IOException {
+		dataStream.writeInt(ELE_BOUNDS);
+		dataStream.writeFloat(mMinX);
+		dataStream.writeFloat(mMinY);
+		dataStream.writeFloat(mMinZ);
+		dataStream.writeFloat(mMaxX);
+		dataStream.writeFloat(mMaxY);
+		dataStream.writeFloat(mMaxZ);
+	}
+	
 	public boolean writeData(String filename) {
 		File file = new File(filename);
     	
@@ -232,6 +318,7 @@ public class FigureData {
         	FileOutputStream fileStream = new FileOutputStream(file);
         	DataOutputStream dataStream = new DataOutputStream(fileStream);
         	
+        	writeBounds(dataStream);
         	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf);
         	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf);
         	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf);
@@ -242,5 +329,41 @@ public class FigureData {
     		return false;
     	}
     	return true;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer sbuf = new StringBuffer();
+		if (mVertexBuf != null) {
+			sbuf.append(toString("vertexbuf", mVertexBuf.asFloatBuffer()));
+		}
+		if (mIndexBuf != null) {
+			sbuf.append(toString("indexbuf", mIndexBuf.asShortBuffer()));
+		}
+		return sbuf.toString();
+	}
+	
+	public String toString(String name, FloatBuffer fbuf) {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(name);
+		sbuf.append("=");
+		sbuf.append(fbuf.get());
+		while (fbuf.hasRemaining()) {
+			sbuf.append(",");
+			sbuf.append(fbuf.get());
+		}
+		return sbuf.toString();
+	}
+	
+	public String toString(String name, ShortBuffer fbuf) {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(name);
+		sbuf.append("=");
+		sbuf.append(fbuf.get());
+		while (fbuf.hasRemaining()) {
+			sbuf.append(",");
+			sbuf.append(fbuf.get());
+		}
+		return sbuf.toString();
 	}
 }

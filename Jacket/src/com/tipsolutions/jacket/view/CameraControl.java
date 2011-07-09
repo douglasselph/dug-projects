@@ -8,7 +8,7 @@ public class CameraControl extends Camera implements IControl {
 
 	float mAnglePerTouch = (float) Math.PI/20;
 	boolean mBackwards = false;
-	boolean mChanged = false;
+	boolean mChanged = true;
 	float mDistPerTouch = 1;
 	
 	@Override
@@ -97,4 +97,29 @@ public class CameraControl extends Camera implements IControl {
 	@Override
 	public void touchStart() {
 	}
+
+	@Override
+	public Camera setLocation(Vector3f loc) {
+		mChanged = true;
+		return super.setLocation(loc);
+	}
+
+	@Override
+	public Camera setLookAt(Vector3f loc) {
+		mChanged = true;
+		return super.setLookAt(loc);
+	}
+
+	@Override
+	public Camera setScreenDimension(int width, int height) {
+		mChanged = true;
+		return super.setScreenDimension(width, height);
+	}
+
+	@Override
+	public Camera setUp(Vector3f loc) {
+		mChanged = true;
+		return super.setUp(loc);
+	}
+	
 }

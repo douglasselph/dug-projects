@@ -149,4 +149,18 @@ public class Vector3f {
 		return this;
 	}
 	public void zero() { mX = 0; mY = 0; mZ = 0; }
+
+	@Override
+	public String toString() {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("(");
+		sbuf.append(mX);
+		sbuf.append(",");
+		sbuf.append(mY);
+		sbuf.append(",");
+		sbuf.append(mZ);
+		sbuf.append(")");
+		return sbuf.toString();
+	}
+	
 }

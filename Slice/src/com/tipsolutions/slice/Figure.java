@@ -18,6 +18,8 @@ package com.tipsolutions.slice;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.data.FigureData;
 import com.tipsolutions.jacket.math.Rotate;
 import com.tipsolutions.jacket.math.Vector3f;
@@ -48,19 +50,27 @@ class Figure extends FigureData
 		if (mRotate.mRoll != 0) {
 			gl.glRotatef(mRotate.mRoll, 0, 0, 1);
 		}
-        gl.glFrontFace(gl.GL_CW);
+        gl.glFrontFace(GL10.GL_CW);
         
+        if (Main.LOG) {
+        	Log.d(Main.TAG, "draw():");
+        	Log.d(Main.TAG, "  " + toString("vertexbuf=", mVertexBuf.asFloatBuffer()));
+        	Log.d(Main.TAG, "  " + toString("indexbuf=", mIndexBuf.asShortBuffer()));
+        }
         if (mVertexBuf != null) {
-            gl.glVertexPointer(3, gl.GL_FLOAT, 0, mVertexBuf.asFloatBuffer());
+        	gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+            gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.asFloatBuffer());
         }
         if (mNormalBuf != null) {
-            gl.glNormalPointer(gl.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
+        	gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+            gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
         }
         if (mColorBuffer != null) {
-            gl.glColorPointer(4, gl.GL_FIXED, 0, mColorBuffer.asShortBuffer());
+        	gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+            gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuffer.asShortBuffer());
         }
         if (mIndexBuf != null) {
-            gl.glDrawElements(gl.GL_TRIANGLES, mIndexCount, gl.GL_UNSIGNED_SHORT, mIndexBuf.asShortBuffer());
+            gl.glDrawElements(GL10.GL_TRIANGLES, mIndexCount, GL10.GL_UNSIGNED_SHORT, mIndexBuf.asShortBuffer());
         }
     }
     

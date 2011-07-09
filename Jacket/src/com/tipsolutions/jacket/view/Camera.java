@@ -3,6 +3,7 @@ package com.tipsolutions.jacket.view;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLU;
+import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.Vector3f;
@@ -21,6 +22,8 @@ public class Camera {
 	}
 
 	public void applyLookAt(GL10 gl) {
+		Log.d("Jacket", "Camera pos=" + mCameraPos.toString() + ", look=" + mLookAtPos.toString() + ", up=" + mUp.toString());
+		
 		GLU.gluLookAt(gl, 
 				mCameraPos.getX(), mCameraPos.getY(), mCameraPos.getZ(), 
 				mLookAtPos.getX(), mLookAtPos.getY(), mLookAtPos.getZ(), 
@@ -81,14 +84,14 @@ public class Camera {
 	
 	public Vector3f getLeft() {
 		if (mLeft == null) {
-		   mLeft.set(mUp).cross(mDirection).normalize();
-		   if (mLeft.equals(Vector3f.ZERO)) {
-                if (mDirection.getX() != 0) {
-	                mLeft.set(new Vector3f(mDirection.getY(), -mDirection.getX(), 0));
-	            } else {
-	                mLeft.set(new Vector3f(0, mDirection.getZ(), -mDirection.getY()));
-	            }
-	        }
+			mLeft = mUp.dup().cross(getDirection()).normalize();
+			if (mLeft.equals(Vector3f.ZERO)) {
+				if (mDirection.getX() != 0) {
+					mLeft.set(new Vector3f(mDirection.getY(), -mDirection.getX(), 0));
+				} else {
+					mLeft.set(new Vector3f(0, mDirection.getZ(), -mDirection.getY()));
+				}
+			}
 		}
 		return mLeft;
 	}

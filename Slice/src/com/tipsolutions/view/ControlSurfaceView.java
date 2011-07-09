@@ -2,6 +2,7 @@ package com.tipsolutions.view;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLSurfaceView.Renderer;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.view.Controller;
@@ -16,7 +17,6 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 	
 	public ControlSurfaceView(Context context, IControl control) {
 		super(context);
-		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 		mController = new Controller(control, this);
 	}
 
@@ -26,6 +26,18 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 //		return true;
 //	}
 
+	@Override
+	public void setRenderer(Renderer renderer) {
+		super.setRenderer(renderer);
+		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		requestRender();
+	}
+
 	@Override 
 	public boolean onTouchEvent(MotionEvent e) {
 		float x = e.getX();
@@ -33,12 +45,15 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 		switch (e.getAction()) {
     		case MotionEvent.ACTION_DOWN:
     			mController.pressDown(x, y);
+	            requestRender();
     			break;
 	        case MotionEvent.ACTION_MOVE:
     			mController.pressMove(x, y);
 	            requestRender();
     			break;
     		case MotionEvent.ACTION_UP:
+    			mController.pressUp(x, y);
+	            requestRender();
     			break;
 		}
 		return true;

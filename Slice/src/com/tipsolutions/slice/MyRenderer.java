@@ -87,6 +87,6 @@ class MyRenderer implements GLSurfaceView.Renderer {
     void cameraInit(GL10 gl) {
     	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
     	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
-    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ());
+    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ()*4);
     }
 }

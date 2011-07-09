@@ -25,6 +25,7 @@ public class ProcessData {
 	FigureData writeData(String filename, ICreate create) {
 		FigureData d = create.create();
 		d.fill();
+		d.computeBounds();
 		d.writeData(filename);
 		return d;
 	}
