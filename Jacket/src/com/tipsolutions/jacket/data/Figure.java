@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package com.tipsolutions.slice;
+package com.tipsolutions.jacket.data;
 
 import javax.microedition.khronos.opengles.GL10;
 
 import android.util.Log;
 
-import com.tipsolutions.jacket.data.FigureData;
 import com.tipsolutions.jacket.math.Rotate;
 import com.tipsolutions.jacket.math.Vector3f;
 
 /**
- * A vertex shaded cube.
+ * Supports all shapes.
  */
-class Figure extends FigureData
+public class Figure 
 {
-	Vector3f mLoc = new Vector3f();
-	Rotate mRotate = new Rotate();
-	
-    public Figure() {
+	protected Vector3f mLoc = new Vector3f();
+	protected Rotate mRotate = new Rotate();
+	protected ShapeData mShape;
+
+    public Figure(ShapeData shape) {
+    	mShape = shape;
     }
 
     public void draw(GL10 gl)
@@ -52,32 +53,9 @@ class Figure extends FigureData
 		}
         gl.glFrontFace(GL10.GL_CW);
         
-        if (Main.LOG) {
-        	Log.d(Main.TAG, "draw():");
-        	Log.d(Main.TAG, "  " + toString("vertexbuf=", mVertexBuf.asFloatBuffer()));
-        	Log.d(Main.TAG, "  " + toString("indexbuf=", mIndexBuf.asShortBuffer()));
-        }
-        if (mVertexBuf != null) {
-        	gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-            gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.asFloatBuffer());
-        }
-        if (mNormalBuf != null) {
-        	gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-            gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
-        }
-        if (mColorBuf != null) {
-        	gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-            gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
-        }
-        if (mIndexBuf != null) {
-            gl.glDrawElements(GL10.GL_TRIANGLES, mIndexCount, GL10.GL_UNSIGNED_SHORT, mIndexBuf.asShortBuffer());
-        }
+        mShape.draw(gl);
     }
     
-	public float getLenX() { return getMaxX()-getMinX(); }
-	public float getLenY() { return getMaxY()-getMinY(); }
-	public float getLenZ() { return getMaxZ()-getMinZ(); }
-	
 	public void setLocation(Vector3f x) { mLoc = x; }
 	public void setRotation(Rotate x) { mRotate = x; }
 	

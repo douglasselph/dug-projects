@@ -12,28 +12,60 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-public class FigureData {
+import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
+public class ShapeData {
+	
 	public static final int ELE_BOUNDS = 1;
-	public static final int ELE_VERTEX = 2;
-	public static final int ELE_NORMAL = 3;
-	public static final int ELE_INDEX = 4;
-	public static final int ELE_COLOR = 5;
+	public static final int ELE_COLOR = 2;
+	public static final int ELE_INDEX = 3;
+	public static final int ELE_NORMAL = 4;
+	public static final int ELE_VERTEX = 5;
 	
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
 	
-	protected ByteBuffer mNormalBuf = null;
-	protected ByteBuffer mVertexBuf = null;
-	protected ByteBuffer mIndexBuf = null;
 	protected ByteBuffer mColorBuf = null;
-	protected int mIndexCount = 0;
-	float mMinX = 0;
-	float mMaxX = 0;
-	float mMinY = 0;
-	float mMaxY = 0;
-	float mMinZ = 0;
-	float mMaxZ = 0;
+	protected ByteBuffer mIndexBuf = null;
+    protected ByteBuffer mNormalBuf = null;
+    protected ByteBuffer mVertexBuf = null;
+
+	protected ShortData getColorData() { return null; }
+	protected ShortData getIndexData() { return null; }
+	protected FloatData getNormalData() { return null; }
+	protected FloatData getVertexData() { return null; }
+	
+    protected static final int MIN_X = 0;
+    protected static final int MIN_Y = 1;
+    protected static final int MIN_Z = 2;
+    protected static final int MAX_X = 3;
+    protected static final int MAX_Y = 4;
+    protected static final int MAX_Z = 5;
+	protected float [] mBounds = null;
+	// These values are computed in this class, and assumes
+	// that readBounds() or computeBounds() has previously
+	// been called.
+	public float getMinX() { return mBounds[MIN_X]; }
+	public float getMinY() { return mBounds[MIN_Y]; }
+	public float getMinZ() { return mBounds[MIN_Z]; }
+	public float getMaxX() { return mBounds[MAX_X]; }
+	public float getMaxY() { return mBounds[MAX_Y]; }
+	public float getMaxZ() { return mBounds[MAX_Z]; }
+	
+	// These values come from the blender file computation
+	// (They are overridden in the super class):
+	public float _getMaxX() { return 0; }
+	public float _getMaxY() { return 0; }
+	public float _getMaxZ() { return 0; }
+	public float _getMinX() { return 0; }
+	public float _getMinY() { return 0; }
+	public float _getMinZ() { return 0; }
+	
+	public float getSizeX() { return getMaxX()-getMinX(); }
+	public float getSizeY() { return getMaxY()-getMinY(); }
+	public float getSizeZ() { return getMaxZ()-getMinZ(); }
 	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
@@ -42,12 +74,10 @@ public class FigureData {
 	public interface MessageWriter {
 		void msg(String msg);
 	}
-
 	public interface ShortData {
 		void fill(ShortBuffer buf);
 		int size();
 	}
-	
 	static int compare(FloatBuffer buf1, FloatBuffer buf2, String who, MessageWriter msg) {
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
@@ -81,7 +111,21 @@ public class FigureData {
 		return numDiffs;
 	}
 	
-    static int compare(ShortBuffer buf1, ShortBuffer buf2, String who, MessageWriter msg) {
+	static boolean compare(MessageWriter msg, String name, float val1, float val2) {
+		if (val1 != val2) {
+			StringBuffer sbuf = new StringBuffer();
+			sbuf.append(name);
+			sbuf.append(":");
+			sbuf.append(val1);
+			sbuf.append(" != ");
+			sbuf.append(val2);
+			msg.msg(sbuf.toString());
+			return false;
+		}
+		return true;
+    }
+	
+	static int compare(ShortBuffer buf1, ShortBuffer buf2, String who, MessageWriter msg) {
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
 			StringBuffer sbuf = new StringBuffer();
@@ -113,22 +157,8 @@ public class FigureData {
 		}
 		return numDiffs;
 	}
-    
-    static boolean compare(MessageWriter msg, String name, float val1, float val2) {
-		if (val1 != val2) {
-			StringBuffer sbuf = new StringBuffer();
-			sbuf.append(name);
-			sbuf.append(":");
-			sbuf.append(val1);
-			sbuf.append(" != ");
-			sbuf.append(val2);
-			msg.msg(sbuf.toString());
-			return false;
-		}
-		return true;
-    }
 
-	public void compare(FigureData other, MessageWriter msg) {
+	public void compare(ShapeData other, MessageWriter msg) {
 		mVertexBuf.rewind();
 		mNormalBuf.rewind();
 		mIndexBuf.rewind();
@@ -144,23 +174,25 @@ public class FigureData {
 		if (compare(mIndexBuf.asShortBuffer(), other.mIndexBuf.asShortBuffer(), "Index", msg) == 0) {
 			msg.msg("Index buffer identical");
 		}
-		compare(msg, "MinX", mMinX, other.mMinX);
-		compare(msg, "MinY", mMinY, other.mMinY);
-		compare(msg, "MinZ", mMinZ, other.mMinZ);
-		compare(msg, "MaxX", mMaxX, other.mMaxX);
-		compare(msg, "MaxY", mMaxY, other.mMaxY);
-		compare(msg, "MaxZ", mMaxZ, other.mMaxZ);
+		compare(msg, "MinX", getMinX(), other.getMinX());
+		compare(msg, "MinY", getMinY(), other.getMinY());
+		compare(msg, "MinZ", getMinZ(), other.getMinZ());
+		compare(msg, "MaxX", getMaxX(), other.getMaxX());
+		compare(msg, "MaxY", getMaxY(), other.getMaxY());
+		compare(msg, "MaxZ", getMaxZ(), other.getMaxZ());
 	}
 	
 	public void computeBounds() {
 		FloatBuffer buf = mVertexBuf.asFloatBuffer();
 		buf.rewind();
-		mMinX = buf.get();
-		mMinY = buf.get();
-		mMinZ = buf.get();
-		mMaxX = mMinX;
-		mMaxY = mMinY;
-		mMaxZ = mMinZ;
+		
+		mBounds = new float[6];
+		float minX = buf.get();
+		float minY = buf.get();
+		float minZ = buf.get();
+		float maxX = minX;
+		float maxY = minY;
+		float maxZ = minZ;
 		
 		float x, y, z;
 		
@@ -168,20 +200,61 @@ public class FigureData {
 			x = buf.get();
 			y = buf.get();
 			z = buf.get();
-			if (x < mMinX) {
-				mMinX = x;
-			} else if (x > mMaxX) {
-				mMaxX = x;
+			if (x < minX) {
+				minX = x;
+			} else if (x > maxX) {
+				maxX = x;
 			}
-			if (y < mMinY) {
-				mMinY = y;
-			} else if (y > mMaxY) {
-				mMaxY = y;
+			if (y < minY) {
+				minY = y;
+			} else if (y > maxY) {
+				maxY = y;
 			}
-			if (z < mMinZ) {
-				mMinZ = z;
-			} else if (z > mMaxZ) {
-				mMaxZ = z;
+			if (z < minZ) {
+				minZ = z;
+			} else if (z > maxZ) {
+				maxZ = z;
+			}
+		}
+		mBounds[MIN_X] = minX;
+		mBounds[MIN_Y] = minY;
+		mBounds[MIN_Z] = minZ;
+		mBounds[MAX_X] = maxX;
+		mBounds[MAX_Y] = maxY;
+		mBounds[MAX_Z] = maxZ;
+	}
+	
+	public void draw(GL10 gl) {
+		if (Constants.LOG) {
+			Log.d(Constants.TAG, "draw():");
+		}
+		FloatBuffer fbuf;
+		ShortBuffer sbuf;
+		
+		if (mVertexBuf != null) {
+			fbuf = mVertexBuf.asFloatBuffer();
+			fbuf.rewind(); gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
+			
+			if (Constants.LOG) {
+    			Log.d(Constants.TAG, "  " + toString("vertexbuf=", mVertexBuf.asFloatBuffer()));
+			}
+		}
+		if (mNormalBuf != null) {
+			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+			gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
+		}
+		if (mColorBuf != null) {
+			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+			gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
+		}
+		if (mIndexBuf != null) {
+			sbuf = mIndexBuf.asShortBuffer();
+			sbuf.rewind();
+			gl.glDrawElements(GL10.GL_TRIANGLES, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
+			
+			if (Constants.LOG) {
+    			Log.d(Constants.TAG, "  " + toString("indexbuf=", mIndexBuf.asShortBuffer()));
 			}
 		}
 	}
@@ -215,27 +288,15 @@ public class FigureData {
         return vbb;
 	}
 	
-	// These values are computed in this class:
-	public float getMinX() { return mMinX; }
-	public float getMinY() { return mMinY; }
-	public float getMinZ() { return mMinZ; }
-	public float getMaxX() { return mMaxX; }
-	public float getMaxY() { return mMaxY; }
-	public float getMaxZ() { return mMaxZ; }
-	
-	// These values come from the blender file computation
-	// (They are overridden in the super class):
-	public float _getMinX() { return 0; }
-	public float _getMinY() { return 0; }
-	public float _getMinZ() { return 0; }
-	public float _getMaxX() { return 0; }
-	public float _getMaxY() { return 0; }
-	public float _getMaxZ() { return 0; }
-	
-	protected ShortData getIndexData() { return null; }
-	protected FloatData getNormalData() { return null; }
-	protected FloatData getVertexData() { return null; }
-	protected ShortData getColorData() { return null; }
+	protected void readBounds(DataInputStream dataStream) throws IOException {
+		mBounds = new float[6];
+		mBounds[MIN_X] = dataStream.readFloat();
+		mBounds[MIN_Y] = dataStream.readFloat();
+		mBounds[MIN_Z] = dataStream.readFloat();
+		mBounds[MAX_X] = dataStream.readFloat();
+		mBounds[MAX_Y] = dataStream.readFloat();
+		mBounds[MAX_Z] = dataStream.readFloat();
+	}
 	
 	protected ByteBuffer readBuffer(DataInputStream dataStream, int size) throws IOException {
 		ByteBuffer vbb = ByteBuffer.allocateDirect(size);
@@ -250,7 +311,7 @@ public class FigureData {
             vbb.rewind();
         }
         return vbb;
-	}
+	};
 	
 	public void readData(InputStream inputStream) {
 		try {
@@ -286,15 +347,6 @@ public class FigureData {
     	} catch (Exception ex) {
     		System.out.println(ex.getMessage());
     	}
-	};
-	
-	protected void readBounds(DataInputStream dataStream) throws IOException {
-		mMinX = dataStream.readFloat();
-		mMinY = dataStream.readFloat();
-		mMinZ = dataStream.readFloat();
-		mMaxX = dataStream.readFloat();
-		mMaxY = dataStream.readFloat();
-		mMaxZ = dataStream.readFloat();
 	}
 	
 	public void readData(String filename) {
@@ -305,54 +357,6 @@ public class FigureData {
     	} catch (Exception ex) {
     		System.out.println(ex.getMessage());
     	}
-	}
-	
-	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
-		if (vbb != null) {
-    		dataStream.writeInt(eleType);
-    		dataStream.writeInt(dataType);
-    		dataStream.writeInt(vbb.limit());
-    		if (vbb.hasArray()) {
-        		dataStream.write(vbb.array(), 0, vbb.limit());
-    		} else {
-    			vbb.rewind();
-    			byte [] dst = new byte[vbb.limit()];
-    			vbb.get(dst);
-        		dataStream.write(dst, 0, vbb.limit());
-        		vbb.rewind();
-    		}
-		}
-	}
-	
-	protected void writeBounds(DataOutputStream dataStream) throws IOException {
-		dataStream.writeInt(ELE_BOUNDS);
-		dataStream.writeFloat(mMinX);
-		dataStream.writeFloat(mMinY);
-		dataStream.writeFloat(mMinZ);
-		dataStream.writeFloat(mMaxX);
-		dataStream.writeFloat(mMaxY);
-		dataStream.writeFloat(mMaxZ);
-	}
-	
-	public boolean writeData(String filename) {
-		File file = new File(filename);
-    	
-    	try {
-        	FileOutputStream fileStream = new FileOutputStream(file);
-        	DataOutputStream dataStream = new DataOutputStream(fileStream);
-        	
-        	writeBounds(dataStream);
-        	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf);
-        	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf);
-        	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf);
-        	writeBuffer(dataStream, ELE_COLOR, TYPE_SHORT, mColorBuf);
-        	
-        	dataStream.close();
-    	} catch (Exception ex) {
-    		System.out.println(ex.getMessage());
-    		return false;
-    	}
-    	return true;
 	}
 	
 	@Override
@@ -389,5 +393,53 @@ public class FigureData {
 			sbuf.append(fbuf.get());
 		}
 		return sbuf.toString();
+	}
+	
+	protected void writeBounds(DataOutputStream dataStream) throws IOException {
+		dataStream.writeInt(ELE_BOUNDS);
+		dataStream.writeFloat(getMinX());
+		dataStream.writeFloat(getMinY());
+		dataStream.writeFloat(getMinZ());
+		dataStream.writeFloat(getMaxX());
+		dataStream.writeFloat(getMaxY());
+		dataStream.writeFloat(getMaxZ());
+	}
+	
+	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
+		if (vbb != null) {
+    		dataStream.writeInt(eleType);
+    		dataStream.writeInt(dataType);
+    		dataStream.writeInt(vbb.limit());
+    		if (vbb.hasArray()) {
+        		dataStream.write(vbb.array(), 0, vbb.limit());
+    		} else {
+    			vbb.rewind();
+    			byte [] dst = new byte[vbb.limit()];
+    			vbb.get(dst);
+        		dataStream.write(dst, 0, vbb.limit());
+        		vbb.rewind();
+    		}
+		}
+	}
+	
+	public boolean writeData(String filename) {
+		File file = new File(filename);
+    	
+    	try {
+        	FileOutputStream fileStream = new FileOutputStream(file);
+        	DataOutputStream dataStream = new DataOutputStream(fileStream);
+        	
+        	writeBounds(dataStream);
+        	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf);
+        	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf);
+        	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf);
+        	writeBuffer(dataStream, ELE_COLOR, TYPE_SHORT, mColorBuf);
+        	
+        	dataStream.close();
+    	} catch (Exception ex) {
+    		System.out.println(ex.getMessage());
+    		return false;
+    	}
+    	return true;
 	}
 }

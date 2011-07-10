@@ -1,20 +1,20 @@
-import com.tipsolutions.jacket.data.FigureData;
+import com.tipsolutions.jacket.data.ShapeData;
 
 public class ProcessData {
 	
 	public interface ICreate {
-		FigureData create();
+		ShapeData create();
 	};
 
 	void run(String filename, ICreate create) {
 		
 		System.out.println("Writing " + filename);
-		FigureData wdata = writeData(filename, create);
+		ShapeData wdata = writeData(filename, create);
 		System.out.println("Reading " + filename);
-		FigureData rdata = readData(filename, create);
+		ShapeData rdata = readData(filename, create);
 		System.out.println("Comparing results");
 		
-		wdata.compare(rdata, new FigureData.MessageWriter() {
+		wdata.compare(rdata, new ShapeData.MessageWriter() {
 			@Override
 			public void msg(String msg) {
 				System.out.println(msg);
@@ -22,16 +22,16 @@ public class ProcessData {
 		});
 	}
 	
-	FigureData writeData(String filename, ICreate create) {
-		FigureData d = create.create();
+	ShapeData writeData(String filename, ICreate create) {
+		ShapeData d = create.create();
 		d.fill();
 		d.computeBounds();
 		d.writeData(filename);
 		return d;
 	}
 	
-	FigureData readData(String filename, ICreate create) {
-		FigureData d = create.create();
+	ShapeData readData(String filename, ICreate create) {
+		ShapeData d = create.create();
 		d.readData(filename);
 		return d;
 	}

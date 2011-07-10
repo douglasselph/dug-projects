@@ -5,8 +5,9 @@ import java.io.InputStream;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
 
+import com.tipsolutions.jacket.data.Figure;
+import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.view.CameraControl;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 import com.tipsolutions.jacket.view.IEventTap;
@@ -26,13 +27,14 @@ public class Main extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        Figure figure = new Figure();
+        ShapeData shape = new ShapeData();
         try {
             InputStream inputStream = getAssets().open(FigureFile);
-            figure.readData(inputStream);
+            shape.readData(inputStream);
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
         }
+        Figure figure = new Figure(shape);
 //        mCamera = new CameraControl();
 //        mSurfaceView = new ControlSurfaceView(this, mCamera);
         mSurfaceView = new ControlSurfaceView(this);

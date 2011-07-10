@@ -21,6 +21,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
 
+import com.tipsolutions.jacket.data.Figure;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.CameraControl;
 

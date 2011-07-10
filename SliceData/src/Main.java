@@ -1,4 +1,4 @@
-import com.tipsolutions.jacket.data.FigureData;
+import com.tipsolutions.jacket.data.ShapeData;
 
 public class Main {
 	
@@ -9,19 +9,19 @@ public class Main {
 		ProcessData process = new ProcessData();
 		process.run("hank.data", new ProcessData.ICreate() {
 			@Override
-			public FigureData create() {
+			public ShapeData create() {
 				return new hank();
 			}
 		});
 		process.run("cube.data", new ProcessData.ICreate() {
 			@Override
-			public FigureData create() {
+			public ShapeData create() {
 				return new cube();
 			}
 		});
 		process.run("susan.data", new ProcessData.ICreate() {
 			@Override
-			public FigureData create() {
+			public ShapeData create() {
 				return new susan();
 			}
 		});

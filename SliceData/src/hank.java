@@ -2,8 +2,8 @@
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import com.tipsolutions.jacket.data.FigureData;
-class hank extends FigureData {
+import com.tipsolutions.jacket.data.ShapeData;
+class hank extends ShapeData {
 
 	@Override public float _getMinX() { return -2.722488f; }
 	@Override public float _getMaxX() { return 2.722488f; }
