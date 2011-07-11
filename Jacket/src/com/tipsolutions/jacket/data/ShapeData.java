@@ -31,8 +31,12 @@ public class ShapeData {
 	protected ByteBuffer mIndexBuf = null;
     protected ByteBuffer mNormalBuf = null;
     protected ByteBuffer mVertexBuf = null;
+	protected int mIndexMode = GL10.GL_TRIANGLES;
+	
+//	static final protected int FIXED_COLOR_ONE = 0x10000;
+//	protected ShortData getColorFixed() { return null; }
 
-	protected ShortData getColorData() { return null; }
+	protected FloatData getColorData() { return null; }
 	protected ShortData getIndexData() { return null; }
 	protected FloatData getNormalData() { return null; }
 	protected FloatData getVertexData() { return null; }
@@ -44,24 +48,40 @@ public class ShapeData {
     protected static final int MAX_Y = 4;
     protected static final int MAX_Z = 5;
 	protected float [] mBounds = null;
+
+	// Public access uses computed bounds if done, otherwise uses super class define
+	public float getMaxX() { return mBounds == null ? _getMaxX() : _getMaxXb(); }
+	public float getMaxY() { return mBounds == null ? _getMaxY() : _getMaxYb(); }
+	public float getMaxZ() { return mBounds == null ? _getMaxZ() : _getMaxZb(); }
+	public float getMinX() { return mBounds == null ? _getMinX() : _getMinXb(); }
+	public float getMinY() { return mBounds == null ? _getMinY() : _getMinYb(); }
+	public float getMinZ() { return mBounds == null ? _getMinZ() : _getMinZb(); }
+	
 	// These values are computed in this class, and assumes
 	// that readBounds() or computeBounds() has previously
 	// been called.
-	public float getMinX() { return mBounds[MIN_X]; }
-	public float getMinY() { return mBounds[MIN_Y]; }
-	public float getMinZ() { return mBounds[MIN_Z]; }
-	public float getMaxX() { return mBounds[MAX_X]; }
-	public float getMaxY() { return mBounds[MAX_Y]; }
-	public float getMaxZ() { return mBounds[MAX_Z]; }
+	protected float _getMinXb() { return mBounds[MIN_X]; }
+	protected float _getMinYb() { return mBounds[MIN_Y]; }
+	protected float _getMinZb() { return mBounds[MIN_Z]; }
+	protected float _getMaxXb() { return mBounds[MAX_X]; }
+	protected float _getMaxYb() { return mBounds[MAX_Y]; }
+	protected float _getMaxZb() { return mBounds[MAX_Z]; }
 	
 	// These values come from the blender file computation
 	// (They are overridden in the super class):
-	public float _getMaxX() { return 0; }
-	public float _getMaxY() { return 0; }
-	public float _getMaxZ() { return 0; }
-	public float _getMinX() { return 0; }
-	public float _getMinY() { return 0; }
-	public float _getMinZ() { return 0; }
+	protected float _getMaxX() { return 0; }
+	protected float _getMaxY() { return 0; }
+	protected float _getMaxZ() { return 0; }
+	protected float _getMinX() { return 0; }
+	protected float _getMinY() { return 0; }
+	protected float _getMinZ() { return 0; }
+	
+	protected void setMaxX(float x) { mBounds[MAX_X] = x; }
+	protected void setMaxY(float y) { mBounds[MAX_Y] = y; }
+	protected void setMaxZ(float z) { mBounds[MAX_Z] = z; }
+	protected void setMinX(float x) { mBounds[MIN_X] = x; }
+	protected void setMinY(float y) { mBounds[MIN_Y] = y; }
+	protected void setMinZ(float z) { mBounds[MIN_Z] = z; }
 	
 	public float getSizeX() { return getMaxX()-getMinX(); }
 	public float getSizeY() { return getMaxY()-getMinY(); }
@@ -182,11 +202,17 @@ public class ShapeData {
 		compare(msg, "MaxZ", getMaxZ(), other.getMaxZ());
 	}
 	
+	protected void allocBounds() {
+		if (mBounds == null) {
+    		mBounds = new float[6];
+		}
+	}
+	
 	public void computeBounds() {
 		FloatBuffer buf = mVertexBuf.asFloatBuffer();
 		buf.rewind();
 		
-		mBounds = new float[6];
+		allocBounds();
 		float minX = buf.get();
 		float minY = buf.get();
 		float minZ = buf.get();
@@ -216,54 +242,27 @@ public class ShapeData {
 				maxZ = z;
 			}
 		}
-		mBounds[MIN_X] = minX;
-		mBounds[MIN_Y] = minY;
-		mBounds[MIN_Z] = minZ;
-		mBounds[MAX_X] = maxX;
-		mBounds[MAX_Y] = maxY;
-		mBounds[MAX_Z] = maxZ;
+		setMinX(minX);
+		setMinY(minY);
+		setMinZ(minZ);
+		setMaxX(maxX);
+		setMaxY(maxY);
+		setMaxZ(maxZ);
 	}
 	
-	public void draw(GL10 gl) {
-		if (Constants.LOG) {
-			Log.d(Constants.TAG, "draw():");
-		}
-		FloatBuffer fbuf;
-		ShortBuffer sbuf;
-		
-		if (mVertexBuf != null) {
-			fbuf = mVertexBuf.asFloatBuffer();
-			fbuf.rewind(); gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
-			
-			if (Constants.LOG) {
-    			Log.d(Constants.TAG, "  " + toString("vertexbuf=", mVertexBuf.asFloatBuffer()));
-			}
-		}
-		if (mNormalBuf != null) {
-			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-			gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
-		}
-		if (mColorBuf != null) {
-			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-			gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
-		}
-		if (mIndexBuf != null) {
-			sbuf = mIndexBuf.asShortBuffer();
-			sbuf.rewind();
-			gl.glDrawElements(GL10.GL_TRIANGLES, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
-			
-			if (Constants.LOG) {
-    			Log.d(Constants.TAG, "  " + toString("indexbuf=", mIndexBuf.asShortBuffer()));
-			}
-		}
-	}
-	
+
 	public void fill() {
-		mVertexBuf = fill(getVertexData());
-		mNormalBuf = fill(getNormalData());
-		mIndexBuf = fill(getIndexData());
-		mColorBuf = fill(getColorData());
+		setVertexData(getVertexData());
+		setNormalData(getNormalData());
+		setIndexData(getIndexData());
+		setColorData(getColorData());
+		
+		// It is arguably faster and easier to use floats
+		// because modern hardware supports colors floats.
+		// If not, then it is faster to use GL_FIXED.
+		// Right now, this code is optimized for modern hardware.
+		
+//		setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
 	}
 	
 	ByteBuffer fill(FloatData data) {
@@ -288,14 +287,45 @@ public class ShapeData {
         return vbb;
 	}
 	
+	public void onCreate(GL10 gl) {
+		if (mVertexBuf != null) {
+    		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+		}
+		if (mNormalBuf != null) {
+    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+		}
+		if (mColorBuf != null) {
+    		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+		}
+	}
+	
+	public void onDraw(GL10 gl) {
+		if (mVertexBuf != null) {
+    		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.asFloatBuffer());
+		}
+		if (mNormalBuf != null) {
+    		gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
+		}
+		if (mColorBuf != null) {
+    		gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.asShortBuffer());
+    		
+    		// Not doing it this way anymore:
+//    		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
+		}
+		if (mIndexBuf != null) {
+			ShortBuffer sbuf = mIndexBuf.asShortBuffer();
+			gl.glDrawElements(mIndexMode, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
+		}
+	}
+	
 	protected void readBounds(DataInputStream dataStream) throws IOException {
-		mBounds = new float[6];
-		mBounds[MIN_X] = dataStream.readFloat();
-		mBounds[MIN_Y] = dataStream.readFloat();
-		mBounds[MIN_Z] = dataStream.readFloat();
-		mBounds[MAX_X] = dataStream.readFloat();
-		mBounds[MAX_Y] = dataStream.readFloat();
-		mBounds[MAX_Z] = dataStream.readFloat();
+		allocBounds();
+		setMinX(dataStream.readFloat());
+		setMinY(dataStream.readFloat());
+		setMinZ(dataStream.readFloat());
+		setMaxX(dataStream.readFloat());
+		setMaxY(dataStream.readFloat());
+		setMaxZ(dataStream.readFloat());
 	}
 	
 	protected ByteBuffer readBuffer(DataInputStream dataStream, int size) throws IOException {
@@ -357,6 +387,35 @@ public class ShapeData {
     	} catch (Exception ex) {
     		System.out.println(ex.getMessage());
     	}
+	}
+	
+	public void setColorData(ShortData data) {
+		if (data != null) {
+    		mColorBuf = fill(data);
+		}
+	}
+	
+	public void setColorData(FloatData data) {
+		if (data != null) {
+    		mColorBuf = fill(data);
+		}
+	}
+	
+	public void setIndexData(ShortData data) {
+		mIndexBuf = fill(data);
+	}
+	
+	public void setIndexData(ShortData data, int mode) {
+		mIndexBuf = fill(data);
+		mIndexMode = mode;
+	}
+	
+	public void setNormalData(FloatData data) {
+		mNormalBuf = fill(data);
+	}
+	
+	public void setVertexData(FloatData data) {
+		mVertexBuf = fill(data);
 	}
 	
 	@Override

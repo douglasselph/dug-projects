@@ -19,25 +19,26 @@ package com.tipsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.opengl.GLSurfaceView;
-
 import com.tipsolutions.jacket.data.Figure;
-import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.view.CameraControl;
+import com.tipsolutions.jacket.view.ControlRenderer;
+import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 /**
  * Render a pair of tumbling cubes.
  */
 
-class MyRenderer implements GLSurfaceView.Renderer {
+class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
-    Figure mFigure;
+    Shape mShape;
     final CameraControl mCamera;
 
-    public MyRenderer(Figure figure, CameraControl camera, boolean useTranslucentBackground) {
+    public MyRenderer(ControlSurfaceView view, Shape shape, CameraControl camera, boolean useTranslucentBackground) {
+    	super(view);
         mTranslucentBackground = useTranslucentBackground;
-        mFigure = figure;
+        mShape = shape;
         mCamera = camera;
     }
 
@@ -52,10 +53,9 @@ class MyRenderer implements GLSurfaceView.Renderer {
     }
     
     public void onDrawFrame(GL10 gl) {
-    	 // define the color we want to be displayed as the "clipping wall"
-        gl.glClearColor(_red, _green, _blue, 1.0f);
-        // clear the color buffer to show the ClearColor we called above...
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+    	super.onDrawFrame(gl);
+        
+        mShape.onDraw(gl);
 //        /*
 //         * Usually, the first thing one might want to do is to clear
 //         * the screen. The most efficient way of doing this is to use
@@ -66,7 +66,6 @@ class MyRenderer implements GLSurfaceView.Renderer {
 //        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 ////        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 //
-//        mFigure.draw(gl);
 //        mCamera.onDraw(gl);
     }
     
@@ -76,6 +75,8 @@ class MyRenderer implements GLSurfaceView.Renderer {
     }
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    	mShape.onCreate(gl);
+
 //        /*
 //         * By default, OpenGL enables features that improve quality
 //         * but reduce performance. One might want to tweak that

@@ -1,5 +1,7 @@
 package com.tipsolutions.jacket.math;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import android.util.FloatMath;
 
 public class Vector3f {
@@ -42,6 +44,10 @@ public class Vector3f {
 		return this;
 	}
 	
+	public void apply(GL10 gl) {
+		gl.glTranslatef(getX(), getY(), getZ());
+	}
+	
 	public Vector3f cross(final Vector3f v) {
 		mX = (mY * v.mZ) - (mZ * v.mY);
 		mY = (mZ * v.mX) - (mX * v.mZ);
@@ -79,9 +85,7 @@ public class Vector3f {
 	}
 	
 	public float getX() { return mX; }
-	
 	public float getY() { return mY; }
-
 	public float getZ() { return mZ; }
 	
 	public float length() {

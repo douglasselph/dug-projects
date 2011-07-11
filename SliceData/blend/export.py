@@ -67,12 +67,12 @@ def write_boundaries(out, mesh):
 			maxz = vert.co.z
 
 	out.write('\n')
-	out.write('\t@Override public float _getMinX() { return %ff; }\n' % minx);
-	out.write('\t@Override public float _getMaxX() { return %ff; }\n' % maxx);
-	out.write('\t@Override public float _getMinY() { return %ff; }\n' % miny);
-	out.write('\t@Override public float _getMaxY() { return %ff; }\n' % maxy);
-	out.write('\t@Override public float _getMinZ() { return %ff; }\n' % minz);
-	out.write('\t@Override public float _getMaxZ() { return %ff; }\n' % maxz);
+	out.write('\t@Override protected float _getMinX() { return %ff; }\n' % minx);
+	out.write('\t@Override protected float _getMaxX() { return %ff; }\n' % maxx);
+	out.write('\t@Override protected float _getMinY() { return %ff; }\n' % miny);
+	out.write('\t@Override protected float _getMaxY() { return %ff; }\n' % maxy);
+	out.write('\t@Override protected float _getMinZ() { return %ff; }\n' % minz);
+	out.write('\t@Override protected float _getMaxZ() { return %ff; }\n' % maxz);
 
 def write_vertexes(out, mesh):
 	global megaMax

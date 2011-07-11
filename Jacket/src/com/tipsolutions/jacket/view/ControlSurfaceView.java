@@ -10,7 +10,7 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 //	final float TRACKBALL_SCALE_FACTOR = 36.0f;
 	IEventTap mEventTap = null;
 //	final Controller mController;
-	Renderer mRenderer;
+	ControlRenderer mRenderer;
 	
 	public ControlSurfaceView(Context context) {
 		super(context);
@@ -25,11 +25,9 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 		return mRenderer;
 	}
 
-	@Override
-	public void setRenderer(Renderer renderer) {
+	public void setRenderer(ControlRenderer renderer) {
 		mRenderer = renderer;
 		super.setRenderer(renderer);
-//		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 	}
 
 	@Override
@@ -37,7 +35,7 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 		super.onResume();
 		requestRender();
 	}
-
+	
 	@Override 
 	public boolean onTouchEvent(final MotionEvent e) {
 		if (mEventTap != null) {
