@@ -32,7 +32,8 @@ import com.tipsolutions.jacket.view.ControlSurfaceView;
 class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
-    Shape mShape;
+    Shape mShape = null;
+    boolean mInit = false;
 
     public MyRenderer(ControlSurfaceView view, Shape shape, ControlCamera camera, boolean useTranslucentBackground) {
     	super(view, camera);
@@ -40,21 +41,36 @@ class MyRenderer extends ControlRenderer {
         mShape = shape;
         mCamera = camera;
     }
-
-    // DEBUG
-//    float _red = 0.9f;
-//    float _green = 0.2f;
-//    float _blue = 0.2f;
-//    public void setColor(float r, float g, float b) {
-//        _red = r;
-//        _green = g;
-//        _blue = b;
-//    }
     
+    public void setShape(Shape shape) {
+    	mShape = shape;
+    	mInit = false;
+    }
+
     public void onDrawFrame(GL10 gl) {
     	super.onDrawFrame(gl);
         
-        mShape.onDraw(gl);
+    	if (mShape != null) {
+    		if (!mInit) {
+    			mInit = true;
+    			if (mShape.hasVertexArray()) {
+    	    		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+    			} else {
+    	    		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
+    			}
+    			if (mShape.hasNormalArray()) {
+    	    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+    			} else {
+    	    		gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+    			}
+    			if (mShape.hasColorArray()) {
+    	    		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+    			} else {
+    	    		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+    			}
+    		}
+            mShape.onDraw(gl);
+    	}
 //        /*
 //         * Usually, the first thing one might want to do is to clear
 //         * the screen. The most efficient way of doing this is to use
@@ -71,11 +87,6 @@ class MyRenderer extends ControlRenderer {
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	super.onSurfaceCreated(gl, config);
-    	
-    	mShape.onCreate(gl);
-    	mCamera.setLookAt(mShape.getLocation().dup());
-    	mCamera.setLocation(mCamera.getLookAt().dup());
-    	mCamera.getLocation().add(0, 0, mShape.getSizeZ()*3);
 
 //        /*
 //         * By default, OpenGL enables features that improve quality

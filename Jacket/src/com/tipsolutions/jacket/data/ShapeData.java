@@ -287,16 +287,16 @@ public class ShapeData {
         return vbb;
 	}
 	
-	public void onCreate(GL10 gl) {
-		if (mVertexBuf != null) {
-    		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-		}
-		if (mNormalBuf != null) {
-    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-		}
-		if (mColorBuf != null) {
-    		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-		}
+	public boolean hasVertexArray() {
+		return (mVertexBuf != null);
+	}
+	
+	public boolean hasNormalArray() {
+		return (mNormalBuf != null);
+	}
+	
+	public boolean hasColorArray() {
+		return (mColorBuf != null);
 	}
 	
 	public void onDraw(GL10 gl) {

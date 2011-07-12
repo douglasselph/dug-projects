@@ -9,7 +9,7 @@ import com.tipsolutions.jacket.math.Vector3f;
 public class Shape extends ShapeData {
 	Color4f mColor = null;
 	protected Vector3f mLoc = null;
-	protected Rotate mRotate = null;
+	protected Rotate mRotate = new Rotate(0,0,0);
 	
 	@Override
 	public void onDraw(GL10 gl) {

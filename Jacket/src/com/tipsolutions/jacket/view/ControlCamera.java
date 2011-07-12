@@ -19,6 +19,7 @@ public class ControlCamera extends Camera implements IEventTap {
 	long mBackwardsTouchTime;
 	int mStartX;
 	int mStartY;
+	Runnable mDoubleTap = null;
 	
 	public boolean isBackwards() {
 		return mBackwards;
@@ -92,6 +93,12 @@ public class ControlCamera extends Camera implements IEventTap {
 			long curTime = System.currentTimeMillis();
     		long diffTime = curTime - mStartTouchTime;
     		if (diffTime <= FORWARD_TRIGGER_MS) {
+    			if (mDoubleTap != null) {
+        			diffTime = mStartTouchTime - mBackwardsTouchTime;
+        			if (diffTime <= FORWARD_TRIGGER_MS) {
+        				mDoubleTap.run();
+        			}
+    			}
     			mBackwards = true;
     			mBackwardsTouchTime = curTime;
     		}
@@ -103,6 +110,10 @@ public class ControlCamera extends Camera implements IEventTap {
 	public void applyFrustrum(GL10 gl) {
 		super.applyFrustrum(gl);
 		mDistForwardPerTimeFrame = (mRight - mLeft) / 10f;
+	}
+	
+	public void setDoubleTap(Runnable run) {
+		mDoubleTap = run;
 	}
 
 //	public void sideDown() {
