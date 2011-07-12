@@ -4,7 +4,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.math.Vector3f;
 
-public class CameraControl extends Camera implements IControlled {
+public class ControlCamera extends Camera implements IControlled {
 
 	float mAnglePerTouch = (float) Math.PI/20;
 	boolean mBackwards = false;

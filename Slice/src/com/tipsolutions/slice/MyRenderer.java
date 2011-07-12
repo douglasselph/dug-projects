@@ -19,9 +19,9 @@ package com.tipsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.data.Figure;
 import com.tipsolutions.jacket.data.Shape;
-import com.tipsolutions.jacket.view.CameraControl;
+import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.view.Camera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
@@ -33,9 +33,9 @@ class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
     Shape mShape;
-    final CameraControl mCamera;
+    final Camera mCamera;
 
-    public MyRenderer(ControlSurfaceView view, Shape shape, CameraControl camera, boolean useTranslucentBackground) {
+    public MyRenderer(ControlSurfaceView view, Shape shape, Camera camera, boolean useTranslucentBackground) {
     	super(view);
         mTranslucentBackground = useTranslucentBackground;
         mShape = shape;
@@ -63,19 +63,18 @@ class MyRenderer extends ControlRenderer {
 //         */
 //		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 //
-//        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-////        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-//
 //        mCamera.onDraw(gl);
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-//    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
-    	gl.glViewport(0, 0, width, height);
+    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
     }
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	mShape.onCreate(gl);
+    	mCamera.setLookAt(new Vector3f(mShape.getLocation()));
+    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
+    	mCamera.getLocation().add(0, 0, -mShape.getSizeZ()*4);
 
 //        /*
 //         * By default, OpenGL enables features that improve quality
@@ -94,16 +93,6 @@ class MyRenderer extends ControlRenderer {
 //         } else {
 //             gl.glClearColor(1,1,1,1);
 //         }
-//         gl.glEnable(GL10.GL_CULL_FACE);
 //         gl.glShadeModel(GL10.GL_SMOOTH);
-//         gl.glEnable(GL10.GL_DEPTH_TEST);
-//         
-//         cameraInit(gl);
     }
-    
-//    void cameraInit(GL10 gl) {
-//    	mCamera.setLookAt(new Vector3f(mFigure.getLocation()));
-//    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
-//    	mCamera.getLocation().add(0, 0, -mFigure.getLenZ()*4);
-//    }
 }

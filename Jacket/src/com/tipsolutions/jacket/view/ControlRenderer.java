@@ -11,6 +11,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	
 	protected final ControlSurfaceView mView;
 	protected Color4f mClippingPlaneColor = null;
+	protected int mWidth;
+	protected int mHeight;
 	
 	public ControlRenderer(ControlSurfaceView view) {
 		mView = view;
@@ -18,26 +20,28 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		reset(gl);
+		clearScene(gl);
+		gl.glLoadIdentity();
 	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
+		mWidth = width;
+		mHeight = height;
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-	}
-	
-	protected void reset(GL10 gl) {
-		clearScene(gl);
-		gl.glMatrixMode(GL10.GL_MODELVIEW);
-		gl.glLoadIdentity();
-        gl.glFrontFace(GL10.GL_CCW); // Defines front face
-        
-        gl.glEnable(GL10.GL_CULL_FACE);
-        gl.glCullFace(GL10.GL_BACK); // Do not draw this face
+
+		gl.glMatrixMode(GL10.GL_PROJECTION); // Modify projection matrix in the following commands:
+
+		gl.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
+		gl.glFrontFace(GL10.GL_CCW); // Defines front face
+		gl.glEnable(GL10.GL_CULL_FACE);
+		gl.glCullFace(GL10.GL_BACK); // Do not draw this face
+
+		gl.glEnable(GL10.GL_DEPTH_TEST);
 	}
 	
 	protected void clearScene(GL10 gl) {

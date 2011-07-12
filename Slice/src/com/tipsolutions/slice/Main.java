@@ -12,7 +12,7 @@ import com.tipsolutions.jacket.data.ShapeData.FloatData;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Rotate;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.view.CameraControl;
+import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 import com.tipsolutions.jacket.view.IEventTap;
 
@@ -22,7 +22,7 @@ public class Main extends Activity {
 	public static final String TAG = "Slice";
 	
     ControlSurfaceView mSurfaceView;
-    CameraControl mCamera;
+    ControlCamera mCamera;
     MyRenderer mRenderer;
     final String FigureFile = "cube.data";
     
@@ -60,8 +60,7 @@ public class Main extends Activity {
         });
         shape.setRotate(new Rotate(0f, 0f, 0f));
         
-//        mCamera = new CameraControl();
-//        mSurfaceView = new ControlSurfaceView(this, mCamera);
+        mCamera = new ControlCamera();
         mSurfaceView = new ControlSurfaceView(this);
         mRenderer = new MyRenderer(mSurfaceView, shape, mCamera, false);
         mRenderer.setClippingPlaneColor(new Color4f(0.1f, 0.1f, 0.6f));
