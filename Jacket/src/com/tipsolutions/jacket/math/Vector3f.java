@@ -49,9 +49,11 @@ public class Vector3f {
 	}
 	
 	public Vector3f cross(final Vector3f v) {
-		mX = (mY * v.mZ) - (mZ * v.mY);
-		mY = (mZ * v.mX) - (mX * v.mZ);
-		mZ = (mX * v.mY) - (mY * v.mX);
+		float x = mX;
+		float y = mY;
+		mX = (y * v.mZ) - (mZ * v.mY);
+		mY = (mZ * v.mX) - (x * v.mZ);
+		mZ = (x * v.mY) - (y * v.mX);
 		return this;
 	}
 	

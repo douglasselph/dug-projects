@@ -4,122 +4,124 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.math.Vector3f;
 
-public class ControlCamera extends Camera implements IControlled {
+public class ControlCamera extends Camera implements IEventTap {
 
-	float mAnglePerTouch = (float) Math.PI/20;
+	static final int DRAG_TRIGGER_PX = 10;
+	static final int FORWARD_TRIGGER_MS = 400;
+	static final int FORWARD_INTERVAL_MS = 100;
+	static final int BACKWARDS_RESET_MS = 2000;
+	
 	boolean mBackwards = false;
-	boolean mChanged = true;
-	float mDistPerTouch = 1;
+	boolean mDidMove = false;
+	boolean mForwardOn = false;
+	float mDistForwardPerTimeFrame = 0.1f;
+	long mStartTouchTime;
+	long mBackwardsTouchTime;
+	int mStartX;
+	int mStartY;
 	
-	@Override
-	public void centerLong() {
-		Vector3f amt = getDirection().dup().multiply(mDistPerTouch);
-		if (mBackwards) {
-    		getLocation().subtract(amt);
-		} else {
-    		getLocation().add(amt);
-		}
-		mChanged = true;
-	}
-	
-	@Override
-	public void centerShort() {
-		mBackwards = !mBackwards;
-	}
-
 	public boolean isBackwards() {
 		return mBackwards;
 	}
 
-	public void onDraw(GL10 gl) {
-		if (mChanged) {
-			applyLookAt(gl);
-			mChanged = false;
+	public void moveOut() {
+		Vector3f amt = getUnitOut().dup().multiply(mDistForwardPerTimeFrame);
+		
+		if (mBackwards) {
+    		mCameraPos.subtract(amt);
+    		mLookAtPos.subtract(amt);
+		} else {
+    		mCameraPos.add(amt);
+    		mLookAtPos.add(amt);
 		}
 	}
 
 	@Override
-	public void sideDown() {
-		Vector3f amt = getUp().dup().multiply(mDistPerTouch);
-		getLocation().subtract(amt);
-		mChanged = true;
+	public boolean pressDown(float x, float y) {
+		long curTime = System.currentTimeMillis();
+		mStartTouchTime = curTime;
+		mStartX = (int) x;
+		mStartY = (int) y;
+		mDidMove = false;
+		mForwardOn = false;
+		
+		long diffTime = curTime - mBackwardsTouchTime;
+		if (diffTime >= BACKWARDS_RESET_MS) {
+			mBackwards = false;
+		}
+		return true;
 	}
 
 	@Override
-	public void sideLeft() {
-		Vector3f amt = getLeft().dup().multiply(mDistPerTouch);
-		getLocation().add(amt);
-		mChanged = true;
-	}
+	public boolean pressMove(float x, float y) {
+		long curTime = System.currentTimeMillis();
+		float diffx = x - mStartX;
+		float diffy = y - mStartY;
+		
+		if (Math.abs(diffx) >= DRAG_TRIGGER_PX || Math.abs(diffy) >= DRAG_TRIGGER_PX) {
+			lookAtAdjust(diffx*2, diffy*2);
+			mStartX = (int) x;
+			mStartY = (int) y;
+			mDidMove = true;
+			mForwardOn = false;
+			mStartTouchTime = curTime;
+		} else {
+			long diffTime = curTime - mStartTouchTime;
+			boolean moveOut = false;
 
-	@Override
-	public void sideRight() {
-		Vector3f amt = getLeft().dup().multiply(mDistPerTouch);
-		getLocation().subtract(amt);
-		mChanged = true;
-	}
-
-	@Override
-	public void sideUp() {
-		Vector3f amt = getUp().dup().multiply(mDistPerTouch);
-		getLocation().add(amt);
-		mChanged = true;
-	}
-
-	@Override
-	public void slideDown(int times) {
-		rotate(0, mAnglePerTouch*times);
-		mChanged = true;
-	}
-
-	@Override
-	public void slideLeft(int times) {
-		rotate(mAnglePerTouch*times, 0);
-		mChanged = true;
-	}
-
-	@Override
-	public void slideRight(int times) {
-		rotate(-mAnglePerTouch*times, 0);
-		mChanged = true;
+			if (mForwardOn) {
+				if (diffTime >= FORWARD_INTERVAL_MS) {
+					moveOut = true;
+				}
+			} else if (diffTime >= FORWARD_TRIGGER_MS) {
+				moveOut = true;
+			}
+			if (moveOut) {
+				moveOut();
+				mForwardOn = true;
+				mStartTouchTime = curTime;
+				mDidMove = true;
+			}
+		}
+		return true;
 	}
 	
 	@Override
-	public void slideUp(int times) {
-		rotate(0, -mAnglePerTouch*times);
-		mChanged = true;
+	public boolean pressUp(float x, float y) {
+		if (!mDidMove) {
+			long curTime = System.currentTimeMillis();
+    		long diffTime = curTime - mStartTouchTime;
+    		if (diffTime <= FORWARD_TRIGGER_MS) {
+    			mBackwards = true;
+    			mBackwardsTouchTime = curTime;
+    		}
+		}
+		return true;
 	}
 
 	@Override
-	public void touchEnd() {
+	public void applyFrustrum(GL10 gl) {
+		super.applyFrustrum(gl);
+		mDistForwardPerTimeFrame = (mRight - mLeft) / 10f;
 	}
 
-	@Override
-	public void touchStart() {
-	}
-
-	@Override
-	public Camera setLocation(Vector3f loc) {
-		mChanged = true;
-		return super.setLocation(loc);
-	}
-
-	@Override
-	public Camera setLookAt(Vector3f loc) {
-		mChanged = true;
-		return super.setLookAt(loc);
-	}
-
-	@Override
-	public Camera setScreenDimension(int width, int height) {
-		mChanged = true;
-		return super.setScreenDimension(width, height);
-	}
-
-	@Override
-	public Camera setUp(Vector3f loc) {
-		mChanged = true;
-		return super.setUp(loc);
-	}
-	
+//	public void sideDown() {
+//		Vector3f amt = getUp().dup().multiply(mDistPerTouch);
+//		getLocation().subtract(amt);
+//	}
+//
+//	public void sideLeft() {
+//		Vector3f amt = getUnitLeft().dup().multiply(mDistPerTouch);
+//		getLocation().add(amt);
+//	}
+//
+//	public void sideRight() {
+//		Vector3f amt = getUnitLeft().dup().multiply(mDistPerTouch);
+//		getLocation().subtract(amt);
+//	}
+//
+//	public void sideUp() {
+//		Vector3f amt = getUp().dup().multiply(mDistPerTouch);
+//		getLocation().add(amt);
+//	}
 }

@@ -39,12 +39,12 @@ public class Pyramid extends Shape {
 		setIndexData(new ShortData() {
 			public void fill(ShortBuffer buf) {
 				buf.put((short)0).put((short)1).put((short)2); /* face front */
-				buf.put((short)3); /* next vertex for base */
-				buf.put((short)0); /* next vertex for right face */
-				buf.put((short)1); /* next vertex for left face */
+				buf.put((short)0).put((short)3).put((short)1); /* face left */
+				buf.put((short)0).put((short)2).put((short)3); /* face right */
+				buf.put((short)1).put((short)3).put((short)2); /* base */
 			};
-			public int size() { return 3+3; }
-		}, GL10.GL_TRIANGLE_STRIP);
+			public int size() { return 4*3; }
+		});
 		
 		allocBounds();
 		setMinX(-baseHalf);
@@ -53,6 +53,16 @@ public class Pyramid extends Shape {
 		setMaxY(height);
 		setMinZ(-triHeightHalf);
 		setMaxZ(triHeightHalf);
+		
+//		setIndexData(new ShortData() {
+//			public void fill(ShortBuffer buf) {
+//				buf.put((short)0).put((short)1).put((short)2); /* face front */
+//				buf.put((short)3); /* next vertex for base */
+//				buf.put((short)0); /* next vertex for right face */
+//				buf.put((short)1); /* next vertex for left face */
+//			};
+//			public int size() { return 3+3; }
+//		}, GL10.GL_TRIANGLE_STRIP);
 	}
 	
 	// Construct a pyramid with the given width (x dir),

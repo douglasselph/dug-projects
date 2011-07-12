@@ -63,42 +63,16 @@ public class Main extends Activity {
         mCamera = new ControlCamera();
         mSurfaceView = new ControlSurfaceView(this);
         mRenderer = new MyRenderer(mSurfaceView, shape, mCamera, false);
-        mRenderer.setClippingPlaneColor(new Color4f(0.1f, 0.1f, 0.6f));
+        mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
         
         mSurfaceView.setRenderer(mRenderer);
-        mSurfaceView.setEventTap(new IEventTap() {
-        	float _x;
-        	float _y;
-        	
-        	public boolean pressDown(final float x, final float y) {
-        		_x = x;
-        		_y = y;
-        		mSurfaceView.queueEvent(new Runnable() {
-        			public void run() {
-                		mRenderer.setClippingPlaneColor(
-            				new Color4f(x / mSurfaceView.getWidth(), y / mSurfaceView.getHeight(), 1f));
-        			}
-        		});
-        		return true;
-        	}
-        	
-        	public boolean pressMove(final float x, final float y) {
-        		mSurfaceView.queueEvent(new Runnable() {
-        			public void run() {
-        				float xdiff = (_x - x);
-        				float ydiff = (_y - y);
-        				shape.addRotate(new Rotate(ydiff, xdiff, 0f));
-        				mSurfaceView.requestRender();
-        			}
-        		});
-        		return true;
-        	}
-        	
-        	public boolean pressUp(float x, float y){
-        		return false;
-        	}
-        });
+        
+        mSurfaceView.setEventTap(mCamera);
+//        ObjEventTap eventTap = new ObjEventTap(shape);
+//        mSurfaceView.setEventTap(eventTap);
+        
         setContentView(mSurfaceView);
+        
 //        mSurfaceView.requestFocus();
 //        mSurfaceView.setFocusableInTouchMode(true);
     }
@@ -164,7 +138,46 @@ public class Main extends Activity {
     			public int size() { return 3*4; }
     		};
     	};
-
+    	
     };
+   
+    class ObjEventTap implements IEventTap {
+    	
+     	float _x;
+    	float _y;
+    	final Shape mShape;
+    	
+    	ObjEventTap(Shape shape){
+    		mShape = shape;
+    	}
+    	
+    	public boolean pressDown(final float x, final float y) {
+    		_x = x;
+    		_y = y;
+    		mSurfaceView.queueEvent(new Runnable() {
+    			public void run() {
+            		mRenderer.setClippingPlaneColor(
+        				new Color4f(x / mSurfaceView.getWidth(), y / mSurfaceView.getHeight(), 1f));
+    			}
+    		});
+    		return true;
+    	}
+    	
+    	public boolean pressMove(final float x, final float y) {
+    		mSurfaceView.queueEvent(new Runnable() {
+    			public void run() {
+    				float xdiff = (_x - x);
+    				float ydiff = (_y - y);
+    				mShape.addRotate(new Rotate(ydiff, xdiff, 0f));
+    				mSurfaceView.requestRender();
+    			}
+    		});
+    		return true;
+    	}
+    	
+    	public boolean pressUp(float x, float y){
+    		return false;
+    	}
+    }
     
 }

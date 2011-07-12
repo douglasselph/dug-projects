@@ -38,37 +38,27 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 	
 	@Override 
 	public boolean onTouchEvent(final MotionEvent e) {
+		boolean changed = false;
 		if (mEventTap != null) {
     		float x = e.getX();
     		float y = e.getY();
     		switch (e.getAction()) {
         		case MotionEvent.ACTION_DOWN:
-        			return mEventTap.pressDown(x, y);
+        			changed = mEventTap.pressDown(x, y);
+        			break;
     	        case MotionEvent.ACTION_MOVE:
-        			return mEventTap.pressMove(x, y);
+        			changed = mEventTap.pressMove(x, y);
+        			break;
         		case MotionEvent.ACTION_UP:
-        			return mEventTap.pressUp(x, y);
+        			changed = mEventTap.pressUp(x, y);
+        			break;
+    		}
+    		if (changed) {
+        		requestRender();
     		}
 		}
-		return false;
-		
-//		
-//		float x = e.getX();
-//		float y = e.getY();
-//		switch (e.getAction()) {
-//    		case MotionEvent.ACTION_DOWN:
-//    			mController.pressDown(x, y);
-//	            requestRender();
-//    			break;
-//	        case MotionEvent.ACTION_MOVE:
-//    			mController.pressMove(x, y);
-//	            requestRender();
-//    			break;
-//    		case MotionEvent.ACTION_UP:
-//    			mController.pressUp(x, y);
-//	            requestRender();
-//    			break;
-//		}
-//		return true;
+		return changed;
 	}
+	
+	
 }

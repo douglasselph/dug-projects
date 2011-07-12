@@ -21,7 +21,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.view.Camera;
+import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
@@ -33,24 +33,23 @@ class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
     Shape mShape;
-    final Camera mCamera;
 
-    public MyRenderer(ControlSurfaceView view, Shape shape, Camera camera, boolean useTranslucentBackground) {
-    	super(view);
+    public MyRenderer(ControlSurfaceView view, Shape shape, ControlCamera camera, boolean useTranslucentBackground) {
+    	super(view, camera);
         mTranslucentBackground = useTranslucentBackground;
         mShape = shape;
         mCamera = camera;
     }
 
     // DEBUG
-    float _red = 0.9f;
-    float _green = 0.2f;
-    float _blue = 0.2f;
-    public void setColor(float r, float g, float b) {
-        _red = r;
-        _green = g;
-        _blue = b;
-    }
+//    float _red = 0.9f;
+//    float _green = 0.2f;
+//    float _blue = 0.2f;
+//    public void setColor(float r, float g, float b) {
+//        _red = r;
+//        _green = g;
+//        _blue = b;
+//    }
     
     public void onDrawFrame(GL10 gl) {
     	super.onDrawFrame(gl);
@@ -67,14 +66,16 @@ class MyRenderer extends ControlRenderer {
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-    	mCamera.setScreenDimension(width, height).applyFrustrum(gl);
+    	super.onSurfaceChanged(gl, width, height);
     }
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    	super.onSurfaceCreated(gl, config);
+    	
     	mShape.onCreate(gl);
-    	mCamera.setLookAt(new Vector3f(mShape.getLocation()));
-    	mCamera.setLocation(new Vector3f(mCamera.getLookAt()));
-    	mCamera.getLocation().add(0, 0, -mShape.getSizeZ()*4);
+    	mCamera.setLookAt(mShape.getLocation().dup());
+    	mCamera.setLocation(mCamera.getLookAt().dup());
+    	mCamera.getLocation().add(0, 0, mShape.getSizeZ()*3);
 
 //        /*
 //         * By default, OpenGL enables features that improve quality
