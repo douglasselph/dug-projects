@@ -188,6 +188,7 @@ public class Main extends Activity {
         mData[DATA_SUSAN] = new Data(new CreateShape() {
 			public Shape create() {
 				Shape shape = loadShape(SUSAN_FILE);
+		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
 				setColors(shape);
 				return shape;
 			}
@@ -251,7 +252,7 @@ public class Main extends Activity {
     }
     
     void setColors(Shape shape) {
-        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+//        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
         shape.setColorData(new FloatData() {
 			@Override
 			public void fill(FloatBuffer buf) {

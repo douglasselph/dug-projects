@@ -14,8 +14,6 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 public class ShapeData {
 	
 	public static final int ELE_BOUNDS = 1;
@@ -27,10 +25,82 @@ public class ShapeData {
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
 	
-	protected ByteBuffer mColorBuf = null;
-	protected ByteBuffer mIndexBuf = null;
-    protected ByteBuffer mNormalBuf = null;
-    protected ByteBuffer mVertexBuf = null;
+	class FloatBuf {
+		ByteBuffer mRoot;
+		FloatBuffer mBuf;
+		
+		void set(FloatData data) {
+			if (data == null) {
+				mRoot = null;
+				mBuf = null;
+			} else {
+    			mRoot = ByteBuffer.allocateDirect(data.size()*4);
+    			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
+    			mBuf = mRoot.asFloatBuffer();
+    			data.fill(mBuf);
+			}
+		}
+		
+		void set(ByteBuffer buf) {
+			mRoot = buf;
+			mBuf = buf.asFloatBuffer();
+		}
+		
+		FloatBuffer getBuf() {
+			if (mBuf != null) {
+				mBuf.rewind();
+			}
+			return mBuf;
+		}
+		
+		ByteBuffer getRootBuf() {
+			if (mRoot != null) {
+				mRoot.rewind();
+			}
+			return mRoot;
+		}
+	};
+	
+	class ShortBuf {
+		ByteBuffer mRoot;
+		ShortBuffer mBuf;
+		
+		void set(ShortData data) {
+			if (data == null) {
+				mRoot = null;
+				mBuf = null;
+			}
+			mRoot = ByteBuffer.allocateDirect(data.size()*2);
+			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
+			mBuf = mRoot.asShortBuffer();
+			data.fill(mBuf);
+		}
+		
+		void set(ByteBuffer buf) {
+			mRoot = buf;
+			mBuf = buf.asShortBuffer();
+		}
+		
+		ShortBuffer getBuf() {
+			if (mBuf != null) {
+    			mBuf.rewind();
+			}
+			return mBuf;
+		}
+		
+		ByteBuffer getRootBuf() {
+			if (mRoot != null) {
+    			mRoot.rewind();
+			}
+			return mRoot;
+		}
+	};
+	
+	protected FloatBuf mColorBuf = new FloatBuf();
+	protected ShortBuf mIndexBuf = new ShortBuf();
+    protected FloatBuf mNormalBuf = new FloatBuf();
+    protected FloatBuf mVertexBuf = new FloatBuf();
+    
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
@@ -87,18 +157,34 @@ public class ShapeData {
 	public float getSizeY() { return getMaxY()-getMinY(); }
 	public float getSizeZ() { return getMaxZ()-getMinZ(); }
 	
+	public FloatBuffer getColorBuf() { return mVertexBuf.getBuf(); }
+	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
+	public FloatBuffer getVertexBuf() { return mVertexBuf.getBuf(); }
+	public FloatBuffer getNormalBuf() { return mNormalBuf.getBuf(); }
+	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
 		int size();
 	}
+	
 	public interface MessageWriter {
 		void msg(String msg);
 	}
+	
 	public interface ShortData {
 		void fill(ShortBuffer buf);
 		int size();
 	}
+	
 	static int compare(FloatBuffer buf1, FloatBuffer buf2, String who, MessageWriter msg) {
+		if (buf1 == null && buf2 == null) {
+			return 0;
+		}
+		if (buf1 == null) {
+			msg.msg("First buffer was null");
+		} else if (buf2 == null) {
+			msg.msg("Second buffer was null");
+		}
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
 			StringBuffer sbuf = new StringBuffer();
@@ -179,20 +265,27 @@ public class ShapeData {
 	}
 
 	public void compare(ShapeData other, MessageWriter msg) {
-		mVertexBuf.rewind();
-		mNormalBuf.rewind();
-		mIndexBuf.rewind();
-		other.mVertexBuf.rewind();
-		other.mNormalBuf.rewind();
-		other.mIndexBuf.rewind();
-		if (compare(mVertexBuf.asFloatBuffer(), other.mVertexBuf.asFloatBuffer(), "Vertex", msg) == 0) {
+		FloatBuffer vertexBuf = getVertexBuf();
+		FloatBuffer normalBuf = getNormalBuf();
+		ShortBuffer indexBuf = getIndexBuf();
+		FloatBuffer colorBuf = getColorBuf();
+		
+		FloatBuffer vertexBufO = other.getVertexBuf();
+		FloatBuffer normalBufO = other.getNormalBuf();
+		ShortBuffer indexBufO = other.getIndexBuf();
+		FloatBuffer colorBufO = other.getColorBuf();
+		
+		if (compare(vertexBuf, vertexBufO, "Vertex", msg) == 0) {
 			msg.msg("Vertex buffer identical");
 		}
-		if (compare(mNormalBuf.asFloatBuffer(), other.mNormalBuf.asFloatBuffer(), "Normal", msg) == 0) {
+		if (compare(normalBuf, normalBufO, "Normal", msg) == 0) {
 			msg.msg("Normal buffer identical");
 		}
-		if (compare(mIndexBuf.asShortBuffer(), other.mIndexBuf.asShortBuffer(), "Index", msg) == 0) {
+		if (compare(indexBuf, indexBufO, "Index", msg) == 0) {
 			msg.msg("Index buffer identical");
+		}
+		if (compare(colorBuf, colorBufO, "Color", msg) == 0) {
+			msg.msg("Color buffer identical");
 		}
 		compare(msg, "MinX", getMinX(), other.getMinX());
 		compare(msg, "MinY", getMinY(), other.getMinY());
@@ -209,8 +302,7 @@ public class ShapeData {
 	}
 	
 	public void computeBounds() {
-		FloatBuffer buf = mVertexBuf.asFloatBuffer();
-		buf.rewind();
+		FloatBuffer buf = getVertexBuf();
 		
 		allocBounds();
 		float minX = buf.get();
@@ -249,7 +341,6 @@ public class ShapeData {
 		setMaxY(maxY);
 		setMaxZ(maxZ);
 	}
-	
 
 	public void fill() {
 		setVertexData(getVertexData());
@@ -265,55 +356,34 @@ public class ShapeData {
 //		setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
 	}
 	
-	ByteBuffer fill(FloatData data) {
-		if (data == null) {
-			return null;
-		}
-		ByteBuffer vbb = ByteBuffer.allocateDirect(data.size()*4);
-        vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
-        FloatBuffer buf = vbb.asFloatBuffer();
-        data.fill(buf);
-        return vbb;
-	}
-	
-	ByteBuffer fill(ShortData data) {
-		if (data == null) {
-			return null;
-		}
-		ByteBuffer vbb = ByteBuffer.allocateDirect(data.size()*2);
-        vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
-        ShortBuffer buf = vbb.asShortBuffer();
-        data.fill(buf);
-        return vbb;
-	}
-	
 	public boolean hasVertexArray() {
-		return (mVertexBuf != null);
+		return (mVertexBuf.getBuf() != null);
 	}
 	
 	public boolean hasNormalArray() {
-		return (mNormalBuf != null);
+		return (mNormalBuf.getBuf() != null);
 	}
 	
 	public boolean hasColorArray() {
-		return (mColorBuf != null);
+		return (mColorBuf.getBuf() != null);
 	}
 	
 	public void onDraw(GL10 gl) {
-		if (mVertexBuf != null) {
-    		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.asFloatBuffer());
+		FloatBuffer fbuf;
+		if ((fbuf = getVertexBuf()) != null) {
+    		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
 		}
-		if (mNormalBuf != null) {
-    		gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.asFloatBuffer());
+		if ((fbuf = getNormalBuf()) != null) {
+    		gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
 		}
-		if (mColorBuf != null) {
-    		gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.asShortBuffer());
+		if ((fbuf = getColorBuf()) != null) {
+    		gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
     		
     		// Not doing it this way anymore:
 //    		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
 		}
 		if (mIndexBuf != null) {
-			ShortBuffer sbuf = mIndexBuf.asShortBuffer();
+			ShortBuffer sbuf = getIndexBuf();
 			gl.glDrawElements(mIndexMode, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
 		}
 	}
@@ -343,40 +413,48 @@ public class ShapeData {
         return vbb;
 	};
 	
-	public void readData(InputStream inputStream) {
-		try {
-        	DataInputStream dataStream = new DataInputStream(inputStream);
-        	int eleType;
-        	int type;
-        	int size;
-        	ByteBuffer vbb;
-        	
-        	while (dataStream.available() > 0) {
-        		eleType = dataStream.readInt();
-        		
-        		if (eleType == ELE_BOUNDS) {
-        			readBounds(dataStream);
-        		} else {
-            		type = dataStream.readInt();
-            		size = dataStream.readInt();
-            		
-            		vbb = readBuffer(dataStream, size);
-            		
-            		if (eleType == ELE_VERTEX) {
-            			mVertexBuf = vbb;
-            		} else if (eleType == ELE_NORMAL) {
-            			mNormalBuf = vbb;
-            		} else if (eleType == ELE_INDEX) {
-            			mIndexBuf = vbb;
-            		} else if (eleType == ELE_COLOR) {
-            			mColorBuf = vbb;
-            		}
-        		}
-        	}
-        	dataStream.close();
-    	} catch (Exception ex) {
-    		System.out.println(ex.getMessage());
-    	}
+	public void readData(InputStream inputStream) throws Exception, IOException {
+		DataInputStream dataStream = new DataInputStream(inputStream);
+		int eleType;
+		int type;
+		int size;
+		ByteBuffer vbb;
+
+		while (dataStream.available() > 0) {
+			eleType = dataStream.readInt();
+
+			if (eleType == ELE_BOUNDS) {
+				readBounds(dataStream);
+			} else {
+				type = dataStream.readInt();
+				size = dataStream.readInt();
+
+				vbb = readBuffer(dataStream, size);
+
+				if (eleType == ELE_VERTEX) {
+					if (type != TYPE_FLOAT) {
+						throw new Exception("Expected float type for vertex");
+					}
+					mVertexBuf.set(vbb);
+				} else if (eleType == ELE_NORMAL) {
+					if (type != TYPE_FLOAT) {
+						throw new Exception("Expected float type for normals");
+					}
+					mNormalBuf.set(vbb);
+				} else if (eleType == ELE_INDEX) {
+					if (type != TYPE_SHORT) {
+						throw new Exception("Expected short type for indexes");
+					}
+					mIndexBuf.set(vbb);
+				} else if (eleType == ELE_COLOR) {
+					if (type != TYPE_FLOAT) {
+						throw new Exception("Expected float type for colors");
+					}
+					mColorBuf.set(vbb);
+				}
+			}
+		}
+		dataStream.close();
 	}
 	
 	public void readData(String filename) {
@@ -389,43 +467,48 @@ public class ShapeData {
     	}
 	}
 	
-	public void setColorData(ShortData data) {
-		if (data != null) {
-    		mColorBuf = fill(data);
-		}
-	}
+//	public void setColorData(ShortData data) {
+//		if (data != null) {
+//    		mColorBuf = fill(data);
+//		}
+//	}
 	
 	public void setColorData(FloatData data) {
 		if (data != null) {
-    		mColorBuf = fill(data);
+			mColorBuf = new FloatBuf();
+    		mColorBuf.set(data);
 		}
 	}
 	
 	public void setIndexData(ShortData data) {
-		mIndexBuf = fill(data);
+		mIndexBuf = new ShortBuf();
+		mIndexBuf.set(data);
 	}
 	
 	public void setIndexData(ShortData data, int mode) {
-		mIndexBuf = fill(data);
+		mIndexBuf = new ShortBuf();
+		mIndexBuf.set(data);
 		mIndexMode = mode;
 	}
 	
 	public void setNormalData(FloatData data) {
-		mNormalBuf = fill(data);
+		mNormalBuf = new FloatBuf();
+		mNormalBuf.set(data);
 	}
 	
 	public void setVertexData(FloatData data) {
-		mVertexBuf = fill(data);
+		mVertexBuf = new FloatBuf();
+		mVertexBuf.set(data);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuffer sbuf = new StringBuffer();
 		if (mVertexBuf != null) {
-			sbuf.append(toString("vertexbuf", mVertexBuf.asFloatBuffer()));
+			sbuf.append(toString("vertexbuf", mVertexBuf.getBuf()));
 		}
 		if (mIndexBuf != null) {
-			sbuf.append(toString("indexbuf", mIndexBuf.asShortBuffer()));
+			sbuf.append(toString("indexbuf", mIndexBuf.getBuf()));
 		}
 		return sbuf.toString();
 	}
@@ -489,10 +572,10 @@ public class ShapeData {
         	DataOutputStream dataStream = new DataOutputStream(fileStream);
         	
         	writeBounds(dataStream);
-        	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf);
-        	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf);
-        	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf);
-        	writeBuffer(dataStream, ELE_COLOR, TYPE_SHORT, mColorBuf);
+        	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf.getRootBuf());
+        	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf.getRootBuf());
+        	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf.getRootBuf());
+        	writeBuffer(dataStream, ELE_COLOR, TYPE_FLOAT, mColorBuf.getRootBuf());
         	
         	dataStream.close();
     	} catch (Exception ex) {
