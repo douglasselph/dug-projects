@@ -21,6 +21,7 @@ public class ShapeData {
 	public static final int ELE_INDEX = 3;
 	public static final int ELE_NORMAL = 4;
 	public static final int ELE_VERTEX = 5;
+	public static final int ELE_TEXTURE = 6;
 	
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
@@ -46,6 +47,12 @@ public class ShapeData {
 			mBuf = buf.asFloatBuffer();
 		}
 		
+		FloatBuffer set(int size) {
+			mRoot = ByteBuffer.allocateDirect(size*4);
+			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
+			return mBuf = mRoot.asFloatBuffer();
+		}
+		
 		FloatBuffer getBuf() {
 			if (mBuf != null) {
 				mBuf.rewind();
@@ -58,6 +65,10 @@ public class ShapeData {
 				mRoot.rewind();
 			}
 			return mRoot;
+		}
+		
+		boolean hasData() {
+			return (mRoot != null);
 		}
 	};
 	
@@ -81,6 +92,12 @@ public class ShapeData {
 			mBuf = buf.asShortBuffer();
 		}
 		
+		ShortBuffer set(int size) {
+			mRoot = ByteBuffer.allocateDirect(size*2);
+			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
+			return mBuf = mRoot.asShortBuffer();
+		}
+		
 		ShortBuffer getBuf() {
 			if (mBuf != null) {
     			mBuf.rewind();
@@ -100,6 +117,7 @@ public class ShapeData {
 	protected ShortBuf mIndexBuf = new ShortBuf();
     protected FloatBuf mNormalBuf = new FloatBuf();
     protected FloatBuf mVertexBuf = new FloatBuf();
+    protected FloatBuf mTextureBuf = new FloatBuf();
     
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	
@@ -161,6 +179,7 @@ public class ShapeData {
 	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
 	public FloatBuffer getVertexBuf() { return mVertexBuf.getBuf(); }
 	public FloatBuffer getNormalBuf() { return mNormalBuf.getBuf(); }
+	public FloatBuffer getTextureBuf() { return mTextureBuf.getBuf(); }
 	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
@@ -368,6 +387,10 @@ public class ShapeData {
 		return (mColorBuf.getBuf() != null);
 	}
 	
+	public boolean hasTextureArray() {
+		return (mTextureBuf.getBuf() != null);
+	}
+	
 	public void onDraw(GL10 gl) {
 		FloatBuffer fbuf;
 		if ((fbuf = getVertexBuf()) != null) {
@@ -501,6 +524,31 @@ public class ShapeData {
 		mVertexBuf.set(data);
 	}
 	
+	public FloatBuffer setColorBuf(int size) {
+		mColorBuf = new FloatBuf();
+		return mColorBuf.set(size);
+	}
+	
+	public ShortBuffer setIndexBuf(int size) {
+		mIndexBuf = new ShortBuf();
+		return mIndexBuf.set(size);
+	}
+	
+	public FloatBuffer setNormalBuf(int size) {
+		mNormalBuf = new FloatBuf();
+		return mNormalBuf.set(size);
+	}
+	
+	public FloatBuffer setVertexBuf(int size) {
+		mVertexBuf = new FloatBuf();
+		return mVertexBuf.set(size);
+	}
+	
+	public FloatBuffer setTextureBuf(int size) {
+		mTextureBuf = new FloatBuf();
+		return mTextureBuf.set(size);
+	}
+		
 	@Override
 	public String toString() {
 		StringBuffer sbuf = new StringBuffer();

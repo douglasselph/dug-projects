@@ -21,7 +21,7 @@ public class Shape extends ShapeData {
 		if (mLoc != null) {
 			mLoc.apply(gl);
 		}
-		if (mColorBuf == null) {
+		if (!hasColorArray()) {
 			Color4f color = getColor();
 			if (color != null) {
 		        gl.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());

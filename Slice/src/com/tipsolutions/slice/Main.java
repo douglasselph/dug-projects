@@ -25,11 +25,13 @@ public class Main extends Activity {
 	static final int MENU_CUBE = 1;
 	static final int MENU_SUSAN = 2;
 	static final int MENU_HANK = 3;
+	static final int MENU_PIGEON = 4;
 	
 	final int DATA_PYRAMID = 0;
 	final int DATA_CUBE = 1;
 	final int DATA_SUSAN = 2;
 	final int DATA_HANK = 3;
+	final int DATA_PIGEON = 4;
 	
 	interface CreateShape {
 		Shape create();
@@ -157,8 +159,12 @@ public class Main extends Activity {
     final String CUBE_FILE = "cube.data";
     final String SUSAN_FILE = "susan.data";
     final String HANK_FILE = "hank.data";
+    final String PIGEON_FILE = "pigeon2.data";
     
-    Shape [] mShapes = new Shape[4];
+    static final int NUM_FILES = 4;
+    static final int ARRAY_SIZE = NUM_FILES+1;
+    
+    Shape [] mShapes = new Shape[ARRAY_SIZE];
     Shape mActiveShape = null;
     TwirlEventTap mTwirlEventTap = new TwirlEventTap();
     ControlCamera mCamera;
@@ -172,7 +178,7 @@ public class Main extends Activity {
         
 //        final Triangle shape  = new Triangle();
         
-        mData = new Data[4];
+        mData = new Data[ARRAY_SIZE];
         mData[DATA_PYRAMID] = new Data(new CreateShape() {
 			public Shape create() {
 				return getPyramid();
@@ -197,6 +203,13 @@ public class Main extends Activity {
 			public Shape create() {
 				Shape shape = loadShape(HANK_FILE);
 				setColors(shape);
+				return shape;
+			}
+        });
+        mData[DATA_PIGEON] = new Data(new CreateShape() {
+			public Shape create() {
+				Shape shape = loadShape(PIGEON_FILE);
+		        shape.setColor(new Color4f(0.4f, 0.3f, 0.4f, 0.5f));
 				return shape;
 			}
         });
@@ -287,6 +300,7 @@ public class Main extends Activity {
 		menu.add(0, MENU_CUBE, 0, "Cube");
 		menu.add(0, MENU_SUSAN, 0, "Susan");
 		menu.add(0, MENU_HANK, 0, "Hank");
+		menu.add(0, MENU_PIGEON, 0, "Pigeon");
 		return true;
 	}
 
@@ -304,6 +318,9 @@ public class Main extends Activity {
     			break;
     		case MENU_HANK:
     			setShape(mData[DATA_HANK].getShape());
+    			break;
+    		case MENU_PIGEON:
+    			setShape(mData[DATA_PIGEON].getShape());
     			break;
 		}
 		return super.onOptionsItemSelected(item);

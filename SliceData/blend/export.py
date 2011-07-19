@@ -29,7 +29,7 @@ def write_mesh(out, mesh, name):
 			
 	out.write('import java.nio.FloatBuffer;\n')
 	out.write('import java.nio.ShortBuffer;\n')
-	out.write('import com.tipsolutions.jacket.data.FigureData;\n')
+	out.write('import com.tipsolutions.jacket.data.ShapeData;\n\n')
 	out.write
 	out.write('class %s extends FigureData {\n' % name)
 
@@ -194,10 +194,6 @@ def write_indexes(out, mesh):
 				out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
 				x = x + 1
 				header = False
-			elif i == end:
-				start = start + max
-				end = end + max
-				header = True
 			
 			out.write('\t\t\t\tbuf')
 			for vert in face.v:
@@ -206,10 +202,12 @@ def write_indexes(out, mesh):
 			out.write('; /* %d */\n' % i)
 			i = i + 1
 			
-			if header:
+			if i == end:
 				out.write('\t\t\t};\n')
-				header = False
-		if header:
+				header = True
+				start = start + max
+				end = end + max
+		if not header:
 			out.write('\t\t\t};\n')
 	else:
 		count = 0

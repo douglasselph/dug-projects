@@ -2,8 +2,6 @@ import com.tipsolutions.jacket.data.ShapeData;
 
 public class Main {
 	
-	static final String HankFile = "hank.data";
-	
 	public static void main(String[] args) throws Exception {
 		
 		ProcessData process = new ProcessData();
@@ -23,6 +21,12 @@ public class Main {
 			@Override
 			public ShapeData create() {
 				return new susan();
+			}
+		});
+		process.run("pigeon2.data", new ProcessData.ICreate() {
+			@Override
+			public ShapeData create() {
+				return new pigeon2();
 			}
 		});
 	}
