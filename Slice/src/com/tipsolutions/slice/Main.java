@@ -159,7 +159,7 @@ public class Main extends Activity {
     final String CUBE_FILE = "cube.data";
     final String SUSAN_FILE = "susan.data";
     final String HANK_FILE = "hank.data";
-    final String PIGEON_FILE = "pigeon2.data";
+    final String PIGEON_FILE = "pigeon.data";
     
     static final int NUM_FILES = 4;
     static final int ARRAY_SIZE = NUM_FILES+1;
@@ -240,7 +240,7 @@ public class Main extends Activity {
         
     	mCamera.setLookAt(new Vector3f(0, 0, 0));
     	mCamera.setLocation(mCamera.getLookAt().dup());
-    	mCamera.getLocation().add(0, 0, mActiveShape.getSizeZ()*2);
+    	mCamera.getLocation().add(0, 0, mActiveShape.getSizeZc()*2);
         
         mSurfaceView.setEventTap(mCamera);
         mSurfaceView.requestRender();
@@ -259,7 +259,7 @@ public class Main extends Activity {
     
     Shape getPyramid() {
         Shape shape = new Pyramid(1f, 1f);
-        shape.setLocation(new Vector3f(0f, -shape.getSizeY()/2, 0));
+        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
         setColors(shape);
         return shape;
     }

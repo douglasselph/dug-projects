@@ -14,17 +14,25 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import com.tipsolutions.jacket.math.Matrix4f;
+
 public class ShapeData {
 	
-	public static final int ELE_BOUNDS = 1;
-	public static final int ELE_COLOR = 2;
-	public static final int ELE_INDEX = 3;
-	public static final int ELE_NORMAL = 4;
-	public static final int ELE_VERTEX = 5;
-	public static final int ELE_TEXTURE = 6;
+	protected static final int FILE_VERSION = 1;
 	
-	public static final int TYPE_FLOAT = 1;
-	public static final int TYPE_SHORT = 2;
+	protected static final int ELE_FINISH 	= "finish".hashCode();
+	protected static final int ELE_VERSION 	= "version".hashCode();
+	protected static final int ELE_BOUNDS 	= "bounds".hashCode();
+	protected static final int ELE_COLOR 	= "color".hashCode();
+	protected static final int ELE_INDEX 	= "index".hashCode();
+	protected static final int ELE_NORMAL	= "normal".hashCode();
+	protected static final int ELE_VERTEX 	= "vertex".hashCode();
+	protected static final int ELE_TEXTURE  = "texture".hashCode();
+	protected static final int ELE_MATRIX   = "matrix".hashCode();
+	protected static final int ELE_CHILDREN = "children".hashCode();
+	
+	protected static final int TYPE_FLOAT = 1;
+	protected static final int TYPE_SHORT = 2;
 	
 	class FloatBuf {
 		ByteBuffer mRoot;
@@ -80,11 +88,12 @@ public class ShapeData {
 			if (data == null) {
 				mRoot = null;
 				mBuf = null;
+			} else {
+    			mRoot = ByteBuffer.allocateDirect(data.size()*2);
+    			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
+    			mBuf = mRoot.asShortBuffer();
+    			data.fill(mBuf);
 			}
-			mRoot = ByteBuffer.allocateDirect(data.size()*2);
-			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
-			mBuf = mRoot.asShortBuffer();
-			data.fill(mBuf);
 		}
 		
 		void set(ByteBuffer buf) {
@@ -118,8 +127,9 @@ public class ShapeData {
     protected FloatBuf mNormalBuf = new FloatBuf();
     protected FloatBuf mVertexBuf = new FloatBuf();
     protected FloatBuf mTextureBuf = new FloatBuf();
-    
 	protected int mIndexMode = GL10.GL_TRIANGLES;
+	protected Matrix4f mMatrix = null;
+	protected ShapeData [] mChildren = null;
 	
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
 //	protected ShortData getColorFixed() { return null; }
@@ -128,6 +138,24 @@ public class ShapeData {
 	protected ShortData getIndexData() { return null; }
 	protected FloatData getNormalData() { return null; }
 	protected FloatData getVertexData() { return null; }
+	protected FloatData getTextureData() { return null; }
+	
+	protected ShapeData [] _getChildren() { return null; }
+	protected Matrix4f _getMatrix() { return null; }
+	
+	protected Matrix4f getMatrix() {
+		if (mMatrix == null) {
+			mMatrix = _getMatrix();
+		}
+		return mMatrix;
+	}
+	
+	protected ShapeData [] getChildren() {
+		if (mChildren == null) {
+			mChildren = _getChildren();
+		}
+		return mChildren;
+	}
 	
     protected static final int MIN_X = 0;
     protected static final int MIN_Y = 1;
@@ -171,9 +199,9 @@ public class ShapeData {
 	protected void setMinY(float y) { mBounds[MIN_Y] = y; }
 	protected void setMinZ(float z) { mBounds[MIN_Z] = z; }
 	
-	public float getSizeX() { return getMaxX()-getMinX(); }
-	public float getSizeY() { return getMaxY()-getMinY(); }
-	public float getSizeZ() { return getMaxZ()-getMinZ(); }
+	public float getSizeXc() { return getMaxX()-getMinX(); }
+	public float getSizeYc() { return getMaxY()-getMinY(); }
+	public float getSizeZc() { return getMaxZ()-getMinZ(); }
 	
 	public FloatBuffer getColorBuf() { return mVertexBuf.getBuf(); }
 	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
@@ -187,7 +215,7 @@ public class ShapeData {
 	}
 	
 	public interface MessageWriter {
-		void msg(String msg);
+		void msg(String tag, String msg);
 	}
 	
 	public interface ShortData {
@@ -195,14 +223,16 @@ public class ShapeData {
 		int size();
 	}
 	
-	static int compare(FloatBuffer buf1, FloatBuffer buf2, String who, MessageWriter msg) {
+	static int compare(FloatBuffer buf1, FloatBuffer buf2, String tag, String who, MessageWriter msg) {
 		if (buf1 == null && buf2 == null) {
 			return 0;
 		}
 		if (buf1 == null) {
-			msg.msg("First buffer was null");
+			msg.msg(tag, "First buffer was null");
+			return 1;
 		} else if (buf2 == null) {
-			msg.msg("Second buffer was null");
+			msg.msg(tag, "Second buffer was null");
+			return 1;
 		}
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
@@ -212,7 +242,7 @@ public class ShapeData {
 			sbuf.append(buf1.limit());
 			sbuf.append(" != ");
 			sbuf.append(buf2.limit());
-			msg.msg(sbuf.toString());
+			msg.msg(tag, sbuf.toString());
 			numDiffs++;
 		}
 		buf1.rewind();
@@ -229,14 +259,14 @@ public class ShapeData {
     			sbuf.append(f1);
     			sbuf.append(" != ");
     			sbuf.append(f2);
-    			msg.msg(sbuf.toString());
+    			msg.msg(tag, sbuf.toString());
     			numDiffs++;
 			}
 		}
 		return numDiffs;
 	}
 	
-	static boolean compare(MessageWriter msg, String name, float val1, float val2) {
+	static boolean compare(MessageWriter msg, String tag, String name, float val1, float val2) {
 		if (val1 != val2) {
 			StringBuffer sbuf = new StringBuffer();
 			sbuf.append(name);
@@ -244,13 +274,23 @@ public class ShapeData {
 			sbuf.append(val1);
 			sbuf.append(" != ");
 			sbuf.append(val2);
-			msg.msg(sbuf.toString());
+			msg.msg(tag, sbuf.toString());
 			return false;
 		}
 		return true;
     }
 	
-	static int compare(ShortBuffer buf1, ShortBuffer buf2, String who, MessageWriter msg) {
+	static int compare(ShortBuffer buf1, ShortBuffer buf2, String tag, String who, MessageWriter msg) {
+		if (buf1 == null && buf2 == null) {
+			return 0;
+		}
+		if (buf1 == null) {
+			msg.msg(tag, "First buffer was null");
+			return 1;
+		} else if (buf2 == null) {
+			msg.msg(tag, "Second buffer was null");
+			return 1;
+		}
 		int numDiffs = 0;
 		if (buf1.limit() != buf2.limit()) {
 			StringBuffer sbuf = new StringBuffer();
@@ -259,7 +299,7 @@ public class ShapeData {
 			sbuf.append(buf1.limit());
 			sbuf.append(" != ");
 			sbuf.append(buf2.limit());
-			msg.msg(sbuf.toString());
+			msg.msg(tag, sbuf.toString());
 			numDiffs++;
 		}
 		buf1.rewind();
@@ -276,42 +316,94 @@ public class ShapeData {
     			sbuf.append(s1);
     			sbuf.append(" != ");
     			sbuf.append(s2);
-    			msg.msg(sbuf.toString());
+    			msg.msg(tag, sbuf.toString());
     			numDiffs++;
 			}
 		}
 		return numDiffs;
 	}
 
-	public void compare(ShapeData other, MessageWriter msg) {
+	public void compare(String tag, ShapeData other, MessageWriter msg) {
 		FloatBuffer vertexBuf = getVertexBuf();
 		FloatBuffer normalBuf = getNormalBuf();
 		ShortBuffer indexBuf = getIndexBuf();
 		FloatBuffer colorBuf = getColorBuf();
+		FloatBuffer textureBuf = getTextureBuf();
 		
 		FloatBuffer vertexBufO = other.getVertexBuf();
 		FloatBuffer normalBufO = other.getNormalBuf();
 		ShortBuffer indexBufO = other.getIndexBuf();
 		FloatBuffer colorBufO = other.getColorBuf();
+		FloatBuffer textureBufO = other.getTextureBuf();
 		
-		if (compare(vertexBuf, vertexBufO, "Vertex", msg) == 0) {
-			msg.msg("Vertex buffer identical");
+		if (compare(vertexBuf, vertexBufO, tag, "Vertex", msg) == 0) {
+			msg.msg(tag, "vertex buffers identical");
 		}
-		if (compare(normalBuf, normalBufO, "Normal", msg) == 0) {
-			msg.msg("Normal buffer identical");
+		if (compare(normalBuf, normalBufO, tag, "Normal", msg) == 0) {
+			msg.msg(tag, "normal buffers identical");
 		}
-		if (compare(indexBuf, indexBufO, "Index", msg) == 0) {
-			msg.msg("Index buffer identical");
+		if (compare(indexBuf, indexBufO, tag, "Index", msg) == 0) {
+			msg.msg(tag, "index buffers identical");
 		}
-		if (compare(colorBuf, colorBufO, "Color", msg) == 0) {
-			msg.msg("Color buffer identical");
+		if (compare(colorBuf, colorBufO, tag, "Color", msg) == 0) {
+			msg.msg(tag, "color buffers identical");
 		}
-		compare(msg, "MinX", getMinX(), other.getMinX());
-		compare(msg, "MinY", getMinY(), other.getMinY());
-		compare(msg, "MinZ", getMinZ(), other.getMinZ());
-		compare(msg, "MaxX", getMaxX(), other.getMaxX());
-		compare(msg, "MaxY", getMaxY(), other.getMaxY());
-		compare(msg, "MaxZ", getMaxZ(), other.getMaxZ());
+		if (compare(textureBuf, textureBufO, tag, "Texture", msg) == 0) {
+			msg.msg(tag, "texture buffers identical");
+		}
+		compare(msg, tag, "MinX", getMinX(), other.getMinX());
+		compare(msg, tag, "MinY", getMinY(), other.getMinY());
+		compare(msg, tag, "MinZ", getMinZ(), other.getMinZ());
+		compare(msg, tag, "MaxX", getMaxX(), other.getMaxX());
+		compare(msg, tag, "MaxY", getMaxY(), other.getMaxY());
+		compare(msg, tag, "MaxZ", getMaxZ(), other.getMaxZ());
+		
+		if (getMatrix() != null) {
+			if (other.getMatrix() == null) {
+				msg.msg(tag, "Second matrix was null, first wasn't");
+			} else {
+				for (int row = 0; row < 4; row++) {
+					for (int col = 0; col < 4; col++) {
+						StringBuffer sbuf = new StringBuffer();
+						sbuf.append("M[");
+						sbuf.append(row);
+						sbuf.append("][");
+						sbuf.append(col);
+						sbuf.append("]");
+						compare(msg, tag, sbuf.toString(), getMatrix().getValue(row, col), other.getMatrix().getValue(row, col));
+					}
+				}
+			}
+		} else if (other.getMatrix() != null) {
+			msg.msg(tag, "First matrix was null, second matrix wasn't");
+		}
+		if (getChildren() != null) {
+			if (other.getChildren() == null) {
+				msg.msg(tag, "Second didn't have children");
+			} else {
+				if (getChildren().length != other.getChildren().length) {
+					StringBuffer sbuf = new StringBuffer();
+					sbuf.append("First had ");
+					sbuf.append(getChildren().length);
+					sbuf.append(" children, second had ");
+					sbuf.append(other.getChildren().length);
+					sbuf.append(" children.");
+					msg.msg(tag, sbuf.toString());
+				} else {
+					for (int i = 0; i < getChildren().length; i++) {
+						ShapeData child = getChildren()[i];
+						ShapeData childO = other.getChildren()[i];
+						StringBuffer sbuf = new StringBuffer();
+						sbuf.append(tag);
+						sbuf.append(".child");
+						sbuf.append(i);
+						child.compare(sbuf.toString(), childO, msg);
+					}
+				}
+			}
+		} else if (other.getChildren() != null) {
+			msg.msg(tag, "First didn't have children");
+		}
 	}
 	
 	protected void allocBounds() {
@@ -322,8 +414,11 @@ public class ShapeData {
 	
 	public void computeBounds() {
 		FloatBuffer buf = getVertexBuf();
-		
+		if (buf == null) {
+			return;
+		}
 		allocBounds();
+		
 		float minX = buf.get();
 		float minY = buf.get();
 		float minZ = buf.get();
@@ -359,13 +454,29 @@ public class ShapeData {
 		setMaxX(maxX);
 		setMaxY(maxY);
 		setMaxZ(maxZ);
+		
+		if (getChildren() != null) {
+			for (ShapeData child : getChildren()) {
+				child.computeBounds();
+			}
+		}
 	}
 
 	public void fill() {
+		
 		setVertexData(getVertexData());
 		setNormalData(getNormalData());
 		setIndexData(getIndexData());
 		setColorData(getColorData());
+		setTextureData(getTextureData());
+		
+		getMatrix();
+		
+		if (getChildren() != null) {
+    		for (ShapeData child : getChildren()) {
+    			child.fill();
+    		}
+		}
 		
 		// It is arguably faster and easier to use floats
 		// because modern hardware supports colors floats.
@@ -436,8 +547,31 @@ public class ShapeData {
         return vbb;
 	};
 	
+	protected void readMatrix(DataInputStream dataStream) throws IOException {
+		mMatrix = new Matrix4f();
+		for (int row = 0; row < 4; row++) {
+			for (int col = 0; col < 4; col++) {
+				mMatrix.setValue(row, col, dataStream.readFloat());
+			}
+		}
+	}
+	
+	protected void readChildren(DataInputStream dataStream) throws IOException, Exception {
+		int numChildren = dataStream.readInt();
+		mChildren = new ShapeData[numChildren];
+		for (int i = 0; i < numChildren; i++) {
+			mChildren[i] = new ShapeData();
+			mChildren[i].readData(dataStream);
+		}
+	}
+	
 	public void readData(InputStream inputStream) throws Exception, IOException {
 		DataInputStream dataStream = new DataInputStream(inputStream);
+		readData(dataStream);
+		dataStream.close();
+	}
+	
+	protected void readData(DataInputStream dataStream) throws IOException, Exception {
 		int eleType;
 		int type;
 		int size;
@@ -445,15 +579,28 @@ public class ShapeData {
 
 		while (dataStream.available() > 0) {
 			eleType = dataStream.readInt();
-
-			if (eleType == ELE_BOUNDS) {
+			
+			if (eleType == ELE_FINISH) {
+				return;
+			}
+			if (eleType == ELE_VERSION) {
+				int version = dataStream.readInt();
+				assert(version == FILE_VERSION);
+			} else if (eleType == ELE_BOUNDS) {
 				readBounds(dataStream);
-			} else {
+			} else if (eleType == ELE_MATRIX) {
+				readMatrix(dataStream);
+			} else if (eleType == ELE_CHILDREN) {
+				readChildren(dataStream);
+			} else if (eleType == ELE_VERTEX ||
+					   eleType == ELE_NORMAL ||
+					   eleType == ELE_INDEX ||
+					   eleType == ELE_COLOR ||
+					   eleType == ELE_TEXTURE) {
 				type = dataStream.readInt();
 				size = dataStream.readInt();
-
 				vbb = readBuffer(dataStream, size);
-
+				
 				if (eleType == ELE_VERTEX) {
 					if (type != TYPE_FLOAT) {
 						throw new Exception("Expected float type for vertex");
@@ -474,10 +621,14 @@ public class ShapeData {
 						throw new Exception("Expected float type for colors");
 					}
 					mColorBuf.set(vbb);
-				}
+				} else if (eleType == ELE_TEXTURE) {
+					if (type != TYPE_FLOAT) {
+						throw new Exception("Expected float type for texture");
+					}
+					mTextureBuf.set(vbb);
+				} 
 			}
 		}
-		dataStream.close();
 	}
 	
 	public void readData(String filename) {
@@ -500,6 +651,13 @@ public class ShapeData {
 		if (data != null) {
 			mColorBuf = new FloatBuf();
     		mColorBuf.set(data);
+		}
+	}
+	
+	public void setTextureData(FloatData data) {
+		if (data != null) {
+			mTextureBuf = new FloatBuf();
+    		mTextureBuf.set(data);
 		}
 	}
 	
@@ -585,6 +743,11 @@ public class ShapeData {
 		return sbuf.toString();
 	}
 	
+	protected void writeVersion(DataOutputStream dataStream) throws IOException {
+		dataStream.writeInt(ELE_VERSION);
+		dataStream.writeInt(FILE_VERSION);
+	}
+	
 	protected void writeBounds(DataOutputStream dataStream) throws IOException {
 		dataStream.writeInt(ELE_BOUNDS);
 		dataStream.writeFloat(getMinX());
@@ -593,6 +756,17 @@ public class ShapeData {
 		dataStream.writeFloat(getMaxX());
 		dataStream.writeFloat(getMaxY());
 		dataStream.writeFloat(getMaxZ());
+	}
+	
+	protected void writeMatrix(DataOutputStream dataStream) throws IOException {
+		if (getMatrix() != null) {
+    		dataStream.writeInt(ELE_MATRIX);
+    		for (int row = 0; row < 4; row++) {
+    			for (int col = 0; col < 4; col++) {
+    				dataStream.writeFloat(mMatrix.getValue(row, col));
+    			}
+    		}
+		}
 	}
 	
 	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
@@ -619,11 +793,8 @@ public class ShapeData {
         	FileOutputStream fileStream = new FileOutputStream(file);
         	DataOutputStream dataStream = new DataOutputStream(fileStream);
         	
-        	writeBounds(dataStream);
-        	writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf.getRootBuf());
-        	writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf.getRootBuf());
-        	writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf.getRootBuf());
-        	writeBuffer(dataStream, ELE_COLOR, TYPE_FLOAT, mColorBuf.getRootBuf());
+        	writeVersion(dataStream);
+        	writeData(dataStream);
         	
         	dataStream.close();
     	} catch (Exception ex) {
@@ -631,5 +802,24 @@ public class ShapeData {
     		return false;
     	}
     	return true;
+	}
+	
+	protected void writeData(DataOutputStream dataStream) throws IOException {
+		writeBounds(dataStream);
+		writeMatrix(dataStream);
+		writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf.getRootBuf());
+		writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf.getRootBuf());
+		writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf.getRootBuf());
+		writeBuffer(dataStream, ELE_COLOR, TYPE_FLOAT, mColorBuf.getRootBuf());
+		writeBuffer(dataStream, ELE_TEXTURE, TYPE_FLOAT, mTextureBuf.getRootBuf());
+		
+    	if (getChildren() != null && mChildren.length > 0) {
+    		dataStream.writeInt(ELE_CHILDREN);
+    		dataStream.writeInt(mChildren.length);
+    		for (int i = 0; i < mChildren.length; i++) {
+    			mChildren[i].writeData(dataStream);
+    		}
+    	}
+    	dataStream.writeInt(ELE_FINISH);
 	}
 }
