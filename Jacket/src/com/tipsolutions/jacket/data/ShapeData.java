@@ -516,8 +516,11 @@ public class ShapeData {
     		// Not doing it this way anymore:
 //    		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
 		}
-		if (mIndexBuf != null) {
-			ShortBuffer sbuf = getIndexBuf();
+		if ((fbuf = getTextureBuf()) != null) {
+    		gl.glTexCoordPointer(4, GL10.GL_FLOAT, 0, fbuf);
+		}
+		ShortBuffer sbuf;
+		if ((sbuf = getIndexBuf()) != null) {
 			gl.glDrawElements(mIndexMode, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
 		}
 	}
