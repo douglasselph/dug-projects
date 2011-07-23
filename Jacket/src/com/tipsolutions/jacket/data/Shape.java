@@ -3,24 +3,18 @@ package com.tipsolutions.jacket.data;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Rotate;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Shape extends ShapeData {
 	Color4f mColor = null;
-	protected Vector3f mLoc = null;
-	protected Rotate mRotate = new Rotate(0,0,0);
+	Matrix4f mMatrixMod = null;
 	
 	@Override
 	public void onDraw(GL10 gl) {
 		gl.glPushMatrix();
 		
-		if (mRotate != null) {
-    		mRotate.apply(gl);
-		}
-		if (mLoc != null) {
-			mLoc.apply(gl);
-		}
 		if (!hasColorArray()) {
 			Color4f color = getColor();
 			if (color != null) {
@@ -33,14 +27,42 @@ public class Shape extends ShapeData {
 	}
 	
 	protected Color4f _getColor4() { return null; } // Override in super class
-	
 	public Color4f getColor() { return mColor != null ? mColor : _getColor4(); }
-	public Rotate getRotate() { return mRotate; }
-	public Vector3f getLocation() { return mLoc; }
-	
 	public void setColor(Color4f color) { mColor = color; }
-	public void setRotate(Rotate x) { mRotate = x; }
-	public void setLocation(Vector3f x) { mLoc = x; }
 	
-	public Rotate addRotate(Rotate x) { return mRotate.add(x); }
+	@Override 
+	protected Matrix4f getMatrix() {
+		if (mMatrixMod != null) {
+			return mMatrixMod;
+		}
+		return super.getMatrix();
+	}
+	
+	protected Matrix4f getMatrixMod() {
+		if (mMatrixMod == null) {
+			mMatrixMod = new Matrix4f(mMatrix);
+		}
+		return mMatrixMod;
+	}
+	
+	// Warning: subject to inaccuracies
+	public Rotate getRotate() { 
+		return getMatrix().getRotate(); 
+	}
+	
+	public Vector3f getLocation() { 
+		return getMatrix().getLocation(); 
+	}
+	
+	public void setRotate(Rotate x) { 
+		getMatrixMod().setRotate(x);
+	}
+	
+	public void setLocation(Vector3f x) { 
+		getMatrixMod().setLocation(x);
+	}
+	
+	public void addRotate(Rotate x) {
+		getMatrixMod().addRotateQuat(x);
+	}
 }

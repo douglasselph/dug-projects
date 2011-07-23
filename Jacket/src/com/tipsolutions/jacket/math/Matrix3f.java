@@ -101,6 +101,67 @@ public class Matrix3f {
         return this;
     }
 
+    public Vector3f getColumn(final int index) {
+        if (index < 0 || index > 2) {
+            throw new IllegalArgumentException("Illegal column index: " + index);
+        }
+        Vector3f result = new Vector3f();
+        result.setX(mData[0][index]);
+        result.setY(mData[1][index]);
+        result.setZ(mData[2][index]);
+        return result;
+    }
+    
+    public Vector3f getColumn(final int index, Vector3f store) {
+        if (index < 0 || index > 2) {
+            throw new IllegalArgumentException("Illegal column index: " + index);
+        }
+        store.setX(mData[0][index]);
+        store.setY(mData[1][index]);
+        store.setZ(mData[2][index]);
+        return store;
+    }
+    
+    public Rotate getRotate() {
+    	/*
+        	 |  0  1  2  3 |
+        M =  |  4  5  6  7 |
+             |  8  9 10 11 |
+             | 12 13 14 15 |
+        */
+    	double angle_x, angle_y, angle_z;
+    	double C;
+    	double tr_x, tr_y;
+    	
+    	angle_y = -Math.asin(getValue(0,2)/*mat[2]*/);/* Calculate Y-axis angle */
+    	C       =  Math.cos( angle_y );
+
+    	if (Math.abs( C ) > 0.005)             /* Gimball lock? */
+    	{
+    		tr_x      =  getValue(2,2) /*mat[10]*// C; /* No, so get X-axis angle */
+    		tr_y      = -getValue(1,2) /*mat[6]*// C;
+
+    		angle_x  = Math.atan2( tr_y, tr_x );
+
+    		tr_x      =  getValue(0,0)/*mat[0]*/ / C; /* Get Z-axis angle */
+    		tr_y      = -getValue(0,1)/*mat[1]*/ / C;
+
+    		angle_z  = Math.atan2( tr_y, tr_x );
+    	} else { /* Gimball lock has occurred */
+    		angle_x  = 0;                      /* Set X-axis angle to zero */
+
+    		tr_x      = getValue(1,1)/*mat[5]*/; /* And calculate Z-axis angle */
+    		tr_y      = getValue(1,0)/*mat[4]*/;
+
+    		angle_z  = Math.atan2( tr_y, tr_x );
+    	}
+    	angle_x = MathUtils.clamp( angle_x );
+    	angle_y = MathUtils.clamp( angle_y );
+    	angle_z = MathUtils.clamp( angle_z );
+    	
+    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
+    }
+
     public float getValue(final int row, final int column) {
         return mData[row][column];
     }
@@ -119,5 +180,13 @@ public class Matrix3f {
         mData[2][2] = source.getValue(2, 2);
 
         return this;
+    }
+    
+    public void setValue(final int row, final int column, float v) {
+        mData[row][column] = v;
+    }
+    
+    public void setValue(final int row, final int column, double v) {
+        mData[row][column] = (float)v;
     }
 }

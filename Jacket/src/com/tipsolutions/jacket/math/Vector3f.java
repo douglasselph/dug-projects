@@ -131,6 +131,20 @@ public class Vector3f {
 		return this;
 	}
 	
+	public Vector3f set(float x, float y, float z) {
+		mX = x;
+		mY = y;
+		mZ = z;
+		return this;
+	}
+	
+	public Vector3f set(double x, double y, double z) {
+		mX = (float)x;
+		mY = (float)y;
+		mZ = (float)z;
+		return this;
+	}
+	
 	public Vector3f set(final Vector3f v) {
 		mX = v.mX;
 		mY = v.mY;

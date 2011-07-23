@@ -504,6 +504,12 @@ public class ShapeData {
 	
 	public void onDraw(GL10 gl) {
 		FloatBuffer fbuf;
+		Matrix4f matrix;
+		
+		if ((matrix = getMatrix()) != null) {
+			gl.glMatrixMode(GL10.GL_MODELVIEW);
+			gl.glMultMatrixf(matrix.getArray(), 0);
+		}
 		if ((fbuf = getVertexBuf()) != null) {
     		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
 		}
