@@ -313,26 +313,32 @@ public class Quaternion {
     }
     
     public Rotate getRotate() {
-//    	normalize();
-//
-//	    double cos_a = getW();
-//	    double angle = Math.acos( cos_a ) * 2;
-//	    double sin_a = Math.sqrt( 1.0 - cos_a * cos_a );
-//	    
-//	    if (Math.abs(sin_a) < 0.0005) {
-//	    	sin_a = 1;
-//	    }
-//	    Rotate rotate = new Rotate();
-//	    rotate.setAngleX(getX() / sin_a);
-//	    rotate.setAngleY(getY() / sin_a);
-//	    rotate.setAngleZ(getZ() / sin_a);
-//	    
-//	    return rotate;
+    	normalize();
 
-    	double [] angles = toEulerAngles();
-    	return new Rotate(MathUtils.clamp(angles[2]), 
-    					  MathUtils.clamp(angles[0]), 
-    					  MathUtils.clamp(angles[1]));
+	    double cos_a = getW();
+	    double angle = Math.acos( cos_a ) * 2;
+	    double sin_a = Math.sqrt( 1.0 - cos_a * cos_a );
+	    
+	    if (Math.abs(sin_a) < 0.0005) {
+	    	sin_a = 1;
+	    }
+	    double ax = getX() / sin_a;
+	    double ay = getY() / sin_a;
+	    double az = getZ() / sin_a;
+	    
+	    Rotate rotate = new Rotate();
+	    
+    	rotate.setAngleX(angle*ax);
+    	rotate.setAngleY(angle*ay);
+    	rotate.setAngleZ(angle*az);
+    	rotate.clamp();
+    	
+	    return rotate;
+	    
+//    	double [] angles = toEulerAngles();
+//    	return new Rotate(MathUtils.clamp(angles[2]), 
+//    					  MathUtils.clamp(angles[0]), 
+//    					  MathUtils.clamp(angles[1]));
     }
 
     public double getW() {
@@ -447,10 +453,10 @@ public class Quaternion {
      * @return this quaternion for chaining
      */
     public Quaternion multiply(final double qx, final double qy, final double qz, final double qw) {
-        final double x = getX() * qw + getY() * qz - getZ() * qy + getW() * qx;
-        final double y = -getX() * qz + getY() * qw + getZ() * qx + getW() * qy;
-        final double z = getX() * qy - getY() * qx + getZ() * qw + getW() * qz;
-        final double w = -getX() * qx - getY() * qy - getZ() * qz + getW() * qw;
+        final double x = (getX() * qw) + (getY() * qz) - (getZ() * qy) + (getW() * qx);
+        final double y = -(getX() * qz) + (getY() * qw) + (getZ() * qx) + (getW() * qy);
+        final double z = (getX() * qy) - (getY() * qx) + (getZ() * qw) + (getW() * qz);
+        final double w = -(getX() * qx) - (getY() * qy) - (getZ() * qz) + (getW() * qw);
         return set(x, y, z, w);
     }
     

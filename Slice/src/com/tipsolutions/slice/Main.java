@@ -14,6 +14,7 @@ import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Rotate;
@@ -456,7 +457,20 @@ public class Main extends Activity {
 		Quaternion compareQuat = new Quaternion();
 		for (int angle = 0; angle < 360; angle += 20) {
     		compareQuat.setFromAngles(Math.toRadians(angle), 0, 0);
-    		Log.d("DEBUG", "For " + angle + " = " + compareQuat.toString());
+    		Rotate postangle = compareQuat.getRotate();
+    		Log.d("DEBUG", "For " + angle + " = " + compareQuat.toString() + ", postangle=" + postangle.toString());
+		}
+		{
+			Quaternion quat2 = new Quaternion();
+			quat2.setFromAngles(Math.toRadians(20), Math.toRadians(30), 0);
+			Quaternion quat = new Quaternion();
+			Matrix4f m = new Matrix4f();
+			quat.set(new Rotate(20, 0, 0, true));
+			m.addRotateQuat(new Rotate(20, 0, 0, true));
+			Rotate c1 = m.getRotateQuat();
+			m.addRotateQuat(new Rotate(0, 30, 0, true));
+			Rotate c2 = m.getRotateQuat();
+			Log.d("DEBUG", "c1=" + c1.toString() + ", c2=" + c2.toString());
 		}
 		Matrix4f m = new Matrix4f();
 		Rotate cur = new Rotate();
