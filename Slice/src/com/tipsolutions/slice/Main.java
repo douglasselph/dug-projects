@@ -336,13 +336,13 @@ public class Main extends Activity {
 		class Test {
 			String mName;
 			Vector3f mVecInit;
-			double mRotX, mRotY, mRotZ;
+			float mRotX, mRotY, mRotZ;
 			
 			Test(String name, int rx, int ry, int rz, Vector3f initVec) {
 				mName = name;
-				mRotX = Math.toRadians(rx);
-				mRotY = Math.toRadians(ry);
-				mRotZ = Math.toRadians(rz);
+				mRotX = (float) Math.toRadians(rx);
+				mRotY = (float) Math.toRadians(ry);
+				mRotZ = (float) Math.toRadians(rz);
 				mVecInit = initVec;
 			}
 			
@@ -424,35 +424,6 @@ public class Main extends Activity {
 		tests.add(new Test("Test58", 0, 0, 300, new Vector3f(0,0,1)));
 		tests.add(new Test("Test59", 0, 0, 300, new Vector3f(0,1,1)));
 		tests.add(new Test("Test60", 261, 38, 0, new Vector3f(1,1,1)));
-//		{
-//			int angleX = 261;
-//			int angleY = 38;
-//			double angleXd = Math.toRadians(angleX);
-//			double angleYd = Math.toRadians(angleY);
-//			double Cx = Math.cos(angleXd);
-//			double Sx = Math.sin(angleXd);
-//			double Cy = Math.cos(angleYd);
-//			double Sy = Math.sin(angleYd);
-//			Vector3f expected = new Vector3f(
-//					Cx+Sy,
-//					Sx*Sy+Cx-Sx*Cy,
-//					Cx*-Sy+Sx+Cx*Cy);
-//    		tests.add(new Test("Test44", angleX, angleY, 0, new Vector3f(1,1,1), expected));
-//		}
-//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,1,0), new Vector3f(0,1,0)));
-//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
-//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(1,1,0), new Vector3f(1,1,0)));
-//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(1,0,0), new Vector3f(1,0,0)));
-//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(0,1,0), new Vector3f(0,1,0)));
-//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
-//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(1,1,0), new Vector3f(1,1,0)));
-//		tests.add(new Test("Test12", 340, 0, 0, new Vector3f(1,1,0), new Vector3f(1,1,0)));
-//		tests.add(new Test("Test13", 45, 315, 45, new Vector3f(1,1,1), new Vector3f(1,1,1)));
-//		tests.add(new Test("Test13", -45, 315, 45, new Vector3f(1,1,1), new Vector3f(1,1,1)));
-//		tests.add(new Test("Test13", 0, 0, 340, new Vector3f(1,1,1), new Vector3f(1,1,1)));
-//		tests.add(new Test("Test13", 0, 45, 315, new Vector3f(1,1,1), new Vector3f(1,1,1)));
-//		tests.add(new Test("Test13", -45, 45, 315, new Vector3f(1,1,1), new Vector3f(1,1,1)));
-//		tests.add(new Test("Test13", 170, 340, 10, new Vector3f(1,1,1), new Vector3f(1,1,1)));
 		Matrix4f m = new Matrix4f();
 		float diff = 0;
 		for (Test test : tests) {

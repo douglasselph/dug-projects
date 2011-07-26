@@ -6,6 +6,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLSurfaceView;
 
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
 	
@@ -14,37 +15,45 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected int mWidth;
 	protected int mHeight;
 	protected ControlCamera mCamera;
+	protected MatrixTrackingGL mGL = null;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
 		mCamera = camera;
 	}
+	
+	protected MatrixTrackingGL getGL(GL10 gl) {
+		if (mGL == null) {
+			mGL = new MatrixTrackingGL(gl);
+		}
+		return mGL;
+	}
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		clearScene(gl);
-		gl.glViewport(0, 0, mWidth, mHeight);
-		gl.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
-		gl.glLoadIdentity();
-    	mCamera.applyFrustrum(gl);
+		getGL(gl);
+		clearScene();
+		mGL.glViewport(0, 0, mWidth, mHeight);
+		mGL.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
+		mGL.glLoadIdentity();
+    	mCamera.applyFrustrum(mGL);
     	
-		gl.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
-		gl.glLoadIdentity();
+		mGL.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
+		mGL.glLoadIdentity();
 		
-		gl.glFrontFace(GL10.GL_CCW); // Defines front face
-		gl.glEnable(GL10.GL_CULL_FACE);
-		gl.glCullFace(GL10.GL_BACK); // Do not draw this face
-
-		gl.glEnable(GL10.GL_DEPTH_TEST);
+		mGL.glFrontFace(GL10.GL_CCW); // Defines front face
+		mGL.glEnable(GL10.GL_CULL_FACE);
+		mGL.glCullFace(GL10.GL_BACK); // Do not draw this face
+		mGL.glEnable(GL10.GL_DEPTH_TEST);
 		
-		mCamera.applyLookAt(gl);
+		mCamera.applyLookAt(mGL);
 	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		mWidth = width;
 		mHeight = height;
-		gl.glViewport(0, 0, mWidth, mHeight);
+		getGL(gl).glViewport(0, 0, mWidth, mHeight);
     	mCamera.setScreenDimension(mWidth, mHeight);
 	}
 
@@ -53,18 +62,18 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 	}
 	
-	protected void clearScene(GL10 gl) {
+	protected void clearScene() {
 		if (mClippingPlaneColor != null) {
     		 // define the color we want to be displayed as the "clipping wall"
-			gl.glClearColor(mClippingPlaneColor.getRed(), 
+			mGL.glClearColor(mClippingPlaneColor.getRed(), 
 							mClippingPlaneColor.getGreen(), 
 							mClippingPlaneColor.getBlue(), 
 							mClippingPlaneColor.getAlpha());
 		}
-		gl.glClearDepthf(1f);
+		mGL.glClearDepthf(1f);
 		
         // clear the color buffer to show the ClearColor we called above...
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        mGL.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 	}
 	
 	public void setClippingPlaneColor(Color4f color) {

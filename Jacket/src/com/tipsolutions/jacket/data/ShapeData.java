@@ -17,6 +17,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix4f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class ShapeData {
@@ -420,30 +421,19 @@ public class ShapeData {
 		return (mTextureBuf.getBuf() != null);
 	}
 	
-	public void onDraw(GL10 gl) {
-		onDraw(gl, null);
-	}
-	
-	public void onDraw(GL10 gl, final Matrix4f curMatrix) {
+	public void onDraw(MatrixTrackingGL gl) {
 		FloatBuffer fbuf;
 		boolean didPush = false;
 		
-		Matrix4f useMatrix = curMatrix;
 		Matrix4f matrix = getMatrix();
-		if (matrix == null) {
-			useMatrix = curMatrix;
-		} else {
-			if (curMatrix == null) {
-				useMatrix = matrix;
-			} else {
-    			useMatrix = new Matrix4f(curMatrix).mult(matrix);
-			}
+		if (matrix != null) {
 			gl.glMatrixMode(GL10.GL_MODELVIEW);
 			gl.glPushMatrix();
 			didPush = true;
-			Log.d("DEBUG", "MATRIX " + useMatrix.toString());
-			Matrix4f tmp = new Matrix4f();
-			gl.glLoadMatrixf(tmp.getArray(), 0);
+			
+			Matrix4f curMatrix = gl.getMatrix();
+			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
+			gl.glLoadMatrix(useMatrix);
 		}
 		if ((fbuf = getVertexBuf()) != null) {
     		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
@@ -478,12 +468,11 @@ public class ShapeData {
 		}
 		if (mChildren != null) {
 			for (ShapeData shape : mChildren) {
-				shape.onDraw(gl, useMatrix);
+				shape.onDraw(gl);
 			}
 		}
 		if (didPush) {
     		gl.glPopMatrix();
-    		Log.d("DEBUG", "POP");
 		}
 	}
 	
@@ -513,12 +502,13 @@ public class ShapeData {
 	};
 	
 	protected void readMatrix(DataInputStream dataStream) throws IOException {
-		mMatrix = new Matrix4f();
+		Matrix4f mat = new Matrix4f();
 		for (int row = 0; row < 4; row++) {
 			for (int col = 0; col < 4; col++) {
-				mMatrix.setValue(row, col, dataStream.readFloat());
+				mat.setValue(row, col, dataStream.readFloat());
 			}
 		}
+		mMatrix = mat;
 	}
 	
 	protected void readChildren(DataInputStream dataStream) throws IOException, Exception {

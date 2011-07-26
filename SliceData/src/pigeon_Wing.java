@@ -3,17 +3,16 @@
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.data.ShapeData;
-
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
 class pigeon_Wing extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
-		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
+		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 2.127508f,
 		                    0.000000f, 1.000000f, 0.000000f, 0.000000f,
-		                    0.000000f, 0.000000f, 1.000000f, 0.000000f,
-		                    2.127508f, 0.000000f, -0.633726f, 1.000000f);
+		                    0.000000f, 0.000000f, 1.000000f, -0.633726f,
+		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.305521f; }
 	@Override protected float _getMaxX() { return 21.826908f; }

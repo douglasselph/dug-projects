@@ -168,7 +168,7 @@ public class Quaternion {
     }
 
     // Radians
-    public Quaternion fromAngles(double angleX, double angleY, double angleZ) {
+    public Quaternion fromAngles(float angleX, float angleY, float angleZ) {
     	Matrix3f rot = new Matrix3f();
     	rot.setRotate(angleX, angleY, angleZ);
     	return fromRotationMatrix(rot);
@@ -341,10 +341,11 @@ public class Quaternion {
      *             if matrix is null.
      */
     public Quaternion fromRotationMatrix(final Matrix3f matrix) {
+    	final float [] values = matrix.getValues();
         return fromRotationMatrix(
-        		matrix.getValue(0,0), matrix.getValue(0,1), matrix.getValue(0,2), 
-        		matrix.getValue(1,0), matrix.getValue(1,1), matrix.getValue(1,2), 
-        		matrix.getValue(2,0), matrix.getValue(2,1), matrix.getValue(2,2));
+        		values[Matrix3f.pos(0,0)], values[Matrix3f.pos(0,1)], values[Matrix3f.pos(0,2)], 
+        		values[Matrix3f.pos(1,0)], values[Matrix3f.pos(1,1)], values[Matrix3f.pos(1,2)], 
+        		values[Matrix3f.pos(2,0)], values[Matrix3f.pos(2,1)], values[Matrix3f.pos(2,2)]);
     }
     
     public Quaternion fromRotationMatrix(final Matrix4f matrix) {
@@ -614,15 +615,15 @@ public class Quaternion {
      * @throws IllegalArgumentException
      *             if the given axes array is smaller than 3 elements.
      */
-    public void toAxes(final Vector3f axes []) {
-        if (axes.length < 3) {
-            throw new IllegalArgumentException("axes array must have at least three elements");
-        }
-        Matrix3f tempMat = toRotationMatrix3f();
-        axes[0] = tempMat.getColumn(0);
-        axes[1] = tempMat.getColumn(1);
-        axes[2] = tempMat.getColumn(2);
-    }
+//    public void toAxes(final Vector3f axes []) {
+//        if (axes.length < 3) {
+//            throw new IllegalArgumentException("axes array must have at least three elements");
+//        }
+//        Matrix3f tempMat = toRotationMatrix3f();
+//        axes[0] = tempMat.getColumn(0);
+//        axes[1] = tempMat.getColumn(1);
+//        axes[2] = tempMat.getColumn(2);
+//    }
 
 //    public double [] toEulerAngles() {
 //    	return toEulerAngles(null);
@@ -674,10 +675,6 @@ public class Quaternion {
      *         if store is not null and is read only.
      */
     public Matrix3f toRotationMatrix(final Matrix3f store) {
-        Matrix3f result = store;
-        if (result == null) {
-            result = new Matrix3f();
-        }
         final double norm = magnitudeSquared();
         final double s = (norm > 0.0 ? 2.0 / norm : 0.0);
 
@@ -697,16 +694,22 @@ public class Quaternion {
         final double zw = getW() * zs;
 
         // using s=2/norm (instead of 1/norm) saves 9 multiplications by 2 here
-        result.setValue(0, 0, 1.0 - (yy + zz));
-        result.setValue(0, 1, xy - zw);
-        result.setValue(0, 2, xz + yw);
-        result.setValue(1, 0, xy + zw);
-        result.setValue(1, 1, 1.0 - (xx + zz));
-        result.setValue(1, 2, yz - xw);
-        result.setValue(2, 0, xz - yw);
-        result.setValue(2, 1, yz + xw);
-        result.setValue(2, 2, 1.0 - (xx + yy));
-
+        float [] values = new float[9];
+        values[Matrix3f.pos(0, 0)] = (float) (1.0 - (yy + zz));
+        values[Matrix3f.pos(0, 1)] = (float) (xy - zw);
+        values[Matrix3f.pos(0, 2)] = (float) (xz + yw);
+        values[Matrix3f.pos(1, 0)] = (float) (xy + zw);
+        values[Matrix3f.pos(1, 1)] = (float) (1.0 - (xx + zz));
+        values[Matrix3f.pos(1, 2)] = (float) (yz - xw);
+        values[Matrix3f.pos(2, 0)] = (float) (xz - yw);
+        values[Matrix3f.pos(2, 1)] = (float) (yz + xw);
+        values[Matrix3f.pos(2, 2)] = (float) (1.0 - (xx + yy));
+        
+        Matrix3f result = store;
+        if (result == null) {
+            result = new Matrix3f();
+        }
+        result.setValues(values);
         return result;
     }
 

@@ -1,7 +1,6 @@
 package com.tipsolutions.jacket.view;
 
-import javax.microedition.khronos.opengles.GL10;
-
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class ControlCamera extends Camera implements IEventTap {
@@ -107,7 +106,7 @@ public class ControlCamera extends Camera implements IEventTap {
 	}
 
 	@Override
-	public void applyFrustrum(GL10 gl) {
+	public void applyFrustrum(MatrixTrackingGL gl) {
 		super.applyFrustrum(gl);
 		mDistForwardPerTimeFrame = (mRight - mLeft) / 10f;
 	}

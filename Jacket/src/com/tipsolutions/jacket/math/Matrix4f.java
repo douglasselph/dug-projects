@@ -1,7 +1,6 @@
 package com.tipsolutions.jacket.math;
 
-
-
+import java.nio.FloatBuffer;
 
 public class Matrix4f {
 	
@@ -10,7 +9,7 @@ public class Matrix4f {
     													 0, 0, 1f, 0,
     													 0, 0, 0, 1f);
     
-    protected final float [] mData = new float[16];
+    protected float [] mData = new float[16];
     
     public Matrix4f() {
         this(1, 0, 0, 0,
@@ -58,9 +57,9 @@ public class Matrix4f {
     }
     
     public void addLocation(final Vector3f loc) {
-    	setValue(3, 0, getValue(3, 0) + loc.getX());
-    	setValue(3, 1, getValue(3, 1) + loc.getY());
-    	setValue(3, 2, getValue(3, 2) + loc.getZ());
+    	setValue(0, 3, getValue(0, 3) + loc.getX());
+    	setValue(1, 3, getValue(1, 3) + loc.getY());
+    	setValue(2, 3, getValue(2, 3) + loc.getZ());
     }
     
  
@@ -140,12 +139,39 @@ public class Matrix4f {
     	return mData;
     }
     
+    public FloatBuffer getBuffer() {
+    	FloatBuffer fbuf = FloatBuffer.allocate(mData.length);
+    	fbuf.put(mData);
+    	fbuf.rewind();
+    	return fbuf;
+    }
+    
     public Vector3f getLocation() {
+    	return new Vector3f(getValue(0, 3), 
+    					    getValue(1, 3), 
+    					    getValue(2, 3));
+    }
+    
+    // Not sure enough about matrix mathematics about what it means
+    // when the location is stored in the 4th row. For OpenGL() 
+    // the location needs to be in the 4th column. So I have to 
+    // transpose this once and a while.
+    public Vector3f getLocationAlt() {
     	return new Vector3f(getValue(3, 0), 
     					    getValue(3, 1), 
     					    getValue(3, 2));
     }
-
+    
+    public Matrix4f transposeLocation() {
+    	Matrix4f mat = new Matrix4f();
+    	mat.setRotation(getRotation());
+    	Vector3f vecLoc = getLocation();
+    	Vector3f vecAlt = getLocationAlt();
+    	mat.setLocation(vecAlt);
+    	mat.setLocationAlt(vecLoc);
+    	return mat;
+    }
+    
     public Quaternion getQuaternion() {
     	return new Quaternion().fromRotationMatrix(this);
     }
@@ -301,7 +327,19 @@ public class Matrix4f {
         return this;
     }
     
+    public Matrix4f setValues(float [] values) {
+    	mData = values;
+    	return this;
+    }
+    
     public void setLocation(final Vector3f v) {
+    	setValue(0, 3, v.getX());
+    	setValue(1, 3, v.getY());
+    	setValue(2, 3, v.getZ());
+    	setValue(3, 3, 1);
+    }
+    
+    public void setLocationAlt(final Vector3f v) {
     	setValue(3, 0, v.getX());
     	setValue(3, 1, v.getY());
     	setValue(3, 2, v.getZ());

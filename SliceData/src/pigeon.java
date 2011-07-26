@@ -3,7 +3,6 @@
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.data.ShapeData;
-
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
@@ -27,8 +26,8 @@ class pigeon extends ShapeData {
 	}
 
 	@Override protected Matrix4f _getMatrix() {
-		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
-		                    0.000000f, 1.000000f, 0.000000f, 0.000000f,
-		                    0.000000f, 0.000000f, 1.000000f, 0.000000f,
-		                    -7.242573f, 2.917195f, -0.292292f, 1.000000f);
+		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, -7.242573f,
+		                    0.000000f, 1.000000f, 0.000000f, 2.917195f,
+		                    0.000000f, 0.000000f, 1.000000f, -0.292292f,
+		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}};

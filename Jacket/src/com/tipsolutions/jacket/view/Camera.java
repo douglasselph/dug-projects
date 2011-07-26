@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLU;
 
 import com.tipsolutions.jacket.math.Matrix3f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Camera {
@@ -27,12 +28,12 @@ public class Camera {
 	public Camera() {
 	}
 
-	public void applyFrustrum(GL10 gl) {
+	public void applyFrustrum(MatrixTrackingGL gl) {
 		gluPerspective(gl, mAngle, (float)mWidth / mHeight, mNearPlane, mFarPlane);
 	}
 	
 	// Doing it myself, so I can record the computed clipping planes.
-	void gluPerspective(GL10 gl, float fovy, float aspect, float zNear, float zFar) {
+	void gluPerspective(MatrixTrackingGL gl, float fovy, float aspect, float zNear, float zFar) {
 		mTop = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
 		mBottom = -mTop;
 		mLeft = mBottom * aspect;
@@ -40,7 +41,7 @@ public class Camera {
 		gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
 	}
 	
-	public void applyLookAt(GL10 gl) {
+	public void applyLookAt(MatrixTrackingGL gl) {
 		GLU.gluLookAt(gl, 
 				mCameraPos.getX(), mCameraPos.getY(), mCameraPos.getZ(), 
 				mLookAtPos.getX(), mLookAtPos.getY(), mLookAtPos.getZ(), 
