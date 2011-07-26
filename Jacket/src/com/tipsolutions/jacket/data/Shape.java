@@ -2,6 +2,8 @@ package com.tipsolutions.jacket.data;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Quaternion;
@@ -18,6 +20,7 @@ public class Shape extends ShapeData {
 	// Radians
 	public void addRotate(double angleX, double angleY, double angleZ) {
 		Quaternion quat = getQuaternion();
+		Log.d("DEBUG", "addRotate(" + angleX + ", " + angleY + ", " + angleZ + ")");
 		Quaternion rot = new Quaternion().fromAngles(angleX, angleY, angleZ);
 		quat.multiply(rot);
 		quat.toRotationMatrix(mMatrixMod);

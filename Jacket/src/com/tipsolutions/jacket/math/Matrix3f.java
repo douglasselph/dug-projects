@@ -52,9 +52,9 @@ public class Matrix3f {
         if (result == null) {
             result = new Vector3f();
         }
-        final float x = vec.getX();
-        final float y = vec.getY();
-        final float z = vec.getZ();
+        float x = vec.getX();
+        float y = vec.getY();
+        float z = vec.getZ();
 
         result.setX(mData[0][0] * x + mData[0][1] * y + mData[0][2] * z);
         result.setY(mData[1][0] * x + mData[1][1] * y + mData[1][2] * z);

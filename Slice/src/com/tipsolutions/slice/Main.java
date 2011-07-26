@@ -134,9 +134,9 @@ public class Main extends Activity {
     	public boolean pressMove(final float x, final float y) {
     		mSurfaceView.queueEvent(new Runnable() {
     			public void run() {
-    				float xdiff = (_x - x);
-    				float ydiff = (_y - y);
-    				mActiveShape.addRotate(ydiff, xdiff, 0f);
+    				float xdiff = (_x - x)/3;
+    				float ydiff = (_y - y)/3;
+    				mActiveShape.addRotate(Math.toRadians(ydiff), Math.toRadians(xdiff), 0f);
     				mSurfaceView.requestRender();
     			}
     		});
@@ -336,101 +336,109 @@ public class Main extends Activity {
 		class Test {
 			String mName;
 			Vector3f mVecInit;
-			Vector3f mVecPost;
-			int mRotX, mRotY, mRotZ;
+			double mRotX, mRotY, mRotZ;
 			
-			Test(String name, int rx, int ry, int rz, Vector3f initVec, Vector3f postVec) {
+			Test(String name, int rx, int ry, int rz, Vector3f initVec) {
 				mName = name;
-				mRotX = rx;
-				mRotY = ry;
-				mRotZ = rz;
+				mRotX = Math.toRadians(rx);
+				mRotY = Math.toRadians(ry);
+				mRotZ = Math.toRadians(rz);
 				mVecInit = initVec;
-				mVecPost = postVec;
 			}
 			
 			float run() {
 				float diff = 0;
 				Quaternion quat = new Quaternion();
-				quat.fromAngles(Math.toRadians(mRotX), Math.toRadians(mRotY), Math.toRadians(mRotZ));
+				quat.fromAngles(mRotX, mRotY, mRotZ);
 				
 				Vector3f vec = new Vector3f(quat.apply(mVecInit, null));
-				diff += assertEquals(mName, mVecPost, vec);
+				diff += assertEquals(mName, vec, getExpected());
 				
 				return diff;
 			}
 			
 			Vector3f getExpected() {
 				Matrix3f m = new Matrix3f();
-				m.setRotate(mRotX, mRotY, mRotY);
+				m.setRotate(mRotX, mRotY, mRotZ);
 				return m.apply(mVecInit,null);
 			}
 		};
-		double cos45 = Math.cos(Math.toRadians(45));
-		float cos45f = (float) cos45;
-		double cos190 = Math.cos(Math.toRadians(190));
-		float cos190f = (float) cos190;
-		double sin190 = Math.sin(Math.toRadians(190));
-		float sin190f = (float) sin190;
-		
 		ArrayList<Test> tests = new ArrayList<Test>();
-		tests.add(new Test("Test01", 0, 0, 0, new Vector3f(1,0,0), new Vector3f(1,0,0)));
-		tests.add(new Test("Test02", 45, 0, 0, new Vector3f(1,0,0), new Vector3f(1,0,0)));
-		tests.add(new Test("Test03", 45, 0, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,cos45f)));
-		tests.add(new Test("Test04", 45, 0, 0, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
-		tests.add(new Test("Test05", 0, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,0,-cos45f)));
-		tests.add(new Test("Test06", 0, 45, 0, new Vector3f(0,1,0), new Vector3f(0,1,0)));
-		tests.add(new Test("Test07", 0, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,0,cos45f)));
-		tests.add(new Test("Test08", 0, 0, 45, new Vector3f(1,0,0), new Vector3f(cos45f,cos45f,0)));
-		tests.add(new Test("Test09", 0, 0, 45, new Vector3f(0,1,0), new Vector3f(-cos45f,cos45f,0)));
-		tests.add(new Test("Test10", 0, 0, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
-		tests.add(new Test("Test11", -45, 0, 0, new Vector3f(1,1,0), new Vector3f(1,cos45f,-cos45f)));
-		tests.add(new Test("Test12", 0, -45, 0, new Vector3f(1,1,0), new Vector3f(cos45f,1,cos45f)));
-		tests.add(new Test("Test13", 0, 0, -45, new Vector3f(1,1,0), new Vector3f(2*cos45f,0,0)));
-		tests.add(new Test("Test14", 315, 0, 0, new Vector3f(1,1,0), new Vector3f(1,cos45f,-cos45f)));
-		tests.add(new Test("Test15", 0, 315, 0, new Vector3f(1,1,0), new Vector3f(cos45f,1,cos45f)));
-		tests.add(new Test("Test16", 0, 0, 315, new Vector3f(1,1,0), new Vector3f(2*cos45f,0,0)));
-		tests.add(new Test("Test17", 45, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,0.5f,-0.5f)));
-		tests.add(new Test("Test18", 45, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,cos45f)));
-		tests.add(new Test("Test19", 45, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,-.5f,0.5f)));
-		tests.add(new Test("Test20", -45, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
-		tests.add(new Test("Test21", -45, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,-cos45f)));
-		tests.add(new Test("Test22", -45, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,.5f,0.5f)));
-		tests.add(new Test("Test13", 315, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
-		tests.add(new Test("Test24", 315, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,-cos45f)));
-		tests.add(new Test("Test25", 315, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,.5f,0.5f)));
-		tests.add(new Test("Test26", 45, 0, -45, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
-		tests.add(new Test("Test27", 45, 0, -45, new Vector3f(0,1,0), new Vector3f(cos45f,0.5f,0.5f)));
-		tests.add(new Test("Test28", 45, 0, -45, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
-		tests.add(new Test("Test29", 45, 0, -45, new Vector3f(0,1,1), new Vector3f(cos45f,-cos45f+.5f,cos45f+.5f)));
-		tests.add(new Test("Test30", 45, 0, -45, new Vector3f(1,0,1), new Vector3f(cos45f,-cos45f-.5f,cos45f-.5f)));
-		tests.add(new Test("Test31", 45, 0, -45, new Vector3f(1,1,0), new Vector3f(cos45f*2,0,0)));
-		tests.add(new Test("Test32", 45, 0, -45, new Vector3f(1,1,1), new Vector3f(cos45f*2,-cos45f,cos45f)));
-		tests.add(new Test("Test33", 45, 0, 315, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
-		tests.add(new Test("Test34", 45, 0, 315, new Vector3f(0,1,0), new Vector3f(cos45f,0.5f,0.5f)));
-		tests.add(new Test("Test35", 45, 0, 315, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
-		tests.add(new Test("Test36", 190, 0, 0, new Vector3f(1,0,0), new Vector3f(1,0,0)));
-		tests.add(new Test("Test37", 190, 0, 0, new Vector3f(0,1,0), new Vector3f(0,cos190f,sin190f)));
-		tests.add(new Test("Test38", 190, 0, 0, new Vector3f(0,0,1), new Vector3f(0,-sin190f,cos190f)));
-		tests.add(new Test("Test39", 190, 0, 0, new Vector3f(1,1,0), new Vector3f(1,cos190f,sin190f)));
-		tests.add(new Test("Test40", 0, 190, 0, new Vector3f(1,0,0), new Vector3f(cos190f,0,-sin190f)));
-		tests.add(new Test("Test41", 0, 190, 0, new Vector3f(0,1,0), new Vector3f(0,1,0)));
-		tests.add(new Test("Test42", 0, 190, 0, new Vector3f(0,0,1), new Vector3f(sin190f,0,cos190f)));
-		tests.add(new Test("Test43", 0, 190, 0, new Vector3f(0,1,1), new Vector3f(sin190f,1,cos190f)));
-		{
-			int angleX = 261;
-			int angleY = 38;
-			double angleXd = Math.toRadians(angleX);
-			double angleYd = Math.toRadians(angleY);
-			double Cx = Math.cos(angleXd);
-			double Sx = Math.sin(angleXd);
-			double Cy = Math.cos(angleYd);
-			double Sy = Math.sin(angleYd);
-			Vector3f expected = new Vector3f(
-					Cx+Sy,
-					Sx*Sy+Cx-Sx*Cy,
-					Cx*-Sy+Sx+Cx*Cy);
-    		tests.add(new Test("Test44", angleX, angleY, 0, new Vector3f(1,1,1), expected));
-		}
+		tests.add(new Test("Test01", 0, 0, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test02", 45, 0, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test03", 45, 0, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test04", 45, 0, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test05", 0, 45, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test06", 0, 45, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test07", 0, 45, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test08", 0, 0, 45, new Vector3f(1,0,0)));
+		tests.add(new Test("Test09", 0, 0, 45, new Vector3f(0,1,0)));
+		tests.add(new Test("Test10", 0, 0, 45, new Vector3f(0,0,1)));
+		tests.add(new Test("Test11", -45, 0, 0, new Vector3f(1,1,0)));
+		tests.add(new Test("Test12", 0, -45, 0, new Vector3f(1,1,0)));
+		tests.add(new Test("Test13", 0, 0, -45, new Vector3f(1,1,0)));
+		tests.add(new Test("Test14", 315, 0, 0, new Vector3f(1,1,0)));
+		tests.add(new Test("Test15", 0, 315, 0, new Vector3f(1,1,0)));
+		tests.add(new Test("Test16", 0, 0, 315, new Vector3f(1,1,0)));
+		tests.add(new Test("Test17", 45, 45, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test18", 45, 45, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test19", 45, 45, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test20", -45, 45, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test21", -45, 45, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test22", -45, 45, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test13", 315, 45, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test24", 315, 45, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test25", 315, 45, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test26", 45, 0, -45, new Vector3f(1,0,0)));
+		tests.add(new Test("Test27", 45, 0, -45, new Vector3f(0,1,0)));
+		tests.add(new Test("Test28", 45, 0, -45, new Vector3f(0,0,1)));
+		tests.add(new Test("Test29", 45, 0, -45, new Vector3f(0,1,1)));
+		tests.add(new Test("Test30", 45, 0, -45, new Vector3f(1,0,1)));
+		tests.add(new Test("Test31", 45, 0, -45, new Vector3f(1,1,0)));
+		tests.add(new Test("Test32", 45, 0, -45, new Vector3f(1,1,1)));
+		tests.add(new Test("Test33", 45, 0, 315, new Vector3f(1,0,0)));
+		tests.add(new Test("Test34", 45, 0, 315, new Vector3f(0,1,0)));
+		tests.add(new Test("Test35", 45, 0, 315, new Vector3f(0,0,1)));
+		tests.add(new Test("Test36", 190, 0, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test37", 190, 0, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test38", 190, 0, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test39", 190, 0, 0, new Vector3f(1,1,0)));
+		tests.add(new Test("Test40", 0, 190, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test41", 0, 190, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test42", 0, 190, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test43", 0, 190, 0, new Vector3f(0,1,1)));
+		tests.add(new Test("Test44", 0, 0, 190, new Vector3f(1,0,0)));
+		tests.add(new Test("Test45", 0, 0, 190, new Vector3f(0,1,0)));
+		tests.add(new Test("Test46", 0, 0, 190, new Vector3f(0,0,1)));
+		tests.add(new Test("Test47", 0, 0, 190, new Vector3f(0,1,1)));
+		tests.add(new Test("Test48", 300, 0, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test49", 300, 0, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test50", 300, 0, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test51", 300, 0, 0, new Vector3f(0,1,1)));
+		tests.add(new Test("Test52", 0, 300, 0, new Vector3f(1,0,0)));
+		tests.add(new Test("Test53", 0, 300, 0, new Vector3f(0,1,0)));
+		tests.add(new Test("Test54", 0, 300, 0, new Vector3f(0,0,1)));
+		tests.add(new Test("Test55", 0, 300, 0, new Vector3f(0,1,1)));
+		tests.add(new Test("Test56", 0, 0, 300, new Vector3f(1,0,0)));
+		tests.add(new Test("Test57", 0, 0, 300, new Vector3f(0,1,0)));
+		tests.add(new Test("Test58", 0, 0, 300, new Vector3f(0,0,1)));
+		tests.add(new Test("Test59", 0, 0, 300, new Vector3f(0,1,1)));
+		tests.add(new Test("Test60", 261, 38, 0, new Vector3f(1,1,1)));
+//		{
+//			int angleX = 261;
+//			int angleY = 38;
+//			double angleXd = Math.toRadians(angleX);
+//			double angleYd = Math.toRadians(angleY);
+//			double Cx = Math.cos(angleXd);
+//			double Sx = Math.sin(angleXd);
+//			double Cy = Math.cos(angleYd);
+//			double Sy = Math.sin(angleYd);
+//			Vector3f expected = new Vector3f(
+//					Cx+Sy,
+//					Sx*Sy+Cx-Sx*Cy,
+//					Cx*-Sy+Sx+Cx*Cy);
+//    		tests.add(new Test("Test44", angleX, angleY, 0, new Vector3f(1,1,1), expected));
+//		}
 //		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,1,0), new Vector3f(0,1,0)));
 //		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
 //		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(1,1,0), new Vector3f(1,1,0)));
