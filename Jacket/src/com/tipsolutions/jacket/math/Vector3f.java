@@ -36,6 +36,12 @@ public class Vector3f {
 		mZ = v.mZ;
 	}
 	
+	public Vector3f(final Vector3 v) {
+		mX = (float) v.mX;
+		mY = (float) v.mY;
+		mZ = (float) v.mZ;
+	}
+	
 	public Vector3f add(float x, float y, float z) {
 		mX += x;
 		mY += y;
@@ -155,6 +161,13 @@ public class Vector3f {
 		mX = v.mX;
 		mY = v.mY;
 		mZ = v.mZ;
+		return this;
+	}
+	
+	public Vector3f set(final Vector3 v) {
+		mX = (float) v.mX;
+		mY = (float) v.mY;
+		mZ = (float) v.mZ;
 		return this;
 	}
 	

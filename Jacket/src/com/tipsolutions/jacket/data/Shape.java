@@ -4,12 +4,29 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
-import com.tipsolutions.jacket.math.Rotate;
+import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Shape extends ShapeData {
 	Color4f mColor = null;
 	Matrix4f mMatrixMod = null;
+	
+	public void addRotateDegrees(float angleX, float angleY, float angleZ) {
+		addRotate(Math.toDegrees(angleX), Math.toDegrees(angleY), Math.toDegrees(angleZ));
+	}
+	
+	// Radians
+	public void addRotate(double angleX, double angleY, double angleZ) {
+		Quaternion quat = getQuaternion();
+		Quaternion rot = new Quaternion().fromAngles(angleX, angleY, angleZ);
+		quat.multiply(rot);
+		quat.toRotationMatrix(mMatrixMod);
+	}
+	
+	// Radians
+	public void addRotate(float angleX, float angleY, float angleZ) {
+		addRotate((double)angleX, (double)angleY, (double)angleZ);
+	}
 	
 	@Override
 	public void onDraw(GL10 gl) {
@@ -45,24 +62,15 @@ public class Shape extends ShapeData {
 		return mMatrixMod;
 	}
 	
-	// Warning: subject to inaccuracies
-	public Rotate getRotate() { 
-		return getMatrix().getRotate(); 
+	public Quaternion getQuaternion() { 
+		return getMatrix().getQuaternion();
 	}
 	
 	public Vector3f getLocation() { 
 		return getMatrix().getLocation(); 
 	}
 	
-	public void setRotate(Rotate x) { 
-		getMatrixMod().setRotate(x);
-	}
-	
 	public void setLocation(Vector3f x) { 
 		getMatrixMod().setLocation(x);
-	}
-	
-	public void addRotate(Rotate x) {
-		getMatrixMod().addRotate(x);
 	}
 }

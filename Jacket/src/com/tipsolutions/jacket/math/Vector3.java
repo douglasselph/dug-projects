@@ -28,6 +28,12 @@ public class Vector3 {
 		mZ = v.mZ;
 	}
 	
+	public Vector3(final Vector3f v) {
+		mX = v.mX;
+		mY = v.mY;
+		mZ = v.mZ;
+	}
+	
 	public Vector3 add(double x, double y, double z) {
 		mX += x;
 		mY += y;

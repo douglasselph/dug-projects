@@ -65,6 +65,16 @@ public class Quaternion {
         setW(getW() + quat.getW());
         return this;
     }
+    
+    public Vector3f apply(final Vector3f vec, Vector3f store) {
+        Vector3 result = apply(new Vector3(vec), null);
+        if (store == null) {
+            store = new Vector3f(result);
+        } else {
+        	store.set(result);
+        }
+        return store;
+    }
 
     /**
      * Rotates the given vector by this quaternion. If supplied, the result is stored into the supplied "store" vector.
@@ -157,6 +167,12 @@ public class Quaternion {
         return fromAxes(axes[0], axes[1], axes[2]);
     }
 
+    // Radians
+    public Quaternion fromAngles(double angleX, double angleY, double angleZ) {
+    	Matrix3f rot = new Matrix3f();
+    	rot.setRotate(angleX, angleY, angleZ);
+    	return fromRotationMatrix(rot);
+    }
     /**
      * Updates this quaternion from the given Euler rotation angles, applied in the given order: heading, attitude,
      * bank.
@@ -206,32 +222,32 @@ public class Quaternion {
 //        return fromEulerAngles(angles[0], angles[1], angles[2]);
 //    }
    
-    protected Quaternion setFromAxisAngle(Vector3f axis, double angle) {
-    	double sin_a = Math.sin( angle / 2 );
-	    double cos_a = Math.cos( angle / 2 );
-
-	    setX(axis.getX() * sin_a);
-    	setY(axis.getY() * sin_a);
-    	setZ(axis.getZ() * sin_a);
-    	setW(cos_a);
-    	
-    	normalize();
-    	
-    	return this;
-    }
+//    protected Quaternion setFromAxisAngle(Vector3f axis, double angle) {
+//    	double sin_a = Math.sin( angle / 2 );
+//	    double cos_a = Math.cos( angle / 2 );
+//
+//	    setX(axis.getX() * sin_a);
+//    	setY(axis.getY() * sin_a);
+//    	setZ(axis.getZ() * sin_a);
+//    	setW(cos_a);
+//    	
+//    	normalize();
+//    	
+//    	return this;
+//    }
     
-    public Quaternion setFromAngles(double ax, double ay, double az) {
-    	Quaternion qx = new Quaternion();
-    	qx.setFromAxisAngle(Vector3f.UNIT_X, ax);
-    	Quaternion qy = new Quaternion();
-    	qy.setFromAxisAngle(Vector3f.UNIT_Y, ay);
-    	Quaternion qz = new Quaternion();
-    	qz.setFromAxisAngle(Vector3f.UNIT_Z, az);
-    	set(qx);
-    	multiply(qy);
-    	multiply(qz);
-    	return this;
-    }
+//    public Quaternion setFromAngles(double ax, double ay, double az) {
+//    	Quaternion qx = new Quaternion();
+//    	qx.setFromAxisAngle(Vector3f.UNIT_X, ax);
+//    	Quaternion qy = new Quaternion();
+//    	qy.setFromAxisAngle(Vector3f.UNIT_Y, ay);
+//    	Quaternion qz = new Quaternion();
+//    	qz.setFromAxisAngle(Vector3f.UNIT_Z, az);
+//    	set(qx);
+//    	multiply(qy);
+//    	multiply(qz);
+//    	return this;
+//    }
     
 //    public Quaternion setFromAngles2(double ax, double ay, double az) {
 //    	Quaternion qx = new Quaternion(Math.cos(ax/2f), Math.sin(ax/2f), 0, 0);
@@ -338,34 +354,34 @@ public class Quaternion {
         		matrix.getValue(2,0), matrix.getValue(2,1), matrix.getValue(2,2));
     }
     
-    public Rotate getRotate() {
-    	normalize();
-
-	    double cos_a = getW();
-	    double angle = Math.acos( cos_a ) * 2;
-	    double sin_a = Math.sqrt( 1.0 - cos_a * cos_a );
-	    
-	    if (Math.abs(sin_a) < 0.0005) {
-	    	sin_a = 1;
-	    }
-	    double ax = getX() / sin_a;
-	    double ay = getY() / sin_a;
-	    double az = getZ() / sin_a;
-	    
-	    Rotate rotate = new Rotate();
-	    
-    	rotate.setAngleX(angle*ax);
-    	rotate.setAngleY(angle*ay);
-    	rotate.setAngleZ(angle*az);
-    	rotate.clamp();
-    	
-	    return rotate;
-	    
-//    	double [] angles = toEulerAngles();
-//    	return new Rotate(MathUtils.clamp(angles[2]), 
-//    					  MathUtils.clamp(angles[0]), 
-//    					  MathUtils.clamp(angles[1]));
-    }
+//    public Rotate getRotate() {
+//    	normalize();
+//
+//	    double cos_a = getW();
+//	    double angle = Math.acos( cos_a ) * 2;
+//	    double sin_a = Math.sqrt( 1.0 - cos_a * cos_a );
+//	    
+//	    if (Math.abs(sin_a) < 0.0005) {
+//	    	sin_a = 1;
+//	    }
+//	    double ax = getX() / sin_a;
+//	    double ay = getY() / sin_a;
+//	    double az = getZ() / sin_a;
+//	    
+//	    Rotate rotate = new Rotate();
+//	    
+//    	rotate.setAngleX(angle*ax);
+//    	rotate.setAngleY(angle*ay);
+//    	rotate.setAngleZ(angle*az);
+//    	rotate.clamp();
+//    	
+//	    return rotate;
+//	    
+////    	double [] angles = toEulerAngles();
+////    	return new Rotate(MathUtils.clamp(angles[2]), 
+////    					  MathUtils.clamp(angles[0]), 
+////    					  MathUtils.clamp(angles[1]));
+//    }
 
     public double getW() {
         return _w;
@@ -546,11 +562,11 @@ public class Quaternion {
         return this;
     }
     
-    public void set(final Rotate rotate) {
-    	setFromAngles(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
-//    	setFromAngles2(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
-//    	setFromRotate(rotate);
-    }
+//    public void set(final Rotate rotate) {
+//    	setFromAngles(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
+////    	setFromAngles2(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
+////    	setFromRotate(rotate);
+//    }
 
     /**
      * Sets the value of this quaternion to (0, 0, 0, 1). Equivalent to calling set(0, 0, 0, 1)

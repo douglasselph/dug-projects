@@ -18,9 +18,6 @@ package com.tipsolutions.jacket.data;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.math.Rotate;
-import com.tipsolutions.jacket.math.Vector3f;
-
 /**
  * Supports all shapes.
  */
