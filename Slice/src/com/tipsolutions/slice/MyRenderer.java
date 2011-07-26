@@ -20,7 +20,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.data.Shape;
-import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -33,7 +32,6 @@ class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
     Shape mShape = null;
-    boolean mInit = false;
 
     public MyRenderer(ControlSurfaceView view, Shape shape, ControlCamera camera, boolean useTranslucentBackground) {
     	super(view, camera);
@@ -44,31 +42,12 @@ class MyRenderer extends ControlRenderer {
     
     public void setShape(Shape shape) {
     	mShape = shape;
-    	mInit = false;
     }
 
     public void onDrawFrame(GL10 gl) {
     	super.onDrawFrame(gl);
         
     	if (mShape != null) {
-    		if (!mInit) {
-    			mInit = true;
-    			if (mShape.hasVertexArray()) {
-    	    		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-    			} else {
-    	    		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
-    			}
-    			if (mShape.hasNormalArray()) {
-    	    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-    			} else {
-    	    		gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
-    			}
-    			if (mShape.hasColorArray()) {
-    	    		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-    			} else {
-    	    		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
-    			}
-    		}
             mShape.onDraw(gl);
     	}
 //        /*

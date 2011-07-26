@@ -170,6 +170,71 @@ public class Matrix3f {
         return mData[row][column];
     }
     
+    public Matrix3f mult(final Matrix3f matrix) {
+    	float data00 = getValue(0,0);
+    	float data01 = getValue(0,1);
+    	float data02 = getValue(0,2);
+    	float data10 = getValue(1,0);
+    	float data11 = getValue(1,1);
+    	float data12 = getValue(1,2);
+    	float data20 = getValue(2,0);
+    	float data21 = getValue(2,1);
+    	float data22 = getValue(2,2);
+    	
+    	float m00 = matrix.getValue(0,0);
+    	float m01 = matrix.getValue(0,1);
+    	float m02 = matrix.getValue(0,2);
+    	float m10 = matrix.getValue(1,0);
+    	float m11 = matrix.getValue(1,1);
+    	float m12 = matrix.getValue(1,2);
+    	float m20 = matrix.getValue(2,0);
+    	float m21 = matrix.getValue(2,1);
+    	float m22 = matrix.getValue(2,2);
+    	
+        double temp00 = data00 * m00 + data01 * m10 + data02 * m20;
+        double temp01 = data00 * m01 + data01 * m11 + data02 * m21;
+        double temp02 = data00 * m02 + data01 * m12 + data02 * m22;
+
+        double temp10 = data10 * m00 + data11 * m10 + data12 * m20;
+        double temp11 = data10 * m01 + data11 * m11 + data12 * m21;
+        double temp12 = data10 * m02 + data11 * m12 + data12 * m22;
+
+        double temp20 = data20 * m00 + data21 * m10 + data22 * m20;
+        double temp21 = data20 * m01 + data21 * m11 + data22 * m21;
+        double temp22 = data20 * m02 + data21 * m12 + data22 * m22;
+
+        set(temp00, temp01, temp02, 
+        	temp10, temp11, temp12, 
+        	temp20, temp21, temp22);
+
+        return this;
+    }
+    
+    public Matrix3f set(double m00, double m01, double m02,
+    					double m10, double m11, double m12,
+    					double m20, double m21, double m22) {
+    	return set((float)m00, (float) m01, (float) m02,
+    			   (float)m10, (float) m11, (float) m12,
+    			   (float)m20, (float) m21, (float) m22);
+    }
+    
+    public Matrix3f set(float m00, float m01, float m02,
+    					float m10, float m11, float m12,
+    					float m20, float m21, float m22) {
+        mData[0][0] = m00;
+        mData[1][0] = m10;
+        mData[2][0] = m20;
+
+        mData[0][1] = m01;
+        mData[1][1] = m11;
+        mData[2][1] = m21;
+
+        mData[0][2] = m02;
+        mData[1][2] = m12;
+        mData[2][2] = m22;
+        return this;
+    }
+    
     public Matrix3f set(final Matrix3f source) {
         mData[0][0] = source.getValue(0, 0);
         mData[1][0] = source.getValue(1, 0);

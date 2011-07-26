@@ -63,26 +63,7 @@ public class Matrix4f {
     	setValue(3, 2, getValue(3, 2) + loc.getZ());
     }
     
-    // Note: this yields inaccuracies due to gimbal lock
-//    public void addRotate(final Rotate rotate) {
-//    	Rotate cur = getRotate();
-//    	Rotate post = new Rotate(cur).add(rotate);
-//    	setRotate(getRotate().add(rotate));
-//    }
-
-	// Note: Uses Quaternion to avoid the inaccuracies that surface
-	// using with the getRotate() function (gimball lock problems).
-//    public void addRotateQuat(final Rotate rotate) {
-//    	Matrix3f rotMatrix = getRotationMatrix();
-//    	Quaternion quatRot = new Quaternion();
-//    	quatRot.fromRotationMatrix(rotMatrix);
-//    	Rotate curRotate = quatRot.getRotate();
-//    	curRotate.add(rotate);
-//    	quatRot.set(curRotate);
-//    	rotMatrix = quatRot.toRotationMatrix3f();
-//    	setRotation(rotMatrix);
-//    }
-    
+ 
     /**
      * Multiplies the given vector by this matrix (v * M). If supplied, the result is stored into the supplied "store"
      * vector.
@@ -160,114 +141,16 @@ public class Matrix4f {
     }
     
     public Vector3f getLocation() {
-    	return new Vector3f(getValue(0, 3), 
-    					    getValue(1, 3), 
-    					    getValue(2, 3));
+    	return new Vector3f(getValue(3, 0), 
+    					    getValue(3, 1), 
+    					    getValue(3, 2));
     }
-    
-    // Gets the rotation using "direct" methods because it is very
-    // accurate for most values. For values that are subject to 
-    // "gimball lock", use the Quaternion approach.
-//    public Rotate getRotate() {
-//    	/*
-//        	 |  0  1  2  3 |
-//        M =  |  4  5  6  7 |
-//             |  8  9 10 11 |
-//             | 12 13 14 15 |
-//        */
-//    	double angle_x, angle_y, angle_z;
-//    	double Cy;
-////    	double tr_x, tr_y;
-//    	double verify;
-//    	
-//    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */ /* was -asin(m[2]) */
-//    	Cy      = Math.cos( angle_y );
-//
-//    	if (Math.abs( Cy ) <= 0.005) {/* Gimball lock? */
-//    		return getRotateQuat();
-//    	}
-//    	// Two ways of getting angle_z, should yield the same result */
-//    	angle_z = Math.asin(-getValue(0,1)/Cy);
-//    	verify = Math.acos(getValue(0,0)/Cy);
-//    	
-//    	// Two of getting angle_x, should yield the same result */
-//    	angle_x = Math.asin(-getValue(1,2)/Cy);
-//    	verify = Math.acos(getValue(2,2)/Cy);
-//    	
-//    	// OLD WAY from the web didn't work that well:
-////    	tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
-////    	tr_y      = -getValue(1,2) /*mat[6]*// Cy;
-////
-////    	angle_x  = Math.atan2( tr_y, tr_x );
-////
-////    	tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
-////    	tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
-////
-////    	angle_z = Math.atan2( tr_y, tr_x );
-//    	
-//    	angle_x = MathUtils.clamp( angle_x );
-//    	angle_y = MathUtils.clamp( angle_y );
-//    	angle_z = MathUtils.clamp( angle_z );
-//    	
-//    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
-//    }
-    
-    // A "standard" way of determining the rotations.
-    // this way can lead to inaccuracies for certain values 
-    // because of "gimball lock".
-//    public Rotate getRotateDirect() {
-//    	/*
-//        	 |  0  1  2  3 |
-//        M =  |  4  5  6  7 |
-//             |  8  9 10 11 |
-//             | 12 13 14 15 |
-//        */
-//    	double angle_x, angle_y, angle_z;
-//    	double Cy;
-//    	double tr_x, tr_y;
-//    	
-//    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */
-//    	Cy      = Math.cos(angle_y);
-//
-//    	if (Math.abs( Cy ) > 0.005)             /* Gimball lock? */
-//    	{
-//    		angle_x = Math.asin(-getValue(1,2)/Cy);
-//    		angle_z = Math.asin(-getValue(0,1)/Cy);
-//    	
-//    		// OLD WAY didn't work that well.
-////    		tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
-////    		tr_y      = -getValue(1,2) /*mat[6]*// Cy;
-//
-////    		angle_x  = Math.atan2( tr_y, tr_x );
-//
-////    		tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
-////    		tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
-//
-////    		angle_z  = Math.atan2( tr_y, tr_x );
-//    	} else { /* Gimball lock has occurred */
-//    		angle_x  = 0;                      /* Set X-axis angle to zero */
-//
-//    		tr_x      = getValue(1,1)/*mat[5]*/; /* And calculate Z-axis angle */
-//    		tr_y      = getValue(1,0)/*mat[4]*/;
-//
-//    		angle_z  = Math.atan2( tr_y, tr_x );
-//    	}
-//    	angle_x = MathUtils.clamp( angle_x );
-//    	angle_y = MathUtils.clamp( angle_y );
-//    	angle_z = MathUtils.clamp( angle_z );
-//    	
-//    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
-//    }
-//    
-//    public Rotate getRotateQuat() {
-//    	return getQuaternion().getRotate();
-//    }
-    
+
     public Quaternion getQuaternion() {
     	return new Quaternion().fromRotationMatrix(this);
     }
     
-    public Matrix3f getRotationMatrix() {
+    public Matrix3f getRotation() {
     	return new Matrix3f(
     			getValue(0,0), getValue(0,1), getValue(0,2),
     			getValue(1,0), getValue(1,1), getValue(1,2),
@@ -419,9 +302,10 @@ public class Matrix4f {
     }
     
     public void setLocation(final Vector3f v) {
-    	setValue(0, 3, v.getX());
-    	setValue(1, 3, v.getY());
-    	setValue(2, 3, v.getZ());
+    	setValue(3, 0, v.getX());
+    	setValue(3, 1, v.getY());
+    	setValue(3, 2, v.getZ());
+    	setValue(3, 3, 1);
     }
     
     // Set rotation part of this matrix, leaving everything else as is.
@@ -489,6 +373,123 @@ public class Matrix4f {
 		sbuf.append("]");
 		return sbuf.toString();
 	}
+	
+// Note: this yields inaccuracies due to gimbal lock
+//  public void addRotate(final Rotate rotate) {
+//  	Rotate cur = getRotate();
+//  	Rotate post = new Rotate(cur).add(rotate);
+//  	setRotate(getRotate().add(rotate));
+//  }
+
+	// Note: Uses Quaternion to avoid the inaccuracies that surface
+	// using with the getRotate() function (gimball lock problems).
+//  public void addRotateQuat(final Rotate rotate) {
+//  	Matrix3f rotMatrix = getRotationMatrix();
+//  	Quaternion quatRot = new Quaternion();
+//  	quatRot.fromRotationMatrix(rotMatrix);
+//  	Rotate curRotate = quatRot.getRotate();
+//  	curRotate.add(rotate);
+//  	quatRot.set(curRotate);
+//  	rotMatrix = quatRot.toRotationMatrix3f();
+//  	setRotation(rotMatrix);
+//  }
+  
+    // Gets the rotation using "direct" methods because it is very
+    // accurate for most values. For values that are subject to 
+    // "gimball lock", use the Quaternion approach.
+//    public Rotate getRotate() {
+//    	/*
+//        	 |  0  1  2  3 |
+//        M =  |  4  5  6  7 |
+//             |  8  9 10 11 |
+//             | 12 13 14 15 |
+//        */
+//    	double angle_x, angle_y, angle_z;
+//    	double Cy;
+////    	double tr_x, tr_y;
+//    	double verify;
+//    	
+//    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */ /* was -asin(m[2]) */
+//    	Cy      = Math.cos( angle_y );
+//
+//    	if (Math.abs( Cy ) <= 0.005) {/* Gimball lock? */
+//    		return getRotateQuat();
+//    	}
+//    	// Two ways of getting angle_z, should yield the same result */
+//    	angle_z = Math.asin(-getValue(0,1)/Cy);
+//    	verify = Math.acos(getValue(0,0)/Cy);
+//    	
+//    	// Two of getting angle_x, should yield the same result */
+//    	angle_x = Math.asin(-getValue(1,2)/Cy);
+//    	verify = Math.acos(getValue(2,2)/Cy);
+//    	
+//    	// OLD WAY from the web didn't work that well:
+////    	tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
+////    	tr_y      = -getValue(1,2) /*mat[6]*// Cy;
+////
+////    	angle_x  = Math.atan2( tr_y, tr_x );
+////
+////    	tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
+////    	tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
+////
+////    	angle_z = Math.atan2( tr_y, tr_x );
+//    	
+//    	angle_x = MathUtils.clamp( angle_x );
+//    	angle_y = MathUtils.clamp( angle_y );
+//    	angle_z = MathUtils.clamp( angle_z );
+//    	
+//    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
+//    }
     
+    // A "standard" way of determining the rotations.
+    // this way can lead to inaccuracies for certain values 
+    // because of "gimball lock".
+//    public Rotate getRotateDirect() {
+//    	/*
+//        	 |  0  1  2  3 |
+//        M =  |  4  5  6  7 |
+//             |  8  9 10 11 |
+//             | 12 13 14 15 |
+//        */
+//    	double angle_x, angle_y, angle_z;
+//    	double Cy;
+//    	double tr_x, tr_y;
+//    	
+//    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */
+//    	Cy      = Math.cos(angle_y);
+//
+//    	if (Math.abs( Cy ) > 0.005)             /* Gimball lock? */
+//    	{
+//    		angle_x = Math.asin(-getValue(1,2)/Cy);
+//    		angle_z = Math.asin(-getValue(0,1)/Cy);
+//    	
+//    		// OLD WAY didn't work that well.
+////    		tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
+////    		tr_y      = -getValue(1,2) /*mat[6]*// Cy;
+//
+////    		angle_x  = Math.atan2( tr_y, tr_x );
+//
+////    		tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
+////    		tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
+//
+////    		angle_z  = Math.atan2( tr_y, tr_x );
+//    	} else { /* Gimball lock has occurred */
+//    		angle_x  = 0;                      /* Set X-axis angle to zero */
+//
+//    		tr_x      = getValue(1,1)/*mat[5]*/; /* And calculate Z-axis angle */
+//    		tr_y      = getValue(1,0)/*mat[4]*/;
+//
+//    		angle_z  = Math.atan2( tr_y, tr_x );
+//    	}
+//    	angle_x = MathUtils.clamp( angle_x );
+//    	angle_y = MathUtils.clamp( angle_y );
+//    	angle_z = MathUtils.clamp( angle_z );
+//    	
+//    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
+//    }
+//    
+//    public Rotate getRotateQuat() {
+//    	return getQuaternion().getRotate();
+//    }
     
 }

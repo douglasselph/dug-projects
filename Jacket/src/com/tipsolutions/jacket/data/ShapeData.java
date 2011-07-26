@@ -14,7 +14,10 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.math.Matrix4f;
+import com.tipsolutions.jacket.math.Vector3f;
 
 public class ShapeData {
 	
@@ -143,6 +146,9 @@ public class ShapeData {
 	protected ShapeData [] _getChildren() { return null; }
 	protected Matrix4f _getMatrix() { return null; }
 	
+	// Returns the given object matrix if any.
+	// Will return NULL if no matrix predefined transformation for the object
+	// has been defined.
 	protected Matrix4f getMatrix() {
 		if (mMatrix == null) {
 			mMatrix = _getMatrix();
@@ -223,106 +229,6 @@ public class ShapeData {
 		int size();
 	}
 	
-	static int compare(FloatBuffer buf1, FloatBuffer buf2, String tag, String who, MessageWriter msg) {
-		if (buf1 == null && buf2 == null) {
-			return 0;
-		}
-		if (buf1 == null) {
-			msg.msg(tag, "First buffer was null");
-			return 1;
-		} else if (buf2 == null) {
-			msg.msg(tag, "Second buffer was null");
-			return 1;
-		}
-		int numDiffs = 0;
-		if (buf1.limit() != buf2.limit()) {
-			StringBuffer sbuf = new StringBuffer();
-			sbuf.append(who);
-			sbuf.append(" buffers have different sizes: ");
-			sbuf.append(buf1.limit());
-			sbuf.append(" != ");
-			sbuf.append(buf2.limit());
-			msg.msg(tag, sbuf.toString());
-			numDiffs++;
-		}
-		buf1.rewind();
-		buf2.rewind();
-		float f1, f2;
-		
-		while (buf1.position() < buf1.limit()) {
-			if ((f1 = buf1.get()) != (f2 = buf2.get())) {
-    			StringBuffer sbuf = new StringBuffer();
-    			sbuf.append(who);
-    			sbuf.append(" different value at ");
-    			sbuf.append(buf1.position());
-    			sbuf.append(" :");
-    			sbuf.append(f1);
-    			sbuf.append(" != ");
-    			sbuf.append(f2);
-    			msg.msg(tag, sbuf.toString());
-    			numDiffs++;
-			}
-		}
-		return numDiffs;
-	}
-	
-	static boolean compare(MessageWriter msg, String tag, String name, float val1, float val2) {
-		if (val1 != val2) {
-			StringBuffer sbuf = new StringBuffer();
-			sbuf.append(name);
-			sbuf.append(":");
-			sbuf.append(val1);
-			sbuf.append(" != ");
-			sbuf.append(val2);
-			msg.msg(tag, sbuf.toString());
-			return false;
-		}
-		return true;
-    }
-	
-	static int compare(ShortBuffer buf1, ShortBuffer buf2, String tag, String who, MessageWriter msg) {
-		if (buf1 == null && buf2 == null) {
-			return 0;
-		}
-		if (buf1 == null) {
-			msg.msg(tag, "First buffer was null");
-			return 1;
-		} else if (buf2 == null) {
-			msg.msg(tag, "Second buffer was null");
-			return 1;
-		}
-		int numDiffs = 0;
-		if (buf1.limit() != buf2.limit()) {
-			StringBuffer sbuf = new StringBuffer();
-			sbuf.append(who);
-			sbuf.append(" buffers have different sizes: ");
-			sbuf.append(buf1.limit());
-			sbuf.append(" != ");
-			sbuf.append(buf2.limit());
-			msg.msg(tag, sbuf.toString());
-			numDiffs++;
-		}
-		buf1.rewind();
-		buf2.rewind();
-		short s1, s2;
-		
-		while (buf1.position() < buf1.limit()) {
-			if ((s1 = buf1.get()) != (s2 = buf2.get())) {
-    			StringBuffer sbuf = new StringBuffer();
-    			sbuf.append(who);
-    			sbuf.append(" different value at ");
-    			sbuf.append(buf1.position());
-    			sbuf.append(" :");
-    			sbuf.append(s1);
-    			sbuf.append(" != ");
-    			sbuf.append(s2);
-    			msg.msg(tag, sbuf.toString());
-    			numDiffs++;
-			}
-		}
-		return numDiffs;
-	}
-
 	public void compare(String tag, ShapeData other, MessageWriter msg) {
 		FloatBuffer vertexBuf = getVertexBuf();
 		FloatBuffer normalBuf = getNormalBuf();
@@ -336,27 +242,27 @@ public class ShapeData {
 		FloatBuffer colorBufO = other.getColorBuf();
 		FloatBuffer textureBufO = other.getTextureBuf();
 		
-		if (compare(vertexBuf, vertexBufO, tag, "Vertex", msg) == 0) {
+		if (ShapeUtils.compare(vertexBuf, vertexBufO, tag, "Vertex", msg) == 0) {
 			msg.msg(tag, "vertex buffers identical");
 		}
-		if (compare(normalBuf, normalBufO, tag, "Normal", msg) == 0) {
+		if (ShapeUtils.compare(normalBuf, normalBufO, tag, "Normal", msg) == 0) {
 			msg.msg(tag, "normal buffers identical");
 		}
-		if (compare(indexBuf, indexBufO, tag, "Index", msg) == 0) {
+		if (ShapeUtils.compare(indexBuf, indexBufO, tag, "Index", msg) == 0) {
 			msg.msg(tag, "index buffers identical");
 		}
-		if (compare(colorBuf, colorBufO, tag, "Color", msg) == 0) {
+		if (ShapeUtils.compare(colorBuf, colorBufO, tag, "Color", msg) == 0) {
 			msg.msg(tag, "color buffers identical");
 		}
-		if (compare(textureBuf, textureBufO, tag, "Texture", msg) == 0) {
+		if (ShapeUtils.compare(textureBuf, textureBufO, tag, "Texture", msg) == 0) {
 			msg.msg(tag, "texture buffers identical");
 		}
-		compare(msg, tag, "MinX", getMinX(), other.getMinX());
-		compare(msg, tag, "MinY", getMinY(), other.getMinY());
-		compare(msg, tag, "MinZ", getMinZ(), other.getMinZ());
-		compare(msg, tag, "MaxX", getMaxX(), other.getMaxX());
-		compare(msg, tag, "MaxY", getMaxY(), other.getMaxY());
-		compare(msg, tag, "MaxZ", getMaxZ(), other.getMaxZ());
+		ShapeUtils.compare(msg, tag, "MinX", getMinX(), other.getMinX());
+		ShapeUtils.compare(msg, tag, "MinY", getMinY(), other.getMinY());
+		ShapeUtils.compare(msg, tag, "MinZ", getMinZ(), other.getMinZ());
+		ShapeUtils.compare(msg, tag, "MaxX", getMaxX(), other.getMaxX());
+		ShapeUtils.compare(msg, tag, "MaxY", getMaxY(), other.getMaxY());
+		ShapeUtils.compare(msg, tag, "MaxZ", getMaxZ(), other.getMaxZ());
 		
 		if (getMatrix() != null) {
 			if (other.getMatrix() == null) {
@@ -370,7 +276,7 @@ public class ShapeData {
 						sbuf.append("][");
 						sbuf.append(col);
 						sbuf.append("]");
-						compare(msg, tag, sbuf.toString(), getMatrix().getValue(row, col), other.getMatrix().getValue(row, col));
+						ShapeUtils.compare(msg, tag, sbuf.toString(), getMatrix().getValue(row, col), other.getMatrix().getValue(row, col));
 					}
 				}
 			}
@@ -414,52 +320,64 @@ public class ShapeData {
 	
 	public void computeBounds() {
 		FloatBuffer buf = getVertexBuf();
-		if (buf == null) {
-			return;
+		
+		class ComputeBounds {
+    		float minX = 0;
+    		float minY = 0;
+    		float minZ = 0;
+    		float maxX = 0;
+    		float maxY = 0;
+    		float maxZ = 0;
+    		boolean initialized = false;
+    		
+    		void apply(float x, float y, float z) {
+    			if (!initialized) {
+            		minX = x;
+            		minY = y;
+            		minZ = z;
+            		maxX = x;
+            		maxY = y;
+            		maxZ = z;
+            		initialized = true;
+    			} else {
+        			if (x < minX) {
+        				minX = x;
+        			} else if (x > maxX) {
+        				maxX = x;
+        			}
+        			if (y < minY) {
+        				minY = y;
+        			} else if (y > maxY) {
+        				maxY = y;
+        			}
+        			if (z < minZ) {
+        				minZ = z;
+        			} else if (z > maxZ) {
+        				maxZ = z;
+        			}
+    			}
+    		}
+		};
+		ComputeBounds computeBounds = new ComputeBounds();
+		if (buf != null) {
+    		while (buf.position() < buf.limit()) {
+    			computeBounds.apply(buf.get(), buf.get(), buf.get());
+    		}
 		}
-		allocBounds();
-		
-		float minX = buf.get();
-		float minY = buf.get();
-		float minZ = buf.get();
-		float maxX = minX;
-		float maxY = minY;
-		float maxZ = minZ;
-		
-		float x, y, z;
-		
-		while (buf.position() < buf.limit()) {
-			x = buf.get();
-			y = buf.get();
-			z = buf.get();
-			if (x < minX) {
-				minX = x;
-			} else if (x > maxX) {
-				maxX = x;
-			}
-			if (y < minY) {
-				minY = y;
-			} else if (y > maxY) {
-				maxY = y;
-			}
-			if (z < minZ) {
-				minZ = z;
-			} else if (z > maxZ) {
-				maxZ = z;
-			}
-		}
-		setMinX(minX);
-		setMinY(minY);
-		setMinZ(minZ);
-		setMaxX(maxX);
-		setMaxY(maxY);
-		setMaxZ(maxZ);
-		
 		if (getChildren() != null) {
 			for (ShapeData child : getChildren()) {
 				child.computeBounds();
+				computeBounds.apply(child.getMinX(), child.getMinY(), child.getMinZ());
+				computeBounds.apply(child.getMaxX(), child.getMaxY(), child.getMaxZ());
 			}
 		}
+		allocBounds();
+		setMinX(computeBounds.minX);
+		setMinY(computeBounds.minY);
+		setMinZ(computeBounds.minZ);
+		setMaxX(computeBounds.maxX);
+		setMaxY(computeBounds.maxY);
+		setMaxZ(computeBounds.maxZ);
 	}
 
 	public void fill() {
@@ -503,31 +421,69 @@ public class ShapeData {
 	}
 	
 	public void onDraw(GL10 gl) {
+		onDraw(gl, null);
+	}
+	
+	public void onDraw(GL10 gl, final Matrix4f curMatrix) {
 		FloatBuffer fbuf;
-		Matrix4f matrix;
+		boolean didPush = false;
 		
-		if ((matrix = getMatrix()) != null) {
+		Matrix4f useMatrix = curMatrix;
+		Matrix4f matrix = getMatrix();
+		if (matrix == null) {
+			useMatrix = curMatrix;
+		} else {
+			if (curMatrix == null) {
+				useMatrix = matrix;
+			} else {
+    			useMatrix = new Matrix4f(curMatrix).mult(matrix);
+			}
 			gl.glMatrixMode(GL10.GL_MODELVIEW);
-			gl.glMultMatrixf(matrix.getArray(), 0);
+			gl.glPushMatrix();
+			didPush = true;
+			Log.d("DEBUG", "MATRIX " + useMatrix.toString());
+			Matrix4f tmp = new Matrix4f();
+			gl.glLoadMatrixf(tmp.getArray(), 0);
 		}
 		if ((fbuf = getVertexBuf()) != null) {
+    		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
     		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
+		} else {
+    		gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		}
 		if ((fbuf = getNormalBuf()) != null) {
+    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
     		gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
+		} else {
+    		gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 		}
 		if ((fbuf = getColorBuf()) != null) {
+    		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
     		gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
     		
     		// Not doing it this way anymore:
 //    		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
+		} else {
+    		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 		}
 		if ((fbuf = getTextureBuf()) != null) {
+    		gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
     		gl.glTexCoordPointer(4, GL10.GL_FLOAT, 0, fbuf);
+		} else {
+    		gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 		}
 		ShortBuffer sbuf;
 		if ((sbuf = getIndexBuf()) != null) {
 			gl.glDrawElements(mIndexMode, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
+		}
+		if (mChildren != null) {
+			for (ShapeData shape : mChildren) {
+				shape.onDraw(gl, useMatrix);
+			}
+		}
+		if (didPush) {
+    		gl.glPopMatrix();
+    		Log.d("DEBUG", "POP");
 		}
 	}
 	
