@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,7 +15,6 @@ import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Rotate;
@@ -237,8 +237,7 @@ public class Main extends Activity {
 //        mSurfaceView.requestFocus();
 //        mSurfaceView.setFocusableInTouchMode(true);
         
-//        testMatrixAddRotate();
-        testMatrixAddRotateQuat();
+        testMatrixAddRotate(OPTION_GET_CHOICE | OPTION_ADD_DIRECT);
     }
     
     void setShape(Shape shape) {
@@ -333,160 +332,191 @@ public class Main extends Activity {
 		return super.onOptionsItemSelected(item);
 	}
 	
-	void testMatrixAddRotate() {
-		Matrix4f m = new Matrix4f();
-		assertEquals("Test1", m.getRotate(), new Rotate(0,0,0));
-		
-		m.addRotate(new Rotate(20, 0, 0, true));
-		assertEquals("Test2", m.getRotate(), new Rotate(20,0,0,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(0, 20, 0, true));
-		assertEquals("Test3", m.getRotate(), new Rotate(0,20,0,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(0, 0, 20, true));
-		assertEquals("Test4", m.getRotate(), new Rotate(0,0,20,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(20, 0, 0, true));
-		assertEquals("Test5", m.getRotate(), new Rotate(20,0,0,true));
-		
-		m.addRotate(new Rotate(0, 30, 0, true));
-		assertEquals("Test6", m.getRotate(), new Rotate(20,30,0,true));
-		
-		m.addRotate(new Rotate(0, 0, 10, true));
-		assertEquals("Test7", m.getRotate(), new Rotate(20,30,10,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(-15, 0, 0, true));
-		assertEquals("Test8", m.getRotate(), new Rotate(360-16,0,0,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(0, -15, 0, true));
-		assertEquals("Test9", m.getRotate(), new Rotate(0,360-16,0,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(0, 0, -15, true));
-		assertEquals("Test10", m.getRotate(), new Rotate(0,0,360-16,true));
-		
-		m.setIdentity();
-		m.addRotate(new Rotate(-20, 10, 0, true));
-		assertEquals("Test11", m.getRotate(), new Rotate(360-20,10,0,true));
-		
-		m.setIdentity();
-		m.setRotate(new Rotate(340, 0, 0, true));
-		m.addRotate(new Rotate(60, 0, 0, true));
-		assertEquals("Test12", m.getRotate(), new Rotate(40,0,0,true));
-		
-		m.setIdentity();
-		m.setRotate(new Rotate(0, 340, 0, true));
-		m.addRotate(new Rotate(0, 60, 0, true));
-		assertEquals("Test13", m.getRotate(), new Rotate(0,40,0,true));
-		
-		m.setIdentity();
-		m.setRotate(new Rotate(0, 0, 340, true));
-		m.addRotate(new Rotate(0, 0, 60, true));
-		assertEquals("Test14", m.getRotate(), new Rotate(0,0,40,true));
-		
-		m.setIdentity();
-		m.setRotate(new Rotate(170, 340, 0, true));
-		m.addRotate(new Rotate(10, -40, 0, true));
-		assertEquals("Test15", m.getRotate(), new Rotate(180,300,0,true));
-		
-		m.setIdentity();
-		m.setRotate(new Rotate(325, 80, 0, true));
-		m.addRotate(new Rotate(-5, 10, 0, true));
-		assertEquals("Test16", m.getRotate(), new Rotate(320,90,0,true));
-	}
+	static final int OPTION_GET_DIRECT = 1;
+	static final int OPTION_GET_QUAT  =  2;
+	static final int OPTION_GET_CHOICE = 3;
+	static final int OPTION_GET_MASK   = 3;
 	
-	void testMatrixAddRotateQuat() {
+	static final int OPTION_ADD_DIRECT = 4;
+	static final int OPTION_ADD_QUAT   = 8;
+	static final int OPTION_ADD_MASK   = 12;
+	
+	void testMatrixAddRotate(final int options) {
+		
 		class Test {
-			String name;
-			int initX, initY, initZ;
-			boolean reset;
+			String mName;
+			Vector3f mVecInit;
+			Vector3f mVecPost;
+			int mRotX, mRotY, mRotZ;
+			boolean mReset = true;
 			
-			Test(String n, int x, int y, int z, boolean r) {
-				name = n;
-				initX = x;
-				initY = y;
-				initZ = z;
-				reset = r;
+			Test(String name, int rx, int ry, int rz, Vector3f initVec, Vector3f postVec) {
+				mName = name;
+				mRotX = rx;
+				mRotY = ry;
+				mRotZ = rz;
+				mVecInit = initVec;
+				mVecPost = postVec;
 			}
 			
-			void run(Matrix4f m, Rotate cur) {
-				if (reset) {
+			void addRotate(Matrix4f m, Rotate rot) {
+				if ((options & OPTION_ADD_MASK) == OPTION_ADD_DIRECT) {
+    				m.addRotate(rot);
+				} else {
+    				m.addRotateQuat(rot);
+				}
+			}
+			
+			Rotate getRotate(Matrix4f m) {
+				if ((options & OPTION_GET_MASK) == OPTION_GET_CHOICE) {
+					return m.getRotate();
+				} else if ((options & OPTION_GET_MASK) == OPTION_GET_DIRECT) {
+					return m.getRotateDirect(); 
+				} else {
+					return m.getRotateQuat(); 
+				}
+			}
+			
+			float run(Matrix4f m, Rotate cur) {
+				if (mReset) {
 					m.setIdentity();
 					cur.clear();
 				}
-				Rotate rot = new Rotate(initX, initY, initZ, true);
-				m.addRotateQuat(rot);
-				Rotate post = m.getRotateQuat();
+				float diff = 0;
+				Rotate rot = new Rotate(mRotX, mRotY, mRotZ, true);
+				addRotate(m, rot);
+				
+				Vector3f vec = new Vector3f(mVecInit);
+				m.applyPost(vec);
+				diff += assertEquals(mName + "V", mVecPost, vec);
+				
+				Rotate post = getRotate(m);
 				cur.add(rot);
 				cur.clamp();
-				assertEquals(name, post, cur);
+				diff += assertEquals(mName, post, cur);
+				
 				Matrix4f m2 = new Matrix4f();
-				m2.addRotateQuat(post);
-				Rotate post2 = m2.getRotateQuat();
-				assertEquals(name + "B", post2, post);
+				addRotate(m2, post);
+				Rotate post2 = getRotate(m2);
+				diff += assertEquals(mName + "B", post2, post);
+				
+				vec.set(mVecInit);
+				m.applyPost(vec);
+				diff += assertEquals(mName + "VB", mVecPost, vec);
+				
+				return diff;
 			}
 		};
-		ArrayList<Test> tests = new ArrayList<Test>();
-		tests.add(new Test("Test1", 0, 0, 0, true));
-		tests.add(new Test("Test2", 20, 0, 0, false));
-		tests.add(new Test("Test3", 0, 20, 0, true));
-		tests.add(new Test("Test4", 0, 0, 20, true));
-		tests.add(new Test("Test5", 20, 0, 0, true));
-		tests.add(new Test("Test6", 0, 30, 0, false));
-		tests.add(new Test("Test7", 0, 0, 10, false));
-		tests.add(new Test("Test8", -15, 0, 0, true));
-		tests.add(new Test("Test9", 0, -15, 0, true));
-		tests.add(new Test("Test10", 0, 0, -15, true));
-		tests.add(new Test("Test11", -20, 10, 0, true));
-		tests.add(new Test("Test12", 340, 0, 0, true));
-		tests.add(new Test("Test13", 60, 0, 0, false));
-		tests.add(new Test("Test14", 0, 340, 0, true));
-		tests.add(new Test("Test15", 0, 60, 0, false));
-		tests.add(new Test("Test16", 0, 0, 340, true));
-		tests.add(new Test("Test17", 0, 0, 60, false));
-		tests.add(new Test("Test18", 170, 340, 0, true));
-		tests.add(new Test("Test19", 10, -40, 0, false));
-		tests.add(new Test("Test20", 325, 80, 0, true));
-		tests.add(new Test("Test21", -5, 10, 0, false));
+		double cos45 = Math.cos(Math.toRadians(45));
+		float cos45f = (float) cos45;
 		
-		Quaternion compareQuat = new Quaternion();
-		for (int angle = 0; angle < 360; angle += 20) {
-    		compareQuat.setFromAngles(Math.toRadians(angle), 0, 0);
-    		Rotate postangle = compareQuat.getRotate();
-    		Log.d("DEBUG", "For " + angle + " = " + compareQuat.toString() + ", postangle=" + postangle.toString());
-		}
-		{
-			Quaternion quat2 = new Quaternion();
-			quat2.setFromAngles(Math.toRadians(20), Math.toRadians(30), 0);
-			Quaternion quat = new Quaternion();
-			Matrix4f m = new Matrix4f();
-			quat.set(new Rotate(20, 0, 0, true));
-			m.addRotateQuat(new Rotate(20, 0, 0, true));
-			Rotate c1 = m.getRotateQuat();
-			m.addRotateQuat(new Rotate(0, 30, 0, true));
-			Rotate c2 = m.getRotateQuat();
-			Log.d("DEBUG", "c1=" + c1.toString() + ", c2=" + c2.toString());
-		}
+		ArrayList<Test> tests = new ArrayList<Test>();
+//		tests.add(new Test("Test01", 0, 0, 0, new Vector3f(1,0,0), new Vector3f(1,0,0)));
+//		tests.add(new Test("Test02", 45, 0, 0, new Vector3f(1,0,0), new Vector3f(1,0,0)));
+//		tests.add(new Test("Test03", 45, 0, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,cos45f)));
+//		tests.add(new Test("Test04", 45, 0, 0, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
+//		tests.add(new Test("Test05", 0, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,0,-cos45f)));
+//		tests.add(new Test("Test06", 0, 45, 0, new Vector3f(0,1,0), new Vector3f(0,1,0)));
+//		tests.add(new Test("Test07", 0, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,0,cos45f)));
+//		tests.add(new Test("Test08", 0, 0, 45, new Vector3f(1,0,0), new Vector3f(cos45f,cos45f,0)));
+//		tests.add(new Test("Test09", 0, 0, 45, new Vector3f(0,1,0), new Vector3f(-cos45f,cos45f,0)));
+//		tests.add(new Test("Test10", 0, 0, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
+//		tests.add(new Test("Test11", -45, 0, 0, new Vector3f(1,1,0), new Vector3f(1,cos45f,-cos45f)));
+//		tests.add(new Test("Test12", 0, -45, 0, new Vector3f(1,1,0), new Vector3f(cos45f,1,cos45f)));
+//		tests.add(new Test("Test13", 0, 0, -45, new Vector3f(1,1,0), new Vector3f(2*cos45f,0,0)));
+//		tests.add(new Test("Test14", 315, 0, 0, new Vector3f(1,1,0), new Vector3f(1,cos45f,-cos45f)));
+//		tests.add(new Test("Test15", 0, 315, 0, new Vector3f(1,1,0), new Vector3f(cos45f,1,cos45f)));
+//		tests.add(new Test("Test16", 0, 0, 315, new Vector3f(1,1,0), new Vector3f(2*cos45f,0,0)));
+//		tests.add(new Test("Test17", 45, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,0.5f,-0.5f)));
+//		tests.add(new Test("Test18", 45, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,cos45f)));
+//		tests.add(new Test("Test19", 45, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,-.5f,0.5f)));
+//		tests.add(new Test("Test20", -45, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
+//		tests.add(new Test("Test21", -45, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,-cos45f)));
+//		tests.add(new Test("Test22", -45, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,.5f,0.5f)));
+//		tests.add(new Test("Test13", 315, 45, 0, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
+//		tests.add(new Test("Test24", 315, 45, 0, new Vector3f(0,1,0), new Vector3f(0,cos45f,-cos45f)));
+//		tests.add(new Test("Test25", 315, 45, 0, new Vector3f(0,0,1), new Vector3f(cos45f,.5f,0.5f)));
+//		tests.add(new Test("Test26", 45, 0, -45, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
+//		tests.add(new Test("Test27", 45, 0, -45, new Vector3f(0,1,0), new Vector3f(cos45f,0.5f,0.5f)));
+//		tests.add(new Test("Test28", 45, 0, -45, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
+//		tests.add(new Test("Test29", 45, 0, -45, new Vector3f(0,1,1), new Vector3f(cos45f,-cos45f+.5f,cos45f+.5f)));
+//		tests.add(new Test("Test30", 45, 0, -45, new Vector3f(1,0,1), new Vector3f(cos45f,-cos45f-.5f,cos45f-.5f)));
+//		tests.add(new Test("Test31", 45, 0, -45, new Vector3f(1,1,0), new Vector3f(cos45f*2,0,0)));
+//		tests.add(new Test("Test32", 45, 0, -45, new Vector3f(1,1,1), new Vector3f(cos45f*2,-cos45f,cos45f)));
+//		tests.add(new Test("Test33", 45, 0, 315, new Vector3f(1,0,0), new Vector3f(cos45f,-0.5f,-0.5f)));
+//		tests.add(new Test("Test34", 45, 0, 315, new Vector3f(0,1,0), new Vector3f(cos45f,0.5f,0.5f)));
+//		tests.add(new Test("Test35", 45, 0, 315, new Vector3f(0,0,1), new Vector3f(0,-cos45f,cos45f)));
+//		{
+			int angleX = 261;
+			int angleY = 38;
+			double angleXd = Math.toRadians(angleX);
+			double angleYd = Math.toRadians(angleY);
+			double Cx = Math.cos(angleXd);
+			double Sx = Math.sin(angleXd);
+			double Cy = Math.cos(angleYd);
+			double Sy = Math.sin(angleYd);
+			Vector3f expected = new Vector3f(
+					Cx+Sy,
+					Sx*Sy+Cx-Sx*Cy,
+					Cx*-Sy+Sx+Cx*Cy);
+    		tests.add(new Test("Test36", angleX, angleY, 0, new Vector3f(1,1,1), expected));
+//		}
+//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,1,0), new Vector3f(0,1,0)));
+//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
+//		tests.add(new Test("Test13", 45, 0, 45, new Vector3f(1,1,0), new Vector3f(1,1,0)));
+//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(1,0,0), new Vector3f(1,0,0)));
+//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(0,1,0), new Vector3f(0,1,0)));
+//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(0,0,1), new Vector3f(0,0,1)));
+//		tests.add(new Test("Test13", 0, 45, 45, new Vector3f(1,1,0), new Vector3f(1,1,0)));
+//		tests.add(new Test("Test12", 340, 0, 0, new Vector3f(1,1,0), new Vector3f(1,1,0)));
+//		tests.add(new Test("Test13", 45, 315, 45, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+//		tests.add(new Test("Test13", -45, 315, 45, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+//		tests.add(new Test("Test13", 0, 0, 340, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+//		tests.add(new Test("Test13", 0, 45, 315, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+//		tests.add(new Test("Test13", -45, 45, 315, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+//		tests.add(new Test("Test13", 170, 340, 10, new Vector3f(1,1,1), new Vector3f(1,1,1)));
+		
+//		Quaternion compareQuat = new Quaternion();
+//		for (int angle = 0; angle < 360; angle += 20) {
+//    		compareQuat.setFromAngles(Math.toRadians(angle), 0, 0);
+//    		Rotate postangle = compareQuat.getRotate();
+//    		Log.d("DEBUG", "For " + angle + " = " + compareQuat.toString() + ", postangle=" + postangle.toString());
+//		}
+//		{
+//			Quaternion quat2 = new Quaternion();
+//			quat2.setFromAngles(Math.toRadians(20), Math.toRadians(30), 0);
+//			Quaternion quat = new Quaternion();
+//			Matrix4f m = new Matrix4f();
+//			quat.set(new Rotate(20, 0, 0, true));
+//			m.addRotateQuat(new Rotate(20, 0, 0, true));
+//			Rotate c1 = m.getRotate();
+//			m.addRotateQuat(new Rotate(0, 30, 0, true));
+//			Rotate c2 = m.getRotateQuat();
+//			Log.d("DEBUG", "c1=" + c1.toString() + ", c2=" + c2.toString());
+//			Log.d("DEBUG", "c1=" + c1.toString());
+//		}
 		Matrix4f m = new Matrix4f();
 		Rotate cur = new Rotate();
+		float diff = 0;
 		for (Test test : tests) {
-			test.run(m, cur);
+			diff += test.run(m, cur);
 		}
+		Log.d(TAG, "Total diff=" + diff);
 	}
 	
-	void assertEquals(String what, Rotate r1, Rotate r2) {
-		assertEquals(what + " AngleX", r1.getAngleXDegrees(), r2.getAngleXDegrees());
-		assertEquals(what + " AngleY", r1.getAngleYDegrees(), r2.getAngleYDegrees());
-		assertEquals(what + " AngleZ", r1.getAngleZDegrees(), r2.getAngleZDegrees());
+	float assertEquals(String what, Rotate r1, Rotate r2) {
+		float diff = 0;
+		diff += assertEquals(what + " AngleX", r1.getAngleXDegrees(), r2.getAngleXDegrees());
+		diff += assertEquals(what + " AngleY", r1.getAngleYDegrees(), r2.getAngleYDegrees());
+		diff += assertEquals(what + " AngleZ", r1.getAngleZDegrees(), r2.getAngleZDegrees());
+		return diff;
 	}
 	
-	void assertEquals(String what, float v1, float v2) {
-		if (v1 != v2) {
+	final float ZERO_THRESHOLD = 0.0001f;
+	
+	float assertEquals(String what, float v1, float v2) {
+		float diff = Math.abs(v1-v2);
+		if (Math.abs(diff) > ZERO_THRESHOLD) {
 			StringBuffer sbuf = new StringBuffer();
 			sbuf.append("ERROR: ");
 			sbuf.append(what);
@@ -494,8 +524,36 @@ public class Main extends Activity {
 			sbuf.append(v1);
 			sbuf.append("!=");
 			sbuf.append(v2);
+			sbuf.append(", diff=");
+			sbuf.append(diff);
 			Log.e(TAG, sbuf.toString());
 		}
+		return diff;
+	}
+	
+	float assertEquals(String what, Vector3f v1, Vector3f v2) {
+		float diff = 0;
+		if (!v1.equals(v2)){
+			double dx = Math.abs(v1.getX()-v2.getX());
+			double dy = Math.abs(v1.getY()-v2.getY());
+			double dz = Math.abs(v1.getZ()-v2.getZ());
+			diff += dx + dy + dz;
+    		if (dx > ZERO_THRESHOLD ||
+    			dy > ZERO_THRESHOLD ||
+    			dz > ZERO_THRESHOLD) {
+    			StringBuffer sbuf = new StringBuffer();
+    			sbuf.append("ERROR: ");
+    			sbuf.append(what);
+    			sbuf.append("->");
+    			sbuf.append(v1.toString());
+    			sbuf.append("!=");
+    			sbuf.append(v2.toString());
+    			sbuf.append(", diff=");
+    			sbuf.append(diff);
+    			Log.e(TAG, sbuf.toString());
+    		}
+		}
+		return diff;
 	}
     
 }

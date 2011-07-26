@@ -66,7 +66,13 @@ public class Matrix4f {
     
     // Note: this yields inaccuracies due to gimbal lock
     public void addRotate(final Rotate rotate) {
+    	Rotate cur = getRotate();
+    	Rotate post = new Rotate(cur).add(rotate);
+    	Log.d("DEBUG", "addRotate(" + rotate.toString() + ")");
+    	Log.d("DEBUG", "...curRotate=" + cur.toString());
+    	Log.d("DEBUG:", " ...doing=" + post.toString());
     	setRotate(getRotate().add(rotate));
+    	Log.d("DEBUG:", " ...post=" + getRotate().toString());
     }
 
 	// Note: Uses Quaternion to avoid the inaccuracies that surface
@@ -75,18 +81,81 @@ public class Matrix4f {
     	Matrix3f rotMatrix = getRotationMatrix();
     	Quaternion quatRot = new Quaternion();
     	quatRot.fromRotationMatrix(rotMatrix);
-    	Log.d("DEBUG", "addRotateQuat(), quat initial=" + quatRot.toString());
     	Rotate curRotate = quatRot.getRotate();
-    	Log.d("DEBUG", "addRotateQuat(), rotate was =" + curRotate.toString());
     	curRotate.add(rotate);
-    	Log.d("DEBUG", "addRotateQuat(), rotate now =" + curRotate.toString());
     	quatRot.set(curRotate);
-    	Log.d("DEBUG", "addRotateQuat(), quat post=" + quatRot.toString());
-    	Log.d("DEBUG", " ...post=" + quatRot.getRotate().toString());
     	rotMatrix = quatRot.toRotationMatrix3f();
     	setRotation(rotMatrix);
     }
     
+    /**
+     * Multiplies the given vector by this matrix (v * M). If supplied, the result is stored into the supplied "store"
+     * vector.
+     * 
+     * @param vector
+     *            the vector to multiply this matrix by.
+     * @param store
+     *            the vector to store the result in. If store is null, a new vector is created. Note that it IS safe for
+     *            vector and store to be the same object.
+     * @return the store vector, or a new vector if store is null.
+     * @throws NullPointerException
+     *             if vector is null
+     */
+    public Vector3f applyPre(Vector3f vector, Vector3f store) {
+        if (store == null) {
+            store = new Vector3f();
+        }
+        double x = vector.getX();
+        double y = vector.getY();
+        double z = vector.getZ();
+        // double w = 0;
+
+        store.setX(getValue(0,0) * x + getValue(1,0) * y + getValue(2,0) * z /*+ getValue(3,0) * w*/);
+        store.setY(getValue(0,1) * x + getValue(1,1) * y + getValue(2,1) * z /*+ getValue(3,1) * w*/);
+        store.setZ(getValue(0,2) * x + getValue(1,2) * y + getValue(2,2) * z /*+ getValue(3,2) * w*/);
+//        store.setW(getValue(0,3) * x + getValue(1,3) * y + getValue(2,3) * z + getValue(3,3) * w);
+
+        return store;
+    }
+    
+    public Vector3f applyPre(Vector3f vector) {
+    	return applyPre(vector, vector);
+    }
+
+    /**
+     * Multiplies the given vector by this matrix (M * v). If supplied, the result is stored into the supplied "store"
+     * vector.
+     * 
+     * @param vector
+     *            the vector to multiply this matrix by.
+     * @param store
+     *            the vector to store the result in. If store is null, a new vector is created. Note that it IS safe for
+     *            vector and store to be the same object.
+     * @return the store vector, or a new vector if store is null.
+     * @throws NullPointerException
+     *             if vector is null
+     */
+    public Vector3f applyPost(final Vector3f vector, Vector3f store) {
+        if (store == null) {
+            store = new Vector3f();
+        }
+        double x = vector.getX();
+        double y = vector.getY();
+        double z = vector.getZ();
+//        final double w = vector.getW();
+
+        store.setX(getValue(0,0) * x + getValue(0,1) * y + getValue(0,2) * z /*+ getValue(0,3) * w*/);
+        store.setY(getValue(1,0) * x + getValue(1,1) * y + getValue(1,2) * z /*+ getValue(1,3) * w*/);
+        store.setZ(getValue(2,0) * x + getValue(2,1) * y + getValue(2,2) * z /*+ getValue(2,3) * w*/);
+//        store.setW(_data[3][0] * x + _data[3][1] * y + _data[3][2] * z + _data[3][3] * w);
+
+        return store;
+    }
+    
+    public Vector3f applyPost(final Vector3f vector) {
+    	return applyPost(vector, vector);
+    }
+
     public void setIdentity() {
     	set(IDENTITY);
     }
@@ -101,6 +170,9 @@ public class Matrix4f {
     					    getValue(2, 3));
     }
     
+    // Gets the rotation using "direct" methods because it is very
+    // accurate for most values. For values that are subject to 
+    // "gimball lock", use the Quaternion approach.
     public Rotate getRotate() {
     	/*
         	 |  0  1  2  3 |
@@ -109,23 +181,75 @@ public class Matrix4f {
              | 12 13 14 15 |
         */
     	double angle_x, angle_y, angle_z;
-    	double C;
+    	double Cy;
+//    	double tr_x, tr_y;
+    	double verify;
+    	
+    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */ /* was -asin(m[2]) */
+    	Cy      = Math.cos( angle_y );
+
+    	if (Math.abs( Cy ) <= 0.005) {/* Gimball lock? */
+    		Log.d("DEBUG", "GIMBAL LOCK!");
+    		return getRotateQuat();
+    	}
+    	// Two ways of getting angle_z, should yield the same result */
+    	angle_z = Math.asin(-getValue(0,1)/Cy);
+    	verify = Math.acos(getValue(0,0)/Cy);
+    	
+    	// Two of getting angle_x, should yield the same result */
+    	angle_x = Math.asin(-getValue(1,2)/Cy);
+    	verify = Math.acos(getValue(2,2)/Cy);
+    	
+    	// OLD WAY from the web didn't work that well:
+//    	tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
+//    	tr_y      = -getValue(1,2) /*mat[6]*// Cy;
+//
+//    	angle_x  = Math.atan2( tr_y, tr_x );
+//
+//    	tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
+//    	tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
+//
+//    	angle_z = Math.atan2( tr_y, tr_x );
+    	
+    	angle_x = MathUtils.clamp( angle_x );
+    	angle_y = MathUtils.clamp( angle_y );
+    	angle_z = MathUtils.clamp( angle_z );
+    	
+    	return new Rotate((float) angle_x, (float) angle_y, (float) angle_z);
+    }
+    
+    // A "standard" way of determining the rotations.
+    // this way can lead to inaccuracies for certain values 
+    // because of "gimball lock".
+    public Rotate getRotateDirect() {
+    	/*
+        	 |  0  1  2  3 |
+        M =  |  4  5  6  7 |
+             |  8  9 10 11 |
+             | 12 13 14 15 |
+        */
+    	double angle_x, angle_y, angle_z;
+    	double Cy;
     	double tr_x, tr_y;
     	
-    	angle_y = -Math.asin(getValue(0,2)/*mat[2]*/);/* Calculate Y-axis angle */
-    	C       =  Math.cos( angle_y );
+    	angle_y = Math.asin(getValue(0,2));/* Calculate Y-axis angle */
+    	Cy      = Math.cos(angle_y);
 
-    	if (Math.abs( C ) > 0.005)             /* Gimball lock? */
+    	if (Math.abs( Cy ) > 0.005)             /* Gimball lock? */
     	{
-    		tr_x      =  getValue(2,2) /*mat[10]*// C; /* No, so get X-axis angle */
-    		tr_y      = -getValue(1,2) /*mat[6]*// C;
+    		angle_x = Math.asin(-getValue(1,2)/Cy);
+    		angle_z = Math.asin(-getValue(0,1)/Cy);
+    	
+    		// OLD WAY didn't work that well.
+//    		tr_x      =  getValue(2,2) /*mat[10]*// Cy; /* No, so get X-axis angle */
+//    		tr_y      = -getValue(1,2) /*mat[6]*// Cy;
 
-    		angle_x  = Math.atan2( tr_y, tr_x );
+//    		angle_x  = Math.atan2( tr_y, tr_x );
 
-    		tr_x      =  getValue(0,0)/*mat[0]*/ / C; /* Get Z-axis angle */
-    		tr_y      = -getValue(0,1)/*mat[1]*/ / C;
+//    		tr_x      =  getValue(0,0)/*mat[0]*/ / Cy; /* Get Z-axis angle */
+//    		tr_y      = -getValue(0,1)/*mat[1]*/ / Cy;
 
-    		angle_z  = Math.atan2( tr_y, tr_x );
+//    		angle_z  = Math.atan2( tr_y, tr_x );
     	} else { /* Gimball lock has occurred */
     		angle_x  = 0;                      /* Set X-axis angle to zero */
 
@@ -324,25 +448,25 @@ public class Matrix4f {
              |  8  9 10 11 |
              | 12 13 14 15 |
         */
-        double A       = Math.cos(rotate.getAngleX());
-        double B       = Math.sin(rotate.getAngleX());
-        double C       = Math.cos(rotate.getAngleY());
-        double D       = Math.sin(rotate.getAngleY());
-        double E       = Math.cos(rotate.getAngleZ());
-        double F       = Math.sin(rotate.getAngleZ());
+        double Cx       = Math.cos(rotate.getAngleX());
+        double Sx       = Math.sin(rotate.getAngleX());
+        double Cy       = Math.cos(rotate.getAngleY());
+        double Sy       = Math.sin(rotate.getAngleY());
+        double Cz       = Math.cos(rotate.getAngleZ());
+        double Sz       = Math.sin(rotate.getAngleZ());
 
-        double AD      = A * D;
-        double BD      = B * D;
+        double CxSy      = Cx * Sy;
+        double SxSy      = Sx * Sy;
 
-        setValue(0, 0, C * E); 	/*mat[0]*/
-        setValue(0, 1, -C * F); /*mat[1]*/
-        setValue(0, 2, -D);	    /*mat[2]*/
-        setValue(1, 0, -BD * E + A * F);/*mat[4]*/
-        setValue(1, 1, BD * F + A * E); /*mat[5]*/
-        setValue(1, 2, -B * C); 		/*mat[6]*/
-        setValue(2, 0, AD * E + B * F); /*mat[8]*/
-        setValue(2, 1, -AD * F + B * E);/*mat[9]*/
-        setValue(2, 2, A * C); 		/*mat[10]*/
+        setValue(0, 0, Cy * Cz); 	/*mat[0]*/
+        setValue(0, 1, Cy * -Sz);   /*mat[1]*/
+        setValue(0, 2, Sy);	        /*mat[2]*/ /* was -Sy */
+        setValue(1, 0, SxSy * Cz + Cx * Sz);/*mat[4]*/ /* was -SxSy */
+        setValue(1, 1, -SxSy * Sz + Cx * Cz); /*mat[5]*/ /* was SxSy */
+        setValue(1, 2, -Sx * Cy); 		/*mat[6]*/
+        setValue(2, 0, -CxSy * Cz + Sx * Sz); /*mat[8]*/ /* was CxSy */
+        setValue(2, 1, CxSy * Sz + Sx * Cz);/*mat[9]*/ /* was -CxSy */
+        setValue(2, 2, Cx * Cy); 		/*mat[10]*/
 
         // mat[3] =  mat[7] = mat[11] = mat[12] = mat[13] = mat[14] = 0;
         setValue(0, 3, 0);
@@ -354,4 +478,25 @@ public class Matrix4f {
         
         setValue(3, 3, 1); /* mat[15]*/
     }
+
+	@Override
+	public String toString() {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("[");
+		for (int row = 0; row < 4; row++) {
+			if (row > 0) {
+    			sbuf.append("\n");
+			}
+			for (int col = 0; col < 4; col++) {
+				if (col > 0) {
+					sbuf.append(",");
+				}
+				sbuf.append(getValue(row,col));
+			}
+		}
+		sbuf.append("]");
+		return sbuf.toString();
+	}
+    
+    
 }

@@ -63,6 +63,6 @@ public class Shape extends ShapeData {
 	}
 	
 	public void addRotate(Rotate x) {
-		getMatrixMod().addRotateQuat(x);
+		getMatrixMod().addRotate(x);
 	}
 }

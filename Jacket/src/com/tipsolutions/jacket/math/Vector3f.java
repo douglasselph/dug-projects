@@ -24,6 +24,12 @@ public class Vector3f {
 		mZ = z;
 	}
 	
+	public Vector3f(double x, double y, double z) {
+		mX = (float)x;
+		mY = (float)y;
+		mZ = (float)z;
+	}
+	
 	public Vector3f(final Vector3f v) {
 		mX = v.mX;
 		mY = v.mY;
@@ -155,6 +161,9 @@ public class Vector3f {
 	public void setX(float x) { mX = x; }
 	public void setY(float y) { mY = y; }
 	public void setZ(float z) { mZ = z; }
+	public void setX(double x) { mX = (float)x; }
+	public void setY(double y) { mY = (float)y; }
+	public void setZ(double z) { mZ = (float)z; }
 	
 	public Vector3f subtract(float x, float y, float z) {
 		mX -= x;

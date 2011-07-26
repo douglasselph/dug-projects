@@ -1,5 +1,7 @@
 package com.tipsolutions.jacket.math;
 
+import android.util.FloatMath;
+
 public class Quaternion {
 	
     public final static Quaternion IDENTITY = new Quaternion(0, 0, 0, 1);
@@ -231,6 +233,30 @@ public class Quaternion {
     	return this;
     }
     
+//    public Quaternion setFromAngles2(double ax, double ay, double az) {
+//    	Quaternion qx = new Quaternion(Math.cos(ax/2f), Math.sin(ax/2f), 0, 0);
+//    	Quaternion qy = new Quaternion(Math.cos(ay/2f), 0, Math.sin(ay/2f), 0);
+//    	Quaternion qz = new Quaternion(Math.cos(az/2f), 0, 0, Math.sin(az/2f));
+//    	set(qx);
+//    	multiply(qy);
+//    	multiply(qz);
+//    	return this;
+//    }
+    
+//    void setFromRotate(final Rotate rotate) {
+//      float fSinPitch = FloatMath.sin(rotate.getAngleX()*0.5f);
+//      float fCosPitch = FloatMath.cos(rotate.getAngleX()*0.5f);
+//      float fSinYaw = FloatMath.sin(rotate.getAngleY()*0.5f);
+//      float fCosYaw = FloatMath.cos(rotate.getAngleY()*0.5f);
+//      float fSinRoll = FloatMath.sin(rotate.getAngleZ()*0.5f);
+//      float fCosRoll = FloatMath.cos(rotate.getAngleZ()*0.5f);
+//      float fCosPitchCosYaw = fCosPitch*fCosYaw;
+//      float fSinPitchSinYaw = fSinPitch*fSinYaw;
+//      setX(fSinRoll * fCosPitchCosYaw     - fCosRoll * fSinPitchSinYaw);
+//      setY(fCosRoll * fSinPitch * fCosYaw + fSinRoll * fCosPitch * fSinYaw);
+//      setZ(fCosRoll * fCosPitch * fSinYaw - fSinRoll * fSinPitch * fCosYaw);
+//      setW(fCosRoll * fCosPitchCosYaw     + fSinRoll * fSinPitchSinYaw);
+//    }
     /**
      * Sets the value of this quaternion to the rotation described by the given matrix values.
      * 
@@ -522,6 +548,8 @@ public class Quaternion {
     
     public void set(final Rotate rotate) {
     	setFromAngles(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
+//    	setFromAngles2(rotate.getAngleX(), rotate.getAngleY(), rotate.getAngleZ());
+//    	setFromRotate(rotate);
     }
 
     /**
@@ -580,9 +608,9 @@ public class Quaternion {
         axes[2] = tempMat.getColumn(2);
     }
 
-    public double [] toEulerAngles() {
-    	return toEulerAngles(null);
-    }
+//    public double [] toEulerAngles() {
+//    	return toEulerAngles(null);
+//    }
     /**
      * Converts this quaternion to Euler rotation angles in radians (heading (y), attitude (z), bank (x)).
      * 
@@ -592,35 +620,35 @@ public class Quaternion {
      * @throws IllegalArgumentException
      *             if non-null store is not at least length 3
      */
-    public double [] toEulerAngles(final double[] store) {
-        double[] result = store;
-        if (result == null) {
-            result = new double[3];
-        } else if (result.length < 3) {
-            throw new IllegalArgumentException("store array must have at least three elements");
-        }
-        final double sqw = getW() * getW();
-        final double sqx = getX() * getX();
-        final double sqy = getY() * getY();
-        final double sqz = getZ() * getZ();
-        final double unit = sqx + sqy + sqz + sqw; // if normalized is one, otherwise
-        // is correction factor
-        final double test = getX() * getY() + getZ() * getW();
-        if (test > 0.499 * unit) { // singularity at north pole
-            result[0] = 2 * Math.atan2(getX(), getW());
-            result[1] = Constants.HALF_PI;
-            result[2] = 0;
-        } else if (test < -0.499 * unit) { // singularity at south pole
-            result[0] = -2 * Math.atan2(getX(), getW());
-            result[1] = -Constants.HALF_PI;
-            result[2] = 0;
-        } else {
-            result[0] = Math.atan2(2 * getY() * getW() - 2 * getX() * getZ(), sqx - sqy - sqz + sqw);
-            result[1] = Math.asin(2 * test / unit);
-            result[2] = Math.atan2(2 * getX() * getW() - 2 * getY() * getZ(), -sqx + sqy - sqz + sqw);
-        }
-        return result;
-    }
+//    public double [] toEulerAngles(final double[] store) {
+//        double[] result = store;
+//        if (result == null) {
+//            result = new double[3];
+//        } else if (result.length < 3) {
+//            throw new IllegalArgumentException("store array must have at least three elements");
+//        }
+//        final double sqw = getW() * getW();
+//        final double sqx = getX() * getX();
+//        final double sqy = getY() * getY();
+//        final double sqz = getZ() * getZ();
+//        final double unit = sqx + sqy + sqz + sqw; // if normalized is one, otherwise
+//        // is correction factor
+//        final double test = getX() * getY() + getZ() * getW();
+//        if (test > 0.499 * unit) { // singularity at north pole
+//            result[0] = 2 * Math.atan2(getX(), getW());
+//            result[1] = Constants.HALF_PI;
+//            result[2] = 0;
+//        } else if (test < -0.499 * unit) { // singularity at south pole
+//            result[0] = -2 * Math.atan2(getX(), getW());
+//            result[1] = -Constants.HALF_PI;
+//            result[2] = 0;
+//        } else {
+//            result[0] = Math.atan2(2 * getY() * getW() - 2 * getX() * getZ(), sqx - sqy - sqz + sqw);
+//            result[1] = Math.asin(2 * test / unit);
+//            result[2] = Math.atan2(2 * getX() * getW() - 2 * getY() * getZ(), -sqx + sqy - sqz + sqw);
+//        }
+//        return result;
+//    }
 
     /**
      * @param store

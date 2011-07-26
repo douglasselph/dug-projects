@@ -10,6 +10,12 @@ public class Rotate {
 	public Rotate() {
 	}
 	
+	public Rotate(final Rotate other) {
+		mYaw = other.mYaw;     // X radians
+		mPitch = other.mPitch; // Y radians
+		mRoll = other.mRoll;   // Z radians
+	}
+	
 	public Rotate(float yaw, float pitch, float roll) {
 		mYaw = yaw;     // X radians
 		mPitch = pitch; // Y radians
