@@ -9,6 +9,7 @@ gFileData = {}
 
 def write_obj(filename):
 	global gMeshTree
+	
 	# rootname = os.path.basename(os.path.splitext(filename)[0])
 	gMeshTree = build_tree()
 	dirname = os.path.dirname(filename)
@@ -39,6 +40,8 @@ def build_tree():
 					tree[parentname].append(obj)
 				else:
 					tree[parentname] = [parent, obj]
+		else:
+			print "Skipping %s of type %s" % (name, type)
 		
 	return tree
 	
@@ -76,8 +79,11 @@ def write_mesh(dirname, basename, objname):
 		print "Error: not such object name found: '%s'" % objname
 		return
 	
+	print "Writing '%s'" % objname
+	
 	list = gMeshTree[objname]
 	obj = list[0]
+	
 	objchildren = list[1:]
 		
 	if not os.path.isdir(dirname):
@@ -128,7 +134,7 @@ def write_mesh(dirname, basename, objname):
 	write_normals(out, mesh)
 	write_indexes(out, mesh)
 	write_colors(out, mesh)	
-	write_info(mesh)
+	# write_info(mesh)
 
 	out.write('};\n')
 	out.close()
@@ -153,13 +159,15 @@ def write_children(out, objchildren, classname):
 			
 def write_objdata(out, obj):
 	
-	matrix = obj.getMatrix('localspace')
+	matrix = obj.getMatrix()
 	
-	# Note: transpose location from 4th row to 4th column
-	# Don't know enough about matrixes to know why I need to do this.
-	# But OpenGL expects the location to be in the 4th column which I know
-	# works. I do not know what it means when it is in the 4th row as blender
-	# keeps it.
+	# 
+	# Blender uses row order translations, that is: [x y z w] x M
+	# But OpenGL, uses column order, that is: 
+	#         [x
+	#    M x   y 
+	#          z
+	#          w]
 	out.write('\n')
 	out.write('\t@Override protected Matrix4f _getMatrix() {\n');
 	out.write('\t\treturn new Matrix4f(%ff, %ff, %ff, %ff,\n'  % (matrix[0][0], matrix[0][1], matrix[0][2], matrix[3][0]))
