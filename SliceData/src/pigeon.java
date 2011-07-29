@@ -26,7 +26,7 @@ class pigeon extends ShapeData {
 	}
 
 	@Override protected Matrix4f _getMatrix() {
-		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
+		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, -2.000000f,
 		                    0.000000f, 1.000000f, 0.000000f, 0.000000f,
 		                    0.000000f, 0.000000f, 1.000000f, 0.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);

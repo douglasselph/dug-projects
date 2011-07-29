@@ -1,3 +1,6 @@
+#
+# TIP Solutions, Shape molded, OpenGL exporter
+#
 import Blender
 from Blender import *
 import bpy
@@ -6,6 +9,7 @@ import math
 
 gMegaMax = 1700
 gFileData = {}
+gMeshInfo = {}
 
 def write_obj(filename):
 	global gMeshTree
@@ -134,7 +138,8 @@ def write_mesh(dirname, basename, objname):
 	write_normals(out, mesh)
 	write_indexes(out, mesh)
 	write_colors(out, mesh)	
-	# write_info(mesh)
+	write_textures(out, mesh)
+	write_info(mesh)
 
 	out.write('};\n')
 	out.close()
@@ -159,7 +164,7 @@ def write_children(out, objchildren, classname):
 			
 def write_objdata(out, obj):
 	
-	matrix = obj.getMatrix()
+	matrix = obj.getMatrix("localspace")
 	
 	# 
 	# Blender uses row order translations, that is: [x y z w] x M
@@ -177,6 +182,8 @@ def write_objdata(out, obj):
 	out.write('\t}')
 			
 def write_boundaries(out, mesh):
+	global gMeshInfo
+	
 	if len(mesh.verts) == 0:
 		return
 	
@@ -210,6 +217,13 @@ def write_boundaries(out, mesh):
 	out.write('\t@Override protected float _getMinZ() { return %ff; }\n' % minz);
 	out.write('\t@Override protected float _getMaxZ() { return %ff; }\n' % maxz);
 
+	gMeshInfo['minx'] = minx
+	gMeshInfo['maxx'] = maxx
+	gMeshInfo['miny'] = miny
+	gMeshInfo['maxy'] = maxy
+	gMeshInfo['minz'] = minz
+	gMeshInfo['maxz'] = maxz
+	
 def write_vertexes(out, mesh):
 	global gMegaMax
 	numverts = len(mesh.verts)
@@ -430,6 +444,79 @@ def write_colors(out, mesh):
 	out.write('\t\treturn new ColorData();\n')
 	out.write('\t};\n')
 				
+def write_textures(out, mesh):
+	
+	writeCoords = False;
+	
+	for mat in mesh.materials:
+		for mtex in mat.getTextures():
+			if not mtex:
+				continue
+
+			tex = mtex.tex
+			im = tex.getImage()
+			if im:
+				out.write('\t@Override\n')
+				out.write('\tprotected String _getTextureFilename() { return "%s"; }\n' % im.getFilename().lstrip('/'))
+				writeCoords = True
+	
+	if writeCoords:
+		global gMegaMax
+		global gMeshInfo
+		
+		max = gMegaMax
+	
+		numverts = len(mesh.verts)
+		if numverts == 0:
+			return
+	
+		mx = gMeshInfo['minx']
+		my = gMeshInfo['miny']
+		sx = gMeshInfo['maxx']-gMeshInfo['minx']
+		sy = gMeshInfo['maxy']-gMeshInfo['miny']
+		sz = gMeshInfo['maxz']-gMeshInfo['minz']
+		
+		out.write('\n')
+		out.write('\t@Override\n')
+		out.write('\tprotected FloatData getTextureData() {\n');
+		out.write('\t\tclass TextureData implements FloatData {\n')
+ 			
+		out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
+
+		index = 0
+	
+		if numverts > max:
+			num = int(math.ceil(float(numverts) / float(max)))
+				
+			for x in range(num):
+				out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
+			out.write('\t\t\t}\n')
+			out.write
+			count = 0
+			for x in range(num):
+				out.write
+				out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+				start = x * max
+				end = start + max
+				for vert in mesh.verts[start:end]:
+					out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
+					count = count + 2
+					index = index + 1
+				out.write('\t\t\t};\n')
+		else:
+			for vert in mesh.verts:
+				out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
+				index = index + 1
+			out.write('\t\t\t};\n')
+			count = numverts * 2
+
+		out.write
+		out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
+		out.write('\t\t};\n')
+		out.write('\t\treturn new TextureData();\n')
+		out.write('\t};\n')
+		out.write('\n')			
+
 def convertToTriangles(mesh):
 	global bpy
 	sce = bpy.data.scenes.active
@@ -437,6 +524,7 @@ def convertToTriangles(mesh):
 	editmode = Window.EditMode()
 	if editmode:
 		Window.EditMode(0)
+		
 	has_quads = False
 			
 	for f in mesh.faces:

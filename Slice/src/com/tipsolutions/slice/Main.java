@@ -13,9 +13,9 @@ import android.view.MenuItem;
 import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix3f;
-import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlCamera;
@@ -255,7 +255,7 @@ public class Main extends Activity {
         Shape shape = new Shape();
         try {
             InputStream inputStream = getAssets().open(file);
-            shape.readData(inputStream);
+            shape.readData(inputStream, mRenderer.getTextureManager());
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
         }
@@ -263,7 +263,8 @@ public class Main extends Activity {
     }
     
     Shape getPyramid() {
-        Shape shape = new Pyramid(1f, 1f);
+        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+        Shape shape = new Pyramid(1f, 1f, texture);
         shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
         setColors(shape);
         return shape;
@@ -424,7 +425,6 @@ public class Main extends Activity {
 		tests.add(new Test("Test58", 0, 0, 300, new Vector3f(0,0,1)));
 		tests.add(new Test("Test59", 0, 0, 300, new Vector3f(0,1,1)));
 		tests.add(new Test("Test60", 261, 38, 0, new Vector3f(1,1,1)));
-		Matrix4f m = new Matrix4f();
 		float diff = 0;
 		for (Test test : tests) {
 			diff += test.run();

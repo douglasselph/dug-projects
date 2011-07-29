@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
 
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
@@ -14,12 +15,19 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected Color4f mClippingPlaneColor = null;
 	protected int mWidth;
 	protected int mHeight;
-	protected ControlCamera mCamera;
+	protected final ControlCamera mCamera;
 	protected MatrixTrackingGL mGL = null;
+    protected final TextureManager mTM;
+    protected boolean mInitializedTextures = false;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
 		mCamera = camera;
+        mTM = new TextureManager(view.getContext());
+	}
+	
+	public TextureManager getTextureManager() {
+		return mTM;
 	}
 	
 	protected MatrixTrackingGL getGL(GL10 gl) {
@@ -31,9 +39,15 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		getGL(gl);
+		if (!mInitializedTextures) {
+			mTM.init(getGL(gl));
+			mInitializedTextures = true;
+		} else {
+    		getGL(gl); // sanity
+		}
+
 		clearScene();
-		mGL.glViewport(0, 0, mWidth, mHeight);
+		
 		mGL.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
 		mGL.glLoadIdentity();
     	mCamera.applyFrustrum(mGL);
@@ -60,6 +74,14 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		/*
+         * By default, OpenGL enables features that improve quality
+         * but reduce performance. One might want to tweak that
+         * especially on software renderer.
+         */
+        gl.glDisable(GL10.GL_DITHER);
+        
+        gl.glEnable(GL10.GL_DEPTH_TEST);
 	}
 	
 	protected void clearScene() {

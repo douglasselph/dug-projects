@@ -3,9 +3,9 @@ package com.tipsolutions.jacket.data;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import javax.microedition.khronos.opengles.GL10;
-
 import android.util.FloatMath;
+
+import com.tipsolutions.jacket.image.TextureManager;
 
 public class Pyramid extends Shape {
 
@@ -13,16 +13,20 @@ public class Pyramid extends Shape {
 	}
 	
 	public Pyramid(float base, float height) {
-		set4(base, height);
+		set4(base, height, null);
 	}
+	
+	public Pyramid(float base, float height, TextureManager.Texture texture) {
+		set4(base, height, texture);
+	}
+	
 	// Make a four sided pyramid the given base side length
 	// and height. The y-axis will serve as the center pole
 	// defining the height. The forward face will be parallel
 	// to the x-axis.
 	//
 	// Assumes CCW facing.
-	public void set4(float base, final float height) {
-		float radians60 = (float) (Math.PI/3);
+	public void set4(float base, final float height, TextureManager.Texture texture) { float radians60 = (float) (Math.PI/3);
 		float triHeight = FloatMath.sin(radians60) / FloatMath.cos(radians60) * base/2;
 		final float baseHalf = base/2;
 		final float triHeightHalf = triHeight/2;
@@ -45,7 +49,17 @@ public class Pyramid extends Shape {
 			};
 			public int size() { return 4*3; }
 		});
-		
+		if (texture != null) {
+			setTexture(texture);
+    		setTextureData(new FloatData() {
+    			public void fill(FloatBuffer buf) {
+    				buf.put(0.5f).put(1);   /* 0: peak */
+    				buf.put(0f).put(0f); /* 1: x-left */
+    				buf.put(1f).put(0f); /* 2: x-right */
+    			};
+    			public int size() { return 3*2; }
+    		});
+		}
 		allocBounds();
 		setMinX(-baseHalf);
 		setMaxX(baseHalf);

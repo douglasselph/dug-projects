@@ -14,26 +14,25 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.math.Vector3f;
 
 public class ShapeData {
 	
 	protected static final int FILE_VERSION = 1;
 	
-	protected static final int ELE_FINISH 	= "finish".hashCode();
-	protected static final int ELE_VERSION 	= "version".hashCode();
-	protected static final int ELE_BOUNDS 	= "bounds".hashCode();
-	protected static final int ELE_COLOR 	= "color".hashCode();
-	protected static final int ELE_INDEX 	= "index".hashCode();
-	protected static final int ELE_NORMAL	= "normal".hashCode();
-	protected static final int ELE_VERTEX 	= "vertex".hashCode();
-	protected static final int ELE_TEXTURE  = "texture".hashCode();
-	protected static final int ELE_MATRIX   = "matrix".hashCode();
-	protected static final int ELE_CHILDREN = "children".hashCode();
+	protected static final int ELE_FINISH 		   = "finish".hashCode();
+	protected static final int ELE_VERSION 		   = "version".hashCode();
+	protected static final int ELE_BOUNDS 		   = "bounds".hashCode();
+	protected static final int ELE_COLOR 		   = "color".hashCode();
+	protected static final int ELE_INDEX 		   = "index".hashCode();
+	protected static final int ELE_NORMAL		   = "normal".hashCode();
+	protected static final int ELE_VERTEX 		   = "vertex".hashCode();
+	protected static final int ELE_MATRIX   	   = "matrix".hashCode();
+	protected static final int ELE_CHILDREN 	   = "children".hashCode();
+	protected static final int ELE_TEXTURE_COORDS  = "texture_coords".hashCode();
+	protected static final int ELE_TEXTURE_INFO    = "texture_info".hashCode();
 	
 	protected static final int TYPE_FLOAT = 1;
 	protected static final int TYPE_SHORT = 2;
@@ -134,6 +133,7 @@ public class ShapeData {
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix = null;
 	protected ShapeData [] mChildren = null;
+	protected TextureManager.Texture mTexture = null;
 	
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
 //	protected ShortData getColorFixed() { return null; }
@@ -146,6 +146,7 @@ public class ShapeData {
 	
 	protected ShapeData [] _getChildren() { return null; }
 	protected Matrix4f _getMatrix() { return null; }
+	protected String _getTextureFilename() { return null; }
 	
 	// Returns the given object matrix if any.
 	// Will return NULL if no matrix predefined transformation for the object
@@ -210,7 +211,7 @@ public class ShapeData {
 	public float getSizeYc() { return getMaxY()-getMinY(); }
 	public float getSizeZc() { return getMaxZ()-getMinZ(); }
 	
-	public FloatBuffer getColorBuf() { return mVertexBuf.getBuf(); }
+	public FloatBuffer getColorBuf() { return mColorBuf.getBuf(); }
 	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
 	public FloatBuffer getVertexBuf() { return mVertexBuf.getBuf(); }
 	public FloatBuffer getNormalBuf() { return mNormalBuf.getBuf(); }
@@ -421,6 +422,17 @@ public class ShapeData {
 		return (mTextureBuf.getBuf() != null);
 	}
 	
+	public void onCreate(MatrixTrackingGL gl) {
+		if (mTexture != null) {
+			mTexture.use();
+		}
+		if (mChildren != null) {
+			for (ShapeData shape : mChildren) {
+				shape.onCreate(gl);
+			}
+		}
+	}
+	
 	public void onDraw(MatrixTrackingGL gl) {
 		FloatBuffer fbuf;
 		boolean didPush = false;
@@ -434,6 +446,9 @@ public class ShapeData {
 			Matrix4f curMatrix = gl.getMatrix();
 			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
 			gl.glLoadMatrix(useMatrix);
+		}
+		if (mTexture != null) {
+			mTexture.onDraw(gl);
 		}
 		if ((fbuf = getVertexBuf()) != null) {
     		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
@@ -476,6 +491,17 @@ public class ShapeData {
 		}
 	}
 	
+	public void onFinished(MatrixTrackingGL gl) {
+		if (mTexture != null) {
+			mTexture.done();
+		}
+		if (mChildren != null) {
+			for (ShapeData shape : mChildren) {
+				shape.onFinished(gl);
+			}
+		}
+	}
+	
 	protected void readBounds(DataInputStream dataStream) throws IOException {
 		allocBounds();
 		setMinX(dataStream.readFloat());
@@ -511,22 +537,26 @@ public class ShapeData {
 		mMatrix = mat;
 	}
 	
-	protected void readChildren(DataInputStream dataStream) throws IOException, Exception {
+	protected void readTextureInfo(DataInputStream dataStream, TextureManager tm) throws IOException {
+		mTexture = tm.getTexture(readString(dataStream));
+	}
+	
+	protected void readChildren(DataInputStream dataStream, TextureManager tm) throws IOException, Exception {
 		int numChildren = dataStream.readInt();
 		mChildren = new ShapeData[numChildren];
 		for (int i = 0; i < numChildren; i++) {
 			mChildren[i] = new ShapeData();
-			mChildren[i].readData(dataStream);
+			mChildren[i].readData(dataStream, tm);
 		}
 	}
 	
-	public void readData(InputStream inputStream) throws Exception, IOException {
+	public void readData(InputStream inputStream, TextureManager tm) throws Exception, IOException {
 		DataInputStream dataStream = new DataInputStream(inputStream);
-		readData(dataStream);
+		readData(dataStream, tm);
 		dataStream.close();
 	}
 	
-	protected void readData(DataInputStream dataStream) throws IOException, Exception {
+	protected void readData(DataInputStream dataStream, TextureManager tm) throws IOException, Exception {
 		int eleType;
 		int type;
 		int size;
@@ -545,13 +575,15 @@ public class ShapeData {
 				readBounds(dataStream);
 			} else if (eleType == ELE_MATRIX) {
 				readMatrix(dataStream);
+			} else if (eleType == ELE_TEXTURE_INFO) {
+				readTextureInfo(dataStream, tm);
 			} else if (eleType == ELE_CHILDREN) {
-				readChildren(dataStream);
+				readChildren(dataStream, tm);
 			} else if (eleType == ELE_VERTEX ||
 					   eleType == ELE_NORMAL ||
 					   eleType == ELE_INDEX ||
 					   eleType == ELE_COLOR ||
-					   eleType == ELE_TEXTURE) {
+					   eleType == ELE_TEXTURE_COORDS) {
 				type = dataStream.readInt();
 				size = dataStream.readInt();
 				vbb = readBuffer(dataStream, size);
@@ -576,7 +608,7 @@ public class ShapeData {
 						throw new Exception("Expected float type for colors");
 					}
 					mColorBuf.set(vbb);
-				} else if (eleType == ELE_TEXTURE) {
+				} else if (eleType == ELE_TEXTURE_COORDS) {
 					if (type != TYPE_FLOAT) {
 						throw new Exception("Expected float type for texture");
 					}
@@ -586,11 +618,11 @@ public class ShapeData {
 		}
 	}
 	
-	public void readData(String filename) {
+	public void readData(String filename, TextureManager tm) {
 		File file = new File(filename);
 		try {
 			FileInputStream fileStream = new FileInputStream(file);
-			readData(fileStream);
+			readData(fileStream, tm);
     	} catch (Exception ex) {
     		System.out.println(ex.getMessage());
     	}
@@ -614,6 +646,10 @@ public class ShapeData {
 			mTextureBuf = new FloatBuf();
     		mTextureBuf.set(data);
 		}
+	}
+	
+	public void setTexture(TextureManager.Texture texture) {
+		mTexture = texture;
 	}
 	
 	public void setIndexData(ShortData data) {
@@ -724,6 +760,13 @@ public class ShapeData {
 		}
 	}
 	
+	protected void writeTextureInfo(DataOutputStream dataStream) throws IOException {
+		if (_getTextureFilename() != null) {
+    		dataStream.writeInt(ELE_TEXTURE_INFO);
+    		writeString(dataStream, _getTextureFilename());
+		}
+	}
+	
 	protected void writeBuffer(DataOutputStream dataStream, int eleType, int dataType, ByteBuffer vbb) throws IOException {
 		if (vbb != null) {
     		dataStream.writeInt(eleType);
@@ -762,11 +805,12 @@ public class ShapeData {
 	protected void writeData(DataOutputStream dataStream) throws IOException {
 		writeBounds(dataStream);
 		writeMatrix(dataStream);
+		writeTextureInfo(dataStream);
 		writeBuffer(dataStream, ELE_VERTEX, TYPE_FLOAT, mVertexBuf.getRootBuf());
 		writeBuffer(dataStream, ELE_NORMAL, TYPE_FLOAT, mNormalBuf.getRootBuf());
 		writeBuffer(dataStream, ELE_INDEX, TYPE_SHORT, mIndexBuf.getRootBuf());
 		writeBuffer(dataStream, ELE_COLOR, TYPE_FLOAT, mColorBuf.getRootBuf());
-		writeBuffer(dataStream, ELE_TEXTURE, TYPE_FLOAT, mTextureBuf.getRootBuf());
+		writeBuffer(dataStream, ELE_TEXTURE_COORDS, TYPE_FLOAT, mTextureBuf.getRootBuf());
 		
     	if (getChildren() != null && mChildren.length > 0) {
     		dataStream.writeInt(ELE_CHILDREN);
@@ -776,5 +820,21 @@ public class ShapeData {
     		}
     	}
     	dataStream.writeInt(ELE_FINISH);
+	}
+	
+	protected void writeString(DataOutputStream dataStream, String str) throws IOException {
+		dataStream.writeShort(str.length());
+		for (int i = 0; i < str.length(); i++) {
+			dataStream.writeChar(str.charAt(i));
+		}
+	}
+	
+	protected String readString(DataInputStream dataStream) throws IOException {
+		int len = dataStream.readShort();
+		StringBuffer sbuf = new StringBuffer();
+		for (int i = 0; i < len; i++) {
+			sbuf.append(dataStream.readChar());
+		}
+		return sbuf.toString();
 	}
 }

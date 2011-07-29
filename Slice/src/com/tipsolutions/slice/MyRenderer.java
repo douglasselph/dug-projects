@@ -37,11 +37,18 @@ class MyRenderer extends ControlRenderer {
     	super(view, camera);
         mTranslucentBackground = useTranslucentBackground;
         mShape = shape;
-        mCamera = camera;
     }
     
     public void setShape(Shape shape) {
+    	if (mShape != null) {
+            mShape.onFinished(mGL);
+    	}
     	mShape = shape;
+    	
+    	if (mShape != null) {
+            mShape.onCreate(mGL);
+    	}
+    	mInitializedTextures = false;
     }
 
     public void onDrawFrame(GL10 gl) {
@@ -58,7 +65,10 @@ class MyRenderer extends ControlRenderer {
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	super.onSurfaceCreated(gl, config);
-
+    	
+    	if (mShape != null) {
+    		mShape.onCreate(getGL(gl));
+    	}
 //        /*
 //         * By default, OpenGL enables features that improve quality
 //         * but reduce performance. One might want to tweak that

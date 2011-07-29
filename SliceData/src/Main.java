@@ -1,4 +1,5 @@
 import com.tipsolutions.jacket.data.ShapeData;
+import com.tipsolutions.jacket.image.TextureManager;
 
 public class Main {
 	
@@ -38,13 +39,16 @@ public class Main {
 		
 		ShapeData readData(String filename, ICreate create) {
 			ShapeData d = create.create();
-			d.readData(filename);
+			d.readData(filename, mTM);
 			return d;
 		}
 	};
+	
+	static TextureManager mTM;
 
 	public static void main(String[] args) throws Exception {
 		
+		mTM = new TextureManager();
 		ProcessData process = new ProcessData();
 		
 		process.run("hank.data", new ICreate() {
@@ -72,6 +76,5 @@ public class Main {
 			}
 		});
 	}
-	
 
 }
