@@ -1,6 +1,7 @@
 package com.tipsolutions.jacket.math;
 
-import javax.microedition.khronos.opengles.GL10;
+import java.nio.FloatBuffer;
+
 
 
 public class Color4f {
@@ -115,5 +116,10 @@ public class Color4f {
         mG = g;
         mB = b;
         mA = a;
+    }
+    
+    public Color4f put(FloatBuffer buf) {
+    	buf.put(mR).put(mG).put(mB).put(mA);
+    	return this;
     }
 }

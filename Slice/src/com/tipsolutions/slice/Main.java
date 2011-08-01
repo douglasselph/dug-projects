@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.tipsolutions.jacket.data.Box;
 import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
@@ -26,15 +27,17 @@ public class Main extends Activity {
 
 	static final int MENU_PYRAMID = 0;
 	static final int MENU_CUBE = 1;
-	static final int MENU_SUSAN = 2;
-	static final int MENU_HANK = 3;
-	static final int MENU_PIGEON = 4;
+	static final int MENU_BOX = 2;
+	static final int MENU_SUSAN = 3;
+	static final int MENU_HANK = 4;
+	static final int MENU_PIGEON = 5;
 	
 	final int DATA_PYRAMID = 0;
 	final int DATA_CUBE = 1;
-	final int DATA_SUSAN = 2;
-	final int DATA_HANK = 3;
-	final int DATA_PIGEON = 4;
+	final int DATA_BOX = 2;
+	final int DATA_SUSAN = 3;
+	final int DATA_HANK = 4;
+	final int DATA_PIGEON = 5;
 	
 	interface CreateShape {
 		Shape create();
@@ -165,7 +168,7 @@ public class Main extends Activity {
     final String PIGEON_FILE = "pigeon.data";
     
     static final int NUM_FILES = 4;
-    static final int ARRAY_SIZE = NUM_FILES+1;
+    static final int ARRAY_SIZE = NUM_FILES+2;
     
     Shape [] mShapes = new Shape[ARRAY_SIZE];
     Shape mActiveShape = null;
@@ -192,6 +195,11 @@ public class Main extends Activity {
 				Shape shape = loadShape(CUBE_FILE);
 				setColors(shape);
 				return shape;
+			}
+        });
+        mData[DATA_BOX] = new Data(new CreateShape() {
+			public Shape create() {
+				return getBox();
 			}
         });
         mData[DATA_SUSAN] = new Data(new CreateShape() {
@@ -270,20 +278,65 @@ public class Main extends Activity {
         return shape;
     }
     
-    void setColors(Shape shape) {
-//        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+    Shape getBox() {
+        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+        final Shape shape = new Box(1f, texture);
+        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
+//        setColors(shape);
         shape.setColorData(new FloatData() {
 			@Override
 			public void fill(FloatBuffer buf) {
-				buf.put(1f).put(0f).put(0f).put(1f);
-				buf.put(0f).put(1f).put(0f).put(1f);
-				buf.put(0f).put(0f).put(1f).put(1f);
-				buf.put(0.5f).put(0.5f).put(0.5f).put(1f);
+				ArrayList<Color4f> colors = new ArrayList<Color4f>();
+				colors.add(new Color4f(1, 0, 0, 1));
+				colors.add(new Color4f(0, 1, 0, 1));
+				colors.add(new Color4f(0, 0, 1, 1));
+				colors.add(new Color4f(1, 0, 1, 1));
+				colors.add(new Color4f(1, 1, 0, 1));
+				colors.add(new Color4f(0.5f, 0.5f, 0.5f, 1));
+				int next = 0;
+				int count = 0;
+				for (int i = 0; i < shape.getNumVertexes(); i++) {
+					colors.get(next).put(buf);
+					
+					if (++count >= 4) {
+						count = 0;
+						if (++next >= colors.size()) {
+							next = 0;
+						}
+					}
+				}
 			}
     
 			@Override
 			public int size() {
-				return 4*4;
+				return shape.getNumVertexes()*4;
+			}
+        });
+        return shape;
+    }
+    
+    void setColors(final Shape shape) {
+//        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+        shape.setColorData(new FloatData() {
+			@Override
+			public void fill(FloatBuffer buf) {
+				ArrayList<Color4f> colors = new ArrayList<Color4f>();
+				colors.add(new Color4f(1, 0, 0, 1));
+				colors.add(new Color4f(0, 1, 0, 1));
+				colors.add(new Color4f(0, 0, 1, 1));
+				colors.add(new Color4f(0.5f, 0.5f, 0.5f, 1));
+				int next = 0;
+				for (int i = 0; i < shape.getNumVertexes(); i++) {
+					colors.get(next).put(buf);
+					if (++next >= colors.size()) {
+						next = 0;
+					}
+				}
+			}
+    
+			@Override
+			public int size() {
+				return shape.getNumVertexes()*4;
 			}
         });
     }
@@ -304,6 +357,7 @@ public class Main extends Activity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(0, MENU_PYRAMID, 0, "Pyramid");
 		menu.add(0, MENU_CUBE, 0, "Cube");
+		menu.add(0, MENU_BOX, 0, "Box");
 		menu.add(0, MENU_SUSAN, 0, "Susan");
 		menu.add(0, MENU_HANK, 0, "Hank");
 		menu.add(0, MENU_PIGEON, 0, "Pigeon");
@@ -318,6 +372,9 @@ public class Main extends Activity {
     			break;
     		case MENU_CUBE:
     			setShape(mData[DATA_CUBE].getShape());
+    			break;
+    		case MENU_BOX:
+    			setShape(mData[DATA_BOX].getShape());
     			break;
     		case MENU_SUSAN:
     			setShape(mData[DATA_SUSAN].getShape());

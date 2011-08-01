@@ -1,5 +1,7 @@
 package com.tipsolutions.jacket.math;
 
+import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import android.util.FloatMath;
@@ -140,6 +142,11 @@ public class Vector3f {
 		if (Math.abs(lengthSq) > MathUtils.EPSILON) {
 			return multiply((float) MathUtils.inverseSqrt(lengthSq));
 		}
+		return this;
+	}
+	
+	public Vector3f put(FloatBuffer buf) {
+		buf.put(getX()).put(getY()).put(getZ());
 		return this;
 	}
 	

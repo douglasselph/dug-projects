@@ -1,8 +1,7 @@
 package com.tipsolutions.jacket.view;
 
-import javax.microedition.khronos.opengles.GL10;
-
 import android.opengl.GLU;
+import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
@@ -42,6 +41,9 @@ public class Camera {
 	}
 	
 	public void applyLookAt(MatrixTrackingGL gl) {
+//		Log.d("DEBUG", "Eye: " + mCameraPos.toString());
+//		Log.d("DEBUG", "Center: " + mLookAtPos.toString());
+//		Log.d("DEBUG", "Up: " + mUp.toString());
 		GLU.gluLookAt(gl, 
 				mCameraPos.getX(), mCameraPos.getY(), mCameraPos.getZ(), 
 				mLookAtPos.getX(), mLookAtPos.getY(), mLookAtPos.getZ(), 

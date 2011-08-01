@@ -81,6 +81,10 @@ public class ShapeData {
 		boolean hasData() {
 			return (mRoot != null);
 		}
+		
+		int capacity() {
+			return mBuf.capacity();
+		}
 	};
 	
 	class ShortBuf {
@@ -122,6 +126,10 @@ public class ShapeData {
     			mRoot.rewind();
 			}
 			return mRoot;
+		}
+		
+		int capacity() {
+			return mBuf.capacity();
 		}
 	};
 	
@@ -216,6 +224,8 @@ public class ShapeData {
 	public FloatBuffer getVertexBuf() { return mVertexBuf.getBuf(); }
 	public FloatBuffer getNormalBuf() { return mNormalBuf.getBuf(); }
 	public FloatBuffer getTextureBuf() { return mTextureBuf.getBuf(); }
+	
+	public int getNumVertexes() { return mVertexBuf.capacity(); } 
 	
 	public interface FloatData {
 		void fill(FloatBuffer buf);
@@ -447,9 +457,6 @@ public class ShapeData {
 			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
 			gl.glLoadMatrix(useMatrix);
 		}
-		if (mTexture != null) {
-			mTexture.onDraw(gl);
-		}
 		if ((fbuf = getVertexBuf()) != null) {
     		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
     		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
@@ -471,11 +478,14 @@ public class ShapeData {
 		} else {
     		gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 		}
-		if ((fbuf = getTextureBuf()) != null) {
-    		gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-    		gl.glTexCoordPointer(4, GL10.GL_FLOAT, 0, fbuf);
-		} else {
-    		gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+		if (mTexture != null) {
+			if ((fbuf = getTextureBuf()) != null) {
+				mTexture.onDraw(gl);
+				gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+				gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
+			} else {
+				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+			}
 		}
 		ShortBuffer sbuf;
 		if ((sbuf = getIndexBuf()) != null) {
