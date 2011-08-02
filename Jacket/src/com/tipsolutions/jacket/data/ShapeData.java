@@ -83,6 +83,9 @@ public class ShapeData {
 		}
 		
 		int capacity() {
+			if (mBuf == null) {
+				return 0;
+			}
 			return mBuf.capacity();
 		}
 	};
@@ -166,7 +169,7 @@ public class ShapeData {
 		return mMatrix;
 	}
 	
-	protected ShapeData [] getChildren() {
+	public ShapeData [] getChildren() {
 		if (mChildren == null) {
 			mChildren = _getChildren();
 		}

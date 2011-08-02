@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import com.tipsolutions.jacket.data.Box;
 import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
+import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
@@ -220,7 +221,7 @@ public class Main extends Activity {
         mData[DATA_PIGEON] = new Data(new CreateShape() {
 			public Shape create() {
 				Shape shape = loadShape(PIGEON_FILE);
-		        shape.setColor(new Color4f(0.4f, 0.3f, 0.4f, 0.5f));
+//		        shape.setColor(new Color4f(0.8f, 0.8f, 0.8f, 1.0f));
 				return shape;
 			}
         });
@@ -279,10 +280,10 @@ public class Main extends Activity {
     }
     
     Shape getBox() {
-        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+//        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture("feather_real.png");
         final Shape shape = new Box(1f, texture);
         shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
-//        setColors(shape);
         shape.setColorData(new FloatData() {
 			@Override
 			public void fill(FloatBuffer buf) {
@@ -315,30 +316,38 @@ public class Main extends Activity {
         return shape;
     }
     
-    void setColors(final Shape shape) {
-//        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
-        shape.setColorData(new FloatData() {
-			@Override
-			public void fill(FloatBuffer buf) {
-				ArrayList<Color4f> colors = new ArrayList<Color4f>();
-				colors.add(new Color4f(1, 0, 0, 1));
-				colors.add(new Color4f(0, 1, 0, 1));
-				colors.add(new Color4f(0, 0, 1, 1));
-				colors.add(new Color4f(0.5f, 0.5f, 0.5f, 1));
-				int next = 0;
-				for (int i = 0; i < shape.getNumVertexes(); i++) {
-					colors.get(next).put(buf);
-					if (++next >= colors.size()) {
-						next = 0;
-					}
-				}
-			}
-    
-			@Override
-			public int size() {
-				return shape.getNumVertexes()*4;
-			}
-        });
+    void setColors(final ShapeData shape) {
+    	if (shape.getNumVertexes() > 0) {
+    //        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+            shape.setColorData(new FloatData() {
+    			@Override
+    			public void fill(FloatBuffer buf) {
+    				ArrayList<Color4f> colors = new ArrayList<Color4f>();
+    				colors.add(new Color4f(1, 0, 0, 1));
+    				colors.add(new Color4f(0, 1, 0, 1));
+    				colors.add(new Color4f(0, 0, 1, 1));
+    				colors.add(new Color4f(1, 0, 1, 1));
+    				colors.add(new Color4f(0, 1, 1, 1));
+    				colors.add(new Color4f(0.5f, 0.5f, 0.5f, 1));
+    				int next = 0;
+    				for (int i = 0; i < shape.getNumVertexes(); i++) {
+    					colors.get(next).put(buf);
+    					if (++next >= colors.size()) {
+    						next = 0;
+    					}
+    				}
+    			}
+        
+    			@Override
+    			public int size() {
+    				return shape.getNumVertexes()*4;
+    			}
+            });
+    	} else {
+    		for (ShapeData child : shape.getChildren()) {
+    			setColors(child);
+    		}
+    	}
     }
     
     @Override
