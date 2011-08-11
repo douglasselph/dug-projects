@@ -66,6 +66,7 @@ class pigeon_Feather extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -88,8 +89,8 @@ class pigeon_Feather001 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 6.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -7.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -7.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -144,6 +145,7 @@ class pigeon_Feather001 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -166,8 +168,8 @@ class pigeon_Feather002 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 7.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -6.500000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -6.500000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -222,6 +224,7 @@ class pigeon_Feather002 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -244,8 +247,8 @@ class pigeon_Feather003 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 8.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -6.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -6.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -300,6 +303,7 @@ class pigeon_Feather003 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -322,8 +326,8 @@ class pigeon_Feather004 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 9.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -5.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -5.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -378,6 +382,7 @@ class pigeon_Feather004 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -400,8 +405,8 @@ class pigeon_Feather005 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 11.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -3.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -3.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -456,6 +461,7 @@ class pigeon_Feather005 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -478,8 +484,8 @@ class pigeon_Feather006 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 10.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -4.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -4.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -534,6 +540,7 @@ class pigeon_Feather006 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -556,8 +563,8 @@ class pigeon_Feather007 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 12.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -2.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -2.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -612,6 +619,7 @@ class pigeon_Feather007 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -634,8 +642,8 @@ class pigeon_Feather008 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 13.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, -1.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, -1.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -690,6 +698,7 @@ class pigeon_Feather008 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -712,8 +721,8 @@ class pigeon_Feather009 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 14.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, 0.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, 0.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -768,6 +777,7 @@ class pigeon_Feather009 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -790,8 +800,8 @@ class pigeon_Feather010 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 15.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, 1.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, 1.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -846,6 +856,7 @@ class pigeon_Feather010 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {
@@ -868,8 +879,8 @@ class pigeon_Feather011 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 16.000000f,
-		                    0.000000f, -0.000000f, 1.000000f, 0.000000f,
-		                    0.000000f, -1.000000f, -0.000000f, 2.000000f,
+		                    0.000000f, -0.000000f, -1.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, -0.000000f, 2.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float _getMinX() { return -1.000000f; }
@@ -924,6 +935,7 @@ class pigeon_Feather011 extends ShapeData {
 
 	@Override
 	protected String _getTextureFilename() { return "feather_real.png"; }
+
 	@Override
 	protected FloatData getTextureData() {
 		class TextureData implements FloatData {

@@ -4,11 +4,21 @@ import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.tipsolutions.jacket.data.Box;
 import com.tipsolutions.jacket.data.Pyramid;
@@ -16,6 +26,7 @@ import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.data.ShapeData.FloatData;
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.Quaternion;
@@ -225,11 +236,22 @@ public class Main extends Activity {
 				return shape;
 			}
         });
+        RelativeLayout main = new RelativeLayout(this);
+        main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        
+//        LinearLayout main = new LinearLayout(this);
+//        main.setOrientation(LinearLayout.VERTICAL);
         
         mCamera = new ControlCamera();
+        
         mSurfaceView = new ControlSurfaceView(this);
+        mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        mSurfaceView.setId(1);
+//        mSurfaceView.setEGLConfigChooser(false);
+        
         mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
         mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
+        
         mSurfaceView.setRenderer(mRenderer);
         
         mCamera.setDoubleTap(new Runnable() {
@@ -240,12 +262,87 @@ public class Main extends Activity {
         });
         setShape(getPyramid());
         
-        setContentView(mSurfaceView);
+        View controls = createControls();
+      
+        RelativeLayout.LayoutParams params;
+        
+        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        
+        main.addView(controls, params);
+        
+        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        params.addRule(RelativeLayout.ABOVE, controls.getId());
+        main.addView(mSurfaceView, params);
+    
+        setContentView(main);
         
 //        mSurfaceView.requestFocus();
 //        mSurfaceView.setFocusableInTouchMode(true);
         
         testMatrixAddRotate();
+    }
+    
+    class BlendControl {
+    	String name;
+    	int param;
+    	
+    	public BlendControl(String _name, int _param) {
+    		name = _name;
+    		param = _param;
+    	}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+    };
+    
+    View createControls() {
+        LinearLayout holder = new LinearLayout(this);
+        holder.setOrientation(LinearLayout.HORIZONTAL);
+        holder.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        holder.setId(2);
+        
+        final Spinner blendChoice = new Spinner(this);
+        ArrayAdapter<BlendControl> adapter = new ArrayAdapter<BlendControl>(this,
+        		android.R.layout.simple_spinner_item,
+        		new BlendControl[] {
+        		  new BlendControl("Replace", GL10.GL_REPLACE),
+        		  new BlendControl("Modulate", GL10.GL_MODULATE),
+        		  new BlendControl("Decal", GL10.GL_DECAL),
+        		  new BlendControl("Blend", GL10.GL_BLEND),
+                });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        blendChoice.setAdapter(adapter);
+        blendChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				BlendControl item = (BlendControl) blendChoice.getSelectedItem();
+				setBlendTexture(item.param);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+        	
+        });
+        blendChoice.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        
+
+        holder.addView(blendChoice);
+        
+        return holder;
+    }
+    
+    void setBlendTexture(int param) {
+    	TextureManager tm = mRenderer.getTextureManager();
+        for (Texture t : tm.getTextures()) { 
+        	t.setBlendParam(param);
+        }
+        mSurfaceView.requestRender();
     }
     
     void setShape(Shape shape) {

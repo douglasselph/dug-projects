@@ -2,6 +2,8 @@ package com.tipsolutions.jacket.image;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -21,6 +23,7 @@ public class TextureManager {
 	public class Texture {
 		int mTextureID = 0;
 		int mUseCount = 0;
+		int mBlendParam = GL10.GL_MODULATE;
 		
 		public Texture() {
 		}
@@ -68,12 +71,13 @@ public class TextureManager {
 	        }
 		}
 		
-		public void onDraw(MatrixTrackingGL gl) {
+		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf) {
+			gl.glEnable(GL10.GL_BLEND); 
+			gl.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
+			
 			gl.glEnable(GL10.GL_TEXTURE_2D); 
 			gl.glTexEnvx(GL10.GL_TEXTURE_ENV, 
-					GL10.GL_TEXTURE_ENV_MODE, GL10.GL_MODULATE);
-//	        gl.glTexEnvx(GL10.GL_TEXTURE_ENV, 
-//	        		GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
+					GL10.GL_TEXTURE_ENV_MODE, mBlendParam);
 		       
 			gl.glActiveTexture(GL10.GL_TEXTURE0);
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
@@ -81,6 +85,15 @@ public class TextureManager {
 					GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
 			gl.glTexParameterx(GL10.GL_TEXTURE_2D,
 					GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
+		
+			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
+		}
+		
+		// Expected to be one of GL10.GL_MODULATE, GL10.GL_DECAL, 
+		//   GL10.GL_BLEND, or GL10.GL_REPLACE;
+		public void setBlendParam(int param) {
+			mBlendParam = param;
 		}
 		
 		public void use() {
@@ -117,6 +130,13 @@ public class TextureManager {
 			mSMap.put(filename, entry = new Texture());
 		}
 		return entry;
+	}
+	
+	public ArrayList<Texture> getTextures() {
+		ArrayList<Texture> list = new ArrayList<Texture>();
+		list.addAll(mSMap.values());
+		list.addAll(mIMap.values());
+		return list;
 	}
 	
 	public void init(MatrixTrackingGL gl) {

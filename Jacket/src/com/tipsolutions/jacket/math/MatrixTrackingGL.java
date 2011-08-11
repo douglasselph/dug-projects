@@ -57,6 +57,9 @@ public class MatrixTrackingGL implements GL, GL10, GL10Ext, GL11, GL11Ext {
     FloatBuffer mFloatBuffer;
     float[] mCheckA;
     float[] mCheckB;
+    
+    int mFrontFace = 0;
+    int mCullFace = 0;
 
     public MatrixTrackingGL(GL gl) {
         mgl = (GL10) gl;
@@ -171,9 +174,22 @@ public class MatrixTrackingGL implements GL, GL10, GL10Ext, GL11, GL11Ext {
     }
 
     public void glCullFace(int mode) {
-        mgl.glCullFace(mode);
+        mgl.glCullFace(mCullFace = mode);
     }
-
+    
+    public int getCullFace() {
+    	return mCullFace;
+    }
+    
+    public void setCullFace(int mode) {
+    	if (mode == 0) {
+    		glDisable(GL10.GL_CULL_FACE);
+    	} else if (mCullFace != mode) {
+    		glEnable(GL10.GL_CULL_FACE);
+    		glCullFace(GL10.GL_BACK); // Do not draw this face
+    	}
+    }
+    
     public void glDeleteTextures(int n, int[] textures, int offset) {
         mgl.glDeleteTextures(n, textures, offset);
     }
@@ -255,7 +271,11 @@ public class MatrixTrackingGL implements GL, GL10, GL10Ext, GL11, GL11Ext {
     }
 
     public void glFrontFace(int mode) {
-        mgl.glFrontFace(mode);
+        mgl.glFrontFace(mFrontFace = mode);
+    }
+    
+    public int getFrontFace() {
+    	return mFrontFace;
     }
 
     public void glFrustumf(float left, float right, float bottom, float top,

@@ -158,6 +158,8 @@ public class ShapeData {
 	protected ShapeData [] _getChildren() { return null; }
 	protected Matrix4f _getMatrix() { return null; }
 	protected String _getTextureFilename() { return null; }
+	protected int _getFrontFace() { return GL10.GL_CCW; }
+	protected int _getCullFace() { return GL10.GL_BACK; }
 	
 	// Returns the given object matrix if any.
 	// Will return NULL if no matrix predefined transformation for the object
@@ -450,6 +452,16 @@ public class ShapeData {
 		FloatBuffer fbuf;
 		boolean didPush = false;
 		
+		if (_getFrontFace() != gl.getFrontFace()) {
+			gl.glFrontFace(_getFrontFace());
+		}
+		if (hasTextureArray()) {
+    		gl.setCullFace(0);
+		} else {
+    		gl.setCullFace(_getCullFace());
+		}
+		gl.glDisable(GL10.GL_BLEND);
+		
 		Matrix4f matrix = getMatrix();
 		if (matrix != null) {
 			gl.glMatrixMode(GL10.GL_MODELVIEW);
@@ -483,9 +495,7 @@ public class ShapeData {
 		}
 		if (mTexture != null) {
 			if ((fbuf = getTextureBuf()) != null) {
-				mTexture.onDraw(gl);
-				gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-				gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
+				mTexture.onDraw(gl, fbuf);
 			} else {
 				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			}

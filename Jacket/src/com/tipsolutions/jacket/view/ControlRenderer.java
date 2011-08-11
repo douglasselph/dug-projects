@@ -45,7 +45,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		} else {
     		getGL(gl); // sanity
 		}
-
 		clearScene();
 		
 		mGL.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 

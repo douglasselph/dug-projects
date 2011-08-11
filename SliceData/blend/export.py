@@ -173,11 +173,12 @@ def write_objdata(out, obj):
 	#    M x   y 
 	#          z
 	#          w]
+	# Also need to invert matrix rotations
 	out.write('\n')
 	out.write('\t@Override protected Matrix4f _getMatrix() {\n');
-	out.write('\t\treturn new Matrix4f(%ff, %ff, %ff, %ff,\n'  % (matrix[0][0], matrix[0][1], matrix[0][2], matrix[3][0]))
-	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[1][0], matrix[1][1], matrix[1][2], matrix[3][1]))
-	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[2][0], matrix[2][1], matrix[2][2], matrix[3][2]))
+	out.write('\t\treturn new Matrix4f(%ff, %ff, %ff, %ff,\n'  % (matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0]))
+	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]))
+	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2]))
 	out.write('\t\t                    %ff, %ff, %ff, %ff);\n' % (matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]))
 	out.write('\t}')
 			
