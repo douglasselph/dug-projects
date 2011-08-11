@@ -6,7 +6,7 @@ import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class pigeon_Feather extends ShapeData {
+class wing1_Feather extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, -5.000000f,
@@ -85,7 +85,7 @@ class pigeon_Feather extends ShapeData {
 };
 
 
-class pigeon_Feather001 extends ShapeData {
+class wing1_Feather001 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 6.000000f,
@@ -164,7 +164,7 @@ class pigeon_Feather001 extends ShapeData {
 };
 
 
-class pigeon_Feather002 extends ShapeData {
+class wing1_Feather002 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 7.000000f,
@@ -243,7 +243,7 @@ class pigeon_Feather002 extends ShapeData {
 };
 
 
-class pigeon_Feather003 extends ShapeData {
+class wing1_Feather003 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 8.000000f,
@@ -322,7 +322,7 @@ class pigeon_Feather003 extends ShapeData {
 };
 
 
-class pigeon_Feather004 extends ShapeData {
+class wing1_Feather004 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 9.000000f,
@@ -401,7 +401,7 @@ class pigeon_Feather004 extends ShapeData {
 };
 
 
-class pigeon_Feather005 extends ShapeData {
+class wing1_Feather005 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 11.000000f,
@@ -480,7 +480,7 @@ class pigeon_Feather005 extends ShapeData {
 };
 
 
-class pigeon_Feather006 extends ShapeData {
+class wing1_Feather006 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 10.000000f,
@@ -559,7 +559,7 @@ class pigeon_Feather006 extends ShapeData {
 };
 
 
-class pigeon_Feather007 extends ShapeData {
+class wing1_Feather007 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 12.000000f,
@@ -638,7 +638,7 @@ class pigeon_Feather007 extends ShapeData {
 };
 
 
-class pigeon_Feather008 extends ShapeData {
+class wing1_Feather008 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 13.000000f,
@@ -717,7 +717,7 @@ class pigeon_Feather008 extends ShapeData {
 };
 
 
-class pigeon_Feather009 extends ShapeData {
+class wing1_Feather009 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 14.000000f,
@@ -796,7 +796,7 @@ class pigeon_Feather009 extends ShapeData {
 };
 
 
-class pigeon_Feather010 extends ShapeData {
+class wing1_Feather010 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 15.000000f,
@@ -875,7 +875,7 @@ class pigeon_Feather010 extends ShapeData {
 };
 
 
-class pigeon_Feather011 extends ShapeData {
+class wing1_Feather011 extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 16.000000f,

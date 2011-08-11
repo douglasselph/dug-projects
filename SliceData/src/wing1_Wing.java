@@ -6,7 +6,7 @@ import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class pigeon_Wing extends ShapeData {
+class wing1_Wing extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,

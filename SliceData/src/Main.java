@@ -69,10 +69,10 @@ public class Main {
 				return new susan();
 			}
 		});
-		process.run("pigeon.data", new ICreate() {
+		process.run("wing1.data", new ICreate() {
 			@Override
 			public ShapeData create() {
-				return new pigeon();
+				return new wing1();
 			}
 		});
 	}

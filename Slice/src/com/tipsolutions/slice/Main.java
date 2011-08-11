@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -15,9 +16,10 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.tipsolutions.jacket.data.Box;
@@ -37,20 +39,6 @@ import com.tipsolutions.jacket.view.IEventTap;
 
 public class Main extends Activity {
 
-	static final int MENU_PYRAMID = 0;
-	static final int MENU_CUBE = 1;
-	static final int MENU_BOX = 2;
-	static final int MENU_SUSAN = 3;
-	static final int MENU_HANK = 4;
-	static final int MENU_PIGEON = 5;
-	
-	final int DATA_PYRAMID = 0;
-	final int DATA_CUBE = 1;
-	final int DATA_BOX = 2;
-	final int DATA_SUSAN = 3;
-	final int DATA_HANK = 4;
-	final int DATA_PIGEON = 5;
-	
 	interface CreateShape {
 		Shape create();
 	}
@@ -69,59 +57,21 @@ public class Main extends Activity {
 			}
 			return mShape;
 		}
-	};
-	
-	Data [] mData;
-	
-//	class Triangle extends Shape {
-//    	
-//    	Triangle() {
-//    		fill();
-//    	}
-//    	
-//    	@Override protected Color4f _getColor4() { return new Color4f(0.5f, 0f, 0f, 0.5f); }
-//    	@Override protected float _getMaxX() { return 0.500000f; }
-//    	@Override protected float _getMaxY() { return 0.500000f; }
-//    	@Override protected float _getMaxZ() { return 0.000000f; }
-//    	@Override protected float _getMinX() { return -0.500000f; }
-//    	@Override protected float _getMinY() { return -0.500001f; }
-//    	@Override protected float _getMinZ() { return 0.000000f; }
-//
-//    	@Override
-//    	protected FloatData getColorData() {
-//    		return new FloatData() {
-//    			public void fill(FloatBuffer buf) {
-//    				buf.put(1f).put(0f).put(0).put(1f); /* 0 */
-//    				buf.put(0f).put(1f).put(0).put(1f); /* 0 */
-//    				buf.put(0f).put(0f).put(1f).put(1f); /* 0 */
-//    			};
-//    			public int size() { return 3*4; }
-//    		};
-//    	};
-//
-//    	@Override
-//    	protected ShortData getIndexData() {
-//    		return new ShortData() {
-//    			public void fill(ShortBuffer buf) {
-//    				buf.put((short)0).put((short)1).put((short)2); /* 0 */
-//    			};
-//    			public int size() { return 3; }
-//    		};
-//    	};
-//    	
-//    	@Override
-//    	protected FloatData getVertexData() {
-//    		return new FloatData() {
-//    			public void fill(FloatBuffer buf) {
-//    				buf.put(-0.500000f).put(-0.500000f).put(0.000000f); /* 0 */
-//    				buf.put(0.500000f).put(-0.500000f).put(0.000000f); /* 1 */
-//    				buf.put(0.000000f).put(0.500000f).put(0.000000f); /* 2 */
-//    			};
-//    			public int size() { return 3*3; }
-//    		};
-//    	};
-//    }
-	
+	}
+	class SpinnerControl {
+    	String name;
+    	int arg;
+    	
+    	public SpinnerControl(String _name, int _arg) {
+    		name = _name;
+    		arg = _arg;
+    	}
+
+		@Override
+		public String toString() {
+			return name;
+		}
+    }
 	class TwirlEventTap implements IEventTap {
     
     	static final short DOUBLE_TAP_TRIGGER_MS = 400;
@@ -171,148 +121,121 @@ public class Main extends Activity {
     		return false;
     	}
     }
+	static final int MENU_TOGGLE_EGL_DEPTH = 0;
 	
+	static final int DATA_PYRAMID = 0;
+	static final int DATA_CUBE = 1;
+	static final int DATA_BOX = 2;
+	static final int DATA_SUSAN = 3;
+	static final int DATA_HANK = 4;
+	static final int DATA_WING1 = 5;
+	
+    Data [] mData;
+    
     public static final boolean LOG = true;
     public static final String TAG = "Slice";
+    
     final String CUBE_FILE = "cube.data";
     final String SUSAN_FILE = "susan.data";
     final String HANK_FILE = "hank.data";
-    final String PIGEON_FILE = "pigeon.data";
-    
+    final String WING1_FILE = "wing1.data";
     static final int NUM_FILES = 4;
-    static final int ARRAY_SIZE = NUM_FILES+2;
     
+    static final int ARRAY_SIZE = NUM_FILES+2;
     Shape [] mShapes = new Shape[ARRAY_SIZE];
     Shape mActiveShape = null;
     TwirlEventTap mTwirlEventTap = new TwirlEventTap();
     ControlCamera mCamera;
     MyRenderer mRenderer;
     ControlSurfaceView mSurfaceView;
+    MyApplication mApp;
 
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-//        final Triangle shape  = new Triangle();
-        
-        mData = new Data[ARRAY_SIZE];
-        mData[DATA_PYRAMID] = new Data(new CreateShape() {
-			public Shape create() {
-				return getPyramid();
-			}
-        });
-        mData[DATA_CUBE] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(CUBE_FILE);
-				setColors(shape);
-				return shape;
-			}
-        });
-        mData[DATA_BOX] = new Data(new CreateShape() {
-			public Shape create() {
-				return getBox();
-			}
-        });
-        mData[DATA_SUSAN] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(SUSAN_FILE);
-		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
-				setColors(shape);
-				return shape;
-			}
-        });
-        mData[DATA_HANK] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(HANK_FILE);
-				setColors(shape);
-				return shape;
-			}
-        });
-        mData[DATA_PIGEON] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(PIGEON_FILE);
-//		        shape.setColor(new Color4f(0.8f, 0.8f, 0.8f, 1.0f));
-				return shape;
-			}
-        });
-        RelativeLayout main = new RelativeLayout(this);
-        main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-        
-//        LinearLayout main = new LinearLayout(this);
-//        main.setOrientation(LinearLayout.VERTICAL);
-        
-        mCamera = new ControlCamera();
-        
-        mSurfaceView = new ControlSurfaceView(this);
-        mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        mSurfaceView.setId(1);
-//        mSurfaceView.setEGLConfigChooser(false);
-        
-        mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
-        mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
-        
-        mSurfaceView.setRenderer(mRenderer);
-        
-        mCamera.setDoubleTap(new Runnable() {
-			@Override
-			public void run() {
-				mSurfaceView.setEventTap(mTwirlEventTap);
-			}
-        });
-        setShape(getPyramid());
-        
-        View controls = createControls();
-      
-        RelativeLayout.LayoutParams params;
-        
-        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
-        
-        main.addView(controls, params);
-        
-        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        params.addRule(RelativeLayout.ABOVE, controls.getId());
-        main.addView(mSurfaceView, params);
+    final float ZERO_THRESHOLD = 0.0001f;
     
-        setContentView(main);
-        
-//        mSurfaceView.requestFocus();
-//        mSurfaceView.setFocusableInTouchMode(true);
-        
-        testMatrixAddRotate();
-    }
-    
-    class BlendControl {
-    	String name;
-    	int param;
-    	
-    	public BlendControl(String _name, int _param) {
-    		name = _name;
-    		param = _param;
-    	}
-
-		@Override
-		public String toString() {
-			return name;
+    float assertEquals(String what, float v1, float v2) {
+		float diff = Math.abs(v1-v2);
+		if (Math.abs(diff) > ZERO_THRESHOLD) {
+			StringBuffer sbuf = new StringBuffer();
+			sbuf.append("ERROR: ");
+			sbuf.append(what);
+			sbuf.append("->");
+			sbuf.append(v1);
+			sbuf.append("!=");
+			sbuf.append(v2);
+			sbuf.append(", diff=");
+			sbuf.append(diff);
+			Log.e(TAG, sbuf.toString());
 		}
-    };
+		return diff;
+	}
+    
+    float assertEquals(String what, Vector3f v1, Vector3f v2) {
+		float diff = 0;
+		if (!v1.equals(v2)){
+			double dx = Math.abs(v1.getX()-v2.getX());
+			double dy = Math.abs(v1.getY()-v2.getY());
+			double dz = Math.abs(v1.getZ()-v2.getZ());
+			diff += dx + dy + dz;
+    		if (dx > ZERO_THRESHOLD ||
+    			dy > ZERO_THRESHOLD ||
+    			dz > ZERO_THRESHOLD) {
+    			StringBuffer sbuf = new StringBuffer();
+    			sbuf.append("ERROR: ");
+    			sbuf.append(what);
+    			sbuf.append("->");
+    			sbuf.append(v1.toString());
+    			sbuf.append("!=");
+    			sbuf.append(v2.toString());
+    			sbuf.append(", diff=");
+    			sbuf.append(diff);
+    			Log.e(TAG, sbuf.toString());
+    		}
+		}
+		return diff;
+	}
     
     View createControls() {
-        LinearLayout holder = new LinearLayout(this);
-        holder.setOrientation(LinearLayout.HORIZONTAL);
+        TableLayout holder = new TableLayout(this);
         holder.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        holder.setStretchAllColumns(true);
+        holder.setShrinkAllColumns(true);
+        holder.setOrientation(TableLayout.HORIZONTAL);
         holder.setId(2);
         
-        final Spinner blendChoice = new Spinner(this);
-        ArrayAdapter<BlendControl> adapter = new ArrayAdapter<BlendControl>(this,
+        final Spinner itemChoice = new Spinner(this);
+        ArrayAdapter<SpinnerControl> adapter = new ArrayAdapter<SpinnerControl>(this,
         		android.R.layout.simple_spinner_item,
-        		new BlendControl[] {
-        		  new BlendControl("Replace", GL10.GL_REPLACE),
-        		  new BlendControl("Modulate", GL10.GL_MODULATE),
-        		  new BlendControl("Decal", GL10.GL_DECAL),
-        		  new BlendControl("Blend", GL10.GL_BLEND),
+        		new SpinnerControl[] {
+        		  new SpinnerControl("Pyramid", DATA_PYRAMID),
+        		  new SpinnerControl("Cube", DATA_CUBE),
+        		  new SpinnerControl("Box", DATA_BOX),
+        		  new SpinnerControl("Susan", DATA_SUSAN),
+        		  new SpinnerControl("Hank", DATA_HANK),
+        		  new SpinnerControl("Wing1", DATA_WING1),
+                });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        itemChoice.setAdapter(adapter);
+        itemChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				SpinnerControl item = (SpinnerControl) itemChoice.getSelectedItem();
+				setShape(item.arg);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+        });
+        itemChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        
+        final Spinner blendChoice = new Spinner(this);
+        adapter = new ArrayAdapter<SpinnerControl>(this,
+        		android.R.layout.simple_spinner_item,
+        		new SpinnerControl[] {
+        		  new SpinnerControl("Replace", GL10.GL_REPLACE),
+        		  new SpinnerControl("Modulate", GL10.GL_MODULATE),
+        		  new SpinnerControl("Decal", GL10.GL_DECAL),
+        		  new SpinnerControl("Blend", GL10.GL_BLEND),
                 });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         blendChoice.setAdapter(adapter);
@@ -320,8 +243,8 @@ public class Main extends Activity {
 
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				BlendControl item = (BlendControl) blendChoice.getSelectedItem();
-				setBlendTexture(item.param);
+				SpinnerControl item = (SpinnerControl) blendChoice.getSelectedItem();
+				setBlendTexture(item.arg);
 			}
 
 			@Override
@@ -329,53 +252,18 @@ public class Main extends Activity {
 			}
         	
         });
-        blendChoice.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        
+        blendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 
-        holder.addView(blendChoice);
+        TableRow tableRow = new TableRow(this);
+        tableRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        tableRow.addView(itemChoice);
+        tableRow.addView(blendChoice);
+        
+        holder.addView(tableRow);
         
         return holder;
     }
-    
-    void setBlendTexture(int param) {
-    	TextureManager tm = mRenderer.getTextureManager();
-        for (Texture t : tm.getTextures()) { 
-        	t.setBlendParam(param);
-        }
-        mSurfaceView.requestRender();
-    }
-    
-    void setShape(Shape shape) {
-    	mActiveShape = shape;
-        mRenderer.setShape(shape);
-        
-    	mCamera.setLookAt(new Vector3f(0, 0, 0));
-    	mCamera.setLocation(mCamera.getLookAt().dup());
-    	mCamera.getLocation().add(0, 0, mActiveShape.getSizeZc()*2);
-        
-        mSurfaceView.setEventTap(mCamera);
-        mSurfaceView.requestRender();
-    }
    
-    Shape loadShape(String file) {
-        Shape shape = new Shape();
-        try {
-            InputStream inputStream = getAssets().open(file);
-            shape.readData(inputStream, mRenderer.getTextureManager());
-        } catch (Exception ex) {
-        	Log.e(MyApplication.TAG, ex.getMessage());
-        }
-        return shape;
-    }
-    
-    Shape getPyramid() {
-        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
-        Shape shape = new Pyramid(1f, 1f, texture);
-        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
-        setColors(shape);
-        return shape;
-    }
-    
     Shape getBox() {
 //        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
         TextureManager.Texture texture = mRenderer.getTextureManager().getTexture("feather_real.png");
@@ -413,7 +301,189 @@ public class Main extends Activity {
         return shape;
     }
     
-    void setColors(final ShapeData shape) {
+    Shape getPyramid() {
+        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+        Shape shape = new Pyramid(1f, 1f, texture);
+        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
+        setColors(shape);
+        return shape;
+    }
+    
+    Shape loadShape(String file) {
+        Shape shape = new Shape();
+        try {
+            InputStream inputStream = getAssets().open(file);
+            shape.readData(inputStream, mRenderer.getTextureManager());
+        } catch (Exception ex) {
+        	Log.e(MyApplication.TAG, ex.getMessage());
+        }
+        return shape;
+    }
+    
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        mApp = (MyApplication) getApplicationContext();
+        
+        mData = new Data[ARRAY_SIZE];
+        mData[DATA_PYRAMID] = new Data(new CreateShape() {
+			public Shape create() {
+				return getPyramid();
+			}
+        });
+        mData[DATA_CUBE] = new Data(new CreateShape() {
+			public Shape create() {
+				Shape shape = loadShape(CUBE_FILE);
+				setColors(shape);
+				return shape;
+			}
+        });
+        mData[DATA_BOX] = new Data(new CreateShape() {
+			public Shape create() {
+				return getBox();
+			}
+        });
+        mData[DATA_SUSAN] = new Data(new CreateShape() {
+			public Shape create() {
+				Shape shape = loadShape(SUSAN_FILE);
+		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+				setColors(shape);
+				return shape;
+			}
+        });
+        mData[DATA_HANK] = new Data(new CreateShape() {
+			public Shape create() {
+				Shape shape = loadShape(HANK_FILE);
+				setColors(shape);
+				return shape;
+			}
+        });
+        mData[DATA_WING1] = new Data(new CreateShape() {
+			public Shape create() {
+				Shape shape = loadShape(WING1_FILE);
+				return shape;
+			}
+        });
+        RelativeLayout main = new RelativeLayout(this);
+        main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        
+//        LinearLayout main = new LinearLayout(this);
+//        main.setOrientation(LinearLayout.VERTICAL);
+        
+        mCamera = new ControlCamera();
+    
+        mSurfaceView = new ControlSurfaceView(this);
+        mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        mSurfaceView.setId(1);
+        
+        // We want an 8888 pixel format because that's required for
+        // a translucent window.
+        // And we want a depth buffer.
+//        mSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        
+        // Use a surface format with an Alpha channel:
+//        mSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        
+        mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
+        mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
+        
+        mSurfaceView.setEGLConfigChooser(mApp.getEGLDepth());
+        mSurfaceView.setRenderer(mRenderer);
+        
+        mCamera.setDoubleTap(new Runnable() {
+			@Override
+			public void run() {
+				mSurfaceView.setEventTap(mTwirlEventTap);
+			}
+        });
+        View controls = createControls();
+      
+        RelativeLayout.LayoutParams params;
+        
+        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        
+        main.addView(controls, params);
+        
+        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        params.addRule(RelativeLayout.ABOVE, controls.getId());
+        main.addView(mSurfaceView, params);
+    
+        setContentView(main);
+        
+        
+        setShape(getPyramid());
+        
+        testMatrixAddRotate();
+    }
+    
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		int order = 0;
+		menu.add(0, MENU_TOGGLE_EGL_DEPTH, order++, "Egl Depth");
+		return true;
+	};
+   
+    @Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+    		case MENU_TOGGLE_EGL_DEPTH:
+    			mApp.setEGLDepth(!mApp.getEGLDepth());
+    			reload();
+    			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+    
+    void reload() {
+    	Intent intent = getIntent();
+    	overridePendingTransition(0, 0);
+    	intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    	finish();
+
+    	overridePendingTransition(0, 0);
+    	startActivity(intent);
+    }
+
+	@Override
+    protected void onPause() {
+        super.onPause();
+        mSurfaceView.onPause();
+    }
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		int eglDepthPos = 0;
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("Turn ");
+		if (mApp.getEGLDepth()) {
+			sbuf.append("Off");
+		} else {
+			sbuf.append("On");
+		}
+		sbuf.append(" EGL Depth");
+		menu.getItem(eglDepthPos).setTitle(sbuf.toString());
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+    protected void onResume() {
+        super.onResume();
+        mSurfaceView.onResume();
+    }
+	
+	void setBlendTexture(int param) {
+    	TextureManager tm = mRenderer.getTextureManager();
+        for (Texture t : tm.getTextures()) { 
+        	t.setBlendParam(param);
+        }
+        mSurfaceView.requestRender();
+    }
+	
+	void setColors(final ShapeData shape) {
     	if (shape.getNumVertexes() > 0) {
     //        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
             shape.setColorData(new FloatData() {
@@ -446,54 +516,30 @@ public class Main extends Activity {
     		}
     	}
     }
-    
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mSurfaceView.onPause();
-    };
-   
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mSurfaceView.onResume();
+	
+//	float assertEquals(String what, Rotate r1, Rotate r2) {
+//		float diff = 0;
+//		diff += assertEquals(what + " AngleX", r1.getAngleXDegrees(), r2.getAngleXDegrees());
+//		diff += assertEquals(what + " AngleY", r1.getAngleYDegrees(), r2.getAngleYDegrees());
+//		diff += assertEquals(what + " AngleZ", r1.getAngleZDegrees(), r2.getAngleZDegrees());
+//		return diff;
+//	}
+	
+	public void setShape(int arg) {
+		setShape(mData[arg].getShape());
+	}
+	
+	void setShape(Shape shape) {
+    	mActiveShape = shape;
+        mRenderer.setShape(shape);
+        
+    	mCamera.setLookAt(new Vector3f(0, 0, 0));
+    	mCamera.setLocation(mCamera.getLookAt().dup());
+    	mCamera.getLocation().add(0, 0, mActiveShape.getSizeZc()*2);
+        
+        mSurfaceView.setEventTap(mCamera);
+        mSurfaceView.requestRender();
     }
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, MENU_PYRAMID, 0, "Pyramid");
-		menu.add(0, MENU_CUBE, 0, "Cube");
-		menu.add(0, MENU_BOX, 0, "Box");
-		menu.add(0, MENU_SUSAN, 0, "Susan");
-		menu.add(0, MENU_HANK, 0, "Hank");
-		menu.add(0, MENU_PIGEON, 0, "Pigeon");
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-    		case MENU_PYRAMID:
-    			setShape(mData[DATA_PYRAMID].getShape());
-    			break;
-    		case MENU_CUBE:
-    			setShape(mData[DATA_CUBE].getShape());
-    			break;
-    		case MENU_BOX:
-    			setShape(mData[DATA_BOX].getShape());
-    			break;
-    		case MENU_SUSAN:
-    			setShape(mData[DATA_SUSAN].getShape());
-    			break;
-    		case MENU_HANK:
-    			setShape(mData[DATA_HANK].getShape());
-    			break;
-    		case MENU_PIGEON:
-    			setShape(mData[DATA_PIGEON].getShape());
-    			break;
-		}
-		return super.onOptionsItemSelected(item);
-	}
 	
 	void testMatrixAddRotate() {
 		
@@ -510,6 +556,12 @@ public class Main extends Activity {
 				mVecInit = initVec;
 			}
 			
+			Vector3f getExpected() {
+				Matrix3f m = new Matrix3f();
+				m.setRotate(mRotX, mRotY, mRotZ);
+				return m.apply(mVecInit,null);
+			}
+			
 			float run() {
 				float diff = 0;
 				Quaternion quat = new Quaternion();
@@ -519,12 +571,6 @@ public class Main extends Activity {
 				diff += assertEquals(mName, vec, getExpected());
 				
 				return diff;
-			}
-			
-			Vector3f getExpected() {
-				Matrix3f m = new Matrix3f();
-				m.setRotate(mRotX, mRotY, mRotZ);
-				return m.apply(mVecInit,null);
 			}
 		};
 		ArrayList<Test> tests = new ArrayList<Test>();
@@ -593,58 +639,6 @@ public class Main extends Activity {
 			diff += test.run();
 		}
 		Log.d(TAG, "Total diff=" + diff);
-	}
-	
-//	float assertEquals(String what, Rotate r1, Rotate r2) {
-//		float diff = 0;
-//		diff += assertEquals(what + " AngleX", r1.getAngleXDegrees(), r2.getAngleXDegrees());
-//		diff += assertEquals(what + " AngleY", r1.getAngleYDegrees(), r2.getAngleYDegrees());
-//		diff += assertEquals(what + " AngleZ", r1.getAngleZDegrees(), r2.getAngleZDegrees());
-//		return diff;
-//	}
-	
-	final float ZERO_THRESHOLD = 0.0001f;
-	
-	float assertEquals(String what, float v1, float v2) {
-		float diff = Math.abs(v1-v2);
-		if (Math.abs(diff) > ZERO_THRESHOLD) {
-			StringBuffer sbuf = new StringBuffer();
-			sbuf.append("ERROR: ");
-			sbuf.append(what);
-			sbuf.append("->");
-			sbuf.append(v1);
-			sbuf.append("!=");
-			sbuf.append(v2);
-			sbuf.append(", diff=");
-			sbuf.append(diff);
-			Log.e(TAG, sbuf.toString());
-		}
-		return diff;
-	}
-	
-	float assertEquals(String what, Vector3f v1, Vector3f v2) {
-		float diff = 0;
-		if (!v1.equals(v2)){
-			double dx = Math.abs(v1.getX()-v2.getX());
-			double dy = Math.abs(v1.getY()-v2.getY());
-			double dz = Math.abs(v1.getZ()-v2.getZ());
-			diff += dx + dy + dz;
-    		if (dx > ZERO_THRESHOLD ||
-    			dy > ZERO_THRESHOLD ||
-    			dz > ZERO_THRESHOLD) {
-    			StringBuffer sbuf = new StringBuffer();
-    			sbuf.append("ERROR: ");
-    			sbuf.append(what);
-    			sbuf.append("->");
-    			sbuf.append(v1.toString());
-    			sbuf.append("!=");
-    			sbuf.append(v2.toString());
-    			sbuf.append(", diff=");
-    			sbuf.append(diff);
-    			Log.e(TAG, sbuf.toString());
-    		}
-		}
-		return diff;
 	}
     
 }
