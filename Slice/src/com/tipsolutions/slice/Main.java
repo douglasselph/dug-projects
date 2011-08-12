@@ -136,7 +136,7 @@ public class Main extends Activity {
     public static final String TAG = "Slice";
     
     final String CUBE_FILE = "cube.data";
-    final String SUSAN_FILE = "susan.data";
+    final String SUSAN_FILE = "suzanne.data";
     final String HANK_FILE = "hank.data";
     final String WING1_FILE = "wing1.data";
     static final int NUM_FILES = 4;

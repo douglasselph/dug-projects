@@ -3,14 +3,23 @@
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.data.ShapeData;
-class cube extends ShapeData {
+import com.tipsolutions.jacket.math.Matrix4f;
 
-	@Override public float _getMinX() { return -1.000000f; }
-	@Override public float _getMaxX() { return 1.000000f; }
-	@Override public float _getMinY() { return -1.000001f; }
-	@Override public float _getMaxY() { return 1.000000f; }
-	@Override public float _getMinZ() { return -1.000000f; }
-	@Override public float _getMaxZ() { return 1.000000f; }
+
+class Cube extends ShapeData {
+
+	@Override protected Matrix4f _getMatrix() {
+		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
+		                    0.000000f, 1.000000f, 0.000000f, 0.000000f,
+		                    0.000000f, 0.000000f, 1.000000f, 0.000000f,
+		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
+	}
+	@Override protected float _getMinX() { return -1.000000f; }
+	@Override protected float _getMaxX() { return 1.000000f; }
+	@Override protected float _getMinY() { return -1.000001f; }
+	@Override protected float _getMaxY() { return 1.000000f; }
+	@Override protected float _getMinZ() { return -1.000000f; }
+	@Override protected float _getMaxZ() { return 1.000000f; }
 
 	@Override
 	protected FloatData getVertexData() {
@@ -71,6 +80,28 @@ class cube extends ShapeData {
 
 		};
 		return new IndexData();
+	};
+
+	@Override
+	protected String _getTextureFilename() { return "CubePaint.png"; }
+
+	@Override
+	protected FloatData getTextureData() {
+		class TextureData implements FloatData {
+			public void fill(FloatBuffer buf) {
+				buf.put(1.000000f).put(1.000000f); /* 0 */
+				buf.put(1.000000f).put(0.000000f); /* 1 */
+				buf.put(0.000000f).put(0.000000f); /* 2 */
+				buf.put(0.000000f).put(1.000000f); /* 3 */
+				buf.put(1.000000f).put(1.000000f); /* 4 */
+				buf.put(0.999999f).put(0.000000f); /* 5 */
+				buf.put(0.000000f).put(0.000000f); /* 6 */
+				buf.put(0.000000f).put(1.000000f); /* 7 */
+			};
+			public int size() { return 16; }
+
+		};
+		return new TextureData();
 	};
 
 };

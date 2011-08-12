@@ -60,13 +60,13 @@ public class Main {
 		process.run("cube.data", new ICreate() {
 			@Override
 			public ShapeData create() {
-				return new cube();
+				return new Cube();
 			}
 		});
-		process.run("susan.data", new ICreate() {
+		process.run("suzanne.data", new ICreate() {
 			@Override
 			public ShapeData create() {
-				return new susan();
+				return new Suzanne();
 			}
 		});
 		process.run("wing1.data", new ICreate() {

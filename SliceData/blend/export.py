@@ -18,7 +18,10 @@ def write_obj(filename):
 	gMeshTree = build_tree()
 	dirname = os.path.dirname(filename)
 	topobjname = get_topname()
-	write_mesh(dirname, None, topobjname)
+	if topobjname == '':
+		raise NoTopObjName
+	else:
+		write_mesh(dirname, None, topobjname)
 	
 def build_tree():
 	global bpy
@@ -52,7 +55,7 @@ def build_tree():
 def get_topname():
 	global gMeshTree
 	topname = ''
-	topchildcount = 0
+	topchildcount = -1
 	
 	for objname in gMeshTree.keys():
 		count = get_childcount(objname)
@@ -458,7 +461,7 @@ def write_textures(out, mesh):
 			im = tex.getImage()
 			if im:
 				out.write('\t@Override\n')
-				out.write('\tprotected String _getTextureFilename() { return "%s"; }\n' % im.getFilename().lstrip('/'))
+				out.write('\tprotected String _getTextureFilename() { return "%s"; }\n' % os.path.basename(im.getFilename().lstrip('/')))
 				writeCoords = True
 	
 	if writeCoords:
