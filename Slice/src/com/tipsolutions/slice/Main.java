@@ -336,7 +336,6 @@ public class Main extends Activity {
         mData[DATA_CUBE] = new Data(new CreateShape() {
 			public Shape create() {
 				Shape shape = loadShape(CUBE_FILE);
-				setColors(shape);
 				return shape;
 			}
         });
