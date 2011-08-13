@@ -9,8 +9,107 @@ import math
 
 gMegaMax = 1700
 gFileData = {}
-gMeshInfo = {}
 
+class MyVert:
+	uv = None
+	
+	def __init__(self, vert):
+		self.co = vert.co
+		self.no = vert.no
+
+	def setCol(self, col):
+		self.col = col
+	
+	def setUV(self, uv):
+		self.uv = uv
+		
+	def hasUV(self):
+		return self.uv != None
+	
+	def matchUV(self, uv):
+		if (self.uv.x == uv.x and self.uv.y == uv.y):
+			return True
+		return False
+
+class MeshInfo:
+	verts = []
+	faceVertsOverride = {}
+	extraVerts = {}
+	
+	def collect_data(self, mesh):
+		self.verts = []
+		self.faceVertsOverride = {}
+		self.extraVerts = {}
+		
+		vert = mesh.verts[0]
+		self.minx = vert.co.x
+		self.maxx = vert.co.x
+		self.miny = vert.co.y
+		self.maxy = vert.co.y
+		self.minz = vert.co.z
+		self.maxz = vert.co.z
+
+		for vert in mesh.verts:
+			if vert.co.x < self.minx:
+				self.minx = vert.co.x
+			elif vert.co.x > self.maxx:
+				self.maxx = vert.co.x
+			if vert.co.y < self.miny:
+				self.miny = vert.co.y
+			elif vert.co.y > self.maxy:
+				self.maxy = vert.co.y
+			if vert.co.z < self.minz:
+				self.minz = vert.co.z
+			elif vert.co.z > self.maxz:
+				self.maxz = vert.co.z
+				
+			self.verts.append(MyVert(vert))
+				
+		if mesh.vertexColors:
+			print "Not implemented: collecting of vertex colors"
+		
+		if mesh.faceUV:
+			for face in mesh.faces:
+				for i in range(len(face.verts)):
+					self.addUV(face.index, face.verts[i].index, face.uv[i])
+	
+	def addUV(self, face_index, vert_index, uv):
+		vert = self.verts[vert_index]
+		
+		if not vert.hasUV():
+			vert.setUV(uv)
+		elif not vert.matchUV(uv):
+			# First check for existing matching override
+			if self.extraVerts.has_key(vert_index):
+				for xtra_index in self.extraVerts[vert_index]:		
+					if self.verts[xtra_index].matchUV(uv):
+						self.faceVertsOverride[face_index,vert_index] = xtra_index
+						return
+					
+			# No match: make new entry
+			newvert = MyVert(vert);
+			newvert.setUV(uv)
+			newvertIndex = len(self.verts)
+			self.verts.append(newvert)
+			
+			if self.extraVerts.has_key(vert_index):
+				self.extraVerts[vert_index].append(newvertIndex)
+			else:
+				self.extraVerts[vert_index] = [newvertIndex]
+				
+			self.faceVertsOverride[face_index,vert_index] = newvertIndex
+	
+	def getVertIndex(self, face_index, vert_index):
+		if self.faceVertsOverride.has_key((face_index,vert_index)):
+			return self.faceVertsOverride[face_index,vert_index]
+		
+		return vert_index
+	
+	def getNumVerts(self):
+		return len(self.verts)
+		
+gMeshInfo = MeshInfo()
+	
 def write_obj(filename):
 	global gMeshTree
 	
@@ -81,6 +180,7 @@ def get_childcount(name):
 def write_mesh(dirname, basename, objname):
 	global gMeshTree
 	global gFileData
+	global gMeshInfo
 	
 	if not gMeshTree.has_key(objname):
 		print "Error: not such object name found: '%s'" % objname
@@ -136,9 +236,12 @@ def write_mesh(dirname, basename, objname):
 	
 	write_children(out, objchildren, classname)
 	write_objdata(out, obj)
-	write_boundaries(out, mesh)
-	write_vertexes(out, mesh)
-	write_normals(out, mesh)
+	
+	gMeshInfo.collect_data(mesh)
+	
+	write_boundaries(out)
+	write_vertexes(out)
+	write_normals(out)
 	write_indexes(out, mesh)
 	write_colors(out, mesh)	
 	write_textures(out, mesh)
@@ -168,7 +271,6 @@ def write_children(out, objchildren, classname):
 def write_objdata(out, obj):
 	
 	matrix = obj.getMatrix("localspace")
-	
 	# 
 	# Blender uses row order translations, that is: [x y z w] x M
 	# But OpenGL, uses column order, that is: 
@@ -183,66 +285,31 @@ def write_objdata(out, obj):
 	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]))
 	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2]))
 	out.write('\t\t                    %ff, %ff, %ff, %ff);\n' % (matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]))
-	out.write('\t}')
-			
-def write_boundaries(out, mesh):
+	out.write('\t}')	
+		
+def write_boundaries(out):
 	global gMeshInfo
 	
-	if len(mesh.verts) == 0:
-		return
-	
-	vert = mesh.verts[0]
-	minx = vert.co.x
-	maxx = vert.co.x
-	miny = vert.co.y
-	maxy = vert.co.y
-	minz = vert.co.z
-	maxz = vert.co.z
-
-	for vert in mesh.verts:
-		if vert.co.x < minx:
-			minx = vert.co.x
-		elif vert.co.x > maxx:
-			maxx = vert.co.x
-		if vert.co.y < miny:
-			miny = vert.co.y
-		elif vert.co.y > maxy:
-			maxy = vert.co.y
-		if vert.co.z < minz:
-			minz = vert.co.z
-		elif vert.co.z > maxz:
-			maxz = vert.co.z
-
 	out.write('\n')
-	out.write('\t@Override protected float _getMinX() { return %ff; }\n' % minx);
-	out.write('\t@Override protected float _getMaxX() { return %ff; }\n' % maxx);
-	out.write('\t@Override protected float _getMinY() { return %ff; }\n' % miny);
-	out.write('\t@Override protected float _getMaxY() { return %ff; }\n' % maxy);
-	out.write('\t@Override protected float _getMinZ() { return %ff; }\n' % minz);
-	out.write('\t@Override protected float _getMaxZ() { return %ff; }\n' % maxz);
+	out.write('\t@Override protected float _getMinX() { return %ff; }\n' % gMeshInfo.minx);
+	out.write('\t@Override protected float _getMaxX() { return %ff; }\n' % gMeshInfo.maxx);
+	out.write('\t@Override protected float _getMinY() { return %ff; }\n' % gMeshInfo.miny);
+	out.write('\t@Override protected float _getMaxY() { return %ff; }\n' % gMeshInfo.maxy);
+	out.write('\t@Override protected float _getMinZ() { return %ff; }\n' % gMeshInfo.minz);
+	out.write('\t@Override protected float _getMaxZ() { return %ff; }\n' % gMeshInfo.maxz);
 
-	gMeshInfo['minx'] = minx
-	gMeshInfo['maxx'] = maxx
-	gMeshInfo['miny'] = miny
-	gMeshInfo['maxy'] = maxy
-	gMeshInfo['minz'] = minz
-	gMeshInfo['maxz'] = maxz
-	
-def write_vertexes(out, mesh):
+def write_vertexes(out):
 	global gMegaMax
-	numverts = len(mesh.verts)
+	global gMeshInfo
 	
-	if numverts == 0:
-		return
-
+	numverts = gMeshInfo.getNumVerts()
+	
 	out.write('\n')
 	out.write('\t@Override\n')
 	out.write('\tprotected FloatData getVertexData() {\n');
-	out.write('\t\tclass VertexData implements FloatData {\n')
-		
+	out.write('\t\tclass VertexData implements FloatData {\n')	
 	out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 		
-	gMegaMax = 1700
 	max = gMegaMax
 	index = 0
 			
@@ -260,13 +327,13 @@ def write_vertexes(out, mesh):
 			start = x * max
 			end = start + max
 			
-			for vert in mesh.verts[start:end]:
+			for vert in gMeshInfo.verts[start:end]:
 				out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, index))
 				count = count + 3
 				index = index + 1
  			out.write('\t\t\t};\n')
 	else:
-		for vert in mesh.verts:
+		for vert in gMeshInfo.verts:
 			out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, index))
 			index = index + 1
  		out.write('\t\t\t};\n')
@@ -279,18 +346,17 @@ def write_vertexes(out, mesh):
 	out.write('\t};\n')
 	out.write('\n')
 
-def write_normals(out, mesh):
+def write_normals(out):
 	global gMegaMax
+	global gMeshInfo
+	
 	max = gMegaMax
 	
-	numverts = len(mesh.verts)
-	if numverts == 0:
-		return
+	numverts = gMeshInfo.getNumVerts()
 	
 	out.write('\t@Override\n')
 	out.write('\tprotected FloatData getNormalData() {\n');
 	out.write('\t\tclass NormalData implements FloatData {\n')
- 			
 	out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 
 	index = 0
@@ -308,19 +374,19 @@ def write_normals(out, mesh):
 			out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
 			start = x * max
 			end = start + max
-			for vert in mesh.verts[start:end]:
+			for vert in gMeshInfo.verts[start, end]:
 				out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, index))
 				count = count + 3
 				index = index + 1
 			out.write('\t\t\t};\n')
 	else:
-		for vert in mesh.verts:
+		for vert in gMeshInfo.verts:
 			out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, index))
 			index = index + 1
 		out.write('\t\t\t};\n')
 		count = numverts * 3
 
-	out.write
+	out.write('\n')
 	out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 	out.write('\t\t};\n')
 	out.write('\t\treturn new NormalData();\n')
@@ -328,14 +394,11 @@ def write_normals(out, mesh):
 	out.write('\n')			
 
 def write_indexes(out, mesh):
-	
+	global gMeshInfo
 	global gMegaMax
-	max = gMegaMax
 	
-	max = int(max/3)
+	max = int(gMegaMax/3)
 	numfaces = len(mesh.faces)
-	if numfaces == 0:
-		return
 	
 	out.write('\t@Override\n')
 	out.write('\tprotected ShortData getIndexData() {\n');
@@ -365,7 +428,7 @@ def write_indexes(out, mesh):
 			
 			out.write('\t\t\t\tbuf')
 			for vert in face.v:
-				out.write('.put((short)%d)' % vert.index)
+				out.write('.put((short)%d)' % gMeshInfo.getVertIndex(face.index,vert.index))
 				count = count + 1
 			out.write('; /* %d */\n' % i)
 			i = i + 1
@@ -383,7 +446,7 @@ def write_indexes(out, mesh):
 		for face in mesh.faces:
 			out.write('\t\t\t\tbuf')
 			for vert in face.v:
-				out.write('.put((short)%d)' % vert.index)
+				out.write('.put((short)%d)' % gMeshInfo.getVertIndex(face.index, vert.index))
 				count = count + 1
 			out.write('; /* %d */\n' % i)
 			i = i + 1
@@ -449,7 +512,6 @@ def write_colors(out, mesh):
 	out.write('\t};\n')
 				
 def write_textures(out, mesh):
-	
 	writeCoords = False;
 	
 	for mat in mesh.materials:
@@ -463,57 +525,80 @@ def write_textures(out, mesh):
 				out.write('\t@Override\n')
 				out.write('\tprotected String _getTextureFilename() { return "%s"; }\n' % os.path.basename(im.getFilename().lstrip('/')))
 				writeCoords = True
+				break
 	
 	if writeCoords:
 		global gMegaMax
 		global gMeshInfo
 		
 		max = gMegaMax
+		numverts = gMeshInfo.getNumVerts()
 	
-		numverts = len(mesh.verts)
-		if numverts == 0:
-			return
-	
-		mx = gMeshInfo['minx']
-		my = gMeshInfo['miny']
-		sx = gMeshInfo['maxx']-gMeshInfo['minx']
-		sy = gMeshInfo['maxy']-gMeshInfo['miny']
-		sz = gMeshInfo['maxz']-gMeshInfo['minz']
-		
 		out.write('\n')
 		out.write('\t@Override\n')
 		out.write('\tprotected FloatData getTextureData() {\n');
 		out.write('\t\tclass TextureData implements FloatData {\n')
- 			
 		out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 
 		index = 0
 	
-		if numverts > max:
-			num = int(math.ceil(float(numverts) / float(max)))
+		if not mesh.faceUV:
+			mx = gMeshInfo.minx
+			my = gMeshInfo.miny
+			sx = gMeshInfo.maxx-gMeshInfo.minx
+			sy = gMeshInfo.maxy-gMeshInfo.miny
+			sz = gMeshInfo.maxz-gMeshInfo.minz
+
+			if numverts > max:
+				num = int(math.ceil(float(numverts) / float(max)))
 				
-			for x in range(num):
-				out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
-			out.write('\t\t\t}\n')
-			out.write
-			count = 0
-			for x in range(num):
-				out.write
-				out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
-				start = x * max
-				end = start + max
-				for vert in mesh.verts[start:end]:
+				for x in range(num):
+					out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
+				out.write('\t\t\t}\n')
+				out.write('\n')
+				count = 0
+				for x in range(num):
+					out.write
+					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+					start = x * max
+					end = start + max
+					for vert in gMeshInfo.verts[start:end]:
+						out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
+						count = count + 2
+						index = index + 1
+					out.write('\t\t\t};\n')
+			else:
+				for vert in gMeshInfo.verts:
 					out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
-					count = count + 2
 					index = index + 1
 				out.write('\t\t\t};\n')
+				count = numverts * 2
 		else:
-			for vert in mesh.verts:
-				out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
-				index = index + 1
-			out.write('\t\t\t};\n')
-			count = numverts * 2
-
+			if numverts > max:
+				num = int(math.ceil(float(numverts) / float(max)))
+				
+				for x in range(num):
+					out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
+				out.write('\t\t\t}\n')
+				out.write
+				count = 0
+				for x in range(num):
+					out.write('\n')
+					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+					start = x * max
+					end = start + max
+					for vert in gMeshInfo.verts[start:end]:
+						out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (vert.uv.x, vert.uv.y, index))
+						count = count + 2
+						index = index + 1
+					out.write('\t\t\t};\n')
+			else:
+				for vert in gMeshInfo.verts:
+					out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (vert.uv.x, vert.uv.y, index))
+					index = index + 1
+				out.write('\t\t\t};\n')
+				count = numverts * 2
+				
 		out.write
 		out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 		out.write('\t\t};\n')
@@ -549,9 +634,6 @@ def convertToTriangles(mesh):
 		Mesh.Mode(oldmode)			
 		
 def write_info(mesh):
-	if mesh.faceUV:
-		print "Mesh HAS FACE UV TRUE"
-		
 	for mat in mesh.materials:
 		print "+++ Material %s" % mat.getName()
 		print "RGB Col %s" % mat.getRGBCol()
