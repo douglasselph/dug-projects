@@ -20,10 +20,12 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class TextureManager {
 	
+	int mDefaultBlendParam = GL10.GL_MODULATE;
+	
 	public class Texture {
 		int mTextureID = 0;
 		int mUseCount = 0;
-		int mBlendParam = GL10.GL_MODULATE;
+		int mBlendParam = mDefaultBlendParam;
 		
 		public Texture() {
 		}
@@ -195,5 +197,9 @@ public class TextureManager {
 		if (!once) {
 			gl.glDisable(GL10.GL_TEXTURE_2D); 
 		}
+	}
+	
+	public void setDefaultBlendParam(int param) {
+		mDefaultBlendParam = param;
 	}
 }

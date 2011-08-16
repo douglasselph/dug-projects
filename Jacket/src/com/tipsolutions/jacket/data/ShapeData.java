@@ -154,12 +154,14 @@ public class ShapeData {
 	protected FloatData getNormalData() { return null; }
 	protected FloatData getVertexData() { return null; }
 	protected FloatData getTextureData() { return null; }
-	
+	protected VertexGroupData [] getVertexGroups() { return null; }
+
 	protected ShapeData [] _getChildren() { return null; }
 	protected Matrix4f _getMatrix() { return null; }
 	protected String _getTextureFilename() { return null; }
 	protected int _getFrontFace() { return GL10.GL_CCW; }
 	protected int _getCullFace() { return GL10.GL_BACK; }
+	
 	
 	// Returns the given object matrix if any.
 	// Will return NULL if no matrix predefined transformation for the object
@@ -245,6 +247,12 @@ public class ShapeData {
 		void fill(ShortBuffer buf);
 		int size();
 	}
+	
+	public class VertexGroupData implements ShortData {
+		public String getName() { return null; }
+		public void fill(ShortBuffer buf) {}
+		public int size() { return 0; }
+	};
 	
 	public void compare(String tag, ShapeData other, MessageWriter msg) {
 		FloatBuffer vertexBuf = getVertexBuf();

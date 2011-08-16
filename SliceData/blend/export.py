@@ -134,18 +134,22 @@ def build_tree():
 			if name.startswith("Mesh."):
 				print "Skipping %s" % name
 				continue
+				
+			print "Found %s" % name
 							
 			if not tree.has_key(name):
 				tree[name] = [obj]
 				
 			parent = obj.getParent()
-			if parent:
+			if parent and (parent.getType() == "Mesh"):
 				parentname = parent.getName()
 				
 				if tree.has_key(parentname):
 					tree[parentname].append(obj)
 				else:
 					tree[parentname] = [parent, obj]
+		elif type == "Armature":
+			print "Found Armature %s" % name
 		else:
 			print "Skipping %s of type %s" % (name, type)
 		
@@ -232,6 +236,9 @@ def write_mesh(dirname, basename, objname):
 	mesh = Mesh.New()
 	mesh.getFromObject(objname) 
 	
+	#In theory more efficient, but totally different class:
+	nmesh = obj.getData()
+	
 	convertToTriangles(mesh)
 	
 	write_children(out, objchildren, classname)
@@ -245,7 +252,8 @@ def write_mesh(dirname, basename, objname):
 	write_indexes(out, mesh)
 	write_colors(out, mesh)	
 	write_textures(out, mesh)
-	write_info(mesh)
+	write_vertexgroups(out, nmesh)
+	write_debuginfo(mesh)
 
 	out.write('};\n')
 	out.close()
@@ -606,6 +614,44 @@ def write_textures(out, mesh):
 		out.write('\t};\n')
 		out.write('\n')			
 
+def write_vertexgroups(out, mesh):
+	names = mesh.getVertGroupNames()
+	if len(names) <= 0:
+		return
+
+	out.write('\t@Override\n')
+	out.write('\tprotected VertexGroupData [] getVertexGroups() {\n')
+	out.write('\t\tVertexGroupData [] data = new VertexGroupData[%d];\n' % len(names))
+	out.write('\n')
+	
+	group = 0
+	vertPerLine = 5
+	
+	for groupname in names:
+		out.write('\t\tdata[%d] = new VertexGroupData() {\n' % group);
+		out.write('\t\t\tpublic String getName() { return "%s"; }\n' % groupname)
+		out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
+		c = 0
+		count = 0
+		out.write('\t\t\t\tbuf');
+		for vert in mesh.getVertsFromGroup(groupname):
+			if c >= vertPerLine:
+				out.write(';\n\t\t\t\tbuf');
+				c = 1
+			else:
+				c = c + 1
+			out.write('.put((short)%d)' % vert);
+			count = count + 1
+			once = True
+		out.write(';\n\t\t\t}\n')
+		out.write('\t\t\tpublic int size() { return %d; }\n' % count)
+		out.write('\t\t};\n')
+		group = group + 1
+		
+	out.write('\t\treturn data;\n')
+	out.write('\t};\n')
+	out.write('\n')	
+		
 def convertToTriangles(mesh):
 	global bpy
 	sce = bpy.data.scenes.active
@@ -633,7 +679,7 @@ def convertToTriangles(mesh):
 		sce.objects.unlink(tempob)
 		Mesh.Mode(oldmode)			
 		
-def write_info(mesh):
+def write_debuginfo(mesh):
 	for mat in mesh.materials:
 		print "+++ Material %s" % mat.getName()
 		print "RGB Col %s" % mat.getRGBCol()
