@@ -121,14 +121,16 @@ public class Main extends Activity {
     		return false;
     	}
     }
-	static final int MENU_TOGGLE_EGL_DEPTH = 0;
-	
 	static final int DATA_PYRAMID = 0;
 	static final int DATA_CUBE = 1;
 	static final int DATA_BOX = 2;
 	static final int DATA_SUSAN = 3;
 	static final int DATA_HANK = 4;
 	static final int DATA_WING1 = 5;
+	
+	static final int EGL_NONE = 0;
+	static final int EGL_DEPTH = 1;
+	static final int EGL_NO_DEPTH = 2;
 	
     Data [] mData;
     
@@ -227,6 +229,7 @@ public class Main extends Activity {
 			}
         });
         itemChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        itemChoice.setSelection(mApp.getActiveShapeIndex());
         
         final Spinner blendChoice = new Spinner(this);
         adapter = new ArrayAdapter<SpinnerControl>(this,
@@ -240,7 +243,6 @@ public class Main extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         blendChoice.setAdapter(adapter);
         blendChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
-
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				SpinnerControl item = (SpinnerControl) blendChoice.getSelectedItem();
@@ -253,12 +255,46 @@ public class Main extends Activity {
         	
         });
         blendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        
+        for (int pos = 0; pos < adapter.getCount(); pos++) {
+        	if (adapter.getItem(pos).arg == mApp.getBlenderControl()) {
+        		blendChoice.setSelection(pos);
+        		break;
+        	}
+        }
+        final Spinner eglChoice = new Spinner(this);
+        adapter = new ArrayAdapter<SpinnerControl>(this,
+        		android.R.layout.simple_spinner_item,
+        		new SpinnerControl[] {
+        		  new SpinnerControl("No EGL", EGL_NONE),
+        		  new SpinnerControl("EGL Depth", EGL_DEPTH),
+        		  new SpinnerControl("EGL NoDep", EGL_NO_DEPTH),
+                });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        eglChoice.setAdapter(adapter);
+        eglChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				SpinnerControl item = (SpinnerControl) eglChoice.getSelectedItem();
+				setEGLDepth(item.arg);
+			}
 
-        TableRow tableRow = new TableRow(this);
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+        });
+        eglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        eglChoice.setSelection(mApp.getEGLDepth());
+
+        TableRow tableRow;
+        tableRow = new TableRow(this);
+        tableRow.addView(eglChoice);
+        holder.addView(tableRow);
+        
+        tableRow = new TableRow(this);
         tableRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
         tableRow.addView(itemChoice);
         tableRow.addView(blendChoice);
-        
         holder.addView(tableRow);
         
         return holder;
@@ -388,7 +424,13 @@ public class Main extends Activity {
         mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
         mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
         
-        mSurfaceView.setEGLConfigChooser(mApp.getEGLDepth());
+        if (mApp.getEGLDepth() != EGL_NONE) {
+        	if (mApp.getEGLDepth() == EGL_DEPTH) {
+                mSurfaceView.setEGLConfigChooser(true);
+        	} else {
+                mSurfaceView.setEGLConfigChooser(false);
+        	}
+        }
         mSurfaceView.setRenderer(mRenderer);
         
         mCamera.setDoubleTap(new Runnable() {
@@ -412,35 +454,26 @@ public class Main extends Activity {
         main.addView(mSurfaceView, params);
     
         setContentView(main);
-        
-        
-        setShape(getPyramid());
+		setShape(mData[mApp.getActiveShapeIndex()].getShape());
         
         testMatrixAddRotate();
     }
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		int order = 0;
-		menu.add(0, MENU_TOGGLE_EGL_DEPTH, order++, "Egl Depth");
+//		int order = 0;
+//		menu.add(0, MENU_TOGGLE_EGL_DEPTH, order++, "Egl Depth");
 		return true;
 	};
    
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-    		case MENU_TOGGLE_EGL_DEPTH:
-    			mApp.setEGLDepth(!mApp.getEGLDepth());
-    			reload();
-    			break;
-		}
 		return super.onOptionsItemSelected(item);
 	}
     
     void reload() {
     	Intent intent = getIntent();
     	overridePendingTransition(0, 0);
-    	intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
     	finish();
 
     	overridePendingTransition(0, 0);
@@ -455,16 +488,16 @@ public class Main extends Activity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		int eglDepthPos = 0;
-		StringBuffer sbuf = new StringBuffer();
-		sbuf.append("Turn ");
-		if (mApp.getEGLDepth()) {
-			sbuf.append("Off");
-		} else {
-			sbuf.append("On");
-		}
-		sbuf.append(" EGL Depth");
-		menu.getItem(eglDepthPos).setTitle(sbuf.toString());
+//		int eglDepthPos = 0;
+//		String msg;
+//		if (mApp.getEGLDepth() == null) {
+//			msg = "Use EGL with Depth";
+//		} else if (!mApp.getEGLDepth()) {
+//			msg = "Use EGL without Depth";
+//		} else {
+//			msg = "Disable EGL";
+//		}
+//		menu.getItem(eglDepthPos).setTitle(msg);
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -475,12 +508,23 @@ public class Main extends Activity {
     }
 	
 	void setBlendTexture(int param) {
-    	TextureManager tm = mRenderer.getTextureManager();
-        for (Texture t : tm.getTextures()) { 
-        	t.setBlendParam(param);
-        }
-        mSurfaceView.requestRender();
+		if (mApp.getBlenderControl() != param) {
+        	TextureManager tm = mRenderer.getTextureManager();
+        	mApp.setBlenderControl(param);
+        	tm.setDefaultBlendParam(param);
+            for (Texture t : tm.getTextures()) { 
+            	t.setBlendParam(param);
+            }
+            mSurfaceView.requestRender();
+		}
     }
+	
+	void setEGLDepth(int param) {
+		if (mApp.getEGLDepth() != param) {
+    		mApp.setEGLDepth(param);
+    		reload();	
+		}
+	}
 	
 	void setColors(final ShapeData shape) {
     	if (shape.getNumVertexes() > 0) {
@@ -525,7 +569,10 @@ public class Main extends Activity {
 //	}
 	
 	public void setShape(int arg) {
-		setShape(mData[arg].getShape());
+		if (mApp.getActiveShapeIndex() != arg) {
+    		mApp.setActiveShapeIndex(arg);
+    		setShape(mData[arg].getShape());
+		}
 	}
 	
 	void setShape(Shape shape) {

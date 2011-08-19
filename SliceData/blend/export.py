@@ -35,6 +35,7 @@ class MeshInfo:
 	verts = []
 	faceVertsOverride = {}
 	extraVerts = {}
+	armData = None
 	
 	def collect_data(self, mesh):
 		self.verts = []
@@ -107,7 +108,141 @@ class MeshInfo:
 	
 	def getNumVerts(self):
 		return len(self.verts)
+	
+	def collect_arm_data(mesh):
+		self.armData = ArmData()
+		self.armData.collect_data(mesh)
 		
+class Bone:
+	index = None
+	verts = []
+	joints = []
+	
+	def __init__(self, name):
+		self.name = name
+		
+	def hasJoints(self):
+		return (len(self.joints) > 0)
+	
+	def getNumJoints(self):
+		return len(self.joints)
+	
+	def getJoints(self):
+		return joints
+	
+class Joint
+	index = None
+	verts = []
+	bones = []
+	
+	def __init__(self, bones):
+		self.bones = bones
+		
+	def match(self, bones):
+		for i in range(len(bones)):
+			if self.bones[i] != bones[i]:
+				return False
+		return True
+	
+	def getBoneIndexes(self, arm):
+		result = []
+		for bonename in self.bones:
+			if arm.joints.has_key(bonename):
+				result.append(arm.joints[bonename].index)
+			else:
+				result.append(-1)
+		return result
+	
+class ArmData:
+	arm = None
+	bones = {}
+	joints = {}
+	bonelist = []
+	
+	def collect_data(self, mesh):
+		groupnames = mesh.getVertGroupNames()
+		
+		if len(names) <= 0:
+			return
+		
+		try:
+			self.arm = Armature.Get("Armature_" + mesh.getName())
+		except:
+			return
+	
+		basebones = []
+	
+		for bonekey in arm.bones.keys():
+			if findInList(groupnames, bonekey) < 0:
+				continue
+				
+			if not self.bones.has_key(bonekey)
+				self.bones[bonekey] = Bone(bonekey)
+			
+			bone = self.bones[bonekey]
+			
+			for vert in mesh.getVertsFromGroup(bonekey):
+				influences = mesh.getVertexInfluences(vert)
+				
+				if len(influences) == 1:
+					bone.verts.append(vert)
+				else:
+					influences.sort()
+					bonenames = []
+					for inf in influences:
+						bonenames.append(inf[0])
+						
+					if not self.joints.has_key(bonenames):
+						self.joints[bonenames] = new Joint(bonenames)
+					
+					self.joints[bonenames].verts.append(vert)
+			
+			blender_bone = self.arm.bones[bonekey]
+			if blender_bone.parent == None:
+				basebones.append(bone)
+				
+		self.bonelist = []
+		processed = {}
+		
+		for bone in basebones:
+			self.buildList(processed, bone.name)		
+				
+		pos = 0
+		for bone in self.bonelist:
+			bone.index = pos
+			pos = pos + 1
+		
+		pos = 0
+		for joint in self.joints.keys():
+			joints[joint].index = pos
+			pos = pos + 1
+			
+		for bone in self.bonelist:
+			bone.joints = self.getJoints(bone.name)
+				
+	def buildList(self, processed, bonename):
+		if processed.has_key(bonename):
+			return
+		processed[bonename] = True
+		if self.bones.has_key(bonename):
+	 		self.bonelist.append(self.bones[bonename])
+			blender_bone = self.arm.bones[bonename]
+			for child in blender_bone.children:
+				self.buildList(processed, child.name)
+			
+	def hasData(self):
+		if self.arm != None and len(self.bones) > 0 and len(self.bonelist) > 0:
+			return True
+		return False	
+	
+	def getJoints(self, bonename):
+		result = []
+		for bonenames in self.joints.keys():
+			if findInList(bonenames, bonename) >= 0:
+				result.append(self.joints[bonenames])
+		
+		return result
+				
 gMeshInfo = MeshInfo()
 	
 def write_obj(filename):
@@ -245,6 +380,7 @@ def write_mesh(dirname, basename, objname):
 	write_objdata(out, obj)
 	
 	gMeshInfo.collect_data(mesh)
+	gMeshInfo.collect_arm_data(nmesh)
 	
 	write_boundaries(out)
 	write_vertexes(out)
@@ -252,7 +388,7 @@ def write_mesh(dirname, basename, objname):
 	write_indexes(out, mesh)
 	write_colors(out, mesh)	
 	write_textures(out, mesh)
-	write_vertexgroups(out, nmesh)
+	write_armature(out)
 	write_debuginfo(mesh)
 
 	out.write('};\n')
@@ -614,27 +750,28 @@ def write_textures(out, mesh):
 		out.write('\t};\n')
 		out.write('\n')			
 
-def write_vertexgroups(out, mesh):
-	names = mesh.getVertGroupNames()
-	if len(names) <= 0:
+def write_armature(out):
+	global gMeshInfo
+	
+	if not gMeshInfo.armData.hasData():
 		return
-
+	
 	out.write('\t@Override\n')
-	out.write('\tprotected VertexGroupData [] getVertexGroups() {\n')
-	out.write('\t\tVertexGroupData [] data = new VertexGroupData[%d];\n' % len(names))
-	out.write('\n')
+	out.write('\tprotected Bone [] getBones() {\n')
+	out.write('\t\tBone [] bones = new Bone[%d];\n' % len(gMeshInfo.armData.bonelist))
+	out.write('\n')	
 	
-	group = 0
-	vertPerLine = 5
+	vertsPerLine = 5
 	
-	for groupname in names:
-		out.write('\t\tdata[%d] = new VertexGroupData() {\n' % group);
-		out.write('\t\t\tpublic String getName() { return "%s"; }\n' % groupname)
+	for bone in gMeshInfo.armData.bonelist:
+		out.write('\t\tbones[%d] = new Bone() {\n' % bone.index);
+		out.write('\t\t\tpublic String getName() { return "%s"; }\n' % bone.name)
 		out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
+		
 		c = 0
 		count = 0
 		out.write('\t\t\t\tbuf');
-		for vert in mesh.getVertsFromGroup(groupname):
+		for vert in bone.verts:
 			if c >= vertPerLine:
 				out.write(';\n\t\t\t\tbuf');
 				c = 1
@@ -643,15 +780,74 @@ def write_vertexgroups(out, mesh):
 			out.write('.put((short)%d)' % vert);
 			count = count + 1
 			once = True
+		
 		out.write(';\n\t\t\t}\n')
 		out.write('\t\t\tpublic int size() { return %d; }\n' % count)
-		out.write('\t\t};\n')
-		group = group + 1
+		out.write('\t\t\tpublic int [] getJoints() {\n');
 		
-	out.write('\t\treturn data;\n')
+		if bone.hasJoints():
+			out.write('\t\t\t\tint [] joints = new int[%d]\n' % bone.getNumJoints())
+			pos = 0
+			for joint in bone.getJoints():
+				out.write('\t\t\t\tjoints[%d] = %d;\n' % (pos, joint.index))
+				pos = pos + 1
+			out.write('\t\t\t\treturn joints;\n')
+		else:
+			out.write('\t\t\t\treturn null;\n')
+		
+		out.write('\t\t\t};\n');
+		out.write('\t\t};\n')
+	
+	out.write('\t\treturn bones;\n')
+	out.write('\t};\n')
+	out.write('\n')
+	
+	out.write('\t@Override\n')
+	out.write('\tprotected Joint [] getJoints() {\n')
+	out.write('\t\tJoint [] joints = new Joint[%d];\n' % len(gMeshInfo.armData.joints.keys()))
+	
+	for joint in gMeshInfo.armData.joints.keys():
+		out.write('\t\tjoints[%d] = new Joint() {\n' % joint.index);
+		out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
+		
+		c = 0
+		count = 0
+		out.write('\t\t\t\tbuf');
+		for vert in joint.verts:
+			if c >= vertPerLine:
+				out.write(';\n\t\t\t\tbuf');
+				c = 1
+			else:
+				c = c + 1
+			out.write('.put((short)%d)' % vert);
+			count = count + 1
+			once = True
+		
+		out.write(';\n\t\t\t}\n')
+		out.write('\t\t\tpublic int size() { return %d; }\n' % count)
+		out.write('\t\t\tpublic int [] getBones() {\n');
+		
+		boneindexes = joint.getBoneIndexes()
+		
+		out.write('\t\t\t\tint [] bones = new int[%d]\n' % len(boneindexes))
+		pos = 0
+		for index in boneindexes:
+			out.write('\t\t\t\tbones[%d] = %d;\n' % (pos, index))
+			pos = pos + 1
+		out.write('\t\t\t\treturn bones;\n')
+		out.write('\t\t\t};\n');
+		out.write('\t\t};\n')
 	out.write('\t};\n')
 	out.write('\n')	
 		
+def findInList(list, key):
+	i = 0
+	for k in list:
+		if k == key:
+			return i
+		i = i + 1
+	return -1
+
 def convertToTriangles(mesh):
 	global bpy
 	sce = bpy.data.scenes.active

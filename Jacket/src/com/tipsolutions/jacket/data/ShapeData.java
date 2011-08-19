@@ -154,8 +154,9 @@ public class ShapeData {
 	protected FloatData getNormalData() { return null; }
 	protected FloatData getVertexData() { return null; }
 	protected FloatData getTextureData() { return null; }
-	protected VertexGroupData [] getVertexGroups() { return null; }
-
+	protected Bone [] getBones() { return null; }
+	protected Joint [] getJoints() { return null; }
+	
 	protected ShapeData [] _getChildren() { return null; }
 	protected Matrix4f _getMatrix() { return null; }
 	protected String _getTextureFilename() { return null; }
@@ -248,10 +249,17 @@ public class ShapeData {
 		int size();
 	}
 	
-	public class VertexGroupData implements ShortData {
+	public class Bone implements ShortData {
 		public String getName() { return null; }
 		public void fill(ShortBuffer buf) {}
 		public int size() { return 0; }
+		public int [] getJoints() { return null; }
+	};
+	
+	public class Joint implements ShortData {
+		public void fill(ShortBuffer buf) {}
+		public int size() { return 0; }
+		public int [] getBones() { return null; }
 	};
 	
 	public void compare(String tag, ShapeData other, MessageWriter msg) {
