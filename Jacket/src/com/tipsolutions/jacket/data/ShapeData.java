@@ -254,6 +254,7 @@ public class ShapeData {
 		public void fill(ShortBuffer buf) {}
 		public int size() { return 0; }
 		public int [] getJoints() { return null; }
+		public int getJointParent() { return -1; }
 	};
 	
 	public class Joint implements ShortData {

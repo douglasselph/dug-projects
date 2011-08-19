@@ -6,7 +6,7 @@ import com.tipsolutions.jacket.data.ShapeData;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class WingBone extends ShapeData {
+class Wing_L extends ShapeData {
 
 	@Override protected Matrix4f _getMatrix() {
 		return new Matrix4f(0.000000f, 0.000000f, -0.641370f, -0.082528f,
@@ -2677,183 +2677,256 @@ class WingBone extends ShapeData {
 	};
 
 	@Override
-	protected VertexGroupData [] getVertexGroups() {
-		VertexGroupData [] data = new VertexGroupData[4];
+	protected Bone [] getBones() {
+		Bone [] bones = new Bone[4];
 
-		data[0] = new VertexGroupData() {
-			public String getName() { return "Wing_L.Arm1"; }
-			public void fill(ShortBuffer buf) {
-				buf.put((short)0).put((short)1).put((short)2).put((short)4).put((short)5);
-				buf.put((short)7).put((short)9).put((short)11).put((short)14).put((short)16);
-				buf.put((short)17).put((short)19).put((short)20).put((short)21).put((short)22);
-				buf.put((short)23).put((short)24).put((short)26).put((short)27).put((short)29);
-				buf.put((short)30).put((short)31).put((short)32).put((short)33).put((short)34);
-				buf.put((short)35).put((short)36).put((short)40).put((short)41).put((short)42);
-				buf.put((short)46).put((short)48).put((short)49).put((short)51).put((short)52);
-				buf.put((short)53).put((short)54).put((short)56).put((short)58).put((short)59);
-				buf.put((short)60).put((short)61).put((short)62).put((short)63).put((short)64);
-				buf.put((short)65).put((short)66).put((short)67).put((short)68).put((short)75);
-				buf.put((short)76).put((short)77).put((short)78).put((short)80).put((short)81);
-				buf.put((short)86).put((short)88).put((short)89).put((short)90).put((short)91);
-				buf.put((short)92).put((short)93).put((short)95).put((short)96).put((short)97);
-				buf.put((short)98).put((short)99).put((short)100).put((short)101).put((short)104);
-				buf.put((short)105).put((short)106).put((short)107).put((short)108).put((short)110);
-				buf.put((short)113).put((short)114).put((short)115).put((short)116).put((short)121);
+		bones[0] = new Bone() {
+			@Override public String getName() { return "Wing_L.Arm1"; }
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)0).put((short)2).put((short)4).put((short)9).put((short)11);
+				buf.put((short)17).put((short)19).put((short)22).put((short)23).put((short)24);
+				buf.put((short)26).put((short)27).put((short)29).put((short)30).put((short)31);
+				buf.put((short)32).put((short)33).put((short)34).put((short)35).put((short)36);
+				buf.put((short)40).put((short)41).put((short)42).put((short)46).put((short)48);
+				buf.put((short)49).put((short)51).put((short)52).put((short)53).put((short)54);
+				buf.put((short)56).put((short)58).put((short)59).put((short)60).put((short)61);
+				buf.put((short)62).put((short)63).put((short)64).put((short)65).put((short)66);
+				buf.put((short)67).put((short)68).put((short)75).put((short)76).put((short)77);
+				buf.put((short)78).put((short)80).put((short)81).put((short)86).put((short)89);
+				buf.put((short)90).put((short)91).put((short)92).put((short)93).put((short)96);
+				buf.put((short)97).put((short)98).put((short)99).put((short)100).put((short)101);
+				buf.put((short)104).put((short)105).put((short)106).put((short)107).put((short)108);
+				buf.put((short)110).put((short)113).put((short)114).put((short)115).put((short)121);
 				buf.put((short)122).put((short)123).put((short)124).put((short)125).put((short)126);
-				buf.put((short)127).put((short)128).put((short)129).put((short)130).put((short)132);
-				buf.put((short)133).put((short)135).put((short)137).put((short)139).put((short)140);
-				buf.put((short)142).put((short)143).put((short)144).put((short)146).put((short)148);
+				buf.put((short)128).put((short)130).put((short)133).put((short)135).put((short)137);
+				buf.put((short)139).put((short)140).put((short)142).put((short)143).put((short)146);
 				buf.put((short)150).put((short)154).put((short)155).put((short)156).put((short)157);
 				buf.put((short)158).put((short)159).put((short)160).put((short)161).put((short)162);
-				buf.put((short)163).put((short)164).put((short)165).put((short)166).put((short)167);
-				buf.put((short)168).put((short)169).put((short)170).put((short)172).put((short)173);
-				buf.put((short)174).put((short)175).put((short)178).put((short)180).put((short)181);
-				buf.put((short)183).put((short)184).put((short)185).put((short)186).put((short)187);
-				buf.put((short)188).put((short)189).put((short)190).put((short)191).put((short)192);
-				buf.put((short)193).put((short)194).put((short)196).put((short)197).put((short)198);
-				buf.put((short)199).put((short)201).put((short)202).put((short)203).put((short)204);
-				buf.put((short)205).put((short)206).put((short)207).put((short)208).put((short)209);
-				buf.put((short)210).put((short)211).put((short)212).put((short)213).put((short)214);
-				buf.put((short)215).put((short)216).put((short)217).put((short)219).put((short)220);
-				buf.put((short)225).put((short)226).put((short)227).put((short)229).put((short)230);
+				buf.put((short)163).put((short)164).put((short)165).put((short)167).put((short)168);
+				buf.put((short)169).put((short)170).put((short)172).put((short)173).put((short)174);
+				buf.put((short)175).put((short)180).put((short)181).put((short)183).put((short)184);
+				buf.put((short)186).put((short)188).put((short)189).put((short)190).put((short)191);
+				buf.put((short)192).put((short)193).put((short)194).put((short)196).put((short)197);
+				buf.put((short)198).put((short)199).put((short)201).put((short)202).put((short)203);
+				buf.put((short)204).put((short)205).put((short)206).put((short)207).put((short)208);
+				buf.put((short)209).put((short)210).put((short)211).put((short)212).put((short)213);
+				buf.put((short)214).put((short)215).put((short)216).put((short)217).put((short)219);
+				buf.put((short)220).put((short)225).put((short)226).put((short)227).put((short)229);
 				buf.put((short)231).put((short)234).put((short)235).put((short)237).put((short)239);
 				buf.put((short)243).put((short)244).put((short)245).put((short)248).put((short)250);
 				buf.put((short)252).put((short)253).put((short)254).put((short)255).put((short)256);
-				buf.put((short)257).put((short)260).put((short)262).put((short)264).put((short)265);
-				buf.put((short)267).put((short)268).put((short)269).put((short)270).put((short)272);
-				buf.put((short)274).put((short)275).put((short)277).put((short)279).put((short)280);
-				buf.put((short)281).put((short)283).put((short)284).put((short)285).put((short)286);
-				buf.put((short)287).put((short)288).put((short)289).put((short)293).put((short)294);
-				buf.put((short)295).put((short)296).put((short)297).put((short)298).put((short)300);
-				buf.put((short)302).put((short)308).put((short)309).put((short)310).put((short)311);
-				buf.put((short)314).put((short)315).put((short)316).put((short)317).put((short)318);
-				buf.put((short)319).put((short)322).put((short)323).put((short)327).put((short)337);
-				buf.put((short)353).put((short)360).put((short)369).put((short)372).put((short)375);
-				buf.put((short)381).put((short)382).put((short)383).put((short)388).put((short)389);
-				buf.put((short)390).put((short)405).put((short)409).put((short)410).put((short)417);
+				buf.put((short)257).put((short)262).put((short)264).put((short)265).put((short)267);
+				buf.put((short)268).put((short)269).put((short)270).put((short)272).put((short)274);
+				buf.put((short)275).put((short)277).put((short)279).put((short)280).put((short)283);
+				buf.put((short)284).put((short)285).put((short)286).put((short)287).put((short)288);
+				buf.put((short)289).put((short)293).put((short)294).put((short)295).put((short)296);
+				buf.put((short)297).put((short)298).put((short)300).put((short)302).put((short)308);
+				buf.put((short)309).put((short)310).put((short)311).put((short)314).put((short)315);
+				buf.put((short)316).put((short)317).put((short)318).put((short)319).put((short)322);
+				buf.put((short)323).put((short)327).put((short)337).put((short)360).put((short)369);
+				buf.put((short)372).put((short)375).put((short)381).put((short)382).put((short)383);
+				buf.put((short)389).put((short)390).put((short)409).put((short)410).put((short)417);
 				buf.put((short)419).put((short)422).put((short)429).put((short)446).put((short)449);
 				buf.put((short)451).put((short)453).put((short)461).put((short)463).put((short)465);
 				buf.put((short)471).put((short)472).put((short)474).put((short)477).put((short)481);
 				buf.put((short)490).put((short)494).put((short)501).put((short)506).put((short)514);
 				buf.put((short)515).put((short)517).put((short)519).put((short)527).put((short)532);
-				buf.put((short)534).put((short)545).put((short)547).put((short)552).put((short)553);
-				buf.put((short)554).put((short)555).put((short)556).put((short)557).put((short)558);
-				buf.put((short)559).put((short)560).put((short)561).put((short)563).put((short)564);
-				buf.put((short)565).put((short)570).put((short)571).put((short)575).put((short)576);
-				buf.put((short)579).put((short)581).put((short)584).put((short)586).put((short)587);
-				buf.put((short)588).put((short)589).put((short)590).put((short)591).put((short)592);
-				buf.put((short)594).put((short)596).put((short)599).put((short)600).put((short)602);
-				buf.put((short)603).put((short)604).put((short)605).put((short)606).put((short)607);
-				buf.put((short)611).put((short)613).put((short)615).put((short)616).put((short)618);
-				buf.put((short)620).put((short)621).put((short)622).put((short)623).put((short)625);
-				buf.put((short)626).put((short)628).put((short)629).put((short)630).put((short)631);
-				buf.put((short)632).put((short)634).put((short)635).put((short)636).put((short)637);
-				buf.put((short)638).put((short)640).put((short)645).put((short)647).put((short)648);
-				buf.put((short)649);
+				buf.put((short)545).put((short)547).put((short)552).put((short)554).put((short)555);
+				buf.put((short)556).put((short)557).put((short)558).put((short)559).put((short)564);
+				buf.put((short)570).put((short)571).put((short)575).put((short)579).put((short)581);
+				buf.put((short)584).put((short)586).put((short)587).put((short)588).put((short)589);
+				buf.put((short)590).put((short)591).put((short)592).put((short)594).put((short)596);
+				buf.put((short)599).put((short)600).put((short)602).put((short)603).put((short)604);
+				buf.put((short)605).put((short)606).put((short)607).put((short)611).put((short)613);
+				buf.put((short)615).put((short)616).put((short)618).put((short)621).put((short)622);
+				buf.put((short)623).put((short)625).put((short)626).put((short)628).put((short)629);
+				buf.put((short)630).put((short)631).put((short)632).put((short)634).put((short)635);
+				buf.put((short)636).put((short)637).put((short)638).put((short)640).put((short)647);
+				buf.put((short)648).put((short)649);
 			}
-			public int size() { return 331; }
+			@Override public int size() { return 297; }
+			@Override public int [] getJoints() {
+				int [] joints = new int[1];
+				joints[0] = 0;
+				return joints;
+			};
 		};
-		data[1] = new VertexGroupData() {
-			public String getName() { return "Wing_L.Arm2"; }
-			public void fill(ShortBuffer buf) {
-				buf.put((short)1).put((short)3).put((short)5).put((short)7).put((short)13);
-				buf.put((short)14).put((short)15).put((short)16).put((short)18).put((short)20);
-				buf.put((short)21).put((short)47).put((short)73).put((short)83).put((short)88);
-				buf.put((short)94).put((short)95).put((short)109).put((short)116).put((short)117);
-				buf.put((short)118).put((short)127).put((short)129).put((short)132).put((short)134);
-				buf.put((short)136).put((short)144).put((short)148).put((short)153).put((short)166);
-				buf.put((short)171).put((short)176).put((short)177).put((short)178).put((short)182);
-				buf.put((short)185).put((short)187).put((short)230).put((short)233).put((short)236);
-				buf.put((short)238).put((short)240).put((short)246).put((short)259).put((short)260);
-				buf.put((short)261).put((short)271).put((short)273).put((short)278).put((short)281);
+		bones[1] = new Bone() {
+			@Override public String getName() { return "Wing_L.Arm2"; }
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)18).put((short)47).put((short)83).put((short)94).put((short)117);
+				buf.put((short)118).put((short)134).put((short)153).put((short)177).put((short)182);
+				buf.put((short)236).put((short)259).put((short)261).put((short)271).put((short)273);
 				buf.put((short)305).put((short)306).put((short)313).put((short)321).put((short)325);
 				buf.put((short)326).put((short)330).put((short)334).put((short)335).put((short)336);
 				buf.put((short)338).put((short)340).put((short)342).put((short)343).put((short)344);
 				buf.put((short)346).put((short)348).put((short)349).put((short)350).put((short)352);
-				buf.put((short)353).put((short)354).put((short)356).put((short)357).put((short)358);
-				buf.put((short)361).put((short)362).put((short)364).put((short)366).put((short)367);
-				buf.put((short)368).put((short)370).put((short)371).put((short)373).put((short)377);
-				buf.put((short)378).put((short)379).put((short)380).put((short)388).put((short)396);
-				buf.put((short)400).put((short)401).put((short)404).put((short)405).put((short)408);
-				buf.put((short)412).put((short)413).put((short)416).put((short)420).put((short)421);
-				buf.put((short)431).put((short)433).put((short)444).put((short)447).put((short)456);
-				buf.put((short)464).put((short)468).put((short)469).put((short)476).put((short)480);
-				buf.put((short)485).put((short)489).put((short)507).put((short)516).put((short)518);
-				buf.put((short)520).put((short)525).put((short)526).put((short)530).put((short)531);
-				buf.put((short)534).put((short)537).put((short)550).put((short)551).put((short)553);
-				buf.put((short)560).put((short)561).put((short)563).put((short)565).put((short)567);
-				buf.put((short)573).put((short)576).put((short)577).put((short)580).put((short)582);
-				buf.put((short)583).put((short)585).put((short)593).put((short)597).put((short)598);
-				buf.put((short)601).put((short)608).put((short)612).put((short)619).put((short)620);
-				buf.put((short)624).put((short)633).put((short)641).put((short)642).put((short)644);
-				buf.put((short)645).put((short)650);
+				buf.put((short)354).put((short)356).put((short)357).put((short)358).put((short)361);
+				buf.put((short)362).put((short)364).put((short)366).put((short)367).put((short)368);
+				buf.put((short)370).put((short)371).put((short)373).put((short)377).put((short)378);
+				buf.put((short)379).put((short)400).put((short)404).put((short)408).put((short)412);
+				buf.put((short)413).put((short)416).put((short)420).put((short)421).put((short)431);
+				buf.put((short)433).put((short)444).put((short)447).put((short)485).put((short)516);
+				buf.put((short)518).put((short)520).put((short)526).put((short)531).put((short)537);
+				buf.put((short)567).put((short)573).put((short)580).put((short)585).put((short)597);
+				buf.put((short)598).put((short)601).put((short)612).put((short)619).put((short)633);
+				buf.put((short)641).put((short)642).put((short)644).put((short)650);
 			}
-			public int size() { return 152; }
+			@Override public int size() { return 84; }
+			@Override public int [] getJoints() {
+				int [] joints = new int[2];
+				joints[0] = 1;
+				joints[1] = 2;
+				return joints;
+			};
+			@Override public int getJointParent() { return 0; }
 		};
-		data[2] = new VertexGroupData() {
-			public String getName() { return "Wing_L.Hand"; }
-			public void fill(ShortBuffer buf) {
-				buf.put((short)3).put((short)6).put((short)10).put((short)12).put((short)13);
-				buf.put((short)15).put((short)25).put((short)38).put((short)39).put((short)43);
-				buf.put((short)44).put((short)45).put((short)50).put((short)55).put((short)57);
-				buf.put((short)69).put((short)70).put((short)71).put((short)72).put((short)74);
-				buf.put((short)82).put((short)84).put((short)103).put((short)109).put((short)111);
-				buf.put((short)119).put((short)120).put((short)131).put((short)136).put((short)138);
-				buf.put((short)141).put((short)145).put((short)149).put((short)152).put((short)171);
-				buf.put((short)195).put((short)200).put((short)221).put((short)223).put((short)224);
-				buf.put((short)232).put((short)233).put((short)238).put((short)240).put((short)241);
+		bones[2] = new Bone() {
+			@Override public String getName() { return "Wing_L.Hand"; }
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)6).put((short)10).put((short)12).put((short)25).put((short)38);
+				buf.put((short)39).put((short)43).put((short)44).put((short)45).put((short)50);
+				buf.put((short)55).put((short)57).put((short)69).put((short)70).put((short)71);
+				buf.put((short)72).put((short)82).put((short)84).put((short)103).put((short)111);
+				buf.put((short)119).put((short)120).put((short)131).put((short)138).put((short)141);
+				buf.put((short)145).put((short)149).put((short)152).put((short)195).put((short)200);
+				buf.put((short)221).put((short)223).put((short)224).put((short)232).put((short)241);
 				buf.put((short)242).put((short)247).put((short)249).put((short)251).put((short)258);
-				buf.put((short)266).put((short)276).put((short)278).put((short)282).put((short)301);
-				buf.put((short)304).put((short)307).put((short)320).put((short)332).put((short)333);
-				buf.put((short)339).put((short)341).put((short)347).put((short)351).put((short)355);
-				buf.put((short)359).put((short)363).put((short)365).put((short)374).put((short)376);
-				buf.put((short)384).put((short)385).put((short)391).put((short)392).put((short)393);
-				buf.put((short)395).put((short)396).put((short)397).put((short)399).put((short)411);
-				buf.put((short)415).put((short)440).put((short)441).put((short)442).put((short)443);
-				buf.put((short)445).put((short)448).put((short)450).put((short)452).put((short)454);
-				buf.put((short)455).put((short)456).put((short)457).put((short)458).put((short)459);
-				buf.put((short)460).put((short)462).put((short)464).put((short)466).put((short)467);
-				buf.put((short)468).put((short)469).put((short)470).put((short)476).put((short)478);
-				buf.put((short)479).put((short)480).put((short)482).put((short)483).put((short)484);
-				buf.put((short)486).put((short)487).put((short)488).put((short)489).put((short)492);
-				buf.put((short)493).put((short)495).put((short)496).put((short)497).put((short)498);
-				buf.put((short)500).put((short)502).put((short)503).put((short)504).put((short)508);
-				buf.put((short)509).put((short)510).put((short)511).put((short)512).put((short)513);
-				buf.put((short)521).put((short)522).put((short)523).put((short)524).put((short)525);
-				buf.put((short)533).put((short)535).put((short)536).put((short)538).put((short)539);
-				buf.put((short)540).put((short)542).put((short)543).put((short)544).put((short)546);
-				buf.put((short)548).put((short)549).put((short)550).put((short)551).put((short)562);
-				buf.put((short)569).put((short)572).put((short)578).put((short)582).put((short)593);
-				buf.put((short)595).put((short)608).put((short)609).put((short)624).put((short)639);
+				buf.put((short)266).put((short)276).put((short)282).put((short)301).put((short)304);
+				buf.put((short)307).put((short)320).put((short)333).put((short)339).put((short)341);
+				buf.put((short)347).put((short)351).put((short)355).put((short)359).put((short)363);
+				buf.put((short)365).put((short)374).put((short)376).put((short)384).put((short)391);
+				buf.put((short)395).put((short)397).put((short)399).put((short)411).put((short)415);
+				buf.put((short)440).put((short)441).put((short)442).put((short)443).put((short)445);
+				buf.put((short)448).put((short)450).put((short)452).put((short)454).put((short)455);
+				buf.put((short)457).put((short)458).put((short)459).put((short)460).put((short)462);
+				buf.put((short)466).put((short)467).put((short)470).put((short)478).put((short)479);
+				buf.put((short)482).put((short)483).put((short)484).put((short)486).put((short)487);
+				buf.put((short)488).put((short)492).put((short)493).put((short)495).put((short)496);
+				buf.put((short)497).put((short)498).put((short)500).put((short)502).put((short)503);
+				buf.put((short)504).put((short)508).put((short)509).put((short)510).put((short)511);
+				buf.put((short)512).put((short)513).put((short)521).put((short)522).put((short)523);
+				buf.put((short)524).put((short)533).put((short)535).put((short)536).put((short)538);
+				buf.put((short)539).put((short)540).put((short)542).put((short)543).put((short)544);
+				buf.put((short)546).put((short)548).put((short)549).put((short)562).put((short)569);
+				buf.put((short)572).put((short)578).put((short)595).put((short)609).put((short)639);
 				buf.put((short)652).put((short)653);
 			}
-			public int size() { return 162; }
+			@Override public int size() { return 132; }
+			@Override public int [] getJoints() {
+				int [] joints = new int[1];
+				joints[0] = 3;
+				return joints;
+			};
+			@Override public int getJointParent() { return 1; }
 		};
-		data[3] = new VertexGroupData() {
-			public String getName() { return "Wing_L.Thumb"; }
-			public void fill(ShortBuffer buf) {
-				buf.put((short)8).put((short)28).put((short)37).put((short)73).put((short)74);
-				buf.put((short)79).put((short)85).put((short)87).put((short)102).put((short)112);
-				buf.put((short)147).put((short)151).put((short)176).put((short)179).put((short)218);
-				buf.put((short)222).put((short)228).put((short)246).put((short)263).put((short)290);
-				buf.put((short)291).put((short)292).put((short)299).put((short)303).put((short)312);
-				buf.put((short)324).put((short)328).put((short)329).put((short)331).put((short)332);
-				buf.put((short)345).put((short)380).put((short)385).put((short)386).put((short)387);
-				buf.put((short)392).put((short)393).put((short)394).put((short)398).put((short)401);
+		bones[3] = new Bone() {
+			@Override public String getName() { return "Wing_L.Thumb"; }
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)8).put((short)28).put((short)37).put((short)79).put((short)85);
+				buf.put((short)87).put((short)102).put((short)112).put((short)147).put((short)151);
+				buf.put((short)179).put((short)218).put((short)222).put((short)228).put((short)263);
+				buf.put((short)290).put((short)291).put((short)292).put((short)299).put((short)303);
+				buf.put((short)312).put((short)324).put((short)328).put((short)329).put((short)331);
+				buf.put((short)345).put((short)386).put((short)387).put((short)394).put((short)398);
 				buf.put((short)402).put((short)403).put((short)406).put((short)407).put((short)414);
 				buf.put((short)418).put((short)423).put((short)424).put((short)425).put((short)426);
 				buf.put((short)427).put((short)428).put((short)430).put((short)432).put((short)434);
 				buf.put((short)435).put((short)436).put((short)437).put((short)438).put((short)439);
 				buf.put((short)473).put((short)475).put((short)491).put((short)499).put((short)505);
-				buf.put((short)507).put((short)528).put((short)529).put((short)530).put((short)541);
-				buf.put((short)566).put((short)568).put((short)574).put((short)577).put((short)583);
-				buf.put((short)610).put((short)614).put((short)617).put((short)627).put((short)643);
-				buf.put((short)646).put((short)651);
+				buf.put((short)528).put((short)529).put((short)541).put((short)566).put((short)568);
+				buf.put((short)574).put((short)610).put((short)614).put((short)617).put((short)627);
+				buf.put((short)643).put((short)646).put((short)651);
 			}
-			public int size() { return 82; }
+			@Override public int size() { return 68; }
+			@Override public int [] getJoints() {
+				int [] joints = new int[1];
+				joints[0] = 3;
+				return joints;
+			};
+			@Override public int getJointParent() { return 2; }
 		};
+		return bones;
+	};
 
-		return data;
+	@Override
+	protected Joint [] getJoints() {
+		Joint [] joints = new Joint[4];
+		joints[0] = new Joint() {
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)1).put((short)5).put((short)7).put((short)14).put((short)16);
+				buf.put((short)20).put((short)21).put((short)88).put((short)95).put((short)116);
+				buf.put((short)127).put((short)129).put((short)132).put((short)144).put((short)148);
+				buf.put((short)166).put((short)178).put((short)185).put((short)187).put((short)230);
+				buf.put((short)260).put((short)281).put((short)353).put((short)388).put((short)405);
+				buf.put((short)534).put((short)553).put((short)560).put((short)561).put((short)563);
+				buf.put((short)565).put((short)576).put((short)620).put((short)645).put((short)1);
+				buf.put((short)5).put((short)7).put((short)14).put((short)16).put((short)20);
+				buf.put((short)21).put((short)88).put((short)95).put((short)116).put((short)127);
+				buf.put((short)129).put((short)132).put((short)144).put((short)148).put((short)166);
+				buf.put((short)178).put((short)185).put((short)187).put((short)230).put((short)260);
+				buf.put((short)281).put((short)353).put((short)388).put((short)405).put((short)534);
+				buf.put((short)553).put((short)560).put((short)561).put((short)563).put((short)565);
+				buf.put((short)576).put((short)620).put((short)645);
+			}
+			@Override public int size() { return 68; }
+			@Override public int [] getBones() {
+				int [] bones = new int[2];
+				bones[0] = 0;
+				bones[1] = 1;
+				return bones;
+			};
+		};
+		joints[1] = new Joint() {
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)3).put((short)13).put((short)15).put((short)109).put((short)136);
+				buf.put((short)171).put((short)233).put((short)238).put((short)240).put((short)278);
+				buf.put((short)396).put((short)456).put((short)464).put((short)468).put((short)469);
+				buf.put((short)476).put((short)480).put((short)489).put((short)525).put((short)550);
+				buf.put((short)551).put((short)582).put((short)593).put((short)608).put((short)624);
+				buf.put((short)3).put((short)13).put((short)15).put((short)109).put((short)136);
+				buf.put((short)171).put((short)233).put((short)238).put((short)240).put((short)278);
+				buf.put((short)396).put((short)456).put((short)464).put((short)468).put((short)469);
+				buf.put((short)476).put((short)480).put((short)489).put((short)525).put((short)550);
+				buf.put((short)551).put((short)582).put((short)593).put((short)608).put((short)624);
+			}
+			@Override public int size() { return 50; }
+			@Override public int [] getBones() {
+				int [] bones = new int[2];
+				bones[0] = 1;
+				bones[1] = 2;
+				return bones;
+			};
+		};
+		joints[2] = new Joint() {
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)73).put((short)176).put((short)246).put((short)380).put((short)401);
+				buf.put((short)507).put((short)530).put((short)577).put((short)583).put((short)73);
+				buf.put((short)176).put((short)246).put((short)380).put((short)401).put((short)507);
+				buf.put((short)530).put((short)577).put((short)583);
+			}
+			@Override public int size() { return 18; }
+			@Override public int [] getBones() {
+				int [] bones = new int[2];
+				bones[0] = 1;
+				bones[1] = 3;
+				return bones;
+			};
+		};
+		joints[3] = new Joint() {
+			@Override public void fill(ShortBuffer buf) {
+				buf.put((short)74).put((short)332).put((short)385).put((short)392).put((short)393);
+				buf.put((short)74).put((short)332).put((short)385).put((short)392).put((short)393);
+			}
+			@Override public int size() { return 10; }
+			@Override public int [] getBones() {
+				int [] bones = new int[2];
+				bones[0] = 2;
+				bones[1] = 3;
+				return bones;
+			};
+		};
+		return joints;
 	};
 
 };

@@ -11,11 +11,10 @@ gMegaMax = 1700
 gFileData = {}
 
 class MyVert:
-	uv = None
-	
 	def __init__(self, vert):
 		self.co = vert.co
 		self.no = vert.no
+		self.uv = None
 
 	def setCol(self, col):
 		self.col = col
@@ -32,10 +31,13 @@ class MyVert:
 		return False
 
 class MeshInfo:
-	verts = []
-	faceVertsOverride = {}
-	extraVerts = {}
-	armData = None
+	
+	def __init__(self):
+		self.verts = []
+		self.faceVertsOverride = {}
+		self.extraVerts = {}
+		self.armData = None
+		self.armNames = []
 	
 	def collect_data(self, mesh):
 		self.verts = []
@@ -109,16 +111,25 @@ class MeshInfo:
 	def getNumVerts(self):
 		return len(self.verts)
 	
-	def collect_arm_data(mesh):
-		self.armData = ArmData()
-		self.armData.collect_data(mesh)
+	def collect_arm_data(self, mesh):
+		arm = self.getArmatureFor(mesh.name)
+		if arm != None:
+			self.armData = ArmData()
+			self.armData.collect_data(arm, mesh)
+		
+	def getArmatureFor(self, name):
+		for arm in self.armNames:
+			if arm.endswith(name):
+				return Armature.Get(arm)
+		return None
 		
 class Bone:
-	index = None
-	verts = []
-	joints = []
 	
 	def __init__(self, name):
+		self.index = None
+		self.verts = []
+		self.joints = []
+		self.jointParent = None
 		self.name = name
 		
 	def hasJoints(self):
@@ -128,14 +139,13 @@ class Bone:
 		return len(self.joints)
 	
 	def getJoints(self):
-		return joints
+		return self.joints
 	
-class Joint
-	index = None
-	verts = []
-	bones = []
+class Joint:
 	
 	def __init__(self, bones):
+		self.index = None
+		self.verts = []
 		self.bones = bones
 		
 	def match(self, bones):
@@ -144,42 +154,47 @@ class Joint
 				return False
 		return True
 	
-	def getBoneIndexes(self, arm):
+	def getBoneIndexes(self, armdata):
 		result = []
 		for bonename in self.bones:
-			if arm.joints.has_key(bonename):
-				result.append(arm.joints[bonename].index)
+			if armdata.bones.has_key(bonename):
+				result.append(armdata.bones[bonename].index)
 			else:
 				result.append(-1)
 		return result
 	
-class ArmData:
-	arm = None
-	bones = {}
-	joints = {}
-	bonelist = []
+	def getBoneSum(self, armdata):
+		sum = 0
+		for bonename in self.bones:
+			if armdata.bones.has_key(bonename):
+				sum = sum + armdata.bones[bonename].index
+		return sum
 	
-	def collect_data(self, mesh):
+class ArmData:
+	
+	def collect_data(self, arm, mesh):
+		self.arm = arm
+		self.bones = {}
+		self.joints = {}
+		self.bonelist = []
+		self.jointlist = []
+		
 		groupnames = mesh.getVertGroupNames()
 		
-		if len(names) <= 0:
+		if len(groupnames) <= 0:
+			print "No group names for mesh %s" % mesh.name
 			return
 		
-		try:
-			self.arm = Armature.Get("Armature_" + mesh.getName())
-		except:
-			return
-	
-		basebones = []
-	
-		for bonekey in arm.bones.keys():
-			if findInList(groupnames, bonekey) < 0:
+		for bonekey in self.arm.bones.keys():
+			if not findInList(groupnames, bonekey):
+				print "No vertex group for %s (skipping)" % bonekey
 				continue
 				
-			if not self.bones.has_key(bonekey)
+			if not self.bones.has_key(bonekey):
 				self.bones[bonekey] = Bone(bonekey)
 			
 			bone = self.bones[bonekey]
+			verts = mesh.getVertsFromGroup(bonekey)
 			
 			for vert in mesh.getVertsFromGroup(bonekey):
 				influences = mesh.getVertexInfluences(vert)
@@ -192,35 +207,64 @@ class ArmData:
 					for inf in influences:
 						bonenames.append(inf[0])
 						
-					if not self.joints.has_key(bonenames):
-						self.joints[bonenames] = new Joint(bonenames)
+					jointkey = self.getJointKey(bonenames)
+					if not self.joints.has_key(jointkey):
+						self.joints[jointkey] = Joint(bonenames)
 					
-					self.joints[bonenames].verts.append(vert)
-			
+					self.joints[jointkey].verts.append(vert)
+					
+		# Get Base bones
+		basebones = []
+		for bonekey in self.bones.keys():
 			blender_bone = self.arm.bones[bonekey]
-			if blender_bone.parent == None:
-				basebones.append(bone)
+			root = self.getRootBone(blender_bone)
+			if not findInList(basebones, root.name):
+				basebones.append(root.name)
 				
+		if len(basebones) == 0:
+			print "No root bones?"
+			return
+		
+		# Build bone list:	
 		self.bonelist = []
 		processed = {}
 		
-		for bone in basebones:
-			self.buildList(processed, bone.name)		
-				
+		for bonename in basebones:
+			self.buildBoneList(processed, bonename)		
+		
+		# Set bone indexes:		
 		pos = 0
 		for bone in self.bonelist:
 			bone.index = pos
 			pos = pos + 1
 		
-		pos = 0
-		for joint in self.joints.keys():
-			joints[joint].index = pos
-			pos = pos + 1
+		# Build joint list:
+		jointlist = []
+		for jointkey in self.joints.keys():
+			jointlist.append(self.joints[jointkey])
+		
+		self.jointlist = sorted(jointlist, key=lambda joint: joint.getBoneSum(self))
 			
+		# Set joint indexes
+		pos = 0
+		for joint in self.jointlist:
+			joint.index = pos
+			pos = pos + 1
+		
+		# Compute joints for each bone	
 		for bone in self.bonelist:
-			bone.joints = self.getJoints(bone.name)
+			bone.jointParent = self.getJointParent(bone.name)
+			bone.joints = self.getJoints(bone)
 				
-	def buildList(self, processed, bonename):
+	def getRootBone(self, blender_bone):
+		parent = blender_bone.parent
+		if parent == None:
+			return blender_bone
+		if self.bones.has_key(parent.name):
+			return self.getRootBone(parent)
+		return blender_bone
+		
+	def buildBoneList(self, processed, bonename):
 		if processed.has_key(bonename):
 			return
 		processed[bonename] = True
@@ -228,20 +272,36 @@ class ArmData:
 	 		self.bonelist.append(self.bones[bonename])
 			blender_bone = self.arm.bones[bonename]
 			for child in blender_bone.children:
-				self.buildList(processed, child.name)
+				self.buildBoneList(processed, child.name)
 			
 	def hasData(self):
 		if self.arm != None and len(self.bones) > 0 and len(self.bonelist) > 0:
 			return True
 		return False	
 	
-	def getJoints(self, bonename):
+	def getJointParent(self, bonename):
+		blender_bone = self.arm.bones[bonename]
+		blender_parent = blender_bone.parent
+		if not self.bones.has_key(blender_parent.name):
+			return None
+		bone = self.bones[bonename]
+		parent = self.bones[blender_parent.name]
+		for key in self.joints.keys():
+			joint = self.joints[key]
+			if findInList(joint.bones, bone.name) and findInList(joint.bones, parent.name):
+				return joint
+		return None
+	
+	def getJoints(self, bone):
 		result = []
-		for bonenames in self.joints.keys():
-			if findInList(bonenames, bonename) >= 0:
-				result.append(self.joints[bonenames])
-		
+		for key in self.joints.keys():
+			joint = self.joints[key]
+			if joint != bone.jointParent and findInList(joint.bones, bone.name):
+				result.append(joint)
 		return result
+	
+	def getJointKey(self, bonenames):
+		return ','.join(bonenames)
 				
 gMeshInfo = MeshInfo()
 	
@@ -259,6 +319,7 @@ def write_obj(filename):
 	
 def build_tree():
 	global bpy
+	global gMeshInfo
 	tree = {}
 	
 	for obj in bpy.data.objects:
@@ -284,7 +345,7 @@ def build_tree():
 				else:
 					tree[parentname] = [parent, obj]
 		elif type == "Armature":
-			print "Found Armature %s" % name
+			gMeshInfo.armNames.append(name)
 		else:
 			print "Skipping %s of type %s" % (name, type)
 		
@@ -297,7 +358,7 @@ def get_topname():
 	
 	for objname in gMeshTree.keys():
 		count = get_childcount(objname)
-		print 'Mesh %s %d' % (objname, count)
+		print 'TOP Mesh %s %d' % (objname, count)
 		
 		if count > topchildcount:
 			topchildcount = count
@@ -754,6 +815,7 @@ def write_armature(out):
 	global gMeshInfo
 	
 	if not gMeshInfo.armData.hasData():
+		print "No armature data"
 		return
 	
 	out.write('\t@Override\n')
@@ -761,12 +823,12 @@ def write_armature(out):
 	out.write('\t\tBone [] bones = new Bone[%d];\n' % len(gMeshInfo.armData.bonelist))
 	out.write('\n')	
 	
-	vertsPerLine = 5
+	vertPerLine = 5
 	
 	for bone in gMeshInfo.armData.bonelist:
 		out.write('\t\tbones[%d] = new Bone() {\n' % bone.index);
-		out.write('\t\t\tpublic String getName() { return "%s"; }\n' % bone.name)
-		out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
+		out.write('\t\t\t@Override public String getName() { return "%s"; }\n' % bone.name)
+		out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n');
 		
 		c = 0
 		count = 0
@@ -782,11 +844,11 @@ def write_armature(out):
 			once = True
 		
 		out.write(';\n\t\t\t}\n')
-		out.write('\t\t\tpublic int size() { return %d; }\n' % count)
-		out.write('\t\t\tpublic int [] getJoints() {\n');
+		out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
+		out.write('\t\t\t@Override public int [] getJoints() {\n');
 		
 		if bone.hasJoints():
-			out.write('\t\t\t\tint [] joints = new int[%d]\n' % bone.getNumJoints())
+			out.write('\t\t\t\tint [] joints = new int[%d];\n' % bone.getNumJoints())
 			pos = 0
 			for joint in bone.getJoints():
 				out.write('\t\t\t\tjoints[%d] = %d;\n' % (pos, joint.index))
@@ -796,6 +858,9 @@ def write_armature(out):
 			out.write('\t\t\t\treturn null;\n')
 		
 		out.write('\t\t\t};\n');
+		
+		if bone.jointParent != None:
+			out.write('\t\t\t@Override public int getJointParent() { return %d; }\n' % bone.jointParent.index)
 		out.write('\t\t};\n')
 	
 	out.write('\t\treturn bones;\n')
@@ -806,30 +871,30 @@ def write_armature(out):
 	out.write('\tprotected Joint [] getJoints() {\n')
 	out.write('\t\tJoint [] joints = new Joint[%d];\n' % len(gMeshInfo.armData.joints.keys()))
 	
-	for joint in gMeshInfo.armData.joints.keys():
-		out.write('\t\tjoints[%d] = new Joint() {\n' % joint.index);
-		out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
+	for joint in gMeshInfo.armData.jointlist:
+		out.write('\t\tjoints[%d] = new Joint() {\n' % joint.index)
+		out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n')
 		
 		c = 0
 		count = 0
 		out.write('\t\t\t\tbuf');
 		for vert in joint.verts:
 			if c >= vertPerLine:
-				out.write(';\n\t\t\t\tbuf');
+				out.write(';\n\t\t\t\tbuf')
 				c = 1
 			else:
 				c = c + 1
-			out.write('.put((short)%d)' % vert);
+			out.write('.put((short)%d)' % vert)
 			count = count + 1
 			once = True
 		
 		out.write(';\n\t\t\t}\n')
-		out.write('\t\t\tpublic int size() { return %d; }\n' % count)
-		out.write('\t\t\tpublic int [] getBones() {\n');
+		out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
+		out.write('\t\t\t@Override public int [] getBones() {\n')
 		
-		boneindexes = joint.getBoneIndexes()
+		boneindexes = joint.getBoneIndexes(gMeshInfo.armData)
 		
-		out.write('\t\t\t\tint [] bones = new int[%d]\n' % len(boneindexes))
+		out.write('\t\t\t\tint [] bones = new int[%d];\n' % len(boneindexes))
 		pos = 0
 		for index in boneindexes:
 			out.write('\t\t\t\tbones[%d] = %d;\n' % (pos, index))
@@ -837,16 +902,15 @@ def write_armature(out):
 		out.write('\t\t\t\treturn bones;\n')
 		out.write('\t\t\t};\n');
 		out.write('\t\t};\n')
+	out.write('\t\treturn joints;\n')
 	out.write('\t};\n')
 	out.write('\n')	
 		
 def findInList(list, key):
-	i = 0
 	for k in list:
 		if k == key:
-			return i
-		i = i + 1
-	return -1
+			return True
+	return False
 
 def convertToTriangles(mesh):
 	global bpy
