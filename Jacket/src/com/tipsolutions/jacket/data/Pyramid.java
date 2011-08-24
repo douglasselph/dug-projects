@@ -7,7 +7,7 @@ import android.util.FloatMath;
 
 import com.tipsolutions.jacket.image.TextureManager;
 
-public class Pyramid extends Shape {
+public class Pyramid extends ShapeGL {
 
 	public Pyramid() {
 	}
@@ -31,7 +31,7 @@ public class Pyramid extends Shape {
 		final float baseHalf = base/2;
 		final float triHeightHalf = triHeight/2;
 		
-		setVertexData(new FloatData() {
+		setVertexData(new dFloatBuf() {
 			public void fill(FloatBuffer buf) {
 				buf.put(0).put(height).put(0f);   /* 0: peak */
 				buf.put(-baseHalf).put(0f).put(triHeightHalf); /* 1: x-left */
@@ -40,7 +40,7 @@ public class Pyramid extends Shape {
 			};
 			public int size() { return 4*3; }
 		});
-		setIndexData(new ShortData() {
+		setIndexData(new dShortBuf() {
 			public void fill(ShortBuffer buf) {
 				buf.put((short)0).put((short)1).put((short)2); /* face front */
 				buf.put((short)0).put((short)3).put((short)1); /* face left */
@@ -51,7 +51,7 @@ public class Pyramid extends Shape {
 		});
 		if (texture != null) {
 			setTexture(texture);
-    		setTextureData(new FloatData() {
+    		setTextureData(new dFloatBuf() {
     			public void fill(FloatBuffer buf) {
     				buf.put(0.5f).put(1);   /* 0: peak */
     				buf.put(0f).put(0f); /* 1: x-left */
@@ -60,13 +60,12 @@ public class Pyramid extends Shape {
     			public int size() { return 3*2; }
     		});
 		}
-		allocBounds();
-		setMinX(-baseHalf);
-		setMaxX(baseHalf);
-		setMinY(0);
-		setMaxY(height);
-		setMinZ(-triHeightHalf);
-		setMaxZ(triHeightHalf);
+		mBounds.setMinX(-baseHalf);
+		mBounds.setMaxX(baseHalf);
+		mBounds.setMinY(0);
+		mBounds.setMaxY(height);
+		mBounds.setMinZ(-triHeightHalf);
+		mBounds.setMaxZ(triHeightHalf);
 		
 //		setIndexData(new ShortData() {
 //			public void fill(ShortBuffer buf) {

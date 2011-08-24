@@ -1,10 +1,10 @@
-import com.tipsolutions.jacket.data.ShapeData;
+import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.image.TextureManager;
 
 public class Main {
 	
 	public interface ICreate {
-		ShapeData create();
+		Shape create();
 	};
 	
 	static class ProcessData {
@@ -12,12 +12,12 @@ public class Main {
 		void run(String filename, ICreate create) {
 			
 			System.out.println("Writing " + filename);
-			ShapeData wdata = writeData(filename, create);
+			Shape wdata = writeData(filename, create);
 			System.out.println("Reading " + filename);
-			ShapeData rdata = readData(filename, create);
+			Shape rdata = readData(filename, create);
 			System.out.println("Comparing results");
 			
-			wdata.compare(filename, rdata, new ShapeData.MessageWriter() {
+			wdata.compare(filename, rdata, new Shape.MessageWriter() {
 				@Override
 				public void msg(String tag, String msg) {
 					StringBuffer sbuf = new StringBuffer();
@@ -29,16 +29,16 @@ public class Main {
 			});
 		}
 		
-		ShapeData writeData(String filename, ICreate create) {
-			ShapeData d = create.create();
+		Shape writeData(String filename, ICreate create) {
+			Shape d = create.create();
 			d.fill();
-			d.computeBounds();
+			d.getBounds().compute();
 			d.writeData(filename);
 			return d;
 		}
 		
-		ShapeData readData(String filename, ICreate create) {
-			ShapeData d = create.create();
+		Shape readData(String filename, ICreate create) {
+			Shape d = create.create();
 			d.readData(filename, mTM);
 			return d;
 		}
@@ -53,26 +53,26 @@ public class Main {
 		
 		process.run("hank.data", new ICreate() {
 			@Override
-			public ShapeData create() {
+			public Shape create() {
 				return new hank();
 			}
 		});
 		process.run("cube.data", new ICreate() {
 			@Override
-			public ShapeData create() {
+			public Shape create() {
 				return new Cube();
 			}
 		});
 		process.run("suzanne.data", new ICreate() {
 			@Override
-			public ShapeData create() {
+			public Shape create() {
 				return new Suzanne();
 			}
 		});
-		process.run("wing1.data", new ICreate() {
+		process.run("wingL.data", new ICreate() {
 			@Override
-			public ShapeData create() {
-				return new wing1();
+			public Shape create() {
+				return new Wing_L();
 			}
 		});
 	}

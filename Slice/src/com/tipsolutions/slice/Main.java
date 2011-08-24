@@ -25,8 +25,8 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import com.tipsolutions.jacket.data.Box;
 import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
-import com.tipsolutions.jacket.data.ShapeData;
-import com.tipsolutions.jacket.data.ShapeData.FloatData;
+import com.tipsolutions.jacket.data.ShapeGL;
+import com.tipsolutions.jacket.data.Shape.dFloatBuf;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
@@ -40,18 +40,18 @@ import com.tipsolutions.jacket.view.IEventTap;
 public class Main extends Activity {
 
 	interface CreateShape {
-		Shape create();
+		ShapeGL create();
 	}
 	
 	class Data {
 		CreateShape mCreate;
-		Shape mShape = null;
+		ShapeGL mShape = null;
 		
 		Data(CreateShape create) {
 			mCreate = create;
 		}
 		
-		Shape getShape() {
+		ShapeGL getShape() {
 			if (mShape == null) {
 				mShape = mCreate.create();
 			}
@@ -140,12 +140,12 @@ public class Main extends Activity {
     final String CUBE_FILE = "cube.data";
     final String SUSAN_FILE = "suzanne.data";
     final String HANK_FILE = "hank.data";
-    final String WING1_FILE = "wing1.data";
+    final String WING1_FILE = "wingL.data";
     static final int NUM_FILES = 4;
     
     static final int ARRAY_SIZE = NUM_FILES+2;
-    Shape [] mShapes = new Shape[ARRAY_SIZE];
-    Shape mActiveShape = null;
+    ShapeGL [] mShapes = new ShapeGL[ARRAY_SIZE];
+    ShapeGL mActiveShape = null;
     TwirlEventTap mTwirlEventTap = new TwirlEventTap();
     ControlCamera mCamera;
     MyRenderer mRenderer;
@@ -300,12 +300,12 @@ public class Main extends Activity {
         return holder;
     }
    
-    Shape getBox() {
+    ShapeGL getBox() {
 //        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
         TextureManager.Texture texture = mRenderer.getTextureManager().getTexture("feather_real.png");
-        final Shape shape = new Box(1f, texture);
-        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
-        shape.setColorData(new FloatData() {
+        final ShapeGL shape = new Box(1f, texture);
+        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeYc()/2, 0));
+        shape.setColorData(new dFloatBuf() {
 			@Override
 			public void fill(FloatBuffer buf) {
 				ArrayList<Color4f> colors = new ArrayList<Color4f>();
@@ -337,16 +337,16 @@ public class Main extends Activity {
         return shape;
     }
     
-    Shape getPyramid() {
+    ShapeGL getPyramid() {
         TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
-        Shape shape = new Pyramid(1f, 1f, texture);
-        shape.setLocation(new Vector3f(0f, -shape.getSizeYc()/2, 0));
+        ShapeGL shape = new Pyramid(1f, 1f, texture);
+        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeYc()/2, 0));
         setColors(shape);
         return shape;
     }
     
-    Shape loadShape(String file) {
-        Shape shape = new Shape();
+    ShapeGL loadShape(String file) {
+        ShapeGL shape = new ShapeGL();
         try {
             InputStream inputStream = getAssets().open(file);
             shape.readData(inputStream, mRenderer.getTextureManager());
@@ -365,40 +365,38 @@ public class Main extends Activity {
         
         mData = new Data[ARRAY_SIZE];
         mData[DATA_PYRAMID] = new Data(new CreateShape() {
-			public Shape create() {
+			public ShapeGL create() {
 				return getPyramid();
 			}
         });
         mData[DATA_CUBE] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(CUBE_FILE);
-				return shape;
+			public ShapeGL create() {
+				return loadShape(CUBE_FILE);
 			}
         });
         mData[DATA_BOX] = new Data(new CreateShape() {
-			public Shape create() {
+			public ShapeGL create() {
 				return getBox();
 			}
         });
         mData[DATA_SUSAN] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(SUSAN_FILE);
+			public ShapeGL create() {
+				ShapeGL shape = loadShape(SUSAN_FILE);
 		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
 				setColors(shape);
 				return shape;
 			}
         });
         mData[DATA_HANK] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(HANK_FILE);
+			public ShapeGL create() {
+				ShapeGL shape = loadShape(HANK_FILE);
 				setColors(shape);
 				return shape;
 			}
         });
         mData[DATA_WING1] = new Data(new CreateShape() {
-			public Shape create() {
-				Shape shape = loadShape(WING1_FILE);
-				return shape;
+			public ShapeGL create() {
+				return loadShape(WING1_FILE);
 			}
         });
         RelativeLayout main = new RelativeLayout(this);
@@ -526,10 +524,10 @@ public class Main extends Activity {
 		}
 	}
 	
-	void setColors(final ShapeData shape) {
+	void setColors(final Shape shape) {
     	if (shape.getNumVertexes() > 0) {
     //        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
-            shape.setColorData(new FloatData() {
+            shape.setColorData(new dFloatBuf() {
     			@Override
     			public void fill(FloatBuffer buf) {
     				ArrayList<Color4f> colors = new ArrayList<Color4f>();
@@ -554,7 +552,7 @@ public class Main extends Activity {
     			}
             });
     	} else {
-    		for (ShapeData child : shape.getChildren()) {
+    		for (Shape child : shape.getChildren()) {
     			setColors(child);
     		}
     	}
@@ -575,13 +573,13 @@ public class Main extends Activity {
 		}
 	}
 	
-	void setShape(Shape shape) {
+	void setShape(ShapeGL shape) {
     	mActiveShape = shape;
         mRenderer.setShape(shape);
         
     	mCamera.setLookAt(new Vector3f(0, 0, 0));
     	mCamera.setLocation(mCamera.getLookAt().dup());
-    	mCamera.getLocation().add(0, 0, mActiveShape.getSizeZc()*2);
+    	mCamera.getLocation().add(0, 0, mActiveShape.getBounds().getSizeZc()*2);
         
         mSurfaceView.setEventTap(mCamera);
         mSurfaceView.requestRender();

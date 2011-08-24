@@ -2,28 +2,28 @@
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import com.tipsolutions.jacket.data.ShapeData;
+import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class Wing_L extends ShapeData {
+class Wing_L extends Shape {
 
-	@Override protected Matrix4f _getMatrix() {
+	@Override protected Matrix4f dGetMatrix() {
 		return new Matrix4f(0.000000f, 0.000000f, -0.641370f, -0.082528f,
 		                    0.000000f, 0.659431f, 0.000000f, -0.193257f,
 		                    0.272642f, 0.000000f, 0.000000f, 1.814072f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
-	@Override protected float _getMinX() { return -4.609327f; }
-	@Override protected float _getMaxX() { return 11.020552f; }
-	@Override protected float _getMinY() { return -0.247236f; }
-	@Override protected float _getMaxY() { return 0.771351f; }
-	@Override protected float _getMinZ() { return -0.400066f; }
-	@Override protected float _getMaxZ() { return 0.106947f; }
+	@Override protected float dGetMinX() { return -4.609327f; }
+	@Override protected float dGetMaxX() { return 11.020552f; }
+	@Override protected float dGetMinY() { return -0.247236f; }
+	@Override protected float dGetMaxY() { return 0.771351f; }
+	@Override protected float dGetMinZ() { return -0.400066f; }
+	@Override protected float dGetMaxZ() { return 0.106947f; }
 
 	@Override
-	protected FloatData getVertexData() {
-		class VertexData implements FloatData {
+	protected dFloatBuf dGetVertexDef() {
+		class VertexData implements dFloatBuf {
 			public void fill(FloatBuffer buf) {
 				buf.put(0.881293f).put(0.149233f).put(-0.327959f); /* 0 */
 				buf.put(1.436305f).put(0.120696f).put(-0.314636f); /* 1 */
@@ -687,8 +687,8 @@ class Wing_L extends ShapeData {
 	};
 
 	@Override
-	protected FloatData getNormalData() {
-		class NormalData implements FloatData {
+	protected dFloatBuf dGetNormalDef() {
+		class NormalData implements dFloatBuf {
 			public void fill(FloatBuffer buf) {
 				buf.put(0.007385f).put(-0.239418f).put(-0.970855f); /* 0 */
 				buf.put(0.009186f).put(-0.462416f).put(-0.886593f); /* 1 */
@@ -1353,8 +1353,8 @@ class Wing_L extends ShapeData {
 	};
 
 	@Override
-	protected ShortData getIndexData() {
-		class IndexData implements ShortData {
+	protected dShortBuf dGetIndexDef() {
+		class IndexData implements dShortBuf {
 			public void fill(ShortBuffer buf) {
 				fill1(buf);
 				fill2(buf);
@@ -2677,10 +2677,10 @@ class Wing_L extends ShapeData {
 	};
 
 	@Override
-	protected Bone [] getBones() {
-		Bone [] bones = new Bone[4];
+	protected dBone [] dGetBonesDef() {
+		dBone [] bones = new dBone[4];
 
-		bones[0] = new Bone() {
+		bones[0] = new dBone() {
 			@Override public String getName() { return "Wing_L.Arm1"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)0).put((short)2).put((short)4).put((short)9).put((short)11);
@@ -2751,7 +2751,7 @@ class Wing_L extends ShapeData {
 				return joints;
 			};
 		};
-		bones[1] = new Bone() {
+		bones[1] = new dBone() {
 			@Override public String getName() { return "Wing_L.Arm2"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)18).put((short)47).put((short)83).put((short)94).put((short)117);
@@ -2781,7 +2781,7 @@ class Wing_L extends ShapeData {
 			};
 			@Override public int getJointParent() { return 0; }
 		};
-		bones[2] = new Bone() {
+		bones[2] = new dBone() {
 			@Override public String getName() { return "Wing_L.Hand"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)6).put((short)10).put((short)12).put((short)25).put((short)38);
@@ -2820,7 +2820,7 @@ class Wing_L extends ShapeData {
 			};
 			@Override public int getJointParent() { return 1; }
 		};
-		bones[3] = new Bone() {
+		bones[3] = new dBone() {
 			@Override public String getName() { return "Wing_L.Thumb"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)8).put((short)28).put((short)37).put((short)79).put((short)85);
@@ -2850,9 +2850,9 @@ class Wing_L extends ShapeData {
 	};
 
 	@Override
-	protected Joint [] getJoints() {
-		Joint [] joints = new Joint[4];
-		joints[0] = new Joint() {
+	protected dJoint [] dGetJointsDef() {
+		dJoint [] joints = new dJoint[4];
+		joints[0] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)1).put((short)5).put((short)7).put((short)14).put((short)16);
 				buf.put((short)20).put((short)21).put((short)88).put((short)95).put((short)116);
@@ -2877,7 +2877,7 @@ class Wing_L extends ShapeData {
 				return bones;
 			};
 		};
-		joints[1] = new Joint() {
+		joints[1] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)3).put((short)13).put((short)15).put((short)109).put((short)136);
 				buf.put((short)171).put((short)233).put((short)238).put((short)240).put((short)278);
@@ -2898,7 +2898,7 @@ class Wing_L extends ShapeData {
 				return bones;
 			};
 		};
-		joints[2] = new Joint() {
+		joints[2] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)73).put((short)176).put((short)246).put((short)380).put((short)401);
 				buf.put((short)507).put((short)530).put((short)577).put((short)583).put((short)73);
@@ -2913,7 +2913,7 @@ class Wing_L extends ShapeData {
 				return bones;
 			};
 		};
-		joints[3] = new Joint() {
+		joints[3] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put((short)74).put((short)332).put((short)385).put((short)392).put((short)393);
 				buf.put((short)74).put((short)332).put((short)385).put((short)392).put((short)393);

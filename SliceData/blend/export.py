@@ -423,11 +423,11 @@ def write_mesh(dirname, basename, objname):
 			
 		out.write('import java.nio.FloatBuffer;\n')
 		out.write('import java.nio.ShortBuffer;\n')
-		out.write('import com.tipsolutions.jacket.data.ShapeData;\n')
+		out.write('import com.tipsolutions.jacket.data.Shape;\n')
 		out.write('import com.tipsolutions.jacket.math.Matrix4f;\n\n')
 		
 	out.write('\n')
-	out.write('class %s extends ShapeData {\n' % classname)
+	out.write('class %s extends Shape {\n' % classname)
 				
 	mesh = Mesh.New()
 	mesh.getFromObject(objname) 
@@ -463,8 +463,8 @@ def write_mesh(dirname, basename, objname):
 def write_children(out, objchildren, classname):
 	if len(objchildren) > 0:
 		out.write
-		out.write('\t@Override protected ShapeData [] _getChildren() {\n')
-		out.write('\t\tShapeData [] children = new ShapeData[%d];\n' % len(objchildren))
+		out.write('\t@Override protected Shape [] dGetChildren() {\n')
+		out.write('\t\tShape [] children = new Shape[%d];\n' % len(objchildren))
 		i = 0
 		for child in objchildren:
 			childname = "%s_%s" % (classname, child.getName().replace('.',''))
@@ -485,7 +485,7 @@ def write_objdata(out, obj):
 	#          w]
 	# Also need to invert matrix rotations
 	out.write('\n')
-	out.write('\t@Override protected Matrix4f _getMatrix() {\n');
+	out.write('\t@Override protected Matrix4f dGetMatrix() {\n');
 	out.write('\t\treturn new Matrix4f(%ff, %ff, %ff, %ff,\n'  % (matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0]))
 	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1]))
 	out.write('\t\t                    %ff, %ff, %ff, %ff,\n'  % (matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2]))
@@ -496,12 +496,12 @@ def write_boundaries(out):
 	global gMeshInfo
 	
 	out.write('\n')
-	out.write('\t@Override protected float _getMinX() { return %ff; }\n' % gMeshInfo.minx);
-	out.write('\t@Override protected float _getMaxX() { return %ff; }\n' % gMeshInfo.maxx);
-	out.write('\t@Override protected float _getMinY() { return %ff; }\n' % gMeshInfo.miny);
-	out.write('\t@Override protected float _getMaxY() { return %ff; }\n' % gMeshInfo.maxy);
-	out.write('\t@Override protected float _getMinZ() { return %ff; }\n' % gMeshInfo.minz);
-	out.write('\t@Override protected float _getMaxZ() { return %ff; }\n' % gMeshInfo.maxz);
+	out.write('\t@Override protected float dGetMinX() { return %ff; }\n' % gMeshInfo.minx);
+	out.write('\t@Override protected float dGetMaxX() { return %ff; }\n' % gMeshInfo.maxx);
+	out.write('\t@Override protected float dGetMinY() { return %ff; }\n' % gMeshInfo.miny);
+	out.write('\t@Override protected float dGetMaxY() { return %ff; }\n' % gMeshInfo.maxy);
+	out.write('\t@Override protected float dGetMinZ() { return %ff; }\n' % gMeshInfo.minz);
+	out.write('\t@Override protected float dGetMaxZ() { return %ff; }\n' % gMeshInfo.maxz);
 
 def write_vertexes(out):
 	global gMegaMax
@@ -511,8 +511,8 @@ def write_vertexes(out):
 	
 	out.write('\n')
 	out.write('\t@Override\n')
-	out.write('\tprotected FloatData getVertexData() {\n');
-	out.write('\t\tclass VertexData implements FloatData {\n')	
+	out.write('\tprotected dFloatBuf dGetVertexDef() {\n');
+	out.write('\t\tclass VertexData implements dFloatBuf {\n')	
 	out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 		
 	max = gMegaMax
@@ -560,8 +560,8 @@ def write_normals(out):
 	numverts = gMeshInfo.getNumVerts()
 	
 	out.write('\t@Override\n')
-	out.write('\tprotected FloatData getNormalData() {\n');
-	out.write('\t\tclass NormalData implements FloatData {\n')
+	out.write('\tprotected dFloatBuf dGetNormalDef() {\n');
+	out.write('\t\tclass NormalData implements dFloatBuf {\n')
 	out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 
 	index = 0
@@ -579,7 +579,7 @@ def write_normals(out):
 			out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
 			start = x * max
 			end = start + max
-			for vert in gMeshInfo.verts[start, end]:
+			for vert in gMeshInfo.verts[start:end]:
 				out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, index))
 				count = count + 3
 				index = index + 1
@@ -606,8 +606,8 @@ def write_indexes(out, mesh):
 	numfaces = len(mesh.faces)
 	
 	out.write('\t@Override\n')
-	out.write('\tprotected ShortData getIndexData() {\n');
-	out.write('\t\tclass IndexData implements ShortData {\n');	
+	out.write('\tprotected dShortBuf dGetIndexDef() {\n');
+	out.write('\t\tclass IndexData implements dShortBuf {\n');	
 	out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
 
 	if numfaces > max:
@@ -676,8 +676,8 @@ def write_colors(out, mesh):
 		return
 
 	out.write('\t@Override\n')
-	out.write('\tprotected ShortData getColorData() {\n');
-	out.write('\t\tclass ColorData implements ShortData {\n');				
+	out.write('\tprotected dShortBuf dGetColorDef() {\n');
+	out.write('\t\tclass ColorData implements dShortBuf {\n');				
 	out.write('\t\t\tpublic void fill(ShortBuffer buf) {\n');
 
 	if numfaces > max:
@@ -728,7 +728,7 @@ def write_textures(out, mesh):
 			im = tex.getImage()
 			if im:
 				out.write('\t@Override\n')
-				out.write('\tprotected String _getTextureFilename() { return "%s"; }\n' % os.path.basename(im.getFilename().lstrip('/')))
+				out.write('\tprotected String dGetTextureFilename() { return "%s"; }\n' % os.path.basename(im.getFilename().lstrip('/')))
 				writeCoords = True
 				break
 	
@@ -741,8 +741,8 @@ def write_textures(out, mesh):
 	
 		out.write('\n')
 		out.write('\t@Override\n')
-		out.write('\tprotected FloatData getTextureData() {\n');
-		out.write('\t\tclass TextureData implements FloatData {\n')
+		out.write('\tprotected dFloatBuf dGetTextureDef() {\n');
+		out.write('\t\tclass TextureData implements dFloatBuf {\n')
 		out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 
 		index = 0
@@ -814,19 +814,19 @@ def write_textures(out, mesh):
 def write_armature(out):
 	global gMeshInfo
 	
-	if not gMeshInfo.armData.hasData():
+	if gMeshInfo.armData == None or not gMeshInfo.armData.hasData():
 		print "No armature data"
 		return
 	
 	out.write('\t@Override\n')
-	out.write('\tprotected Bone [] getBones() {\n')
-	out.write('\t\tBone [] bones = new Bone[%d];\n' % len(gMeshInfo.armData.bonelist))
+	out.write('\tprotected dBone [] dGetBonesDef() {\n')
+	out.write('\t\tdBone [] bones = new dBone[%d];\n' % len(gMeshInfo.armData.bonelist))
 	out.write('\n')	
 	
 	vertPerLine = 5
 	
 	for bone in gMeshInfo.armData.bonelist:
-		out.write('\t\tbones[%d] = new Bone() {\n' % bone.index);
+		out.write('\t\tbones[%d] = new dBone() {\n' % bone.index);
 		out.write('\t\t\t@Override public String getName() { return "%s"; }\n' % bone.name)
 		out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n');
 		
@@ -868,11 +868,11 @@ def write_armature(out):
 	out.write('\n')
 	
 	out.write('\t@Override\n')
-	out.write('\tprotected Joint [] getJoints() {\n')
-	out.write('\t\tJoint [] joints = new Joint[%d];\n' % len(gMeshInfo.armData.joints.keys()))
+	out.write('\tprotected dJoint [] dGetJointsDef() {\n')
+	out.write('\t\tdJoint [] joints = new dJoint[%d];\n' % len(gMeshInfo.armData.joints.keys()))
 	
 	for joint in gMeshInfo.armData.jointlist:
-		out.write('\t\tjoints[%d] = new Joint() {\n' % joint.index)
+		out.write('\t\tjoints[%d] = new dJoint() {\n' % joint.index)
 		out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n')
 		
 		c = 0

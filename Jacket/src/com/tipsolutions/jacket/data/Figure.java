@@ -23,9 +23,9 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class Figure 
 {
-	protected Shape mShape;
+	protected ShapeGL mShape;
 
-    public Figure(Shape shape) {
+    public Figure(ShapeGL shape) {
     	mShape = shape;
     }
     

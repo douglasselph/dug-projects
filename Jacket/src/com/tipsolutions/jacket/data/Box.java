@@ -6,7 +6,7 @@ import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Vector3f;
 
-public class Box extends Shape {
+public class Box extends ShapeGL {
 
 	public Box() {
 		set(1f, 1f, 1f, null);
@@ -31,7 +31,7 @@ public class Box extends Shape {
 		final float ydelta = ylength/2;
 		final float zdelta = zlength/2;
 		
-		setVertexData(new FloatData() {
+		setVertexData(new dFloatBuf() {
 			public void fill(FloatBuffer buf) {
         		// 0: lower-left back 
         		// 1: lower-right back 
@@ -94,7 +94,7 @@ public class Box extends Shape {
 			}
 		});
 		
-		setNormalData(new FloatData() {
+		setNormalData(new dFloatBuf() {
 			public void fill(FloatBuffer buf) {
 				int i;
 				
@@ -129,7 +129,7 @@ public class Box extends Shape {
 			}
 		});
 		
-		setIndexData(new ShortData() {
+		setIndexData(new dShortBuf() {
 			public void fill(ShortBuffer buf) {
 				// CCW:
 				
@@ -185,7 +185,7 @@ public class Box extends Shape {
 		});
 		if (texture != null) {
 			setTexture(texture);
-    		setTextureData(new FloatData() {
+    		setTextureData(new dFloatBuf() {
     			public void fill(FloatBuffer buf) {
     				// Back
     				// lower-left back 
@@ -250,12 +250,11 @@ public class Box extends Shape {
     			public int size() { return 6*4*2; }
     		});
 		}
-		allocBounds();
-		setMinX(-xdelta);
-		setMaxX(xdelta);
-		setMinY(-ydelta);
-		setMaxY(ydelta);
-		setMinZ(-zdelta);
-		setMaxZ(zdelta);
+		mBounds.setMinX(-xdelta);
+		mBounds.setMaxX(xdelta);
+		mBounds.setMinY(-ydelta);
+		mBounds.setMaxY(ydelta);
+		mBounds.setMinZ(-zdelta);
+		mBounds.setMaxZ(zdelta);
 	}
 }

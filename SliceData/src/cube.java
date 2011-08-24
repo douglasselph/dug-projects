@@ -2,28 +2,28 @@
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import com.tipsolutions.jacket.data.ShapeData;
+import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class Cube extends ShapeData {
+class Cube extends Shape {
 
-	@Override protected Matrix4f _getMatrix() {
+	@Override protected Matrix4f dGetMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
 		                    0.000000f, 1.000000f, 0.000000f, 0.000000f,
 		                    0.000000f, 0.000000f, 1.000000f, 0.000000f,
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
-	@Override protected float _getMinX() { return -1.000000f; }
-	@Override protected float _getMaxX() { return 1.000000f; }
-	@Override protected float _getMinY() { return -1.000001f; }
-	@Override protected float _getMaxY() { return 1.000000f; }
-	@Override protected float _getMinZ() { return -1.000000f; }
-	@Override protected float _getMaxZ() { return 1.000000f; }
+	@Override protected float dGetMinX() { return -1.000000f; }
+	@Override protected float dGetMaxX() { return 1.000000f; }
+	@Override protected float dGetMinY() { return -1.000001f; }
+	@Override protected float dGetMaxY() { return 1.000000f; }
+	@Override protected float dGetMinZ() { return -1.000000f; }
+	@Override protected float dGetMaxZ() { return 1.000000f; }
 
 	@Override
-	protected FloatData getVertexData() {
-		class VertexData implements FloatData {
+	protected dFloatBuf dGetVertexDef() {
+		class VertexData implements dFloatBuf {
 			public void fill(FloatBuffer buf) {
 				buf.put(1.000000f).put(1.000000f).put(-1.000000f); /* 0 */
 				buf.put(1.000000f).put(-1.000000f).put(-1.000000f); /* 1 */
@@ -57,8 +57,8 @@ class Cube extends ShapeData {
 	};
 
 	@Override
-	protected FloatData getNormalData() {
-		class NormalData implements FloatData {
+	protected dFloatBuf dGetNormalDef() {
+		class NormalData implements dFloatBuf {
 			public void fill(FloatBuffer buf) {
 				buf.put(0.408246f).put(0.408246f).put(-0.816492f); /* 0 */
 				buf.put(0.816492f).put(-0.408246f).put(-0.408246f); /* 1 */
@@ -93,8 +93,8 @@ class Cube extends ShapeData {
 	};
 
 	@Override
-	protected ShortData getIndexData() {
-		class IndexData implements ShortData {
+	protected dShortBuf dGetIndexDef() {
+		class IndexData implements dShortBuf {
 			public void fill(ShortBuffer buf) {
 				buf.put((short)4).put((short)0).put((short)3); /* 0 */
 				buf.put((short)4).put((short)3).put((short)7); /* 1 */
@@ -116,11 +116,11 @@ class Cube extends ShapeData {
 	};
 
 	@Override
-	protected String _getTextureFilename() { return "CubePaint.png"; }
+	protected String dGetTextureFilename() { return "CubePaint.png"; }
 
 	@Override
-	protected FloatData getTextureData() {
-		class TextureData implements FloatData {
+	protected dFloatBuf dGetTextureDef() {
+		class TextureData implements dFloatBuf {
 			public void fill(FloatBuffer buf) {
 				buf.put(0.826603f).put(0.972696f); /* 0 */
 				buf.put(0.827490f).put(0.474609f); /* 1 */

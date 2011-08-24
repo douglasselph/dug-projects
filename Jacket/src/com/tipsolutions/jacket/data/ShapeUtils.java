@@ -1,9 +1,12 @@
 package com.tipsolutions.jacket.data;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import com.tipsolutions.jacket.data.ShapeData.MessageWriter;
+import com.tipsolutions.jacket.data.Shape.MessageWriter;
 
 public class ShapeUtils {
 	
@@ -105,5 +108,45 @@ public class ShapeUtils {
 			}
 		}
 		return numDiffs;
+	}
+	
+	static public String toString(String name, FloatBuffer fbuf) {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(name);
+		sbuf.append("=");
+		sbuf.append(fbuf.get());
+		while (fbuf.hasRemaining()) {
+			sbuf.append(",");
+			sbuf.append(fbuf.get());
+		}
+		return sbuf.toString();
+	}
+	
+	static public String toString(String name, ShortBuffer fbuf) {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(name);
+		sbuf.append("=");
+		sbuf.append(fbuf.get());
+		while (fbuf.hasRemaining()) {
+			sbuf.append(",");
+			sbuf.append(fbuf.get());
+		}
+		return sbuf.toString();
+	}
+	
+	static public void writeString(DataOutputStream dataStream, String str) throws IOException {
+		dataStream.writeShort(str.length());
+		for (int i = 0; i < str.length(); i++) {
+			dataStream.writeChar(str.charAt(i));
+		}
+	}
+	
+	static public String readString(DataInputStream dataStream) throws IOException {
+		int len = dataStream.readShort();
+		StringBuffer sbuf = new StringBuffer();
+		for (int i = 0; i < len; i++) {
+			sbuf.append(dataStream.readChar());
+		}
+		return sbuf.toString();
 	}
 }

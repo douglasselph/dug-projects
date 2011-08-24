@@ -6,7 +6,7 @@ import com.tipsolutions.jacket.math.BufferUtils;
 import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3;
 
-public class Sphere extends Shape {
+public class Sphere extends ShapeGL {
 
     public enum TextureMode {
         Linear, Projected, Polar;
@@ -154,14 +154,12 @@ public class Sphere extends Shape {
         } else {
             texBuf.put(0.5f).put(1.0f);
         }
-		allocBounds();
-		
-		setMinX((float) (mCenter.getX()-mRadius));
-		setMaxX((float) (mCenter.getX()+mRadius));
-		setMinY((float) (mCenter.getY()-mRadius));
-		setMaxY((float) (mCenter.getY()+mRadius));
-		setMinZ((float) (mCenter.getZ()-mRadius));
-		setMaxZ((float) (mCenter.getZ()+mRadius));
+		mBounds.setMinX((float) (mCenter.getX()-mRadius));
+		mBounds.setMaxX((float) (mCenter.getX()+mRadius));
+		mBounds.setMinY((float) (mCenter.getY()-mRadius));
+		mBounds.setMaxY((float) (mCenter.getY()+mRadius));
+		mBounds.setMinZ((float) (mCenter.getZ()-mRadius));
+		mBounds.setMaxZ((float) (mCenter.getZ()+mRadius));
 	}
 	
 }
