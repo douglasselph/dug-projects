@@ -25,6 +25,10 @@ public class ShapeGL extends Shape {
 		addRotate((float) angleX, (float) angleY, (float) angleZ);
 	}
 	
+	public void resetRotate() {
+		mMatrixMod = new Matrix4f();
+	}
+	
 	public Color4f getColor() {
 		if (mColor == null) {
 			mColor = dGetColor();

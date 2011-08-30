@@ -2,6 +2,8 @@ package com.tipsolutions.slice;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import com.tipsolutions.jacket.data.Shape;
+
 import android.app.Application;
 
 public class MyApplication extends Application {
@@ -11,6 +13,7 @@ public class MyApplication extends Application {
     int mEglDepth = Main.EGL_NONE;
     int mBlenderControl = GL10.GL_MODULATE;
     int mActiveShapeIndex = Main.DATA_PYRAMID;
+    Shape.CullFace mCullFace = Shape.CullFace.BACK;
     
     public int getEGLDepth() {
     	return mEglDepth;
@@ -35,5 +38,14 @@ public class MyApplication extends Application {
     public void setActiveShapeIndex(int shape) {
     	mActiveShapeIndex = shape;
     }
+    
+    public Shape.CullFace getCullFace() {
+    	return mCullFace;
+    }
+    
+    public void setCullFace(Shape.CullFace face) {
+    	mCullFace = face;
+    }
+    
     
 }

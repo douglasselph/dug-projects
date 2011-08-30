@@ -190,9 +190,9 @@ public class Shape {
 		protected void setMinY(float y) { mBounds[MIN_Y] = y; }
 		protected void setMinZ(float z) { mBounds[MIN_Z] = z; }
 		
-		public float getSizeXc() { return getMaxX()-getMinX(); }
-		public float getSizeYc() { return getMaxY()-getMinY(); }
-		public float getSizeZc() { return getMaxZ()-getMinZ(); }
+		public float getSizeX() { return getMaxX()-getMinX(); }
+		public float getSizeY() { return getMaxY()-getMinY(); }
+		public float getSizeZ() { return getMaxZ()-getMinZ(); }
 		
 		public float getMidX() { return (getMaxX()+getMinX())/2; }
 		public float getMidY() { return (getMaxY()+getMinY())/2; }
@@ -277,12 +277,13 @@ public class Shape {
 	protected Matrix4f mMatrix = null;
 	protected Shape [] mChildren = null;
 	protected TextureManager.Texture mTexture = null;
+	protected int mCullFace = GL10.GL_BACK;
 	
 	public Shape [] getChildren() { return mChildren; }
 	protected Matrix4f getMatrix() { return mMatrix; }
 	
 	protected int getFrontFace() { return GL10.GL_CCW; }
-	protected int getCullFace() { return GL10.GL_BACK; }
+	protected int getCullFace() { return mCullFace; }
 	
 	public Bounds getBounds() { return mBounds; }
 	
@@ -297,6 +298,25 @@ public class Shape {
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
 //	protected ShortData getColorFixed() { return null; }
 	
+	public enum CullFace { NONE, BACK, FRONT }
+	public void setCullFace(CullFace code) { 
+		if (code == CullFace.BACK) {
+    		mCullFace = GL10.GL_BACK;
+		} else if (code == CullFace.FRONT) {
+    		mCullFace = GL10.GL_FRONT;
+		} else {
+    		mCullFace = 0;
+		}
+	}
+	
+	public static CullFace GetCullFaceFromOrdinal(int face) {
+    	for (Shape.CullFace match : Shape.CullFace.values()) {
+    		if (match.ordinal() == face) {
+    			return match;
+    		}
+    	}
+    	return Shape.CullFace.NONE;
+	}
 
 	// Other helper functions:
 	public interface MessageWriter {

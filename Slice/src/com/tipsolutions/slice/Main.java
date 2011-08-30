@@ -99,10 +99,12 @@ public class Main extends Activity {
     	public boolean pressMove(final float x, final float y) {
     		mSurfaceView.queueEvent(new Runnable() {
     			public void run() {
-    				float xdiff = (_x - x)/3;
-    				float ydiff = (_y - y)/3;
+    				float xdiff = (_x - x);
+    				float ydiff = (_y - y);
     				mActiveShape.addRotate(Math.toRadians(ydiff), Math.toRadians(xdiff), 0f);
     				mSurfaceView.requestRender();
+    				_x = x;
+    				_y = y;
     			}
     		});
     		return true;
@@ -131,6 +133,9 @@ public class Main extends Activity {
 	static final int EGL_NONE = 0;
 	static final int EGL_DEPTH = 1;
 	static final int EGL_NO_DEPTH = 2;
+	
+	static final int MENU_QUIT = 0;
+	static final int MENU_RESET = 1;
 	
     Data [] mData;
     
@@ -204,7 +209,7 @@ public class Main extends Activity {
         holder.setOrientation(TableLayout.HORIZONTAL);
         holder.setId(2);
         
-        final Spinner itemChoice = new Spinner(this);
+        final Spinner shapeChoice = new Spinner(this);
         ArrayAdapter<SpinnerControl> adapter = new ArrayAdapter<SpinnerControl>(this,
         		android.R.layout.simple_spinner_item,
         		new SpinnerControl[] {
@@ -216,11 +221,11 @@ public class Main extends Activity {
         		  new SpinnerControl("Wing1", DATA_WING1),
                 });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        itemChoice.setAdapter(adapter);
-        itemChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+        shapeChoice.setAdapter(adapter);
+        shapeChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				SpinnerControl item = (SpinnerControl) itemChoice.getSelectedItem();
+				SpinnerControl item = (SpinnerControl) shapeChoice.getSelectedItem();
 				setShape(item.arg);
 			}
 
@@ -228,8 +233,8 @@ public class Main extends Activity {
 			public void onNothingSelected(AdapterView<?> parent) {
 			}
         });
-        itemChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        itemChoice.setSelection(mApp.getActiveShapeIndex());
+        shapeChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        shapeChoice.setSelection(locateSelection(adapter, mApp.getActiveShapeIndex()));
         
         final Spinner blendChoice = new Spinner(this);
         adapter = new ArrayAdapter<SpinnerControl>(this,
@@ -255,6 +260,7 @@ public class Main extends Activity {
         	
         });
         blendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        blendChoice.setSelection(locateSelection(adapter, mApp.getBlenderControl()));
         
         for (int pos = 0; pos < adapter.getCount(); pos++) {
         	if (adapter.getItem(pos).arg == mApp.getBlenderControl()) {
@@ -284,16 +290,41 @@ public class Main extends Activity {
 			}
         });
         eglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        eglChoice.setSelection(mApp.getEGLDepth());
+        eglChoice.setSelection(locateSelection(adapter, mApp.getEGLDepth()));
+        
+        final Spinner cullChoice = new Spinner(this);
+        adapter = new ArrayAdapter<SpinnerControl>(this,
+        		android.R.layout.simple_spinner_item,
+        		new SpinnerControl[] {
+        		  new SpinnerControl("Cull None", Shape.CullFace.NONE.ordinal()),
+        		  new SpinnerControl("Cull Back", Shape.CullFace.BACK.ordinal()),
+        		  new SpinnerControl("Cull Front", Shape.CullFace.FRONT.ordinal()),
+                });
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        cullChoice.setAdapter(adapter);
+        cullChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				SpinnerControl item = (SpinnerControl) cullChoice.getSelectedItem();
+				setCullFace(item.arg);
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+			}
+        });
+        cullChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        cullChoice.setSelection(locateSelection(adapter, mApp.getCullFace().ordinal()));
 
         TableRow tableRow;
         tableRow = new TableRow(this);
         tableRow.addView(eglChoice);
+        tableRow.addView(cullChoice);
         holder.addView(tableRow);
         
         tableRow = new TableRow(this);
         tableRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        tableRow.addView(itemChoice);
+        tableRow.addView(shapeChoice);
         tableRow.addView(blendChoice);
         holder.addView(tableRow);
         
@@ -304,7 +335,7 @@ public class Main extends Activity {
 //        TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
         TextureManager.Texture texture = mRenderer.getTextureManager().getTexture("feather_real.png");
         final ShapeGL shape = new Box(1f, texture);
-        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeYc()/2, 0));
+        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
         shape.setColorData(new dFloatBuf() {
 			@Override
 			public void fill(FloatBuffer buf) {
@@ -340,7 +371,7 @@ public class Main extends Activity {
     ShapeGL getPyramid() {
         TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
         ShapeGL shape = new Pyramid(1f, 1f, texture);
-        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeYc()/2, 0));
+        shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
         setColors(shape);
         return shape;
     }
@@ -459,13 +490,23 @@ public class Main extends Activity {
     
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-//		int order = 0;
-//		menu.add(0, MENU_TOGGLE_EGL_DEPTH, order++, "Egl Depth");
+		int order = 0;
+		menu.add(0, MENU_QUIT, order++, "Quit");
+		menu.add(0, MENU_RESET, order++, "Reset");
 		return true;
 	};
    
     @Override
 	public boolean onOptionsItemSelected(MenuItem item) {
+    	switch (item.getItemId()) {
+    		case MENU_QUIT:
+    			finish();
+    			break;
+    		case MENU_RESET:
+				mActiveShape.resetRotate();
+				mSurfaceView.requestRender();
+				break;
+    	}
 		return super.onOptionsItemSelected(item);
 	}
     
@@ -524,6 +565,14 @@ public class Main extends Activity {
 		}
 	}
 	
+	void setCullFace(int face) {
+		if (mApp.getCullFace().ordinal() != face) {
+			mApp.setCullFace(Shape.GetCullFaceFromOrdinal(face));
+			mActiveShape.setCullFace(mApp.getCullFace());
+            mSurfaceView.requestRender();
+		}
+	}
+	
 	void setColors(final Shape shape) {
     	if (shape.getNumVertexes() > 0) {
     //        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
@@ -579,7 +628,15 @@ public class Main extends Activity {
         
     	mCamera.setLookAt(mActiveShape.getMidPoint());
     	mCamera.setLocation(mCamera.getLookAt().dup());
-    	mCamera.getLocation().add(0, 0, mActiveShape.getBounds().getSizeZc()*2);
+    	
+    	Shape.Bounds bounds = mActiveShape.getBounds();
+    	float offsetZ = bounds.getSizeZ();
+    	if (bounds.getSizeY() > bounds.getSizeX()) {
+    		offsetZ += bounds.getSizeY();
+    	} else {
+    		offsetZ += bounds.getSizeX();
+    	}
+    	mCamera.getLocation().add(0, 0, offsetZ);
         
         mSurfaceView.setEventTap(mCamera);
         mSurfaceView.requestRender();
@@ -683,6 +740,15 @@ public class Main extends Activity {
 			diff += test.run();
 		}
 		Log.d(TAG, "Total diff=" + diff);
+	}
+	
+	static int locateSelection(ArrayAdapter<SpinnerControl> adapter, int code) {
+		for (int i = 0; i < adapter.getCount(); i++) {
+			if (adapter.getItem(i).arg == code) {
+				return i;
+			}
+		}
+		return 0;
 	}
     
 }
