@@ -18,6 +18,7 @@ import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.math.Vector3f;
 
 // 
 // Base class for defining shapes.
@@ -192,6 +193,10 @@ public class Shape {
 		public float getSizeXc() { return getMaxX()-getMinX(); }
 		public float getSizeYc() { return getMaxY()-getMinY(); }
 		public float getSizeZc() { return getMaxZ()-getMinZ(); }
+		
+		public float getMidX() { return (getMaxX()+getMinX())/2; }
+		public float getMidY() { return (getMaxY()+getMinY())/2; }
+		public float getMidZ() { return (getMaxZ()+getMinZ())/2; }
 		
 		public void compute() {
 			FloatBuffer buf = getVertexBuf();
@@ -557,6 +562,14 @@ public class Shape {
 			sbuf.append(ShapeUtils.toString("indexbuf", mIndexBuf.getBuf()));
 		}
 		return sbuf.toString();
+	}
+	
+	public Vector3f getMidPoint() {
+		Bounds bounds = getBounds();
+		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(), bounds.getMidZ());
+		Matrix4f matrix = getMatrix();
+		matrix.applyPost(midPoint);
+		return midPoint;
 	}
 	
 	public boolean hasVertexArray() {

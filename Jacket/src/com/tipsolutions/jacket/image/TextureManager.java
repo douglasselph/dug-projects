@@ -141,7 +141,7 @@ public class TextureManager {
 		return list;
 	}
 	
-	public void init(MatrixTrackingGL gl) {
+	public void init(MatrixTrackingGL gl) throws IOException {
 		gl.glEnable(GL10.GL_TEXTURE_2D); 
 		
 		boolean once = false;
@@ -160,7 +160,14 @@ public class TextureManager {
 				}
 				once = true;
 			} catch (Exception ex) {
-				Log.e(Constants.TAG, ex.getMessage());
+				StringBuffer sbuf = new StringBuffer();
+				sbuf.append("File:");
+				sbuf.append("\"");
+				sbuf.append(filename);
+				sbuf.append("\", ");
+				sbuf.append("got exception: ");
+				sbuf.append(ex.getMessage());
+				throw new IOException(sbuf.toString());
 			} finally {
 				try {
 					if (is != null) {

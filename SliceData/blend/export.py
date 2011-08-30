@@ -7,7 +7,7 @@ import bpy
 import os
 import math
 
-gMegaMax = 1700
+gMegaMax = 2000
 gFileData = {}
 
 class MyVert:
@@ -516,6 +516,7 @@ def write_vertexes(out):
 	out.write('\t\t\tpublic void fill(FloatBuffer buf) {\n')
 		
 	max = gMegaMax
+	perLine = 5
 	index = 0
 			
 	if numverts > max:
@@ -529,18 +530,44 @@ def write_vertexes(out):
 		for x in range(num):
 			out.write
 			out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+			out.write('\t\t\t\tbuf.put(new float [] {\n')
 			start = x * max
 			end = start + max
+			perLineCount = 0
 			
 			for vert in gMeshInfo.verts[start:end]:
-				out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, index))
+				if perLineCount == 0:
+					out.write('\t\t\t\t\t')
+				out.write('%ff, %ff, %ff, ' % (vert.co.x, vert.co.y, vert.co.z))
 				count = count + 3
 				index = index + 1
+				perLineCount = perLineCount + 1
+				if perLineCount >= perLine:
+					out.write('/* %d -> %d */\n' % (index-perLineCount, index-1))
+					perLineCount = 0
+			if perLineCount > 0:
+				out.write('/* %d -> %d */\n' % (index-perLineCount, index-1))
+			out.write('\t\t\t\t});\n')
  			out.write('\t\t\t};\n')
 	else:
+		out.write('\t\t\t\tbuf.put(new float [] {\n')
+		perLineCount = 0
+		
 		for vert in gMeshInfo.verts:
-			out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.co.x, vert.co.y, vert.co.z, index))
+			if perLineCount == 0:
+				out.write('\t\t\t\t\t')
+				
+			out.write('%ff, %ff, %ff, ' % (vert.co.x, vert.co.y, vert.co.z))
+			
+			perLineCount = perLineCount + 1
 			index = index + 1
+			if perLineCount >= perLine:
+				out.write('/* %d -> %d */\n' % (index-perLineCount,index-1))
+				perLineCount = 0
+		if perLineCount > 0:
+			out.write('/* %d -> %d */\n' % (index-perLineCount,index-1))
+			
+		out.write('\t\t\t\t});\n')
  		out.write('\t\t\t};\n')
 		count = numverts * 3
 
@@ -556,8 +583,8 @@ def write_normals(out):
 	global gMeshInfo
 	
 	max = gMegaMax
-	
 	numverts = gMeshInfo.getNumVerts()
+	perLine = 5
 	
 	out.write('\t@Override\n')
 	out.write('\tprotected dFloatBuf dGetNormalDef() {\n');
@@ -574,20 +601,45 @@ def write_normals(out):
 		out.write('\t\t\t}\n')
 		out.write
 		count = 0
+		perLineCount = 0
+		
 		for x in range(num):
-			out.write
+			out.write('\n')
 			out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+			out.write('\t\t\t\tbuf.put(new float [] {\n')
 			start = x * max
 			end = start + max
 			for vert in gMeshInfo.verts[start:end]:
-				out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, index))
+				if perLineCount == 0:
+					out.write('\t\t\t\t\t')
+				out.write('%ff, %ff, %ff, ' % (vert.no.x, vert.no.y, vert.no.z))
+				perLineCount = perLineCount + 1
 				count = count + 3
 				index = index + 1
+				if perLineCount >= perLine:
+					out.write('/* %d -> %d */\n' % (index-perLineCount,index-1))
+					perLineCount = 0
+			out.write('\t\t\t\t});\n')
 			out.write('\t\t\t};\n')
 	else:
+		perLineCount = 0
+		out.write('\t\t\t\tbuf.put(new float [] {\n')
+		
 		for vert in gMeshInfo.verts:
-			out.write('\t\t\t\tbuf.put(%ff).put(%ff).put(%ff); /* %d */\n' % (vert.no.x, vert.no.y, vert.no.z, index))
+			if perLineCount == 0:
+				out.write('\t\t\t\t\t')
+			out.write('%ff, %ff, %ff, ' % (vert.no.x, vert.no.y, vert.no.z))
 			index = index + 1
+			perLineCount = perLineCount + 1
+			
+			if perLineCount >= perLine:
+				out.write(' /* %d -> %d */\n' % (index-perLineCount,index-1))
+				perLineCount = 0
+				
+		if perLineCount > 0:
+				out.write(' /* %d -> %d */\n' % (index-perLineCount,index-1))
+				
+		out.write('\t\t\t\t});\n')
 		out.write('\t\t\t};\n')
 		count = numverts * 3
 
@@ -602,7 +654,8 @@ def write_indexes(out, mesh):
 	global gMeshInfo
 	global gMegaMax
 	
-	max = int(gMegaMax/3)
+	max = int(gMegaMax)
+	perLine = 10
 	numfaces = len(mesh.faces)
 	
 	out.write('\t@Override\n')
@@ -628,33 +681,59 @@ def write_indexes(out, mesh):
 			if header:
 				out.write
 				out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
+				out.write('\t\t\t\tbuf.put(new short [] {\n')
 				x = x + 1
 				header = False
+				perLineCount = 0
 			
-			out.write('\t\t\t\tbuf')
+			if perLineCount == 0:
+				out.write('\t\t\t\t\t')
+				
 			for vert in face.v:
-				out.write('.put((short)%d)' % gMeshInfo.getVertIndex(face.index,vert.index))
+				out.write('%d, ' % gMeshInfo.getVertIndex(face.index,vert.index))
 				count = count + 1
-			out.write('; /* %d */\n' % i)
+				
 			i = i + 1
+			perLineCount = perLineCount + 1
+			if perLineCount >= perLine or i == end:	
+				out.write('/* %d -> %d */\n' % (i-perLineCount,i-1))
+				perLineCount = 0
 			
 			if i == end:
+				out.write('\t\t\t\t});\n')
 				out.write('\t\t\t};\n')
 				header = True
 				start = start + max
 				end = end + max
 		if not header:
+			out.write('\t\t\t\t});\n')
 			out.write('\t\t\t};\n')
 	else:
 		count = 0
 		i = 0
+		perLineCount = 0
+		perLineStart_i = 0
+		
+		out.write('\t\t\t\tbuf.put(new short [] {\n')
+		
 		for face in mesh.faces:
-			out.write('\t\t\t\tbuf')
+			if perLineCount == 0:
+				out.write('\t\t\t\t\t')
+					
 			for vert in face.v:
-				out.write('.put((short)%d)' % gMeshInfo.getVertIndex(face.index, vert.index))
+				out.write('%d,' % gMeshInfo.getVertIndex(face.index, vert.index))				
 				count = count + 1
-			out.write('; /* %d */\n' % i)
+				
 			i = i + 1
+			perLineCount = perLineCount + 1
+			if perLineCount >= perLine:
+				out.write('/* %d -> %d */\n' % (i-perLineCount, i-1))
+				perLineCount = 0
+				
+		if perLineCount > 0:
+			out.write('/* %d -> %d */\n' % (i-perLineCount,i-1))
+			
+		out.write('\t\t\t\t});\n')
 		out.write('\t\t\t};\n')
 
 	out.write
@@ -672,6 +751,7 @@ def write_colors(out, mesh):
 		
 	max = int(gMegaMax/4)
 	numfaces = len(mesh.faces)
+	perLine = 5
 	if numfaces == 0:
 		return
 
@@ -685,28 +765,48 @@ def write_colors(out, mesh):
 		for x in range(num):
 			out.write('\t\t\t\tfill%d(buf);\n' % (x+1))
 		out.write('\t\t\t}\n')
-		out.write
+		out.write('\n')
 
 		count = 0
 		i = 0
 		for x in range(num):
 			out.write
 			out.write('\t\t\tvoid fill%d(ShortBuffer buf) {\n' % (x+1))
+			out.write('\t\t\t\tbuf.put(new short [] {\n')
 			start = int(x * max)
 			end = int(start + max)
+			perLineCount = 0
 			for face in mesh.faces[start:end]:
+				if perLineCount == 0:
+					out.write('\t\t\t\t\t')
 				for col in mesh.col:
-					out.write('\t\t\t\tbuf.put((short)%d).put((short)%d).put((short)%d).put((short)%d); /* %d */\n' % 
-						(col.r, col.g, col.b, col.a, i))
+					out.write('%d,%d,%d,%d,' % 
+						(col.r, col.g, col.b, col.a))
 					i = i + 1
+					perLineCount = perLineCount + 1
+					if perLineCount >= perLine:
+						out.write('/* %d -> %d */\n' % (i - perLineCount, i-1))
+						perLineCount = 0
+				
+			if perLineCount == 0:
+				out.write('/* %d -> %d */\n' % (i - perLineCount, i-1))
+			out.write('\t\t\t\t});\n')
 			out.write('\t\t\t};\n')
 	else:
 		i = 0
+		perLineCount = 0
+		out.write('\t\t\t\tbuf.put(new short [] {\n')
 		for face in mesh.faces:
 			for col in mesh.col:
-				out.write('\t\t\t\tbuf.put((short)%d).put((short)%d).put((short)%d).put((short)%d); /* %d */\n' % 
-					(col.r, col.g, col.b, col.a, i))
+				out.write('%d,%d,%d,%d,' % (col.r, col.g, col.b, col.a))
 				i = i + 1
+				perLineCount = perLineCount + 1
+				if perLineCount >= perLine:
+					out.write('/* %d -> %d */\n' % (i - perLineCount, i-1))
+					perLineCount = 0
+		if perLineCount == 0:
+			out.write('/* %d -> %d */\n' % (i - perLineCount, i-1))
+		out.write('\t\t\t\t});\n')
 		out.write('\t\t\t};\n')
 
 	count = i * 4
@@ -738,6 +838,7 @@ def write_textures(out, mesh):
 		
 		max = gMegaMax
 		numverts = gMeshInfo.getNumVerts()
+		perLine = 10
 	
 		out.write('\n')
 		out.write('\t@Override\n')
@@ -763,19 +864,41 @@ def write_textures(out, mesh):
 				out.write('\n')
 				count = 0
 				for x in range(num):
-					out.write
+					out.write('\n')
 					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+					out.write('\t\t\t\tbuf.put(new float [] {\n')
 					start = x * max
 					end = start + max
+					perLineCount = 0
 					for vert in gMeshInfo.verts[start:end]:
-						out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
+						if perLineCount == 0:
+							out.write('\t\t\t\t\t')
+						out.write('%ff, %ff, ' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy)))
+						perLineCount = perLineCount + 1
 						count = count + 2
 						index = index + 1
+						if perLineCount >= perLine:
+							out.write('/* %d -> %d */\n' % (index-perLineCount, index-1))
+							perLineCount = 0
+					if perLineCount > 0:
+						out.write('/* %d -> %d */\n' % (index-perLineCount, index-1))
+					out.write('});\n')
 					out.write('\t\t\t};\n')
 			else:
+				perLineCount = 0
+				out.write('\t\t\t\tbuf.put(new float [] {\n')
 				for vert in gMeshInfo.verts:
-					out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy), index))
+					if perLineCount == 0:
+						out.write('\t\t\t\t\t')
+					out.write('%ff, %ff, ' % (((vert.co.x-mx)/sx), ((vert.co.y-my)/sy)))
 					index = index + 1
+					perLineCount = perLineCount + 1
+					if perLineCount >= perLine:
+						out.write('/* %d -> %d */\n' % (index-perLineCount,index-1))
+						perLineCount = 0
+				if perLineCount > 0:
+					out.write('/* %d -> %d */\n' % (index-perLineCount,index-1))
+				out.write('});\n')
 				out.write('\t\t\t};\n')
 				count = numverts * 2
 		else:
@@ -790,17 +913,43 @@ def write_textures(out, mesh):
 				for x in range(num):
 					out.write('\n')
 					out.write('\t\t\tvoid fill%d(FloatBuffer buf) {\n' % (x+1))
+					out.write('\t\t\t\tbuf.put(new float [] {\n')
 					start = x * max
 					end = start + max
+					perLineCount = 0
 					for vert in gMeshInfo.verts[start:end]:
-						out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (vert.uv.x, vert.uv.y, index))
+						if perLineCount == 0:
+							out.write('\t\t\t\t\t')
+						out.write('%ff, %ff, ' % (vert.uv.x, vert.uv.y))
 						count = count + 2
 						index = index + 1
+						perLineCount = perLineCount + 1
+						if perLineCount >= perLine:
+							out.write('/* %d -> %d */' % (index-perLineCount, index-1))
+							perLineCount = 0
+					if perLineCount > 0:
+						out.write('/* %d -> %d */' % (index-perLineCount, index-1))
+					out.write('});\n')
 					out.write('\t\t\t};\n')
 			else:
+				out.write('\t\t\t\tbuf.put(new float [] {\n')
+				perLineCount = 0
+				
 				for vert in gMeshInfo.verts:
-					out.write('\t\t\t\tbuf.put(%ff).put(%ff); /* %d */\n' % (vert.uv.x, vert.uv.y, index))
+					if perLineCount == 0:
+						out.write('\t\t\t\t\t')
+					out.write('%ff, %ff, ' % (vert.uv.x, vert.uv.y))
+					perLineCount = perLineCount + 1
 					index = index + 1
+					if perLineCount >= perLine:
+						out.write('/* %d -> %d */\n' % (index - perLineCount, index-1))
+						perLineCount = 0
+					
+				if perLineCount > 0:
+					out.write('/* %d -> %d */\n' % (index - perLineCount, index-1))
+					
+				out.write('\t\t\t\t});\n')
+				
 				out.write('\t\t\t};\n')
 				count = numverts * 2
 				
@@ -823,7 +972,7 @@ def write_armature(out):
 	out.write('\t\tdBone [] bones = new dBone[%d];\n' % len(gMeshInfo.armData.bonelist))
 	out.write('\n')	
 	
-	vertPerLine = 5
+	vertPerLine = 10
 	
 	for bone in gMeshInfo.armData.bonelist:
 		out.write('\t\tbones[%d] = new dBone() {\n' % bone.index);
@@ -832,18 +981,18 @@ def write_armature(out):
 		
 		c = 0
 		count = 0
-		out.write('\t\t\t\tbuf');
+		out.write('\t\t\t\tbuf.put(new short [] {\n\t\t\t\t\t');
 		for vert in bone.verts:
 			if c >= vertPerLine:
-				out.write(';\n\t\t\t\tbuf');
+				out.write('\n\t\t\t\t\t');
 				c = 1
 			else:
 				c = c + 1
-			out.write('.put((short)%d)' % vert);
+			out.write('%d,' % vert);
 			count = count + 1
 			once = True
 		
-		out.write(';\n\t\t\t}\n')
+		out.write('});\n\t\t\t}\n')
 		out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
 		out.write('\t\t\t@Override public int [] getJoints() {\n');
 		
@@ -877,18 +1026,18 @@ def write_armature(out):
 		
 		c = 0
 		count = 0
-		out.write('\t\t\t\tbuf');
+		out.write('\t\t\t\tbuf.put(new short [] {\n\t\t\t\t\t');
 		for vert in joint.verts:
 			if c >= vertPerLine:
-				out.write(';\n\t\t\t\tbuf')
+				out.write('\n\t\t\t\t\t')
 				c = 1
 			else:
 				c = c + 1
-			out.write('.put((short)%d)' % vert)
+			out.write('%d,' % vert)
 			count = count + 1
 			once = True
 		
-		out.write(';\n\t\t\t}\n')
+		out.write('});\n\t\t\t}\n')
 		out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
 		out.write('\t\t\t@Override public int [] getBones() {\n')
 		

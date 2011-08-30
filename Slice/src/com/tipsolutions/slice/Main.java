@@ -577,7 +577,7 @@ public class Main extends Activity {
     	mActiveShape = shape;
         mRenderer.setShape(shape);
         
-    	mCamera.setLookAt(new Vector3f(0, 0, 0));
+    	mCamera.setLookAt(mActiveShape.getMidPoint());
     	mCamera.setLocation(mCamera.getLookAt().dup());
     	mCamera.getLocation().add(0, 0, mActiveShape.getBounds().getSizeZc()*2);
         

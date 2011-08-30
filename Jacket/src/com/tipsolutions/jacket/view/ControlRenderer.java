@@ -4,9 +4,11 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
@@ -40,7 +42,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	@Override
 	public void onDrawFrame(GL10 gl) {
 		if (!mInitializedTextures) {
-			mTM.init(getGL(gl));
+			try {
+    			mTM.init(getGL(gl));
+			} catch (Exception ex) {
+				Log.e(Constants.TAG, ex.getMessage());
+			}
 			mInitializedTextures = true;
 		} else {
     		getGL(gl); // sanity

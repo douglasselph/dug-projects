@@ -16,6 +16,8 @@ public class Matrix4f {
         	 0, 1, 0, 0,
         	 0, 0, 1, 0,
         	 0, 0, 0, 1);
+        
+        android.opengl.Matrix matrix;
     }
     
     public Matrix4f(
@@ -83,11 +85,11 @@ public class Matrix4f {
         double x = vector.getX();
         double y = vector.getY();
         double z = vector.getZ();
-        // double w = 0;
+        double w = 1;
 
-        store.setX(getValue(0,0) * x + getValue(1,0) * y + getValue(2,0) * z /*+ getValue(3,0) * w*/);
-        store.setY(getValue(0,1) * x + getValue(1,1) * y + getValue(2,1) * z /*+ getValue(3,1) * w*/);
-        store.setZ(getValue(0,2) * x + getValue(1,2) * y + getValue(2,2) * z /*+ getValue(3,2) * w*/);
+        store.setX(getValue(0,0) * x + getValue(1,0) * y + getValue(2,0) * z + getValue(3,0) * w);
+        store.setY(getValue(0,1) * x + getValue(1,1) * y + getValue(2,1) * z + getValue(3,1) * w);
+        store.setZ(getValue(0,2) * x + getValue(1,2) * y + getValue(2,2) * z + getValue(3,2) * w);
 //        store.setW(getValue(0,3) * x + getValue(1,3) * y + getValue(2,3) * z + getValue(3,3) * w);
 
         return store;
@@ -117,11 +119,11 @@ public class Matrix4f {
         double x = vector.getX();
         double y = vector.getY();
         double z = vector.getZ();
-//        final double w = vector.getW();
+        double w = 1;
 
-        store.setX(getValue(0,0) * x + getValue(0,1) * y + getValue(0,2) * z /*+ getValue(0,3) * w*/);
-        store.setY(getValue(1,0) * x + getValue(1,1) * y + getValue(1,2) * z /*+ getValue(1,3) * w*/);
-        store.setZ(getValue(2,0) * x + getValue(2,1) * y + getValue(2,2) * z /*+ getValue(2,3) * w*/);
+        store.setX(getValue(0,0) * x + getValue(0,1) * y + getValue(0,2) * z + getValue(0,3) * w);
+        store.setY(getValue(1,0) * x + getValue(1,1) * y + getValue(1,2) * z + getValue(1,3) * w);
+        store.setZ(getValue(2,0) * x + getValue(2,1) * y + getValue(2,2) * z + getValue(2,3) * w);
 //        store.setW(_data[3][0] * x + _data[3][1] * y + _data[3][2] * z + _data[3][3] * w);
 
         return store;
