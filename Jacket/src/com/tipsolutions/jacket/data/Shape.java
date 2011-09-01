@@ -7,8 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
@@ -19,6 +17,8 @@ import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
+import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
 
 // 
 // Base class for defining shapes.
@@ -28,128 +28,7 @@ public class Shape {
 	///////////////////////////////////////////////
 	// CORE 
 	///////////////////////////////////////////////
-	protected static final int TYPE_FLOAT = 1;
-	protected static final int TYPE_SHORT = 2;
-	
-	protected abstract class Buffer<BUFTYPE> {
-		ByteBuffer mRoot;
-		BUFTYPE mBuf;
-		
-		void set(dData<BUFTYPE> data) {
-			if (data == null) {
-				mRoot = null;
-				mBuf = null;
-			} else {
-    			mRoot = ByteBuffer.allocateDirect(data.size()*getSize());
-    			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
-    			mBuf = asBuffer(mRoot);
-    			data.fill(mBuf);
-			}
-		}
-		
-		abstract BUFTYPE asBuffer(ByteBuffer buf);
-		abstract void rewind(BUFTYPE buf);
-		abstract int capacity(BUFTYPE buf);
-		abstract int getSize();
-		abstract int getType();
-		
-		void set(ByteBuffer buf) {
-			mRoot = buf;
-			mBuf = asBuffer(buf);
-		}
-		
-		BUFTYPE set(int size) {
-			mRoot = ByteBuffer.allocateDirect(size*getSize());
-			mRoot.order(ByteOrder.nativeOrder()); // Get this from android platform
-			mBuf = asBuffer(mRoot);
-			return mBuf;
-		}
-		
-		BUFTYPE getBuf() {
-			if (mBuf != null) {
-				rewind(mBuf);
-			}
-			return mBuf;
-		}
-		
-		ByteBuffer getRootBuf() {
-			if (mRoot != null) {
-				mRoot.rewind();
-			}
-			return mRoot;
-		}
-		
-		boolean hasData() {
-			return (mRoot != null);
-		}
-		
-		int capacity() {
-			if (mBuf == null) {
-				return 0;
-			}
-			return capacity(mBuf);
-		}
-		
-		public void writeBuffer(DataOutputStream dataStream) throws IOException {
-			ByteBuffer vbb = getRootBuf();
-			if (vbb != null) {
-	    		dataStream.writeInt(getType());
-	    		dataStream.writeInt(vbb.limit());
-	    		if (vbb.hasArray()) {
-	        		dataStream.write(vbb.array(), 0, vbb.limit());
-	    		} else {
-	    			vbb.rewind();
-	    			byte [] dst = new byte[vbb.limit()];
-	    			vbb.get(dst);
-	        		dataStream.write(dst, 0, vbb.limit());
-	        		vbb.rewind();
-	    		}
-			}
-		}
-		
-		public void readBuffer(DataInputStream dataStream) throws IOException, Exception {
-			int type = dataStream.readInt();
-			int size = dataStream.readInt();
-			
-			if (type != getType()) {
-				if (getType() == TYPE_FLOAT) {
-					throw new Exception("Expected float type");
-				}
-				if (getType() == TYPE_SHORT) {
-					throw new Exception("Expected short type");
-				}
-				throw new Exception("Expected a different type");
-			}
-			ByteBuffer vbb = ByteBuffer.allocateDirect(size);
-	        vbb.order(ByteOrder.nativeOrder()); // Get this from android platform
-	        if (vbb.hasArray()) {
-	            dataStream.read(vbb.array(), 0, size);
-	        } else {
-	        	byte [] dst = new byte[size];
-	            dataStream.read(dst, 0, size);
-	            vbb.rewind();
-	            vbb.put(dst);
-	            vbb.rewind();
-	        }
-	        set(vbb);
-		}
-	};
 
-	protected class FloatBuf extends Buffer<FloatBuffer> {
-		@Override FloatBuffer asBuffer(ByteBuffer buf) { return buf.asFloatBuffer(); } @Override int capacity(FloatBuffer buf) { return buf.capacity(); }
-		@Override void rewind(FloatBuffer buf) { buf.rewind(); }
-		@Override int getSize() { return 4; }
-		@Override int getType() { return TYPE_FLOAT; }
-	};
-	
-	protected class ShortBuf extends Buffer<ShortBuffer> {
-		@Override ShortBuffer asBuffer(ByteBuffer buf) { return buf.asShortBuffer(); }
-		@Override int capacity(ShortBuffer buf) { return buf.capacity(); }
-		@Override void rewind(ShortBuffer buf) { buf.rewind(); }
-		@Override int getSize() { return 2; }
-		@Override int getType() { return TYPE_SHORT; }
-	};
-	
 	protected abstract class MyData<TARGET> {
 		TARGET mTarget;
 	};
@@ -277,13 +156,13 @@ public class Shape {
 	protected Matrix4f mMatrix = null;
 	protected Shape [] mChildren = null;
 	protected TextureManager.Texture mTexture = null;
-	protected int mCullFace = GL10.GL_BACK;
+//	protected int mCullFace = GL10.GL_BACK;
 	
 	public Shape [] getChildren() { return mChildren; }
 	protected Matrix4f getMatrix() { return mMatrix; }
 	
 	protected int getFrontFace() { return GL10.GL_CCW; }
-	protected int getCullFace() { return mCullFace; }
+	protected int getCullFace() { return GL10.GL_BACK; }
 	
 	public Bounds getBounds() { return mBounds; }
 	
@@ -298,25 +177,25 @@ public class Shape {
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
 //	protected ShortData getColorFixed() { return null; }
 	
-	public enum CullFace { NONE, BACK, FRONT }
-	public void setCullFace(CullFace code) { 
-		if (code == CullFace.BACK) {
-    		mCullFace = GL10.GL_BACK;
-		} else if (code == CullFace.FRONT) {
-    		mCullFace = GL10.GL_FRONT;
-		} else {
-    		mCullFace = 0;
-		}
-	}
-	
-	public static CullFace GetCullFaceFromOrdinal(int face) {
-    	for (Shape.CullFace match : Shape.CullFace.values()) {
-    		if (match.ordinal() == face) {
-    			return match;
-    		}
-    	}
-    	return Shape.CullFace.NONE;
-	}
+//	public enum CullFace { NONE, BACK, FRONT }
+//	public void setCullFace(CullFace code) { 
+//		if (code == CullFace.BACK) {
+//    		mCullFace = GL10.GL_BACK;
+//		} else if (code == CullFace.FRONT) {
+//    		mCullFace = GL10.GL_FRONT;
+//		} else {
+//    		mCullFace = 0;
+//		}
+//	}
+//	
+//	public static CullFace GetCullFaceFromOrdinal(int face) {
+//    	for (Shape.CullFace match : Shape.CullFace.values()) {
+//    		if (match.ordinal() == face) {
+//    			return match;
+//    		}
+//    	}
+//    	return Shape.CullFace.NONE;
+//	}
 
 	// Other helper functions:
 	public interface MessageWriter {
@@ -610,27 +489,27 @@ public class Shape {
 	
 	public FloatBuffer setColorBuf(int size) {
 		mColorBuf = new FloatBuf();
-		return mColorBuf.set(size);
+		return mColorBuf.alloc(size);
 	}
 	
 	public ShortBuffer setIndexBuf(int size) {
 		mIndexBuf = new ShortBuf();
-		return mIndexBuf.set(size);
+		return mIndexBuf.alloc(size);
 	}
 	
 	public FloatBuffer setNormalBuf(int size) {
 		mNormalBuf = new FloatBuf();
-		return mNormalBuf.set(size);
+		return mNormalBuf.alloc(size);
 	}
 	
 	public FloatBuffer setVertexBuf(int size) {
 		mVertexBuf = new FloatBuf();
-		return mVertexBuf.set(size);
+		return mVertexBuf.alloc(size);
 	}
 	
 	public FloatBuffer setTextureBuf(int size) {
 		mTextureBuf = new FloatBuf();
-		return mTextureBuf.set(size);
+		return mTextureBuf.alloc(size);
 	}
 	
 	///////////////////////////////////////

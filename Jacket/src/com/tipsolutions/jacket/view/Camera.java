@@ -19,9 +19,9 @@ public class Camera {
 	protected float mAngle = 65.0f;
 	protected int mHeight = 100;
 	protected int mWidth = 100;
-	protected float mLeft; // left clipping plane of viewport in model space coordinates
-	protected float mRight; // right clipping plane
-	protected float mTop; // top clipping plane
+	protected float mLeft;   // left clipping plane of viewport in model space coordinates
+	protected float mRight;  // right clipping plane
+	protected float mTop;    // top clipping plane
 	protected float mBottom; // bottom clipping plane
 
 	public Camera() {
@@ -48,6 +48,8 @@ public class Camera {
 				mCameraPos.getX(), mCameraPos.getY(), mCameraPos.getZ(), 
 				mLookAtPos.getX(), mLookAtPos.getY(), mLookAtPos.getZ(), 
 				mUp.getX(), mUp.getY(), mUp.getZ());
+		// Perhaps another way to rotate the camera around a point:
+//		gl.glRotatef(angle, x, y, z);
 	}
 	
 	protected Vector3f getUnitOut() {

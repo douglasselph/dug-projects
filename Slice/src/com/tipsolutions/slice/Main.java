@@ -13,9 +13,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TableLayout;
@@ -35,7 +37,9 @@ import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
-import com.tipsolutions.jacket.view.IEventTap;
+import com.tipsolutions.jacket.view.SpinnerControl;
+import com.tipsolutions.jacket.view.TwirlEventTap;
+import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
 
 public class Main extends Activity {
 
@@ -58,71 +62,7 @@ public class Main extends Activity {
 			return mShape;
 		}
 	}
-	class SpinnerControl {
-    	String name;
-    	int arg;
-    	
-    	public SpinnerControl(String _name, int _arg) {
-    		name = _name;
-    		arg = _arg;
-    	}
-
-		@Override
-		public String toString() {
-			return name;
-		}
-    }
-	class TwirlEventTap implements IEventTap {
-    
-    	static final short DOUBLE_TAP_TRIGGER_MS = 400;
-    	float _x;
-    	float _y;
-     	long mLastTouchTime;
-    	long mStartTouchTime;
-   	
-    	TwirlEventTap() {
-    	}
-    	
-    	public boolean pressDown(final float x, final float y) {
-    		_x = x;
-    		_y = y;
-    		mStartTouchTime = System.currentTimeMillis();
-//    		mSurfaceView.queueEvent(new Runnable() {
-//    			public void run() {
-//            		mRenderer.setClippingPlaneColor(
-//        				new Color4f(x / mSurfaceView.getWidth(), y / mSurfaceView.getHeight(), 1f));
-//    			}
-//    		});
-    		return true;
-    	}
-    	
-    	public boolean pressMove(final float x, final float y) {
-    		mSurfaceView.queueEvent(new Runnable() {
-    			public void run() {
-    				float xdiff = (_x - x);
-    				float ydiff = (_y - y);
-    				mActiveShape.addRotate(Math.toRadians(ydiff), Math.toRadians(xdiff), 0f);
-    				mSurfaceView.requestRender();
-    				_x = x;
-    				_y = y;
-    			}
-    		});
-    		return true;
-    	}
-    	
-    	public boolean pressUp(float x, float y){
-    		long curTime = System.currentTimeMillis();
-    		long diffTime = curTime - mStartTouchTime;
-    		if (diffTime <= DOUBLE_TAP_TRIGGER_MS) {
-        		diffTime = mStartTouchTime - mLastTouchTime;
-        		if (diffTime <= DOUBLE_TAP_TRIGGER_MS) {
-    				mSurfaceView.setEventTap(mCamera);
-    			}
-    		}
-    		mLastTouchTime = curTime;
-    		return false;
-    	}
-    }
+	
 	static final int DATA_PYRAMID = 0;
 	static final int DATA_CUBE = 1;
 	static final int DATA_BOX = 2;
@@ -151,7 +91,7 @@ public class Main extends Activity {
     static final int ARRAY_SIZE = NUM_FILES+2;
     ShapeGL [] mShapes = new ShapeGL[ARRAY_SIZE];
     ShapeGL mActiveShape = null;
-    TwirlEventTap mTwirlEventTap = new TwirlEventTap();
+    TwirlEventTap mTwirlEventTap;
     ControlCamera mCamera;
     MyRenderer mRenderer;
     ControlSurfaceView mSurfaceView;
@@ -226,7 +166,7 @@ public class Main extends Activity {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				SpinnerControl item = (SpinnerControl) shapeChoice.getSelectedItem();
-				setShape(item.arg);
+				setShape(item.getArg());
 			}
 
 			@Override
@@ -234,7 +174,7 @@ public class Main extends Activity {
 			}
         });
         shapeChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        shapeChoice.setSelection(locateSelection(adapter, mApp.getActiveShapeIndex()));
+        shapeChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getActiveShapeIndex()));
         
         final Spinner blendChoice = new Spinner(this);
         adapter = new ArrayAdapter<SpinnerControl>(this,
@@ -251,7 +191,7 @@ public class Main extends Activity {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				SpinnerControl item = (SpinnerControl) blendChoice.getSelectedItem();
-				setBlendTexture(item.arg);
+				setBlendTexture(item.getArg());
 			}
 
 			@Override
@@ -260,14 +200,8 @@ public class Main extends Activity {
         	
         });
         blendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        blendChoice.setSelection(locateSelection(adapter, mApp.getBlenderControl()));
+        blendChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getBlenderControl()));
         
-        for (int pos = 0; pos < adapter.getCount(); pos++) {
-        	if (adapter.getItem(pos).arg == mApp.getBlenderControl()) {
-        		blendChoice.setSelection(pos);
-        		break;
-        	}
-        }
         final Spinner eglChoice = new Spinner(this);
         adapter = new ArrayAdapter<SpinnerControl>(this,
         		android.R.layout.simple_spinner_item,
@@ -282,7 +216,7 @@ public class Main extends Activity {
 			@Override
 			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 				SpinnerControl item = (SpinnerControl) eglChoice.getSelectedItem();
-				setEGLDepth(item.arg);
+				setEGLDepth(item.getArg());
 			}
 
 			@Override
@@ -290,36 +224,44 @@ public class Main extends Activity {
 			}
         });
         eglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        eglChoice.setSelection(locateSelection(adapter, mApp.getEGLDepth()));
+        eglChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getEGLDepth()));
         
-        final Spinner cullChoice = new Spinner(this);
-        adapter = new ArrayAdapter<SpinnerControl>(this,
-        		android.R.layout.simple_spinner_item,
-        		new SpinnerControl[] {
-        		  new SpinnerControl("Cull None", Shape.CullFace.NONE.ordinal()),
-        		  new SpinnerControl("Cull Back", Shape.CullFace.BACK.ordinal()),
-        		  new SpinnerControl("Cull Front", Shape.CullFace.FRONT.ordinal()),
-                });
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        cullChoice.setAdapter(adapter);
-        cullChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+        Button btn = new Button(this);
+        btn.setText("Set Pos");
+        btn.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-				SpinnerControl item = (SpinnerControl) cullChoice.getSelectedItem();
-				setCullFace(item.arg);
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent) {
+			public void onClick(View v) {
 			}
         });
-        cullChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        cullChoice.setSelection(locateSelection(adapter, mApp.getCullFace().ordinal()));
+        
+//        final Spinner cullChoice = new Spinner(this);
+//        adapter = new ArrayAdapter<SpinnerControl>(this,
+//        		android.R.layout.simple_spinner_item,
+//        		new SpinnerControl[] {
+//        		  new SpinnerControl("Cull None", Shape.CullFace.NONE.ordinal()),
+//        		  new SpinnerControl("Cull Back", Shape.CullFace.BACK.ordinal()),
+//        		  new SpinnerControl("Cull Front", Shape.CullFace.FRONT.ordinal()),
+//                });
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        cullChoice.setAdapter(adapter);
+//        cullChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+//			@Override
+//			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//				SpinnerControl item = (SpinnerControl) cullChoice.getSelectedItem();
+//				setCullFace(item.arg);
+//			}
+//
+//			@Override
+//			public void onNothingSelected(AdapterView<?> parent) {
+//			}
+//        });
+//        cullChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+//        cullChoice.setSelection(locateSelection(adapter, mApp.getCullFace().ordinal()));
 
         TableRow tableRow;
         tableRow = new TableRow(this);
         tableRow.addView(eglChoice);
-        tableRow.addView(cullChoice);
+//        tableRow.addView(cullChoice);
         holder.addView(tableRow);
         
         tableRow = new TableRow(this);
@@ -441,7 +383,7 @@ public class Main extends Activity {
         mSurfaceView = new ControlSurfaceView(this);
         mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
         mSurfaceView.setId(1);
-        
+      
         // We want an 8888 pixel format because that's required for
         // a translucent window.
         // And we want a depth buffer.
@@ -462,6 +404,18 @@ public class Main extends Activity {
         }
         mSurfaceView.setRenderer(mRenderer);
         
+        mTwirlEventTap = new TwirlEventTap(mSurfaceView, new Rotate() {
+			@Override
+			public void rotate(double xAngle, double yAngle) {
+				mActiveShape.getMatrixMod().addRotate(xAngle, yAngle, 0.0);
+			}
+        });
+        mTwirlEventTap.setDoubleTap(new Runnable() {
+			@Override
+			public void run() {
+				mSurfaceView.setEventTap(mCamera);
+			}
+        });
         mCamera.setDoubleTap(new Runnable() {
 			@Override
 			public void run() {
@@ -565,13 +519,13 @@ public class Main extends Activity {
 		}
 	}
 	
-	void setCullFace(int face) {
-		if (mApp.getCullFace().ordinal() != face) {
-			mApp.setCullFace(Shape.GetCullFaceFromOrdinal(face));
-			mActiveShape.setCullFace(mApp.getCullFace());
-            mSurfaceView.requestRender();
-		}
-	}
+//	void setCullFace(int face) {
+//		if (mApp.getCullFace().ordinal() != face) {
+//			mApp.setCullFace(Shape.GetCullFaceFromOrdinal(face));
+//			mActiveShape.setCullFace(mApp.getCullFace());
+//            mSurfaceView.requestRender();
+//		}
+//	}
 	
 	void setColors(final Shape shape) {
     	if (shape.getNumVertexes() > 0) {
@@ -742,13 +696,4 @@ public class Main extends Activity {
 		Log.d(TAG, "Total diff=" + diff);
 	}
 	
-	static int locateSelection(ArrayAdapter<SpinnerControl> adapter, int code) {
-		for (int i = 0; i < adapter.getCount(); i++) {
-			if (adapter.getItem(i).arg == code) {
-				return i;
-			}
-		}
-		return 0;
-	}
-    
 }

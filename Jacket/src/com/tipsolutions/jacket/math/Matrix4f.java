@@ -16,8 +16,6 @@ public class Matrix4f {
         	 0, 1, 0, 0,
         	 0, 0, 1, 0,
         	 0, 0, 0, 1);
-        
-        android.opengl.Matrix matrix;
     }
     
     public Matrix4f(
@@ -64,6 +62,22 @@ public class Matrix4f {
     	setValue(2, 3, getValue(2, 3) + loc.getZ());
     }
     
+	public void addRotateDegrees(float angleX, float angleY, float angleZ) {
+		addRotate(Math.toDegrees(angleX), Math.toDegrees(angleY), Math.toDegrees(angleZ));
+	}
+    
+	// Radians
+	public void addRotate(double angleX, double angleY, double angleZ) {
+		addRotate((float) angleX, (float) angleY, (float) angleZ);
+	}
+    
+	// Radians
+	public void addRotate(float angleX, float angleY, float angleZ) {
+		Quaternion quat = getQuaternion();
+		Quaternion rot = new Quaternion().fromAngles(angleX, angleY, angleZ);
+		quat.multiply(rot);
+		quat.toRotationMatrix(this);
+	}
  
     /**
      * Multiplies the given vector by this matrix (v * M). If supplied, the result is stored into the supplied "store"

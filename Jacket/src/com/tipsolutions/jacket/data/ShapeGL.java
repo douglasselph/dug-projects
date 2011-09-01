@@ -9,22 +9,6 @@ public class ShapeGL extends Shape {
 	Color4f mColor = null;
 	Matrix4f mMatrixMod = null;
 	
-	public void addRotateDegrees(float angleX, float angleY, float angleZ) {
-		addRotate(Math.toDegrees(angleX), Math.toDegrees(angleY), Math.toDegrees(angleZ));
-	}
-	
-	// Radians
-	public void addRotate(float angleX, float angleY, float angleZ) {
-		Quaternion quat = getQuaternionMod();
-		Quaternion rot = new Quaternion().fromAngles(angleX, angleY, angleZ);
-		quat.multiply(rot);
-		quat.toRotationMatrix(mMatrixMod);
-	}
-	
-	public void addRotate(double angleX, double angleY, double angleZ) {
-		addRotate((float) angleX, (float) angleY, (float) angleZ);
-	}
-	
 	public void resetRotate() {
 		mMatrixMod = new Matrix4f();
 	}
@@ -49,7 +33,7 @@ public class ShapeGL extends Shape {
 	
 	// Get the modification matrix that lives on top of the object matrix.
 	// Will never return null.
-	protected Matrix4f getMatrixMod() {
+	public Matrix4f getMatrixMod() {
 		if (mMatrixMod == null) {
 			mMatrixMod = new Matrix4f(mMatrix);
 		}
