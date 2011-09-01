@@ -101,51 +101,39 @@ public class ParticleSystem {
 		protected Particle [] mList;
 		protected FloatBuf mVertexBuf;
 		protected ShortBuf mIndexBuf;
-		protected long mLastAddParticleTime; // Last time we added particles
 		
 		public void init() {
 			int size = (mEmitter.getCreatePerFrame() + mEmitter.getCreateVariance()) * mEmitter.getEnergyInitial();
 			mList = new Particle[size];
 			
-			int num = mEmitter.genCreateNum();
 			Particle sample = mEmitter.create();
 			int bufSize = size * sample.getNumVertex();
 			
 			mVertexBuf = new FloatBuf();
-			mIndexBuf = new ShortBuf();
 			mVertexBuf.alloc(bufSize*3);
-			ShortBuffer ibuf = mIndexBuf.alloc(bufSize);
-			
-			for (int i = 0; i < num; i++) {
-				mList[i] = mEmitter.create();
-				ibuf.put((short)i);
+			mIndexBuf = new ShortBuf();
+			mIndexBuf.alloc(bufSize);
+			mVertexBuf.getBuf().limit(0);
+			mIndexBuf.getBuf().limit(0);
+		}
+		
+		public void addParticles() {
+			int num = mEmitter.genCreateNum();
+			for (int i = 0; i < mList.length; i++) {
+				if (mList[i] == null) {
+					mList[i] = mEmitter.create();
+				} else if (!mList[i].isAlive()) {
+					mEmitter.reinit(mList[i]);
+				} else {
+					continue;
+				}
+				if (--num <= 0) {
+					break;
+				}
 			}
-			ibuf.limit(num);
-			
-			mVertexBuf.getBuf().limit(num*3);
-			
-			mLastAddParticleTime = System.currentTimeMillis();
 		}
 		
 		public void setAge() {
-			// Determine number of new particles to create
-			int times = mTiming.getAge(mLastAddParticleTime);
-			int num = 0;
-			for (int t = 0; t < times; t++) {
-    			num += mEmitter.genCreateNum();
-			}
-			if (num > 0) {
-				// Create new particles
-    			for (int i = 0; i < mList.length; i++) {
-    				if (mList[i] == null) {
-    					mList[i] = mEmitter.create();
-    				} else if (!mList[i].isAlive()) {
-    					mEmitter.reinit(mList[i]);
-    				}
-    			}
-			}
-			mLastAddParticleTime = mTiming.getCurTime();
-			
 			// Set ages of all particles
 			FloatBuffer vbuf = mVertexBuf.getBuf();
 			ShortBuffer ibuf = mIndexBuf.getBuf();
@@ -157,14 +145,20 @@ public class ParticleSystem {
 			ibuf.rewind();
 			
 			for (int i = 0; i < mList.length; i++) {
-				if (mList[i] == null) {
+				Particle part = mList[i];
+				if (part == null) {
 					break;
 				}
-				if (mList[i].isAlive()) {
-					mList[i].setAge(vbuf, i);
-					
-					if (mList[i].isAlive()) {
-						ibuf.put((short)i);
+				if (part.isAlive()) {
+					final int numVertex = part.getNumVertex();
+					if (vbuf.position() + numVertex*3 < vbuf.capacity() &&
+						ibuf.position() + numVertex < ibuf.capacity()) {
+    					part.setAge(vbuf, i);
+    					if (part.isAlive()) {
+    						for (int j = 0; j < numVertex; j++) {
+        						ibuf.put((short)(i+j));
+    						}
+    					}
 					}
 				}
 			}
@@ -228,6 +222,10 @@ public class ParticleSystem {
 			vec.normalize();
 			return vec.multiply(strength);
 		}
+		
+		public float getMaxDistance() {
+			return (mStrength + mStrengthVariance) * (mMaxAgeInitial + mMaxAgeInitialVariance);
+		}
 	};
 	
 	protected class Timing {
@@ -276,12 +274,12 @@ public class ParticleSystem {
 	// Shared texture used to render each particle
 	protected Texture mTexture = null;
 	// Common force applied to all particles
-	protected Vector3f mForce;
+	protected Vector3f mForce = new Vector3f();
 	// World location and rotation of particlar system
 	protected Matrix4f mMatrix = new Matrix4f();
 	// Used to lookup colors used in particles;
 	protected ColorTable mColorTable = null;
-	protected Color4f mGeneralColor = null;
+	protected Color4f mGeneralColor = Color4f.BLACK;
 	// Random generator 
 	protected Random mRandom;
 	// Used to control the rate of frame draws
@@ -316,6 +314,7 @@ public class ParticleSystem {
 	
 	public void onDraw(MatrixTrackingGL gl) {
 		if (mTiming.ready()) {
+			mParticles.addParticles();
 			mParticles.setAge();
 		}
 		{
@@ -350,6 +349,14 @@ public class ParticleSystem {
 	
 	public Matrix4f getMatrix() {
 		return mMatrix;
+	}
+	
+	public float getMaxDistance() {
+		return mEmitter.getMaxDistance();
+	}
+	
+	public int getFrameIntervalMs() {
+		return mTiming.mFrameIntervalMs;
 	}
 	
 }

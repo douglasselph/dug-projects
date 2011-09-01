@@ -80,20 +80,6 @@ public class Main extends Activity {
         mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
         mSurfaceView.setId(1);
         
-        final int frameIntervalMs = 30;
-        final int frameVariance = 5;
-        final int lifeMs = 3000;
-        final int maxAge = lifeMs/frameIntervalMs;
-        final int maxAgeVar = 10;
-        final float strength = 0.1f;
-        final float strengthVar = 0.03f;
-        
-        mParticleSystem = new ParticleSystem(mSurfaceView, frameIntervalMs);
-        mParticleSystem.setEmitter(mParticleSystem.new Emitter(
-        		frameIntervalMs, frameVariance, 
-        		maxAge, maxAgeVar, 
-        		strength, strengthVar));
-        
         mRenderer = new MyRenderer(mSurfaceView, mCamera);
         mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
         
@@ -117,6 +103,11 @@ public class Main extends Activity {
 				mSurfaceView.setEventTap(mTwirlEventTap);
 			}
         });
+        
+        final int frameIntervalMs = 30;
+        mParticleSystem = new ParticleSystem(mSurfaceView, frameIntervalMs);
+        setEmitter(EMIT_DEFAULT);
+        
         View controls = createControls();
       
         RelativeLayout.LayoutParams params;
@@ -202,6 +193,29 @@ public class Main extends Activity {
     }
     
     void setEmitter(int code) {
+    	switch (code) {
+    		case EMIT_DEFAULT:
+    		default:
+    			final int create = 30;
+    			final int createVar = 5;
+    			final int lifeMs = 3000;
+    			final int maxAge = lifeMs/mParticleSystem.getFrameIntervalMs();
+    			final int maxAgeVar = 10;
+    			final float strength = 0.1f;
+    			final float strengthVar = 0.03f;
+    			
+                mParticleSystem.setEmitter(mParticleSystem.new Emitter(
+                		create, createVar, 
+                		maxAge, maxAgeVar, 
+                		strength, strengthVar));
+                break;
+    	}
+    	mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
+    	mCamera.setLocation(mCamera.getLookAt().dup());
+    	mCamera.getLocation().add(0, 0, mParticleSystem.getMaxDistance());
+        
+        mSurfaceView.setEventTap(mCamera);
+        mSurfaceView.requestRender();
     }
     
 	void setBlendTexture(int param) {
