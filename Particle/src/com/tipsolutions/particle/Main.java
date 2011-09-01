@@ -16,6 +16,7 @@ import android.widget.TableRow;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.tipsolutions.jacket.effect.Emitter;
+import com.tipsolutions.jacket.effect.EmitterTex;
 import com.tipsolutions.jacket.effect.ParticleSystem;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
@@ -30,6 +31,7 @@ import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
 public class Main extends Activity {
 
 	static final int EMIT_DEFAULT = 0;
+	static final int EMIT_TEXTURE = 1;
 	
 	class MyRenderer extends ControlRenderer {
 		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
@@ -139,6 +141,7 @@ public class Main extends Activity {
         		android.R.layout.simple_spinner_item,
         		new SpinnerControl[] {
         		  new SpinnerControl("Default", EMIT_DEFAULT),
+        		  new SpinnerControl("Tex", EMIT_TEXTURE),
                 });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         emitChoice.setAdapter(adapter);
@@ -194,8 +197,29 @@ public class Main extends Activity {
     
     void setEmitter(int code) {
     	switch (code) {
+    		case EMIT_TEXTURE:
+    		{
+    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+    			final int frameIntervalMs = 30;
+    			final int create = 30;
+    			final int createVar = 5;
+    			final int lifeMs = 3000;
+    			final int maxAge = lifeMs/frameIntervalMs;
+    			final int maxAgeVar = 10;
+    			final float strength = 0.1f;
+    			final float strengthVar = 0.03f;
+    			
+                mParticleSystem.setEmitter(new EmitterTex(
+                		tex, 0.2f,
+                		frameIntervalMs,
+                		create, createVar, 
+                		maxAge, maxAgeVar, 
+                		strength, strengthVar));
+    			break;
+    		}
     		case EMIT_DEFAULT:
     		default:
+    		{
     			final int frameIntervalMs = 30;
     			final int create = 30;
     			final int createVar = 5;
@@ -211,6 +235,7 @@ public class Main extends Activity {
                 		maxAge, maxAgeVar, 
                 		strength, strengthVar));
                 break;
+    		}
     	}
     	mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
     	mCamera.setLocation(mCamera.getLookAt().dup());

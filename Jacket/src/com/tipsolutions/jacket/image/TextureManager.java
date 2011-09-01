@@ -74,7 +74,7 @@ public class TextureManager {
 		}
 		
 		// If a texture is shared across multiple shapes, this alone is called
-		public void onDraw(MatrixTrackingGL gl) {
+		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf) {
 			gl.glEnable(GL10.GL_BLEND); 
 			gl.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
 			
@@ -90,14 +90,9 @@ public class TextureManager {
 					GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
 		
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-		}
-			
-		// Otherwise, if one texture and just one shape, call this.
-		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf) {
-			onDraw(gl);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
 		}
-		
+			
 		// Expected to be one of GL10.GL_MODULATE, GL10.GL_DECAL, 
 		//   GL10.GL_BLEND, or GL10.GL_REPLACE;
 		public void setBlendParam(int param) {

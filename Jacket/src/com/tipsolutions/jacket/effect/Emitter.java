@@ -7,12 +7,18 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.util.Log;
+
+import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
 
 public class Emitter {
+	
+	static Boolean DEBUG = true;
 	
 	public class ColorTable {
 		ArrayList<Color4f> mColors = new ArrayList<Color4f>();
@@ -24,8 +30,10 @@ public class Emitter {
 		}
 	};
 	
+	static protected Vector3f tempVec = new Vector3f();
+	
 	// By default the base class represents a simple point
-	public class Particle {
+	protected class Particle {
 		protected Vector3f mLastPos;
 		protected Vector3f mVelocity;
 		protected long mBirthtime; // time particle was born
@@ -62,24 +70,31 @@ public class Emitter {
 			return mGeneralColor;
 		}
 		
-		public void setAge(FloatBuffer buf, int index) {
+		public void setLoc(int index) {
 			int age = getAge();
 			
 			if (age <= mMaxAge) {
-    			float x = (mVelocity.getX()+mForce.getX())*age;
-    			float y = (mVelocity.getY()+mForce.getY())*age;
-    			float z = (mVelocity.getZ()+mForce.getZ())*age;
-    			
-				int pos = index*3;
-    			buf.position(pos);
-    			buf.put(x).put(y).put(z);
+    			Vector3f loc = getLoc(age);
+    			mVertexFbuf.position(getVbufPos(index));
+    			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
 			} else {
 				mMaxAge = 0;
 			}
 		}
 		
+		protected Vector3f getLoc(int age) {
+			tempVec.setX((mVelocity.getX()+mForce.getX())*age);
+			tempVec.setY((mVelocity.getY()+mForce.getY())*age);
+			tempVec.setZ((mVelocity.getZ()+mForce.getZ())*age);
+			return tempVec;
+		}
+		
 		public boolean isAlive() {
 			return mMaxAge > 0;
+		}
+		
+		public int getVbufPos(int index) {
+			return index*3*getNumVertex();
 		}
 		
 		public int getNumVertex() {
@@ -90,15 +105,13 @@ public class Emitter {
 	protected class Particles {
 		// List of particles
 		protected Particle [] mList;
-		protected FloatBuf mVertexBuf;
-		protected ShortBuf mIndexBuf;
 		
 		public void init() {
 			int size = (getCreatePerFrame() + getCreateVariance()) * getEnergyInitial();
 			mList = new Particle[size];
 			
-			Particle sample = create();
-			int bufSize = size * sample.getNumVertex();
+			Particle sample = createParticle();
+			int bufSize = mParticles.mList.length * sample.getNumVertex();
 			
 			mVertexBuf = new FloatBuf();
 			mVertexBuf.alloc(bufSize*3);
@@ -106,13 +119,15 @@ public class Emitter {
 			mIndexBuf.alloc(bufSize);
 			mVertexBuf.getBuf().limit(0);
 			mIndexBuf.getBuf().limit(0);
+			
+			mNumAlive = 0;
 		}
 		
 		public void addParticles() {
 			int num = genCreateNum();
 			for (int i = 0; i < mList.length; i++) {
 				if (mList[i] == null) {
-					mList[i] = create();
+					mList[i] = createParticle();
 				} else if (!mList[i].isAlive()) {
 					reinit(mList[i]);
 				} else {
@@ -124,16 +139,22 @@ public class Emitter {
 			}
 		}
 		
-		public void setAge() {
+		public Particle createParticle() {
+			return new Particle(genVelocity(), genMaxAge());
+		}
+		
+		public void setLoc() {
 			// Set ages of all particles
-			FloatBuffer vbuf = mVertexBuf.getBuf();
-			ShortBuffer ibuf = mIndexBuf.getBuf();
+			mVertexFbuf = mVertexBuf.getBuf();
+			mIndexSbuf = mIndexBuf.getBuf();
+
+			mVertexFbuf.limit(mVertexFbuf.capacity());
+			mIndexSbuf.limit(mIndexSbuf.capacity());
+
+			mVertexFbuf.rewind();
+			mIndexSbuf.rewind();
 			
-			vbuf.limit(vbuf.capacity());
-			ibuf.limit(ibuf.capacity());
-			
-			vbuf.rewind();
-			ibuf.rewind();
+			mNumAlive = 0;
 			
 			for (int i = 0; i < mList.length; i++) {
 				Particle part = mList[i];
@@ -142,19 +163,36 @@ public class Emitter {
 				}
 				if (part.isAlive()) {
 					final int numVertex = part.getNumVertex();
-					if (vbuf.position() + numVertex*3 < vbuf.capacity() &&
-						ibuf.position() + numVertex < ibuf.capacity()) {
-    					part.setAge(vbuf, i);
-    					if (part.isAlive()) {
-    						for (int j = 0; j < numVertex; j++) {
-        						ibuf.put((short)(i+j));
-    						}
-    					}
+					
+					if (DEBUG) {
+						if (!checkAdd(numVertex)) {
+							continue;
+						}
+					}
+					part.setLoc(i);
+					if (part.isAlive()) {
+						for (int j = 0; j < numVertex; j++) {
+							mIndexSbuf.put((short)(i+j));
+						}
+						mNumAlive++;
 					}
 				}
 			}
-			vbuf.limit(vbuf.position());
-			ibuf.limit(ibuf.position());
+			mVertexFbuf.limit(mVertexFbuf.position());
+			mIndexSbuf.limit(mIndexSbuf.position());
+		}
+		
+		boolean checkAdd(int numVertex) {
+			boolean flag = true;
+			if (mVertexFbuf.position() + numVertex*3 >= mVertexFbuf.capacity()) {
+				Log.e(Constants.TAG, "Too many vertexes: " + mVertexFbuf.position() + "+3*" + numVertex + ">=" + mVertexFbuf.capacity());
+				flag = false;
+			}
+			if (mIndexSbuf.position() + numVertex >= mIndexSbuf.capacity()) {
+				Log.e(Constants.TAG, "Too many indexes: " + mIndexSbuf.position() + "+" + numVertex + ">=" + mIndexSbuf.capacity());
+				flag = false;
+			}
+			return flag;
 		}
 	};
 	
@@ -163,8 +201,7 @@ public class Emitter {
 		protected long mCurTime;  // This time
 		protected int mFrameIntervalMs; // Number of milliseconds per frame
 		protected boolean mScheduled = false;
-		
-		Timer timer = new Timer();
+		protected Timer mTimer = new Timer();
 		
 		public Timing(int intervalMs) {
 			mFrameIntervalMs = intervalMs;
@@ -187,7 +224,7 @@ public class Emitter {
 			mLastDraw = mCurTime;
 			
 			if (!mScheduled) {
-    			timer.schedule(new TimerTask() {
+    			mTimer.schedule(new TimerTask() {
     				@Override
     				public void run() {
     					mScheduled = false;
@@ -223,6 +260,13 @@ public class Emitter {
 	// Common force applied to all particles
 	protected Vector3f mForce = new Vector3f();
 	protected Particles mParticles;
+	protected int mNumAlive = 0;
+	
+	protected FloatBuf mVertexBuf;
+	protected FloatBuffer mVertexFbuf;
+	
+	protected ShortBuf mIndexBuf;
+	protected ShortBuffer mIndexSbuf;
 	
 	public Emitter(int frameInterval,
 				   int createPerFrame, int createVariance, 
@@ -255,11 +299,7 @@ public class Emitter {
 		mRandom = new Random();
 	}
 	
-	// Note: the particles location are taken relative to the system.
-	public Particle create() {
-		return new Particle(genVelocity(), genMaxAge());
-	}
-	
+
 	public void reinit(Particle part) {
 		part.reinit(genVelocity(), genMaxAge());
 	}
@@ -287,5 +327,29 @@ public class Emitter {
 	
 	public float getMaxDistance() {
 		return (mStrength + mStrengthVariance) * (mMaxAgeInitial + mMaxAgeInitialVariance);
+	}
+	
+	public Texture getTexture() {
+		return null;
+	}
+	
+	public FloatBuffer getVertexBuf() {
+		return mVertexBuf.getBuf();
+	}
+	
+	public FloatBuffer getTextureBuf() {
+		return null;
+	}
+	
+	public int getParticleCount() {
+		return mNumAlive;
+	}
+	
+	public ShortBuffer getIndexBuf() {
+		return mIndexBuf.getBuf();
+	}
+	
+	public ShortBuffer getIndexBuf(int i) {
+		return null;
 	}
 }
