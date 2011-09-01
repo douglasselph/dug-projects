@@ -15,6 +15,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.AdapterView.OnItemSelectedListener;
 
+import com.tipsolutions.jacket.effect.Emitter;
 import com.tipsolutions.jacket.effect.ParticleSystem;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
@@ -81,7 +82,7 @@ public class Main extends Activity {
         mSurfaceView.setId(1);
         
         mRenderer = new MyRenderer(mSurfaceView, mCamera);
-        mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
+        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
         
         mSurfaceView.setRenderer(mRenderer);
        
@@ -104,8 +105,7 @@ public class Main extends Activity {
 			}
         });
         
-        final int frameIntervalMs = 30;
-        mParticleSystem = new ParticleSystem(mSurfaceView, frameIntervalMs);
+        mParticleSystem = new ParticleSystem(mSurfaceView);
         setEmitter(EMIT_DEFAULT);
         
         View controls = createControls();
@@ -196,15 +196,17 @@ public class Main extends Activity {
     	switch (code) {
     		case EMIT_DEFAULT:
     		default:
+    			final int frameIntervalMs = 30;
     			final int create = 30;
     			final int createVar = 5;
     			final int lifeMs = 3000;
-    			final int maxAge = lifeMs/mParticleSystem.getFrameIntervalMs();
+    			final int maxAge = lifeMs/frameIntervalMs;
     			final int maxAgeVar = 10;
     			final float strength = 0.1f;
     			final float strengthVar = 0.03f;
     			
-                mParticleSystem.setEmitter(mParticleSystem.new Emitter(
+                mParticleSystem.setEmitter(new Emitter(
+                		frameIntervalMs,
                 		create, createVar, 
                 		maxAge, maxAgeVar, 
                 		strength, strengthVar));
