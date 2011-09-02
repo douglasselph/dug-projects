@@ -13,10 +13,9 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
-import android.util.Log;
 
-import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.misc.Msg;
 
 public class TextureManager {
 	
@@ -55,16 +54,10 @@ public class TextureManager {
     				init(is, gl);
     			} catch (Exception ex) {
     				if (mFilename != null) {
-    					StringBuffer sbuf = new StringBuffer();
-    					sbuf.append("File:");
-    					sbuf.append("\"");
-    					sbuf.append(mFilename);
-    					sbuf.append("\", ");
-    					sbuf.append("got exception: ");
-    					sbuf.append(ex.getMessage());
-    					throw new IOException(sbuf.toString());
+    					throw new IOException(Msg.build
+        					("File: \"", mFilename, "\", got exception: ", ex.getMessage()));
     				} else {
-        				Log.e(Constants.TAG, ex.getMessage());
+    					Msg.err(ex.getMessage());
     				}
     			} finally {
     				try {
@@ -72,7 +65,7 @@ public class TextureManager {
     						is.close();
     					}
     				} catch(IOException e) {
-    					Log.e(Constants.TAG, e.getMessage());
+    					Msg.err(e.getMessage());
     				}
     			}
 			}
@@ -100,7 +93,7 @@ public class TextureManager {
 	        try {
 	            bitmap = BitmapFactory.decodeStream(is);
 	        } catch (Exception ex) {
-	        	Log.e(Constants.TAG, ex.getMessage());
+	        	Msg.err(ex.getMessage());
 	        }
 	        if (bitmap != null) {
 	        	Bitmap flipped = ImageUtils.flipRows(bitmap);
@@ -116,7 +109,8 @@ public class TextureManager {
 				try {
     				init(gl);
 				} catch (Exception ex) {
-					Log.e(Constants.TAG, ex.getMessage());
+					Msg.err(ex.getMessage());
+					return;
 				}
 			}
 			gl.glEnable(GL10.GL_BLEND); 

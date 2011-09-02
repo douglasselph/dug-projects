@@ -1,7 +1,6 @@
 package com.tipsolutions.jacket.math;
 
 public class Constants {
-	public static final String TAG = "Jacket";
 	public static final Boolean LOG = true;
 	
 	public static final double TWO_PI = 2 * Math.PI;

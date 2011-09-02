@@ -11,26 +11,48 @@ import android.util.Log;
 
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
 
 public class Emitter {
 	
-	static Boolean DEBUG = true;
-	
-	public class ColorTable {
-		ArrayList<Color4f> mColors = new ArrayList<Color4f>();
+	protected class ColorTable {
+		ArrayList<Color4f> mList = new ArrayList<Color4f>();
 		
-		public int numColors() { return mColors.size(); }
-		
-		public Color4f getColor(int age) {
-			return mColors.get(age % mColors.size());
+		public void clear() {
+			mList.clear();
 		}
-	};
-	
-	static protected Vector3f tempVec = new Vector3f();
+		
+		public void setSize(int size) {
+			mList.clear();
+			mList.ensureCapacity(size);
+			
+			Color4f diffColor = new Color4f(
+					mEndColor.getRed() - mStartColor.getRed(),
+					mEndColor.getGreen() - mStartColor.getGreen(),
+					mEndColor.getBlue() - mStartColor.getBlue(),
+					mEndColor.getAlpha() - mStartColor.getAlpha());
+			
+			float ratio;
+			
+			for (int i = 0; i < size; i++) {
+				ratio = (float)i/(float)(size-1);
+				mList.add(new Color4f(
+						mStartColor.getRed()+diffColor.getRed()*ratio,
+						mStartColor.getGreen()+diffColor.getGreen()*ratio,
+						mStartColor.getBlue()+diffColor.getBlue()*ratio,
+						mStartColor.getAlpha()+diffColor.getAlpha()*ratio));
+			}
+		}
+		
+		public Color4f getColor(int index) {
+			if (index >= mList.size()) {
+				index = mList.size()-1;
+			}
+			return mList.get(index);
+		}
+	}
 	
 	// By default the base class represents a simple point
 	protected class Particle {
@@ -38,25 +60,9 @@ public class Emitter {
 		protected Vector3f mVelocity;
 		protected long mBirthtime; // time particle was born
 		protected int mMaxAge;
-		protected boolean mDoColor; // Lookup in color table.
-		
-		public Particle(Vector3f velocity, boolean doColor) {
-			mLastPos = null;
-			mDoColor = doColor;
-			mVelocity = velocity;
-			mBirthtime = mTiming.getCurTime();
-		}
 		
 		public Particle(Vector3f velocity, int maxAge) {
 			reinit(velocity, maxAge);
-		}
-		
-		public void reinit(Vector3f velocity, int maxAge) {
-			mLastPos = null;
-			mVelocity = velocity;
-			mDoColor = false;
-			mBirthtime = mTiming.getCurTime();
-			mMaxAge = maxAge;
 		}
 		
 		public int getAge() {
@@ -64,22 +70,7 @@ public class Emitter {
 		}
 		
 		public Color4f getColor() {
-			if (mDoColor) {
-				mColorTable.getColor(getAge());
-			}
-			return mGeneralColor;
-		}
-		
-		public void setLoc(int index) {
-			int age = getAge();
-			
-			if (age <= mMaxAge) {
-    			Vector3f loc = getLoc(age);
-    			mVertexFbuf.position(getVPos(index));
-    			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
-			} else {
-				mMaxAge = 0;
-			}
+			return mColorTable.getColor(getAge());
 		}
 		
 		protected Vector3f getLoc(int age) {
@@ -89,39 +80,51 @@ public class Emitter {
 			return tempVec;
 		}
 		
-		public boolean isAlive() {
-			return mMaxAge > 0;
+		public short getVNum() {
+			return 1;
 		}
 		
-		public int getNumVertex() {
+		public short getINum() {
 			return 1;
 		}
 		
 		public int getVPos(int index) {
-			return index*3*getNumVertex();
+			return index*3*getVNum();
+		}
+		
+		public boolean isAlive() {
+			return mMaxAge > 0;
+		}
+		
+		public void reinit(Vector3f velocity, int maxAge) {
+			mLastPos = null;
+			mVelocity = velocity;
+			mBirthtime = mTiming.getCurTime();
+			mMaxAge = maxAge;
+		}
+		
+		public boolean setLoc(int index) {
+			int age = getAge();
+			
+			if (age <= mMaxAge) {
+    			Vector3f loc = getLoc(age);
+    			int vpos = getVPos(index);
+    			mVertexFbuf.position(vpos);
+    			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
+    			
+    			mIndexSbuf.put((short)vpos);
+			} else {
+				mMaxAge = 0;
+			}
+			return (mMaxAge > 0);
 		}
 	};
 	
 	protected class Particles {
 		// List of particles
 		protected Particle [] mList;
-		
-		public void init() {
-			int size = (getCreatePerFrame() + getCreateVariance()) * getEnergyInitial();
-			mList = new Particle[size];
-			
-			Particle sample = createParticle();
-			int bufSize = mParticles.mList.length * sample.getNumVertex();
-			
-			mVertexBuf = new FloatBuf();
-			mVertexBuf.alloc(bufSize*3);
-			mIndexBuf = new ShortBuf();
-			mIndexBuf.alloc(bufSize);
-			mVertexBuf.getBuf().limit(0);
-			mIndexBuf.getBuf().limit(0);
-			
-			mNumAlive = 0;
-		}
+		protected short vNum;
+		protected short iNum;
 		
 		public void addParticles() {
 			int num = genCreateNum();
@@ -139,10 +142,51 @@ public class Emitter {
 			}
 		}
 		
+//		boolean checkAdd(int numVertex) {
+//			boolean flag = true;
+//			if (mVertexFbuf.position() + numVertex*3 >= mVertexFbuf.capacity()) {
+//				Msg.err("Too many vertexes: " + mVertexFbuf.position() + "+3*" + numVertex + ">=" + mVertexFbuf.capacity());
+//				flag = false;
+//			}
+//			if (mIndexSbuf.position() + numVertex >= mIndexSbuf.capacity()) {
+//				Msg.err("Too many indexes: " + mIndexSbuf.position() + "+" + numVertex + ">=" + mIndexSbuf.capacity());
+//				flag = false;
+//			}
+//			return flag;
+//		}
+		
 		public Particle createParticle() {
 			return new Particle(genVelocity(), genMaxAge());
 		}
 
+		public void init() {
+			int size = (getCreatePerFrame() + getCreateVar()) * getMaxAge();
+			mList = new Particle[size];
+			
+			Particle sample = createParticle();
+			vNum = sample.getVNum();
+			iNum = sample.getINum();
+			
+			int bufSize = mParticles.mList.length * vNum;
+			
+			mVertexBuf = new FloatBuf();
+			mVertexBuf.alloc(bufSize*3);
+			mVertexBuf.getBuf().limit(0);
+			
+			bufSize = mParticles.mList.length * iNum;
+			mIndexBuf = new ShortBuf();
+			mIndexBuf.alloc(bufSize);
+			mIndexBuf.getBuf().limit(0);
+			
+			mNumAlive = 0;
+			
+			if (hasParticleColors()) {
+				mColorTable.setSize(mMaxAge + mMaxAgeVar);
+			} else {
+				mColorTable.clear();
+			}
+		}
+		
 		public void setLoc() {
 			// Set ages of all particles
 			mVertexFbuf = mVertexBuf.getBuf();
@@ -162,19 +206,13 @@ public class Emitter {
 					break;
 				}
 				if (part.isAlive()) {
-					final int nVertex = part.getNumVertex();
-					
-					if (DEBUG) {
-						if (!checkAdd(nVertex)) {
-							continue;
-						}
-					}
-					part.setLoc(i);
-					if (part.isAlive()) {
-						final int iPos = nVertex*i;
-						for (int j = 0; j < nVertex; j++) {
-							mIndexSbuf.put((short)(iPos+j));
-						}
+//					final int nVertex = part.getNumVertex();
+//					if (DEBUG) {
+//						if (!checkAdd(part.get)) {
+//							continue;
+//						}
+//					}
+					if (part.setLoc(i)) {
 						mNumAlive++;
 					}
 				}
@@ -182,20 +220,7 @@ public class Emitter {
 			mVertexFbuf.limit(mVertexFbuf.position());
 			mIndexSbuf.limit(mIndexSbuf.position());
 		}
-		
-		boolean checkAdd(int numVertex) {
-			boolean flag = true;
-			if (mVertexFbuf.position() + numVertex*3 >= mVertexFbuf.capacity()) {
-				Log.e(Constants.TAG, "Too many vertexes: " + mVertexFbuf.position() + "+3*" + numVertex + ">=" + mVertexFbuf.capacity());
-				flag = false;
-			}
-			if (mIndexSbuf.position() + numVertex >= mIndexSbuf.capacity()) {
-				Log.e(Constants.TAG, "Too many indexes: " + mIndexSbuf.position() + "+" + numVertex + ">=" + mIndexSbuf.capacity());
-				flag = false;
-			}
-			return flag;
-		}
-	};
+	}
 	
 	protected class Timing {
 		protected long mLastDraw; // Time of last draw
@@ -208,12 +233,12 @@ public class Emitter {
 			mFrameIntervalMs = intervalMs;
 		}
 		
-		public long getCurTime() {
-			return mCurTime;
-		}
-		
 		public int getAge(long startTime) {
 			return (int) (mCurTime - startTime) / mFrameIntervalMs;
+		}
+		
+		public long getCurTime() {
+			return mCurTime;
 		}
 		
 		boolean ready() {
@@ -237,25 +262,28 @@ public class Emitter {
 		}
 	};
 	
+	static protected Vector3f tempVec = new Vector3f();
+	
 	// The number of new particles to create per frame:
-	protected int mCreatePerFrame;
+	protected int mCreatePerFrame = 30;
 	// The largest range of variance to add to mCreatePerFrame:
-	protected int mCreateVariance;
+	protected int mCreateVar = 5;
 	// Mid energy of newly created particle (age):
-	protected int mMaxAgeInitial;
+	protected int mMaxAge = 100;
 	// Amount of variance of starting energy level (age):
-	protected int mMaxAgeInitialVariance;
+	protected int mMaxAgeVar = 10;
 	// Mid strength for setting initial velocity of particle (coords per frame):
-	protected float mStrength;
+	protected float mStrength = 0.05f;
 	// Amount of variance of strength:
-	protected float mStrengthVariance;
+	protected float mStrengthVar = 0.01f;
 	// Control when each draw occurs
 	protected Timing mTiming;
 	// Associated ParticleSystem
 	protected ParticleSystem mParticleSystem;
-	// ColorTable
-	protected ColorTable mColorTable = null;
-	protected Color4f mGeneralColor = Color4f.BLACK;
+	// Colors
+	protected Color4f mStartColor = Color4f.BLACK;
+	protected Color4f mEndColor = null;
+	protected ColorTable mColorTable = new ColorTable();
 	// Random generator 
 	protected Random mRandom;
 	// Common force applied to all particles
@@ -269,59 +297,22 @@ public class Emitter {
 	protected ShortBuf mIndexBuf;
 	protected ShortBuffer mIndexSbuf;
 	
-	public Emitter(int frameInterval,
-				   int createPerFrame, int createVariance, 
-				   int maxAgeInitial, int maxAgeVariance,
-				   float strength, float strengthVariance) {
-		mCreatePerFrame = createPerFrame;
-		mCreateVariance = createVariance;
-		mMaxAgeInitial = maxAgeInitial;
-		mMaxAgeInitialVariance = maxAgeVariance;
-		mStrength = strength;
-		mStrengthVariance = strengthVariance;
-		mTiming = new Timing(frameInterval);
+	public Emitter() {
+		mTiming = new Timing(30);
 		mParticles = new Particles();
 		mRandom = new Random();
 	}
 	
-	public void init() {
-		mParticles.init();
-	}
-	
-	public void setParticleSystem(ParticleSystem ps) {
-		mParticleSystem = ps;
-	}
-	
-	public void setRandomSeed(long seed) {
-		mRandom = new Random(seed);
-	}
-	
-	public void setRandom() {
-		mRandom = new Random();
-	}
-	
-	public void setGeneralColor(Color4f color) {
-		mGeneralColor = color;
-	}
-
-	public void reinit(Particle part) {
-		part.reinit(genVelocity(), genMaxAge());
-	}
-	
-	public int getCreatePerFrame() { return mCreatePerFrame; }
-	public int getCreateVariance() { return mCreateVariance; }
-	public int getEnergyInitial() { return mMaxAgeInitial; }
-	
 	public int genCreateNum() {
-		return mCreatePerFrame + mRandom.nextInt(mCreateVariance*2+1) - mCreateVariance;
+		return mCreatePerFrame + mRandom.nextInt(mCreateVar*2+1) - mCreateVar;
 	}
 	
 	protected int genMaxAge() {
-		return mMaxAgeInitial + mRandom.nextInt(mMaxAgeInitialVariance*2+1) - mMaxAgeInitialVariance;
+		return mMaxAge + mRandom.nextInt(mMaxAgeVar*2+1) - mMaxAgeVar;
 	}
 	
 	protected Vector3f genVelocity() {
-		float strength = mStrength + (mStrengthVariance * mRandom.nextFloat() * 2) - mStrengthVariance;
+		float strength = mStrength + (mStrengthVar * mRandom.nextFloat() * 2) - mStrengthVar;
 		Vector3f vec = new Vector3f(mRandom.nextFloat()*2-1,
 								    mRandom.nextFloat()*2-1,
 								    mRandom.nextFloat()*2-1);
@@ -329,35 +320,79 @@ public class Emitter {
 		return vec.multiply(strength);
 	}
 	
+	public Color4f getGeneralColor() {
+		if (mStartColor == null && mEndColor == null) {
+			return null;
+		}
+		if (mStartColor == null) {
+			return mEndColor;
+		}
+		if (mEndColor == null) {
+			return mStartColor;
+		}
+		if (mStartColor.equals(mEndColor)) {
+			return mStartColor;
+		}
+		return null;
+	}
+	
+	public boolean hasParticleColors() {
+		return mStartColor != null && mEndColor != null;
+	}
+	
+	public int getCreatePerFrame() { return mCreatePerFrame; }
+	public int getCreateVar() { return mCreateVar; }
+	public int getFrameIntervalMs() { return mTiming.mFrameIntervalMs; }
+	public Color4f getStartColor() { return mStartColor; }
+	public Color4f getEndColor() { return mEndColor; }
+	public int getMaxAge() { return mMaxAge; }
+	public int getMaxAgeVar() { return mMaxAgeVar; }
+	public float getStrength() { return mStrength; }
+	public float getStrengthVar() { return mStrengthVar; }
+	
+	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
+	public ShortBuffer getIndexBuf(int i) { return null; }
+	
 	public float getMaxDistance() {
-		return (mStrength + mStrengthVariance) * (mMaxAgeInitial + mMaxAgeInitialVariance);
+		return (mStrength + mStrengthVar) * (mMaxAge + mMaxAgeVar);
 	}
 	
-	public Texture getTexture() {
-		return null;
+	public Color4f getParticleColor(int i) {
+		return mParticles.mList[i].getColor();
 	}
 	
-	public FloatBuffer getVertexBuf() {
-		return mVertexBuf.getBuf();
+	public FloatBuffer getColorBuf() { return null; }
+	public FloatBuffer getNormalBuf() { return null; }
+	public int getParticleCount() { return mNumAlive; }
+	public Texture getTexture() { return null; }
+	public FloatBuffer getTextureBuf() { return null; }
+	public FloatBuffer getVertexBuf() { return mVertexBuf.getBuf(); }
+	
+	public void init() {
+		mParticles.init();
 	}
 	
-	public FloatBuffer getNormalBuf() {
-		return null;
+	public void reinit(Particle part) {
+		part.reinit(genVelocity(), genMaxAge());
 	}
 	
-	public FloatBuffer getTextureBuf() {
-		return null;
+	public void setCreatePerFrame(int v) { mCreatePerFrame = v; }
+	public void setCreateVar(int v) { mCreateVar = v; }
+	public void setFrameIntervalMs(int v) { mTiming.mFrameIntervalMs = v; }
+	
+	public void setGeneralColor(Color4f color) {
+		mStartColor = color;
+		mEndColor = null;
 	}
 	
-	public int getParticleCount() {
-		return mNumAlive;
-	}
+	public void setStartColor(Color4f color) { mStartColor = color; }
+	public void setEndColor(Color4f color) { mEndColor = color; }
+	public void setMaxAge(int v) { mMaxAge = v; }
+	public void setMaxAgeVar(int v) { mMaxAgeVar = v; }
+	public void setStrength(float v) { mStrength = v; }
+	public void setStrengthVar(float v) { mStrengthVar = v; }
 	
-	public ShortBuffer getIndexBuf() {
-		return mIndexBuf.getBuf();
-	}
-	
-	public ShortBuffer getIndexBuf(int i) {
-		return null;
-	}
+	public void setParticleSystem(ParticleSystem ps) { mParticleSystem = ps; }
+	public void setRandom() { mRandom = new Random(); }
+	public void setRandomSeed(long seed) { mRandom = new Random(seed); }
 }

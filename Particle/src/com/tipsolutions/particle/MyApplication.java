@@ -9,7 +9,7 @@ public class MyApplication extends Application {
 	static final String TAG = "Particle";
 	
     int mBlenderControl = GL10.GL_MODULATE;
-    int mEmitChoice = 0;
+    int mEmitChoice = -1;
     
     public int getBlenderControl() {
     	return mBlenderControl;

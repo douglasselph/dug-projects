@@ -122,4 +122,9 @@ public class Color4f {
     	buf.put(mR).put(mG).put(mB).put(mA);
     	return this;
     }
+
+	public boolean equals(Color4f o) {
+		return mR == o.mR && mG == o.mG && mB == o.mB && mA == o.mA;
+	}
+    
 }

@@ -4,12 +4,11 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.misc.Msg;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
 	
@@ -45,7 +44,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 			try {
     			mTM.init(getGL(gl));
 			} catch (Exception ex) {
-				Log.e(Constants.TAG, ex.getMessage());
+				Msg.err(ex.getMessage());
 			}
 			mInitializedTextures = true;
 		} else {

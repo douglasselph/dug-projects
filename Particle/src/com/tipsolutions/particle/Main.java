@@ -196,26 +196,14 @@ public class Main extends Activity {
     }
     
     void setEmitter(int code) {
+    	if (mApp.getEmitChoice() == code) {
+    		return;
+    	}
     	switch (code) {
     		case EMIT_TEXTURE:
     		{
-    			final int frameIntervalMs = 30;
-    			final int create = 30;
-    			final int createVar = 5;
-    			final float size = 0.2f;
-    			final int lifeMs = 3000;
-    			final int maxAge = lifeMs/frameIntervalMs;
-    			final int maxAgeVar = 10;
-    			final float strength = 0.1f;
-    			final float strengthVar = 0.03f;
-    			
     			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
-    			EmitterTex emitter = new EmitterTex(
-                		tex, size, 
-                		frameIntervalMs,
-                		create, createVar, 
-                		maxAge, maxAgeVar, 
-                		strength, strengthVar);
+    			EmitterTex emitter = new EmitterTex(tex);
     			emitter.setGeneralColor(Color4f.GREEN);
                 mParticleSystem.setEmitter(emitter);
     			break;
@@ -223,23 +211,12 @@ public class Main extends Activity {
     		case EMIT_DEFAULT:
     		default:
     		{
-    			final int frameIntervalMs = 30;
-    			final int create = 30;
-    			final int createVar = 5;
-    			final int lifeMs = 3000;
-    			final int maxAge = lifeMs/frameIntervalMs;
-    			final int maxAgeVar = 10;
-    			final float strength = 0.1f;
-    			final float strengthVar = 0.03f;
-    			
-                mParticleSystem.setEmitter(new Emitter(
-                		frameIntervalMs,
-                		create, createVar, 
-                		maxAge, maxAgeVar, 
-                		strength, strengthVar));
+                mParticleSystem.setEmitter(new Emitter());
                 break;
     		}
     	}
+    	mApp.setEmitChoice(code);
+    	
     	mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
     	mCamera.setLocation(mCamera.getLookAt().dup());
     	mCamera.getLocation().add(0, 0, mParticleSystem.getMaxDistance());
