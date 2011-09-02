@@ -1,5 +1,6 @@
 package com.tipsolutions.jacket.effect;
 
+import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -7,6 +8,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.Matrix4f;
@@ -48,7 +50,7 @@ public class ParticleSystem {
 			mEmitter.mParticles.addParticles();
 			mEmitter.mParticles.setLoc();
 		}
-		gl.glFrontFace(GL10.GL_CCW);
+		gl.glFrontFace(GL10.GL_CW);
 		gl.glDisable(GL10.GL_BLEND);
 		
 		Color4f color = mEmitter.mGeneralColor;
@@ -73,7 +75,15 @@ public class ParticleSystem {
 		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mEmitter.getVertexBuf());
 		
+		FloatBuffer fbuf = mEmitter.getNormalBuf();
+		if (fbuf != null) {
+    		gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+    		gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
+		} else {
+    		gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+		}
 		if (mEmitter.getTexture() != null) {
+			gl.setCullFace(0);
 			mEmitter.getTexture().onDraw(gl, mEmitter.getTextureBuf());
 			
 //			ShortBuffer ibuf = mEmitter.getIndexBuf();

@@ -199,22 +199,25 @@ public class Main extends Activity {
     	switch (code) {
     		case EMIT_TEXTURE:
     		{
-    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
     			final int frameIntervalMs = 30;
     			final int create = 30;
     			final int createVar = 5;
+    			final float size = 0.2f;
     			final int lifeMs = 3000;
     			final int maxAge = lifeMs/frameIntervalMs;
     			final int maxAgeVar = 10;
     			final float strength = 0.1f;
     			final float strengthVar = 0.03f;
     			
-                mParticleSystem.setEmitter(new EmitterTex(
-                		tex, 0.2f,
+    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+    			EmitterTex emitter = new EmitterTex(
+                		tex, size, 
                 		frameIntervalMs,
                 		create, createVar, 
                 		maxAge, maxAgeVar, 
-                		strength, strengthVar));
+                		strength, strengthVar);
+    			emitter.setGeneralColor(Color4f.GREEN);
+                mParticleSystem.setEmitter(emitter);
     			break;
     		}
     		case EMIT_DEFAULT:
@@ -249,10 +252,7 @@ public class Main extends Activity {
 		if (mApp.getBlenderControl() != param) {
         	TextureManager tm = mRenderer.getTextureManager();
         	mApp.setBlenderControl(param);
-        	tm.setDefaultBlendParam(param);
-            for (Texture t : tm.getTextures()) { 
-            	t.setBlendParam(param);
-            }
+        	tm.setBlendParam(param);
             mSurfaceView.requestRender();
 		}
     }

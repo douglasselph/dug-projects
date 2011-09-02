@@ -3,10 +3,7 @@ package com.tipsolutions.jacket.effect;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import android.util.Log;
-
 import com.tipsolutions.jacket.image.TextureManager.Texture;
-import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 
@@ -33,28 +30,29 @@ public class EmitterTex extends Emitter {
     			float x = loc.getX();
     			float y = loc.getY();
     			float z = loc.getZ();
-    			mVertexFbuf.position(getVbufPos(index));
-    			mVertexFbuf.put(x-mParticleHalfSize).put(y+mParticleHalfSize).put(z);
-    			mVertexFbuf.put(x-mParticleHalfSize).put(y-mParticleHalfSize).put(z);
-    			mVertexFbuf.put(x+mParticleHalfSize).put(y-mParticleHalfSize).put(z);
-    			mVertexFbuf.put(x+mParticleHalfSize).put(y+mParticleHalfSize).put(z);
     			
-    			mTextureFbuf.position(getTbufPos(index));
-    			mTextureFbuf.put(0).put(1);
-    			mTextureFbuf.put(0).put(0);
-    			mTextureFbuf.put(1).put(0);
-    			mTextureFbuf.put(1).put(1);
+    			float x1 = x - mParticleHalfSize;
+    			float x2 = x + mParticleHalfSize;
+    			float y1 = y - mParticleHalfSize;
+    			float y2 = y + mParticleHalfSize;
+    			
+    			mVertexFbuf.position(getVPos(index));
+    			mVertexFbuf.put(x1).put(y1).put(z);
+    			mVertexFbuf.put(x1).put(y2).put(z);
+    			mVertexFbuf.put(x2).put(y1).put(z);
+    			mVertexFbuf.put(x2).put(y2).put(z);
 			}
 		}
 		
-		int getTbufPos(int index) {
+		public int getTPos(int index) {
 			return index*2*getNumVertex();
 		}
-		
+
 		@Override
 		public int getNumVertex() {
 			return 4;
 		}
+		
 	};
 	
 	class ParticlesTex extends Particles {
@@ -65,39 +63,46 @@ public class EmitterTex extends Emitter {
 			
 			mTextureBuf = new FloatBuf();
 			mTextureBuf.alloc(mIndexBuf.capacity()*2);
-			mTextureBuf.getBuf().limit(0);
+			FloatBuffer fbuf = mTextureBuf.getBuf();
+			
+			for (int i = 0; i < mTextureBuf.capacity()/8; i++) {
+				fbuf.put(0).put(0);
+				fbuf.put(0).put(1);
+				fbuf.put(1).put(0);
+				fbuf.put(1).put(1);
+			}
+			fbuf.limit(0);
+			
+			mNormalBuf = new FloatBuf();
+			mNormalBuf.alloc(mVertexBuf.capacity());
+			fbuf = mNormalBuf.getBuf();
+			for (int i = 0; i < mNormalBuf.capacity()/3; i++) {
+    			fbuf.put(0).put(0).put(1);
+			}
+			fbuf.limit(0);
 		}
 
 		@Override
 		public void setLoc() {
-			mTextureFbuf = mTextureBuf.getBuf();
-			mTextureFbuf.limit(mTextureFbuf.capacity());
-			mTextureFbuf.rewind();
 			super.setLoc();
-			mTextureFbuf.limit(mTextureFbuf.position());
+			
+			int vlimit = mVertexBuf.getBuf().limit();
+			mNormalBuf.getBuf().limit(vlimit);
+			int tlimit = (vlimit/3)*2;
+			mTextureBuf.getBuf().limit(tlimit);
 		}
 		
 		@Override
 		public Particle createParticle() {
 			return new ParticleTex(genVelocity(), genMaxAge());
 		}
-
-		@Override
-		boolean checkAdd(int numVertex) {
-			boolean flag = super.checkAdd(numVertex);
-			
-			if (mTextureFbuf.position() + numVertex*2 >= mTextureFbuf.capacity()) {
-				Log.e(Constants.TAG, "Too many texcoords: " + mTextureFbuf.position() + "+2*" + numVertex + ">=" + mTextureFbuf.capacity());
-				flag = false;
-			}
-			return flag;
-		}
 	};
 	
 	protected Texture mTexture;
 	protected float mParticleHalfSize;
+	
 	protected FloatBuf mTextureBuf;
-	protected FloatBuffer mTextureFbuf;
+	protected FloatBuf mNormalBuf;
 
 	public EmitterTex(Texture tex, float particleSize,
 			int frameInterval, 
@@ -120,6 +125,11 @@ public class EmitterTex extends Emitter {
 	@Override
 	public FloatBuffer getTextureBuf() {
 		return mTextureBuf.getBuf();
+	}
+
+	@Override
+	public FloatBuffer getNormalBuf() {
+		return mNormalBuf.getBuf();
 	}
 
 	@Override

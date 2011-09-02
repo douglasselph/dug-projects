@@ -75,7 +75,7 @@ public class Emitter {
 			
 			if (age <= mMaxAge) {
     			Vector3f loc = getLoc(age);
-    			mVertexFbuf.position(getVbufPos(index));
+    			mVertexFbuf.position(getVPos(index));
     			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
 			} else {
 				mMaxAge = 0;
@@ -93,12 +93,12 @@ public class Emitter {
 			return mMaxAge > 0;
 		}
 		
-		public int getVbufPos(int index) {
-			return index*3*getNumVertex();
-		}
-		
 		public int getNumVertex() {
 			return 1;
+		}
+		
+		public int getVPos(int index) {
+			return index*3*getNumVertex();
 		}
 	};
 	
@@ -142,7 +142,7 @@ public class Emitter {
 		public Particle createParticle() {
 			return new Particle(genVelocity(), genMaxAge());
 		}
-		
+
 		public void setLoc() {
 			// Set ages of all particles
 			mVertexFbuf = mVertexBuf.getBuf();
@@ -162,17 +162,18 @@ public class Emitter {
 					break;
 				}
 				if (part.isAlive()) {
-					final int numVertex = part.getNumVertex();
+					final int nVertex = part.getNumVertex();
 					
 					if (DEBUG) {
-						if (!checkAdd(numVertex)) {
+						if (!checkAdd(nVertex)) {
 							continue;
 						}
 					}
 					part.setLoc(i);
 					if (part.isAlive()) {
-						for (int j = 0; j < numVertex; j++) {
-							mIndexSbuf.put((short)(i+j));
+						final int iPos = nVertex*i;
+						for (int j = 0; j < nVertex; j++) {
+							mIndexSbuf.put((short)(iPos+j));
 						}
 						mNumAlive++;
 					}
@@ -299,6 +300,9 @@ public class Emitter {
 		mRandom = new Random();
 	}
 	
+	public void setGeneralColor(Color4f color) {
+		mGeneralColor = color;
+	}
 
 	public void reinit(Particle part) {
 		part.reinit(genVelocity(), genMaxAge());
@@ -309,11 +313,11 @@ public class Emitter {
 	public int getEnergyInitial() { return mMaxAgeInitial; }
 	
 	public int genCreateNum() {
-		return mCreatePerFrame + mRandom.nextInt(mCreateVariance*2) - mCreateVariance;
+		return mCreatePerFrame + mRandom.nextInt(mCreateVariance*2+1) - mCreateVariance;
 	}
 	
 	protected int genMaxAge() {
-		return mMaxAgeInitial + mRandom.nextInt(mMaxAgeInitialVariance*2) - mMaxAgeInitialVariance;
+		return mMaxAgeInitial + mRandom.nextInt(mMaxAgeInitialVariance*2+1) - mMaxAgeInitialVariance;
 	}
 	
 	protected Vector3f genVelocity() {
@@ -335,6 +339,10 @@ public class Emitter {
 	
 	public FloatBuffer getVertexBuf() {
 		return mVertexBuf.getBuf();
+	}
+	
+	public FloatBuffer getNormalBuf() {
+		return null;
 	}
 	
 	public FloatBuffer getTextureBuf() {

@@ -504,10 +504,7 @@ public class Main extends Activity {
 		if (mApp.getBlenderControl() != param) {
         	TextureManager tm = mRenderer.getTextureManager();
         	mApp.setBlenderControl(param);
-        	tm.setDefaultBlendParam(param);
-            for (Texture t : tm.getTextures()) { 
-            	t.setBlendParam(param);
-            }
+        	tm.setBlendParam(param);
             mSurfaceView.requestRender();
 		}
     }

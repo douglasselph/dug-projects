@@ -3,7 +3,7 @@ package com.tipsolutions.jacket.image;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -23,23 +23,59 @@ public class TextureManager {
 	int mDefaultBlendParam = GL10.GL_MODULATE;
 	
 	public class Texture {
+		final String mFilename;
+		final int mResId;
+		
 		int mTextureID = 0;
-		int mUseCount = 0;
 		int mBlendParam = mDefaultBlendParam;
 		
-		public Texture() {
+		public Texture(String filename) {
+			mFilename = filename;
+			mResId = 0;
 		}
 		
-		public void done() {
-			mUseCount--;
-		}
-		
-		public boolean used() {
-			return mUseCount > 0;
+		public Texture(int resId) {
+			mFilename = null;
+			mResId = resId;
 		}
 		
 		public boolean initialized() {
 			return mTextureID != 0;
+		}
+		
+		void init(MatrixTrackingGL gl) throws IOException {
+			if (!initialized()) {
+    			InputStream is = null;
+    			try {
+    				if (mFilename != null) {
+    					is = mAM.open(mFilename);
+    				} else {
+    					is = mContext.getResources().openRawResource(mResId);
+    				}
+    				init(is, gl);
+    			} catch (Exception ex) {
+    				if (mFilename != null) {
+    					StringBuffer sbuf = new StringBuffer();
+    					sbuf.append("File:");
+    					sbuf.append("\"");
+    					sbuf.append(mFilename);
+    					sbuf.append("\", ");
+    					sbuf.append("got exception: ");
+    					sbuf.append(ex.getMessage());
+    					throw new IOException(sbuf.toString());
+    				} else {
+        				Log.e(Constants.TAG, ex.getMessage());
+    				}
+    			} finally {
+    				try {
+    					if (is != null) {
+    						is.close();
+    					}
+    				} catch(IOException e) {
+    					Log.e(Constants.TAG, e.getMessage());
+    				}
+    			}
+			}
 		}
 		
 		void init(InputStream is, MatrixTrackingGL gl) {
@@ -47,6 +83,7 @@ public class TextureManager {
 			gl.glGenTextures(1, textures, 0);
 			mTextureID = textures[0];
 			
+			gl.glEnable(GL10.GL_TEXTURE_2D); 
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
 			
 	        gl.glTexParameterf(GL10.GL_TEXTURE_2D, 
@@ -75,11 +112,18 @@ public class TextureManager {
 		
 		// If a texture is shared across multiple shapes, this alone is called
 		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf) {
+			if (!initialized()) {
+				try {
+    				init(gl);
+				} catch (Exception ex) {
+					Log.e(Constants.TAG, ex.getMessage());
+				}
+			}
 			gl.glEnable(GL10.GL_BLEND); 
 			gl.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
 			
 			gl.glEnable(GL10.GL_TEXTURE_2D); 
-			gl.glTexEnvx(GL10.GL_TEXTURE_ENV, 
+			gl.glTexEnvx(GL10.GL_TEXTURE_ENV,
 					GL10.GL_TEXTURE_ENV_MODE, mBlendParam);
 		       
 			gl.glActiveTexture(GL10.GL_TEXTURE0);
@@ -98,14 +142,11 @@ public class TextureManager {
 		public void setBlendParam(int param) {
 			mBlendParam = param;
 		}
-		
-		public void use() {
-			mUseCount++;
-		}
 	};
+	
 	final Context mContext;
-	HashMap<Integer,Texture> mIMap = new HashMap<Integer,Texture>();
-	HashMap<String,Texture> mSMap = new HashMap<String,Texture>();
+	HashMap<Long,Texture> mMap = new HashMap<Long,Texture>();
+	AssetManager mAM;
 	
 	public TextureManager() {
 		mContext = null;
@@ -113,101 +154,49 @@ public class TextureManager {
 	
 	public TextureManager(Context ctx) {
 		mContext = ctx;
+		mAM = mContext.getResources().getAssets();
 	}
 	
 	public Texture getTexture(int resId) {
 		Texture entry;
-		if (mIMap.containsKey(resId)) {
-			entry = mIMap.get(resId);
+		long key = (1<<16) + resId;
+		if (mMap.containsKey(key)) {
+			entry = mMap.get(key);
 		} else {
-			mIMap.put(resId, entry = new Texture());
+			mMap.put(key, entry = new Texture(resId));
 		}
 		return entry;
 	}
 	
 	public Texture getTexture(String filename) {
 		Texture entry;
-		if (mSMap.containsKey(filename)) {
-			entry = mSMap.get(filename);
+		long key = filename.hashCode();
+		if (mMap.containsKey(key)) {
+			entry = mMap.get(key);
 		} else {
-			mSMap.put(filename, entry = new Texture());
+			mMap.put(key, entry = new Texture(filename));
 		}
 		return entry;
 	}
 	
-	public ArrayList<Texture> getTextures() {
-		ArrayList<Texture> list = new ArrayList<Texture>();
-		list.addAll(mSMap.values());
-		list.addAll(mIMap.values());
-		return list;
+	public Collection<Texture> getTextures() {
+		return mMap.values();
 	}
 	
 	public void init(MatrixTrackingGL gl) throws IOException {
-		gl.glEnable(GL10.GL_TEXTURE_2D); 
-		
-		boolean once = false;
-		
-		AssetManager am = mContext.getResources().getAssets();
-		Texture tex;
-		for (String filename : mSMap.keySet()) {
-			InputStream is = null;
-			try {
-				tex = mSMap.get(filename);
-				if (!tex.initialized()) {
-					is = am.open(filename);
-					if (tex.used()) {
-						tex.init(is, gl);
-					}
-				}
-				once = true;
-			} catch (Exception ex) {
-				StringBuffer sbuf = new StringBuffer();
-				sbuf.append("File:");
-				sbuf.append("\"");
-				sbuf.append(filename);
-				sbuf.append("\", ");
-				sbuf.append("got exception: ");
-				sbuf.append(ex.getMessage());
-				throw new IOException(sbuf.toString());
-			} finally {
-				try {
-					if (is != null) {
-						is.close();
-					}
-				} catch(IOException e) {
-					Log.e(Constants.TAG, e.getMessage());
-				}
-			}
-		}
-		for (int resId : mIMap.keySet()) {
-			InputStream is = null;
-			try {
-				tex = mIMap.get(resId);
-				if (!tex.initialized()) {
-					is = mContext.getResources().openRawResource(resId);
-					if (tex.used()) {
-						tex.init(is, gl);
-					}
-				}
-				once = true;
-			} catch (Exception ex) {
-				Log.e(Constants.TAG, ex.getMessage());
-			} finally {
-				try {
-					if (is != null) {
-						is.close();
-					}
-				} catch(IOException e) {
-					Log.e(Constants.TAG, e.getMessage());
-				}
-			}
-		}
-		if (!once) {
-			gl.glDisable(GL10.GL_TEXTURE_2D); 
+		for (Texture tex : getTextures()){
+			tex.init(gl);
 		}
 	}
 	
 	public void setDefaultBlendParam(int param) {
 		mDefaultBlendParam = param;
+	}
+	
+	public void setBlendParam(int param) {
+		setDefaultBlendParam(param);
+        for (Texture t : getTextures()) { 
+        	t.setBlendParam(param);
+        }
 	}
 }

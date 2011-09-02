@@ -1013,9 +1013,6 @@ public class Shape {
 	///////////////////////////////////////
 
 	public void onCreate(MatrixTrackingGL gl) {
-		if (mTexture != null) {
-			mTexture.use();
-		}
 		if (mChildren != null) {
 			for (Shape shape : mChildren) {
 				shape.onCreate(gl);
@@ -1097,9 +1094,6 @@ public class Shape {
 	}
 
 	public void onFinished(MatrixTrackingGL gl) {
-		if (mTexture != null) {
-			mTexture.done();
-		}
 		if (mChildren != null) {
 			for (Shape shape : mChildren) {
 				shape.onFinished(gl);
