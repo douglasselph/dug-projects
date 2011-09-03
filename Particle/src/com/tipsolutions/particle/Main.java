@@ -22,6 +22,7 @@ import com.tipsolutions.jacket.effect.ParticleSystem;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -86,6 +87,8 @@ public class Main extends Activity {
         
         mRenderer = new MyRenderer(mSurfaceView, mCamera);
         mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
+        
+        mSurfaceView.setEGLConfigChooser(false);
         
         mSurfaceView.setRenderer(mRenderer);
        
@@ -205,11 +208,13 @@ public class Main extends Activity {
     		{
     			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
     			EmitterTex emitter = new EmitterTex(tex);
-//    			emitter.setCreate((short)3000, (short)1, (short)0);
-//    			emitter.setAge((short)1000, (short)5, (short)0);
-    			emitter.setGeneralColor(Color4f.GREEN);
+    			emitter.setCreate((short)300, (short)30, (short)5);
+    			emitter.setAge((short)100, (short)40, (short)10);
+    			emitter.setStartColor(Color4f.GREEN);
 //    			emitter.setParticleSize(0.3f);
-//    			emitter.setEndColor(Color4f.BLACK);
+    			emitter.setEndColor(Color4f.BLACK);
+    			emitter.setStrength(0.05f, 0.01f);
+    			emitter.setForce(new Vector3f(0, -0.02f, 0f));
                 mParticleSystem.setEmitter(emitter);
 //                mParticleSystem.DEBUG = true;
     			break;
