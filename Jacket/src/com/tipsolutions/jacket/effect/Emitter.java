@@ -58,33 +58,29 @@ public class Emitter {
 	protected class Particle {
 		protected Vector3f mLastPos;
 		protected Vector3f mVelocity;
-		protected long mBirthtime; // time particle was born
-		protected int mMaxAge;
+		protected short mMaxAge;
+		protected short mAge;
 		
-		public Particle(Vector3f velocity, int maxAge) {
+		public Particle(Vector3f velocity, short maxAge) {
 			reinit(velocity, maxAge);
 		}
 		
-		public int getAge() {
-			return mTiming.getAge(mBirthtime);
-		}
-		
 		public Color4f getColor() {
-			return mColorTable.getColor(getAge());
+			return mColorTable.getColor(mAge);
 		}
 		
-		protected Vector3f getLoc(int age) {
+		protected Vector3f getLoc(short age) {
 			tempVec.setX((mVelocity.getX()+mForce.getX())*age);
 			tempVec.setY((mVelocity.getY()+mForce.getY())*age);
 			tempVec.setZ((mVelocity.getZ()+mForce.getZ())*age);
 			return tempVec;
 		}
 		
-		public short getVNum() {
+		public short getINum() {
 			return 1;
 		}
 		
-		public short getINum() {
+		public short getVNum() {
 			return 1;
 		}
 		
@@ -93,30 +89,27 @@ public class Emitter {
 		}
 		
 		public boolean isAlive() {
-			return mMaxAge > 0;
+			return (mAge <= mMaxAge);
 		}
 		
-		public void reinit(Vector3f velocity, int maxAge) {
+		public void reinit(Vector3f velocity, short maxAge) {
 			mLastPos = null;
 			mVelocity = velocity;
-			mBirthtime = mTiming.getCurTime();
 			mMaxAge = maxAge;
+			mAge = 0;
 		}
 		
 		public boolean setLoc(int index) {
-			int age = getAge();
-			
-			if (age <= mMaxAge) {
-    			Vector3f loc = getLoc(age);
-    			int vpos = getVPos(index);
-    			mVertexFbuf.position(vpos);
-    			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
-    			
-    			mIndexSbuf.put((short)vpos);
-			} else {
-				mMaxAge = 0;
+			if (mAge > mMaxAge) {
+				return false;
 			}
-			return (mMaxAge > 0);
+			Vector3f loc = getLoc(mAge);
+			int vpos = index*3;
+			mVertexFbuf.position(vpos);
+			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
+
+			mIndexSbuf.put((short) index);
+			return true;
 		}
 	};
 	
@@ -128,17 +121,19 @@ public class Emitter {
 		
 		public void addParticles() {
 			int num = genCreateNum();
-			for (int i = 0; i < mList.length; i++) {
-				if (mList[i] == null) {
-					mList[i] = createParticle();
-				} else if (!mList[i].isAlive()) {
-					reinit(mList[i]);
-				} else {
-					continue;
-				}
-				if (--num <= 0) {
-					break;
-				}
+			if (num > 0) {
+    			for (int i = 0; i < mList.length; i++) {
+    				if (mList[i] == null) {
+    					mList[i] = createParticle();
+    				} else if (!mList[i].isAlive()) {
+    					reinit(mList[i]);
+    				} else {
+    					continue;
+    				}
+    				if (--num <= 0) {
+    					break;
+    				}
+    			}
 			}
 		}
 		
@@ -160,7 +155,10 @@ public class Emitter {
 		}
 
 		public void init() {
-			int size = (getCreatePerFrame() + getCreateVar()) * getMaxAge();
+			long maxLifeMs = (mMaxAge + mMaxAgeVar) * mAgeInterval;
+			float maxNumCreatesPerLife = (float)maxLifeMs / (float)mCreateInterval;
+			int size = (int) ((mCreateCount + mCreateVar) * maxNumCreatesPerLife);
+			
 			mList = new Particle[size];
 			
 			Particle sample = createParticle();
@@ -200,19 +198,16 @@ public class Emitter {
 			
 			mNumAlive = 0;
 			
+//			Log.d("DEBUG", "mList size=" + mList.length + ", vertex cap=" + mVertexFbuf.limit());
+			
 			for (int i = 0; i < mList.length; i++) {
 				Particle part = mList[i];
 				if (part == null) {
 					break;
 				}
 				if (part.isAlive()) {
-//					final int nVertex = part.getNumVertex();
-//					if (DEBUG) {
-//						if (!checkAdd(part.get)) {
-//							continue;
-//						}
-//					}
 					if (part.setLoc(i)) {
+						part.mAge++;
 						mNumAlive++;
 					}
 				}
@@ -223,61 +218,107 @@ public class Emitter {
 	}
 	
 	protected class Timing {
-		protected long mLastDraw; // Time of last draw
-		protected long mCurTime;  // This time
-		protected int mFrameIntervalMs; // Number of milliseconds per frame
-		protected boolean mScheduled = false;
+		protected long mCurTime;
+		protected long mLastUpdate = 0;
+		protected long mLastCreate = 0;
 		protected Timer mTimer = new Timer();
+		protected Boolean mScheduled = false;
 		
-		public Timing(int intervalMs) {
-			mFrameIntervalMs = intervalMs;
-		}
-		
-		public int getAge(long startTime) {
-			return (int) (mCurTime - startTime) / mFrameIntervalMs;
+		public Timing() {
 		}
 		
 		public long getCurTime() {
 			return mCurTime;
 		}
 		
-		boolean ready() {
-			mCurTime = System.currentTimeMillis();
-			return (mCurTime >= mLastDraw + mFrameIntervalMs);
+		void stop() {
+			if (mTimer != null) {
+    			mTimer.cancel();
+    			mTimer = new Timer();
+			}
+			mScheduled = false;
+			mLastCreate = 0;
+			mLastUpdate = 0;
 		}
 		
-		void schedule() {
-			mLastDraw = mCurTime;
-			
-			if (!mScheduled) {
-    			mTimer.schedule(new TimerTask() {
-    				@Override
-    				public void run() {
-    					mScheduled = false;
-    					mParticleSystem.getView().requestRender();
-    				}
-    			}, mFrameIntervalMs);
-    			mScheduled = true;
+		void onDrawStart() {
+			mCurTime = System.currentTimeMillis();
+		}
+		
+		boolean readyForCreate() {
+			long diff = mCurTime - mLastCreate;
+			if (diff >= mCreateInterval) {
+				mLastCreate = mCurTime;
+				return true;
 			}
+			return false;
+		}
+		
+		boolean readyForUpdate() {
+			long diff = mCurTime - mLastUpdate;
+			if (diff >= mAgeInterval) {
+				mLastUpdate = mCurTime;
+				return true;
+			}
+			return false;
+		}
+		
+		void reschedule() {
+			stop();
+			schedule();
+		}
+		
+		synchronized void schedule() {
+			if (!mScheduled) {
+    			long diffC = mCreateInterval - (mCurTime - mLastCreate);
+    			long diffU = mAgeInterval - (mCurTime - mLastUpdate);
+    			long diff;
+    			
+    			if (diffC < diffU) {
+    				diff = diffC;
+    			} else {
+    				diff = diffU;
+    			}
+    			if (diff <= 0) {
+    				mParticleSystem.getView().requestRender();
+    			} else {
+        			mTimer.schedule(new TimerTask() {
+        				@Override
+        				public void run() {
+        					activity();
+        				}
+        			}, diff);
+        			mScheduled = true;
+    			}
+			}
+		}
+		
+		synchronized void activity() {
+			mParticleSystem.getView().requestRender();
+			mScheduled = false;
 		}
 	};
 	
 	static protected Vector3f tempVec = new Vector3f();
 	
-	// The number of new particles to create per frame:
-	protected int mCreatePerFrame = 30;
+	// The number of new particles to create per designated interval
+	protected short mCreateCount = 30;
+	// How often to create 
+	protected short mCreateInterval = 30;
 	// The largest range of variance to add to mCreatePerFrame:
-	protected int mCreateVar = 5;
+	protected short mCreateVar = 5;
 	// Mid energy of newly created particle (age):
-	protected int mMaxAge = 100;
+	protected short mMaxAge = 100;
 	// Amount of variance of starting energy level (age):
-	protected int mMaxAgeVar = 10;
+	protected short mMaxAgeVar = 10;
+	// How often to age particles
+	protected short mAgeInterval = 30;
 	// Mid strength for setting initial velocity of particle (coords per frame):
 	protected float mStrength = 0.05f;
 	// Amount of variance of strength:
 	protected float mStrengthVar = 0.01f;
 	// Control when each draw occurs
-	protected Timing mTiming;
+	protected Timing mTiming = new Timing();
 	// Associated ParticleSystem
 	protected ParticleSystem mParticleSystem;
 	// Colors
@@ -298,17 +339,17 @@ public class Emitter {
 	protected ShortBuffer mIndexSbuf;
 	
 	public Emitter() {
-		mTiming = new Timing(30);
+		mTiming = new Timing();
 		mParticles = new Particles();
 		mRandom = new Random();
 	}
 	
 	public int genCreateNum() {
-		return mCreatePerFrame + mRandom.nextInt(mCreateVar*2+1) - mCreateVar;
+		return mCreateCount + mRandom.nextInt(mCreateVar*2+1) - mCreateVar;
 	}
 	
-	protected int genMaxAge() {
-		return mMaxAge + mRandom.nextInt(mMaxAgeVar*2+1) - mMaxAgeVar;
+	protected short genMaxAge() {
+		return (short) (mMaxAge + mRandom.nextInt(mMaxAgeVar*2+1) - mMaxAgeVar);
 	}
 	
 	protected Vector3f genVelocity() {
@@ -340,13 +381,14 @@ public class Emitter {
 		return mStartColor != null && mEndColor != null;
 	}
 	
-	public int getCreatePerFrame() { return mCreatePerFrame; }
-	public int getCreateVar() { return mCreateVar; }
-	public int getFrameIntervalMs() { return mTiming.mFrameIntervalMs; }
+	public short getCreateInterval() { return mCreateInterval; }
+	public short getCreateCount() { return mCreateCount; }
+	public short getCreateVar() { return mCreateVar; }
 	public Color4f getStartColor() { return mStartColor; }
 	public Color4f getEndColor() { return mEndColor; }
-	public int getMaxAge() { return mMaxAge; }
-	public int getMaxAgeVar() { return mMaxAgeVar; }
+	public short getMaxAge() { return mMaxAge; }
+	public short getMaxAgeVar() { return mMaxAgeVar; }
+	public short getAgeInterval() { return mAgeInterval; }
 	public float getStrength() { return mStrength; }
 	public float getStrengthVar() { return mStrengthVar; }
 	
@@ -376,9 +418,11 @@ public class Emitter {
 		part.reinit(genVelocity(), genMaxAge());
 	}
 	
-	public void setCreatePerFrame(int v) { mCreatePerFrame = v; }
-	public void setCreateVar(int v) { mCreateVar = v; }
-	public void setFrameIntervalMs(int v) { mTiming.mFrameIntervalMs = v; }
+	public void setCreate(short createInterval, short numToCreate, short createVar) {
+		mCreateInterval = createInterval; 
+		mCreateCount = numToCreate;
+		mCreateVar = createVar;
+	}
 	
 	public void setGeneralColor(Color4f color) {
 		mStartColor = color;
@@ -387,11 +431,16 @@ public class Emitter {
 	
 	public void setStartColor(Color4f color) { mStartColor = color; }
 	public void setEndColor(Color4f color) { mEndColor = color; }
-	public void setMaxAge(int v) { mMaxAge = v; }
-	public void setMaxAgeVar(int v) { mMaxAgeVar = v; }
-	public void setStrength(float v) { mStrength = v; }
-	public void setStrengthVar(float v) { mStrengthVar = v; }
 	
+	public void setAge(short ageInterval, short maxAge, short maxAgeVar) {
+		mAgeInterval = ageInterval;
+		mMaxAge = maxAge;
+		mMaxAgeVar = maxAgeVar;
+	}
+	public void setStrength(float strength, float var) { 
+		mStrength = strength; 
+		mStrengthVar = var;
+	}
 	public void setParticleSystem(ParticleSystem ps) { mParticleSystem = ps; }
 	public void setRandom() { mRandom = new Random(); }
 	public void setRandomSeed(long seed) { mRandom = new Random(seed); }

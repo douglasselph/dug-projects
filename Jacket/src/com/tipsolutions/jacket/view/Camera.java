@@ -40,7 +40,7 @@ public class Camera {
 		gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
 	}
 	
-	public void applyLookAt(MatrixTrackingGL gl) {
+	public synchronized void applyLookAt(MatrixTrackingGL gl) {
 //		Log.d("DEBUG", "Eye: " + mCameraPos.toString());
 //		Log.d("DEBUG", "Center: " + mLookAtPos.toString());
 //		Log.d("DEBUG", "Up: " + mUp.toString());
@@ -96,7 +96,7 @@ public class Camera {
 	// ay: specifies the radian angle of rotation around the left axis.
 	//
 	// Affects the lookAt and Up position defining the camera.
-	protected void rotate(float ax, float ay) {
+	protected synchronized void rotate(float ax, float ay) {
 		if (ax != 0 && ay != 0) {
     		Matrix3f matrix = new Matrix3f();
     		if (ax != 0) {
@@ -133,14 +133,14 @@ public class Camera {
 		rotate(ax, ay);
 	}
 
-	public Camera setLocation(Vector3f loc) {
+	public synchronized Camera setLocation(Vector3f loc) {
 		mCameraPos = loc;
 		mUnitOut = null;
 		mUnitLeft = null;
 		return this;
 	}
 	
-	public Camera setLookAt(Vector3f loc) {
+	public synchronized Camera setLookAt(Vector3f loc) {
 		mLookAtPos = loc;
 		mUnitOut = null;
 		mUnitLeft = null;
@@ -153,7 +153,7 @@ public class Camera {
 		return this;
 	}
 	
-	public Camera setUp(Vector3f loc) {
+	public synchronized Camera setUp(Vector3f loc) {
 		mUp = loc;
 		mUnitLeft = null;
 		mUnitOut = null;

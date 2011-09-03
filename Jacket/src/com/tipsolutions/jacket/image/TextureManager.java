@@ -13,6 +13,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.misc.Msg;

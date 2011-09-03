@@ -3,6 +3,8 @@ package com.tipsolutions.jacket.effect;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Vector3f;
@@ -45,8 +47,9 @@ public class EmitterTex extends Emitter {
 			fbuf.limit(0);
 			
 			if (!USE_STRIPS && hasParticleColors()) {
+				bufSize = mParticles.mList.length * vNum;
 				mColorBuf = new FloatBuf();
-				mColorBuf.alloc(vNum*4);
+				mColorBuf.alloc(bufSize*4);
 				mColorBuf.getBuf().limit(0);
 			} else {
 				mColorBuf = null;
@@ -57,6 +60,8 @@ public class EmitterTex extends Emitter {
 		public void setLoc() {
 			if (mColorBuf != null) {
 				mColorFbuf = mColorBuf.getBuf();
+				mColorFbuf.limit(mColorFbuf.capacity());
+				mColorFbuf.rewind();
 			} else {
 				mColorFbuf = null;
 			}
@@ -75,7 +80,7 @@ public class EmitterTex extends Emitter {
 
 	class ParticleTex extends Particle {
 
-		public ParticleTex(Vector3f velocity, int maxAge) {
+		public ParticleTex(Vector3f velocity, short maxAge) {
 			super(velocity, maxAge);
 		}
 		
@@ -99,23 +104,20 @@ public class EmitterTex extends Emitter {
 
 		@Override
 		public boolean setLoc(int index) {
-			int age = getAge();
-			
-			if (age > mMaxAge) {
-				mMaxAge = 0;
+			if (mAge > mMaxAge) {
 				return false;
 			}
-			Vector3f loc = getLoc(age);
+			Vector3f loc = getLoc(mAge);
 			float x = loc.getX();
 			float y = loc.getY();
 			float z = loc.getZ();
-
+			
 			float x1 = x - mParticleHalfSize;
 			float x2 = x + mParticleHalfSize;
 			float y1 = y - mParticleHalfSize;
 			float y2 = y + mParticleHalfSize;
 
-			int vpos = (short) getVPos(index);
+			int vpos = index*3*4;
 			mVertexFbuf.position(vpos);
 			mVertexFbuf.put(x1).put(y1).put(z);
 			mVertexFbuf.put(x1).put(y2).put(z);
@@ -123,34 +125,33 @@ public class EmitterTex extends Emitter {
 			mVertexFbuf.put(x2).put(y2).put(z);
 
 			short [] vA;
+			short ipos = (short) (index*4);
 
 			if (USE_STRIPS) {
 				vA = new short[4];
-				vA[0] = (short) (vpos);
-				vA[1] = (short) (vpos+1);
-				vA[2] = (short) (vpos+2);
-				vA[3] = (short) (vpos+3);
+				vA[0] = ipos;
+				vA[1] = (short) (ipos+1);
+				vA[2] = (short) (ipos+2);
+				vA[3] = (short) (ipos+3);
 			} else {
 				vA = new short[6];
 
-				vA[0] = (short) (vpos);
-				vA[1] = (short) (vpos+1);
-				vA[2] = (short) (vpos+2);
-				vA[3] = (short) (vpos+3);
+				vA[0] = ipos;
+				vA[1] = (short) (ipos+1);
+				vA[2] = (short) (ipos+2);
+				vA[3] = (short) (ipos+3);
 				vA[4] = (short) vA[2];
 				vA[5] = (short) vA[1];
 
 				if (mColorFbuf != null) {
-					Color4f color = mColorTable.getColor(age);
-					mColorFbuf.position(getCPos(index));
+					Color4f color = mColorTable.getColor(mAge);
+					mColorFbuf.position(index*4*4);
 					for (int i = 0; i < 4; i++) {
 						mColorFbuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
 					}
 				}
 			}
-			for (short v : vA) {
-				mIndexSbuf.put(v);
-			}
+			mIndexSbuf.put(vA);
 			return true;
 		}
 		

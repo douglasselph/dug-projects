@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
@@ -91,7 +92,7 @@ public class Main extends Activity {
         mTwirlEventTap = new TwirlEventTap(mSurfaceView, new Rotate() {
 			@Override
 			public void rotate(double xAngle, double yAngle) {
-				mParticleSystem.getMatrix().addRotate(xAngle, yAngle, 0);
+				mParticleSystem.addRotate(xAngle, yAngle, 0);
 			}
         });
         mTwirlEventTap.setDoubleTap(new Runnable() {
@@ -204,14 +205,20 @@ public class Main extends Activity {
     		{
     			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
     			EmitterTex emitter = new EmitterTex(tex);
+//    			emitter.setCreate((short)3000, (short)1, (short)0);
+//    			emitter.setAge((short)1000, (short)5, (short)0);
     			emitter.setGeneralColor(Color4f.GREEN);
+//    			emitter.setParticleSize(0.3f);
+//    			emitter.setEndColor(Color4f.BLACK);
                 mParticleSystem.setEmitter(emitter);
+//                mParticleSystem.DEBUG = true;
     			break;
     		}
     		case EMIT_DEFAULT:
     		default:
     		{
                 mParticleSystem.setEmitter(new Emitter());
+                mParticleSystem.DEBUG = false;
                 break;
     		}
     	}
@@ -220,6 +227,8 @@ public class Main extends Activity {
     	mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
     	mCamera.setLocation(mCamera.getLookAt().dup());
     	mCamera.getLocation().add(0, 0, mParticleSystem.getMaxDistance());
+    	
+    	Log.d("DEBUG", "Camera: " + mCamera.getLocation().toString());
         
         mSurfaceView.setEventTap(mCamera);
         mSurfaceView.requestRender();
@@ -233,4 +242,17 @@ public class Main extends Activity {
             mSurfaceView.requestRender();
 		}
     }
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mParticleSystem.onPause();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mParticleSystem.onResume();
+	}
+	
 }
