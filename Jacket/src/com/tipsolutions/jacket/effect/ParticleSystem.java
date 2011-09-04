@@ -18,6 +18,7 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 public class ParticleSystem {
 	
 	public static Boolean DEBUG = false;
+	public static Boolean DEBUG2 = false;
 	
 	// World location and rotation of particlar system
 	protected Matrix4f mMatrix = new Matrix4f();

@@ -54,6 +54,7 @@ public class EmitterTex extends Emitter {
 			} else {
 				mColorBuf = null;
 			}
+			mDeltaSize = mEndSize - mStartSize;
 		}
 		
 		@Override
@@ -79,7 +80,7 @@ public class EmitterTex extends Emitter {
 	}
 
 	class ParticleTex extends Particle {
-
+		
 		public ParticleTex(Vector3f velocity, short maxAge) {
 			super(velocity, maxAge);
 		}
@@ -111,12 +112,15 @@ public class EmitterTex extends Emitter {
 			float x = loc.getX();
 			float y = loc.getY();
 			float z = loc.getZ();
-			
-			float x1 = x - mParticleHalfSize;
-			float x2 = x + mParticleHalfSize;
-			float y1 = y - mParticleHalfSize;
-			float y2 = y + mParticleHalfSize;
-
+		
+			float halfSize = (mStartSize + mDeltaSize/mMaxAge * mAge)/2;
+			float x1 = x - halfSize;
+			float x2 = x + halfSize;
+			float y1 = y - halfSize;
+			float y2 = y + halfSize;
+			if (ParticleSystem.DEBUG2) {
+				Log.d("DEBUG", "" + index + ":x1=" + x1 + ", x2=" + x2 + ", y1=" + y1 + ", y2=" + y2);
+			}
 			int vpos = index*3*4;
 			mVertexFbuf.position(vpos);
 			mVertexFbuf.put(x1).put(y1).put(z);
@@ -163,7 +167,9 @@ public class EmitterTex extends Emitter {
 	public static final Boolean USE_STRIPS = false;;
 	
 	protected Texture mTexture;
-	protected float mParticleHalfSize = 0.1f;
+	protected float mStartSize = 0.1f;
+	protected float mEndSize = 0.1f;
+	float mDeltaSize;
 	
 	protected FloatBuf mTextureBuf;
 	protected FloatBuf mNormalBuf;
@@ -194,7 +200,8 @@ public class EmitterTex extends Emitter {
 	@Override
 	public FloatBuffer getNormalBuf() { return mNormalBuf.getBuf(); }
 
-	public float getParticleSize() { return mParticleHalfSize*2; }
+	public float getStartSize() { return mStartSize; }
+	public float getEndSize(){ return mEndSize; }
 	
 	@Override
 	public Texture getTexture() { return mTexture; }
@@ -202,6 +209,9 @@ public class EmitterTex extends Emitter {
 	@Override
 	public FloatBuffer getTextureBuf() { return mTextureBuf.getBuf(); }
 
-	public void setParticleSize(float v) { mParticleHalfSize = v/2; }
+	public void setSize(float startSize, float endSize) { 
+		mStartSize = startSize;
+		mEndSize = endSize;
+	}
 	public void setTexture(Texture t) { mTexture = t; }
 }

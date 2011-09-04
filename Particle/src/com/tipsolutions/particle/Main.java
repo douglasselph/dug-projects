@@ -34,6 +34,7 @@ public class Main extends Activity {
 
 	static final int EMIT_DEFAULT = 0;
 	static final int EMIT_TEXTURE = 1;
+	static final int EMIT_FLARE = 2;
 	
 	class MyRenderer extends ControlRenderer {
 		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
@@ -146,6 +147,7 @@ public class Main extends Activity {
         		new SpinnerControl[] {
         		  new SpinnerControl("Default", EMIT_DEFAULT),
         		  new SpinnerControl("Tex", EMIT_TEXTURE),
+        		  new SpinnerControl("Flare", EMIT_FLARE),
                 });
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         emitChoice.setAdapter(adapter);
@@ -204,26 +206,42 @@ public class Main extends Activity {
     		return;
     	}
     	switch (code) {
+    		case EMIT_FLARE:
+    		{
+    	        mRenderer.setClippingPlaneColor(new Color4f(0.1f, 0.1f, 0.1f));
+    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+//    			tex.setBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
+    			EmitterTex emitter = new EmitterTex(tex);
+    			emitter.setSize(0.4f, 0.1f);
+    			emitter.setStartColor(new Color4f(1, 0, 0, 0));
+    			emitter.setEndColor(new Color4f(0, 1, 0, 0));
+    			emitter.setCreate(300, 75, 75);
+    			emitter.setAge(30, 1200/30, 1400/30);
+    			emitter.setStrength(0.02f, 0.02f);
+                mParticleSystem.setEmitter(emitter);
+//    			mParticleSystem.DEBUG2 = true;
+    			break;
+    		}
     		case EMIT_TEXTURE:
     		{
+    	        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
     			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+    			tex.setBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
     			EmitterTex emitter = new EmitterTex(tex);
-    			emitter.setCreate((short)300, (short)30, (short)5);
-    			emitter.setAge((short)100, (short)40, (short)10);
+    			emitter.setCreate(300, 5, 15);
+    			emitter.setAge(100, 30, 50);
     			emitter.setStartColor(Color4f.GREEN);
-//    			emitter.setParticleSize(0.3f);
     			emitter.setEndColor(Color4f.BLACK);
-    			emitter.setStrength(0.05f, 0.01f);
+    			emitter.setStrength(0.04f, 0.06f);
     			emitter.setForce(new Vector3f(0, -0.02f, 0f));
                 mParticleSystem.setEmitter(emitter);
-//                mParticleSystem.DEBUG = true;
     			break;
     		}
     		case EMIT_DEFAULT:
     		default:
     		{
+    	        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
                 mParticleSystem.setEmitter(new Emitter());
-                mParticleSystem.DEBUG = false;
                 break;
     		}
     	}

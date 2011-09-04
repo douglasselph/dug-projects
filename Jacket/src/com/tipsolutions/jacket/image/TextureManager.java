@@ -21,6 +21,8 @@ import com.tipsolutions.jacket.misc.Msg;
 public class TextureManager {
 	
 	int mDefaultBlendParam = GL10.GL_MODULATE;
+	int mDefaultBlendSource = GL10.GL_ONE;
+	int mDefaultBlendDest = GL10.GL_ONE_MINUS_SRC_ALPHA;
 	
 	public class Texture {
 		final String mFilename;
@@ -28,6 +30,8 @@ public class TextureManager {
 		
 		int mTextureID = 0;
 		int mBlendParam = mDefaultBlendParam;
+		int mBlendSource = mDefaultBlendSource;
+		int mBlendDest = mDefaultBlendDest;
 		
 		public Texture(String filename) {
 			mFilename = filename;
@@ -37,6 +41,15 @@ public class TextureManager {
 		public Texture(int resId) {
 			mFilename = null;
 			mResId = resId;
+		}
+		
+		public Texture(final Texture from) {
+			mFilename = from.mFilename;
+			mResId = from.mResId;
+			mTextureID = from.mTextureID;
+    		mBlendParam = from.mBlendParam;
+    		mBlendSource = from.mBlendSource;
+    		mBlendDest = from.mBlendDest;
 		}
 		
 		public boolean initialized() {
@@ -115,7 +128,7 @@ public class TextureManager {
 				}
 			}
 			gl.glEnable(GL10.GL_BLEND); 
-			gl.glBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
+			gl.glBlendFunc(mBlendSource, mBlendDest);
 			
 			gl.glEnable(GL10.GL_TEXTURE_2D); 
 			gl.glTexEnvx(GL10.GL_TEXTURE_ENV,
@@ -134,8 +147,15 @@ public class TextureManager {
 			
 		// Expected to be one of GL10.GL_MODULATE, GL10.GL_DECAL, 
 		//   GL10.GL_BLEND, or GL10.GL_REPLACE;
-		public void setBlendParam(int param) {
+		public void setBlendEnv(int param) {
 			mBlendParam = param;
+		}
+		
+		// Expected to be GL10.GL_ONE, 
+		// 				  GL10.GL_ONE_MINUS_SRC_ALPHA, etc.
+		public void setBlendFunc(int src, int dest) {
+			mBlendSource = src;
+			mBlendDest = dest;
 		}
 	};
 	
@@ -191,7 +211,7 @@ public class TextureManager {
 	public void setBlendParam(int param) {
 		setDefaultBlendParam(param);
         for (Texture t : getTextures()) { 
-        	t.setBlendParam(param);
+        	t.setBlendEnv(param);
         }
 	}
 }
