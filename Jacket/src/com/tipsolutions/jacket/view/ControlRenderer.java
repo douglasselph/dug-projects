@@ -1,8 +1,14 @@
 package com.tipsolutions.jacket.view;
 
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 
 import com.tipsolutions.jacket.image.TextureManager;
@@ -84,7 +90,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
          * especially on software renderer.
          */
         gl.glDisable(GL10.GL_DITHER);
-        
         gl.glEnable(GL10.GL_DEPTH_TEST);
 	}
 	
@@ -104,6 +109,41 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	
 	public void setClippingPlaneColor(Color4f color) {
 		mClippingPlaneColor = color;
+	}
+	
+	public void snapshot(String filename) {
+		int width = mWidth;
+		int height = mHeight;
+		int size = width * height;
+		ByteBuffer buf = ByteBuffer.allocateDirect(size * 4);
+		buf.order(ByteOrder.nativeOrder());
+		mGL.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
+		int data[] = new int[size];
+		buf.asIntBuffer().get(data);
+		buf = null;
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+		bitmap.setPixels(data, size-width, -width, 0, 0, width, height);
+		data = null;
+
+		short sdata[] = new short[size];
+		ShortBuffer sbuf = ShortBuffer.wrap(sdata);
+		bitmap.copyPixelsToBuffer(sbuf);
+		for (int i = 0; i < size; ++i) {
+		    //BGR-565 to RGB-565
+		    short v = sdata[i];
+		    sdata[i] = (short) (((v&0x1f) << 11) | (v&0x7e0) | ((v&0xf800) >> 11));
+		}
+		sbuf.rewind();
+		bitmap.copyPixelsFromBuffer(sbuf);
+
+		try {
+		    FileOutputStream fos = new FileOutputStream(filename);
+		    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+		    fos.flush();
+		    fos.close();
+		} catch (Exception e) {
+			Msg.err(e.getMessage());
+		}
 	}
 	
 }

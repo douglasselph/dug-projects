@@ -6,6 +6,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
@@ -276,6 +277,15 @@ public class Main extends Activity {
 	protected void onResume() {
 		super.onResume();
 		mParticleSystem.onResume();
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_S) {
+			mRenderer.snapshot("/sdcard/screenshot.png");
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 	
 }

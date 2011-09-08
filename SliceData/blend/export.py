@@ -386,7 +386,7 @@ def write_mesh(dirname, basename, objname):
 		print "Error: not such object name found: '%s'" % objname
 		return
 	
-	print "Writing '%s'" % objname
+	print "(%s) Writing '%s'" % (basename, objname)
 	
 	list = gMeshTree[objname]
 	obj = list[0]
