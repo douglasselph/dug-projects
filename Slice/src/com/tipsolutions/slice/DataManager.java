@@ -15,7 +15,7 @@ import com.tipsolutions.jacket.data.Shape.dFloatBuf;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.slice.TestObj.CreateShape;
+import com.tipsolutions.slice.ViewObj.CreateShape;
 
 public class DataManager {
 

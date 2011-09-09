@@ -210,7 +210,7 @@ public class Main extends Activity {
     		case EMIT_FLARE:
     		{
     	        mRenderer.setClippingPlaneColor(new Color4f(0.1f, 0.1f, 0.1f));
-    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+    			Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
 //    			tex.setBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
     			EmitterTex emitter = new EmitterTex(tex);
     			emitter.setSize(0.4f, 0.1f);
@@ -226,7 +226,7 @@ public class Main extends Activity {
     		case EMIT_TEXTURE:
     		{
     	        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
-    			Texture tex = mRenderer.getTextureManager().getTexture(R.drawable.flaresmall);
+    			Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
     			tex.setBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
     			EmitterTex emitter = new EmitterTex(tex);
     			emitter.setCreate(300, 5, 15);
@@ -260,7 +260,7 @@ public class Main extends Activity {
     
 	void setBlendTexture(int param) {
 		if (mApp.getBlenderControl() != param) {
-        	TextureManager tm = mRenderer.getTextureManager();
+        	TextureManager tm = mApp.getTextureManager();
         	mApp.setBlenderControl(param);
         	tm.setBlendParam(param);
             mSurfaceView.requestRender();

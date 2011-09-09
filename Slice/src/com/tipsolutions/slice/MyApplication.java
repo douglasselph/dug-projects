@@ -10,9 +10,10 @@ public class MyApplication extends Application {
 
 	static final String TAG = "Slice";
 	
-    int mEglDepth = TestObj.EGL_NONE;
+    int mEglDepth = ViewObj.EGL_NONE;
     int mBlenderControl = GL10.GL_MODULATE;
     int mActiveShapeIndex = DataManager.DATA_PYRAMID;
+    int mActiveControl = ViewObj.CONTROL_CAMERA;
     
     DataManager mDataManager;
     TextureManager mTM;
@@ -25,10 +26,12 @@ public class MyApplication extends Application {
     public DataManager getDataManager() { return mDataManager; }
     public TextureManager getTextureManager() { return mTM; }
     public int getEGLDepth() { return mEglDepth; }
+    public int getActiveControl() { return mActiveControl; }
     
     public void setActiveShapeIndex(int shape) { mActiveShapeIndex = shape; }
     public void setBlenderControl(int param) { mBlenderControl = param; }
     public void setEGLDepth(int param) { mEglDepth = param; }
+    public void setActiveControl(int code) { mActiveControl = code; }
     
 //    public Shape.CullFace getCullFace() {
 //    	return mCullFace;

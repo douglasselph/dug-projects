@@ -10,7 +10,7 @@
     	android:icon="@drawable/icon" 
     	android:label="@string/app_name">
     	
-        <activity android:name=".TestObj"
+        <activity android:name=".ViewObj"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -18,8 +18,5 @@
             </intent-filter>
         </activity>
         
-        <activity android:name=".TestArm"
-				  android:label="Test Armature"/>
-
     </application>
 </manifest>
