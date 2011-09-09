@@ -24,19 +24,19 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected int mHeight;
 	protected final ControlCamera mCamera;
 	protected MatrixTrackingGL mGL = null;
-    protected final TextureManager mTM;
-    protected boolean mInitializedTextures = false;
+//    protected final TextureManager mTM;
+//    protected boolean mInitializedTextures = false;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
 		mCamera = camera;
-        mTM = new TextureManager(view.getContext());
+//        mTM = new TextureManager(view.getContext());
 	}
 	
-	public TextureManager getTextureManager() {
-		return mTM;
-	}
-	
+//	public TextureManager getTextureManager() {
+//		return mTM;
+//	}
+//	
 	protected MatrixTrackingGL getGL(GL10 gl) {
 		if (mGL == null) {
 			mGL = new MatrixTrackingGL(gl);
@@ -46,16 +46,17 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		if (!mInitializedTextures) {
-			try {
-    			mTM.init(getGL(gl));
-			} catch (Exception ex) {
-				Msg.err(ex.getMessage());
-			}
-			mInitializedTextures = true;
-		} else {
-    		getGL(gl); // sanity
-		}
+//		if (!mInitializedTextures) {
+//			try {
+//    			mTM.init(getGL(gl));
+//			} catch (Exception ex) {
+//				Msg.err(ex.getMessage());
+//			}
+//			mInitializedTextures = true;
+//		} else {
+//		}
+		getGL(gl); // sanity
+		
 		clearScene();
 		
 		mGL.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 

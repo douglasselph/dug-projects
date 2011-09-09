@@ -48,7 +48,7 @@ class MyRenderer extends ControlRenderer {
     	if (mShape != null) {
             mShape.onCreate(mGL);
     	}
-    	mInitializedTextures = false;
+//    	mInitializedTextures = false;
     }
 
     public void onDrawFrame(GL10 gl) {
