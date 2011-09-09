@@ -54,25 +54,31 @@ public class Main {
 		process.run("hank.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new hank();
+				return new data.hank();
 			}
 		});
 		process.run("cube.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new Cube();
+				return new data.Cube();
 			}
 		});
 		process.run("suzanne.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new Suzanne();
+				return new data.Suzanne();
 			}
 		});
 		process.run("wingL.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new Wing_L();
+				return new data.Wing_L();
+			}
+		});
+		process.run("wingArm.data", new ICreate() {
+			@Override
+			public Shape create() {
+				return new data.wing.WingArm();
 			}
 		});
 	}

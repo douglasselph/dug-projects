@@ -1,4 +1,4 @@
-#
+#arm
 # TIP Solutions, Shape molded, OpenGL exporter
 #
 import Blender
@@ -37,7 +37,8 @@ class MeshInfo:
 		self.faceVertsOverride = {}
 		self.extraVerts = {}
 		self.armData = None
-		self.armNames = []
+		self.armObjects = []
+		self.pkgName = ""
 	
 	def collect_data(self, mesh):
 		self.verts = []
@@ -105,7 +106,6 @@ class MeshInfo:
 	def getVertIndex(self, face_index, vert_index):
 		if self.faceVertsOverride.has_key((face_index,vert_index)):
 			return self.faceVertsOverride[face_index,vert_index]
-		
 		return vert_index
 	
 	def getNumVerts(self):
@@ -116,11 +116,13 @@ class MeshInfo:
 		if arm != None:
 			self.armData = ArmData()
 			self.armData.collect_data(arm, mesh)
+		else:
+			print "No armature data found for '%s'" % mesh.name
 		
 	def getArmatureFor(self, name):
-		for arm in self.armNames:
-			if arm.endswith(name):
-				return Armature.Get(arm)
+		for armobj in self.armObjects:
+			if armobj.getName().endswith(name):
+				return armobj.getData()
 		return None
 		
 class Bone:
@@ -182,12 +184,12 @@ class ArmData:
 		groupnames = mesh.getVertGroupNames()
 		
 		if len(groupnames) <= 0:
-			print "No group names for mesh %s" % mesh.name
+			print "*ARM-ERROR*: No group names for mesh '%s'" % mesh.name
 			return
 		
 		for bonekey in self.arm.bones.keys():
 			if not findInList(groupnames, bonekey):
-				print "No vertex group for %s (skipping)" % bonekey
+				print "*ARM-ERROR*: No vertex group for bone '%s' (skipping)" % bonekey
 				continue
 				
 			if not self.bones.has_key(bonekey):
@@ -222,7 +224,7 @@ class ArmData:
 				basebones.append(root.name)
 				
 		if len(basebones) == 0:
-			print "No root bones?"
+			print "*ARM-ERROR*: No root bones?"
 			return
 		
 		# Build bone list:	
@@ -282,6 +284,8 @@ class ArmData:
 	def getJointParent(self, bonename):
 		blender_bone = self.arm.bones[bonename]
 		blender_parent = blender_bone.parent
+		if blender_parent == None:
+			return None
 		if not self.bones.has_key(blender_parent.name):
 			return None
 		bone = self.bones[bonename]
@@ -307,8 +311,12 @@ gMeshInfo = MeshInfo()
 	
 def write_obj(filename):
 	global gMeshTree
+	global gMeshInfo
 	
-	# rootname = os.path.basename(os.path.splitext(filename)[0])
+	gMeshInfo.pkgName = Blender.Draw.PupStrInput("Package Name: ", "data", 25)
+		
+	print '-- [write_obj(%s)] --' % filename
+	
 	gMeshTree = build_tree()
 	dirname = os.path.dirname(filename)
 	topobjname = get_topname()
@@ -345,7 +353,8 @@ def build_tree():
 				else:
 					tree[parentname] = [parent, obj]
 		elif type == "Armature":
-			gMeshInfo.armNames.append(name)
+			print "Found Armature %s" % name
+			gMeshInfo.armObjects.append(obj)
 		else:
 			print "Skipping %s of type %s" % (name, type)
 		
@@ -390,36 +399,34 @@ def write_mesh(dirname, basename, objname):
 	
 	list = gMeshTree[objname]
 	obj = list[0]
-	
 	objchildren = list[1:]
 		
 	if not os.path.isdir(dirname):
 		dirname = os.path.dirname(dirname)
 	
-	dotpos = objname.find('.')
-	if dotpos >= 0:
-		root_objname = objname[0:dotpos]
-	else:
-		root_objname = objname
+	use_objname = objname.replace('.','')
 	
 	if basename == None:
-		classname = objname.replace('.','')
-		shapename = root_objname
+		classname = use_objname
+		shapename = use_objname
 	else:
-		classname = '%s_%s' % (basename, objname.replace('.',''))
-		shapename = '%s_%s' % (basename, root_objname)
+		classname = '%s_%s' % (basename, use_objname)
+		shapename = '%s_%s' % (basename, use_objname)
 	
-	if gFileData.has_key(root_objname):
-		filename = gFileData[root_objname]
+	if gFileData.has_key(use_objname):
+		filename = gFileData[use_objname]
 		out = file(filename, 'a')
 		out.write('\n')
 	else:
 		filename = "%s/%s.java" % (dirname, shapename)
 		
-		gFileData[root_objname] = filename
+		gFileData[use_objname] = filename
 		
 		out = file(filename, 'w')
 		out.write('/* THIS IS A GENERATED FILE */\n\n')
+		
+		if gMeshInfo.pkgName != "":
+			out.write('package %s;\n' % gMeshInfo.pkgName)
 			
 		out.write('import java.nio.FloatBuffer;\n')
 		out.write('import java.nio.ShortBuffer;\n')
@@ -427,7 +434,7 @@ def write_mesh(dirname, basename, objname):
 		out.write('import com.tipsolutions.jacket.math.Matrix4f;\n\n')
 		
 	out.write('\n')
-	out.write('class %s extends Shape {\n' % classname)
+	out.write('public class %s extends Shape {\n' % classname)
 				
 	mesh = Mesh.New()
 	mesh.getFromObject(objname) 
@@ -450,7 +457,7 @@ def write_mesh(dirname, basename, objname):
 	write_colors(out, mesh)	
 	write_textures(out, mesh)
 	write_armature(out)
-	write_debuginfo(mesh)
+	# write_debuginfo(mesh)
 
 	out.write('};\n')
 	out.close()
@@ -953,7 +960,7 @@ def write_textures(out, mesh):
 				out.write('\t\t\t};\n')
 				count = numverts * 2
 				
-		out.write
+		out.write('\n')
 		out.write('\t\t\tpublic int size() { return %d; }\n\n' % count)
 		out.write('\t\t};\n')
 		out.write('\t\treturn new TextureData();\n')
@@ -963,8 +970,11 @@ def write_textures(out, mesh):
 def write_armature(out):
 	global gMeshInfo
 	
-	if gMeshInfo.armData == None or not gMeshInfo.armData.hasData():
+	if gMeshInfo.armData == None:
 		print "No armature data"
+		return
+	if not gMeshInfo.armData.hasData():
+		print "Empty armature data"
 		return
 	
 	out.write('\t@Override\n')
@@ -1111,6 +1121,7 @@ def write_debuginfo(mesh):
 			print "---"	
 			
 	print "--- MESH DONE"
-						
-name = os.path.splitext(Blender.Get('filename'))[0]
-Blender.Window.FileSelector(write_obj, "Export", name)
+	
+	
+dirname = os.path.splitext(Blender.Get('filename'))[0]
+Blender.Window.FileSelector(write_obj, "Export", dirname)

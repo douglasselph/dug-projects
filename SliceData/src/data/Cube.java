@@ -1,3 +1,4 @@
+package data;
 /* THIS IS A GENERATED FILE */
 
 import java.nio.FloatBuffer;
@@ -6,7 +7,7 @@ import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.math.Matrix4f;
 
 
-class Cube extends Shape {
+public class Cube extends Shape {
 
 	@Override protected Matrix4f dGetMatrix() {
 		return new Matrix4f(1.000000f, 0.000000f, 0.000000f, 0.000000f,
