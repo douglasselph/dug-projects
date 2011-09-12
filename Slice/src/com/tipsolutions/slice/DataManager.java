@@ -11,6 +11,7 @@ import com.tipsolutions.jacket.data.Box;
 import com.tipsolutions.jacket.data.Pyramid;
 import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeGL;
+import com.tipsolutions.jacket.data.Shape.CullFace;
 import com.tipsolutions.jacket.data.Shape.dFloatBuf;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
@@ -39,8 +40,9 @@ public class DataManager {
 	static final int DATA_BOX = 2;
 	static final int DATA_SUSAN = 3;
 	static final int DATA_HANK = 4;
-	
 	static final int DATA_WING1 = 5;
+	static final int DATA_WINGARM = 6;
+	static final int DATA_NUM = 7;
 
     protected Data [] mData = null;
     
@@ -48,10 +50,10 @@ public class DataManager {
     final String SUSAN_FILE = "suzanne.data";
     final String HANK_FILE = "hank.data";
     final String WING1_FILE = "wingL.data";
-    static final int NUM_FILES = 4;
+    final String WINGARM_FILE = "wingArm.data";
+    static final int NUM_FILES = 5;
     
-    static final int ARRAY_SIZE = NUM_FILES+2;
-    ShapeGL [] mShapes = new ShapeGL[ARRAY_SIZE];
+    ShapeGL [] mShapes = new ShapeGL[DATA_NUM];
     Context mCtx;
     MyApplication mApp;
     
@@ -111,7 +113,7 @@ public class DataManager {
 
     
     public void init() {
-        mData = new Data[ARRAY_SIZE];
+        mData = new Data[DATA_NUM];
         
         mData[DATA_PYRAMID] = new Data(new CreateShape() {
 			public ShapeGL create() {
@@ -146,6 +148,13 @@ public class DataManager {
         mData[DATA_WING1] = new Data(new CreateShape() {
 			public ShapeGL create() {
 				return loadShape(WING1_FILE);
+			}
+        });
+        mData[DATA_WINGARM] = new Data(new CreateShape() {
+			public ShapeGL create() {
+				ShapeGL shape = loadShape(WINGARM_FILE);
+				shape.setCullFace(CullFace.NONE);
+				return shape;
 			}
         });
     }

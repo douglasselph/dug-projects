@@ -40,8 +40,8 @@ public class WingArm extends Shape {
 				buf.put(new float [] {
 					0.133726f, 0.060180f, -0.183519f, 0.133726f, -0.014884f, -0.183519f, -1.334232f, -0.028067f, 0.211233f, -1.334232f, 0.073363f, 0.211233f, 0.133726f, 0.060180f, 0.012227f, /* 0 -> 4 */
 					0.133726f, -0.014884f, 0.012227f, -1.334232f, -0.028067f, 0.475732f, -1.334232f, 0.073363f, 0.475732f, 1.767368f, -0.003589f, 0.514780f, 1.767368f, 0.048884f, 0.514780f, /* 5 -> 9 */
-					1.767368f, -0.003589f, 0.377946f, 1.767368f, 0.048884f, 0.377946f, 2.494288f, 0.032693f, 0.334952f, 2.494288f, 0.012602f, 0.334952f, 2.494288f, 0.032693f, 0.387343f, /* 10 -> 14 */
-					2.494288f, 0.012602f, 0.387343f, /* 15 -> 15 */
+					1.767368f, -0.003589f, 0.377946f, 1.767368f, 0.048884f, 0.377946f, 2.494288f, 0.032693f, 0.334952f, 2.494288f, 0.012602f, 0.334952f, 2.494287f, 0.032693f, 0.387343f, /* 10 -> 14 */
+					2.494287f, 0.012602f, 0.387343f, /* 15 -> 15 */
 				});
 			};
 			public int size() { return 48; }
@@ -92,9 +92,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Arm1"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					2,3,6,7,});
+					0,1,2,3,4,5,6,7,});
 			}
-			@Override public int size() { return 4; }
+			@Override public int size() { return 8; }
 			@Override public int [] getJoints() {
 				int [] joints = new int[1];
 				joints[0] = 0;
@@ -105,9 +105,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Arm2"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					});
+					0,1,4,5,8,9,10,11,});
 			}
-			@Override public int size() { return 0; }
+			@Override public int size() { return 8; }
 			@Override public int [] getJoints() {
 				int [] joints = new int[1];
 				joints[0] = 1;
@@ -119,9 +119,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Hand"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					12,13,14,15,});
+					8,9,10,11,12,13,14,15,});
 			}
-			@Override public int size() { return 4; }
+			@Override public int size() { return 8; }
 			@Override public int [] getJoints() {
 				return null;
 			};
@@ -136,9 +136,9 @@ public class WingArm extends Shape {
 		joints[0] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					0,1,4,5,0,1,4,5,});
+					0,1,4,5,});
 			}
-			@Override public int size() { return 8; }
+			@Override public int size() { return 4; }
 			@Override public int [] getBones() {
 				int [] bones = new int[2];
 				bones[0] = 0;
@@ -149,9 +149,9 @@ public class WingArm extends Shape {
 		joints[1] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					8,9,10,11,8,9,10,11,});
+					8,9,10,11,});
 			}
-			@Override public int size() { return 8; }
+			@Override public int size() { return 4; }
 			@Override public int [] getBones() {
 				int [] bones = new int[2];
 				bones[0] = 1;

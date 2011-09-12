@@ -1,7 +1,6 @@
 package com.tipsolutions.jacket.view;
 
 import android.opengl.GLU;
-import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
@@ -90,6 +89,19 @@ public class Camera {
 	
 	public Vector3f getUp() {
 		return mUp;
+	}
+	
+	// Convert from a pixel location within the seen window
+	// to an actual internal coordinate position.
+	//
+	// Note: z will always be zero.
+	public Vector3f getWorldPosition(int px, int py) {
+		Vector3f vec = new Vector3f();
+		float wWidth = mRight - mLeft;
+		float wHeight = mTop - mBottom;
+		vec.setX((wWidth * (float)px/(float)mWidth) + mLeft);
+		vec.setY((wHeight * (float)py/(float)mHeight) + mBottom);
+		return vec;
 	}
 	
 	// ax: specifies the radian angle of rotation around the up axis.

@@ -1,10 +1,13 @@
 package com.tipsolutions.slice;
 
+import java.util.ArrayList;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,12 +20,16 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.data.ShapeGL;
+import com.tipsolutions.jacket.data.Shape.Bone;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.math.BufferUtils.Bounds;
+import com.tipsolutions.jacket.view.AdjustEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -38,10 +45,32 @@ public class ViewObj extends Activity {
 		ShapeGL create();
 	}
 	
+	class AdjustBones implements AdjustEventTap.Adjust {
+		
+		Vector3f mStart;
+		
+		@Override
+		public void start(int x, int y) {
+			mStart = mCamera.getWorldPosition(x, y);
+			Log.d("DEBUG", "Start vector=" + mStart.toString());
+			ArrayList<Bone> list = mActiveShape.getBones((float)x, (float)y);
+			for (Bone bone : list) {
+				Log.d("DEBUG", "Matched " + bone.getName());
+			}
+		}
+
+		@Override
+		public void move(int x, int y) {
+			Vector3f vec = mCamera.getWorldPosition(x, y);
+			Log.d("DEBUG", "Vector=" + vec.toString());
+		}
+	};
+	
 	class Controls {
 		TableLayout mHolder;
 		TableRow mControlRow;
 		TableRow mDisplayRow;
+		ButtonGroup mControlGroup;
 		
 		Controls() {
 			mHolder = new TableLayout(ViewObj.this);
@@ -61,6 +90,7 @@ public class ViewObj extends Activity {
 					new SpinnerControl("Susan", DataManager.DATA_SUSAN),
 					new SpinnerControl("Hank", DataManager.DATA_HANK),
 					new SpinnerControl("Wing1", DataManager.DATA_WING1),
+					new SpinnerControl("WingArm", DataManager.DATA_WINGARM),
 			});
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 			shapeChoice.setAdapter(adapter);
@@ -129,6 +159,7 @@ public class ViewObj extends Activity {
 			
 			ButtonGroup controlGroup = new ButtonGroup(ViewObj.this);
 			controlGroup.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mControlGroup = controlGroup;
 
 			Button btnObj = new Button(ViewObj.this);
 			btnObj.setId(CONTROL_OBJECT);
@@ -194,6 +225,7 @@ public class ViewObj extends Activity {
     
     ShapeGL mActiveShape = null;
     TwirlEventTap mTwirlEventTap;
+    AdjustEventTap mAdjustEventTap;
     ControlCamera mCamera;
     IEventTap mActiveEventTap;
     MyRenderer mRenderer;
@@ -248,18 +280,18 @@ public class ViewObj extends Activity {
 				mActiveShape.getMatrixMod().addRotate(xAngle, yAngle, 0.0);
 			}
         });
-//        mTwirlEventTap.setDoubleTap(new Runnable() {
-//			@Override
-//			public void run() {
-//				mSurfaceView.setEventTap(mCamera);
-//			}
-//        });
-//        mCamera.setDoubleTap(new Runnable() {
-//			@Override
-//			public void run() {
-//				mSurfaceView.setEventTap(mTwirlEventTap);
-//			}
-//        });
+        mAdjustEventTap = new AdjustEventTap(mSurfaceView, new AdjustBones());
+        
+        Runnable doubleTap = new Runnable() {
+			@Override
+			public void run() {
+				setNextEventTap();
+			}
+        };
+        mTwirlEventTap.setDoubleTap(doubleTap);
+        mCamera.setDoubleTap(doubleTap);
+        mAdjustEventTap.setDoubleTap(doubleTap);
+        
         mControls = new Controls();
       
         RelativeLayout.LayoutParams params;
@@ -385,7 +417,7 @@ public class ViewObj extends Activity {
     	mCamera.setLookAt(mActiveShape.getMidPoint());
     	mCamera.setLocation(mCamera.getLookAt().dup());
     	
-    	Shape.Bounds bounds = mActiveShape.getBounds();
+    	Bounds bounds = mActiveShape.getBounds();
     	float offsetZ = bounds.getSizeZ();
     	if (bounds.getSizeY() > bounds.getSizeX()) {
     		offsetZ += bounds.getSizeY();
@@ -407,9 +439,34 @@ public class ViewObj extends Activity {
 				mActiveEventTap = mTwirlEventTap;
 				break;
 			case CONTROL_ARMATURE:
+			{
+				StringBuffer sbuf = new StringBuffer();
+				sbuf.append("#Bones=");
+				sbuf.append(mActiveShape.getNumBones());
+				sbuf.append(", #Joints=");
+				sbuf.append(mActiveShape.getNumJoints());
+				Toast.makeText(this, sbuf.toString(), Toast.LENGTH_LONG).show();
+				mActiveEventTap = mAdjustEventTap;
 				break;
+			}
 		}
         mSurfaceView.setEventTap(mActiveEventTap);
+	}
+	
+	void setNextEventTap() {
+		switch (mApp.getActiveControl()) {
+			case CONTROL_CAMERA:
+				mApp.setActiveControl(CONTROL_OBJECT);
+				break;
+			case CONTROL_OBJECT:
+				mApp.setActiveControl(CONTROL_ARMATURE);
+				break;
+			case CONTROL_ARMATURE:
+				mApp.setActiveControl(CONTROL_CAMERA);
+				break;
+		}
+		mControls.mControlGroup.setChecked(mApp.getActiveControl());
+		setEventTap();
 	}
 	
 }

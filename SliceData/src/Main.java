@@ -32,7 +32,6 @@ public class Main {
 		Shape writeData(String filename, ICreate create) {
 			Shape d = create.create();
 			d.fill();
-			d.getBounds().compute();
 			d.writeData(filename);
 			return d;
 		}

@@ -117,6 +117,7 @@ class MeshInfo:
 			self.armData = ArmData()
 			self.armData.collect_data(arm, mesh)
 		else:
+			self.armData = None
 			print "No armature data found for '%s'" % mesh.name
 		
 	def getArmatureFor(self, name):
@@ -201,9 +202,10 @@ class ArmData:
 			for vert in mesh.getVertsFromGroup(bonekey):
 				influences = mesh.getVertexInfluences(vert)
 				
-				if len(influences) == 1:
+				if not findInList(bone.verts, vert):
 					bone.verts.append(vert)
-				else:
+					
+				if len(influences) > 1:
 					influences.sort()
 					bonenames = []
 					for inf in influences:
@@ -212,8 +214,9 @@ class ArmData:
 					jointkey = self.getJointKey(bonenames)
 					if not self.joints.has_key(jointkey):
 						self.joints[jointkey] = Joint(bonenames)
-					
-					self.joints[jointkey].verts.append(vert)
+	
+					if not findInList(self.joints[jointkey].verts, vert):				
+						self.joints[jointkey].verts.append(vert)
 					
 		# Get Base bones
 		basebones = []

@@ -9,14 +9,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
+
+import android.util.Log;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.math.BufferUtils.Bounds;
+import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
 
@@ -28,96 +33,12 @@ public class Shape {
 	///////////////////////////////////////////////
 	// CORE 
 	///////////////////////////////////////////////
-
-	protected abstract class MyData<TARGET> {
-		TARGET mTarget;
-	};
 	
-	protected class Bone extends ShortBuf {
-		String mName;
-		int [] mJoints = null;
-		int mJointParent = -1;
-	};
-
-	protected class Joint extends ShortBuf {
-		int [] mBones = null;
-	};
-	
-	public class Bounds {
-		protected static final int MIN_X = 0;
-		protected static final int MIN_Y = 1;
-		protected static final int MIN_Z = 2;
-		protected static final int MAX_X = 3;
-		protected static final int MAX_Y = 4;
-		protected static final int MAX_Z = 5;
-		
-		protected static final int SIZ = 6;
-
-		float [] mBounds = new float[SIZ];
-		
-		protected float getMinX() { return mBounds[MIN_X]; }
-		protected float getMinY() { return mBounds[MIN_Y]; }
-		protected float getMinZ() { return mBounds[MIN_Z]; }
-		protected float getMaxX() { return mBounds[MAX_X]; }
-		protected float getMaxY() { return mBounds[MAX_Y]; }
-		protected float getMaxZ() { return mBounds[MAX_Z]; }
-		
-		protected void setMaxX(float x) { mBounds[MAX_X] = x; }
-		protected void setMaxY(float y) { mBounds[MAX_Y] = y; }
-		protected void setMaxZ(float z) { mBounds[MAX_Z] = z; }
-		protected void setMinX(float x) { mBounds[MIN_X] = x; }
-		protected void setMinY(float y) { mBounds[MIN_Y] = y; }
-		protected void setMinZ(float z) { mBounds[MIN_Z] = z; }
-		
-		public float getSizeX() { return getMaxX()-getMinX(); }
-		public float getSizeY() { return getMaxY()-getMinY(); }
-		public float getSizeZ() { return getMaxZ()-getMinZ(); }
-		
-		public float getMidX() { return (getMaxX()+getMinX())/2; }
-		public float getMidY() { return (getMaxY()+getMinY())/2; }
-		public float getMidZ() { return (getMaxZ()+getMinZ())/2; }
+	public class ShapeBounds extends Bounds {
 		
 		public void compute() {
-			FloatBuffer buf = getVertexBuf();
-			
-			class ComputeBounds {
-	    		float minX = 0;
-	    		float minY = 0;
-	    		float minZ = 0;
-	    		float maxX = 0;
-	    		float maxY = 0;
-	    		float maxZ = 0;
-	    		boolean initialized = false;
-	    		
-	    		void apply(float x, float y, float z) {
-	    			if (!initialized) {
-	            		minX = x;
-	            		minY = y;
-	            		minZ = z;
-	            		maxX = x;
-	            		maxY = y;
-	            		maxZ = z;
-	            		initialized = true;
-	    			} else {
-	        			if (x < minX) {
-	        				minX = x;
-	        			} else if (x > maxX) {
-	        				maxX = x;
-	        			}
-	        			if (y < minY) {
-	        				minY = y;
-	        			} else if (y > maxY) {
-	        				maxY = y;
-	        			}
-	        			if (z < minZ) {
-	        				minZ = z;
-	        			} else if (z > maxZ) {
-	        				maxZ = z;
-	        			}
-	    			}
-	    		}
-			};
 			ComputeBounds computeBounds = new ComputeBounds();
+			FloatBuffer buf = getVertexBuf();
 			
 			if (buf != null) {
 	    		while (buf.position() < buf.limit()) {
@@ -131,16 +52,77 @@ public class Shape {
 					computeBounds.apply(child.getBounds().getMaxX(), child.getBounds().getMaxY(), child.getBounds().getMaxZ());
 				}
 			}
-			mBounds = new float[SIZ];
-			
-			setMinX(computeBounds.minX);
-			setMinY(computeBounds.minY);
-			setMinZ(computeBounds.minZ);
-			setMaxX(computeBounds.maxX);
-			setMaxY(computeBounds.maxY);
-			setMaxZ(computeBounds.maxZ);
+			set(computeBounds);
+		}		
+	};
+
+	protected abstract class MyData<TARGET> {
+		TARGET mTarget;
+	};
+	
+	public class Bone extends ShortBuf {
+		protected String mName;
+		protected int [] mJoints = null;
+		protected int mJointParent = -1;
+		protected Bounds mBounds = null;
+		
+		public String getName() {
+			return mName;
 		}
 		
+		public int getNumJoints() {
+			return mJoints.length;
+		}
+	
+		public Joint getJoint(int index) {
+			if (index >= 0 && index < mJoints.length) {
+				return Shape.this.getJoint(mJoints[index]);
+			}
+			return null;
+		}
+		
+		public Joint getJointParent() {
+			return Shape.this.getJoint(mJointParent);
+		}
+		
+		public Bounds getBounds() { return mBounds; }
+		
+		public void computeBounds() {
+			ShortBuffer sbuf = getBuf();
+			FloatBuffer fbuf = getVertexBuf();
+			int index;
+			float x, y, z;
+			
+			ComputeBounds computeBounds = new ComputeBounds();
+			
+			sbuf.rewind();
+			fbuf.rewind();
+			while (sbuf.hasRemaining()) {
+				index = sbuf.get();
+				fbuf.position(index*3);
+				x = fbuf.get();
+				y = fbuf.get();
+				z = fbuf.get();
+				computeBounds.apply(x, y, z);
+			}
+			mBounds = new Bounds();
+			mBounds.set(computeBounds);
+		}
+	};
+
+	public class Joint extends ShortBuf {
+		protected int [] mBones = null;
+		
+		public int getNumBones() {
+			return mBones.length;
+		}
+		
+		public Bone getBone(int index) {
+			if (index >=0 && index < mBones.length) {
+				return Shape.this.getBone(mBones[index]);
+			}
+			return null;
+		}
 	};
 	
 	protected FloatBuf mColorBuf = new FloatBuf();
@@ -150,21 +132,83 @@ public class Shape {
     protected FloatBuf mTextureBuf = new FloatBuf();
     protected Bone [] mBones = null;
     protected Joint [] mJoints = null;
-	protected Bounds mBounds = new Bounds();
+	protected ShapeBounds mBounds = new ShapeBounds();
     
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix = null;
 	protected Shape [] mChildren = null;
 	protected TextureManager.Texture mTexture = null;
-//	protected int mCullFace = GL10.GL_BACK;
+	protected int mCullFace = GL10.GL_BACK;
 	
 	public Shape [] getChildren() { return mChildren; }
 	protected Matrix4f getMatrix() { return mMatrix; }
 	
 	protected int getFrontFace() { return GL10.GL_CCW; }
-	protected int getCullFace() { return GL10.GL_BACK; }
+	public int getCullFace() { return mCullFace; }
 	
-	public Bounds getBounds() { return mBounds; }
+	public Bone [] getBones() { return mBones; }
+	public Joint [] getJoints() { return mJoints; }
+	
+	public ShapeBounds getBounds() { return mBounds; }
+	
+	public int getNumBones() {
+		if (mBones == null) {
+			return 0;
+		} else {
+			return mBones.length;
+		}
+	}
+	
+	public int getNumJoints() {
+		if (mJoints == null) {
+			return 0;
+		} else {
+			return mJoints.length;
+		}
+	}
+	
+	public Joint getJoint(int index) {
+		if (index >= 0 && index < mJoints.length) {
+			return mJoints[index];
+		}
+		return null;
+	}
+	
+	public Bone getBone(int index) {
+		if (index >= 0 && index < mBones.length) {
+			return mBones[index];
+		}
+		return null;
+	}
+	
+	public ArrayList<Bone> getBones(float x, float y, float z) {
+		if (mBones == null) {
+			return null;
+		}
+		ArrayList<Bone> list = new ArrayList<Bone>();
+		for (Bone bone : mBones) {
+			if (bone.getBounds().within(x, y, z)) {
+				list.add(bone);
+			}
+		}
+		return list;
+	}
+	
+	public ArrayList<Bone> getBones(float x, float y) {
+		if (mBones == null) {
+			return null;
+		}
+		ArrayList<Bone> list = new ArrayList<Bone>();
+		for (Bone bone : mBones) {
+			if (bone.getBounds().within(x, y)) {
+				Log.d("DEBUG", "Match " + bone.getName() + ":" + bone.getBounds().toString());
+				list.add(bone);
+			} else {
+				Log.d("DEBUG", "No Match " + bone.getName() + ":" + bone.getBounds().toString());
+			}
+		}
+		return list;
+	}
 	
 	public FloatBuffer getColorBuf() { return mColorBuf.getBuf(); }
 	public ShortBuffer getIndexBuf() { return mIndexBuf.getBuf(); }
@@ -177,16 +221,17 @@ public class Shape {
 //	static final protected int FIXED_COLOR_ONE = 0x10000;
 //	protected ShortData getColorFixed() { return null; }
 	
-//	public enum CullFace { NONE, BACK, FRONT }
-//	public void setCullFace(CullFace code) { 
-//		if (code == CullFace.BACK) {
-//    		mCullFace = GL10.GL_BACK;
-//		} else if (code == CullFace.FRONT) {
-//    		mCullFace = GL10.GL_FRONT;
-//		} else {
-//    		mCullFace = 0;
-//		}
-//	}
+	public enum CullFace { NONE, BACK, FRONT }
+	public Shape setCullFace(CullFace code) { 
+		if (code == CullFace.BACK) {
+    		mCullFace = GL10.GL_BACK;
+		} else if (code == CullFace.FRONT) {
+    		mCullFace = GL10.GL_FRONT;
+		} else {
+    		mCullFace = 0;
+		}
+		return this;
+	}
 //	
 //	public static CullFace GetCullFaceFromOrdinal(int face) {
 //    	for (Shape.CullFace match : Shape.CullFace.values()) {
@@ -590,6 +635,7 @@ public class Shape {
 				child.fill();
 			}
 		}
+		getBounds().compute();
 
 		// It is arguably faster and easier to use floats
 		// because modern hardware supports colors floats.
@@ -662,6 +708,7 @@ public class Shape {
 				}
 				tgt.mJointParent = src.getJointParent();
 				tgt.set(src);
+				tgt.computeBounds();
 				mBones[i] = tgt;
 			}
 		}
@@ -840,21 +887,11 @@ public class Shape {
 	// 
 	protected void writeBounds(DataOutputStream dataStream) throws IOException {
 		dataStream.writeInt(ELE_BOUNDS);
-		dataStream.writeFloat(getBounds().getMinX());
-		dataStream.writeFloat(getBounds().getMinY());
-		dataStream.writeFloat(getBounds().getMinZ());
-		dataStream.writeFloat(getBounds().getMaxX());
-		dataStream.writeFloat(getBounds().getMaxY());
-		dataStream.writeFloat(getBounds().getMaxZ());
+		getBounds().write(dataStream);
 	}
 
 	protected void readBounds(DataInputStream dataStream) throws IOException {
-		mBounds.setMinX(dataStream.readFloat());
-		mBounds.setMinY(dataStream.readFloat());
-		mBounds.setMinZ(dataStream.readFloat());
-		mBounds.setMaxX(dataStream.readFloat());
-		mBounds.setMaxY(dataStream.readFloat());
-		mBounds.setMaxZ(dataStream.readFloat());
+		getBounds().read(dataStream);
 	}
 
 	// 
@@ -931,6 +968,7 @@ public class Shape {
 			dataStream.writeInt(0);
 		}
 		dataStream.writeInt(bone.mJointParent);
+		bone.getBounds().write(dataStream);
 		bone.writeBuffer(dataStream);
 	}
 
@@ -949,6 +987,8 @@ public class Shape {
 			}
 		}
 		bone.mJointParent = dataStream.readInt();
+		bone.mBounds = new Bounds();
+		bone.mBounds.read(dataStream);
 		bone.readBuffer(dataStream);
 		return bone;
 	}
