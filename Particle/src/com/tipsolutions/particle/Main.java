@@ -57,9 +57,6 @@ public class Main extends Activity {
 		@Override
 		public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 			super.onSurfaceCreated(gl, config);
-			
-			getGL(gl);
-			
 			mParticleSystem.onCreate();
 		}
 		
@@ -282,7 +279,7 @@ public class Main extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_S) {
-			mRenderer.snapshot("/sdcard/screenshot.png");
+//			mRenderer.snapshot("/sdcard/screenshot.png");
 			return true;
 		}
 		return super.onKeyDown(keyCode, event);

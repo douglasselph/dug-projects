@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.data;
+package com.tipsolutions.jacket.shape;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import com.tipsolutions.jacket.data.Shape.MessageWriter;
+import com.tipsolutions.jacket.shape.Shape.MessageWriter;
 
 public class ShapeUtils {
 	

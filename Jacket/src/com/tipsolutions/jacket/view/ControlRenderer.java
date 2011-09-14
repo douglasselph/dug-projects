@@ -1,6 +1,8 @@
 package com.tipsolutions.jacket.view;
 
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -11,12 +13,14 @@ import javax.microedition.khronos.opengles.GL10;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 
-import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.misc.Msg;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
+	
+	public interface OnAfterNextRender {
+		void run(ControlRenderer renderer, MatrixTrackingGL gl);
+	};
 	
 	protected final ControlSurfaceView mView;
 	protected Color4f mClippingPlaneColor = null;
@@ -24,38 +28,23 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected int mHeight;
 	protected final ControlCamera mCamera;
 	protected MatrixTrackingGL mGL = null;
-//    protected final TextureManager mTM;
-//    protected boolean mInitializedTextures = false;
+	protected OnAfterNextRender mOnAfterNextRender = null;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
 		mCamera = camera;
-//        mTM = new TextureManager(view.getContext());
 	}
 	
-//	public TextureManager getTextureManager() {
-//		return mTM;
-//	}
-//	
-	protected MatrixTrackingGL getGL(GL10 gl) {
-		if (mGL == null) {
-			mGL = new MatrixTrackingGL(gl);
-		}
+	public MatrixTrackingGL getGL() {
 		return mGL;
 	}
+	
+	public float getWidth() { return mWidth; }
+	public float getHeight() { return mHeight; }
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-//		if (!mInitializedTextures) {
-//			try {
-//    			mTM.init(getGL(gl));
-//			} catch (Exception ex) {
-//				Msg.err(ex.getMessage());
-//			}
-//			mInitializedTextures = true;
-//		} else {
-//		}
-		getGL(gl); // sanity
+		mGL = new MatrixTrackingGL(gl);
 		
 		clearScene();
 		
@@ -73,12 +62,19 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		
 		mCamera.applyLookAt(mGL);
 	}
+	
+	protected void onDrawFrameDone() {
+		if (mOnAfterNextRender != null) {
+			mOnAfterNextRender.run(this, mGL);
+			mOnAfterNextRender = null;
+		}
+	}
 
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		mWidth = width;
 		mHeight = height;
-		getGL(gl).glViewport(0, 0, mWidth, mHeight);
+		gl.glViewport(0, 0, mWidth, mHeight);
     	mCamera.setScreenDimension(mWidth, mHeight);
 	}
 
@@ -112,7 +108,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mClippingPlaneColor = color;
 	}
 	
-	public void snapshot(String filename) {
+	public void setOnAfterNextRender(OnAfterNextRender run) {
+		mOnAfterNextRender = run;
+	}
+	
+	public Bitmap snapshot() {
 		int width = mWidth;
 		int height = mHeight;
 		int size = width * height;
@@ -136,15 +136,15 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		}
 		sbuf.rewind();
 		bitmap.copyPixelsFromBuffer(sbuf);
-
-		try {
-		    FileOutputStream fos = new FileOutputStream(filename);
-		    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-		    fos.flush();
-		    fos.close();
-		} catch (Exception e) {
-			Msg.err(e.getMessage());
-		}
+		return bitmap;
+	}
+	
+	public void snapshot(File file) throws IOException {
+		Bitmap bitmap = snapshot();
+		FileOutputStream fos = new FileOutputStream(file);
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+		fos.flush();
+		fos.close();
 	}
 	
 }

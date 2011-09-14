@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.data;
+package com.tipsolutions.jacket.shape;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -7,7 +7,7 @@ import android.util.FloatMath;
 
 import com.tipsolutions.jacket.image.TextureManager;
 
-public class Pyramid extends ShapeGL {
+public class Pyramid extends Shape {
 
 	public Pyramid() {
 	}

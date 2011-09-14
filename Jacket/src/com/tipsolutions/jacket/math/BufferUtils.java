@@ -8,7 +8,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import com.tipsolutions.jacket.data.Shape.dData;
+import com.tipsolutions.jacket.shape.Shape.dData;
 
 public class BufferUtils {
     /**

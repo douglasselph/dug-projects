@@ -1,6 +1,6 @@
 package com.tipsolutions.slice;
 
-import java.util.ArrayList;
+import java.io.File;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -23,26 +23,30 @@ import android.widget.TableRow;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.tipsolutions.jacket.data.ShapeGL;
-import com.tipsolutions.jacket.data.Shape.Bone;
+import com.tipsolutions.jacket.file.FileUtils;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.Bounds;
+import com.tipsolutions.jacket.shape.Box;
+import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.view.AdjustEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup;
 import com.tipsolutions.jacket.view.ControlCamera;
+import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 import com.tipsolutions.jacket.view.IEventTap;
 import com.tipsolutions.jacket.view.SpinnerControl;
 import com.tipsolutions.jacket.view.TwirlEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
+import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
 
 public class ViewObj extends Activity {
 
 	interface CreateShape {
-		ShapeGL create();
+		Shape create();
 	}
 	
 	class AdjustBones implements AdjustEventTap.Adjust {
@@ -51,12 +55,55 @@ public class ViewObj extends Activity {
 		
 		@Override
 		public void start(int x, int y) {
-			mStart = mCamera.getWorldPosition(x, y);
-			Log.d("DEBUG", "Start vector=" + mStart.toString());
-			ArrayList<Bone> list = mActiveShape.getBones((float)x, (float)y);
-			for (Bone bone : list) {
-				Log.d("DEBUG", "Matched " + bone.getName());
+			MatrixTrackingGL gl = mRenderer.getGL();
+			
+			gl.glMatrixMode(GL10.GL_MODELVIEW);
+			gl.glLoadIdentity();
+		
+			class Try {
+				float size;
+				Color4f color;
+				float z;
+				Try(float z, float s, Color4f c) {
+					this.z = z;
+					this.size = s;
+					this.color = c;
+				}
+			};
+			Try [] trys = {
+				new Try(-1f, 0.3f, Color4f.RED),
+				new Try(-0.5f, 0.25f, Color4f.GREEN),
+				new Try(0f, 0.2f, Color4f.YELLOW),
+				new Try(0.5f, 0.15f, Color4f.BLACK),
+				new Try(0.9f, 0.11f, Color4f.CYAN),
+				new Try(1.0f, 0.4f, Color4f.BROWN),
+			};
+			for (Try t : trys) {
+				Vector3f win = new Vector3f(x, y, t.z);
+				Vector3f pos = mCamera.getUnproject(gl, x, y, t.z);
+				Log.d("DEBUG", "VEC=" + win.toString() + ", POS=" + pos.toString());
+				mRoot.addChild(createPoint(pos, t.size, t.color));
 			}
+			mSurfaceView.requestRender();
+			
+//			gl.glMatrixMode(GL10.GL_MODELVIEW);
+//			Matrix4f mv = gl.getMatrix();
+//			Matrix4f mvi = new Matrix4f(mv).invert();
+//			Log.d("DEBUG", "ModelView Matrix=" + mv.toString() + ", invert=" + mvi.toString());
+//			Log.d("DEBUG", "Projection Matrix=" + mv.toString() + ", invert=" + mpi.toString());
+			
+//			Bounds mb = mActiveShape.getBounds();
+			
+//			Log.d("DEBUG", "Shape bounds=" + mb.toString());
+//			Log.d("DEBUG", "Shape matrix=" + mActiveShape.getMatrixMod().toString());
+			
+//			Log.d("DEBUG", "Point invert proj post=" + mpi.applyPost(mStart).toString());
+//			Log.d("DEBUG", "Point invert proj pre=" + mpi.applyPre(mStart).toString());
+			
+//			ArrayList<Bone> list = mActiveShape.getBones((float)x, (float)y);
+//			for (Bone bone : list) {
+//				Log.d("DEBUG", "Matched " + bone.getName());
+//			}
 		}
 
 		@Override
@@ -219,11 +266,13 @@ public class ViewObj extends Activity {
 	
 	static final int MENU_QUIT = 0;
 	static final int MENU_RESET = 1;
+	static final int MENU_SNAPSHOT = 2;
 	
     public static final boolean LOG = true;
     public static final String TAG = "Slice";
     
-    ShapeGL mActiveShape = null;
+    Shape mRoot = new Shape();
+    Shape mActiveShape = null;
     TwirlEventTap mTwirlEventTap;
     AdjustEventTap mAdjustEventTap;
     ControlCamera mCamera;
@@ -307,9 +356,11 @@ public class ViewObj extends Activity {
         main.addView(mSurfaceView, params);
     
         setContentView(main);
+        mRenderer.setShape(mRoot);
 		setShape(mApp.getDataManager().getShape(mApp.getActiveShapeIndex()));
         
-//        testMatrixAddRotate();
+		TestData testData = new TestData();
+		testData.run();
     }
     
     @Override
@@ -317,6 +368,7 @@ public class ViewObj extends Activity {
 		int order = 0;
 		menu.add(0, MENU_QUIT, order++, "Quit");
 		menu.add(0, MENU_RESET, order++, "Reset");
+		menu.add(0, MENU_SNAPSHOT, order++, "Snapshot");
 		return true;
 	};
    
@@ -330,6 +382,27 @@ public class ViewObj extends Activity {
 				mActiveShape.resetRotate();
 				mSurfaceView.requestRender();
 				break;
+    		case MENU_SNAPSHOT:
+    		{	
+    			mSurfaceView.setOnAfterNextRender(new OnAfterNextRender() {
+    				@Override
+    				public void run(ControlRenderer renderer, MatrixTrackingGL gl) {
+    					try {
+        					final File file = FileUtils.GetExternalFile("screen.jpg", true);
+        					renderer.snapshot(file);
+        					mSurfaceView.post(new Runnable() {
+								@Override
+								public void run() {
+									Toast.makeText(ViewObj.this, "Created " + file.getAbsoluteFile(), Toast.LENGTH_SHORT).show();
+								}
+        					});
+    					} catch (Exception ex) {
+    						Toast.makeText(ViewObj.this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+    					}
+    				}
+    			});
+    			break;
+    		}
     	}
 		return super.onOptionsItemSelected(item);
 	}
@@ -338,6 +411,9 @@ public class ViewObj extends Activity {
     	Intent intent = getIntent();
     	overridePendingTransition(0, 0);
     	finish();
+    	
+    	mApp.getDataManager().init();
+    	mApp.getTextureManager().reset();
 
     	overridePendingTransition(0, 0);
     	startActivity(intent);
@@ -410,9 +486,10 @@ public class ViewObj extends Activity {
 		}
 	}
 	
-	void setShape(ShapeGL shape) {
+	void setShape(Shape shape) {
+		mRoot.resetChildren(shape);
+		
     	mActiveShape = shape;
-        mRenderer.setShape(shape);
         
     	mCamera.setLookAt(mActiveShape.getMidPoint());
     	mCamera.setLocation(mCamera.getLookAt().dup());
@@ -467,6 +544,13 @@ public class ViewObj extends Activity {
 		}
 		mControls.mControlGroup.setChecked(mApp.getActiveControl());
 		setEventTap();
+	}
+	
+	Shape createPoint(Vector3f loc, float size, Color4f color) {
+		Shape point = new Box(size);
+		point.setLocation(loc);
+		point.setColor(color);
+		return point;
 	}
 	
 }

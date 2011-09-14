@@ -433,7 +433,7 @@ def write_mesh(dirname, basename, objname):
 			
 		out.write('import java.nio.FloatBuffer;\n')
 		out.write('import java.nio.ShortBuffer;\n')
-		out.write('import com.tipsolutions.jacket.data.Shape;\n')
+		out.write('import com.tipsolutions.jacket.shape.Shape;\n')
 		out.write('import com.tipsolutions.jacket.math.Matrix4f;\n\n')
 		
 	out.write('\n')

@@ -16,10 +16,14 @@
 
 package com.tipsolutions.slice;
 
+import java.io.File;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.data.Shape;
+import android.util.Log;
+
+import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -32,7 +36,7 @@ class MyRenderer extends ControlRenderer {
 	
     boolean mTranslucentBackground;
     Shape mShape = null;
-
+    
     public MyRenderer(ControlSurfaceView view, Shape shape, ControlCamera camera, boolean useTranslucentBackground) {
     	super(view, camera);
         mTranslucentBackground = useTranslucentBackground;
@@ -40,23 +44,24 @@ class MyRenderer extends ControlRenderer {
     }
     
     public void setShape(Shape shape) {
-    	if (mShape != null) {
-            mShape.onFinished(mGL);
-    	}
+//    	if (mShape != null) {
+//            mShape.onFinished(mGL);
+//    	}
     	mShape = shape;
     	
-    	if (mShape != null) {
-            mShape.onCreate(mGL);
-    	}
+//    	if (mShape != null) {
+//            mShape.onCreate(mGL);
+//    	}
 //    	mInitializedTextures = false;
     }
-
+    
     public void onDrawFrame(GL10 gl) {
     	super.onDrawFrame(gl);
         
     	if (mShape != null) {
             mShape.onDraw(mGL);
     	}
+    	onDrawFrameDone();
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -66,9 +71,9 @@ class MyRenderer extends ControlRenderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	super.onSurfaceCreated(gl, config);
     	
-    	if (mShape != null) {
-    		mShape.onCreate(getGL(gl));
-    	}
+//    	if (mShape != null) {
+//    		mShape.onCreate(getGL(gl));
+//    	}
 //        /*
 //         * By default, OpenGL enables features that improve quality
 //         * but reduce performance. One might want to tweak that
@@ -88,4 +93,5 @@ class MyRenderer extends ControlRenderer {
 //         }
 //         gl.glShadeModel(GL10.GL_SMOOTH);
     }
+    
 }

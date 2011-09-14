@@ -54,7 +54,7 @@ public class MatrixStack {
     public void glLoadIdentity() {
         Matrix.setIdentityM(mMatrix, mTop);
     }
-
+    
     public void glLoadMatrixf(float[] m, int offset) {
         System.arraycopy(m, offset, mMatrix, mTop, MATRIX_SIZE);
     }

@@ -7,28 +7,27 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.util.Log;
 
-import com.tipsolutions.jacket.data.Box;
-import com.tipsolutions.jacket.data.Pyramid;
-import com.tipsolutions.jacket.data.Shape;
-import com.tipsolutions.jacket.data.ShapeGL;
-import com.tipsolutions.jacket.data.Shape.CullFace;
-import com.tipsolutions.jacket.data.Shape.dFloatBuf;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.shape.Box;
+import com.tipsolutions.jacket.shape.Pyramid;
+import com.tipsolutions.jacket.shape.Shape;
+import com.tipsolutions.jacket.shape.Shape.CullFace;
+import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
 import com.tipsolutions.slice.ViewObj.CreateShape;
 
 public class DataManager {
 
 	class Data {
 		CreateShape mCreate;
-		ShapeGL mShape = null;
+		Shape mShape = null;
 		
 		Data(CreateShape create) {
 			mCreate = create;
 		}
 		
-		ShapeGL getShape() {
+		Shape getShape() {
 			if (mShape == null) {
 				mShape = mCreate.create();
 			}
@@ -53,7 +52,7 @@ public class DataManager {
     final String WINGARM_FILE = "wingArm.data";
     static final int NUM_FILES = 5;
     
-    ShapeGL [] mShapes = new ShapeGL[DATA_NUM];
+    Shape [] mShapes = new Shape[DATA_NUM];
     Context mCtx;
     MyApplication mApp;
     
@@ -62,10 +61,9 @@ public class DataManager {
     	mApp = (MyApplication)context.getApplicationContext();
     }
     
-    ShapeGL getBox() {
-//      TextureManager.Texture texture = mRenderer.getTextureManager().getTexture(R.raw.robot);
+    Shape getBox() {
       TextureManager.Texture texture = mApp.getTextureManager().getTexture("feather_real.png");
-      final ShapeGL shape = new Box(1f, texture);
+      final Shape shape = new Box(1f, texture);
       shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
       shape.setColorData(new dFloatBuf() {
 			@Override
@@ -99,60 +97,59 @@ public class DataManager {
       return shape;
   }
     
-    ShapeGL getPyramid() {
+    Shape getPyramid() {
         TextureManager.Texture texture = mApp.getTextureManager().getTexture(R.raw.robot);
-        ShapeGL shape = new Pyramid(1f, 1f, texture);
+        Shape shape = new Pyramid(1f, 1f, texture);
         shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
         setColors(shape);
         return shape;
     }
     
-    public ShapeGL getShape(int index) {
+    public Shape getShape(int index) {
     	return mData[index].getShape();
     }
 
-    
     public void init() {
         mData = new Data[DATA_NUM];
         
         mData[DATA_PYRAMID] = new Data(new CreateShape() {
-			public ShapeGL create() {
+			public Shape create() {
 				return getPyramid();
 			}
         });
         mData[DATA_CUBE] = new Data(new CreateShape() {
-			public ShapeGL create() {
+			public Shape create() {
 				return loadShape(CUBE_FILE);
 			}
         });
         mData[DATA_BOX] = new Data(new CreateShape() {
-			public ShapeGL create() {
+			public Shape create() {
 				return getBox();
 			}
         });
         mData[DATA_SUSAN] = new Data(new CreateShape() {
-			public ShapeGL create() {
-				ShapeGL shape = loadShape(SUSAN_FILE);
+			public Shape create() {
+				Shape shape = loadShape(SUSAN_FILE);
 		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
 				setColors(shape);
 				return shape;
 			}
         });
         mData[DATA_HANK] = new Data(new CreateShape() {
-			public ShapeGL create() {
-				ShapeGL shape = loadShape(HANK_FILE);
+			public Shape create() {
+				Shape shape = loadShape(HANK_FILE);
 				setColors(shape);
 				return shape;
 			}
         });
         mData[DATA_WING1] = new Data(new CreateShape() {
-			public ShapeGL create() {
+			public Shape create() {
 				return loadShape(WING1_FILE);
 			}
         });
         mData[DATA_WINGARM] = new Data(new CreateShape() {
-			public ShapeGL create() {
-				ShapeGL shape = loadShape(WINGARM_FILE);
+			public Shape create() {
+				Shape shape = loadShape(WINGARM_FILE);
 				shape.setCullFace(CullFace.NONE);
 				return shape;
 			}
@@ -163,8 +160,8 @@ public class DataManager {
     	return (mData != null);
     }
     
-    ShapeGL loadShape(String file) {
-        ShapeGL shape = new ShapeGL();
+    Shape loadShape(String file) {
+        Shape shape = new Shape();
         try {
             InputStream inputStream = mCtx.getAssets().open(file);
             shape.readData(inputStream, mApp.getTextureManager());

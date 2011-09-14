@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.data;
+package com.tipsolutions.jacket.shape;
 
 import java.nio.FloatBuffer;
 
@@ -6,7 +6,7 @@ import com.tipsolutions.jacket.math.BufferUtils;
 import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3;
 
-public class Sphere extends ShapeGL {
+public class Sphere extends Shape {
 
     public enum TextureMode {
         Linear, Projected, Polar;

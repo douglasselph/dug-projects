@@ -13,7 +13,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
-import android.util.Log;
 
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.misc.Msg;
@@ -170,6 +169,10 @@ public class TextureManager {
 	public TextureManager(Context ctx) {
 		mContext = ctx;
 		mAM = mContext.getResources().getAssets();
+	}
+	
+	public void reset() {
+		mMap = new HashMap<Long,Texture>();
 	}
 	
 	public Texture getTexture(int resId) {

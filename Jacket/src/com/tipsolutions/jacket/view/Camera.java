@@ -1,5 +1,7 @@
 package com.tipsolutions.jacket.view;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import android.opengl.GLU;
 
 import com.tipsolutions.jacket.math.Matrix3f;
@@ -22,6 +24,10 @@ public class Camera {
 	protected float mRight;  // right clipping plane
 	protected float mTop;    // top clipping plane
 	protected float mBottom; // bottom clipping plane
+	protected boolean mDoOrtho = false;
+	
+	public float getWidth() { return mWidth; }
+	public float getHeight() { return mHeight; }
 
 	public Camera() {
 	}
@@ -36,7 +42,11 @@ public class Camera {
 		mBottom = -mTop;
 		mLeft = mBottom * aspect;
 		mRight = mTop * aspect;
-		gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
+		if (mDoOrtho) {
+			gl.glOrthof(mLeft, mRight, mBottom, mTop, zNear, zFar);
+		} else {
+			gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
+		}
 	}
 	
 	public synchronized void applyLookAt(MatrixTrackingGL gl) {
@@ -100,8 +110,28 @@ public class Camera {
 		float wWidth = mRight - mLeft;
 		float wHeight = mTop - mBottom;
 		vec.setX((wWidth * (float)px/(float)mWidth) + mLeft);
-		vec.setY((wHeight * (float)py/(float)mHeight) + mBottom);
+		vec.setY((wHeight * (float)(mHeight-py)/(float)mHeight) + mBottom);
 		return vec;
+	}
+	
+	public Vector3f getUnproject(MatrixTrackingGL gl, float winX, float winY, float winZ) {
+		float [] modelview = new float[16];
+		float [] projection = new float[16];
+		int [] view = new int[4];
+		float [] obj = new float[4];
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		gl.getMatrix(modelview, 0);
+		gl.glMatrixMode(GL10.GL_PROJECTION);
+		gl.getMatrix(projection, 0);
+		view[0] = 0;
+		view[1] = 0;
+		view[2] = mWidth;
+		view[3] = mHeight;
+		GLU.gluUnProject(
+				winX, (mHeight-winY), winZ, 
+				modelview, 0, 
+				projection, 0, view, 0, obj, 0);
+		return new Vector3f(obj[0], obj[1], obj[2]);
 	}
 	
 	// ax: specifies the radian angle of rotation around the up axis.
@@ -144,6 +174,14 @@ public class Camera {
 		}
 		rotate(ax, ay);
 	}
+	
+	public void setOrtho() {
+		mDoOrtho = true;
+	}
+	
+	public void setPerspective() {
+		mDoOrtho = false;
+	}
 
 	public synchronized Camera setLocation(Vector3f loc) {
 		mCameraPos = loc;
@@ -170,5 +208,20 @@ public class Camera {
 		mUnitLeft = null;
 		mUnitOut = null;
 		return this;
+	}
+	
+	public String toString() {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("[Lf,Rt,Bt,Tp]=");
+		sbuf.append(mLeft);
+		sbuf.append(",");
+		sbuf.append(mRight);
+		sbuf.append(",");
+		sbuf.append(mBottom);
+		sbuf.append(",");
+		sbuf.append(mTop);
+		sbuf.append(", Up=");
+		sbuf.append(mUp.toString());
+		return sbuf.toString();
 	}
 }

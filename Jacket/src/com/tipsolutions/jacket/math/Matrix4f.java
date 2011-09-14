@@ -155,6 +155,15 @@ public class Matrix4f {
     	return mData;
     }
     
+    public boolean equals(final Matrix4f other) {
+    	for (int i = 0; i < mData.length; i++) {
+    		if (mData[i] != other.mData[i]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
     public FloatBuffer getBuffer() {
     	FloatBuffer fbuf = FloatBuffer.allocate(mData.length);
     	fbuf.put(mData);
@@ -203,6 +212,48 @@ public class Matrix4f {
         return mData[col*4+row];
     }
     
+    public Matrix4f invert() {
+    	final float dA0 = getValue(0,0) * getValue(1,1) - getValue(0,1) * getValue(1,0);
+    	final float dA1 = getValue(0,0) * getValue(1,2) - getValue(0,2) * getValue(1,0);
+    	final float dA2 = getValue(0,0) * getValue(1,3) - getValue(0,3) * getValue(1,0);
+    	final float dA3 = getValue(0,1) * getValue(1,2) - getValue(0,2) * getValue(1,1);
+    	final float dA4 = getValue(0,1) * getValue(1,3) - getValue(0,3) * getValue(1,1);
+    	final float dA5 = getValue(0,2) * getValue(1,3) - getValue(0,3) * getValue(1,2);
+    	final float dB0 = getValue(2,0) * getValue(3,1) - getValue(2,1) * getValue(3,0);
+    	final float dB1 = getValue(2,0) * getValue(3,2) - getValue(2,2) * getValue(3,0);
+    	final float dB2 = getValue(2,0) * getValue(3,3) - getValue(2,3) * getValue(3,0);
+    	final float dB3 = getValue(2,1) * getValue(3,2) - getValue(2,2) * getValue(3,1);
+    	final float dB4 = getValue(2,1) * getValue(3,3) - getValue(2,3) * getValue(3,1);
+    	final float dB5 = getValue(2,2) * getValue(3,3) - getValue(2,3) * getValue(3,2);
+    	final float det = dA0 * dB5 - dA1 * dB4 + dA2 * dB3 + dA3 * dB2 - dA4 * dB1 + dA5 * dB0;
+
+    	if (Math.abs(det) <= MathUtils.EPSILON) {
+    		throw new ArithmeticException("This matrix cannot be inverted");
+    	}
+    	final float temp00 = +getValue(1,1) * dB5 - getValue(1,2) * dB4 + getValue(1,3) * dB3;
+    	final float temp10 = -getValue(1,0) * dB5 + getValue(1,2) * dB2 - getValue(1,3) * dB1;
+    	final float temp20 = +getValue(1,0) * dB4 - getValue(1,1) * dB2 + getValue(1,3) * dB0;
+    	final float temp30 = -getValue(1,0) * dB3 + getValue(1,1) * dB1 - getValue(1,2) * dB0;
+    	final float temp01 = -getValue(0,1) * dB5 + getValue(0,2) * dB4 - getValue(0,3) * dB3;
+    	final float temp11 = +getValue(0,0) * dB5 - getValue(0,2) * dB2 + getValue(0,3) * dB1;
+    	final float temp21 = -getValue(0,0) * dB4 + getValue(0,1) * dB2 - getValue(0,3) * dB0;
+    	final float temp31 = +getValue(0,0) * dB3 - getValue(0,1) * dB1 + getValue(0,2) * dB0;
+    	final float temp02 = +getValue(3,1) * dA5 - getValue(3,2) * dA4 + getValue(3,3) * dA3;
+    	final float temp12 = -getValue(3,0) * dA5 + getValue(3,2) * dA2 - getValue(3,3) * dA1;
+    	final float temp22 = +getValue(3,0) * dA4 - getValue(3,1) * dA2 + getValue(3,3) * dA0;
+    	final float temp32 = -getValue(3,0) * dA3 + getValue(3,1) * dA1 - getValue(3,2) * dA0;
+    	final float temp03 = -getValue(2,1) * dA5 + getValue(2,2) * dA4 - getValue(2,3) * dA3;
+    	final float temp13 = +getValue(2,0) * dA5 - getValue(2,2) * dA2 + getValue(2,3) * dA1;
+    	final float temp23 = -getValue(2,0) * dA4 + getValue(2,1) * dA2 - getValue(2,3) * dA0;
+    	final float temp33 = +getValue(2,0) * dA3 - getValue(2,1) * dA1 + getValue(2,2) * dA0;
+
+    	set(temp00, temp01, temp02, temp03, 
+    		temp10, temp11, temp12, temp13, 
+    		temp20, temp21, temp22, temp23,
+    		temp30, temp31, temp32, temp33);
+    	return mult(1.0 / det);
+    }
+
     public Matrix4f mult(final Matrix4f matrix) {
     	float data00 = getValue(0,0);
     	float data01 = getValue(0,1);
@@ -279,6 +330,15 @@ public class Matrix4f {
         	temp20, temp21, temp22, temp23,
             temp30, temp31, temp32, temp33);
 
+        return this;
+    }
+    
+    public Matrix4f mult(final double scalar) {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                setValue(i,j,getValue(i,j) * scalar);
+            }
+        }
         return this;
     }
     

@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.data;
+package com.tipsolutions.jacket.shape;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -13,12 +13,11 @@ import java.util.ArrayList;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.Bounds;
 import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
@@ -136,12 +135,14 @@ public class Shape {
     
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix = null;
-	protected Shape [] mChildren = null;
+	protected Matrix4f mMatrixMod = null;
+	protected ArrayList<Shape> mChildren = null;
 	protected TextureManager.Texture mTexture = null;
 	protected int mCullFace = GL10.GL_BACK;
+	protected Color4f mColor = null;
 	
-	public Shape [] getChildren() { return mChildren; }
-	protected Matrix4f getMatrix() { return mMatrix; }
+	public Shape getChild(int i) { return mChildren.get(i); }
+	public ArrayList<Shape> getChildren() { return mChildren; }
 	
 	protected int getFrontFace() { return GL10.GL_CCW; }
 	public int getCullFace() { return mCullFace; }
@@ -201,10 +202,7 @@ public class Shape {
 		ArrayList<Bone> list = new ArrayList<Bone>();
 		for (Bone bone : mBones) {
 			if (bone.getBounds().within(x, y)) {
-				Log.d("DEBUG", "Match " + bone.getName() + ":" + bone.getBounds().toString());
 				list.add(bone);
-			} else {
-				Log.d("DEBUG", "No Match " + bone.getName() + ":" + bone.getBounds().toString());
 			}
 		}
 		return list;
@@ -232,7 +230,16 @@ public class Shape {
 		}
 		return this;
 	}
-//	
+	
+	public Color4f getColor() {
+		if (mColor == null) {
+			mColor = dGetColor();
+		}
+		return mColor;
+	}
+	
+	public void setColor(Color4f color) { mColor = color; }
+	
 //	public static CullFace GetCullFaceFromOrdinal(int face) {
 //    	for (Shape.CullFace match : Shape.CullFace.values()) {
 //    		if (match.ordinal() == face) {
@@ -471,18 +478,18 @@ public class Shape {
 			if (other.getChildren() == null) {
 				msg.msg(tag, "Second didn't have children");
 			} else {
-				if (getChildren().length != other.getChildren().length) {
+				if (getChildren().size() != other.getChildren().size()) {
 					StringBuffer sbuf = new StringBuffer();
 					sbuf.append("First had ");
-					sbuf.append(getChildren().length);
+					sbuf.append(getChildren().size());
 					sbuf.append(" children, second had ");
-					sbuf.append(other.getChildren().length);
+					sbuf.append(other.getChildren().size());
 					sbuf.append(" children.");
 					msg.msg(tag, sbuf.toString());
 				} else {
-					for (int i = 0; i < getChildren().length; i++) {
-						Shape child = getChildren()[i];
-						Shape childO = other.getChildren()[i];
+					for (int i = 0; i < getChildren().size(); i++) {
+						Shape child = getChild(i);
+						Shape childO = other.getChild(i);
 						StringBuffer sbuf = new StringBuffer();
 						sbuf.append(tag);
 						sbuf.append(".child");
@@ -534,27 +541,37 @@ public class Shape {
 	
 	public FloatBuffer setColorBuf(int size) {
 		mColorBuf = new FloatBuf();
-		return mColorBuf.alloc(size);
+		FloatBuffer buf = mColorBuf.alloc(size);
+		buf.rewind();
+		return buf;
 	}
 	
 	public ShortBuffer setIndexBuf(int size) {
 		mIndexBuf = new ShortBuf();
-		return mIndexBuf.alloc(size);
+		ShortBuffer buf = mIndexBuf.alloc(size);
+		buf.rewind();
+		return buf;
 	}
 	
 	public FloatBuffer setNormalBuf(int size) {
 		mNormalBuf = new FloatBuf();
-		return mNormalBuf.alloc(size);
+		FloatBuffer buf = mNormalBuf.alloc(size);
+		buf.rewind();
+		return buf;
 	}
 	
 	public FloatBuffer setVertexBuf(int size) {
 		mVertexBuf = new FloatBuf();
-		return mVertexBuf.alloc(size);
+		FloatBuffer buf = mVertexBuf.alloc(size);
+		buf.rewind();
+		return buf;
 	}
 	
 	public FloatBuffer setTextureBuf(int size) {
 		mTextureBuf = new FloatBuf();
-		return mTextureBuf.alloc(size);
+		FloatBuffer buf = mTextureBuf.alloc(size);
+		buf.rewind();
+		return buf;
 	}
 	
 	///////////////////////////////////////
@@ -630,7 +647,10 @@ public class Shape {
 		}
 		Shape [] children = dGetChildren();
 		if (children != null) {
-			mChildren = children;
+			mChildren = new ArrayList<Shape>(children.length);
+			for (Shape child : children) {
+				mChildren.add(child);
+			}
 			for (Shape child : mChildren) {
 				child.fill();
 			}
@@ -645,6 +665,29 @@ public class Shape {
 		//			setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
 	}
 
+	public ArrayList<Shape> resetChildren() {
+		mChildren = new ArrayList<Shape>();
+		return mChildren;
+	}
+	
+	public void resetChildren(Shape child) {
+		resetChildren();
+		mChildren.add(child);
+	}
+	
+	public void resetChildren(Shape [] children) {
+		resetChildren();
+		for (Shape shape : children) {
+			mChildren.add(shape);
+		}
+	}
+	
+	public void addChild(Shape child) {
+		if (mChildren == null) {
+			mChildren = new ArrayList<Shape>();
+		}
+		mChildren.add(child);
+	}
 	//		public void setColorData(ShortData data) {
 	//			if (data != null) {
 	//	    		mColorBuf = fill(data);
@@ -734,6 +777,40 @@ public class Shape {
 			}
 		}
 	}
+	
+	public void resetRotate() {
+		mMatrixMod = new Matrix4f();
+	}
+
+	// Returns the currently active matrix that should be applied for drawing.
+	// Warning: this can return NULL.
+	protected Matrix4f getMatrix() {
+		if (mMatrixMod != null) {
+			return mMatrixMod;
+		}
+		return mMatrix;
+	}
+	
+	// Get the modification matrix that lives on top of the object matrix.
+	// Will never return null.
+	public Matrix4f getMatrixMod() {
+		if (mMatrixMod == null) {
+			mMatrixMod = new Matrix4f(mMatrix);
+		}
+		return mMatrixMod;
+	}
+	
+	public Quaternion getQuaternionMod() { 
+		return getMatrixMod().getQuaternion();
+	}
+	
+	public Vector3f getLocationMod() { 
+		return getMatrixMod().getLocation(); 
+	}
+	
+	public void setLocation(Vector3f x) { 
+		getMatrixMod().setLocation(x);
+	}
 
 	///////////////////////////////////////
 	// FILE
@@ -789,11 +866,11 @@ public class Shape {
 		writeBones(dataStream);
 		writeJoints(dataStream);
 
-		if (getChildren() != null && mChildren.length > 0) {
+		if (getChildren() != null && getChildren().size() > 0) {
 			dataStream.writeInt(ELE_CHILDREN);
-			dataStream.writeInt(mChildren.length);
-			for (int i = 0; i < mChildren.length; i++) {
-				mChildren[i].writeData(dataStream);
+			dataStream.writeInt(getChildren().size());
+			for (int i = 0; i < getChildren().size(); i++) {
+				getChild(i).writeData(dataStream);
 			}
 		}
 		dataStream.writeInt(ELE_FINISH);
@@ -874,11 +951,11 @@ public class Shape {
 
 	protected void readChildren(DataInputStream dataStream, TextureManager tm) throws IOException, Exception {
 		int numChildren = dataStream.readInt();
-		mChildren = new Shape[numChildren];
+		mChildren = new ArrayList<Shape>(numChildren);
 		for (int i = 0; i < numChildren; i++) {
 			Shape child = new Shape();
 			child.readData(dataStream, tm);
-			mChildren[i] = child;
+			mChildren.add(child);
 		}
 	}
 
@@ -1052,25 +1129,24 @@ public class Shape {
 	// OpenGL
 	///////////////////////////////////////
 
-	public void onCreate(MatrixTrackingGL gl) {
-		if (mChildren != null) {
-			for (Shape shape : mChildren) {
-				shape.onCreate(gl);
-			}
-		}
-	}
+//	public void onCreate(MatrixTrackingGL gl) {
+//		if (mChildren != null) {
+//			for (Shape shape : mChildren) {
+//				shape.onCreate(gl);
+//			}
+//		}
+//	}
 
 	public void onDraw(MatrixTrackingGL gl) {
 		FloatBuffer fbuf;
 		boolean didPush = false;
 
 		if (!hasColorArray()) {
-			Color4f color = dGetColor();
+			Color4f color = getColor();
 			if (color != null) {
 				gl.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 			}
 		}
-
 		if (getFrontFace() != gl.getFrontFace()) {
 			gl.glFrontFace(getFrontFace());
 		}
@@ -1108,16 +1184,14 @@ public class Shape {
 			gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
 
 			// Not doing it this way anymore:
-				//	    		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
+			// gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
 		} else {
 			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 		}
-		if (mTexture != null) {
-			if ((fbuf = getTextureBuf()) != null) {
-				mTexture.onDraw(gl, fbuf);
-			} else {
-				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-			}
+		if ((mTexture != null) && ((fbuf = getTextureBuf()) != null)) {
+			mTexture.onDraw(gl, fbuf);
+		} else {
+			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 		}
 		ShortBuffer sbuf;
 		if ((sbuf = getIndexBuf()) != null) {
@@ -1133,11 +1207,11 @@ public class Shape {
 		}
 	}
 
-	public void onFinished(MatrixTrackingGL gl) {
-		if (mChildren != null) {
-			for (Shape shape : mChildren) {
-				shape.onFinished(gl);
-			}
-		}
-	}
+//	public void onFinished(MatrixTrackingGL gl) {
+//		if (mChildren != null) {
+//			for (Shape shape : mChildren) {
+//				shape.onFinished(gl);
+//			}
+//		}
+//	}
 }

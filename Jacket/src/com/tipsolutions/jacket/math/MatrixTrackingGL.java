@@ -181,6 +181,10 @@ public class MatrixTrackingGL implements GL, GL10, GL10Ext, GL11, GL11Ext {
     	return mCullFace;
     }
     
+    public GL10 getGL() {
+    	return mgl;
+    }
+    
     public void setCullFace(int mode) {
     	if (mode == 0) {
     		glDisable(GL10.GL_CULL_FACE);
@@ -462,7 +466,7 @@ public class MatrixTrackingGL implements GL, GL10, GL10Ext, GL11, GL11Ext {
         mMatrixMode = mode;
         if ( _check) check();
     }
-
+    
     public void glMultMatrixf(float[] m, int offset) {
         mCurrent.glMultMatrixf(m, offset);
         mgl.glMultMatrixf(m, offset);

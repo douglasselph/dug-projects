@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.data;
+package com.tipsolutions.jacket.shape;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
@@ -6,7 +6,7 @@ import java.nio.ShortBuffer;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Vector3f;
 
-public class Box extends ShapeGL {
+public class Box extends Shape {
 
 	public Box() {
 		set(1f, 1f, 1f, null);

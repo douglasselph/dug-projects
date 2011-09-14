@@ -3,8 +3,13 @@ package data;
 
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-import com.tipsolutions.jacket.data.Shape;
+
 import com.tipsolutions.jacket.math.Matrix4f;
+import com.tipsolutions.jacket.shape.Shape;
+import com.tipsolutions.jacket.shape.Shape.dBone;
+import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
+import com.tipsolutions.jacket.shape.Shape.dJoint;
+import com.tipsolutions.jacket.shape.Shape.dShortBuf;
 
 
 public class Wing_L extends Shape {

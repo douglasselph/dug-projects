@@ -1,5 +1,5 @@
-import com.tipsolutions.jacket.data.Shape;
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.shape.Shape;
 
 public class Main {
 	

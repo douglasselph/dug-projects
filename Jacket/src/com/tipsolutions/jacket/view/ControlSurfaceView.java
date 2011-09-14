@@ -1,8 +1,16 @@
 package com.tipsolutions.jacket.view;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
+
+import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 
 public class ControlSurfaceView extends GLSurfaceView implements IView {
 
@@ -60,5 +68,24 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 		return changed;
 	}
 	
+	public Bitmap snapshot() {
+		Bitmap bitmap = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		draw(canvas);
+		return bitmap;
+	}
+	
+	public void snapshot(File file) throws IOException {
+		Bitmap bitmap = snapshot();
+		FileOutputStream fos = new FileOutputStream(file);
+		bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+		fos.flush();
+		fos.close();
+	}
+	
+	public void setOnAfterNextRender(OnAfterNextRender run) {
+		mRenderer.setOnAfterNextRender(run);
+		requestRender();
+	}
 	
 }
