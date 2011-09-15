@@ -16,13 +16,10 @@
 
 package com.tipsolutions.slice;
 
-import java.io.File;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
@@ -55,13 +52,10 @@ class MyRenderer extends ControlRenderer {
 //    	mInitializedTextures = false;
     }
     
-    public void onDrawFrame(GL10 gl) {
-    	super.onDrawFrame(gl);
-        
+    public void onDrawFrame(MatrixTrackingGL gl) {
     	if (mShape != null) {
-            mShape.onDraw(mGL);
+            mShape.onDraw(gl);
     	}
-    	onDrawFrameDone();
     }
     
     public void onSurfaceChanged(GL10 gl, int width, int height) {

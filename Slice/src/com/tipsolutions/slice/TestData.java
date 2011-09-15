@@ -2,10 +2,14 @@ package com.tipsolutions.slice;
 
 import java.util.ArrayList;
 
+import javax.microedition.khronos.opengles.GL10;
+
+import android.opengl.Matrix;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.Matrix4f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 
@@ -14,6 +18,46 @@ public class TestData {
 	public void run() {
 		testMatrixAddRotate();
 		testMatrixInvert();
+		testUnproject();
+		
+		float [] projection = new float[16];
+		Matrix.frustumM(projection, 0, -1, 1, -1, 1, 1, 1000);
+		Log.d("PROJ", showM(projection));
+		float [] invert = new float[16];
+		Matrix.invertM(invert, 0, projection, 0);
+		Log.d("INVERT", showM(invert));
+	}
+	
+	String showM(float [] m) {
+		StringBuffer sbuf = new StringBuffer();
+		for (int r = 0; r < 4; r++) {
+			sbuf.append(r);
+			sbuf.append("=[");
+			for (int c = 0; c < 4; c++) {
+				if (c > 0) {
+					sbuf.append(",");
+				}
+				sbuf.append(m[c*4+r]);
+			}
+			sbuf.append("]\n");
+		}
+		return sbuf.toString();
+	}
+	
+	String showV(float [] v) {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("[");
+		boolean first = true; 
+		for (float f : v) {
+			if (first) {
+				first = false;
+			} else {
+				sbuf.append(",");
+			}
+			sbuf.append(f);
+		}
+		sbuf.append("]");
+		return sbuf.toString();
 	}
 	
 	final float ZERO_THRESHOLD = 0.0001f;
@@ -219,5 +263,162 @@ public class TestData {
 			diff += test.run();
 		}
 		Log.d(MyApplication.TAG, "Total diff=" + diff);
+	}
+	
+	void testUnproject() {
+		
+		final float [] IDENTITY = { 1, 0, 0, 0, 
+								    0, 1, 0, 0,
+								    0, 0, 1, 0,
+								    0, 0, 0, 1 };
+		final float WIDTH = 480;
+		final float HEIGHT = 560;
+		final float LEFT = -1f;
+		final float RIGHT = 1f;
+		final float TOP = 1f;
+		final float BOTTOM = -1f;
+		final float NEAR = 1f;
+		final float FAR = 1000f;
+		
+		class Test {
+			
+			float [] mPlanes = new float[6];
+			float [] mModelview = IDENTITY;
+			float [] mProjection = new float[16];
+			float [] mLoc = new float[3];
+			float [] mViewport = new float[4];
+			
+			Vector3f mResultWin;
+			Vector3f mResultWorld;
+			float mResultWorldW;
+			float mResultClipW;
+			
+			Test(float x, float y, float z) {
+				mPlanes[0] = LEFT;
+				mPlanes[1] = RIGHT;
+				mPlanes[2] = BOTTOM;
+				mPlanes[3] = TOP;
+				mPlanes[4] = NEAR;
+				mPlanes[5] = FAR;
+				Matrix.frustumM(mProjection, 0, mPlanes[0], mPlanes[1], mPlanes[2], mPlanes[3], mPlanes[4], mPlanes[5]);
+				mLoc[0] = x;
+				mLoc[1] = y;
+				mLoc[2] = z;
+				mViewport[0] = 0;
+				mViewport[1] = 0;
+				mViewport[2] = WIDTH;
+				mViewport[3] = HEIGHT;
+			}
+			
+			float vWidth() { return mViewport[2] - mViewport[0]; }
+			float vHeight() { return mViewport[3] - mViewport[1]; }
+			
+			void forward() {
+				float [] worldVec = new float[4];
+				
+				worldVec[0] = mLoc[0];
+				worldVec[1] = mLoc[1];
+				worldVec[2] = mLoc[2];
+				worldVec[3] = 1;
+
+				float [] eyeVec = new float[4];
+				Matrix.multiplyMV(eyeVec, 0, mModelview, 0, worldVec, 0);
+
+				float [] clipVec = new float[4];
+				Matrix.multiplyMV(clipVec, 0, mProjection, 0, eyeVec, 0);
+
+				float [] normDevCoords = new float[4];
+				float div = 1f/clipVec[3];
+				normDevCoords[0] = clipVec[0] * div;
+				normDevCoords[1] = clipVec[1] * div;
+				normDevCoords[2] = clipVec[2] * div;
+				normDevCoords[3] = 1f;
+
+				float [] winCoords = new float[3];
+				winCoords[0] = (normDevCoords[0] *.5f + .5f) * vWidth() + mViewport[0];
+				winCoords[1] = (normDevCoords[1] *.5f + .5f) * vHeight() + mViewport[1];
+				winCoords[2] = (1 + normDevCoords[2]) * .5f;
+
+				mResultWin = new Vector3f(winCoords[0], winCoords[1], winCoords[2]);
+				mResultClipW = clipVec[3];
+			}
+			
+			void testReverse(float z, float clipW) {
+				Vector3f v;
+				reverse(v = new Vector3f(mResultWin.getX(), mResultWin.getY(), z), clipW);
+				StringBuffer sbuf = new StringBuffer();
+				sbuf.append("Reverse:");
+				sbuf.append(v.toString());
+				sbuf.append(", C");
+				sbuf.append(clipW);
+				sbuf.append("->");
+				sbuf.append(mResultWorld.toString());
+				sbuf.append(", resultW=");
+				sbuf.append(mResultWorldW);
+				Log.d("DEBUG", sbuf.toString());
+			}
+			
+			void reverse() {
+				reverse(mResultWin, mResultClipW);
+			}
+			
+			void reverse(Vector3f win, float clipW) {
+				// Reverse
+				float [] winCoordsR = new float[3];
+				
+				winCoordsR[0] = win.getX();
+				winCoordsR[1] = win.getY();
+				winCoordsR[2] = win.getZ();
+
+				float [] normDevCoordsR = new float[4];
+				normDevCoordsR[0] = (((winCoordsR[0] - mViewport[0]) / vWidth()) - .5f)/.5f;
+				normDevCoordsR[1] = (((winCoordsR[1] - mViewport[1])/ vHeight()) - .5f)/.5f;
+				normDevCoordsR[2] = ((winCoordsR[2] / .5f - 1));
+				normDevCoordsR[3] = 1f;
+
+				float [] clipVecR = new float[4];
+				clipVecR[0] = normDevCoordsR[0] * clipW;
+				clipVecR[1] = normDevCoordsR[1] * clipW;
+				clipVecR[2] = normDevCoordsR[2] * clipW;
+				clipVecR[3] = clipW;
+
+				float [] scratch = new float[16];
+				Matrix.multiplyMM(scratch, 0, mProjection, 0, mModelview, 0);
+				Matrix.invertM(scratch, 0, scratch, 0);
+
+				float [] worldVecR = new float[4];
+				Matrix.multiplyMV(worldVecR, 0, scratch, 0, clipVecR, 0);
+
+				mResultWorld = new Vector3f(worldVecR[0], worldVecR[1], worldVecR[2]);
+				mResultWorldW = worldVecR[3];
+			}
+			
+			void run() {
+				forward();
+				Log.d("DEBUG", "***" + showV(mPlanes));
+				Log.d("DEBUG", "Vec:" + new Vector3f(mLoc).toString() + "->" + mResultWin.toString() + ", clipW=" + mResultClipW);
+				reverse();
+				Log.d("DEBUG", "Reverse:" + mResultWorld.toString() + ", ResultW=" + mResultWorldW);
+				testReverse(0, 1);
+				testReverse(0.5f, 1);
+				testReverse(1, 1);
+				testReverse(0, 2);
+				testReverse(0, 3);
+				testReverse(0, 4);
+				testReverse(0, 10);
+				testReverse(0, 20);
+			}
+			
+		};
+		ArrayList<Test> tests = new ArrayList<Test>();
+		
+		for (int z = -1; z >= -3; z--) {
+    		tests.add(new Test(0, 0, z));
+    		tests.add(new Test(LEFT+(RIGHT-LEFT)/4, BOTTOM+(TOP-BOTTOM)/4, z));
+    		tests.add(new Test(RIGHT, TOP, z));
+		}
+		for (Test t : tests) {
+			t.run();
+		}
 	}
 }

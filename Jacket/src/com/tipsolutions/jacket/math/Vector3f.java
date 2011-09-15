@@ -44,6 +44,12 @@ public class Vector3f {
 		mZ = (float) v.mZ;
 	}
 	
+	public Vector3f(float [] v) {
+		mX = v[0];
+		mY = v[1];
+		mZ = v[2];
+	}
+	
 	public Vector3f add(float x, float y, float z) {
 		mX += x;
 		mY += y;

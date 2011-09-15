@@ -519,7 +519,7 @@ public class Shape {
 		Bounds bounds = getBounds();
 		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(), bounds.getMidZ());
 		Matrix4f matrix = getMatrix();
-		matrix.applyPost(midPoint);
+		matrix.multMV(midPoint);
 		return midPoint;
 	}
 	

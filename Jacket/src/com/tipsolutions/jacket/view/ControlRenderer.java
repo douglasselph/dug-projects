@@ -27,7 +27,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected int mWidth;
 	protected int mHeight;
 	protected final ControlCamera mCamera;
-	protected MatrixTrackingGL mGL = null;
+	protected MatrixTrackingGL mLastGL = null;
 	protected OnAfterNextRender mOnAfterNextRender = null;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
@@ -35,8 +35,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mCamera = camera;
 	}
 	
-	public MatrixTrackingGL getGL() {
-		return mGL;
+	public MatrixTrackingGL getLastGL() {
+		return mLastGL;
 	}
 	
 	public float getWidth() { return mWidth; }
@@ -44,28 +44,35 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		mGL = new MatrixTrackingGL(gl);
+		MatrixTrackingGL mgl = new MatrixTrackingGL(gl);
+		mLastGL = mgl;
 		
-		clearScene();
+		clearScene(mgl);
 		
-		mGL.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
-		mGL.glLoadIdentity();
-    	mCamera.applyFrustrum(mGL);
+		mgl.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
+		mgl.glLoadIdentity();
+    	mCamera.applyFrustrum(mLastGL);
     	
-		mGL.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
-		mGL.glLoadIdentity();
+		mgl.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
+		mgl.glLoadIdentity();
 		
-		mGL.glFrontFace(GL10.GL_CCW); // Defines front face
-		mGL.glEnable(GL10.GL_CULL_FACE);
-		mGL.glCullFace(GL10.GL_BACK); // Do not draw this face
-		mGL.glEnable(GL10.GL_DEPTH_TEST);
+		mgl.glFrontFace(GL10.GL_CCW); // Defines front face
+		mgl.glEnable(GL10.GL_CULL_FACE);
+		mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
+		mgl.glEnable(GL10.GL_DEPTH_TEST);
 		
-		mCamera.applyLookAt(mGL);
+		mCamera.applyLookAt(mgl);
+		
+		onDrawFrame(mgl);
+		onDrawFrameDone(mgl);
 	}
 	
-	protected void onDrawFrameDone() {
+	protected void onDrawFrame(MatrixTrackingGL gl) {
+	}
+	
+	protected void onDrawFrameDone(MatrixTrackingGL gl) {
 		if (mOnAfterNextRender != null) {
-			mOnAfterNextRender.run(this, mGL);
+			mOnAfterNextRender.run(this, gl);
 			mOnAfterNextRender = null;
 		}
 	}
@@ -90,18 +97,18 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
         gl.glEnable(GL10.GL_DEPTH_TEST);
 	}
 	
-	protected void clearScene() {
+	protected void clearScene(MatrixTrackingGL gl) {
 		if (mClippingPlaneColor != null) {
     		 // define the color we want to be displayed as the "clipping wall"
-			mGL.glClearColor(mClippingPlaneColor.getRed(), 
+			gl.glClearColor(mClippingPlaneColor.getRed(), 
 							mClippingPlaneColor.getGreen(), 
 							mClippingPlaneColor.getBlue(), 
 							mClippingPlaneColor.getAlpha());
 		}
-		mGL.glClearDepthf(1f);
+		gl.glClearDepthf(1f);
 		
         // clear the color buffer to show the ClearColor we called above...
-        mGL.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 	}
 	
 	public void setClippingPlaneColor(Color4f color) {
@@ -112,13 +119,13 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mOnAfterNextRender = run;
 	}
 	
-	public Bitmap snapshot() {
+	public Bitmap snapshot(MatrixTrackingGL gl) {
 		int width = mWidth;
 		int height = mHeight;
 		int size = width * height;
 		ByteBuffer buf = ByteBuffer.allocateDirect(size * 4);
 		buf.order(ByteOrder.nativeOrder());
-		mGL.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
+		gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
 		int data[] = new int[size];
 		buf.asIntBuffer().get(data);
 		buf = null;
@@ -139,8 +146,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		return bitmap;
 	}
 	
-	public void snapshot(File file) throws IOException {
-		Bitmap bitmap = snapshot();
+	public void snapshot(MatrixTrackingGL gl, File file) throws IOException {
+		Bitmap bitmap = snapshot(gl);
 		FileOutputStream fos = new FileOutputStream(file);
 		bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
 		fos.flush();

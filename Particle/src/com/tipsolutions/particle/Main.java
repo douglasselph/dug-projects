@@ -23,6 +23,7 @@ import com.tipsolutions.jacket.effect.ParticleSystem;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
@@ -43,10 +44,8 @@ public class Main extends Activity {
 		}
 
 		@Override
-		public void onDrawFrame(GL10 gl) {
-			super.onDrawFrame(gl);
-			
-			mParticleSystem.onDraw(mGL);
+		public void onDrawFrame(MatrixTrackingGL gl) {
+			mParticleSystem.onDraw(gl);
 		}
 
 		@Override

@@ -3,8 +3,11 @@ package com.tipsolutions.jacket.view;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.opengl.GLU;
+import android.opengl.Matrix;
+import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
+import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 
@@ -103,18 +106,141 @@ public class Camera {
 	
 	// Convert from a pixel location within the seen window
 	// to an actual internal coordinate position.
-	//
-	// Note: z will always be zero.
-	public Vector3f getWorldPosition(int px, int py) {
-		Vector3f vec = new Vector3f();
-		float wWidth = mRight - mLeft;
-		float wHeight = mTop - mBottom;
-		vec.setX((wWidth * (float)px/(float)mWidth) + mLeft);
-		vec.setY((wHeight * (float)(mHeight-py)/(float)mHeight) + mBottom);
-		return vec;
+	public Vector3f getWorldPosition(MatrixTrackingGL gl, float px, float py, float pz) {
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		float [] modelview = new float[16];
+		gl.getMatrix(modelview, 0);
+		
+		gl.glMatrixMode(GL10.GL_PROJECTION);
+		float [] projection = new float[16];
+		gl.getMatrix(projection, 0);
+		
+		float clipW = pz;
+		float [] winCoordsR = new float[3];
+		float z = pz;
+		winCoordsR[0] = px;
+		winCoordsR[1] = py;
+		winCoordsR[2] = 1f - 1f/z + 1f/(z*1000) + 1f/(z*1000000);
+		
+		float [] normDevCoordsR = new float[4];
+		normDevCoordsR[0] = ((winCoordsR[0] / mWidth) - .5f)/.5f;
+		normDevCoordsR[1] = ((winCoordsR[1] / mHeight) - .5f)/.5f;
+		normDevCoordsR[2] = ((winCoordsR[2] / .5f - 1));
+		normDevCoordsR[3] = 1f;
+
+		float [] clipVecR = new float[4];
+		clipVecR[0] = normDevCoordsR[0] * clipW;
+		clipVecR[1] = normDevCoordsR[1] * clipW;
+		clipVecR[2] = normDevCoordsR[2] * clipW;
+		clipVecR[3] = z;
+		
+		float [] scratch = new float[16];
+		Matrix.multiplyMM(scratch, 0, projection, 0, modelview, 0);
+		Matrix.invertM(scratch, 0, scratch, 0);
+
+		float [] worldVecR = new float[4];
+		Matrix.multiplyMV(worldVecR, 0, scratch, 0, clipVecR, 0);
+
+		return new Vector3f(worldVecR[0], -worldVecR[1], worldVecR[2]);
 	}
 	
-	public Vector3f getUnproject(MatrixTrackingGL gl, float winX, float winY, float winZ) {
+	public void test(MatrixTrackingGL gl) {
+		for (int z = -1; z >= -4; z--) {
+    		test(gl, new Vector3f(0, 0, z));
+    		test(gl, new Vector3f(mRight, mTop, z));
+    		test(gl, new Vector3f(mLeft, mTop, z));
+    		test(gl, new Vector3f(mRight, mBottom, z));
+    		test(gl, new Vector3f(mLeft, mBottom, z));
+		}
+	}
+	
+	public void test(MatrixTrackingGL gl, Vector3f vec) {
+		Vector3f vecWin;
+		// Forward
+		
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		float [] modelview = new float[16];
+		gl.getMatrix(modelview, 0);
+		
+		gl.glMatrixMode(GL10.GL_PROJECTION);
+		float [] projection = new float[16];
+		gl.getMatrix(projection, 0);
+		
+		float clipW;
+		
+		float [] worldVec = new float[4];
+		worldVec[0] = vec.getX();
+		worldVec[1] = vec.getY();
+		worldVec[2] = vec.getZ();
+		worldVec[3] = 1;
+
+		float [] eyeVec = new float[4];
+		Matrix.multiplyMV(eyeVec, 0, modelview, 0, worldVec, 0);
+
+		float [] clipVec = new float[4];
+		Matrix.multiplyMV(clipVec, 0, projection, 0, eyeVec, 0);
+		
+		float [] normDevCoords = new float[4];
+		float div = 1f/clipVec[3];
+		normDevCoords[0] = clipVec[0] * div;
+		normDevCoords[1] = clipVec[1] * div;
+		normDevCoords[2] = clipVec[2] * div;
+		normDevCoords[3] = 1f;
+		
+		float [] winCoords = new float[3];
+		winCoords[0] = (normDevCoords[0] *.5f + .5f) * mWidth;
+		winCoords[1] = (normDevCoords[1] *.5f + .5f) * mHeight;
+		winCoords[2] = (1 + normDevCoords[2]) * .5f;
+
+		vecWin = new Vector3f(winCoords[0], winCoords[1], winCoords[2]);
+		clipW = clipVec[3];
+		
+		Log.d("DEBUG", "FORWARD " + vec.toString());
+		Log.d("DEBUG", " ->winCoords=" + vecWin.toString() + ", clipW=" + clipW);
+		
+		// Reverse
+		Vector3f vecWorld;
+		float vecW;
+		float [] winCoordsR = new float[3];
+		float z = -worldVec[2];
+		winCoordsR[0] = vecWin.getX();
+		winCoordsR[1] = vecWin.getY();
+		winCoordsR[2] = 1f - 1f/z + 1f/(z*1000) + 1f/(z*1000000);
+
+		float [] normDevCoordsR = new float[4];
+		normDevCoordsR[0] = ((winCoordsR[0] / mWidth) - .5f)/.5f;
+		normDevCoordsR[1] = ((winCoordsR[1] / mHeight) - .5f)/.5f;
+		normDevCoordsR[2] = ((winCoordsR[2] / .5f - 1));
+		normDevCoordsR[3] = 1f;
+
+		float [] clipVecR = new float[4];
+		clipVecR[0] = normDevCoordsR[0] * clipW;
+		clipVecR[1] = normDevCoordsR[1] * clipW;
+		clipVecR[2] = normDevCoordsR[2] * clipW;
+		clipVecR[3] = z;
+		
+		float [] scratch = new float[16];
+		Matrix.multiplyMM(scratch, 0, projection, 0, modelview, 0);
+		Matrix.invertM(scratch, 0, scratch, 0);
+
+		float [] worldVecR = new float[4];
+		Matrix.multiplyMV(worldVecR, 0, scratch, 0, clipVecR, 0);
+
+		vecWorld = new Vector3f(worldVecR[0], worldVecR[1], worldVecR[2]);
+		vecW = worldVecR[3];
+		Log.d("DEBUG", "REVERSE " + vecWorld.toString() + ", W=" + vecW);
+	}
+	
+//	public Vector3f getWorldPosition(int px, int py) {
+//		Vector3f vec = new Vector3f();
+//		float wWidth = mRight - mLeft;
+//		float wHeight = mTop - mBottom;
+//		vec.setX((wWidth * (float)px/(float)mWidth) + mLeft);
+//		vec.setY((wHeight * (float)(mHeight-py)/(float)mHeight) + mBottom);
+//		return vec;
+//	}
+	
+	public Vector3f getUnproject(MatrixTrackingGL gl, float winX, float winY) {
 		float [] modelview = new float[16];
 		float [] projection = new float[16];
 		int [] view = new int[4];
@@ -128,7 +254,7 @@ public class Camera {
 		view[2] = mWidth;
 		view[3] = mHeight;
 		GLU.gluUnProject(
-				winX, (mHeight-winY), winZ, 
+				winX, (mHeight-winY), 1, 
 				modelview, 0, 
 				projection, 0, view, 0, obj, 0);
 		return new Vector3f(obj[0], obj[1], obj[2]);

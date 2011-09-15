@@ -55,36 +55,28 @@ public class ViewObj extends Activity {
 		
 		@Override
 		public void start(int x, int y) {
-			MatrixTrackingGL gl = mRenderer.getGL();
+			MatrixTrackingGL gl = mRenderer.getLastGL();
 			
 			gl.glMatrixMode(GL10.GL_MODELVIEW);
 			gl.glLoadIdentity();
-		
-			class Try {
-				float size;
-				Color4f color;
-				float z;
-				Try(float z, float s, Color4f c) {
-					this.z = z;
-					this.size = s;
-					this.color = c;
-				}
-			};
-			Try [] trys = {
-				new Try(-1f, 0.3f, Color4f.RED),
-				new Try(-0.5f, 0.25f, Color4f.GREEN),
-				new Try(0f, 0.2f, Color4f.YELLOW),
-				new Try(0.5f, 0.15f, Color4f.BLACK),
-				new Try(0.9f, 0.11f, Color4f.CYAN),
-				new Try(1.0f, 0.4f, Color4f.BROWN),
-			};
-			for (Try t : trys) {
-				Vector3f win = new Vector3f(x, y, t.z);
-				Vector3f pos = mCamera.getUnproject(gl, x, y, t.z);
-				Log.d("DEBUG", "VEC=" + win.toString() + ", POS=" + pos.toString());
-				mRoot.addChild(createPoint(pos, t.size, t.color));
-			}
+			
+			Log.d("DEBUG", "TOUCH=" + x + ", " + y);
+			
+			Vector3f pos = mCamera.getUnproject(gl, x, y);
+			Log.d("DEBUG", "POS-B=" + pos.toString());
+			mRoot.addChild(createPoint(pos, 0.1f, Color4f.BLACK));
+			
+			pos = mCamera.getWorldPosition(gl, x, y, 1);
+			Log.d("DEBUG", "POS-R=" + pos.toString());
+			mRoot.addChild(createPoint(pos, 0.2f, Color4f.RED));
+			
+//			pos = mCamera.getWorldPosition(gl, x, y, 2);
+//			Log.d("DEBUG", "POS-G=" + pos.toString());
+//			mRoot.addChild(createPoint(pos, 0.3f, Color4f.GREEN));
+			
 			mSurfaceView.requestRender();
+			
+//			mCamera.test(gl);
 			
 //			gl.glMatrixMode(GL10.GL_MODELVIEW);
 //			Matrix4f mv = gl.getMatrix();
@@ -108,8 +100,7 @@ public class ViewObj extends Activity {
 
 		@Override
 		public void move(int x, int y) {
-			Vector3f vec = mCamera.getWorldPosition(x, y);
-			Log.d("DEBUG", "Vector=" + vec.toString());
+//			Vector3f vec = mCamera.getWorldPosition(x, y);
 		}
 	};
 	
@@ -389,7 +380,7 @@ public class ViewObj extends Activity {
     				public void run(ControlRenderer renderer, MatrixTrackingGL gl) {
     					try {
         					final File file = FileUtils.GetExternalFile("screen.jpg", true);
-        					renderer.snapshot(file);
+        					renderer.snapshot(gl, file);
         					mSurfaceView.post(new Runnable() {
 								@Override
 								public void run() {

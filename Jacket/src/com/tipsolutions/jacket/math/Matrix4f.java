@@ -92,7 +92,7 @@ public class Matrix4f {
      * @throws NullPointerException
      *             if vector is null
      */
-    public Vector3f applyPre(Vector3f vector, Vector3f store) {
+    public Vector3f multVM(Vector3f vector, Vector3f store) {
         if (store == null) {
             store = new Vector3f();
         }
@@ -109,8 +109,8 @@ public class Matrix4f {
         return store;
     }
     
-    public Vector3f applyPre(Vector3f vector) {
-    	return applyPre(vector, vector);
+    public Vector3f multVM(Vector3f vector) {
+    	return multVM(vector, vector);
     }
 
     /**
@@ -126,7 +126,7 @@ public class Matrix4f {
      * @throws NullPointerException
      *             if vector is null
      */
-    public Vector3f applyPost(final Vector3f vector, Vector3f store) {
+    public Vector3f multMV(final Vector3f vector, Vector3f store) {
         if (store == null) {
             store = new Vector3f();
         }
@@ -143,8 +143,8 @@ public class Matrix4f {
         return store;
     }
     
-    public Vector3f applyPost(final Vector3f vector) {
-    	return applyPost(vector, vector);
+    public Vector3f multMV(final Vector3f vector) {
+    	return multMV(vector, vector);
     }
 
     public void setIdentity() {
