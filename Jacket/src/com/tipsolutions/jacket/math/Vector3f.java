@@ -13,54 +13,53 @@ public class Vector3f {
 	static public final Vector3f UNIT_Z = new Vector3f(0, 0, 1);
 	static public final Vector3f ZERO = new Vector3f(0, 0, 0);
 	
-	protected float mX = 0;
-	protected float mY = 0;
-	protected float mZ = 0;
+	protected float [] mData;
 	
 	public Vector3f() {
+		mData = new float[3];
 	}
 	
 	public Vector3f(float x, float y, float z) {
-		mX = x;
-		mY = y;
-		mZ = z;
+		mData[0] = x;
+		mData[1] = y;
+		mData[2] = z;
 	}
 	
 	public Vector3f(double x, double y, double z) {
-		mX = (float)x;
-		mY = (float)y;
-		mZ = (float)z;
+		mData[0] = (float)x;
+		mData[1] = (float)y;
+		mData[2] = (float)z;
 	}
 	
 	public Vector3f(final Vector3f v) {
-		mX = v.mX;
-		mY = v.mY;
-		mZ = v.mZ;
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			mData[i] = v.mData[i];
+		}
 	}
 	
 	public Vector3f(final Vector3 v) {
-		mX = (float) v.mX;
-		mY = (float) v.mY;
-		mZ = (float) v.mZ;
+		mData[0] = (float) v.mX;
+		mData[1] = (float) v.mY;
+		mData[2] = (float) v.mZ;
 	}
 	
 	public Vector3f(float [] v) {
-		mX = v[0];
-		mY = v[1];
-		mZ = v[2];
+		for (int i = 0; i < mData.length && i < v.length; i++) {
+			mData[i] = v[i];
+		}
 	}
 	
 	public Vector3f add(float x, float y, float z) {
-		mX += x;
-		mY += y;
-		mZ += z;
+		mData[0] += x;
+		mData[1] += y;
+		mData[2] += z;
 		return this;
 	}
 	
 	public Vector3f add(final Vector3f v) {
-		mX += v.mX;
-		mY += v.mY;
-		mZ += v.mZ;
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			mData[i] += v.mData[i];
+		}
 		return this;
 	}
 	
@@ -69,32 +68,32 @@ public class Vector3f {
 	}
 	
 	public Vector3f cross(final Vector3f v) {
-		float x = mX;
-		float y = mY;
-		mX = (y * v.mZ) - (mZ * v.mY);
-		mY = (mZ * v.mX) - (x * v.mZ);
-		mZ = (x * v.mY) - (y * v.mX);
+		float x = getX();
+		float y = getY();
+		mData[0] = (y * v.getZ()) - (getZ() * v.getY());
+		mData[1] = (getZ() * v.getX()) - (x * v.getZ());
+		mData[2] = (x * v.getY()) - (y * v.getX());
 		return this;
 	}
 	
 	public Vector3f divide(float scalar) {
-		mX /= scalar;
-		mY /= scalar;
-		mZ /= scalar;
+		mData[0] /= scalar;
+		mData[1] /= scalar;
+		mData[2] /= scalar;
 		return this;
 	}
 
 	public Vector3f divide(float x, float y, float z) {
-		mX /= x;
-		mY /= y;
-		mZ /= z;
+		mData[0] /= x;
+		mData[1] /= y;
+		mData[2] /= z;
 		return this;
 	}
 	
 	public Vector3f divide(final Vector3f v) {
-		mX /= v.mX;
-		mY /= v.mY;
-		mZ /= v.mZ;
+		mData[0] /= v.getX();
+		mData[1] /= v.getY();
+		mData[2] /= v.getZ();
 		return this;
 	}
 	
@@ -103,12 +102,17 @@ public class Vector3f {
 	}
 	
 	public boolean equals(final Vector3f v) {
-		return (mX == v.mX) && (mY == v.mY) && (mZ == v.mZ);
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			if (mData[i] != v.mData[i]) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
-	public float getX() { return mX; }
-	public float getY() { return mY; }
-	public float getZ() { return mZ; }
+	public float getX() { return mData[0]; }
+	public float getY() { return mData[1]; }
+	public float getZ() { return mData[2]; }
 	
 	public float length() {
 		return FloatMath.sqrt(lengthSquared());
@@ -119,23 +123,23 @@ public class Vector3f {
 	}
 	
 	public Vector3f multiply(float scalar) {
-		mX *= scalar;
-		mY *= scalar;
-		mZ *= scalar;
+		for (int i = 0; i < mData.length; i++) {
+			mData[i] *= scalar;
+		}
 		return this;
 	}
 	
 	public Vector3f multiply(float x, float y, float z) {
-		mX *= x;
-		mY *= y;
-		mZ *= z;
+		mData[0] *= x;
+		mData[1] *= y;
+		mData[2] *= z;
 		return this;
 	}
 	
 	public Vector3f multiply(final Vector3f v) {
-		mX *= v.mX;
-		mY *= v.mY;
-		mZ *= v.mZ;
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			mData[i] *= v.mData[i];
+		}
 		return this;
 	}
 	
@@ -157,63 +161,67 @@ public class Vector3f {
 	}
 	
 	public Vector3f set(float x, float y, float z) {
-		mX = x;
-		mY = y;
-		mZ = z;
+		mData[0] = x;
+		mData[1] = y;
+		mData[2] = z;
 		return this;
 	}
 	
 	public Vector3f set(double x, double y, double z) {
-		mX = (float)x;
-		mY = (float)y;
-		mZ = (float)z;
+		mData[0] = (float)x;
+		mData[1] = (float)y;
+		mData[2] = (float)z;
 		return this;
 	}
 	
 	public Vector3f set(final Vector3f v) {
-		mX = v.mX;
-		mY = v.mY;
-		mZ = v.mZ;
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			mData[i] = v.mData[i];
+		}
 		return this;
 	}
 	
 	public Vector3f set(final Vector3 v) {
-		mX = (float) v.mX;
-		mY = (float) v.mY;
-		mZ = (float) v.mZ;
+		mData[0] = (float) v.mX;
+		mData[1] = (float) v.mY;
+		mData[2] = (float) v.mZ;
 		return this;
 	}
 	
-	public void setX(float x) { mX = x; }
-	public void setY(float y) { mY = y; }
-	public void setZ(float z) { mZ = z; }
-	public void setX(double x) { mX = (float)x; }
-	public void setY(double y) { mY = (float)y; }
-	public void setZ(double z) { mZ = (float)z; }
+	public void setX(float x) { mData[0] = x; }
+	public void setY(float y) { mData[1] = y; }
+	public void setZ(float z) { mData[2] = z; }
+	public void setX(double x) { mData[0] = (float)x; }
+	public void setY(double y) { mData[1] = (float)y; }
+	public void setZ(double z) { mData[2] = (float)z; }
 	
 	public Vector3f subtract(float x, float y, float z) {
-		mX -= x;
-		mY -= y;
-		mZ -= z;
+		mData[0] -= x;
+		mData[1] -= y;
+		mData[2] -= z;
 		return this;
 	}
 	public Vector3f subtract(final Vector3f v) {
-		mX -= v.mX;
-		mY -= v.mY;
-		mZ -= v.mZ;
+		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
+			mData[i] -= v.mData[i];
+		}
 		return this;
 	}
-	public void zero() { mX = 0; mY = 0; mZ = 0; }
+	public void zero() { 
+		for (int i = 0; i < mData.length; i++) {
+			mData[i] = 0;
+		}
+	}
 
 	@Override
 	public String toString() {
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("(");
-		sbuf.append(mX);
+		sbuf.append(getX());
 		sbuf.append(",");
-		sbuf.append(mY);
+		sbuf.append(getY());
 		sbuf.append(",");
-		sbuf.append(mZ);
+		sbuf.append(getZ());
 		sbuf.append(")");
 		return sbuf.toString();
 	}

@@ -62,13 +62,13 @@ public class ViewObj extends Activity {
 			
 			Log.d("DEBUG", "TOUCH=" + x + ", " + y);
 			
-			Vector3f pos = mCamera.getUnproject(gl, x, y);
-			Log.d("DEBUG", "POS-B=" + pos.toString());
-			mRoot.addChild(createPoint(pos, 0.1f, Color4f.BLACK));
-			
-			pos = mCamera.getWorldPosition(gl, x, y, 1);
-			Log.d("DEBUG", "POS-R=" + pos.toString());
-			mRoot.addChild(createPoint(pos, 0.2f, Color4f.RED));
+//			Vector3f pos = mCamera.getUnproject(gl, x, y);
+//			Log.d("DEBUG", "POS-B=" + pos.toString());
+//			mRoot.addChild(createPoint(pos, 0.1f, Color4f.BLACK));
+//			
+//			pos = mCamera.getWorldPosition(gl, x, y, 1);
+//			Log.d("DEBUG", "POS-R=" + pos.toString());
+//			mRoot.addChild(createPoint(pos, 0.2f, Color4f.RED));
 			
 //			pos = mCamera.getWorldPosition(gl, x, y, 2);
 //			Log.d("DEBUG", "POS-G=" + pos.toString());

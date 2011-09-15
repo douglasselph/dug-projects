@@ -29,9 +29,9 @@ public class Vector3 {
 	}
 	
 	public Vector3(final Vector3f v) {
-		mX = v.mX;
-		mY = v.mY;
-		mZ = v.mZ;
+		mX = v.getX();
+		mY = v.getY();
+		mZ = v.getZ();
 	}
 	
 	public Vector3 add(double x, double y, double z) {

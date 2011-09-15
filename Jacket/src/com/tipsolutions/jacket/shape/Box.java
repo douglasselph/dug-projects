@@ -20,6 +20,10 @@ public class Box extends Shape {
 		set(length, length, length, texture);
 	}
 	
+	public Box(float xlength, float ylength, float zlength) {
+		set(xlength, ylength, zlength, null);
+	}
+	
 	public Box(float xlength, float ylength, float zlength, Texture texture) {
 		set(xlength, ylength, zlength, texture);
 	}
