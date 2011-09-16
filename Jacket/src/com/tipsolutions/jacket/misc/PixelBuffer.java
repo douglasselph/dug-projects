@@ -1,6 +1,17 @@
 package com.tipsolutions.jacket.misc;
-import static javax.microedition.khronos.egl.EGL10.*;
-import static javax.microedition.khronos.opengles.GL10.*;
+import static javax.microedition.khronos.egl.EGL10.EGL_ALPHA_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_BLUE_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_DEFAULT_DISPLAY;
+import static javax.microedition.khronos.egl.EGL10.EGL_DEPTH_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_GREEN_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_HEIGHT;
+import static javax.microedition.khronos.egl.EGL10.EGL_NONE;
+import static javax.microedition.khronos.egl.EGL10.EGL_NO_CONTEXT;
+import static javax.microedition.khronos.egl.EGL10.EGL_RED_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_STENCIL_SIZE;
+import static javax.microedition.khronos.egl.EGL10.EGL_WIDTH;
+import static javax.microedition.khronos.opengles.GL10.GL_RGBA;
+import static javax.microedition.khronos.opengles.GL10.GL_UNSIGNED_BYTE;
 
 import java.nio.IntBuffer;
 
@@ -15,6 +26,8 @@ import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.tipsolutions.jacket.math.Color4f;
+
 public class PixelBuffer {
 
 	final static String TAG = "PixelBuffer";
@@ -22,7 +35,6 @@ public class PixelBuffer {
 
 	GLSurfaceView.Renderer mRenderer; // borrow this interface
 	int mWidth, mHeight;
-	Bitmap mBitmap;
 
 	EGL10 mEGL;
 	EGLDisplay mEGLDisplay;
@@ -31,8 +43,9 @@ public class PixelBuffer {
 	EGLContext mEGLContext;
 	EGLSurface mEGLSurface;
 	GL10 mGL;
-
+	IntBuffer mResultBuf;
 	String mThreadOwner;
+	boolean mFlipped = false;
 
 	public PixelBuffer(int width, int height) {
 		mWidth = width;
@@ -59,40 +72,7 @@ public class PixelBuffer {
 		mThreadOwner = Thread.currentThread().getName();
 	}
 
-	public void setRenderer(GLSurfaceView.Renderer renderer) {
-		mRenderer = renderer;
-
-		// Does this thread own the OpenGL context?
-		if (!Thread.currentThread().getName().equals(mThreadOwner)) {
-			Log.e(TAG, "setRenderer: This thread does not own the OpenGL context.");
-			return;
-		}
-
-		// Call the renderer initialization routines
-		mRenderer.onSurfaceCreated(mGL, mEGLConfig);
-		mRenderer.onSurfaceChanged(mGL, mWidth, mHeight);
-	}
-
-	public Bitmap getBitmap() {
-		// Do we have a renderer?
-		if (mRenderer == null) {
-			Log.e(TAG, "getBitmap: Renderer was not set.");
-			return null;
-		}
-
-		// Does this thread own the OpenGL context?
-		if (!Thread.currentThread().getName().equals(mThreadOwner)) {
-			Log.e(TAG, "getBitmap: This thread does not own the OpenGL context.");
-			return null;
-		}
-
-		// Call the renderer draw routine
-		mRenderer.onDrawFrame(mGL);
-		convertToBitmap();
-		return mBitmap;
-	}
-
-	private EGLConfig chooseConfig() {
+	EGLConfig chooseConfig() {
 		int[] attribList = new int[] {                  
 				EGL_DEPTH_SIZE, 0,
 				EGL_STENCIL_SIZE, 0,
@@ -117,8 +97,74 @@ public class PixelBuffer {
 
 		return mEGLConfigs[0];  // Best match is probably the first configuration
 	}
+	
+	public PixelBuffer fill() {
+		// Do we have a renderer?
+		if (mRenderer == null) {
+			Log.e(TAG, "getBitmap: Renderer was not set.");
+			return null;
+		}
 
-	private void listConfig() {
+		// Does this thread own the OpenGL context?
+		if (!Thread.currentThread().getName().equals(mThreadOwner)) {
+			Log.e(TAG, "getBitmap: This thread does not own the OpenGL context.");
+			return null;
+		}
+		// Call the renderer draw routine
+		mRenderer.onDrawFrame(mGL);
+		
+		mResultBuf = IntBuffer.allocate(mWidth*mHeight);
+		mGL.glReadPixels(0, 0, mWidth, mHeight, GL_RGBA, GL_UNSIGNED_BYTE, mResultBuf);
+		
+		return this;
+	}
+	
+	// Convert upside down mirror-reversed image to right-side up normal image.
+	public PixelBuffer flip() {
+		IntBuffer newBuf = IntBuffer.allocate(mWidth*mHeight);
+		newBuf = IntBuffer.allocate(mWidth*mHeight);
+		
+		mResultBuf.rewind();
+		
+		for (int r = 0; r < mHeight; r++) {    
+			for (int x = 0; x < mWidth; x++) {
+				newBuf.put((mHeight-r-1)*mWidth + x, mResultBuf.get(r*mWidth + x));
+			}
+		}                  
+		mResultBuf = newBuf;
+		mFlipped = !mFlipped;
+		return this;
+	}
+
+	public Bitmap getBitmap() {
+		Bitmap bitmap;
+		
+		mResultBuf.rewind();
+		
+		bitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+		bitmap.copyPixelsFromBuffer(mResultBuf);
+		
+		return bitmap;
+	}
+	
+	public Color4f getColor(int px, int py) {
+		mResultBuf.position(position(py, px));
+		int pixel = mResultBuf.get();
+		// Need to convert from ARGB -> RGBA
+		Color4f c = new Color4f(pixel);
+		return new Color4f(c.getGreen(), c.getBlue(), c.getAlpha(), c.getRed());
+	}
+	
+	int getConfigAttrib(EGLConfig config, int attribute) {
+		int[] value = new int[1];
+		return mEGL.eglGetConfigAttrib(mEGLDisplay, config,
+				attribute, value)? value[0] : 0;
+	}
+	
+	public int getHeight() { return mHeight; }
+	public int getWidth() { return mWidth; }
+	
+	void listConfig() {
 		Log.i(TAG, "Config List {");
 
 		for (EGLConfig config : mEGLConfigs) {
@@ -137,26 +183,32 @@ public class PixelBuffer {
 
 		Log.i(TAG, "}");
 	}
-
-	private int getConfigAttrib(EGLConfig config, int attribute) {
-		int[] value = new int[1];
-		return mEGL.eglGetConfigAttrib(mEGLDisplay, config,
-				attribute, value)? value[0] : 0;
+	
+	int position(int r, int c) {
+		if (mFlipped) {
+			return r*mWidth+c;
+		} else {
+			return (mHeight-r-1)*mWidth+c;
+		}
 	}
 
-	private void convertToBitmap() {
-		IntBuffer ib = IntBuffer.allocate(mWidth*mHeight);
-		IntBuffer ibt = IntBuffer.allocate(mWidth*mHeight);
-		mGL.glReadPixels(0, 0, mWidth, mHeight, GL_RGBA, GL_UNSIGNED_BYTE, ib);
-
-		// Convert upside down mirror-reversed image to right-side up normal image.
-		for (int i = 0; i < mHeight; i++) {    
-			for (int j = 0; j < mWidth; j++) {
-				ibt.put((mHeight-i-1)*mWidth + j, ib.get(i*mWidth + j));
-			}
-		}                  
-
-		mBitmap = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
-		mBitmap.copyPixelsFromBuffer(ibt);
+	public void setPixel(int px, int py, int pixel) {
+		mResultBuf.position(position(py, px));
+		mResultBuf.put(pixel);
 	}
+
+	public void setRenderer(GLSurfaceView.Renderer renderer) {
+		mRenderer = renderer;
+
+		// Does this thread own the OpenGL context?
+		if (!Thread.currentThread().getName().equals(mThreadOwner)) {
+			Log.e(TAG, "setRenderer: This thread does not own the OpenGL context.");
+			return;
+		}
+
+		// Call the renderer initialization routines
+		mRenderer.onSurfaceCreated(mGL, mEGLConfig);
+		mRenderer.onSurfaceChanged(mGL, mWidth, mHeight);
+	}
+	
 }

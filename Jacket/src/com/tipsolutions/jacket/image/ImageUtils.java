@@ -1,10 +1,18 @@
 package com.tipsolutions.jacket.image;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import com.tipsolutions.jacket.file.FileUtils;
+
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.widget.Toast;
 
 public class ImageUtils {
 
-	static public Bitmap flipRows(Bitmap bitmap) {
+	static public Bitmap FlipRows(Bitmap bitmap) {
 		int width = bitmap.getWidth();
 		int height = bitmap.getHeight();
     	Bitmap flipped = Bitmap.createBitmap(width, height, bitmap.getConfig());
@@ -14,5 +22,21 @@ public class ImageUtils {
     		}
     	}
     	return flipped;
+	}
+	
+	static public void SaveBitmap(Bitmap bitmap, File file) throws IOException {
+		FileOutputStream fos = new FileOutputStream(file);
+		bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+		fos.flush();
+		fos.close();
+	}
+	
+	static public void SaveBitmap(Context context, Bitmap bitmap, String filename) {
+		try {
+			final File file = FileUtils.GetExternalFile(filename, true);
+			ImageUtils.SaveBitmap(bitmap, file);
+		} catch (Exception ex) {
+			Toast.makeText(context, ex.getMessage(), Toast.LENGTH_SHORT).show();
+		}
 	}
 }

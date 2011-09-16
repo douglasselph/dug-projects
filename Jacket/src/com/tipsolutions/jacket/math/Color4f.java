@@ -2,6 +2,8 @@ package com.tipsolutions.jacket.math;
 
 import java.nio.FloatBuffer;
 
+import android.graphics.Color;
+
 
 
 public class Color4f {
@@ -66,9 +68,13 @@ public class Color4f {
      */
     public static final Color4f PINK = new Color4f(1f, 0.68f, 0.68f, 1f);
 
+    static protected int value255(float c) {
+    	return (int)(c * 255);
+    }
     protected float mR = 0;
     protected float mG = 0;
     protected float mB = 0;
+    
     protected float mA = 0;
     
     public Color4f(final Color4f c) {
@@ -85,53 +91,82 @@ public class Color4f {
     public Color4f(float r, float g, float b, float a) {
     	mR = r; mG = g; mB = b; mA = a;
     }
-
-    public float getRed() {
-        return mR;
+    
+    public Color4f(int color) {
+    	mR = ((float) Color.red(color)) / (float) 0xFF;
+    	mG = ((float) Color.green(color)) / (float) 0xFF;
+    	mB = ((float) Color.blue(color)) / (float) 0xFF;
+    	mA = ((float) Color.alpha(color)) / (float) 0xFF;
     }
+    
+    public boolean equals(Color4f o) {
+		return mR == o.mR && mG == o.mG && mB == o.mB && mA == o.mA;
+	}
 
-    public float getGreen() {
-        return mG;
+    public float getAlpha() {
+        return mA;
     }
 
     public float getBlue() {
         return mB;
     }
 
-    public float getAlpha() {
-        return mA;
+    public int getColor() {
+    	return Color.argb(value255(mA), 
+    					  value255(mR), 
+    					  value255(mG), 
+    					  value255(mB));
+    }
+
+    public float getGreen() {
+        return mG;
     }
     
-    public void setRed(float r) {
-        mR = r;
+    public float getRed() {
+        return mR;
     }
 
-    public void setGreen(float g) {
-        mG = g;
+    public Color4f put(FloatBuffer buf) {
+    	buf.put(mR).put(mG).put(mB).put(mA);
+    	return this;
     }
 
-    public void setBlue(float b) {
-        mB = b;
-    }
-
-    public void setAlpha(float a) {
-        mA = a;
-    }
-    
     public void set(float r, float g, float b, float a) {
         mR = r;
         mG = g;
         mB = b;
         mA = a;
     }
+
+    public void setAlpha(float a) {
+        mA = a;
+    }
     
-    public Color4f put(FloatBuffer buf) {
-    	buf.put(mR).put(mG).put(mB).put(mA);
-    	return this;
+    public void setBlue(float b) {
+        mB = b;
+    }
+    
+    public void setGreen(float g) {
+        mG = g;
     }
 
-	public boolean equals(Color4f o) {
-		return mR == o.mR && mG == o.mG && mB == o.mB && mA == o.mA;
+	public void setRed(float r) {
+        mR = r;
+    }
+
+	@Override
+	public String toString() {
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append("[");
+		sbuf.append(mR);
+		sbuf.append(",");
+		sbuf.append(mG);
+		sbuf.append(",");
+		sbuf.append(mB);
+		sbuf.append(",");
+		sbuf.append(mA);
+		sbuf.append("]");
+		return sbuf.toString();
 	}
     
 }

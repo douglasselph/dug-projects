@@ -58,12 +58,15 @@ public class ViewObj extends Activity {
 		
 		@Override
 		public void start(int x, int y) {
-			MatrixTrackingGL gl = mRenderer.getLastGL();
 			
-			gl.glMatrixMode(GL10.GL_MODELVIEW);
-			gl.glLoadIdentity();
+			Shape shape = mRenderer.pickShape(x, y);
 			
-			Log.d("DEBUG", "TOUCH=" + x + ", " + y);
+//			MatrixTrackingGL gl = mRenderer.getLastGL();
+			
+//			gl.glMatrixMode(GL10.GL_MODELVIEW);
+//			gl.glLoadIdentity();
+			
+//			Log.d("DEBUG", "TOUCH=" + x + ", " + y);
 			
 //			Vector3f pos = mCamera.getUnproject(gl, x, y);
 //			Log.d("DEBUG", "POS-B=" + pos.toString());
@@ -307,7 +310,7 @@ public class ViewObj extends Activity {
 //        mSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         
         mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
-        mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
+        mRenderer.setBackground(new Color4f(0.5f, 1.0f, 1.0f));
         
         mApp.getDataManager().init(mRenderer.getTextureManager());
         
@@ -406,7 +409,7 @@ public class ViewObj extends Activity {
     		{
     			PixelBuffer pixelImage = new PixelBuffer((int)mCamera.getWidth(),(int)mCamera.getHeight());
     			pixelImage.setRenderer(mRenderer);
-    			Bitmap bitmap = pixelImage.getBitmap();
+    			Bitmap bitmap = pixelImage.fill().flip().getBitmap();
     		
     			try {
     				final File file = FileUtils.GetExternalFile("image.png", true);
@@ -425,6 +428,8 @@ public class ViewObj extends Activity {
     		}
     		case MENU_OUTLINE:
     		{
+    	        mRenderer.setBackground(new Color4f(0.5f, 1.0f, 1.0f));
+
     			if (mActiveShape.hasOutlineOverride()) {
         			mActiveShape.clearOutlineOverride();
     			} else {

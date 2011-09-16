@@ -259,83 +259,83 @@ public class Matrix4f {
     }
 
     public Matrix4f mult(final Matrix4f matrix) {
-    	Matrix.multiplyMM(mData, 0, mData, 0, matrix.mData, 0);
-    	return this;
-//    	float data00 = getValue(0,0);
-//    	float data01 = getValue(0,1);
-//    	float data02 = getValue(0,2);
-//    	float data03 = getValue(0,3);
-//    	float data10 = getValue(1,0);
-//    	float data11 = getValue(1,1);
-//    	float data12 = getValue(1,2);
-//    	float data13 = getValue(1,3);
-//    	float data20 = getValue(2,0);
-//    	float data21 = getValue(2,1);
-//    	float data22 = getValue(2,2);
-//    	float data23 = getValue(2,3);
-//    	float data30 = getValue(3,0);
-//    	float data31 = getValue(3,1);
-//    	float data32 = getValue(3,2);
-//    	float data33 = getValue(3,3);
-//    	
-//    	float m00 = matrix.getValue(0,0);
-//    	float m01 = matrix.getValue(0,1);
-//    	float m02 = matrix.getValue(0,2);
-//    	float m03 = matrix.getValue(0,3);
-//    	float m10 = matrix.getValue(1,0);
-//    	float m11 = matrix.getValue(1,1);
-//    	float m12 = matrix.getValue(1,2);
-//    	float m13 = matrix.getValue(1,3);
-//    	float m20 = matrix.getValue(2,0);
-//    	float m21 = matrix.getValue(2,1);
-//    	float m22 = matrix.getValue(2,2);
-//    	float m23 = matrix.getValue(2,3);
-//    	float m30 = matrix.getValue(3,0);
-//    	float m31 = matrix.getValue(3,1);
-//    	float m32 = matrix.getValue(3,2);
-//    	float m33 = matrix.getValue(3,3);
-//    	
-//        double temp00 = data00 * m00 + data01 * m10 + 
-//        			    data02 * m20 + data03 * m30;
-//        double temp01 = data00 * m01 + data01 * m11 + 
-//        			    data02 * m21 + data03 * m31;
-//        double temp02 = data00 * m02 + data01 * m12 + 
-//        			    data02 * m22 + data03 * m32;
-//        double temp03 = data00 * m03 + data01 * m13 + 
-//        				data02 * m23 + data03 * m33;
-//
-//        double temp10 = data10 * m00 + data11 * m10 + 
-//        			    data12 * m20 + data13 * m30;
-//        double temp11 = data10 * m01 + data11 * m11 + 
-//        			    data12 * m21 + data13 * m31;
-//        double temp12 = data10 * m02 + data11 * m12 + 
-//        				data12 * m22 + data13 * m32;
-//        double temp13 = data10 * m03 + data11 * m13 + 
-//        			    data12 * m23 + data13 * m33;
-//
-//        double temp20 = data20 * m00 + data21 * m10 + 
-//        			    data22 * m20 + data23 * m30;
-//        double temp21 = data20 * m01 + data21 * m11 + 
-//        			    data22 * m21 + data23 * m31;
-//        double temp22 = data20 * m02 + data21 * m12 + 
-//        				data22 * m22 + data23 * m32;
-//        double temp23 = data20 * m03 + data21 * m13 + 
-//        				data22 * m23 + data23 * m33;
-//
-//        double temp30 = data30 * m00 + data31 * m10 + 
-//        			    data32 * m20 + data33 * m30;
-//        double temp31 = data30 * m01 + data31 * m11 + 
-//        			    data32 * m21 + data33 * m31;
-//        double temp32 = data30 * m02 + data31 * m12 + 
-//        			    data32 * m22 + data33 * m32;
-//        double temp33 = data30 * m03 + data31 * m13 + 
-//        			    data32 * m23 + data33 * m33;
-//
-//        set(temp00, temp01, temp02, temp03, 
-//        	temp10, temp11, temp12, temp13, 
-//        	temp20, temp21, temp22, temp23,
-//            temp30, temp31, temp32, temp33);
-//        return this;
+//    	Matrix.multiplyMM(mData, 0, mData, 0, matrix.mData, 0);
+//    	return this;
+    	float data00 = getValue(0,0);
+    	float data01 = getValue(0,1);
+    	float data02 = getValue(0,2);
+    	float data03 = getValue(0,3);
+    	float data10 = getValue(1,0);
+    	float data11 = getValue(1,1);
+    	float data12 = getValue(1,2);
+    	float data13 = getValue(1,3);
+    	float data20 = getValue(2,0);
+    	float data21 = getValue(2,1);
+    	float data22 = getValue(2,2);
+    	float data23 = getValue(2,3);
+    	float data30 = getValue(3,0);
+    	float data31 = getValue(3,1);
+    	float data32 = getValue(3,2);
+    	float data33 = getValue(3,3);
+    	
+    	float m00 = matrix.getValue(0,0);
+    	float m01 = matrix.getValue(0,1);
+    	float m02 = matrix.getValue(0,2);
+    	float m03 = matrix.getValue(0,3);
+    	float m10 = matrix.getValue(1,0);
+    	float m11 = matrix.getValue(1,1);
+    	float m12 = matrix.getValue(1,2);
+    	float m13 = matrix.getValue(1,3);
+    	float m20 = matrix.getValue(2,0);
+    	float m21 = matrix.getValue(2,1);
+    	float m22 = matrix.getValue(2,2);
+    	float m23 = matrix.getValue(2,3);
+    	float m30 = matrix.getValue(3,0);
+    	float m31 = matrix.getValue(3,1);
+    	float m32 = matrix.getValue(3,2);
+    	float m33 = matrix.getValue(3,3);
+    	
+        double temp00 = data00 * m00 + data01 * m10 + 
+        			    data02 * m20 + data03 * m30;
+        double temp01 = data00 * m01 + data01 * m11 + 
+        			    data02 * m21 + data03 * m31;
+        double temp02 = data00 * m02 + data01 * m12 + 
+        			    data02 * m22 + data03 * m32;
+        double temp03 = data00 * m03 + data01 * m13 + 
+        				data02 * m23 + data03 * m33;
+
+        double temp10 = data10 * m00 + data11 * m10 + 
+        			    data12 * m20 + data13 * m30;
+        double temp11 = data10 * m01 + data11 * m11 + 
+        			    data12 * m21 + data13 * m31;
+        double temp12 = data10 * m02 + data11 * m12 + 
+        				data12 * m22 + data13 * m32;
+        double temp13 = data10 * m03 + data11 * m13 + 
+        			    data12 * m23 + data13 * m33;
+
+        double temp20 = data20 * m00 + data21 * m10 + 
+        			    data22 * m20 + data23 * m30;
+        double temp21 = data20 * m01 + data21 * m11 + 
+        			    data22 * m21 + data23 * m31;
+        double temp22 = data20 * m02 + data21 * m12 + 
+        				data22 * m22 + data23 * m32;
+        double temp23 = data20 * m03 + data21 * m13 + 
+        				data22 * m23 + data23 * m33;
+
+        double temp30 = data30 * m00 + data31 * m10 + 
+        			    data32 * m20 + data33 * m30;
+        double temp31 = data30 * m01 + data31 * m11 + 
+        			    data32 * m21 + data33 * m31;
+        double temp32 = data30 * m02 + data31 * m12 + 
+        			    data32 * m22 + data33 * m32;
+        double temp33 = data30 * m03 + data31 * m13 + 
+        			    data32 * m23 + data33 * m33;
+
+        set(temp00, temp01, temp02, temp03, 
+        	temp10, temp11, temp12, temp13, 
+        	temp20, temp21, temp22, temp23,
+            temp30, temp31, temp32, temp33);
+        return this;
     }
     
     public Matrix4f mult(final double scalar) {

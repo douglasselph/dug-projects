@@ -109,7 +109,7 @@ public class TextureManager {
 	        	Msg.err(ex.getMessage());
 	        }
 	        if (bitmap != null) {
-	        	Bitmap flipped = ImageUtils.flipRows(bitmap);
+	        	Bitmap flipped = ImageUtils.FlipRows(bitmap);
 	            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, flipped, 0);
 	            bitmap.recycle();
 	            flipped.recycle();

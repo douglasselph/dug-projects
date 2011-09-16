@@ -15,25 +15,24 @@ import com.tipsolutions.jacket.shape.Pyramid;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.shape.Shape.CullFace;
 import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
-import com.tipsolutions.slice.ViewObj.CreateShape;
 
 public class DataManager {
 
-	class Data {
-		CreateShape mCreate;
-		Shape mShape = null;
-		
-		Data(CreateShape create) {
-			mCreate = create;
-		}
-		
-		Shape getShape() {
-			if (mShape == null) {
-				mShape = mCreate.create();
-			}
-			return mShape;
-		}
-	}
+//	class Data {
+//		CreateShape mCreate;
+//		Shape mShape = null;
+//		
+//		Data(CreateShape create) {
+//			mCreate = create;
+//		}
+//		
+//		Shape getShape() {
+//			if (mShape == null) {
+//				mShape = mCreate.create();
+//			}
+//			return mShape;
+//		}
+//	}
 	static final int DATA_PYRAMID = 0;
 	static final int DATA_CUBE = 1;
 	static final int DATA_BOX = 2;
@@ -43,7 +42,7 @@ public class DataManager {
 	static final int DATA_WINGARM = 6;
 	static final int DATA_NUM = 7;
 
-    protected Data [] mData = null;
+//    protected Data [] mData = null;
     
     final String CUBE_FILE = "cube.data";
     final String SUSAN_FILE = "suzanne.data";
@@ -52,7 +51,7 @@ public class DataManager {
     final String WINGARM_FILE = "wingArm.data";
     static final int NUM_FILES = 5;
     
-    Shape [] mShapes = new Shape[DATA_NUM];
+//    Shape [] mShapes = new Shape[DATA_NUM];
     Context mCtx;
     MyApplication mApp;
     TextureManager mTM;
@@ -121,59 +120,88 @@ public class DataManager {
     }
     
     public Shape getShape(int index) {
-    	return mData[index].getShape();
-    }
-
-    public void init(TextureManager tm) {
-        mData = new Data[DATA_NUM];
-        mTM = tm;
-        
-        mData[DATA_PYRAMID] = new Data(new CreateShape() {
-			public Shape create() {
+    	switch (index) {
+    		case DATA_PYRAMID:
 				return getPyramid();
-			}
-        });
-        mData[DATA_CUBE] = new Data(new CreateShape() {
-			public Shape create() {
+    		case DATA_CUBE:
 				return loadShape(CUBE_FILE);
-			}
-        });
-        mData[DATA_BOX] = new Data(new CreateShape() {
-			public Shape create() {
+    		case DATA_BOX:
 				return getBox();
-			}
-        });
-        mData[DATA_SUSAN] = new Data(new CreateShape() {
-			public Shape create() {
+    		case DATA_SUSAN:
+    		{
 				Shape shape = loadShape(SUSAN_FILE);
 		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
 				setColors(shape);
 				return shape;
-			}
-        });
-        mData[DATA_HANK] = new Data(new CreateShape() {
-			public Shape create() {
+    		}
+    		case DATA_HANK:
+    		{
 				Shape shape = loadShape(HANK_FILE);
 				setColors(shape);
 				return shape;
-			}
-        });
-        mData[DATA_WING1] = new Data(new CreateShape() {
-			public Shape create() {
+    		}
+    		case DATA_WING1:
 				return loadShape(WING1_FILE);
-			}
-        });
-        mData[DATA_WINGARM] = new Data(new CreateShape() {
-			public Shape create() {
+    		case DATA_WINGARM:
+    		{
 				Shape shape = loadShape(WINGARM_FILE);
 				shape.setCullFace(CullFace.NONE);
 				return shape;
-			}
-        });
+    		}
+    	}
+    	return null;
+    }
+
+    public void init(TextureManager tm) {
+//        mData = new Data[DATA_NUM];
+        mTM = tm;
+        
+//        mData[DATA_PYRAMID] = new Data(new CreateShape() {
+//			public Shape create() {
+//				return getPyramid();
+//			}
+//        });
+//        mData[DATA_CUBE] = new Data(new CreateShape() {
+//			public Shape create() {
+//				return loadShape(CUBE_FILE);
+//			}
+//        });
+//        mData[DATA_BOX] = new Data(new CreateShape() {
+//			public Shape create() {
+//				return getBox();
+//			}
+//        });
+//        mData[DATA_SUSAN] = new Data(new CreateShape() {
+//			public Shape create() {
+//				Shape shape = loadShape(SUSAN_FILE);
+//		        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
+//				setColors(shape);
+//				return shape;
+//			}
+//        });
+//        mData[DATA_HANK] = new Data(new CreateShape() {
+//			public Shape create() {
+//				Shape shape = loadShape(HANK_FILE);
+//				setColors(shape);
+//				return shape;
+//			}
+//        });
+//        mData[DATA_WING1] = new Data(new CreateShape() {
+//			public Shape create() {
+//				return loadShape(WING1_FILE);
+//			}
+//        });
+//        mData[DATA_WINGARM] = new Data(new CreateShape() {
+//			public Shape create() {
+//				Shape shape = loadShape(WINGARM_FILE);
+//				shape.setCullFace(CullFace.NONE);
+//				return shape;
+//			}
+//        });
     }
   
     public boolean initialized() {
-    	return (mData != null);
+    	return (mTM != null);
     }
     
     Shape loadShape(String file) {

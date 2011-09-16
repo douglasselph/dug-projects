@@ -14,6 +14,8 @@ import java.util.HashMap;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
@@ -1131,33 +1133,38 @@ public class Shape {
 	///////////////////////////////////////
 	// Color Outline override
 	///////////////////////////////////////
+	static final Color4f [] mColorMapColors = {
+		Color4f.RED,
+		Color4f.GREEN,
+		Color4f.BLUE,
+		Color4f.CYAN,
+		Color4f.MAGENTA,
+		Color4f.ORANGE,
+		Color4f.PINK,
+		Color4f.GRAY,
+		Color4f.BROWN,
+		Color4f.BLACK,
+		Color4f.YELLOW,
+		Color4f.LIGHT_GRAY,
+		Color4f.DARK_GRAY,
+	};
 	
 	public class ColorMap {
-		HashMap<Shape,Color4f> mMap = new HashMap<Shape,Color4f>();
-		Color4f [] mColors = {
-			Color4f.RED,
-			Color4f.GREEN,
-			Color4f.BLUE,
-			Color4f.CYAN,
-			Color4f.MAGENTA,
-			Color4f.ORANGE,
-			Color4f.PINK,
-			Color4f.GRAY,
-			Color4f.BROWN,
-			Color4f.BLACK,
-			Color4f.YELLOW,
-			Color4f.LIGHT_GRAY,
-			Color4f.DARK_GRAY,
-		};
+		HashMap<Integer,Shape> mMap;
+		
 		int mNextColor = 0;
 		
+		ColorMap() {
+			mMap = new HashMap<Integer,Shape>();
+		}
+		
 		Color4f getNextColor() {
-			int baseColor = mNextColor % mColors.length;
-			int offset = mNextColor / mColors.length;
+			int baseColor = mNextColor % mColorMapColors.length;
+			int offset = mNextColor / mColorMapColors.length;
 			
 			mNextColor++;
 			
-			Color4f choice = mColors[baseColor];
+			Color4f choice = mColorMapColors[baseColor];
 			
 			if (offset > 0) {
 				int which = (offset-1) % 3;
@@ -1195,9 +1202,14 @@ public class Shape {
 			return choice;
 		}
 		
-		void assign() {
-			mColorOutline = getNextColor();
-			mMap.put(Shape.this, mColorOutline);
+		void assign(Shape shape) {
+			shape.mColorOutline = getNextColor();
+			int color = shape.mColorOutline.getColor();
+			mMap.put(color, shape);
+		}
+		
+		public Shape getShape(int pixel) {
+			return mMap.get(pixel);
 		}
 	};
 	
@@ -1211,7 +1223,7 @@ public class Shape {
 	
 	protected void setOutlineOverride(ColorMap colorMap) {
 		if (hasVertexArray()) {
-			colorMap.assign();
+			colorMap.assign(this);
 		}
 		if (mChildren != null) {
     		for (Shape child : mChildren) {

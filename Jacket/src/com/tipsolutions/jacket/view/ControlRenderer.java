@@ -1,7 +1,6 @@
 package com.tipsolutions.jacket.view;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -13,10 +12,10 @@ import javax.microedition.khronos.opengles.GL10;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 
+import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.misc.PixelBuffer;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
 	
@@ -25,7 +24,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	};
 	
 	protected final ControlSurfaceView mView;
-	protected Color4f mClippingPlaneColor = null;
+	protected Color4f mBackground = null;
 	protected int mWidth;
 	protected int mHeight;
 	protected final ControlCamera mCamera;
@@ -39,15 +38,26 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
         mTM = new TextureManager(view.getContext());
 	}
 	
-	public MatrixTrackingGL getLastGL() {
-		return mLastGL;
+	protected void clearScene(MatrixTrackingGL gl) {
+		if (mBackground != null) {
+    		 // define the color we want to be displayed as the "clipping wall"
+			gl.glClearColor(mBackground.getRed(), 
+							mBackground.getGreen(), 
+							mBackground.getBlue(), 
+							mBackground.getAlpha());
+		}
+		gl.glClearDepthf(1f);
+		
+        // clear the color buffer to show the ClearColor we called above...
+        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 	}
 	
-	public float getWidth() { return mWidth; }
+	public Color4f getBackground() { return mBackground; }
 	public float getHeight() { return mHeight; }
-	
+	public MatrixTrackingGL getLastGL() { return mLastGL; }
 	public TextureManager getTextureManager() { return mTM; }
-
+	public float getWidth() { return mWidth; }
+	
 	@Override
 	public void onDrawFrame(GL10 gl) {
 		MatrixTrackingGL mgl;
@@ -76,17 +86,17 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		onDrawFrame(mgl);
 		onDrawFrameDone(mgl);
 	}
-	
+
 	protected void onDrawFrame(MatrixTrackingGL gl) {
 	}
-	
+
 	protected void onDrawFrameDone(MatrixTrackingGL gl) {
 		if (mOnAfterNextRender != null) {
 			mOnAfterNextRender.run(this, gl);
 			mOnAfterNextRender = null;
 		}
 	}
-
+	
 	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		mWidth = width;
@@ -94,7 +104,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		gl.glViewport(0, 0, mWidth, mHeight);
     	mCamera.setScreenDimension(mWidth, mHeight);
 	}
-
+	
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	mTM.reset();
@@ -108,22 +118,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
         gl.glEnable(GL10.GL_DEPTH_TEST);
 	}
 	
-	protected void clearScene(MatrixTrackingGL gl) {
-		if (mClippingPlaneColor != null) {
-    		 // define the color we want to be displayed as the "clipping wall"
-			gl.glClearColor(mClippingPlaneColor.getRed(), 
-							mClippingPlaneColor.getGreen(), 
-							mClippingPlaneColor.getBlue(), 
-							mClippingPlaneColor.getAlpha());
-		}
-		gl.glClearDepthf(1f);
-		
-        // clear the color buffer to show the ClearColor we called above...
-        gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-	}
-	
-	public void setClippingPlaneColor(Color4f color) {
-		mClippingPlaneColor = color;
+	public void setBackground(Color4f color) {
+		mBackground = color;
 	}
 	
 	public void setOnAfterNextRender(OnAfterNextRender run) {
@@ -159,15 +155,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	
 	public void snapshot(MatrixTrackingGL gl, File file) throws IOException {
 		Bitmap bitmap = snapshot(gl);
-		FileOutputStream fos = new FileOutputStream(file);
-		bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
-		fos.flush();
-		fos.close();
-	}
-	
-	public Bitmap getBitmap() {
-		PixelBuffer pixelImage = new PixelBuffer((int)mCamera.getWidth(),(int)mCamera.getHeight());
-		pixelImage.setRenderer(this);
-		return pixelImage.getBitmap();
+		ImageUtils.SaveBitmap(bitmap, file);
 	}
 }

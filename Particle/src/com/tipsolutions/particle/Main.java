@@ -84,7 +84,7 @@ public class Main extends Activity {
         mSurfaceView.setId(1);
         
         mRenderer = new MyRenderer(mSurfaceView, mCamera);
-        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
+        mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
         
         mSurfaceView.setEGLConfigChooser(false);
         
@@ -205,7 +205,7 @@ public class Main extends Activity {
     	switch (code) {
     		case EMIT_FLARE:
     		{
-    	        mRenderer.setClippingPlaneColor(new Color4f(0.1f, 0.1f, 0.1f));
+    	        mRenderer.setBackground(new Color4f(0.1f, 0.1f, 0.1f));
     			Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
 //    			tex.setBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
     			EmitterTex emitter = new EmitterTex(tex);
@@ -221,7 +221,7 @@ public class Main extends Activity {
     		}
     		case EMIT_TEXTURE:
     		{
-    	        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
+    	        mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
     			Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
     			tex.setBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
     			EmitterTex emitter = new EmitterTex(tex);
@@ -237,7 +237,7 @@ public class Main extends Activity {
     		case EMIT_DEFAULT:
     		default:
     		{
-    	        mRenderer.setClippingPlaneColor(new Color4f(0.9f, 0.9f, 0.9f));
+    	        mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
                 mParticleSystem.setEmitter(new Emitter());
                 break;
     		}

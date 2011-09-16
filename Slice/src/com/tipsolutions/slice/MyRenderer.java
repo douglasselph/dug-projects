@@ -19,7 +19,13 @@ package com.tipsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.graphics.Bitmap;
+import android.util.Log;
+
+import com.tipsolutions.jacket.image.ImageUtils;
+import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.misc.PixelBuffer;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.shape.Shape.ColorMap;
 import com.tipsolutions.jacket.view.ControlCamera;
@@ -58,7 +64,42 @@ class MyRenderer extends ControlRenderer {
     	super.onSurfaceCreated(gl, config);
     }
     
-    public void setOutlineOverride() {
+    public Shape pickShape(int px, int py) {
+        Color4f savedColor = getBackground();
+        setBackground(Color4f.WHITE);
+
     	ColorMap colorMap = mShape.setOutlineOverride();
+    	
+		PixelBuffer pixelImage = new PixelBuffer((int)mCamera.getWidth(),(int)mCamera.getHeight());
+		pixelImage.setRenderer(this);
+		pixelImage.fill();
+		
+    	mShape.clearOutlineOverride();
+        setBackground(savedColor);
+    	
+    	Color4f color = pixelImage.getColor(px, py);
+    	Shape shape = colorMap.getShape(color.getColor());
+    	
+    	// DEBUG
+    	// Put a cross where we just picked
+    	if (false)
+    	{
+    		if (shape != null) {
+    			Log.d("DEBUG", "Got a shape on pixel " + color.getColor() + ", color=" + color + " @" + px + ", " + py);
+    		} else {
+    			Log.d("DEBUG", "No shape at point " + px + ", " + py + ", pixel=" + color.getColor() + ", col=" + color.toString());
+    		}
+    		int linePixel = Color4f.BLACK.getColor();
+    		
+    		for (int x = 0; x < pixelImage.getWidth(); x++) {
+    			pixelImage.setPixel(x, py, linePixel);
+    		}
+    		for (int y = 0; y < pixelImage.getHeight(); y++) {
+    			pixelImage.setPixel(px, y, linePixel);
+    		}
+    		Bitmap bitmap = pixelImage.getBitmap();
+    		ImageUtils.SaveBitmap(mView.getContext(), bitmap, "pick.png");
+    	}
+    	return shape;
     }
 }
