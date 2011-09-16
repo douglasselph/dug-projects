@@ -16,7 +16,6 @@ public class MyApplication extends Application {
     int mActiveControl = ViewObj.CONTROL_CAMERA;
     
     DataManager mDataManager;
-    TextureManager mTM;
     
 //    Shape.CullFace mCullFace = Shape.CullFace.BACK;
     
@@ -24,7 +23,6 @@ public class MyApplication extends Application {
     public int getActiveShapeIndex() { return mActiveShapeIndex; }
 	public int getBlenderControl() { return mBlenderControl; }
     public DataManager getDataManager() { return mDataManager; }
-    public TextureManager getTextureManager() { return mTM; }
     public int getEGLDepth() { return mEglDepth; }
     public int getActiveControl() { return mActiveControl; }
     
@@ -44,8 +42,6 @@ public class MyApplication extends Application {
     @Override
 	public void onCreate() {
 		super.onCreate();
-		
 		mDataManager = new DataManager(this);
-		mTM = new TextureManager(this);
 	}
 }

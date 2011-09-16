@@ -13,6 +13,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
@@ -29,10 +30,12 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected final ControlCamera mCamera;
 	protected MatrixTrackingGL mLastGL = null;
 	protected OnAfterNextRender mOnAfterNextRender = null;
+    protected TextureManager mTM;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
 		mCamera = camera;
+        mTM = new TextureManager(view.getContext());
 	}
 	
 	public MatrixTrackingGL getLastGL() {
@@ -41,12 +44,18 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	
 	public float getWidth() { return mWidth; }
 	public float getHeight() { return mHeight; }
+	
+	public TextureManager getTextureManager() { return mTM; }
 
 	@Override
 	public void onDrawFrame(GL10 gl) {
-		MatrixTrackingGL mgl = new MatrixTrackingGL(gl);
+		MatrixTrackingGL mgl;
+		if (gl instanceof MatrixTrackingGL) {
+			mgl = (MatrixTrackingGL) gl;
+		} else {
+    		mgl = new MatrixTrackingGL(gl);
+		}
 		mLastGL = mgl;
-		
 		clearScene(mgl);
 		
 		mgl.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
@@ -87,6 +96,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    	mTM.reset();
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 		/*
          * By default, OpenGL enables features that improve quality

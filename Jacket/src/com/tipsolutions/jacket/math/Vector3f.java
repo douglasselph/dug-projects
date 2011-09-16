@@ -20,30 +20,35 @@ public class Vector3f {
 	}
 	
 	public Vector3f(float x, float y, float z) {
+		mData = new float[3];
 		mData[0] = x;
 		mData[1] = y;
 		mData[2] = z;
 	}
 	
 	public Vector3f(double x, double y, double z) {
+		mData = new float[3];
 		mData[0] = (float)x;
 		mData[1] = (float)y;
 		mData[2] = (float)z;
 	}
 	
 	public Vector3f(final Vector3f v) {
+		mData = new float[3];
 		for (int i = 0; i < mData.length && i < v.mData.length; i++) {
 			mData[i] = v.mData[i];
 		}
 	}
 	
 	public Vector3f(final Vector3 v) {
+		mData = new float[3];
 		mData[0] = (float) v.mX;
 		mData[1] = (float) v.mY;
 		mData[2] = (float) v.mZ;
 	}
 	
 	public Vector3f(float [] v) {
+		mData = new float[3];
 		for (int i = 0; i < mData.length && i < v.length; i++) {
 			mData[i] = v[i];
 		}

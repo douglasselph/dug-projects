@@ -55,14 +55,33 @@ public class DataManager {
     Shape [] mShapes = new Shape[DATA_NUM];
     Context mCtx;
     MyApplication mApp;
+    TextureManager mTM;
     
     public DataManager(Context context) {
     	mCtx = context;
     	mApp = (MyApplication)context.getApplicationContext();
     }
     
+    void setTextureManager(TextureManager tm) {
+    	mTM = tm;
+    }
+    
+    TextureManager.Texture getTexture(String file) {
+    	if (mTM == null) {
+    		return null;
+    	}
+    	return mTM.getTexture(file);
+    }
+    
+    TextureManager.Texture getTexture(int resid) {
+    	if (mTM == null) {
+    		return null;
+    	}
+    	return mTM.getTexture(resid);
+    }
+    
     Shape getBox() {
-      TextureManager.Texture texture = mApp.getTextureManager().getTexture("feather_real.png");
+      TextureManager.Texture texture = getTexture("feather_real.png");
       final Shape shape = new Box(1f, texture);
       shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
       shape.setColorData(new dFloatBuf() {
@@ -98,7 +117,7 @@ public class DataManager {
   }
     
     Shape getPyramid() {
-        TextureManager.Texture texture = mApp.getTextureManager().getTexture(R.raw.robot);
+        TextureManager.Texture texture = getTexture(R.raw.robot);
         Shape shape = new Pyramid(1f, 1f, texture);
         shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
         setColors(shape);
@@ -164,7 +183,7 @@ public class DataManager {
         Shape shape = new Shape();
         try {
             InputStream inputStream = mCtx.getAssets().open(file);
-            shape.readData(inputStream, mApp.getTextureManager());
+            shape.readData(inputStream, mTM);
         } catch (Exception ex) {
         	Log.e(MyApplication.TAG, ex.getMessage());
         }

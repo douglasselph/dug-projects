@@ -1,11 +1,13 @@
 package com.tipsolutions.slice;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -29,6 +31,7 @@ import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.Bounds;
+import com.tipsolutions.jacket.misc.PixelBuffer;
 import com.tipsolutions.jacket.shape.Box;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.view.AdjustEventTap;
@@ -258,6 +261,7 @@ public class ViewObj extends Activity {
 	static final int MENU_QUIT = 0;
 	static final int MENU_RESET = 1;
 	static final int MENU_SNAPSHOT = 2;
+	static final int MENU_IMAGE = 3;
 	
     public static final boolean LOG = true;
     public static final String TAG = "Slice";
@@ -350,8 +354,8 @@ public class ViewObj extends Activity {
         mRenderer.setShape(mRoot);
 		setShape(mApp.getDataManager().getShape(mApp.getActiveShapeIndex()));
         
-		TestData testData = new TestData();
-		testData.run();
+//		TestData testData = new TestData();
+//		testData.run();
     }
     
     @Override
@@ -360,6 +364,7 @@ public class ViewObj extends Activity {
 		menu.add(0, MENU_QUIT, order++, "Quit");
 		menu.add(0, MENU_RESET, order++, "Reset");
 		menu.add(0, MENU_SNAPSHOT, order++, "Snapshot");
+		menu.add(0, MENU_IMAGE, order++, "Image");
 		return true;
 	};
    
@@ -379,7 +384,7 @@ public class ViewObj extends Activity {
     				@Override
     				public void run(ControlRenderer renderer, MatrixTrackingGL gl) {
     					try {
-        					final File file = FileUtils.GetExternalFile("screen.jpg", true);
+        					final File file = FileUtils.GetExternalFile("screen.png", true);
         					renderer.snapshot(gl, file);
         					mSurfaceView.post(new Runnable() {
 								@Override
@@ -394,6 +399,27 @@ public class ViewObj extends Activity {
     			});
     			break;
     		}
+    		case MENU_IMAGE:
+    		{
+    			PixelBuffer pixelImage = new PixelBuffer((int)mCamera.getWidth(),(int)mCamera.getHeight());
+    			pixelImage.setRenderer(mRenderer);
+    			Bitmap bitmap = pixelImage.getBitmap();
+    		
+    			try {
+    				final File file = FileUtils.GetExternalFile("image.png", true);
+    				
+        			FileOutputStream fos = new FileOutputStream(file);
+        			bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        			fos.flush();
+        			fos.close();
+        			
+        			Toast.makeText(ViewObj.this, "Created " + file.getAbsoluteFile(), Toast.LENGTH_SHORT).show();
+        			
+    			} catch (Exception ex) {
+					Toast.makeText(ViewObj.this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+    			}
+    			break;
+    		}
     	}
 		return super.onOptionsItemSelected(item);
 	}
@@ -404,7 +430,6 @@ public class ViewObj extends Activity {
     	finish();
     	
     	mApp.getDataManager().init();
-    	mApp.getTextureManager().reset();
 
     	overridePendingTransition(0, 0);
     	startActivity(intent);
@@ -439,7 +464,7 @@ public class ViewObj extends Activity {
 	
 	void setBlendTexture(int param) {
 		if (mApp.getBlenderControl() != param) {
-        	TextureManager tm = mApp.getTextureManager();
+        	TextureManager tm = mRenderer.getTextureManager();
         	mApp.setBlenderControl(param);
         	tm.setBlendParam(param);
             mSurfaceView.requestRender();
