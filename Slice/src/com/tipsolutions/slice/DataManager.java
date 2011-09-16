@@ -62,10 +62,6 @@ public class DataManager {
     	mApp = (MyApplication)context.getApplicationContext();
     }
     
-    void setTextureManager(TextureManager tm) {
-    	mTM = tm;
-    }
-    
     TextureManager.Texture getTexture(String file) {
     	if (mTM == null) {
     		return null;
@@ -128,8 +124,9 @@ public class DataManager {
     	return mData[index].getShape();
     }
 
-    public void init() {
+    public void init(TextureManager tm) {
         mData = new Data[DATA_NUM];
+        mTM = tm;
         
         mData[DATA_PYRAMID] = new Data(new CreateShape() {
 			public Shape create() {

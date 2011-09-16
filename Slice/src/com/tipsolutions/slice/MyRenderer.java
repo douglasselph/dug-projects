@@ -19,9 +19,9 @@ package com.tipsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.shape.Shape;
+import com.tipsolutions.jacket.shape.Shape.ColorMap;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -56,5 +56,9 @@ class MyRenderer extends ControlRenderer {
     
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	super.onSurfaceCreated(gl, config);
+    }
+    
+    public void setOutlineOverride() {
+    	ColorMap colorMap = mShape.setOutlineOverride();
     }
 }

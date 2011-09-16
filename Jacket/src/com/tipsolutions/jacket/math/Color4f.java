@@ -71,6 +71,13 @@ public class Color4f {
     protected float mB = 0;
     protected float mA = 0;
     
+    public Color4f(final Color4f c) {
+    	mR = c.mR;
+    	mG = c.mG;
+    	mB = c.mB;
+    	mA = c.mA;
+    }
+    
     public Color4f(float r, float g, float b) {
     	mR = r; mG = g; mB = b; mA = 1f;
     }

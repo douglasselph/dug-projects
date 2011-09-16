@@ -42,7 +42,7 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 		mRenderer = renderer;
 		super.setRenderer(renderer);
 	}
-
+	
 	@Override
 	public void onResume() {
 		super.onResume();

@@ -262,6 +262,7 @@ public class ViewObj extends Activity {
 	static final int MENU_RESET = 1;
 	static final int MENU_SNAPSHOT = 2;
 	static final int MENU_IMAGE = 3;
+	static final int MENU_OUTLINE = 4;
 	
     public static final boolean LOG = true;
     public static final String TAG = "Slice";
@@ -283,7 +284,6 @@ public class ViewObj extends Activity {
         super.onCreate(savedInstanceState);
         
         mApp = (MyApplication) getApplicationContext();
-        mApp.getDataManager().init();
 
         RelativeLayout main = new RelativeLayout(this);
         main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
@@ -308,6 +308,8 @@ public class ViewObj extends Activity {
         
         mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
         mRenderer.setClippingPlaneColor(new Color4f(0.5f, 1.0f, 1.0f));
+        
+        mApp.getDataManager().init(mRenderer.getTextureManager());
         
         if (mApp.getEGLDepth() != EGL_NONE) {
         	if (mApp.getEGLDepth() == EGL_DEPTH) {
@@ -365,6 +367,7 @@ public class ViewObj extends Activity {
 		menu.add(0, MENU_RESET, order++, "Reset");
 		menu.add(0, MENU_SNAPSHOT, order++, "Snapshot");
 		menu.add(0, MENU_IMAGE, order++, "Image");
+		menu.add(0, MENU_OUTLINE, order++, "Outline");
 		return true;
 	};
    
@@ -420,6 +423,15 @@ public class ViewObj extends Activity {
     			}
     			break;
     		}
+    		case MENU_OUTLINE:
+    		{
+    			if (mActiveShape.hasOutlineOverride()) {
+        			mActiveShape.clearOutlineOverride();
+    			} else {
+        			mActiveShape.setOutlineOverride();
+    			}
+    			mSurfaceView.requestRender();
+    		}
     	}
 		return super.onOptionsItemSelected(item);
 	}
@@ -429,7 +441,7 @@ public class ViewObj extends Activity {
     	overridePendingTransition(0, 0);
     	finish();
     	
-    	mApp.getDataManager().init();
+    	mApp.getDataManager().init(mRenderer.getTextureManager());
 
     	overridePendingTransition(0, 0);
     	startActivity(intent);

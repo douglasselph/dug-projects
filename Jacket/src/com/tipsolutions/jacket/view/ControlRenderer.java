@@ -16,6 +16,7 @@ import android.opengl.GLSurfaceView;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.misc.PixelBuffer;
 
 public class ControlRenderer implements GLSurfaceView.Renderer {
 	
@@ -164,4 +165,9 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		fos.close();
 	}
 	
+	public Bitmap getBitmap() {
+		PixelBuffer pixelImage = new PixelBuffer((int)mCamera.getWidth(),(int)mCamera.getHeight());
+		pixelImage.setRenderer(this);
+		return pixelImage.getBitmap();
+	}
 }

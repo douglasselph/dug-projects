@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -140,6 +141,7 @@ public class Shape {
 	protected TextureManager.Texture mTexture = null;
 	protected int mCullFace = GL10.GL_BACK;
 	protected Color4f mColor = null;
+	protected Color4f mColorOutline = null;
 	
 	public Shape getChild(int i) { return mChildren.get(i); }
 	public ArrayList<Shape> getChildren() { return mChildren; }
@@ -239,6 +241,7 @@ public class Shape {
 	}
 	
 	public void setColor(Color4f color) { mColor = color; }
+	
 	
 //	public static CullFace GetCullFaceFromOrdinal(int face) {
 //    	for (Shape.CullFace match : Shape.CullFace.values()) {
@@ -1126,22 +1129,122 @@ public class Shape {
 	}
 
 	///////////////////////////////////////
+	// Color Outline override
+	///////////////////////////////////////
+	
+	public class ColorMap {
+		HashMap<Shape,Color4f> mMap = new HashMap<Shape,Color4f>();
+		Color4f [] mColors = {
+			Color4f.RED,
+			Color4f.GREEN,
+			Color4f.BLUE,
+			Color4f.CYAN,
+			Color4f.MAGENTA,
+			Color4f.ORANGE,
+			Color4f.PINK,
+			Color4f.GRAY,
+			Color4f.BROWN,
+			Color4f.BLACK,
+			Color4f.YELLOW,
+			Color4f.LIGHT_GRAY,
+			Color4f.DARK_GRAY,
+		};
+		int mNextColor = 0;
+		
+		Color4f getNextColor() {
+			int baseColor = mNextColor % mColors.length;
+			int offset = mNextColor / mColors.length;
+			
+			mNextColor++;
+			
+			Color4f choice = mColors[baseColor];
+			
+			if (offset > 0) {
+				int which = (offset-1) % 3;
+				int amt = (offset-1)/3+1;
+				float color;
+
+				while (which < 3) {
+					if (which == 0) {
+						color = choice.getRed();
+					} else if (which == 1) {
+						color = choice.getGreen();
+					} else {
+						color = choice.getBlue();
+					}
+					color += amt * 0.1f;
+
+					if (color <= 1) {
+						choice = new Color4f(choice);
+						
+						if (which == 0) {
+							choice.setRed(color);
+						} else if (which == 1) {
+							choice.setGreen(color);
+						} else {
+							choice.setBlue(color);
+						}
+						break;
+					}
+					which++;
+				}
+				if (which >= 3) {
+					return getNextColor();
+				}
+			}
+			return choice;
+		}
+		
+		void assign() {
+			mColorOutline = getNextColor();
+			mMap.put(Shape.this, mColorOutline);
+		}
+	};
+	
+	// Draw the shape as a solid color shape only. No details.
+	// Note: children are left as is. Must do each child individually.
+	public ColorMap setOutlineOverride() {
+		ColorMap colorMap = new ColorMap();
+		setOutlineOverride(colorMap);
+		return colorMap;
+	}
+	
+	protected void setOutlineOverride(ColorMap colorMap) {
+		if (hasVertexArray()) {
+			colorMap.assign();
+		}
+		if (mChildren != null) {
+    		for (Shape child : mChildren) {
+    			child.setOutlineOverride(colorMap);
+    		}
+		}
+	}
+	
+	public void clearOutlineOverride() {
+		mColorOutline = null;
+		
+		if (mChildren != null) {
+    		for (Shape child : mChildren) {
+    			child.clearOutlineOverride();
+    		}
+		}
+	}
+	
+	public boolean hasOutlineOverride() {
+		return mColorOutline != null;
+	}
+
+	///////////////////////////////////////
 	// OpenGL
 	///////////////////////////////////////
-
-//	public void onCreate(MatrixTrackingGL gl) {
-//		if (mChildren != null) {
-//			for (Shape shape : mChildren) {
-//				shape.onCreate(gl);
-//			}
-//		}
-//	}
 
 	public void onDraw(MatrixTrackingGL gl) {
 		FloatBuffer fbuf;
 		boolean didPush = false;
 
-		if (!hasColorArray()) {
+		if (mColorOutline != null) {
+			gl.glColor4f(mColorOutline.getRed(), mColorOutline.getGreen(), mColorOutline.getBlue(), mColorOutline.getAlpha());
+		} else if (!hasColorArray()) {
 			Color4f color = getColor();
 			if (color != null) {
 				gl.glColor4f(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
@@ -1173,25 +1276,31 @@ public class Shape {
 		} else {
 			gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		}
-		if ((fbuf = getNormalBuf()) != null) {
-			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-			gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
-		} else {
-			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
-		}
-		if ((fbuf = getColorBuf()) != null) {
-			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-			gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
-
-			// Not doing it this way anymore:
-			// gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
-		} else {
+		if (mColorOutline != null) {
 			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
-		}
-		if ((mTexture != null) && ((fbuf = getTextureBuf()) != null)) {
-			mTexture.onDraw(gl, fbuf);
-		} else {
+			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+		} else {
+    		if ((fbuf = getNormalBuf()) != null) {
+    			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+    			gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
+    		} else {
+    			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+    		}
+    		if ((fbuf = getColorBuf()) != null) {
+    			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+    			gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
+    
+    			// Not doing it this way anymore:
+    			// gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
+    		} else {
+    			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
+    		}
+    		if ((mTexture != null) && ((fbuf = getTextureBuf()) != null)) {
+    			mTexture.onDraw(gl, fbuf);
+    		} else {
+    			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+    		}
 		}
 		ShortBuffer sbuf;
 		if ((sbuf = getIndexBuf()) != null) {
