@@ -3,13 +3,8 @@
 package data.wing;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Shape.dBone;
-import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
-import com.tipsolutions.jacket.shape.Shape.dJoint;
-import com.tipsolutions.jacket.shape.Shape.dShortBuf;
+import com.tipsolutions.jacket.math.Matrix4f;
 
 
 public class WingArm extends Shape {
@@ -32,7 +27,7 @@ public class WingArm extends Shape {
 		                    0.000000f, 0.000000f, 0.000000f, 1.000000f);
 	}
 	@Override protected float dGetMinX() { return -1.334232f; }
-	@Override protected float dGetMaxX() { return 2.494288f; }
+	@Override protected float dGetMaxX() { return 2.494289f; }
 	@Override protected float dGetMinY() { return -0.028067f; }
 	@Override protected float dGetMaxY() { return 0.073363f; }
 	@Override protected float dGetMinZ() { return -0.183519f; }
@@ -44,9 +39,9 @@ public class WingArm extends Shape {
 			public void fill(FloatBuffer buf) {
 				buf.put(new float [] {
 					0.133726f, 0.060180f, -0.183519f, 0.133726f, -0.014884f, -0.183519f, -1.334232f, -0.028067f, 0.211233f, -1.334232f, 0.073363f, 0.211233f, 0.133726f, 0.060180f, 0.012227f, /* 0 -> 4 */
-					0.133726f, -0.014884f, 0.012227f, -1.334232f, -0.028067f, 0.475732f, -1.334232f, 0.073363f, 0.475732f, 1.767368f, -0.003589f, 0.514780f, 1.767368f, 0.048884f, 0.514780f, /* 5 -> 9 */
-					1.767368f, -0.003589f, 0.377946f, 1.767368f, 0.048884f, 0.377946f, 2.494288f, 0.032693f, 0.334952f, 2.494288f, 0.012602f, 0.334952f, 2.494287f, 0.032693f, 0.387343f, /* 10 -> 14 */
-					2.494287f, 0.012602f, 0.387343f, /* 15 -> 15 */
+					0.133725f, -0.014884f, 0.012227f, -1.334232f, -0.028067f, 0.475732f, -1.334232f, 0.073363f, 0.475732f, 1.767368f, -0.003589f, 0.514780f, 1.767368f, 0.048884f, 0.514780f, /* 5 -> 9 */
+					1.767368f, -0.003589f, 0.377946f, 1.767368f, 0.048884f, 0.377946f, 2.494289f, 0.032693f, 0.334952f, 2.494289f, 0.012602f, 0.334952f, 2.494288f, 0.032693f, 0.387343f, /* 10 -> 14 */
+					2.494288f, 0.012602f, 0.387343f, /* 15 -> 15 */
 				});
 			};
 			public int size() { return 48; }
@@ -105,6 +100,79 @@ public class WingArm extends Shape {
 				joints[0] = 0;
 				return joints;
 			};
+			@Override public float [] getAnimKnotPts(AnimType type) {
+				if (type == AnimType.LOC_X) {
+					return new float [] {
+						261.000000f, 0.000000f,
+					};
+				}
+				if (type == AnimType.LOC_Y) {
+					return new float [] {
+						261.000000f, 0.000000f,
+					};
+				}
+				if (type == AnimType.LOC_Z) {
+					return new float [] {
+						261.000000f, 0.000000f,
+					};
+				}
+				if (type == AnimType.SCALE_X) {
+					return new float [] {
+						261.000000f, 1.000000f,
+					};
+				}
+				if (type == AnimType.SCALE_Y) {
+					return new float [] {
+						261.000000f, 1.000000f,
+					};
+				}
+				if (type == AnimType.SCALE_Z) {
+					return new float [] {
+						261.000000f, 1.000000f,
+					};
+				}
+				if (type == AnimType.QUAT_X) {
+					return new float [] {
+						1.000000f, 0.000000f,
+						6.000000f, 0.017682f,
+						15.000000f, -0.021447f,
+						24.000000f, -0.000009f,
+						250.000000f, 0.000000f,
+						261.000000f, 0.014603f,
+					};
+				}
+				if (type == AnimType.QUAT_Y) {
+					return new float [] {
+						1.000000f, 0.000000f,
+						6.000000f, -0.039845f,
+						15.000000f, 0.048329f,
+						24.000000f, 0.000020f,
+						250.000000f, 0.000000f,
+						261.000000f, -0.032907f,
+					};
+				}
+				if (type == AnimType.QUAT_Z) {
+					return new float [] {
+						1.000000f, 0.000000f,
+						6.000000f, 0.275492f,
+						15.000000f, -0.334156f,
+						24.000000f, -0.000136f,
+						250.000000f, 0.000000f,
+						261.000000f, 0.227523f,
+					};
+				}
+				if (type == AnimType.QUAT_W) {
+					return new float [] {
+						1.000000f, 1.000000f,
+						6.000000f, 0.960315f,
+						15.000000f, 0.941033f,
+						24.000000f, 1.000000f,
+						250.000000f, 1.000000f,
+						261.000000f, 0.973107f,
+					};
+				}
+				return null;
+			}
 		};
 		bones[1] = new dBone() {
 			@Override public String getName() { return "Arm2"; }

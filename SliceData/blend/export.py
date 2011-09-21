@@ -112,10 +112,13 @@ class MeshInfo:
 		return len(self.verts)
 	
 	def collect_arm_data(self, mesh):
-		arm = self.getArmatureFor(mesh.name)
-		if arm != None:
+		armobj = self.getArmatureFor(mesh.name)
+		if armobj != None:
+			print "Found armature data for '%s'\n" % mesh.name
+			
 			self.armData = ArmData()
-			self.armData.collect_data(arm, mesh)
+			self.armData.collect_data(armobj, mesh)
+			self.armData.collect_anim_data(armobj)
 		else:
 			self.armData = None
 			print "No armature data found for '%s'" % mesh.name
@@ -123,8 +126,8 @@ class MeshInfo:
 	def getArmatureFor(self, name):
 		for armobj in self.armObjects:
 			if armobj.getName().endswith(name):
-				return armobj.getData()
-		return None
+				return armobj
+		return None	
 		
 class Bone:
 	
@@ -133,6 +136,7 @@ class Bone:
 		self.verts = []
 		self.joints = []
 		self.jointParent = None
+		self.animData = {}
 		self.name = name
 		
 	def hasJoints(self):
@@ -143,6 +147,26 @@ class Bone:
 	
 	def getJoints(self):
 		return self.joints
+	
+	def writeAnimSubData(self, out, tab, ckey, key):
+		out.write('%sif (type == AnimType.%s) {\n' % (tab, ckey))
+		out.write('%s\treturn new float [] {\n' % tab)
+		for pt in self.animData[key]:
+			out.write('%s\t\t%ff, %ff,\n' % (tab, pt[0], pt[1]))
+		out.write('%s\t};\n' % tab)
+		out.write('%s}\n' % tab)
+	
+	def writeAnimData(self, out, tab):
+		self.writeAnimSubData(out, tab, 'LOC_X', 'LocX')
+		self.writeAnimSubData(out, tab, 'LOC_Y', 'LocY')
+		self.writeAnimSubData(out, tab, 'LOC_Z', 'LocZ')
+		self.writeAnimSubData(out, tab, 'SCALE_X', 'ScaleX')
+		self.writeAnimSubData(out, tab, 'SCALE_Y', 'ScaleY')
+		self.writeAnimSubData(out, tab, 'SCALE_Z', 'ScaleZ')
+		self.writeAnimSubData(out, tab, 'QUAT_X', 'QuatX')
+		self.writeAnimSubData(out, tab, 'QUAT_Y', 'QuatY')
+		self.writeAnimSubData(out, tab, 'QUAT_Z', 'QuatZ')
+		self.writeAnimSubData(out, tab, 'QUAT_W', 'QuatW')
 	
 class Joint:
 	
@@ -175,8 +199,8 @@ class Joint:
 	
 class ArmData:
 	
-	def collect_data(self, arm, mesh):
-		self.arm = arm
+	def collect_data(self, armobj, mesh):
+		self.arm = armobj.getData()
 		self.bones = {}
 		self.joints = {}
 		self.bonelist = []
@@ -309,7 +333,30 @@ class ArmData:
 	
 	def getJointKey(self, bonenames):
 		return ','.join(bonenames)
+	
+	def collect_anim_data(self, armobj):
+		
+		# armipo = armobj.getIpo()
+	
+		armact = armobj.getAction()
+		if armact == None:
+			print "No armature actions found"
+			return
+		
+		for channelName in armact.getChannelNames():
+			if not self.bones.has_key(channelName):
+				print "Skipping channel %s: no such bone" % channelName
+				continue
 				
+			bone = self.bones[channelName]
+			armipo = armact.getChannelIpo(channelName)
+		
+			for curve in armipo.curves:
+				name = curve.getName()
+				bone.animData[name] = []
+				for beztriplet in curve.bezierPoints:
+					bone.animData[name].append(beztriplet.pt)
+					
 gMeshInfo = MeshInfo()
 	
 def write_obj(filename):
@@ -1023,6 +1070,13 @@ def write_armature(out):
 		
 		if bone.jointParent != None:
 			out.write('\t\t\t@Override public int getJointParent() { return %d; }\n' % bone.jointParent.index)
+		
+		if len(bone.animData) > 0:
+			out.write('\t\t\t@Override public float [] getAnimKnotPts(AnimType type) {\n')
+			bone.writeAnimData(out, '\t\t\t\t')
+			out.write('\t\t\t\treturn null;\n')
+			out.write('\t\t\t}\n')
+			
 		out.write('\t\t};\n')
 	
 	out.write('\t\treturn bones;\n')

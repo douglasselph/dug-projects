@@ -3,11 +3,8 @@
 package data.wing;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
-import com.tipsolutions.jacket.shape.Shape.dShortBuf;
+import com.tipsolutions.jacket.math.Matrix4f;
 
 
 public class WingArm_Secondaries2 extends Shape {
