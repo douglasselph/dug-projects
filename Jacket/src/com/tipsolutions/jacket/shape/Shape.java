@@ -14,8 +14,6 @@ import java.util.HashMap;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
@@ -67,6 +65,15 @@ public class Shape {
 		protected int [] mJoints = null;
 		protected int mJointParent = -1;
 		protected Bounds mBounds = null;
+		protected BoneAnim [] mAnim = null;
+		
+		public class BoneAnim {
+			float [] mPts;
+			
+			public BoneAnim(float [] pts) {
+				mPts = pts;
+			}	
+		};
 		
 		public String getName() {
 			return mName;
@@ -109,6 +116,18 @@ public class Shape {
 			}
 			mBounds = new Bounds();
 			mBounds.set(computeBounds);
+		}
+		
+		public void allocAnim() {
+			mAnim = new BoneAnim[NUM_ANIM_TYPES];
+		}
+		
+		public void setAnimKnotPts(AnimType type, float [] pts) {
+			mAnim[type.ordinal()] = new BoneAnim(pts);
+		}
+		
+		public void setAnimKnotPts(int index, float [] pts) {
+			mAnim[index] = new BoneAnim(pts);
 		}
 	};
 
@@ -594,12 +613,20 @@ public class Shape {
 	public interface dShortBuf extends dData<ShortBuffer> {
 	};
 	
+	public enum AnimType {
+		LOC_X, LOC_Y, LOC_Z,
+		SCALE_X, SCALE_Y, SCALE_Z,
+		QUAT_X, QUAT_Y, QUAT_Z, QUAT_W
+	};
+	public static final int NUM_ANIM_TYPES = 10;
+	
 	public class dBone implements dShortBuf {
 		public String getName() { return null; }
 		public void fill(ShortBuffer buf) {}
 		public int size() { return 0; }
 		public int [] getJoints() { return null; }
 		public int getJointParent() { return -1; }
+		public float [] getAnimKnotPts(AnimType type) { return null; }
 	};
 
 	public class dJoint implements dShortBuf {
@@ -757,6 +784,12 @@ public class Shape {
 				tgt.mJointParent = src.getJointParent();
 				tgt.set(src);
 				tgt.computeBounds();
+				if (src.getAnimKnotPts(AnimType.LOC_X) != null) {
+					tgt.allocAnim();
+					for (AnimType type : AnimType.values()) {
+    					tgt.setAnimKnotPts(type, src.getAnimKnotPts(type));
+					}
+				}
 				mBones[i] = tgt;
 			}
 		}
@@ -1052,6 +1085,18 @@ public class Shape {
 		dataStream.writeInt(bone.mJointParent);
 		bone.getBounds().write(dataStream);
 		bone.writeBuffer(dataStream);
+		
+		if (bone.mAnim != null) {
+			dataStream.writeInt(bone.mAnim.length);
+			for (Bone.BoneAnim anim : bone.mAnim) {
+				dataStream.writeInt(anim.mPts.length);
+				for (float f : anim.mPts) {
+					dataStream.writeFloat(f);
+				}
+			}
+		} else {
+			dataStream.writeInt(0);
+		}
 	}
 
 	protected Bone readBone(DataInputStream dataStream) throws IOException, Exception {
@@ -1072,6 +1117,19 @@ public class Shape {
 		bone.mBounds = new Bounds();
 		bone.mBounds.read(dataStream);
 		bone.readBuffer(dataStream);
+		
+		int animDataCount = dataStream.readInt();
+		if (animDataCount > 0) {
+			bone.allocAnim();
+			for (int count = 0; count < animDataCount; count++) {
+				int numpts = dataStream.readInt();
+				float [] pts = new float[numpts];
+				for (int i = 0; i < numpts; i++) {
+					pts[i] = dataStream.readFloat();
+				}
+				bone.setAnimKnotPts(count, pts);
+			}
+		}
 		return bone;
 	}
 

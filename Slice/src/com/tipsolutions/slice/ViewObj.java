@@ -9,7 +9,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,6 +44,7 @@ import com.tipsolutions.jacket.view.TwirlEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
 import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
+import com.tipsolutions.slice.MyRenderer.PickShape;
 
 public class ViewObj extends Activity {
 
@@ -59,7 +59,8 @@ public class ViewObj extends Activity {
 		@Override
 		public void start(int x, int y) {
 			
-			Shape shape = mRenderer.pickShape(x, y);
+			PickShape pick = mRenderer.pick();
+			Shape shape = pick.getShapeAt(x, y);
 			
 //			MatrixTrackingGL gl = mRenderer.getLastGL();
 			
@@ -79,8 +80,6 @@ public class ViewObj extends Activity {
 //			pos = mCamera.getWorldPosition(gl, x, y, 2);
 //			Log.d("DEBUG", "POS-G=" + pos.toString());
 //			mRoot.addChild(createPoint(pos, 0.3f, Color4f.GREEN));
-			
-			mSurfaceView.requestRender();
 			
 //			mCamera.test(gl);
 			

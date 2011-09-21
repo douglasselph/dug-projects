@@ -1,6 +1,5 @@
 package com.tipsolutions.jacket.math;
 
-import android.util.FloatMath;
 
 public class Quaternion {
 	
@@ -34,7 +33,6 @@ public class Quaternion {
     protected double _w = 1;
     protected double _x = 0;
     protected double _y = 0;
-    
     protected double _z = 0;
     
     public Quaternion() {
