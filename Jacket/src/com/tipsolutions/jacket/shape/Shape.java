@@ -73,6 +73,14 @@ public class Shape {
 			public BoneAnim(float [] pts) {
 				mPts = pts;
 			}	
+			
+			public float get(int i) {
+				return mPts[i];
+			}
+			
+			public int num() {
+				return mPts.length;
+			}
 		};
 		
 		public String getName() {
@@ -378,6 +386,71 @@ public class Shape {
 							sbuf.append(" != ");
 							sbuf.append(boneO.mJointParent);
 							msg.msg(tag, sbuf.toString());
+						}
+						if (bone.mAnim != null && boneO.mAnim == null) {
+							StringBuffer sbuf = new StringBuffer();
+							sbuf.append("Bone ");
+							sbuf.append(i);
+							sbuf.append(": first had animations, second didn't");
+							msg.msg(tag, sbuf.toString());
+						} else if (bone.mAnim == null && boneO.mAnim != null) {
+							StringBuffer sbuf = new StringBuffer();
+							sbuf.append("Bone ");
+							sbuf.append(i);
+							sbuf.append(": second had animations, first didn't");
+							msg.msg(tag, sbuf.toString());
+						} else if (bone.mAnim != null) {
+							if (bone.mAnim.length != boneO.mAnim.length) {
+								StringBuffer sbuf = new StringBuffer();
+								sbuf.append("Bone ");
+								sbuf.append(i);
+								sbuf.append(" #anim ");
+								sbuf.append(bone.mAnim.length);
+								sbuf.append(" != ");
+								sbuf.append(boneO.mAnim.length);
+								msg.msg(tag, sbuf.toString());
+							} else {
+								for (i = 0; i < bone.mAnim.length; i++) {
+									Bone.BoneAnim anim1 = bone.mAnim[i];
+									Bone.BoneAnim anim2 = boneO.mAnim[i];
+									if (anim1.num() != anim2.num()) {
+										StringBuffer sbuf = new StringBuffer();
+										sbuf.append("Bone ");
+										sbuf.append(i);
+										sbuf.append(" #anim ");
+										sbuf.append(bone.mAnim.length);
+										sbuf.append(" != ");
+										sbuf.append(boneO.mAnim.length);
+										msg.msg(tag, sbuf.toString());
+									} else if (anim1.num() > 0) {
+										boolean identical = true;
+										for (int j = 0; j < anim1.num(); j++) {
+											if (anim1.get(j) != anim2.get(j)) {
+												StringBuffer sbuf = new StringBuffer();
+												sbuf.append("Bone#");
+												sbuf.append(i);
+												sbuf.append(", anim pt# ");
+												sbuf.append(j);
+												sbuf.append(": ");
+												sbuf.append(anim1.get(j));
+												sbuf.append(" != ");
+												sbuf.append(anim2.get(j));
+												msg.msg(tag, sbuf.toString());
+												identical = false;
+											}
+										}
+										if (identical) {
+											StringBuffer sbuf = new StringBuffer();
+											sbuf.append("Bone#");
+											sbuf.append(i);
+											sbuf.append(", ");
+											sbuf.append(anim1.num());
+											sbuf.append(" anim pts identical");
+											msg.msg(tag, sbuf.toString());
+										}
+									}
+								}
+							}
 						}
 						{
     						StringBuffer sbuf = new StringBuffer();
