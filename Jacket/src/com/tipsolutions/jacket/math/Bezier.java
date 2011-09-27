@@ -23,7 +23,7 @@ public class Bezier {
 			mCalc.set(mP[0]);
 			mCalc.multiply(invT*invT);
 			mCalc2.set(mP[1]);
-			mCalc2.multiply(2*invT);
+			mCalc2.multiply(2*invT*t);
 			mCalc.add(mCalc2);
 			mCalc2.set(mP[2]);
 			mCalc2.multiply(t*t);

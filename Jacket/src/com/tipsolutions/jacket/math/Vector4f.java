@@ -42,6 +42,7 @@ public class Vector4f extends Vector3f {
 	}
 	
 	public Vector4f(float x, float y, float z, float w) {
+		mData = new float[4];
 		mData[0] = x;
 		mData[1] = y;
 		mData[2] = z;
@@ -49,6 +50,7 @@ public class Vector4f extends Vector3f {
 	}
 	
 	public Vector4f(float [] v) {
+		mData = new float[4];
 		int i;
 		for (i = 0; i < mData.length && i < v.length; i++) {
 			mData[i] = v[i];
@@ -57,5 +59,8 @@ public class Vector4f extends Vector3f {
 			mData[3] = 1;
 		}
 	}
+	
 	public float getW() { return mData[3]; }
+	public void setW(float w) { mData[3] = w; }
+	public void setW(double w) { mData[3] = (float) w; }
 }

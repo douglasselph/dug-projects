@@ -2,14 +2,11 @@ package com.tipsolutions.slice;
 
 import java.util.ArrayList;
 
-import javax.microedition.khronos.opengles.GL10;
-
 import android.opengl.Matrix;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.Matrix4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 

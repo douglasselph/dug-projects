@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -31,8 +32,12 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.BufferUtils.Bounds;
 import com.tipsolutions.jacket.misc.PixelBuffer;
+import com.tipsolutions.jacket.misc.Timing;
+import com.tipsolutions.jacket.shape.Animator;
 import com.tipsolutions.jacket.shape.Box;
 import com.tipsolutions.jacket.shape.Shape;
+import com.tipsolutions.jacket.shape.Animator.OnPlayListener;
+import com.tipsolutions.jacket.shape.Shape.Bone;
 import com.tipsolutions.jacket.view.AdjustEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup;
 import com.tipsolutions.jacket.view.ControlCamera;
@@ -114,6 +119,9 @@ public class ViewObj extends Activity {
 		TableRow mControlRow;
 		TableRow mDisplayRow;
 		ButtonGroup mControlGroup;
+		Spinner mEglChoice;
+		Spinner mBlendChoice;
+		Button mPlay;
 		
 		Controls() {
 			mHolder = new TableLayout(ViewObj.this);
@@ -151,7 +159,7 @@ public class ViewObj extends Activity {
 			shapeChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 			shapeChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getActiveShapeIndex()));
 			
-			final Spinner blendChoice = new Spinner(ViewObj.this);
+			mBlendChoice = new Spinner(ViewObj.this);
 			adapter = new ArrayAdapter<SpinnerControl>(ViewObj.this,
 					android.R.layout.simple_spinner_item,
 					new SpinnerControl[] {
@@ -161,11 +169,11 @@ public class ViewObj extends Activity {
 					new SpinnerControl("Blend", GL10.GL_BLEND),
 			});
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			blendChoice.setAdapter(adapter);
-			blendChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+			mBlendChoice.setAdapter(adapter);
+			mBlendChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-					SpinnerControl item = (SpinnerControl) blendChoice.getSelectedItem();
+					SpinnerControl item = (SpinnerControl) mBlendChoice.getSelectedItem();
 					setBlendTexture(item.getArg());
 				}
 
@@ -173,10 +181,10 @@ public class ViewObj extends Activity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
-			blendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-			blendChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getBlenderControl()));
+			mBlendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mBlendChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getBlenderControl()));
 
-			final Spinner eglChoice = new Spinner(ViewObj.this);
+			mEglChoice = new Spinner(ViewObj.this);
 			adapter = new ArrayAdapter<SpinnerControl>(ViewObj.this,
 					android.R.layout.simple_spinner_item,
 					new SpinnerControl[] {
@@ -185,11 +193,11 @@ public class ViewObj extends Activity {
 					new SpinnerControl("EGL NoDep", EGL_NO_DEPTH),
 			});
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			eglChoice.setAdapter(adapter);
-			eglChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
+			mEglChoice.setAdapter(adapter);
+			mEglChoice.setOnItemSelectedListener(new OnItemSelectedListener() {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-					SpinnerControl item = (SpinnerControl) eglChoice.getSelectedItem();
+					SpinnerControl item = (SpinnerControl) mEglChoice.getSelectedItem();
 					setEGLDepth(item.getArg());
 				}
 
@@ -197,8 +205,28 @@ public class ViewObj extends Activity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
-			eglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-			eglChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getEGLDepth()));
+			mEglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mEglChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getEGLDepth()));
+			
+			mPlay = new Button(ViewObj.this);
+			mPlay.setText("Play");
+			mPlay.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					playOrStop();
+					
+					runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							if (mAnimator.isPlaying()) {
+								mPlay.setText("Stop");
+							} else {
+								mPlay.setText("Play");
+							}
+						}
+					});
+				}
+			});
 			
 			ButtonGroup controlGroup = new ButtonGroup(ViewObj.this);
 			controlGroup.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
@@ -228,6 +256,12 @@ public class ViewObj extends Activity {
 				public void onClickChanged(View v) {
 					mApp.setActiveControl(v.getId());
 					setEventTap();
+					
+					if (v.getId() == CONTROL_ARMATURE) {
+						showPlay();
+					} else {
+						hidePlay();
+					}
 				}
 			});
 			
@@ -238,8 +272,8 @@ public class ViewObj extends Activity {
 			
 			mDisplayRow = new TableRow(ViewObj.this);
 			mDisplayRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-			mDisplayRow.addView(eglChoice);
-			mDisplayRow.addView(blendChoice);
+			mDisplayRow.addView(mEglChoice);
+			mDisplayRow.addView(mBlendChoice);
 			
 			mHolder.addView(mDisplayRow);
 			mHolder.addView(mControlRow);
@@ -250,6 +284,19 @@ public class ViewObj extends Activity {
 			params.weight = 1;
 			return params;
 		}
+	
+		void showPlay() {
+			mDisplayRow.removeAllViews();
+			mDisplayRow.addView(mPlay);
+			mDisplayRow.addView(mBlendChoice);
+		}
+		
+		void hidePlay() {
+			mDisplayRow.removeAllViews();
+			mDisplayRow.addView(mEglChoice);
+			mDisplayRow.addView(mBlendChoice);
+		}
+		
 	};
 	
     static final int CONTROL_OBJECT = 0;
@@ -279,6 +326,7 @@ public class ViewObj extends Activity {
     ControlSurfaceView mSurfaceView;
     MyApplication mApp;
     Controls mControls;
+    Animator mAnimator;
    
     /** Called when the activity is first created. */
     @Override
@@ -519,7 +567,10 @@ public class ViewObj extends Activity {
 	}
 	
 	void setShape(Shape shape) {
+		
+		Timing.Get(this).start("resetChildren");
 		mRoot.resetChildren(shape);
+		Timing.Get(this).end("resetChildren");
 		
     	mActiveShape = shape;
         
@@ -583,6 +634,24 @@ public class ViewObj extends Activity {
 		point.setLocation(loc);
 		point.setColor(color);
 		return point;
+	}
+	
+	void playOrStop() {
+		Bone [] bones = mActiveShape.getBones();
+		if (bones != null) {
+			if (mAnimator != null && mAnimator.isPlaying()) {
+				mAnimator.stop();
+			} else {
+        		mAnimator = new Animator(mActiveShape, bones[0]);
+        		mAnimator.rewind();
+        		mAnimator.play(new OnPlayListener() {
+    				@Override
+    				public void onFrame(Animator animator, int frame) {
+    					mSurfaceView.requestRender();
+    				}
+        		});
+			}
+		}
 	}
 	
 }

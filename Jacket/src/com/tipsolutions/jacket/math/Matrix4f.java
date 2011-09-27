@@ -81,6 +81,73 @@ public class Matrix4f {
 		quat.toRotationMatrix(this);
 	}
  
+	   /**
+     * Multiplies the given vector by this matrix (v * M). If supplied, the result is stored into the supplied "store"
+     * vector.
+     * 
+     * @param vector
+     *            the vector to multiply this matrix by.
+     * @param store
+     *            the vector to store the result in. If store is null, a new vector is created. Note that it IS safe for
+     *            vector and store to be the same object.
+     * @return the store vector, or a new vector if store is null.
+     * @throws NullPointerException
+     *             if vector is null
+     */
+    public Vector4f applyPre(Vector4f vector, Vector4f store) {
+        if (store == null) {
+            store = new Vector4f();
+        }
+        final double x = vector.getX();
+        final double y = vector.getY();
+        final double z = vector.getZ();
+        final double w = vector.getW();
+
+        store.setX(getValue(0,0) * x + getValue(1,0) * y + getValue(2,0) * z + getValue(3,0) * w);
+        store.setY(getValue(0,1) * x + getValue(1,1) * y + getValue(2,1) * z + getValue(3,1) * w);
+        store.setZ(getValue(0,2) * x + getValue(1,2) * y + getValue(2,2) * z + getValue(3,2) * w);
+        store.setW(getValue(0,3) * x + getValue(1,3) * y + getValue(2,3) * z + getValue(3,3) * w);
+
+        return store;
+    }
+    
+    public Vector4f applyPre(Vector4f vector) {
+    	return applyPre(vector, vector);
+    }
+
+    /**
+     * Multiplies the given vector by this matrix (M * v). If supplied, the result is stored into the supplied "store"
+     * vector.
+     * 
+     * @param vector
+     *            the vector to multiply this matrix by.
+     * @param store
+     *            the vector to store the result in. If store is null, a new vector is created. Note that it IS safe for
+     *            vector and store to be the same object.
+     * @return the store vector, or a new vector if store is null.
+     * @throws NullPointerException
+     *             if vector is null
+     */
+    public Vector4f apply(Vector4f vector, Vector4f store) {
+        if (store == null) {
+            store = new Vector4f();
+        }
+        final double x = vector.getX();
+        final double y = vector.getY();
+        final double z = vector.getZ();
+        final double w = vector.getW();
+
+        store.setX(getValue(0,0) * x + getValue(0,1) * y + getValue(0,2) * z + getValue(0,3) * w);
+        store.setY(getValue(1,0) * x + getValue(1,1) * y + getValue(1,2) * z + getValue(1,3) * w);
+        store.setZ(getValue(2,0) * x + getValue(2,1) * y + getValue(2,2) * z + getValue(2,3) * w);
+        store.setW(getValue(3,0) * x + getValue(3,1) * y + getValue(3,2) * z + getValue(3,3) * w);
+
+        return store;
+    }
+    
+    public Vector4f apply(Vector4f vector) {
+    	return apply(vector, vector);
+    }
     /**
      * Multiplies the given vector by this matrix (v * M). If supplied, the result is stored into the supplied "store"
      * vector.
@@ -187,6 +254,29 @@ public class Matrix4f {
     	return new Vector3f(getValue(3, 0), 
     					    getValue(3, 1), 
     					    getValue(3, 2));
+    }
+    
+    public Matrix4f setScale(Vector4f scale) {
+        set(getValue(0,0) * scale.getX(), 
+        	getValue(0,1) * scale.getY(), 
+        	getValue(0,2) * scale.getZ(), 
+        	getValue(0,3) * scale.getW(), 
+        		   
+        	getValue(1,0) * scale.getX(), 
+        	getValue(1,1) * scale.getY(), 
+        	getValue(1,2) * scale.getZ(),
+        	getValue(1,3) * scale.getW(), 
+        		   
+        	getValue(2,0) * scale.getX(), 
+        	getValue(2,1) * scale.getY(), 
+        	getValue(2,2) * scale.getZ(), 
+        	getValue(2,3) * scale.getW(), 
+        		   
+        	getValue(3,0) * scale.getX(), 
+        	getValue(3,1) * scale.getY(), 
+        	getValue(3,2) * scale.getZ(), 
+        	getValue(3,3) * scale.getW());
+        return this;
     }
     
     public Matrix4f transposeLocation() {
@@ -426,6 +516,10 @@ public class Matrix4f {
     	setValue(3, 2, v.getZ());
     	setValue(3, 3, 1);
     }
+    
+    public void setLocX(float x) { setValue(3, 0, x); }
+    public void setLocY(float y) { setValue(3, 1, y); }
+    public void setLocZ(float z) { setValue(3, 1, z); }
     
     // Set rotation part of this matrix, leaving everything else as is.
     public void setRotation(final Matrix3f rotate) {

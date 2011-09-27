@@ -109,10 +109,12 @@ public class TextureManager {
 	        	Msg.err(ex.getMessage());
 	        }
 	        if (bitmap != null) {
-	        	Bitmap flipped = ImageUtils.FlipRows(bitmap);
-	            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, flipped, 0);
+	        	// REALLY REALLY bad idea to do this kind of work here.
+	        	// It is VERY slow:
+//	        	Bitmap flipped = ImageUtils.FlipRows(bitmap);
+	        	
+	            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
 	            bitmap.recycle();
-	            flipped.recycle();
 	        }
 		}
 		

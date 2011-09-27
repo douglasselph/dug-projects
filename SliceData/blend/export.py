@@ -148,13 +148,30 @@ class Bone:
 	def getJoints(self):
 		return self.joints
 	
+	def recordAnimData(self, name, pt):
+		list = self.animData[name]
+		last_pos = len(list)-1
+		last_pos2 = last_pos-1
+		if last_pos2 >= 0:
+ 			last_val = list[last_pos]
+			last_val2 = list[last_pos2]
+		
+			if last_val[1] == last_val2[1] and last_val[1] == pt[1]:
+				self.animData[name][last_pos] = pt
+			else:
+				self.animData[name].append(pt)
+		else:
+			self.animData[name].append(pt)
+	
 	def writeAnimSubData(self, out, tab, ckey, key):
-		out.write('%sif (type == AnimType.%s) {\n' % (tab, ckey))
-		out.write('%s\treturn new float [] {\n' % tab)
-		for pt in self.animData[key]:
-			out.write('%s\t\t%ff, %ff,\n' % (tab, pt[0], pt[1]))
-		out.write('%s\t};\n' % tab)
-		out.write('%s}\n' % tab)
+		if self.animData.has_key(key):
+			if len(self.animData[key]) > 1:
+				out.write('%sif (type == AnimType.%s) {\n' % (tab, ckey))
+				out.write('%s\treturn new float [] {\n' % tab)
+				for pt in self.animData[key]:
+					out.write('%s\t\t%ff, %ff,\n' % (tab, pt[0], pt[1]))
+				out.write('%s\t};\n' % tab)
+				out.write('%s}\n' % tab)
 	
 	def writeAnimData(self, out, tab):
 		self.writeAnimSubData(out, tab, 'LOC_X', 'LocX')
@@ -167,6 +184,9 @@ class Bone:
 		self.writeAnimSubData(out, tab, 'QUAT_Y', 'QuatY')
 		self.writeAnimSubData(out, tab, 'QUAT_Z', 'QuatZ')
 		self.writeAnimSubData(out, tab, 'QUAT_W', 'QuatW')
+		self.writeAnimSubData(out, tab, 'ROT_X', 'RotX')
+		self.writeAnimSubData(out, tab, 'ROT_Y', 'RotY')
+		self.writeAnimSubData(out, tab, 'ROT_Z', 'RotZ')
 	
 class Joint:
 	
@@ -335,27 +355,41 @@ class ArmData:
 		return ','.join(bonenames)
 	
 	def collect_anim_data(self, armobj):
-		
-		# armipo = armobj.getIpo()
-	
 		armact = armobj.getAction()
+		
 		if armact == None:
-			print "No armature actions found"
-			return
-		
-		for channelName in armact.getChannelNames():
-			if not self.bones.has_key(channelName):
-				print "Skipping channel %s: no such bone" % channelName
-				continue
+			armipo = armobj.getIpo()
+			
+			if armipo == None:
+				print "No armature actions found"
+				return
+			
+			arm = armobj.getData()
+			bonekeys = arm.bones.keys()
+			bonename = bonekeys[0]
+			if self.bones.has_key(bonename):
+				bone = self.bones[bonename]
+				self.collect_anim_data_bone(armipo, bone)
+			else:
+				print "*ARM-ERROR*: No bone found named '%s'" % bonename
+				print " Bone names were: %s" % self.bones.keys()
+		else:
+			for channelName in armact.getChannelNames():
+					if not self.bones.has_key(channelName):
+						print "Skipping channel %s: no such bone" % channelName
+						continue
 				
-			bone = self.bones[channelName]
-			armipo = armact.getChannelIpo(channelName)
+					bone = self.bones[channelName]
+					armipo = armact.getChannelIpo(channelName)
 		
-			for curve in armipo.curves:
+					self.collect_anim_data_bone(armipo, bone)
+					
+	def collect_anim_data_bone(self, armipo, bone):
+		for curve in armipo.curves:
 				name = curve.getName()
 				bone.animData[name] = []
 				for beztriplet in curve.bezierPoints:
-					bone.animData[name].append(beztriplet.pt)
+					bone.recordAnimData(name, beztriplet.pt)
 					
 gMeshInfo = MeshInfo()
 	
@@ -1072,6 +1106,7 @@ def write_armature(out):
 			out.write('\t\t\t@Override public int getJointParent() { return %d; }\n' % bone.jointParent.index)
 		
 		if len(bone.animData) > 0:
+			out.write('\t\t\t@Override public boolean hasAnimKnotPts() { return true; }\n')
 			out.write('\t\t\t@Override public float [] getAnimKnotPts(AnimType type) {\n')
 			bone.writeAnimData(out, '\t\t\t\t')
 			out.write('\t\t\t\treturn null;\n')
@@ -1178,7 +1213,6 @@ def write_debuginfo(mesh):
 			print "---"	
 			
 	print "--- MESH DONE"
-	
-	
+
 dirname = os.path.splitext(Blender.Get('filename'))[0]
 Blender.Window.FileSelector(write_obj, "Export", dirname)

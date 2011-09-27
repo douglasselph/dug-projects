@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import com.tipsolutions.jacket.file.FileUtils;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.widget.Toast;
+
+import com.tipsolutions.jacket.file.FileUtils;
 
 public class ImageUtils {
 

@@ -19,10 +19,6 @@ package com.tipsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.graphics.Bitmap;
-import android.util.Log;
-
-import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.misc.PixelBuffer;

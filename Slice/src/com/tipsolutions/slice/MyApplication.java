@@ -4,8 +4,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Application;
 
-import com.tipsolutions.jacket.image.TextureManager;
-
 public class MyApplication extends Application {
 
 	static final String TAG = "Slice";

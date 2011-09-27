@@ -100,37 +100,8 @@ public class WingArm extends Shape {
 				joints[0] = 0;
 				return joints;
 			};
+			@Override public boolean hasAnimKnotPts() { return true; }
 			@Override public float [] getAnimKnotPts(AnimType type) {
-				if (type == AnimType.LOC_X) {
-					return new float [] {
-						261.000000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.LOC_Y) {
-					return new float [] {
-						261.000000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.LOC_Z) {
-					return new float [] {
-						261.000000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.SCALE_X) {
-					return new float [] {
-						261.000000f, 1.000000f,
-					};
-				}
-				if (type == AnimType.SCALE_Y) {
-					return new float [] {
-						261.000000f, 1.000000f,
-					};
-				}
-				if (type == AnimType.SCALE_Z) {
-					return new float [] {
-						261.000000f, 1.000000f,
-					};
-				}
 				if (type == AnimType.QUAT_X) {
 					return new float [] {
 						1.000000f, 0.000000f,
