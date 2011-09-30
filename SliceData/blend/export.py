@@ -77,6 +77,9 @@ class MeshInfo:
 				for i in range(len(face.verts)):
 					self.addUV(face.index, face.verts[i].index, face.uv[i])
 	
+	# Need duplicate vertexes to handle uv texture placement.
+	# That is, a single vertex could represent many different places
+	# on the same texture bitmap.
 	def addUV(self, face_index, vert_index, uv):
 		vert = self.verts[vert_index]
 		
@@ -148,6 +151,19 @@ class Bone:
 	def getJoints(self):
 		return self.joints
 	
+	def addVertIndex(self, vert_index):
+		global gMeshInfo
+		
+		if not findInList(self.verts, vert_index):
+			self.verts.append(vert_index)
+		
+			if gMeshInfo.extraVerts.has_key(vert_index):
+				for xtra_vert_index in gMeshInfo.extraVerts[vert_index]:
+					self.verts.append(xtra_vert_index)
+
+	def getSortedVerts(self):
+		return sorted(self.verts)
+					
 	def recordAnimData(self, name, pt):
 		list = self.animData[name]
 		last_pos = len(list)-1
@@ -217,6 +233,19 @@ class Joint:
 				sum = sum + armdata.bones[bonename].index
 		return sum
 	
+	def addVertIndex(self, vert_index):
+		global gMeshInfo
+		
+		if not findInList(self.verts, vert_index):				
+				self.verts.append(vert_index)
+				
+				if gMeshInfo.extraVerts.has_key(vert_index):
+					for xtra_vert_index in gMeshInfo.extraVerts[vert_index]:
+						self.verts.append(xtra_vert_index)
+	
+	def getSortedVerts(self):
+		return soted(self.verts)
+	
 class ArmData:
 	
 	def collect_data(self, armobj, mesh):
@@ -243,11 +272,10 @@ class ArmData:
 			bone = self.bones[bonekey]
 			verts = mesh.getVertsFromGroup(bonekey)
 			
-			for vert in mesh.getVertsFromGroup(bonekey):
-				influences = mesh.getVertexInfluences(vert)
-				
-				if not findInList(bone.verts, vert):
-					bone.verts.append(vert)
+			for vert_index in mesh.getVertsFromGroup(bonekey):
+				influences = mesh.getVertexInfluences(vert_index)
+	
+				bone.addVertIndex(vert_index)
 					
 				if len(influences) > 1:
 					influences.sort()
@@ -259,8 +287,10 @@ class ArmData:
 					if not self.joints.has_key(jointkey):
 						self.joints[jointkey] = Joint(bonenames)
 	
-					if not findInList(self.joints[jointkey].verts, vert):				
-						self.joints[jointkey].verts.append(vert)
+					self.joints[jointkey].addVertIndex(vert_index)
+					
+					if not findInList(self.joints[jointkey].verts, vert_index):				
+						self.joints[jointkey].verts.append(vert_index)
 					
 		# Get Base bones
 		basebones = []
@@ -1076,7 +1106,7 @@ def write_armature(out):
 		c = 0
 		count = 0
 		out.write('\t\t\t\tbuf.put(new short [] {\n\t\t\t\t\t');
-		for vert in bone.verts:
+		for vert in bone.getSortedVerts():
 			if c >= vertPerLine:
 				out.write('\n\t\t\t\t\t');
 				c = 1
@@ -1118,44 +1148,47 @@ def write_armature(out):
 	out.write('\t};\n')
 	out.write('\n')
 	
-	out.write('\t@Override\n')
-	out.write('\tprotected dJoint [] dGetJointsDef() {\n')
-	out.write('\t\tdJoint [] joints = new dJoint[%d];\n' % len(gMeshInfo.armData.joints.keys()))
+	numJoints = len(gMeshInfo.armData.joints.keys())
 	
-	for joint in gMeshInfo.armData.jointlist:
-		out.write('\t\tjoints[%d] = new dJoint() {\n' % joint.index)
-		out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n')
+	if numJoints > 0:
+		out.write('\t@Override\n')
+		out.write('\tprotected dJoint [] dGetJointsDef() {\n')
+		out.write('\t\tdJoint [] joints = new dJoint[%d];\n' % numJoints)
+	
+		for joint in gMeshInfo.armData.jointlist:
+			out.write('\t\tjoints[%d] = new dJoint() {\n' % joint.index)
+			out.write('\t\t\t@Override public void fill(ShortBuffer buf) {\n')
 		
-		c = 0
-		count = 0
-		out.write('\t\t\t\tbuf.put(new short [] {\n\t\t\t\t\t');
-		for vert in joint.verts:
-			if c >= vertPerLine:
-				out.write('\n\t\t\t\t\t')
-				c = 1
-			else:
-				c = c + 1
-			out.write('%d,' % vert)
-			count = count + 1
-			once = True
+			c = 0
+			count = 0
+			out.write('\t\t\t\tbuf.put(new short [] {\n\t\t\t\t\t');
+			for vert in joint.getSortedVerts():
+				if c >= vertPerLine:
+					out.write('\n\t\t\t\t\t')
+					c = 1
+				else:
+					c = c + 1
+				out.write('%d,' % vert)
+				count = count + 1
+				once = True
 		
-		out.write('});\n\t\t\t}\n')
-		out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
-		out.write('\t\t\t@Override public int [] getBones() {\n')
+			out.write('});\n\t\t\t}\n')
+			out.write('\t\t\t@Override public int size() { return %d; }\n' % count)
+			out.write('\t\t\t@Override public int [] getBones() {\n')
 		
-		boneindexes = joint.getBoneIndexes(gMeshInfo.armData)
+			boneindexes = joint.getBoneIndexes(gMeshInfo.armData)
 		
-		out.write('\t\t\t\tint [] bones = new int[%d];\n' % len(boneindexes))
-		pos = 0
-		for index in boneindexes:
-			out.write('\t\t\t\tbones[%d] = %d;\n' % (pos, index))
-			pos = pos + 1
-		out.write('\t\t\t\treturn bones;\n')
-		out.write('\t\t\t};\n');
-		out.write('\t\t};\n')
-	out.write('\t\treturn joints;\n')
-	out.write('\t};\n')
-	out.write('\n')	
+			out.write('\t\t\t\tint [] bones = new int[%d];\n' % len(boneindexes))
+			pos = 0
+			for index in boneindexes:
+				out.write('\t\t\t\tbones[%d] = %d;\n' % (pos, index))
+				pos = pos + 1
+			out.write('\t\t\t\treturn bones;\n')
+			out.write('\t\t\t};\n');
+			out.write('\t\t};\n')
+		out.write('\t\treturn joints;\n')
+		out.write('\t};\n')
+		out.write('\n')	
 		
 def findInList(list, key):
 	for k in list:
