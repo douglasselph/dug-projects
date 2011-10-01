@@ -174,6 +174,7 @@ public class Animator {
 	
 	static public interface OnPlayListener {
 		void onFrame(Animator animator, int frame);
+		void onFinished();
 	};
 	
 	protected final Shape mShape;
@@ -181,7 +182,7 @@ public class Animator {
 	protected float mInterval = 0.1f; // seconds
 	protected float mAtTime = 0;
 	protected Interpolation mInterpolation = Interpolation.Linear;;
-	protected FloatBuffer mVertexOrig;
+	protected FloatBuffer mVertexOrig = null;
 	protected Timer mTimer = null;
 	protected int mFrame;
 	protected boolean mIsPlaying = false;
@@ -202,6 +203,8 @@ public class Animator {
 	
 	public float getCurTime() { return mAtTime; }
 	public boolean isPlaying() { return mIsPlaying; }
+	public Shape getShape() { return mShape; }
+	public Bone getBone() { return mBone; }
 	
 	void makeCopy() {
 		if (mVertexOrig != null) {
@@ -252,7 +255,9 @@ public class Animator {
 				if (next()) {
     				playListener.onFrame(Animator.this, ++mFrame);
 				} else {
+    				playListener.onFinished();
 					mTimer.cancel();
+					mIsPlaying = false;
 				}
 			}
 		}, milliInterval, milliInterval);
@@ -269,6 +274,9 @@ public class Animator {
 		if (mVertexOrig != null) {
     		ShortBuffer indexBuf = mBone.getBuf();
     		FloatBuffer vertexBuf = mShape.getVertexBuf();
+    		vertexBuf.rewind();
+    		indexBuf.rewind();
+    		mVertexOrig.rewind();
     		
     		while (mVertexOrig.hasRemaining()) {
     			vertexBuf.position(indexBuf.get()*3);

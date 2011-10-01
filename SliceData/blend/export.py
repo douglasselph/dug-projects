@@ -39,6 +39,9 @@ class MeshInfo:
 		self.armData = None
 		self.armObjects = []
 		self.pkgName = ""
+		
+		global bpy
+		self.fps = bpy.data.scenes.active.getRenderingContext().fps
 	
 	def collect_data(self, mesh):
 		self.verts = []
@@ -185,7 +188,7 @@ class Bone:
 				out.write('%sif (type == AnimType.%s) {\n' % (tab, ckey))
 				out.write('%s\treturn new float [] {\n' % tab)
 				for pt in self.animData[key]:
-					out.write('%s\t\t%ff, %ff,\n' % (tab, pt[0], pt[1]))
+					out.write('%s\t\t%ff, %ff,\n' % (tab, convertToTime(pt[0]), pt[1]))
 				out.write('%s\t};\n' % tab)
 				out.write('%s}\n' % tab)
 	
@@ -244,7 +247,7 @@ class Joint:
 						self.verts.append(xtra_vert_index)
 	
 	def getSortedVerts(self):
-		return soted(self.verts)
+		return sorted(self.verts)
 	
 class ArmData:
 	
@@ -1196,6 +1199,10 @@ def findInList(list, key):
 			return True
 	return False
 
+def convertToTime(framex):
+	global gMeshInfo
+	return framex / gMeshInfo.fps
+	
 def convertToTriangles(mesh):
 	global bpy
 	sce = bpy.data.scenes.active

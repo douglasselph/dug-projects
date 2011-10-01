@@ -642,12 +642,24 @@ public class ViewObj extends Activity {
 			if (mAnimator != null && mAnimator.isPlaying()) {
 				mAnimator.stop();
 			} else {
-        		mAnimator = new Animator(mActiveShape, bones[0]);
-        		mAnimator.rewind();
+				mAnimator = new Animator(mActiveShape, bones[0]);
+				mAnimator.rewind();
         		mAnimator.play(new OnPlayListener() {
     				@Override
     				public void onFrame(Animator animator, int frame) {
     					mSurfaceView.requestRender();
+    				}
+    				
+    				@Override
+    				public void onFinished() {
+    					runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								mControls.mPlay.setText("Play");
+								mAnimator.rewind();
+								mSurfaceView.requestRender();
+							}
+    					});
     				}
         		});
 			}
