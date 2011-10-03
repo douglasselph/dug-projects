@@ -102,11 +102,9 @@ public class Cube extends Shape {
 			@Override public String getName() { return "Bone"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					0,1,2,3,4,5,6,7,8,9,
-					10,11,12,13,14,15,16,17,18,19,
-					20,21,22,23,});
+					23,0,});
 			}
-			@Override public int size() { return 24; }
+			@Override public int size() { return 2; }
 			@Override public int [] getJoints() {
 				return null;
 			};

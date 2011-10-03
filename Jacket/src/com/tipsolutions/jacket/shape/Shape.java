@@ -26,6 +26,7 @@ import com.tipsolutions.jacket.math.BufferUtils.Bounds;
 import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
+import com.tipsolutions.jacket.math.BufferUtils.ShortBufSortedRange;
 
 // 
 // Base class for defining shapes.
@@ -62,7 +63,7 @@ public class Shape {
 		TARGET mTarget;
 	};
 	
-	public class Bone extends ShortBuf {
+	public class Bone extends ShortBufSortedRange {
 		protected String mName;
 		protected int [] mJoints = null;
 		protected int mJointParent = -1;
@@ -167,17 +168,17 @@ public class Shape {
 		public Bounds getBounds() { return mBounds; }
 		
 		public void computeBounds() {
-			ShortBuffer sbuf = getBuf();
 			FloatBuffer fbuf = getVertexBuf();
 			int index;
 			float x, y, z;
 			
 			ComputeBounds computeBounds = new ComputeBounds();
 			
-			sbuf.rewind();
+			rewind();
+			
 			fbuf.rewind();
-			while (sbuf.hasRemaining()) {
-				index = sbuf.get();
+			while (hasRemaining()) {
+				index = get();
 				fbuf.position(index*3);
 				x = fbuf.get();
 				y = fbuf.get();

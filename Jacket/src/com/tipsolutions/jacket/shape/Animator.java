@@ -3,7 +3,6 @@ package com.tipsolutions.jacket.shape;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -210,18 +209,17 @@ public class Animator {
 		if (mVertexOrig != null) {
 			return;
 		}
-		ShortBuffer indexBuf = mBone.getBuf();
 		FloatBuffer vertexBuf = mShape.getVertexBuf();
 		
-		indexBuf.rewind();
+		mBone.rewind();
 		vertexBuf.rewind();
 		
-		ByteBuffer buf = ByteBuffer.allocateDirect(3*4*indexBuf.limit());
+		ByteBuffer buf = ByteBuffer.allocateDirect(3*4*mBone.limit());
 		buf.order(ByteOrder.nativeOrder()); // Get this from android platform
 		mVertexOrig = buf.asFloatBuffer();
 		
-		while (indexBuf.hasRemaining()) {
-			vertexBuf.position(indexBuf.get()*3);
+		while (mBone.hasRemaining()) {
+			vertexBuf.position(mBone.get()*3);
 			mVertexOrig.put(vertexBuf.get());
 			mVertexOrig.put(vertexBuf.get());
 			mVertexOrig.put(vertexBuf.get());
@@ -272,14 +270,13 @@ public class Animator {
 	
 	public void rewind() {
 		if (mVertexOrig != null) {
-    		ShortBuffer indexBuf = mBone.getBuf();
     		FloatBuffer vertexBuf = mShape.getVertexBuf();
     		vertexBuf.rewind();
-    		indexBuf.rewind();
+    		mBone.rewind();
     		mVertexOrig.rewind();
     		
     		while (mVertexOrig.hasRemaining()) {
-    			vertexBuf.position(indexBuf.get()*3);
+    			vertexBuf.position(mBone.get()*3);
     			vertexBuf.put(mVertexOrig.get());
     			vertexBuf.put(mVertexOrig.get());
     			vertexBuf.put(mVertexOrig.get());
@@ -307,11 +304,10 @@ public class Animator {
 		
 		makeCopy();
 		
-		ShortBuffer indexBuf = mBone.getBuf();
 		FloatBuffer vertexBuf = mShape.getVertexBuf();
 	
 		vertexBuf.rewind();
-		indexBuf.rewind();
+		mBone.rewind();
 		mVertexOrig.rewind();
 		
 		Vector4f value;
@@ -321,7 +317,7 @@ public class Animator {
 								 mVertexOrig.get(), 
 								 mVertexOrig.get(), 1);
 			m.apply(value);
-			vertexBuf.position(indexBuf.get()*3);
+			vertexBuf.position(mBone.get()*3);
 			vertexBuf.put(value.getX());
 			vertexBuf.put(value.getY());
 			vertexBuf.put(value.getZ());

@@ -165,7 +165,7 @@ class Bone:
 					self.verts.append(xtra_vert_index)
 
 	def getSortedVerts(self):
-		return sorted(self.verts)
+		return range_sorted(self.verts)
 					
 	def recordAnimData(self, name, pt):
 		list = self.animData[name]
@@ -247,7 +247,7 @@ class Joint:
 						self.verts.append(xtra_vert_index)
 	
 	def getSortedVerts(self):
-		return sorted(self.verts)
+		return range_sorted(self.verts)
 	
 class ArmData:
 	
@@ -1199,6 +1199,49 @@ def findInList(list, key):
 			return True
 	return False
 
+# Examine list, and create a result list with these conditions:
+#  If N+1 > N then N+1 is disconnected from N.
+#  If N+1 < N then a range is represented from N+1 to N
+def range_sorted(values):
+	values = sorted(values)
+	result = []
+	previous = None
+	start_range = None
+	
+	for value in values:
+		if previous == None:
+			previous = value
+			start_range = None
+		elif value == previous+1:
+			if start_range == None:
+				start_range = previous
+			previous = value
+		else:
+			if start_range != None:
+				if previous > start_range+1:
+					result.append(previous)
+					result.append(start_range)
+				else:
+					result.append(start_range)
+					result.append(previous)
+				previous = value
+				start_range = None
+			else:
+				result.append(previous)
+				previous = value
+				
+	if start_range != None:
+		if previous > start_range+1:
+			result.append(previous)
+			result.append(start_range)
+		else:
+			result.append(start_range)
+			result.append(previous)
+	elif previous != None:
+		result.append(previous)
+		
+	return result
+		
 def convertToTime(framex):
 	global gMeshInfo
 	return framex / gMeshInfo.fps

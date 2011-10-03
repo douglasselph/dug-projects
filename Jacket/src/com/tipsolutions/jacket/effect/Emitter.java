@@ -217,7 +217,7 @@ public class Emitter {
 			mIndexSbuf.limit(mIndexSbuf.position());
 			
 			if (ParticleSystem.DEBUG2) {
-				Log.d("DEBUG", "Vertexes=" + mVertexFbuf.limit() + ", indexes=" + mIndexSbuf.limit());
+//				Log.d("DEBUG", "Vertexes=" + mVertexFbuf.limit() + ", indexes=" + mIndexSbuf.limit());
 				
 				mIndexSbuf.rewind();
 				Vector3f max = new Vector3f();
@@ -256,11 +256,11 @@ public class Emitter {
 						}
 					}
 				}
-				Log.d("DEBUG", "Min=" + min.toString() + ", Max=" + max.toString());
-				mIndexSbuf.rewind();
-				while (mIndexSbuf.hasRemaining()) {
-					int index = mIndexSbuf.get();
-				}
+//				Log.d("DEBUG", "Min=" + min.toString() + ", Max=" + max.toString());
+//				mIndexSbuf.rewind();
+//				while (mIndexSbuf.hasRemaining()) {
+//					int index = mIndexSbuf.get();
+//				}
 				mIndexSbuf.rewind();
 			}
 		}
@@ -460,7 +460,6 @@ public class Emitter {
 	}
 	
 	public int getParticleCount() { return mNumAlive; }
-	
 	public Color4f getStartColor() { return mStartColor; }
 	
 	public float getMinStr() { return mMinStr; }

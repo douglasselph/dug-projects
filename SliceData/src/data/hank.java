@@ -1,13 +1,10 @@
-package data;
 /* THIS IS A GENERATED FILE */
 
+package data;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
-import com.tipsolutions.jacket.shape.Shape.dShortBuf;
+import com.tipsolutions.jacket.math.Matrix4f;
 
 
 public class hank extends Shape {

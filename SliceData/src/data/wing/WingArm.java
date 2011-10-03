@@ -92,9 +92,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Arm1"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					0,1,2,3,4,5,6,7,});
+					7,0,});
 			}
-			@Override public int size() { return 8; }
+			@Override public int size() { return 2; }
 			@Override public int [] getJoints() {
 				int [] joints = new int[1];
 				joints[0] = 0;
@@ -149,9 +149,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Arm2"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					0,1,4,5,8,9,10,11,});
+					0,1,4,5,11,8,});
 			}
-			@Override public int size() { return 8; }
+			@Override public int size() { return 6; }
 			@Override public int [] getJoints() {
 				int [] joints = new int[1];
 				joints[0] = 1;
@@ -163,9 +163,9 @@ public class WingArm extends Shape {
 			@Override public String getName() { return "Hand"; }
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					8,9,10,11,12,13,14,15,});
+					15,8,});
 			}
-			@Override public int size() { return 8; }
+			@Override public int size() { return 2; }
 			@Override public int [] getJoints() {
 				return null;
 			};
@@ -193,9 +193,9 @@ public class WingArm extends Shape {
 		joints[1] = new dJoint() {
 			@Override public void fill(ShortBuffer buf) {
 				buf.put(new short [] {
-					8,9,10,11,});
+					11,8,});
 			}
-			@Override public int size() { return 4; }
+			@Override public int size() { return 2; }
 			@Override public int [] getBones() {
 				int [] bones = new int[2];
 				bones[0] = 1;

@@ -178,6 +178,11 @@ public class BufferUtils {
 		@Override public void rewind(FloatBuffer buf) { buf.rewind(); }
 		@Override int getSize() { return 4; }
 		@Override int getType() { return TYPE_FLOAT; }
+		
+		public void rewind() { rewind(getBuf()); }
+		public boolean hasRemaining() { return mBuf.hasRemaining(); }
+		public float get() { return mBuf.get(); }
+		public int limit() { return mBuf.limit(); }
 	};
 	
 	public static class ShortBuf extends Buffer<ShortBuffer> {
@@ -186,6 +191,113 @@ public class BufferUtils {
 		@Override public void rewind(ShortBuffer buf) { buf.rewind(); }
 		@Override int getSize() { return 2; }
 		@Override int getType() { return TYPE_SHORT; }
+		
+		public void rewind() { rewind(getBuf()); }
+		public boolean hasRemaining() { return mBuf.hasRemaining(); }
+		public short get() { return mBuf.get(); }
+		public int limit() { return mBuf.limit(); }
+	};
+	
+	// If N+1 > N then two disconnected values.
+	// If N+1 < N then treat as range of values between N+1 .. N
+	public static class ShortBufSortedRange extends ShortBuf {
+		int mLimit = 0;
+		int mPos = 0;
+		
+		// To Support get() routine:
+		boolean mInRange = false;
+		boolean mHasPrevious = false;
+		short mPrevious = 0;
+		short mCurValue = 0;
+		short mEndValue = 0;
+		
+		@Override 
+		public void rewind() {
+			super.rewind();
+			mPos = 0;
+			mHasPrevious = false;
+			mInRange = false;
+		}
+		
+		@Override
+		public int limit() {
+			if (mLimit == 0) {
+				super.rewind();
+				boolean hasPrevious = false;
+				short value;
+				short previous = 0;
+				
+				while (super.hasRemaining()) {
+					value = super.get();
+					if (!hasPrevious) {
+						previous = value;
+						hasPrevious = true;
+					} else if (value < previous) {
+						mLimit += (previous-value+1);
+						hasPrevious = false;
+					} else {
+						mLimit++;
+						previous = value;
+					}
+				}
+				if (hasPrevious) {
+					mLimit++;
+				}
+				super.rewind();
+			}
+			return mLimit;
+		}
+		
+		@Override 
+		public boolean hasRemaining() {
+			return (mPos < limit());
+		}
+		
+		@Override 
+		public short get() {
+			if (!hasRemaining()) {
+				return 0;
+			}
+			short value;
+			
+			if (mInRange) {
+				if (++mCurValue <= mEndValue) {
+					mPos++;
+					return mCurValue;
+				}
+				mInRange = false;
+			}
+			if (!super.hasRemaining()) {
+				if (mHasPrevious) {
+					mPos++;
+					return mPrevious;
+				}
+				return 0; // should never get here
+			}
+			value = super.get();
+			
+			if (!mHasPrevious) {
+				if (super.hasRemaining()) {
+					mPrevious = value;
+					mHasPrevious = true;
+					value = super.get();
+				} else {
+					mPos++;
+					return value;
+				}
+			}
+			if (value < mPrevious) {
+				mInRange = true;
+				mCurValue = value;
+				mEndValue = mPrevious;
+				mHasPrevious = false;
+			} else {
+				mCurValue = mPrevious;
+				mPrevious = value;
+			}
+			mPos++;
+			return mCurValue;
+		}
 	};
 	
 	static public class Bounds {
