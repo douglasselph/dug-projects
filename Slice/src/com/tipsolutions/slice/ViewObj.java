@@ -637,12 +637,11 @@ public class ViewObj extends Activity {
 	}
 	
 	void playOrStop() {
-		Bone [] bones = mActiveShape.getBones();
-		if (bones != null) {
+		if (mActiveShape.hasAnimation()) {
 			if (mAnimator != null && mAnimator.isPlaying()) {
 				mAnimator.stop();
 			} else {
-				mAnimator = new Animator(mActiveShape, bones[0]);
+				mAnimator = new Animator(mActiveShape);
 				mAnimator.rewind();
         		mAnimator.play(new OnPlayListener() {
     				@Override

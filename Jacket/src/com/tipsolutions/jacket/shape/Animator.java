@@ -191,6 +191,11 @@ public class Animator {
 		mBone = bone;
 	}
 	
+	public Animator(Shape shape) {
+		mShape = shape;
+		mBone = mShape.getAnimBone();
+	}
+	
 	protected Compute getCompute(Point pt1, Point pt2) {
 		if (mInterpolation == Interpolation.Linear) {
 			return new ComputeLinear(pt1, pt2);

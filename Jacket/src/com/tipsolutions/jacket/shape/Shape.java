@@ -268,6 +268,17 @@ public class Shape {
 	
 	public ShapeBounds getBounds() { return mBounds; }
 	
+	public Bone getAnimBone() {
+		if (getBones() != null) {
+			for (Bone bone : getBones()) {
+				if (bone.getNumAnim() > 0) {
+					return bone;
+				}
+			}
+		}
+		return null;
+	}
+	
 	public int getNumBones() {
 		if (mBones == null) {
 			return 0;
@@ -727,6 +738,10 @@ public class Shape {
 	public boolean hasTextureArray() {
 		return (mTextureBuf.getBuf() != null);
 	}	
+	
+	public boolean hasAnimation() {
+		return (getAnimBone() != null);
+	}
 	
 	public FloatBuffer setColorBuf(int size) {
 		mColorBuf = new FloatBuf();
