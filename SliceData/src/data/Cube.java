@@ -108,92 +108,98 @@ public class Cube extends Shape {
 			@Override public int [] getJoints() {
 				return null;
 			};
-			@Override public boolean hasAnimKnotPts() { return true; }
-			@Override public float [] getAnimKnotPts(AnimType type) {
-				if (type == AnimType.LOC_X) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						0.960000f, 2.000000f,
-						3.000000f, 2.000000f,
-						4.000000f, 0.000000f,
-						9.480000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.LOC_Y) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						0.960000f, 0.000000f,
-						2.000000f, 2.000000f,
-						3.000000f, 2.000000f,
-						4.000000f, 0.000000f,
-						9.480000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.LOC_Z) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						2.000000f, 0.000000f,
-						3.000000f, 2.000000f,
-						4.000000f, 0.000000f,
-						9.480000f, 0.000000f,
-					};
-				}
-				if (type == AnimType.SCALE_X) {
-					return new float [] {
-						0.040000f, 1.000000f,
-						8.000000f, 1.000000f,
-						8.480000f, 1.409168f,
-						9.000000f, 2.369224f,
-						9.480000f, 2.581802f,
-					};
-				}
-				if (type == AnimType.SCALE_Y) {
-					return new float [] {
-						0.040000f, 1.000000f,
-						8.000000f, 1.000000f,
-						8.480000f, 1.610084f,
-						9.000000f, 2.372826f,
-						9.480000f, 2.637741f,
-					};
-				}
-				if (type == AnimType.SCALE_Z) {
-					return new float [] {
-						0.040000f, 1.000000f,
-						8.000000f, 1.000000f,
-						8.480000f, 1.192424f,
-						9.000000f, 1.193246f,
-						9.480000f, 2.256702f,
-					};
-				}
-				if (type == AnimType.ROT_X) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						4.000000f, 0.000000f,
-						5.000000f, 4.500000f,
-						6.000000f, 4.500000f,
-						7.000000f, 4.500000f,
-						8.000000f, -1.682944f,
-						9.480000f, -1.682944f,
-					};
-				}
-				if (type == AnimType.ROT_Y) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						5.000000f, -0.000000f,
-						6.000000f, 4.500000f,
-						7.000000f, 4.500000f,
-						8.000000f, 1.447751f,
-						9.480000f, 1.447751f,
-					};
-				}
-				if (type == AnimType.ROT_Z) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						6.000000f, 0.000000f,
-						7.000000f, 4.500000f,
-						8.000000f, -5.369934f,
-						9.480000f, -5.369934f,
-					};
+			@Override public String [] getAnimSets() {
+				return new String [] {
+					"ObIpo",
+				};
+			}
+			@Override public float [] getAnimKnotPts(int set, AnimType type) {
+				if (set == 0) {
+					if (type == AnimType.LOC_X) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							0.960000f, 2.000000f,
+							3.000000f, 2.000000f,
+							4.000000f, 0.000000f,
+							9.480000f, 0.000000f,
+						};
+					}
+					if (type == AnimType.LOC_Y) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							0.960000f, 0.000000f,
+							2.000000f, 2.000000f,
+							3.000000f, 2.000000f,
+							4.000000f, 0.000000f,
+							9.480000f, 0.000000f,
+						};
+					}
+					if (type == AnimType.LOC_Z) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							2.000000f, 0.000000f,
+							3.000000f, 2.000000f,
+							4.000000f, 0.000000f,
+							9.480000f, 0.000000f,
+						};
+					}
+					if (type == AnimType.SCALE_X) {
+						return new float [] {
+							0.040000f, 1.000000f,
+							8.000000f, 1.000000f,
+							8.480000f, 1.409168f,
+							9.000000f, 2.369224f,
+							9.480000f, 2.581802f,
+						};
+					}
+					if (type == AnimType.SCALE_Y) {
+						return new float [] {
+							0.040000f, 1.000000f,
+							8.000000f, 1.000000f,
+							8.480000f, 1.610084f,
+							9.000000f, 2.372826f,
+							9.480000f, 2.637741f,
+						};
+					}
+					if (type == AnimType.SCALE_Z) {
+						return new float [] {
+							0.040000f, 1.000000f,
+							8.000000f, 1.000000f,
+							8.480000f, 1.192424f,
+							9.000000f, 1.193246f,
+							9.480000f, 2.256702f,
+						};
+					}
+					if (type == AnimType.ROT_X) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							4.000000f, 0.000000f,
+							5.000000f, 4.500000f,
+							6.000000f, 4.500000f,
+							7.000000f, 4.500000f,
+							8.000000f, -1.682944f,
+							9.480000f, -1.682944f,
+						};
+					}
+					if (type == AnimType.ROT_Y) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							5.000000f, -0.000000f,
+							6.000000f, 4.500000f,
+							7.000000f, 4.500000f,
+							8.000000f, 1.447751f,
+							9.480000f, 1.447751f,
+						};
+					}
+					if (type == AnimType.ROT_Z) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							6.000000f, 0.000000f,
+							7.000000f, 4.500000f,
+							8.000000f, -5.369934f,
+							9.480000f, -5.369934f,
+						};
+					}
 				}
 				return null;
 			}

@@ -27,6 +27,7 @@ import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
 import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
 import com.tipsolutions.jacket.math.BufferUtils.ShortBufSortedRange;
+import com.tipsolutions.jacket.shape.Shape.AnimSet.AnimControl;
 
 // 
 // Base class for defining shapes.
@@ -63,19 +64,11 @@ public class Shape {
 		TARGET mTarget;
 	};
 	
-	public class Bone extends ShortBufSortedRange {
-		protected String mName;
-		protected int [] mJoints = null;
-		protected int mJointParent = -1;
-		protected Bounds mBounds = null;
-		protected HashMap<AnimType,BoneAnim> mAnim = null;
-		protected float mAnimStartTime;
-		protected float mAnimEndTime;
-		
-		public class BoneAnim {
+	public class AnimSet {
+		public class AnimControl {
 			float [] mPairs;
 			
-			public BoneAnim(float [] pairs) {
+			public AnimControl(float [] pairs) {
 				mPairs = pairs;
 			}
 			
@@ -129,8 +122,85 @@ public class Shape {
 			float getLastTime() {
 				return mPairs[mPairs.length-2];
 			}
+		
+			///////////////////////////////////////
+			// Alternative to limit(), hasRemaining(), and get() functions
+			// which includes  connected bones as well.
+			//////////////////////////////////////
+			
+//			int limit_incChildBones() {
+//			}
+//			
+//			boolean hasRemaining_incChildBones() {
+//			}
+//			
+//			short get_incChildBones() {
+//			}
 		};
 		
+		protected String mName;
+		protected HashMap<AnimType,AnimControl> mControls = new HashMap<AnimType,AnimControl>();
+		protected float mAnimStartTime;
+		protected float mAnimEndTime;
+		
+		public AnimSet(String name) {
+			mName = name;
+		}
+		
+		public int getNumControls() {
+			if (mControls == null) {
+				return 0;
+			}
+			return mControls.keySet().size();
+		}
+		
+		public Set<AnimType> getControlKeys() {
+			return mControls.keySet();
+		}
+		
+		public AnimControl getAnim(AnimType key) {
+			return mControls.get(key);
+		}
+
+		public void computeBounds() {
+			boolean first = true;
+			for (AnimType type : mControls.keySet()) {
+				AnimControl anim = mControls.get(type);
+				if (first) {
+					mAnimStartTime = anim.getFirstTime();
+					mAnimEndTime = anim.getLastTime();
+					first = false;
+				} else {
+					if (anim.getFirstTime() < mAnimStartTime) {
+						mAnimStartTime = anim.getFirstTime();
+					} else if (anim.getLastTime() > mAnimEndTime) {
+						mAnimEndTime = anim.getLastTime();
+					}
+				}
+			}
+		}
+		
+		public void setAnimKnotPts(AnimType type, float [] pts) {
+			mControls.put(type,new AnimControl(pts));
+		}
+		
+		public float getStartTime() {
+			return mAnimStartTime;
+		}
+		
+		public float getEndTime() {
+			return mAnimEndTime;
+		}
+		
+	};
+
+	public class Bone extends ShortBufSortedRange {
+		protected String mName;
+		protected int [] mJoints = null;
+		protected int mJointParent = -1;
+		protected Bounds mBounds = null;
+		protected ArrayList<AnimSet> mAnim = null;
+
 		public String getName() {
 			return mName;
 		}
@@ -154,15 +224,11 @@ public class Shape {
 			if (mAnim == null) {
 				return 0;
 			}
-			return mAnim.keySet().size();
+			return mAnim.size();
 		}
 		
-		public Set<AnimType> getAnimKeys() {
-			return mAnim.keySet();
-		}
-		
-		public BoneAnim getAnim(AnimType key) {
-			return mAnim.get(key);
+		public ArrayList<AnimSet> getAnimSet() {
+			return mAnim;
 		}
 		
 		public Bounds getBounds() { return mBounds; }
@@ -189,39 +255,38 @@ public class Shape {
 			mBounds.set(computeBounds);
 		}
 		
-		public void computeAnimBounds() {
-			boolean first = true;
-			for (AnimType type : mAnim.keySet()) {
-				BoneAnim anim = mAnim.get(type);
-				if (first) {
-					mAnimStartTime = anim.getFirstTime();
-					mAnimEndTime = anim.getLastTime();
-					first = false;
-				} else {
-					if (anim.getFirstTime() < mAnimStartTime) {
-						mAnimStartTime = anim.getFirstTime();
-					} else if (anim.getLastTime() > mAnimEndTime) {
-						mAnimEndTime = anim.getLastTime();
-					}
+		public AnimSet allocAnimSet(String name) {
+			AnimSet set = new AnimSet(name);
+			if (mAnim == null) {
+				mAnim = new ArrayList<AnimSet>();
+			}
+			mAnim.add(set);
+			return set;
+		}
+		
+		public ArrayList<AnimSet> getAnimSets() {
+			return mAnim;
+		}
+		
+		public AnimSet getAnimSet(String name) {
+			if (mAnim == null) {
+				return null;
+			}
+			for (AnimSet set : mAnim) {
+				if (set.mName.equals(name)) {
+					return set;
 				}
 			}
+			return null;
 		}
 		
-		public void allocAnim() {
-			mAnim = new HashMap<AnimType,BoneAnim>();
+		public AnimSet getAnimSet(int index) {
+			if ((mAnim == null) || (index < 0) || (index >= mAnim.size())) {
+				return null;
+			}
+			return mAnim.get(index);
 		}
-		
-		public void setAnimKnotPts(AnimType type, float [] pts) {
-			mAnim.put(type,new BoneAnim(pts));
-		}
-		
-		public float getStartTime() {
-			return mAnimStartTime;
-		}
-		
-		public float getEndTime() {
-			return mAnimEndTime;
-		}
+
 	};
 
 	public class Joint extends ShortBuf {
@@ -496,76 +561,91 @@ public class Shape {
 							sbuf.append(": second had animations, first didn't");
 							msg.msg(tag, sbuf.toString());
 						} else if (bone.mAnim != null) {
-							if (bone.mAnim.keySet().size() != boneO.mAnim.keySet().size()) {
+							if (bone.mAnim.size() != boneO.mAnim.size()) {
 								StringBuffer sbuf = new StringBuffer();
 								sbuf.append("Bone ");
 								sbuf.append(i);
-								sbuf.append(" #anim ");
-								sbuf.append(bone.mAnim.keySet().size());
-								sbuf.append(" != ");
-								sbuf.append(boneO.mAnim.keySet().size());
+								sbuf.append(": first had ");
+								sbuf.append(bone.mAnim.size());
+								sbuf.append(" animations, second had ");
+								sbuf.append(boneO.mAnim.size());
 								msg.msg(tag, sbuf.toString());
 							} else {
-								for (AnimType type : bone.mAnim.keySet()) {
-									Bone.BoneAnim anim1 = bone.mAnim.get(type);
-									Bone.BoneAnim anim2 = boneO.mAnim.get(type);
-									if (anim2 == null) {
+								for (int set_index = 0; set_index < bone.mAnim.size(); set_index++) {
+									AnimSet animSet = bone.mAnim.get(set_index);
+									AnimSet animSetO = boneO.mAnim.get(set_index);
+									if (animSet.mControls.keySet().size() != animSetO.mControls.keySet().size()) {
 										StringBuffer sbuf = new StringBuffer();
-										sbuf.append("Bone2 does not have anim key ");
-										sbuf.append(type.toString());
+										sbuf.append("Bone ");
+										sbuf.append(i);
+										sbuf.append(" #anim ");
+										sbuf.append(animSet.mControls.keySet().size());
+										sbuf.append(" != ");
+										sbuf.append(animSetO.mControls.keySet().size());
 										msg.msg(tag, sbuf.toString());
 									} else {
-    									if (anim1.num() != anim2.num()) {
-    										StringBuffer sbuf = new StringBuffer();
-    										sbuf.append("Bone ");
-    										sbuf.append(i);
-    										sbuf.append(" #anim ");
-    										sbuf.append(anim1.num());
-    										sbuf.append(" != ");
-    										sbuf.append(anim2.num());
-    										msg.msg(tag, sbuf.toString());
-    									} else if (anim1.num() > 0) {
-    										boolean identical = true;
-    										for (int j = 0; j < anim1.num(); j++) {
-    											if (anim1.get(j) != anim2.get(j)) {
-    												StringBuffer sbuf = new StringBuffer();
-    												sbuf.append("Bone#");
-    												sbuf.append(i);
-    												sbuf.append(", anim pt# ");
-    												sbuf.append(j);
-    												sbuf.append(": ");
-    												sbuf.append(anim1.get(j));
-    												sbuf.append(" != ");
-    												sbuf.append(anim2.get(j));
-    												msg.msg(tag, sbuf.toString());
-    												identical = false;
-    											}
-    										}
-    										if (identical) {
-    											StringBuffer sbuf = new StringBuffer();
-    											sbuf.append("Bone#");
-    											sbuf.append(i);
-    											sbuf.append(", ");
-    											sbuf.append(anim1.num());
-    											sbuf.append(" anim pts identical");
-    											msg.msg(tag, sbuf.toString());
-    										}
-    									}
+										for (AnimType type : animSet.mControls.keySet()) {
+											AnimControl anim1 = animSet.mControls.get(type);
+											AnimControl anim2 = animSetO.mControls.get(type);
+											if (anim2 == null) {
+												StringBuffer sbuf = new StringBuffer();
+												sbuf.append("Bone2 does not have anim key ");
+												sbuf.append(type.toString());
+												msg.msg(tag, sbuf.toString());
+											} else {
+												if (anim1.num() != anim2.num()) {
+													StringBuffer sbuf = new StringBuffer();
+													sbuf.append("Bone ");
+													sbuf.append(i);
+													sbuf.append(" #anim ");
+													sbuf.append(anim1.num());
+													sbuf.append(" != ");
+													sbuf.append(anim2.num());
+													msg.msg(tag, sbuf.toString());
+												} else if (anim1.num() > 0) {
+													boolean identical = true;
+													for (int j = 0; j < anim1.num(); j++) {
+														if (anim1.get(j) != anim2.get(j)) {
+															StringBuffer sbuf = new StringBuffer();
+															sbuf.append("Bone#");
+															sbuf.append(i);
+															sbuf.append(", anim pt# ");
+															sbuf.append(j);
+															sbuf.append(": ");
+															sbuf.append(anim1.get(j));
+															sbuf.append(" != ");
+															sbuf.append(anim2.get(j));
+															msg.msg(tag, sbuf.toString());
+															identical = false;
+														}
+													}
+													if (identical) {
+														StringBuffer sbuf = new StringBuffer();
+														sbuf.append("Bone#");
+														sbuf.append(i);
+														sbuf.append(", ");
+														sbuf.append(anim1.num());
+														sbuf.append(" anim pts identical");
+														msg.msg(tag, sbuf.toString());
+													}
+												}
+											}
+										}
 									}
 								}
 							}
-						}
-						{
-    						StringBuffer sbuf = new StringBuffer();
-							sbuf.append("Bone ");
-							sbuf.append(i);
-							
-    						if (ShapeUtils.compare(bone.getBuf(), boneO.getBuf(), tag, sbuf.toString(), msg) == 0) {
-    							StringBuffer sbuf2 = new StringBuffer();
-    							sbuf2.append(sbuf.toString());
-    							sbuf2.append(" buffer identical");
-    							msg.msg(tag, sbuf2.toString());
-    						}
+							{
+								StringBuffer sbuf = new StringBuffer();
+								sbuf.append("Bone ");
+								sbuf.append(i);
+
+								if (ShapeUtils.compare(bone.getBuf(), boneO.getBuf(), tag, sbuf.toString(), msg) == 0) {
+									StringBuffer sbuf2 = new StringBuffer();
+									sbuf2.append(sbuf.toString());
+									sbuf2.append(" buffer identical");
+									msg.msg(tag, sbuf2.toString());
+								}
+							}
 						}
 					}
 				}
@@ -809,6 +889,23 @@ public class Shape {
 			return UNKNOWN;
 		}
 	};
+	
+	public enum BoneAnimControl {
+		ControlBoneOnly,
+		ControlBoneAndChildren,
+		ControlShape,
+		UNKNOWN;
+		
+		static BoneAnimControl from(int value) {
+			for (BoneAnimControl type : BoneAnimControl.values()) {
+				if (type.ordinal() == value) {
+					return type;
+				}
+			}
+			return UNKNOWN;
+		}
+	};
+	
 	public static final int NUM_ANIM_TYPES = 10;
 	
 	public class dBone implements dShortBuf {
@@ -817,8 +914,8 @@ public class Shape {
 		public int size() { return 0; }
 		public int [] getJoints() { return null; }
 		public int getJointParent() { return -1; }
-		public float [] getAnimKnotPts(AnimType type) { return null; }
-		public boolean hasAnimKnotPts() { return false; }
+		public String [] getAnimSets() { return null; }
+		public float [] getAnimKnotPts(int set, AnimType type) { return null; }
 	};
 
 	public class dJoint implements dShortBuf {
@@ -976,15 +1073,20 @@ public class Shape {
 				tgt.mJointParent = src.getJointParent();
 				tgt.set(src);
 				tgt.computeBounds();
-				if (src.hasAnimKnotPts()) {
-					tgt.allocAnim();
-					for (AnimType type : AnimType.values()) {
-						float [] pts = src.getAnimKnotPts(type);
-						if (pts != null) {
-        					tgt.setAnimKnotPts(type, pts);
-						}
+				
+				String [] animSets = src.getAnimSets();
+				if (animSets != null) {
+					for (int set_index = 0; set_index < animSets.length; set_index++) {
+						String animName = animSets[set_index];
+						AnimSet set = tgt.allocAnimSet(animName);
+    					for (AnimType type : AnimType.values()) {
+    						float [] pts = src.getAnimKnotPts(set_index, type);
+    						if (pts != null) {
+            					set.setAnimKnotPts(type, pts);
+    						}
+    					}
+    					set.computeBounds();
 					}
-					tgt.computeAnimBounds();
 				}
 				mBones[i] = tgt;
 			}
@@ -1283,14 +1385,18 @@ public class Shape {
 		bone.writeBuffer(dataStream);
 		
 		if (bone.mAnim != null) {
-			dataStream.writeInt(bone.mAnim.keySet().size());
-			for (AnimType type : bone.mAnim.keySet()) {
-				Bone.BoneAnim anim = bone.mAnim.get(type);
-    			dataStream.writeInt(type.ordinal());
-				dataStream.writeInt(anim.mPairs.length);
-				for (float f : anim.mPairs) {
-					dataStream.writeFloat(f);
-				}
+			dataStream.writeInt(bone.mAnim.size());
+			for (AnimSet set : bone.mAnim){ 
+				ShapeUtils.writeString(dataStream, set.mName);
+    			dataStream.writeInt(set.mControls.keySet().size());
+    			for (AnimType type : set.mControls.keySet()) {
+    				AnimControl control = set.mControls.get(type);
+        			dataStream.writeInt(type.ordinal());
+    				dataStream.writeInt(control.mPairs.length);
+    				for (float f : control.mPairs) {
+    					dataStream.writeFloat(f);
+    				}
+    			}
 			}
 		} else {
 			dataStream.writeInt(0);
@@ -1316,20 +1422,24 @@ public class Shape {
 		bone.mBounds.read(dataStream);
 		bone.readBuffer(dataStream);
 		
-		int animDataCount = dataStream.readInt();
-		if (animDataCount > 0) {
-			bone.allocAnim();
-			for (int count = 0; count < animDataCount; count++) {
-				int typeI = dataStream.readInt();
-				AnimType typeA = AnimType.from(typeI);
-				int numpts = dataStream.readInt();
-				float [] pts = new float[numpts];
-				for (int i = 0; i < numpts; i++) {
-					pts[i] = dataStream.readFloat();
+		int animSetCount = dataStream.readInt();
+		if (animSetCount > 0) {
+			for (int set_index = 0; set_index < animSetCount; set_index++) {
+				String animName = ShapeUtils.readString(dataStream);
+				AnimSet set = bone.allocAnimSet(animName);
+				int animControlCount = dataStream.readInt();
+				for (int count = 0; count < animControlCount; count++) {
+					int typeI = dataStream.readInt();
+					AnimType typeA = AnimType.from(typeI);
+					int numpts = dataStream.readInt();
+					float [] pts = new float[numpts];
+					for (int i = 0; i < numpts; i++) {
+						pts[i] = dataStream.readFloat();
+					}
+					set.setAnimKnotPts(typeA, pts);
 				}
-				bone.setAnimKnotPts(typeA, pts);
+				set.computeBounds();
 			}
-			bone.computeAnimBounds();
 		}
 		return bone;
 	}

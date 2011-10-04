@@ -166,9 +166,19 @@ class Bone:
 
 	def getSortedVerts(self):
 		return range_sorted(self.verts)
+	
+	def readyAnimData(self, iponame, name):
+		if self.animData.has_key(iponame):
+			ipodict = self.animData[iponame]
+		else:
+			ipodict = {}
+			self.animData[iponame] = ipodict
+			
+		ipodict[name] = []
 					
-	def recordAnimData(self, name, pt):
-		list = self.animData[name]
+	def recordAnimData(self, iponame, name, pt):
+		opdict = self.animData[iponame]
+		list = opdict[name]
 		last_pos = len(list)-1
 		last_pos2 = last_pos-1
 		if last_pos2 >= 0:
@@ -176,36 +186,42 @@ class Bone:
 			last_val2 = list[last_pos2]
 		
 			if last_val[1] == last_val2[1] and last_val[1] == pt[1]:
-				self.animData[name][last_pos] = pt
+				opdict[name][last_pos] = pt
 			else:
-				self.animData[name].append(pt)
+				opdict[name].append(pt)
 		else:
-			self.animData[name].append(pt)
+			opdict[name].append(pt)
 	
-	def writeAnimSubData(self, out, tab, ckey, key):
-		if self.animData.has_key(key):
-			if len(self.animData[key]) > 1:
-				out.write('%sif (type == AnimType.%s) {\n' % (tab, ckey))
-				out.write('%s\treturn new float [] {\n' % tab)
-				for pt in self.animData[key]:
-					out.write('%s\t\t%ff, %ff,\n' % (tab, convertToTime(pt[0]), pt[1]))
-				out.write('%s\t};\n' % tab)
-				out.write('%s}\n' % tab)
+	def writeAnimSubData(self, out, tab, opname, ckey, key):
+		opdict = self.animData[opname]
+		if opdict.has_key(key):
+			if len(opdict[key]) > 1:
+				out.write('%s\tif (type == AnimType.%s) {\n' % (tab, ckey))
+				out.write('%s\t\treturn new float [] {\n' % tab)
+				for pt in opdict[key]:
+					out.write('%s\t\t\t%ff, %ff,\n' % (tab, convertToTime(pt[0]), pt[1]))
+				out.write('%s\t\t};\n' % tab)
+				out.write('%s\t}\n' % tab)
 	
 	def writeAnimData(self, out, tab):
-		self.writeAnimSubData(out, tab, 'LOC_X', 'LocX')
-		self.writeAnimSubData(out, tab, 'LOC_Y', 'LocY')
-		self.writeAnimSubData(out, tab, 'LOC_Z', 'LocZ')
-		self.writeAnimSubData(out, tab, 'SCALE_X', 'ScaleX')
-		self.writeAnimSubData(out, tab, 'SCALE_Y', 'ScaleY')
-		self.writeAnimSubData(out, tab, 'SCALE_Z', 'ScaleZ')
-		self.writeAnimSubData(out, tab, 'QUAT_X', 'QuatX')
-		self.writeAnimSubData(out, tab, 'QUAT_Y', 'QuatY')
-		self.writeAnimSubData(out, tab, 'QUAT_Z', 'QuatZ')
-		self.writeAnimSubData(out, tab, 'QUAT_W', 'QuatW')
-		self.writeAnimSubData(out, tab, 'ROT_X', 'RotX')
-		self.writeAnimSubData(out, tab, 'ROT_Y', 'RotY')
-		self.writeAnimSubData(out, tab, 'ROT_Z', 'RotZ')
+		set = 0
+		for opname in self.animData.keys():
+			out.write('%sif (set == %d) {\n' % (tab, set))
+			self.writeAnimSubData(out, tab, opname, 'LOC_X', 'LocX')
+			self.writeAnimSubData(out, tab, opname, 'LOC_Y', 'LocY')
+			self.writeAnimSubData(out, tab, opname, 'LOC_Z', 'LocZ')
+			self.writeAnimSubData(out, tab, opname, 'SCALE_X', 'ScaleX')
+			self.writeAnimSubData(out, tab, opname, 'SCALE_Y', 'ScaleY')
+			self.writeAnimSubData(out, tab, opname, 'SCALE_Z', 'ScaleZ')
+			self.writeAnimSubData(out, tab, opname, 'QUAT_X', 'QuatX')
+			self.writeAnimSubData(out, tab, opname, 'QUAT_Y', 'QuatY')
+			self.writeAnimSubData(out, tab, opname, 'QUAT_Z', 'QuatZ')
+			self.writeAnimSubData(out, tab, opname, 'QUAT_W', 'QuatW')
+			self.writeAnimSubData(out, tab, opname, 'ROT_X', 'RotX')
+			self.writeAnimSubData(out, tab, opname, 'ROT_Y', 'RotY')
+			self.writeAnimSubData(out, tab, opname, 'ROT_Z', 'RotZ')
+			out.write('%s}\n' % tab)
+			set = set + 1
 	
 class Joint:
 	
@@ -420,9 +436,9 @@ class ArmData:
 	def collect_anim_data_bone(self, armipo, bone):
 		for curve in armipo.curves:
 				name = curve.getName()
-				bone.animData[name] = []
+				bone.readyAnimData(armipo.name, name)
 				for beztriplet in curve.bezierPoints:
-					bone.recordAnimData(name, beztriplet.pt)
+					bone.recordAnimData(armipo.name, name, beztriplet.pt)
 					
 gMeshInfo = MeshInfo()
 	
@@ -1139,8 +1155,13 @@ def write_armature(out):
 			out.write('\t\t\t@Override public int getJointParent() { return %d; }\n' % bone.jointParent.index)
 		
 		if len(bone.animData) > 0:
-			out.write('\t\t\t@Override public boolean hasAnimKnotPts() { return true; }\n')
-			out.write('\t\t\t@Override public float [] getAnimKnotPts(AnimType type) {\n')
+			out.write('\t\t\t@Override public String [] getAnimSets() {\n')
+			out.write('\t\t\t\treturn new String [] {\n')
+			for opname in bone.animData.keys():
+				out.write('\t\t\t\t\t"%s",\n' % opname)
+			out.write('\t\t\t\t};\n')
+			out.write('\t\t\t}\n')
+			out.write('\t\t\t@Override public float [] getAnimKnotPts(int set, AnimType type) {\n')
 			bone.writeAnimData(out, '\t\t\t\t')
 			out.write('\t\t\t\treturn null;\n')
 			out.write('\t\t\t}\n')

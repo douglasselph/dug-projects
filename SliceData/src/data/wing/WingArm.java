@@ -100,47 +100,53 @@ public class WingArm extends Shape {
 				joints[0] = 0;
 				return joints;
 			};
-			@Override public boolean hasAnimKnotPts() { return true; }
-			@Override public float [] getAnimKnotPts(AnimType type) {
-				if (type == AnimType.QUAT_X) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						0.240000f, 0.017682f,
-						0.600000f, -0.021447f,
-						0.960000f, -0.000009f,
-						10.000000f, 0.000000f,
-						10.440000f, 0.014603f,
-					};
-				}
-				if (type == AnimType.QUAT_Y) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						0.240000f, -0.039845f,
-						0.600000f, 0.048329f,
-						0.960000f, 0.000020f,
-						10.000000f, 0.000000f,
-						10.440000f, -0.032907f,
-					};
-				}
-				if (type == AnimType.QUAT_Z) {
-					return new float [] {
-						0.040000f, 0.000000f,
-						0.240000f, 0.275492f,
-						0.600000f, -0.334156f,
-						0.960000f, -0.000136f,
-						10.000000f, 0.000000f,
-						10.440000f, 0.227523f,
-					};
-				}
-				if (type == AnimType.QUAT_W) {
-					return new float [] {
-						0.040000f, 1.000000f,
-						0.240000f, 0.960315f,
-						0.600000f, 0.941033f,
-						0.960000f, 1.000000f,
-						10.000000f, 1.000000f,
-						10.440000f, 0.973107f,
-					};
+			@Override public String [] getAnimSets() {
+				return new String [] {
+					"ActIpo",
+				};
+			}
+			@Override public float [] getAnimKnotPts(int set, AnimType type) {
+				if (set == 0) {
+					if (type == AnimType.QUAT_X) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							0.240000f, 0.017682f,
+							0.600000f, -0.021447f,
+							0.960000f, -0.000009f,
+							10.000000f, 0.000000f,
+							10.440000f, 0.014603f,
+						};
+					}
+					if (type == AnimType.QUAT_Y) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							0.240000f, -0.039845f,
+							0.600000f, 0.048329f,
+							0.960000f, 0.000020f,
+							10.000000f, 0.000000f,
+							10.440000f, -0.032907f,
+						};
+					}
+					if (type == AnimType.QUAT_Z) {
+						return new float [] {
+							0.040000f, 0.000000f,
+							0.240000f, 0.275492f,
+							0.600000f, -0.334156f,
+							0.960000f, -0.000136f,
+							10.000000f, 0.000000f,
+							10.440000f, 0.227523f,
+						};
+					}
+					if (type == AnimType.QUAT_W) {
+						return new float [] {
+							0.040000f, 1.000000f,
+							0.240000f, 0.960315f,
+							0.600000f, 0.941033f,
+							0.960000f, 1.000000f,
+							10.000000f, 1.000000f,
+							10.440000f, 0.973107f,
+						};
+					}
 				}
 				return null;
 			}

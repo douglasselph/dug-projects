@@ -11,9 +11,10 @@ import com.tipsolutions.jacket.math.Point;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
+import com.tipsolutions.jacket.shape.Shape.AnimSet;
 import com.tipsolutions.jacket.shape.Shape.AnimType;
 import com.tipsolutions.jacket.shape.Shape.Bone;
-import com.tipsolutions.jacket.shape.Shape.Bone.BoneAnim;
+import com.tipsolutions.jacket.shape.Shape.AnimSet.AnimControl;
 
 public class Animator {
 
@@ -34,8 +35,8 @@ public class Animator {
 			boolean setRot = false;
 			boolean setScale = false;
 			
-			for (AnimType type : mBone.getAnimKeys()) {
-				BoneAnim anim = mBone.getAnim(type);
+			for (AnimType type : mAnimSet.getControlKeys()) {
+				AnimControl anim = mAnimSet.getAnim(type);
 				Point [] pairs = anim.getPairs(atTime);
 				
 				if (pairs != null) {
@@ -178,6 +179,7 @@ public class Animator {
 	
 	protected final Shape mShape;
 	protected final Bone mBone;
+	protected final AnimSet mAnimSet;
 	protected float mInterval = 0.1f; // seconds
 	protected float mAtTime = 0;
 	protected Interpolation mInterpolation = Interpolation.Linear;;
@@ -186,14 +188,16 @@ public class Animator {
 	protected int mFrame;
 	protected boolean mIsPlaying = false;
 
-	public Animator(Shape shape, Bone bone) {
+	public Animator(Shape shape, Bone bone, String animSetName) {
 		mShape = shape;
 		mBone = bone;
+		mAnimSet = bone.getAnimSet(animSetName);
 	}
 	
 	public Animator(Shape shape) {
 		mShape = shape;
 		mBone = mShape.getAnimBone();
+		mAnimSet = mBone.getAnimSet(0);
 	}
 	
 	protected Compute getCompute(Point pt1, Point pt2) {
@@ -234,7 +238,7 @@ public class Animator {
 	public boolean next() {
 		if (mAtTime < 0) {
 			rewind();
-		} else if (mAtTime < mBone.getEndTime()) {
+		} else if (mAtTime < mAnimSet.getEndTime()) {
     		toTime(mAtTime + mInterval);
 		} else {
 			return false;
@@ -289,7 +293,7 @@ public class Animator {
 		} else {
 			makeCopy();
 		}
-		mAtTime = mBone.getStartTime();
+		mAtTime = mAnimSet.getStartTime();
 	}
 	
 	public void setInpolation(Interpolation interpolation) {
@@ -301,8 +305,8 @@ public class Animator {
 	}
 	
 	public void toTime(float time) {
-		if (time > mBone.getEndTime()) {
-			time = mBone.getEndTime();
+		if (time > mAnimSet.getEndTime()) {
+			time = mAnimSet.getEndTime();
 		}
 		CMatrix cmatrix = new CMatrix();
 		Matrix4f m = cmatrix.evaluate(time);
