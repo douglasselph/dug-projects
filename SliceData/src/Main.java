@@ -1,5 +1,7 @@
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.shape.Shape;
+import com.tipsolutions.jacket.shape.Shape.AnimControlOp;
+import com.tipsolutions.jacket.shape.Shape.AnimSet;
 
 public class Main {
 	
@@ -31,7 +33,6 @@ public class Main {
 		
 		Shape writeData(String filename, ICreate create) {
 			Shape d = create.create();
-			d.fill();
 			d.writeData(filename);
 			return d;
 		}
@@ -53,31 +54,35 @@ public class Main {
 		process.run("hank.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new data.hank();
+				return new data.hank().fill();
 			}
 		});
 		process.run("cube.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new data.Cube();
+				return new data.Cube().fill();
 			}
 		});
 		process.run("suzanne.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new data.Suzanne();
+				return new data.Suzanne().fill();
 			}
 		});
 		process.run("wingL.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new data.Wing_L();
+				return new data.Wing_L().fill();
 			}
 		});
 		process.run("wingArm.data", new ICreate() {
 			@Override
 			public Shape create() {
-				return new data.wing.WingArm();
+				Shape shape = new data.wing.WingArm().fill();
+				AnimSet animSet = shape.getAnimBone().getAnimSet().get(0);
+				animSet.setControlOp(AnimControlOp.ControlShape);
+				animSet.cullToTime(animSet.getStartTime(), 1.0f);
+				return shape;
 			}
 		});
 	}

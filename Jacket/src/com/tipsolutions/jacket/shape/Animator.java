@@ -11,6 +11,7 @@ import com.tipsolutions.jacket.math.Point;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
+import com.tipsolutions.jacket.shape.Shape.AnimControlOp;
 import com.tipsolutions.jacket.shape.Shape.AnimSet;
 import com.tipsolutions.jacket.shape.Shape.AnimType;
 import com.tipsolutions.jacket.shape.Shape.Bone;
@@ -18,6 +19,119 @@ import com.tipsolutions.jacket.shape.Shape.AnimSet.AnimControl;
 
 public class Animator {
 
+	abstract class Source {
+		abstract void rewind();
+		abstract void apply(Matrix4f matrix);
+	};
+	
+	// Affect indicated bone only
+	class SourceBoneOnly extends Source {
+		FloatBuffer mVertexOrig = null;
+	
+		void makeCopy() {
+			if (mVertexOrig != null) {
+				return;
+			}
+			FloatBuffer vertexBuf = mShape.getVertexBuf();
+
+			mBone.rewind();
+			vertexBuf.rewind();
+
+			ByteBuffer buf = ByteBuffer.allocateDirect(3*4*mBone.limit());
+			buf.order(ByteOrder.nativeOrder()); // Get this from android platform
+			mVertexOrig = buf.asFloatBuffer();
+
+			while (mBone.hasRemaining()) {
+				vertexBuf.position(mBone.get()*3);
+				mVertexOrig.put(vertexBuf.get());
+				mVertexOrig.put(vertexBuf.get());
+				mVertexOrig.put(vertexBuf.get());
+			}
+		}
+	
+		@Override
+		void rewind() {
+    		if (mVertexOrig != null) {
+        		FloatBuffer vertexBuf = mShape.getVertexBuf();
+        		vertexBuf.rewind();
+        		mBone.rewind();
+        		mVertexOrig.rewind();
+        		
+        		while (mVertexOrig.hasRemaining()) {
+        			vertexBuf.position(mBone.get()*3);
+        			vertexBuf.put(mVertexOrig.get());
+        			vertexBuf.put(mVertexOrig.get());
+        			vertexBuf.put(mVertexOrig.get());
+        		}
+    		} else {
+    			makeCopy();
+    		}
+		}
+    	
+		@Override
+		void apply(Matrix4f matrix) {
+			makeCopy();
+
+			FloatBuffer vertexBuf = mShape.getVertexBuf();
+
+			vertexBuf.rewind();
+			mBone.rewind();
+			mVertexOrig.rewind();
+
+			Vector4f value;
+
+			while (mVertexOrig.hasRemaining()) {
+				value = new Vector4f(mVertexOrig.get(), 
+						mVertexOrig.get(), 
+						mVertexOrig.get(), 1);
+				matrix.apply(value);
+				vertexBuf.position(mBone.get()*3);
+				vertexBuf.put(value.getX());
+				vertexBuf.put(value.getY());
+				vertexBuf.put(value.getZ());
+			}
+		}
+	};
+	
+	// Affect indicated bone and it's children
+	class SourceBoneAndChildren extends Source {
+		@Override
+		void rewind() {
+		}
+
+		@Override
+		void apply(Matrix4f matrix) {
+		}
+	};
+	
+	// Affect the entire shape
+	class SourceShape extends Source {
+		Matrix4f mMatrixModOrig = null;
+		
+		void makeCopy() {
+			if (mMatrixModOrig == null) {
+				mMatrixModOrig = mShape.getMatrixMod();
+			}
+		}
+		
+		@Override
+		void rewind() {
+			if (mMatrixModOrig != null) {
+				mShape.setMatrixMod(mMatrixModOrig);
+			} else {
+				makeCopy();
+			}
+		}
+
+		@Override
+		void apply(Matrix4f matrix) {
+			makeCopy();
+			Matrix4f useMatrix = new Matrix4f(mMatrixModOrig);
+			useMatrix.mult(matrix);
+			mShape.setMatrixMod(useMatrix);
+		}
+	};
+	
 	class CMatrix {
 		Matrix4f mMatrix;
 		float mTime = -1;
@@ -182,11 +296,11 @@ public class Animator {
 	protected final AnimSet mAnimSet;
 	protected float mInterval = 0.1f; // seconds
 	protected float mAtTime = 0;
-	protected Interpolation mInterpolation = Interpolation.Linear;;
-	protected FloatBuffer mVertexOrig = null;
+	protected Interpolation mInterpolation = Interpolation.Linear;
 	protected Timer mTimer = null;
 	protected int mFrame;
 	protected boolean mIsPlaying = false;
+	protected Source mSource = null;
 
 	public Animator(Shape shape, Bone bone, String animSetName) {
 		mShape = shape;
@@ -209,31 +323,23 @@ public class Animator {
 		return null;
 	}
 	
+	protected Source getSource() {
+		if (mSource == null) {
+			if (mAnimSet.getControlOp() == AnimControlOp.ControlBoneOnly) {
+				mSource = new SourceBoneOnly();
+			} else if (mAnimSet.getControlOp() == AnimControlOp.ControlBoneAndChildren) {
+				mSource = new SourceBoneAndChildren();
+			} else if (mAnimSet.getControlOp() == AnimControlOp.ControlShape) {
+				mSource = new SourceShape();
+			}
+		}
+		return mSource;
+	}
+	
 	public float getCurTime() { return mAtTime; }
 	public boolean isPlaying() { return mIsPlaying; }
 	public Shape getShape() { return mShape; }
 	public Bone getBone() { return mBone; }
-	
-	void makeCopy() {
-		if (mVertexOrig != null) {
-			return;
-		}
-		FloatBuffer vertexBuf = mShape.getVertexBuf();
-		
-		mBone.rewind();
-		vertexBuf.rewind();
-		
-		ByteBuffer buf = ByteBuffer.allocateDirect(3*4*mBone.limit());
-		buf.order(ByteOrder.nativeOrder()); // Get this from android platform
-		mVertexOrig = buf.asFloatBuffer();
-		
-		while (mBone.hasRemaining()) {
-			vertexBuf.position(mBone.get()*3);
-			mVertexOrig.put(vertexBuf.get());
-			mVertexOrig.put(vertexBuf.get());
-			mVertexOrig.put(vertexBuf.get());
-		}
-	}
 	
 	public boolean next() {
 		if (mAtTime < 0) {
@@ -262,9 +368,9 @@ public class Animator {
 				if (next()) {
     				playListener.onFrame(Animator.this, ++mFrame);
 				} else {
+					mIsPlaying = false;
     				playListener.onFinished();
 					mTimer.cancel();
-					mIsPlaying = false;
 				}
 			}
 		}, milliInterval, milliInterval);
@@ -278,21 +384,7 @@ public class Animator {
 	}
 	
 	public void rewind() {
-		if (mVertexOrig != null) {
-    		FloatBuffer vertexBuf = mShape.getVertexBuf();
-    		vertexBuf.rewind();
-    		mBone.rewind();
-    		mVertexOrig.rewind();
-    		
-    		while (mVertexOrig.hasRemaining()) {
-    			vertexBuf.position(mBone.get()*3);
-    			vertexBuf.put(mVertexOrig.get());
-    			vertexBuf.put(mVertexOrig.get());
-    			vertexBuf.put(mVertexOrig.get());
-    		}
-		} else {
-			makeCopy();
-		}
+		getSource().rewind();
 		mAtTime = mAnimSet.getStartTime();
 	}
 	
@@ -311,26 +403,8 @@ public class Animator {
 		CMatrix cmatrix = new CMatrix();
 		Matrix4f m = cmatrix.evaluate(time);
 		
-		makeCopy();
+		getSource().apply(m);
 		
-		FloatBuffer vertexBuf = mShape.getVertexBuf();
-	
-		vertexBuf.rewind();
-		mBone.rewind();
-		mVertexOrig.rewind();
-		
-		Vector4f value;
-		
-		while (mVertexOrig.hasRemaining()) {
-			value = new Vector4f(mVertexOrig.get(), 
-								 mVertexOrig.get(), 
-								 mVertexOrig.get(), 1);
-			m.apply(value);
-			vertexBuf.position(mBone.get()*3);
-			vertexBuf.put(value.getX());
-			vertexBuf.put(value.getY());
-			vertexBuf.put(value.getZ());
-		}
 		mAtTime = time;
 	}
 	

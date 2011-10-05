@@ -122,6 +122,38 @@ public class Shape {
 			float getLastTime() {
 				return mPairs[mPairs.length-2];
 			}
+			
+			// Remove all entries before the given startTime and
+			// after the given endTime.
+			void cullToTime(float startTime, float endTime) {
+				int start_index = -1;
+				int end_index = -1;
+				
+				for (int i = 0; i < mPairs.length; i += 2) {
+					if (start_index == -1) {
+						if (mPairs[i] >= startTime) {
+							start_index = i;
+						} else {
+							continue;
+						}
+					}
+					if (mPairs[i] <= endTime) {
+						end_index = i;
+					} else {
+						break;
+					}
+				}
+				int num = end_index - start_index + 1;
+				if (num <= 0) {
+					mPairs = new float[0];
+				} else {
+    				float [] values = new float[num+1];
+    				for (int i = start_index; i <= end_index+1; i++) {
+    					values[i] = mPairs[i];
+    				}
+    				mPairs = values;
+				}
+			}
 		
 			///////////////////////////////////////
 			// Alternative to limit(), hasRemaining(), and get() functions
@@ -142,6 +174,7 @@ public class Shape {
 		protected HashMap<AnimType,AnimControl> mControls = new HashMap<AnimType,AnimControl>();
 		protected float mAnimStartTime;
 		protected float mAnimEndTime;
+		protected AnimControlOp mControlOp  = AnimControlOp.ControlBoneOnly;
 		
 		public AnimSet(String name) {
 			mName = name;
@@ -192,6 +225,20 @@ public class Shape {
 			return mAnimEndTime;
 		}
 		
+		public void setControlOp(AnimControlOp op) {
+			mControlOp = op;
+		}
+		
+		public AnimControlOp getControlOp() {
+			return mControlOp;
+		}
+		
+		public void cullToTime(float startTime, float endTime) {
+			for (AnimType type : mControls.keySet()) {
+				mControls.get(type).cullToTime(startTime, endTime);
+			}
+			computeBounds();
+		}
 	};
 
 	public class Bone extends ShortBufSortedRange {
@@ -890,14 +937,14 @@ public class Shape {
 		}
 	};
 	
-	public enum BoneAnimControl {
+	public enum AnimControlOp {
 		ControlBoneOnly,
 		ControlBoneAndChildren,
 		ControlShape,
 		UNKNOWN;
 		
-		static BoneAnimControl from(int value) {
-			for (BoneAnimControl type : BoneAnimControl.values()) {
+		static AnimControlOp from(int value) {
+			for (AnimControlOp type : AnimControlOp.values()) {
 				if (type.ordinal() == value) {
 					return type;
 				}
@@ -944,8 +991,7 @@ public class Shape {
 	protected Matrix4f dGetMatrix() { return null; }
 	protected Shape [] dGetChildren() { return null; }
 	
-	public void fill() {
-
+	public Shape fill() {
 		setVertexData(dGetVertexDef());
 		setNormalData(dGetNormalDef());
 		setIndexData(dGetIndexDef());
@@ -984,6 +1030,7 @@ public class Shape {
 		// Right now, this code is optimized for modern hardware.
 
 		//			setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
+		return this;
 	}
 
 	public ArrayList<Shape> resetChildren() {
@@ -1134,6 +1181,10 @@ public class Shape {
 			mMatrixMod = new Matrix4f(mMatrix);
 		}
 		return mMatrixMod;
+	}
+	
+	public void setMatrixMod(Matrix4f mod) {
+		mMatrixMod = mod;
 	}
 	
 	public Quaternion getQuaternionMod() { 
@@ -1388,6 +1439,7 @@ public class Shape {
 			dataStream.writeInt(bone.mAnim.size());
 			for (AnimSet set : bone.mAnim){ 
 				ShapeUtils.writeString(dataStream, set.mName);
+				dataStream.writeInt(set.getControlOp().ordinal());
     			dataStream.writeInt(set.mControls.keySet().size());
     			for (AnimType type : set.mControls.keySet()) {
     				AnimControl control = set.mControls.get(type);
@@ -1427,6 +1479,8 @@ public class Shape {
 			for (int set_index = 0; set_index < animSetCount; set_index++) {
 				String animName = ShapeUtils.readString(dataStream);
 				AnimSet set = bone.allocAnimSet(animName);
+				int controlOp = dataStream.readInt();
+				set.setControlOp(AnimControlOp.from(controlOp));
 				int animControlCount = dataStream.readInt();
 				for (int count = 0; count < animControlCount; count++) {
 					int typeI = dataStream.readInt();
