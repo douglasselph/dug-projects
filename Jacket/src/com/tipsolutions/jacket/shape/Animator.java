@@ -381,6 +381,7 @@ public class Animator {
 			mTimer.cancel();
 			mTimer = null;
 		}
+		mIsPlaying = false;
 	}
 	
 	public void rewind() {

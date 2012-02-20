@@ -640,6 +640,12 @@ public class ViewObj extends Activity {
 		if (mActiveShape.hasAnimation()) {
 			if (mAnimator != null && mAnimator.isPlaying()) {
 				mAnimator.stop();
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						mControls.mPlay.setText("Play");
+					}
+				});
 			} else {
 				mAnimator = new Animator(mActiveShape);
 				mAnimator.rewind();
