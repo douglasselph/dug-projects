@@ -58,7 +58,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	public TextureManager getTextureManager() { return mTM; }
 	public float getWidth() { return mWidth; }
 	
-	@Override
 	public void onDrawFrame(GL10 gl) {
 		MatrixTrackingGL mgl;
 		if (gl instanceof MatrixTrackingGL) {
@@ -97,7 +96,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		}
 	}
 	
-	@Override
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		mWidth = width;
 		mHeight = height;
@@ -105,7 +103,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
     	mCamera.setScreenDimension(mWidth, mHeight);
 	}
 	
-	@Override
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	mTM.reset();
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);

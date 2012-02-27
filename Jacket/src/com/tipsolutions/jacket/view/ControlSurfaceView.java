@@ -18,7 +18,6 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 	ControlRenderer mRenderer;
 	
 	class MyGLWrapper implements GLWrapper {
-		@Override
 		public GL wrap(GL gl) {
 			return new MatrixTrackingGL(gl);
 		}

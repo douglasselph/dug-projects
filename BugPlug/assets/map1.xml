@@ -25,13 +25,6 @@ w.....P.....w
 ww.n.....n.ww
 wwwwwwwwwwwww
   </Layout>
-  <Key element="stone_large">S</Key> 
-  <Key element="crack">C</Key>
-  <Key element="stone_soft">s</Key>
-  <Key element="water">w</Key>
-  <Key element="nutrients">n</Key>
-  <Key element="dirt">.</Key>
-  <Key element="plant">P</Key>
   <Edge>
 ..........
 ..........

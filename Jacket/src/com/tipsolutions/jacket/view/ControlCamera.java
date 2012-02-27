@@ -36,7 +36,6 @@ public class ControlCamera extends Camera implements IEventTap {
 		}
 	}
 
-	@Override
 	public boolean pressDown(float x, float y) {
 		long curTime = System.currentTimeMillis();
 		mStartTouchTime = curTime;
@@ -52,7 +51,6 @@ public class ControlCamera extends Camera implements IEventTap {
 		return true;
 	}
 
-	@Override
 	public boolean pressMove(float x, float y) {
 		long curTime = System.currentTimeMillis();
 		float diffx = x - mStartX;
@@ -86,7 +84,6 @@ public class ControlCamera extends Camera implements IEventTap {
 		return true;
 	}
 	
-	@Override
 	public boolean pressUp(float x, float y) {
 		if (!mDidMove) {
 			long curTime = System.currentTimeMillis();

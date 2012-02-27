@@ -14,7 +14,6 @@ import android.widget.LinearLayout;
 public class ButtonGroup extends LinearLayout {
 	
 	protected class CheckedStateTracker implements OnClickListener {
-	    @Override
 		synchronized public void onClick(View v) {
 	        if (mIgnore) {
 	            return; // prevents from infinite recursion
