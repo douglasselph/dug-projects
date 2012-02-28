@@ -80,7 +80,7 @@ public class BugPlugMapActivity extends Activity {
 	void initMap() {
 		InputStream is = null;
 		try {
-			is = getAssets().open("map1.xml");
+			is = getAssets().open("map1/map.xml");
 			MapXmlData parser = new MapXmlData();
 			parser.parse(is);
 		} catch (Exception ex) {
