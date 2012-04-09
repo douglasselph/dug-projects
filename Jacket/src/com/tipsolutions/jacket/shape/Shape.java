@@ -16,17 +16,19 @@ import java.util.Set;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.BufferUtils.Bounds;
+import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
+import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
+import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
+import com.tipsolutions.jacket.math.BufferUtils.ShortBufSortedRange;
+import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
+import com.tipsolutions.jacket.math.BufferUtils.dShortBuf;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Point;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.math.BufferUtils.Bounds;
-import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
-import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBufSortedRange;
 import com.tipsolutions.jacket.shape.Shape.AnimSet.AnimControl;
 
 // 
@@ -60,9 +62,9 @@ public class Shape {
 		}		
 	};
 
-	protected abstract class MyData<TARGET> {
-		TARGET mTarget;
-	};
+//	protected abstract class MyData<TARGET> {
+//		TARGET mTarget;
+//	};
 	
 	public class AnimSet {
 		public class AnimControl {
@@ -909,17 +911,6 @@ public class Shape {
 	// DEFINE
 	///////////////////////////////////////
 	
-	public interface dData<BUFTYPE> {
-		void fill(BUFTYPE buf);
-		int size();
-	};
-	
-	public interface dFloatBuf extends dData<FloatBuffer> {
-	};
-	
-	public interface dShortBuf extends dData<ShortBuffer> {
-	};
-	
 	public enum AnimType {
 		LOC_X, LOC_Y, LOC_Z,
 		SCALE_X, SCALE_Y, SCALE_Z,
@@ -1029,7 +1020,7 @@ public class Shape {
 		// If not, then it is faster to use GL_FIXED.
 		// Right now, this code is optimized for modern hardware.
 
-		//			setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
+		//setColorData(getColorFixed()); // Note: uses FIXED, which means one is 0x10000.
 		return this;
 	}
 

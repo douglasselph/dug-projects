@@ -10,11 +10,11 @@ import android.util.Log;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
 import com.tipsolutions.jacket.shape.Box;
 import com.tipsolutions.jacket.shape.Pyramid;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.shape.Shape.CullFace;
-import com.tipsolutions.jacket.shape.Shape.dFloatBuf;
 
 public class DataManager {
 

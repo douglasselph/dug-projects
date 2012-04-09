@@ -6,6 +6,8 @@ import java.nio.ShortBuffer;
 import android.util.FloatMath;
 
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
+import com.tipsolutions.jacket.math.BufferUtils.dShortBuf;
 
 public class Pyramid extends Shape {
 

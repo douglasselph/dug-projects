@@ -8,8 +8,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import com.tipsolutions.jacket.shape.Shape.dData;
-
 public class BufferUtils {
     /**
      * Copies a Vector3 from one position in the buffer to another. The index values are in terms of vector number (eg,
@@ -65,6 +63,17 @@ public class BufferUtils {
     // 
     // BUFFERS
     //
+	public interface dData<BUFTYPE> {
+		void fill(BUFTYPE buf);
+		int size();
+	};
+	
+	public interface dFloatBuf extends dData<FloatBuffer> {
+	};
+	
+	public interface dShortBuf extends dData<ShortBuffer> {
+	};
+	
 	public static final int TYPE_FLOAT = 1;
 	public static final int TYPE_SHORT = 2;
 	
