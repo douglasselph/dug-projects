@@ -6,8 +6,8 @@ import java.nio.ShortBuffer;
 import android.util.FloatMath;
 
 import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.dShortBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.dFloatBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.dShortBuf;
 
 public class Pyramid extends Shape {
 
@@ -28,7 +28,8 @@ public class Pyramid extends Shape {
 	// to the x-axis.
 	//
 	// Assumes CCW facing.
-	public void set4(float base, final float height, TextureManager.Texture texture) { float radians60 = (float) (Math.PI/3);
+	public void set4(float base, final float height, TextureManager.Texture texture) { 
+		float radians60 = (float) (Math.PI/3);
 		float triHeight = FloatMath.sin(radians60) / FloatMath.cos(radians60) * base/2;
 		final float baseHalf = base/2;
 		final float triHeightHalf = triHeight/2;

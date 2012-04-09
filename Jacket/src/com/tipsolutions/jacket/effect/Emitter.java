@@ -12,8 +12,8 @@ import android.util.Log;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.FloatBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.ShortBuf;
 
 public class Emitter {
 	

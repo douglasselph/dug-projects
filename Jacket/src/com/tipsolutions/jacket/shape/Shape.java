@@ -16,19 +16,19 @@ import java.util.Set;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.BufferUtils.Bounds;
-import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
-import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBufSortedRange;
-import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.dShortBuf;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Point;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.shape.BufferUtils.Bounds;
+import com.tipsolutions.jacket.shape.BufferUtils.ComputeBounds;
+import com.tipsolutions.jacket.shape.BufferUtils.FloatBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.ShortBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.ShortBufSortedRange;
+import com.tipsolutions.jacket.shape.BufferUtils.dFloatBuf;
+import com.tipsolutions.jacket.shape.BufferUtils.dShortBuf;
 import com.tipsolutions.jacket.shape.Shape.AnimSet.AnimControl;
 
 // 

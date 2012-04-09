@@ -6,74 +6,36 @@ import java.nio.ShortBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.BufferUtils.Bounds;
-import com.tipsolutions.jacket.math.BufferUtils.ComputeBounds;
-import com.tipsolutions.jacket.math.BufferUtils.FloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.ShortBuf;
-import com.tipsolutions.jacket.math.BufferUtils.dFloatBuf;
-import com.tipsolutions.jacket.math.BufferUtils.dShortBuf;
+import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
+import com.tipsolutions.jacket.shape.BufferUtils.Bounds;
+import com.tipsolutions.jacket.shape.BufferUtils.ComputeBounds;
 
 public class Model {
 
-	protected FloatBuf mColorBuf = new FloatBuf();
-	protected ShortBuf mIndexBuf = new ShortBuf();
-	protected FloatBuf mNormalBuf = new FloatBuf();
-	protected FloatBuf mVertexBuf = new FloatBuf();
-	protected FloatBuf mTextureBuf = new FloatBuf();
+	protected Bounds mBounds;
+	protected Color4f mColor;
+	protected FloatBuffer mColorBuf;
+	protected Color4f mColorOutline = null;
+	protected int mCullFace = GL10.GL_BACK;
+	protected ShortBuffer mIndexBuf;
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix;
 	protected Matrix4f mMatrixMod;
-	protected Color4f mColor;
-	protected Color4f mColorOutline = null;
+	protected FloatBuffer mNormalBuf;
 	protected TextureManager.Texture mTexture;
-	protected int mCullFace = GL10.GL_BACK;
-	protected Bounds mBounds;
-
-	public FloatBuffer allocColorBuf(int size) {
-		mColorBuf = new FloatBuf();
-		FloatBuffer buf = mColorBuf.alloc(size);
-		buf.rewind();
-		return buf;
-	}
-
-	public ShortBuffer allocIndexBuf(int size) {
-		mIndexBuf = new ShortBuf();
-		ShortBuffer buf = mIndexBuf.alloc(size);
-		buf.rewind();
-		return buf;
-	}
-
-	public FloatBuffer allocNormalBuf(int size) {
-		mNormalBuf = new FloatBuf();
-		FloatBuffer buf = mNormalBuf.alloc(size);
-		buf.rewind();
-		return buf;
-	}
-
-	public FloatBuffer allocTextureBuf(int size) {
-		mTextureBuf = new FloatBuf();
-		FloatBuffer buf = mTextureBuf.alloc(size);
-		buf.rewind();
-		return buf;
-	}
-
-	public FloatBuffer allocVertexBuf(int size) {
-		mVertexBuf = new FloatBuf();
-		FloatBuffer buf = mVertexBuf.alloc(size);
-		buf.rewind();
-		return buf;
-	}
+	protected FloatBuffer mTextureBuf;
+	protected FloatBuffer mVertexBuf;
 
 	protected void computeBounds(ComputeBounds computeBounds) {
-		FloatBuffer buf = getVertexBuf();
-		if (buf != null) {
-			while (buf.position() < buf.limit()) {
-				computeBounds.apply(buf.get(), buf.get(), buf.get());
+		if (mVertexBuf != null) {
+			mVertexBuf.rewind();
+			while (mVertexBuf.position() < mVertexBuf.limit()) {
+				computeBounds.apply(mVertexBuf.get(), mVertexBuf.get(), mVertexBuf.get());
 			}
 		}
 	}
@@ -92,7 +54,7 @@ public class Model {
 	}
 
 	public FloatBuffer getColorBuf() {
-		return mColorBuf.getBuf(); 
+		return mColorBuf;
 	}
 
 	public int getCullFace() { 
@@ -104,7 +66,7 @@ public class Model {
 	}
 	
 	public ShortBuffer getIndexBuf() { 
-		return mIndexBuf.getBuf(); 
+		return mIndexBuf;
 	}
 
 	public Vector3f getLocationMod() { 
@@ -138,7 +100,7 @@ public class Model {
 	}
 
 	public FloatBuffer getNormalBuf() { 
-		return mNormalBuf.getBuf(); 
+		return mNormalBuf;
 	}
 
 	public Quaternion getQuaternionMod() { 
@@ -146,27 +108,27 @@ public class Model {
 	}
 
 	public FloatBuffer getTextureBuf() { 
-		return mTextureBuf.getBuf(); 
+		return mTextureBuf;
 	}
 
 	public FloatBuffer getVertexBuf() {
-		return mVertexBuf.getBuf(); 
+		return mVertexBuf;
 	}
 
 	public boolean hasColorArray() {
-		return (mColorBuf.getBuf() != null);
+		return (mColorBuf != null);
 	}
 
 	public boolean hasNormalArray() {
-		return (mNormalBuf.getBuf() != null);
+		return (mNormalBuf != null);
 	}
 
 	public boolean hasTextureArray() {
-		return (mTextureBuf.getBuf() != null);
+		return (mTextureBuf != null);
 	}
 
 	public boolean hasVertexArray() {
-		return (mVertexBuf.getBuf() != null);
+		return (mVertexBuf != null);
 	}
 
 	public void onDraw(MatrixTrackingGL gl) {
@@ -252,6 +214,15 @@ public class Model {
 		mColor = color; 
 	}
 
+	public void setIndexBuf(ShortBuffer buf) {
+		mIndexBuf = buf;
+	}
+
+	public void setIndexBuf(ShortBuffer buf, int mode) {
+		mIndexBuf = buf;
+		mIndexMode = mode;
+	}
+	
 	public void setLocation(Vector3f x) { 
 		getMatrixMod().setLocation(x);
 	}
@@ -259,26 +230,20 @@ public class Model {
 	public void setMatrixMod(Matrix4f mod) {
 		mMatrixMod = mod;
 	}
+
+	public void setNormalBuf(FloatBuffer buf) {
+		mNormalBuf = buf;
+	}
+
+	public void setTexture(Texture texture) {
+		mTexture = texture;
+	}
 	
-	public void setIndexData(dShortBuf data) {
-		mIndexBuf = new ShortBuf();
-		mIndexBuf.set(data);
+	public void setTextureBuf(FloatBuffer buf) {
+		mTextureBuf = buf;
 	}
 
-	public void setIndexData(dShortBuf data, int mode) {
-		mIndexBuf = new ShortBuf();
-		mIndexBuf.set(data);
-		mIndexMode = mode;
+	public void setVertexBuf(FloatBuffer buf) {
+		mVertexBuf = buf;
 	}
-
-	public void setNormalData(dFloatBuf data) {
-		mNormalBuf = new FloatBuf();
-		mNormalBuf.set(data);
-	}
-
-	public void setVertexData(dFloatBuf data) {
-		mVertexBuf = new FloatBuf();
-		mVertexBuf.set(data);
-	}
-
 }

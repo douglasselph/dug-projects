@@ -2,7 +2,6 @@ package com.tipsolutions.jacket.shape;
 
 import java.nio.FloatBuffer;
 
-import com.tipsolutions.jacket.math.BufferUtils;
 import com.tipsolutions.jacket.math.Constants;
 import com.tipsolutions.jacket.math.Vector3;
 

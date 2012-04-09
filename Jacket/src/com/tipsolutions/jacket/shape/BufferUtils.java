@@ -1,4 +1,4 @@
-package com.tipsolutions.jacket.math;
+package com.tipsolutions.jacket.shape;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+
+import com.tipsolutions.jacket.math.Vector3;
 
 public class BufferUtils {
     /**
