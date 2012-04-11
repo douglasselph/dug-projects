@@ -12,8 +12,8 @@ import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.shape.BufferUtils.Bounds;
-import com.tipsolutions.jacket.shape.BufferUtils.ComputeBounds;
+import com.tipsolutions.jacket.math.BufUtils.Bounds;
+import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 
 public class Model {
 
@@ -23,6 +23,7 @@ public class Model {
 	protected Color4f mColorOutline = null;
 	protected int mCullFace = GL10.GL_BACK;
 	protected ShortBuffer mIndexBuf;
+	protected int mIndexSlice;
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix;
 	protected Matrix4f mMatrixMod;
@@ -133,7 +134,6 @@ public class Model {
 
 	public void onDraw(MatrixTrackingGL gl) {
 
-		FloatBuffer fbuf;
 		boolean didPush = false;
 
 		if (mColorOutline != null) {
@@ -164,9 +164,10 @@ public class Model {
 			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
 			gl.glLoadMatrix(useMatrix);
 		}
-		if ((fbuf = getVertexBuf()) != null) {
+		if (mVertexBuf != null) {
+			mVertexBuf.rewind();
 			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, fbuf);
+			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf);
 		} else {
 			gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		}
@@ -175,30 +176,45 @@ public class Model {
 			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 		} else {
-			if ((fbuf = getNormalBuf()) != null) {
+			if (mNormalBuf != null) {
+				mNormalBuf.rewind();
 				gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-				gl.glNormalPointer(GL10.GL_FLOAT, 0, fbuf);
+				gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf);
 			} else {
 				gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 			}
-			if ((fbuf = getColorBuf()) != null) {
+			if (mColorBuf != null) {
+				mColorBuf.rewind();
 				gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-				gl.glColorPointer(4, GL10.GL_FLOAT, 0, fbuf);
+				gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf);
 
 				// Not doing it this way anymore:
 				// gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
 			} else {
 				gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
 			}
-			if ((mTexture != null) && ((fbuf = getTextureBuf()) != null)) {
-				mTexture.onDraw(gl, fbuf);
+			if ((mTexture != null) && (mTextureBuf != null)) {
+				mTextureBuf.rewind();
+				mTexture.onDraw(gl, mTextureBuf);
 			} else {
 				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			}
 		}
-		ShortBuffer sbuf;
-		if ((sbuf = getIndexBuf()) != null) {
-			gl.glDrawElements(mIndexMode, sbuf.remaining(), GL10.GL_UNSIGNED_SHORT, sbuf);
+		if (mIndexBuf != null) {
+			mIndexBuf.rewind();
+			if (mIndexSlice > 0) {
+				int count;
+				while (mIndexBuf.position() < mIndexBuf.remaining()) {
+					if (mIndexSlice < mIndexBuf.remaining()) {
+						count = mIndexSlice;
+					} else {
+						count = mIndexBuf.remaining();
+					}
+					gl.glDrawElements(mIndexMode, count, GL10.GL_UNSIGNED_SHORT, mIndexBuf);
+				}
+			} else {
+				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(), GL10.GL_UNSIGNED_SHORT, mIndexBuf);
+			}
 		}
 		onDrawing(gl);
 
@@ -216,11 +232,20 @@ public class Model {
 
 	public void setIndexBuf(ShortBuffer buf) {
 		mIndexBuf = buf;
+		mIndexMode = GL10.GL_TRIANGLES;
+		mIndexSlice = 0;
 	}
 
 	public void setIndexBuf(ShortBuffer buf, int mode) {
 		mIndexBuf = buf;
 		mIndexMode = mode;
+		mIndexSlice = 0;
+	}
+	
+	public void setIndexTriStrip(ShortBuffer buf, int slice) {
+		mIndexBuf = buf;
+		mIndexMode = GL10.GL_TRIANGLE_STRIP;
+		mIndexSlice = slice;
 	}
 	
 	public void setLocation(Vector3f x) { 

@@ -116,10 +116,8 @@ public class Box extends Model {
 			for (i = 0; i < 4; i++) {
 				buf.put(0).put(-1).put(0);
 			}
-
 			setNormalBuf(buf);
 		}
-
 		{
 			ShortBuffer buf = ShortBuffer.allocate(6*2*3);
 			// CCW:
@@ -171,6 +169,8 @@ public class Box extends Model {
 			// 23: lower-right front
 			buf.put((short)20).put((short)21).put((short)23);
 			buf.put((short)20).put((short)23).put((short)22);
+			
+			setIndexBuf(buf);
 		}
 		if (texture != null) {
 			setTexture(texture);
@@ -235,6 +235,8 @@ public class Box extends Model {
 				buf.put(1f).put(0f); // was 1,0
 				buf.put(0f).put(1f); // was 0,1
 				buf.put(1f).put(1f); // was 1,1
+				
+				setTextureBuf(buf);
 			}
 		}
 		mBounds.setMinX(-xdelta);

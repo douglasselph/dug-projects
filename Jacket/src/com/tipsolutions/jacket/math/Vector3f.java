@@ -72,12 +72,23 @@ public class Vector3f {
 		gl.glTranslatef(getX(), getY(), getZ());
 	}
 	
+	/**
+	 * Compute the cross product of the current vector u to the incoming
+	 * vector v. Thus the return is "u x v" where "u" is the this vector.
+	 * 
+	 * @param v : second operand of the cross product 
+	 * @return cross product
+	 */
 	public Vector3f cross(final Vector3f v) {
 		float x = getX();
 		float y = getY();
-		mData[0] = (y * v.getZ()) - (getZ() * v.getY());
-		mData[1] = (getZ() * v.getX()) - (x * v.getZ());
-		mData[2] = (x * v.getY()) - (y * v.getX());
+		float z = getZ();
+		float x2 = v.getX();
+		float y2 = v.getY();
+		float z2 = v.getZ();
+		mData[0] = (y * z2) - (z * y2); /* x */
+		mData[1] = (z * x2) - (x * z2); /* y */
+		mData[2] = (x * y2) - (y * x2); /* z */
 		return this;
 	}
 	

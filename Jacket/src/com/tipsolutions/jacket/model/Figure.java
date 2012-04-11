@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.tipsolutions.jacket.math.Point;
-import com.tipsolutions.jacket.shape.BufferUtils.Bounds;
-import com.tipsolutions.jacket.shape.BufferUtils.ComputeBounds;
+import com.tipsolutions.jacket.math.BufUtils.Bounds;
+import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBuf;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBufSortedRange;
 
