@@ -9,39 +9,58 @@ import com.tipsolutions.jacket.model.Model;
 
 public class TerrainGrid extends Model {
 
-	int mNumRows;
-	int mNumCols;
-	float mWidth;
-	float mHeight;
-	float mStartX;
-	float mStartY;
-	ComputeValue mCompute;
+	int mNumRows = 10;
+	int mNumCols = 10;
+	float mWidth = 1;
+	float mHeight = 1;
+	float mStartX = 0;
+	float mStartY = 0;
+	ICalcValue mCompute;
 
-	public TerrainGrid(int rows, int columns, float startx, float starty, float width, float height, ComputeValue compute) {
-		super();
-		
-		mNumRows = rows;
-		mNumCols = columns;
-		mWidth = width;
-		mHeight = height;
-		mStartX = startx;
-		mStartY = starty;
-		mCompute = compute;
+	public TerrainGrid() {
+	}
+
+	public ICalcValue getCompute() {
+		return mCompute;
 	}
 	
-	public void set() {
+	public float getHeight() {
+		return mHeight;
+	}
+	
+	public int getNumCols() {
+		return mNumCols;
+	}
+	
+	public int getNumRows() {
+		return mNumRows;
+	}
+	
+	public float getStartX() {
+		return mStartX;
+	}
+	
+	public float getStartY() {
+		return mStartY;
+	}
+	
+	public float getWidth() {
+		return mWidth;
+	}
+	
+	public void init() {
 		int numVertex = (mNumRows+1)*(mNumCols+1);
-		
+
 		FloatBuffer vbuf = BufUtils.setSize(mVertexBuf, numVertex*3);
 		FloatBuffer nbuf = BufUtils.setSize(mNormalBuf, numVertex*3);
 		ShortBuffer sbuf = BufUtils.setSize(mIndexBuf, (mNumCols+1)*2*mNumRows);
 		FloatBuffer tbuf = BufUtils.setSize(mTextureBuf, numVertex*2);
-		
+
 		vbuf.rewind();
 		nbuf.rewind();
 		sbuf.rewind();
 		tbuf.rewind();
-		
+
 		Vector3f normalDefault = new Vector3f(0, 0, 1);
 		Vector3f normal = normalDefault;
 		float incX = mWidth / mNumCols;
@@ -63,21 +82,27 @@ public class TerrainGrid extends Model {
 
 			for (int col = 0; col <= mNumCols; col++) {
 				if (mCompute != null) {
-					z = mCompute.getHeight(x, y);
-					normal = mCompute.getNormal(x, y);
-					if (normal == null) {
+					Info info = mCompute.getInfo(x, y);
+					if (info == null) {
+						z = 0;
 						normal = normalDefault;
+					} else {
+						z = info.getHeight();
+						normal = info.getNormal();
+						if (normal == null) {
+							normal = normalDefault;
+						}
 					}
 				}
 				vbuf.put(x).put(y).put(z);
-				
+
 				normal.put(nbuf);
-				
+
 				sbuf.put(index);
 				sbuf.put((short)(index+indexRowInc));
 
 				tbuf.put(percentX).put(percentY);
-				
+
 				x += incX;
 				percentX += percentIncX;
 			}
@@ -89,17 +114,34 @@ public class TerrainGrid extends Model {
 		setIndexTriStrip(sbuf, indexRowInc);
 		setTextureBuf(tbuf);
 	}
+
+	public TerrainGrid setCompute(ICalcValue calc) {
+		mCompute = calc;
+		return this;
+	}
+
+	public TerrainGrid setDimension(float width, float height) {
+		mWidth = width;
+		mHeight = height;
+		return this;
+	}
 	
-	TerrainGrid setGridSize(int nrows, int ncols) {
+	public TerrainGrid setGranularity(int nrows, int ncols) {
+		mNumRows = (int) (mHeight * nrows);
+		mNumCols = (int) (mWidth * ncols);
+		return this;
+	}
+	
+	public TerrainGrid setGridSize(int nrows, int ncols) {
 		mNumRows = nrows;
 		mNumCols = ncols;
 		return this;
 	}
-	
-	TerrainGrid setStartXY(float x, float y) {
+
+	public TerrainGrid setStartXY(float x, float y) {
 		mStartX = x;
 		mStartY = y;
 		return this;
 	}
-	
+
 }

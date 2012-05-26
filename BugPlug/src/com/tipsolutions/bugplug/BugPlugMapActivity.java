@@ -12,7 +12,8 @@ import android.util.Log;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 
-import com.tipsolutions.bugplug.data.MapXmlData;
+import com.tipsolutions.bugplug.map.Map;
+import com.tipsolutions.bugplug.map.file.MapXmlData;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.view.ControlCamera;
@@ -22,12 +23,18 @@ import com.tipsolutions.jacket.view.ControlSurfaceView;
 public class BugPlugMapActivity extends Activity {
 	
 	class MyRenderer extends ControlRenderer {
+		
+		Map mMap;
+		
 		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
 			super(view, camera);
+
+			mMap = new Map();
 		}
 
 		@Override
 		public void onDrawFrame(MatrixTrackingGL gl) {
+			mMap.onDraw(gl);
 		}
 
 		@Override

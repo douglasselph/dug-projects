@@ -4,7 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.util.Log;
 
-import com.tipsolutions.bugplug.data.DatabaseManager;
+import com.tipsolutions.bugplug.map.DatabaseManager;
 
 public class MyApplication extends Application {
 

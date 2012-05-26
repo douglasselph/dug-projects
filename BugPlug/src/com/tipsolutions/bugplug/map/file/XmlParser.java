@@ -1,4 +1,4 @@
-package com.tipsolutions.bugplug.data;
+package com.tipsolutions.bugplug.map.file;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
