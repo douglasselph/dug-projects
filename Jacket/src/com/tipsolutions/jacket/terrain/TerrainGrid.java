@@ -3,10 +3,15 @@ package com.tipsolutions.jacket.terrain;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.BufUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.model.Model;
 
+/**
+ * For a single terrain image, supports an arbitrarily complex geometry using
+ * generators.
+ */
 public class TerrainGrid extends Model {
 
 	int mNumRows = 10;

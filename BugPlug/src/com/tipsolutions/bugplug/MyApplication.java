@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.tipsolutions.bugplug.map.DatabaseManager;
+import com.tipsolutions.jacket.image.TextureManager;
 
 public class MyApplication extends Application {
 
@@ -22,7 +23,6 @@ public class MyApplication extends Application {
 	public void onLowMemory() {
 		super.onLowMemory();
 	}
-	
 	
 	public static DatabaseManager getDatabaseManager(Context context) {
 		if (mDb == null) {

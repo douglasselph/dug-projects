@@ -1,5 +1,7 @@
 package com.tipsolutions.bugplug.map;
 
+import com.tipsolutions.bugplug.R;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.terrain.CalcConstant;
@@ -12,8 +14,9 @@ import com.tipsolutions.jacket.terrain.TerrainGrid;
 public class Map {
 
 	TerrainGrid mTerrainGrid;
+	TextureManager mTM;
 	
-	public Map() {
+	public Map(TextureManager tm) {
 		mTerrainGrid = new TerrainGrid()
 			.setDimension(11f, 20f)
 			.setGranularity(10, 10);
@@ -23,6 +26,7 @@ public class Map {
 		calcGroup.add(new CalcParabola(5f, 0.4f, new Bounds2D(6f, 3f, 11f, 6f)));
 		CalcStore calcStore = new CalcStore(calcGroup);
 		mTerrainGrid.setCompute(calcStore);
+		mTerrainGrid.setTexture(mTM.getTexture(R.drawable.dirt));
 		mTerrainGrid.init();
 	}
 	

@@ -28,8 +28,7 @@ public class BugPlugMapActivity extends Activity {
 		
 		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
 			super(view, camera);
-
-			mMap = new Map();
+			mMap = new Map(mTM);
 		}
 
 		@Override
