@@ -23,9 +23,11 @@ public class CalcGroup implements ICalcValue {
 		for (ICalcValue calc : mList) {
 			if (calc.within(x, y)) {
 				Info info = calc.getInfo(x, y);
-				height += info.getHeight();
-				normal.add(info.getNormal());
-				normal.normalize();
+				if (info != null) {
+					height += info.getHeight();
+					normal.add(info.getNormal());
+					normal.normalize();
+				}
 			}
 		}
 		return new Info(height, normal);

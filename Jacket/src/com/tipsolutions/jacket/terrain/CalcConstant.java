@@ -1,6 +1,7 @@
 package com.tipsolutions.jacket.terrain;
 
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Vector3f;
 
 /**
  * Generate a constant height over all values.
@@ -25,7 +26,7 @@ public class CalcConstant extends CalcValue {
 	
 	public Info getInfo(float x, float y) {
 		if (within(x, y)) {
-			return new Info(mHeight);
+			return new Info(mHeight, new Vector3f(0, 0, 1));
 		}
 		return null;
 	}

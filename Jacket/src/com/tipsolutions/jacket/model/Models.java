@@ -2,8 +2,8 @@ package com.tipsolutions.jacket.model;
 
 import java.util.ArrayList;
 
+import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 
 public class Models extends Model {
 

@@ -5,11 +5,11 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLU;
 import android.opengl.Matrix;
 
+import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
-import com.tipsolutions.jacket.math.BufUtils.Bounds;
 import com.tipsolutions.jacket.model.Model;
 
 public class Camera {
@@ -457,7 +457,7 @@ public class Camera {
 		setLookAt(model.getMidPoint());
     	setLocation(getLookAt().dup());
     	
-    	Bounds bounds = model.getBounds();
+    	Bounds3D bounds = model.getBounds();
     	float offsetZ = bounds.getSizeZ();
     	if (bounds.getSizeY() > bounds.getSizeX()) {
     		offsetZ += bounds.getSizeY();

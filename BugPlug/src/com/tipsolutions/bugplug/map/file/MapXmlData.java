@@ -234,12 +234,10 @@ public class MapXmlData extends XmlParser {
 
 	void fillCells(String description) {
 		fill(description, new Action() {
-			@Override
 			public void fill(short x, short y, char chr) {
 				mCells.get(x, y).set(chr);  
 			}
 
-			@Override
 			public void setSize(short lineLength, short numLines) {
 				mCells = new MapCells(lineLength, numLines);
 			}
@@ -248,14 +246,12 @@ public class MapXmlData extends XmlParser {
 
 	void fillEdge(String description) {
 		fill(description, new Action() {
-			@Override
 			public void fill(short x, short y, char chr) {
 				if (chr == 'x') {
 					mCurEdge.setEdge(x, y);
 				}
 			}
 
-			@Override
 			public void setSize(short lineLength, short numLines) {
 				mCurEdge = new EdgeDescription(lineLength, numLines);
 			}	

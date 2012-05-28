@@ -16,14 +16,14 @@ import java.util.Set;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Point;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.math.BufUtils.Bounds;
-import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 import com.tipsolutions.jacket.shape.BufferUtils.FloatBuf;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBuf;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBufSortedRange;
@@ -40,7 +40,7 @@ public class Shape {
 	// CORE 
 	///////////////////////////////////////////////
 	
-	public class ShapeBounds extends Bounds {
+	public class ShapeBounds extends Bounds3D {
 		
 		public void compute() {
 			ComputeBounds computeBounds = new ComputeBounds();
@@ -247,7 +247,7 @@ public class Shape {
 		protected String mName;
 		protected int [] mJoints = null;
 		protected int mJointParent = -1;
-		protected Bounds mBounds = null;
+		protected Bounds3D mBounds = null;
 		protected ArrayList<AnimSet> mAnim = null;
 
 		public String getName() {
@@ -280,7 +280,7 @@ public class Shape {
 			return mAnim;
 		}
 		
-		public Bounds getBounds() { return mBounds; }
+		public Bounds3D getBounds() { return mBounds; }
 		
 		public void computeBounds() {
 			FloatBuffer fbuf = getVertexBuf();
@@ -300,8 +300,7 @@ public class Shape {
 				z = fbuf.get();
 				computeBounds.apply(x, y, z);
 			}
-			mBounds = new Bounds();
-			mBounds.set(computeBounds);
+			mBounds = computeBounds.getBounds();
 		}
 		
 		public AnimSet allocAnimSet(String name) {
@@ -845,7 +844,7 @@ public class Shape {
 	}
 	
 	public Vector3f getMidPoint() {
-		Bounds bounds = getBounds();
+		Bounds3D bounds = getBounds();
 		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(), bounds.getMidZ());
 		Matrix4f matrix = getMatrix();
 		matrix.multMV(midPoint);
@@ -1461,7 +1460,7 @@ public class Shape {
 			}
 		}
 		bone.mJointParent = dataStream.readInt();
-		bone.mBounds = new Bounds();
+		bone.mBounds = new Bounds3D();
 		bone.mBounds.read(dataStream);
 		bone.readBuffer(dataStream);
 		

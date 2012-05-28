@@ -5,7 +5,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.tipsolutions.bugplug.map.DatabaseManager;
-import com.tipsolutions.jacket.image.TextureManager;
 
 public class MyApplication extends Application {
 

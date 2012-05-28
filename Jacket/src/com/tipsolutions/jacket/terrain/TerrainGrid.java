@@ -59,7 +59,7 @@ public class TerrainGrid extends Model {
 
 		FloatBuffer vbuf = BufUtils.setSize(mVertexBuf, numVertex*3);
 		FloatBuffer nbuf = BufUtils.setSize(mNormalBuf, numVertex*3);
-		ShortBuffer sbuf = BufUtils.setSize(mIndexBuf, (mNumCols+1)*2*mNumRows);
+		ShortBuffer sbuf = BufUtils.setSize(mIndexBuf, (mNumCols+1)*2*(mNumRows+1));
 		FloatBuffer tbuf = BufUtils.setSize(mTextureBuf, numVertex*2);
 
 		vbuf.rewind();

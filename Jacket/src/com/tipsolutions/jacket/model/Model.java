@@ -7,17 +7,17 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
+import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.math.BufUtils.Bounds;
-import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 
 public class Model {
 
-	protected Bounds mBounds;
+	protected Bounds3D mBounds;
 	protected Color4f mColor;
 	protected FloatBuffer mColorBuf;
 	protected Color4f mColorOutline = null;
@@ -41,11 +41,11 @@ public class Model {
 		}
 	}
 
-	public Bounds getBounds() {
+	public Bounds3D getBounds() {
 		if (mBounds == null) {
 			ComputeBounds computeBounds = new ComputeBounds();
 			computeBounds(computeBounds);
-			mBounds.set(computeBounds);
+			mBounds = computeBounds.getBounds();
 		}
 		return mBounds;
 	}
@@ -93,10 +93,12 @@ public class Model {
 	}
 
 	public Vector3f getMidPoint() {
-		Bounds bounds = getBounds();
+		Bounds3D bounds = getBounds();
 		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(), bounds.getMidZ());
 		Matrix4f matrix = getMatrix();
-		matrix.multMV(midPoint);
+		if (matrix != null) {
+			matrix.multMV(midPoint);
+		}
 		return midPoint;
 	}
 

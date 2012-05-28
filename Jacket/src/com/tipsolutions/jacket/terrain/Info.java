@@ -16,6 +16,7 @@ public class Info {
 	
 	public Info(float height) {
 		mHeight = height;
+		mNormal = new Vector3f(0, 0, 1);
 	}
 	
 	public Info() {

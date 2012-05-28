@@ -3,6 +3,7 @@ package com.tipsolutions.jacket.terrain;
 import android.util.FloatMath;
 
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Vector3f;
 
 /**
  * A center point where the height is at max.
@@ -48,7 +49,9 @@ public class CalcParabola extends CalcConstant {
 		float py = Math.abs(mA * dist * dist);
 		float val = mHeight - py;
 		if (val > 0) {
-			return new Info(val);
+			Vector3f normal = new Vector3f(mCenterX - x, mCenterY - y, val);
+			normal.normalize();
+			return new Info(val, normal);
 		}
 		return null;
 	}

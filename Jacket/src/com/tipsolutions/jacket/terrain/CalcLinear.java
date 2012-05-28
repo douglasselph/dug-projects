@@ -3,6 +3,7 @@ package com.tipsolutions.jacket.terrain;
 import android.util.FloatMath;
 
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Vector3f;
 
 /**
  * A simple cone generator. There is a defined center point where the max height is.
@@ -63,7 +64,11 @@ public class CalcLinear extends CalcConstant {
 		if (dist < maxDist) {
     		float percent = dist / maxDist;
     		float height = mHeight * percent;
-    		return new Info(height);
+    		
+    		Vector3f normal = new Vector3f(mCenterX - x, mCenterY - y, height);
+    		normal.normalize();
+    		
+    		return new Info(height, normal);
 		}
 		return null;
 	}

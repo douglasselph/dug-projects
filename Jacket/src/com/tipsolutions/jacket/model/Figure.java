@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
+import com.tipsolutions.jacket.math.Bounds3D;
+import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.Point;
-import com.tipsolutions.jacket.math.BufUtils.Bounds;
-import com.tipsolutions.jacket.math.BufUtils.ComputeBounds;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBuf;
 import com.tipsolutions.jacket.shape.BufferUtils.ShortBufSortedRange;
 
@@ -227,7 +227,7 @@ public class Figure extends Model {
 		protected String mName;
 		protected int [] mJoints = null;
 		protected int mJointParent = -1;
-		protected Bounds mBounds = null;
+		protected Bounds3D mBounds = null;
 		protected ArrayList<AnimSet> mAnim = null;
 
 		public AnimSet allocAnimSet(String name) {
@@ -257,8 +257,7 @@ public class Figure extends Model {
 				z = fbuf.get();
 				computeBounds.apply(x, y, z);
 			}
-			mBounds = new Bounds();
-			mBounds.set(computeBounds);
+			mBounds = computeBounds.getBounds();
 		}
 
 		public ArrayList<AnimSet> getAnimSet() {
@@ -288,7 +287,7 @@ public class Figure extends Model {
 			return mAnim;
 		}
 
-		public Bounds getBounds() { return mBounds; }
+		public Bounds3D getBounds() { return mBounds; }
 
 		public Joint getJoint(int index) {
 			if (index >= 0 && index < mJoints.length) {
