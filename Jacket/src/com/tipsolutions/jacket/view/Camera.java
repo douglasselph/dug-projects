@@ -9,6 +9,8 @@ import com.tipsolutions.jacket.math.Matrix3f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
+import com.tipsolutions.jacket.math.BufUtils.Bounds;
+import com.tipsolutions.jacket.model.Model;
 
 public class Camera {
 
@@ -449,6 +451,20 @@ public class Camera {
     		ay = (float) Math.atan(dy / curOutDist);
 		}
 		rotate(ax, ay);
+	}
+	
+	public void lookAt(Model model) {
+		setLookAt(model.getMidPoint());
+    	setLocation(getLookAt().dup());
+    	
+    	Bounds bounds = model.getBounds();
+    	float offsetZ = bounds.getSizeZ();
+    	if (bounds.getSizeY() > bounds.getSizeX()) {
+    		offsetZ += bounds.getSizeY();
+    	} else {
+    		offsetZ += bounds.getSizeX();
+    	}
+    	getLocation().add(0, 0, offsetZ);
 	}
 	
 	public void setOrtho() {

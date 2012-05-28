@@ -1,19 +1,14 @@
 package com.tipsolutions.bugplug;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.RelativeLayout;
 
 import com.tipsolutions.bugplug.map.Map;
-import com.tipsolutions.bugplug.map.file.MapXmlData;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.view.ControlCamera;
@@ -29,6 +24,7 @@ public class BugPlugMapActivity extends Activity {
 		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
 			super(view, camera);
 			mMap = new Map(mTM);
+			camera.lookAt(mMap.getPrimaryModel());
 		}
 
 		@Override
@@ -82,24 +78,5 @@ public class BugPlugMapActivity extends Activity {
         
 		setContentView(main);
 	}
-
-	void initMap() {
-		InputStream is = null;
-		try {
-			is = getAssets().open("map1/map.xml");
-			MapXmlData parser = new MapXmlData();
-			parser.parse(is);
-		} catch (Exception ex) {
-			Log.e(MyApplication.TAG, ex.getMessage());
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-				is = null;
-			}
-		}
-
-	}
+	
 }

@@ -16,10 +16,7 @@ public class TerrainGrid extends Model {
 
 	int mNumRows = 10;
 	int mNumCols = 10;
-	float mWidth = 1;
-	float mHeight = 1;
-	float mStartX = 0;
-	float mStartY = 0;
+	Bounds2D mBounds2D;
 	ICalcValue mCompute;
 
 	public TerrainGrid() {
@@ -30,7 +27,7 @@ public class TerrainGrid extends Model {
 	}
 	
 	public float getHeight() {
-		return mHeight;
+		return mBounds2D.getSizeY();
 	}
 	
 	public int getNumCols() {
@@ -42,17 +39,21 @@ public class TerrainGrid extends Model {
 	}
 	
 	public float getStartX() {
-		return mStartX;
+		return mBounds2D.getMinX();
 	}
 	
 	public float getStartY() {
-		return mStartY;
+		return mBounds2D.getMinY();
 	}
 	
 	public float getWidth() {
-		return mWidth;
+		return mBounds2D.getSizeX();
 	}
 	
+	/**
+	 * Warning: setBounds() must be called first.
+	 * Then setGridSize(), setGranuality() and setCompute() should be called.
+	 */
 	public void init() {
 		int numVertex = (mNumRows+1)*(mNumCols+1);
 
@@ -68,9 +69,11 @@ public class TerrainGrid extends Model {
 
 		Vector3f normalDefault = new Vector3f(0, 0, 1);
 		Vector3f normal = normalDefault;
-		float incX = mWidth / mNumCols;
-		float incY = mHeight / mNumRows;
-		float y = mStartY;
+		float width = getWidth();
+		float height = getHeight();
+		float incX = width / mNumCols;
+		float incY = height / mNumRows;
+		float y = getStartY();
 		float x;
 		float z = 0;
 		float percentX;
@@ -81,7 +84,7 @@ public class TerrainGrid extends Model {
 		short indexRowInc = (short)(mNumCols+1);
 
 		for (int row = 0; row <= mNumRows; row++) {
-			x = mStartX;
+			x = getStartX();
 			percentX = 0;
 			index = (short)(row*indexRowInc);
 
@@ -125,27 +128,27 @@ public class TerrainGrid extends Model {
 		return this;
 	}
 
-	public TerrainGrid setDimension(float width, float height) {
-		mWidth = width;
-		mHeight = height;
+	public TerrainGrid setBounds(Bounds2D bounds) {
+		mBounds2D = bounds;
 		return this;
 	}
 	
+	/**
+	 * Warning: setBounds() must be called first.
+	 * 
+	 * @param nrows
+	 * @param ncols
+	 * @return
+	 */
 	public TerrainGrid setGranularity(int nrows, int ncols) {
-		mNumRows = (int) (mHeight * nrows);
-		mNumCols = (int) (mWidth * ncols);
+		mNumRows = (int) (getHeight() * nrows);
+		mNumCols = (int) (getWidth() * ncols);
 		return this;
 	}
 	
 	public TerrainGrid setGridSize(int nrows, int ncols) {
 		mNumRows = nrows;
 		mNumCols = ncols;
-		return this;
-	}
-
-	public TerrainGrid setStartXY(float x, float y) {
-		mStartX = x;
-		mStartY = y;
 		return this;
 	}
 

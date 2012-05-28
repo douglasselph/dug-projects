@@ -2,6 +2,8 @@ package com.tipsolutions.jacket.terrain;
 
 import java.util.ArrayList;
 
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
+
 public class TerrainGrids {
 
 	ArrayList<TerrainGrid> mGrids = new ArrayList<TerrainGrid>();
@@ -54,6 +56,12 @@ public class TerrainGrids {
 	
 	public float getWidth() {
 		return mWidth;
+	}
+	
+	public void onDraw(MatrixTrackingGL gl) {
+		for (TerrainGrid grid : mGrids) {
+			grid.onDraw(gl);
+		}
 	}
 	
 	public TerrainGrids setDimension(float width, float height) {
