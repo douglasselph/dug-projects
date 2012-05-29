@@ -4,7 +4,6 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import com.tipsolutions.jacket.math.Bounds2D;
-import com.tipsolutions.jacket.math.BufUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.model.Model;
 
@@ -54,18 +53,8 @@ public class TerrainGrid extends Model {
 	 * Warning: setBounds() must be called first.
 	 * Then setGridSize(), setGranuality() and setCompute() should be called.
 	 */
-	public void init() {
+	public TerrainGrid init() {
 		int numVertex = (mNumRows+1)*(mNumCols+1);
-
-		FloatBuffer vbuf = BufUtils.setSize(mVertexBuf, numVertex*3);
-		FloatBuffer nbuf = BufUtils.setSize(mNormalBuf, numVertex*3);
-		ShortBuffer sbuf = BufUtils.setSize(mIndexBuf, (mNumCols+1)*2*(mNumRows+1));
-		FloatBuffer tbuf = BufUtils.setSize(mTextureBuf, numVertex*2);
-
-		vbuf.rewind();
-		nbuf.rewind();
-		sbuf.rewind();
-		tbuf.rewind();
 
 		Vector3f normalDefault = new Vector3f(0, 0, 1);
 		Vector3f normal = normalDefault;
@@ -83,6 +72,16 @@ public class TerrainGrid extends Model {
 		short index;
 		short indexRowInc = (short)(mNumCols+1);
 
+		FloatBuffer vbuf = initVertexBuf(numVertex*3);
+		FloatBuffer nbuf = initNormalBuf(numVertex*3);
+		ShortBuffer sbuf = initIndexTriStrip((mNumCols+1)*2*(mNumRows+1), indexRowInc);
+		FloatBuffer tbuf = initTextureBuf(numVertex*2);
+
+		vbuf.rewind();
+		nbuf.rewind();
+		sbuf.rewind();
+		tbuf.rewind();
+		
 		for (int row = 0; row <= mNumRows; row++) {
 			x = getStartX();
 			percentX = 0;
@@ -117,10 +116,7 @@ public class TerrainGrid extends Model {
 			y += incY;
 			percentY += percentIncY;
 		}
-		setVertexBuf(vbuf);
-		setNormalBuf(nbuf);
-		setIndexTriStrip(sbuf, indexRowInc);
-		setTextureBuf(tbuf);
+		return this;
 	}
 
 	public TerrainGrid setCompute(ICalcValue calc) {
@@ -130,19 +126,6 @@ public class TerrainGrid extends Model {
 
 	public TerrainGrid setBounds(Bounds2D bounds) {
 		mBounds2D = bounds;
-		return this;
-	}
-	
-	/**
-	 * Warning: setBounds() must be called first.
-	 * 
-	 * @param nrows
-	 * @param ncols
-	 * @return
-	 */
-	public TerrainGrid setGranularity(int nrows, int ncols) {
-		mNumRows = (int) (getHeight() * nrows);
-		mNumCols = (int) (getWidth() * ncols);
 		return this;
 	}
 	

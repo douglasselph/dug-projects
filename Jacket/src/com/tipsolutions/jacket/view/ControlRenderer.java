@@ -11,6 +11,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
@@ -31,6 +32,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected MatrixTrackingGL mLastGL = null;
 	protected OnAfterNextRender mOnAfterNextRender = null;
     protected TextureManager mTM;
+    protected boolean mUpdateCamera = true;
 	
 	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
 		mView = view;
@@ -68,20 +70,21 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mLastGL = mgl;
 		clearScene(mgl);
 		
-		mgl.glMatrixMode(GL10.GL_PROJECTION);  // Modify the projection matrix 
+		if (mUpdateCamera) {
+			mCamera.applyFrustrum(mLastGL);
+			mUpdateCamera = false;
+		}
+		mgl.glMatrixMode(GL10.GL_MODELVIEW); // Or GL10.GL_PROJECTION
 		mgl.glLoadIdentity();
-    	mCamera.applyFrustrum(mLastGL);
-    	
-		mgl.glMatrixMode(GL10.GL_MODELVIEW);  // Modify the modelview matrix in the following commands:
-		mgl.glLoadIdentity();
-		
-		mgl.glFrontFace(GL10.GL_CCW); // Defines front face
-		mgl.glEnable(GL10.GL_CULL_FACE);
-		mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
-		mgl.glEnable(GL10.GL_DEPTH_TEST);
-		
-		mCamera.applyLookAt(mgl);
-		
+//		
+//		mgl.glFrontFace(GL10.GL_CCW); // Defines front face
+//		mgl.glEnable(GL10.GL_CULL_FACE);
+//		mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
+//		mgl.glEnable(GL10.GL_DEPTH_TEST);
+//		
+//		mCamera.applyLookAt(mgl);
+//		Log.d("DEBUG", "Camera = " + mCamera.toString());
+//
 		onDrawFrame(mgl);
 		onDrawFrameDone(mgl);
 	}
@@ -99,20 +102,43 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	public void onSurfaceChanged(GL10 gl, int width, int height) {
 		mWidth = width;
 		mHeight = height;
+		
 		gl.glViewport(0, 0, mWidth, mHeight);
+		
     	mCamera.setScreenDimension(mWidth, mHeight);
+    	mCamera.setNearFar(1, 10);
+    	mUpdateCamera = true;
+        /*
+         * Set our projection matrix. This doesn't have to be done
+         * each time we draw, but usually a new projection needs to
+         * be set when the viewport is resized.
+         */
+        float ratio = (float) width / height;
+//        gl.glMatrixMode(GL10.GL_PROJECTION);
+//        gl.glLoadIdentity();
+//        gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+		   Log.i("DEBUG", "was(" + -ratio + ", " + ratio + ", " + -1 + ", " + 1 + ", " + 1 + ", " + 10 + ")");
+
 	}
 	
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     	mTM.reset();
-		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		/*
-         * By default, OpenGL enables features that improve quality
-         * but reduce performance. One might want to tweak that
-         * especially on software renderer.
-         */
+//		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+//		/*
+//         * By default, OpenGL enables features that improve quality
+//         * but reduce performance. One might want to tweak that
+//         * especially on software renderer.
+//         */
         gl.glDisable(GL10.GL_DITHER);
         gl.glEnable(GL10.GL_DEPTH_TEST);
+        /*
+         * Some one-time OpenGL initialization can be made here
+         * probably based on features of this particular context
+         */
+         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
+         gl.glClearColor(1,1,1,1);
+         gl.glEnable(GL10.GL_CULL_FACE);
+         gl.glShadeModel(GL10.GL_SMOOTH);
 	}
 	
 	public void setBackground(Color4f color) {

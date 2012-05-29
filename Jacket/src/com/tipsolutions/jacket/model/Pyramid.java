@@ -6,6 +6,7 @@ import java.nio.ShortBuffer;
 import android.util.FloatMath;
 
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.Bounds3D;
 
 public class Pyramid extends Model {
 
@@ -28,31 +29,29 @@ public class Pyramid extends Model {
 		final float baseHalf = base/2;
 		final float triHeightHalf = triHeight/2;
 		{
-			FloatBuffer buf = FloatBuffer.allocate(4*3);
+			FloatBuffer buf = initVertexBuf(4*3);
 			buf.put(0).put(height).put(0f);   /* 0: peak */
 			buf.put(-baseHalf).put(0f).put(triHeightHalf); /* 1: x-left */
 			buf.put(baseHalf).put(0f).put(triHeightHalf); /* 2: x-right */
 			buf.put(0f).put(0f).put(-triHeightHalf); /* 3: z-depth */
-			setVertexBuf(buf);
 		}
 		{
-			ShortBuffer buf = ShortBuffer.allocate(4*3);
+			ShortBuffer buf = initIndexBuf(4*3);
 			buf.put((short)0).put((short)1).put((short)2); /* face front */
 			buf.put((short)0).put((short)3).put((short)1); /* face left */
 			buf.put((short)0).put((short)2).put((short)3); /* face right */
 			buf.put((short)1).put((short)3).put((short)2); /* base */
-			setIndexBuf(buf);
 		}
 		if (texture != null) {
 			setTexture(texture);
 			{
-				FloatBuffer buf = FloatBuffer.allocate(3*2);
+				FloatBuffer buf = initTextureBuf(3*2);
 				buf.put(0.5f).put(1);/* 0: peak */
 				buf.put(0f).put(0f); /* 1: x-left */
 				buf.put(1f).put(0f); /* 2: x-right */
-				setTextureBuf(buf);
 			}
 		}
+		mBounds = new Bounds3D();
 		mBounds.setMinX(-baseHalf);
 		mBounds.setMaxX(baseHalf);
 		mBounds.setMinY(0);

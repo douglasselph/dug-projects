@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -23,30 +24,29 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.Toast;
-import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.tipsolutions.jacket.file.FileUtils;
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.math.BufUtils.Bounds;
 import com.tipsolutions.jacket.misc.PixelBuffer;
 import com.tipsolutions.jacket.misc.Timing;
 import com.tipsolutions.jacket.shape.Animator;
+import com.tipsolutions.jacket.shape.Animator.OnPlayListener;
 import com.tipsolutions.jacket.shape.Box;
 import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Animator.OnPlayListener;
 import com.tipsolutions.jacket.view.AdjustEventTap;
 import com.tipsolutions.jacket.view.ButtonGroup;
+import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
 import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
+import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 import com.tipsolutions.jacket.view.IEventTap;
 import com.tipsolutions.jacket.view.SpinnerControl;
 import com.tipsolutions.jacket.view.TwirlEventTap;
-import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
-import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
 import com.tipsolutions.slice.MyRenderer.PickShape;
 
@@ -124,7 +124,7 @@ public class ViewObj extends Activity {
 		
 		Controls() {
 			mHolder = new TableLayout(ViewObj.this);
-			mHolder.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mHolder.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mHolder.setStretchAllColumns(true);
 			mHolder.setShrinkAllColumns(true);
 			mHolder.setOrientation(TableLayout.HORIZONTAL);
@@ -155,7 +155,7 @@ public class ViewObj extends Activity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
-			shapeChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			shapeChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			shapeChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getActiveShapeIndex()));
 			
 			mBlendChoice = new Spinner(ViewObj.this);
@@ -180,7 +180,7 @@ public class ViewObj extends Activity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
-			mBlendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mBlendChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mBlendChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getBlenderControl()));
 
 			mEglChoice = new Spinner(ViewObj.this);
@@ -204,7 +204,7 @@ public class ViewObj extends Activity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
-			mEglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mEglChoice.setLayoutParams(new TableRow.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mEglChoice.setSelection(SpinnerControl.locateSelection(adapter, mApp.getEGLDepth()));
 			
 			mPlay = new Button(ViewObj.this);
@@ -228,7 +228,7 @@ public class ViewObj extends Activity {
 			});
 			
 			ButtonGroup controlGroup = new ButtonGroup(ViewObj.this);
-			controlGroup.setLayoutParams(new TableRow.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			controlGroup.setLayoutParams(new TableRow.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mControlGroup = controlGroup;
 
 			Button btnObj = new Button(ViewObj.this);
@@ -265,12 +265,12 @@ public class ViewObj extends Activity {
 			});
 			
 			mControlRow = new TableRow(ViewObj.this);
-			mControlRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mControlRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mControlRow.addView(shapeChoice);
 			mControlRow.addView(controlGroup);
 			
 			mDisplayRow = new TableRow(ViewObj.this);
-			mDisplayRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+			mDisplayRow.setLayoutParams(new TableLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 			mDisplayRow.addView(mEglChoice);
 			mDisplayRow.addView(mBlendChoice);
 			
@@ -335,7 +335,7 @@ public class ViewObj extends Activity {
         mApp = (MyApplication) getApplicationContext();
 
         RelativeLayout main = new RelativeLayout(this);
-        main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        main.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         
 //        LinearLayout main = new LinearLayout(this);
 //        main.setOrientation(LinearLayout.VERTICAL);
@@ -344,7 +344,7 @@ public class ViewObj extends Activity {
         mActiveEventTap = mCamera;
         
         mSurfaceView = new ControlSurfaceView(this);
-        mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+        mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         mSurfaceView.setId(1);
       
         // We want an 8888 pixel format because that's required for
@@ -391,12 +391,12 @@ public class ViewObj extends Activity {
       
         RelativeLayout.LayoutParams params;
         
-        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         
         main.addView(mControls.mHolder, params);
         
-        params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+        params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
         params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         params.addRule(RelativeLayout.ABOVE, mControls.mHolder.getId());
         main.addView(mSurfaceView, params);
@@ -576,7 +576,7 @@ public class ViewObj extends Activity {
     	mCamera.setLookAt(mActiveShape.getMidPoint());
     	mCamera.setLocation(mCamera.getLookAt().dup());
     	
-    	Bounds bounds = mActiveShape.getBounds();
+    	Bounds3D bounds = mActiveShape.getBounds();
     	float offsetZ = bounds.getSizeZ();
     	if (bounds.getSizeY() > bounds.getSizeX()) {
     		offsetZ += bounds.getSizeY();

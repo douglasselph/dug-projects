@@ -8,6 +8,8 @@ import javax.microedition.khronos.opengles.GL10;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Bounds3D;
+import com.tipsolutions.jacket.math.BufUtils.FloatBuf;
+import com.tipsolutions.jacket.math.BufUtils.ShortBuf;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.Matrix4f;
@@ -19,18 +21,18 @@ public class Model {
 
 	protected Bounds3D mBounds;
 	protected Color4f mColor;
-	protected FloatBuffer mColorBuf;
+	protected FloatBuf mColorBuf;
 	protected Color4f mColorOutline = null;
 	protected int mCullFace = GL10.GL_BACK;
-	protected ShortBuffer mIndexBuf;
+	protected ShortBuf mIndexBuf;
 	protected int mIndexSlice;
 	protected int mIndexMode = GL10.GL_TRIANGLES;
 	protected Matrix4f mMatrix;
 	protected Matrix4f mMatrixMod;
-	protected FloatBuffer mNormalBuf;
+	protected FloatBuf mNormalBuf;
 	protected TextureManager.Texture mTexture;
-	protected FloatBuffer mTextureBuf;
-	protected FloatBuffer mVertexBuf;
+	protected FloatBuf mTextureBuf;
+	protected FloatBuf mVertexBuf;
 
 	protected void computeBounds(ComputeBounds computeBounds) {
 		if (mVertexBuf != null) {
@@ -55,7 +57,7 @@ public class Model {
 	}
 
 	public FloatBuffer getColorBuf() {
-		return mColorBuf;
+		return mColorBuf.getBuf();
 	}
 
 	public int getCullFace() { 
@@ -67,7 +69,7 @@ public class Model {
 	}
 	
 	public ShortBuffer getIndexBuf() { 
-		return mIndexBuf;
+		return mIndexBuf.getBuf();
 	}
 
 	public Vector3f getLocationMod() { 
@@ -103,7 +105,7 @@ public class Model {
 	}
 
 	public FloatBuffer getNormalBuf() { 
-		return mNormalBuf;
+		return mNormalBuf.getBuf();
 	}
 
 	public Quaternion getQuaternionMod() { 
@@ -111,11 +113,11 @@ public class Model {
 	}
 
 	public FloatBuffer getTextureBuf() { 
-		return mTextureBuf;
+		return mTextureBuf.getBuf();
 	}
 
 	public FloatBuffer getVertexBuf() {
-		return mVertexBuf;
+		return mVertexBuf.getBuf();
 	}
 
 	public boolean hasColorArray() {
@@ -169,7 +171,7 @@ public class Model {
 		if (mVertexBuf != null) {
 			mVertexBuf.rewind();
 			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf);
+			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.getBuf());
 		} else {
 			gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		}
@@ -181,14 +183,14 @@ public class Model {
 			if (mNormalBuf != null) {
 				mNormalBuf.rewind();
 				gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-				gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf);
+				gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.getBuf());
 			} else {
 				gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 			}
 			if (mColorBuf != null) {
 				mColorBuf.rewind();
 				gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-				gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf);
+				gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.getBuf());
 
 				// Not doing it this way anymore:
 				// gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuf.asShortBuffer());
@@ -197,7 +199,7 @@ public class Model {
 			}
 			if ((mTexture != null) && (mTextureBuf != null)) {
 				mTextureBuf.rewind();
-				mTexture.onDraw(gl, mTextureBuf);
+				mTexture.onDraw(gl, mTextureBuf.getBuf());
 			} else {
 				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			}
@@ -212,10 +214,10 @@ public class Model {
 					} else {
 						count = mIndexBuf.remaining();
 					}
-					gl.glDrawElements(mIndexMode, count, GL10.GL_UNSIGNED_SHORT, mIndexBuf);
+					gl.glDrawElements(mIndexMode, count, GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
 				}
 			} else {
-				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(), GL10.GL_UNSIGNED_SHORT, mIndexBuf);
+				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(), GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
 			}
 		}
 		onDrawing(gl);
@@ -232,22 +234,22 @@ public class Model {
 		mColor = color; 
 	}
 
-	public void setIndexBuf(ShortBuffer buf) {
-		mIndexBuf = buf;
-		mIndexMode = GL10.GL_TRIANGLES;
-		mIndexSlice = 0;
+	public ShortBuffer initIndexBuf(int size) {
+		return initIndexBuf(size, GL10.GL_TRIANGLES);
 	}
 
-	public void setIndexBuf(ShortBuffer buf, int mode) {
-		mIndexBuf = buf;
+	public ShortBuffer initIndexBuf(int size, int mode) {
+		mIndexBuf = new ShortBuf(size);
 		mIndexMode = mode;
 		mIndexSlice = 0;
+		return mIndexBuf.getBuf();
 	}
 	
-	public void setIndexTriStrip(ShortBuffer buf, int slice) {
-		mIndexBuf = buf;
+	public ShortBuffer initIndexTriStrip(int size, int slice) {
+		mIndexBuf = new ShortBuf(size);
 		mIndexMode = GL10.GL_TRIANGLE_STRIP;
 		mIndexSlice = slice;
+		return mIndexBuf.getBuf();
 	}
 	
 	public void setLocation(Vector3f x) { 
@@ -258,19 +260,23 @@ public class Model {
 		mMatrixMod = mod;
 	}
 
-	public void setNormalBuf(FloatBuffer buf) {
-		mNormalBuf = buf;
+	public FloatBuffer initNormalBuf(int size) {
+		mNormalBuf = new FloatBuf(size);
+		return mNormalBuf.getBuf();
 	}
 
 	public void setTexture(Texture texture) {
 		mTexture = texture;
 	}
 	
-	public void setTextureBuf(FloatBuffer buf) {
-		mTextureBuf = buf;
+	public FloatBuffer initTextureBuf(int size) {
+		mTextureBuf = new FloatBuf(size);
+		return mTextureBuf.getBuf();
 	}
 
-	public void setVertexBuf(FloatBuffer buf) {
-		mVertexBuf = buf;
-	}
+	public FloatBuffer initVertexBuf(int size) {
+		mVertexBuf = new FloatBuf(size);
+		return mVertexBuf.getBuf();
+	}	
+	
 }

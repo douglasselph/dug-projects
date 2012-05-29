@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 import com.tipsolutions.jacket.image.TextureManager.Texture;
+import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Box extends Model {
@@ -29,7 +30,7 @@ public class Box extends Model {
 		final float ydelta = ylength/2;
 		final float zdelta = zlength/2;
 		{
-			FloatBuffer buf = FloatBuffer.allocate(4*3*6);
+			FloatBuffer buf = initVertexBuf(4*3*6);
 			// 0: lower-left back 
 			// 1: lower-right back 
 			// 2: upper-right back
@@ -84,11 +85,9 @@ public class Box extends Model {
 			verts[1].put(buf); // 21: lower-right back
 			verts[4].put(buf); // 22: lower-left front
 			verts[5].put(buf); // 23: lower-right front
-
-			setVertexBuf(buf);
 		}
 		{
-			FloatBuffer buf = FloatBuffer.allocate(4*3*6);
+			FloatBuffer buf = initNormalBuf(4*3*6);
 
 			int i;
 
@@ -116,10 +115,9 @@ public class Box extends Model {
 			for (i = 0; i < 4; i++) {
 				buf.put(0).put(-1).put(0);
 			}
-			setNormalBuf(buf);
 		}
 		{
-			ShortBuffer buf = ShortBuffer.allocate(6*2*3);
+			ShortBuffer buf = initIndexBuf(6*2*3);
 			// CCW:
 
 			// Back
@@ -169,13 +167,11 @@ public class Box extends Model {
 			// 23: lower-right front
 			buf.put((short)20).put((short)21).put((short)23);
 			buf.put((short)20).put((short)23).put((short)22);
-			
-			setIndexBuf(buf);
 		}
 		if (texture != null) {
 			setTexture(texture);
 			{
-				FloatBuffer buf = FloatBuffer.allocate(6*4*2);
+				FloatBuffer buf = initTextureBuf(6*4*2);
 				// Back
 				// lower-left back 
 				// lower-right back 
@@ -235,10 +231,9 @@ public class Box extends Model {
 				buf.put(1f).put(0f); // was 1,0
 				buf.put(0f).put(1f); // was 0,1
 				buf.put(1f).put(1f); // was 1,1
-				
-				setTextureBuf(buf);
 			}
 		}
+		mBounds = new Bounds3D();
 		mBounds.setMinX(-xdelta);
 		mBounds.setMaxX(xdelta);
 		mBounds.setMinY(-ydelta);
