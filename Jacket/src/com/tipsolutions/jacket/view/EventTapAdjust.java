@@ -1,6 +1,11 @@
 package com.tipsolutions.jacket.view;
 
-public class AdjustEventTap extends EventTap {
+/**
+ * 
+ * @author dug
+ *
+ */
+public class EventTapAdjust extends EventTap {
 
 	public interface Adjust {
 		void start(int x, int y);
@@ -11,7 +16,7 @@ public class AdjustEventTap extends EventTap {
 	protected float mX;
 	protected float mY;
 	
-	public AdjustEventTap(ControlSurfaceView view, Adjust adjust) {
+	public EventTapAdjust(ControlSurfaceView view, Adjust adjust) {
 		super(view);
 		mAdjust = adjust;
 	}

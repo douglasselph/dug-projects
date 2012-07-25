@@ -1,18 +1,23 @@
 package com.tipsolutions.jacket.view;
 
-public class TwirlEventTap extends EventTap {
+/**
+ * An event processor that twirls the associated view with mouse movement.
+ * 
+ * @author dug
+ */
+public class EventTapTwirl extends EventTap {
 
 	public interface Rotate {
 		void rotate(double xAngle, double yAngle);
 	};
-	
-	protected Rotate mRotate;
-	
-	public TwirlEventTap(ControlSurfaceView view, Rotate rotate) {
+
+	protected Rotate	mRotate;
+
+	public EventTapTwirl(ControlSurfaceView view, Rotate rotate) {
 		super(view);
 		mRotate = rotate;
 	}
-	
+
 	@Override
 	public boolean pressMove(final float x, final float y) {
 		mView.queueEvent(new Runnable() {

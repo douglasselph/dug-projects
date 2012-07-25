@@ -13,6 +13,7 @@ package com.tipsolutions.bugplug;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -22,14 +23,14 @@ import com.tipsolutions.jacket.math.Vector3f;
 /**
  * A vertex shaded cube.
  */
-public class Cube {
-	static final int	vOne	= 0x07000;
+public class CubeF {
+	static final float	vOne	= 0.7f;
 	static final int	cOne	= 0x10000;
 
-	public Cube() {
-		final int vertices[] = { -vOne, -vOne, -vOne, vOne, -vOne, -vOne, vOne,
-				vOne, -vOne, -vOne, vOne, -vOne, -vOne, -vOne, vOne, vOne,
-				-vOne, vOne, vOne, vOne, vOne, -vOne, vOne, vOne, };
+	public CubeF() {
+		final float vertices[] = { -vOne, -vOne, -vOne, vOne, -vOne, -vOne,
+				vOne, vOne, -vOne, -vOne, vOne, -vOne, -vOne, -vOne, vOne,
+				vOne, -vOne, vOne, vOne, vOne, vOne, -vOne, vOne, vOne, };
 
 		final int colors[] = { 0, 0, 0, cOne, cOne, 0, 0, cOne, cOne, cOne, 0,
 				cOne, 0, cOne, 0, cOne, 0, 0, cOne, cOne, cOne, 0, cOne, cOne,
@@ -47,7 +48,7 @@ public class Cube {
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
-		mVertexBuffer = vbb.asIntBuffer();
+		mVertexBuffer = vbb.asFloatBuffer();
 		mVertexBuffer.put(vertices);
 		mVertexBuffer.position(0);
 
@@ -64,13 +65,13 @@ public class Cube {
 
 	public void draw(GL10 gl) {
 		gl.glFrontFace(GL10.GL_CW);
-		gl.glVertexPointer(3, GL10.GL_FIXED, 0, mVertexBuffer);
+		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
 		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuffer);
 		gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
 				mIndexBuffer);
 	}
 
-	private IntBuffer	mVertexBuffer;
+	private FloatBuffer	mVertexBuffer;
 	private IntBuffer	mColorBuffer;
 	private ByteBuffer	mIndexBuffer;
 

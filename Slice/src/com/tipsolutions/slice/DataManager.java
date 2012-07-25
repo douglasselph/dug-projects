@@ -80,7 +80,6 @@ public class DataManager {
       final Shape shape = new Box(1f, texture);
       shape.setLocation(new Vector3f(0f, -shape.getBounds().getSizeY()/2, 0));
       shape.setColorData(new dFloatBuf() {
-			@Override
 			public void fill(FloatBuffer buf) {
 				ArrayList<Color4f> colors = new ArrayList<Color4f>();
 				colors.add(new Color4f(1, 0, 0, 1));
@@ -103,7 +102,6 @@ public class DataManager {
 				}
 			}
   
-			@Override
 			public int size() {
 				return shape.getNumVertexes()*4;
 			}
@@ -219,7 +217,6 @@ public class DataManager {
     	if (shape.getNumVertexes() > 0) {
     //        shape.setColor(new Color4f(0.5f, 0f, 0f, 0.5f));
             shape.setColorData(new dFloatBuf() {
-    			@Override
     			public void fill(FloatBuffer buf) {
     				ArrayList<Color4f> colors = new ArrayList<Color4f>();
     				colors.add(new Color4f(1, 0, 0, 1));
@@ -237,7 +234,6 @@ public class DataManager {
     				}
     			}
         
-    			@Override
     			public int size() {
     				return shape.getNumVertexes()*4;
     			}
