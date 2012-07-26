@@ -27,14 +27,14 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	protected Color4f					mBackground			= null;
 	protected int						mWidth;
 	protected int						mHeight;
-	protected final ControlCamera		mCamera;
+	protected final Camera				mCamera;
 	protected MatrixTrackingGL			mLastGL				= null;
 	protected OnAfterNextRender			mOnAfterNextRender	= null;
 	protected TextureManager			mTM;
 
-	public ControlRenderer(ControlSurfaceView view, ControlCamera camera) {
+	public ControlRenderer(ControlSurfaceView view) {
 		mView = view;
-		mCamera = camera;
+		mCamera = new Camera();
 		mTM = new TextureManager(view.getContext());
 	}
 
@@ -83,8 +83,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mLastGL = mgl;
 		clearScene(mgl);
 
-		mCamera.checkUpdateFrustrum(mLastGL);
-
 		mgl.glMatrixMode(GL10.GL_MODELVIEW); // Or GL10.GL_PROJECTION
 		mgl.glLoadIdentity();
 		//
@@ -114,10 +112,9 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mWidth = width;
 		mHeight = height;
 
-		gl.glViewport(0, 0, mWidth, mHeight);
-
 		mCamera.setScreenDimension(mWidth, mHeight);
 		mCamera.setNearFar(1, 10);
+		mCamera.setPerspective(gl);
 		/*
 		 * Set our projection matrix. This doesn't have to be done each time we
 		 * draw, but usually a new projection needs to be set when the viewport
@@ -191,4 +188,5 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		Bitmap bitmap = snapshot(gl);
 		ImageUtils.SaveBitmap(bitmap, file);
 	}
+
 }

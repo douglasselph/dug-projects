@@ -12,53 +12,45 @@ import android.widget.TextView;
 
 import com.tipsolutions.bugplug.map.Map;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.view.Camera;
-import com.tipsolutions.jacket.view.Camera.OnPositionChanged;
-import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class BugPlugMapActivity extends Activity {
 
-	int	mState;
-
 	class MyRenderer extends ControlRenderer {
 
-		Map				mMap;
-		Cube			mCube;
-		private float	mAngle;
+		Map		mMap;
+		Cube	mCube;
 
-		public MyRenderer(ControlSurfaceView view, ControlCamera camera) {
-			super(view, camera);
+		// private float mAngle;
+
+		public MyRenderer(ControlSurfaceView view) {
+			super(view);
 			mCube = new Cube();
 
-			// mMap = new Map(mTM);
-			// camera.lookAtFromAbove(mMap.getPrimaryModel());
-			// Log.d("DEBUG", "Looking from " + camera.getLocation().toString()
-			// + ", on model with bounds=" +
-			// mMap.getPrimaryModel().getBounds().toString());
+			mMap = new Map(mTM);
 		}
 
 		@Override
 		public void onDrawFrame(MatrixTrackingGL gl) {
 			super.onDrawFrame(gl);
-			// mMap.onDraw(gl);
+			mMap.onDraw(gl);
 
-			gl.glTranslatef(0, 0, -3.0f);
-			gl.glRotatef(mAngle, 0, 1, 0);
-			gl.glRotatef(mAngle * 0.25f, 1, 0, 0);
-
-			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-
-			mCube.draw(gl);
-
-			gl.glRotatef(mAngle * 2.0f, 0, 1, 1);
-			gl.glTranslatef(0.5f, 0.5f, 0.5f);
-
-			mCube.draw(gl);
-
-			mAngle += 1.2f;
+			// gl.glTranslatef(0, 0, -3.0f);
+			// gl.glRotatef(mAngle, 0, 1, 0);
+			// gl.glRotatef(mAngle * 0.25f, 1, 0, 0);
+			//
+			// gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+			// gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+			//
+			// mCube.draw(gl);
+			//
+			// gl.glRotatef(mAngle * 2.0f, 0, 1, 1);
+			// gl.glTranslatef(0.5f, 0.5f, 0.5f);
+			//
+			// mCube.draw(gl);
+			//
+			// mAngle += 1.2f;
 		}
 
 		@Override
@@ -75,7 +67,6 @@ public class BugPlugMapActivity extends Activity {
 
 	static final int	SURFACE_ID	= 1;
 	ControlSurfaceView	mSurfaceView;
-	ControlCamera		mCamera;
 	MyRenderer			mRenderer;
 	TextView			mCamEye;
 	TextView			mCamLook;
@@ -93,19 +84,7 @@ public class BugPlugMapActivity extends Activity {
 				LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mSurfaceView.setId(SURFACE_ID);
 
-		mCamera = new ControlCamera();
-		mCamera.setOnPositionChangedListener(new OnPositionChanged() {
-			public void positionChanged(Camera cam) {
-				mSurfaceView.post(new Runnable() {
-					public void run() {
-						setMessage();
-					}
-				});
-			}
-		});
-		mCamera.setForwardMovementResolution(.300f);
-
-		mRenderer = new MyRenderer(mSurfaceView, mCamera);
+		mRenderer = new MyRenderer(mSurfaceView);
 
 		// EventTapAdjust eventTap = new EventTapAdjust(mSurfaceView,
 		// new EventTapAdjust.Adjust() {
@@ -118,7 +97,6 @@ public class BugPlugMapActivity extends Activity {
 		//
 		// });
 		// mSurfaceView.setEventTap(eventTap);
-		mSurfaceView.setEventTap(mCamera);
 
 		// mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));0
 
@@ -140,9 +118,6 @@ public class BugPlugMapActivity extends Activity {
 	}
 
 	void setMessage() {
-		final String format = "%.3f";
-		mCamEye.setText(mCamera.getLocation().toString(format));
-		mCamLook.setText(mCamera.getLookAt().toString(format));
-		mCamUp.setText(mCamera.getUp().toString(format));
+
 	}
 }
