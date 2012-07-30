@@ -26,6 +26,10 @@ public class Cube {
 	static final int	vOne	= 0x07000;
 	static final int	cOne	= 0x10000;
 
+	private IntBuffer	mVertexBuffer;
+	private IntBuffer	mColorBuffer;
+	private ByteBuffer	mIndexBuffer;
+
 	public Cube() {
 		final int vertices[] = { -vOne, -vOne, -vOne, vOne, -vOne, -vOne, vOne,
 				vOne, -vOne, -vOne, vOne, -vOne, -vOne, -vOne, vOne, vOne,
@@ -69,10 +73,6 @@ public class Cube {
 		gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
 				mIndexBuffer);
 	}
-
-	private IntBuffer	mVertexBuffer;
-	private IntBuffer	mColorBuffer;
-	private ByteBuffer	mIndexBuffer;
 
 	public Vector3f getLoc() {
 		return new Vector3f(0, 0, 0);

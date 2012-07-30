@@ -39,7 +39,6 @@ import com.tipsolutions.jacket.shape.Box;
 import com.tipsolutions.jacket.shape.Shape;
 import com.tipsolutions.jacket.view.ButtonGroup;
 import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
-import com.tipsolutions.jacket.view.ControlCamera;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -334,7 +333,6 @@ public class ViewObj extends Activity {
 	Shape						mActiveShape		= null;
 	EventTapTwirl				mTwirlEventTap;
 	EventTapAdjust				mAdjustEventTap;
-	ControlCamera				mCamera;
 	IEventTap					mActiveEventTap;
 	MyRenderer					mRenderer;
 	ControlSurfaceView			mSurfaceView;
@@ -356,9 +354,6 @@ public class ViewObj extends Activity {
 		// LinearLayout main = new LinearLayout(this);
 		// main.setOrientation(LinearLayout.VERTICAL);
 
-		mCamera = new ControlCamera();
-		mActiveEventTap = mCamera;
-
 		mSurfaceView = new ControlSurfaceView(this);
 		mSurfaceView.setLayoutParams(new LayoutParams(
 				LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -372,7 +367,7 @@ public class ViewObj extends Activity {
 		// Use a surface format with an Alpha channel:
 		// mSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
-		mRenderer = new MyRenderer(mSurfaceView, null, mCamera, false);
+		mRenderer = new MyRenderer(mSurfaceView, null, false);
 		mRenderer.setBackground(new Color4f(0.5f, 1.0f, 1.0f));
 
 		mApp.getDataManager().init(mRenderer.getTextureManager());
@@ -479,7 +474,7 @@ public class ViewObj extends Activity {
 			}
 			case MENU_IMAGE: {
 				PixelBuffer pixelImage = new PixelBuffer(
-						(int) mCamera.getWidth(), (int) mCamera.getHeight());
+						(int) mRenderer.getWidth(), (int) mRenderer.getHeight());
 				pixelImage.setRenderer(mRenderer);
 				Bitmap bitmap = pixelImage.fill().flip().getBitmap();
 

@@ -85,12 +85,12 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 
 		mgl.glMatrixMode(GL10.GL_MODELVIEW); // Or GL10.GL_PROJECTION
 		mgl.glLoadIdentity();
-		//
-		// mgl.glFrontFace(GL10.GL_CCW); // Defines front face
-		// mgl.glEnable(GL10.GL_CULL_FACE);
-		// mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
-		// mgl.glEnable(GL10.GL_DEPTH_TEST);
-		//
+
+		mgl.glFrontFace(GL10.GL_CCW); // Defines front face
+		mgl.glEnable(GL10.GL_CULL_FACE);
+		mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
+		mgl.glEnable(GL10.GL_DEPTH_TEST);
+
 		// mCamera.checkUpdateLookAt(mgl);
 
 		onDrawFrame(mgl);

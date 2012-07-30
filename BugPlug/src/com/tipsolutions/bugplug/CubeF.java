@@ -28,13 +28,23 @@ public class CubeF {
 	static final int	cOne	= 0x10000;
 
 	public CubeF() {
-		final float vertices[] = { -vOne, -vOne, -vOne, vOne, -vOne, -vOne,
-				vOne, vOne, -vOne, -vOne, vOne, -vOne, -vOne, -vOne, vOne,
-				vOne, -vOne, vOne, vOne, vOne, vOne, -vOne, vOne, vOne, };
+		final float vertices[] = { -vOne, -vOne, -vOne, // 0
+				vOne, -vOne, -vOne, // 1
+				vOne, vOne, -vOne, // 2
+				-vOne, vOne, -vOne, // 3
+				-vOne, -vOne, vOne, // 4
+				vOne, -vOne, vOne, // 5
+				vOne, vOne, vOne, // 6
+				-vOne, vOne, vOne, }; // 7
 
-		final int colors[] = { 0, 0, 0, cOne, cOne, 0, 0, cOne, cOne, cOne, 0,
-				cOne, 0, cOne, 0, cOne, 0, 0, cOne, cOne, cOne, 0, cOne, cOne,
-				cOne, cOne, cOne, cOne, 0, cOne, cOne, cOne, };
+		final int colors[] = { 0, 0, 0, cOne, // 0
+				cOne, 0, 0, cOne, // 1
+				cOne, cOne, 0, cOne, // 2
+				0, cOne, 0, cOne, // 3
+				0, 0, cOne, cOne, // 4
+				cOne, 0, cOne, cOne, // 5
+				cOne, cOne, cOne, cOne, // 6
+				0, cOne, cOne, cOne, }; // 7
 
 		final byte indices[] = { 0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7,
 				2, 7, 3, 3, 7, 4, 3, 4, 0, 4, 7, 6, 4, 6, 5, 3, 0, 1, 3, 1, 2 };
