@@ -23,7 +23,6 @@ public class Model {
 	protected Color4f					mColor;
 	protected FloatBuf					mColorBuf;
 	protected Color4f					mColorOutline	= null;
-	protected int						mCullFace		= GL10.GL_BACK;
 	protected ShortBuf					mIndexBuf;
 	protected int						mIndexSlice;
 	protected int						mIndexMode		= GL10.GL_TRIANGLES;
@@ -62,14 +61,6 @@ public class Model {
 
 	public FloatBuffer getColorBuf() {
 		return mColorBuf.getBuf();
-	}
-
-	public int getCullFace() {
-		return mCullFace;
-	}
-
-	protected int getFrontFace() {
-		return GL10.GL_CCW;
 	}
 
 	public ShortBuffer getIndexBuf() {
@@ -186,6 +177,8 @@ public class Model {
 
 		boolean didPush = false;
 
+		onDrawInit(gl);
+
 		if (mColorOutline != null)
 		{
 			gl.glColor4f(mColorOutline.getRed(), mColorOutline.getGreen(),
@@ -199,19 +192,6 @@ public class Model {
 						color.getAlpha());
 			}
 		}
-		if (getFrontFace() != gl.getFrontFace())
-		{
-			gl.glFrontFace(getFrontFace());
-		}
-		if (hasTextureArray())
-		{
-			gl.setCullFace(0);
-		} else
-		{
-			gl.setCullFace(getCullFace());
-		}
-		gl.glDisable(GL10.GL_BLEND);
-
 		Matrix4f matrix = getMatrix();
 		if (matrix != null)
 		{
@@ -300,6 +280,14 @@ public class Model {
 		{
 			gl.glPopMatrix();
 		}
+	}
+
+	protected void onDrawInit(MatrixTrackingGL gl) {
+		gl.glFrontFace(GL10.GL_CCW);
+		gl.glEnable(GL10.GL_CULL_FACE);
+		gl.glCullFace(GL10.GL_BACK);
+		gl.glEnable(GL10.GL_DEPTH_TEST);
+		gl.glDisable(GL10.GL_BLEND);
 	}
 
 	protected void onDrawing(MatrixTrackingGL gl) {

@@ -9,11 +9,10 @@
  * governing permissions and limitations under the License.
  */
 
-package com.tipsolutions.bugplug;
+package com.tipsolutions.bugplug.testobj;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -23,28 +22,22 @@ import com.tipsolutions.jacket.math.Vector3f;
 /**
  * A vertex shaded cube.
  */
-public class CubeF {
-	static final float	vOne	= 0.7f;
+public class Cube {
+	static final int	vOne	= 0x07000;
 	static final int	cOne	= 0x10000;
 
-	public CubeF() {
-		final float vertices[] = { -vOne, -vOne, -vOne, // 0
-				vOne, -vOne, -vOne, // 1
-				vOne, vOne, -vOne, // 2
-				-vOne, vOne, -vOne, // 3
-				-vOne, -vOne, vOne, // 4
-				vOne, -vOne, vOne, // 5
-				vOne, vOne, vOne, // 6
-				-vOne, vOne, vOne, }; // 7
+	private IntBuffer	mVertexBuffer;
+	private IntBuffer	mColorBuffer;
+	private ByteBuffer	mIndexBuffer;
 
-		final int colors[] = { 0, 0, 0, cOne, // 0
-				cOne, 0, 0, cOne, // 1
-				cOne, cOne, 0, cOne, // 2
-				0, cOne, 0, cOne, // 3
-				0, 0, cOne, cOne, // 4
-				cOne, 0, cOne, cOne, // 5
-				cOne, cOne, cOne, cOne, // 6
-				0, cOne, cOne, cOne, }; // 7
+	public Cube() {
+		final int vertices[] = { -vOne, -vOne, -vOne, vOne, -vOne, -vOne, vOne,
+				vOne, -vOne, -vOne, vOne, -vOne, -vOne, -vOne, vOne, vOne,
+				-vOne, vOne, vOne, vOne, vOne, -vOne, vOne, vOne, };
+
+		final int colors[] = { 0, 0, 0, cOne, cOne, 0, 0, cOne, cOne, cOne, 0,
+				cOne, 0, cOne, 0, cOne, 0, 0, cOne, cOne, cOne, 0, cOne, cOne,
+				cOne, cOne, cOne, cOne, 0, cOne, cOne, cOne, };
 
 		final byte indices[] = { 0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7,
 				2, 7, 3, 3, 7, 4, 3, 4, 0, 4, 7, 6, 4, 6, 5, 3, 0, 1, 3, 1, 2 };
@@ -58,7 +51,7 @@ public class CubeF {
 
 		ByteBuffer vbb = ByteBuffer.allocateDirect(vertices.length * 4);
 		vbb.order(ByteOrder.nativeOrder());
-		mVertexBuffer = vbb.asFloatBuffer();
+		mVertexBuffer = vbb.asIntBuffer();
 		mVertexBuffer.put(vertices);
 		mVertexBuffer.position(0);
 
@@ -75,15 +68,11 @@ public class CubeF {
 
 	public void draw(GL10 gl) {
 		gl.glFrontFace(GL10.GL_CW);
-		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
+		gl.glVertexPointer(3, GL10.GL_FIXED, 0, mVertexBuffer);
 		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuffer);
 		gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
 				mIndexBuffer);
 	}
-
-	private FloatBuffer	mVertexBuffer;
-	private IntBuffer	mColorBuffer;
-	private ByteBuffer	mIndexBuffer;
 
 	public Vector3f getLoc() {
 		return new Vector3f(0, 0, 0);

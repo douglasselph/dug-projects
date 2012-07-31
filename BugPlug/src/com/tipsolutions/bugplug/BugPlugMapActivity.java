@@ -1,6 +1,9 @@
 package com.tipsolutions.bugplug;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
@@ -8,6 +11,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.tipsolutions.bugplug.map.Map;
+import com.tipsolutions.bugplug.testobj.CubeF;
+import com.tipsolutions.bugplug.testobj.Square;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Box;
@@ -22,6 +27,7 @@ public class BugPlugMapActivity extends Activity {
 		Map		mMap;
 		CubeF	mCube;
 		Box		mBox;
+		Square	mSquare;
 		float	mAngle;
 
 		public MyRenderer(ControlSurfaceView view) {
@@ -30,6 +36,18 @@ public class BugPlugMapActivity extends Activity {
 			mMap = new Map(mTM);
 			// mBox = new Box(1f, 1f, 1f, mTM.getTexture(R.drawable.dirt));
 			mBox = new Box(1f, 1f, 1f, Color4f.RED);
+			mSquare = new Square();
+		}
+
+		@Override
+		protected void onCreatedInitHint(GL10 gl) {
+			gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+		}
+
+		@Override
+		protected void onCreatedInitTexture(GL10 gl) {
+			mSquare.loadTexture(gl, getContext(), R.drawable.ic_launcher);
+			super.onCreatedInitTexture(gl);
 		}
 
 		@Override
@@ -37,7 +55,8 @@ public class BugPlugMapActivity extends Activity {
 			super.onDrawFrame(gl);
 
 			// mMap.onDraw(gl);
-			drawCubes(gl);
+			// drawCubes(gl);
+			drawSquare(gl);
 		}
 
 		void drawCubes(MatrixTrackingGL gl) {
@@ -53,6 +72,13 @@ public class BugPlugMapActivity extends Activity {
 
 			mBox.onDraw(gl);
 
+			mAngle += 1.2f;
+		}
+
+		void drawSquare(MatrixTrackingGL gl) {
+			gl.glTranslatef(0, 0, -3.0f);
+			gl.glRotatef(mAngle * 0.25f, 0, 0, 1);
+			mSquare.draw(gl, true);
 			mAngle += 1.2f;
 		}
 	};
@@ -110,5 +136,9 @@ public class BugPlugMapActivity extends Activity {
 
 	void setMessage() {
 
+	}
+
+	Context getContext() {
+		return this;
 	}
 }

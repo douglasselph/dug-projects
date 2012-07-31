@@ -24,13 +24,14 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	};
 
 	protected final ControlSurfaceView	mView;
-	protected Color4f					mBackground			= null;
+	protected Color4f					mBackground;
 	protected int						mWidth;
 	protected int						mHeight;
 	protected final Camera				mCamera;
-	protected MatrixTrackingGL			mLastGL				= null;
-	protected OnAfterNextRender			mOnAfterNextRender	= null;
+	protected MatrixTrackingGL			mLastGL;
+	protected OnAfterNextRender			mOnAfterNextRender;
 	protected TextureManager			mTM;
+	protected boolean					mRenderWhenDirty;
 
 	public ControlRenderer(ControlSurfaceView view) {
 		mView = view;
@@ -39,13 +40,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 	}
 
 	protected void clearScene(MatrixTrackingGL gl) {
-		if (mBackground != null)
-		{
-			// define the color we want to be displayed as the "clipping wall"
-			gl.glClearColor(mBackground.getRed(), mBackground.getGreen(),
-					mBackground.getBlue(), mBackground.getAlpha());
-		}
-		gl.glClearDepthf(1f);
 
 		// clear the color buffer to show the ClearColor we called above...
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
@@ -71,6 +65,29 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		return mWidth;
 	}
 
+	protected void onCreatedInitDepth(GL10 gl) {
+		gl.glClearDepthf(1.0f);
+		gl.glEnable(GL10.GL_DEPTH_TEST);
+		gl.glDepthFunc(GL10.GL_LEQUAL);
+	}
+
+	protected void onCreatedInitHint(GL10 gl) {
+		/*
+		 * By default, OpenGL enables features that improve quality but reduce
+		 * performance. One might want to tweak that especially on software
+		 * renderer.
+		 */
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
+	}
+
+	protected void onCreatedInitShading(GL10 gl) {
+		gl.glShadeModel(GL10.GL_SMOOTH);
+	}
+
+	protected void onCreatedInitTexture(GL10 gl) {
+		gl.glEnable(GL10.GL_TEXTURE_2D);
+	}
+
 	public void onDrawFrame(GL10 gl) {
 		MatrixTrackingGL mgl;
 		if (gl instanceof MatrixTrackingGL)
@@ -83,15 +100,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mLastGL = mgl;
 		clearScene(mgl);
 
-		mgl.glMatrixMode(GL10.GL_MODELVIEW); // Or GL10.GL_PROJECTION
+		mgl.glMatrixMode(GL10.GL_MODELVIEW);
 		mgl.glLoadIdentity();
-
-		mgl.glFrontFace(GL10.GL_CCW); // Defines front face
-		mgl.glEnable(GL10.GL_CULL_FACE);
-		mgl.glCullFace(GL10.GL_BACK); // Do not draw this face
-		mgl.glEnable(GL10.GL_DEPTH_TEST);
-
-		// mCamera.checkUpdateLookAt(mgl);
 
 		onDrawFrame(mgl);
 		onDrawFrameDone(mgl);
@@ -115,43 +125,48 @@ public class ControlRenderer implements GLSurfaceView.Renderer {
 		mCamera.setScreenDimension(mWidth, mHeight);
 		mCamera.setNearFar(1, 10);
 		mCamera.setPerspective(gl);
-		/*
-		 * Set our projection matrix. This doesn't have to be done each time we
-		 * draw, but usually a new projection needs to be set when the viewport
-		 * is resized.
-		 */
-		// float ratio = (float) width / height;
-		// gl.glMatrixMode(GL10.GL_PROJECTION);
-		// gl.glLoadIdentity();
-		// gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
 		mTM.reset();
-		// mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
-		// /*
-		// * By default, OpenGL enables features that improve quality
-		// * but reduce performance. One might want to tweak that
-		// * especially on software renderer.
-		// */
-		gl.glDisable(GL10.GL_DITHER);
-		gl.glEnable(GL10.GL_DEPTH_TEST);
-		/*
-		 * Some one-time OpenGL initialization can be made here probably based
-		 * on features of this particular context
-		 */
-		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
-		gl.glClearColor(1, 1, 1, 1);
-		gl.glEnable(GL10.GL_CULL_FACE);
-		gl.glShadeModel(GL10.GL_SMOOTH);
+
+		if (mRenderWhenDirty)
+		{
+			mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		}
+		if (mBackground != null)
+		{
+			// define the color we want to be displayed as the "clipping wall"
+			gl.glClearColor(mBackground.getRed(), mBackground.getGreen(),
+					mBackground.getBlue(), mBackground.getAlpha());
+		} else
+		{
+			gl.glClearColor(1f, 1f, 1f, 1f);
+		}
+		// gl.glDisable(GL10.GL_DITHER);
+
+		onCreatedInitDepth(gl);
+		onCreatedInitShading(gl);
+		onCreatedInitTexture(gl);
+		onCreatedInitHint(gl);
 	}
 
+	/**
+	 * Needs to happen before surface created
+	 * 
+	 * @param color
+	 */
 	public void setBackground(Color4f color) {
 		mBackground = color;
 	}
 
 	public void setOnAfterNextRender(OnAfterNextRender run) {
 		mOnAfterNextRender = run;
+	}
+
+	public void setRenderOnDirty() {
+		mRenderWhenDirty = true;
+		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 	}
 
 	public Bitmap snapshot(MatrixTrackingGL gl) {
