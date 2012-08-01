@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.tipsolutions.bugplug.map.DatabaseManager;
+import com.tipsolutions.jacket.image.TextureManager;
 
 public class MyApplication extends Application {
 
@@ -12,6 +13,7 @@ public class MyApplication extends Application {
 	public static final Boolean	LOG	= true;
 
 	static DatabaseManager		mDb;
+	static TextureManager		mTM;
 
 	@Override
 	public void onCreate() {
@@ -31,5 +33,13 @@ public class MyApplication extends Application {
 			}
 		}
 		return mDb;
+	}
+
+	public static TextureManager getTM(Context context) {
+		if (mTM == null)
+		{
+			mTM = new TextureManager(context);
+		}
+		return mTM;
 	}
 }

@@ -17,13 +17,11 @@ import android.opengl.GLUtils;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.misc.Msg;
 
-public class TextureManager {
+public class TextureManager
+{
 
-	int	mDefaultBlendParam	= GL10.GL_MODULATE;
-	int	mDefaultBlendSource	= GL10.GL_ONE;
-	int	mDefaultBlendDest	= GL10.GL_ONE_MINUS_SRC_ALPHA;
-
-	public class Texture {
+	public class Texture
+	{
 		final String	mFilename;
 		final int		mResId;
 
@@ -32,17 +30,20 @@ public class TextureManager {
 		int				mBlendSource	= mDefaultBlendSource;
 		int				mBlendDest		= mDefaultBlendDest;
 
-		public Texture(String filename) {
-			mFilename = filename;
-			mResId = 0;
-		}
-
-		public Texture(int resId) {
+		public Texture(int resId)
+		{
 			mFilename = null;
 			mResId = resId;
 		}
 
-		public Texture(final Texture from) {
+		public Texture(String filename)
+		{
+			mFilename = filename;
+			mResId = 0;
+		}
+
+		public Texture(final Texture from)
+		{
 			mFilename = from.mFilename;
 			mResId = from.mResId;
 			mTextureID = from.mTextureID;
@@ -51,11 +52,13 @@ public class TextureManager {
 			mBlendDest = from.mBlendDest;
 		}
 
-		public boolean initialized() {
-			return mTextureID != 0;
+		public int getTextureID()
+		{
+			return mTextureID;
 		}
 
-		void init(GL10 gl) throws IOException {
+		void init(GL10 gl) throws IOException
+		{
 			if (!initialized())
 			{
 				InputStream is = null;
@@ -64,22 +67,26 @@ public class TextureManager {
 					if (mFilename != null)
 					{
 						is = mAM.open(mFilename);
-					} else
+					}
+					else
 					{
 						is = mContext.getResources().openRawResource(mResId);
 					}
 					init(is, gl);
-				} catch (Exception ex)
+				}
+				catch (Exception ex)
 				{
 					if (mFilename != null)
 					{
 						throw new IOException(Msg.build("File: \"", mFilename,
 								"\", got exception: ", ex.getMessage()));
-					} else
+					}
+					else
 					{
 						Msg.err(ex.getMessage());
 					}
-				} finally
+				}
+				finally
 				{
 					try
 					{
@@ -87,7 +94,8 @@ public class TextureManager {
 						{
 							is.close();
 						}
-					} catch (IOException e)
+					}
+					catch (IOException e)
 					{
 						Msg.err(e.getMessage());
 					}
@@ -95,7 +103,8 @@ public class TextureManager {
 			}
 		}
 
-		void init(InputStream is, GL10 gl) {
+		void init(InputStream is, GL10 gl)
+		{
 			int[] textures = new int[1];
 			gl.glGenTextures(1, textures, 0);
 			mTextureID = textures[0];
@@ -117,7 +126,8 @@ public class TextureManager {
 			try
 			{
 				bitmap = BitmapFactory.decodeStream(is);
-			} catch (Exception ex)
+			}
+			catch (Exception ex)
 			{
 				Msg.err(ex.getMessage());
 			}
@@ -132,19 +142,31 @@ public class TextureManager {
 			}
 		}
 
-		// If a texture is shared across multiple shapes, this alone is called
-		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf) {
+		public boolean initialized()
+		{
+			return mTextureID != 0;
+		}
+
+		public void load(GL10 gl)
+		{
 			if (!initialized())
 			{
 				try
 				{
 					init(gl);
-				} catch (Exception ex)
+				}
+				catch (Exception ex)
 				{
 					Msg.err(ex.getMessage());
-					return;
 				}
 			}
+		}
+
+		// If a texture is shared across multiple shapes, this alone is called
+		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf)
+		{
+			load(gl);
+
 			gl.glEnable(GL10.GL_BLEND);
 			gl.glBlendFunc(mBlendSource, mBlendDest);
 
@@ -165,81 +187,98 @@ public class TextureManager {
 
 		// Expected to be one of GL10.GL_MODULATE, GL10.GL_DECAL,
 		// GL10.GL_BLEND, or GL10.GL_REPLACE;
-		public void setBlendEnv(int param) {
+		public void setBlendEnv(int param)
+		{
 			mBlendParam = param;
 		}
 
 		// Expected to be GL10.GL_ONE,
 		// GL10.GL_ONE_MINUS_SRC_ALPHA, etc.
-		public void setBlendFunc(int src, int dest) {
+		public void setBlendFunc(int src, int dest)
+		{
 			mBlendSource = src;
 			mBlendDest = dest;
 		}
-	};
+	}
+
+	int						mDefaultBlendParam	= GL10.GL_MODULATE;
+	int						mDefaultBlendSource	= GL10.GL_ONE;
+	int						mDefaultBlendDest	= GL10.GL_ONE_MINUS_SRC_ALPHA;	;
 
 	final Context			mContext;
-	HashMap<Long, Texture>	mMap	= new HashMap<Long, Texture>();
+	HashMap<Long, Texture>	mMap				= new HashMap<Long, Texture>();
 	AssetManager			mAM;
 
-	public TextureManager() {
+	public TextureManager()
+	{
 		mContext = null;
 	}
 
-	public TextureManager(Context ctx) {
+	public TextureManager(Context ctx)
+	{
 		mContext = ctx;
 		mAM = mContext.getResources().getAssets();
 	}
 
-	public void reset() {
-		mMap = new HashMap<Long, Texture>();
-	}
-
-	public Texture getTexture(int resId) {
+	public Texture getTexture(int resId)
+	{
 		Texture entry;
 		long key = (1 << 16) + resId;
 		if (mMap.containsKey(key))
 		{
 			entry = mMap.get(key);
-		} else
+		}
+		else
 		{
 			mMap.put(key, entry = new Texture(resId));
 		}
 		return entry;
 	}
 
-	public Texture getTexture(String filename) {
+	public Texture getTexture(String filename)
+	{
 		Texture entry;
 		long key = filename.hashCode();
 		if (mMap.containsKey(key))
 		{
 			entry = mMap.get(key);
-		} else
+		}
+		else
 		{
 			mMap.put(key, entry = new Texture(filename));
 		}
 		return entry;
 	}
 
-	public Collection<Texture> getTextures() {
+	public Collection<Texture> getTextures()
+	{
 		return mMap.values();
 	}
 
-	public void init(GL10 gl) throws IOException {
+	public void init(GL10 gl) throws IOException
+	{
 		for (Texture tex : getTextures())
 		{
 			tex.init(gl);
 		}
 	}
 
-	public void setDefaultBlendParam(int param) {
-		mDefaultBlendParam = param;
+	public void reset()
+	{
+		mMap = new HashMap<Long, Texture>();
 	}
 
-	public void setBlendParam(int param) {
+	public void setBlendParam(int param)
+	{
 		setDefaultBlendParam(param);
 		for (Texture t : getTextures())
 		{
 			t.setBlendEnv(param);
 		}
+	}
+
+	public void setDefaultBlendParam(int param)
+	{
+		mDefaultBlendParam = param;
 	}
 }

@@ -1,5 +1,6 @@
 package com.tipsolutions.bugplug.testobj;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -10,8 +11,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
+import android.util.Log;
 
-public class Square {
+import com.tipsolutions.bugplug.MyApplication;
+import com.tipsolutions.jacket.image.TextureManager.Texture;
+import com.tipsolutions.jacket.math.Color4f;
+
+public class TestSquare
+{
 
 	final float			mVertices[]	= { -1f, -1f, 0f, // 0
 			-1f, 1f, 0f, // 1
@@ -27,8 +34,11 @@ public class Square {
 	private FloatBuffer	mVertexBuffer;
 	private FloatBuffer	mTextureBuffer;
 	private int			mTextureID;
+	private Texture		mTexture;
+	private Color4f		mColor;
 
-	public Square() {
+	public TestSquare()
+	{
 		// a float has 4 bytes so we allocate for each coordinate 4 bytes
 		ByteBuffer vertexByteBuffer = ByteBuffer
 				.allocateDirect(mVertices.length * 4);
@@ -46,19 +56,41 @@ public class Square {
 		mTextureBuffer = textureByteBuffer.asFloatBuffer();
 		mTextureBuffer.put(mTexPts);
 		mTextureBuffer.position(0);
+
+		mColor = Color4f.GREEN;
 	}
 
-	public void draw(GL10 gl, boolean doTexture) {
+	void texInit(GL10 gl)
+	{
+		gl.glEnable(GL10.GL_TEXTURE_2D); // Enable Texture Mapping
+		gl.glShadeModel(GL10.GL_SMOOTH); // Enable Smooth Shading
+		gl.glEnable(GL10.GL_DEPTH_TEST); // Enables Depth Testing
+		gl.glDepthFunc(GL10.GL_LEQUAL); // The Type Of Depth Testing To do
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+	}
+
+	public void draw(GL10 gl)
+	{
 		gl.glFrontFace(GL10.GL_CW);
 
-		if (doTexture)
+		if (mTexture != null || mTextureID != 0)
 		{
-			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
+			gl.glEnable(GL10.GL_TEXTURE_2D);
+			if (mTexture != null)
+			{
+				gl.glBindTexture(GL10.GL_TEXTURE_2D, mTexture.getTextureID());
+			}
+			else
+			{
+				gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
+			}
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuffer);
-		} else
+		}
+		else
 		{
-			gl.glColor4f(0f, 1f, 0f, 0.5f);
+			gl.glColor4f(mColor.getRed(), mColor.getGreen(), mColor.getBlue(),
+					mColor.getAlpha());
 		}
 		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
@@ -68,11 +100,20 @@ public class Square {
 		gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 	}
 
-	public void loadTexture(GL10 gl, Context context, int resId) {
+	public void loadTextureID(GL10 gl, Context context, int resId)
+	{
 		int textures[] = new int[1];
 
-		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(),
-				resId);
+		InputStream is = context.getResources().openRawResource(resId);
+		Bitmap bitmap = BitmapFactory.decodeStream(is);
+		try
+		{
+			is.close();
+		}
+		catch (Exception ex)
+		{
+			Log.e("Square", ex.getMessage());
+		}
 		// generate one texture pointer
 		gl.glGenTextures(1, textures, 0);
 		// ...and bind it to our array
@@ -89,5 +130,13 @@ public class Square {
 		bitmap.recycle();
 
 		mTextureID = textures[0];
+		texInit(gl);
+	}
+
+	public void loadTexture(GL10 gl, Context context, int resId)
+	{
+		mTexture = MyApplication.getTM(context).getTexture(resId);
+		mTexture.load(gl);
+		texInit(gl);
 	}
 }

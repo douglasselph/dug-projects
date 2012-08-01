@@ -17,15 +17,15 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 
-public class Model {
+public class Model
+{
 
 	protected Bounds3D					mBounds;
 	protected Color4f					mColor;
 	protected FloatBuf					mColorBuf;
-	protected Color4f					mColorOutline	= null;
 	protected ShortBuf					mIndexBuf;
 	protected int						mIndexSlice;
-	protected int						mIndexMode		= GL10.GL_TRIANGLES;
+	protected int						mIndexMode	= GL10.GL_TRIANGLES;
 	protected Matrix4f					mMatrix;
 	protected Matrix4f					mMatrixMod;
 	protected FloatBuf					mNormalBuf;
@@ -33,7 +33,8 @@ public class Model {
 	protected FloatBuf					mTextureBuf;
 	protected FloatBuf					mVertexBuf;
 
-	protected void computeBounds(ComputeBounds computeBounds) {
+	protected void computeBounds(ComputeBounds computeBounds)
+	{
 		if (mVertexBuf != null)
 		{
 			mVertexBuf.rewind();
@@ -45,7 +46,8 @@ public class Model {
 		}
 	}
 
-	public Bounds3D getBounds() {
+	public Bounds3D getBounds()
+	{
 		if (mBounds == null)
 		{
 			ComputeBounds computeBounds = new ComputeBounds();
@@ -55,25 +57,30 @@ public class Model {
 		return mBounds;
 	}
 
-	public Color4f getColor() {
+	public Color4f getColor()
+	{
 		return mColor;
 	}
 
-	public FloatBuffer getColorBuf() {
+	public FloatBuffer getColorBuf()
+	{
 		return mColorBuf.getBuf();
 	}
 
-	public ShortBuffer getIndexBuf() {
+	public ShortBuffer getIndexBuf()
+	{
 		return mIndexBuf.getBuf();
 	}
 
-	public Vector3f getLocationMod() {
+	public Vector3f getLocationMod()
+	{
 		return getMatrixMod().getLocation();
 	}
 
 	// Returns the currently active matrix that should be applied for drawing.
 	// Warning: this can return NULL.
-	protected Matrix4f getMatrix() {
+	protected Matrix4f getMatrix()
+	{
 		if (mMatrixMod != null)
 		{
 			return mMatrixMod;
@@ -83,7 +90,8 @@ public class Model {
 
 	// Get the modification matrix that lives on top of the object matrix.
 	// Will never return null.
-	public Matrix4f getMatrixMod() {
+	public Matrix4f getMatrixMod()
+	{
 		if (mMatrixMod == null)
 		{
 			mMatrixMod = new Matrix4f(mMatrix);
@@ -91,7 +99,8 @@ public class Model {
 		return mMatrixMod;
 	}
 
-	public Vector3f getMidPoint() {
+	public Vector3f getMidPoint()
+	{
 		Bounds3D bounds = getBounds();
 		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(),
 				bounds.getMidZ());
@@ -103,95 +112,102 @@ public class Model {
 		return midPoint;
 	}
 
-	public FloatBuffer getNormalBuf() {
+	public FloatBuffer getNormalBuf()
+	{
 		return mNormalBuf.getBuf();
 	}
 
-	public Quaternion getQuaternionMod() {
+	public Quaternion getQuaternionMod()
+	{
 		return getMatrixMod().getQuaternion();
 	}
 
-	public FloatBuffer getTextureBuf() {
+	public Texture getTexture()
+	{
+		return mTexture;
+	}
+
+	public FloatBuffer getTextureBuf()
+	{
 		return mTextureBuf.getBuf();
 	}
 
-	public FloatBuffer getVertexBuf() {
+	public FloatBuffer getVertexBuf()
+	{
 		return mVertexBuf.getBuf();
 	}
 
-	public boolean hasColorArray() {
+	public boolean hasColorArray()
+	{
 		return (mColorBuf != null);
 	}
 
-	public boolean hasNormalArray() {
+	public boolean hasNormalArray()
+	{
 		return (mNormalBuf != null);
 	}
 
-	public boolean hasTextureArray() {
+	public boolean hasTextureArray()
+	{
 		return (mTextureBuf != null);
 	}
 
-	public boolean hasVertexArray() {
+	public boolean hasVertexArray()
+	{
 		return (mVertexBuf != null);
 	}
 
-	public ShortBuffer initIndexBuf(int size) {
+	public FloatBuffer initColorBuf(int size)
+	{
+		mColorBuf = new FloatBuf(size);
+		return mColorBuf.getBuf();
+	}
+
+	public ShortBuffer initIndexBuf(int size)
+	{
 		return initIndexBuf(size, GL10.GL_TRIANGLES);
 	}
 
-	public ShortBuffer initIndexBuf(int size, int mode) {
+	public ShortBuffer initIndexBuf(int size, int mode)
+	{
 		mIndexBuf = new ShortBuf(size);
 		mIndexMode = mode;
 		mIndexSlice = 0;
 		return mIndexBuf.getBuf();
 	}
 
-	public ShortBuffer initIndexTriStrip(int size, int slice) {
+	public ShortBuffer initIndexTriStrip(int size, int slice)
+	{
 		mIndexBuf = new ShortBuf(size);
 		mIndexMode = GL10.GL_TRIANGLE_STRIP;
 		mIndexSlice = slice;
 		return mIndexBuf.getBuf();
 	}
 
-	public FloatBuffer initColorBuf(int size) {
-		mColorBuf = new FloatBuf(size);
-		return mColorBuf.getBuf();
-	}
-
-	public FloatBuffer initNormalBuf(int size) {
+	public FloatBuffer initNormalBuf(int size)
+	{
 		mNormalBuf = new FloatBuf(size);
 		return mNormalBuf.getBuf();
 	}
 
-	public FloatBuffer initTextureBuf(int size) {
+	public FloatBuffer initTextureBuf(int size)
+	{
 		mTextureBuf = new FloatBuf(size);
 		return mTextureBuf.getBuf();
 	}
 
-	public FloatBuffer initVertexBuf(int size) {
+	public FloatBuffer initVertexBuf(int size)
+	{
 		mVertexBuf = new FloatBuf(size);
 		return mVertexBuf.getBuf();
 	}
 
-	public void onDraw(MatrixTrackingGL gl) {
-
+	public void onDraw(MatrixTrackingGL gl)
+	{
 		boolean didPush = false;
 
-		onDrawInit(gl);
+		onDrawPre(gl);
 
-		if (mColorOutline != null)
-		{
-			gl.glColor4f(mColorOutline.getRed(), mColorOutline.getGreen(),
-					mColorOutline.getBlue(), mColorOutline.getAlpha());
-		} else if (!hasColorArray())
-		{
-			Color4f color = getColor();
-			if (color != null)
-			{
-				gl.glColor4f(color.getRed(), color.getGreen(), color.getBlue(),
-						color.getAlpha());
-			}
-		}
 		Matrix4f matrix = getMatrix();
 		if (matrix != null)
 		{
@@ -203,52 +219,51 @@ public class Model {
 			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
 			gl.glLoadMatrix(useMatrix);
 		}
+		if (!hasColorArray() && mColor != null)
+		{
+			gl.glColor4f(mColor.getRed(), mColor.getGreen(), mColor.getBlue(),
+					mColor.getAlpha());
+		}
 		if (mVertexBuf != null)
 		{
-			mVertexBuf.rewind();
 			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.getBuf());
-		} else
+		}
+		else
 		{
 			gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 		}
-		if (mColorOutline != null)
+		if (mNormalBuf != null)
+		{
+			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
+			gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.getBuf());
+		}
+		else
+		{
+			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
+		}
+		if (mColorBuf != null)
+		{
+			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+			gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.getBuf());
+
+			// Not doing it this way anymore:
+			// gl.glColorPointer(4, GL10.GL_FIXED, 0,
+			// mColorBuf.asShortBuffer());
+		}
+		else
 		{
 			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
-			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
-			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-		} else
+		}
+		if ((mTexture != null) && (mTextureBuf != null))
 		{
-			if (mNormalBuf != null)
-			{
-				mNormalBuf.rewind();
-				gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
-				gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.getBuf());
-			} else
-			{
-				gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
-			}
-			if (mColorBuf != null)
-			{
-				mColorBuf.rewind();
-				gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
-				gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.getBuf());
-
-				// Not doing it this way anymore:
-				// gl.glColorPointer(4, GL10.GL_FIXED, 0,
-				// mColorBuf.asShortBuffer());
-			} else
-			{
-				gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
-			}
-			if ((mTexture != null) && (mTextureBuf != null))
-			{
-				mTextureBuf.rewind();
-				mTexture.onDraw(gl, mTextureBuf.getBuf());
-			} else
-			{
-				gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-			}
+			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTexture.getTextureID());
+			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuf.getBuf());
+		}
+		else
+		{
+			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 		}
 		if (mIndexBuf != null)
 		{
@@ -261,20 +276,22 @@ public class Model {
 					if (mIndexSlice < mIndexBuf.remaining())
 					{
 						count = mIndexSlice;
-					} else
+					}
+					else
 					{
 						count = mIndexBuf.remaining();
 					}
 					gl.glDrawElements(mIndexMode, count,
 							GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
 				}
-			} else
+			}
+			else
 			{
 				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(),
 						GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
 			}
 		}
-		onDrawing(gl);
+		onDrawPost(gl);
 
 		if (didPush)
 		{
@@ -282,31 +299,38 @@ public class Model {
 		}
 	}
 
-	protected void onDrawInit(MatrixTrackingGL gl) {
-		gl.glFrontFace(GL10.GL_CCW);
-		gl.glEnable(GL10.GL_CULL_FACE);
-		gl.glCullFace(GL10.GL_BACK);
-		gl.glEnable(GL10.GL_DEPTH_TEST);
-		gl.glDisable(GL10.GL_BLEND);
+	protected void onDrawPost(MatrixTrackingGL gl)
+	{
 	}
 
-	protected void onDrawing(MatrixTrackingGL gl) {
+	protected void onDrawPre(MatrixTrackingGL gl)
+	{
+		// gl.glFrontFace(GL10.GL_CCW);
+		// gl.glEnable(GL10.GL_CULL_FACE);
+		// gl.glCullFace(GL10.GL_BACK);
+		// gl.glEnable(GL10.GL_DEPTH_TEST);
+		// gl.glDisable(GL10.GL_BLEND);
 	}
 
-	public void setColor(Color4f color) {
+	public void setColor(Color4f color)
+	{
 		mColor = color;
 	}
 
-	public void setLocation(Vector3f x) {
+	public void setLocation(Vector3f x)
+	{
 		getMatrixMod().setLocation(x);
 	}
 
-	public void setMatrixMod(Matrix4f mod) {
+	public void setMatrixMod(Matrix4f mod)
+	{
 		mMatrixMod = mod;
 	}
 
-	public void setTexture(Texture texture) {
+	public Model setTexture(Texture texture)
+	{
 		mTexture = texture;
+		return this;
 	}
 
 }

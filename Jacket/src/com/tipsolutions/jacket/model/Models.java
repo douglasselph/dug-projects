@@ -26,7 +26,7 @@ public class Models extends Model {
 	}
 
 	@Override
-	protected void onDrawing(MatrixTrackingGL gl) {
+	protected void onDrawPost(MatrixTrackingGL gl) {
 		if (mChildren != null) {
 			for (Models model : mChildren) {
 				model.onDraw(gl);
