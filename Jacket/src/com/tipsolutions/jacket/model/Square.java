@@ -14,6 +14,7 @@ public class Square extends Model
 	{
 		initVertexBuf(length);
 		initIndexBuf();
+		mIndexMode = GL10.GL_TRIANGLE_STRIP;
 	}
 
 	void initVertexBuf(final float length)

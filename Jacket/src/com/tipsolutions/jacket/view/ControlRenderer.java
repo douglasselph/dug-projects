@@ -41,7 +41,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 
 	protected void clearScene(MatrixTrackingGL gl)
 	{
-
 		// clear the color buffer to show the ClearColor we called above...
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 	}
@@ -90,7 +89,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 
 	protected void onCreatedInitTexture(GL10 gl)
 	{
-		gl.glEnable(GL10.GL_TEXTURE_2D);
+		// gl.glEnable(GL10.GL_TEXTURE_2D);
 	}
 
 	public void onDrawFrame(GL10 gl)

@@ -9,7 +9,7 @@
  * governing permissions and limitations under the License.
  */
 
-package com.tipsolutions.bugplug.testobj;
+package com.tipsolutions.bugplug.test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,11 +23,13 @@ import com.tipsolutions.jacket.math.Vector3f;
 /**
  * A vertex shaded cube.
  */
-public class CubeF {
+public class CubeF
+{
 	static final float	vOne	= 0.7f;
 	static final int	cOne	= 0x10000;
 
-	public CubeF() {
+	public CubeF()
+	{
 		final float vertices[] = { -vOne, -vOne, -vOne, // 0
 				vOne, -vOne, -vOne, // 1
 				vOne, vOne, -vOne, // 2
@@ -73,8 +75,11 @@ public class CubeF {
 		mIndexBuffer.position(0);
 	}
 
-	public void draw(GL10 gl) {
+	public void draw(GL10 gl)
+	{
 		gl.glFrontFace(GL10.GL_CW);
+		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+		gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 		gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
 		gl.glColorPointer(4, GL10.GL_FIXED, 0, mColorBuffer);
 		gl.glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE,
@@ -85,7 +90,8 @@ public class CubeF {
 	private IntBuffer	mColorBuffer;
 	private ByteBuffer	mIndexBuffer;
 
-	public Vector3f getLoc() {
+	public Vector3f getLoc()
+	{
 		return new Vector3f(0, 0, 0);
 	};
 }

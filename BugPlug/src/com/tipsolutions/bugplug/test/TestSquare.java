@@ -1,4 +1,4 @@
-package com.tipsolutions.bugplug.testobj;
+package com.tipsolutions.bugplug.test;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;

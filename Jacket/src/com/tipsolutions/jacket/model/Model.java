@@ -19,7 +19,6 @@ import com.tipsolutions.jacket.math.Vector3f;
 
 public class Model
 {
-
 	protected Bounds3D					mBounds;
 	protected Color4f					mColor;
 	protected FloatBuf					mColorBuf;
