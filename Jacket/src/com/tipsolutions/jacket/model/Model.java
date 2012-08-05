@@ -225,6 +225,7 @@ public class Model
 		}
 		if (mVertexBuf != null)
 		{
+			mVertexBuf.rewind();
 			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuf.getBuf());
 		}
@@ -234,6 +235,7 @@ public class Model
 		}
 		if (mNormalBuf != null)
 		{
+			mNormalBuf.rewind();
 			gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
 			gl.glNormalPointer(GL10.GL_FLOAT, 0, mNormalBuf.getBuf());
 		}
@@ -243,6 +245,7 @@ public class Model
 		}
 		if (mColorBuf != null)
 		{
+			mColorBuf.rewind();
 			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 			gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.getBuf());
 
@@ -256,6 +259,7 @@ public class Model
 		}
 		if ((mTexture != null) && (mTextureBuf != null))
 		{
+			mTextureBuf.rewind();
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTexture.getTextureID());
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuf.getBuf());
@@ -269,19 +273,26 @@ public class Model
 			mIndexBuf.rewind();
 			if (mIndexSlice > 0)
 			{
+				ShortBuffer sbuf = mIndexBuf.getBuf();
+
 				int count;
-				while (mIndexBuf.position() < mIndexBuf.remaining())
+				int position = 0;
+				int remaining = sbuf.remaining();
+
+				while (position < remaining)
 				{
-					if (mIndexSlice < mIndexBuf.remaining())
+					if (mIndexSlice < remaining)
 					{
 						count = mIndexSlice;
 					}
 					else
 					{
-						count = mIndexBuf.remaining();
+						count = remaining;
 					}
+					sbuf.position(position);
 					gl.glDrawElements(mIndexMode, count,
-							GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
+							GL10.GL_UNSIGNED_SHORT, sbuf);
+					position += count;
 				}
 			}
 			else

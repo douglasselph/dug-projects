@@ -6,22 +6,21 @@ import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Model;
 import com.tipsolutions.jacket.terrain.CalcConstant;
-import com.tipsolutions.jacket.terrain.CalcGroup;
-import com.tipsolutions.jacket.terrain.CalcStore;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
 import com.tipsolutions.jacket.terrain.TerrainGrids;
 
-public class Map {
-
+public class Map
+{
 	TerrainGrids	mTerrainGrids;
 	TextureManager	mTM;
 
-	public Map(TextureManager tm) {
+	public Map(TextureManager tm)
+	{
 		mTM = tm;
 		mTerrainGrids = new TerrainGrids();
 		TerrainGrid grid;
-		CalcGroup calcGroup;
-		CalcStore calcStore;
+		// CalcGroup calcGroup;
+		// CalcStore calcStore;
 
 		// TerrainGrid grid = new TerrainGrid()
 		// .setBounds(new Bounds2D(0, 0, 11f, 2f))
@@ -69,11 +68,13 @@ public class Map {
 		mTerrainGrids.addGrid(grid);
 	}
 
-	public void onDraw(MatrixTrackingGL gl) {
+	public void onDraw(MatrixTrackingGL gl)
+	{
 		mTerrainGrids.onDraw(gl);
 	}
 
-	public Model getPrimaryModel() {
+	public Model getPrimaryModel()
+	{
 		return mTerrainGrids.getGrid(0);
 	}
 

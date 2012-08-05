@@ -28,7 +28,7 @@ public class BugPlugMapActivity extends Activity
 	TextView			mCamUp;
 	ControlRenderer		mRenderer;
 	ControlSurfaceView	mSurfaceView;
-	final Renderer		mChoice		= Renderer.BoxTex;
+	final Renderer		mChoice		= Renderer.Map;
 
 	/** Called when the activity is first created. */
 	@Override

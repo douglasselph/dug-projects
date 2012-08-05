@@ -11,50 +11,60 @@ import com.tipsolutions.jacket.model.Model;
  * For a single terrain image, supports an arbitrarily complex geometry using
  * generators.
  */
-public class TerrainGrid extends Model {
+public class TerrainGrid extends Model
+{
 
-	int mNumRows = 10;
-	int mNumCols = 10;
-	Bounds2D mBounds2D;
-	ICalcValue mCompute;
+	int			mNumRows	= 10;
+	int			mNumCols	= 10;
+	Bounds2D	mBounds2D;
+	ICalcValue	mCompute;
 
-	public TerrainGrid() {
+	public TerrainGrid()
+	{
 	}
 
-	public ICalcValue getCompute() {
+	public ICalcValue getCompute()
+	{
 		return mCompute;
 	}
-	
-	public float getHeight() {
+
+	public float getHeight()
+	{
 		return mBounds2D.getSizeY();
 	}
-	
-	public int getNumCols() {
+
+	public int getNumCols()
+	{
 		return mNumCols;
 	}
-	
-	public int getNumRows() {
+
+	public int getNumRows()
+	{
 		return mNumRows;
 	}
-	
-	public float getStartX() {
+
+	public float getStartX()
+	{
 		return mBounds2D.getMinX();
 	}
-	
-	public float getStartY() {
+
+	public float getStartY()
+	{
 		return mBounds2D.getMinY();
 	}
-	
-	public float getWidth() {
+
+	public float getWidth()
+	{
 		return mBounds2D.getSizeX();
 	}
-	
+
 	/**
-	 * Warning: setBounds() must be called first.
-	 * Then setGridSize(), setGranuality() and setCompute() should be called.
+	 * Warning: setBounds() must be called first. Then setGridSize(),
+	 * setGranuality() and setCompute() should be called.
 	 */
-	public TerrainGrid init() {
-		int numVertex = (mNumRows+1)*(mNumCols+1);
+	public TerrainGrid init()
+	{
+		int numVertex = (mNumRows + 1) * (mNumCols + 1);
 
 		Vector3f normalDefault = new Vector3f(0, 0, 1);
 		Vector3f normal = normalDefault;
@@ -67,36 +77,44 @@ public class TerrainGrid extends Model {
 		float z = 0;
 		float percentX;
 		float percentY = 0;
-		float percentIncX = 1f/mNumCols;
-		float percentIncY = 1f/mNumRows;
+		float percentIncX = 1f / mNumCols;
+		float percentIncY = 1f / mNumRows;
 		short index;
-		short indexRowInc = (short)(mNumCols+1);
+		short indexRowInc = (short) (mNumCols + 1);
 
-		FloatBuffer vbuf = initVertexBuf(numVertex*3);
-		FloatBuffer nbuf = initNormalBuf(numVertex*3);
-		ShortBuffer sbuf = initIndexTriStrip((mNumCols+1)*2*(mNumRows+1), indexRowInc);
-		FloatBuffer tbuf = initTextureBuf(numVertex*2);
+		FloatBuffer vbuf = initVertexBuf(numVertex * 3);
+		FloatBuffer nbuf = initNormalBuf(numVertex * 3);
+		ShortBuffer sbuf = initIndexTriStrip((mNumCols + 1) * 2
+				* (mNumRows + 1), indexRowInc);
+		FloatBuffer tbuf = initTextureBuf(numVertex * 2);
 
 		vbuf.rewind();
 		nbuf.rewind();
 		sbuf.rewind();
 		tbuf.rewind();
-		
-		for (int row = 0; row <= mNumRows; row++) {
+
+		for (int row = 0; row <= mNumRows; row++)
+		{
 			x = getStartX();
 			percentX = 0;
-			index = (short)(row*indexRowInc);
+			index = (short) (row * indexRowInc);
 
-			for (int col = 0; col <= mNumCols; col++) {
-				if (mCompute != null) {
+			for (int col = 0; col <= mNumCols; col++)
+			{
+				if (mCompute != null)
+				{
 					Info info = mCompute.getInfo(x, y);
-					if (info == null) {
+					if (info == null)
+					{
 						z = 0;
 						normal = normalDefault;
-					} else {
+					}
+					else
+					{
 						z = info.getHeight();
 						normal = info.getNormal();
-						if (normal == null) {
+						if (normal == null)
+						{
 							normal = normalDefault;
 						}
 					}
@@ -106,7 +124,7 @@ public class TerrainGrid extends Model {
 				normal.put(nbuf);
 
 				sbuf.put(index);
-				sbuf.put((short)(index+indexRowInc));
+				sbuf.put((short) (index + indexRowInc));
 
 				tbuf.put(percentX).put(percentY);
 
@@ -116,20 +134,27 @@ public class TerrainGrid extends Model {
 			y += incY;
 			percentY += percentIncY;
 		}
+		vbuf.rewind();
+		nbuf.rewind();
+		sbuf.rewind();
+		tbuf.rewind();
 		return this;
 	}
 
-	public TerrainGrid setCompute(ICalcValue calc) {
+	public TerrainGrid setCompute(ICalcValue calc)
+	{
 		mCompute = calc;
 		return this;
 	}
 
-	public TerrainGrid setBounds(Bounds2D bounds) {
+	public TerrainGrid setBounds(Bounds2D bounds)
+	{
 		mBounds2D = bounds;
 		return this;
 	}
-	
-	public TerrainGrid setGridSize(int nrows, int ncols) {
+
+	public TerrainGrid setGridSize(int nrows, int ncols)
+	{
 		mNumRows = nrows;
 		mNumCols = ncols;
 		return this;
