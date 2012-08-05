@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 
 import com.tipsolutions.jacket.image.ImageUtils;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
@@ -24,6 +25,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		void run(ControlRenderer renderer, MatrixTrackingGL gl);
 	};
 
+	protected final TextureManager		mTM;
 	protected final ControlSurfaceView	mView;
 	protected Color4f					mBackground;
 	protected int						mWidth;
@@ -33,8 +35,9 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 	protected OnAfterNextRender			mOnAfterNextRender;
 	protected boolean					mRenderWhenDirty;
 
-	public ControlRenderer(ControlSurfaceView view)
+	public ControlRenderer(ControlSurfaceView view, TextureManager tm)
 	{
+		mTM = tm;
 		mView = view;
 		mCamera = new Camera();
 	}
@@ -152,6 +155,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		{
 			gl.glClearColor(1f, 1f, 1f, 1f);
 		}
+		if (mTM != null)
+		{
+			mTM.load(gl);
+		}
+
 		// gl.glDisable(GL10.GL_DITHER);
 
 		onCreatedInitDepth(gl);

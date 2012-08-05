@@ -3,7 +3,10 @@ package com.tipsolutions.jacket.terrain;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.model.Model;
 
@@ -79,25 +82,22 @@ public class TerrainGrid extends Model
 		float percentY = 0;
 		float percentIncX = 1f / mNumCols;
 		float percentIncY = 1f / mNumRows;
-		short index;
-		short indexRowInc = (short) (mNumCols + 1);
+		short index1;
+		short index2;
+		short index3;
+		short index4;
+		int numIndexPerRow = (short) ((mNumCols + 1) * 2);
 
 		FloatBuffer vbuf = initVertexBuf(numVertex * 3);
 		FloatBuffer nbuf = initNormalBuf(numVertex * 3);
-		ShortBuffer sbuf = initIndexTriStrip((mNumCols + 1) * 2
-				* (mNumRows + 1), indexRowInc);
+		ShortBuffer sbuf = initIndexTriStrip(numIndexPerRow * mNumRows,
+				numIndexPerRow);
 		FloatBuffer tbuf = initTextureBuf(numVertex * 2);
-
-		vbuf.rewind();
-		nbuf.rewind();
-		sbuf.rewind();
-		tbuf.rewind();
 
 		for (int row = 0; row <= mNumRows; row++)
 		{
 			x = getStartX();
 			percentX = 0;
-			index = (short) (row * indexRowInc);
 
 			for (int col = 0; col <= mNumCols; col++)
 			{
@@ -123,9 +123,6 @@ public class TerrainGrid extends Model
 
 				normal.put(nbuf);
 
-				sbuf.put(index);
-				sbuf.put((short) (index + indexRowInc));
-
 				tbuf.put(percentX).put(percentY);
 
 				x += incX;
@@ -134,10 +131,23 @@ public class TerrainGrid extends Model
 			y += incY;
 			percentY += percentIncY;
 		}
-		vbuf.rewind();
-		nbuf.rewind();
-		sbuf.rewind();
-		tbuf.rewind();
+		for (int row = 0; row < mNumRows; row++)
+		{
+			index2 = (short) (row * (mNumCols + 1));
+			index4 = (short) (index2 + mNumCols + 1);
+
+			sbuf.put(index4).put(index2);
+
+			for (int col = 0; col < mNumCols; col++)
+			{
+				index1 = index2;
+				index2 = (short) (index1 + 1);
+				index3 = index4;
+				index4 = (short) (index3 + 1);
+
+				sbuf.put(index4).put(index2);
+			}
+		}
 		return this;
 	}
 
@@ -158,6 +168,13 @@ public class TerrainGrid extends Model
 		mNumRows = nrows;
 		mNumCols = ncols;
 		return this;
+	}
+
+	@Override
+	protected void onDrawPre(MatrixTrackingGL gl)
+	{
+		super.onDrawPre(gl);
+		gl.glFrontFace(GL10.GL_CW);
 	}
 
 }

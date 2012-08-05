@@ -60,9 +60,9 @@ public class Map
 		// grid.init();
 
 		Bounds2D bounds = new Bounds2D(0, 0, 10f, 10f);
-		grid = new TerrainGrid().setBounds(bounds).setGridSize(10, 10);
+		grid = new TerrainGrid().setBounds(bounds).setGridSize(1, 1);
 		grid.setCompute(new CalcConstant(1f, bounds));
-		grid.setTexture(mTM.getTexture(R.drawable.dirt));
+		grid.setTexture(mTM.getTexture(R.drawable.sample));
 		grid.init();
 
 		mTerrainGrids.addGrid(grid);

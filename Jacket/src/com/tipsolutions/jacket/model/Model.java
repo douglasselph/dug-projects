@@ -315,9 +315,10 @@ public class Model
 
 	protected void onDrawPre(MatrixTrackingGL gl)
 	{
-		// gl.glFrontFace(GL10.GL_CCW);
-		// gl.glEnable(GL10.GL_CULL_FACE);
-		// gl.glCullFace(GL10.GL_BACK);
+		gl.glFrontFace(GL10.GL_CW);
+		gl.glEnable(GL10.GL_CULL_FACE);
+		gl.glCullFace(GL10.GL_BACK);
+
 		// gl.glEnable(GL10.GL_DEPTH_TEST);
 		// gl.glDisable(GL10.GL_BLEND);
 	}

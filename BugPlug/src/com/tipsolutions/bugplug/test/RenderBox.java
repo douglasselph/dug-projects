@@ -1,10 +1,10 @@
-package com.tipsolutions.bugplug;
+package com.tipsolutions.bugplug.test;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.content.Context;
-
+import com.tipsolutions.bugplug.R;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Box;
@@ -13,22 +13,22 @@ import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class RenderBox extends ControlRenderer
 {
-	Context	mCtx;
 	Box		mBox;
 	float	mAngle;
-	boolean	mWithTex;
 
-	public RenderBox(Context context, ControlSurfaceView view, boolean withTex)
+	public RenderBox(ControlSurfaceView view, TextureManager tm)
 	{
-		super(view);
+		super(view, tm);
 
-		mCtx = context;
 		mBox = new Box(1f);
-		mWithTex = withTex;
 
-		if (!mWithTex)
+		if (tm == null)
 		{
 			mBox.setColor(new Color4f(1f, 0f, 0f, 0.5f));
+		}
+		else
+		{
+			mBox.setTexture(mTM.getTexture(R.drawable.sample));
 		}
 	}
 
@@ -36,13 +36,6 @@ public class RenderBox extends ControlRenderer
 	public void onSurfaceCreated(GL10 gl, EGLConfig config)
 	{
 		super.onSurfaceCreated(gl, config);
-
-		if (mWithTex)
-		{
-			mBox.setTexture(MyApplication.getTM(mCtx).getTexture(
-					R.drawable.sample));
-			mBox.getTexture().load(gl);
-		}
 	}
 
 	@Override

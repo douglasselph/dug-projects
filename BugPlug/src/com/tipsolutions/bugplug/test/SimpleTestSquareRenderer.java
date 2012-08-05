@@ -7,6 +7,7 @@ import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 
+import com.tipsolutions.bugplug.MyApplication;
 import com.tipsolutions.bugplug.R;
 
 public class SimpleTestSquareRenderer implements GLSurfaceView.Renderer
@@ -55,6 +56,6 @@ public class SimpleTestSquareRenderer implements GLSurfaceView.Renderer
 		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); // Black Background
 		gl.glClearDepthf(1.0f); // Depth Buffer Setup
 
-		mSquare.loadTexture(gl, mCtx, R.drawable.sample);
+		mSquare.loadTexture(gl, MyApplication.getTM(mCtx), R.drawable.sample);
 	}
 }

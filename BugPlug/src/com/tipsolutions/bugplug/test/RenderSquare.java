@@ -1,10 +1,7 @@
-package com.tipsolutions.bugplug;
+package com.tipsolutions.bugplug.test;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-import android.content.Context;
-
+import com.tipsolutions.bugplug.R;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Square;
@@ -13,35 +10,21 @@ import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class RenderSquare extends ControlRenderer
 {
-	Context	mCtx;
 	Square	mSquare;
 	float	mAngle;
-	boolean	mWithTexture;
 
-	public RenderSquare(Context context, ControlSurfaceView view,
-			boolean withTex)
+	public RenderSquare(ControlSurfaceView view, TextureManager tm)
 	{
-		super(view);
-		mCtx = context;
+		super(view, tm);
 		mSquare = new Square(1);
-		mWithTexture = withTex;
 
-		if (!mWithTexture)
+		if (tm == null)
 		{
 			mSquare.setColor(Color4f.BLUE);
 		}
-	}
-
-	@Override
-	public void onSurfaceCreated(GL10 gl, EGLConfig config)
-	{
-		super.onSurfaceCreated(gl, config);
-
-		if (mWithTexture)
+		else
 		{
-			mSquare.setTexture(MyApplication.getTM(mCtx).getTexture(
-					R.drawable.sample));
-			mSquare.getTexture().load(gl);
+			mSquare.setTexture(tm.getTexture(R.drawable.sample));
 		}
 	}
 

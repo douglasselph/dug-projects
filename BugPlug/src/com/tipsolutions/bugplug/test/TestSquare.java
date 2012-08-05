@@ -13,7 +13,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
 import android.util.Log;
 
-import com.tipsolutions.bugplug.MyApplication;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Color4f;
 
@@ -133,9 +133,9 @@ public class TestSquare
 		texInit(gl);
 	}
 
-	public void loadTexture(GL10 gl, Context context, int resId)
+	public void loadTexture(GL10 gl, TextureManager tm, int resId)
 	{
-		mTexture = MyApplication.getTM(context).getTexture(resId);
+		mTexture = tm.getTexture(resId);
 		mTexture.load(gl);
 		texInit(gl);
 	}

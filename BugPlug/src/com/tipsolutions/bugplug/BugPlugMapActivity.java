@@ -9,6 +9,8 @@ import android.widget.TextView;
 
 import com.tipsolutions.bugplug.test.CubeFRenderer;
 import com.tipsolutions.bugplug.test.CubeRenderer;
+import com.tipsolutions.bugplug.test.RenderBox;
+import com.tipsolutions.bugplug.test.RenderSquare;
 import com.tipsolutions.bugplug.test.TestSquareRenderer;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -76,11 +78,11 @@ public class BugPlugMapActivity extends Activity
 
 		if (mChoice == Renderer.Box)
 		{
-			return new RenderBox(this, mSurfaceView, false);
+			return new RenderBox(mSurfaceView, null);
 		}
 		else if (mChoice == Renderer.BoxTex)
 		{
-			return new RenderBox(this, mSurfaceView, true);
+			return new RenderBox(mSurfaceView, MyApplication.getTM(this));
 		}
 		else if (mChoice == Renderer.Cube)
 		{
@@ -92,19 +94,20 @@ public class BugPlugMapActivity extends Activity
 		}
 		else if (mChoice == Renderer.Map)
 		{
-			return new RenderMap(this, mSurfaceView);
+			return new RenderMap(mSurfaceView, MyApplication.getTM(this));
 		}
 		else if (mChoice == Renderer.Square)
 		{
-			return new RenderSquare(this, mSurfaceView, false);
+			return new RenderSquare(mSurfaceView, null);
 		}
 		else if (mChoice == Renderer.SquareTex)
 		{
-			return new RenderSquare(this, mSurfaceView, true);
+			return new RenderSquare(mSurfaceView, MyApplication.getTM(this));
 		}
 		else if (mChoice == Renderer.TestSquare)
 		{
-			return new TestSquareRenderer(this, mSurfaceView);
+			return new TestSquareRenderer(mSurfaceView,
+					MyApplication.getTM(this));
 		}
 		return null;
 	}

@@ -263,6 +263,14 @@ public class TextureManager
 		}
 	}
 
+	public void load(GL10 gl)
+	{
+		for (Texture tex : getTextures())
+		{
+			tex.load(gl);
+		}
+	}
+
 	public void reset()
 	{
 		mMap = new HashMap<Long, Texture>();

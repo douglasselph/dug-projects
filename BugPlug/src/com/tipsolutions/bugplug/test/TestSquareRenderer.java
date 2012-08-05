@@ -3,23 +3,20 @@ package com.tipsolutions.bugplug.test;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.content.Context;
-
 import com.tipsolutions.bugplug.R;
+import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class TestSquareRenderer extends ControlRenderer
 {
-	Context		mCtx;
 	TestSquare	mTestSquare;
 	float		mAngle;
 
-	public TestSquareRenderer(Context context, ControlSurfaceView view)
+	public TestSquareRenderer(ControlSurfaceView view, TextureManager tm)
 	{
-		super(view);
-		mCtx = context;
+		super(view, tm);
 		mTestSquare = new TestSquare();
 	}
 
@@ -28,7 +25,7 @@ public class TestSquareRenderer extends ControlRenderer
 	{
 		super.onSurfaceCreated(gl, config);
 
-		mTestSquare.loadTexture(gl, mCtx, R.drawable.sample);
+		mTestSquare.loadTexture(gl, mTM, R.drawable.sample);
 	}
 
 	@Override

@@ -1,8 +1,5 @@
 package com.tipsolutions.bugplug.test;
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -14,14 +11,8 @@ public class CubeRenderer extends ControlRenderer
 
 	public CubeRenderer(ControlSurfaceView view)
 	{
-		super(view);
+		super(view, null);
 		mCube = new Cube();
-	}
-
-	@Override
-	public void onSurfaceCreated(GL10 gl, EGLConfig config)
-	{
-		super.onSurfaceCreated(gl, config);
 	}
 
 	@Override
