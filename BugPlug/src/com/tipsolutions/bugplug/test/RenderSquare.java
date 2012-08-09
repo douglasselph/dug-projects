@@ -38,4 +38,10 @@ public class RenderSquare extends ControlRenderer
 		mSquare.onDraw(gl);
 		mAngle += 1.2f;
 	}
+
+	@Override
+	public String toString()
+	{
+		return mSquare.toString();
+	}
 }

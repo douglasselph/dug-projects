@@ -2,6 +2,7 @@ package com.tipsolutions.bugplug;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
@@ -30,7 +31,7 @@ public class BugPlugMapActivity extends Activity
 	TextView			mCamUp;
 	ControlRenderer		mRenderer;
 	ControlSurfaceView	mSurfaceView;
-	final Renderer		mChoice		= Renderer.Map;
+	final Renderer		mChoice		= Renderer.SquareTex;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -58,7 +59,8 @@ public class BugPlugMapActivity extends Activity
 
 				});
 		mSurfaceView.setEventTap(eventTap);
-		mSurfaceView.setRenderer(getRenderer());
+		mRenderer = getRenderer();
+		mSurfaceView.setRenderer(mRenderer);
 
 		FrameLayout container = (FrameLayout) findViewById(R.id.container);
 		container.addView(mSurfaceView, new RelativeLayout.LayoutParams(
@@ -68,6 +70,8 @@ public class BugPlugMapActivity extends Activity
 		mCamEye = (TextView) findViewById(R.id.cameraEye);
 		mCamLook = (TextView) findViewById(R.id.cameraLook);
 		mCamUp = (TextView) findViewById(R.id.cameraUp);
+
+		Log.d("DEBUG", mRenderer.toString());
 
 		setMessage();
 	}

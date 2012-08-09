@@ -19,7 +19,6 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class ControlRenderer implements GLSurfaceView.Renderer
 {
-
 	public interface OnAfterNextRender
 	{
 		void run(ControlRenderer renderer, MatrixTrackingGL gl);
@@ -226,4 +225,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		ImageUtils.SaveBitmap(bitmap, file);
 	}
 
+	public String toString()
+	{
+		return "";
+	}
 }

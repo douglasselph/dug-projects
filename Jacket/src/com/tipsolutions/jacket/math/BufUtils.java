@@ -10,6 +10,8 @@ import java.nio.ShortBuffer;
 
 public class BufUtils
 {
+	public static final int	TYPE_FLOAT	= 1;
+	public static final int	TYPE_SHORT	= 2;
 
 	public static abstract class Buffer<BUFTYPE>
 	{
@@ -117,7 +119,6 @@ public class BufUtils
 
 	public static class FloatBuf extends Buffer<FloatBuffer>
 	{
-
 		public FloatBuf(int size)
 		{
 			super(size);
@@ -181,6 +182,21 @@ public class BufUtils
 		public void rewind(FloatBuffer buf)
 		{
 			buf.rewind();
+		}
+
+		public String toString()
+		{
+			StringBuffer sbuf = new StringBuffer();
+
+			rewind();
+			while (hasRemaining())
+			{
+				sbuf.append(position());
+				sbuf.append("=");
+				sbuf.append(get());
+				sbuf.append(" ");
+			}
+			return sbuf.toString();
 		}
 	}
 
@@ -250,9 +266,21 @@ public class BufUtils
 		{
 			buf.rewind();
 		}
+
+		public String toString()
+		{
+			StringBuffer sbuf = new StringBuffer();
+
+			rewind();
+			while (hasRemaining())
+			{
+				sbuf.append(position());
+				sbuf.append("=");
+				sbuf.append(get());
+				sbuf.append("|");
+			}
+			return sbuf.toString();
+		}
 	};
 
-	public static final int	TYPE_FLOAT	= 1;	;
-
-	public static final int	TYPE_SHORT	= 2;	;
 }

@@ -19,6 +19,8 @@ import com.tipsolutions.jacket.math.Vector3f;
 
 public class Model
 {
+	static final String					TAG			= "Model";
+	static final Boolean				LOG			= true;
 	protected Bounds3D					mBounds;
 	protected Color4f					mColor;
 	protected FloatBuf					mColorBuf;
@@ -342,6 +344,38 @@ public class Model
 	{
 		mTexture = texture;
 		return this;
+	}
+
+	public String toString()
+	{
+		StringBuffer sbuf = new StringBuffer();
+
+		sbuf.append("VERTEX=[");
+		sbuf.append(mVertexBuf.toString());
+		sbuf.append("]\n");
+
+		if (mNormalBuf != null)
+		{
+			sbuf.append("NORMAL=[");
+			sbuf.append(mNormalBuf.toString());
+			sbuf.append("]\n");
+		}
+		if (mTextureBuf != null)
+		{
+			sbuf.append("TEX=[");
+			sbuf.append(mTextureBuf.toString());
+			sbuf.append("]\n");
+		}
+		if (mColorBuf != null)
+		{
+			sbuf.append("COLOR=[");
+			sbuf.append(mColorBuf.toString());
+			sbuf.append("]\n");
+		}
+		sbuf.append("INDEX=[");
+		sbuf.append(mIndexBuf.toString());
+		sbuf.append("]\n");
+		return sbuf.toString();
 	}
 
 }

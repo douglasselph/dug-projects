@@ -17,15 +17,22 @@ public class Square extends Model
 		mIndexMode = GL10.GL_TRIANGLE_STRIP;
 	}
 
-	void initVertexBuf(final float length)
+	void initIndexBuf()
 	{
-		final float vertices[] = { -length, -length, 0f, // 0: lower-left
-				-length, length, 0f, // 1: upper-left
-				length, -length, 0f, // 2: lower-right
-				length, length, 0f }; // 3: upper-right
+		/** CW: triangle strip */
+		// ShortBuffer buf = initIndexBuf(4);
+		ShortBuffer buf = initIndexTriStrip(4, 4);
+		buf.put((short) 0).put((short) 1).put((short) 2).put((short) 3);
+		buf.rewind();
+	}
 
-		FloatBuffer buf = initVertexBuf(vertices.length);
-		buf.put(vertices);
+	void initNormalBuf()
+	{
+		FloatBuffer buf = initNormalBuf(4 * 3);
+		for (int i = 0; i < 4; i++)
+		{
+			buf.put(0).put(0).put(1);
+		}
 		buf.rewind();
 	}
 
@@ -41,22 +48,15 @@ public class Square extends Model
 		buf.rewind();
 	}
 
-	void initNormalBuf()
+	void initVertexBuf(final float length)
 	{
-		FloatBuffer buf = initNormalBuf(4 * 3);
-		for (int i = 0; i < 4; i++)
-		{
-			buf.put(0).put(0).put(1);
-		}
-		buf.rewind();
-	}
+		final float vertices[] = { -length, -length, 0f, // 0: lower-left
+				-length, length, 0f, // 1: upper-left
+				length, -length, 0f, // 2: lower-right
+				length, length, 0f }; // 3: upper-right
 
-	void initIndexBuf()
-	{
-		/* CW */
-		/* two triangles: using strip so only 4 points */
-		ShortBuffer buf = initIndexBuf(4);
-		buf.put((short) 0).put((short) 1).put((short) 2).put((short) 3);
+		FloatBuffer buf = initVertexBuf(vertices.length);
+		buf.put(vertices);
 		buf.rewind();
 	}
 

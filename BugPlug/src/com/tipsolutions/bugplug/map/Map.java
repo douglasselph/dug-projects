@@ -78,4 +78,9 @@ public class Map
 		return mTerrainGrids.getGrid(0);
 	}
 
+	public String toString()
+	{
+		return mTerrainGrids.toString();
+	}
+
 }

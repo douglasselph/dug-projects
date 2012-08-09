@@ -26,4 +26,10 @@ public class RenderMap extends ControlRenderer
 		mMap.onDraw(gl);
 	}
 
+	@Override
+	public String toString()
+	{
+		return mMap.toString();
+	}
+
 }
