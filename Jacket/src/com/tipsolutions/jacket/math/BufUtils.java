@@ -58,8 +58,7 @@ public class BufUtils
 
 		abstract int getType();
 
-		public void readBuffer(DataInputStream dataStream) throws IOException,
-				Exception
+		public void readBuffer(DataInputStream dataStream) throws IOException, Exception
 		{
 			int type = dataStream.readInt();
 			int size = dataStream.readInt();
@@ -249,6 +248,11 @@ public class BufUtils
 		public int position()
 		{
 			return mBuf.position();
+		}
+
+		public void put(short v)
+		{
+			mBuf.put(v);
 		}
 
 		public int remaining()

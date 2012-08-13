@@ -16,7 +16,6 @@ import com.tipsolutions.jacket.model.Model;
  */
 public class TerrainGrid extends Model
 {
-
 	int			mNumRows	= 10;
 	int			mNumCols	= 10;
 	Bounds2D	mBounds2D;
