@@ -197,6 +197,38 @@ public class BufUtils
 			}
 			return sbuf.toString();
 		}
+
+		public String toString(int breakEvery)
+		{
+			StringBuffer sbuf = new StringBuffer();
+
+			rewind();
+			int count = 0;
+			boolean firstTime = true;
+			while (hasRemaining())
+			{
+				if (firstTime)
+				{
+					firstTime = false;
+				}
+				else
+				{
+					if (++count >= breakEvery)
+					{
+						sbuf.append("\n");
+						count = 0;
+					}
+					else
+					{
+						sbuf.append(" ");
+					}
+				}
+				sbuf.append(position());
+				sbuf.append("=");
+				sbuf.append(get());
+			}
+			return sbuf.toString();
+		}
 	}
 
 	public static class ShortBuf extends Buffer<ShortBuffer>

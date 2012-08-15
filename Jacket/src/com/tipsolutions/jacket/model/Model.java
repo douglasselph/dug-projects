@@ -41,8 +41,7 @@ public class Model
 			mVertexBuf.rewind();
 			while (mVertexBuf.position() < mVertexBuf.limit())
 			{
-				computeBounds.apply(mVertexBuf.get(), mVertexBuf.get(),
-						mVertexBuf.get());
+				computeBounds.apply(mVertexBuf.get(), mVertexBuf.get(), mVertexBuf.get());
 			}
 		}
 	}
@@ -103,8 +102,7 @@ public class Model
 	public Vector3f getMidPoint()
 	{
 		Bounds3D bounds = getBounds();
-		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(),
-				bounds.getMidZ());
+		Vector3f midPoint = new Vector3f(bounds.getMidX(), bounds.getMidY(), bounds.getMidZ());
 		Matrix4f matrix = getMatrix();
 		if (matrix != null)
 		{
@@ -222,8 +220,7 @@ public class Model
 		}
 		if (!hasColorArray() && mColor != null)
 		{
-			gl.glColor4f(mColor.getRed(), mColor.getGreen(), mColor.getBlue(),
-					mColor.getAlpha());
+			gl.glColor4f(mColor.getRed(), mColor.getGreen(), mColor.getBlue(), mColor.getAlpha());
 		}
 		if (mVertexBuf != null)
 		{
@@ -292,15 +289,13 @@ public class Model
 						count = remaining;
 					}
 					sbuf.position(position);
-					gl.glDrawElements(mIndexMode, count,
-							GL10.GL_UNSIGNED_SHORT, sbuf);
+					gl.glDrawElements(mIndexMode, count, GL10.GL_UNSIGNED_SHORT, sbuf);
 					position += count;
 				}
 			}
 			else
 			{
-				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(),
-						GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
+				gl.glDrawElements(mIndexMode, mIndexBuf.remaining(), GL10.GL_UNSIGNED_SHORT, mIndexBuf.getBuf());
 			}
 		}
 		onDrawPost(gl);
@@ -350,31 +345,31 @@ public class Model
 	{
 		StringBuffer sbuf = new StringBuffer();
 
-		sbuf.append("VERTEX=[");
-		sbuf.append(mVertexBuf.toString());
-		sbuf.append("]\n");
+		sbuf.append("VERTEX=\n");
+		sbuf.append(mVertexBuf.toString(3));
+		sbuf.append("\n");
 
 		if (mNormalBuf != null)
 		{
-			sbuf.append("NORMAL=[");
-			sbuf.append(mNormalBuf.toString());
-			sbuf.append("]\n");
+			sbuf.append("NORMAL=\n");
+			sbuf.append(mNormalBuf.toString(3));
+			sbuf.append("\n");
 		}
 		if (mTextureBuf != null)
 		{
-			sbuf.append("TEX=[");
-			sbuf.append(mTextureBuf.toString());
-			sbuf.append("]\n");
+			sbuf.append("TEX=\n");
+			sbuf.append(mTextureBuf.toString(2));
+			sbuf.append("\n");
 		}
 		if (mColorBuf != null)
 		{
-			sbuf.append("COLOR=[");
-			sbuf.append(mColorBuf.toString());
-			sbuf.append("]\n");
+			sbuf.append("COLOR=\n");
+			sbuf.append(mColorBuf.toString(4));
+			sbuf.append("\n");
 		}
-		sbuf.append("INDEX=[");
+		sbuf.append("INDEX=\n");
 		sbuf.append(mIndexBuf.toString());
-		sbuf.append("]\n");
+		sbuf.append("\n");
 		return sbuf.toString();
 	}
 

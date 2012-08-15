@@ -19,12 +19,13 @@ import com.tipsolutions.jacket.math.Vector3f;
  */
 public class Grid
 {
-	public class BufferResult
+	class BufferResult
 	{
 		FloatBuf			mVertexBuf;
 		FloatBuf			mNormalBuf;
 		FloatBuf			mTexBuf;
 		ArrayList<Short>	mIndexArray;
+		ShortBuf			mIndexBuf;
 		final Vector3f		mNormalDefault	= new Vector3f(0, 0, 1);
 		FloatBuffer			mVBuf;
 		FloatBuffer			mNBuf;
@@ -42,7 +43,7 @@ public class Grid
 			mIndexArray = new ArrayList<Short>();
 		}
 
-		public ShortBuf allocIndexBuf()
+		ShortBuf allocIndexBuf()
 		{
 			ShortBuf buf = new ShortBuf(mIndexArray.size());
 			ShortBuffer sbuf = buf.getBuf();
@@ -51,6 +52,15 @@ public class Grid
 				sbuf.put(mIndexArray.get(i));
 			}
 			return buf;
+		}
+
+		public ShortBuf getIndexBuf()
+		{
+			if (mIndexBuf == null)
+			{
+				mIndexBuf = allocIndexBuf();
+			}
+			return mIndexBuf;
 		}
 
 		public FloatBuf getNormalBuf()
@@ -73,7 +83,7 @@ public class Grid
 			return mVertexBuf;
 		}
 
-		void put(float x, float y, float percentX, float percentY)
+		public void put(float x, float y, float percentX, float percentY)
 		{
 			Vector3f normal;
 			float z;
@@ -105,27 +115,9 @@ public class Grid
 
 			normal.put(mNBuf);
 
-			mTBuf.put(percentX).put(percentY);
+			mTBuf.put(percentX).put(1 - percentY);
 
 			mPosition++;
-		}
-
-		/**
-		 * Make two triangles where passed in are four points of a square.
-		 * 0: upper-left, 1: upper-right, 2: lower-left, 3: lower-right
-		 * 
-		 * @param subStartIndex
-		 */
-		void putTwoTriangles(short[] subStartIndex)
-		{
-			/** Triangle 1 */
-			mIndexArray.add(subStartIndex[0]);
-			mIndexArray.add(subStartIndex[1]);
-			mIndexArray.add(subStartIndex[2]);
-			/** Triangle 2 */
-			mIndexArray.add(subStartIndex[3]);
-			mIndexArray.add(subStartIndex[2]);
-			mIndexArray.add(subStartIndex[1]);
 		}
 
 		/**
@@ -162,6 +154,24 @@ public class Grid
 			mIndexArray.add(rightPts[0]);
 			mIndexArray.add(rightPts[1]);
 		}
+
+		/**
+		 * Make two triangles where passed in are four points of a square.
+		 * 0: upper-left, 1: upper-right, 2: lower-left, 3: lower-right
+		 * 
+		 * @param subStartIndex
+		 */
+		void putTwoTriangles(short[] subStartIndex)
+		{
+			/** Triangle 1 */
+			mIndexArray.add(subStartIndex[0]);
+			mIndexArray.add(subStartIndex[1]);
+			mIndexArray.add(subStartIndex[2]);
+			/** Triangle 2 */
+			mIndexArray.add(subStartIndex[3]);
+			mIndexArray.add(subStartIndex[2]);
+			mIndexArray.add(subStartIndex[1]);
+		}
 	};
 
 	int				mNumRows;
@@ -187,12 +197,11 @@ public class Grid
 		setSize(nrows, ncols);
 	}
 
-	public BufferResult calc()
+	public void calc()
 	{
 		mResult = new BufferResult(calcNumPoints());
 		calcVectors();
 		calcIndexes();
-		return mResult;
 	}
 
 	/**
@@ -214,12 +223,17 @@ public class Grid
 		int incExtraRight;
 		int incExtraRowsRight;
 		int incExtraBottom;
+		int incExtraRowsBottom;
 		int subRow;
 		int subRowRight;
 		int subCol;
+		int subColBottom;
+		int numPts;
 		short edgeIndex;
 		short ptsLeft[];
+		short ptsTop[];
 		short ptsRight[] = new short[2];
+		short ptsBottom[] = new short[2];
 		short subIndexPos;
 
 		// CW
@@ -233,7 +247,7 @@ public class Grid
 
 				subDivision[0] = mSubdivision[subDivisionPos];
 				subDivision[1] = mSubdivision[subDivisionPos + 1]; // right
-				subDivision[2] = mSubdivision[subDivisionPos + mNumCols]; // bottom
+				subDivision[2] = mSubdivision[subDivisionPos + mNumCols + 1]; // bottom
 				startIndex[0] = mStartIndex[startIndexPos];
 				startIndex[1] = mStartIndex[startIndexPos + 1]; // right
 				startIndex[2] = mStartIndex[startIndexPos + mNumCols + 1]; // bottom
@@ -300,23 +314,19 @@ public class Grid
 							if (subRowRight == numCellsRight - 1)
 							{
 								ptsRight[1] = (short) (startIndex[3]);
-
-								for (subRow = 0; subRow < incExtraRowsRight - 1; subRow++)
-								{
-									ptsLeft[subRow] = edgeIndex;
-									edgeIndex += numCells;
-								}
-								// skip last point on left because it is bottom - way too complicated to consider.
+								// Skip last point on left because it is bottom - way too complicated to consider now.
+								// But we will get it later.
+								numPts = incExtraRowsRight - 1;
 							}
 							else
 							{
 								ptsRight[1] = (short) (ptsRight[0] + numCellsRight);
-
-								for (subRow = 0; subRow < incExtraRowsRight; subRow++)
-								{
-									ptsLeft[subRow] = edgeIndex;
-									edgeIndex += numCells;
-								}
+								numPts = incExtraRowsRight;
+							}
+							for (subRow = 0; subRow < numPts; subRow++)
+							{
+								ptsLeft[subRow] = edgeIndex;
+								edgeIndex += numCells;
 							}
 							mResult.putTriangles(ptsLeft, ptsRight);
 						}
@@ -324,6 +334,8 @@ public class Grid
 					//
 					// Bottom Edge
 					//
+					incExtraBottom = subDivision[2] - subDivision[0];
+
 					if (subDivision[0] <= subDivision[2])
 					{
 						// More or the same cells below than above is not so bad
@@ -340,11 +352,35 @@ public class Grid
 					else
 					{
 						// More cells above than beneath is complicated.
+						incExtraRowsBottom = MathUtils.powOf2(-incExtraBottom); // diff converted to #cells
+						ptsTop = new short[incExtraRowsBottom];
+						edgeIndex = (short) (startIndex[0] + numCells * numCells - numCells); // first upper point
 
+						for (subColBottom = 0; subColBottom < numCellsBottom; subColBottom++)
+						{
+							ptsBottom[0] = (short) (startIndex[1] + subColBottom * incExtraRowsBottom);
+
+							if (subColBottom == numCellsBottom - 1)
+							{
+								ptsBottom[1] = (short) (startIndex[3]);
+								numPts = incExtraRowsBottom - 1;
+								// Skip last point, way to complicated to figure out, and we already have triangles here
+								// anyway.
+							}
+							else
+							{
+								ptsBottom[1] = (short) (ptsBottom[0] + 1);
+								numPts = incExtraRowsBottom;
+							}
+							for (subRow = 0; subRow < numPts; subRow++)
+							{
+								ptsTop[subRow] = edgeIndex;
+								edgeIndex += numCells;
+							}
+							mResult.putTriangles(ptsTop, ptsBottom);
+						}
 					}
 					// Bottom-Right Corner
-					incExtraBottom = subDivision[2] - subDivision[0];
-
 					subStartIndex[0] = (short) (startIndex[0] + (numCells * numCells) - 1);
 					subStartIndex[1] = (short) (startIndex[1] + (numCellsRight * (numCellsRight - 1 - incExtraRight)));
 					subStartIndex[2] = (short) (startIndex[2] + numCellsBottom - 1 - incExtraBottom);
@@ -354,6 +390,7 @@ public class Grid
 				}
 			}
 			startIndexPos++;
+			subDivisionPos++;
 		}
 	}
 
@@ -377,31 +414,34 @@ public class Grid
 	{
 		int count = 0;
 		int rc;
-		/** Account for the points needed by each cell */
-		for (rc = 0; rc < mSubdivision.length; rc++)
-		{
-			count += calcNumCells(mSubdivision[rc]);
-		}
-		/*
-		 * The right and bottom edges are special. Normally the right and bottom edge of a cell are forced to have the
-		 * number of points as that neighboring cell. But for the far right and bottom edges, we re-use the subdivision
-		 * value of the just before edge cells.
-		 */
 		int row;
-		int col = mNumCols - 1;
+		int col;
+		int subNumRC = 0;
+		int subNumCells;
+
+		rc = 0;
+		/** Account for the points needed by each cell */
 		for (row = 0; row < mNumRows; row++)
 		{
-			rc = sdPos(row, col);
-			count += calcNumCells(mSubdivision[rc]);
+			for (col = 0; col < mNumCols; col++)
+			{
+				subNumRC = MathUtils.powOf2(mSubdivision[rc++]);
+				subNumCells = subNumRC * subNumRC;
+				count += subNumCells;
+			}
+			// Add equal number of points as last cell.
+			count += subNumRC;
+			rc++;
 		}
-		row = mNumRows - 1;
+		// Now points to finalize bottom cells
 		for (col = 0; col < mNumCols; col++)
 		{
-			rc = sdPos(row, col);
-			count += calcNumCells(mSubdivision[rc]);
+			subNumRC = MathUtils.powOf2(mSubdivision[posSD(mNumRows - 1, col)]);
+			count += subNumRC;
 		}
-		/** Now for the bottom right point */
+		// Now bottom-right point
 		count++;
+
 		return count;
 	}
 
@@ -448,7 +488,7 @@ public class Grid
 
 			for (int col = 0; col <= mNumCols; col++)
 			{
-				mStartIndex[siPos(row, col)] = mResult.getPosition();
+				mStartIndex[posSI(row, col)] = mResult.getPosition();
 
 				if (col == mNumCols)
 				{
@@ -478,7 +518,7 @@ public class Grid
 				else if (row == mNumRows)
 				{
 					/* Grab subdivision value set on previous row */
-					subDivision = mSubdivision[sdPos(row - 1, col)];
+					subDivision = mSubdivision[posSD(row - 1, col)];
 
 					if (subDivision > 0)
 					{
@@ -505,7 +545,7 @@ public class Grid
 				}
 				else
 				{
-					subDivision = mSubdivision[sdPos(row, col)];
+					subDivision = mSubdivision[posSD(row, col)];
 
 					if (subDivision > 0)
 					{
@@ -547,6 +587,26 @@ public class Grid
 		}
 	}
 
+	public ShortBuf getCalcIndexBuf()
+	{
+		return mResult.getIndexBuf();
+	}
+
+	public FloatBuf getCalcNormalBuf()
+	{
+		return mResult.getNormalBuf();
+	}
+
+	public FloatBuf getCalcTexBuf()
+	{
+		return mResult.getTexBuf();
+	}
+
+	public FloatBuf getCalcVertexBuf()
+	{
+		return mResult.getVertexBuf();
+	}
+
 	public float getHeight()
 	{
 		return mBounds2D.getSizeY();
@@ -578,15 +638,39 @@ public class Grid
 	}
 
 	/**
-	 * Get Subdivision index from row,col
+	 * Return subDivision index from row,col
 	 * 
 	 * @param row
 	 * @param col
 	 * @return
 	 */
-	int sdPos(int row, int col)
+	int posSD(int row, int col)
 	{
-		return row * mNumCols + col;
+		return row * (mNumCols + 1) + col;
+	}
+
+	/**
+	 * Return startIndex index from row,col
+	 * 
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	int posSI(int row, int col)
+	{
+		return row * (mNumCols + 1) + col;
+	}
+
+	public Grid setBounds(Bounds2D bounds)
+	{
+		mBounds2D = bounds;
+		return this;
+	}
+
+	public Grid setCompute(ICalcValue calc)
+	{
+		mCompute = calc;
+		return this;
 	}
 
 	public void setSize(int nrows, int ncols)
@@ -594,8 +678,9 @@ public class Grid
 		mNumRows = nrows;
 		mNumCols = ncols;
 
-		mSubdivision = new byte[nrows * ncols];
-		mStartIndex = new short[(nrows + 1) * (ncols + 1)];
+		int size = (nrows + 1) * (ncols + 1);
+		mSubdivision = new byte[size];
+		mStartIndex = new short[size];
 	}
 
 	/**
@@ -608,22 +693,23 @@ public class Grid
 	 */
 	public void setSubdivision(int row, int col, byte subdivision)
 	{
-		int i = sdPos(row, col);
-		if (i >= 0 && i < mSubdivision.length)
+		int rc = posSD(row, col);
+		if (rc >= 0 && rc < mSubdivision.length)
 		{
-			mSubdivision[sdPos(row, col)] = subdivision;
+			mSubdivision[rc] = subdivision;
+			/*
+			 * There are no set-able subdivisions beyond the edge.
+			 * However, for the sake of computation we pretend there is.
+			 * We set it to be the same as the edge.
+			 */
+			if (row == mNumRows - 1)
+			{
+				mSubdivision[posSD(row + 1, col)] = subdivision;
+			}
+			if (col == mNumCols - 1)
+			{
+				mSubdivision[posSD(row, col + 1)] = subdivision;
+			}
 		}
-	}
-
-	/**
-	 * Return startIndex index from row,col
-	 * 
-	 * @param row
-	 * @param col
-	 * @return
-	 */
-	int siPos(int row, int col)
-	{
-		return row * (mNumCols + 1) + col;
 	}
 }

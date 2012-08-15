@@ -4,21 +4,18 @@ import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.model.Model;
 import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
-import com.tipsolutions.jacket.terrain.TerrainGrids;
 
 public class Map
 {
-	TerrainGrids	mTerrainGrids;
+	TerrainGrid		mTerrainGrid;
 	TextureManager	mTM;
 
 	public Map(TextureManager tm)
 	{
 		mTM = tm;
-		mTerrainGrids = new TerrainGrids();
-		TerrainGrid grid;
+
 		// CalcGroup calcGroup;
 		// CalcStore calcStore;
 
@@ -59,28 +56,22 @@ public class Map
 		// grid.setTexture(mTM.getTexture(R.drawable.dirt));
 		// grid.init();
 
-		Bounds2D bounds = new Bounds2D(0, 0, 10f, 10f);
-		grid = new TerrainGrid().setBounds(bounds).setGridSize(1, 1);
-		grid.setCompute(new CalcConstant(1f, bounds));
-		grid.setTexture(mTM.getTexture(R.drawable.sample));
-		grid.init();
-
-		mTerrainGrids.addGrid(grid);
+		Bounds2D bounds = new Bounds2D(-1f, -1f, 1f, 1f);
+		mTerrainGrid = new TerrainGrid();
+		mTerrainGrid.setBounds(bounds).setGridSize(1, 1);
+		mTerrainGrid.setCompute(new CalcConstant(0f, bounds));
+		mTerrainGrid.setTexture(mTM.getTexture(R.drawable.sample));
+		mTerrainGrid.init();
 	}
 
 	public void onDraw(MatrixTrackingGL gl)
 	{
-		mTerrainGrids.onDraw(gl);
-	}
-
-	public Model getPrimaryModel()
-	{
-		return mTerrainGrids.getGrid(0);
+		mTerrainGrid.onDraw(gl);
 	}
 
 	public String toString()
 	{
-		return mTerrainGrids.toString();
+		return mTerrainGrid.toString();
 	}
 
 }
