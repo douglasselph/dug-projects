@@ -33,7 +33,7 @@ public class TestSquareRenderer extends ControlRenderer
 	{
 		super.onDrawFrame(gl);
 
-		gl.glTranslatef(0, 0, -3.0f);
+		gl.glTranslatef(0, 0, -11f);
 		gl.glRotatef(mAngle * 0.25f, 0, 0, 1);
 		mTestSquare.draw(gl);
 		mAngle += 1.2f;

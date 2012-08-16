@@ -7,7 +7,6 @@ import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
 
 /**
  * Like a regular surface view but provides for touch event support.
@@ -105,10 +104,10 @@ public class ControlSurfaceView extends GLSurfaceView implements IView
 	// fos.close();
 	// }
 
-	public void setOnAfterNextRender(OnAfterNextRender run)
-	{
-		mRenderer.setOnAfterNextRender(run);
-		requestRender();
-	}
+	// public void setOnAfterNextRender(OnAfterNextRender run)
+	// {
+	// mRenderer.setOnAfterNextRender(run);
+	// requestRender();
+	// }
 
 }

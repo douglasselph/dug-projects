@@ -11,6 +11,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
@@ -19,10 +20,13 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class ControlRenderer implements GLSurfaceView.Renderer
 {
-	public interface OnAfterNextRender
-	{
-		void run(ControlRenderer renderer, MatrixTrackingGL gl);
-	};
+	static final String					TAG	= "ControlRenderer";
+	static final Boolean				ERR	= true;				// If set to true show errors from opengl.
+
+	// public interface OnAfterNextRender
+	// {
+	// void run(ControlRenderer renderer, MatrixTrackingGL gl);
+	// };
 
 	protected final TextureManager		mTM;
 	protected final ControlSurfaceView	mView;
@@ -31,7 +35,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 	protected int						mHeight;
 	protected final Camera				mCamera;
 	protected MatrixTrackingGL			mLastGL;
-	protected OnAfterNextRender			mOnAfterNextRender;
+	// protected OnAfterNextRender mOnAfterNextRender;
 	protected boolean					mRenderWhenDirty;
 
 	public ControlRenderer(ControlSurfaceView view, TextureManager tm)
@@ -69,9 +73,9 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 
 	protected void onCreatedInitDepth(GL10 gl)
 	{
-		gl.glClearDepthf(1.0f);
-		gl.glEnable(GL10.GL_DEPTH_TEST);
-		gl.glDepthFunc(GL10.GL_LEQUAL);
+		// gl.glClearDepthf(1.0f);
+		// gl.glEnable(GL10.GL_DEPTH_TEST);
+		// gl.glDepthFunc(GL10.GL_LEQUAL);
 	}
 
 	protected void onCreatedInitHint(GL10 gl)
@@ -121,11 +125,15 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 
 	protected void onDrawFrameDone(MatrixTrackingGL gl)
 	{
-		if (mOnAfterNextRender != null)
+		if (ERR)
 		{
-			mOnAfterNextRender.run(this, gl);
-			mOnAfterNextRender = null;
+			printErrors(gl);
 		}
+		// if (mOnAfterNextRender != null)
+		// {
+		// mOnAfterNextRender.run(this, gl);
+		// mOnAfterNextRender = null;
+		// }
 	}
 
 	public void onSurfaceChanged(GL10 gl, int width, int height)
@@ -147,8 +155,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		if (mBackground != null)
 		{
 			// define the color we want to be displayed as the "clipping wall"
-			gl.glClearColor(mBackground.getRed(), mBackground.getGreen(),
-					mBackground.getBlue(), mBackground.getAlpha());
+			gl.glClearColor(mBackground.getRed(), mBackground.getGreen(), mBackground.getBlue(), mBackground.getAlpha());
 		}
 		else
 		{
@@ -167,6 +174,40 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		onCreatedInitHint(gl);
 	}
 
+	protected void printErrors(GL10 gl)
+	{
+		int err;
+		while ((err = gl.glGetError()) != GL10.GL_NO_ERROR)
+		{
+			printError(getError(err));
+		}
+	}
+
+	protected void printError(String msg)
+	{
+		Log.e(TAG, msg);
+	}
+
+	static protected String getError(int code)
+	{
+		switch (code)
+		{
+			case GL10.GL_INVALID_ENUM:
+				return "Invalid enum";
+			case GL10.GL_INVALID_OPERATION:
+				return "Invalid operation";
+			case GL10.GL_INVALID_VALUE:
+				return "Invalid value";
+			case GL10.GL_STACK_OVERFLOW:
+				return "Stack overflow";
+			case GL10.GL_STACK_UNDERFLOW:
+				return "Stack underflow";
+			case GL10.GL_OUT_OF_MEMORY:
+				return "out of memory";
+		}
+		return null;
+	}
+
 	/**
 	 * Needs to happen before surface created
 	 * 
@@ -177,10 +218,10 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		mBackground = color;
 	}
 
-	public void setOnAfterNextRender(OnAfterNextRender run)
-	{
-		mOnAfterNextRender = run;
-	}
+	// public void setOnAfterNextRender(OnAfterNextRender run)
+	// {
+	// mOnAfterNextRender = run;
+	// }
 
 	public void setRenderOnDirty()
 	{
@@ -195,13 +236,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		int size = width * height;
 		ByteBuffer buf = ByteBuffer.allocateDirect(size * 4);
 		buf.order(ByteOrder.nativeOrder());
-		gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA,
-				GL10.GL_UNSIGNED_BYTE, buf);
+		gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
 		int data[] = new int[size];
 		buf.asIntBuffer().get(data);
 		buf = null;
-		Bitmap bitmap = Bitmap.createBitmap(width, height,
-				Bitmap.Config.RGB_565);
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
 		bitmap.setPixels(data, size - width, -width, 0, 0, width, height);
 		data = null;
 

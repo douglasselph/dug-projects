@@ -17,6 +17,7 @@ import com.tipsolutions.bugplug.test.CubeFRenderer;
 import com.tipsolutions.bugplug.test.CubeRenderer;
 import com.tipsolutions.bugplug.test.RenderBox;
 import com.tipsolutions.bugplug.test.RenderSquare;
+import com.tipsolutions.bugplug.test.SimpleTestSquareRenderer;
 import com.tipsolutions.bugplug.test.TestSquareRenderer;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -29,15 +30,16 @@ public class BugPlugMapActivity extends Activity
 		Box, BoxTex, Cube, CubeF, Map, Square, SquareTex, TestSquare
 	};
 
-	static final int	SURFACE_ID				= 1;
-
-	TextView			mCamEye;
-	TextView			mCamLook;
-	TextView			mCamUp;
-	ControlRenderer		mRenderer;
-	ControlSurfaceView	mSurfaceView;
-	Renderer			mChoice					= Renderer.Map;
-	boolean				mRenderOnlyWhenDirty	= true;
+	static final int		SURFACE_ID				= 1;
+	static final Boolean	SIMPLE_TEST				= false;
+	TextView				mCamEye;
+	TextView				mCamLook;
+	TextView				mCamUp;
+	ControlRenderer			mRenderer;
+	ControlSurfaceView		mSurfaceView;
+	GLSurfaceView			mSimpleSurfaceView;
+	final Renderer			mChoice					= Renderer.TestSquare;
+	final boolean			mRenderOnlyWhenDirty	= false;
 
 	ControlRenderer getRenderer()
 	{
@@ -86,6 +88,9 @@ public class BugPlugMapActivity extends Activity
 
 		setContentView(R.layout.main);
 
+		mSimpleSurfaceView = new GLSurfaceView(this);
+		mSimpleSurfaceView.setRenderer(new SimpleTestSquareRenderer(this));
+
 		mSurfaceView = new ControlSurfaceView(this);
 		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mSurfaceView.setId(SURFACE_ID);
@@ -106,9 +111,17 @@ public class BugPlugMapActivity extends Activity
 		setRenderer(mChoice, mRenderOnlyWhenDirty);
 
 		FrameLayout container = (FrameLayout) findViewById(R.id.container);
-		container.addView(mSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
-				LayoutParams.MATCH_PARENT));
 
+		if (SIMPLE_TEST)
+		{
+			container.addView(mSimpleSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+					LayoutParams.MATCH_PARENT));
+		}
+		else
+		{
+			container.addView(mSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+					LayoutParams.MATCH_PARENT));
+		}
 		mCamEye = (TextView) findViewById(R.id.cameraEye);
 		mCamLook = (TextView) findViewById(R.id.cameraLook);
 		mCamUp = (TextView) findViewById(R.id.cameraUp);
@@ -140,7 +153,7 @@ public class BugPlugMapActivity extends Activity
 
 	void setRenderer(Renderer which, boolean onlyWhenDirty)
 	{
-		mChoice = which;
+		// mChoice = which;
 		mRenderer = getRenderer();
 		mSurfaceView.setRenderer(mRenderer);
 

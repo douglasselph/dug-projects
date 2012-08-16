@@ -27,7 +27,7 @@ public class SimpleTestSquareRenderer implements GLSurfaceView.Renderer
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glLoadIdentity();
 
-		gl.glTranslatef(0, 0, -5.0f);
+		gl.glTranslatef(0, 0, -11.0f);
 		gl.glRotatef(mAngle * 0.25f, 0, 0, 1);
 		mSquare.draw(gl);
 		mAngle += 1.2f;
@@ -44,8 +44,7 @@ public class SimpleTestSquareRenderer implements GLSurfaceView.Renderer
 		gl.glLoadIdentity(); // Reset The Projection Matrix
 
 		// Calculate The Aspect Ratio Of The Window
-		GLU.gluPerspective(gl, 45.0f, (float) width / (float) height, 0.1f,
-				100.0f);
+		GLU.gluPerspective(gl, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
 
 		gl.glMatrixMode(GL10.GL_MODELVIEW); // Select The Modelview Matrix
 		gl.glLoadIdentity(); // Reset The Modelview Matrix
