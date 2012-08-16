@@ -2,6 +2,8 @@ package com.tipsolutions.bugplug.map;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
@@ -10,9 +12,11 @@ import com.tipsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
 {
-	TerrainGrid		mTerrainGrid;
-	TextureManager	mTM;
-	final float		mSize	= 5f;
+	static final String	TAG		= "Map";
+
+	TerrainGrid			mTerrainGrid;
+	TextureManager		mTM;
+	final float			mSize	= 5f;
 
 	public Map(TextureManager tm)
 	{
@@ -60,11 +64,18 @@ public class Map
 
 		Bounds2D bounds = new Bounds2D(-mSize, -mSize, mSize, mSize);
 		mTerrainGrid = new TerrainGrid();
-		mTerrainGrid.setBounds(bounds).setGridSize(2, 2);
+		try
+		{
+			mTerrainGrid.setBounds(bounds).setGridSize(2, 2);
+		}
+		catch (Exception ex)
+		{
+			Log.e(TAG, ex.getMessage());
+		}
 		mTerrainGrid.setCompute(new CalcConstant(0f, bounds));
 		mTerrainGrid.setTexture(mTM.getTexture(R.drawable.sample));
 		mTerrainGrid.setSubdivision(1, 0, 1);
-		// mTerrainGrid.setSubdivision(1, 1, 1);
+		mTerrainGrid.setSubdivision(1, 1, 1);
 		mTerrainGrid.setSubdivision(0, 1, 1);
 
 		mTerrainGrid.init();

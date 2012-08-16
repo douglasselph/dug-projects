@@ -52,7 +52,7 @@ public class TerrainGrid extends Model
 		return this;
 	}
 
-	public TerrainGrid setGridSize(int nrows, int ncols)
+	public TerrainGrid setGridSize(int nrows, int ncols) throws Exception
 	{
 		mGrid.setSize(nrows, ncols);
 		return this;
