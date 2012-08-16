@@ -21,7 +21,6 @@ public class RenderMap extends ControlRenderer
 	{
 		super.onDrawFrame(gl);
 
-		gl.glTranslatef(0, 0, -3.0f);
 		mMap.onDraw(gl);
 	}
 

@@ -4,19 +4,18 @@ import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.model.Square;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class RenderSquare extends ControlRenderer
 {
-	Square	mSquare;
+	Square2	mSquare;
 	float	mAngle;
 
 	public RenderSquare(ControlSurfaceView view, TextureManager tm)
 	{
 		super(view, tm);
-		mSquare = new Square(1);
+		mSquare = new Square2(1);
 
 		if (tm == null)
 		{

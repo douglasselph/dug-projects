@@ -11,6 +11,7 @@ public class Map
 {
 	TerrainGrid		mTerrainGrid;
 	TextureManager	mTM;
+	final float		mSize	= 4f;
 
 	public Map(TextureManager tm)
 	{
@@ -56,7 +57,7 @@ public class Map
 		// grid.setTexture(mTM.getTexture(R.drawable.dirt));
 		// grid.init();
 
-		Bounds2D bounds = new Bounds2D(-1f, -1f, 1f, 1f);
+		Bounds2D bounds = new Bounds2D(-mSize, -mSize, mSize, mSize);
 		mTerrainGrid = new TerrainGrid();
 		mTerrainGrid.setBounds(bounds).setGridSize(1, 1);
 		mTerrainGrid.setCompute(new CalcConstant(0f, bounds));
@@ -66,6 +67,7 @@ public class Map
 
 	public void onDraw(MatrixTrackingGL gl)
 	{
+		gl.glTranslatef(0, 0, -mSize * 2.1f);
 		mTerrainGrid.onDraw(gl);
 	}
 

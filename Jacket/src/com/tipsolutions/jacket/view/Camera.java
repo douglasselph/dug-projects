@@ -4,7 +4,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.util.Log;
 
-public class Camera {
+public class Camera
+{
 
 	static final Boolean	LOG			= false;
 	static final String		TAG			= "Camera";
@@ -24,7 +25,8 @@ public class Camera {
 	protected float			mBottom;
 	protected boolean		mDoOrtho;
 
-	public Camera() {
+	public Camera()
+	{
 	}
 
 	/**
@@ -32,17 +34,19 @@ public class Camera {
 	 * 
 	 * @param gl
 	 */
-	public void setPerspective(GL10 gl) {
+	public void setPerspective(GL10 gl)
+	{
 		gl.glViewport(0, 0, mWidth, mHeight);
-		gluPerspective(gl, mAngle, (float) mWidth / mHeight, mNearPlane,
-				mFarPlane);
+		gluPerspective(gl, mAngle, (float) mWidth / mHeight, mNearPlane, mFarPlane);
 	}
 
-	public float getHeight() {
+	public float getHeight()
+	{
 		return mHeight;
 	}
 
-	public float getWidth() {
+	public float getWidth()
+	{
 		return mWidth;
 	}
 
@@ -55,8 +59,8 @@ public class Camera {
 	 * @param zNear
 	 * @param zFar
 	 */
-	void gluPerspective(GL10 gl, float fovy, float aspect, float zNear,
-			float zFar) {
+	void gluPerspective(GL10 gl, float fovy, float aspect, float zNear, float zFar)
+	{
 		mTop = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
 		mBottom = -mTop;
 		mLeft = mBottom * aspect;
@@ -70,44 +74,49 @@ public class Camera {
 			gl.glOrthof(mLeft, mRight, mBottom, mTop, zNear, zFar);
 			if (LOG)
 			{
-				Log.i(TAG, "glOrtho(" + mLeft + ", " + mRight + ", " + mBottom
-						+ ", " + mTop + ", " + zNear + ", " + zFar + ")");
+				Log.i(TAG, "glOrtho(" + mLeft + ", " + mRight + ", " + mBottom + ", " + mTop + ", " + zNear + ", "
+						+ zFar + ")");
 			}
-		} else
+		}
+		else
 		{
 			gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
 			if (LOG)
 			{
-				Log.i(TAG, "glFrustum(" + mLeft + ", " + mRight + ", "
-						+ mBottom + ", " + mTop + ", " + zNear + ", " + zFar
-						+ ")");
+				Log.i(TAG, "glFrustum(" + mLeft + ", " + mRight + ", " + mBottom + ", " + mTop + ", " + zNear + ", "
+						+ zFar + ")");
 			}
 		}
 	}
 
-	public Camera setOrtho() {
+	public Camera setOrtho()
+	{
 		mDoOrtho = true;
 		return this;
 	}
 
-	public Camera setPerspective() {
+	public Camera setPerspective()
+	{
 		mDoOrtho = false;
 		return this;
 	}
 
-	public Camera setNearFar(float near, float far) {
+	public Camera setNearFar(float near, float far)
+	{
 		mNearPlane = near;
 		mFarPlane = far;
 		return this;
 	}
 
-	public Camera setScreenDimension(int width, int height) {
+	public Camera setScreenDimension(int width, int height)
+	{
 		mWidth = width;
 		mHeight = height;
 		return this;
 	}
 
-	public String toString() {
+	public String toString()
+	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("[Lf,Rt,Bt,Tp]=");
 		sbuf.append(mLeft);

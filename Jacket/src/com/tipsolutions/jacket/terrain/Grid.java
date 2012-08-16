@@ -115,7 +115,7 @@ public class Grid
 
 			normal.put(mNBuf);
 
-			mTBuf.put(percentX).put(1 - percentY);
+			mTBuf.put(percentX).put(percentY);
 
 			mPosition++;
 		}
@@ -454,7 +454,7 @@ public class Grid
 		float height = getHeight();
 		float incX = width / mNumCols;
 		float incY = height / mNumRows;
-		float y = getStartY();
+		float y = mBounds2D.getMaxY();
 		float x;
 		float percentX;
 		float percentY = 0;
@@ -483,7 +483,7 @@ public class Grid
 		 */
 		for (int row = 0; row <= mNumRows; row++)
 		{
-			x = getStartX();
+			x = mBounds2D.getMinX();
 			percentX = 0;
 
 			for (int col = 0; col <= mNumCols; col++)
@@ -495,7 +495,7 @@ public class Grid
 					if (row == mNumRows)
 					{
 						/* One final point */
-						mResult.put(subX, subY, subPercentX, subPercentY);
+						mResult.put(x, y, percentX, percentY);
 					}
 					else
 					{
@@ -582,7 +582,7 @@ public class Grid
 				x += incX;
 				percentX += percentIncX;
 			}
-			y += incY;
+			y -= incY;
 			percentY += percentIncY;
 		}
 	}
@@ -620,16 +620,6 @@ public class Grid
 	public int getNumRows()
 	{
 		return mNumRows;
-	}
-
-	public float getStartX()
-	{
-		return mBounds2D.getMinX();
-	}
-
-	public float getStartY()
-	{
-		return mBounds2D.getMinY();
 	}
 
 	public float getWidth()

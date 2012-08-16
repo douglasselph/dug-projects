@@ -1,6 +1,7 @@
 package com.tipsolutions.bugplug;
 
 import android.app.Activity;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -28,14 +29,15 @@ public class BugPlugMapActivity extends Activity
 		Box, BoxTex, Cube, CubeF, Map, Square, SquareTex, TestSquare
 	};
 
-	static final int	SURFACE_ID	= 1;
+	static final int	SURFACE_ID				= 1;
 
 	TextView			mCamEye;
 	TextView			mCamLook;
 	TextView			mCamUp;
 	ControlRenderer		mRenderer;
 	ControlSurfaceView	mSurfaceView;
-	Renderer			mChoice		= Renderer.Map;
+	Renderer			mChoice					= Renderer.Map;
+	boolean				mRenderOnlyWhenDirty	= true;
 
 	ControlRenderer getRenderer()
 	{
@@ -101,12 +103,11 @@ public class BugPlugMapActivity extends Activity
 		});
 		mSurfaceView.setEventTap(eventTap);
 
-		setRenderer(mChoice);
+		setRenderer(mChoice, mRenderOnlyWhenDirty);
 
 		FrameLayout container = (FrameLayout) findViewById(R.id.container);
 		container.addView(mSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT));
-		// mSurfaceView.requestRender();
 
 		mCamEye = (TextView) findViewById(R.id.cameraEye);
 		mCamLook = (TextView) findViewById(R.id.cameraLook);
@@ -128,31 +129,26 @@ public class BugPlugMapActivity extends Activity
 	{
 		switch (item.getItemId())
 		{
-			case R.id.menu_box:
-				setRenderer(Renderer.BoxTex);
-				break;
-			case R.id.menu_cube:
-				setRenderer(Renderer.Cube);
-				break;
-			case R.id.menu_map:
-				setRenderer(Renderer.Map);
-				break;
-			case R.id.menu_square:
-				setRenderer(Renderer.SquareTex);
+			case R.id.menu_exit:
+				finish();
 				break;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
-
 		return true;
 	}
 
-	void setRenderer(Renderer which)
+	void setRenderer(Renderer which, boolean onlyWhenDirty)
 	{
 		mChoice = which;
 		mRenderer = getRenderer();
 		mSurfaceView.setRenderer(mRenderer);
 
+		if (onlyWhenDirty)
+		{
+			mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+			mSurfaceView.requestRender();
+		}
 		Log.d("DEBUG", mRenderer.toString());
 	}
 

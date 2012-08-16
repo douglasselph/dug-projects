@@ -14,7 +14,8 @@ import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
  * 
  * @author dug
  */
-public class ControlSurfaceView extends GLSurfaceView implements IView {
+public class ControlSurfaceView extends GLSurfaceView implements IView
+{
 
 	// final float TOUCH_SCALE_FACTOR = 180.0f / 320;
 	// final float TRACKBALL_SCALE_FACTOR = 36.0f;
@@ -22,39 +23,47 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 	// final Controller mController;
 	ControlRenderer	mRenderer;
 
-	class MyGLWrapper implements GLWrapper {
-		public GL wrap(GL gl) {
+	class MyGLWrapper implements GLWrapper
+	{
+		public GL wrap(GL gl)
+		{
 			return new MatrixTrackingGL(gl);
 		}
 	};
 
-	public ControlSurfaceView(Context context) {
+	public ControlSurfaceView(Context context)
+	{
 		super(context);
 		setGLWrapper(new MyGLWrapper());
 		// mController = new Controller(control, this);
 	}
 
-	public void setEventTap(IEventTap eventTap) {
+	public void setEventTap(IEventTap eventTap)
+	{
 		mEventTap = eventTap;
 	}
 
-	public Renderer getRenderer() {
+	public Renderer getRenderer()
+	{
 		return mRenderer;
 	}
 
-	public void setRenderer(ControlRenderer renderer) {
+	public void setRenderer(ControlRenderer renderer)
+	{
 		mRenderer = renderer;
 		super.setRenderer(renderer);
 	}
 
 	@Override
-	public void onResume() {
+	public void onResume()
+	{
 		super.onResume();
 		requestRender();
 	}
 
 	@Override
-	public boolean onTouchEvent(final MotionEvent e) {
+	public boolean onTouchEvent(final MotionEvent e)
+	{
 		boolean changed = false;
 		if (mEventTap != null)
 		{
@@ -96,7 +105,8 @@ public class ControlSurfaceView extends GLSurfaceView implements IView {
 	// fos.close();
 	// }
 
-	public void setOnAfterNextRender(OnAfterNextRender run) {
+	public void setOnAfterNextRender(OnAfterNextRender run)
+	{
 		mRenderer.setOnAfterNextRender(run);
 		requestRender();
 	}
