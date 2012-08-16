@@ -1,9 +1,10 @@
 package com.tipsolutions.bugplug.map;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
 
@@ -65,7 +66,7 @@ public class Map
 		mTerrainGrid.init();
 	}
 
-	public void onDraw(MatrixTrackingGL gl)
+	public void onDraw(GL10 gl)
 	{
 		gl.glTranslatef(0, 0, -10.1f); // -mSize * 2.1f
 		mTerrainGrid.onDraw(gl);

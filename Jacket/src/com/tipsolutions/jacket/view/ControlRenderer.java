@@ -16,7 +16,6 @@ import android.util.Log;
 import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class ControlRenderer implements GLSurfaceView.Renderer
 {
@@ -34,7 +33,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 	protected int						mWidth;
 	protected int						mHeight;
 	protected final Camera				mCamera;
-	protected MatrixTrackingGL			mLastGL;
 	// protected OnAfterNextRender mOnAfterNextRender;
 	protected boolean					mRenderWhenDirty;
 
@@ -45,7 +43,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		mCamera = new Camera();
 	}
 
-	protected void clearScene(MatrixTrackingGL gl)
+	protected void clearScene(GL10 gl)
 	{
 		// clear the color buffer to show the ClearColor we called above...
 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
@@ -59,11 +57,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 	public float getHeight()
 	{
 		return mHeight;
-	}
-
-	public MatrixTrackingGL getLastGL()
-	{
-		return mLastGL;
 	}
 
 	public float getWidth()
@@ -100,30 +93,25 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 
 	public void onDrawFrame(GL10 gl)
 	{
-		MatrixTrackingGL mgl;
-		if (gl instanceof MatrixTrackingGL)
-		{
-			mgl = (MatrixTrackingGL) gl;
-		}
-		else
-		{
-			mgl = new MatrixTrackingGL(gl);
-		}
-		mLastGL = mgl;
-		clearScene(mgl);
-
-		mgl.glMatrixMode(GL10.GL_MODELVIEW);
-		mgl.glLoadIdentity();
-
-		onDrawFrame(mgl);
-		onDrawFrameDone(mgl);
+		onDrawFrameStart(gl);
+		onDrawFrameContents(gl);
+		onDrawFrameDone(gl);
 	}
 
-	protected void onDrawFrame(MatrixTrackingGL gl)
+	protected void onDrawFrameStart(GL10 gl)
 	{
+		clearScene(gl);
+
+		gl.glMatrixMode(GL10.GL_MODELVIEW);
+		gl.glLoadIdentity();
 	}
 
-	protected void onDrawFrameDone(MatrixTrackingGL gl)
+	protected void onDrawFrameContents(GL10 gl)
+	{
+
+	}
+
+	protected void onDrawFrameDone(GL10 gl)
 	{
 		if (ERR)
 		{
@@ -229,7 +217,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 	}
 
-	public Bitmap snapshot(MatrixTrackingGL gl)
+	public Bitmap snapshot(GL10 gl)
 	{
 		int width = mWidth;
 		int height = mHeight;
@@ -258,7 +246,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		return bitmap;
 	}
 
-	public void snapshot(MatrixTrackingGL gl, File file) throws IOException
+	public void snapshot(GL10 gl, File file) throws IOException
 	{
 		Bitmap bitmap = snapshot(gl);
 		ImageUtils.SaveBitmap(bitmap, file);

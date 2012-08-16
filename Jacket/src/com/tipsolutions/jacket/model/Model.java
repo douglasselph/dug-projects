@@ -13,7 +13,6 @@ import com.tipsolutions.jacket.math.BufUtils.ShortBuf;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.ComputeBounds;
 import com.tipsolutions.jacket.math.Matrix4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 
@@ -201,7 +200,7 @@ public class Model
 		return mVertexBuf.getBuf();
 	}
 
-	public void onDraw(MatrixTrackingGL gl)
+	public void onDraw(GL10 gl)
 	{
 		boolean didPush = false;
 
@@ -214,9 +213,9 @@ public class Model
 			gl.glPushMatrix();
 			didPush = true;
 
-			Matrix4f curMatrix = gl.getMatrix();
-			Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
-			gl.glLoadMatrix(useMatrix);
+			// Matrix4f curMatrix = gl.getMatrix();
+			// Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
+			// gl.glLoadMatrix(useMatrix);
 		}
 		if (!hasColorArray() && mColor != null)
 		{
@@ -306,11 +305,11 @@ public class Model
 		}
 	}
 
-	protected void onDrawPost(MatrixTrackingGL gl)
+	protected void onDrawPost(GL10 gl)
 	{
 	}
 
-	protected void onDrawPre(MatrixTrackingGL gl)
+	protected void onDrawPre(GL10 gl)
 	{
 		gl.glFrontFace(GL10.GL_CW);
 		gl.glEnable(GL10.GL_CULL_FACE);

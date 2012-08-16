@@ -1,7 +1,8 @@
 package com.tipsolutions.bugplug.map;
 
+import javax.microedition.khronos.opengles.GL10;
+
 import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
@@ -17,9 +18,9 @@ public class RenderMap extends ControlRenderer
 	}
 
 	@Override
-	protected void onDrawFrame(MatrixTrackingGL gl)
+	public void onDrawFrameContents(GL10 gl)
 	{
-		super.onDrawFrame(gl);
+		super.onDrawFrameContents(gl);
 
 		mMap.onDraw(gl);
 	}

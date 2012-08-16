@@ -6,7 +6,6 @@ import java.nio.ShortBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager.Texture;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 public class Square extends Model
 {
@@ -61,7 +60,7 @@ public class Square extends Model
 	}
 
 	@Override
-	protected void onDrawPre(MatrixTrackingGL gl)
+	protected void onDrawPre(GL10 gl)
 	{
 		super.onDrawPre(gl);
 		gl.glFrontFace(GL10.GL_CW);

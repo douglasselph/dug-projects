@@ -3,7 +3,6 @@ package com.tipsolutions.jacket.terrain;
 import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.math.Bounds2D;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Model;
 
 /**
@@ -60,7 +59,7 @@ public class TerrainGrid extends Model
 	}
 
 	@Override
-	protected void onDrawPre(MatrixTrackingGL gl)
+	protected void onDrawPre(GL10 gl)
 	{
 		super.onDrawPre(gl);
 		gl.glFrontFace(GL10.GL_CW);

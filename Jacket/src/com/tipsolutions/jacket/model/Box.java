@@ -8,7 +8,6 @@ import javax.microedition.khronos.opengles.GL10;
 import com.tipsolutions.jacket.image.TextureManager.Texture;
 import com.tipsolutions.jacket.math.Bounds3D;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.math.Vector3f;
 
 /**
@@ -41,8 +40,7 @@ public class Box extends Model
 		FloatBuffer buf = initColorBuf(count);
 		for (int i = 0; i < 4 * 6; i++)
 		{
-			buf.put(mColor.getRed()).put(mColor.getGreen())
-					.put(mColor.getBlue()).put(mColor.getAlpha());
+			buf.put(mColor.getRed()).put(mColor.getGreen()).put(mColor.getBlue()).put(mColor.getAlpha());
 		}
 	}
 
@@ -284,7 +282,7 @@ public class Box extends Model
 	}
 
 	@Override
-	protected void onDrawPre(MatrixTrackingGL gl)
+	protected void onDrawPre(GL10 gl)
 	{
 		super.onDrawPre(gl);
 		gl.glFrontFace(GL10.GL_CCW);

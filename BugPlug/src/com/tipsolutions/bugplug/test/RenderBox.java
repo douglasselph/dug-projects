@@ -6,7 +6,6 @@ import javax.microedition.khronos.opengles.GL10;
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 import com.tipsolutions.jacket.model.Box;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -39,9 +38,10 @@ public class RenderBox extends ControlRenderer
 	}
 
 	@Override
-	public void onDrawFrame(MatrixTrackingGL gl)
+	protected void onDrawFrameContents(GL10 gl)
 	{
-		super.onDrawFrame(gl);
+		super.onDrawFrameContents(gl);
+
 		gl.glTranslatef(0, 0, -3.0f);
 
 		gl.glRotatef(mAngle, 0, 1, 0);

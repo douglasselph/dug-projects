@@ -1,12 +1,8 @@
 package com.tipsolutions.jacket.view;
 
-import javax.microedition.khronos.opengles.GL;
-
 import android.content.Context;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
-
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
 
 /**
  * Like a regular surface view but provides for touch event support.
@@ -15,26 +11,12 @@ import com.tipsolutions.jacket.math.MatrixTrackingGL;
  */
 public class ControlSurfaceView extends GLSurfaceView implements IView
 {
-
-	// final float TOUCH_SCALE_FACTOR = 180.0f / 320;
-	// final float TRACKBALL_SCALE_FACTOR = 36.0f;
 	IEventTap		mEventTap	= null;
-	// final Controller mController;
 	ControlRenderer	mRenderer;
-
-	class MyGLWrapper implements GLWrapper
-	{
-		public GL wrap(GL gl)
-		{
-			return new MatrixTrackingGL(gl);
-		}
-	};
 
 	public ControlSurfaceView(Context context)
 	{
 		super(context);
-		setGLWrapper(new MyGLWrapper());
-		// mController = new Controller(control, this);
 	}
 
 	public void setEventTap(IEventTap eventTap)

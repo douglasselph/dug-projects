@@ -1,6 +1,7 @@
 package com.tipsolutions.bugplug.test;
 
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import javax.microedition.khronos.opengles.GL10;
+
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
@@ -16,9 +17,9 @@ public class CubeRenderer extends ControlRenderer
 	}
 
 	@Override
-	public void onDrawFrame(MatrixTrackingGL gl)
+	protected void onDrawFrameContents(GL10 gl)
 	{
-		super.onDrawFrame(gl);
+		super.onDrawFrameContents(gl);
 
 		gl.glTranslatef(0, 0, -3.0f);
 
