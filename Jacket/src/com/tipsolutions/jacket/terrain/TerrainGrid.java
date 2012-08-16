@@ -2,6 +2,8 @@ package com.tipsolutions.jacket.terrain;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.model.Model;
 
@@ -11,7 +13,9 @@ import com.tipsolutions.jacket.model.Model;
  */
 public class TerrainGrid extends Model
 {
-	Grid	mGrid;
+	static final String	TAG	= "TerrainGrid";
+
+	Grid				mGrid;
 
 	public TerrainGrid()
 	{
@@ -55,6 +59,19 @@ public class TerrainGrid extends Model
 	public TerrainGrid setGridSize(int nrows, int ncols) throws Exception
 	{
 		mGrid.setSize(nrows, ncols);
+		return this;
+	}
+
+	public TerrainGrid setGridSizeSafe(int nrows, int ncols)
+	{
+		try
+		{
+			mGrid.setSize(nrows, ncols);
+		}
+		catch (Exception ex)
+		{
+			Log.e(TAG, ex.getMessage());
+		}
 		return this;
 	}
 

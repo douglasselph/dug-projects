@@ -75,6 +75,8 @@ public class Grid
 		{
 			Vector3f normal;
 			float z;
+			float xadj;
+			float yadj;
 
 			if (mCompute != null)
 			{
@@ -82,11 +84,15 @@ public class Grid
 				if (info == null)
 				{
 					z = 0;
+					xadj = 0;
+					yadj = 0;
 					normal = mNormalDefault;
 				}
 				else
 				{
 					z = info.getHeight();
+					xadj = info.getXAdjust();
+					yadj = info.getYAdjust();
 					normal = info.getNormal();
 					if (normal == null)
 					{
@@ -98,8 +104,10 @@ public class Grid
 			{
 				normal = mNormalDefault;
 				z = 0;
+				xadj = 0;
+				yadj = 0;
 			}
-			mVBuf.put(x).put(y).put(z);
+			mVBuf.put(x + xadj).put(y + yadj).put(z);
 
 			normal.put(mNBuf);
 
