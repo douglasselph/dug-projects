@@ -12,7 +12,7 @@ public class Map
 {
 	TerrainGrid		mTerrainGrid;
 	TextureManager	mTM;
-	final float		mSize	= 4f;
+	final float		mSize	= 5f;
 
 	public Map(TextureManager tm)
 	{
@@ -63,12 +63,16 @@ public class Map
 		mTerrainGrid.setBounds(bounds).setGridSize(2, 2);
 		mTerrainGrid.setCompute(new CalcConstant(0f, bounds));
 		mTerrainGrid.setTexture(mTM.getTexture(R.drawable.sample));
+		mTerrainGrid.setSubdivision(1, 0, 1);
+		// mTerrainGrid.setSubdivision(1, 1, 1);
+		mTerrainGrid.setSubdivision(0, 1, 1);
+
 		mTerrainGrid.init();
 	}
 
 	public void onDraw(GL10 gl)
 	{
-		gl.glTranslatef(0, 0, -10.1f); // -mSize * 2.1f
+		gl.glTranslatef(0, 0, -mSize * 2.1f);
 		mTerrainGrid.onDraw(gl);
 	}
 

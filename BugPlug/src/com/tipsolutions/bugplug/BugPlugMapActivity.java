@@ -38,8 +38,8 @@ public class BugPlugMapActivity extends Activity
 	ControlRenderer			mRenderer;
 	ControlSurfaceView		mSurfaceView;
 	GLSurfaceView			mSimpleSurfaceView;
-	final Renderer			mChoice					= Renderer.TestSquare;
-	final boolean			mRenderOnlyWhenDirty	= false;
+	final Renderer			mChoice					= Renderer.Map;
+	final boolean			mRenderOnlyWhenDirty	= true;
 
 	ControlRenderer getRenderer()
 	{

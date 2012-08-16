@@ -58,6 +58,20 @@ public class TerrainGrid extends Model
 		return this;
 	}
 
+	/**
+	 * Set the subdivision for the indicated cell. By default all cells have no sub-divisions (0). A sub-division of 1,
+	 * means the cell is split into 4 cells. A sub-division of 2, means it is split into 16, etc.
+	 * 
+	 * @param row
+	 * @param col
+	 * @param subdivision
+	 */
+	public TerrainGrid setSubdivision(int row, int col, int subdivision)
+	{
+		mGrid.setSubdivision(row, col, subdivision);
+		return this;
+	}
+
 	@Override
 	protected void onDrawPre(GL10 gl)
 	{

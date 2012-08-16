@@ -130,7 +130,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		mHeight = height;
 
 		mCamera.setScreenDimension(mWidth, mHeight);
-		mCamera.setNearFar(1, 10);
 		mCamera.setPerspective(gl);
 	}
 

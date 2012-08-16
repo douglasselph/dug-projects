@@ -499,7 +499,7 @@ public class Grid
 					}
 					else
 					{
-						/* Borrow subdivision values set on previous column */
+						/* subNumCells: Borrow subdivision values set on previous column */
 						subY = y;
 						subX = x;
 						subPercentY = percentY;
@@ -510,7 +510,7 @@ public class Grid
 						for (int subRow = 0; subRow < subNumCells; subRow++)
 						{
 							mResult.put(subX, subY, subPercentX, subPercentY);
-							subY += subIncY;
+							subY -= subIncY;
 							subPercentY += subPercentIncY;
 						}
 					}
@@ -522,6 +522,7 @@ public class Grid
 
 					if (subDivision > 0)
 					{
+						subNumCells = MathUtils.powOf2(subDivision);
 						subY = y;
 						subPercentY = percentY;
 						subIncX = incX / subNumCells;
@@ -554,6 +555,7 @@ public class Grid
 						subY = y;
 						subPercentY = percentY;
 						subIncX = incX / subNumCells;
+						subIncY = incY / subNumCells;
 						subPercentIncX = percentIncX / subNumCells;
 						subPercentIncY = percentIncY / subNumCells;
 
@@ -569,7 +571,7 @@ public class Grid
 								subX += subIncX;
 								subPercentX += subPercentIncX;
 							}
-							subY += subIncX;
+							subY -= subIncY;
 							subPercentY += subPercentIncY;
 						}
 					}
@@ -585,6 +587,11 @@ public class Grid
 			y -= incY;
 			percentY += percentIncY;
 		}
+	}
+
+	public void clearSubdivision()
+	{
+		mSubdivision = new byte[mSubdivision.length];
 	}
 
 	public ShortBuf getCalcIndexBuf()
@@ -681,12 +688,12 @@ public class Grid
 	 * @param col
 	 * @param subdivision
 	 */
-	public void setSubdivision(int row, int col, byte subdivision)
+	public void setSubdivision(int row, int col, int subdivision)
 	{
 		int rc = posSD(row, col);
 		if (rc >= 0 && rc < mSubdivision.length)
 		{
-			mSubdivision[rc] = subdivision;
+			mSubdivision[rc] = (byte) subdivision;
 			/*
 			 * There are no set-able subdivisions beyond the edge.
 			 * However, for the sake of computation we pretend there is.
@@ -694,11 +701,11 @@ public class Grid
 			 */
 			if (row == mNumRows - 1)
 			{
-				mSubdivision[posSD(row + 1, col)] = subdivision;
+				mSubdivision[posSD(row + 1, col)] = (byte) subdivision;
 			}
 			if (col == mNumCols - 1)
 			{
-				mSubdivision[posSD(row, col + 1)] = subdivision;
+				mSubdivision[posSD(row, col + 1)] = (byte) subdivision;
 			}
 		}
 	}
