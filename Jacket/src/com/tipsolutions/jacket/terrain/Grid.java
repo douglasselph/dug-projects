@@ -186,43 +186,65 @@ public class Grid
 	 */
 	void calcIndexes()
 	{
-		short subDivision;
-		short index[] = new short[4]; // 0: this, 1: right, 2:bottom, 3: bottom-right
-		int numCells;
-		int subRow;
-		int subCol;
-		int rc = 0;
+		short indexes[] = new short[4]; // 0: this, 1: right, 2:bottom, 3: bottom-right
 
 		// CW
-		for (int row = 0; row < mNumRows; row++)
+		if (mSubdivision == null)
 		{
-			for (int col = 0; col < mNumCols; col++)
+			short index = 0;
+
+			for (int row = 0; row < mNumRows; row++)
 			{
-				subDivision = mSubdivision[rc++];
-
-				if (subDivision == 0)
+				for (int col = 0; col < mNumCols; col++, index++)
 				{
-					index[0] = mIndex.get(ID(row, col));
-					index[1] = mIndex.get(ID(row, col + 1)); // right
-					index[2] = mIndex.get(ID(row + 1, col)); // bottom
-					index[3] = mIndex.get(ID(row + 1, col + 1)); // right bottom
+					indexes[0] = index;
+					indexes[1] = (short) (index + 1); // right
+					indexes[2] = (short) (index + mNumCols + 1); // bottom
+					indexes[3] = (short) (indexes[2] + 1); // right bottom
 
-					mResult.putTwoTriangles(index);
+					mResult.putTwoTriangles(indexes);
 				}
-				else
+				index++;
+			}
+		}
+		else
+		{
+			int subRow;
+			int subCol;
+			int numCells;
+			short subDivision;
+			int rc = 0;
+
+			for (int row = 0; row < mNumRows; row++)
+			{
+				for (int col = 0; col < mNumCols; col++)
 				{
-					numCells = MathUtils.powOf2(subDivision);
+					subDivision = mSubdivision[rc++];
 
-					for (subRow = 0; subRow < numCells; subRow++)
+					if (subDivision == 0)
 					{
-						for (subCol = 0; subCol < numCells; subCol++)
-						{
-							index[0] = mIndex.get(ID(row, col, numCells, subRow, subCol));
-							index[1] = mIndex.get(ID(row, col, numCells, subRow, subCol + 1)); // right
-							index[2] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol)); // bottom
-							index[3] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol + 1)); // right-bottom
+						indexes[0] = mIndex.get(ID(row, col));
+						indexes[1] = mIndex.get(ID(row, col + 1)); // right
+						indexes[2] = mIndex.get(ID(row + 1, col)); // bottom
+						indexes[3] = mIndex.get(ID(row + 1, col + 1)); // right bottom
 
-							mResult.putTwoTriangles(index);
+						mResult.putTwoTriangles(indexes);
+					}
+					else
+					{
+						numCells = MathUtils.powOf2(subDivision);
+
+						for (subRow = 0; subRow < numCells; subRow++)
+						{
+							for (subCol = 0; subCol < numCells; subCol++)
+							{
+								indexes[0] = mIndex.get(ID(row, col, numCells, subRow, subCol));
+								indexes[1] = mIndex.get(ID(row, col, numCells, subRow, subCol + 1)); // right
+								indexes[2] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol)); // bottom
+								indexes[3] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol + 1)); // right-bottom
+
+								mResult.putTwoTriangles(indexes);
+							}
 						}
 					}
 				}
@@ -248,22 +270,31 @@ public class Grid
 	 */
 	int calcNumIndex()
 	{
-		int row;
-		int col;
-		int subDivision;
-		int count = 0;
-		int rc = 0;
-		int numSubCells;
+		int count;
 		/*
-		 * Each cell or subcell has two triangles for 6 index.
+		 * Each cell or subcell has two triangles each for 6 index.
 		 */
-		for (row = 0; row < mNumRows; row++)
+		if (mSubdivision == null)
 		{
-			for (col = 0; col < mNumCols; col++)
+			count = mNumRows * mNumCols * 6;
+		}
+		else
+		{
+			int row;
+			int col;
+			int rc = 0;
+			int numSubCells;
+			int subDivision;
+
+			count = 0;
+			for (row = 0; row < mNumRows; row++)
 			{
-				subDivision = mSubdivision[rc++];
-				numSubCells = MathUtils.powOf2(subDivision);
-				count += numSubCells * numSubCells * 6;
+				for (col = 0; col < mNumCols; col++)
+				{
+					subDivision = mSubdivision[rc++];
+					numSubCells = MathUtils.powOf2(subDivision);
+					count += numSubCells * numSubCells * 6;
+				}
 			}
 		}
 		return count;
@@ -276,60 +307,67 @@ public class Grid
 	 */
 	int calcNumPoints()
 	{
-		int count = 0;
-		int rc;
-		int row;
-		int col;
-		int subNumRC = 0;
-		int subNumCells;
-		int subDivision;
-		int subDivisionRight;
-		int subDivisionBottom;
-		int subDivisionDiff;
+		int count;
 
-		rc = 0;
-		/** Account for the points needed by each cell */
-		for (row = 0; row < mNumRows; row++)
+		if (mSubdivision == null)
 		{
-			for (col = 0; col < mNumCols; col++, rc++)
-			{
-				subDivision = mSubdivision[rc];
-				subNumRC = MathUtils.powOf2(subDivision);
-				subNumCells = subNumRC * subNumRC;
-				count += subNumCells;
+			count = (mNumRows + 1) * (mNumCols + 1);
+		}
+		else
+		{
+			int rc;
+			int row;
+			int col;
+			int subNumRC = 0;
+			int subNumCells;
+			int subDivision;
+			int subDivisionRight;
+			int subDivisionBottom;
+			int subDivisionDiff;
 
-				if (col == mNumCols - 1)
+			rc = 0;
+			count = 0;
+			/** Account for the points needed by each cell */
+			for (row = 0; row < mNumRows; row++)
+			{
+				for (col = 0; col < mNumCols; col++, rc++)
 				{
-					count += subNumRC; // right edge points
-				}
-				else
-				{
-					subDivisionRight = mSubdivision[rc + 1];
-					if (subDivisionRight < subDivision)
+					subDivision = mSubdivision[rc];
+					subNumRC = MathUtils.powOf2(subDivision);
+					subNumCells = subNumRC * subNumRC;
+					count += subNumCells;
+
+					if (col == mNumCols - 1)
 					{
-						subDivisionDiff = subDivision - subDivisionRight;
-						count += MathUtils.powOf2(subDivisionDiff) - 1;
+						count += subNumRC; // right edge points
 					}
-				}
-				if (row == mNumRows - 1)
-				{
-					count += subNumRC; // bottom edge points
-				}
-				else
-				{
-					subDivisionBottom = mSubdivision[rc + mNumCols];
-					if (subDivisionBottom < subDivision)
+					else
 					{
-						subDivisionDiff = subDivision - subDivisionBottom;
-						count += MathUtils.powOf2(subDivisionDiff) - 1;
+						subDivisionRight = mSubdivision[rc + 1];
+						if (subDivisionRight < subDivision)
+						{
+							subDivisionDiff = subDivision - subDivisionRight;
+							count += MathUtils.powOf2(subDivisionDiff) - 1;
+						}
+					}
+					if (row == mNumRows - 1)
+					{
+						count += subNumRC; // bottom edge points
+					}
+					else
+					{
+						subDivisionBottom = mSubdivision[rc + mNumCols];
+						if (subDivisionBottom < subDivision)
+						{
+							subDivisionDiff = subDivision - subDivisionBottom;
+							count += MathUtils.powOf2(subDivisionDiff) - 1;
+						}
 					}
 				}
 			}
-
+			// Now bottom-right point
+			count++;
 		}
-		// Now bottom-right point
-		count++;
-
 		return count;
 	}
 
@@ -348,18 +386,6 @@ public class Grid
 		float percentY = 0;
 		float percentIncX = 1f / mNumCols;
 		float percentIncY = 1f / mNumRows;
-		float subX = 0;
-		float subY = 0;
-		float subPercentX = 0;
-		float subPercentY = 0;
-		float subIncX;
-		float subIncY;
-		float subPercentIncX;
-		float subPercentIncY;
-		byte subDivision;
-		int subNumCells = 1;
-		int id;
-		int rc;
 		/*
 		 * Do each cell. With no subdivisions, there is one point per cell. With subdivisions, there is a block of
 		 * points per cell.
@@ -372,56 +398,91 @@ public class Grid
 		 * cell.
 		 */
 		mIndex.clear();
-		rc = 0;
 
-		for (int row = 0; row < mNumRows; row++)
+		if (mSubdivision == null)
 		{
-			x = mBounds2D.getMinX();
-			percentX = 0;
-
-			for (int col = 0; col < mNumCols; col++)
+			for (int row = 0; row <= mNumRows; row++)
 			{
-				subDivision = mSubdivision[rc++];
-				subNumCells = MathUtils.powOf2(subDivision);
+				x = mBounds2D.getMinX();
+				percentX = 0;
 
-				subY = y;
-				subPercentY = percentY;
-				subIncX = incX / subNumCells;
-				subIncY = incY / subNumCells;
-				subPercentIncX = percentIncX / subNumCells;
-				subPercentIncY = percentIncY / subNumCells;
-
-				for (int subRow = 0; subRow <= subNumCells; subRow++)
+				for (int col = 0; col <= mNumCols; col++)
 				{
-					subX = x;
-					subPercentX = percentX;
+					mResult.put(x, y, percentX, percentY);
 
-					for (int subCol = 0; subCol <= subNumCells; subCol++)
-					{
-						id = ID(row, col, subNumCells, subRow, subCol);
-
-						if (!mIndex.containsKey(id))
-						{
-							mIndex.put(id, mResult.getNextPosition());
-							mResult.put(subX, subY, subPercentX, subPercentY);
-						}
-						subX += subIncX;
-						subPercentX += subPercentIncX;
-					}
-					subY -= subIncY;
-					subPercentY += subPercentIncY;
+					x += incX;
+					percentX += percentIncX;
 				}
-				x += incX;
-				percentX += percentIncX;
+				y -= incY;
+				percentY += percentIncY;
 			}
-			y -= incY;
-			percentY += percentIncY;
+		}
+		else
+		{
+			float subX = 0;
+			float subY = 0;
+			float subPercentX = 0;
+			float subPercentY = 0;
+			float subIncX;
+			float subIncY;
+			float subPercentIncX;
+			float subPercentIncY;
+			byte subDivision;
+			int subNumCells = 1;
+			int id;
+			int rc;
+
+			rc = 0;
+
+			for (int row = 0; row < mNumRows; row++)
+			{
+				x = mBounds2D.getMinX();
+				percentX = 0;
+
+				for (int col = 0; col < mNumCols; col++)
+				{
+					subDivision = mSubdivision[rc++];
+					subNumCells = MathUtils.powOf2(subDivision);
+
+					subY = y;
+					subPercentY = percentY;
+					subIncX = incX / subNumCells;
+					subIncY = incY / subNumCells;
+					subPercentIncX = percentIncX / subNumCells;
+					subPercentIncY = percentIncY / subNumCells;
+
+					for (int subRow = 0; subRow <= subNumCells; subRow++)
+					{
+						subX = x;
+						subPercentX = percentX;
+
+						for (int subCol = 0; subCol <= subNumCells; subCol++)
+						{
+							id = ID(row, col, subNumCells, subRow, subCol);
+
+							if (!mIndex.containsKey(id))
+							{
+								mIndex.put(id, mResult.getNextPosition());
+								mResult.put(subX, subY, subPercentX, subPercentY);
+							}
+							subX += subIncX;
+							subPercentX += subPercentIncX;
+						}
+						subY -= subIncY;
+						subPercentY += subPercentIncY;
+					}
+					x += incX;
+					percentX += percentIncX;
+				}
+				y -= incY;
+				percentY += percentIncY;
+			}
 		}
 	}
 
 	public void clearSubdivision()
 	{
-		mSubdivision = new byte[mSubdivision.length];
+		mSubdivision = null;
 	}
 
 	public ShortBuf getCalcIndexBuf()
@@ -525,6 +586,15 @@ public class Grid
 		return this;
 	}
 
+	/**
+	 * Set the size of the grid. This will also clear all sub-divisions set.
+	 * 
+	 * @param nrows
+	 *        : max value of 255.
+	 * @param ncols
+	 *        : max value of 255.
+	 * @throws Exception
+	 */
 	public void setSize(int nrows, int ncols) throws Exception
 	{
 		if (nrows > 255)
@@ -537,7 +607,7 @@ public class Grid
 		}
 		mNumRows = nrows;
 		mNumCols = ncols;
-		mSubdivision = new byte[nrows * ncols];
+		mSubdivision = null;
 	}
 
 	/**
@@ -550,10 +620,13 @@ public class Grid
 	 */
 	public void setSubdivision(int row, int col, int subdivision)
 	{
-		int rc = posSD(row, col);
-		if (rc >= 0 && rc < mSubdivision.length)
+		if (row >= 0 && row < mNumRows && col >= 0 && col < mNumCols)
 		{
-			mSubdivision[rc] = (byte) subdivision;
+			if (mSubdivision == null)
+			{
+				mSubdivision = new byte[mNumRows * mNumCols];
+			}
+			mSubdivision[posSD(row, col)] = (byte) subdivision;
 		}
 	}
 }

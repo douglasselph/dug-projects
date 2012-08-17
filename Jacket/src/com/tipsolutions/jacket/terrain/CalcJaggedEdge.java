@@ -42,6 +42,11 @@ public class CalcJaggedEdge extends CalcValue
 			float indexDelta = (valDist - distIndex1) / mDelta;
 			return val1 + valDelta * indexDelta;
 		}
+
+		int getNumPts()
+		{
+			return mAdjust.length;
+		}
 	}
 
 	public enum Orientation
@@ -53,15 +58,15 @@ public class CalcJaggedEdge extends CalcValue
 	ArrayList<Jag>	mJags	= new ArrayList<Jag>();
 	Random			mRand;
 
-	public CalcJaggedEdge(Orientation orientation, Bounds2D bounds)
+	public CalcJaggedEdge(Bounds2D bounds)
 	{
-		this(orientation, bounds, 0);
+		this(bounds, 0);
 	}
 
-	public CalcJaggedEdge(Orientation orientation, Bounds2D bounds, long seed)
+	public CalcJaggedEdge(Bounds2D bounds, long seed)
 	{
 		super(bounds);
-		mOrientation = orientation;
+		mOrientation = (bounds.getSizeX() > bounds.getSizeY() ? Orientation.HORIZONTAL : Orientation.VERTICAL);
 		mRand = new Random(seed);
 	}
 
@@ -80,6 +85,19 @@ public class CalcJaggedEdge extends CalcValue
 			amt += jag.getAdjust(minval, maxval, val);
 		}
 		return amt;
+	}
+
+	public int getMaxJagPts()
+	{
+		int count = 0;
+		for (Jag jag : mJags)
+		{
+			if (jag.getNumPts() > count)
+			{
+				count = jag.getNumPts();
+			}
+		}
+		return count;
 	}
 
 	@Override
