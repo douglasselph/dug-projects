@@ -2,8 +2,6 @@ package com.tipsolutions.jacket.terrain;
 
 import java.util.ArrayList;
 
-import com.tipsolutions.jacket.math.Vector3f;
-
 /**
  * Generate the sum of a list of generators.
  */
@@ -19,23 +17,24 @@ public class CalcGroup implements ICalcValue
 
 	public Info getInfo(float x, float y)
 	{
-		Vector3f normal = new Vector3f();
-		float height = 0;
+		Info result = null;
 
 		for (ICalcValue calc : mList)
 		{
 			if (calc.within(x, y))
 			{
+				if (result == null)
+				{
+					result = new Info();
+				}
 				Info info = calc.getInfo(x, y);
 				if (info != null)
 				{
-					height += info.getHeight();
-					normal.add(info.getNormal());
-					normal.normalize();
+					result.add(info);
 				}
 			}
 		}
-		return new Info(height, normal);
+		return result;
 	}
 
 	public boolean within(float x, float y)

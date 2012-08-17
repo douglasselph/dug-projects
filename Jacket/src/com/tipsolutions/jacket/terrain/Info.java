@@ -42,6 +42,11 @@ public class Info
 		mYAdjust = yadjust;
 	}
 
+	public float getKey()
+	{
+		return mHeight;
+	}
+
 	public float getHeight()
 	{
 		return mHeight;
@@ -80,5 +85,26 @@ public class Info
 	public void setYXAdjust(float yadjust)
 	{
 		mYAdjust = yadjust;
+	}
+
+	public Info add(final Info arg)
+	{
+		mHeight += arg.mHeight;
+		mXAdjust += arg.mXAdjust;
+		mYAdjust += arg.mYAdjust;
+
+		if (arg.getNormal() != null)
+		{
+			if (mNormal == null)
+			{
+				mNormal = arg.getNormal();
+			}
+			else
+			{
+				mNormal.add(arg.getNormal());
+				mNormal.normalize();
+			}
+		}
+		return this;
 	}
 }
