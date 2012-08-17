@@ -6,6 +6,8 @@ import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.terrain.CalcConstant;
+import com.tipsolutions.jacket.terrain.CalcJaggedEdge;
+import com.tipsolutions.jacket.terrain.CalcJaggedEdge.Orientation;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
@@ -22,6 +24,7 @@ public class Map
 	final float			mWaterHeight	= 2f;
 	final float			mMountainWidth	= 0.8f;
 	final float			mMountainHeight	= 8f;
+	final float			mVariance		= 0.5f;
 
 	public Map(TextureManager tm)
 	{
@@ -69,6 +72,7 @@ public class Map
 		 */
 		mBounds = new Bounds2D(-mWidth / 2, -mHeight / 2, mWidth / 2, mHeight / 2);
 		Bounds2D bounds;
+		CalcJaggedEdge jagged;
 		/*
 		 * Build the base ground
 		 */
@@ -84,11 +88,15 @@ public class Map
 		 * Build the water edge
 		 */
 		bounds = new Bounds2D(mBounds.getMinX(), mBounds.getMinY(), mBounds.getMaxX(), mBounds.getMinY() + mWaterHeight);
+		jagged = new CalcJaggedEdge(Orientation.HORIZONTAL, new Bounds2D(bounds.getMinX(), bounds.getMaxY(),
+				bounds.getMaxX(), bounds.getMaxY()));
+		jagged.addJag(10, mVariance);
+		jagged.addJag(50, mVariance / 4f);
 
 		mWater = new TerrainGrid();
-		mWater.setBounds(bounds).setGridSizeSafe(2, 2);
-		mWater.setCompute(new CalcConstant(0f, bounds));
+		mWater.setBounds(bounds).setGridSizeSafe(2, 20);
 		mWater.setTexture(mTM.getTexture(R.drawable.water));
+		mWater.setCompute(jagged);
 		mWater.init();
 		/*
 		 * Build the mountains
@@ -140,7 +148,7 @@ public class Map
 
 	public String toString()
 	{
-		return mGround.toString();
+		return mWater.toString();
 	}
 
 }

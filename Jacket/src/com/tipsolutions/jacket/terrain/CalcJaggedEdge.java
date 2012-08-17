@@ -9,11 +9,6 @@ import com.tipsolutions.jacket.math.Bounds2D;
 
 public class CalcJaggedEdge extends CalcValue
 {
-	public enum Edge
-	{
-		BOTTOM, LEFT, RIGHT, TOP;
-	}
-
 	class Jag
 	{
 		final float[]	mAdjust;
@@ -49,19 +44,24 @@ public class CalcJaggedEdge extends CalcValue
 		}
 	}
 
-	Edge			mEdge;
+	public enum Orientation
+	{
+		VERTICAL, HORIZONTAL
+	}
+
+	Orientation		mOrientation;
 	ArrayList<Jag>	mJags	= new ArrayList<Jag>();
 	Random			mRand;
 
-	public CalcJaggedEdge(Bounds2D bounds, Edge edge)
+	public CalcJaggedEdge(Orientation orientation, Bounds2D bounds)
 	{
-		this(bounds, edge, 0);
+		this(orientation, bounds, 0);
 	}
 
-	public CalcJaggedEdge(Bounds2D bounds, Edge edge, long seed)
+	public CalcJaggedEdge(Orientation orientation, Bounds2D bounds, long seed)
 	{
 		super(bounds);
-		mEdge = edge;
+		mOrientation = orientation;
 		mRand = new Random(seed);
 	}
 
@@ -82,46 +82,26 @@ public class CalcJaggedEdge extends CalcValue
 		return amt;
 	}
 
+	@Override
 	public Info getInfo(float x, float y)
 	{
 		if (within(x, y))
 		{
-			if (mEdge == Edge.TOP)
+			if (mOrientation == Orientation.HORIZONTAL)
 			{
-				if (y == mBounds.getMaxY())
-				{
-					return new Info(0f, getAdjust(mBounds.getMinX(), mBounds.getMaxX(), x));
-				}
-			}
-			else if (mEdge == Edge.LEFT)
-			{
-				if (x == mBounds.getMinX())
-				{
-					return new Info(getAdjust(mBounds.getMinY(), mBounds.getMaxY(), y), 0f);
-				}
-			}
-			else if (mEdge == Edge.RIGHT)
-			{
-				if (x == mBounds.getMaxX())
-				{
-					return new Info(getAdjust(mBounds.getMinY(), mBounds.getMaxY(), y), 0f);
-				}
+				return new Info(0f, getAdjust(mBounds.getMinX(), mBounds.getMaxX(), x));
 			}
 			else
 			{
-				if (y == mBounds.getMinY())
-				{
-					return new Info(0f, getAdjust(mBounds.getMinX(), mBounds.getMaxX(), x));
-				}
+				return new Info(getAdjust(mBounds.getMinY(), mBounds.getMaxY(), y), 0f);
 			}
 		}
 		return null;
 	}
 
-	public CalcJaggedEdge setEdge(Edge edge)
+	public CalcJaggedEdge setOrientation(Orientation orientation)
 	{
-		mEdge = edge;
+		mOrientation = orientation;
 		return this;
 	}
-
 }
