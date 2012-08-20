@@ -4,12 +4,13 @@ public class MathUtils
 {
 
 	/** A "close to zero" double epsilon value for use */
-	public static final double	EPSILON	= 2.220446049250313E-16d;
+	public static final double	EPSILON		= 2.220446049250313E-16d;
 
-	public static double inverseSqrt(final double dValue)
-	{
-		return 1 / Math.sqrt(dValue);
-	}
+	static final int[]			POW_OF_2	= { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
+			32768, 65536, 131072, 262144, 524288, 1048576 };
+
+	public static final float	TO_DEGREES	= (float) (180.0 / Math.PI);
+	public static final float	TO_RADIANS	= (float) (Math.PI / 180.0);
 
 	public static double clamp(double v)
 	{
@@ -37,9 +38,10 @@ public class MathUtils
 		return v;
 	}
 
-	static final int[]	POW_OF_2	= { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512,
-			1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144,
-			524288, 1048576		};
+	public static double inverseSqrt(final double dValue)
+	{
+		return 1 / Math.sqrt(dValue);
+	}
 
 	public static int powOf2(int arg)
 	{
@@ -48,6 +50,16 @@ public class MathUtils
 			return POW_OF_2[arg];
 		}
 		return 0;
+	}
+
+	public static float toDegrees(float radians)
+	{
+		return radians * TO_DEGREES;
+	}
+
+	public static float toRadians(float degrees)
+	{
+		return degrees * TO_RADIANS;
 	}
 
 }

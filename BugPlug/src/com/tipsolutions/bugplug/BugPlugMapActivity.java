@@ -1,15 +1,12 @@
 package com.tipsolutions.bugplug;
 
-import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
+import com.actionbarsherlock.app.SherlockActivity;
 import com.tipsolutions.bugplug.map.RenderMap;
 import com.tipsolutions.bugplug.test.CubeFRenderer;
 import com.tipsolutions.bugplug.test.CubeRenderer;
@@ -20,7 +17,7 @@ import com.tipsolutions.bugplug.test.TestSquareRenderer;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
-public class BugPlugMapActivity extends Activity
+public class BugPlugMapActivity extends SherlockActivity
 {
 	enum Renderer
 	{
@@ -29,9 +26,7 @@ public class BugPlugMapActivity extends Activity
 
 	static final int		SURFACE_ID				= 1;
 	static final Boolean	SIMPLE_TEST				= false;
-	// TextView mCamEye;
-	// TextView mCamLook;
-	// TextView mCamUp;
+
 	ControlRenderer			mRenderer;
 	ControlSurfaceView		mSurfaceView;
 	GLSurfaceView			mSimpleSurfaceView;
@@ -114,20 +109,54 @@ public class BugPlugMapActivity extends Activity
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(Menu menu)
+	public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu)
 	{
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.menu, menu);
+		super.onCreateOptionsMenu(menu);
+
+		getSupportMenuInflater().inflate(R.menu.menu, menu);
+
+		// int order = 0;
+		//
+		// menu.add(0, MENU_EXIT, order++, "Exit");
+		// menu.add(0, MENU_TILT, order++, "Tilt").setCheckable(true).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+		// menu.add(0, MENU_ROTATE, order++,
+		// "Rotate").setCheckable(true).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+
 		return true;
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item)
+	public boolean onMenuItemSelected(int featureId, com.actionbarsherlock.view.MenuItem item)
+	{
+		return super.onMenuItemSelected(featureId, item);
+	}
+
+	void toggle(com.actionbarsherlock.view.MenuItem item, int on, int off)
+	{
+		item.setChecked(!item.isChecked());
+		if (item.isChecked())
+		{
+			item.setTitle(getString(off));
+		}
+		else
+		{
+			item.setTitle(getString(on));
+		}
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item)
 	{
 		switch (item.getItemId())
 		{
 			case R.id.menu_exit:
 				finish();
+				break;
+			case R.id.menu_tilt:
+				toggle(item, R.string.flat, R.string.tilt);
+				break;
+			case R.id.menu_rotate:
+				toggle(item, R.string.pan, R.string.rotate);
 				break;
 			default:
 				return super.onOptionsItemSelected(item);

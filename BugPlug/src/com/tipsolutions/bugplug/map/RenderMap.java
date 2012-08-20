@@ -5,6 +5,8 @@ import javax.microedition.khronos.opengles.GL10;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.TextureManager;
+import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 import com.tipsolutions.jacket.view.EventTapAdjust;
@@ -15,6 +17,8 @@ public class RenderMap extends ControlRenderer implements Adjust
 	Map				mMap;
 	EventTapAdjust	mEventTap;
 	float			mMaxZ;
+	Bounds2D		mMaxBounds;
+	Vector3f		mRotate;
 
 	public RenderMap(ControlSurfaceView view, TextureManager tm)
 	{
@@ -22,6 +26,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 		mMap = new Map(tm);
 		mEventTap = new EventTapAdjust(this);
+		mRotate = new Vector3f();
 	}
 
 	@Override
@@ -35,6 +40,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 	{
 		super.onDrawFrameContents(gl);
 
+		// gl.glRotatef(angle, x, y, z);
 		mCamera.applyViewBounds(gl);
 		mMap.onDraw(gl);
 	}
@@ -46,6 +52,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 		mCamera.setViewBounds(mMap.getBounds());
 		mMaxZ = mCamera.getViewingLoc().getZ();
+		mMaxBounds = new Bounds2D(mCamera.getViewBounds());
 	}
 
 	@Override
@@ -56,7 +63,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 	public void pan(float xDelta, float yDelta)
 	{
-		mCamera.pan(xDelta, yDelta, mMap.getBounds());
+		mCamera.pan(xDelta, yDelta, mMaxBounds);
 	}
 
 	@Override

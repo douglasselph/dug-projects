@@ -48,18 +48,6 @@ public class Camera
 		gl.glTranslatef(mViewingLoc.getX(), mViewingLoc.getY(), mViewingLoc.getZ());
 	}
 
-	public boolean clamp(Bounds2D bounds)
-	{
-		Bounds2D clamped = new Bounds2D(mClippingPlane);
-
-		if (clamped.clamp(bounds))
-		{
-			setViewBounds(clamped);
-			return true;
-		}
-		return false;
-	}
-
 	/**
 	 * Return the boundaries for an object at the given distance.
 	 * 
@@ -100,7 +88,7 @@ public class Camera
 
 		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
 
-		if (yValue >= xValue)
+		if (yValue < xValue)
 		{
 			return yValue / factor;
 		}
@@ -115,6 +103,11 @@ public class Camera
 	public Vector3f getViewingLoc()
 	{
 		return mViewingLoc;
+	}
+
+	public Bounds2D getViewBounds()
+	{
+		return getBounds(-mViewingLoc.getZ());
 	}
 
 	public int getWidth()
@@ -152,7 +145,7 @@ public class Camera
 			diff = curBounds.getMinX() - worldLimit.getMinX();
 			mViewingLoc.addX(diff);
 		}
-		if (curBounds.getMaxX() > worldLimit.getMaxX())
+		else if (curBounds.getMaxX() > worldLimit.getMaxX())
 		{
 			diff = curBounds.getMaxX() - worldLimit.getMaxX();
 			mViewingLoc.addX(diff);
@@ -162,11 +155,20 @@ public class Camera
 			diff = curBounds.getMinY() - worldLimit.getMinY();
 			mViewingLoc.addY(diff);
 		}
-		if (curBounds.getMaxY() > worldLimit.getMaxY())
+		else if (curBounds.getMaxY() > worldLimit.getMaxY())
 		{
 			diff = curBounds.getMaxY() - worldLimit.getMaxY();
 			mViewingLoc.addY(diff);
 		}
+	}
+
+	/**
+	 * Ensure the viewing location is such that if the range sees more than the limit in one of the directions,
+	 * it will clamp down so that it is upper-left justified.
+	 */
+	public void floor(Bounds2D limit)
+	{
+
 	}
 
 	public void scale(float scale, float maxZ)
@@ -180,6 +182,8 @@ public class Camera
 		else if (newZ < maxZ)
 		{
 			newZ = maxZ;
+			Log.d("DEBUG", "maxZ=" + maxZ);
+
 		}
 		mViewingLoc.setZ(newZ);
 	}
