@@ -6,7 +6,8 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.util.FloatMath;
 
-public class Vector3f {
+public class Vector3f
+{
 
 	static public final Vector3f	UNIT_X	= new Vector3f(1, 0, 0);
 	static public final Vector3f	UNIT_Y	= new Vector3f(0, 1, 0);
@@ -15,40 +16,29 @@ public class Vector3f {
 
 	protected float[]				mData;
 
-	public Vector3f() {
+	public Vector3f()
+	{
 		mData = new float[3];
 	}
 
-	public Vector3f(float x, float y, float z) {
-		mData = new float[3];
-		mData[0] = x;
-		mData[1] = y;
-		mData[2] = z;
-	}
-
-	public Vector3f(double x, double y, double z) {
+	public Vector3f(double x, double y, double z)
+	{
 		mData = new float[3];
 		mData[0] = (float) x;
 		mData[1] = (float) y;
 		mData[2] = (float) z;
 	}
 
-	public Vector3f(final Vector3f v) {
+	public Vector3f(float x, float y, float z)
+	{
 		mData = new float[3];
-		for (int i = 0; i < mData.length && i < v.mData.length; i++)
-		{
-			mData[i] = v.mData[i];
-		}
+		mData[0] = x;
+		mData[1] = y;
+		mData[2] = z;
 	}
 
-	public Vector3f(final Vector3 v) {
-		mData = new float[3];
-		mData[0] = (float) v.mX;
-		mData[1] = (float) v.mY;
-		mData[2] = (float) v.mZ;
-	}
-
-	public Vector3f(float[] v) {
+	public Vector3f(float[] v)
+	{
 		mData = new float[3];
 		for (int i = 0; i < mData.length && i < v.length; i++)
 		{
@@ -56,14 +46,33 @@ public class Vector3f {
 		}
 	}
 
-	public Vector3f add(float x, float y, float z) {
+	public Vector3f(final Vector3 v)
+	{
+		mData = new float[3];
+		mData[0] = (float) v.mX;
+		mData[1] = (float) v.mY;
+		mData[2] = (float) v.mZ;
+	}
+
+	public Vector3f(final Vector3f v)
+	{
+		mData = new float[3];
+		for (int i = 0; i < mData.length && i < v.mData.length; i++)
+		{
+			mData[i] = v.mData[i];
+		}
+	}
+
+	public Vector3f add(float x, float y, float z)
+	{
 		mData[0] += x;
 		mData[1] += y;
 		mData[2] += z;
 		return this;
 	}
 
-	public Vector3f add(final Vector3f v) {
+	public Vector3f add(final Vector3f v)
+	{
 		for (int i = 0; i < mData.length && i < v.mData.length; i++)
 		{
 			mData[i] += v.mData[i];
@@ -71,7 +80,26 @@ public class Vector3f {
 		return this;
 	}
 
-	public void apply(GL10 gl) {
+	public Vector3f addX(float x)
+	{
+		mData[0] += x;
+		return this;
+	}
+
+	public Vector3f addY(float y)
+	{
+		mData[1] += y;
+		return this;
+	}
+
+	public Vector3f addZ(float z)
+	{
+		mData[2] += z;
+		return this;
+	}
+
+	public void apply(GL10 gl)
+	{
 		gl.glTranslatef(getX(), getY(), getZ());
 	}
 
@@ -83,7 +111,8 @@ public class Vector3f {
 	 *        : second operand of the cross product
 	 * @return cross product
 	 */
-	public Vector3f cross(final Vector3f v) {
+	public Vector3f cross(final Vector3f v)
+	{
 		float x = getX();
 		float y = getY();
 		float z = getZ();
@@ -96,32 +125,37 @@ public class Vector3f {
 		return this;
 	}
 
-	public Vector3f divide(float scalar) {
+	public Vector3f divide(float scalar)
+	{
 		mData[0] /= scalar;
 		mData[1] /= scalar;
 		mData[2] /= scalar;
 		return this;
 	}
 
-	public Vector3f divide(float x, float y, float z) {
+	public Vector3f divide(float x, float y, float z)
+	{
 		mData[0] /= x;
 		mData[1] /= y;
 		mData[2] /= z;
 		return this;
 	}
 
-	public Vector3f divide(final Vector3f v) {
+	public Vector3f divide(final Vector3f v)
+	{
 		mData[0] /= v.getX();
 		mData[1] /= v.getY();
 		mData[2] /= v.getZ();
 		return this;
 	}
 
-	public Vector3f dup() {
+	public Vector3f dup()
+	{
 		return new Vector3f(this);
 	}
 
-	public boolean equals(final Vector3f v) {
+	public boolean equals(final Vector3f v)
+	{
 		for (int i = 0; i < mData.length && i < v.mData.length; i++)
 		{
 			if (mData[i] != v.mData[i])
@@ -132,27 +166,33 @@ public class Vector3f {
 		return true;
 	}
 
-	public float getX() {
+	public float getX()
+	{
 		return mData[0];
 	}
 
-	public float getY() {
+	public float getY()
+	{
 		return mData[1];
 	}
 
-	public float getZ() {
+	public float getZ()
+	{
 		return mData[2];
 	}
 
-	public float length() {
+	public float length()
+	{
 		return FloatMath.sqrt(lengthSquared());
 	}
 
-	public float lengthSquared() {
+	public float lengthSquared()
+	{
 		return getX() * getX() + getY() * getY() + getZ() * getZ();
 	}
 
-	public Vector3f multiply(float scalar) {
+	public Vector3f multiply(float scalar)
+	{
 		for (int i = 0; i < mData.length; i++)
 		{
 			mData[i] *= scalar;
@@ -160,14 +200,16 @@ public class Vector3f {
 		return this;
 	}
 
-	public Vector3f multiply(float x, float y, float z) {
+	public Vector3f multiply(float x, float y, float z)
+	{
 		mData[0] *= x;
 		mData[1] *= y;
 		mData[2] *= z;
 		return this;
 	}
 
-	public Vector3f multiply(final Vector3f v) {
+	public Vector3f multiply(final Vector3f v)
+	{
 		for (int i = 0; i < mData.length && i < v.mData.length; i++)
 		{
 			mData[i] *= v.mData[i];
@@ -175,11 +217,13 @@ public class Vector3f {
 		return this;
 	}
 
-	public Vector3f negate() {
+	public Vector3f negate()
+	{
 		return multiply(-1f);
 	}
 
-	public Vector3f normalize() {
+	public Vector3f normalize()
+	{
 		final double lengthSq = lengthSquared();
 		if (Math.abs(lengthSq) > MathUtils.EPSILON)
 		{
@@ -188,26 +232,38 @@ public class Vector3f {
 		return this;
 	}
 
-	public Vector3f put(FloatBuffer buf) {
+	public Vector3f put(FloatBuffer buf)
+	{
 		buf.put(getX()).put(getY()).put(getZ());
 		return this;
 	}
 
-	public Vector3f set(float x, float y, float z) {
-		mData[0] = x;
-		mData[1] = y;
-		mData[2] = z;
-		return this;
-	}
-
-	public Vector3f set(double x, double y, double z) {
+	public Vector3f set(double x, double y, double z)
+	{
 		mData[0] = (float) x;
 		mData[1] = (float) y;
 		mData[2] = (float) z;
 		return this;
 	}
 
-	public Vector3f set(final Vector3f v) {
+	public Vector3f set(float x, float y, float z)
+	{
+		mData[0] = x;
+		mData[1] = y;
+		mData[2] = z;
+		return this;
+	}
+
+	public Vector3f set(final Vector3 v)
+	{
+		mData[0] = (float) v.mX;
+		mData[1] = (float) v.mY;
+		mData[2] = (float) v.mZ;
+		return this;
+	}
+
+	public Vector3f set(final Vector3f v)
+	{
 		for (int i = 0; i < mData.length && i < v.mData.length; i++)
 		{
 			mData[i] = v.mData[i];
@@ -215,45 +271,46 @@ public class Vector3f {
 		return this;
 	}
 
-	public Vector3f set(final Vector3 v) {
-		mData[0] = (float) v.mX;
-		mData[1] = (float) v.mY;
-		mData[2] = (float) v.mZ;
-		return this;
-	}
-
-	public void setX(float x) {
-		mData[0] = x;
-	}
-
-	public void setY(float y) {
-		mData[1] = y;
-	}
-
-	public void setZ(float z) {
-		mData[2] = z;
-	}
-
-	public void setX(double x) {
+	public void setX(double x)
+	{
 		mData[0] = (float) x;
 	}
 
-	public void setY(double y) {
+	public void setX(float x)
+	{
+		mData[0] = x;
+	}
+
+	public void setY(double y)
+	{
 		mData[1] = (float) y;
 	}
 
-	public void setZ(double z) {
+	public void setY(float y)
+	{
+		mData[1] = y;
+	}
+
+	public void setZ(double z)
+	{
 		mData[2] = (float) z;
 	}
 
-	public Vector3f subtract(float x, float y, float z) {
+	public void setZ(float z)
+	{
+		mData[2] = z;
+	}
+
+	public Vector3f subtract(float x, float y, float z)
+	{
 		mData[0] -= x;
 		mData[1] -= y;
 		mData[2] -= z;
 		return this;
 	}
 
-	public Vector3f subtract(final Vector3f v) {
+	public Vector3f subtract(final Vector3f v)
+	{
 		for (int i = 0; i < mData.length && i < v.mData.length; i++)
 		{
 			mData[i] -= v.mData[i];
@@ -261,15 +318,9 @@ public class Vector3f {
 		return this;
 	}
 
-	public void zero() {
-		for (int i = 0; i < mData.length; i++)
-		{
-			mData[i] = 0;
-		}
-	}
-
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("(");
 		sbuf.append(getX());
@@ -287,7 +338,8 @@ public class Vector3f {
 	 *        : specified format. For example, "%.3f"
 	 * @return
 	 */
-	public String toString(String format) {
+	public String toString(String format)
+	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("(");
 		sbuf.append(String.format(format, getX()));
@@ -297,5 +349,13 @@ public class Vector3f {
 		sbuf.append(String.format(format, getZ()));
 		sbuf.append(")");
 		return sbuf.toString();
+	}
+
+	public void zero()
+	{
+		for (int i = 0; i < mData.length; i++)
+		{
+			mData[i] = 0;
+		}
 	}
 }

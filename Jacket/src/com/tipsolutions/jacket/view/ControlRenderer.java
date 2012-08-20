@@ -55,12 +55,12 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		return mBackground;
 	}
 
-	public float getHeight()
+	public int getHeight()
 	{
 		return mHeight;
 	}
 
-	public float getWidth()
+	public int getWidth()
 	{
 		return mWidth;
 	}

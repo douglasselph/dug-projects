@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Vector3f;
 
 public class Camera
 {
@@ -17,6 +18,11 @@ public class Camera
 		return v1 >= v2 ? v1 : v2;
 	}
 
+	static float LESSER(float v1, float v2)
+	{
+		return v1 <= v2 ? v1 : v2;
+	}
+
 	protected float		mNearPlane	= 1;
 	protected float		mFarPlane	= 1000;
 	protected float		mAngle		= 65.0f;
@@ -24,11 +30,34 @@ public class Camera
 	protected int		mHeight		= 100;
 	protected int		mWidth		= 100;
 	protected Bounds2D	mClippingPlane;
+	protected Vector3f	mViewingLoc	= new Vector3f();
 
 	protected boolean	mDoOrtho;
 
 	public Camera()
 	{
+	}
+
+	/**
+	 * Apply a transformation so the view bounds specified by setViewBounds() is visible.
+	 * 
+	 * @param gl
+	 */
+	public void applyViewBounds(GL10 gl)
+	{
+		gl.glTranslatef(mViewingLoc.getX(), mViewingLoc.getY(), mViewingLoc.getZ());
+	}
+
+	public boolean clamp(Bounds2D bounds)
+	{
+		Bounds2D clamped = new Bounds2D(mClippingPlane);
+
+		if (clamped.clamp(bounds))
+		{
+			setViewBounds(clamped);
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -45,6 +74,11 @@ public class Camera
 		bounds.setMinX(bounds.getMinY() * mAspect);
 		bounds.setMaxX(bounds.getMaxY() * mAspect);
 		return bounds;
+	}
+
+	public Bounds2D getClippingPlane()
+	{
+		return mClippingPlane;
 	}
 
 	/**
@@ -73,14 +107,81 @@ public class Camera
 		return xValue / factor / mAspect;
 	}
 
-	public float getHeight()
+	public int getHeight()
 	{
 		return mHeight;
 	}
 
-	public float getWidth()
+	public Vector3f getViewingLoc()
+	{
+		return mViewingLoc;
+	}
+
+	public int getWidth()
 	{
 		return mWidth;
+	}
+
+	/**
+	 * 
+	 * @param xDelta
+	 *        : percentage to adjust in X
+	 * @param yDelta
+	 *        : percentage to adjust in Y
+	 * @param worldLimit
+	 *        : The limit
+	 */
+	public void pan(float xDelta, float yDelta, Bounds2D worldLimit)
+	{
+		Bounds2D curBounds = getBounds(-mViewingLoc.getZ());
+
+		float sizeX = curBounds.getSizeX();
+		float sizeY = curBounds.getSizeY();
+		float adjustX = sizeX * xDelta;
+		float adjustY = sizeY * yDelta;
+
+		mViewingLoc.addX(adjustX);
+		mViewingLoc.addY(-adjustY);
+
+		curBounds.add(-mViewingLoc.getX(), -mViewingLoc.getY());
+
+		float diff;
+
+		if (curBounds.getMinX() < worldLimit.getMinX())
+		{
+			diff = curBounds.getMinX() - worldLimit.getMinX();
+			mViewingLoc.addX(diff);
+		}
+		if (curBounds.getMaxX() > worldLimit.getMaxX())
+		{
+			diff = curBounds.getMaxX() - worldLimit.getMaxX();
+			mViewingLoc.addX(diff);
+		}
+		if (curBounds.getMinY() < worldLimit.getMinY())
+		{
+			diff = curBounds.getMinY() - worldLimit.getMinY();
+			mViewingLoc.addY(diff);
+		}
+		if (curBounds.getMaxY() > worldLimit.getMaxY())
+		{
+			diff = curBounds.getMaxY() - worldLimit.getMaxY();
+			mViewingLoc.addY(diff);
+		}
+	}
+
+	public void scale(float scale, float maxZ)
+	{
+		float newZ = mViewingLoc.getZ() * scale;
+
+		if (newZ > -mNearPlane)
+		{
+			newZ = -mNearPlane;
+		}
+		else if (newZ < maxZ)
+		{
+			newZ = maxZ;
+		}
+		mViewingLoc.setZ(newZ);
 	}
 
 	public Camera setNearFar(float near, float far)
@@ -142,6 +243,25 @@ public class Camera
 		mWidth = width;
 		mHeight = height;
 		return this;
+	}
+
+	/**
+	 * Set the viewing location such that the passed in bounds is just seen.
+	 * Used in conjuction with applyViewBounds().
+	 * 
+	 * @param bounds
+	 *        : area staring at.
+	 */
+	public void setViewBounds(Bounds2D bounds)
+	{
+		float centerX = (bounds.getMaxX() + bounds.getMinX()) / 2;
+		float centerY = (bounds.getMaxY() + bounds.getMinY()) / 2;
+		float halfSizeX = bounds.getSizeX() / 2;
+		float halfSizeY = bounds.getSizeY() / 2;
+		Bounds2D centerBounds = new Bounds2D(-halfSizeX, -halfSizeY, halfSizeX, halfSizeY);
+		mViewingLoc.setX(-centerX);
+		mViewingLoc.setY(-centerY);
+		mViewingLoc.setZ(-getDist(centerBounds));
 	}
 
 	public String toString()

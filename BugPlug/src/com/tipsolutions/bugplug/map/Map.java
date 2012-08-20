@@ -2,8 +2,6 @@ package com.tipsolutions.bugplug.map;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
@@ -149,8 +147,6 @@ public class Map
 		mMountains[2].setCompute(group);
 		mMountains[2].setTexture(mTM.getTexture(R.drawable.hardrock));
 		mMountains[2].init();
-
-		Log.d("DEBUG", "OVERALL BOUNDS=" + mBounds.toString());
 	}
 
 	public Bounds2D getBounds()

@@ -12,30 +12,36 @@ public class EventTapAdjust implements IEventTap
 {
 	public interface Adjust
 	{
-		void pan(int xDelta, int yDelta);
+		void pan(float xDelta, float yDelta);
 
-		void scale(int xDelta, int yDelta);
+		void scale(float delta);
+
+		int getWidth();
+
+		int getHeight();
 	};
 
-	static final float	THRESHOLD	= 6f;
+	static final float	THRESHOLD		= 6f;
+	static final float	UPDATE_SCALE	= 0.1f;
+	static final float	UPDATE_PAN		= 0.05f;
+
+	static int LARGER(int v1, int v2)
+	{
+		return v1 >= v2 ? v1 : v2;
+	}
 
 	protected Adjust	mAdjust;
 	protected float		mX;
 	protected float		mY;
-	protected int		mUpdateResolution;
 	protected int		mLastCallX;
 	protected int		mLastCallY;
+	protected float		mStartScaleDelta;
+	protected float		mStartPanXDelta;
+	protected float		mStartPanYDelta;
 
 	public EventTapAdjust(Adjust adjust)
 	{
 		mAdjust = adjust;
-		mUpdateResolution = 10;
-	}
-
-	public EventTapAdjust(Adjust adjust, int updateResolution)
-	{
-		mAdjust = adjust;
-		mUpdateResolution = updateResolution;
 	}
 
 	public boolean onTouchEvent(MotionEvent ev)
@@ -47,6 +53,9 @@ public class EventTapAdjust implements IEventTap
 			case MotionEvent.ACTION_DOWN:
 				mX = ev.getX();
 				mY = ev.getY();
+				mStartScaleDelta = 0;
+				mStartPanXDelta = 0;
+				mStartPanYDelta = 0;
 				return true;
 			case MotionEvent.ACTION_UP:
 				break;
@@ -59,21 +68,66 @@ public class EventTapAdjust implements IEventTap
 
 					if (ySpanDelta > THRESHOLD || xSpanDelta > THRESHOLD)
 					{
-						if (checkResolution(xSpanDelta, ySpanDelta))
+						float delta;
+
+						if (ySpanDelta > xSpanDelta)
 						{
-							mAdjust.scale(xSpanDelta, ySpanDelta);
+							delta = (float) ySpanDelta / mAdjust.getHeight();
+						}
+						else
+						{
+							delta = (float) xSpanDelta / mAdjust.getWidth();
+						}
+						if (mStartScaleDelta == 0)
+						{
+							mStartScaleDelta = delta;
+						}
+						else
+						{
+							float diffDelta = delta - mStartScaleDelta;
+
+							if (Math.abs(diffDelta) > UPDATE_SCALE)
+							{
+								mStartScaleDelta = delta;
+								mAdjust.scale(1 - diffDelta);
+							}
 						}
 						return true;
 					}
 				}
-				int xDelta = (int) FloatMath.floor(Math.abs(ev.getX(0) - mX));
-				int yDelta = (int) FloatMath.floor(Math.abs(ev.getY(0) - mY));
+				float xDelta = ev.getX(0) - mX;
+				float yDelta = ev.getY(0) - mY;
 
-				if (xDelta > THRESHOLD && yDelta > THRESHOLD)
+				if (Math.abs(xDelta) > THRESHOLD || Math.abs(yDelta) > THRESHOLD)
 				{
-					if (checkResolution(xDelta, yDelta))
+					float panXDelta = (float) xDelta / mAdjust.getWidth();
+					float panYDelta = (float) yDelta / mAdjust.getHeight();
+					float diffXDelta;
+					float diffYDelta;
+
+					if (mStartPanXDelta == 0)
 					{
-						mAdjust.pan(xDelta, yDelta);
+						mStartPanXDelta = panXDelta;
+						diffXDelta = 0;
+					}
+					else
+					{
+						diffXDelta = panXDelta - mStartPanXDelta;
+					}
+					if (mStartPanYDelta == 0)
+					{
+						mStartPanYDelta = panYDelta;
+						diffYDelta = 0;
+					}
+					else
+					{
+						diffYDelta = panYDelta - mStartPanYDelta;
+					}
+					if (Math.abs(diffXDelta) > UPDATE_PAN || Math.abs(diffYDelta) > UPDATE_PAN)
+					{
+						mStartPanXDelta = panXDelta;
+						mStartPanYDelta = panYDelta;
+						mAdjust.pan(diffXDelta, diffYDelta);
 					}
 					return true;
 				}
@@ -81,40 +135,5 @@ public class EventTapAdjust implements IEventTap
 			}
 		}
 		return false;
-	}
-
-	boolean checkResolution(int xDelta, int yDelta)
-	{
-		if (mUpdateResolution == 0)
-		{
-			return true;
-		}
-		if (mLastCallX == 0 && mLastCallY == 0)
-		{
-			mLastCallX = xDelta;
-			mLastCallY = yDelta;
-			return true;
-		}
-		int callDeltaX = Math.abs(xDelta - mLastCallX);
-		int callDeltaY = Math.abs(yDelta - mLastCallY);
-
-		if (callDeltaX > mUpdateResolution || callDeltaY > mUpdateResolution)
-		{
-			mLastCallX = xDelta;
-			mLastCallY = yDelta;
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Call the configured adjust callback only ever N pixels.
-	 * 
-	 * @param pixels
-	 *        : last call has to differ by this much.
-	 */
-	public void setUpdateResolution(int updateResolution)
-	{
-		mUpdateResolution = updateResolution;
 	}
 }

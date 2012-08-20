@@ -2,7 +2,6 @@ package com.tipsolutions.bugplug.map;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.TextureManager;
@@ -15,6 +14,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 {
 	Map				mMap;
 	EventTapAdjust	mEventTap;
+	float			mMaxZ;
 
 	public RenderMap(ControlSurfaceView view, TextureManager tm)
 	{
@@ -25,14 +25,27 @@ public class RenderMap extends ControlRenderer implements Adjust
 	}
 
 	@Override
+	public void scale(float delta)
+	{
+		mCamera.scale(delta, mMaxZ);
+	}
+
+	@Override
 	public void onDrawFrameContents(GL10 gl)
 	{
 		super.onDrawFrameContents(gl);
 
-		float dist = mCamera.getDist(mMap.getBounds());
-		gl.glTranslatef(0, 0, -dist);
-
+		mCamera.applyViewBounds(gl);
 		mMap.onDraw(gl);
+	}
+
+	@Override
+	public void onSurfaceChanged(GL10 gl, int width, int height)
+	{
+		super.onSurfaceChanged(gl, width, height);
+
+		mCamera.setViewBounds(mMap.getBounds());
+		mMaxZ = mCamera.getViewingLoc().getZ();
 	}
 
 	@Override
@@ -41,14 +54,9 @@ public class RenderMap extends ControlRenderer implements Adjust
 		return mEventTap.onTouchEvent(ev);
 	}
 
-	public void pan(int xDelta, int yDelta)
+	public void pan(float xDelta, float yDelta)
 	{
-		Log.d("DEBUG", "PAN " + xDelta + ", " + yDelta);
-	}
-
-	public void scale(int xDelta, int yDelta)
-	{
-		Log.d("DEBUG", "SCALE " + xDelta + ", " + yDelta);
+		mCamera.pan(xDelta, yDelta, mMap.getBounds());
 	}
 
 	@Override
