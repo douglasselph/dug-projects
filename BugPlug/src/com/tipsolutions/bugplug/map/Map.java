@@ -2,9 +2,12 @@ package com.tipsolutions.bugplug.map;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.terrain.CalcConeLinear;
 import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.CalcEdgeJagged;
 import com.tipsolutions.jacket.terrain.CalcEdgeSloped;
@@ -26,11 +29,13 @@ public class Map
 	final float			mWaterVariance		= 0.5f;
 	final int			mWaterMajorPts		= 10;
 	final long			mWaterSeed			= 1;
-	final float			mMountainWidth		= 0.8f;
-	final float			mMountainHeight		= 8f;
+	final float			mMountainSideXSize	= 1f;
+	final float			mMountainTopYSize	= 0.8f;
+	final float			mMountainSideYSize	= 8f;
 	final float			mMountainVariance	= 0.2f;
 	final int			mMountainMajorPts	= 20;
 	final long			mMountainSeed		= 2;
+	final float			mMountainHeight		= 0.6f;
 	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
@@ -42,9 +47,11 @@ public class Map
 		mBounds = new Bounds2D(-mWidth / 2, -mHeight / 2, mWidth / 2, mHeight / 2);
 		Bounds2D bounds;
 		Bounds2D edge;
+		Bounds2D riseBound;
 		CalcEdgeJagged jagged;
 		CalcGroup group;
 		CalcEdgeSloped taper;
+		CalcConeLinear rise;
 		/*
 		 * Build the base ground
 		 */
@@ -78,22 +85,26 @@ public class Map
 		mMountains = new TerrainGrid[3];
 
 		// LEFT
-		bounds = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainHeight, mBounds.getMinX()
-				+ mMountainWidth, mBounds.getMaxY());
+		group = new CalcGroup();
+		bounds = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
+				+ mMountainSideXSize, mBounds.getMaxY());
 		edge = new Bounds2D(bounds.getMaxX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMaxX() + FUDGE,
-				bounds.getMaxY() - mMountainWidth + FUDGE);
+				bounds.getMaxY() - mMountainSideXSize + FUDGE);
 
 		jagged = new CalcEdgeJagged(edge, mMountainSeed);
 		jagged.addJag(mMountainMajorPts, mMountainVariance);
 		jagged.addJag(mMountainMajorPts * 3, mMountainVariance / 5f);
+		group.add(jagged);
 
 		edge = new Bounds2D(bounds.getMinX() + FUDGE, edge.getMinY(), edge.getMaxX(), bounds.getMinY() + 2
-				* mMountainWidth);
-		taper = new CalcEdgeSloped(edge, -mMountainWidth * 0.9f, 0f);
-
-		group = new CalcGroup();
-		group.add(jagged);
+				* mMountainSideXSize);
+		taper = new CalcEdgeSloped(edge, -mMountainSideXSize * 0.9f, 0f);
 		group.add(taper);
+
+		riseBound = new Bounds2D(bounds.getMinX() + mMountainSideXSize / 10f, bounds.getMinY(), bounds.getMaxX()
+				- mMountainSideXSize / 10f, bounds.getMaxY());
+		rise = new CalcConeLinear(riseBound, mMountainHeight);
+		group.add(rise);
 
 		mMountains[0] = new TerrainGrid();
 		mMountains[0].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 10);
@@ -102,8 +113,8 @@ public class Map
 		mMountains[0].init();
 
 		// TOP
-		bounds = new Bounds2D(mBounds.getMinX() + mMountainWidth, mBounds.getMaxY() - mMountainWidth, mBounds.getMaxX()
-				- mMountainWidth, mBounds.getMaxY());
+		bounds = new Bounds2D(mBounds.getMinX() + mMountainSideXSize, mBounds.getMaxY() - mMountainTopYSize,
+				mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY());
 		edge = new Bounds2D(bounds.getMinX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMaxX() + FUDGE,
 				bounds.getMinY() + FUDGE);
 		jagged = new CalcEdgeJagged(edge, mMountainSeed + 2);
@@ -117,17 +128,17 @@ public class Map
 		mMountains[1].init();
 
 		// RIGHT
-		bounds = new Bounds2D(mBounds.getMaxX() - mMountainWidth, mBounds.getMaxY() - mMountainHeight - 1,
+		bounds = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
 				mBounds.getMaxX(), mBounds.getMaxY());
 		edge = new Bounds2D(bounds.getMinX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMinX() + FUDGE,
-				bounds.getMaxY() - mMountainWidth);
+				bounds.getMaxY() - mMountainSideXSize);
 		jagged = new CalcEdgeJagged(edge, mMountainSeed + 3);
 		jagged.addJag(mMountainMajorPts, mMountainVariance);
 		jagged.addJag(mMountainMajorPts * 3, mMountainVariance / 5f);
 
 		edge = new Bounds2D(edge.getMinX(), edge.getMinY(), bounds.getMaxX() - FUDGE, bounds.getMinY() + 2
-				* mMountainWidth);
-		taper = new CalcEdgeSloped(edge, mMountainWidth * 0.9f, 0f);
+				* mMountainSideXSize);
+		taper = new CalcEdgeSloped(edge, mMountainSideXSize * 0.9f, 0f);
 
 		group = new CalcGroup();
 		group.add(jagged);
@@ -138,11 +149,17 @@ public class Map
 		mMountains[2].setCompute(group);
 		mMountains[2].setTexture(mTM.getTexture(R.drawable.hardrock));
 		mMountains[2].init();
+
+		Log.d("DEBUG", "OVERALL BOUNDS=" + mBounds.toString());
+	}
+
+	public Bounds2D getBounds()
+	{
+		return mBounds;
 	}
 
 	public void onDraw(GL10 gl)
 	{
-		gl.glTranslatef(0, 0, mBounds.getSizeX() * -1.05f);
 		mGround.onDraw(gl);
 		gl.glTranslatef(0, 0, 0.1f);
 		mWater.onDraw(gl);

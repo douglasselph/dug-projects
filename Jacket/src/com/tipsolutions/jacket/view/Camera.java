@@ -4,40 +4,73 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.util.Log;
 
+import com.tipsolutions.jacket.math.Bounds2D;
+
 public class Camera
 {
 
-	static final Boolean	LOG			= false;
-	static final String		TAG			= "Camera";
+	static final Boolean	LOG	= true;
+	static final String		TAG	= "Camera";
 
-	protected float			mNearPlane	= 1;
-	protected float			mFarPlane	= 1000;
-	protected float			mAngle		= 65.0f;
-	protected int			mHeight		= 100;
-	protected int			mWidth		= 100;
-	/** left clipping plane of viewport in model space coordinates */
-	protected float			mLeft;
-	/** right clipping plane */
-	protected float			mRight;
-	/** top clipping plane */
-	protected float			mTop;
-	/** bottom clipped plane */
-	protected float			mBottom;
-	protected boolean		mDoOrtho;
+	static float LARGER(float v1, float v2)
+	{
+		return v1 >= v2 ? v1 : v2;
+	}
+
+	protected float		mNearPlane	= 1;
+	protected float		mFarPlane	= 1000;
+	protected float		mAngle		= 65.0f;
+	protected float		mAspect		= 0.5f;
+	protected int		mHeight		= 100;
+	protected int		mWidth		= 100;
+	protected Bounds2D	mClippingPlane;
+
+	protected boolean	mDoOrtho;
 
 	public Camera()
 	{
 	}
 
 	/**
-	 * Called to defined the frustrum of the camera. Called rarely.
+	 * Return the boundaries for an object at the given distance.
 	 * 
-	 * @param gl
+	 * @param dist
+	 * @return
 	 */
-	public void setPerspective(GL10 gl)
+	public Bounds2D getBounds(float dist)
 	{
-		gl.glViewport(0, 0, mWidth, mHeight);
-		gluPerspective(gl, mAngle, (float) mWidth / mHeight, mNearPlane, mFarPlane);
+		Bounds2D bounds = new Bounds2D();
+		bounds.setMaxY(dist * (float) Math.tan(mAngle * (Math.PI / 360.0)));
+		bounds.setMinY(-bounds.getMaxY());
+		bounds.setMinX(bounds.getMinY() * mAspect);
+		bounds.setMaxX(bounds.getMaxY() * mAspect);
+		return bounds;
+	}
+
+	/**
+	 * Return the distance we have to be from the camera in order to just see the object with the given bounds
+	 * completely.
+	 * 
+	 * @param bounds
+	 * @return
+	 */
+	public float getDist(Bounds2D bounds)
+	{
+		// Find most extreme edge
+		float maxY = Math.abs(bounds.getMaxY());
+		float minY = Math.abs(bounds.getMinY());
+		float yValue = LARGER(minY, maxY);
+		float maxX = Math.abs(bounds.getMaxX());
+		float minX = Math.abs(bounds.getMinX());
+		float xValue = LARGER(minX, maxX);
+
+		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
+
+		if (yValue >= xValue)
+		{
+			return yValue / factor;
+		}
+		return xValue / factor / mAspect;
 	}
 
 	public float getHeight()
@@ -50,43 +83,11 @@ public class Camera
 		return mWidth;
 	}
 
-	/**
-	 * Doing it myself, so I can record the computed clipping planes.
-	 * 
-	 * @param gl
-	 * @param fovy
-	 * @param aspect
-	 * @param zNear
-	 * @param zFar
-	 */
-	void gluPerspective(GL10 gl, float fovy, float aspect, float zNear, float zFar)
+	public Camera setNearFar(float near, float far)
 	{
-		mTop = zNear * (float) Math.tan(fovy * (Math.PI / 360.0));
-		mBottom = -mTop;
-		mLeft = mBottom * aspect;
-		mRight = mTop * aspect;
-
-		gl.glMatrixMode(GL10.GL_PROJECTION);
-		gl.glLoadIdentity();
-
-		if (mDoOrtho)
-		{
-			gl.glOrthof(mLeft, mRight, mBottom, mTop, zNear, zFar);
-			if (LOG)
-			{
-				Log.i(TAG, "glOrtho(" + mLeft + ", " + mRight + ", " + mBottom + ", " + mTop + ", " + zNear + ", "
-						+ zFar + ")");
-			}
-		}
-		else
-		{
-			gl.glFrustumf(mLeft, mRight, mBottom, mTop, zNear, zFar);
-			if (LOG)
-			{
-				Log.i(TAG, "glFrustum(" + mLeft + ", " + mRight + ", " + mBottom + ", " + mTop + ", " + zNear + ", "
-						+ zFar + ")");
-			}
-		}
+		mNearPlane = near;
+		mFarPlane = far;
+		return this;
 	}
 
 	public Camera setOrtho()
@@ -101,11 +102,39 @@ public class Camera
 		return this;
 	}
 
-	public Camera setNearFar(float near, float far)
+	/**
+	 * Called to defined the frustrum of the camera. Called rarely.
+	 * 
+	 * @param gl
+	 */
+	public void setPerspective(GL10 gl)
 	{
-		mNearPlane = near;
-		mFarPlane = far;
-		return this;
+		gl.glViewport(0, 0, mWidth, mHeight);
+
+		mAspect = (float) mWidth / mHeight;
+		mClippingPlane = getBounds(mNearPlane);
+
+		gl.glMatrixMode(GL10.GL_PROJECTION);
+		gl.glLoadIdentity();
+
+		if (mDoOrtho)
+		{
+			gl.glOrthof(mClippingPlane.getMinX(), mClippingPlane.getMaxX(), mClippingPlane.getMinY(),
+					mClippingPlane.getMaxY(), mNearPlane, mFarPlane);
+			if (LOG)
+			{
+				Log.i(TAG, "glOrtho(" + mNearPlane + ", " + mFarPlane + ", " + mClippingPlane.toString() + ")");
+			}
+		}
+		else
+		{
+			gl.glFrustumf(mClippingPlane.getMinX(), mClippingPlane.getMaxX(), mClippingPlane.getMinY(),
+					mClippingPlane.getMaxY(), mNearPlane, mFarPlane);
+			if (LOG)
+			{
+				Log.i(TAG, "glFrustum(" + mNearPlane + ", " + mFarPlane + ", " + mClippingPlane.toString() + ")");
+			}
+		}
 	}
 
 	public Camera setScreenDimension(int width, int height)
@@ -119,13 +148,13 @@ public class Camera
 	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("[Lf,Rt,Bt,Tp]=");
-		sbuf.append(mLeft);
+		sbuf.append(mClippingPlane.getMinX());
 		sbuf.append(",");
-		sbuf.append(mRight);
+		sbuf.append(mClippingPlane.getMaxX());
 		sbuf.append(",");
-		sbuf.append(mBottom);
+		sbuf.append(mClippingPlane.getMinY());
 		sbuf.append(",");
-		sbuf.append(mTop);
+		sbuf.append(mClippingPlane.getMaxY());
 		return sbuf.toString();
 	}
 }

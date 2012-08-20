@@ -12,12 +12,13 @@ import javax.microedition.khronos.opengles.GL10;
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
 
-public class ControlRenderer implements GLSurfaceView.Renderer
+public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 {
 	static final String					TAG	= "ControlRenderer";
 	static final Boolean				ERR	= true;				// If set to true show errors from opengl.
@@ -159,6 +160,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer
 		onCreatedInitShading(gl);
 		onCreatedInitTexture(gl);
 		onCreatedInitHint(gl);
+	}
+
+	public boolean onTouchEvent(MotionEvent ev)
+	{
+		return false;
 	}
 
 	protected void printErrors(GL10 gl)

@@ -1,9 +1,8 @@
 package com.tipsolutions.jacket.view;
 
+import android.view.MotionEvent;
 
-public interface IEventTap {
-	boolean pressDown(float x, float y);
-	boolean pressMove(float x, float y);
-	boolean pressUp(float x, float y);
+public interface IEventTap
+{
+	boolean onTouchEvent(MotionEvent ev);
 }
-

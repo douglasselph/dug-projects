@@ -11,17 +11,11 @@ import android.view.MotionEvent;
  */
 public class ControlSurfaceView extends GLSurfaceView implements IView
 {
-	IEventTap		mEventTap	= null;
 	ControlRenderer	mRenderer;
 
 	public ControlSurfaceView(Context context)
 	{
 		super(context);
-	}
-
-	public void setEventTap(IEventTap eventTap)
-	{
-		mEventTap = eventTap;
 	}
 
 	public Renderer getRenderer()
@@ -43,29 +37,13 @@ public class ControlSurfaceView extends GLSurfaceView implements IView
 	}
 
 	@Override
-	public boolean onTouchEvent(final MotionEvent e)
+	public boolean onTouchEvent(final MotionEvent ev)
 	{
 		boolean changed = false;
-		if (mEventTap != null)
+		if (mRenderer.onTouchEvent(ev))
 		{
-			float x = e.getX();
-			float y = e.getY();
-			switch (e.getAction())
-			{
-				case MotionEvent.ACTION_DOWN:
-					changed = mEventTap.pressDown(x, y);
-					break;
-				case MotionEvent.ACTION_MOVE:
-					changed = mEventTap.pressMove(x, y);
-					break;
-				case MotionEvent.ACTION_UP:
-					changed = mEventTap.pressUp(x, y);
-					break;
-			}
-			if (changed)
-			{
-				requestRender();
-			}
+			changed = true;
+			requestRender();
 		}
 		return changed;
 	}

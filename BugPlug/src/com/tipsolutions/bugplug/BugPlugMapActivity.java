@@ -3,14 +3,12 @@ package com.tipsolutions.bugplug;
 import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.tipsolutions.bugplug.map.RenderMap;
 import com.tipsolutions.bugplug.test.CubeFRenderer;
@@ -21,7 +19,6 @@ import com.tipsolutions.bugplug.test.SimpleTestSquareRenderer;
 import com.tipsolutions.bugplug.test.TestSquareRenderer;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
-import com.tipsolutions.jacket.view.EventTapAdjust;
 
 public class BugPlugMapActivity extends Activity
 {
@@ -32,9 +29,9 @@ public class BugPlugMapActivity extends Activity
 
 	static final int		SURFACE_ID				= 1;
 	static final Boolean	SIMPLE_TEST				= false;
-	TextView				mCamEye;
-	TextView				mCamLook;
-	TextView				mCamUp;
+	// TextView mCamEye;
+	// TextView mCamLook;
+	// TextView mCamUp;
 	ControlRenderer			mRenderer;
 	ControlSurfaceView		mSurfaceView;
 	GLSurfaceView			mSimpleSurfaceView;
@@ -95,19 +92,6 @@ public class BugPlugMapActivity extends Activity
 		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mSurfaceView.setId(SURFACE_ID);
 
-		EventTapAdjust eventTap = new EventTapAdjust(mSurfaceView, new EventTapAdjust.Adjust()
-		{
-			public void move(int xAmt, int yAmt)
-			{
-			}
-
-			public void start(int x, int y)
-			{
-			}
-
-		});
-		mSurfaceView.setEventTap(eventTap);
-
 		setRenderer(mChoice, mRenderOnlyWhenDirty);
 
 		FrameLayout container = (FrameLayout) findViewById(R.id.container);
@@ -122,9 +106,9 @@ public class BugPlugMapActivity extends Activity
 			container.addView(mSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 					LayoutParams.MATCH_PARENT));
 		}
-		mCamEye = (TextView) findViewById(R.id.cameraEye);
-		mCamLook = (TextView) findViewById(R.id.cameraLook);
-		mCamUp = (TextView) findViewById(R.id.cameraUp);
+		// mCamEye = (TextView) findViewById(R.id.cameraEye);
+		// mCamLook = (TextView) findViewById(R.id.cameraLook);
+		// mCamUp = (TextView) findViewById(R.id.cameraUp);
 
 		setMessage();
 	}
@@ -153,16 +137,15 @@ public class BugPlugMapActivity extends Activity
 
 	void setRenderer(Renderer which, boolean onlyWhenDirty)
 	{
-		// mChoice = which;
 		mRenderer = getRenderer();
-		mSurfaceView.setRenderer(mRenderer);
 
+		mSurfaceView.setRenderer(mRenderer);
 		if (onlyWhenDirty)
 		{
-			mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+			mRenderer.setRenderOnDirty();
 			mSurfaceView.requestRender();
 		}
-		Log.d("DEBUG", mRenderer.toString());
+		// Log.d("DEBUG", mRenderer.toString());
 	}
 
 	void setMessage()
