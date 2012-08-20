@@ -3,10 +3,10 @@
     <item android:id="@+id/menu_tilt"
           android:title="@string/flat" 
           android:showAsAction="ifRoom"
-          android:checkable="true"/>
+          />
     <item android:id="@+id/menu_rotate" 
           android:title="@string/pan" 
           android:showAsAction="ifRoom"
-          android:checkable="true"/>
+          />
     <item android:id="@+id/menu_exit" android:title="Exit"></item>
 </menu>

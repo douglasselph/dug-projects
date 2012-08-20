@@ -5,34 +5,24 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Camera
 {
+	static final Boolean	LOG			= false;
+	static final String		TAG			= "Camera";
 
-	static final Boolean	LOG	= true;
-	static final String		TAG	= "Camera";
+	protected float			mNearPlane	= 1;
+	protected float			mFarPlane	= 1000;
+	protected float			mAngle		= 65.0f;
+	protected float			mAspect		= 0.5f;
+	protected int			mHeight		= 100;
+	protected int			mWidth		= 100;
+	protected Bounds2D		mClippingPlane;
+	protected Vector3f		mViewingLoc	= new Vector3f();
 
-	static float LARGER(float v1, float v2)
-	{
-		return v1 >= v2 ? v1 : v2;
-	}
-
-	static float LESSER(float v1, float v2)
-	{
-		return v1 <= v2 ? v1 : v2;
-	}
-
-	protected float		mNearPlane	= 1;
-	protected float		mFarPlane	= 1000;
-	protected float		mAngle		= 65.0f;
-	protected float		mAspect		= 0.5f;
-	protected int		mHeight		= 100;
-	protected int		mWidth		= 100;
-	protected Bounds2D	mClippingPlane;
-	protected Vector3f	mViewingLoc	= new Vector3f();
-
-	protected boolean	mDoOrtho;
+	protected boolean		mDoOrtho;
 
 	public Camera()
 	{
@@ -81,10 +71,10 @@ public class Camera
 		// Find most extreme edge
 		float maxY = Math.abs(bounds.getMaxY());
 		float minY = Math.abs(bounds.getMinY());
-		float yValue = LARGER(minY, maxY);
+		float yValue = MathUtils.LARGER(minY, maxY);
 		float maxX = Math.abs(bounds.getMaxX());
 		float minX = Math.abs(bounds.getMinX());
-		float xValue = LARGER(minX, maxX);
+		float xValue = MathUtils.LARGER(minX, maxX);
 
 		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
 
@@ -182,8 +172,6 @@ public class Camera
 		else if (newZ < maxZ)
 		{
 			newZ = maxZ;
-			Log.d("DEBUG", "maxZ=" + maxZ);
-
 		}
 		mViewingLoc.setZ(newZ);
 	}

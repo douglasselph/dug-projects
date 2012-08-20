@@ -62,4 +62,13 @@ public class MathUtils
 		return degrees * TO_RADIANS;
 	}
 
+	public static float LARGER(float v1, float v2)
+	{
+		return v1 >= v2 ? v1 : v2;
+	}
+
+	public static float LESSER(float v1, float v2)
+	{
+		return v1 <= v2 ? v1 : v2;
+	}
 }

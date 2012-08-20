@@ -18,7 +18,8 @@ public class RenderMap extends ControlRenderer implements Adjust
 	EventTapAdjust	mEventTap;
 	float			mMaxZ;
 	Bounds2D		mMaxBounds;
-	Vector3f		mRotate;
+	Vector3f		mRotateAngle;
+	boolean			mIsPan	= true;
 
 	public RenderMap(ControlSurfaceView view, TextureManager tm)
 	{
@@ -26,13 +27,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 		mMap = new Map(tm);
 		mEventTap = new EventTapAdjust(this);
-		mRotate = new Vector3f();
-	}
-
-	@Override
-	public void scale(float delta)
-	{
-		mCamera.scale(delta, mMaxZ);
+		mRotateAngle = new Vector3f();
 	}
 
 	@Override
@@ -40,9 +35,25 @@ public class RenderMap extends ControlRenderer implements Adjust
 	{
 		super.onDrawFrameContents(gl);
 
-		// gl.glRotatef(angle, x, y, z);
 		mCamera.applyViewBounds(gl);
+		applyRotate(gl);
 		mMap.onDraw(gl);
+	}
+
+	void applyRotate(GL10 gl)
+	{
+		if (mRotateAngle.getX() != 0)
+		{
+			gl.glRotatef(mRotateAngle.getX(), 1, 0, 0);
+		}
+		if (mRotateAngle.getY() != 0)
+		{
+			gl.glRotatef(mRotateAngle.getY(), 0, 1, 0);
+		}
+		if (mRotateAngle.getZ() != 0)
+		{
+			gl.glRotatef(mRotateAngle.getZ(), 0, 0, 1);
+		}
 	}
 
 	@Override
@@ -63,7 +74,53 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 	public void pan(float xDelta, float yDelta)
 	{
-		mCamera.pan(xDelta, yDelta, mMaxBounds);
+		if (mIsPan)
+		{
+			mCamera.pan(xDelta, yDelta, mMaxBounds);
+		}
+		else
+		{
+			float delta;
+			if (Math.abs(xDelta) > Math.abs(yDelta))
+			{
+				delta = xDelta;
+			}
+			else
+			{
+				delta = yDelta;
+			}
+			float degrees = (float) (180 * -delta);
+			mRotateAngle.setZ(mRotateAngle.getZ() + degrees);
+		}
+	}
+
+	@Override
+	public void scale(float delta)
+	{
+		mCamera.scale(delta, mMaxZ);
+	}
+
+	public void setIsPan(boolean flag)
+	{
+		mIsPan = flag;
+	}
+
+	/**
+	 * Indicate the tilt.
+	 * 
+	 * @param unit
+	 *        : translates to 15 degrees per value.
+	 */
+	public void setTilt(float unit)
+	{
+		float degrees = unit * -15;
+		mRotateAngle.setX(degrees);
+
+		if (unit == 0)
+		{
+			mRotateAngle.setZ(0);
+		}
+		mView.requestRender();
 	}
 
 	@Override

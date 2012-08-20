@@ -27,11 +27,16 @@ public class BugPlugMapActivity extends SherlockActivity
 	static final int		SURFACE_ID				= 1;
 	static final Boolean	SIMPLE_TEST				= false;
 
+	static final int		MAX_TILT				= 5;
+
 	ControlRenderer			mRenderer;
+	RenderMap				mRenderMap;
 	ControlSurfaceView		mSurfaceView;
 	GLSurfaceView			mSimpleSurfaceView;
 	final Renderer			mChoice					= Renderer.Map;
 	final boolean			mRenderOnlyWhenDirty	= true;
+	boolean					mIsPan					= true;
+	int						mTiltFactor				= 0;
 
 	ControlRenderer getRenderer()
 	{
@@ -55,7 +60,7 @@ public class BugPlugMapActivity extends SherlockActivity
 		}
 		else if (mChoice == Renderer.Map)
 		{
-			return new RenderMap(mSurfaceView, MyApplication.getTM(this));
+			return mRenderMap = new RenderMap(mSurfaceView, MyApplication.getTM(this));
 		}
 		else if (mChoice == Renderer.Square)
 		{
@@ -112,16 +117,7 @@ public class BugPlugMapActivity extends SherlockActivity
 	public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
-
 		getSupportMenuInflater().inflate(R.menu.menu, menu);
-
-		// int order = 0;
-		//
-		// menu.add(0, MENU_EXIT, order++, "Exit");
-		// menu.add(0, MENU_TILT, order++, "Tilt").setCheckable(true).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-		// menu.add(0, MENU_ROTATE, order++,
-		// "Rotate").setCheckable(true).setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-
 		return true;
 	}
 
@@ -129,19 +125,6 @@ public class BugPlugMapActivity extends SherlockActivity
 	public boolean onMenuItemSelected(int featureId, com.actionbarsherlock.view.MenuItem item)
 	{
 		return super.onMenuItemSelected(featureId, item);
-	}
-
-	void toggle(com.actionbarsherlock.view.MenuItem item, int on, int off)
-	{
-		item.setChecked(!item.isChecked());
-		if (item.isChecked())
-		{
-			item.setTitle(getString(off));
-		}
-		else
-		{
-			item.setTitle(getString(on));
-		}
 	}
 
 	@Override
@@ -153,10 +136,34 @@ public class BugPlugMapActivity extends SherlockActivity
 				finish();
 				break;
 			case R.id.menu_tilt:
-				toggle(item, R.string.flat, R.string.tilt);
+				if (++mTiltFactor > MAX_TILT)
+				{
+					mTiltFactor = 0;
+				}
+				if (mTiltFactor == 0)
+				{
+					item.setTitle(R.string.flat);
+				}
+				else
+				{
+					StringBuffer sbuf = new StringBuffer();
+					sbuf.append(getString(R.string.tilt));
+					sbuf.append(mTiltFactor);
+					item.setTitle(sbuf.toString());
+				}
+				mRenderMap.setTilt(mTiltFactor);
 				break;
 			case R.id.menu_rotate:
-				toggle(item, R.string.pan, R.string.rotate);
+				mIsPan = !mIsPan;
+				if (mIsPan)
+				{
+					item.setTitle(R.string.pan);
+				}
+				else
+				{
+					item.setTitle(R.string.rotate);
+				}
+				mRenderMap.setIsPan(mIsPan);
 				break;
 			default:
 				return super.onOptionsItemSelected(item);
