@@ -33,7 +33,7 @@ public class Map
 	final float			mMountainVariance	= 0.2f;
 	final int			mMountainMajorPts	= 20;
 	final long			mMountainSeed		= 2;
-	final float			mMountainHeight		= 0.8f;
+	final float			mMountainHeight		= 0.5f;
 	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
@@ -99,13 +99,13 @@ public class Map
 		taper = new CalcEdgeSloped(edge, -mMountainSideXSize * 0.9f, 0f);
 		group.add(taper);
 
-		riseBound = new Bounds2D(bounds.getMinX() + mMountainSideXSize / 10f, bounds.getMinY(), bounds.getMaxX()
-				- mMountainSideXSize / 10f, bounds.getMaxY());
+		riseBound = new Bounds2D(bounds.getMinX(), bounds.getMinY(), bounds.getMaxX() - mMountainSideXSize / 10f,
+				bounds.getMaxY());
 		rise = new CalcConeLinear(riseBound, mMountainHeight);
 		group.add(rise);
 
 		mMountains[0] = new TerrainGrid();
-		mMountains[0].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 10);
+		mMountains[0].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 15);
 		mMountains[0].setCompute(group);
 		mMountains[0].setTexture(mTM.getTexture(R.drawable.hardrock));
 		mMountains[0].init();

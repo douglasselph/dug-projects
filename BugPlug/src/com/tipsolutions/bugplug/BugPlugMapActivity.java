@@ -169,6 +169,7 @@ public class BugPlugMapActivity extends SherlockActivity
 				break;
 			case R.id.menu_reset:
 				mRenderMap.resetView();
+				mTiltFactor = 0;
 				invalidateOptionsMenu();
 				break;
 			default:

@@ -15,7 +15,7 @@ public class CalcValue implements ICalcValue
 
 	public CalcValue(Bounds2D bounds)
 	{
-		mBounds = bounds;
+		setBounds(bounds);
 	}
 
 	public Info getInfo(float x, float y)
