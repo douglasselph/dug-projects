@@ -35,7 +35,6 @@ public class BugPlugMapActivity extends SherlockActivity
 	GLSurfaceView			mSimpleSurfaceView;
 	final Renderer			mChoice					= Renderer.Map;
 	final boolean			mRenderOnlyWhenDirty	= true;
-	boolean					mIsPan					= true;
 	int						mTiltFactor				= 0;
 
 	ControlRenderer getRenderer()
@@ -118,6 +117,10 @@ public class BugPlugMapActivity extends SherlockActivity
 	{
 		super.onCreateOptionsMenu(menu);
 		getSupportMenuInflater().inflate(R.menu.menu, menu);
+
+		// menu.getItem(R.id.menu_pan).setTitle(R.string.pan);
+		// menu.getItem(R.id.menu_tilt).setTitle(R.string.flat);
+
 		return true;
 	}
 
@@ -153,9 +156,9 @@ public class BugPlugMapActivity extends SherlockActivity
 				}
 				mRenderMap.setTilt(mTiltFactor);
 				break;
-			case R.id.menu_rotate:
-				mIsPan = !mIsPan;
-				if (mIsPan)
+			case R.id.menu_pan:
+				mRenderMap.setIsPan(!mRenderMap.isPan());
+				if (mRenderMap.isPan())
 				{
 					item.setTitle(R.string.pan);
 				}
@@ -163,7 +166,10 @@ public class BugPlugMapActivity extends SherlockActivity
 				{
 					item.setTitle(R.string.rotate);
 				}
-				mRenderMap.setIsPan(mIsPan);
+				break;
+			case R.id.menu_reset:
+				mRenderMap.resetView();
+				invalidateOptionsMenu();
 				break;
 			default:
 				return super.onOptionsItemSelected(item);

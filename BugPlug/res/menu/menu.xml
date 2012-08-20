@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <item android:id="@+id/menu_reset"
+          android:title="Reset"
+          android:showAsAction="ifRoom"/>
     <item android:id="@+id/menu_tilt"
           android:title="@string/flat" 
-          android:showAsAction="ifRoom"
-          />
-    <item android:id="@+id/menu_rotate" 
+          android:showAsAction="always"/>"
+    <item android:id="@+id/menu_pan" 
           android:title="@string/pan" 
-          android:showAsAction="ifRoom"
-          />
+          android:showAsAction="always"/>
     <item android:id="@+id/menu_exit" android:title="Exit"></item>
 </menu>

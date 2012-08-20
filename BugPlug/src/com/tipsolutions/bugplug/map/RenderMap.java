@@ -64,6 +64,8 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mCamera.setViewBounds(mMap.getBounds());
 		mMaxZ = mCamera.getViewingLoc().getZ();
 		mMaxBounds = new Bounds2D(mCamera.getViewBounds());
+		mMaxBounds.setMinX(mMaxBounds.getMinX() * 1.4f);
+		mMaxBounds.setMaxX(mMaxBounds.getMaxX() * 1.4f);
 	}
 
 	@Override
@@ -94,6 +96,14 @@ public class RenderMap extends ControlRenderer implements Adjust
 		}
 	}
 
+	public void resetView()
+	{
+		mRotateAngle = new Vector3f();
+		mIsPan = true;
+		mCamera.setViewBounds(mMap.getBounds());
+		mView.requestRender();
+	}
+
 	@Override
 	public void scale(float delta)
 	{
@@ -103,6 +113,11 @@ public class RenderMap extends ControlRenderer implements Adjust
 	public void setIsPan(boolean flag)
 	{
 		mIsPan = flag;
+	}
+
+	public boolean isPan()
+	{
+		return mIsPan;
 	}
 
 	/**

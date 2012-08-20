@@ -33,7 +33,7 @@ public class Map
 	final float			mMountainVariance	= 0.2f;
 	final int			mMountainMajorPts	= 20;
 	final long			mMountainSeed		= 2;
-	final float			mMountainHeight		= 0.6f;
+	final float			mMountainHeight		= 0.8f;
 	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
