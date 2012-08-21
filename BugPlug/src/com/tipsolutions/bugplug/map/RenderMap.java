@@ -1,5 +1,6 @@
 package com.tipsolutions.bugplug.map;
 
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.view.MotionEvent;
@@ -54,6 +55,15 @@ public class RenderMap extends ControlRenderer implements Adjust
 		{
 			gl.glRotatef(mRotateAngle.getZ(), 0, 0, 1);
 		}
+	}
+
+	@Override
+	public void onSurfaceCreated(GL10 gl, EGLConfig config)
+	{
+		super.onSurfaceCreated(gl, config);
+
+		initDepth(gl);
+		initLighting(gl);
 	}
 
 	@Override

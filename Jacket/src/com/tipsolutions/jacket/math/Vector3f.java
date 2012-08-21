@@ -332,6 +332,11 @@ public class Vector3f
 		return sbuf.toString();
 	}
 
+	public float[] toArray()
+	{
+		return mData;
+	}
+
 	/**
 	 * 
 	 * @param format

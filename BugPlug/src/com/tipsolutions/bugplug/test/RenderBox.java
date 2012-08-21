@@ -3,6 +3,8 @@ package com.tipsolutions.bugplug.test;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
+
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
@@ -15,19 +17,27 @@ public class RenderBox extends ControlRenderer
 	Box		mBox;
 	float	mAngle;
 
-	public RenderBox(ControlSurfaceView view, TextureManager tm)
+	public RenderBox(ControlSurfaceView view, boolean useMaterials, TextureManager tm)
 	{
 		super(view, tm);
 
 		mBox = new Box(1f);
 
-		if (tm == null)
+		if (tm == null && !useMaterials)
 		{
 			mBox.setColor(new Color4f(1f, 0f, 0f, 0.5f));
 		}
-		else
+		else if (tm != null)
 		{
 			mBox.setTexture(mTM.getTexture(R.drawable.sample));
+		}
+		if (useMaterials)
+		{
+			// mBox.setColorAmbient(Color4f.RED);
+			mBox.setColorDiffuse(Color4f.BLUE);
+			// mBox.setColorSpecular(Color4f.GREEN);
+			// mBox.setColorEmission(new Color4f(0.3f, 0f, 0f, 0.2f));
+			// mBox.setColorShininess(shininess);
 		}
 	}
 
@@ -35,6 +45,13 @@ public class RenderBox extends ControlRenderer
 	public void onSurfaceCreated(GL10 gl, EGLConfig config)
 	{
 		super.onSurfaceCreated(gl, config);
+
+		initDepth(gl);
+
+		gl.glEnable(GL10.GL_LIGHTING);
+		gl.glEnable(GL10.GL_LIGHT0);
+		// gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(1f, 0f, 0f, 0).toArray(), 0);
+		// gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, Color4f.RED.toArray(), 0);
 	}
 
 	@Override
@@ -54,6 +71,12 @@ public class RenderBox extends ControlRenderer
 
 		mBox.onDraw(gl);
 
-		mAngle += 1.2f;
+		Log.d("DEBUG", "ANGLE=" + mAngle);
+
+		mAngle += 0.1f;
+		if (mAngle > 360)
+		{
+			mAngle -= 360;
+		}
 	}
 }

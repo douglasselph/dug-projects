@@ -32,6 +32,11 @@ public class Model
 	protected TextureManager.Texture	mTexture;
 	protected FloatBuf					mTextureBuf;
 	protected FloatBuf					mVertexBuf;
+	protected Color4f					mColorDiffuse;
+	protected Color4f					mColorAmbient;
+	protected Color4f					mColorSpecular;
+	protected Color4f					mColorEmission;
+	protected Float						mColorShininess;
 
 	protected void computeBounds(ComputeBounds computeBounds)
 	{
@@ -212,12 +217,35 @@ public class Model
 			gl.glMatrixMode(GL10.GL_MODELVIEW);
 			gl.glPushMatrix();
 			didPush = true;
-
-			// Matrix4f curMatrix = gl.getMatrix();
-			// Matrix4f useMatrix = new Matrix4f(curMatrix).mult(matrix);
-			// gl.glLoadMatrix(useMatrix);
 		}
-		if (!hasColorArray() && mColor != null)
+		boolean hasMaterials = false;
+
+		if (mColorAmbient != null)
+		{
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mColorAmbient.toArray(), 0);
+			hasMaterials = true;
+		}
+		if (mColorDiffuse != null)
+		{
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mColorDiffuse.toArray(), 0);
+			hasMaterials = true;
+		}
+		if (mColorEmission != null)
+		{
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, mColorEmission.toArray(), 0);
+			hasMaterials = true;
+		}
+		if (mColorSpecular != null)
+		{
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mColorSpecular.toArray(), 0);
+			hasMaterials = true;
+		}
+		if (mColorShininess != null)
+		{
+			gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mColorShininess);
+			hasMaterials = true;
+		}
+		if (!hasMaterials && !hasColorArray() && mColor != null)
 		{
 			gl.glColor4f(mColor.getRed(), mColor.getGreen(), mColor.getBlue(), mColor.getAlpha());
 		}
@@ -241,15 +269,11 @@ public class Model
 		{
 			gl.glDisableClientState(GL10.GL_NORMAL_ARRAY);
 		}
-		if (mColorBuf != null)
+		if (!hasMaterials && mColorBuf != null)
 		{
 			mColorBuf.rewind();
 			gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
 			gl.glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuf.getBuf());
-
-			// Not doing it this way anymore:
-			// gl.glColorPointer(4, GL10.GL_FIXED, 0,
-			// mColorBuf.asShortBuffer());
 		}
 		else
 		{
@@ -322,6 +346,67 @@ public class Model
 	public void setColor(Color4f color)
 	{
 		mColor = color;
+	}
+
+	/**
+	 * Ambient light is light that comes from all directions. Systems like OpenGL only directly simulate light coming
+	 * from some light source. The don't simulate the natural occurrence of light bouncing off of other sources or being
+	 * diffused by the atmosphere. Consequently, any surface that does not have a light shining on it directly is not
+	 * lit at all by that light. A hack to deal with this problem is ambient light. If you set an ambient color the same
+	 * as the diffuse color and use a small amount of ambient lighting, you'll be able to see all surfaces no matter
+	 * where the light is. Because AMBIENT and DIFFUSE are often set at the same time, there is an
+	 * GL_AMBIENT_AND_DIFFUSE option for glMaterial.
+	 * 
+	 * @param color
+	 */
+	public void setColorAmbient(Color4f color)
+	{
+		mColorAmbient = color;
+	}
+
+	/**
+	 * Surfaces can be considered to have two lighting characteristics: diffuse reflection and specular reflection.
+	 * Diffuse reflection reflects light in all directions, regardless of where it came from. Specular reflection
+	 * reflects more light in the mirror direction. A perfect mirror has no diffuse reflection and tons of specular
+	 * reflection. Perfectly flat paint has diffuse reflection and no specular reflection. Most things are in-between.
+	 * This is generally the property you'll use to set the color of a surface.
+	 * 
+	 * @param color
+	 */
+	public void setColorDiffuse(Color4f color)
+	{
+		mColorDiffuse = color;
+	}
+
+	/**
+	 * The emissive property is how much a surface generates it's own light.
+	 * 
+	 * @param color
+	 */
+	public void setColorEmission(Color4f color)
+	{
+		mColorEmission = color;
+	}
+
+	/**
+	 * This property sets the specular color. Note that the specular color for most surfaces is white, even if the
+	 * surface is a different color.
+	 * 
+	 * @param color
+	 */
+	public void setColorSpecular(Color4f color)
+	{
+		mColorSpecular = color;
+	}
+
+	/**
+	 * This determine how shiny a surface is. Values range from 0 to 128.
+	 * 
+	 * @param shininess
+	 */
+	public void setColorShininess(float shininess)
+	{
+		mColorShininess = shininess;
 	}
 
 	public void setLocation(Vector3f x)

@@ -21,7 +21,7 @@ public class BugPlugMapActivity extends SherlockActivity
 {
 	enum Renderer
 	{
-		Box, BoxTex, Cube, CubeF, Map, Square, SquareTex, TestSquare
+		BoxColor, BoxMat, BoxTex, BoxTexMat, Cube, CubeF, Map, Square, SquareTex, TestSquare
 	};
 
 	static final int		SURFACE_ID				= 1;
@@ -33,21 +33,31 @@ public class BugPlugMapActivity extends SherlockActivity
 	RenderMap				mRenderMap;
 	ControlSurfaceView		mSurfaceView;
 	GLSurfaceView			mSimpleSurfaceView;
-	final Renderer			mChoice					= Renderer.Map;
-	final boolean			mRenderOnlyWhenDirty	= true;
+	// final Renderer mChoice = Renderer.Map;
+	// final boolean mRenderOnlyWhenDirty = true;
+	final Renderer			mChoice					= Renderer.BoxMat;
+	final boolean			mRenderOnlyWhenDirty	= false;
 	int						mTiltFactor				= 0;
 
 	ControlRenderer getRenderer()
 	{
 		// Box, Cube, CubeF, Map, Square, TestSquare
 
-		if (mChoice == Renderer.Box)
+		if (mChoice == Renderer.BoxColor)
 		{
-			return new RenderBox(mSurfaceView, null);
+			return new RenderBox(mSurfaceView, false, null);
+		}
+		else if (mChoice == Renderer.BoxMat)
+		{
+			return new RenderBox(mSurfaceView, true, null);
 		}
 		else if (mChoice == Renderer.BoxTex)
 		{
-			return new RenderBox(mSurfaceView, MyApplication.getTM(this));
+			return new RenderBox(mSurfaceView, false, MyApplication.getTM(this));
+		}
+		else if (mChoice == Renderer.BoxTexMat)
+		{
+			return new RenderBox(mSurfaceView, true, MyApplication.getTM(this));
 		}
 		else if (mChoice == Renderer.Cube)
 		{
@@ -139,38 +149,47 @@ public class BugPlugMapActivity extends SherlockActivity
 				finish();
 				break;
 			case R.id.menu_tilt:
-				if (++mTiltFactor > MAX_TILT)
+				if (mRenderMap != null)
 				{
-					mTiltFactor = 0;
+					if (++mTiltFactor > MAX_TILT)
+					{
+						mTiltFactor = 0;
+					}
+					if (mTiltFactor == 0)
+					{
+						item.setTitle(R.string.flat);
+					}
+					else
+					{
+						StringBuffer sbuf = new StringBuffer();
+						sbuf.append(getString(R.string.tilt));
+						sbuf.append(mTiltFactor);
+						item.setTitle(sbuf.toString());
+					}
+					mRenderMap.setTilt(mTiltFactor);
 				}
-				if (mTiltFactor == 0)
-				{
-					item.setTitle(R.string.flat);
-				}
-				else
-				{
-					StringBuffer sbuf = new StringBuffer();
-					sbuf.append(getString(R.string.tilt));
-					sbuf.append(mTiltFactor);
-					item.setTitle(sbuf.toString());
-				}
-				mRenderMap.setTilt(mTiltFactor);
 				break;
 			case R.id.menu_pan:
-				mRenderMap.setIsPan(!mRenderMap.isPan());
-				if (mRenderMap.isPan())
+				if (mRenderMap != null)
 				{
-					item.setTitle(R.string.pan);
-				}
-				else
-				{
-					item.setTitle(R.string.rotate);
+					mRenderMap.setIsPan(!mRenderMap.isPan());
+					if (mRenderMap.isPan())
+					{
+						item.setTitle(R.string.pan);
+					}
+					else
+					{
+						item.setTitle(R.string.rotate);
+					}
 				}
 				break;
 			case R.id.menu_reset:
-				mRenderMap.resetView();
-				mTiltFactor = 0;
-				invalidateOptionsMenu();
+				if (mRenderMap != null)
+				{
+					mRenderMap.resetView();
+					mTiltFactor = 0;
+					invalidateOptionsMenu();
+				}
 				break;
 			default:
 				return super.onOptionsItemSelected(item);

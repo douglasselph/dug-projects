@@ -65,11 +65,17 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		return mWidth;
 	}
 
-	protected void onCreatedInitDepth(GL10 gl)
+	protected void initDepth(GL10 gl)
 	{
-		// gl.glClearDepthf(1.0f);
-		// gl.glEnable(GL10.GL_DEPTH_TEST);
-		// gl.glDepthFunc(GL10.GL_LEQUAL);
+		gl.glClearDepthf(1.0f);
+		gl.glEnable(GL10.GL_DEPTH_TEST);
+		gl.glDepthFunc(GL10.GL_LEQUAL);
+	}
+
+	protected void initLighting(GL10 gl)
+	{
+		gl.glEnable(GL10.GL_LIGHTING);
+		gl.glEnable(GL10.GL_LIGHT0);
 	}
 
 	protected void onCreatedInitHint(GL10 gl)
@@ -85,11 +91,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 	protected void onCreatedInitShading(GL10 gl)
 	{
 		gl.glShadeModel(GL10.GL_SMOOTH);
-	}
-
-	protected void onCreatedInitTexture(GL10 gl)
-	{
-		// gl.glEnable(GL10.GL_TEXTURE_2D);
 	}
 
 	public void onDrawFrame(GL10 gl)
@@ -118,11 +119,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		{
 			printErrors(gl);
 		}
-		// if (mOnAfterNextRender != null)
-		// {
-		// mOnAfterNextRender.run(this, gl);
-		// mOnAfterNextRender = null;
-		// }
 	}
 
 	public void onSurfaceChanged(GL10 gl, int width, int height)
@@ -155,10 +151,7 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		}
 
 		// gl.glDisable(GL10.GL_DITHER);
-
-		onCreatedInitDepth(gl);
 		onCreatedInitShading(gl);
-		onCreatedInitTexture(gl);
 		onCreatedInitHint(gl);
 	}
 

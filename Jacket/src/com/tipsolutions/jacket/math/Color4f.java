@@ -4,169 +4,204 @@ import java.nio.FloatBuffer;
 
 import android.graphics.Color;
 
+public class Color4f
+{
+	/**
+	 * the color black (0, 0, 0, 1).
+	 */
+	public static final Color4f	BLACK			= new Color4f(0f, 0f, 0f, 1f);
+	/**
+	 * the color black with a zero alpha value (0, 0, 0, 0).
+	 */
+	public static final Color4f	BLACK_NO_ALPHA	= new Color4f(0f, 0f, 0f, 0f);
+	/**
+	 * the color white (1, 1, 1, 1).
+	 */
+	public static final Color4f	WHITE			= new Color4f(1f, 1f, 1f, 1f);
+	/**
+	 * the color gray (.2f, .2f, .2f, 1).
+	 */
+	public static final Color4f	DARK_GRAY		= new Color4f(0.2f, 0.2f, 0.2f, 1.0f);
+	/**
+	 * the color gray (.5f, .5f, .5f, 1).
+	 */
+	public static final Color4f	GRAY			= new Color4f(0.5f, 0.5f, 0.5f, 1.0f);
+	/**
+	 * the color gray (.8f, .8f, .8f, 1).
+	 */
+	public static final Color4f	LIGHT_GRAY		= new Color4f(0.8f, 0.8f, 0.8f, 1.0f);
+	/**
+	 * the color red (1, 0, 0, 1).
+	 */
+	public static final Color4f	RED				= new Color4f(1f, 0f, 0f, 1f);
+	/**
+	 * the color green (0, 1, 0, 1).
+	 */
+	public static final Color4f	GREEN			= new Color4f(0f, 1f, 0f, 1f);
+	/**
+	 * the color blue (0, 0, 1, 1).
+	 */
+	public static final Color4f	BLUE			= new Color4f(0f, 0f, 1f, 1f);
+	/**
+	 * the color yellow (1, 1, 0, 1).
+	 */
+	public static final Color4f	YELLOW			= new Color4f(1f, 1f, 0f, 1f);
+	/**
+	 * the color magenta (1, 0, 1, 1).
+	 */
+	public static final Color4f	MAGENTA			= new Color4f(1f, 0f, 1f, 1f);
+	/**
+	 * the color cyan (0, 1, 1, 1).
+	 */
+	public static final Color4f	CYAN			= new Color4f(0f, 1f, 1f, 1f);
+	/**
+	 * the color orange (251/255f, 130/255f, 0, 1).
+	 */
+	public static final Color4f	ORANGE			= new Color4f(251f / 255f, 130f / 255f, 0f, 1f);
+	/**
+	 * the color brown (65/255f, 40/255f, 25/255f, 1).
+	 */
+	public static final Color4f	BROWN			= new Color4f(65f / 255f, 40f / 255f, 25f / 255f, 1f);
+	/**
+	 * the color pink (1, 0.68f, 0.68f, 1).
+	 */
+	public static final Color4f	PINK			= new Color4f(1f, 0.68f, 0.68f, 1f);
 
+	static final int			IRED			= 0;
+	static final int			IGREEN			= 1;
+	static final int			IBLUE			= 2;
+	static final int			IALPHA			= 3;
 
-public class Color4f {
-	   /**
-     * the color black (0, 0, 0, 1).
-     */
-    public static final Color4f BLACK = new Color4f(0f, 0f, 0f, 1f);
-    /**
-     * the color black with a zero alpha value (0, 0, 0, 0).
-     */
-    public static final Color4f BLACK_NO_ALPHA = new Color4f(0f, 0f, 0f, 0f);
-    /**
-     * the color white (1, 1, 1, 1).
-     */
-    public static final Color4f WHITE = new Color4f(1f, 1f, 1f, 1f);
-    /**
-     * the color gray (.2f, .2f, .2f, 1).
-     */
-    public static final Color4f DARK_GRAY = new Color4f(0.2f, 0.2f, 0.2f, 1.0f);
-    /**
-     * the color gray (.5f, .5f, .5f, 1).
-     */
-    public static final Color4f GRAY = new Color4f(0.5f, 0.5f, 0.5f, 1.0f);
-    /**
-     * the color gray (.8f, .8f, .8f, 1).
-     */
-    public static final Color4f LIGHT_GRAY = new Color4f(0.8f, 0.8f, 0.8f, 1.0f);
-    /**
-     * the color red (1, 0, 0, 1).
-     */
-    public static final Color4f RED = new Color4f(1f, 0f, 0f, 1f);
-    /**
-     * the color green (0, 1, 0, 1).
-     */
-    public static final Color4f GREEN = new Color4f(0f, 1f, 0f, 1f);
-    /**
-     * the color blue (0, 0, 1, 1).
-     */
-    public static final Color4f BLUE = new Color4f(0f, 0f, 1f, 1f);
-    /**
-     * the color yellow (1, 1, 0, 1).
-     */
-    public static final Color4f YELLOW = new Color4f(1f, 1f, 0f, 1f);
-    /**
-     * the color magenta (1, 0, 1, 1).
-     */
-    public static final Color4f MAGENTA = new Color4f(1f, 0f, 1f, 1f);
-    /**
-     * the color cyan (0, 1, 1, 1).
-     */
-    public static final Color4f CYAN = new Color4f(0f, 1f, 1f, 1f);
-    /**
-     * the color orange (251/255f, 130/255f, 0, 1).
-     */
-    public static final Color4f ORANGE = new Color4f(251f / 255f, 130f / 255f, 0f, 1f);
-    /**
-     * the color brown (65/255f, 40/255f, 25/255f, 1).
-     */
-    public static final Color4f BROWN = new Color4f(65f / 255f, 40f / 255f, 25f / 255f, 1f);
-    /**
-     * the color pink (1, 0.68f, 0.68f, 1).
-     */
-    public static final Color4f PINK = new Color4f(1f, 0.68f, 0.68f, 1f);
-
-    static protected int value255(float c) {
-    	return (int)(c * 255);
-    }
-    protected float mR = 0;
-    protected float mG = 0;
-    protected float mB = 0;
-    
-    protected float mA = 0;
-    
-    public Color4f(final Color4f c) {
-    	mR = c.mR;
-    	mG = c.mG;
-    	mB = c.mB;
-    	mA = c.mA;
-    }
-    
-    public Color4f(float r, float g, float b) {
-    	mR = r; mG = g; mB = b; mA = 1f;
-    }
-    
-    public Color4f(float r, float g, float b, float a) {
-    	mR = r; mG = g; mB = b; mA = a;
-    }
-    
-    public Color4f(int color) {
-    	mR = ((float) Color.red(color)) / (float) 0xFF;
-    	mG = ((float) Color.green(color)) / (float) 0xFF;
-    	mB = ((float) Color.blue(color)) / (float) 0xFF;
-    	mA = ((float) Color.alpha(color)) / (float) 0xFF;
-    }
-    
-    public boolean equals(Color4f o) {
-		return mR == o.mR && mG == o.mG && mB == o.mB && mA == o.mA;
+	static protected int value255(float c)
+	{
+		return (int) (c * 255);
 	}
 
-    public float getAlpha() {
-        return mA;
-    }
+	protected float[]	mColor	= new float[4];
 
-    public float getBlue() {
-        return mB;
-    }
+	public Color4f(final Color4f c)
+	{
+		for (int i = 0; i < mColor.length; i++)
+		{
+			mColor[i] = c.mColor[i];
+		}
+	}
 
-    public int getColor() {
-    	return Color.argb(value255(mA), 
-    					  value255(mR), 
-    					  value255(mG), 
-    					  value255(mB));
-    }
+	public Color4f(float r, float g, float b)
+	{
+		mColor[IRED] = r;
+		mColor[IGREEN] = g;
+		mColor[IBLUE] = b;
+		mColor[IALPHA] = 1;
+	}
 
-    public float getGreen() {
-        return mG;
-    }
-    
-    public float getRed() {
-        return mR;
-    }
+	public Color4f(float r, float g, float b, float a)
+	{
+		mColor[IRED] = r;
+		mColor[IGREEN] = g;
+		mColor[IBLUE] = b;
+		mColor[IALPHA] = a;
+	}
 
-    public Color4f put(FloatBuffer buf) {
-    	buf.put(mR).put(mG).put(mB).put(mA);
-    	return this;
-    }
+	public Color4f(int color)
+	{
+		mColor[IRED] = ((float) Color.red(color)) / (float) 0xFF;
+		mColor[IGREEN] = ((float) Color.green(color)) / (float) 0xFF;
+		mColor[IBLUE] = ((float) Color.blue(color)) / (float) 0xFF;
+		mColor[IALPHA] = ((float) Color.alpha(color)) / (float) 0xFF;
+	}
 
-    public void set(float r, float g, float b, float a) {
-        mR = r;
-        mG = g;
-        mB = b;
-        mA = a;
-    }
+	public boolean equals(final Color4f o)
+	{
+		for (int i = 0; i < mColor.length; i++)
+		{
+			if (mColor[i] != o.mColor[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 
-    public void setAlpha(float a) {
-        mA = a;
-    }
-    
-    public void setBlue(float b) {
-        mB = b;
-    }
-    
-    public void setGreen(float g) {
-        mG = g;
-    }
+	public float getAlpha()
+	{
+		return mColor[IALPHA];
+	}
 
-	public void setRed(float r) {
-        mR = r;
-    }
+	public float getBlue()
+	{
+		return mColor[IBLUE];
+	}
+
+	public int getColor()
+	{
+		return Color.argb(value255(mColor[IALPHA]), value255(mColor[IRED]), value255(mColor[IGREEN]),
+				value255(mColor[IBLUE]));
+	}
+
+	public float getGreen()
+	{
+		return mColor[IGREEN];
+	}
+
+	public float getRed()
+	{
+		return mColor[IRED];
+	}
+
+	public Color4f put(FloatBuffer buf)
+	{
+		buf.put(mColor[IRED]).put(mColor[IGREEN]).put(mColor[IBLUE]).put(mColor[IALPHA]);
+		return this;
+	}
+
+	public void set(float r, float g, float b, float a)
+	{
+		mColor[IRED] = r;
+		mColor[IGREEN] = g;
+		mColor[IBLUE] = b;
+		mColor[IALPHA] = a;
+	}
+
+	public void setAlpha(float a)
+	{
+		mColor[IALPHA] = a;
+	}
+
+	public void setBlue(float b)
+	{
+		mColor[IBLUE] = b;
+	}
+
+	public void setGreen(float g)
+	{
+		mColor[IGREEN] = g;
+	}
+
+	public void setRed(float r)
+	{
+		mColor[IRED] = r;
+	}
+
+	public float[] toArray()
+	{
+		return mColor;
+	}
 
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append("[");
-		sbuf.append(mR);
+		sbuf.append(getRed());
 		sbuf.append(",");
-		sbuf.append(mG);
+		sbuf.append(getGreen());
 		sbuf.append(",");
-		sbuf.append(mB);
+		sbuf.append(getBlue());
 		sbuf.append(",");
-		sbuf.append(mA);
+		sbuf.append(getAlpha());
 		sbuf.append("]");
 		return sbuf.toString();
 	}
-    
+
 }
