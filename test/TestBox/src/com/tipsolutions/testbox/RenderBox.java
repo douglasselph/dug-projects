@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.Vector4f;
 import com.tipsolutions.jacket.model.Box;
 import com.tipsolutions.jacket.view.ControlRenderer;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -30,11 +31,11 @@ public class RenderBox extends ControlRenderer
 		}
 		if (useMaterials)
 		{
-			// mBox.setColorAmbient(Color4f.RED);
+			mBox.setColorAmbient(Color4f.BLUE);
 			mBox.setColorDiffuse(Color4f.BLUE);
-			// mBox.setColorSpecular(Color4f.GREEN);
+			mBox.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1));
+			mBox.setColorShininess(100.0f);
 			// mBox.setColorEmission(new Color4f(0.3f, 0f, 0f, 0.2f));
-			// mBox.setColorShininess(shininess);
 		}
 	}
 
@@ -50,8 +51,16 @@ public class RenderBox extends ControlRenderer
 
 		gl.glEnable(GL10.GL_LIGHTING);
 		gl.glEnable(GL10.GL_LIGHT0);
-		// gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(0f, 0f, 1f, 0).toArray(), 0);
-		// gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, Color4f.RED.toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(1f, 0f, 0f, 0).toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, Color4f.WHITE.toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, Color4f.BLACK.toArray(), 0);
+		gl.glEnable(GL10.GL_LIGHT1);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, new Vector4f(-.3f, 0f, -1f, 1).toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, Color4f.GREEN.toArray(), 0);
+		gl.glEnable(GL10.GL_LIGHT2);
+		gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_POSITION, new Vector4f(.6f, -.2f, -.1f, 1).toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
+		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, new Color4f(0.25f, 0.25f, 0.25f, 1).toArray(), 0);
 	}
 
 	@Override
@@ -74,6 +83,6 @@ public class RenderBox extends ControlRenderer
 
 		gl.glPopMatrix();
 
-		mAngle += 0.2f;
+		mAngle += 0.3f;
 	}
 }
