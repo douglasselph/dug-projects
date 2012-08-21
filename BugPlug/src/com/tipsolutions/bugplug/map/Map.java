@@ -5,6 +5,7 @@ import javax.microedition.khronos.opengles.GL10;
 import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
+import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.terrain.CalcConeLinear;
 import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.CalcEdgeJagged;
@@ -33,7 +34,7 @@ public class Map
 	final float			mMountainVariance	= 0.2f;
 	final int			mMountainMajorPts	= 20;
 	final long			mMountainSeed		= 2;
-	final float			mMountainHeight		= 0.5f;
+	final float			mMountainHeight		= 0.3f;
 	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
@@ -56,10 +57,12 @@ public class Map
 		mGround = new TerrainGrid();
 		mGround.setBounds(mBounds).setGridSizeSafe(2, 2);
 		mGround.setCompute(new CalcConstant(0f, mBounds));
-		mGround.setTexture(mTM.getTexture(R.drawable.sample));
+		mGround.setTexture(mTM.getTexture(R.drawable.dirt));
 		mGround.setSubdivision(1, 0, 1);
 		mGround.setSubdivision(1, 1, 1);
 		mGround.setSubdivision(0, 1, 1);
+		// mGround.setColorAmbient(new Color4f(0.4f, 0.4f, 0.4f, 1f));
+		// mGround.setColorDiffuse(Color4f.WHITE);
 		mGround.init();
 		/*
 		 * Build the water edge
@@ -76,6 +79,8 @@ public class Map
 		mWater.setBounds(bounds).setGridSizeSafe(2, jagged.getMaxJagPts());
 		mWater.setTexture(mTM.getTexture(R.drawable.water));
 		mWater.setCompute(jagged);
+		mWater.setColorAmbient(Color4f.WHITE);
+		mWater.setColorDiffuse(Color4f.WHITE);
 		mWater.init();
 		/*
 		 * Build the mountains
@@ -99,15 +104,17 @@ public class Map
 		taper = new CalcEdgeSloped(edge, -mMountainSideXSize * 0.9f, 0f);
 		group.add(taper);
 
-		riseBound = new Bounds2D(bounds.getMinX(), bounds.getMinY(), bounds.getMaxX() - mMountainSideXSize / 10f,
-				bounds.getMaxY());
-		rise = new CalcConeLinear(riseBound, mMountainHeight);
+		riseBound = new Bounds2D(bounds);
+		rise = new CalcConeLinear(riseBound, 0.2f);
 		group.add(rise);
 
 		mMountains[0] = new TerrainGrid();
 		mMountains[0].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 15);
 		mMountains[0].setCompute(group);
-		mMountains[0].setTexture(mTM.getTexture(R.drawable.hardrock));
+		mMountains[0].setTexture(mTM.getTexture(R.drawable.dirt2));
+		mMountains[0].setColorAmbient(Color4f.WHITE);
+		mMountains[0].setColorDiffuse(Color4f.WHITE);
+		mMountains[0].setColorSpecular(Color4f.WHITE);
 		mMountains[0].init();
 
 		// TOP
@@ -122,7 +129,7 @@ public class Map
 		mMountains[1] = new TerrainGrid();
 		mMountains[1].setBounds(bounds).setGridSizeSafe(2, jagged.getMaxJagPts());
 		mMountains[1].setCompute(jagged);
-		mMountains[1].setTexture(mTM.getTexture(R.drawable.hardrock));
+		mMountains[1].setTexture(mTM.getTexture(R.drawable.dirt2));
 		mMountains[1].init();
 
 		// RIGHT
@@ -145,7 +152,7 @@ public class Map
 		mMountains[2] = new TerrainGrid();
 		mMountains[2].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 10);
 		mMountains[2].setCompute(group);
-		mMountains[2].setTexture(mTM.getTexture(R.drawable.hardrock));
+		mMountains[2].setTexture(mTM.getTexture(R.drawable.dirt2));
 		mMountains[2].init();
 	}
 
