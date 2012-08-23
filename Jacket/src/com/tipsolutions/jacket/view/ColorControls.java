@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.FloatMath;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -11,16 +13,19 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.tipsolutions.jacket.R;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MaterialColors;
 
 public class ColorControls extends FrameLayout
 {
-	class BtnGroup implements Runnable
+	class BtnGroup implements SelectListener
 	{
 		BtnWrapper[]	mBtns;
 		int				mSelected;
+		SelectListener	mSelectListener;
 
 		BtnGroup(int size)
 		{
@@ -28,8 +33,18 @@ public class ColorControls extends FrameLayout
 			mSelected = 0;
 		}
 
+		public BtnWrapper get(int code)
+		{
+			return mBtns[code];
+		}
+
+		public int getSelected()
+		{
+			return mSelected;
+		}
+
 		@Override
-		public void run()
+		public void select(final int code)
 		{
 			for (BtnWrapper btn : mBtns)
 			{
@@ -39,35 +54,28 @@ public class ColorControls extends FrameLayout
 					break;
 				}
 			}
-			mSelected = -1;
+			mSelected = code;
+
+			if (mSelectListener != null)
+			{
+				mSelectListener.select(code);
+			}
 		}
 
 		void set(int pos, int btnResId, int normalResId, int selectedResId)
 		{
-			mBtns[pos] = new BtnWrapper((ImageButton) findViewById(btnResId), normalResId, selectedResId, this);
+			mBtns[pos] = new BtnWrapper((ImageButton) findViewById(btnResId), normalResId, selectedResId, this, pos);
 		}
 
 		public void setSelected(int which)
 		{
-			run();
+			select(which);
 			mBtns[which].setSelected(true);
 		}
 
-		public int getSelected()
+		public void setSelectListener(SelectListener listener)
 		{
-			for (int i = 0; i < mBtns.length; i++)
-			{
-				if (mBtns[i].isSelected())
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-
-		public BtnWrapper get(int code)
-		{
-			return mBtns[code];
+			mSelectListener = listener;
 		}
 	};
 
@@ -75,15 +83,17 @@ public class ColorControls extends FrameLayout
 	{
 		final ImageButton	mBtn;
 		boolean				mIsSelected;
-		Runnable			mListener;
+		SelectListener		mListener;
 		final int			mNormalResId;
 		final int			mSelectedResId;
+		final int			mArg;
 
-		public BtnWrapper(ImageButton btn, int normalResId, int selectedResId, Runnable listener)
+		public BtnWrapper(ImageButton btn, int normalResId, int selectedResId, SelectListener listener, int arg)
 		{
 			mNormalResId = normalResId;
 			mSelectedResId = selectedResId;
 			mBtn = btn;
+			mArg = arg;
 
 			mBtn.setOnClickListener(this);
 			mListener = listener;
@@ -97,7 +107,7 @@ public class ColorControls extends FrameLayout
 		@Override
 		public void onClick(View v)
 		{
-			mListener.run();
+			mListener.select(mArg);
 			setSelected(!mIsSelected);
 		}
 
@@ -114,37 +124,41 @@ public class ColorControls extends FrameLayout
 			}
 		}
 
-		public void setEnabled(boolean flag)
+		public void setColor(Color4f color)
 		{
-			mBtn.setEnabled(flag);
+			if (color != null)
+			{
+				mBtn.setBackgroundColor(color.getColor());
+			}
 		}
-	}
+	};
 
 	public enum ColorCode
 	{
 		All, Red, Green, Blue
-	};
+	}
 
 	public interface OnOperation
 	{
-		int getCurValue(int what, Part part);
+		MaterialColors getMatColor(int what);
 
-		Color4f getCurColor(int what, Part part);
+		int getValue(int what);
 
-		int getHasColor(int what, Part part);
+		boolean hasParts(int what);
 
-		int getMaxValue(int what, Part part);
+		void valueChanged(int what, int value);
 
-		int getMinValue(int what, Part part);
-
-		void setCurValue(int what, Part part, ColorCode code, int value);
-
-		void setCurValue(int what, Part part, int value);
+		void valueChanged(int what, MaterialColors value);
 	};
 
-	public enum Part
+	enum Part
 	{
-		Ambient, Diffuse, Specular, Shininess
+		Unknown, Ambient, Diffuse, Specular, Shininess
+	};
+
+	interface SelectListener
+	{
+		void select(int code);
 	};
 
 	class WhatGroup implements OnClickListener
@@ -158,6 +172,12 @@ public class ColorControls extends FrameLayout
 			mBtn = btn;
 			mBtn.setOnClickListener(this);
 			mList.add(R.drawable.sun);
+		}
+
+		public int add(int resId)
+		{
+			mList.add(resId);
+			return mList.size() - 1;
 		}
 
 		int getSelectCode()
@@ -175,40 +195,241 @@ public class ColorControls extends FrameLayout
 			mBtn.setImageResource(mList.get(mSelected));
 		}
 
-		public int add(int resId)
-		{
-			mList.add(resId);
-			return mList.size() - 1;
-		}
-
 	};
 
-	BtnGroup		mColors;
-	BtnGroup		mParts;
-	SeekBar			mSeekBar;
-	WhatGroup		mWhat;
-	OnOperation		mOpListener;
-	LinearLayout	mColorLayout;
+	static final String	TAG	= "ColorControls";
+
+	BtnGroup			mColors;
+	BtnGroup			mParts;
+	SeekBar				mSeekBar;
+	WhatGroup			mWhat;
+	OnOperation			mOpListener;
+	LinearLayout		mColorLayout;
+	LinearLayout		mPartLayout;
 
 	public ColorControls(Context context)
 	{
 		super(context);
 		setup();
-		setControls();
+		controlInit();
 	}
 
 	public ColorControls(Context context, AttributeSet attrs)
 	{
 		super(context, attrs);
 		setup();
-		setControls();
+		controlInit();
 	}
 
 	public ColorControls(Context context, AttributeSet attrs, int defStyle)
 	{
 		super(context, attrs, defStyle);
 		setup();
-		setControls();
+		controlInit();
+	}
+
+	public int addWhat(int resId)
+	{
+		return mWhat.add(resId);
+	}
+
+	public void controlChanged(final int value)
+	{
+		if (mOpListener == null)
+		{
+			return;
+		}
+		int whatSelected = mWhat.getSelectCode();
+
+		if (mOpListener.hasParts(whatSelected))
+		{
+			Part part = getPart(mParts.getSelected());
+			MaterialColors matColors = mOpListener.getMatColor(whatSelected);
+
+			if (matColors != null)
+			{
+				if (part == Part.Shininess)
+				{
+					float nValue = value * 127f;
+					matColors.setShininess(nValue);
+				}
+				else
+				{
+					Color4f color = getColor(matColors, part);
+					int colorSelected = mColors.getSelected();
+
+					setColorValue(colorSelected, color, value);
+				}
+				mOpListener.valueChanged(whatSelected, matColors);
+			}
+		}
+		else
+		{
+			mOpListener.valueChanged(whatSelected, value);
+		}
+	}
+
+	void controlInit()
+	{
+		if (mOpListener == null)
+		{
+			return;
+		}
+		int whatSelected = mWhat.getSelectCode();
+
+		if (mOpListener.hasParts(whatSelected))
+		{
+			Part part = getPart(mParts.getSelected());
+
+			mPartLayout.setVisibility(View.VISIBLE);
+
+			MaterialColors matColors = mOpListener.getMatColor(whatSelected);
+
+			if (matColors != null)
+			{
+				if (part == Part.Shininess)
+				{
+					mColorLayout.setVisibility(View.INVISIBLE);
+					mSeekBar.setMax(127);
+
+					Float shine = matColors.getShininess();
+					if (shine != null)
+					{
+						int value = (int) FloatMath.floor(shine * 127);
+						mSeekBar.setProgress(value);
+						mSeekBar.setEnabled(true);
+					}
+					else
+					{
+						mSeekBar.setEnabled(false);
+					}
+				}
+				else
+				{
+					mColorLayout.setVisibility(View.VISIBLE);
+					mSeekBar.setMax(255);
+
+					int colorSelected = mColors.getSelected();
+					Color4f color = getColor(matColors, part);
+
+					if (color != null)
+					{
+						int value = getColorValue(colorSelected, color);
+						mSeekBar.setProgress(value);
+						mSeekBar.setEnabled(true);
+					}
+					else
+					{
+						mSeekBar.setEnabled(false);
+					}
+				}
+			}
+			// mParts.get(0).setColor(matColors.getAmbient());
+			// mParts.get(1).setColor(matColors.getDiffuse());
+			// mParts.get(2).setColor(matColors.getSpecular());
+		}
+		else
+		{
+			mColorLayout.setVisibility(View.INVISIBLE);
+			mPartLayout.setVisibility(View.INVISIBLE);
+
+			int value = mOpListener.getValue(whatSelected);
+			mSeekBar.setProgress(value);
+			mSeekBar.setEnabled(true);
+		}
+	}
+
+	Color4f getColor(MaterialColors matColors, Part part)
+	{
+		if (part == Part.Ambient)
+		{
+			return matColors.getAmbient();
+		}
+		if (part == Part.Diffuse)
+		{
+			return matColors.getDiffuse();
+		}
+		if (part == Part.Specular)
+		{
+			return matColors.getSpecular();
+		}
+		return null;
+	}
+
+	int getColorValue(int colorSelect, Color4f color)
+	{
+		if (color == null)
+		{
+			Log.e(TAG, "NULL color [" + colorSelect + "]");
+			return 0;
+		}
+		switch (colorSelect)
+		{
+			case 0:
+			{
+				float value = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
+				return (int) (FloatMath.floor(value * 255));
+			}
+			case 1:
+				return (int) (FloatMath.floor(color.getRed() * 255));
+			case 2:
+				return (int) (FloatMath.floor(color.getGreen() * 255));
+			case 3:
+				return (int) (FloatMath.floor(color.getBlue() * 255));
+		}
+		Log.e(TAG, "bad color select " + colorSelect);
+		return 0;
+	}
+
+	public OnOperation getOpListener()
+	{
+		return mOpListener;
+	}
+
+	Part getPart(int code)
+	{
+		switch (code)
+		{
+			case 0:
+				return Part.Ambient;
+			case 1:
+				return Part.Diffuse;
+			case 2:
+				return Part.Specular;
+			case 3:
+				return Part.Shininess;
+		}
+		return Part.Unknown;
+	}
+
+	public int getWhat()
+	{
+		return mWhat.getSelectCode();
+	}
+
+	void setColorValue(int colorSelect, Color4f color, int value)
+	{
+		float cValue = (float) value / (float) 255;
+
+		switch (colorSelect)
+		{
+			case 0:
+			{
+				color.setRed(cValue);
+				color.setGreen(cValue);
+				color.setBlue(cValue);
+				break;
+			}
+			case 1:
+				color.setRed(cValue);
+				break;
+			case 2:
+				color.setGreen(cValue);
+				break;
+			case 3:
+				color.setBlue(cValue);
+				break;
+		}
 	}
 
 	public void setOpListener(OnOperation listener)
@@ -228,40 +449,52 @@ public class ColorControls extends FrameLayout
 		mColors.set(2, R.id.color_green, R.drawable.empty, R.drawable.empty_select);
 		mColors.set(3, R.id.color_blue, R.drawable.empty, R.drawable.empty_select);
 		mColors.setSelected(0);
+
 		mParts = new BtnGroup(4);
 		mParts.set(0, R.id.part_ambient, R.drawable.ambient, R.drawable.ambient_select);
 		mParts.set(1, R.id.part_diffuse, R.drawable.empty, R.drawable.empty_select);
 		mParts.set(2, R.id.part_specular, R.drawable.spotlight, R.drawable.spotlight_select);
 		mParts.set(3, R.id.part_shine, R.drawable.sparkle, R.drawable.sparkle_select);
 		mParts.setSelected(0);
+		mParts.setSelectListener(new SelectListener()
+		{
+			@Override
+			public void select(int code)
+			{
+				controlInit();
+			}
+		});
 
 		mWhat = new WhatGroup((ImageButton) findViewById(R.id.what_selector));
 		mSeekBar = (SeekBar) findViewById(R.id.seekBar);
 		mColorLayout = (LinearLayout) findViewById(R.id.colors);
-	}
+		mPartLayout = (LinearLayout) findViewById(R.id.part);
 
-	void setControls()
-	{
-		if (mOpListener == null)
+		mSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
 		{
-			return;
-		}
-		int partSelected = mParts.getSelected();
-		if (partSelected == 3)
-		{
-			mColors.get(1).setEnabled(false);
-			mColors.get(2).setEnabled(false);
-			mColors.get(3).setEnabled(false);
-		}
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+			{
+				if (fromUser)
+				{
+					controlChanged(progress);
+				}
+			}
+
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar)
+			{
+			}
+
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar)
+			{
+			}
+		});
 	}
 
-	public int getWhat()
+	public void update()
 	{
-		return mWhat.getSelectCode();
-	}
-
-	public int addWhat(int resId)
-	{
-		return mWhat.add(resId);
+		controlInit();
 	}
 }

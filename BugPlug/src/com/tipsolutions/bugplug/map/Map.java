@@ -6,6 +6,7 @@ import com.tipsolutions.bugplug.R;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MaterialColors;
 import com.tipsolutions.jacket.terrain.CalcConeLinear;
 import com.tipsolutions.jacket.terrain.CalcEdgeJagged;
 import com.tipsolutions.jacket.terrain.CalcGroup;
@@ -107,6 +108,16 @@ public class Map
 	public String toString()
 	{
 		return "";
+	}
+
+	public MaterialColors getGroundMatColors()
+	{
+		return mGround.getMatColors();
+	}
+
+	public MaterialColors getWaterMatColors()
+	{
+		return mWater.getMatColors();
 	}
 
 }

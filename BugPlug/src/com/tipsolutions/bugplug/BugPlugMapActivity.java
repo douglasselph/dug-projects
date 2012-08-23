@@ -1,7 +1,6 @@
 package com.tipsolutions.bugplug;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
@@ -9,16 +8,75 @@ import android.widget.RelativeLayout;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.tipsolutions.bugplug.map.RenderMap;
+import com.tipsolutions.jacket.math.MaterialColors;
+import com.tipsolutions.jacket.view.ColorControls;
+import com.tipsolutions.jacket.view.ColorControls.OnOperation;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class BugPlugMapActivity extends SherlockActivity
 {
+	class ColorOp implements OnOperation
+	{
+		@Override
+		public MaterialColors getMatColor(int what)
+		{
+			switch (what)
+			{
+				case WHAT_GLOBAL:
+					return mRenderMap.getGlobalMatColors();
+				case WHAT_GROUND:
+					return mRenderMap.getGroundMatColors();
+				case WHAT_WATER:
+					return mRenderMap.getWaterMatColors();
+			}
+			return null;
+		}
+
+		@Override
+		public int getValue(int what)
+		{
+			return 0;
+		}
+
+		@Override
+		public boolean hasParts(int what)
+		{
+			return true;
+		}
+
+		@Override
+		public void valueChanged(int what, MaterialColors value)
+		{
+			if (what == WHAT_GLOBAL)
+			{
+				mRenderMap.updateGlobalLights();
+			}
+			mSurfaceView.requestRender();
+		}
+
+		@Override
+		public void valueChanged(int what, int value)
+		{
+			if (what == WHAT_GLOBAL)
+			{
+				mRenderMap.updateGlobalLights();
+			}
+			mSurfaceView.requestRender();
+		}
+
+	};
+
 	static final int	MAX_TILT	= 5;
+
+	static final int	WHAT_GLOBAL	= 0;
+	static final int	WHAT_GROUND	= 1;
+	static final int	WHAT_WATER	= 2;
 
 	RenderMap			mRenderMap;
 	ControlSurfaceView	mSurfaceView;
 	int					mTiltFactor	= 0;
 	FrameLayout			mBottom;
+	ColorControls		mColorControls;
 
 	int getTiltIcon()
 	{
@@ -78,6 +136,10 @@ public class BugPlugMapActivity extends SherlockActivity
 				LayoutParams.MATCH_PARENT));
 
 		mBottom = (FrameLayout) findViewById(R.id.bottom);
+		mColorControls = (ColorControls) findViewById(R.id.color_controls);
+		mColorControls.setOpListener(new ColorOp());
+		mColorControls.addWhat(R.drawable.dirt);
+		mColorControls.addWhat(R.drawable.water);
 	}
 
 	@Override
@@ -138,12 +200,11 @@ public class BugPlugMapActivity extends SherlockActivity
 				if (mBottom.getVisibility() == View.VISIBLE)
 				{
 					mBottom.setVisibility(View.GONE);
-					Log.d("DEBUG", "GONE");
 				}
 				else
 				{
 					mBottom.setVisibility(View.VISIBLE);
-					Log.d("DEBUG", "VISIBLE");
+					mColorControls.update();
 				}
 				break;
 			default:

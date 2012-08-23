@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.math.MaterialColors;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
 import com.tipsolutions.jacket.view.ControlRenderer;
@@ -23,7 +24,9 @@ public class RenderMap extends ControlRenderer implements Adjust
 	Bounds2D		mMaxBounds;
 	Vector3f		mRotateAngle;
 	Vector4f		mSunPos;
-	boolean			mIsPan	= true;
+	MaterialColors	mGlobalColor	= new MaterialColors();
+	boolean			mIsPan			= true;
+	boolean			mUpdateLights;
 
 	public RenderMap(ControlSurfaceView view, TextureManager tm)
 	{
@@ -61,6 +64,11 @@ public class RenderMap extends ControlRenderer implements Adjust
 	{
 		super.onDrawFrameContents(gl);
 
+		if (mUpdateLights)
+		{
+			setLights(gl);
+			mUpdateLights = false;
+		}
 		mCamera.applyViewBounds(gl);
 		applyRotate(gl);
 		mMap.onDraw(gl);
@@ -89,18 +97,31 @@ public class RenderMap extends ControlRenderer implements Adjust
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadIdentity();
 
+		mGlobalColor.setAmbient(new Color4f(0.25f, 0.25f, 0.25f, 1));
+		mGlobalColor.setDiffuse(new Color4f(0.5f, 0.5f, 0.5f, 1f));
+		mGlobalColor.setSpecular(new Color4f(Color4f.WHITE));
+
 		gl.glEnable(GL10.GL_LIGHTING);
-		/* AMBIENT LIGHT */
-		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, new Color4f(0.25f, 0.25f, 0.25f, 1).toArray(), 0);
+
 		/* GENERAL LIGHT */
 		gl.glEnable(GL10.GL_LIGHT0);
 		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(0f, 0f, 1f, 0).toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, new Vector4f(0.5f, 0.5f, 0.5f, 1f).toArray(), 0);
 		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
 		/* SPECULAR HIGHLIGHT */
 		gl.glEnable(GL10.GL_LIGHT1);
+
+		setLights(gl);
+	}
+
+	void setLights(GL10 gl)
+	{
+		/* AMBIENT LIGHT */
+		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, mGlobalColor.getAmbient().toArray(), 0);
+		/* GENERAL LIGHT */
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, mGlobalColor.getDiffuse().toArray(), 0);
+		/* SPECULAR HIGHLIGHT */
 		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSunPos.toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mGlobalColor.getSpecular().toArray(), 0);
 	}
 
 	@Override
@@ -174,4 +195,23 @@ public class RenderMap extends ControlRenderer implements Adjust
 		return mMap.toString();
 	}
 
+	public void updateGlobalLights()
+	{
+		mUpdateLights = true;
+	}
+
+	public MaterialColors getGlobalMatColors()
+	{
+		return mGlobalColor;
+	}
+
+	public MaterialColors getWaterMatColors()
+	{
+		return mMap.getWaterMatColors();
+	}
+
+	public MaterialColors getGroundMatColors()
+	{
+		return mMap.getGroundMatColors();
+	}
 }

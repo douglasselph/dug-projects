@@ -120,8 +120,10 @@
         
 		<ImageButton
         	android:id="@+id/what_selector"
-        	android:layout_width="wrap_content"
-        	android:layout_height="wrap_content"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:maxWidth="@dimen/control_btn_size"
+        	android:maxHeight="@dimen/control_btn_size"
         	android:src="@drawable/sun"/>
 	
     </LinearLayout>

@@ -12,31 +12,28 @@ import com.tipsolutions.jacket.math.BufUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufUtils.ShortBuf;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.ComputeBounds;
+import com.tipsolutions.jacket.math.MaterialColors;
 import com.tipsolutions.jacket.math.Matrix4f;
 import com.tipsolutions.jacket.math.Quaternion;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Model
 {
-	static final String					TAG			= "Model";
-	static final Boolean				LOG			= true;
+	static final String					TAG				= "Model";
+	static final Boolean				LOG				= true;
 	protected Bounds3D					mBounds;
 	protected Color4f					mColor;
 	protected FloatBuf					mColorBuf;
 	protected ShortBuf					mIndexBuf;
 	protected int						mIndexSlice;
-	protected int						mIndexMode	= GL10.GL_TRIANGLES;
+	protected int						mIndexMode		= GL10.GL_TRIANGLES;
 	protected Matrix4f					mMatrix;
 	protected Matrix4f					mMatrixMod;
 	protected FloatBuf					mNormalBuf;
 	protected TextureManager.Texture	mTexture;
 	protected FloatBuf					mTextureBuf;
 	protected FloatBuf					mVertexBuf;
-	protected Color4f					mColorDiffuse;
-	protected Color4f					mColorAmbient;
-	protected Color4f					mColorSpecular;
-	protected Color4f					mColorEmission;
-	protected Float						mColorShininess;
+	protected MaterialColors			mColorMaterials	= new MaterialColors();
 
 	protected void computeBounds(ComputeBounds computeBounds)
 	{
@@ -79,6 +76,11 @@ public class Model
 	public Vector3f getLocationMod()
 	{
 		return getMatrixMod().getLocation();
+	}
+
+	public MaterialColors getMatColors()
+	{
+		return mColorMaterials;
 	}
 
 	// Returns the currently active matrix that should be applied for drawing.
@@ -220,29 +222,29 @@ public class Model
 		}
 		boolean hasMaterials = false;
 
-		if (mColorAmbient != null)
+		if (mColorMaterials.getAmbient() != null)
 		{
-			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mColorAmbient.toArray(), 0);
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_AMBIENT, mColorMaterials.getAmbient().toArray(), 0);
 			hasMaterials = true;
 		}
-		if (mColorDiffuse != null)
+		if (mColorMaterials.getDiffuse() != null)
 		{
-			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mColorDiffuse.toArray(), 0);
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_DIFFUSE, mColorMaterials.getDiffuse().toArray(), 0);
 			hasMaterials = true;
 		}
-		if (mColorEmission != null)
+		if (mColorMaterials.getEmission() != null)
 		{
-			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, mColorEmission.toArray(), 0);
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_EMISSION, mColorMaterials.getEmission().toArray(), 0);
 			hasMaterials = true;
 		}
-		if (mColorSpecular != null)
+		if (mColorMaterials.getSpecular() != null)
 		{
-			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mColorSpecular.toArray(), 0);
+			gl.glMaterialfv(GL10.GL_FRONT_AND_BACK, GL10.GL_SPECULAR, mColorMaterials.getSpecular().toArray(), 0);
 			hasMaterials = true;
 		}
-		if (mColorShininess != null)
+		if (mColorMaterials.getShininess() != null)
 		{
-			gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mColorShininess);
+			gl.glMaterialf(GL10.GL_FRONT_AND_BACK, GL10.GL_SHININESS, mColorMaterials.getShininess());
 			hasMaterials = true;
 		}
 		if (!hasMaterials && !hasColorArray() && mColor != null)
@@ -361,7 +363,7 @@ public class Model
 	 */
 	public void setColorAmbient(Color4f color)
 	{
-		mColorAmbient = color;
+		mColorMaterials.setAmbient(color);
 	}
 
 	/**
@@ -375,7 +377,7 @@ public class Model
 	 */
 	public void setColorDiffuse(Color4f color)
 	{
-		mColorDiffuse = color;
+		mColorMaterials.setDiffuse(color);
 	}
 
 	/**
@@ -385,7 +387,17 @@ public class Model
 	 */
 	public void setColorEmission(Color4f color)
 	{
-		mColorEmission = color;
+		mColorMaterials.setEmission(color);
+	}
+
+	/**
+	 * This determine how shiny a surface is. Values range from 0 to 128.
+	 * 
+	 * @param shininess
+	 */
+	public void setColorShininess(float shininess)
+	{
+		mColorMaterials.setShininess(shininess);
 	}
 
 	/**
@@ -396,17 +408,7 @@ public class Model
 	 */
 	public void setColorSpecular(Color4f color)
 	{
-		mColorSpecular = color;
-	}
-
-	/**
-	 * This determine how shiny a surface is. Values range from 0 to 128.
-	 * 
-	 * @param shininess
-	 */
-	public void setColorShininess(float shininess)
-	{
-		mColorShininess = shininess;
+		mColorMaterials.setSpecular(color);
 	}
 
 	public void setLocation(Vector3f x)
