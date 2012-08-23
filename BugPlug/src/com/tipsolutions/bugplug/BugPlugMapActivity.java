@@ -1,6 +1,8 @@
 package com.tipsolutions.bugplug;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
@@ -16,6 +18,43 @@ public class BugPlugMapActivity extends SherlockActivity
 	RenderMap			mRenderMap;
 	ControlSurfaceView	mSurfaceView;
 	int					mTiltFactor	= 0;
+	FrameLayout			mBottom;
+
+	int getTiltIcon()
+	{
+		switch (mTiltFactor)
+		{
+			case 0:
+				return R.drawable.tilt0;
+			case 1:
+				return R.drawable.tilt15;
+			case 2:
+				return R.drawable.tilt30;
+			case 3:
+				return R.drawable.tilt45;
+			case 4:
+				return R.drawable.tilt60;
+			case 5:
+				return R.drawable.tilt75;
+		}
+		return R.drawable.icon;
+
+	}
+
+	String getTiltTitle()
+	{
+		if (mTiltFactor == 0)
+		{
+			return getString(R.string.flat);
+		}
+		else
+		{
+			StringBuffer sbuf = new StringBuffer();
+			sbuf.append(getString(R.string.tilt));
+			sbuf.append(mTiltFactor);
+			return sbuf.toString();
+		}
+	}
 
 	/** Called when the activity is first created. */
 	@Override
@@ -38,7 +77,7 @@ public class BugPlugMapActivity extends SherlockActivity
 		container.addView(mSurfaceView, new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT));
 
-		setMessage();
+		mBottom = (FrameLayout) findViewById(R.id.bottom);
 	}
 
 	@Override
@@ -65,17 +104,9 @@ public class BugPlugMapActivity extends SherlockActivity
 					{
 						mTiltFactor = 0;
 					}
-					if (mTiltFactor == 0)
-					{
-						item.setTitle(R.string.flat);
-					}
-					else
-					{
-						StringBuffer sbuf = new StringBuffer();
-						sbuf.append(getString(R.string.tilt));
-						sbuf.append(mTiltFactor);
-						item.setTitle(sbuf.toString());
-					}
+					item.setTitle(getTiltTitle());
+					item.setIcon(getTiltIcon());
+
 					mRenderMap.setTilt(mTiltFactor);
 				}
 				break;
@@ -86,10 +117,12 @@ public class BugPlugMapActivity extends SherlockActivity
 					if (mRenderMap.isPan())
 					{
 						item.setTitle(R.string.pan);
+						item.setIcon(R.drawable.pan);
 					}
 					else
 					{
 						item.setTitle(R.string.rotate);
+						item.setIcon(R.drawable.rotate);
 					}
 				}
 				break;
@@ -101,14 +134,21 @@ public class BugPlugMapActivity extends SherlockActivity
 					invalidateOptionsMenu();
 				}
 				break;
+			case R.id.menu_controls:
+				if (mBottom.getVisibility() == View.VISIBLE)
+				{
+					mBottom.setVisibility(View.GONE);
+					Log.d("DEBUG", "GONE");
+				}
+				else
+				{
+					mBottom.setVisibility(View.VISIBLE);
+					Log.d("DEBUG", "VISIBLE");
+				}
+				break;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
 		return true;
-	}
-
-	void setMessage()
-	{
-
 	}
 }

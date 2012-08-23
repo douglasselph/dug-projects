@@ -7,9 +7,7 @@ import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.terrain.CalcConeLinear;
-import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.CalcEdgeJagged;
-import com.tipsolutions.jacket.terrain.CalcEdgeSloped;
 import com.tipsolutions.jacket.terrain.CalcGroup;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
 
@@ -19,7 +17,6 @@ public class Map
 
 	TerrainGrid			mGround;
 	TerrainGrid			mWater;
-	TerrainGrid[]		mMountains;
 	TextureManager		mTM;
 	Bounds2D			mBounds;
 	final float			mWidth				= 10f;
@@ -31,9 +28,6 @@ public class Map
 	final float			mMountainSideXSize	= 1f;
 	final float			mMountainTopYSize	= 0.8f;
 	final float			mMountainSideYSize	= 8f;
-	final float			mMountainVariance	= 0.2f;
-	final int			mMountainMajorPts	= 20;
-	final long			mMountainSeed		= 2;
 	final float			mMountainHeight		= 0.3f;
 	final float			FUDGE				= 0.01f;
 
@@ -46,23 +40,37 @@ public class Map
 		mBounds = new Bounds2D(-mWidth / 2, -mHeight / 2, mWidth / 2, mHeight / 2);
 		Bounds2D bounds;
 		Bounds2D edge;
-		Bounds2D riseBound;
 		CalcEdgeJagged jagged;
 		CalcGroup group;
-		CalcEdgeSloped taper;
 		CalcConeLinear rise;
 		/*
 		 * Build the base ground
 		 */
 		mGround = new TerrainGrid();
-		mGround.setBounds(mBounds).setGridSizeSafe(2, 2);
-		mGround.setCompute(new CalcConstant(0f, mBounds));
+		mGround.setBounds(mBounds).setGridSizeSafe(100, 100);
 		mGround.setTexture(mTM.getTexture(R.drawable.dirt));
-		mGround.setSubdivision(1, 0, 1);
-		mGround.setSubdivision(1, 1, 1);
-		mGround.setSubdivision(0, 1, 1);
-		// mGround.setColorAmbient(new Color4f(0.4f, 0.4f, 0.4f, 1f));
-		// mGround.setColorDiffuse(Color4f.WHITE);
+		mGround.setColorAmbient(new Color4f(0.2f, 0.2f, 0.2f, 1f));
+		mGround.setColorDiffuse(new Color4f(0.4f, 0.4f, 0.4f, 1f));
+		mGround.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1f));
+
+		group = new CalcGroup();
+		// Left rise
+		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
+				+ mMountainSideXSize, mBounds.getMaxY());
+		rise = new CalcConeLinear(edge, mMountainHeight);
+		group.add(rise);
+		// Top rise
+		edge = new Bounds2D(mBounds.getMinX() + mMountainSideXSize, mBounds.getMaxY() - mMountainTopYSize,
+				mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY());
+		rise = new CalcConeLinear(edge, mMountainHeight);
+		group.add(rise);
+		// Right rise
+		edge = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
+				mBounds.getMaxX(), mBounds.getMaxY());
+		rise = new CalcConeLinear(edge, mMountainHeight);
+		group.add(rise);
+
+		mGround.setCompute(group);
 		mGround.init();
 		/*
 		 * Build the water edge
@@ -82,78 +90,6 @@ public class Map
 		mWater.setColorAmbient(Color4f.WHITE);
 		mWater.setColorDiffuse(Color4f.WHITE);
 		mWater.init();
-		/*
-		 * Build the mountains
-		 */
-		mMountains = new TerrainGrid[3];
-
-		// LEFT
-		group = new CalcGroup();
-		bounds = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
-				+ mMountainSideXSize, mBounds.getMaxY());
-		edge = new Bounds2D(bounds.getMaxX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMaxX() + FUDGE,
-				bounds.getMaxY() - mMountainSideXSize + FUDGE);
-
-		jagged = new CalcEdgeJagged(edge, mMountainSeed);
-		jagged.addJag(mMountainMajorPts, mMountainVariance);
-		jagged.addJag(mMountainMajorPts * 3, mMountainVariance / 5f);
-		group.add(jagged);
-
-		edge = new Bounds2D(bounds.getMinX() + FUDGE, edge.getMinY(), edge.getMaxX(), bounds.getMinY() + 2
-				* mMountainSideXSize);
-		taper = new CalcEdgeSloped(edge, -mMountainSideXSize * 0.9f, 0f);
-		group.add(taper);
-
-		riseBound = new Bounds2D(bounds);
-		rise = new CalcConeLinear(riseBound, 0.2f);
-		group.add(rise);
-
-		mMountains[0] = new TerrainGrid();
-		mMountains[0].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 15);
-		mMountains[0].setCompute(group);
-		mMountains[0].setTexture(mTM.getTexture(R.drawable.dirt2));
-		mMountains[0].setColorAmbient(Color4f.WHITE);
-		mMountains[0].setColorDiffuse(Color4f.WHITE);
-		mMountains[0].setColorSpecular(Color4f.WHITE);
-		mMountains[0].init();
-
-		// TOP
-		bounds = new Bounds2D(mBounds.getMinX() + mMountainSideXSize, mBounds.getMaxY() - mMountainTopYSize,
-				mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY());
-		edge = new Bounds2D(bounds.getMinX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMaxX() + FUDGE,
-				bounds.getMinY() + FUDGE);
-		jagged = new CalcEdgeJagged(edge, mMountainSeed + 2);
-		jagged.addJag(mMountainMajorPts, mMountainVariance);
-		jagged.addJag(mMountainMajorPts * 3, mMountainVariance / 5f);
-
-		mMountains[1] = new TerrainGrid();
-		mMountains[1].setBounds(bounds).setGridSizeSafe(2, jagged.getMaxJagPts());
-		mMountains[1].setCompute(jagged);
-		mMountains[1].setTexture(mTM.getTexture(R.drawable.dirt2));
-		mMountains[1].init();
-
-		// RIGHT
-		bounds = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
-				mBounds.getMaxX(), mBounds.getMaxY());
-		edge = new Bounds2D(bounds.getMinX() - FUDGE, bounds.getMinY() - FUDGE, bounds.getMinX() + FUDGE,
-				bounds.getMaxY() - mMountainSideXSize);
-		jagged = new CalcEdgeJagged(edge, mMountainSeed + 3);
-		jagged.addJag(mMountainMajorPts, mMountainVariance);
-		jagged.addJag(mMountainMajorPts * 3, mMountainVariance / 5f);
-
-		edge = new Bounds2D(edge.getMinX(), edge.getMinY(), bounds.getMaxX() - FUDGE, bounds.getMinY() + 2
-				* mMountainSideXSize);
-		taper = new CalcEdgeSloped(edge, mMountainSideXSize * 0.9f, 0f);
-
-		group = new CalcGroup();
-		group.add(jagged);
-		group.add(taper);
-
-		mMountains[2] = new TerrainGrid();
-		mMountains[2].setBounds(bounds).setGridSizeSafe(jagged.getMaxJagPts(), 10);
-		mMountains[2].setCompute(group);
-		mMountains[2].setTexture(mTM.getTexture(R.drawable.dirt2));
-		mMountains[2].init();
 	}
 
 	public Bounds2D getBounds()
@@ -166,15 +102,11 @@ public class Map
 		mGround.onDraw(gl);
 		gl.glTranslatef(0, 0, 0.1f);
 		mWater.onDraw(gl);
-		for (TerrainGrid grid : mMountains)
-		{
-			grid.onDraw(gl);
-		}
 	}
 
 	public String toString()
 	{
-		return mMountains[0].toString();
+		return "";
 	}
 
 }

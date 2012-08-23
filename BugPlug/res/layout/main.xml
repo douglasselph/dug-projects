@@ -4,66 +4,22 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
- 	<RelativeLayout android:id="@+id/info"
+ 	<FrameLayout android:id="@+id/bottom"
  	    android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="3dip"
         android:layout_alignParentBottom="true">
         
-        <TextView android:id="@+id/cameraEyeLabel"
-            android:text="CamEye"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+     	<com.tipsolutions.jacket.view.ColorControls
+     	    android:id="@+id/color_controls"
+     	    android:layout_width="match_parent"
+     	    android:layout_height="match_parent"/> 	    
         
-        <TextView android:id="@+id/cameraEye"
-            android:singleLine="true"
-        	android:paddingLeft="4dip"
-        	android:layout_toRightOf="@id/cameraEyeLabel"
-        	android:layout_alignBottom="@id/cameraEyeLabel"
-        	android:layout_height="wrap_content"
-        	android:layout_alignParentRight="true"
-        	android:layout_width="0dip"/>
-        
-        <TextView android:id="@+id/cameraLookLabel"
-            android:text="CamLook"
-        	android:layout_below="@id/cameraEyeLabel"
-        	android:layout_alignParentLeft="true"
-        	android:layout_width="wrap_content"
-        	android:layout_height="wrap_content"/>
-        
-        <TextView android:id="@+id/cameraLook"
-            android:singleLine="true"
-          	android:paddingLeft="4dip"
-          	android:layout_toRightOf="@id/cameraLookLabel"
-          	android:layout_alignBottom="@id/cameraLookLabel"
-          	android:layout_alignParentRight="true"
-          	android:layout_height="wrap_content"
-          	android:layout_width="0dip"/>
-        
-        <TextView android:id="@+id/cameraUpLabel"
-            android:text="CamUp"
-            android:layout_below="@id/cameraLookLabel"
-            android:layout_alignParentLeft="true"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"/>
-        
-       	<TextView android:id="@+id/cameraUp"
-        	android:paddingLeft="4dip"
-        	android:singleLine="true"
-        	android:layout_toRightOf="@id/cameraUpLabel"
-        	android:layout_alignBottom="@id/cameraUpLabel"
-        	android:layout_height="wrap_content"
-        	android:layout_width="0dip"
-        	android:layout_alignParentRight="true"/>
-        
-    </RelativeLayout>
+    </FrameLayout>
         
     <FrameLayout android:id="@+id/container"
         android:layout_alignParentTop="true"
-        android:layout_above="@id/info"
+        android:layout_above="@id/bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
     

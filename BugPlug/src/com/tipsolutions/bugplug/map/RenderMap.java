@@ -95,12 +95,12 @@ public class RenderMap extends ControlRenderer implements Adjust
 		/* GENERAL LIGHT */
 		gl.glEnable(GL10.GL_LIGHT0);
 		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(0f, 0f, 1f, 0).toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, Color4f.WHITE.toArray(), 0);
-		// gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, Color4f.BLACK.toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, new Vector4f(0.5f, 0.5f, 0.5f, 1f).toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
 		/* SPECULAR HIGHLIGHT */
-		// gl.glEnable(GL10.GL_LIGHT1);
-		// gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSunPos.toArray(), 0);
-		// gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
+		gl.glEnable(GL10.GL_LIGHT1);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSunPos.toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
 	}
 
 	@Override

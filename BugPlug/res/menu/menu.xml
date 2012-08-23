@@ -2,13 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     
     <item android:id="@+id/menu_reset"
-          android:title="Reset"
+          android:title="Fit"
+          android:icon="@drawable/fit"
           android:showAsAction="ifRoom"/>
     <item android:id="@+id/menu_tilt"
           android:title="@string/flat" 
-          android:showAsAction="always"/>"
+          android:icon="@drawable/tilt0"
+          android:showAsAction="always"/>
     <item android:id="@+id/menu_pan" 
           android:title="@string/pan" 
+          android:icon="@drawable/pan"
           android:showAsAction="always"/>
-    <item android:id="@+id/menu_exit" android:title="Exit"></item>
+    <item android:id="@+id/menu_controls"
+          android:title="Control"
+          android:icon="@drawable/gear"
+          android:showAsAction="ifRoom"/>
+    <item android:id="@+id/menu_exit" 
+          android:title="Exit"/>
+    
 </menu>

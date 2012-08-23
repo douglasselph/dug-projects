@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginBottom="8dip">
+  
+    <LinearLayout android:id="@+id/part"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="3dip"
+        android:orientation="horizontal">
+        
+		<ImageButton
+        	android:id="@+id/part_ambient"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:src="@drawable/ambient"
+        	android:background="#ffffff"/>
+		
+		<ImageButton
+        	android:id="@+id/part_diffuse"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:src="@drawable/empty"
+        	android:background="#ffffff"/>
+		
+		<ImageButton
+        	android:id="@+id/part_specular"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:src="@drawable/spotlight"
+        	android:background="#ffffff"/>
+		
+		<ImageButton
+        	android:id="@+id/part_shine"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:src="@drawable/sparkle"
+        	android:background="#ffffff"/>
+	
+    </LinearLayout>
+    
+    <View android:id="@+id/sep1"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/part"
+        android:layout_alignTop="@id/part"
+        android:layout_alignBottom="@id/part"
+        android:layout_width="2dip"
+        android:background="#000000"/>
+     
+    <LinearLayout android:id="@+id/colors"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="2dip"
+        android:layout_alignTop="@id/part"
+        android:layout_alignBottom="@id/part"
+        android:layout_toRightOf="@id/sep1"
+        android:layout_alignParentRight="true">
+		
+        <ImageButton
+        	android:id="@+id/color_all"
+        	android:layout_marginLeft="2dip"
+        	android:padding="0dip"
+        	android:cropToPadding="true"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:layout_weight="1"
+        	android:src="@drawable/empty"
+        	android:tint="#99999999"
+        	android:background="@android:color/transparent"
+        	/>
+        
+         <ImageButton
+        	android:id="@+id/color_red"
+        	android:layout_marginLeft="2dip"
+        	android:cropToPadding="true"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:layout_weight="1"
+        	android:src="@drawable/empty"
+        	android:tint="#99ff0000"
+        	android:background="@android:color/transparent"
+        	/>
+         
+         <ImageButton
+        	android:id="@+id/color_green"
+        	android:layout_marginLeft="2dip"
+        	android:cropToPadding="true"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:layout_weight="1"
+        	android:src="@drawable/empty"
+        	android:tint="#9900ff00"
+        	android:background="@android:color/transparent"
+        	/>
+           
+         <ImageButton
+        	android:id="@+id/color_blue"
+        	android:layout_marginLeft="2dip"
+        	android:cropToPadding="true"
+        	android:layout_width="@dimen/control_btn_size"
+        	android:layout_height="@dimen/control_btn_size"
+        	android:layout_weight="1"
+        	android:src="@drawable/empty"
+        	android:tint="#990000ff"
+        	android:background="@android:color/transparent"
+        	/>
+        
+    </LinearLayout>
+    
+    <LinearLayout android:id="@+id/what"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/part"
+        android:layout_alignParentLeft="true"
+        android:orientation="horizontal">
+        
+		<ImageButton
+        	android:id="@+id/what_selector"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:src="@drawable/sun"/>
+	
+    </LinearLayout>
+    
+   <SeekBar android:id="@+id/seekBar"
+    	android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip"
+        android:layout_marginTop="10dip"
+        android:layout_alignTop="@id/what"
+        android:layout_toRightOf="@id/what"
+        android:layout_alignParentRight="true"/>
+   
+</RelativeLayout>
