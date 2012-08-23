@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="control_btn_size">40dip</dimen>
-    <dimen name="control_btn_margin">5dip</dimen>
+    <dimen name="control_show_size">5dip</dimen>
 </resources>

@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -41,6 +40,11 @@ public class ColorControls extends FrameLayout
 		public int getSelected()
 		{
 			return mSelected;
+		}
+
+		public int size()
+		{
+			return mBtns.length;
 		}
 
 		@Override
@@ -193,6 +197,7 @@ public class ColorControls extends FrameLayout
 				mSelected = 0;
 			}
 			mBtn.setImageResource(mList.get(mSelected));
+			controlInit();
 		}
 
 	};
@@ -201,11 +206,12 @@ public class ColorControls extends FrameLayout
 
 	BtnGroup			mColors;
 	BtnGroup			mParts;
+	View[]				mShow;
 	SeekBar				mSeekBar;
 	WhatGroup			mWhat;
 	OnOperation			mOpListener;
-	LinearLayout		mColorLayout;
-	LinearLayout		mPartLayout;
+	View				mColorLayout;
+	View				mPartLayout;
 
 	public ColorControls(Context context)
 	{
@@ -323,10 +329,26 @@ public class ColorControls extends FrameLayout
 						mSeekBar.setEnabled(false);
 					}
 				}
+				showColor(mShow[0], mParts.get(0), matColors.getAmbient());
+				showColor(mShow[1], mParts.get(1), matColors.getDiffuse());
+				showColor(mShow[2], mParts.get(2), matColors.getSpecular());
+
+				if (matColors.getShininess() == null)
+				{
+					mParts.get(3).mBtn.setVisibility(View.INVISIBLE);
+				}
+				else
+				{
+					mParts.get(3).mBtn.setVisibility(View.VISIBLE);
+				}
 			}
-			// mParts.get(0).setColor(matColors.getAmbient());
-			// mParts.get(1).setColor(matColors.getDiffuse());
-			// mParts.get(2).setColor(matColors.getSpecular());
+			else
+			{
+				for (int i = 0; i < mParts.size(); i++)
+				{
+					mParts.get(i).mBtn.setVisibility(View.INVISIBLE);
+				}
+			}
 		}
 		else
 		{
@@ -467,8 +489,8 @@ public class ColorControls extends FrameLayout
 
 		mWhat = new WhatGroup((ImageButton) findViewById(R.id.what_selector));
 		mSeekBar = (SeekBar) findViewById(R.id.seekBar);
-		mColorLayout = (LinearLayout) findViewById(R.id.colors);
-		mPartLayout = (LinearLayout) findViewById(R.id.part);
+		mColorLayout = findViewById(R.id.colors);
+		mPartLayout = findViewById(R.id.part);
 
 		mSeekBar.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
 		{
@@ -491,6 +513,27 @@ public class ColorControls extends FrameLayout
 			{
 			}
 		});
+
+		mShow = new View[3];
+		mShow[0] = findViewById(R.id.show_ambient);
+		mShow[1] = findViewById(R.id.show_diffuse);
+		mShow[2] = findViewById(R.id.show_specular);
+	}
+
+	void showColor(View view, BtnWrapper wrap, Color4f color)
+	{
+		if (color != null)
+		{
+			view.setBackgroundColor(color.getColor());
+
+			view.setVisibility(View.VISIBLE);
+			wrap.mBtn.setVisibility(View.VISIBLE);
+		}
+		else
+		{
+			view.setVisibility(View.INVISIBLE);
+			wrap.mBtn.setVisibility(View.INVISIBLE);
+		}
 	}
 
 	public void update()

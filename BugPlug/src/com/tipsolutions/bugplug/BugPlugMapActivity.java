@@ -28,6 +28,8 @@ public class BugPlugMapActivity extends SherlockActivity
 					return mRenderMap.getGroundMatColors();
 				case WHAT_WATER:
 					return mRenderMap.getWaterMatColors();
+				case WHAT_SPOT:
+					return mRenderMap.getGlobalSpotMatColors();
 			}
 			return null;
 		}
@@ -45,9 +47,9 @@ public class BugPlugMapActivity extends SherlockActivity
 		}
 
 		@Override
-		public void valueChanged(int what, MaterialColors value)
+		public void valueChanged(int what, int value)
 		{
-			if (what == WHAT_GLOBAL)
+			if (what == WHAT_GLOBAL || what == WHAT_SPOT)
 			{
 				mRenderMap.updateGlobalLights();
 			}
@@ -55,9 +57,9 @@ public class BugPlugMapActivity extends SherlockActivity
 		}
 
 		@Override
-		public void valueChanged(int what, int value)
+		public void valueChanged(int what, MaterialColors value)
 		{
-			if (what == WHAT_GLOBAL)
+			if (what == WHAT_GLOBAL || what == WHAT_SPOT)
 			{
 				mRenderMap.updateGlobalLights();
 			}
@@ -71,6 +73,7 @@ public class BugPlugMapActivity extends SherlockActivity
 	static final int	WHAT_GLOBAL	= 0;
 	static final int	WHAT_GROUND	= 1;
 	static final int	WHAT_WATER	= 2;
+	static final int	WHAT_SPOT	= 3;
 
 	RenderMap			mRenderMap;
 	ControlSurfaceView	mSurfaceView;
@@ -140,6 +143,7 @@ public class BugPlugMapActivity extends SherlockActivity
 		mColorControls.setOpListener(new ColorOp());
 		mColorControls.addWhat(R.drawable.dirt);
 		mColorControls.addWhat(R.drawable.water);
+		mColorControls.addWhat(R.drawable.spotlight);
 	}
 
 	@Override

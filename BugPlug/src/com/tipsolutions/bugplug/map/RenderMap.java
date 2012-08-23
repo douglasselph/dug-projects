@@ -3,6 +3,7 @@ package com.tipsolutions.bugplug.map;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.TextureManager;
@@ -25,6 +26,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 	Vector3f		mRotateAngle;
 	Vector4f		mSunPos;
 	MaterialColors	mGlobalColor	= new MaterialColors();
+	MaterialColors	mGlobalSpot		= new MaterialColors();
 	boolean			mIsPan			= true;
 	boolean			mUpdateLights;
 
@@ -100,13 +102,13 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mGlobalColor.setAmbient(new Color4f(0.25f, 0.25f, 0.25f, 1));
 		mGlobalColor.setDiffuse(new Color4f(0.5f, 0.5f, 0.5f, 1f));
 		mGlobalColor.setSpecular(new Color4f(Color4f.WHITE));
+		mGlobalSpot.setSpecular(new Color4f(Color4f.WHITE));
 
 		gl.glEnable(GL10.GL_LIGHTING);
 
 		/* GENERAL LIGHT */
 		gl.glEnable(GL10.GL_LIGHT0);
 		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, new Vector4f(0f, 0f, 1f, 0).toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
 		/* SPECULAR HIGHLIGHT */
 		gl.glEnable(GL10.GL_LIGHT1);
 
@@ -119,9 +121,15 @@ public class RenderMap extends ControlRenderer implements Adjust
 		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, mGlobalColor.getAmbient().toArray(), 0);
 		/* GENERAL LIGHT */
 		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, mGlobalColor.getDiffuse().toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, mGlobalColor.getSpecular().toArray(), 0);
 		/* SPECULAR HIGHLIGHT */
 		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSunPos.toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mGlobalColor.getSpecular().toArray(), 0);
+		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mGlobalSpot.getSpecular().toArray(), 0);
+
+		Log.d("DEBUG", "GLOBAL AMBIENT=" + mGlobalColor.getAmbient().toString());
+		Log.d("DEBUG", "GLOBAL DIFFUSE=" + mGlobalColor.getDiffuse().toString());
+		Log.d("DEBUG", "GLOBAL SPECULAR=" + mGlobalColor.getSpecular().toString());
+		Log.d("DEBUG", "SPOT SPECULAR=" + mGlobalSpot.getSpecular().toString());
 	}
 
 	@Override
@@ -203,6 +211,11 @@ public class RenderMap extends ControlRenderer implements Adjust
 	public MaterialColors getGlobalMatColors()
 	{
 		return mGlobalColor;
+	}
+
+	public MaterialColors getGlobalSpotMatColors()
+	{
+		return mGlobalSpot;
 	}
 
 	public MaterialColors getWaterMatColors()
