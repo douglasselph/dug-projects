@@ -7,8 +7,11 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
 import com.tipsolutions.bugplug.map.RenderMap;
+import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.MaterialColors;
+import com.tipsolutions.jacket.math.Vector4f;
 import com.tipsolutions.jacket.view.ColorControls;
 import com.tipsolutions.jacket.view.ColorControls.OnOperation;
 import com.tipsolutions.jacket.view.ControlSurfaceView;
@@ -17,6 +20,8 @@ public class BugPlugMapActivity extends SherlockActivity
 {
 	class ColorOp implements OnOperation
 	{
+		MaterialColors	mSpotCopy;
+
 		@Override
 		public MaterialColors getMatColor(int what)
 		{
@@ -29,41 +34,54 @@ public class BugPlugMapActivity extends SherlockActivity
 				case WHAT_WATER:
 					return mRenderMap.getWaterMatColors();
 				case WHAT_SPOT:
-					return mRenderMap.getGlobalSpotMatColors();
+					if (mSpotCopy == null)
+					{
+						mSpotCopy = copy(mRenderMap.getSpotMatColors());
+					}
+					pullSpotPos();
+					return mSpotCopy;
 			}
 			return null;
 		}
 
 		@Override
-		public int getValue(int what)
-		{
-			return 0;
-		}
-
-		@Override
-		public boolean hasParts(int what)
-		{
-			return true;
-		}
-
-		@Override
-		public void valueChanged(int what, int value)
-		{
-			if (what == WHAT_GLOBAL || what == WHAT_SPOT)
-			{
-				mRenderMap.updateGlobalLights();
-			}
-			mSurfaceView.requestRender();
-		}
-
-		@Override
 		public void valueChanged(int what, MaterialColors value)
 		{
+			if (what == WHAT_SPOT)
+			{
+				pushSpotPos();
+			}
 			if (what == WHAT_GLOBAL || what == WHAT_SPOT)
 			{
 				mRenderMap.updateGlobalLights();
 			}
 			mSurfaceView.requestRender();
+		}
+
+		MaterialColors copy(final MaterialColors src)
+		{
+			MaterialColors copy = new MaterialColors();
+			copy.setAmbient(src.getAmbient());
+			copy.setDiffuse(src.getDiffuse());
+			copy.setEmission(src.getEmission());
+			copy.setSpecular(src.getSpecular());
+			return copy;
+		}
+
+		void pullSpotPos()
+		{
+			Vector4f pos = mRenderMap.getSpotPos();
+			Bounds2D bounds = mRenderMap.getBounds();
+			float value = ((pos.getX() - bounds.getMinX()) / bounds.getSizeX()) * 127f;
+			mSpotCopy.setShininess(value);
+		}
+
+		void pushSpotPos()
+		{
+			Vector4f pos = mRenderMap.getSpotPos();
+			Bounds2D bounds = mRenderMap.getBounds();
+			float value = mSpotCopy.getShininess();
+			pos.setX(value / 127f * bounds.getSizeX() + bounds.getMinX());
 		}
 
 	};
@@ -77,13 +95,22 @@ public class BugPlugMapActivity extends SherlockActivity
 
 	RenderMap			mRenderMap;
 	ControlSurfaceView	mSurfaceView;
-	int					mTiltFactor	= 0;
 	FrameLayout			mBottom;
 	ColorControls		mColorControls;
 
+	int getTiltFactor()
+	{
+		int unit = mRenderMap.getTilt();
+		if (unit < 0 || unit > MAX_TILT)
+		{
+			unit = 0;
+		}
+		return unit;
+	}
+
 	int getTiltIcon()
 	{
-		switch (mTiltFactor)
+		switch (getTiltFactor())
 		{
 			case 0:
 				return R.drawable.tilt0;
@@ -104,7 +131,9 @@ public class BugPlugMapActivity extends SherlockActivity
 
 	String getTiltTitle()
 	{
-		if (mTiltFactor == 0)
+		int factor = getTiltFactor();
+
+		if (factor == 0)
 		{
 			return getString(R.string.flat);
 		}
@@ -112,7 +141,7 @@ public class BugPlugMapActivity extends SherlockActivity
 		{
 			StringBuffer sbuf = new StringBuffer();
 			sbuf.append(getString(R.string.tilt));
-			sbuf.append(mTiltFactor);
+			sbuf.append(factor);
 			return sbuf.toString();
 		}
 	}
@@ -151,7 +180,6 @@ public class BugPlugMapActivity extends SherlockActivity
 	{
 		super.onCreateOptionsMenu(menu);
 		getSupportMenuInflater().inflate(R.menu.menu, menu);
-
 		return true;
 	}
 
@@ -166,14 +194,15 @@ public class BugPlugMapActivity extends SherlockActivity
 			case R.id.menu_tilt:
 				if (mRenderMap != null)
 				{
-					if (++mTiltFactor > MAX_TILT)
+					int factor = getTiltFactor();
+					if (++factor > MAX_TILT)
 					{
-						mTiltFactor = 0;
+						factor = 0;
 					}
+					mRenderMap.setTilt(factor);
+
 					item.setTitle(getTiltTitle());
 					item.setIcon(getTiltIcon());
-
-					mRenderMap.setTilt(mTiltFactor);
 				}
 				break;
 			case R.id.menu_pan:
@@ -196,7 +225,6 @@ public class BugPlugMapActivity extends SherlockActivity
 				if (mRenderMap != null)
 				{
 					mRenderMap.resetView();
-					mTiltFactor = 0;
 					invalidateOptionsMenu();
 				}
 				break;
@@ -215,6 +243,12 @@ public class BugPlugMapActivity extends SherlockActivity
 				return super.onOptionsItemSelected(item);
 		}
 		return true;
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu)
+	{
+		return super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override

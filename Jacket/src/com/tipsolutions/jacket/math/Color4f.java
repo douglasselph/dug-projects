@@ -155,6 +155,14 @@ public class Color4f
 		return this;
 	}
 
+	public void set(final Color4f cp)
+	{
+		for (int i = 0; i < mColor.length; i++)
+		{
+			mColor[i] = cp.mColor[i];
+		}
+	}
+
 	public void set(float r, float g, float b, float a)
 	{
 		mColor[IRED] = r;

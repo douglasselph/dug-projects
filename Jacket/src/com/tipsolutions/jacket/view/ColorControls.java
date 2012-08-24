@@ -13,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 
 import com.tipsolutions.jacket.R;
 import com.tipsolutions.jacket.math.Color4f;
@@ -146,12 +147,6 @@ public class ColorControls extends FrameLayout
 	{
 		MaterialColors getMatColor(int what);
 
-		int getValue(int what);
-
-		boolean hasParts(int what);
-
-		void valueChanged(int what, int value);
-
 		void valueChanged(int what, MaterialColors value);
 	};
 
@@ -212,6 +207,7 @@ public class ColorControls extends FrameLayout
 	OnOperation			mOpListener;
 	View				mColorLayout;
 	View				mPartLayout;
+	TextView			mValue;
 
 	public ColorControls(Context context)
 	{
@@ -247,31 +243,24 @@ public class ColorControls extends FrameLayout
 		}
 		int whatSelected = mWhat.getSelectCode();
 
-		if (mOpListener.hasParts(whatSelected))
-		{
-			Part part = getPart(mParts.getSelected());
-			MaterialColors matColors = mOpListener.getMatColor(whatSelected);
+		Part part = getPart(mParts.getSelected());
+		MaterialColors matColors = mOpListener.getMatColor(whatSelected);
 
-			if (matColors != null)
+		if (matColors != null)
+		{
+			if (part == Part.Shininess)
 			{
-				if (part == Part.Shininess)
-				{
-					float nValue = value * 127f;
-					matColors.setShininess(nValue);
-				}
-				else
-				{
-					Color4f color = getColor(matColors, part);
-					int colorSelected = mColors.getSelected();
-
-					setColorValue(colorSelected, color, value);
-				}
-				mOpListener.valueChanged(whatSelected, matColors);
+				matColors.setShininess(value);
 			}
-		}
-		else
-		{
-			mOpListener.valueChanged(whatSelected, value);
+			else
+			{
+				Color4f color = getColor(matColors, part);
+				int colorSelected = mColors.getSelected();
+
+				setColorValue(colorSelected, color, value);
+			}
+			mOpListener.valueChanged(whatSelected, matColors);
+			mValue.setText(Integer.toString(value));
 		}
 	}
 
@@ -283,81 +272,71 @@ public class ColorControls extends FrameLayout
 		}
 		int whatSelected = mWhat.getSelectCode();
 
-		if (mOpListener.hasParts(whatSelected))
+		Part part = getPart(mParts.getSelected());
+
+		mPartLayout.setVisibility(View.VISIBLE);
+
+		MaterialColors matColors = mOpListener.getMatColor(whatSelected);
+
+		if (matColors != null)
 		{
-			Part part = getPart(mParts.getSelected());
-
-			mPartLayout.setVisibility(View.VISIBLE);
-
-			MaterialColors matColors = mOpListener.getMatColor(whatSelected);
-
-			if (matColors != null)
+			if (part == Part.Shininess)
 			{
-				if (part == Part.Shininess)
-				{
-					mColorLayout.setVisibility(View.INVISIBLE);
-					mSeekBar.setMax(127);
+				mColorLayout.setVisibility(View.INVISIBLE);
+				mSeekBar.setMax(127);
 
-					Float shine = matColors.getShininess();
-					if (shine != null)
-					{
-						int value = (int) FloatMath.floor(shine * 127);
-						mSeekBar.setProgress(value);
-						mSeekBar.setEnabled(true);
-					}
-					else
-					{
-						mSeekBar.setEnabled(false);
-					}
+				Float shine = matColors.getShininess();
+				if (shine != null)
+				{
+					int value = (int) FloatMath.floor(shine);
+					mSeekBar.setProgress(value);
+					mSeekBar.setEnabled(true);
+					mValue.setText(Integer.toString(value));
 				}
 				else
 				{
-					mColorLayout.setVisibility(View.VISIBLE);
-					mSeekBar.setMax(255);
-
-					int colorSelected = mColors.getSelected();
-					Color4f color = getColor(matColors, part);
-
-					if (color != null)
-					{
-						int value = getColorValue(colorSelected, color);
-						mSeekBar.setProgress(value);
-						mSeekBar.setEnabled(true);
-					}
-					else
-					{
-						mSeekBar.setEnabled(false);
-					}
-				}
-				showColor(mShow[0], mParts.get(0), matColors.getAmbient());
-				showColor(mShow[1], mParts.get(1), matColors.getDiffuse());
-				showColor(mShow[2], mParts.get(2), matColors.getSpecular());
-
-				if (matColors.getShininess() == null)
-				{
-					mParts.get(3).mBtn.setVisibility(View.INVISIBLE);
-				}
-				else
-				{
-					mParts.get(3).mBtn.setVisibility(View.VISIBLE);
+					mSeekBar.setEnabled(false);
 				}
 			}
 			else
 			{
-				for (int i = 0; i < mParts.size(); i++)
+				mColorLayout.setVisibility(View.VISIBLE);
+				mSeekBar.setMax(255);
+
+				int colorSelected = mColors.getSelected();
+				Color4f color = getColor(matColors, part);
+
+				if (color != null)
 				{
-					mParts.get(i).mBtn.setVisibility(View.INVISIBLE);
+					int value = getColorValue(colorSelected, color);
+					mSeekBar.setProgress(value);
+					mValue.setText(Integer.toString(value));
+					mSeekBar.setEnabled(true);
 				}
+				else
+				{
+					mSeekBar.setEnabled(false);
+				}
+			}
+			showColor(mShow[0], mParts.get(0), matColors.getAmbient());
+			showColor(mShow[1], mParts.get(1), matColors.getDiffuse());
+			showColor(mShow[2], mParts.get(2), matColors.getSpecular());
+
+			if (matColors.getShininess() == null)
+			{
+				mParts.get(3).mBtn.setVisibility(View.INVISIBLE);
+			}
+			else
+			{
+				mParts.get(3).mBtn.setVisibility(View.VISIBLE);
 			}
 		}
 		else
 		{
-			mColorLayout.setVisibility(View.INVISIBLE);
-			mPartLayout.setVisibility(View.INVISIBLE);
-
-			int value = mOpListener.getValue(whatSelected);
-			mSeekBar.setProgress(value);
-			mSeekBar.setEnabled(true);
+			for (int i = 0; i < mParts.size(); i++)
+			{
+				mParts.get(i).mBtn.setVisibility(View.INVISIBLE);
+			}
 		}
 	}
 
@@ -518,6 +497,7 @@ public class ColorControls extends FrameLayout
 		mShow[0] = findViewById(R.id.show_ambient);
 		mShow[1] = findViewById(R.id.show_diffuse);
 		mShow[2] = findViewById(R.id.show_specular);
+		mValue = (TextView) findViewById(R.id.value);
 	}
 
 	void showColor(View view, BtnWrapper wrap, Color4f color)

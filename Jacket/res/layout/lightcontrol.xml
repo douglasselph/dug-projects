@@ -156,14 +156,24 @@
 	
     </LinearLayout>
     
-   <SeekBar android:id="@+id/seekBar"
+    <TextView android:id="@+id/value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/colors"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="5dip"
+        android:layout_marginRight="6dip"
+        />
+    
+   	<SeekBar android:id="@+id/seekBar"
     	android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dip"
-        android:layout_marginRight="10dip"
-        android:layout_marginTop="10dip"
+        android:layout_marginRight="4dip"
+        android:layout_marginBottom="12dip"
         android:layout_alignTop="@id/what"
         android:layout_toRightOf="@id/what"
-        android:layout_alignParentRight="true"/>
+        android:layout_toLeftOf="@id/value"
+        />
    
 </RelativeLayout>

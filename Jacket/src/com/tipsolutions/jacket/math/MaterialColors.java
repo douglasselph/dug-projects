@@ -4,9 +4,62 @@ public class MaterialColors
 {
 	Color4f	mAmbient;
 	Color4f	mDiffuse;
+	Color4f	mSpecular;
 	Color4f	mEmission;
 	Float	mShininess;
-	Color4f	mSpecular;
+
+	public MaterialColors()
+	{
+	}
+
+	public MaterialColors(final MaterialColors cp)
+	{
+		copy(cp);
+	}
+
+	public void copy(final MaterialColors cp)
+	{
+		if (cp.mAmbient == null)
+		{
+			mAmbient = null;
+		}
+		else
+		{
+			mAmbient = new Color4f(cp.mAmbient);
+		}
+		if (cp.mDiffuse == null)
+		{
+			mDiffuse = null;
+		}
+		else
+		{
+			mDiffuse = new Color4f(cp.mDiffuse);
+		}
+		if (cp.mSpecular == null)
+		{
+			mSpecular = null;
+		}
+		else
+		{
+			mSpecular = new Color4f(cp.mSpecular);
+		}
+		if (cp.mEmission == null)
+		{
+			mEmission = null;
+		}
+		else
+		{
+			mEmission = new Color4f(cp.mEmission);
+		}
+		if (cp.mShininess == null)
+		{
+			mShininess = null;
+		}
+		else
+		{
+			mShininess = new Float(cp.mShininess);
+		}
+	}
 
 	public Color4f getAmbient()
 	{

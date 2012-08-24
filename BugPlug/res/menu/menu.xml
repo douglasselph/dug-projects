@@ -7,7 +7,7 @@
           android:showAsAction="ifRoom"/>
     <item android:id="@+id/menu_tilt"
           android:title="@string/flat" 
-          android:icon="@drawable/tilt0"
+          android:icon="@drawable/tilt15"
           android:showAsAction="always"/>
     <item android:id="@+id/menu_pan" 
           android:title="@string/pan" 
