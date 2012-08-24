@@ -33,6 +33,7 @@ public class ControlSurfaceView extends GLSurfaceView implements IView
 	public void onResume()
 	{
 		super.onResume();
+		mRenderer.setRebuildTextures();
 		requestRender();
 	}
 
@@ -62,12 +63,6 @@ public class ControlSurfaceView extends GLSurfaceView implements IView
 	// bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
 	// fos.flush();
 	// fos.close();
-	// }
-
-	// public void setOnAfterNextRender(OnAfterNextRender run)
-	// {
-	// mRenderer.setOnAfterNextRender(run);
-	// requestRender();
 	// }
 
 }

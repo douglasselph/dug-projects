@@ -11,22 +11,17 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.ImageUtils;
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Color4f;
+import com.tipsolutions.jacket.misc.Err;
 
 public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 {
 	static final String					TAG	= "ControlRenderer";
 	static final Boolean				ERR	= true;				// If set to true show errors from opengl.
-
-	// public interface OnAfterNextRender
-	// {
-	// void run(ControlRenderer renderer, MatrixTrackingGL gl);
-	// };
 
 	protected final TextureManager		mTM;
 	protected final ControlSurfaceView	mView;
@@ -34,8 +29,8 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 	protected int						mWidth;
 	protected int						mHeight;
 	protected final Camera				mCamera;
-	// protected OnAfterNextRender mOnAfterNextRender;
 	protected boolean					mRenderWhenDirty;
+	protected boolean					mRebuildTextures;
 
 	public ControlRenderer(ControlSurfaceView view, TextureManager tm)
 	{
@@ -106,19 +101,33 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 		gl.glLoadIdentity();
+
+		if (mRebuildTextures)
+		{
+			mRebuildTextures = false;
+
+			if (mTM != null)
+			{
+				mTM.reload(gl);
+			}
+		}
 	}
 
 	protected void onDrawFrameContents(GL10 gl)
 	{
-
 	}
 
 	protected void onDrawFrameDone(GL10 gl)
 	{
 		if (ERR)
 		{
-			printErrors(gl);
+			Err.printErrors(gl);
 		}
+	}
+
+	public void setRebuildTextures()
+	{
+		mRebuildTextures = true;
 	}
 
 	public void onSurfaceChanged(GL10 gl, int width, int height)
@@ -149,7 +158,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		{
 			mTM.load(gl);
 		}
-
 		// gl.glDisable(GL10.GL_DITHER);
 		onCreatedInitShading(gl);
 		onCreatedInitHint(gl);
@@ -158,40 +166,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 	public boolean onTouchEvent(MotionEvent ev)
 	{
 		return false;
-	}
-
-	protected void printErrors(GL10 gl)
-	{
-		int err;
-		while ((err = gl.glGetError()) != GL10.GL_NO_ERROR)
-		{
-			printError(getError(err));
-		}
-	}
-
-	protected void printError(String msg)
-	{
-		Log.e(TAG, msg);
-	}
-
-	static protected String getError(int code)
-	{
-		switch (code)
-		{
-			case GL10.GL_INVALID_ENUM:
-				return "Invalid enum";
-			case GL10.GL_INVALID_OPERATION:
-				return "Invalid operation";
-			case GL10.GL_INVALID_VALUE:
-				return "Invalid value";
-			case GL10.GL_STACK_OVERFLOW:
-				return "Stack overflow";
-			case GL10.GL_STACK_UNDERFLOW:
-				return "Stack underflow";
-			case GL10.GL_OUT_OF_MEMORY:
-				return "out of memory";
-		}
-		return null;
 	}
 
 	/**
@@ -203,11 +177,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 	{
 		mBackground = color;
 	}
-
-	// public void setOnAfterNextRender(OnAfterNextRender run)
-	// {
-	// mOnAfterNextRender = run;
-	// }
 
 	public void setRenderOnDirty()
 	{

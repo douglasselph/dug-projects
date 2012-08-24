@@ -3,7 +3,6 @@ package com.tipsolutions.bugplug.map;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.TextureManager;
@@ -125,11 +124,6 @@ public class RenderMap extends ControlRenderer implements Adjust
 		/* SPECULAR HIGHLIGHT */
 		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSunPos.toArray(), 0);
 		gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mGlobalSpot.getSpecular().toArray(), 0);
-
-		Log.d("DEBUG", "GLOBAL AMBIENT=" + mGlobalColor.getAmbient().toString());
-		Log.d("DEBUG", "GLOBAL DIFFUSE=" + mGlobalColor.getDiffuse().toString());
-		Log.d("DEBUG", "GLOBAL SPECULAR=" + mGlobalColor.getSpecular().toString());
-		Log.d("DEBUG", "SPOT SPECULAR=" + mGlobalSpot.getSpecular().toString());
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
 
 import com.tipsolutions.jacket.math.MatrixTrackingGL;
+import com.tipsolutions.jacket.misc.Err;
 import com.tipsolutions.jacket.misc.Msg;
 
 public class TextureManager
@@ -78,8 +79,7 @@ public class TextureManager
 				{
 					if (mFilename != null)
 					{
-						throw new IOException(Msg.build("File: \"", mFilename,
-								"\", got exception: ", ex.getMessage()));
+						throw new IOException(Msg.build("File: \"", mFilename, "\", got exception: ", ex.getMessage()));
 					}
 					else
 					{
@@ -112,15 +112,11 @@ public class TextureManager
 			gl.glEnable(GL10.GL_TEXTURE_2D);
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
 
-			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER,
-					GL10.GL_NEAREST);
-			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER,
-					GL10.GL_LINEAR);
+			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
+			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
-			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S,
-					GL10.GL_CLAMP_TO_EDGE);
-			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T,
-					GL10.GL_CLAMP_TO_EDGE);
+			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+			gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
 			Bitmap bitmap = null;
 			try
@@ -138,6 +134,8 @@ public class TextureManager
 				// Bitmap flipped = ImageUtils.FlipRows(bitmap);
 
 				GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+				Err.printErrors(gl);
+
 				bitmap.recycle();
 			}
 		}
@@ -162,8 +160,14 @@ public class TextureManager
 			}
 		}
 
+		public void reload(GL10 gl)
+		{
+			mTextureID = 0;
+			load(gl);
+		}
+
 		// If a texture is shared across multiple shapes, this alone is called
-		public void onDraw(MatrixTrackingGL gl, FloatBuffer fbuf)
+		public void onDrawOld(MatrixTrackingGL gl, FloatBuffer fbuf)
 		{
 			load(gl);
 
@@ -171,15 +175,12 @@ public class TextureManager
 			gl.glBlendFunc(mBlendSource, mBlendDest);
 
 			gl.glEnable(GL10.GL_TEXTURE_2D);
-			gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
-					mBlendParam);
+			gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, mBlendParam);
 
 			gl.glActiveTexture(GL10.GL_TEXTURE0);
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
-			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S,
-					GL10.GL_REPEAT);
-			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T,
-					GL10.GL_REPEAT);
+			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
+			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
 
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
@@ -268,6 +269,14 @@ public class TextureManager
 		for (Texture tex : getTextures())
 		{
 			tex.load(gl);
+		}
+	}
+
+	public void reload(GL10 gl)
+	{
+		for (Texture tex : getTextures())
+		{
+			tex.reload(gl);
 		}
 	}
 

@@ -1722,7 +1722,7 @@ public class Shape {
     			gl.glDisableClientState(GL10.GL_COLOR_ARRAY);
     		}
     		if ((mTexture != null) && ((fbuf = getTextureBuf()) != null)) {
-    			mTexture.onDraw(gl, fbuf);
+    			mTexture.onDrawOld(gl, fbuf);
     		} else {
     			gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
     		}

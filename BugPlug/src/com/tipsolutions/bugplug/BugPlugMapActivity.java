@@ -216,4 +216,12 @@ public class BugPlugMapActivity extends SherlockActivity
 		}
 		return true;
 	}
+
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		mSurfaceView.onResume();
+	}
+
 }

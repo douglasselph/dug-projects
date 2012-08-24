@@ -284,6 +284,7 @@ public class Model
 		if ((mTexture != null) && (mTextureBuf != null))
 		{
 			mTextureBuf.rewind();
+
 			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTexture.getTextureID());
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuf.getBuf());

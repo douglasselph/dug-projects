@@ -149,7 +149,7 @@ public class ParticleSystem
 			if (mEmitter.getTexture() != null)
 			{
 				gl.setCullFace(0);
-				mEmitter.getTexture().onDraw(gl, mEmitter.getTextureBuf());
+				mEmitter.getTexture().onDrawOld(gl, mEmitter.getTextureBuf());
 				if (EmitterTex.USE_STRIPS)
 				{
 					Color4f color;
