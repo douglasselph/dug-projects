@@ -1,7 +1,5 @@
 package com.tipsolutions.jacket.terrain;
 
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 import java.util.HashMap;
 
 import android.util.Log;
@@ -9,6 +7,8 @@ import android.util.Log;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.BufUtils.FloatBuf;
 import com.tipsolutions.jacket.math.BufUtils.ShortBuf;
+import com.tipsolutions.jacket.math.BufUtils.TmpFloatBuf;
+import com.tipsolutions.jacket.math.BufUtils.TmpShortBuf;
 import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 
@@ -23,32 +23,32 @@ public class Grid
 {
 	class BufferResult
 	{
-		FloatBuf		mVertexBuf;
-		FloatBuf		mNormalBuf;
-		FloatBuf		mTexBuf;
-		ShortBuf		mIndexBuf;
+		TmpFloatBuf		mVertexBuf;
+		TmpFloatBuf		mNormalBuf;
+		TmpFloatBuf		mTexBuf;
+		TmpShortBuf		mIndexBuf;
 		final Vector3f	mNormalDefault	= new Vector3f(0, 0, 1);
-		FloatBuffer		mVBuf;
-		FloatBuffer		mNBuf;
-		FloatBuffer		mTBuf;
-		ShortBuffer		mIBuf;
 		short			mPosition;
 
-		public BufferResult(int numVertex, int numIndex)
+		public BufferResult()
 		{
-			mVertexBuf = new FloatBuf(numVertex * 3);
-			mNormalBuf = new FloatBuf(numVertex * 3);
-			mTexBuf = new FloatBuf(numVertex * 2);
-			mIndexBuf = new ShortBuf(numIndex);
-			mVBuf = mVertexBuf.getBuf();
-			mNBuf = mNormalBuf.getBuf();
-			mTBuf = mTexBuf.getBuf();
-			mIBuf = mIndexBuf.getBuf();
+			mVertexBuf = new TmpFloatBuf();
+			mNormalBuf = new TmpFloatBuf();
+			mTexBuf = new TmpFloatBuf();
+			mIndexBuf = new TmpShortBuf();
+		}
+
+		public void cleanup()
+		{
+			mVertexBuf.clear();
+			mNormalBuf.clear();
+			mTexBuf.clear();
+			mIndexBuf.clear();
 		}
 
 		public ShortBuf getIndexBuf()
 		{
-			return mIndexBuf;
+			return mIndexBuf.create();
 		}
 
 		short getNextPosition()
@@ -58,17 +58,17 @@ public class Grid
 
 		public FloatBuf getNormalBuf()
 		{
-			return mNormalBuf;
+			return mNormalBuf.create();
 		}
 
 		public FloatBuf getTexBuf()
 		{
-			return mTexBuf;
+			return mTexBuf.create();
 		}
 
 		public FloatBuf getVertexBuf()
 		{
-			return mVertexBuf;
+			return mVertexBuf.create();
 		}
 
 		public void put(float x, float y, float percentX, float percentY)
@@ -107,13 +107,16 @@ public class Grid
 				xadj = 0;
 				yadj = 0;
 			}
-			mVBuf.put(x + xadj).put(y + yadj).put(z);
-
-			normal.put(mNBuf);
-
-			mTBuf.put(percentX).put(percentY);
-
+			mVertexBuf.put(x + xadj).put(y + yadj).put(z);
+			mNormalBuf.put(normal.getX()).put(normal.getY()).put(normal.getZ());
+			mTexBuf.put(percentX).put(percentY);
 			mPosition++;
+		}
+
+		public void put(int id, HashMap<Integer, Short> map, float x, float y, float percentX, float percentY)
+		{
+			map.put(id, getNextPosition());
+			put(x, y, percentX, percentY);
 		}
 
 		/**
@@ -135,13 +138,24 @@ public class Grid
 		}
 	};
 
-	static final String		TAG		= "Grid";
+	static final String		TAG			= "Grid";
+
 	int						mNumRows;
 	int						mNumCols;
+	int						mTimesRow	= 1;
+	int						mTimesCol	= 1;
 	/** Indicates which major cells have sub-divisions */
 	byte[]					mSubdivision;
 	/** Track index by row,col,subrow,subcol for vertex, normal, and tex arrays */
-	HashMap<Integer, Short>	mIndex	= new HashMap<Integer, Short>();
+	HashMap<Integer, Short>	mIndexTL	= new HashMap<Integer, Short>();
+	/** On repeating texture maps, need secondary points along edge boundaries */
+	/** Top-Right, Column Edge repeats */
+	HashMap<Integer, Short>	mIndexTR	= new HashMap<Integer, Short>();
+	/** Bottom-Left, Row Edge repeats */
+	HashMap<Integer, Short>	mIndexBL	= new HashMap<Integer, Short>();
+	/** Bottom-Right Row,Col Edge repeats */
+	HashMap<Integer, Short>	mIndexBR	= new HashMap<Integer, Short>();
+
 	/** Shared result */
 	BufferResult			mResult;
 	/** Computational bounds of grid */
@@ -176,7 +190,7 @@ public class Grid
 
 	public void calc()
 	{
-		mResult = new BufferResult(calcNumPoints(), calcNumIndex());
+		mResult = new BufferResult();
 		calcPoints();
 		calcIndexes();
 	}
@@ -191,20 +205,38 @@ public class Grid
 		// CW
 		if (mSubdivision == null)
 		{
-			short index = 0;
-
-			for (int row = 0; row < mNumRows; row++)
+			if (!isRepeating())
 			{
-				for (int col = 0; col < mNumCols; col++, index++)
-				{
-					indexes[0] = index;
-					indexes[1] = (short) (index + 1); // right
-					indexes[2] = (short) (index + mNumCols + 1); // bottom
-					indexes[3] = (short) (indexes[2] + 1); // right bottom
+				short index = 0;
 
-					mResult.putTwoTriangles(indexes);
+				for (int row = 0; row < mNumRows; row++)
+				{
+					for (int col = 0; col < mNumCols; col++, index++)
+					{
+						indexes[0] = index;
+						indexes[1] = (short) (index + 1); // right
+						indexes[2] = (short) (index + mNumCols + 1); // bottom
+						indexes[3] = (short) (indexes[2] + 1); // right bottom
+
+						mResult.putTwoTriangles(indexes);
+					}
+					index++;
 				}
-				index++;
+			}
+			else
+			{
+				for (int row = 0; row < mNumRows; row++)
+				{
+					for (int col = 0; col < mNumCols; col++)
+					{
+						indexes[0] = mIndexTL.get(ID(row, col)); // top-left
+						indexes[1] = getIndex(ID(row, col + 1), mIndexTR); // top-right
+						indexes[2] = getIndex(ID(row + 1, col), mIndexBL); // bottom-left
+						indexes[3] = getIndex(ID(row + 1, col + 1), mIndexBR, mIndexTR, mIndexBL); // bottom-right
+
+						mResult.putTwoTriangles(indexes);
+					}
+				}
 			}
 		}
 		else
@@ -223,10 +255,10 @@ public class Grid
 
 					if (subDivision == 0)
 					{
-						indexes[0] = mIndex.get(ID(row, col));
-						indexes[1] = mIndex.get(ID(row, col + 1)); // right
-						indexes[2] = mIndex.get(ID(row + 1, col)); // bottom
-						indexes[3] = mIndex.get(ID(row + 1, col + 1)); // right bottom
+						indexes[0] = mIndexTL.get(ID(row, col));
+						indexes[1] = mIndexTL.get(ID(row, col + 1)); // right
+						indexes[2] = mIndexTL.get(ID(row + 1, col)); // bottom
+						indexes[3] = mIndexTL.get(ID(row + 1, col + 1)); // right bottom
 
 						mResult.putTwoTriangles(indexes);
 					}
@@ -238,10 +270,10 @@ public class Grid
 						{
 							for (subCol = 0; subCol < numCells; subCol++)
 							{
-								indexes[0] = mIndex.get(ID(row, col, numCells, subRow, subCol));
-								indexes[1] = mIndex.get(ID(row, col, numCells, subRow, subCol + 1)); // right
-								indexes[2] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol)); // bottom
-								indexes[3] = mIndex.get(ID(row, col, numCells, subRow + 1, subCol + 1)); // right-bottom
+								indexes[0] = mIndexTL.get(ID(row, col, numCells, subRow, subCol));
+								indexes[1] = mIndexTL.get(ID(row, col, numCells, subRow, subCol + 1)); // right
+								indexes[2] = mIndexTL.get(ID(row, col, numCells, subRow + 1, subCol)); // bottom
+								indexes[3] = mIndexTL.get(ID(row, col, numCells, subRow + 1, subCol + 1)); // right-bottom
 
 								mResult.putTwoTriangles(indexes);
 							}
@@ -264,114 +296,6 @@ public class Grid
 	}
 
 	/**
-	 * Calculate the size of the index array
-	 * 
-	 * @return
-	 */
-	int calcNumIndex()
-	{
-		int count;
-		/*
-		 * Each cell or subcell has two triangles each for 6 index.
-		 */
-		if (mSubdivision == null)
-		{
-			count = mNumRows * mNumCols * 6;
-		}
-		else
-		{
-			int row;
-			int col;
-			int rc = 0;
-			int numSubCells;
-			int subDivision;
-
-			count = 0;
-			for (row = 0; row < mNumRows; row++)
-			{
-				for (col = 0; col < mNumCols; col++)
-				{
-					subDivision = mSubdivision[rc++];
-					numSubCells = MathUtils.powOf2(subDivision);
-					count += numSubCells * numSubCells * 6;
-				}
-			}
-		}
-		return count;
-	}
-
-	/**
-	 * Calculate the number points needed to represent the grid.
-	 * 
-	 * @return
-	 */
-	int calcNumPoints()
-	{
-		int count;
-
-		if (mSubdivision == null)
-		{
-			count = (mNumRows + 1) * (mNumCols + 1);
-		}
-		else
-		{
-			int rc;
-			int row;
-			int col;
-			int subNumRC = 0;
-			int subNumCells;
-			int subDivision;
-			int subDivisionRight;
-			int subDivisionBottom;
-			int subDivisionDiff;
-
-			rc = 0;
-			count = 0;
-			/** Account for the points needed by each cell */
-			for (row = 0; row < mNumRows; row++)
-			{
-				for (col = 0; col < mNumCols; col++, rc++)
-				{
-					subDivision = mSubdivision[rc];
-					subNumRC = MathUtils.powOf2(subDivision);
-					subNumCells = subNumRC * subNumRC;
-					count += subNumCells;
-
-					if (col == mNumCols - 1)
-					{
-						count += subNumRC; // right edge points
-					}
-					else
-					{
-						subDivisionRight = mSubdivision[rc + 1];
-						if (subDivisionRight < subDivision)
-						{
-							subDivisionDiff = subDivision - subDivisionRight;
-							count += MathUtils.powOf2(subDivisionDiff) - 1;
-						}
-					}
-					if (row == mNumRows - 1)
-					{
-						count += subNumRC; // bottom edge points
-					}
-					else
-					{
-						subDivisionBottom = mSubdivision[rc + mNumCols];
-						if (subDivisionBottom < subDivision)
-						{
-							subDivisionDiff = subDivision - subDivisionBottom;
-							count += MathUtils.powOf2(subDivisionDiff) - 1;
-						}
-					}
-				}
-			}
-			// Now bottom-right point
-			count++;
-		}
-		return count;
-	}
-
-	/**
 	 * Calculate out all the points: vertex buffer, normal buffer, and tex buffer.
 	 */
 	void calcPoints()
@@ -383,9 +307,16 @@ public class Grid
 		float y = mBounds2D.getMaxY();
 		float x;
 		float percentX;
+		float percentX2;
 		float percentY = 0;
-		float percentIncX = 1f / mNumCols;
-		float percentIncY = 1f / mNumRows;
+		float percentY2 = 0;
+		float percentIncX = (float) mTimesCol / mNumCols;
+		float percentIncY = (float) mTimesRow / mNumRows;
+		int percentXNumCols = mNumCols / mTimesCol;
+		int percentYNumRows = mNumRows / mTimesRow;
+		int percentXCounter;
+		int percentYCounter;
+		int id;
 		/*
 		 * Do each cell. With no subdivisions, there is one point per cell. With subdivisions, there is a block of
 		 * points per cell.
@@ -396,25 +327,102 @@ public class Grid
 		 * The right & bottom edge are treated as if it were yet another cell in terms of where the index array value
 		 * is, but we only have a single row of points. The subdivision value for these cells share the neighbor edge
 		 * cell.
+		 * 
+		 * Another complication: on the edge of the texture we need to double up the points depending on which side
+		 * of the texture needs to be represented. Upper triangles use the lower portion of the texture on the edge,
+		 * Lower triangles use the upper portion of the texture on the edge. Even though both points are physically in
+		 * the same spot.
 		 */
-		mIndex.clear();
+		mIndexTL.clear();
+		mIndexTR.clear();
+		mIndexBL.clear();
+		mIndexBR.clear();
 
 		if (mSubdivision == null)
 		{
-			for (int row = 0; row <= mNumRows; row++)
+			if (!isRepeating())
 			{
-				x = mBounds2D.getMinX();
-				percentX = 0;
-
-				for (int col = 0; col <= mNumCols; col++)
+				for (int row = 0; row <= mNumRows; row++)
 				{
-					mResult.put(x, y, percentX, percentY);
+					x = mBounds2D.getMinX();
+					percentX = 0;
 
-					x += incX;
-					percentX += percentIncX;
+					for (int col = 0; col <= mNumCols; col++)
+					{
+						mResult.put(x, y, percentX, percentY);
+
+						x += incX;
+						percentX += percentIncX;
+					}
+					y -= incY;
+					percentY += percentIncY;
 				}
-				y -= incY;
-				percentY += percentIncY;
+			}
+			else
+			{
+				percentYCounter = 0;
+
+				for (int row = 0; row <= mNumRows; row++)
+				{
+					x = mBounds2D.getMinX();
+
+					percentXCounter = 0;
+					percentX = 0;
+					percentX2 = 0;
+
+					for (int col = 0; col <= mNumCols; col++)
+					{
+						id = ID(row, col);
+
+						mResult.put(id, mIndexTL, x, y, percentX, percentY);
+
+						if (percentX != percentX2)
+						{
+							if (percentY != percentY2)
+							{
+								mResult.put(id, mIndexTR, x, y, percentX2, percentY);
+								mResult.put(id, mIndexBR, x, y, percentX2, percentY2);
+								mResult.put(id, mIndexBL, x, y, percentX, percentY2);
+							}
+							else
+							{
+								mResult.put(id, mIndexTR, x, y, percentX2, percentY);
+							}
+						}
+						else if (percentY2 != percentY)
+						{
+							mResult.put(id, mIndexBL, x, y, percentX, percentY2);
+						}
+						x += incX;
+						percentXCounter++;
+
+						if (percentXCounter >= percentXNumCols)
+						{
+							percentXCounter = 0;
+							percentX2 = 1f;
+							percentX = 0;
+						}
+						else
+						{
+							percentX = (float) percentXCounter / percentXNumCols;
+							percentX2 = percentX;
+						}
+					}
+					y -= incY;
+					percentYCounter++;
+
+					if (percentYCounter >= percentYNumRows)
+					{
+						percentYCounter = 0;
+						percentY = 0;
+						percentY2 = 1;
+					}
+					else
+					{
+						percentY = (float) percentYCounter / percentYNumRows;
+						percentY2 = percentY;
+					}
+				}
 			}
 		}
 		else
@@ -429,7 +437,6 @@ public class Grid
 			float subPercentIncY;
 			byte subDivision;
 			int subNumCells = 1;
-			int id;
 			int rc;
 
 			rc = 0;
@@ -460,9 +467,9 @@ public class Grid
 						{
 							id = ID(row, col, subNumCells, subRow, subCol);
 
-							if (!mIndex.containsKey(id))
+							if (!mIndexTL.containsKey(id))
 							{
-								mIndex.put(id, mResult.getNextPosition());
+								mIndexTL.put(id, mResult.getNextPosition());
 								mResult.put(subX, subY, subPercentX, subPercentY);
 							}
 							subX += subIncX;
@@ -478,6 +485,11 @@ public class Grid
 				percentY += percentIncY;
 			}
 		}
+	}
+
+	public void cleanup()
+	{
+		mResult.cleanup();
 	}
 
 	public void clearSubdivision()
@@ -508,6 +520,32 @@ public class Grid
 	public float getHeight()
 	{
 		return mBounds2D.getSizeY();
+	}
+
+	short getIndex(int id, HashMap<Integer, Short> map)
+	{
+		if (map.containsKey(id))
+		{
+			return map.get(id);
+		}
+		return mIndexTL.get(id);
+	}
+
+	short getIndex(int id, HashMap<Integer, Short> map, HashMap<Integer, Short> map2, HashMap<Integer, Short> map3)
+	{
+		if (map.containsKey(id))
+		{
+			return map.get(id);
+		}
+		if (map2.containsKey(id))
+		{
+			return map2.get(id);
+		}
+		if (map3.containsKey(id))
+		{
+			return map3.get(id);
+		}
+		return mIndexTL.get(id);
 	}
 
 	public int getNumCols()
@@ -562,6 +600,11 @@ public class Grid
 		return (row << 24) + (col << 16) + (subrow << 8) + subcol;
 	}
 
+	boolean isRepeating()
+	{
+		return (mTimesRow > 1 || mTimesCol > 1);
+	}
+
 	/**
 	 * Return subDivision index from row,col
 	 * 
@@ -584,6 +627,18 @@ public class Grid
 	{
 		mCompute = calc;
 		return this;
+	}
+
+	/**
+	 * Indicate the number of times the pattern is to be repeated across the rows and cols.
+	 * 
+	 * @param rowTimes
+	 * @param colTimes
+	 */
+	public void setRepeating(int rowTimes, int colTimes)
+	{
+		mTimesCol = colTimes;
+		mTimesRow = rowTimes;
 	}
 
 	/**
@@ -629,4 +684,113 @@ public class Grid
 			mSubdivision[posSD(row, col)] = (byte) subdivision;
 		}
 	}
+
+	/**
+	 * Calculate the size of the index array
+	 * 
+	 * @return
+	 */
+	// int calcNumIndex()
+	// {
+	// int count;
+	// /*
+	// * Each cell or subcell has two triangles each for 6 index.
+	// */
+	// if (mSubdivision == null)
+	// {
+	// count = mNumRows * mNumCols * 6;
+	// }
+	// else
+	// {
+	// int row;
+	// int col;
+	// int rc = 0;
+	// int numSubCells;
+	// int subDivision;
+	//
+	// count = 0;
+	// for (row = 0; row < mNumRows; row++)
+	// {
+	// for (col = 0; col < mNumCols; col++)
+	// {
+	// subDivision = mSubdivision[rc++];
+	// numSubCells = MathUtils.powOf2(subDivision);
+	// count += numSubCells * numSubCells * 6;
+	// }
+	// }
+	// }
+	// return count;
+	// }
+
+	/**
+	 * Calculate the number points needed to represent the grid.
+	 * 
+	 * @return
+	 */
+	// int calcNumPoints()
+	// {
+	// int count;
+	//
+	// if (mSubdivision == null)
+	// {
+	// count = (mNumRows + 1) * (mNumCols + 1);
+	// }
+	// else
+	// {
+	// int rc;
+	// int row;
+	// int col;
+	// int subNumRC = 0;
+	// int subNumCells;
+	// int subDivision;
+	// int subDivisionRight;
+	// int subDivisionBottom;
+	// int subDivisionDiff;
+	//
+	// rc = 0;
+	// count = 0;
+	// /** Account for the points needed by each cell */
+	// for (row = 0; row < mNumRows; row++)
+	// {
+	// for (col = 0; col < mNumCols; col++, rc++)
+	// {
+	// subDivision = mSubdivision[rc];
+	// subNumRC = MathUtils.powOf2(subDivision);
+	// subNumCells = subNumRC * subNumRC;
+	// count += subNumCells;
+	//
+	// if (col == mNumCols - 1)
+	// {
+	// count += subNumRC; // right edge points
+	// }
+	// else
+	// {
+	// subDivisionRight = mSubdivision[rc + 1];
+	// if (subDivisionRight < subDivision)
+	// {
+	// subDivisionDiff = subDivision - subDivisionRight;
+	// count += MathUtils.powOf2(subDivisionDiff) - 1;
+	// }
+	// }
+	// if (row == mNumRows - 1)
+	// {
+	// count += subNumRC; // bottom edge points
+	// }
+	// else
+	// {
+	// subDivisionBottom = mSubdivision[rc + mNumCols];
+	// if (subDivisionBottom < subDivision)
+	// {
+	// subDivisionDiff = subDivision - subDivisionBottom;
+	// count += MathUtils.powOf2(subDivisionDiff) - 1;
+	// }
+	// }
+	// }
+	// }
+	// // Now bottom-right point
+	// count++;
+	// }
+	// return count;
+	// }
+
 }

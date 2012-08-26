@@ -3,13 +3,16 @@ package com.tipsolutions.bugplug.map;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.graphics.Color;
 import android.util.FloatMath;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.tipsolutions.jacket.image.TextureManager;
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MaterialColors;
+import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 import com.tipsolutions.jacket.math.Vector4f;
 import com.tipsolutions.jacket.view.ControlRenderer;
@@ -19,7 +22,8 @@ import com.tipsolutions.jacket.view.EventTapAdjust.Adjust;
 
 public class RenderMap extends ControlRenderer implements Adjust
 {
-	static final boolean	mHasSpotLight	= false;
+	static final String		TAG				= "RenderMap";
+	static final boolean	mHasSpotLight	= true;
 	static final float		GLOBAL_AMBIENT	= 0.25f;
 	static final float		GLOBAL_DIFFUSE	= 0.5f;
 	static final float		GLOBAL_SPECULAR	= 0.82f;
@@ -44,6 +48,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mMap = new Map(tm);
 		mEventTap = new EventTapAdjust(this);
 		mRotateAngle = new Vector3f(INITIAL_TILT, 0, 0);
+		setBackground(new Color4f(Color.parseColor("#3399FF")));
 	}
 
 	void applyRotate(GL10 gl)
@@ -60,6 +65,21 @@ public class RenderMap extends ControlRenderer implements Adjust
 		{
 			gl.glRotatef(mRotateAngle.getZ(), 0, 0, 1);
 		}
+	}
+
+	public Bounds2D getAdjustedBounds()
+	{
+		Bounds2D bounds = new Bounds2D(mMaxBounds);
+		float degrees = -mRotateAngle.getX();
+		float adjust = FloatMath.sin(degrees * MathUtils.TO_RADIANS);
+		float halfSizeY = mMaxBounds.getSizeY() / 2;
+		float amt = adjust * halfSizeY;
+		float centerY = (bounds.getMinY() + bounds.getMaxY());
+		float adjustedHalfSizeY = halfSizeY - amt;
+		bounds.setMinY(centerY - adjustedHalfSizeY);
+		bounds.setMaxY(centerY + adjustedHalfSizeY);
+		Log.d("DEBUG", "Bounds FROM " + mMaxBounds.toString() + "->" + bounds.toString());
+		return bounds;
 	}
 
 	public Bounds2D getBounds()
@@ -90,6 +110,11 @@ public class RenderMap extends ControlRenderer implements Adjust
 	public Vector4f getSpotPos()
 	{
 		return mSpotPos;
+	}
+
+	public int getTilt()
+	{
+		return (int) FloatMath.floor(mRotateAngle.getX() / -15f);
 	}
 
 	public MaterialColors getWaterMatColors()
@@ -125,9 +150,33 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mCamera.setViewBounds(mMap.getBounds());
 		mMaxZ = mCamera.getViewingLoc().getZ();
 		mMaxBounds = new Bounds2D(mCamera.getViewBounds());
-		mMaxBounds.setMinX(mMaxBounds.getMinX() * 1.4f);
-		mMaxBounds.setMaxX(mMaxBounds.getMaxX() * 1.4f);
+		// mMaxBounds.setMinX(mMaxBounds.getMinX() * 1.4f);
+		// mMaxBounds.setMaxX(mMaxBounds.getMaxX() * 1.4f);
 		mSpotPos.set(mMaxBounds.getSizeX() / 2, 0, -1f, 1);
+	}
+
+	Bounds2D computeViewBounds()
+	{
+		Bounds2D bounds = mMap.getBounds();
+		float center;
+		float halfSize;
+
+		/* Clip longer edge to shorter to minimize viewable dead space */
+		if (bounds.getSizeX() > bounds.getSizeY())
+		{
+			halfSize = bounds.getSizeY() / 2;
+			center = (bounds.getMinX() + bounds.getMaxX()) / 2;
+			bounds.setMinX(center - halfSize);
+			bounds.setMaxX(center + halfSize);
+		}
+		else
+		{
+			halfSize = bounds.getSizeX() / 2;
+			center = (bounds.getMinX() + bounds.getMaxX()) / 2;
+			bounds.setMinX(center - halfSize);
+			bounds.setMaxX(center + halfSize);
+		}
+		return bounds;
 	}
 
 	@Override
@@ -143,7 +192,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mGlobalColor.setAmbient(new Color4f(GLOBAL_AMBIENT, GLOBAL_AMBIENT, GLOBAL_AMBIENT, 1));
 		mGlobalColor.setDiffuse(new Color4f(GLOBAL_DIFFUSE, GLOBAL_DIFFUSE, GLOBAL_DIFFUSE, 1f));
 		mGlobalColor.setSpecular(new Color4f(GLOBAL_SPECULAR, GLOBAL_SPECULAR, GLOBAL_SPECULAR, 1f));
-		mGlobalPos = new Vector4f(0f, 0f, 1f, 0);
+		mGlobalPos = new Vector4f(0f, 0.05f, 1f, 0);
 
 		mSpotColor.setAmbient(new Color4f(Color4f.BLACK));
 		mSpotColor.setDiffuse(new Color4f(Color4f.BLACK));
@@ -242,11 +291,6 @@ public class RenderMap extends ControlRenderer implements Adjust
 			mRotateAngle.setZ(0);
 		}
 		mView.requestRender();
-	}
-
-	public int getTilt()
-	{
-		return (int) FloatMath.floor(mRotateAngle.getX() / -15f);
 	}
 
 	@Override

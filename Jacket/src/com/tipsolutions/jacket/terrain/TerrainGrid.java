@@ -36,6 +36,7 @@ public class TerrainGrid extends Model
 		mNormalBuf = mGrid.getCalcNormalBuf();
 		mTextureBuf = mGrid.getCalcTexBuf();
 		mIndexBuf = mGrid.getCalcIndexBuf();
+		mGrid.cleanup();
 		mVertexBuf.rewind();
 		mNormalBuf.rewind();
 		mTextureBuf.rewind();
@@ -72,6 +73,12 @@ public class TerrainGrid extends Model
 		{
 			Log.e(TAG, ex.getMessage());
 		}
+		return this;
+	}
+
+	public TerrainGrid setRepeating(int rowTimes, int colTimes)
+	{
+		mGrid.setRepeating(rowTimes, colTimes);
 		return this;
 	}
 

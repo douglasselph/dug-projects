@@ -20,7 +20,18 @@ public class BugPlugMapActivity extends SherlockActivity
 {
 	class ColorOp implements OnOperation
 	{
+		MaterialColors	mGlobalCopy;
 		MaterialColors	mSpotCopy;
+
+		MaterialColors copy(final MaterialColors src)
+		{
+			MaterialColors copy = new MaterialColors();
+			copy.setAmbient(src.getAmbient());
+			copy.setDiffuse(src.getDiffuse());
+			copy.setEmission(src.getEmission());
+			copy.setSpecular(src.getSpecular());
+			return copy;
+		}
 
 		@Override
 		public MaterialColors getMatColor(int what)
@@ -28,7 +39,12 @@ public class BugPlugMapActivity extends SherlockActivity
 			switch (what)
 			{
 				case WHAT_GLOBAL:
-					return mRenderMap.getGlobalMatColors();
+					if (mGlobalCopy == null)
+					{
+						mGlobalCopy = copy(mRenderMap.getGlobalMatColors());
+					}
+					pullGlobalPos();
+					return mGlobalCopy;
 				case WHAT_GROUND:
 					return mRenderMap.getGroundMatColors();
 				case WHAT_WATER:
@@ -44,28 +60,12 @@ public class BugPlugMapActivity extends SherlockActivity
 			return null;
 		}
 
-		@Override
-		public void valueChanged(int what, MaterialColors value)
+		void pullGlobalPos()
 		{
-			if (what == WHAT_SPOT)
-			{
-				pushSpotPos();
-			}
-			if (what == WHAT_GLOBAL || what == WHAT_SPOT)
-			{
-				mRenderMap.updateGlobalLights();
-			}
-			mSurfaceView.requestRender();
-		}
-
-		MaterialColors copy(final MaterialColors src)
-		{
-			MaterialColors copy = new MaterialColors();
-			copy.setAmbient(src.getAmbient());
-			copy.setDiffuse(src.getDiffuse());
-			copy.setEmission(src.getEmission());
-			copy.setSpecular(src.getSpecular());
-			return copy;
+			Vector4f pos = mRenderMap.getGlobalPos();
+			Bounds2D bounds = mRenderMap.getBounds();
+			float value = ((pos.getX() - bounds.getMinX()) / bounds.getSizeX()) * 127f;
+			mGlobalCopy.setShininess(value);
 		}
 
 		void pullSpotPos()
@@ -76,12 +76,36 @@ public class BugPlugMapActivity extends SherlockActivity
 			mSpotCopy.setShininess(value);
 		}
 
+		void pushGlobalPos()
+		{
+			Vector4f pos = mRenderMap.getGlobalPos();
+			Bounds2D bounds = mRenderMap.getBounds();
+			float value = mGlobalCopy.getShininess();
+			pos.setX(value / 127f * bounds.getSizeX() + bounds.getMinX());
+		}
+
 		void pushSpotPos()
 		{
 			Vector4f pos = mRenderMap.getSpotPos();
 			Bounds2D bounds = mRenderMap.getBounds();
 			float value = mSpotCopy.getShininess();
 			pos.setX(value / 127f * bounds.getSizeX() + bounds.getMinX());
+		}
+
+		@Override
+		public void valueChanged(int what, MaterialColors value)
+		{
+			if (what == WHAT_SPOT)
+			{
+				pushSpotPos();
+				mRenderMap.updateGlobalLights();
+			}
+			else if (what == WHAT_GLOBAL)
+			{
+				pushGlobalPos();
+				mRenderMap.updateGlobalLights();
+			}
+			mSurfaceView.requestRender();
 		}
 
 	};

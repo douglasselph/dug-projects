@@ -25,7 +25,7 @@ public class CalcConeLinear extends CalcConstant
 		super(height);
 	}
 
-	public CalcConeLinear(Bounds2D bounds, float height)
+	public CalcConeLinear(float height, Bounds2D bounds)
 	{
 		super(height, bounds);
 	}

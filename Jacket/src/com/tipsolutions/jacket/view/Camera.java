@@ -153,14 +153,11 @@ public class Camera
 	}
 
 	/**
-	 * Ensure the viewing location is such that if the range sees more than the limit in one of the directions,
-	 * it will clamp down so that it is upper-left justified.
+	 * Zoom in or out that indicated amount. Effectively just sets the Z value. The maxZ value is passed in.
+	 * 
+	 * @param scale
+	 * @param maxZ
 	 */
-	public void floor(Bounds2D limit)
-	{
-
-	}
-
 	public void scale(float scale, float maxZ)
 	{
 		float newZ = mViewingLoc.getZ() * scale;

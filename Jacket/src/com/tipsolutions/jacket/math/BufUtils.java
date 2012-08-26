@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 
 public class BufUtils
 {
@@ -26,16 +27,14 @@ public class BufUtils
 			mBuf = asBuffer(mRoot);
 		}
 
-		void set(ByteBuffer buf)
-		{
-			mRoot = buf;
-			mBuf = asBuffer(buf);
-		}
+		public abstract BUFTYPE asBuffer(ByteBuffer buf);
 
 		public int capacity()
 		{
 			return capacity(mBuf);
 		}
+
+		public abstract int capacity(BUFTYPE buf);
 
 		public BUFTYPE getBuf()
 		{
@@ -47,12 +46,6 @@ public class BufUtils
 			mRoot.rewind();
 			return mRoot;
 		}
-
-		public abstract BUFTYPE asBuffer(ByteBuffer buf);
-
-		public abstract int capacity(BUFTYPE buf);
-
-		public abstract void rewind(BUFTYPE buf);
 
 		abstract int getSize();
 
@@ -91,6 +84,14 @@ public class BufUtils
 				vbb.rewind();
 			}
 			set(vbb);
+		}
+
+		public abstract void rewind(BUFTYPE buf);
+
+		void set(ByteBuffer buf)
+		{
+			mRoot = buf;
+			mBuf = asBuffer(buf);
 		}
 
 		public void writeBuffer(DataOutputStream dataStream) throws IOException
@@ -316,6 +317,72 @@ public class BufUtils
 				sbuf.append("|");
 			}
 			return sbuf.toString();
+		}
+	}
+
+	/**
+	 * Used to build up a FloatBuf if you don't know ahead of time the size.
+	 * 
+	 * @author dug
+	 * 
+	 */
+	public static class TmpFloatBuf
+	{
+		ArrayList<Float>	mArray	= new ArrayList<Float>();
+
+		public void clear()
+		{
+			mArray.clear();
+		}
+
+		public FloatBuf create()
+		{
+			FloatBuf buf = new FloatBuf(mArray.size());
+			FloatBuffer fbuf = buf.getBuf();
+			for (float value : mArray)
+			{
+				fbuf.put(value);
+			}
+			return buf;
+		}
+
+		public TmpFloatBuf put(float value)
+		{
+			mArray.add(value);
+			return this;
+		}
+	}
+
+	/**
+	 * Used to build up a ShortBuf if you don't know ahead of time the size.
+	 * 
+	 * @author dug
+	 * 
+	 */
+	public static class TmpShortBuf
+	{
+		ArrayList<Short>	mArray	= new ArrayList<Short>();
+
+		public void clear()
+		{
+			mArray.clear();
+		}
+
+		public ShortBuf create()
+		{
+			ShortBuf buf = new ShortBuf(mArray.size());
+			ShortBuffer sbuf = buf.getBuf();
+			for (short value : mArray)
+			{
+				sbuf.put(value);
+			}
+			return buf;
+		}
+
+		public TmpShortBuf put(short value)
+		{
+			mArray.add(value);
+			return this;
 		}
 	};
 
