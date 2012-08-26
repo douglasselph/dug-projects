@@ -310,12 +310,10 @@ public class Grid
 		float percentX2;
 		float percentY = 0;
 		float percentY2 = 0;
-		float percentIncX = (float) mTimesCol / mNumCols;
-		float percentIncY = (float) mTimesRow / mNumRows;
 		int percentXNumCols = mNumCols / mTimesCol;
 		int percentYNumRows = mNumRows / mTimesRow;
 		int percentXCounter;
-		int percentYCounter;
+		int percentYCounter = 0;
 		int id;
 		/*
 		 * Do each cell. With no subdivisions, there is one point per cell. With subdivisions, there is a block of
@@ -342,6 +340,9 @@ public class Grid
 		{
 			if (!isRepeating())
 			{
+				float percentIncX = 1f / mNumCols;
+				float percentIncY = 1f / mNumRows;
+
 				for (int row = 0; row <= mNumRows; row++)
 				{
 					x = mBounds2D.getMinX();
@@ -360,8 +361,6 @@ public class Grid
 			}
 			else
 			{
-				percentYCounter = 0;
-
 				for (int row = 0; row <= mNumRows; row++)
 				{
 					x = mBounds2D.getMinX();
@@ -431,10 +430,12 @@ public class Grid
 			float subY = 0;
 			float subPercentX = 0;
 			float subPercentY = 0;
+			float subPercentX2;
+			float subPercentY2;
 			float subIncX;
 			float subIncY;
-			float subPercentIncX;
-			float subPercentIncY;
+			float percentIncX = 1f / percentXNumCols;
+			float percentIncY = 1f / percentYNumRows;
 			byte subDivision;
 			int subNumCells = 1;
 			int rc;
@@ -444,7 +445,10 @@ public class Grid
 			for (int row = 0; row < mNumRows; row++)
 			{
 				x = mBounds2D.getMinX();
+
 				percentX = 0;
+				percentX2 = 0;
+				percentXCounter = 0;
 
 				for (int col = 0; col < mNumCols; col++)
 				{
@@ -453,15 +457,16 @@ public class Grid
 
 					subY = y;
 					subPercentY = percentY;
+					subPercentY2 = percentY2;
+
 					subIncX = incX / subNumCells;
 					subIncY = incY / subNumCells;
-					subPercentIncX = percentIncX / subNumCells;
-					subPercentIncY = percentIncY / subNumCells;
 
 					for (int subRow = 0; subRow <= subNumCells; subRow++)
 					{
 						subX = x;
 						subPercentX = percentX;
+						subPercentX2 = percentX2;
 
 						for (int subCol = 0; subCol <= subNumCells; subCol++)
 						{
@@ -469,20 +474,63 @@ public class Grid
 
 							if (!mIndexTL.containsKey(id))
 							{
-								mIndexTL.put(id, mResult.getNextPosition());
-								mResult.put(subX, subY, subPercentX, subPercentY);
+								mResult.put(id, mIndexTL, subX, subY, subPercentX, subPercentY);
+							}
+							/**** WAS HERE: Trying to figure out what percentX2 and percentY2 should be. */
+							if (percentX != percentX2)
+							{
+								if (percentY != percentY2)
+								{
+									mResult.put(id, mIndexTR, subX, subY, subPercentX2, subPercentY);
+									mResult.put(id, mIndexBR, subX, subY, subPercentX2, subPercentY2);
+									mResult.put(id, mIndexBL, subX, subY, subPercentX, subPercentY2);
+								}
+								else
+								{
+									mResult.put(id, mIndexTR, subX, subY, subPercentX2, subPercentY);
+								}
+							}
+							else if (percentY2 != percentY)
+							{
+								mResult.put(id, mIndexBL, subX, subY, subPercentX, subPercentY2);
 							}
 							subX += subIncX;
-							subPercentX += subPercentIncX;
+							subPercentX += (float) subCol / subNumCells * percentIncX;
+							subPercentX2 = subPercentX;
 						}
 						subY -= subIncY;
-						subPercentY += subPercentIncY;
+						subPercentY += (float) subRow / subNumCells * percentIncY;
+						subPercentY2 = subPercentY;
 					}
 					x += incX;
-					percentX += percentIncX;
+					percentXCounter++;
+
+					if (percentXCounter >= percentXNumCols)
+					{
+						percentXCounter = 0;
+						percentX2 = 1f;
+						percentX = 0;
+					}
+					else
+					{
+						percentX = (float) percentXCounter / percentXNumCols;
+						percentX2 = percentX;
+					}
 				}
 				y -= incY;
-				percentY += percentIncY;
+				percentYCounter++;
+
+				if (percentYCounter >= percentYNumRows)
+				{
+					percentYCounter = 0;
+					percentY = 0;
+					percentY2 = 1;
+				}
+				else
+				{
+					percentY = (float) percentYCounter / percentYNumRows;
+					percentY2 = percentY;
+				}
 			}
 		}
 	}

@@ -51,11 +51,12 @@ public class Map
 		 */
 		mGround = new TerrainGrid();
 		mGround.setBounds(mBounds).setGridSizeSafe(100, 100);
-		mGround.setRepeating(2, 2);
+		// mGround.setRepeating(2, 2);
 		mGround.setTexture(mTM.getTexture(R.drawable.dirt));
 		mGround.setColorAmbient(new Color4f(0.2f, 0.2f, 0.2f, 1f));
 		mGround.setColorDiffuse(new Color4f(0.4f, 0.4f, 0.4f, 1f));
 		mGround.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1f));
+		mGround.setSubdivision(0, 1, 2);
 
 		group = new CalcGroup();
 		// Left rise
