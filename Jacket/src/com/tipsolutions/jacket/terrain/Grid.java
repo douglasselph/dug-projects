@@ -476,24 +476,6 @@ public class Grid
 							{
 								mResult.put(id, mIndexTL, subX, subY, subPercentX, subPercentY);
 							}
-							/**** WAS HERE: Trying to figure out what percentX2 and percentY2 should be. */
-							if (percentX != percentX2)
-							{
-								if (percentY != percentY2)
-								{
-									mResult.put(id, mIndexTR, subX, subY, subPercentX2, subPercentY);
-									mResult.put(id, mIndexBR, subX, subY, subPercentX2, subPercentY2);
-									mResult.put(id, mIndexBL, subX, subY, subPercentX, subPercentY2);
-								}
-								else
-								{
-									mResult.put(id, mIndexTR, subX, subY, subPercentX2, subPercentY);
-								}
-							}
-							else if (percentY2 != percentY)
-							{
-								mResult.put(id, mIndexBL, subX, subY, subPercentX, subPercentY2);
-							}
 							subX += subIncX;
 							subPercentX += (float) subCol / subNumCells * percentIncX;
 							subPercentX2 = subPercentX;

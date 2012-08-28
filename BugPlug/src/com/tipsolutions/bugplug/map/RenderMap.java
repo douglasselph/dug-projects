@@ -245,6 +245,22 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mView.requestRender();
 	}
 
+	/**
+	 * Get the viewing bounds of the map taking into account the current tilt.
+	 */
+	Bounds2D getBoundsWithTilt()
+	{
+		Bounds2D bounds = new Bounds2D(mMap.getBounds());
+		float angle = -mRotateAngle.getX();
+		float tilt_dist = FloatMath.sin(angle * MathUtils.TO_RADIANS);
+		float sizeY = bounds.getSizeY();
+		sizeY -= sizeY * tilt_dist;
+		float centerY = (bounds.getMinY() + bounds.getMaxY()) / 2;
+		bounds.setMinY(centerY - sizeY / 2);
+		bounds.setMaxY(centerY + sizeY / 2);
+		return bounds;
+	}
+
 	@Override
 	public void scale(float delta)
 	{

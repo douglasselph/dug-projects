@@ -5,7 +5,6 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import com.tipsolutions.jacket.math.Bounds2D;
-import com.tipsolutions.jacket.math.MathUtils;
 import com.tipsolutions.jacket.math.Vector3f;
 
 public class Camera
@@ -60,29 +59,28 @@ public class Camera
 	}
 
 	/**
-	 * Return the distance we have to be from the camera in order to just see the object with the given bounds
-	 * completely.
+	 * Return the distance we have to be from the camera in order to just see the twice the given XSize completely.
 	 * 
-	 * @param bounds
+	 * @param sizeX
 	 * @return
 	 */
-	public float getDist(Bounds2D bounds)
+	public float getDistX(float sizeX)
 	{
-		// Find most extreme edge
-		float maxY = Math.abs(bounds.getMaxY());
-		float minY = Math.abs(bounds.getMinY());
-		float yValue = MathUtils.LARGER(minY, maxY);
-		float maxX = Math.abs(bounds.getMaxX());
-		float minX = Math.abs(bounds.getMinX());
-		float xValue = MathUtils.LARGER(minX, maxX);
-
 		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
+		return sizeX / factor / mAspect;
+	}
 
-		if (yValue < xValue)
-		{
-			return yValue / factor;
-		}
-		return xValue / factor / mAspect;
+	/**
+	 * Return the distance we have to be from the camera in order to just see the twice given Ysize completely.
+	 * 
+	 * @param sizeY
+	 * @return
+	 */
+	public float getDistY(float sizeY)
+	{
+		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
+		return sizeY / factor;
+
 	}
 
 	public int getHeight()
@@ -245,12 +243,11 @@ public class Camera
 	{
 		float centerX = (bounds.getMaxX() + bounds.getMinX()) / 2;
 		float centerY = (bounds.getMaxY() + bounds.getMinY()) / 2;
-		float halfSizeX = bounds.getSizeX() / 2;
+		// float halfSizeX = bounds.getSizeX() / 2;
 		float halfSizeY = bounds.getSizeY() / 2;
-		Bounds2D centerBounds = new Bounds2D(-halfSizeX, -halfSizeY, halfSizeX, halfSizeY);
 		mViewingLoc.setX(-centerX);
 		mViewingLoc.setY(-centerY);
-		mViewingLoc.setZ(-getDist(centerBounds));
+		mViewingLoc.setZ(-getDistY(halfSizeY));
 	}
 
 	public String toString()

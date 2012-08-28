@@ -11,7 +11,7 @@ import com.tipsolutions.jacket.view.ControlSurfaceView;
 
 public class MainActivity extends SherlockActivity
 {
-	CubeRenderer		mRenderer;
+	CubeWRenderer		mRenderer;
 	ControlSurfaceView	mSurfaceView;
 	TextureManager		mTM;
 
@@ -28,7 +28,7 @@ public class MainActivity extends SherlockActivity
 		mSurfaceView = new ControlSurfaceView(this);
 		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-		mRenderer = new CubeRenderer(mSurfaceView);
+		mRenderer = new CubeWRenderer(mSurfaceView);
 		mSurfaceView.setRenderer(mRenderer);
 
 		FrameLayout container = (FrameLayout) findViewById(R.id.container);
