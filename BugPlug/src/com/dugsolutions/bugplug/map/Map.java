@@ -10,6 +10,7 @@ import com.dugsolutions.jacket.math.MaterialColors;
 import com.dugsolutions.jacket.terrain.CalcConeLinear;
 import com.dugsolutions.jacket.terrain.CalcEdgeJagged;
 import com.dugsolutions.jacket.terrain.CalcGroup;
+import com.dugsolutions.jacket.terrain.CalcMountain;
 import com.dugsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
@@ -44,6 +45,7 @@ public class Map
 		CalcEdgeJagged jagged;
 		CalcGroup group;
 		CalcConeLinear rise;
+		CalcMountain mountain;
 		/*
 		 * Build the base ground
 		 */
@@ -60,13 +62,14 @@ public class Map
 		// Left rise
 		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
 				+ mMountainSideXSize, mBounds.getMaxY());
-		rise = new CalcConeLinear(mMountainHeight, edge);
-		// group.add(rise);
+		// mountain = new CalcMountain(mMountainHeight, 0.2f, 10, 1L, edge);
+		// group.add(mountain);
+
 		// Top rise
 		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainTopYSize, mBounds.getMaxX(),
 				mBounds.getMaxY());
-		rise = new CalcConeLinear(mMountainHeight, edge);
-		group.add(rise);
+		mountain = new CalcMountain(mMountainHeight, 0.4f, 10, 1L, edge);
+		group.add(mountain);
 		// Right rise
 		edge = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
 				mBounds.getMaxX(), mBounds.getMaxY());

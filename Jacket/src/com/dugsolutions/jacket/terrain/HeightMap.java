@@ -18,10 +18,12 @@ public class HeightMap
 {
 	class ComputeBox
 	{
-		int	mx1;
-		int	mx2;
-		int	my1;
-		int	my2;
+		final int	mx1;
+		final int	mx2;
+		final int	my1;
+		final int	my2;
+		final int	mcx;
+		final int	mcy;
 
 		ComputeBox(int x1, int y1, int x2, int y2)
 		{
@@ -29,41 +31,49 @@ public class HeightMap
 			my1 = y1;
 			mx2 = x2;
 			my2 = y2;
+			mcx = (mx1 + mx2) / 2;
+			mcy = (my1 + my2) / 2;
 		}
 
 		void calc()
 		{
-			int cx = (mx1 + mx2) / 2;
-			int cy = (my1 + my2) / 2;
 			int p1 = arrayPos(mx1, my1);
 			int p2 = arrayPos(mx2, my1);
 			int p3 = arrayPos(mx1, my2);
 			int p4 = arrayPos(mx2, my2);
 			// Center
-			setMid(arrayPos(cx, cy), p1, p4);
+			setMid(arrayPos(mcx, mcy), p1, p4);
 			// Top
-			setMid(arrayPos(cx, my1), p1, p2);
+			setMid(arrayPos(mcx, my1), p1, p2);
 			// Bottom
-			setMid(arrayPos(cx, my2), p3, p4);
+			setMid(arrayPos(mcx, my2), p3, p4);
 			// Left
-			setMid(arrayPos(mx1, cy), p1, p3);
+			setMid(arrayPos(mx1, mcy), p1, p3);
 			// Right
-			setMid(arrayPos(mx2, cy), p2, p4);
+			setMid(arrayPos(mx2, mcy), p2, p4);
 
-			if (cx != mx1)
+			if (mcx != mx1 && mcy != my1)
 			{
-				mComputeList.add(new ComputeBox(mx1, my1, cx, cy));
-				mComputeList.add(new ComputeBox(cx, my1, mx2, cy));
+				mComputeList.add(new ComputeBox(mx1, my1, mcx, mcy));
+				mComputeList.add(new ComputeBox(mcx, my1, mx2, mcy));
+				mComputeList.add(new ComputeBox(mx1, mcy, mcx, my2));
+				mComputeList.add(new ComputeBox(mcx, mcy, mx2, my2));
 			}
-			if (cy != my1)
+			else if (mcx != mx1)
 			{
-				mComputeList.add(new ComputeBox(mx1, cy, cx, my2));
+				mComputeList.add(new ComputeBox(mx1, my1, mcx, my2));
+				mComputeList.add(new ComputeBox(mcx, my1, mx2, my2));
+			}
+			else if (mcy != my1)
+			{
+				mComputeList.add(new ComputeBox(mx1, my1, mx2, mcy));
+				mComputeList.add(new ComputeBox(mx1, mcy, mx2, my2));
+			}
+		}
 
-				if (cx != mx1)
-				{
-					mComputeList.add(new ComputeBox(cx, cy, mx2, my2));
-				}
-			}
+		int getCenterPos()
+		{
+			return arrayPos(mcx, mcy);
 		}
 
 		void setMid(int midpos, int spos, int epos)
@@ -72,7 +82,11 @@ public class HeightMap
 			{
 				int height = (getHeight(spos) + getHeight(epos)) / 2;
 				int variance = (getVariance(spos) + getVariance(epos)) / 2;
-				height += getRandom((short) variance);
+
+				if (variance > 0)
+				{
+					height += getRandom((short) variance);
+				}
 				setHeight(midpos, height);
 				setVariance(midpos, variance);
 			}
@@ -96,15 +110,16 @@ public class HeightMap
 		}
 	}
 
-	static final short		MAX_HEIGHT		= 10000;
-	static final short		MAX_VARIANCE	= 1000;
+	static final short		MAX_HEIGHT			= 10000;
+	static final short		MAX_VARIANCE		= 1000;
 
-	LinkedList<ComputeBox>	mComputeList	= new LinkedList<ComputeBox>();
+	LinkedList<ComputeBox>	mComputeList		= new LinkedList<ComputeBox>();
 	short[]					mHeightVals;
 	final int				mNumX;
 	final int				mNumY;
 	Random					mRandom;
 	short[]					mVarianceVals;
+	int						mZNormalDirection	= -1;
 
 	public HeightMap(int numX, int numY, long seed)
 	{
@@ -133,13 +148,15 @@ public class HeightMap
 
 		mComputeList.clear();
 
-		setHeightAndVariance(0, 0, mRandom.nextInt(3), mRandom.nextInt(4));
-		setHeightAndVariance(mNumX - 1, 0, mRandom.nextInt(3), mRandom.nextInt(4));
-		setHeightAndVariance(mNumX - 1, mNumY - 1, mRandom.nextInt(3), mRandom.nextInt(4));
-		setHeightAndVariance(0, mNumY - 1, mRandom.nextInt(3), mRandom.nextInt(4));
-		setHeightAndVariance(mNumX / 2, mNumY / 2, MAX_HEIGHT + mRandom.nextInt(4) - 2, variance);
+		setHeightAndVariance(arrayPos(0, 0), mRandom.nextInt(3), mRandom.nextInt(4));
+		setHeightAndVariance(arrayPos(mNumX - 1, 0), mRandom.nextInt(3), mRandom.nextInt(4));
+		setHeightAndVariance(arrayPos(mNumX - 1, mNumY - 1), mRandom.nextInt(3), mRandom.nextInt(4));
+		setHeightAndVariance(arrayPos(0, mNumY - 1), mRandom.nextInt(3), mRandom.nextInt(4));
 
 		ComputeBox compute = new ComputeBox(0, 0, mNumX - 1, mNumY - 1);
+
+		setHeightAndVariance(compute.getCenterPos(), MAX_HEIGHT + mRandom.nextInt(4) - 2, variance);
+
 		compute.calc();
 
 		while (mComputeList.size() > 0)
@@ -186,7 +203,7 @@ public class HeightMap
 		heights[RIGHT] = convertHeight(maxHeight, getHeightChk(ix + 1, iy));
 		dataPoint.mNormal = new Vector3f();
 		dataPoint.mNormal.setX(heights[RIGHT] - heights[LEFT]);
-		dataPoint.mNormal.setZ(deltaUnit * 2);
+		dataPoint.mNormal.setZ(deltaUnit * 2 * mZNormalDirection);
 		dataPoint.mNormal.setY(heights[TOP] - heights[BOTTOM]);
 		dataPoint.mNormal.normalize();
 		return dataPoint;
@@ -213,17 +230,27 @@ public class HeightMap
 
 	public float getPosX(float percentX)
 	{
-		return (float) mNumX * percentX;
+		return (float) (mNumX - 1) * percentX;
 	}
 
 	public float getPosY(float percentY)
 	{
-		return (float) mNumX * percentY;
+		return (float) (mNumY - 1) * percentY;
 	}
 
 	short getRandom(short mMax)
 	{
 		return (short) (mRandom.nextInt(mMax) - mMax / 2);
+	}
+
+	public int getSizeX()
+	{
+		return mNumX;
+	}
+
+	public int getSizeY()
+	{
+		return mNumY;
 	}
 
 	short getVariance(int pos)
@@ -250,9 +277,8 @@ public class HeightMap
 		mHeightVals[pos] = (short) val;
 	}
 
-	void setHeightAndVariance(int x, int y, int height, int variance)
+	void setHeightAndVariance(int pos, int height, int variance)
 	{
-		int pos = arrayPos(x, y);
 		mHeightVals[pos] = (short) height;
 		mVarianceVals[pos] = (short) variance;
 	}
