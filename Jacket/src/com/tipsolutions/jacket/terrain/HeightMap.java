@@ -5,6 +5,15 @@ import java.util.Random;
 
 import com.tipsolutions.jacket.math.Vector3f;
 
+/**
+ * A height map is generated using a variation of the square/diamond algorithm.
+ * 
+ * The result is a generate set of values with the peak value being defined by MAX_HEIGHT.
+ * Note that there may be a few values larger than this because of random-variation.
+ * 
+ * @author dug
+ * 
+ */
 public class HeightMap
 {
 	class ComputeBox
@@ -111,6 +120,13 @@ public class HeightMap
 		return y * mNumX + x;
 	}
 
+	/**
+	 * Calculate the height map with the indicated roughness of the terrain.
+	 * 
+	 * @param roughness
+	 *        : A percentage to indicate what percent of the peak height to start the initial variance.
+	 *        A value of something like .1 is expected.
+	 */
 	public void calc(float roughness)
 	{
 		short variance = (short) (MAX_HEIGHT * roughness);

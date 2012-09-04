@@ -9,8 +9,7 @@ import com.tipsolutions.jacket.terrain.HeightMap.DataPoint;
 /**
  * Calculate a mountain range where the peak is directly in the middle of the boundary defined.
  * 
- * The diamond/square algorithm is used to determine a grid of values in which to gather any particular height.
- * The actual height will be determined by the average within the principle values that a particular point is.
+ * A HeightMap is built using a variation of the diamond/square algorithm.
  */
 public class CalcMountain extends CalcConstant
 {
@@ -58,6 +57,10 @@ public class CalcMountain extends CalcConstant
 		this(height, 0.1f, detail, seed, bounds);
 	}
 
+	/**
+	 * The 4 height/normals nearest to the incoming x,y is retrieved from the built heightmap. Then a single height and
+	 * normal is averaged from this and returned.
+	 */
 	@Override
 	public Info getInfo(float x, float y)
 	{
@@ -65,7 +68,10 @@ public class CalcMountain extends CalcConstant
 		{
 			return null;
 		}
-
+		/*
+		 * Strategy: find the percentage within the square the indicated point is. Then, based on that take a calculated
+		 * percentage from the four corners to get our final value.
+		 */
 		float percentX = mBounds.percentX(x);
 		float percentY = mBounds.percentY(y);
 
@@ -75,74 +81,38 @@ public class CalcMountain extends CalcConstant
 		int iXHi = (int) FloatMath.ceil(fX);
 		int iYLo = (int) FloatMath.floor(fY);
 		int iYHi = (int) FloatMath.ceil(fY);
-		float iXLoP = fX - iXLo;
-		float iYLoP = fY - iYLo;
-		float iXHiP = 1 - iXLoP;
-		float iYHiP = 1 - iYLoP;
+		float pX = fX - iXLo;
+		float pY = fY - iYLo;
+		float pXLoYLo;
+		float pXHiYLo;
+		float pXLoYHi;
+		float pXHiYHi;
+		float pLeft;
 
-		if (iXLo == iXHi)
-		{
-			if (iYLo == iYHi)
-			{
-				DataPoint dataPt = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-				return new Info(dataPt.getHeight(), dataPt.getNormal());
-			}
-			else
-			{
-				DataPoint dataPtYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-				DataPoint dataPtYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYHi);
-				float height = dataPtYLo.getHeight() * iYLoP + dataPtYHi.getHeight() * iYHiP;
-				Vector3f normal;
-				if (iYLoP >= .5f)
-				{
-					normal = dataPtYLo.getNormal();
-				}
-				else
-				{
-					normal = dataPtYHi.getNormal();
-				}
-				return new Info(height, normal);
-			}
-		}
-		else if (iYLo == iYHi)
-		{
-			DataPoint dataPtXLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-			DataPoint dataPtXHi = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYLo);
-			float height = dataPtXLo.getHeight() * iXLoP + dataPtXHi.getHeight() * iXHiP;
-			Vector3f normal;
-			if (iXLoP >= .5f)
-			{
-				normal = dataPtXLo.getNormal();
-			}
-			else
-			{
-				normal = dataPtXHi.getNormal();
-			}
-			return new Info(height, normal);
-		}
-		else
-		{
-			DataPoint dataPt[] = new DataPoint[4];
-			dataPt[0] = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-			dataPt[1] = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYHi);
-			dataPt[2] = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYLo);
-			dataPt[3] = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYHi);
-			float percent[] = new float[4];
-			percent[0] = (iXLoP + iYLoP) / 2;
-			percent[1] = (iXLoP + iYHiP) / 2;
-			percent[2] = (iXHiP + iYLoP) / 2;
-			percent[3] = (iXHiP + iYHiP) / 2;
-			float height = (dataPt[0].getHeight() * percent[0] + dataPt[1].getHeight() * percent[1]
-					+ dataPt[2].getHeight() * percent[2] + dataPt[3].getHeight() * percent[3]) / 4;
-			Vector3f normal = new Vector3f();
-			for (int i = 0; i < 4; i++)
-			{
-				Vector3f tmp = new Vector3f(dataPt[i].getNormal()).multiply(percent[i]);
-				normal.add(tmp);
-			}
-			normal.divide(4f);
-			return new Info(height, normal);
-		}
+		/* Compute out percentages used from the 4 corners */
+		pXHiYHi = pX * pY;
+		pXLoYLo = (1 - pX) * (1 - pY);
+		pLeft = 1 - pXHiYHi - pXLoYLo;
+		pXLoYHi = pLeft * (pY / (pX + pY));
+		pXHiYLo = pLeft - pXLoYHi;
+
+		/* Get the four corners */
+		DataPoint dataPtXLoYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
+		DataPoint dataPtXLoYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYHi);
+		DataPoint dataPtXHiYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYLo);
+		DataPoint dataPtXHiYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYHi);
+
+		/* Apply percentages to corner info to get a single result */
+		float height = (dataPtXLoYLo.getHeight() * pXLoYLo + dataPtXLoYHi.getHeight() * pXLoYHi
+				+ dataPtXHiYLo.getHeight() * pXHiYLo + dataPtXHiYHi.getHeight() * pXHiYHi);
+		Vector3f normal = new Vector3f();
+		normal.add(new Vector3f(dataPtXLoYLo.getNormal()).multiply(pXLoYLo));
+		normal.add(new Vector3f(dataPtXHiYLo.getNormal()).multiply(pXHiYLo));
+		normal.add(new Vector3f(dataPtXLoYHi.getNormal()).multiply(pXLoYHi));
+		normal.add(new Vector3f(dataPtXHiYHi.getNormal()).multiply(pXHiYHi));
+		normal.normalize(); // re-normalize to catch rounding errors
+
+		return new Info(height, normal);
 	}
 
 	void init(float roughness, int detail, long seed)
