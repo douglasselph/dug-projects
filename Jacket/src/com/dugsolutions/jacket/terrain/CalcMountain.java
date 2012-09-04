@@ -3,7 +3,6 @@ package com.dugsolutions.jacket.terrain;
 import android.util.FloatMath;
 
 import com.dugsolutions.jacket.math.Bounds2D;
-import com.dugsolutions.jacket.math.Vector3f;
 import com.dugsolutions.jacket.terrain.HeightMap.DataPoint;
 
 /**
@@ -68,125 +67,19 @@ public class CalcMountain extends CalcConstant
 		{
 			return null;
 		}
-		/*
-		 * Strategy: find the percentage within the square the indicated point is. Then, based on that take a calculated
-		 * percentage from the four corners to get our final value.
-		 */
 		float percentX = mBounds.percentX(x);
 		float percentY = mBounds.percentY(y);
 
 		float fX = mHeightMap.getPosX(percentX);
 		float fY = mHeightMap.getPosY(percentY);
-		int iXLo = (int) FloatMath.floor(fX);
-		int iXHi = (int) FloatMath.ceil(fX);
-		int iYLo = (int) FloatMath.floor(fY);
-		int iYHi = (int) FloatMath.ceil(fY);
-		float pX = fX - iXLo;
-		float pY = fY - iYLo;
-		float pXLoYLo;
-		float pXHiYLo;
-		float pXLoYHi;
-		float pXHiYHi;
-		float pLeft;
-		float height;
-		Vector3f normal;
-
-		if (iXLo == iXHi)
+		int iX = (int) Math.round(fX);
+		int iY = (int) Math.round(fY);
+		DataPoint dataPt = mHeightMap.getDataPoint(mHeight, mDetail, iX, iY);
+		if (dataPt != null)
 		{
-			if (iYLo == iYHi)
-			{
-				DataPoint dataPt = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-				return new Info(dataPt.getHeight(), dataPt.getNormal());
-			}
-			DataPoint dataPtYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-			DataPoint dataPtYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYHi);
-
-			if (dataPtYHi != null)
-			{
-				float pYLo = 1 - pY;
-				float pYHi = pY;
-
-				height = dataPtYLo.getHeight() * pYLo + dataPtYHi.getHeight() * pYHi;
-				normal = new Vector3f(dataPtYLo.getNormal()).multiply(pYLo);
-				normal.add(new Vector3f(dataPtYHi.getNormal()).multiply(pYHi));
-				normal.normalize();
-				return new Info(height, normal);
-			}
-			else
-			{
-				return new Info(dataPtYLo.getHeight(), dataPtYLo.getNormal());
-			}
+			return new Info(dataPt.getHeight(), dataPt.getNormal());
 		}
-		else if (iYLo == iYHi)
-		{
-			DataPoint dataPtXLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-			DataPoint dataPtXHi = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYLo);
-
-			if (dataPtXHi != null)
-			{
-				float pXLo = 1 - pX;
-				float pXHi = pX;
-
-				height = dataPtXLo.getHeight() * pXLo + dataPtXHi.getHeight() * pXHi;
-				normal = new Vector3f(dataPtXLo.getNormal()).multiply(pXLo);
-				normal.add(new Vector3f(dataPtXHi.getNormal()).multiply(pXHi));
-				normal.normalize();
-				return new Info(height, normal);
-			}
-			else
-			{
-				return new Info(dataPtXLo.getHeight(), dataPtXLo.getNormal());
-			}
-		}
-		else
-		{
-			if (iXHi >= mHeightMap.getSizeX())
-			{
-				pX = 0;
-			}
-			if (iYHi >= mHeightMap.getSizeY())
-			{
-				pY = 0;
-			}
-			pXHiYHi = pX * pY;
-			pXLoYLo = (1 - pX) * (1 - pY);
-			pLeft = 1 - pXHiYHi - pXLoYLo;
-			pXLoYHi = pLeft * (pY / (pX + pY));
-			pXHiYLo = pLeft - pXLoYHi;
-
-			/* Get the four corners */
-			DataPoint dataPtXLoYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYLo);
-			DataPoint dataPtXLoYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXLo, iYHi);
-			DataPoint dataPtXHiYLo = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYLo);
-			DataPoint dataPtXHiYHi = mHeightMap.getDataPoint(mHeight, mDetail, iXHi, iYHi);
-
-			height = 0;
-			normal = new Vector3f();
-
-			if (dataPtXLoYLo != null && pXLoYLo > 0)
-			{
-				height += dataPtXLoYLo.getHeight() * pXLoYLo;
-				normal.add(new Vector3f(dataPtXLoYLo.getNormal()).multiply(pXLoYLo));
-			}
-			if (dataPtXLoYHi != null && pXLoYHi > 0)
-			{
-				height += dataPtXLoYHi.getHeight() * pXLoYHi;
-				normal.add(new Vector3f(dataPtXLoYHi.getNormal()).multiply(pXLoYHi));
-			}
-			if (dataPtXHiYLo != null && pXHiYLo > 0)
-			{
-				height += dataPtXHiYLo.getHeight() * pXHiYLo;
-				normal.add(new Vector3f(dataPtXHiYLo.getNormal()).multiply(pXHiYLo));
-			}
-			if (dataPtXHiYHi != null && pXHiYHi > 0)
-			{
-				height += dataPtXHiYHi.getHeight() * pXHiYHi;
-				normal.add(new Vector3f(dataPtXHiYHi.getNormal()).multiply(pXHiYHi));
-			}
-			normal.normalize(); // re-normalize to catch rounding errors
-
-			return new Info(height, normal);
-		}
+		return null;
 	}
 
 	void init(float roughness, int detail, long seed)

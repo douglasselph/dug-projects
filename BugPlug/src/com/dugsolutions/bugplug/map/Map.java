@@ -30,7 +30,7 @@ public class Map
 	final float			mMountainSideXSize	= 2f;
 	final float			mMountainTopYSize	= 1.5f;
 	final float			mMountainSideYSize	= 8f;
-	final float			mMountainHeight		= 0.4f;
+	final float			mMountainHeight		= 2f;
 	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
