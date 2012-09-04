@@ -4,10 +4,10 @@ package data;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import com.tipsolutions.jacket.math.Matrix4f;
-import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.BufferUtils.dFloatBuf;
-import com.tipsolutions.jacket.shape.BufferUtils.dShortBuf;
+import com.dugsolutions.jacket.math.Matrix4f;
+import com.dugsolutions.jacket.shape.Shape;
+import com.dugsolutions.jacket.shape.BufferUtils.dFloatBuf;
+import com.dugsolutions.jacket.shape.BufferUtils.dShortBuf;
 
 
 public class Wing_L extends Shape {

@@ -1,7 +1,7 @@
-import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Shape.AnimControlOp;
-import com.tipsolutions.jacket.shape.Shape.AnimSet;
+import com.dugsolutions.jacket.image.TextureManager;
+import com.dugsolutions.jacket.shape.Shape;
+import com.dugsolutions.jacket.shape.Shape.AnimControlOp;
+import com.dugsolutions.jacket.shape.Shape.AnimSet;
 
 public class Main {
 	
