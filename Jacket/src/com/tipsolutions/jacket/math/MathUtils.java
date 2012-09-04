@@ -1,13 +1,16 @@
 package com.tipsolutions.jacket.math;
 
+import android.util.FloatMath;
+
 public class MathUtils
 {
 
 	/** A "close to zero" double epsilon value for use */
 	public static final double	EPSILON		= 2.220446049250313E-16d;
 
-	static final int[]			POW_OF_2	= { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384,
-			32768, 65536, 131072, 262144, 524288, 1048576 };
+	static final int[]			POW_OF_2	= {
+			1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
+			1048576						};
 
 	public static final float	TO_DEGREES	= (float) (180.0 / Math.PI);
 	public static final float	TO_RADIANS	= (float) (Math.PI / 180.0);
@@ -36,6 +39,24 @@ public class MathUtils
 			v -= Constants.TWO_PI;
 		}
 		return v;
+	}
+
+	/**
+	 * Return the distance bewteen the two specified points.
+	 * 
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @return
+	 */
+	public static float distance(float x1, float y1, float x2, float y2)
+	{
+		float deltaX = x1 - x2;
+		float deltaY = y1 - y2;
+		float deltaXSquared = deltaX * deltaX;
+		float deltaYSquared = deltaY * deltaY;
+		return FloatMath.sqrt(deltaXSquared + deltaYSquared);
 	}
 
 	public static double inverseSqrt(final double dValue)

@@ -23,7 +23,7 @@ import com.tipsolutions.jacket.view.EventTapAdjust.Adjust;
 public class RenderMap extends ControlRenderer implements Adjust
 {
 	static final String		TAG				= "RenderMap";
-	static final boolean	mHasSpotLight	= true;
+	static final boolean	mHasSpotLight	= false;
 	static final float		GLOBAL_AMBIENT	= 0.25f;
 	static final float		GLOBAL_DIFFUSE	= 0.5f;
 	static final float		GLOBAL_SPECULAR	= 0.82f;

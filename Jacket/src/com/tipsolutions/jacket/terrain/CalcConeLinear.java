@@ -1,7 +1,5 @@
 package com.tipsolutions.jacket.terrain;
 
-import android.util.FloatMath;
-
 import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Vector3f;
 
@@ -37,48 +35,34 @@ public class CalcConeLinear extends CalcConstant
 		{
 			return null;
 		}
-		float deltaX = x - mCenterX;
-		float deltaY = y - mCenterY;
-		float deltaXSquared = deltaX * deltaX;
-		float deltaYSquared = deltaY * deltaY;
-		float dist = FloatMath.sqrt(deltaXSquared + deltaYSquared);
-		float maxDist;
+		float percentX = 1f - percent(x, mCenterX, mBounds.getSizeX() / 2);
+		float percentY = 1f - percent(y, mCenterY, mBounds.getSizeY() / 2);
 
-		if (mIsCircle)
+		if (percentX <= 0 || percentY <= 0)
 		{
-			maxDist = mMaxDist;
+			return null; // redundant: should not get here because of the within() call check previously.
 		}
-		else
-		{
-			// Ellipse
+		float percent = percentX * percentY;
+		float height = mHeight * percent;
 
-			// Find point of intersection along ellipse of line crossing mid point
-			// and intersecting both the point and the edge of the ellipse.
-			// Below:
-			// Px,Py = point of intersection on ellipse
-			// Cx,Cy = center of ellipse
-			// x0,y0 = point defining line with center of ellipse at 0,0
-			// ... this becomes deltaX,deltaY.
+		Vector3f normal = new Vector3f(x - mCenterX, y - mCenterY, height);
+		normal.normalize();
 
-			// Treat the ellipse as though the origin 0,0 is it's center.
-			// To do this we need to translocate the incoming point.
-			// This means we just use the delta.
-			float val = mAB / FloatMath.sqrt(mA * mA * deltaYSquared + mB * mB * deltaXSquared);
-			float Px = deltaX * val;
-			float Py = deltaY * val;
-			maxDist = FloatMath.sqrt(Px * Px + Py * Py);
-		}
-		if (dist < maxDist)
-		{
-			float percent = dist / maxDist;
-			float height = mHeight * percent;
+		return new Info(height, normal);
+	}
 
-			Vector3f normal = new Vector3f(mCenterX - x, mCenterY - y, height);
-			normal.normalize();
-
-			return new Info(height, normal);
-		}
-		return null;
+	/**
+	 * Return the percentage of the distance from the center point that the designated point is.
+	 * If x is right on top of cx then that is 0% away. If it is sizex or greater then it is 100% away.
+	 * 
+	 * @param x
+	 * @param cx
+	 * @param sizex
+	 * @return
+	 */
+	float percent(float x, float cx, float sizex)
+	{
+		return Math.abs(x - cx) / sizex;
 	}
 
 	@Override

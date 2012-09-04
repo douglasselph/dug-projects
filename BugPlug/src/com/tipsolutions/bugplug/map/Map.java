@@ -8,31 +8,29 @@ import com.tipsolutions.jacket.math.Bounds2D;
 import com.tipsolutions.jacket.math.Color4f;
 import com.tipsolutions.jacket.math.MaterialColors;
 import com.tipsolutions.jacket.terrain.CalcConeLinear;
-import com.tipsolutions.jacket.terrain.CalcConstant;
 import com.tipsolutions.jacket.terrain.CalcEdgeJagged;
 import com.tipsolutions.jacket.terrain.CalcGroup;
 import com.tipsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
 {
-	static final String	TAG						= "Map";
+	static final String	TAG					= "Map";
 
 	TerrainGrid			mGround;
 	TerrainGrid			mWater;
 	TextureManager		mTM;
 	Bounds2D			mBounds;
-	final float			mWidth					= 10f;
-	final float			mHeight					= 13f;
-	final float			mWaterHeight			= 2f;
-	final float			mWaterVariance			= 0.5f;
-	final int			mWaterMajorPts			= 10;
-	final long			mWaterSeed				= 1;
-	final float			mMountainSideXSize		= 1f;
-	final float			mMountainTopYSize		= 0.8f;
-	final float			mMountainSideYSize		= 8f;
-	final float			mMountainHeight			= 0.4f;
-	final float			mMountainMassElevate	= 0.2f;
-	final float			FUDGE					= 0.01f;
+	final float			mWidth				= 11f;
+	final float			mHeight				= 13f;
+	final float			mWaterHeight		= 2f;
+	final float			mWaterVariance		= 0.5f;
+	final int			mWaterMajorPts		= 10;
+	final long			mWaterSeed			= 1;
+	final float			mMountainSideXSize	= 2f;
+	final float			mMountainTopYSize	= 1.5f;
+	final float			mMountainSideYSize	= 8f;
+	final float			mMountainHeight		= 0.4f;
+	final float			FUDGE				= 0.01f;
 
 	public Map(TextureManager tm)
 	{
@@ -63,20 +61,17 @@ public class Map
 		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
 				+ mMountainSideXSize, mBounds.getMaxY());
 		rise = new CalcConeLinear(mMountainHeight, edge);
-		group.add(rise);
-		group.add(new CalcConstant(mMountainMassElevate, edge));
+		// group.add(rise);
 		// Top rise
-		edge = new Bounds2D(mBounds.getMinX() + mMountainSideXSize, mBounds.getMaxY() - mMountainTopYSize,
-				mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY());
+		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainTopYSize, mBounds.getMaxX(),
+				mBounds.getMaxY());
 		rise = new CalcConeLinear(mMountainHeight, edge);
 		group.add(rise);
-		group.add(new CalcConstant(mMountainMassElevate, edge));
 		// Right rise
 		edge = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
 				mBounds.getMaxX(), mBounds.getMaxY());
 		rise = new CalcConeLinear(mMountainHeight, edge);
-		group.add(rise);
-		group.add(new CalcConstant(mMountainMassElevate, edge));
+		// group.add(rise);
 
 		mGround.setCompute(group);
 		mGround.init();

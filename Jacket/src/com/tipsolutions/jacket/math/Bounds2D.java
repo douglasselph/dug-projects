@@ -136,6 +136,16 @@ public class Bounds2D
 		return (getSizeX() == getSizeY());
 	}
 
+	public float percentX(float x)
+	{
+		return (x - getMinX()) / getSizeX();
+	}
+
+	public float percentY(float y)
+	{
+		return (y - getMinY()) / getSizeY();
+	}
+
 	public void setMaxX(float x)
 	{
 		mBounds[MAX_X] = x;
