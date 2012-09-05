@@ -17,9 +17,10 @@ public class TerrainGrid extends Model
 
 	Grid				mGrid;
 
-	public TerrainGrid()
+	public TerrainGrid(boolean withNormals)
 	{
 		mGrid = new Grid(10, 10);
+		mGrid.setWithNormals(withNormals);
 	}
 
 	/**
@@ -36,24 +37,39 @@ public class TerrainGrid extends Model
 		mNormalBuf = mGrid.getCalcNormalBuf();
 		mTextureBuf = mGrid.getCalcTexBuf();
 		mIndexBuf = mGrid.getCalcIndexBuf();
+		mColorBuf = mGrid.getCalcColorBuf();
 		mGrid.cleanup();
 		mVertexBuf.rewind();
-		mNormalBuf.rewind();
 		mTextureBuf.rewind();
 		mIndexBuf.rewind();
 
+		if (mNormalBuf != null)
+		{
+			mNormalBuf.rewind();
+		}
+		if (mColorBuf != null)
+		{
+			mColorBuf.rewind();
+		}
+		return this;
+	}
+
+	@Override
+	protected void onDrawPre(GL10 gl)
+	{
+		super.onDrawPre(gl);
+		gl.glFrontFace(GL10.GL_CW);
+	}
+
+	public TerrainGrid setBounds(Bounds2D bounds)
+	{
+		mGrid.setBounds(bounds);
 		return this;
 	}
 
 	public TerrainGrid setCompute(ICalcValue calc)
 	{
 		mGrid.setCompute(calc);
-		return this;
-	}
-
-	public TerrainGrid setBounds(Bounds2D bounds)
-	{
-		mGrid.setBounds(bounds);
 		return this;
 	}
 
@@ -96,11 +112,10 @@ public class TerrainGrid extends Model
 		return this;
 	}
 
-	@Override
-	protected void onDrawPre(GL10 gl)
+	public TerrainGrid setWithNormals(boolean flag)
 	{
-		super.onDrawPre(gl);
-		gl.glFrontFace(GL10.GL_CW);
+		mGrid.setWithNormals(flag);
+		return this;
 	}
 
 }

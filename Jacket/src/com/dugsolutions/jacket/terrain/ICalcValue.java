@@ -1,6 +1,8 @@
 package com.dugsolutions.jacket.terrain;
 
-public interface ICalcValue {
-	Info getInfo(float x, float y);
+public interface ICalcValue
+{
+	void fillInfo(float x, float y, Info info);
+
 	boolean within(float x, float y);
 }

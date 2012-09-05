@@ -5,12 +5,13 @@ import java.util.HashMap;
 import android.util.Log;
 
 import com.dugsolutions.jacket.math.Bounds2D;
-import com.dugsolutions.jacket.math.MathUtils;
-import com.dugsolutions.jacket.math.Vector3f;
 import com.dugsolutions.jacket.math.BufUtils.FloatBuf;
 import com.dugsolutions.jacket.math.BufUtils.ShortBuf;
 import com.dugsolutions.jacket.math.BufUtils.TmpFloatBuf;
 import com.dugsolutions.jacket.math.BufUtils.TmpShortBuf;
+import com.dugsolutions.jacket.math.Color4f;
+import com.dugsolutions.jacket.math.MathUtils;
+import com.dugsolutions.jacket.math.Vector3f;
 
 /**
  * Height map which supports an arbitrarily complex geometry using generators.
@@ -25,25 +26,53 @@ public class Grid
 	{
 		TmpFloatBuf		mVertexBuf;
 		TmpFloatBuf		mNormalBuf;
+		TmpFloatBuf		mColorBuf;
 		TmpFloatBuf		mTexBuf;
 		TmpShortBuf		mIndexBuf;
-		final Vector3f	mNormalDefault	= new Vector3f(0, 0, 1);
+		final Vector3f	mNormalDefault;
 		short			mPosition;
 
 		public BufferResult()
 		{
 			mVertexBuf = new TmpFloatBuf();
-			mNormalBuf = new TmpFloatBuf();
 			mTexBuf = new TmpFloatBuf();
 			mIndexBuf = new TmpShortBuf();
+
+			if (mWithNormals)
+			{
+				mNormalBuf = new TmpFloatBuf();
+				mNormalDefault = new Vector3f(0, 0, 1);
+			}
+			else
+			{
+				mNormalDefault = null;
+				mColorBuf = new TmpFloatBuf();
+			}
 		}
 
 		public void cleanup()
 		{
 			mVertexBuf.clear();
-			mNormalBuf.clear();
 			mTexBuf.clear();
 			mIndexBuf.clear();
+
+			if (mNormalBuf != null)
+			{
+				mNormalBuf.clear();
+			}
+			if (mColorBuf != null)
+			{
+				mColorBuf.clear();
+			}
+		}
+
+		public FloatBuf getColorBuf()
+		{
+			if (mColorBuf != null && mColorBuf.size() > 0)
+			{
+				return mColorBuf.create();
+			}
+			return null;
 		}
 
 		public ShortBuf getIndexBuf()
@@ -58,7 +87,11 @@ public class Grid
 
 		public FloatBuf getNormalBuf()
 		{
-			return mNormalBuf.create();
+			if (mNormalBuf != null && mNormalBuf.size() > 0)
+			{
+				return mNormalBuf.create();
+			}
+			return null;
 		}
 
 		public FloatBuf getTexBuf()
@@ -73,6 +106,7 @@ public class Grid
 
 		public void put(float x, float y, float percentX, float percentY)
 		{
+			Color4f color;
 			Vector3f normal;
 			float z;
 			float xadj;
@@ -80,24 +114,19 @@ public class Grid
 
 			if (mCompute != null)
 			{
-				Info info = mCompute.getInfo(x, y);
-				if (info == null)
+				Info info = new Info();
+				info.setGenNormal(mWithNormals);
+
+				mCompute.fillInfo(x, y, info);
+
+				z = info.getHeight();
+				xadj = info.getXAdjust();
+				yadj = info.getYAdjust();
+				normal = info.getNormal();
+				color = info.getColor();
+				if (normal == null)
 				{
-					z = 0;
-					xadj = 0;
-					yadj = 0;
 					normal = mNormalDefault;
-				}
-				else
-				{
-					z = info.getHeight();
-					xadj = info.getXAdjust();
-					yadj = info.getYAdjust();
-					normal = info.getNormal();
-					if (normal == null)
-					{
-						normal = mNormalDefault;
-					}
 				}
 			}
 			else
@@ -106,10 +135,20 @@ public class Grid
 				z = 0;
 				xadj = 0;
 				yadj = 0;
+				color = null;
 			}
 			mVertexBuf.put(x + xadj).put(y + yadj).put(z);
-			mNormalBuf.put(normal.getX()).put(normal.getY()).put(normal.getZ());
+
+			if (mNormalBuf != null && normal != null)
+			{
+				mNormalBuf.put(normal.getX()).put(normal.getY()).put(normal.getZ());
+			}
 			mTexBuf.put(percentX).put(percentY);
+
+			if (color != null && mColorBuf != null)
+			{
+				mColorBuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
+			}
 			mPosition++;
 		}
 
@@ -138,23 +177,23 @@ public class Grid
 		}
 	};
 
-	static final String		TAG			= "Grid";
+	static final String		TAG				= "Grid";
 
 	int						mNumRows;
 	int						mNumCols;
-	int						mTimesRow	= 1;
-	int						mTimesCol	= 1;
+	int						mTimesRow		= 1;
+	int						mTimesCol		= 1;
 	/** Indicates which major cells have sub-divisions */
 	byte[]					mSubdivision;
 	/** Track index by row,col,subrow,subcol for vertex, normal, and tex arrays */
-	HashMap<Integer, Short>	mIndexTL	= new HashMap<Integer, Short>();
+	HashMap<Integer, Short>	mIndexTL		= new HashMap<Integer, Short>();
 	/** On repeating texture maps, need secondary points along edge boundaries */
 	/** Top-Right, Column Edge repeats */
-	HashMap<Integer, Short>	mIndexTR	= new HashMap<Integer, Short>();
+	HashMap<Integer, Short>	mIndexTR		= new HashMap<Integer, Short>();
 	/** Bottom-Left, Row Edge repeats */
-	HashMap<Integer, Short>	mIndexBL	= new HashMap<Integer, Short>();
+	HashMap<Integer, Short>	mIndexBL		= new HashMap<Integer, Short>();
 	/** Bottom-Right Row,Col Edge repeats */
-	HashMap<Integer, Short>	mIndexBR	= new HashMap<Integer, Short>();
+	HashMap<Integer, Short>	mIndexBR		= new HashMap<Integer, Short>();
 
 	/** Shared result */
 	BufferResult			mResult;
@@ -162,6 +201,8 @@ public class Grid
 	Bounds2D				mBounds2D;
 	/** Used to compute the actual values */
 	ICalcValue				mCompute;
+	/** If used, then we are computing normal values too */
+	boolean					mWithNormals	= true;
 
 	/**
 	 * 
@@ -527,6 +568,11 @@ public class Grid
 		mSubdivision = null;
 	}
 
+	public FloatBuf getCalcColorBuf()
+	{
+		return mResult.getColorBuf();
+	}
+
 	public ShortBuf getCalcIndexBuf()
 	{
 		return mResult.getIndexBuf();
@@ -713,6 +759,11 @@ public class Grid
 			}
 			mSubdivision[posSD(row, col)] = (byte) subdivision;
 		}
+	}
+
+	public void setWithNormals(boolean withNormal)
+	{
+		mWithNormals = withNormal;
 	}
 
 	/**

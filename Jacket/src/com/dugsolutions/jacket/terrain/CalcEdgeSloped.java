@@ -66,20 +66,19 @@ public class CalcEdgeSloped extends CalcValue
 	}
 
 	@Override
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
 		if (within(x, y))
 		{
 			if (mOrientation == Orientation.HORIZONTAL)
 			{
-				return new Info(0f, getAdjustY(x, y));
+				info.addYAdjust(getAdjustY(x, y));
 			}
 			else
 			{
-				return new Info(getAdjustX(x, y), 0f);
+				info.addXAdjust(getAdjustX(x, y));
 			}
 		}
-		return null;
 	}
 
 	public CalcEdgeSloped setOrientation(Orientation orientation)

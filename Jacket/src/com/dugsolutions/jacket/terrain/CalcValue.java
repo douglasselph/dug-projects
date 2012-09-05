@@ -18,9 +18,8 @@ public class CalcValue implements ICalcValue
 		setBounds(bounds);
 	}
 
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
-		return null;
 	}
 
 	public void setBounds(Bounds2D bounds)

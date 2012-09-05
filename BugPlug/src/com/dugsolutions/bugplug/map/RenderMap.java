@@ -5,7 +5,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.graphics.Color;
 import android.util.FloatMath;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import com.dugsolutions.jacket.image.TextureManager;
@@ -24,6 +23,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 {
 	static final String		TAG				= "RenderMap";
 	static final boolean	mHasSpotLight	= false;
+	static final boolean	mHasLight		= false;
 	static final float		GLOBAL_AMBIENT	= 0.25f;
 	static final float		GLOBAL_DIFFUSE	= 0.5f;
 	static final float		GLOBAL_SPECULAR	= 0.82f;
@@ -45,7 +45,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 	{
 		super(view, tm);
 
-		mMap = new Map(tm);
+		mMap = new Map(tm, mHasLight);
 		mEventTap = new EventTapAdjust(this);
 		mRotateAngle = new Vector3f(INITIAL_TILT, 0, 0);
 		setBackground(new Color4f(Color.parseColor("#3399FF")));
@@ -78,7 +78,6 @@ public class RenderMap extends ControlRenderer implements Adjust
 		float adjustedHalfSizeY = halfSizeY - amt;
 		bounds.setMinY(centerY - adjustedHalfSizeY);
 		bounds.setMaxY(centerY + adjustedHalfSizeY);
-		Log.d("DEBUG", "Bounds FROM " + mMaxBounds.toString() + "->" + bounds.toString());
 		return bounds;
 	}
 
@@ -199,14 +198,17 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mSpotColor.setSpecular(new Color4f(Color4f.WHITE));
 		mSpotPos = new Vector4f(0, 0, -1, 1);
 
-		gl.glEnable(GL10.GL_LIGHTING);
-		gl.glEnable(GL10.GL_LIGHT0);
-
-		if (mHasSpotLight)
+		if (mHasLight)
 		{
-			gl.glEnable(GL10.GL_LIGHT1);
+			gl.glEnable(GL10.GL_LIGHTING);
+			gl.glEnable(GL10.GL_LIGHT0);
+
+			if (mHasSpotLight)
+			{
+				gl.glEnable(GL10.GL_LIGHT1);
+			}
+			setLights(gl);
 		}
-		setLights(gl);
 	}
 
 	@Override
@@ -274,20 +276,23 @@ public class RenderMap extends ControlRenderer implements Adjust
 
 	void setLights(GL10 gl)
 	{
-		/* AMBIENT LIGHT */
-		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, mGlobalColor.getAmbient().toArray(), 0);
-		/* GENERAL LIGHT */
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, mGlobalColor.getDiffuse().toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, mGlobalColor.getSpecular().toArray(), 0);
-		gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, mGlobalPos.toArray(), 0);
-
-		if (mHasSpotLight)
+		if (mHasLight)
 		{
-			/* SPECULAR HIGHLIGHT */
-			gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSpotPos.toArray(), 0);
-			gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_AMBIENT, mSpotColor.getAmbient().toArray(), 0);
-			gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_DIFFUSE, mSpotColor.getDiffuse().toArray(), 0);
-			gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mSpotColor.getSpecular().toArray(), 0);
+			/* AMBIENT LIGHT */
+			gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, mGlobalColor.getAmbient().toArray(), 0);
+			/* GENERAL LIGHT */
+			gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, mGlobalColor.getDiffuse().toArray(), 0);
+			gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_SPECULAR, mGlobalColor.getSpecular().toArray(), 0);
+			gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, mGlobalPos.toArray(), 0);
+
+			if (mHasSpotLight)
+			{
+				/* SPECULAR HIGHLIGHT */
+				gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_POSITION, mSpotPos.toArray(), 0);
+				gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_AMBIENT, mSpotColor.getAmbient().toArray(), 0);
+				gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_DIFFUSE, mSpotColor.getDiffuse().toArray(), 0);
+				gl.glLightfv(GL10.GL_LIGHT1, GL10.GL_SPECULAR, mSpotColor.getSpecular().toArray(), 0);
+			}
 		}
 	}
 

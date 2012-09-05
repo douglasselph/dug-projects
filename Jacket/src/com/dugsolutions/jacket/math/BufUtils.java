@@ -351,6 +351,11 @@ public class BufUtils
 			mArray.add(value);
 			return this;
 		}
+
+		public int size()
+		{
+			return mArray.size();
+		}
 	}
 
 	/**

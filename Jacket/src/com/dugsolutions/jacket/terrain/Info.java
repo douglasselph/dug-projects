@@ -1,5 +1,6 @@
 package com.dugsolutions.jacket.terrain;
 
+import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.Vector3f;
 
 /**
@@ -7,6 +8,9 @@ import com.dugsolutions.jacket.math.Vector3f;
  */
 public class Info
 {
+	Color4f		mColor;
+	boolean		mGenColor;
+	boolean		mGenNormal;
 	float		mHeight;
 	Vector3f	mNormal;
 	float		mXAdjust;
@@ -16,38 +20,83 @@ public class Info
 	{
 	}
 
-	public Info(float height)
+	public Info(final Info cp)
 	{
-		mHeight = height;
-		mNormal = new Vector3f(0, 0, 1);
+		set(cp);
 	}
 
-	public Info(float xadjust, float yadjust)
+	public Info addHeight(float height)
 	{
-		mXAdjust = xadjust;
-		mYAdjust = yadjust;
+		mHeight += height;
+		return this;
 	}
 
-	public Info(float height, Vector3f normal)
+	public Info addNormal(Vector3f normal)
 	{
-		mHeight = height;
-		mNormal = normal;
+		if (mNormal == null)
+		{
+			mNormal = normal;
+		}
+		else
+		{
+			mNormal.add(normal);
+			mNormal.normalize();
+		}
+		return this;
 	}
 
-	public Info(float height, Vector3f normal, float xadjust, float yadjust)
+	public Info addXAdjust(float xadjust)
 	{
-		mHeight = height;
-		mNormal = normal;
-		mXAdjust = xadjust;
-		mYAdjust = yadjust;
+		mXAdjust += xadjust;
+		return this;
 	}
 
-	public float getKey()
+	public Info addYAdjust(float yadjust)
+	{
+		mYAdjust += yadjust;
+		return this;
+	}
+
+	public Info dup()
+	{
+		Info cp = new Info();
+
+		if (mColor != null)
+		{
+			cp.mColor = new Color4f(mColor);
+		}
+		cp.mGenNormal = mGenNormal;
+		cp.mHeight = mHeight;
+		if (mNormal != null)
+		{
+			cp.mNormal = new Vector3f(mNormal);
+		}
+		cp.mXAdjust = mXAdjust;
+		cp.mYAdjust = mYAdjust;
+		return cp;
+	}
+
+	public boolean genColor()
+	{
+		return mGenColor;
+	}
+
+	public boolean genNormal()
+	{
+		return mGenNormal;
+	}
+
+	public Color4f getColor()
+	{
+		return mColor;
+	}
+
+	public float getHeight()
 	{
 		return mHeight;
 	}
 
-	public float getHeight()
+	public float getKey()
 	{
 		return mHeight;
 	}
@@ -67,44 +116,55 @@ public class Info
 		return mYAdjust;
 	}
 
-	public void setHeight(float height)
+	public void set(final Info info)
+	{
+		mColor = info.mColor;
+		mGenNormal = info.mGenNormal;
+		mHeight = info.mHeight;
+		mNormal = info.mNormal;
+		mXAdjust = info.mXAdjust;
+		mYAdjust = info.mYAdjust;
+	}
+
+	public Info setColor(Color4f color)
+	{
+		mColor = color;
+		return this;
+	}
+
+	public Info setGenColor(boolean flag)
+	{
+		mGenColor = flag;
+		return this;
+	}
+
+	public Info setGenNormal(boolean flag)
+	{
+		mGenNormal = flag;
+		return this;
+	}
+
+	public Info setHeight(float height)
 	{
 		mHeight = height;
+		return this;
 	}
 
-	public void setNormal(Vector3f normal)
+	public Info setNormal(Vector3f normal)
 	{
 		mNormal = normal;
+		return this;
 	}
 
-	public void setXAdjust(float xadjust)
+	public Info setXAdjust(float xadjust)
 	{
 		mXAdjust = xadjust;
+		return this;
 	}
 
-	public void setYXAdjust(float yadjust)
+	public Info setYXAdjust(float yadjust)
 	{
 		mYAdjust = yadjust;
-	}
-
-	public Info add(final Info arg)
-	{
-		mHeight += arg.mHeight;
-		mXAdjust += arg.mXAdjust;
-		mYAdjust += arg.mYAdjust;
-
-		if (arg.getNormal() != null)
-		{
-			if (mNormal == null)
-			{
-				mNormal = arg.getNormal();
-			}
-			else
-			{
-				mNormal.add(arg.getNormal());
-				mNormal.normalize();
-			}
-		}
 		return this;
 	}
 }

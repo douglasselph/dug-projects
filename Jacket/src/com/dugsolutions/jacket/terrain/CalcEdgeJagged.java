@@ -101,20 +101,19 @@ public class CalcEdgeJagged extends CalcValue
 	}
 
 	@Override
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
 		if (within(x, y))
 		{
 			if (mOrientation == Orientation.HORIZONTAL)
 			{
-				return new Info(0f, getAdjust(mBounds.getMinX(), mBounds.getMaxX(), x));
+				info.addYAdjust(getAdjust(mBounds.getMinX(), mBounds.getMaxX(), x));
 			}
 			else
 			{
-				return new Info(getAdjust(mBounds.getMinY(), mBounds.getMaxY(), y), 0f);
+				info.addXAdjust(getAdjust(mBounds.getMinY(), mBounds.getMaxY(), y));
 			}
 		}
-		return null;
 	}
 
 	public CalcEdgeJagged setOrientation(Orientation orientation)

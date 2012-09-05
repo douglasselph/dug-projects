@@ -183,7 +183,7 @@ public class HeightMap
 	 *        : the y value on the bitmap to get
 	 * @return data point holding height and normal
 	 */
-	public DataPoint getDataPoint(float maxHeight, float deltaUnit, int ix, int iy)
+	public DataPoint getDataPoint(float maxHeight, float deltaUnit, int ix, int iy, boolean withNormal)
 	{
 		final int TOP = 0;
 		final int BOTTOM = 1;
@@ -201,11 +201,15 @@ public class HeightMap
 		heights[BOTTOM] = convertHeight(maxHeight, getHeightChk(ix, iy + 1));
 		heights[LEFT] = convertHeight(maxHeight, getHeightChk(ix - 1, iy));
 		heights[RIGHT] = convertHeight(maxHeight, getHeightChk(ix + 1, iy));
-		dataPoint.mNormal = new Vector3f();
-		dataPoint.mNormal.setX(heights[RIGHT] - heights[LEFT]);
-		dataPoint.mNormal.setZ(deltaUnit * 2 * mZNormalDirection);
-		dataPoint.mNormal.setY(heights[TOP] - heights[BOTTOM]);
-		dataPoint.mNormal.normalize();
+
+		if (withNormal)
+		{
+			dataPoint.mNormal = new Vector3f();
+			dataPoint.mNormal.setX(heights[RIGHT] - heights[LEFT]);
+			dataPoint.mNormal.setZ(deltaUnit * 2 * mZNormalDirection);
+			dataPoint.mNormal.setY(heights[TOP] - heights[BOTTOM]);
+			dataPoint.mNormal.normalize();
+		}
 		return dataPoint;
 	}
 

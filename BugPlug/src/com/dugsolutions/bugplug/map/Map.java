@@ -10,32 +10,44 @@ import com.dugsolutions.jacket.math.MaterialColors;
 import com.dugsolutions.jacket.terrain.CalcConeLinear;
 import com.dugsolutions.jacket.terrain.CalcEdgeJagged;
 import com.dugsolutions.jacket.terrain.CalcGroup;
+import com.dugsolutions.jacket.terrain.CalcHeightColor;
 import com.dugsolutions.jacket.terrain.CalcMountain;
 import com.dugsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
 {
-	static final String	TAG					= "Map";
+	static final String		TAG					= "Map";
 
-	TerrainGrid			mGround;
-	TerrainGrid			mWater;
-	TextureManager		mTM;
-	Bounds2D			mBounds;
-	final float			mWidth				= 11f;
-	final float			mHeight				= 13f;
-	final float			mWaterHeight		= 2f;
-	final float			mWaterVariance		= 0.5f;
-	final int			mWaterMajorPts		= 10;
-	final long			mWaterSeed			= 1;
-	final float			mMountainSideXSize	= 2f;
-	final float			mMountainTopYSize	= 1.5f;
-	final float			mMountainSideYSize	= 8f;
-	final float			mMountainHeight		= 2f;
-	final float			FUDGE				= 0.01f;
+	Bounds2D				mBounds;
+	TerrainGrid				mGround;
+	final boolean			mHasLight;
+	final TextureManager	mTM;
+	TerrainGrid				mWater;
 
-	public Map(TextureManager tm)
+	final float				FUDGE				= 0.01f;
+
+	final float				mHeight				= 13f;
+	final float				mMountainHeight		= 2f;
+	final float				mMountainSideXSize	= 2f;
+	final float				mMountainSideYSize	= 8f;
+	final float				mMountainTopYSize	= 1.5f;
+
+	final Color4f			mColorMax			= new Color4f(1f, 1f, 1f);
+	final float				mColorMaxHeight		= mMountainHeight;
+	final float				mColorMinV			= 0.75f;
+	final Color4f			mColorMin			= new Color4f(mColorMinV, mColorMinV, mColorMinV);
+	final float				mColorMinHeight		= 0;
+
+	final float				mWaterHeight		= 2f;
+	final int				mWaterMajorPts		= 10;
+	final long				mWaterSeed			= 1;
+	final float				mWaterVariance		= 0.5f;
+	final float				mWidth				= 11f;
+
+	public Map(TextureManager tm, boolean hasLight)
 	{
 		mTM = tm;
+		mHasLight = hasLight;
 		/*
 		 * Define total bounds
 		 */
@@ -46,18 +58,22 @@ public class Map
 		CalcGroup group;
 		CalcConeLinear rise;
 		CalcMountain mountain;
+		CalcHeightColor heightColor;
 		/*
 		 * Build the base ground
 		 */
-		mGround = new TerrainGrid();
+		mGround = new TerrainGrid(mHasLight);
 		mGround.setBounds(mBounds).setGridSizeSafe(100, 100);
 		// mGround.setRepeating(2, 2);
 		mGround.setTexture(mTM.getTexture(R.drawable.dirt));
-		mGround.setColorAmbient(new Color4f(0.2f, 0.2f, 0.2f, 1f));
-		mGround.setColorDiffuse(new Color4f(0.4f, 0.4f, 0.4f, 1f));
-		mGround.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1f));
 		mGround.setSubdivision(0, 1, 2);
 
+		if (mHasLight)
+		{
+			mGround.setColorAmbient(new Color4f(0.2f, 0.2f, 0.2f, 1f));
+			mGround.setColorDiffuse(new Color4f(0.4f, 0.4f, 0.4f, 1f));
+			mGround.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1f));
+		}
 		group = new CalcGroup();
 		// Left rise
 		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
@@ -76,6 +92,11 @@ public class Map
 		rise = new CalcConeLinear(mMountainHeight, edge);
 		// group.add(rise);
 
+		if (!mHasLight)
+		{
+			heightColor = new CalcHeightColor(mColorMinHeight, mColorMaxHeight, mColorMin, mColorMax, mBounds);
+			group.add(heightColor);
+		}
 		mGround.setCompute(group);
 		mGround.init();
 		/*
@@ -89,18 +110,32 @@ public class Map
 		jagged.addJag(mWaterMajorPts, mWaterVariance);
 		jagged.addJag(mWaterMajorPts * 5, mWaterVariance / 4f);
 
-		mWater = new TerrainGrid();
+		mWater = new TerrainGrid(mHasLight);
 		mWater.setBounds(bounds).setGridSizeSafe(2, jagged.getMaxJagPts());
 		mWater.setTexture(mTM.getTexture(R.drawable.water));
 		mWater.setCompute(jagged);
-		mWater.setColorAmbient(Color4f.WHITE);
-		mWater.setColorDiffuse(Color4f.WHITE);
+
+		if (mHasLight)
+		{
+			mWater.setColorAmbient(Color4f.WHITE);
+			mWater.setColorDiffuse(Color4f.WHITE);
+		}
 		mWater.init();
 	}
 
 	public Bounds2D getBounds()
 	{
 		return mBounds;
+	}
+
+	public MaterialColors getGroundMatColors()
+	{
+		return mGround.getMatColors();
+	}
+
+	public MaterialColors getWaterMatColors()
+	{
+		return mWater.getMatColors();
 	}
 
 	public void onDraw(GL10 gl)
@@ -113,16 +148,6 @@ public class Map
 	public String toString()
 	{
 		return "";
-	}
-
-	public MaterialColors getGroundMatColors()
-	{
-		return mGround.getMatColors();
-	}
-
-	public MaterialColors getWaterMatColors()
-	{
-		return mWater.getMatColors();
 	}
 
 }

@@ -15,26 +15,15 @@ public class CalcGroup implements ICalcValue
 		return this;
 	}
 
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
-		Info result = null;
-
 		for (ICalcValue calc : mList)
 		{
 			if (calc.within(x, y))
 			{
-				if (result == null)
-				{
-					result = new Info();
-				}
-				Info info = calc.getInfo(x, y);
-				if (info != null)
-				{
-					result.add(info);
-				}
+				calc.fillInfo(x, y, info);
 			}
 		}
-		return result;
 	}
 
 	public boolean within(float x, float y)

@@ -16,16 +16,18 @@ public class CalcStore implements ICalcValue
 		mValue = calc;
 	}
 
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
-		Info info = mapQuery(x, y);
-		if (info != null)
+		Info cur = mapQuery(x, y);
+		if (cur != null)
 		{
-			return info;
+			info.set(cur.dup());
 		}
-		info = mValue.getInfo(x, y);
-		mapStore(x, y, info);
-		return info;
+		else
+		{
+			mValue.fillInfo(x, y, info);
+			mapStore(x, y, info.dup());
+		}
 	}
 
 	public boolean within(float x, float y)

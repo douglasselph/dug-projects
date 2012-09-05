@@ -29,26 +29,30 @@ public class CalcConeLinear extends CalcConstant
 	}
 
 	@Override
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
-		if (!within(x, y))
+		if (within(x, y))
 		{
-			return null;
+			float percentX = 1f - percent(x, mCenterX, mBounds.getSizeX() / 2);
+			float percentY = 1f - percent(y, mCenterY, mBounds.getSizeY() / 2);
+
+			if (percentX > 0 && percentX <= 1 && percentY > 0 && percentY <= 1)
+			{
+				float percent = percentX * percentY;
+				float height = mHeight * percent;
+
+				info.addHeight(height);
+
+				if (info.genNormal())
+				{
+					Vector3f normal;
+
+					normal = new Vector3f(x - mCenterX, y - mCenterY, height);
+					normal.normalize();
+					info.addNormal(normal);
+				}
+			}
 		}
-		float percentX = 1f - percent(x, mCenterX, mBounds.getSizeX() / 2);
-		float percentY = 1f - percent(y, mCenterY, mBounds.getSizeY() / 2);
-
-		if (percentX <= 0 || percentY <= 0)
-		{
-			return null; // redundant: should not get here because of the within() call check previously.
-		}
-		float percent = percentX * percentY;
-		float height = mHeight * percent;
-
-		Vector3f normal = new Vector3f(x - mCenterX, y - mCenterY, height);
-		normal.normalize();
-
-		return new Info(height, normal);
 	}
 
 	/**

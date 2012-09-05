@@ -61,25 +61,28 @@ public class CalcMountain extends CalcConstant
 	 * normal is averaged from this and returned.
 	 */
 	@Override
-	public Info getInfo(float x, float y)
+	public void fillInfo(float x, float y, Info info)
 	{
-		if (!within(x, y))
+		if (within(x, y))
 		{
-			return null;
-		}
-		float percentX = mBounds.percentX(x);
-		float percentY = mBounds.percentY(y);
+			float percentX = mBounds.percentX(x);
+			float percentY = mBounds.percentY(y);
 
-		float fX = mHeightMap.getPosX(percentX);
-		float fY = mHeightMap.getPosY(percentY);
-		int iX = (int) Math.round(fX);
-		int iY = (int) Math.round(fY);
-		DataPoint dataPt = mHeightMap.getDataPoint(mHeight, mDetail, iX, iY);
-		if (dataPt != null)
-		{
-			return new Info(dataPt.getHeight(), dataPt.getNormal());
+			float fX = mHeightMap.getPosX(percentX);
+			float fY = mHeightMap.getPosY(percentY);
+			int iX = (int) Math.round(fX);
+			int iY = (int) Math.round(fY);
+			DataPoint dataPt = mHeightMap.getDataPoint(mHeight, mDetail, iX, iY, info.genNormal());
+			if (dataPt != null)
+			{
+				info.addHeight(dataPt.getHeight());
+
+				if (info.genNormal())
+				{
+					info.addNormal(info.getNormal());
+				}
+			}
 		}
-		return null;
 	}
 
 	void init(float roughness, int detail, long seed)
