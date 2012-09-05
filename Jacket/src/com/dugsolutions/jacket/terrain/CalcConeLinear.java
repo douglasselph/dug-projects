@@ -1,22 +1,29 @@
 package com.dugsolutions.jacket.terrain;
 
+import android.util.FloatMath;
+
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Vector3f;
 
 /**
- * A simple cone generator. There is a defined center point where the max height is.
- * And then there is a radius where the outer edge is zero. A circle defines the entire linear
- * slope that is seen.
+ * A Cone Generator.
+ * 
+ * There is a defined boundary which indicates either a circular area or an elliptical area.
+ * If it is a circle, the center of the circle is the height. The edge of the circle is zero.
+ * If it is an ellipse, the two foci of the ellipse and the line connecting them, is the height.
+ * The distance from the foci determines what percentage of the height to use until the edge of the ellipse is reached
+ * which is zero.
  */
 public class CalcConeLinear extends CalcConstant
 {
 	float	mA;		// Semi major axis or distance from center of ellipse to right edge
 	float	mB;		// Semi minor axis or distance from center of ellipse to top edge.
-	float	mAB;		// mA * mB
-	float	mCenterX;
+	float	mC;		// Distance from center to either foci on ellipse
+	float	mCenterX;	// Center of circle and ellipse
 	float	mCenterY;
-	boolean	mIsCircle;	// otherwise ellipse which is more complicated
-	float	mMaxDist;	// used for circle only.
+	float	mMaxDist;	// Distance greater than or equal to this is always zero.
+	float	mMinDist;	// Distance less than or equal to this is full height.
+	boolean	mIsCircle;	// Otherwise ellipse which is more complicated
 
 	public CalcConeLinear(float height)
 	{
@@ -33,40 +40,124 @@ public class CalcConeLinear extends CalcConstant
 	{
 		if (within(x, y))
 		{
-			float percentX = 1f - percent(x, mCenterX, mBounds.getSizeX() / 2);
-			float percentY = 1f - percent(y, mCenterY, mBounds.getSizeY() / 2);
+			float height;
+			float dist;
+			float percent;
 
-			if (percentX > 0 && percentX <= 1 && percentY > 0 && percentY <= 1)
+			if (mIsCircle)
 			{
-				float percent = percentX * percentY;
-				float height = mHeight * percent;
+				float dX = x - mCenterX;
+				float dY = y - mCenterY;
+				dist = FloatMath.sqrt(dX * dX + dY * dY);
 
-				info.addHeight(height);
-
-				if (info.genNormal())
+				if (dist < mMaxDist)
 				{
-					Vector3f normal;
+					percent = 1 - dist / mMaxDist;
+					height = percent * mHeight;
+					info.addHeight(height);
 
-					normal = new Vector3f(x - mCenterX, y - mCenterY, height);
-					normal.normalize();
-					info.addNormal(normal);
+					if (info.genNormal() && height > 0)
+					{
+						Vector3f normal;
+						normal = new Vector3f(dX, dY, height);
+						normal.normalize();
+						info.addNormal(normal);
+					}
+				}
+			}
+			else
+			{
+				float f1;
+				float f2;
+				float dA1;
+				float dA2;
+				float dB;
+
+				if (mA > mB)
+				{
+					f1 = mCenterX - mC;
+					f2 = mCenterX + mC;
+					dA1 = x - f1;
+					dA2 = x - f2;
+					dB = y - mCenterY;
+				}
+				else
+				{
+					f1 = mCenterY - mC;
+					f2 = mCenterY + mC;
+					dA1 = y - f1;
+					dA2 = y - f2;
+					dB = x - mCenterX;
+				}
+				float dBSquared = dB * dB;
+				float dist1 = FloatMath.sqrt(dA1 * dA1 + dBSquared);
+				float dist2 = FloatMath.sqrt(dA2 * dA2 + dBSquared);
+				dist = dist1 + dist2;
+
+				if (dist <= mMinDist)
+				{
+					height = mHeight;
+				}
+				else if (dist < mMaxDist)
+				{
+					percent = 1 - ((dist - mMinDist) / (mMaxDist - mMinDist));
+					height = percent * mHeight;
+				}
+				else
+				{
+					height = 0;
+				}
+				if (height > 0)
+				{
+					info.addHeight(height);
+
+					if (info.genNormal())
+					{
+						float dX;
+						float dY;
+
+						if (mA > mB)
+						{
+							dY = dB;
+
+							if (x >= f2)
+							{
+								dX = dA2;
+							}
+							else if (x <= f1)
+							{
+								dX = dA1;
+							}
+							else
+							{
+								dX = 0;
+							}
+						}
+						else
+						{
+							dX = dB;
+
+							if (y >= f2)
+							{
+								dY = dA2;
+							}
+							else if (y <= f1)
+							{
+								dY = dA1;
+							}
+							else
+							{
+								dY = 0;
+							}
+						}
+						Vector3f normal;
+						normal = new Vector3f(dX, dY, height);
+						normal.normalize();
+						info.addNormal(normal);
+					}
 				}
 			}
 		}
-	}
-
-	/**
-	 * Return the percentage of the distance from the center point that the designated point is.
-	 * If x is right on top of cx then that is 0% away. If it is sizex or greater then it is 100% away.
-	 * 
-	 * @param x
-	 * @param cx
-	 * @param sizex
-	 * @return
-	 */
-	float percent(float x, float cx, float sizex)
-	{
-		return Math.abs(x - cx) / sizex;
 	}
 
 	@Override
@@ -75,11 +166,28 @@ public class CalcConeLinear extends CalcConstant
 		super.setBounds(bounds);
 		mCenterX = mBounds.getMidX();
 		mCenterY = mBounds.getMidY();
-		mMaxDist = Math.abs(mBounds.getMidX() - mCenterX);
 		mIsCircle = mBounds.isSquare();
 		mA = mBounds.getSizeX() / 2;
 		mB = mBounds.getSizeY() / 2;
-		mAB = mA * mB;
-	}
 
+		if (mIsCircle)
+		{
+			mMinDist = 0;
+			mMaxDist = mA;
+		}
+		else
+		{
+			mC = FloatMath.sqrt(mA * mA + mB * mB);
+			mMinDist = 2 * mC;
+
+			if (mA > mB)
+			{
+				mMaxDist = mA * 2;
+			}
+			else
+			{
+				mMaxDist = mB * 2;
+			}
+		}
+	}
 }

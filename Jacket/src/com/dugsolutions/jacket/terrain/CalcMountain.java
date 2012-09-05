@@ -96,18 +96,4 @@ public class CalcMountain extends CalcConstant
 		mHeightMap.calc(roughness);
 	}
 
-	/**
-	 * Return the percentage of the distance from the center point that the designated point is.
-	 * If x is right on top of cx then that is 0% away. If it is sizex or greater then it is 100% away.
-	 * 
-	 * @param x
-	 * @param cx
-	 * @param sizex
-	 * @return
-	 */
-	float percent(float x, float cx, float sizex)
-	{
-		return Math.abs(x - cx) / sizex;
-	}
-
 }
