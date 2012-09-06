@@ -10,11 +10,6 @@ public class CalcConstant extends CalcValue
 {
 	protected float	mHeight;
 
-	public CalcConstant(float height)
-	{
-		mHeight = height;
-	}
-
 	public CalcConstant(float height, Bounds2D bounds)
 	{
 		super(bounds);

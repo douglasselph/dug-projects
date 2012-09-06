@@ -14,23 +14,18 @@ import com.dugsolutions.jacket.math.Vector3f;
  * The distance from the foci determines what percentage of the height to use until the edge of the ellipse is reached
  * which is zero.
  */
-public class CalcConeLinear extends CalcConstant
+public class CalcCone extends CalcConstant
 {
-	float	mA;		// Semi major axis or distance from center of ellipse to right edge
-	float	mB;		// Semi minor axis or distance from center of ellipse to top edge.
-	float	mC;		// Distance from center to either foci on ellipse
-	float	mCenterX;	// Center of circle and ellipse
-	float	mCenterY;
-	float	mMaxDist;	// Distance greater than or equal to this is always zero.
-	float	mMinDist;	// Distance less than or equal to this is full height.
-	boolean	mIsCircle;	// Otherwise ellipse which is more complicated
+	protected float		mdX;		// Semi major axis or distance from center of ellipse to right edge
+	protected float		mdY;		// Semi minor axis or distance from center of ellipse to top edge.
+	protected float		mC;		// Distance from center to either foci on ellipse
+	protected float		mCenterX;	// Center of circle and ellipse
+	protected float		mCenterY;
+	protected float		mMaxDist;	// Distance greater than or equal to this is always zero.
+	protected float		mMinDist;	// Distance less than or equal to this is full height.
+	protected boolean	mIsCircle;	// Otherwise ellipse which is more complicated
 
-	public CalcConeLinear(float height)
-	{
-		super(height);
-	}
-
-	public CalcConeLinear(float height, Bounds2D bounds)
+	public CalcCone(float height, Bounds2D bounds)
 	{
 		super(height, bounds);
 	}
@@ -73,7 +68,7 @@ public class CalcConeLinear extends CalcConstant
 				float dA2;
 				float dB;
 
-				if (mA > mB)
+				if (mdX > mdY)
 				{
 					f1 = mCenterX - mC;
 					f2 = mCenterX + mC;
@@ -116,7 +111,7 @@ public class CalcConeLinear extends CalcConstant
 						float dX;
 						float dY;
 
-						if (mA > mB)
+						if (mdX > mdY)
 						{
 							dY = dB;
 
@@ -167,26 +162,26 @@ public class CalcConeLinear extends CalcConstant
 		mCenterX = mBounds.getMidX();
 		mCenterY = mBounds.getMidY();
 		mIsCircle = mBounds.isSquare();
-		mA = mBounds.getSizeX() / 2;
-		mB = mBounds.getSizeY() / 2;
+		mdX = mBounds.getSizeX() / 2;
+		mdY = mBounds.getSizeY() / 2;
 
 		if (mIsCircle)
 		{
 			mMinDist = 0;
-			mMaxDist = mA;
+			mMaxDist = mdX;
 		}
 		else
 		{
-			mC = FloatMath.sqrt(mA * mA + mB * mB);
+			mC = FloatMath.sqrt(mdX * mdX + mdY * mdY);
 			mMinDist = 2 * mC;
 
-			if (mA > mB)
+			if (mdX > mdY)
 			{
-				mMaxDist = mA * 2;
+				mMaxDist = mdX * 2;
 			}
 			else
 			{
-				mMaxDist = mB * 2;
+				mMaxDist = mdY * 2;
 			}
 		}
 	}

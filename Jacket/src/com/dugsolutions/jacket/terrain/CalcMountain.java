@@ -17,22 +17,6 @@ public class CalcMountain extends CalcConstant
 	int			mDetail;
 
 	/**
-	 * @param height
-	 *        : The height at the peak.
-	 * @param roughness
-	 *        : How rough the terrain is. 1.0 is 100% fantastically rough. 0.1f is 10% roughness.
-	 * @param detail
-	 *        : How many points to compute per unit of actual boundary.
-	 * @param seed
-	 *        : random value seed
-	 */
-	public CalcMountain(float height, float roughness, int detail, long seed)
-	{
-		super(height);
-		init(roughness, detail, seed);
-	}
-
-	/**
 	 * 
 	 * @param height
 	 *        : The height at the peak.

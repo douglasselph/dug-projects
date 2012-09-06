@@ -7,7 +7,7 @@ import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.MaterialColors;
-import com.dugsolutions.jacket.terrain.CalcConeLinear;
+import com.dugsolutions.jacket.terrain.CalcCone;
 import com.dugsolutions.jacket.terrain.CalcEdgeJagged;
 import com.dugsolutions.jacket.terrain.CalcGroup;
 import com.dugsolutions.jacket.terrain.CalcHeightColor;
@@ -56,7 +56,7 @@ public class Map
 		Bounds2D edge;
 		CalcEdgeJagged jagged;
 		CalcGroup group;
-		CalcConeLinear rise;
+		CalcCone rise;
 		CalcMountain mountain;
 		CalcHeightColor heightColor;
 		/*
@@ -89,7 +89,7 @@ public class Map
 		// Right rise
 		edge = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
 				mBounds.getMaxX(), mBounds.getMaxY());
-		rise = new CalcConeLinear(mMountainHeight, edge);
+		rise = new CalcCone(mMountainHeight, edge);
 		// group.add(rise);
 
 		if (!mHasLight)
