@@ -33,6 +33,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 	EventTapAdjust			mEventTap;
 	float					mMaxZ;
 	Bounds2D				mMaxBounds;
+	Bounds2D				mPanBounds;
 	Vector3f				mRotateAngle;
 	Vector4f				mSpotPos;
 	Vector4f				mGlobalPos;
@@ -149,8 +150,11 @@ public class RenderMap extends ControlRenderer implements Adjust
 		mCamera.setViewBounds(mMap.getBounds());
 		mMaxZ = mCamera.getViewingLoc().getZ();
 		mMaxBounds = new Bounds2D(mCamera.getViewBounds());
-		// mMaxBounds.setMinX(mMaxBounds.getMinX() * 1.4f);
-		// mMaxBounds.setMaxX(mMaxBounds.getMaxX() * 1.4f);
+		mPanBounds = new Bounds2D(mMaxBounds);
+		mPanBounds.setMinX(mPanBounds.getMinX() * 1.4f);
+		mPanBounds.setMaxX(mPanBounds.getMaxX() * 1.4f);
+		mPanBounds.setMinY(mPanBounds.getMinY() * 1.4f);
+		mPanBounds.setMaxY(mPanBounds.getMaxY() * 1.4f);
 		mSpotPos.set(mMaxBounds.getSizeX() / 2, 0, -1f, 1);
 	}
 
@@ -221,7 +225,7 @@ public class RenderMap extends ControlRenderer implements Adjust
 	{
 		if (mIsPan)
 		{
-			mCamera.pan(xDelta, yDelta, mMaxBounds);
+			mCamera.pan(xDelta, yDelta, mPanBounds);
 		}
 		else
 		{

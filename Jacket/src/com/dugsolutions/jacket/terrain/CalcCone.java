@@ -172,17 +172,17 @@ public class CalcCone extends CalcConstant
 		}
 		else
 		{
-			mC = FloatMath.sqrt(mdX * mdX + mdY * mdY);
-			mMinDist = 2 * mC;
-
 			if (mdX > mdY)
 			{
+				mC = (float) Math.sqrt(mdX * mdX - mdY * mdY);
 				mMaxDist = mdX * 2;
 			}
 			else
 			{
+				mC = (float) Math.sqrt(mdY * mdY - mdX * mdX);
 				mMaxDist = mdY * 2;
 			}
+			mMinDist = 2 * mC;
 		}
 	}
 }

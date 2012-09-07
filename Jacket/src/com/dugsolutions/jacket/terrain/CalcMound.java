@@ -32,7 +32,7 @@ public class CalcMound extends CalcCone
 				float dX = x - mCenterX;
 				float dY = y - mCenterY;
 				float dist = FloatMath.sqrt(dX * dX + dY * dY);
-				float height = -mdS * dist * dist + mHeight;
+				float height = -mPA * dist * dist + mHeight;
 
 				if (height > 0)
 				{
@@ -86,7 +86,7 @@ public class CalcMound extends CalcCone
 					dist = dB;
 					dA = 0;
 				}
-				height = -mdS * dist * dist + mHeight;
+				height = -mPA * dist * dist + mHeight;
 
 				if (height > 0)
 				{
