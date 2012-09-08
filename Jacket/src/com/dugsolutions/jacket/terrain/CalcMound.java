@@ -11,10 +11,15 @@ import com.dugsolutions.jacket.math.Vector3f;
  * Then a slope defines a parabolic slope outward toward the edge, max circle radius,
  * where the value is zero.
  */
-public class CalcMound extends CalcCone
+public class CalcMound extends CalcConstant
 {
-	protected float	mdS;
-	protected float	mPA;
+	protected float		mA;		// Ellipsoid X axis length.
+	protected float		mB;		// Ellipsoid y axis length.
+	protected float		mCenterX;	// Center of circle and ellipse
+	protected float		mCenterY;
+	protected float		mMaxDist;	// Distance greater than or equal to this is always zero.
+	protected boolean	mIsCircle;	// Otherwise ellipse which is more complicated
+	protected float		mPA;
 
 	public CalcMound(float height, Bounds2D bounds)
 	{
@@ -27,133 +32,56 @@ public class CalcMound extends CalcCone
 	{
 		if (within(x, y))
 		{
+			float dX = x - mCenterX;
+			float dY = y - mCenterY;
+			float dXSquared = dX * dX;
+			float dYSquared = dY * dY;
+			float height;
+			float dist = FloatMath.sqrt(dXSquared + dYSquared);
+
 			if (mIsCircle)
 			{
-				float dX = x - mCenterX;
-				float dY = y - mCenterY;
-				float dist = FloatMath.sqrt(dX * dX + dY * dY);
-				float height = -mPA * dist * dist + mHeight;
-
-				if (height > 0)
-				{
-					info.addHeight(height);
-
-					if (info.genNormal())
-					{
-						Vector3f normal;
-						normal = new Vector3f(mCenterX - x, mCenterY - y, height);
-						normal.normalize();
-						info.addNormal(normal);
-					}
-				}
-			}
-			else
-			{
-				float f1;
-				float f2;
-				float dA;
-				float dB;
-				float dP;
-				float dist;
-				float height;
-
-				if (mdX > mdY)
-				{
-					f1 = mCenterX - mC;
-					f2 = mCenterX + mC;
-					dB = y - mCenterY;
-					dP = x;
-				}
-				else
-				{
-					f1 = mCenterY - mC;
-					f2 = mCenterY + mC;
-					dB = x - mCenterX;
-					dP = y;
-				}
-				if (dP < f1)
-				{
-					dA = dP - f1;
-					dist = FloatMath.sqrt(dA * dA + dB * dB);
-				}
-				else if (dP > f2)
-				{
-					dA = dP - f2;
-					dist = FloatMath.sqrt(dA * dA + dB * dB);
-				}
-				else
-				{
-					dist = dB;
-					dA = 0;
-				}
 				height = -mPA * dist * dist + mHeight;
-
-				if (height > 0)
-				{
-					info.addHeight(height);
-
-					if (info.genNormal())
-					{
-						float dX;
-						float dY;
-
-						if (mdX > mdY)
-						{
-							dY = dB;
-
-							if (x >= f2)
-							{
-								dX = dA;
-							}
-							else if (x <= f1)
-							{
-								dX = dA;
-							}
-							else
-							{
-								dX = 0;
-							}
-						}
-						else
-						{
-							dX = dB;
-
-							if (y >= f2)
-							{
-								dY = dA;
-							}
-							else if (y <= f1)
-							{
-								dY = dA;
-							}
-							else
-							{
-								dY = 0;
-							}
-						}
-						Vector3f normal;
-						normal = new Vector3f(dX, dY, height);
-						normal.normalize();
-						info.addNormal(normal);
-					}
-				}
-			}
-		}
-	}
-
-	void init()
-	{
-		if (mHeight != 0)
-		{
-			if (mdX > mdY)
-			{
-				mdS = mdY;
 			}
 			else
 			{
-				mdS = mdX;
+				float maxDist;
+
+				if (dX != 0)
+				{
+					float angleT = (float) Math.atan(dY / dX);
+
+					if (x < 0)
+					{
+						angleT += Math.PI;
+					}
+					/*
+					 * Find point along line defined by angleT that is on the ellipse, which is
+					 * also the max distance.
+					 */
+					float maxX = mA * FloatMath.cos(angleT);
+					float maxY = mB * FloatMath.sin(angleT);
+
+					maxDist = FloatMath.sqrt(maxX * maxX + maxY * maxY);
+				}
+				else
+				{
+					maxDist = mB;
+				}
+				height = -(mHeight / maxDist) * dist * dist + mHeight;
 			}
-			mPA = mHeight / mdS;
+			if (height > 0)
+			{
+				info.addHeight(height);
+
+				if (info.genNormal())
+				{
+					Vector3f normal;
+					normal = new Vector3f(dX, dY, -height);
+					normal.normalize();
+					info.addNormal(normal);
+				}
+			}
 		}
 	}
 
@@ -164,4 +92,16 @@ public class CalcMound extends CalcCone
 		init();
 	}
 
+	protected void init()
+	{
+		if (mHeight > 0)
+		{
+			mCenterX = mBounds.getMidX();
+			mCenterY = mBounds.getMidY();
+			mIsCircle = mBounds.isSquare();
+			mA = mBounds.getSizeX() / 2;
+			mB = mBounds.getSizeY() / 2;
+			mPA = mHeight / mA;
+		}
+	}
 }

@@ -16,18 +16,16 @@ import com.dugsolutions.jacket.math.Vector3f;
  */
 public class CalcCone extends CalcConstant
 {
-	protected float		mdX;		// Semi major axis or distance from center of ellipse to right edge
-	protected float		mdY;		// Semi minor axis or distance from center of ellipse to top edge.
-	protected float		mC;		// Distance from center to either foci on ellipse
+	protected float		mA;
+	protected float		mB;
 	protected float		mCenterX;	// Center of circle and ellipse
 	protected float		mCenterY;
-	protected float		mMaxDist;	// Distance greater than or equal to this is always zero.
-	protected float		mMinDist;	// Distance less than or equal to this is full height.
 	protected boolean	mIsCircle;	// Otherwise ellipse which is more complicated
 
 	public CalcCone(float height, Bounds2D bounds)
 	{
 		super(height, bounds);
+		init();
 	}
 
 	@Override
@@ -36,120 +34,56 @@ public class CalcCone extends CalcConstant
 		if (within(x, y))
 		{
 			float height;
-			float dist;
 			float percent;
+			float dX = x - mCenterX;
+			float dY = y - mCenterY;
+			float dXSquared = dX * dX;
+			float dYSquared = dY * dY;
+			float dist = FloatMath.sqrt(dXSquared + dYSquared);
+			float maxDist;
 
 			if (mIsCircle)
 			{
-				float dX = x - mCenterX;
-				float dY = y - mCenterY;
-				dist = FloatMath.sqrt(dX * dX + dY * dY);
-
-				if (dist < mMaxDist)
-				{
-					percent = 1 - dist / mMaxDist;
-					height = percent * mHeight;
-					info.addHeight(height);
-
-					if (info.genNormal() && height > 0)
-					{
-						Vector3f normal;
-						normal = new Vector3f(dX, dY, height);
-						normal.normalize();
-						info.addNormal(normal);
-					}
-				}
+				maxDist = mA;
 			}
 			else
 			{
-				float f1;
-				float f2;
-				float dA1;
-				float dA2;
-				float dB;
+				float angleT;
 
-				if (mdX > mdY)
+				if (dX != 0)
 				{
-					f1 = mCenterX - mC;
-					f2 = mCenterX + mC;
-					dA1 = x - f1;
-					dA2 = x - f2;
-					dB = y - mCenterY;
-				}
-				else
-				{
-					f1 = mCenterY - mC;
-					f2 = mCenterY + mC;
-					dA1 = y - f1;
-					dA2 = y - f2;
-					dB = x - mCenterX;
-				}
-				float dBSquared = dB * dB;
-				float dist1 = FloatMath.sqrt(dA1 * dA1 + dBSquared);
-				float dist2 = FloatMath.sqrt(dA2 * dA2 + dBSquared);
-				dist = dist1 + dist2;
+					angleT = (float) Math.atan(dY / dX);
 
-				if (dist <= mMinDist)
-				{
-					height = mHeight;
-				}
-				else if (dist < mMaxDist)
-				{
-					percent = 1 - ((dist - mMinDist) / (mMaxDist - mMinDist));
-					height = percent * mHeight;
-				}
-				else
-				{
-					height = 0;
-				}
-				if (height > 0)
-				{
-					info.addHeight(height);
-
-					if (info.genNormal())
+					if (x < 0)
 					{
-						float dX;
-						float dY;
-
-						if (mdX > mdY)
-						{
-							dY = dB;
-
-							if (x >= f2)
-							{
-								dX = dA2;
-							}
-							else if (x <= f1)
-							{
-								dX = dA1;
-							}
-							else
-							{
-								dX = 0;
-							}
-						}
-						else
-						{
-							dX = dB;
-
-							if (y >= f2)
-							{
-								dY = dA2;
-							}
-							else if (y <= f1)
-							{
-								dY = dA1;
-							}
-							else
-							{
-								dY = 0;
-							}
-						}
-						Vector3f normal;
-						normal = new Vector3f(dX, dY, height);
-						normal.normalize();
-						info.addNormal(normal);
+						angleT += Math.PI;
 					}
+					/*
+					 * Find point along line defined by angleT that is on the ellipse, which is
+					 * also the max distance.
+					 */
+					float maxX = mA * FloatMath.cos(angleT);
+					float maxY = mB * FloatMath.sin(angleT);
+
+					maxDist = FloatMath.sqrt(maxX * maxX + maxY * maxY);
+				}
+				else
+				{
+					maxDist = mB;
+				}
+			}
+			if (dist < maxDist)
+			{
+				percent = 1 - dist / maxDist;
+				height = percent * mHeight;
+				info.addHeight(height);
+
+				if (info.genNormal() && height > 0)
+				{
+					Vector3f normal;
+					normal = new Vector3f(dX, dY, height);
+					normal.normalize();
+					info.addNormal(normal);
 				}
 			}
 		}
@@ -159,30 +93,18 @@ public class CalcCone extends CalcConstant
 	public void setBounds(Bounds2D bounds)
 	{
 		super.setBounds(bounds);
-		mCenterX = mBounds.getMidX();
-		mCenterY = mBounds.getMidY();
-		mIsCircle = mBounds.isSquare();
-		mdX = mBounds.getSizeX() / 2;
-		mdY = mBounds.getSizeY() / 2;
+		init();
+	}
 
-		if (mIsCircle)
+	protected void init()
+	{
+		if (mHeight > 0)
 		{
-			mMinDist = 0;
-			mMaxDist = mdX;
-		}
-		else
-		{
-			if (mdX > mdY)
-			{
-				mC = (float) Math.sqrt(mdX * mdX - mdY * mdY);
-				mMaxDist = mdX * 2;
-			}
-			else
-			{
-				mC = (float) Math.sqrt(mdY * mdY - mdX * mdX);
-				mMaxDist = mdY * 2;
-			}
-			mMinDist = 2 * mC;
+			mCenterX = mBounds.getMidX();
+			mCenterY = mBounds.getMidY();
+			mIsCircle = mBounds.isSquare();
+			mA = mBounds.getSizeX() / 2;
+			mB = mBounds.getSizeY() / 2;
 		}
 	}
 }

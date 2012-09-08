@@ -14,6 +14,7 @@ public class MathUtils
 
 	public static final float	TO_DEGREES	= (float) (180.0 / Math.PI);
 	public static final float	TO_RADIANS	= (float) (Math.PI / 180.0);
+	public static final double	TWO_PI		= Math.PI * 2;
 
 	public static double clamp(double v)
 	{

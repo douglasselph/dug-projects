@@ -60,6 +60,7 @@ public class Map
 		CalcEdgeJagged jagged;
 		CalcGroup group;
 		CalcCone rise;
+		CalcMound mound;
 		CalcMountain mountain;
 		CalcHeightColor heightColor;
 		CalcFieldCones field;
@@ -111,7 +112,7 @@ public class Map
 		ymax = edge.getMaxY();
 		ymin = ymax - cone2h;
 		Bounds2D edge2 = new Bounds2D(xmin, ymin, xmax, ymax);
-		rise = new CalcCone(coneHeight / 2, edge2);
+		rise = new CalcCone(coneHeight, edge2);
 		group.add(rise);
 
 		xmin = edge.getMinX();
@@ -119,16 +120,16 @@ public class Map
 		ymax = edge.getMinY() - offsety;
 		ymin = ymax - mound1size;
 		Bounds2D edge3 = new Bounds2D(xmin, ymin, xmax, ymax);
-		rise = new CalcMound(moundHeight, edge3);
-		group.add(rise);
+		mound = new CalcMound(moundHeight, edge3);
+		group.add(mound);
 
 		xmin = edge3.getMaxX() + offsetx;
 		xmax = xmin + mound2w;
 		ymax = edge3.getMaxY();
 		ymin = ymax - mound2h;
 		Bounds2D edge4 = new Bounds2D(xmin, ymin, xmax, ymax);
-		rise = new CalcMound(moundHeight, edge4);
-		group.add(rise);
+		mound = new CalcMound(moundHeight, edge4);
+		group.add(mound);
 		//
 		// Bounds2D edge5 = new Bounds2D(edge3.getMinX() + offsetx, edge3.getMaxY() + offsety, edge3.getMinX() + offsetx
 		// + field1w, edge3.getMaxY() + offsety + field1h);
