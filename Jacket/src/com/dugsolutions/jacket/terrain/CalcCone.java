@@ -18,6 +18,7 @@ public class CalcCone extends CalcConstant
 {
 	protected float		mA;
 	protected float		mB;
+	protected float		mAB;
 	protected float		mCenterX;	// Center of circle and ellipse
 	protected float		mCenterY;
 	protected boolean	mIsCircle;	// Otherwise ellipse which is more complicated
@@ -48,31 +49,22 @@ public class CalcCone extends CalcConstant
 			}
 			else
 			{
-				float angleT;
-
 				if (dX != 0)
 				{
-					angleT = (float) Math.atan(dY / dX);
+					float angleT = (float) Math.atan(dY / dX);
 
-					if (x < 0)
+					if (dX < 0)
 					{
 						angleT += Math.PI;
 					}
-					/*
-					 * Find point along line defined by angleT that is on the ellipse, which is
-					 * also the max distance.
-					 */
-					float maxX = mA * FloatMath.cos(angleT);
-					float maxY = mB * FloatMath.sin(angleT);
-
-					maxDist = FloatMath.sqrt(maxX * maxX + maxY * maxY);
+					maxDist = getDistOnEllipse(angleT);
 				}
 				else
 				{
 					maxDist = mB;
 				}
 			}
-			if (dist < maxDist)
+			if (dist <= maxDist)
 			{
 				percent = 1 - dist / maxDist;
 				height = percent * mHeight;
@@ -87,6 +79,19 @@ public class CalcCone extends CalcConstant
 				}
 			}
 		}
+	}
+
+	/**
+	 * Return the distance from the center the point on the ellipse would be at the given angle.
+	 * 
+	 * @param angleT
+	 * @return
+	 */
+	protected float getDistOnEllipse(float angleT)
+	{
+		float termB = mB * FloatMath.cos(angleT);
+		float termA = mA * FloatMath.sin(angleT);
+		return mAB / FloatMath.sqrt(termB * termB + termA * termA);
 	}
 
 	@Override
@@ -105,6 +110,7 @@ public class CalcCone extends CalcConstant
 			mIsCircle = mBounds.isSquare();
 			mA = mBounds.getSizeX() / 2;
 			mB = mBounds.getSizeY() / 2;
+			mAB = mA * mB;
 		}
 	}
 }

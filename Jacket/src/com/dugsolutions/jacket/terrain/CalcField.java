@@ -8,7 +8,7 @@ import android.util.FloatMath;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Vector3f;
 
-public class CalcFieldCones extends CalcValue
+public class CalcField extends CalcValue
 {
 	class Cone extends Bounds2D
 	{
@@ -40,7 +40,7 @@ public class CalcFieldCones extends CalcValue
 
 			if (dist < mMaxDist)
 			{
-				float h = mH * (1 - (dist / mMaxDist));
+				float h = genHeight(dist);
 				info.addHeight(h);
 
 				if (info.genNormal())
@@ -59,23 +59,53 @@ public class CalcFieldCones extends CalcValue
 				}
 			}
 		}
-	};
 
-	protected ArrayList<Cone>	mCones;
-	final protected float		mMaxConeHeight;
-	final protected float		mMaxConeSize;
-	final protected int			mNumCones;
+		protected float genHeight(float dist)
+		{
+			return mH * (1 - (dist / mMaxDist));
+		}
+	}
+
+	class Mound extends Cone
+	{
+		float	mPA;
+
+		public Mound(Bounds2D bounds, float h)
+		{
+			super(bounds, h);
+
+			mPA = mH / (getSizeX() / 2);
+		}
+
+		@Override
+		protected float genHeight(float dist)
+		{
+			return -mPA * dist * dist + mH;
+		}
+	}
+
+	protected ArrayList<Cone>	mObjs;
+	final protected float		mMaxObjHeight;
+	final protected float		mMaxObjSize;
+	final protected int			mNumObjs;
 	final protected Random		mRandom;
+	final protected Shape		mShape;
 
-	public CalcFieldCones(int numCones, float maxConeHeight, float maxConeSize, long seed, Bounds2D bounds)
+	public enum Shape
+	{
+		Cone, Mound;
+	}
+
+	public CalcField(Shape shape, int numObjs, float maxObjHeight, float maxObjSize, long seed, Bounds2D bounds)
 	{
 		super(bounds);
 
-		mNumCones = numCones;
-		mMaxConeHeight = maxConeHeight;
-		mMaxConeSize = maxConeSize;
+		mShape = shape;
+		mNumObjs = numObjs;
+		mMaxObjHeight = maxObjHeight;
+		mMaxObjSize = maxObjSize;
 		mRandom = new Random(seed);
-		mCones = new ArrayList<Cone>();
+		mObjs = new ArrayList<Cone>();
 
 		init();
 	}
@@ -85,7 +115,7 @@ public class CalcFieldCones extends CalcValue
 	{
 		if (within(x, y))
 		{
-			for (Cone point : mCones)
+			for (Cone point : mObjs)
 			{
 				if (point.within(x, y))
 				{
@@ -97,11 +127,11 @@ public class CalcFieldCones extends CalcValue
 
 	public void init()
 	{
-		if (mNumCones == 0)
+		if (mNumObjs == 0)
 		{
 			return;
 		}
-		mCones.clear();
+		mObjs.clear();
 
 		float sX = mBounds.getSizeX();
 		float sY = mBounds.getSizeY();
@@ -113,16 +143,26 @@ public class CalcFieldCones extends CalcValue
 		float h;
 		float s;
 
-		for (int i = 0; i < mNumCones; i++)
+		for (int i = 0; i < mNumObjs; i++)
 		{
 			x = mx + mRandom.nextFloat() * sX;
 			y = my + mRandom.nextFloat() * sY;
-			h = mRandom.nextFloat() * (mMaxConeHeight * 2) - mMaxConeHeight;
-			s = mRandom.nextFloat() * mMaxConeSize;
+			h = mRandom.nextFloat() * (mMaxObjHeight * 2) - mMaxObjHeight;
+			s = mRandom.nextFloat() * mMaxObjSize;
 
 			bounds = new Bounds2D(x - s, y - s, x + s, y + s);
 
-			mCones.add(new Cone(bounds, h));
+			Cone cone;
+
+			if (mShape == Shape.Mound)
+			{
+				cone = new Mound(bounds, h);
+			}
+			else
+			{
+				cone = new Cone(bounds, h);
+			}
+			mObjs.add(cone);
 		}
 	}
 

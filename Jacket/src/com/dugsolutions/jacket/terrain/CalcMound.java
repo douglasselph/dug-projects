@@ -11,20 +11,13 @@ import com.dugsolutions.jacket.math.Vector3f;
  * Then a slope defines a parabolic slope outward toward the edge, max circle radius,
  * where the value is zero.
  */
-public class CalcMound extends CalcConstant
+public class CalcMound extends CalcCone
 {
-	protected float		mA;		// Ellipsoid X axis length.
-	protected float		mB;		// Ellipsoid y axis length.
-	protected float		mCenterX;	// Center of circle and ellipse
-	protected float		mCenterY;
-	protected float		mMaxDist;	// Distance greater than or equal to this is always zero.
-	protected boolean	mIsCircle;	// Otherwise ellipse which is more complicated
-	protected float		mPA;
+	protected float	mPA;
 
 	public CalcMound(float height, Bounds2D bounds)
 	{
 		super(height, bounds);
-		init();
 	}
 
 	@Override
@@ -51,25 +44,20 @@ public class CalcMound extends CalcConstant
 				{
 					float angleT = (float) Math.atan(dY / dX);
 
-					if (x < 0)
+					if (dX < 0)
 					{
 						angleT += Math.PI;
 					}
-					/*
-					 * Find point along line defined by angleT that is on the ellipse, which is
-					 * also the max distance.
-					 */
-					float maxX = mA * FloatMath.cos(angleT);
-					float maxY = mB * FloatMath.sin(angleT);
-
-					maxDist = FloatMath.sqrt(maxX * maxX + maxY * maxY);
+					maxDist = getDistOnEllipse(angleT);
 				}
 				else
 				{
 					maxDist = mB;
 				}
-				height = -(mHeight / maxDist) * dist * dist + mHeight;
+				// Parabola along the line in the ellipsoid of interest.
+				height = -(mHeight / (maxDist * maxDist)) * dist * dist + mHeight;
 			}
+
 			if (height > 0)
 			{
 				info.addHeight(height);
@@ -86,22 +74,13 @@ public class CalcMound extends CalcConstant
 	}
 
 	@Override
-	public void setBounds(Bounds2D bounds)
-	{
-		super.setBounds(bounds);
-		init();
-	}
-
 	protected void init()
 	{
+		super.init();
+
 		if (mHeight > 0)
 		{
-			mCenterX = mBounds.getMidX();
-			mCenterY = mBounds.getMidY();
-			mIsCircle = mBounds.isSquare();
-			mA = mBounds.getSizeX() / 2;
-			mB = mBounds.getSizeY() / 2;
-			mPA = mHeight / mA;
+			mPA = mHeight / (mA * mA);
 		}
 	}
 }

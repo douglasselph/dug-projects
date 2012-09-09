@@ -7,13 +7,9 @@ import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.MaterialColors;
-import com.dugsolutions.jacket.terrain.CalcCone;
 import com.dugsolutions.jacket.terrain.CalcEdgeJagged;
-import com.dugsolutions.jacket.terrain.CalcFieldCones;
 import com.dugsolutions.jacket.terrain.CalcGroup;
 import com.dugsolutions.jacket.terrain.CalcHeightColor;
-import com.dugsolutions.jacket.terrain.CalcMound;
-import com.dugsolutions.jacket.terrain.CalcMountain;
 import com.dugsolutions.jacket.terrain.TerrainGrid;
 
 public class Map
@@ -32,20 +28,23 @@ public class Map
 	final float				mWidth				= 11f;
 
 	final float				mMountainHeight		= 2f;
-	final float				mMountainSideXSize	= 2f;
-	final float				mMountainSideYSize	= 8f;
-	final float				mMountainTopYSize	= 1.5f;
+	final float				mMountainRidgeSize	= 2f;
+	final float				mMountainLength		= 8f;
+	final float				mMountainLeftRatio	= .9f;
 
 	final Color4f			mColorMax			= new Color4f(1f, 1f, 1f);
 	final float				mColorMaxHeight		= mMountainHeight;
-	final float				mColorMinV			= 0.75f;
+	final float				mColorMinV			= 0.4f;											// 0.75f;
 	final Color4f			mColorMin			= new Color4f(mColorMinV, mColorMinV, mColorMinV);
-	final float				mColorMinHeight		= 0;
+	final float				mColorMinHeight		= -mMountainHeight;
 
 	final float				mWaterHeight		= 2f;
 	final int				mWaterMajorPts		= 10;
 	final long				mWaterSeed			= 1;
 	final float				mWaterVariance		= 0.5f;
+
+	// final int mGroundTerrain = R.drawable.dirt;
+	final int				mGroundTerrain		= R.drawable.green;
 
 	public Map(TextureManager tm, boolean hasLight)
 	{
@@ -59,18 +58,15 @@ public class Map
 		Bounds2D edge;
 		CalcEdgeJagged jagged;
 		CalcGroup group;
-		CalcCone rise;
-		CalcMound mound;
-		CalcMountain mountain;
 		CalcHeightColor heightColor;
-		CalcFieldCones field;
+
 		/*
 		 * Build the base ground
 		 */
 		mGround = new TerrainGrid(mHasLight);
 		mGround.setBounds(mBounds).setGridSizeSafe(100, 100);
 		// mGround.setRepeating(2, 2);
-		mGround.setTexture(mTM.getTexture(R.drawable.test2));
+		mGround.setTexture(mTM.getTexture(mGroundTerrain));
 		// mGround.setSubdivision(0, 1, 2);
 
 		if (mHasLight)
@@ -79,75 +75,14 @@ public class Map
 			mGround.setColorDiffuse(new Color4f(0.4f, 0.4f, 0.4f, 1f));
 			mGround.setColorSpecular(new Color4f(0.9f, 0.9f, 0.9f, 1f));
 		}
-		group = new CalcGroup();
+		float xmin = mBounds.getMinX();
+		float xmax = mBounds.getMaxX();
+		float ymax = mBounds.getMaxY();
+		float ymin = ymax - mMountainLength;
+		bounds = new Bounds2D(xmin, ymin, xmax, ymax);
+		group = new CalcMountainRidge(mMountainHeight, mMountainRidgeSize, mMountainLeftRatio, bounds);
 
-		// Left rise
-		edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainSideYSize, mBounds.getMinX()
-				+ mMountainSideXSize, mBounds.getMaxY());
-
-		// Test
-		final float cone1size = 2f;
-		final float cone2w = 3f;
-		final float cone2h = 2f;
-		final float mound1size = 2f;
-		final float mound2w = 3;
-		final float mound2h = 2;
-		final float field1w = 7;
-		final float field1h = 2;
-		final float offsetx = 1.5f;
-		final float offsety = 1.5f;
-		final float coneHeight = 2.0f;
-		final float moundHeight = 1.0f;
-
-		float xmin = mBounds.getMinX() + offsetx;
-		float xmax = xmin + cone1size;
-		float ymax = mBounds.getMaxY() - offsety;
-		float ymin = ymax - cone1size;
-		edge = new Bounds2D(xmin, ymin, xmax, ymax);
-		rise = new CalcCone(coneHeight, edge);
-		group.add(rise);
-
-		xmin = edge.getMaxX() + offsetx;
-		xmax = xmin + cone2w;
-		ymax = edge.getMaxY();
-		ymin = ymax - cone2h;
-		Bounds2D edge2 = new Bounds2D(xmin, ymin, xmax, ymax);
-		rise = new CalcCone(coneHeight, edge2);
-		group.add(rise);
-
-		xmin = edge.getMinX();
-		xmax = xmin + mound1size;
-		ymax = edge.getMinY() - offsety;
-		ymin = ymax - mound1size;
-		Bounds2D edge3 = new Bounds2D(xmin, ymin, xmax, ymax);
-		mound = new CalcMound(moundHeight, edge3);
-		group.add(mound);
-
-		xmin = edge3.getMaxX() + offsetx;
-		xmax = xmin + mound2w;
-		ymax = edge3.getMaxY();
-		ymin = ymax - mound2h;
-		Bounds2D edge4 = new Bounds2D(xmin, ymin, xmax, ymax);
-		mound = new CalcMound(moundHeight, edge4);
-		group.add(mound);
-		//
-		// Bounds2D edge5 = new Bounds2D(edge3.getMinX() + offsetx, edge3.getMaxY() + offsety, edge3.getMinX() + offsetx
-		// + field1w, edge3.getMaxY() + offsety + field1h);
-		// field = new CalcFieldCones(10, 0.1f, 0.2f, 1, edge5);
-		// group.add(field);
-		// mountain = new CalcMountain(mMountainHeight, 0.2f, 10, 1L, edge);
-		// group.add(mountain);
-
-		// Top rise
-		// edge = new Bounds2D(mBounds.getMinX(), mBounds.getMaxY() - mMountainTopYSize, mBounds.getMaxX(),
-		// mBounds.getMaxY());
-		// mountain = new CalcMountain(mMountainHeight, 0.4f, 10, 1L, edge);
-		// group.add(mountain);
-		// Right rise
-		// edge = new Bounds2D(mBounds.getMaxX() - mMountainSideXSize, mBounds.getMaxY() - mMountainSideYSize - 1,
-		// mBounds.getMaxX(), mBounds.getMaxY());
-		// rise = new CalcCone(mMountainHeight, edge);
-		// group.add(rise);
+		// group = new CalcTest(mMountainHeight, new Bounds2D(xmin, ymin, xmax, ymax));
 
 		if (!mHasLight)
 		{
@@ -159,7 +94,11 @@ public class Map
 		/*
 		 * Build the water edge
 		 */
-		bounds = new Bounds2D(mBounds.getMinX(), mBounds.getMinY(), mBounds.getMaxX(), mBounds.getMinY() + mWaterHeight);
+		xmin = mBounds.getMinX();
+		xmax = mBounds.getMaxX();
+		ymin = mBounds.getMinY();
+		ymax = ymin + mWaterHeight;
+		bounds = new Bounds2D(xmin, ymin, xmax, ymax);
 		edge = new Bounds2D(bounds.getMinX() - FUDGE, bounds.getMaxY() - FUDGE, bounds.getMaxX() + FUDGE,
 				bounds.getMaxY() + FUDGE);
 

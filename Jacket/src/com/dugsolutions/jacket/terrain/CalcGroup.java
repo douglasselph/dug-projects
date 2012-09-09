@@ -19,10 +19,7 @@ public class CalcGroup implements ICalcValue
 	{
 		for (ICalcValue calc : mList)
 		{
-			if (calc.within(x, y))
-			{
-				calc.fillInfo(x, y, info);
-			}
+			calc.fillInfo(x, y, info);
 		}
 	}
 

@@ -1,5 +1,7 @@
 package com.dugsolutions.jacket.math;
 
+import android.util.Log;
+
 public class Bounds2D
 {
 
@@ -34,6 +36,7 @@ public class Bounds2D
 		setMinY(miny);
 		setMaxX(maxx);
 		setMaxY(maxy);
+		checkValues();
 	}
 
 	public Bounds2D add(float x, float y)
@@ -42,6 +45,7 @@ public class Bounds2D
 		setMaxX(getMaxX() + x);
 		setMinY(getMinY() + y);
 		setMaxY(getMaxY() + y);
+		checkValues();
 		return this;
 	}
 
@@ -185,5 +189,17 @@ public class Bounds2D
 	public boolean within(float x, float y)
 	{
 		return (x >= getMinX() && x <= getMaxX() && y >= getMinY() && y <= getMaxY());
+	}
+
+	public void checkValues()
+	{
+		if (getMinX() > getMaxX())
+		{
+			Log.e("Bounds2D", "X Value min " + getMinX() + " > max " + getMaxX());
+		}
+		if (getMinY() > getMaxY())
+		{
+			Log.e("Bounds2D", "Y Value min " + getMinY() + " > max " + getMaxY());
+		}
 	}
 }
