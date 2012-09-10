@@ -1,8 +1,8 @@
 package com.dugsolutions.bugplug.map;
 
 import com.dugsolutions.jacket.math.Bounds2D;
+import com.dugsolutions.jacket.terrain.CalcBumps;
 import com.dugsolutions.jacket.terrain.CalcCone;
-import com.dugsolutions.jacket.terrain.CalcField;
 import com.dugsolutions.jacket.terrain.CalcGroup;
 import com.dugsolutions.jacket.terrain.CalcMound;
 
@@ -24,7 +24,6 @@ public class CalcTest extends CalcGroup
 		final float ySize = mBounds.getSizeY() / 3;
 		final float cone1size = ySize - mBounds.getSizeY() / 10;
 		final float mound1size = cone1size;
-		final float field1w = mBounds.getSizeX() / 2;
 		final float coneHeight = mHeight;
 		final float moundHeight = mHeight;
 
@@ -56,18 +55,15 @@ public class CalcTest extends CalcGroup
 		mound = new CalcMound(moundHeight, bounds4);
 		add(mound);
 
+		final float bumpHeight = 0.5f;
+		final float bumpSizeX = 0.6f;
+		final float bumpSizeY = 0.5f;
 		xmin = mBounds.getMinX();
-		xmax = xmin + field1w;
+		xmax = mBounds.getMaxX();
 		ymax = bounds3.getMinY();
 		ymin = mBounds.getMinY();
 		Bounds2D bounds5 = new Bounds2D(xmin, ymin, xmax, ymax);
-		CalcField field = new CalcField(CalcField.Shape.Cone, 10, 1f, 1f, 1, bounds5);
-		add(field);
-
-		xmin = bounds5.getMaxX();
-		xmax = mBounds.getMaxX();
-		Bounds2D bounds6 = new Bounds2D(xmin, ymin, xmax, ymax);
-		field = new CalcField(CalcField.Shape.Mound, 10, 1f, 1f, 1, bounds6);
-		add(field);
+		CalcBumps bumps = new CalcBumps(bumpHeight, bumpSizeX, bumpSizeY, 1, bounds5);
+		add(bumps);
 	}
 }

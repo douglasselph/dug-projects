@@ -27,16 +27,16 @@ public class Map
 	final float				mHeight				= 13f;
 	final float				mWidth				= 11f;
 
-	final float				mMountainHeight		= 2f;
+	final float				mMountainHeight		= 1.0f;
 	final float				mMountainRidgeSize	= 2f;
 	final float				mMountainLength		= 8f;
 	final float				mMountainLeftRatio	= .9f;
 
 	final Color4f			mColorMax			= new Color4f(1f, 1f, 1f);
 	final float				mColorMaxHeight		= mMountainHeight;
-	final float				mColorMinV			= 0.4f;											// 0.75f;
+	final float				mColorMinV			= 0.70f;
 	final Color4f			mColorMin			= new Color4f(mColorMinV, mColorMinV, mColorMinV);
-	final float				mColorMinHeight		= -mMountainHeight;
+	final float				mColorMinHeight		= -mMountainHeight / 4;
 
 	final float				mWaterHeight		= 2f;
 	final int				mWaterMajorPts		= 10;
@@ -80,6 +80,7 @@ public class Map
 		float ymax = mBounds.getMaxY();
 		float ymin = ymax - mMountainLength;
 		bounds = new Bounds2D(xmin, ymin, xmax, ymax);
+
 		group = new CalcMountainRidge(mMountainHeight, mMountainRidgeSize, mMountainLeftRatio, bounds);
 
 		// group = new CalcTest(mMountainHeight, new Bounds2D(xmin, ymin, xmax, ymax));
