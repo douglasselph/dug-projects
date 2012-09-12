@@ -346,9 +346,20 @@ public class BufUtils
 			return buf;
 		}
 
+		public Float get(int pos)
+		{
+			return mArray.get(pos);
+		}
+
 		public TmpFloatBuf put(float value)
 		{
 			mArray.add(value);
+			return this;
+		}
+
+		public TmpFloatBuf put(int pos, float value)
+		{
+			mArray.set(pos, value);
 			return this;
 		}
 
@@ -389,6 +400,6 @@ public class BufUtils
 			mArray.add(value);
 			return this;
 		}
-	};
+	}
 
 }

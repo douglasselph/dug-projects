@@ -1,6 +1,5 @@
 package com.dugsolutions.jacket.terrain;
 
-import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.Vector3f;
 
 /**
@@ -8,8 +7,6 @@ import com.dugsolutions.jacket.math.Vector3f;
  */
 public class Info
 {
-	Color4f		mColor;
-	boolean		mGenColor;
 	boolean		mGenNormal;
 	float		mHeight;
 	Vector3f	mNormal;
@@ -61,10 +58,6 @@ public class Info
 	{
 		Info cp = new Info();
 
-		if (mColor != null)
-		{
-			cp.mColor = new Color4f(mColor);
-		}
 		cp.mGenNormal = mGenNormal;
 		cp.mHeight = mHeight;
 		if (mNormal != null)
@@ -76,19 +69,9 @@ public class Info
 		return cp;
 	}
 
-	public boolean genColor()
-	{
-		return mGenColor;
-	}
-
 	public boolean genNormal()
 	{
 		return mGenNormal;
-	}
-
-	public Color4f getColor()
-	{
-		return mColor;
 	}
 
 	public float getHeight()
@@ -118,24 +101,11 @@ public class Info
 
 	public void set(final Info info)
 	{
-		mColor = info.mColor;
 		mGenNormal = info.mGenNormal;
 		mHeight = info.mHeight;
 		mNormal = info.mNormal;
 		mXAdjust = info.mXAdjust;
 		mYAdjust = info.mYAdjust;
-	}
-
-	public Info setColor(Color4f color)
-	{
-		mColor = color;
-		return this;
-	}
-
-	public Info setGenColor(boolean flag)
-	{
-		mGenColor = flag;
-		return this;
 	}
 
 	public Info setGenNormal(boolean flag)

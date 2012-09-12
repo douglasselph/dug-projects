@@ -3,8 +3,9 @@ package com.dugsolutions.jacket.terrain;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
 
-public class CalcHeightColor extends CalcValue
+public class CalcHeightColor implements ICalcColor
 {
+	Bounds2D		mBounds;
 	final Color4f	mMinColor;
 	final Color4f	mMaxColor;
 	final float		mMinHeight;
@@ -16,7 +17,7 @@ public class CalcHeightColor extends CalcValue
 
 	public CalcHeightColor(float minHeight, float maxHeight, Color4f minColor, Color4f maxColor, Bounds2D bounds)
 	{
-		super(bounds);
+		mBounds = bounds;
 		mMinColor = minColor;
 		mMaxColor = maxColor;
 		mMinHeight = minHeight;
@@ -28,15 +29,7 @@ public class CalcHeightColor extends CalcValue
 	}
 
 	@Override
-	public void fillInfo(float x, float y, Info info)
-	{
-		if (within(x, y))
-		{
-			info.setColor(getColor(info.getHeight()));
-		}
-	}
-
-	Color4f getColor(float height)
+	public Color4f getColor(float x, float y, float height)
 	{
 		if (height <= mMinHeight)
 		{

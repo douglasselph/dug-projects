@@ -20,10 +20,40 @@ import com.dugsolutions.jacket.math.Vector3f;
  * <p>
  * Index generation uses full triangles.
  */
-public class Grid
+public class Grid implements IMapData
 {
+	public class PointMap
+	{
+		PointInfo[]	mPoints;
+		int			mNumRows;
+		int			mNumCols;
+
+		PointMap(int numRows, int numCols)
+		{
+			mNumCols = numCols;
+			mNumRows = numRows;
+			mPoints = new PointInfo[mNumRows * mNumCols];
+		}
+
+		PointInfo get(int row, int col)
+		{
+			return mPoints[getIndex(row, col)];
+		}
+
+		void put(int row, int col, PointInfo info)
+		{
+			mPoints[getIndex(row, col)] = info;
+		}
+
+		int getIndex(int row, int col)
+		{
+			return row * mNumCols + col;
+		}
+	}
+
 	class BufferResult
 	{
+		PointMap		mPointMap;
 		TmpFloatBuf		mVertexBuf;
 		TmpFloatBuf		mNormalBuf;
 		TmpFloatBuf		mColorBuf;
@@ -32,8 +62,9 @@ public class Grid
 		final Vector3f	mNormalDefault;
 		short			mPosition;
 
-		public BufferResult()
+		public BufferResult(int numRows, int numCols)
 		{
+			mPointMap = new PointMap(numRows, numCols);
 			mVertexBuf = new TmpFloatBuf();
 			mTexBuf = new TmpFloatBuf();
 			mIndexBuf = new TmpShortBuf();
@@ -47,6 +78,17 @@ public class Grid
 			{
 				mNormalDefault = null;
 				mColorBuf = new TmpFloatBuf();
+			}
+		}
+
+		public void calcColors()
+		{
+			mColorBuf.clear();
+			Color4f color;
+			for (int p = 0; p + 2 < mVertexBuf.size(); p += 3)
+			{
+				color = mComputeColor.getColor(mVertexBuf.get(p), mVertexBuf.get(p + 1), mVertexBuf.get(p + 2));
+				mColorBuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
 			}
 		}
 
@@ -94,6 +136,11 @@ public class Grid
 			return null;
 		}
 
+		int getNumVecs()
+		{
+			return mVertexBuf.size() / 3;
+		}
+
 		public FloatBuf getTexBuf()
 		{
 			return mTexBuf.create();
@@ -104,58 +151,67 @@ public class Grid
 			return mVertexBuf.create();
 		}
 
-		public void put(float x, float y, float percentX, float percentY)
+		public void put(int row, int col, float x, float y, float percentX, float percentY)
 		{
-			Color4f color;
 			Vector3f normal;
-			float z;
-			float xadj;
-			float yadj;
+			Vector3f vec;
+			PointInfo ptInfo;
 
-			if (mCompute != null)
+			ptInfo = mPointMap.get(row, col);
+
+			if (ptInfo == null)
 			{
-				Info info = new Info();
-				info.setGenNormal(mWithNormals);
+				if (mCompute != null)
+				{
+					Info info = new Info();
+					info.setGenNormal(mWithNormals);
 
-				mCompute.fillInfo(x, y, info);
+					mCompute.fillInfo(x, y, info);
 
-				z = info.getHeight();
-				xadj = info.getXAdjust();
-				yadj = info.getYAdjust();
-				normal = info.getNormal();
-				color = info.getColor();
-				if (normal == null)
+					vec = new Vector3f(x + info.getXAdjust(), y + info.getYAdjust(), info.getHeight());
+					normal = info.getNormal();
+					if (normal == null)
+					{
+						normal = mNormalDefault;
+					}
+				}
+				else
 				{
 					normal = mNormalDefault;
+					vec = new Vector3f(x, y, 0);
 				}
+				ptInfo = new PointInfo(vec, normal);
+				mPointMap.put(row, col, ptInfo);
 			}
 			else
 			{
-				normal = mNormalDefault;
-				z = 0;
-				xadj = 0;
-				yadj = 0;
-				color = null;
+				vec = ptInfo.getVec();
+				normal = ptInfo.getNormal();
 			}
-			mVertexBuf.put(x + xadj).put(y + yadj).put(z);
+			ptInfo.addPosition(mVertexBuf.size());
+			mVertexBuf.put(vec.getX()).put(vec.getY()).put(vec.getZ());
 
 			if (mNormalBuf != null && normal != null)
 			{
 				mNormalBuf.put(normal.getX()).put(normal.getY()).put(normal.getZ());
 			}
 			mTexBuf.put(percentX).put(percentY);
-
-			if (color != null && mColorBuf != null)
-			{
-				mColorBuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
-			}
 			mPosition++;
 		}
 
-		public void put(int id, HashMap<Integer, Short> map, float x, float y, float percentX, float percentY)
+		public void putZ(PointInfo info)
+		{
+			for (int pos : info.getPositions())
+			{
+				mVertexBuf.put(pos + 2, info.getVec().getZ());
+			}
+		}
+
+		public void put(int id, HashMap<Integer, Short> map, int row, int col, float x, float y, float percentX,
+				float percentY)
 		{
 			map.put(id, getNextPosition());
-			put(x, y, percentX, percentY);
+			put(row, col, x, y, percentX, percentY);
 		}
 
 		/**
@@ -175,6 +231,7 @@ public class Grid
 			mIndexBuf.put(index[2]);
 			mIndexBuf.put(index[1]);
 		}
+
 	};
 
 	static final String		TAG				= "Grid";
@@ -183,8 +240,8 @@ public class Grid
 	int						mNumCols;
 	int						mTimesRow		= 1;
 	int						mTimesCol		= 1;
-	/** Indicates which major cells have sub-divisions */
-	byte[]					mSubdivision;
+	float					mIncX;
+	float					mIncY;
 	/** Track index by row,col,subrow,subcol for vertex, normal, and tex arrays */
 	HashMap<Integer, Short>	mIndexTL		= new HashMap<Integer, Short>();
 	/** On repeating texture maps, need secondary points along edge boundaries */
@@ -198,9 +255,11 @@ public class Grid
 	/** Shared result */
 	BufferResult			mResult;
 	/** Computational bounds of grid */
-	Bounds2D				mBounds2D;
+	Bounds2D				mBounds;
 	/** Used to compute the actual values */
 	ICalcValue				mCompute;
+	/** Special calculation to handle applying color shades across different heights */
+	ICalcColor				mComputeColor;
 	/** If used, then we are computing normal values too */
 	boolean					mWithNormals	= true;
 
@@ -231,8 +290,16 @@ public class Grid
 
 	public void calc()
 	{
-		mResult = new BufferResult();
+		mResult = new BufferResult(mNumRows + 1, mNumCols + 1);
 		calcPoints();
+		if (mCompute != null)
+		{
+			mCompute.postCalc(this);
+		}
+		if (mComputeColor != null)
+		{
+			mResult.calcColors();
+		}
 		calcIndexes();
 	}
 
@@ -243,83 +310,36 @@ public class Grid
 	{
 		short indexes[] = new short[4]; // 0: this, 1: right, 2:bottom, 3: bottom-right
 
-		// CW
-		if (mSubdivision == null)
+		if (!isRepeating())
 		{
-			if (!isRepeating())
+			short index = 0;
+
+			for (int row = 0; row < mNumRows; row++)
 			{
-				short index = 0;
-
-				for (int row = 0; row < mNumRows; row++)
+				for (int col = 0; col < mNumCols; col++, index++)
 				{
-					for (int col = 0; col < mNumCols; col++, index++)
-					{
-						indexes[0] = index;
-						indexes[1] = (short) (index + 1); // right
-						indexes[2] = (short) (index + mNumCols + 1); // bottom
-						indexes[3] = (short) (indexes[2] + 1); // right bottom
+					indexes[0] = index;
+					indexes[1] = (short) (index + 1); // right
+					indexes[2] = (short) (index + mNumCols + 1); // bottom
+					indexes[3] = (short) (indexes[2] + 1); // right bottom
 
-						mResult.putTwoTriangles(indexes);
-					}
-					index++;
+					mResult.putTwoTriangles(indexes);
 				}
-			}
-			else
-			{
-				for (int row = 0; row < mNumRows; row++)
-				{
-					for (int col = 0; col < mNumCols; col++)
-					{
-						indexes[0] = mIndexTL.get(ID(row, col)); // top-left
-						indexes[1] = getIndex(ID(row, col + 1), mIndexTR); // top-right
-						indexes[2] = getIndex(ID(row + 1, col), mIndexBL); // bottom-left
-						indexes[3] = getIndex(ID(row + 1, col + 1), mIndexBR, mIndexTR, mIndexBL); // bottom-right
-
-						mResult.putTwoTriangles(indexes);
-					}
-				}
+				index++;
 			}
 		}
 		else
 		{
-			int subRow;
-			int subCol;
-			int numCells;
-			short subDivision;
-			int rc = 0;
-
 			for (int row = 0; row < mNumRows; row++)
 			{
 				for (int col = 0; col < mNumCols; col++)
 				{
-					subDivision = mSubdivision[rc++];
+					indexes[0] = mIndexTL.get(ID(row, col)); // top-left
+					indexes[1] = getIndex(ID(row, col + 1), mIndexTR); // top-right
+					indexes[2] = getIndex(ID(row + 1, col), mIndexBL); // bottom-left
+					indexes[3] = getIndex(ID(row + 1, col + 1), mIndexBR, mIndexTR, mIndexBL); // bottom-right
 
-					if (subDivision == 0)
-					{
-						indexes[0] = mIndexTL.get(ID(row, col));
-						indexes[1] = mIndexTL.get(ID(row, col + 1)); // right
-						indexes[2] = mIndexTL.get(ID(row + 1, col)); // bottom
-						indexes[3] = mIndexTL.get(ID(row + 1, col + 1)); // right bottom
-
-						mResult.putTwoTriangles(indexes);
-					}
-					else
-					{
-						numCells = MathUtils.powOf2(subDivision);
-
-						for (subRow = 0; subRow < numCells; subRow++)
-						{
-							for (subCol = 0; subCol < numCells; subCol++)
-							{
-								indexes[0] = mIndexTL.get(ID(row, col, numCells, subRow, subCol));
-								indexes[1] = mIndexTL.get(ID(row, col, numCells, subRow, subCol + 1)); // right
-								indexes[2] = mIndexTL.get(ID(row, col, numCells, subRow + 1, subCol)); // bottom
-								indexes[3] = mIndexTL.get(ID(row, col, numCells, subRow + 1, subCol + 1)); // right-bottom
-
-								mResult.putTwoTriangles(indexes);
-							}
-						}
-					}
+					mResult.putTwoTriangles(indexes);
 				}
 			}
 		}
@@ -345,7 +365,7 @@ public class Grid
 		float height = getHeight();
 		float incX = width / mNumCols;
 		float incY = height / mNumRows;
-		float y = mBounds2D.getMaxY();
+		float y = mBounds.getMaxY();
 		float x;
 		float percentX;
 		float percentX2;
@@ -356,9 +376,11 @@ public class Grid
 		int percentXCounter;
 		int percentYCounter = 0;
 		int id;
+
+		mIncX = incX;
+		mIncY = incY;
 		/*
-		 * Do each cell. With no subdivisions, there is one point per cell. With subdivisions, there is a block of
-		 * points per cell.
+		 * Do each cell. There is one point per cell.
 		 * 
 		 * Note: the order in which the points are added are important. The index array created later refers to this
 		 * order.
@@ -367,7 +389,7 @@ public class Grid
 		 * is, but we only have a single row of points. The subdivision value for these cells share the neighbor edge
 		 * cell.
 		 * 
-		 * Another complication: on the edge of the texture we need to double up the points depending on which side
+		 * A complication: on the edge of the texture we need to double up the points depending on which side
 		 * of the texture needs to be represented. Upper triangles use the lower portion of the texture on the edge,
 		 * Lower triangles use the upper portion of the texture on the edge. Even though both points are physically in
 		 * the same spot.
@@ -377,153 +399,58 @@ public class Grid
 		mIndexBL.clear();
 		mIndexBR.clear();
 
-		if (mSubdivision == null)
+		if (!isRepeating())
 		{
-			if (!isRepeating())
+			float percentIncX = 1f / mNumCols;
+			float percentIncY = 1f / mNumRows;
+
+			for (int row = 0; row <= mNumRows; row++)
 			{
-				float percentIncX = 1f / mNumCols;
-				float percentIncY = 1f / mNumRows;
+				x = mBounds.getMinX();
+				percentX = 0;
 
-				for (int row = 0; row <= mNumRows; row++)
+				for (int col = 0; col <= mNumCols; col++)
 				{
-					x = mBounds2D.getMinX();
-					percentX = 0;
-
-					for (int col = 0; col <= mNumCols; col++)
-					{
-						mResult.put(x, y, percentX, percentY);
-
-						x += incX;
-						percentX += percentIncX;
-					}
-					y -= incY;
-					percentY += percentIncY;
+					mResult.put(row, col, x, y, percentX, percentY);
+					x += incX;
+					percentX += percentIncX;
 				}
-			}
-			else
-			{
-				for (int row = 0; row <= mNumRows; row++)
-				{
-					x = mBounds2D.getMinX();
-
-					percentXCounter = 0;
-					percentX = 0;
-					percentX2 = 0;
-
-					for (int col = 0; col <= mNumCols; col++)
-					{
-						id = ID(row, col);
-
-						mResult.put(id, mIndexTL, x, y, percentX, percentY);
-
-						if (percentX != percentX2)
-						{
-							if (percentY != percentY2)
-							{
-								mResult.put(id, mIndexTR, x, y, percentX2, percentY);
-								mResult.put(id, mIndexBR, x, y, percentX2, percentY2);
-								mResult.put(id, mIndexBL, x, y, percentX, percentY2);
-							}
-							else
-							{
-								mResult.put(id, mIndexTR, x, y, percentX2, percentY);
-							}
-						}
-						else if (percentY2 != percentY)
-						{
-							mResult.put(id, mIndexBL, x, y, percentX, percentY2);
-						}
-						x += incX;
-						percentXCounter++;
-
-						if (percentXCounter >= percentXNumCols)
-						{
-							percentXCounter = 0;
-							percentX2 = 1f;
-							percentX = 0;
-						}
-						else
-						{
-							percentX = (float) percentXCounter / percentXNumCols;
-							percentX2 = percentX;
-						}
-					}
-					y -= incY;
-					percentYCounter++;
-
-					if (percentYCounter >= percentYNumRows)
-					{
-						percentYCounter = 0;
-						percentY = 0;
-						percentY2 = 1;
-					}
-					else
-					{
-						percentY = (float) percentYCounter / percentYNumRows;
-						percentY2 = percentY;
-					}
-				}
+				y -= incY;
+				percentY += percentIncY;
 			}
 		}
 		else
 		{
-			float subX = 0;
-			float subY = 0;
-			float subPercentX = 0;
-			float subPercentY = 0;
-			float subPercentX2;
-			float subPercentY2;
-			float subIncX;
-			float subIncY;
-			float percentIncX = 1f / percentXNumCols;
-			float percentIncY = 1f / percentYNumRows;
-			byte subDivision;
-			int subNumCells = 1;
-			int rc;
-
-			rc = 0;
-
-			for (int row = 0; row < mNumRows; row++)
+			for (int row = 0; row <= mNumRows; row++)
 			{
-				x = mBounds2D.getMinX();
+				x = mBounds.getMinX();
 
+				percentXCounter = 0;
 				percentX = 0;
 				percentX2 = 0;
-				percentXCounter = 0;
 
-				for (int col = 0; col < mNumCols; col++)
+				for (int col = 0; col <= mNumCols; col++)
 				{
-					subDivision = mSubdivision[rc++];
-					subNumCells = MathUtils.powOf2(subDivision);
+					id = ID(row, col);
 
-					subY = y;
-					subPercentY = percentY;
-					subPercentY2 = percentY2;
+					mResult.put(id, mIndexTL, row, col, x, y, percentX, percentY);
 
-					subIncX = incX / subNumCells;
-					subIncY = incY / subNumCells;
-
-					for (int subRow = 0; subRow <= subNumCells; subRow++)
+					if (percentX != percentX2)
 					{
-						subX = x;
-						subPercentX = percentX;
-						subPercentX2 = percentX2;
-
-						for (int subCol = 0; subCol <= subNumCells; subCol++)
+						if (percentY != percentY2)
 						{
-							id = ID(row, col, subNumCells, subRow, subCol);
-
-							if (!mIndexTL.containsKey(id))
-							{
-								mResult.put(id, mIndexTL, subX, subY, subPercentX, subPercentY);
-							}
-							subX += subIncX;
-							subPercentX += (float) subCol / subNumCells * percentIncX;
-							subPercentX2 = subPercentX;
+							mResult.put(id, mIndexTR, row, col, x, y, percentX2, percentY);
+							mResult.put(id, mIndexBR, row, col, x, y, percentX2, percentY2);
+							mResult.put(id, mIndexBL, row, col, x, y, percentX, percentY2);
 						}
-						subY -= subIncY;
-						subPercentY += (float) subRow / subNumCells * percentIncY;
-						subPercentY2 = subPercentY;
+						else
+						{
+							mResult.put(id, mIndexTR, row, col, x, y, percentX2, percentY);
+						}
+					}
+					else if (percentY2 != percentY)
+					{
+						mResult.put(id, mIndexBL, row, col, x, y, percentX, percentY2);
 					}
 					x += incX;
 					percentXCounter++;
@@ -563,11 +490,6 @@ public class Grid
 		mResult.cleanup();
 	}
 
-	public void clearSubdivision()
-	{
-		mSubdivision = null;
-	}
-
 	public FloatBuf getCalcColorBuf()
 	{
 		return mResult.getColorBuf();
@@ -593,9 +515,61 @@ public class Grid
 		return mResult.getVertexBuf();
 	}
 
+	@Override
+	public int[] getBoundary(Bounds2D bounds)
+	{
+		Vector3f vec;
+		int startRow = -1;
+		int startCol = -1;
+		int endRow = mNumRows;
+		int endCol = mNumCols;
+
+		for (int row = 0; row < mNumRows; row++)
+		{
+			vec = mResult.mPointMap.get(row, 0).getVec();
+
+			if (startRow == -1)
+			{
+				if (vec.getY() >= bounds.getMinY() && vec.getY() <= bounds.getMaxY())
+				{
+					startRow = row;
+
+					for (int col = 0; col < mNumCols; col++)
+					{
+						vec = mResult.mPointMap.get(row, col).getVec();
+
+						if (startCol == -1)
+						{
+							if (vec.getX() >= bounds.getMinX() && vec.getX() <= bounds.getMaxX())
+							{
+								startCol = col;
+							}
+						}
+						else if (!(vec.getX() >= bounds.getMinX() && vec.getX() <= bounds.getMaxX()))
+						{
+							endCol = col - 1;
+							break;
+						}
+					}
+				}
+			}
+			else if (!(vec.getY() >= bounds.getMinY() && vec.getY() <= bounds.getMaxY()))
+			{
+				endRow = row - 1;
+				break;
+			}
+		}
+		if ((startRow == -1) || (startCol == -1))
+		{
+			return null;
+		}
+		return new int[] {
+				startRow, startCol, endRow, endCol };
+	}
+
 	public float getHeight()
 	{
-		return mBounds2D.getSizeY();
+		return mBounds.getSizeY();
 	}
 
 	short getIndex(int id, HashMap<Integer, Short> map)
@@ -634,9 +608,15 @@ public class Grid
 		return mNumRows;
 	}
 
+	@Override
+	public PointInfo getPointInfo(int row, int col)
+	{
+		return mResult.mPointMap.get(row, col);
+	}
+
 	public float getWidth()
 	{
-		return mBounds2D.getSizeX();
+		return mBounds.getSizeX();
 	}
 
 	/**
@@ -693,15 +673,27 @@ public class Grid
 		return row * mNumCols + col;
 	}
 
+	@Override
+	public void putZ(PointInfo info)
+	{
+		mResult.putZ(info);
+	}
+
 	public Grid setBounds(Bounds2D bounds)
 	{
-		mBounds2D = bounds;
+		mBounds = bounds;
 		return this;
 	}
 
 	public Grid setCompute(ICalcValue calc)
 	{
 		mCompute = calc;
+		return this;
+	}
+
+	public Grid setComputeColor(ICalcColor calc)
+	{
+		mComputeColor = calc;
 		return this;
 	}
 
@@ -738,140 +730,10 @@ public class Grid
 		}
 		mNumRows = nrows;
 		mNumCols = ncols;
-		mSubdivision = null;
-	}
-
-	/**
-	 * Set the subdivision for the indicated cell. By default all cells have no sub-divisions (0). A sub-division of 1,
-	 * means the cell is split into 4 cells. A sub-division of 2, means it is split into 16, etc.
-	 * 
-	 * @param row
-	 * @param col
-	 * @param subdivision
-	 */
-	public void setSubdivision(int row, int col, int subdivision)
-	{
-		if (row >= 0 && row < mNumRows && col >= 0 && col < mNumCols)
-		{
-			if (mSubdivision == null)
-			{
-				mSubdivision = new byte[mNumRows * mNumCols];
-			}
-			mSubdivision[posSD(row, col)] = (byte) subdivision;
-		}
 	}
 
 	public void setWithNormals(boolean withNormal)
 	{
 		mWithNormals = withNormal;
 	}
-
-	/**
-	 * Calculate the size of the index array
-	 * 
-	 * @return
-	 */
-	// int calcNumIndex()
-	// {
-	// int count;
-	// /*
-	// * Each cell or subcell has two triangles each for 6 index.
-	// */
-	// if (mSubdivision == null)
-	// {
-	// count = mNumRows * mNumCols * 6;
-	// }
-	// else
-	// {
-	// int row;
-	// int col;
-	// int rc = 0;
-	// int numSubCells;
-	// int subDivision;
-	//
-	// count = 0;
-	// for (row = 0; row < mNumRows; row++)
-	// {
-	// for (col = 0; col < mNumCols; col++)
-	// {
-	// subDivision = mSubdivision[rc++];
-	// numSubCells = MathUtils.powOf2(subDivision);
-	// count += numSubCells * numSubCells * 6;
-	// }
-	// }
-	// }
-	// return count;
-	// }
-
-	/**
-	 * Calculate the number points needed to represent the grid.
-	 * 
-	 * @return
-	 */
-	// int calcNumPoints()
-	// {
-	// int count;
-	//
-	// if (mSubdivision == null)
-	// {
-	// count = (mNumRows + 1) * (mNumCols + 1);
-	// }
-	// else
-	// {
-	// int rc;
-	// int row;
-	// int col;
-	// int subNumRC = 0;
-	// int subNumCells;
-	// int subDivision;
-	// int subDivisionRight;
-	// int subDivisionBottom;
-	// int subDivisionDiff;
-	//
-	// rc = 0;
-	// count = 0;
-	// /** Account for the points needed by each cell */
-	// for (row = 0; row < mNumRows; row++)
-	// {
-	// for (col = 0; col < mNumCols; col++, rc++)
-	// {
-	// subDivision = mSubdivision[rc];
-	// subNumRC = MathUtils.powOf2(subDivision);
-	// subNumCells = subNumRC * subNumRC;
-	// count += subNumCells;
-	//
-	// if (col == mNumCols - 1)
-	// {
-	// count += subNumRC; // right edge points
-	// }
-	// else
-	// {
-	// subDivisionRight = mSubdivision[rc + 1];
-	// if (subDivisionRight < subDivision)
-	// {
-	// subDivisionDiff = subDivision - subDivisionRight;
-	// count += MathUtils.powOf2(subDivisionDiff) - 1;
-	// }
-	// }
-	// if (row == mNumRows - 1)
-	// {
-	// count += subNumRC; // bottom edge points
-	// }
-	// else
-	// {
-	// subDivisionBottom = mSubdivision[rc + mNumCols];
-	// if (subDivisionBottom < subDivision)
-	// {
-	// subDivisionDiff = subDivision - subDivisionBottom;
-	// count += MathUtils.powOf2(subDivisionDiff) - 1;
-	// }
-	// }
-	// }
-	// }
-	// // Now bottom-right point
-	// count++;
-	// }
-	// return count;
-	// }
-
 }

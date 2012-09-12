@@ -35,4 +35,13 @@ public class CalcGroup implements ICalcValue
 		return false;
 	}
 
+	@Override
+	public void postCalc(IMapData query)
+	{
+		for (ICalcValue calc : mList)
+		{
+			calc.postCalc(query);
+		}
+	}
+
 }

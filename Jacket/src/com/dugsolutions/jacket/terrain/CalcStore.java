@@ -1,15 +1,12 @@
 package com.dugsolutions.jacket.terrain;
 
-import java.util.HashMap;
-
 /**
  * Takes any calculator, and if the value generated has been generated already
  * then the value is taken from the stored hash map.
  */
-public class CalcStore implements ICalcValue
+public class CalcStore extends FloatMap<Info> implements ICalcValue
 {
-	protected ICalcValue							mValue;
-	protected HashMap<Float, HashMap<Float, Info>>	mHeightMap	= new HashMap<Float, HashMap<Float, Info>>();
+	protected ICalcValue	mValue;
 
 	public CalcStore(ICalcValue calc)
 	{
@@ -18,7 +15,7 @@ public class CalcStore implements ICalcValue
 
 	public void fillInfo(float x, float y, Info info)
 	{
-		Info cur = mapQuery(x, y);
+		Info cur = get(x, y);
 		if (cur != null)
 		{
 			info.set(cur.dup());
@@ -26,7 +23,7 @@ public class CalcStore implements ICalcValue
 		else
 		{
 			mValue.fillInfo(x, y, info);
-			mapStore(x, y, info.dup());
+			put(x, y, info.dup());
 		}
 	}
 
@@ -35,33 +32,8 @@ public class CalcStore implements ICalcValue
 		return mValue.within(x, y);
 	}
 
-	Info mapQuery(float x, float y)
+	@Override
+	public void postCalc(IMapData query)
 	{
-		HashMap<Float, Info> xMap;
-		if (mHeightMap.containsKey(x))
-		{
-			xMap = mHeightMap.get(x);
-			if (xMap.containsKey(y))
-			{
-				return xMap.get(y);
-			}
-		}
-		return null;
 	}
-
-	void mapStore(float x, float y, Info value)
-	{
-		HashMap<Float, Info> xMap;
-		if (mHeightMap.containsKey(x))
-		{
-			xMap = mHeightMap.get(x);
-		}
-		else
-		{
-			xMap = new HashMap<Float, Info>();
-			mHeightMap.put(x, xMap);
-		}
-		xMap.put(y, value);
-	}
-
 }

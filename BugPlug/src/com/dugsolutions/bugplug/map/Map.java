@@ -29,7 +29,7 @@ public class Map
 
 	final float				mMountainHeight		= 1.0f;
 	final float				mMountainRidgeSize	= 2f;
-	final float				mMountainLength		= 8f;
+	final float				mMountainLength		= 10f;
 	final float				mMountainLeftRatio	= .9f;
 
 	final Color4f			mColorMax			= new Color4f(1f, 1f, 1f);
@@ -87,8 +87,7 @@ public class Map
 
 		if (!mHasLight)
 		{
-			heightColor = new CalcHeightColor(mColorMinHeight, mColorMaxHeight, mColorMin, mColorMax, mBounds);
-			group.add(heightColor);
+			mGround.setComputeColor(new CalcHeightColor(mColorMinHeight, mColorMaxHeight, mColorMin, mColorMax, mBounds));
 		}
 		mGround.setCompute(group);
 		mGround.init();

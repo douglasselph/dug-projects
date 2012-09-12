@@ -36,4 +36,8 @@ public class CalcValue implements ICalcValue
 		return mBounds.within(x, y);
 	}
 
+	@Override
+	public void postCalc(IMapData query)
+	{
+	}
 }

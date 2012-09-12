@@ -4,7 +4,6 @@ import android.util.Log;
 
 public class Bounds2D
 {
-
 	protected static final int	MIN_X	= 0;
 	protected static final int	MIN_Y	= 1;
 	protected static final int	MAX_X	= 2;
