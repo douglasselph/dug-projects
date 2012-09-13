@@ -219,11 +219,20 @@ public class CalcBumps extends CalcValue
 		init();
 	}
 
+	/**
+	 * Set the height of the bump at the designated location to the indicated value.
+	 */
 	public void setHeight(int ix, int iy, float val)
 	{
 		mStore.put(ix, iy, val);
 	}
 
+	/**
+	 * Set the height of the entire column designated to the indicated value.
+	 * 
+	 * @param ix
+	 * @param val
+	 */
 	public void setHeightX(int ix, float val)
 	{
 		for (int iy = 0; iy < mNumRows; iy++)
@@ -232,6 +241,13 @@ public class CalcBumps extends CalcValue
 		}
 	}
 
+	/**
+	 * Set the height of the columns designated to the indicated value.
+	 * 
+	 * @param ixl
+	 * @param ixh
+	 * @param val
+	 */
 	public void setHeightX(int ixl, int ixh, float val)
 	{
 		for (int iy = 0; iy < mNumRows; iy++)
@@ -243,6 +259,12 @@ public class CalcBumps extends CalcValue
 		}
 	}
 
+	/**
+	 * Set the height of the row indicated to the designated value.
+	 * 
+	 * @param iy
+	 * @param val
+	 */
 	public void setHeightY(int iy, float val)
 	{
 		for (int ix = 0; ix < mNumCols; ix++)
@@ -251,6 +273,13 @@ public class CalcBumps extends CalcValue
 		}
 	}
 
+	/**
+	 * Set the height of the rows indicated to the designated value.
+	 * 
+	 * @param iyl
+	 * @param iyh
+	 * @param val
+	 */
 	public void setHeightY(int iyl, int iyh, float val)
 	{
 		for (int iy = iyl; iy <= iyh; iy++)

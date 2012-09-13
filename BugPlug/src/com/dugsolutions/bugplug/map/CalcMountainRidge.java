@@ -5,7 +5,6 @@ import java.util.Random;
 
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.terrain.CalcBumps;
-import com.dugsolutions.jacket.terrain.CalcConstant;
 import com.dugsolutions.jacket.terrain.CalcGroup;
 import com.dugsolutions.jacket.terrain.CalcMound;
 import com.dugsolutions.jacket.terrain.IMapData;
@@ -69,9 +68,7 @@ public class CalcMountainRidge extends CalcGroup
 		Bounds2D topEdge;
 		CalcBumps.Config config;
 		CalcBumps bumps;
-
-		CalcConstant con = new CalcConstant(.1f, mBounds);
-		add(con);
+		PostCalcSmooth smooth;
 
 		// Left rise
 		xmin = mBounds.getMinX();
@@ -87,9 +84,29 @@ public class CalcMountainRidge extends CalcGroup
 		add(bumps);
 
 		config = new CalcBumps.Config(maxBumpHeight / 5, true, getSeed());
-		bumps = new CalcBumps(leftEdge.getSizeX() / 16, leftEdge.getSizeY() / 30, config, leftEdge);
+		xmin = leftEdge.getMinX();
+		xmax = leftEdge.getMaxX();
+		ymax = leftEdge.getMaxY();
+		ymin = mBounds.getMinY();
+		bumps = new CalcBumps(leftEdge.getSizeX() / 16, leftEdge.getSizeY() / 30, config, new Bounds2D(xmin, ymin,
+				xmax, ymax));
 		bumps.setHeightX(0, 3, 0);
 		add(bumps);
+
+		final float topSmoothingY = leftEdge.getMinY() + mRidgeSize * 2f / 3f;
+
+		// config = new CalcBumps.Config(maxBumpHeight / 5, true, getSeed());
+		// xmin = leftEdge.getMinX();
+		// xmax = leftEdge.getMaxX();
+		// ymax = topSmoothingY;
+		// ymin = mBounds.getMinY();
+		// Bounds2D leftSmoothing = new Bounds2D(xmin, ymin, xmax, ymax);
+		// bumps = new CalcBumps(leftEdge.getSizeX() / 19, leftEdge.getSizeY() / 25, config, leftSmoothing);
+		// bumps.setHeightX(0, 3, 0);
+		// add(bumps);
+
+		// smooth = new PostCalcSmooth(PostCalcSmooth.Direction.Down, leftSmoothing);
+		// mSmooths.add(smooth);
 
 		// Top rise
 		xmin = mBounds.getMinX();
@@ -127,7 +144,6 @@ public class CalcMountainRidge extends CalcGroup
 		bumps.setHeightX(bumps.getNumCols() - 4, bumps.getNumCols() - 1, 0);
 		add(bumps);
 
-		PostCalcSmooth smooth;
 		// float smoothDist = mRidgeSize / 2;
 		// xmin = leftEdge.getMinX();
 		// xmax = leftEdge.getMaxX();
@@ -136,12 +152,6 @@ public class CalcMountainRidge extends CalcGroup
 		// smooth = new PostCalcSmooth(PostCalcSmooth.Orientation.Horizontal, new Bounds2D(xmin, ymin, xmax, ymax));
 		// mSmooths.add(smooth);
 
-		xmin = leftEdge.getMinX();
-		xmax = leftEdge.getMaxX();
-		ymax = leftEdge.getMinY() + mRidgeSize * 2f / 3f;
-		ymin = mBounds.getMinY();
-		smooth = new PostCalcSmooth(PostCalcSmooth.Orientation.Horizontal, new Bounds2D(xmin, ymin, xmax, ymax));
-		mSmooths.add(smooth);
 	}
 
 	long getSeed()

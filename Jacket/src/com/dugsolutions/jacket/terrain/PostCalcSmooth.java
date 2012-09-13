@@ -2,13 +2,15 @@ package com.dugsolutions.jacket.terrain;
 
 import java.util.ArrayList;
 
+import android.util.Log;
+
 import com.dugsolutions.jacket.math.Bounds2D;
 
 public class PostCalcSmooth
 {
-	public enum Orientation
+	public enum Direction
 	{
-		Horizontal, Vertical;
+		Down, Up, Right, Left;
 	}
 
 	ArrayList<PointInfo>	mAdjustPos	= new ArrayList<PointInfo>();
@@ -18,13 +20,18 @@ public class PostCalcSmooth
 	float					mExtremeDelta;
 	int						mExtremeIPos;
 	IMapData				mMap;
-	Orientation				mOrientation;
+	Direction				mDirection;
 	FloatMap<PointInfo>		mPointMap;
 
-	public PostCalcSmooth(Orientation orientation, Bounds2D bounds)
+	/**
+	 * 
+	 * @param direction
+	 * @param bounds
+	 */
+	public PostCalcSmooth(Direction direction, Bounds2D bounds)
 	{
 		mBounds = bounds;
-		mOrientation = orientation;
+		mDirection = direction;
 	}
 
 	void adjust(int ipos, float amt)
@@ -54,34 +61,35 @@ public class PostCalcSmooth
 		float lastZ;
 		float z;
 		float maxDelta;
-		float totalDelta;
-		float averageDelta;
-		float adjustMax;
-		float adjustInc;
+		float decline;
 		float amt;
 		int maxPos;
+		int p;
+		int dist;
 
-		if (mOrientation == Orientation.Horizontal)
+		if (mDirection == Direction.Down)
 		{
 			for (int col = startCol; col <= endCol; col++)
 			{
+				Log.d("DEBUG", "COLUMN " + col);
 				/*
 				 * Gather column of entries
 				 */
+				PointInfo info;
 				mAdjustPos.clear();
 				for (int row = startRow; row <= endRow; row++)
 				{
-					mAdjustPos.add(mMap.getPointInfo(row, col));
+					mAdjustPos.add(info = mMap.getPointInfo(row, col));
+					Log.d("DEBUG", "ROW " + row + ":" + info.getVec().getZ());
 				}
 				/*
-				 * Find max delta point & average delta
+				 * Locate most extreme delta point.
 				 */
 				lastZ = mAdjustPos.get(0).getVec().getZ();
 				maxDelta = 0;
-				totalDelta = 0;
 				maxPos = 0;
 
-				for (int p = 1; p < mAdjustPos.size(); p++)
+				for (p = 1; p < mAdjustPos.size(); p++)
 				{
 					z = mAdjustPos.get(p).getVec().getZ();
 					delta = z - lastZ;
@@ -90,52 +98,22 @@ public class PostCalcSmooth
 						maxDelta = delta;
 						maxPos = p;
 					}
-					totalDelta += delta;
 				}
-				averageDelta = totalDelta / mAdjustPos.size();
-				/*
-				 * Compute principle adjustment
-				 */
-				adjustMax = (maxDelta - averageDelta) / 2;
-
-				if (maxPos > 0)
-				{
-					/*
-					 * Compute how much the principle adjustment can be reduced each time such that the value will be
-					 * 0.5
-					 * over half the distance.
-					 */
-
-					adjustInc = (float) Math.pow(0.5, 1 / (maxPos / 2.0));
-					/*
-					 * Apply the adjustment to all values BEFORE the max delta.
-					 */
-					amt = adjustMax;
-					for (int p = maxPos - 1; p >= 0; p--)
-					{
-						adjust(p, amt);
-						amt *= adjustInc;
-					}
-				}
-				int left = mAdjustPos.size() - maxPos;
-				if (left > 0)
-				{
-					/*
-					 * Compute how much the principle adjustment can be reduced each time such that the value will be
-					 * 0.5
-					 * over half the distance.
-					 */
-					adjustInc = (float) Math.pow(0.5, 1 / (left / 2.0));
-					/*
-					 * Apply the adjustment to all values AFTER the max delta.
-					 */
-					amt = -adjustMax;
-					for (int p = maxPos; p < mAdjustPos.size(); p++)
-					{
-						adjust(p, amt);
-						amt *= adjustInc;
-					}
-				}
+				Log.d("DEBUG", "MOST EXTREME=" + (startRow + maxPos) + ", " + maxDelta);
+				// /*
+				// * All bets are off if we are already at the end.
+				// */
+				// if (maxPos + 1 < mAdjustPos.size())
+				// {
+				// dist = mAdjustPos.size() - maxPos + 1;
+				// decline = maxDelta / dist;
+				// amt = -maxDelta;
+				// for (p = maxPos; p < mAdjustPos.size(); p++)
+				// {
+				// adjust(p, amt);
+				// amt += decline;
+				// }
+				// }
 			}
 		}
 	}

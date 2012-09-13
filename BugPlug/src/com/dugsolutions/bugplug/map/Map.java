@@ -34,7 +34,7 @@ public class Map
 
 	final Color4f			mColorMax			= new Color4f(1f, 1f, 1f);
 	final float				mColorMaxHeight		= mMountainHeight;
-	final float				mColorMinV			= 0.70f;
+	final float				mColorMinV			= 0.50f;
 	final Color4f			mColorMin			= new Color4f(mColorMinV, mColorMinV, mColorMinV);
 	final float				mColorMinHeight		= -mMountainHeight / 4;
 
