@@ -2,8 +2,6 @@ package com.dugsolutions.jacket.terrain;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import android.util.Log;
-
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.model.Model;
 
@@ -11,16 +9,21 @@ import com.dugsolutions.jacket.model.Model;
  * For a single terrain image, supports an arbitrarily complex geometry using
  * generators.
  */
-public class TerrainGrid extends Model
+public class ModelGrid extends Model
 {
-	static final String	TAG	= "TerrainGrid";
+	static final String	TAG	= "ModelGrid";
 
 	Grid				mGrid;
 
-	public TerrainGrid(boolean withNormals)
+	public ModelGrid()
 	{
 		mGrid = new Grid(10, 10);
-		mGrid.setWithNormals(withNormals);
+	}
+
+	public void calc(ICalcValue calc)
+	{
+		mGrid.calc(calc);
+		init();
 	}
 
 	/**
@@ -29,10 +32,8 @@ public class TerrainGrid extends Model
 	 * 
 	 * @return
 	 */
-	public TerrainGrid init()
+	void init()
 	{
-		mGrid.calc();
-
 		mVertexBuf = mGrid.getCalcVertexBuf();
 		mNormalBuf = mGrid.getCalcNormalBuf();
 		mTextureBuf = mGrid.getCalcTexBuf();
@@ -51,7 +52,6 @@ public class TerrainGrid extends Model
 		{
 			mColorBuf.rewind();
 		}
-		return this;
 	}
 
 	@Override
@@ -61,50 +61,31 @@ public class TerrainGrid extends Model
 		gl.glFrontFace(GL10.GL_CW);
 	}
 
-	public TerrainGrid setBounds(Bounds2D bounds)
+	public ModelGrid setBounds(Bounds2D bounds)
 	{
 		mGrid.setBounds(bounds);
 		return this;
 	}
 
-	public TerrainGrid setCompute(ICalcValue calc)
-	{
-		mGrid.setCompute(calc);
-		return this;
-	}
-
-	public TerrainGrid setComputeColor(ICalcColor calc)
+	public ModelGrid setComputeColor(ICalcColor calc)
 	{
 		mGrid.setComputeColor(calc);
 		return this;
 	}
 
-	public TerrainGrid setGridSize(int nrows, int ncols) throws Exception
+	public ModelGrid setGridSize(int nrows, int ncols)
 	{
 		mGrid.setSize(nrows, ncols);
 		return this;
 	}
 
-	public TerrainGrid setGridSizeSafe(int nrows, int ncols)
-	{
-		try
-		{
-			mGrid.setSize(nrows, ncols);
-		}
-		catch (Exception ex)
-		{
-			Log.e(TAG, ex.getMessage());
-		}
-		return this;
-	}
-
-	public TerrainGrid setRepeating(int rowTimes, int colTimes)
+	public ModelGrid setRepeating(int rowTimes, int colTimes)
 	{
 		mGrid.setRepeating(rowTimes, colTimes);
 		return this;
 	}
 
-	public TerrainGrid setWithNormals(boolean flag)
+	public ModelGrid setWithNormals(boolean flag)
 	{
 		mGrid.setWithNormals(flag);
 		return this;

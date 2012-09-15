@@ -2,8 +2,6 @@ package com.dugsolutions.jacket.terrain;
 
 import java.util.HashMap;
 
-import android.util.Log;
-
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.BufUtils.FloatBuf;
 import com.dugsolutions.jacket.math.BufUtils.ShortBuf;
@@ -53,18 +51,26 @@ public class Grid implements IMapData
 
 	class BufferResult
 	{
-		PointMap		mPointMap;
-		TmpFloatBuf		mVertexBuf;
-		TmpFloatBuf		mNormalBuf;
-		TmpFloatBuf		mColorBuf;
-		TmpFloatBuf		mTexBuf;
-		TmpShortBuf		mIndexBuf;
-		final Vector3f	mNormalDefault;
-		short			mPosition;
+		PointMap	mPointMap;
+		TmpFloatBuf	mVertexBuf;
+		TmpFloatBuf	mNormalBuf;
+		TmpFloatBuf	mColorBuf;
+		TmpFloatBuf	mTexBuf;
+		TmpShortBuf	mIndexBuf;
+		short		mPosition;
 
 		public BufferResult(int numRows, int numCols)
 		{
-			mPointMap = new PointMap(numRows, numCols);
+			this();
+
+			if (mUsePointMap)
+			{
+				mPointMap = new PointMap(numRows, numCols);
+			}
+		}
+
+		public BufferResult()
+		{
 			mVertexBuf = new TmpFloatBuf();
 			mTexBuf = new TmpFloatBuf();
 			mIndexBuf = new TmpShortBuf();
@@ -157,18 +163,25 @@ public class Grid implements IMapData
 			Vector3f vec;
 			PointInfo ptInfo;
 
-			ptInfo = mPointMap.get(row, col);
-
+			if (mPointMap != null)
+			{
+				ptInfo = mPointMap.get(row, col);
+			}
+			else
+			{
+				ptInfo = null;
+			}
 			if (ptInfo == null)
 			{
-				if (mCompute != null)
+				Info info = new Info();
+				info.setGenNormal(mWithNormals);
+
+				mCompute.fillInfo(x, y, info);
+
+				vec = new Vector3f(x + info.getXAdjust(), y + info.getYAdjust(), info.getHeight());
+
+				if (mWithNormals)
 				{
-					Info info = new Info();
-					info.setGenNormal(mWithNormals);
-
-					mCompute.fillInfo(x, y, info);
-
-					vec = new Vector3f(x + info.getXAdjust(), y + info.getYAdjust(), info.getHeight());
 					normal = info.getNormal();
 					if (normal == null)
 					{
@@ -177,11 +190,14 @@ public class Grid implements IMapData
 				}
 				else
 				{
-					normal = mNormalDefault;
-					vec = new Vector3f(x, y, 0);
+					normal = null;
 				}
 				ptInfo = new PointInfo(vec, normal);
-				mPointMap.put(row, col, ptInfo);
+
+				if (mPointMap != null)
+				{
+					mPointMap.put(row, col, ptInfo);
+				}
 			}
 			else
 			{
@@ -260,8 +276,10 @@ public class Grid implements IMapData
 	ICalcValue				mCompute;
 	/** Special calculation to handle applying color shades across different heights */
 	ICalcColor				mComputeColor;
+	Vector3f				mNormalDefault;
 	/** If used, then we are computing normal values too */
 	boolean					mWithNormals	= true;
+	boolean					mUsePointMap;
 
 	/**
 	 * 
@@ -270,32 +288,16 @@ public class Grid implements IMapData
 	 */
 	public Grid(int nrows, int ncols)
 	{
-		try
-		{
-			setSize(nrows, ncols);
-		}
-		catch (Exception ex)
-		{
-			Log.e(TAG, ex.getMessage());
-
-			try
-			{
-				setSize(10, 10);
-			}
-			catch (Exception ex2)
-			{
-			}
-		}
+		setSize(nrows, ncols);
 	}
 
-	public void calc()
+	public void calc(ICalcValue calc)
 	{
+		mCompute = calc;
 		mResult = new BufferResult(mNumRows + 1, mNumCols + 1);
 		calcPoints();
-		if (mCompute != null)
-		{
-			mCompute.postCalc(this);
-		}
+		mCompute.postCalc(this);
+
 		if (mComputeColor != null)
 		{
 			mResult.calcColors();
@@ -518,6 +520,10 @@ public class Grid implements IMapData
 	@Override
 	public int[] getBoundary(Bounds2D bounds)
 	{
+		if (mResult.mPointMap == null)
+		{
+			return null;
+		}
 		Vector3f vec;
 		int startRow = -1;
 		int startCol = -1;
@@ -611,6 +617,10 @@ public class Grid implements IMapData
 	@Override
 	public PointInfo getPointInfo(int row, int col)
 	{
+		if (mResult.mPointMap == null)
+		{
+			return null;
+		}
 		return mResult.mPointMap.get(row, col);
 	}
 
@@ -685,12 +695,6 @@ public class Grid implements IMapData
 		return this;
 	}
 
-	public Grid setCompute(ICalcValue calc)
-	{
-		mCompute = calc;
-		return this;
-	}
-
 	public Grid setComputeColor(ICalcColor calc)
 	{
 		mComputeColor = calc;
@@ -713,23 +717,19 @@ public class Grid implements IMapData
 	 * Set the size of the grid. This will also clear all sub-divisions set.
 	 * 
 	 * @param nrows
-	 *        : max value of 255.
 	 * @param ncols
-	 *        : max value of 255.
 	 * @throws Exception
 	 */
-	public void setSize(int nrows, int ncols) throws Exception
+	public void setSize(int nrows, int ncols)
 	{
-		if (nrows > 255)
-		{
-			throw new Exception("NRows value too large: " + nrows + ", max value of 255");
-		}
-		if (ncols > 255)
-		{
-			throw new Exception("NRows value too large: " + ncols + ", max value of 255");
-		}
 		mNumRows = nrows;
 		mNumCols = ncols;
+	}
+
+	public Grid setUsePointMap(boolean flag)
+	{
+		mUsePointMap = flag;
+		return this;
 	}
 
 	public void setWithNormals(boolean withNormal)

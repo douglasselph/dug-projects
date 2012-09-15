@@ -160,12 +160,6 @@ public class TextureManager
 			}
 		}
 
-		public void reload(GL10 gl)
-		{
-			mTextureID = 0;
-			load(gl);
-		}
-
 		// If a texture is shared across multiple shapes, this alone is called
 		public void onDrawOld(MatrixTrackingGL gl, FloatBuffer fbuf)
 		{
@@ -184,6 +178,12 @@ public class TextureManager
 
 			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
+		}
+
+		public void reload(GL10 gl)
+		{
+			mTextureID = 0;
+			load(gl);
 		}
 
 		// Expected to be one of GL10.GL_MODULATE, GL10.GL_DECAL,
@@ -210,15 +210,15 @@ public class TextureManager
 	HashMap<Long, Texture>	mMap				= new HashMap<Long, Texture>();
 	AssetManager			mAM;
 
-	public TextureManager()
-	{
-		mContext = null;
-	}
-
 	public TextureManager(Context ctx)
 	{
 		mContext = ctx;
 		mAM = mContext.getResources().getAssets();
+	}
+
+	public Context getContext()
+	{
+		return mContext;
 	}
 
 	public Texture getTexture(int resId)
