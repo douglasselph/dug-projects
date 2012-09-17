@@ -51,7 +51,7 @@ public class Map
 		if (mLoadTerrain)
 		{
 			Bitmap heightMap = ImageUtils.LoadBitmap(tm.getContext(), R.drawable.horseshoe);
-			mGridHorseshoe = new GridLoadHorseshoe(heightMap, mBounds, mMountainHeight, ground, mCalcHeightColor);
+			mGridHorseshoe = new GridLoadHorseshoe(heightMap, mBounds, mMountainHeight * 2, ground, mCalcHeightColor);
 		}
 		else
 		{

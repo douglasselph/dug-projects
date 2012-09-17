@@ -5,17 +5,32 @@ import android.graphics.Color;
 
 import com.dugsolutions.jacket.math.Bounds2D;
 
-public class CalcBitmap extends CalcConstant
+public class CalcBitmap extends CalcValue
 {
-	Bitmap	mBitmap;
-	float	mXFactor;
-	float	mYFactor;
+	Bitmap			mBitmap;
+	int				mBitmapMaxVal;
+	int				mBitmapMinVal;
+	int				mBitmapValRange;
+	final boolean	mDoScale;
+	final float		mHeightMax;
+	final float		mHeightMin;
+	float			mHeightSize;
+	float			mXFactor;
+	float			mYFactor;
 
-	public CalcBitmap(Bitmap heightMap, float maxHeight, Bounds2D bounds)
+	public CalcBitmap(Bitmap heightMap, float minHeight, float maxHeight, boolean doScale, Bounds2D bounds)
 	{
-		super(maxHeight, bounds);
+		super(bounds);
 		mBitmap = heightMap;
+		mHeightMax = maxHeight;
+		mHeightMin = minHeight;
+		mDoScale = doScale;
 		init();
+	}
+
+	public void cleanup()
+	{
+		mBitmap.recycle();
 	}
 
 	@Override
@@ -29,8 +44,16 @@ public class CalcBitmap extends CalcConstant
 			{
 				int col = mBitmap.getPixel(ix, iy);
 				int red = Color.red(col);
-				float percent = (float) red / (float) 0xFF;
-				float height = percent * mHeight;
+				float percent;
+				if (mDoScale)
+				{
+					percent = ((float) (red - mBitmapMinVal) / mBitmapValRange);
+				}
+				else
+				{
+					percent = (float) red / (float) 0xFF;
+				}
+				float height = percent * mHeightSize + mHeightMin;
 				info.setHeight(height);
 
 				if (info.genNormal())
@@ -58,16 +81,46 @@ public class CalcBitmap extends CalcConstant
 
 	int getRow(float y)
 	{
-		float by = (y - mBounds.getMinY()) * mYFactor;
+		float by = mBitmap.getHeight() - 1 - ((y - mBounds.getMinY()) * mYFactor);
 		return (int) Math.round(by);
 	}
 
 	void init()
 	{
-		if (mHeight > 0)
+		if (mHeightMax > 0)
 		{
-			mXFactor = (float) mBitmap.getWidth() / mBounds.getSizeX();
-			mYFactor = (float) mBitmap.getHeight() / mBounds.getSizeY();
+			mXFactor = (float) (mBitmap.getWidth() - 1) / mBounds.getSizeX();
+			mYFactor = (float) (mBitmap.getHeight() - 1) / mBounds.getSizeY();
+			mHeightSize = mHeightMax - mHeightMin;
+
+			if (mDoScale)
+			{
+				int col;
+				int red;
+
+				col = mBitmap.getPixel(0, 0);
+				red = Color.red(col);
+				mBitmapMinVal = red;
+				mBitmapMaxVal = red;
+
+				for (int y = 0; y < mBitmap.getHeight(); y++)
+				{
+					for (int x = 0; x < mBitmap.getWidth(); x++)
+					{
+						col = mBitmap.getPixel(x, y);
+						red = Color.red(col);
+						if (red < mBitmapMinVal)
+						{
+							mBitmapMinVal = red;
+						}
+						else if (red > mBitmapMaxVal)
+						{
+							mBitmapMaxVal = red;
+						}
+					}
+				}
+				mBitmapValRange = mBitmapMaxVal - mBitmapMinVal;
+			}
 		}
 	}
 

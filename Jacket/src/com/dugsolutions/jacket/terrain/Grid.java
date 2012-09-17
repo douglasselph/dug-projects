@@ -89,12 +89,15 @@ public class Grid implements IMapData
 
 		public void calcColors()
 		{
-			mColorBuf.clear();
-			Color4f color;
-			for (int p = 0; p + 2 < mVertexBuf.size(); p += 3)
+			if (mColorBuf != null)
 			{
-				color = mComputeColor.getColor(mVertexBuf.get(p), mVertexBuf.get(p + 1), mVertexBuf.get(p + 2));
-				mColorBuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
+				mColorBuf.clear();
+				Color4f color;
+				for (int p = 0; p + 2 < mVertexBuf.size(); p += 3)
+				{
+					color = mComputeColor.getColor(mVertexBuf.get(p), mVertexBuf.get(p + 1), mVertexBuf.get(p + 2));
+					mColorBuf.put(color.getRed()).put(color.getGreen()).put(color.getBlue()).put(color.getAlpha());
+				}
 			}
 		}
 

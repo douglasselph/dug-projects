@@ -23,8 +23,9 @@ public class GridLoadHorseshoe implements IGridHorseshoe
 		mGround.setBounds(bounds);
 		mGround.setTexture(ground);
 		mGround.setComputeColor(calcHeightColor);
+		mGround.setWithNormals(false);
 
-		CalcBitmap calcBitmap = new CalcBitmap(heightBitmap, mountainHeight, mBounds);
+		CalcBitmap calcBitmap = new CalcBitmap(heightBitmap, 0f, mountainHeight, true, mBounds);
 		mGround.calc(calcBitmap);
 	}
 
