@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <color name="box_fill">#96dc4a</color>
+    <color name="box_edge">#000000</color>
+
+</resources>
