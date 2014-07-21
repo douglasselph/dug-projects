@@ -1,7 +1,7 @@
 /**
  * Copyright 2014, TIP Solutions, Inc. All rights reserved.
  */
-package com.tipsolutions.panda.database;
+package com.tipsolutions.panda.data;
 
 import java.util.ArrayList;
 
@@ -34,7 +34,7 @@ public class Character
 		db.delete(TABLE_CHARACTER, null, null);
 	}
 
-	public static ArrayList<Character> query(SQLiteDatabase db)
+	public static ArrayList<Character> query(SQLiteDatabase db) throws Exception
 	{
 		StringBuilder orderby = new StringBuilder(50);
 		orderby.append(KEY_NAME).append(" ASC");
@@ -44,7 +44,7 @@ public class Character
 		return query(db, cursor);
 	}
 
-	static ArrayList<Character> query(SQLiteDatabase db, Cursor cursor)
+	static ArrayList<Character> query(SQLiteDatabase db, Cursor cursor) throws Exception
 	{
 		ArrayList<Character> list = new ArrayList<Character>();
 
@@ -69,7 +69,7 @@ public class Character
 		return list;
 	}
 
-	public static ArrayList<Character> query(SQLiteDatabase db, String name)
+	public static ArrayList<Character> query(SQLiteDatabase db, String name) throws Exception
 	{
 		String where = KEY_NAME + "=?";
 		String[] whereArgs = new String[] {

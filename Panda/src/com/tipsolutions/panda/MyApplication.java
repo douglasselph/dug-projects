@@ -3,7 +3,7 @@ package com.tipsolutions.panda;
 import android.app.Application;
 import android.util.Log;
 
-import com.tipsolutions.panda.database.DatabaseManager;
+import com.tipsolutions.panda.data.DatabaseManager;
 
 public class MyApplication extends Application
 {

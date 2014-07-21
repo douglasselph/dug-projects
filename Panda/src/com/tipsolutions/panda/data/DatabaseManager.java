@@ -1,7 +1,7 @@
 /**
  * Copyright 2014, TIP Solutions, Inc. All rights reserved.
  */
-package com.tipsolutions.panda.database;
+package com.tipsolutions.panda.data;
 
 import android.content.Context;
 import android.database.SQLException;

@@ -6,10 +6,12 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.tipsolutions.panda.database.Strokes;
+import com.tipsolutions.panda.data.CellMap;
+import com.tipsolutions.panda.data.Strokes;
 
 public class StrokesView extends View
 {
@@ -21,21 +23,15 @@ public class StrokesView extends View
 		int	mNumCellsY;
 		int	mCellWidth;
 		int	mCellHeight;
-		int	mWidth;
-		int	mHeight;
 
-		Grid(int w, int h, int padLeft, int padTop)
+		Grid(int cellWidth, int cellHeight, int numx, int numy, int offsetx, int offsety)
 		{
-			mWidth = w;
-			mHeight = h;
-			mCellWidth = getBoxSize();
-			mCellHeight = mCellWidth;
-			mNumCellsX = w / mCellWidth;
-			mNumCellsY = h / mCellHeight;
-			int remainderX = w % mCellWidth;
-			int remainderY = h % mCellHeight;
-			mStartX = padLeft + remainderX / 2;
-			mStartY = padTop + remainderY / 2;
+			mCellWidth = cellWidth;
+			mCellHeight = cellHeight;
+			mNumCellsX = numx;
+			mNumCellsY = numy;
+			mStartX = offsetx;
+			mStartY = offsety;
 		}
 
 		void drawCells(Canvas canvas)
@@ -54,7 +50,10 @@ public class StrokesView extends View
 
 				for (cellx = 0; cellx < mNumCellsX; cellx++)
 				{
-					canvas.drawRect(r, mBoxInteriorPaint);
+					if (isOn(cellx, celly))
+					{
+						canvas.drawRect(r, mBoxInteriorPaint);
+					}
 					r.left += mCellWidth;
 					r.right += mCellWidth;
 				}
@@ -92,20 +91,14 @@ public class StrokesView extends View
 				lineX += mCellWidth;
 			}
 		}
-
-		boolean hasFill(int cellx, int celly)
-		{
-			return false;
-		}
 	};
 
 	MyApplication	mApp;
 	Grid			mGrid;
 	Strokes			mStrokes;
+	CellMap			mMap;
 	Paint			mBoxInteriorPaint;
 	Paint			mBoxEdgePaint;
-	int				mBoxSize;
-	int				mMinNumBoxesOnEdge;
 	int				mLevel	= 0;
 
 	public StrokesView(Context context)
@@ -126,21 +119,16 @@ public class StrokesView extends View
 		init(attrs);
 	}
 
-	int getBoxSize()
-	{
-		return mBoxSize + mBoxSize * mLevel;
-	}
-
 	@Override
 	protected int getSuggestedMinimumHeight()
 	{
-		return (int) mBoxSize * mMinNumBoxesOnEdge;
+		return 100;
 	}
 
 	@Override
 	protected int getSuggestedMinimumWidth()
 	{
-		return (int) mBoxSize * mMinNumBoxesOnEdge;
+		return 100;
 	}
 
 	void init(AttributeSet attrs)
@@ -167,8 +155,34 @@ public class StrokesView extends View
 		color = getResources().getColor(R.color.box_edge);
 		mBoxEdgePaint = new Paint();
 		mBoxEdgePaint.setColor(color);
-		mBoxSize = getResources().getDimensionPixelSize(R.dimen.box_size);
-		mMinNumBoxesOnEdge = getResources().getInteger(R.integer.min_num_boxes_on_edge);
+		// mBoxSize = getResources().getDimensionPixelSize(R.dimen.box_size);
+		// mMinNumBoxesOnEdge = getResources().getInteger(R.integer.min_num_boxes_on_edge);
+	}
+
+	void install(int w, int h) throws Exception
+	{
+		mMap = mStrokes.getCellMap();
+
+		int numCellsFigX = mStrokes.getBounds().width();
+		int numCellsFigY = mStrokes.getBounds().height();
+		int padCellsLeft = mStrokes.getBounds().left;
+		int padCellsTop = mStrokes.getBounds().top;
+		int padCellsRight = padCellsLeft;
+		int padCellsBottom = padCellsTop;
+		int numCellsX = numCellsFigX + padCellsLeft + padCellsRight;
+		int numCellsY = numCellsFigY + padCellsTop + padCellsBottom;
+		int cellSizeX = w / numCellsX;
+		int cellSizeY = h / numCellsY;
+		int cellSize = (cellSizeX > cellSizeY ? cellSizeY : cellSizeX);
+		int offsetx = padCellsLeft * cellSize;
+		int offsety = padCellsTop * cellSize;
+
+		mGrid = new Grid(cellSize, cellSize, numCellsFigX, numCellsFigY, offsetx, offsety);
+	}
+
+	boolean isOn(int x, int y)
+	{
+		return mMap.is(x, y);
 	}
 
 	@Override
@@ -199,13 +213,14 @@ public class StrokesView extends View
 	{
 		super.onSizeChanged(w, h, oldw, oldh);
 
-		float ratio = mApp.getStrokeViewRatio();
-		int useH = h;
-		int useW = (int) (h * ratio);
-		int padTop = getPaddingTop();
-		int padLeft = w - useW;
-
-		mGrid = new Grid(useW, useH, padLeft, padTop);
+		try
+		{
+			install(w, h);
+		}
+		catch (Exception ex)
+		{
+			Log.e(MyApplication.TAG, ex.getMessage());
+		}
 	}
 
 	@Override
@@ -214,10 +229,11 @@ public class StrokesView extends View
 		return super.onTouchEvent(event);
 	}
 
-	public void setStrokes(Strokes strokes)
+	public void setStrokes(Strokes strokes) throws Exception
 	{
 		mStrokes = strokes;
+
+		install(getWidth(), getHeight());
 		invalidate();
 	}
-
 }
