@@ -93,13 +93,15 @@ public class StrokesView extends View
 		}
 	};
 
-	MyApplication	mApp;
-	Grid			mGrid;
-	Strokes			mStrokes;
-	CellMap			mMap;
-	Paint			mBoxInteriorPaint;
-	Paint			mBoxEdgePaint;
-	int				mLevel	= 0;
+	static final int	DEFAULT_BOX_SIZE	= 100;
+	MyApplication		mApp;
+	Grid				mGrid;
+	Strokes				mStrokes;
+	CellMap				mMap;
+	Paint				mBoxInteriorPaint;
+	Paint				mBoxEdgePaint;
+	int					mLevel				= 0;
+	int					mDefaultBoxSize;
 
 	public StrokesView(Context context)
 	{
@@ -122,13 +124,13 @@ public class StrokesView extends View
 	@Override
 	protected int getSuggestedMinimumHeight()
 	{
-		return 100;
+		return mDefaultBoxSize * 2;
 	}
 
 	@Override
 	protected int getSuggestedMinimumWidth()
 	{
-		return 100;
+		return mDefaultBoxSize * 2;
 	}
 
 	void init(AttributeSet attrs)
@@ -155,34 +157,59 @@ public class StrokesView extends View
 		color = getResources().getColor(R.color.box_edge);
 		mBoxEdgePaint = new Paint();
 		mBoxEdgePaint.setColor(color);
-		// mBoxSize = getResources().getDimensionPixelSize(R.dimen.box_size);
+
+		try
+		{
+			mDefaultBoxSize = getResources().getDimensionPixelSize(R.dimen.default_box_size);
+		}
+		catch (Exception ex)
+		{
+			mDefaultBoxSize = DEFAULT_BOX_SIZE;
+		}
 		// mMinNumBoxesOnEdge = getResources().getInteger(R.integer.min_num_boxes_on_edge);
 	}
 
 	void install(int w, int h) throws Exception
 	{
-		mMap = mStrokes.getCellMap();
+		if (mStrokes != null)
+		{
+			mMap = mStrokes.getCellMap();
 
-		int numCellsFigX = mStrokes.getBounds().width();
-		int numCellsFigY = mStrokes.getBounds().height();
-		int padCellsLeft = mStrokes.getBounds().left;
-		int padCellsTop = mStrokes.getBounds().top;
-		int padCellsRight = padCellsLeft;
-		int padCellsBottom = padCellsTop;
-		int numCellsX = numCellsFigX + padCellsLeft + padCellsRight;
-		int numCellsY = numCellsFigY + padCellsTop + padCellsBottom;
-		int cellSizeX = w / numCellsX;
-		int cellSizeY = h / numCellsY;
-		int cellSize = (cellSizeX > cellSizeY ? cellSizeY : cellSizeX);
-		int offsetx = padCellsLeft * cellSize;
-		int offsety = padCellsTop * cellSize;
+			int numCellsFigX = mStrokes.getBounds().width();
+			int numCellsFigY = mStrokes.getBounds().height();
+			int padCellsLeft = mStrokes.getBounds().left;
+			int padCellsTop = mStrokes.getBounds().top;
+			int padCellsRight = padCellsLeft;
+			int padCellsBottom = padCellsTop;
+			int numCellsX = numCellsFigX + padCellsLeft + padCellsRight;
+			int numCellsY = numCellsFigY + padCellsTop + padCellsBottom;
+			int cellSizeX = w / numCellsX;
+			int cellSizeY = h / numCellsY;
+			int cellSize = (cellSizeX > cellSizeY ? cellSizeY : cellSizeX);
+			int offsetx = padCellsLeft * cellSize;
+			int offsety = padCellsTop * cellSize;
 
-		mGrid = new Grid(cellSize, cellSize, numCellsFigX, numCellsFigY, offsetx, offsety);
+			mGrid = new Grid(cellSize, cellSize, numCellsFigX, numCellsFigY, offsetx, offsety);
+		}
+		else
+		{
+			int cellSize = mDefaultBoxSize;
+			int numCellsFigX = w / cellSize;
+			int numCellsFigY = h / cellSize;
+			int offsetx = (w % cellSize) / 2;
+			int offsety = (h % cellSize) / 2;
+			mGrid = new Grid(cellSize, cellSize, numCellsFigX, numCellsFigY, offsetx, offsety);
+		}
 	}
 
 	boolean isOn(int x, int y)
 	{
-		return mMap.is(x, y);
+		if (mMap != null)
+		{
+			return mMap.is(x, y);
+		}
+		else
+			return false;
 	}
 
 	@Override
@@ -232,7 +259,6 @@ public class StrokesView extends View
 	public void setStrokes(Strokes strokes) throws Exception
 	{
 		mStrokes = strokes;
-
 		install(getWidth(), getHeight());
 		invalidate();
 	}
