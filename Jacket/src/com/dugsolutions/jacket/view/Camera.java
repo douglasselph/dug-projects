@@ -20,7 +20,6 @@ public class Camera
 	protected int			mWidth		= 100;
 	protected Bounds2D		mClippingPlane;
 	protected Vector3f		mViewingLoc	= new Vector3f();
-
 	protected boolean		mDoOrtho;
 
 	public Camera()

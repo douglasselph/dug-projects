@@ -1,14 +1,14 @@
-package com.tipsolutions.slice;
+package com.dugsolutions.slice;
 
 import java.util.ArrayList;
 
 import android.opengl.Matrix;
 import android.util.Log;
 
-import com.tipsolutions.jacket.math.Matrix3f;
-import com.tipsolutions.jacket.math.Matrix4f;
-import com.tipsolutions.jacket.math.Quaternion;
-import com.tipsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.math.Matrix3f;
+import com.dugsolutions.jacket.math.Matrix4f;
+import com.dugsolutions.jacket.math.Quaternion;
+import com.dugsolutions.jacket.math.Vector3f;
 
 public class TestData {
 

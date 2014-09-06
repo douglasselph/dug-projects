@@ -1,13 +1,14 @@
 package com.dugsolutions.bugplug;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
-import com.actionbarsherlock.app.SherlockActivity;
-import com.actionbarsherlock.view.Menu;
 import com.dugsolutions.bugplug.map.RenderMap;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.MaterialColors;
@@ -16,7 +17,7 @@ import com.dugsolutions.jacket.view.ColorControls;
 import com.dugsolutions.jacket.view.ColorControls.OnOperation;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
 
-public class BugPlugMapActivity extends SherlockActivity
+public class BugPlugMapActivity extends Activity
 {
 	class ColorOp implements OnOperation
 	{
@@ -200,15 +201,15 @@ public class BugPlugMapActivity extends SherlockActivity
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu)
+	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
-		getSupportMenuInflater().inflate(R.menu.menu, menu);
+		getMenuInflater().inflate(R.menu.menu, menu);
 		return true;
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item)
+	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch (item.getItemId())
 		{

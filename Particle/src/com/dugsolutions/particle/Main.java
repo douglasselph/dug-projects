@@ -1,4 +1,4 @@
-package com.tipsolutions.particle;
+package com.dugsolutions.particle;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -10,27 +10,25 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
-import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.tipsolutions.jacket.effect.Emitter;
-import com.tipsolutions.jacket.effect.EmitterTex;
-import com.tipsolutions.jacket.effect.ParticleSystem;
-import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.image.TextureManager.Texture;
-import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.view.ControlCamera;
-import com.tipsolutions.jacket.view.ControlRenderer;
-import com.tipsolutions.jacket.view.ControlSurfaceView;
-import com.tipsolutions.jacket.view.SpinnerControl;
-import com.tipsolutions.jacket.view.TwirlEventTap;
-import com.tipsolutions.jacket.view.TwirlEventTap.Rotate;
+import com.dugsolutions.jacket.effect.Emitter;
+import com.dugsolutions.jacket.effect.EmitterTex;
+import com.dugsolutions.jacket.effect.ParticleSystem;
+import com.dugsolutions.jacket.image.TextureManager;
+import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.math.Color4f;
+import com.dugsolutions.jacket.math.MatrixTrackingGL;
+import com.dugsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.view.ControlRenderer;
+import com.dugsolutions.jacket.view.ControlSurfaceView;
+import com.dugsolutions.jacket.view.SpinnerControl;
+import com.tipsolutions.particle.R;
 
 public class Main extends Activity {
 

@@ -1,4 +1,4 @@
-package com.tipsolutions.slice;
+package com.dugsolutions.slice;
 
 import javax.microedition.khronos.opengles.GL10;
 

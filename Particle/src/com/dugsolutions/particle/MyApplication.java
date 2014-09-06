@@ -1,10 +1,10 @@
-package com.tipsolutions.particle;
+package com.dugsolutions.particle;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.image.TextureManager;
-
 import android.app.Application;
+
+import com.dugsolutions.jacket.image.TextureManager;
 
 public class MyApplication extends Application {
 

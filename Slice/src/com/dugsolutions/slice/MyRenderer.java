@@ -9,18 +9,18 @@
  * governing permissions and limitations under the License.
  */
 
-package com.tipsolutions.slice;
+package com.dugsolutions.slice;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.misc.PixelBuffer;
-import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.Shape.ColorMap;
-import com.tipsolutions.jacket.view.ControlRenderer;
-import com.tipsolutions.jacket.view.ControlSurfaceView;
+import com.dugsolutions.jacket.math.Color4f;
+import com.dugsolutions.jacket.math.MatrixTrackingGL;
+import com.dugsolutions.jacket.misc.PixelBuffer;
+import com.dugsolutions.jacket.shape.Shape;
+import com.dugsolutions.jacket.shape.Shape.ColorMap;
+import com.dugsolutions.jacket.view.ControlRenderer;
+import com.dugsolutions.jacket.view.ControlSurfaceView;
 
 /**
  * Render a pair of tumbling cubes.

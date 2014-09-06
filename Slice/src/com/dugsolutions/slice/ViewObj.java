@@ -1,4 +1,4 @@
-package com.tipsolutions.slice;
+package com.dugsolutions.slice;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,29 +25,27 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.Toast;
 
-import com.tipsolutions.jacket.file.FileUtils;
-import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.Bounds3D;
-import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.misc.PixelBuffer;
-import com.tipsolutions.jacket.misc.Timing;
-import com.tipsolutions.jacket.shape.Animator;
-import com.tipsolutions.jacket.shape.Animator.OnPlayListener;
-import com.tipsolutions.jacket.shape.Box;
-import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.view.ButtonGroup;
-import com.tipsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
-import com.tipsolutions.jacket.view.ControlRenderer;
-import com.tipsolutions.jacket.view.ControlRenderer.OnAfterNextRender;
-import com.tipsolutions.jacket.view.ControlSurfaceView;
-import com.tipsolutions.jacket.view.EventTapAdjust;
-import com.tipsolutions.jacket.view.EventTapTwirl;
-import com.tipsolutions.jacket.view.EventTapTwirl.Rotate;
-import com.tipsolutions.jacket.view.IEventTap;
-import com.tipsolutions.jacket.view.SpinnerControl;
-import com.tipsolutions.slice.MyRenderer.PickShape;
+import com.dugsolutions.jacket.file.FileUtils;
+import com.dugsolutions.jacket.image.TextureManager;
+import com.dugsolutions.jacket.math.Bounds3D;
+import com.dugsolutions.jacket.math.Color4f;
+import com.dugsolutions.jacket.math.MatrixTrackingGL;
+import com.dugsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.misc.PixelBuffer;
+import com.dugsolutions.jacket.misc.Timing;
+import com.dugsolutions.jacket.shape.Animator;
+import com.dugsolutions.jacket.shape.Animator.OnPlayListener;
+import com.dugsolutions.jacket.shape.Box;
+import com.dugsolutions.jacket.shape.Shape;
+import com.dugsolutions.jacket.view.ButtonGroup;
+import com.dugsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
+import com.dugsolutions.jacket.view.ControlRenderer;
+import com.dugsolutions.jacket.view.ControlSurfaceView;
+import com.dugsolutions.jacket.view.EventTapAdjust;
+import com.dugsolutions.jacket.view.IEventTap;
+import com.dugsolutions.jacket.view.SpinnerControl;
+import com.dugsolutions.slice.MyRenderer.PickShape;
+
 
 public class ViewObj extends Activity {
 

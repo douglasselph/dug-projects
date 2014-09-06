@@ -1,4 +1,4 @@
-package com.tipsolutions.slice;
+package com.dugsolutions.slice;
 
 import java.io.InputStream;
 import java.nio.FloatBuffer;
@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.util.Log;
 
-import com.tipsolutions.jacket.image.TextureManager;
-import com.tipsolutions.jacket.math.Color4f;
-import com.tipsolutions.jacket.math.Vector3f;
-import com.tipsolutions.jacket.shape.Box;
-import com.tipsolutions.jacket.shape.Pyramid;
-import com.tipsolutions.jacket.shape.Shape;
-import com.tipsolutions.jacket.shape.BufferUtils.dFloatBuf;
-import com.tipsolutions.jacket.shape.Shape.CullFace;
+import com.dugsolutions.jacket.image.TextureManager;
+import com.dugsolutions.jacket.math.Color4f;
+import com.dugsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.shape.Box;
+import com.dugsolutions.jacket.shape.BufferUtils.dFloatBuf;
+import com.dugsolutions.jacket.shape.Pyramid;
+import com.dugsolutions.jacket.shape.Shape;
+import com.dugsolutions.jacket.shape.Shape.CullFace;
+import com.tipsolutions.slice.R;
 
 public class DataManager {
 
