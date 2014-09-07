@@ -20,13 +20,14 @@ import android.widget.TableRow;
 import com.dugsolutions.jacket.effect.Emitter;
 import com.dugsolutions.jacket.effect.EmitterTex;
 import com.dugsolutions.jacket.effect.ParticleSystem;
+import com.dugsolutions.jacket.event.EventTapAdjust.Adjust;
 import com.dugsolutions.jacket.event.EventTapTwirl;
 import com.dugsolutions.jacket.event.EventTapTwirl.Rotate;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.Vector3f;
-import com.dugsolutions.jacket.view.Camera;
 import com.dugsolutions.jacket.view.ControlRenderer;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
 import com.dugsolutions.jacket.view.SpinnerControl;
@@ -39,11 +40,16 @@ public class Main extends Activity
 	static final int	EMIT_TEXTURE	= 1;
 	static final int	EMIT_FLARE		= 2;
 
-	class MyRenderer extends ControlRenderer
+	class MyRenderer extends ControlRenderer implements Adjust
 	{
+		Bounds2D	mPanBounds;
+		float		mMaxZ;
+
 		public MyRenderer(ControlSurfaceView view, TextureManager tm)
 		{
 			super(view, tm);
+
+			// mEventTap = new EventTapAdjust(this);
 		}
 
 		@Override
@@ -57,11 +63,29 @@ public class Main extends Activity
 		{
 			super.onSurfaceCreated(gl, config);
 			mParticleSystem.onCreate();
+
+			float max = mParticleSystem.getMaxDistance();
+			mPanBounds.setMinX(-max * 1.4f);
+			mPanBounds.setMaxX(max * 1.4f);
+			mPanBounds.setMinY(-max * 1.4f);
+			mPanBounds.setMaxY(max * 1.4f);
+			mMaxZ = mCamera.getViewingLoc().getZ();
+
 		}
 
+		@Override
+		public void pan(float xDelta, float yDelta)
+		{
+			mCamera.pan(xDelta, yDelta, mPanBounds);
+		}
+
+		@Override
+		public void scale(float delta)
+		{
+			mCamera.scale(delta, mMaxZ);
+		}
 	};
 
-	CameraControl		mCamera;
 	ControlSurfaceView	mSurfaceView;
 	MyRenderer			mRenderer;
 	ParticleSystem		mParticleSystem;
@@ -78,13 +102,12 @@ public class Main extends Activity
 		main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
 		mApp = (MyApplication) getApplicationContext();
-		mCamera = new Camera();
 
 		mSurfaceView = new ControlSurfaceView(this);
 		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
 		mSurfaceView.setId(1);
 
-		mRenderer = new MyRenderer(mSurfaceView, mCamera);
+		mRenderer = new MyRenderer(mSurfaceView, mApp.getTextureManager());
 		mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
 
 		mSurfaceView.setEGLConfigChooser(false);
@@ -98,22 +121,22 @@ public class Main extends Activity
 				mParticleSystem.addRotate(xAngle, yAngle, 0);
 			}
 		});
-		mTwirlEventTap.setDoubleTap(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				mSurfaceView.setEventTap(mCamera);
-			}
-		});
-		mCamera.setDoubleTap(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				mSurfaceView.setEventTap(mTwirlEventTap);
-			}
-		});
+		// mTwirlEventTap.setDoubleTap(new Runnable()
+		// {
+		// @Override
+		// public void run()
+		// {
+		// mSurfaceView.setEventTap(mCamera);
+		// }
+		// });
+		// mCamera.setDoubleTap(new Runnable()
+		// {
+		// @Override
+		// public void run()
+		// {
+		// mSurfaceView.setEventTap(mTwirlEventTap);
+		// }
+		// });
 
 		mParticleSystem = new ParticleSystem(mSurfaceView);
 		setEmitter(EMIT_DEFAULT);

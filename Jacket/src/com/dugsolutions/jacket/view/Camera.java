@@ -87,14 +87,14 @@ public class Camera
 		return mHeight;
 	}
 
-	public Vector3f getViewingLoc()
-	{
-		return mViewingLoc;
-	}
-
 	public Bounds2D getViewBounds()
 	{
 		return getBounds(-mViewingLoc.getZ());
+	}
+
+	public Vector3f getViewingLoc()
+	{
+		return mViewingLoc;
 	}
 
 	public int getWidth()

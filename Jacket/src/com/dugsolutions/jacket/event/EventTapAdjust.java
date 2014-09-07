@@ -51,14 +51,18 @@ public class EventTapAdjust implements IEventTap
 		switch (action)
 		{
 			case MotionEvent.ACTION_DOWN:
+			{
 				mX = ev.getX();
 				mY = ev.getY();
 				mStartScaleDelta = 0;
 				mStartPanXDelta = 0;
 				mStartPanYDelta = 0;
 				return true;
+			}
 			case MotionEvent.ACTION_UP:
+			{
 				break;
+			}
 			case MotionEvent.ACTION_MOVE:
 			{
 				if (ev.getPointerCount() > 1)

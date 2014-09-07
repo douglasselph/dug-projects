@@ -17,7 +17,6 @@ import com.dugsolutions.jacket.math.MatrixTrackingGL;
 // update methods, and cleanup methods.
 public class ParticleSystem
 {
-
 	public static Boolean			DEBUG		= false;
 	public static Boolean			DEBUG2		= false;
 

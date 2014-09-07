@@ -51,6 +51,11 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		return mBackground;
 	}
 
+	public Camera getCamera()
+	{
+		return mCamera;
+	}
+
 	public int getHeight()
 	{
 		return mHeight;
