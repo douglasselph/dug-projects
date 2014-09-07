@@ -39,7 +39,6 @@ public class MyApplication extends Application
 	public void onCreate()
 	{
 		super.onCreate();
-		mTM = new TextureManager(this);
 	}
 
 	public void setBlenderControl(int param)
