@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
+import com.dugsolutions.jacket.event.IEventTap;
 import com.dugsolutions.jacket.image.ImageUtils;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Color4f;

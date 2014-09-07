@@ -20,6 +20,8 @@ import android.widget.TableRow;
 import com.dugsolutions.jacket.effect.Emitter;
 import com.dugsolutions.jacket.effect.EmitterTex;
 import com.dugsolutions.jacket.effect.ParticleSystem;
+import com.dugsolutions.jacket.event.EventTapTwirl;
+import com.dugsolutions.jacket.event.EventTapTwirl.Rotate;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.image.TextureManager.Texture;
 import com.dugsolutions.jacket.math.Color4f;
@@ -59,12 +61,12 @@ public class Main extends Activity
 
 	};
 
-	Camera				mCamera;
+	CameraControl		mCamera;
 	ControlSurfaceView	mSurfaceView;
 	MyRenderer			mRenderer;
 	ParticleSystem		mParticleSystem;
 	MyApplication		mApp;
-	TwirlEventTap		mTwirlEventTap;
+	EventTapTwirl		mTwirlEventTap;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -88,7 +90,7 @@ public class Main extends Activity
 		mSurfaceView.setEGLConfigChooser(false);
 		mSurfaceView.setRenderer(mRenderer);
 
-		mTwirlEventTap = new TwirlEventTap(mSurfaceView, new Rotate()
+		mTwirlEventTap = new EventTapTwirl(mSurfaceView, new Rotate()
 		{
 			@Override
 			public void rotate(double xAngle, double yAngle)

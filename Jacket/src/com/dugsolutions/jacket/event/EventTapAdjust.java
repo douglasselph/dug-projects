@@ -1,4 +1,4 @@
-package com.dugsolutions.jacket.view;
+package com.dugsolutions.jacket.event;
 
 import android.util.FloatMath;
 import android.view.MotionEvent;

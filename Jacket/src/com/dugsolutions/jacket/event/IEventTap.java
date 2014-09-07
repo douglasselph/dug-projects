@@ -1,4 +1,4 @@
-package com.dugsolutions.jacket.view;
+package com.dugsolutions.jacket.event;
 
 import android.view.MotionEvent;
 

@@ -1,9 +1,11 @@
-package com.tipsolutions.jacket.view;
+package com.dugsolutions.jacket.event;
 
 import android.util.Log;
+import android.view.MotionEvent;
 
-import com.tipsolutions.jacket.math.MatrixTrackingGL;
-import com.tipsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.math.MatrixTrackingGL;
+import com.dugsolutions.jacket.math.Vector3f;
+import com.dugsolutions.jacket.view.Camera;
 
 /**
  * A camera with is also an event tap. That means that the user can control the
@@ -16,7 +18,8 @@ import com.tipsolutions.jacket.math.Vector3f;
  * 
  * @author dug
  */
-public class ControlCamera extends Camera implements IEventTap {
+public class ControlCamera extends Camera implements IEventTap
+{
 
 	static final String		TAG							= "ControlCamera";
 	static final Boolean	LOG							= true;
@@ -36,18 +39,21 @@ public class ControlCamera extends Camera implements IEventTap {
 	int						mStartY;
 	Runnable				mDoubleTap					= null;
 
-	public boolean isBackwards() {
+	public boolean isBackwards()
+	{
 		return mBackwards;
 	}
 
-	public void moveInOrOut() {
+	public void moveInOrOut()
+	{
 		Vector3f amt = getUnitOut().dup().multiply(mDistForwardPerTimeFrame);
 
 		if (mBackwards)
 		{
 			mCameraPos.subtract(amt);
 			mLookAtPos.subtract(amt);
-		} else
+		}
+		else
 		{
 			mCameraPos.add(amt);
 			mLookAtPos.add(amt);
@@ -55,7 +61,8 @@ public class ControlCamera extends Camera implements IEventTap {
 		mNeedsLookAt = true;
 	}
 
-	public boolean pressDown(float x, float y) {
+	public boolean pressDown(float x, float y)
+	{
 		long curTime = System.currentTimeMillis();
 		mStartTouchTime = curTime;
 		mStartX = (int) x;
@@ -71,13 +78,13 @@ public class ControlCamera extends Camera implements IEventTap {
 		return true;
 	}
 
-	public boolean pressMove(float x, float y) {
+	public boolean pressMove(float x, float y)
+	{
 		long curTime = System.currentTimeMillis();
 		float diffx = x - mStartX;
 		float diffy = y - mStartY;
 
-		if (Math.abs(diffx) >= DRAG_TRIGGER_PX
-				|| Math.abs(diffy) >= DRAG_TRIGGER_PX)
+		if (Math.abs(diffx) >= DRAG_TRIGGER_PX || Math.abs(diffy) >= DRAG_TRIGGER_PX)
 		{
 			lookAtAdjust(diffx * 2, diffy * 2);
 			mStartX = (int) x;
@@ -85,7 +92,8 @@ public class ControlCamera extends Camera implements IEventTap {
 			mDidMove = true;
 			mForwardOn = false;
 			mStartTouchTime = curTime;
-		} else
+		}
+		else
 		{
 			long diffTime = curTime - mStartTouchTime;
 			boolean moveOut = false;
@@ -96,7 +104,8 @@ public class ControlCamera extends Camera implements IEventTap {
 				{
 					moveOut = true;
 				}
-			} else if (diffTime >= FORWARD_TRIGGER_MS)
+			}
+			else if (diffTime >= FORWARD_TRIGGER_MS)
 			{
 				moveOut = true;
 			}
@@ -111,7 +120,8 @@ public class ControlCamera extends Camera implements IEventTap {
 		return true;
 	}
 
-	public boolean pressUp(float x, float y) {
+	public boolean pressUp(float x, float y)
+	{
 		if (LOG)
 		{
 			Log.d(TAG, "Press up");
@@ -138,18 +148,42 @@ public class ControlCamera extends Camera implements IEventTap {
 	}
 
 	@Override
-	public void applyFrustrum(MatrixTrackingGL gl) {
+	public void applyFrustrum(MatrixTrackingGL gl)
+	{
 		super.applyFrustrum(gl);
 	}
 
-	public void setDoubleTap(Runnable run) {
+	public void setDoubleTap(Runnable run)
+	{
 		mDoubleTap = run;
 	}
 
-	public void setForwardMovementResolution(float d) {
+	public void setForwardMovementResolution(float d)
+	{
 		mDistForwardPerTimeFrame = d;
 	}
 
+	@Override
+	public boolean onTouchEvent(MotionEvent ev)
+	{
+		int action = ev.getActionMasked();
+
+		switch (action)
+		{
+			case MotionEvent.ACTION_DOWN:
+				pressDown(ev.getX(), ev.getY());
+				break;
+			case MotionEvent.ACTION_UP:
+				pressUp(ev.getX(), ev.getY());
+				break;
+			case MotionEvent.ACTION_MOVE:
+				pressMove(ev.getX(), ev.getY());
+				break;
+			default:
+				return false;
+		}
+		return true;
+	}
 	// public void sideDown() {
 	// Vector3f amt = getUp().dup().multiply(mDistPerTouch);
 	// getLocation().subtract(amt);

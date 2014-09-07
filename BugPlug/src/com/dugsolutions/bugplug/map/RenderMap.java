@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.util.FloatMath;
 import android.view.MotionEvent;
 
+import com.dugsolutions.jacket.event.EventTapAdjust;
+import com.dugsolutions.jacket.event.EventTapAdjust.Adjust;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
@@ -16,8 +18,6 @@ import com.dugsolutions.jacket.math.Vector3f;
 import com.dugsolutions.jacket.math.Vector4f;
 import com.dugsolutions.jacket.view.ControlRenderer;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
-import com.dugsolutions.jacket.view.EventTapAdjust;
-import com.dugsolutions.jacket.view.EventTapAdjust.Adjust;
 
 public class RenderMap extends ControlRenderer implements Adjust
 {
