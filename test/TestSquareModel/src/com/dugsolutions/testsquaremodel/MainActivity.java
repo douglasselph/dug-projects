@@ -1,15 +1,17 @@
 package com.dugsolutions.testsquaremodel;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
-import com.actionbarsherlock.app.SherlockActivity;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
 
-public class MainActivity extends SherlockActivity
+public class MainActivity extends Activity
 {
 	RenderModelSquare	mRenderer;
 	ControlSurfaceView	mSurfaceView;
@@ -38,15 +40,15 @@ public class MainActivity extends SherlockActivity
 	}
 
 	@Override
-	public boolean onCreateOptionsMenu(com.actionbarsherlock.view.Menu menu)
+	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		super.onCreateOptionsMenu(menu);
-		getSupportMenuInflater().inflate(R.menu.menu, menu);
+		getMenuInflater().inflate(R.menu.menu, menu);
 		return true;
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(com.actionbarsherlock.view.MenuItem item)
+	public boolean onOptionsItemSelected(MenuItem item)
 	{
 		switch (item.getItemId())
 		{

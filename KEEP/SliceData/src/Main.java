@@ -3,25 +3,31 @@ import com.dugsolutions.jacket.shape.Shape;
 import com.dugsolutions.jacket.shape.Shape.AnimControlOp;
 import com.dugsolutions.jacket.shape.Shape.AnimSet;
 
-public class Main {
-	
-	public interface ICreate {
+public class Main
+{
+
+	public interface ICreate
+	{
 		Shape create();
 	};
-	
-	static class ProcessData {
-		
-		void run(String filename, ICreate create) {
-			
+
+	static class ProcessData
+	{
+
+		void run(String filename, ICreate create)
+		{
+
 			System.out.println("Writing " + filename);
 			Shape wdata = writeData(filename, create);
 			System.out.println("Reading " + filename);
 			Shape rdata = readData(filename, create);
 			System.out.println("Comparing results");
-			
-			wdata.compare(filename, rdata, new Shape.MessageWriter() {
+
+			wdata.compare(filename, rdata, new Shape.MessageWriter()
+			{
 				@Override
-				public void msg(String tag, String msg) {
+				public void msg(String tag, String msg)
+				{
 					StringBuffer sbuf = new StringBuffer();
 					sbuf.append(tag);
 					sbuf.append(": ");
@@ -30,54 +36,67 @@ public class Main {
 				}
 			});
 		}
-		
-		Shape writeData(String filename, ICreate create) {
+
+		Shape writeData(String filename, ICreate create)
+		{
 			Shape d = create.create();
 			d.writeData(filename);
 			return d;
 		}
-		
-		Shape readData(String filename, ICreate create) {
+
+		Shape readData(String filename, ICreate create)
+		{
 			Shape d = create.create();
 			d.readData(filename, mTM);
 			return d;
 		}
 	};
-	
-	static TextureManager mTM;
 
-	public static void main(String[] args) throws Exception {
-		
+	static TextureManager	mTM;
+
+	public static void main(String[] args) throws Exception
+	{
+
 		mTM = new TextureManager();
 		ProcessData process = new ProcessData();
-		
-		process.run("hank.data", new ICreate() {
+
+		process.run("hank.data", new ICreate()
+		{
 			@Override
-			public Shape create() {
+			public Shape create()
+			{
 				return new data.hank().fill();
 			}
 		});
-		process.run("cube.data", new ICreate() {
+		process.run("cube.data", new ICreate()
+		{
 			@Override
-			public Shape create() {
+			public Shape create()
+			{
 				return new data.Cube().fill();
 			}
 		});
-		process.run("suzanne.data", new ICreate() {
+		process.run("suzanne.data", new ICreate()
+		{
 			@Override
-			public Shape create() {
+			public Shape create()
+			{
 				return new data.Suzanne().fill();
 			}
 		});
-		process.run("wingL.data", new ICreate() {
+		process.run("wingL.data", new ICreate()
+		{
 			@Override
-			public Shape create() {
+			public Shape create()
+			{
 				return new data.Wing_L().fill();
 			}
 		});
-		process.run("wingArm.data", new ICreate() {
+		process.run("wingArm.data", new ICreate()
+		{
 			@Override
-			public Shape create() {
+			public Shape create()
+			{
 				Shape shape = new data.wing.WingArm().fill();
 				AnimSet animSet = shape.getAnimBone().getAnimSet().get(0);
 				animSet.setControlOp(AnimControlOp.ControlShape);

@@ -26,49 +26,55 @@ import com.dugsolutions.jacket.view.ControlSurfaceView;
  * Render a pair of tumbling cubes.
  */
 
-class MyRenderer extends ControlRenderer {
+class MyRenderer extends ControlRenderer
+{
 	boolean	mTranslucentBackground;
 	Shape	mShape	= null;
 
-	public MyRenderer(ControlSurfaceView view, Shape shape,
-			boolean useTranslucentBackground) {
+	public MyRenderer(ControlSurfaceView view, Shape shape, boolean useTranslucentBackground)
+	{
 		super(view);
 		mTranslucentBackground = useTranslucentBackground;
 		mShape = shape;
 	}
 
-	public void setShape(Shape shape) {
+	public void setShape(Shape shape)
+	{
 		mShape = shape;
 	}
 
-	public void onDrawFrame(MatrixTrackingGL gl) {
+	public void onDrawFrame(MatrixTrackingGL gl)
+	{
 		if (mShape != null)
 		{
 			mShape.onDraw(gl);
 		}
 	}
 
-	public void onSurfaceChanged(GL10 gl, int width, int height) {
+	public void onSurfaceChanged(GL10 gl, int width, int height)
+	{
 		super.onSurfaceChanged(gl, width, height);
 	}
 
-	public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+	public void onSurfaceCreated(GL10 gl, EGLConfig config)
+	{
 		super.onSurfaceCreated(gl, config);
 	}
 
-	public class PickShape {
+	public class PickShape
+	{
 
 		PixelBuffer	mPixelImage;
 		ColorMap	mColorMap;
 
-		PickShape() {
+		PickShape()
+		{
 			Color4f savedColor = getBackground();
 			setBackground(Color4f.WHITE);
 
 			mColorMap = mShape.setOutlineOverride();
 
-			mPixelImage = new PixelBuffer((int) mCamera.getWidth(),
-					(int) mCamera.getHeight());
+			mPixelImage = new PixelBuffer((int) mCamera.getWidth(), (int) mCamera.getHeight());
 			mPixelImage.setRenderer(MyRenderer.this);
 			mPixelImage.fill();
 
@@ -76,7 +82,8 @@ class MyRenderer extends ControlRenderer {
 			setBackground(savedColor);
 		}
 
-		public Shape getShapeAt(int px, int py) {
+		public Shape getShapeAt(int px, int py)
+		{
 			Color4f color = mPixelImage.getColor(px, py);
 			return mColorMap.getShape(color.getColor());
 
@@ -102,7 +109,8 @@ class MyRenderer extends ControlRenderer {
 		}
 	};
 
-	public PickShape pick() {
+	public PickShape pick()
+	{
 		return new PickShape();
 	}
 }
