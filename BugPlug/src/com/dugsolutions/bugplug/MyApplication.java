@@ -5,16 +5,16 @@ import android.content.Context;
 import android.util.Log;
 
 import com.dugsolutions.bugplug.map.DatabaseManager;
+import com.dugsolutions.jacket.app.JacketApplication;
 import com.dugsolutions.jacket.image.TextureManager;
 
 public class MyApplication extends Application
 {
-
 	public static final String	TAG	= "BugPlug";
 	public static final Boolean	LOG	= true;
 
 	static DatabaseManager		mDb;
-	static TextureManager		mTM;
+	JacketApplication			mJA;
 
 	@Override
 	public void onCreate()
@@ -39,12 +39,12 @@ public class MyApplication extends Application
 		return mDb;
 	}
 
-	public static TextureManager getTM(Context context)
+	public TextureManager getTM()
 	{
-		if (mTM == null)
+		if (mJA == null)
 		{
-			mTM = new TextureManager(context);
+			mJA = new JacketApplication(this);
 		}
-		return mTM;
+		return mJA.getTM();
 	}
 }

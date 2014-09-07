@@ -122,6 +122,7 @@ public class BugPlugMapActivity extends Activity
 	ControlSurfaceView	mSurfaceView;
 	FrameLayout			mBottom;
 	ColorControls		mColorControls;
+	MyApplication		mApp;
 
 	int getTiltFactor()
 	{
@@ -177,12 +178,14 @@ public class BugPlugMapActivity extends Activity
 	{
 		super.onCreate(savedInstanceState);
 
+		mApp = (MyApplication) getApplicationContext();
+
 		setContentView(R.layout.main);
 
 		mSurfaceView = new ControlSurfaceView(this);
 		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
-		mRenderMap = new RenderMap(mSurfaceView, MyApplication.getTM(this));
+		mRenderMap = new RenderMap(mSurfaceView, mApp.getTM());
 		mSurfaceView.setRenderer(mRenderMap);
 		mRenderMap.setRenderOnDirty();
 		mSurfaceView.requestRender();
