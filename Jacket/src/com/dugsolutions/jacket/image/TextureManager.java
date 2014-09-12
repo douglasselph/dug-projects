@@ -20,7 +20,6 @@ import com.dugsolutions.jacket.misc.Msg;
 
 public class TextureManager
 {
-
 	public class Texture
 	{
 		final String	mFilename;
@@ -162,6 +161,25 @@ public class TextureManager
 
 		// If a texture is shared across multiple shapes, this alone is called
 		public void onDrawOld(MatrixTrackingGL gl, FloatBuffer fbuf)
+		{
+			load(gl);
+
+			gl.glEnable(GL10.GL_BLEND);
+			gl.glBlendFunc(mBlendSource, mBlendDest);
+
+			gl.glEnable(GL10.GL_TEXTURE_2D);
+			gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, mBlendParam);
+
+			gl.glActiveTexture(GL10.GL_TEXTURE0);
+			gl.glBindTexture(GL10.GL_TEXTURE_2D, mTextureID);
+			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_REPEAT);
+			gl.glTexParameterx(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_REPEAT);
+
+			gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
+			gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, fbuf);
+		}
+
+		public void onDraw(GL10 gl, FloatBuffer fbuf)
 		{
 			load(gl);
 

@@ -121,7 +121,6 @@ public class Emitter
 			int vpos = index * 3;
 			mVertexFbuf.position(vpos);
 			mVertexFbuf.put(loc.getX()).put(loc.getY()).put(loc.getZ());
-
 			mIndexSbuf.put((short) index);
 			return true;
 		}
@@ -136,9 +135,10 @@ public class Emitter
 
 		public void addParticles()
 		{
-			int num = genCreateNum();
+			final int num = genCreateNum();
 			if (num > 0)
 			{
+				int cnt = num;
 				for (int i = 0; i < mList.length; i++)
 				{
 					if (mList[i] == null)
@@ -153,7 +153,7 @@ public class Emitter
 					{
 						continue;
 					}
-					if (--num <= 0)
+					if (--cnt <= 0)
 					{
 						break;
 					}
@@ -161,7 +161,7 @@ public class Emitter
 			}
 			if (ParticleSystem.DEBUG2)
 			{
-				Log.d("DEBUG", "Created " + num + " particles");
+				Log.d(TAG, "Created " + num + " particles");
 			}
 		}
 
@@ -253,7 +253,7 @@ public class Emitter
 
 			if (ParticleSystem.DEBUG2)
 			{
-				// Log.d("DEBUG", "Vertexes=" + mVertexFbuf.limit() + ", indexes=" + mIndexSbuf.limit());
+				Log.d(TAG, "Vertexes=" + mVertexFbuf.limit() + ", indexes=" + mIndexSbuf.limit());
 
 				mIndexSbuf.rewind();
 				Vector3f max = new Vector3f();
@@ -302,11 +302,8 @@ public class Emitter
 						}
 					}
 				}
-				// Log.d("DEBUG", "Min=" + min.toString() + ", Max=" + max.toString());
-				// mIndexSbuf.rewind();
-				// while (mIndexSbuf.hasRemaining()) {
-				// int index = mIndexSbuf.get();
-				// }
+				Log.d(TAG, "Min=" + min.toString() + ", Max=" + max.toString());
+
 				mIndexSbuf.rewind();
 			}
 		}
@@ -422,6 +419,8 @@ public class Emitter
 			mTimer = null;
 		}
 	};
+
+	static final String			TAG				= "Emitter";
 
 	static protected Vector3f	tempVec			= new Vector3f();
 

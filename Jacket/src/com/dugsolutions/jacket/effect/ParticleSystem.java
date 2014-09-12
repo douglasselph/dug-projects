@@ -8,10 +8,9 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.dugsolutions.jacket.math.Bounds3D;
 import com.dugsolutions.jacket.math.Color4f;
-import com.dugsolutions.jacket.math.Matrix3f;
 import com.dugsolutions.jacket.math.Matrix4f;
-import com.dugsolutions.jacket.math.MatrixTrackingGL;
 
 // Holds the entire collection of particles, their creation methods,
 // update methods, and cleanup methods.
@@ -59,6 +58,19 @@ public class ParticleSystem
 		}
 	}
 
+	public Bounds3D getBounds()
+	{
+		float max = getMaxDistance();
+		Bounds3D bounds = new Bounds3D();
+		bounds.setMinX(-max);
+		bounds.setMaxX(max);
+		bounds.setMinY(-max);
+		bounds.setMaxY(max);
+		bounds.setMinZ(-max);
+		bounds.setMaxZ(max);
+		return bounds;
+	}
+
 	public Matrix4f getMatrix()
 	{
 		return mMatrix;
@@ -79,11 +91,12 @@ public class ParticleSystem
 		mEmitter.mTiming.start();
 	}
 
-	public void onDraw(MatrixTrackingGL gl)
+	public void onDraw(GL10 gl)
 	{
 		synchronized (mLock)
 		{
 			mEmitter.mTiming.onDrawStart();
+
 			if (mEmitter.mTiming.readyForCreate())
 			{
 				mEmitter.mParticles.addParticles();
@@ -94,18 +107,20 @@ public class ParticleSystem
 			}
 			gl.glFrontFace(GL10.GL_CW);
 			gl.glDisable(GL10.GL_BLEND);
-			{
-				gl.glMatrixMode(GL10.GL_MODELVIEW);
-				gl.glPushMatrix();
+			gl.glMultMatrixf(mMatrix.getArray(), 0);
+			// gl.glMatrixMode(GL10.GL_MODELVIEW);
+			// gl.glPushMatrix();
+			// gl.glLoadMatrixf(mMatrix.getArray(), 0);
 
-				Matrix4f curMatrix = gl.getMatrix();
-				Matrix4f useMatrix = new Matrix4f(curMatrix).mult(mMatrix);
-				if (mEmitter.getTexture() != null)
-				{
-					useMatrix.setRotation(new Matrix3f());
-				}
-				gl.glLoadMatrix(useMatrix);
-			}
+			// {
+			// Matrix4f curMatrix = gl.getMatrix();
+			// Matrix4f useMatrix = new Matrix4f(curMatrix).mult(mMatrix);
+			// if (mEmitter.getTexture() != null)
+			// {
+			// useMatrix.setRotation(new Matrix3f());
+			// }
+			// gl.glLoadMatrix(useMatrix);
+			// }
 			gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 			gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mEmitter.getVertexBuf());
 
@@ -145,8 +160,9 @@ public class ParticleSystem
 			}
 			if (mEmitter.getTexture() != null)
 			{
-				gl.setCullFace(0);
-				mEmitter.getTexture().onDrawOld(gl, mEmitter.getTextureBuf());
+				gl.glDisable(GL10.GL_CULL_FACE);
+				// gl.setCullFace(0);
+				mEmitter.getTexture().onDraw(gl, mEmitter.getTextureBuf());
 				if (EmitterTex.USE_STRIPS)
 				{
 					Color4f color;
@@ -174,7 +190,7 @@ public class ParticleSystem
 				ShortBuffer ibuf = mEmitter.getIndexBuf();
 				gl.glDrawElements(GL10.GL_POINTS, ibuf.remaining(), GL10.GL_UNSIGNED_SHORT, ibuf);
 			}
-			gl.glPopMatrix();
+			// gl.glPopMatrix();
 
 			if (DEBUG)
 			{

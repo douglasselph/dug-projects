@@ -3,6 +3,9 @@ package com.dugsolutions.testbox;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.annotation.SuppressLint;
+import android.util.Log;
+
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.Vector4f;
@@ -10,6 +13,7 @@ import com.dugsolutions.jacket.model.Box;
 import com.dugsolutions.jacket.view.ControlRenderer;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
 
+@SuppressLint("WrongCall")
 public class RenderBox extends ControlRenderer
 {
 	Box		mBox;
@@ -61,15 +65,19 @@ public class RenderBox extends ControlRenderer
 		gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_POSITION, new Vector4f(.6f, -.2f, -.1f, 1).toArray(), 0);
 		gl.glLightfv(GL10.GL_LIGHT2, GL10.GL_SPECULAR, Color4f.WHITE.toArray(), 0);
 		gl.glLightModelfv(GL10.GL_LIGHT_MODEL_AMBIENT, new Color4f(0.25f, 0.25f, 0.25f, 1).toArray(), 0);
+
+		mCamera.setViewBounds(mBox.getBounds(), 3f);
+
+		Log.d("DEBUG", "BOX BOUNDS=" + mBox.getBounds());
 	}
 
 	@Override
 	protected void onDrawFrameContents(GL10 gl)
 	{
-		super.onDrawFrameContents(gl);
-
 		gl.glPushMatrix();
-		gl.glTranslatef(0, 0, -3.0f);
+		gl.glLoadIdentity();
+
+		mCamera.applyViewBounds(gl);
 
 		gl.glRotatef(mAngle, 0, 1, 0);
 		gl.glRotatef(mAngle * 0.25f, 1, 0, 0);

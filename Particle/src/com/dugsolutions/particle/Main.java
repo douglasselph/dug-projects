@@ -34,14 +34,19 @@ import com.tipsolutions.particle.R;
 
 public class Main extends Activity
 {
+	static final int		EMIT_DEFAULT	= 0;
+	static final int		EMIT_TEXTURE	= 1;
+	static final int		EMIT_FLARE		= 2;
 
-	static final int	EMIT_DEFAULT	= 0;
-	static final int	EMIT_TEXTURE	= 1;
-	static final int	EMIT_FLARE		= 2;
+	static final Color4f	DEFAULT_COLOR	= new Color4f(1f, 1f, 1f);
+	static final Color4f	TEXTURE_COLOR	= new Color4f(0.9f, 0.9f, 0.9f);
+	static final Color4f	FLARE_COLOR		= new Color4f(0.1f, 0.1f, 0.1f);
+
+	static final float		VIEWING_DIST	= 1f;
 
 	class MyRenderer extends ControlRenderer implements Adjust
 	{
-		Bounds2D	mPanBounds;
+		Bounds2D	mPanBounds	= new Bounds2D();
 		float		mMaxZ;
 
 		public MyRenderer(ControlSurfaceView view, TextureManager tm)
@@ -61,6 +66,7 @@ public class Main extends Activity
 		public void onSurfaceCreated(GL10 gl, EGLConfig config)
 		{
 			super.onSurfaceCreated(gl, config);
+
 			mParticleSystem.onCreate();
 
 			float max = mParticleSystem.getMaxDistance();
@@ -68,8 +74,9 @@ public class Main extends Activity
 			mPanBounds.setMaxX(max * 1.4f);
 			mPanBounds.setMinY(-max * 1.4f);
 			mPanBounds.setMaxY(max * 1.4f);
-			mMaxZ = mCamera.getViewingLoc().getZ();
 
+			mCamera.setViewBounds(mParticleSystem.getBounds(), VIEWING_DIST);
+			mMaxZ = mCamera.getViewingLoc().getZ();
 		}
 
 		@Override
@@ -82,6 +89,14 @@ public class Main extends Activity
 		public void scale(float delta)
 		{
 			mCamera.scale(delta, mMaxZ);
+		}
+
+		@Override
+		protected void onDrawFrameContents(GL10 gl)
+		{
+			gl.glLoadIdentity();
+			mCamera.applyViewBounds(gl);
+			mParticleSystem.onDraw(gl);
 		}
 	};
 
@@ -98,12 +113,12 @@ public class Main extends Activity
 		super.onCreate(savedInstanceState);
 
 		RelativeLayout main = new RelativeLayout(this);
-		main.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		main.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
 		mApp = (MyApplication) getApplicationContext();
 
 		mSurfaceView = new ControlSurfaceView(this);
-		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+		mSurfaceView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 		mSurfaceView.setId(1);
 
 		mRenderer = new MyRenderer(mSurfaceView, mApp.getTextureManager());
@@ -144,12 +159,12 @@ public class Main extends Activity
 
 		RelativeLayout.LayoutParams params;
 
-		params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
 
 		main.addView(controls, params);
 
-		params = new RelativeLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
+		params = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
 		params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
 		params.addRule(RelativeLayout.ABOVE, controls.getId());
 		main.addView(mSurfaceView, params);
@@ -234,7 +249,7 @@ public class Main extends Activity
 		{
 			case EMIT_FLARE:
 			{
-				mRenderer.setBackground(new Color4f(0.1f, 0.1f, 0.1f));
+				mRenderer.setBackground(FLARE_COLOR);
 				Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
 				// tex.setBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);
 				EmitterTex emitter = new EmitterTex(tex);
@@ -250,7 +265,7 @@ public class Main extends Activity
 			}
 			case EMIT_TEXTURE:
 			{
-				mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
+				mRenderer.setBackground(TEXTURE_COLOR);
 				Texture tex = mApp.getTextureManager().getTexture(R.drawable.flaresmall);
 				tex.setBlendFunc(GL10.GL_ONE, GL10.GL_ONE_MINUS_SRC_ALPHA);
 				EmitterTex emitter = new EmitterTex(tex);
@@ -266,7 +281,7 @@ public class Main extends Activity
 			case EMIT_DEFAULT:
 			default:
 			{
-				mRenderer.setBackground(new Color4f(0.9f, 0.9f, 0.9f));
+				mRenderer.setBackground(DEFAULT_COLOR);
 				mParticleSystem.setEmitter(new Emitter());
 				break;
 			}

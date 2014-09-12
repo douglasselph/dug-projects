@@ -5,11 +5,12 @@ import javax.microedition.khronos.opengles.GL10;
 import android.util.Log;
 
 import com.dugsolutions.jacket.math.Bounds2D;
+import com.dugsolutions.jacket.math.Bounds3D;
 import com.dugsolutions.jacket.math.Vector3f;
 
 public class Camera
 {
-	static final Boolean	LOG			= false;
+	static final Boolean	LOG			= true;
 	static final String		TAG			= "Camera";
 
 	protected float			mNearPlane	= 1;
@@ -63,7 +64,7 @@ public class Camera
 	 * @param sizeX
 	 * @return
 	 */
-	public float getDistX(float sizeX)
+	public float getIdealDistX(float sizeX)
 	{
 		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
 		return sizeX / factor / mAspect;
@@ -75,11 +76,10 @@ public class Camera
 	 * @param sizeY
 	 * @return
 	 */
-	public float getDistY(float sizeY)
+	public float getIdealDistY(float sizeY)
 	{
 		float factor = (float) Math.tan(mAngle * (Math.PI / 360.0));
 		return sizeY / factor;
-
 	}
 
 	public int getHeight()
@@ -233,7 +233,7 @@ public class Camera
 
 	/**
 	 * Set the viewing location such that the passed in bounds is just seen.
-	 * Used in conjuction with applyViewBounds().
+	 * After calling this, call applyViewBounds() within your render function at the start of drawing.
 	 * 
 	 * @param bounds
 	 *        : area staring at.
@@ -245,7 +245,34 @@ public class Camera
 		float halfSizeY = bounds.getSizeY() / 2;
 		mViewingLoc.setX(-centerX);
 		mViewingLoc.setY(-centerY);
-		mViewingLoc.setZ(-getDistY(halfSizeY));
+		mViewingLoc.setZ(-getIdealDistY(halfSizeY));
+
+		if (LOG)
+		{
+			Log.i(TAG, "setViewBounds() -> " + mViewingLoc.toString());
+		}
+	}
+
+	/**
+	 * Set the viewing location such that the passed in bounds is just seen + the indicatedd distance.
+	 * 
+	 * 
+	 * @param bounds
+	 *        : area staring at.
+	 */
+	public void setViewBounds(Bounds3D bounds, float dist)
+	{
+		float centerX = (bounds.getMaxX() + bounds.getMinX()) / 2;
+		float centerY = (bounds.getMaxY() + bounds.getMinY()) / 2;
+		float halfSizeY = bounds.getSizeY() / 2;
+		mViewingLoc.setX(-centerX);
+		mViewingLoc.setY(-centerY);
+		mViewingLoc.setZ(bounds.getMinZ() - dist);
+
+		if (LOG)
+		{
+			Log.i(TAG, "setViewBounds() -> viewing loc=" + mViewingLoc.toString());
+		}
 	}
 
 	public String toString()

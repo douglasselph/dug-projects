@@ -7,15 +7,16 @@ import javax.microedition.khronos.opengles.GL10;
 
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Bounds3D;
+import com.dugsolutions.jacket.math.BufUtils.FloatBuf;
+import com.dugsolutions.jacket.math.BufUtils.ShortBuf;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.ComputeBounds;
 import com.dugsolutions.jacket.math.MaterialColors;
 import com.dugsolutions.jacket.math.Matrix4f;
 import com.dugsolutions.jacket.math.Quaternion;
 import com.dugsolutions.jacket.math.Vector3f;
-import com.dugsolutions.jacket.math.BufUtils.FloatBuf;
-import com.dugsolutions.jacket.math.BufUtils.ShortBuf;
 
 public class Model
 {
@@ -56,6 +57,11 @@ public class Model
 			mBounds = computeBounds.getBounds();
 		}
 		return mBounds;
+	}
+
+	public Bounds2D getBounds2D()
+	{
+		return getBounds().getBounds2D();
 	}
 
 	public Color4f getColor()

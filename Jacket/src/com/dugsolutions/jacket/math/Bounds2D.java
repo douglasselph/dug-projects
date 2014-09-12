@@ -173,13 +173,13 @@ public class Bounds2D
 	public String toString()
 	{
 		StringBuffer sbuf = new StringBuffer();
-		sbuf.append("Bounds[");
+		sbuf.append("Bounds[X ");
 		sbuf.append(getMinX());
-		sbuf.append("->");
-		sbuf.append(getMaxX());
 		sbuf.append(",");
+		sbuf.append(getMaxX());
+		sbuf.append(", Y ");
 		sbuf.append(getMinY());
-		sbuf.append("->");
+		sbuf.append(",");
 		sbuf.append(getMaxY());
 		sbuf.append("]");
 		return sbuf.toString();
