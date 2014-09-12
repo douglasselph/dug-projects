@@ -25,8 +25,11 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.Toast;
 
+import com.dugsolutions.jacket.event.EventTapAdjust;
+import com.dugsolutions.jacket.event.EventTapTwirl;
+import com.dugsolutions.jacket.event.EventTapTwirl.Rotate;
+import com.dugsolutions.jacket.event.IEventTap;
 import com.dugsolutions.jacket.file.FileUtils;
-import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Bounds3D;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.MatrixTrackingGL;
@@ -41,8 +44,6 @@ import com.dugsolutions.jacket.view.ButtonGroup;
 import com.dugsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
 import com.dugsolutions.jacket.view.ControlRenderer;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
-import com.dugsolutions.jacket.view.EventTapAdjust;
-import com.dugsolutions.jacket.view.IEventTap;
 import com.dugsolutions.jacket.view.SpinnerControl;
 import com.dugsolutions.slice.MyRenderer.PickShape;
 
@@ -56,7 +57,6 @@ public class ViewObj extends Activity
 
 	class AdjustBones implements EventTapAdjust.Adjust
 	{
-
 		Vector3f	mStart;
 
 		public void start(int x, int y)
@@ -371,10 +371,10 @@ public class ViewObj extends Activity
 		// Use a surface format with an Alpha channel:
 		// mSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
-		mRenderer = new MyRenderer(mSurfaceView, null, false);
+		mRenderer = new MyRenderer(mSurfaceView, mApp.getTM(), null, false);
 		mRenderer.setBackground(new Color4f(0.5f, 1.0f, 1.0f));
 
-		mApp.getDataManager().init(mRenderer.getTextureManager());
+		mApp.getDataManager().init(mApp.getTM());
 
 		if (mApp.getEGLDepth() != EGL_NONE)
 		{
@@ -396,7 +396,7 @@ public class ViewObj extends Activity
 				mActiveShape.getMatrixMod().addRotate(xAngle, yAngle, 0.0);
 			}
 		});
-		mAdjustEventTap = new EventTapAdjust(mSurfaceView, new AdjustBones());
+		mAdjustEventTap = new EventTapAdjust(new AdjustBones());
 
 		Runnable doubleTap = new Runnable()
 		{
@@ -406,8 +406,8 @@ public class ViewObj extends Activity
 			}
 		};
 		mTwirlEventTap.setDoubleTap(doubleTap);
-		mCamera.setDoubleTap(doubleTap);
-		mAdjustEventTap.setDoubleTap(doubleTap);
+		// mCamera.setDoubleTap(doubleTap);
+		// mAdjustEventTap.setDoubleTap(doubleTap);
 
 		mControls = new Controls();
 
@@ -530,7 +530,7 @@ public class ViewObj extends Activity
 		overridePendingTransition(0, 0);
 		finish();
 
-		mApp.getDataManager().init(mRenderer.getTextureManager());
+		mApp.getDataManager().init(mApp.getTM());
 
 		overridePendingTransition(0, 0);
 		startActivity(intent);
@@ -570,9 +570,8 @@ public class ViewObj extends Activity
 	{
 		if (mApp.getBlenderControl() != param)
 		{
-			TextureManager tm = mRenderer.getTextureManager();
 			mApp.setBlenderControl(param);
-			tm.setBlendParam(param);
+			mApp.getTM().setBlendParam(param);
 			mSurfaceView.requestRender();
 		}
 	}

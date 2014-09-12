@@ -23,7 +23,6 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 {
 	static final String					TAG	= "ControlRenderer";
 	static final Boolean				ERR	= true;				// If set to true show errors from opengl.
-
 	protected final TextureManager		mTM;
 	protected final ControlSurfaceView	mView;
 	protected Color4f					mBackground;

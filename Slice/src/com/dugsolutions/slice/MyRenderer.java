@@ -14,6 +14,7 @@ package com.dugsolutions.slice;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.MatrixTrackingGL;
 import com.dugsolutions.jacket.misc.PixelBuffer;
@@ -31,9 +32,9 @@ class MyRenderer extends ControlRenderer
 	boolean	mTranslucentBackground;
 	Shape	mShape	= null;
 
-	public MyRenderer(ControlSurfaceView view, Shape shape, boolean useTranslucentBackground)
+	public MyRenderer(ControlSurfaceView view, TextureManager tm, Shape shape, boolean useTranslucentBackground)
 	{
-		super(view);
+		super(view, tm);
 		mTranslucentBackground = useTranslucentBackground;
 		mShape = shape;
 	}
