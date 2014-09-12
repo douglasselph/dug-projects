@@ -32,53 +32,51 @@ public class ParticleSystem
 	protected long					mTotalTime	= 0;
 	protected int					mNumRuns	= 0;
 
+	public ParticleSystem(GLSurfaceView view)
+	{
+		mView = view;
+	}
+
 	public ParticleSystem(GLSurfaceView view, Emitter emitter)
 	{
 		mView = view;
 		setEmitter(emitter);
 	}
 
-	public ParticleSystem(GLSurfaceView view)
-	{
-		mView = view;
-	}
-
-	public void setEmitter(Emitter emitter)
+	public void addRotate(double angleX, double angleY, double angleZ)
 	{
 		synchronized (mLock)
 		{
-			if (mEmitter != null)
-			{
-				mEmitter.mTiming.cancel();
-			}
-			mNumRuns = 0;
-			mTotalTime = 0;
-			mEmitter = emitter;
-			mEmitter.setParticleSystem(this);
-			mEmitter.init();
-			mEmitter.mTiming.start();
+			mMatrix.addRotate(angleX, angleY, angleZ);
 		}
+	}
+
+	public void addTranslation(float x, float y, float z)
+	{
+		synchronized (mLock)
+		{
+			mMatrix.addTranslation(x, y, z);
+		}
+	}
+
+	public Matrix4f getMatrix()
+	{
+		return mMatrix;
+	}
+
+	public float getMaxDistance()
+	{
+		return mEmitter.getMaxDistance();
+	}
+
+	public GLSurfaceView getView()
+	{
+		return mView;
 	}
 
 	public void onCreate()
 	{
 		mEmitter.mTiming.start();
-	}
-
-	public void onPause()
-	{
-		mEmitter.mTiming.stop();
-	}
-
-	public void onResume()
-	{
-		synchronized (mLock)
-		{
-			if (mEmitter != null)
-			{
-				mEmitter.mTiming.start();
-			}
-		}
 	}
 
 	public void onDraw(MatrixTrackingGL gl)
@@ -193,27 +191,37 @@ public class ParticleSystem
 		}
 	}
 
-	public void addRotate(double angleX, double angleY, double angleZ)
+	public void onPause()
+	{
+		mEmitter.mTiming.stop();
+	}
+
+	public void onResume()
 	{
 		synchronized (mLock)
 		{
-			mMatrix.addRotate(angleX, angleY, angleZ);
+			if (mEmitter != null)
+			{
+				mEmitter.mTiming.start();
+			}
 		}
 	}
 
-	public Matrix4f getMatrix()
+	public void setEmitter(Emitter emitter)
 	{
-		return mMatrix;
-	}
-
-	public float getMaxDistance()
-	{
-		return mEmitter.getMaxDistance();
-	}
-
-	public GLSurfaceView getView()
-	{
-		return mView;
+		synchronized (mLock)
+		{
+			if (mEmitter != null)
+			{
+				mEmitter.mTiming.cancel();
+			}
+			mNumRuns = 0;
+			mTotalTime = 0;
+			mEmitter = emitter;
+			mEmitter.setParticleSystem(this);
+			mEmitter.init();
+			mEmitter.mTiming.start();
+		}
 	}
 
 }

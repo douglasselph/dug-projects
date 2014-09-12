@@ -5,7 +5,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
@@ -273,14 +272,14 @@ public class Main extends Activity
 			}
 		}
 		mApp.setEmitChoice(code);
-
-		mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
-		mCamera.setLocation(mCamera.getLookAt().dup());
-		mCamera.getLocation().add(0, 0, mParticleSystem.getMaxDistance());
-
-		Log.d("DEBUG", "Camera: " + mCamera.getLocation().toString());
-
-		mSurfaceView.setEventTap(mCamera);
+		//
+		// mCamera.setLookAt(mParticleSystem.getMatrix().getLocation());
+		// mCamera.setLocation(mCamera.getLookAt().dup());
+		// mCamera.getLocation().add(0, 0, mParticleSystem.getMaxDistance());
+		//
+		// Log.d("DEBUG", "Camera: " + mCamera.getLocation().toString());
+		//
+		// mSurfaceView.setEventTap(mCamera);
 		mSurfaceView.requestRender();
 	}
 

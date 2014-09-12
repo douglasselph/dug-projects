@@ -242,7 +242,6 @@ public class Camera
 	{
 		float centerX = (bounds.getMaxX() + bounds.getMinX()) / 2;
 		float centerY = (bounds.getMaxY() + bounds.getMinY()) / 2;
-		// float halfSizeX = bounds.getSizeX() / 2;
 		float halfSizeY = bounds.getSizeY() / 2;
 		mViewingLoc.setX(-centerX);
 		mViewingLoc.setY(-centerY);
