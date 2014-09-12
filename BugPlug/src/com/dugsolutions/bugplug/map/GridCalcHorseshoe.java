@@ -2,7 +2,7 @@ package com.dugsolutions.bugplug.map;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.image.Texture;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.terrain.CalcEdgeJagged;

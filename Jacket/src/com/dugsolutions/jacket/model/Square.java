@@ -5,7 +5,7 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.image.Texture;
 
 public class Square extends Model
 {
@@ -37,7 +37,8 @@ public class Square extends Model
 
 	void initTextureBuf()
 	{
-		final float texPts[] = { 0f, 1f, // top left
+		final float texPts[] = {
+				0f, 1f, // top left
 				0f, 0f, // bottom left
 				1f, 1f, // top right
 				1f, 0f // bottom right
@@ -49,7 +50,8 @@ public class Square extends Model
 
 	void initVertexBuf(final float length)
 	{
-		final float vertices[] = { -length, -length, 0f, // 0: lower-left
+		final float vertices[] = {
+				-length, -length, 0f, // 0: lower-left
 				-length, length, 0f, // 1: upper-left
 				length, -length, 0f, // 2: lower-right
 				length, length, 0f }; // 3: upper-right

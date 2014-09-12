@@ -13,8 +13,8 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLUtils;
 import android.util.Log;
 
+import com.dugsolutions.jacket.image.Texture;
 import com.dugsolutions.jacket.image.TextureManager;
-import com.dugsolutions.jacket.image.TextureManager.Texture;
 import com.dugsolutions.jacket.math.Color4f;
 
 public class Square

@@ -5,7 +5,7 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.image.Texture;
 import com.dugsolutions.jacket.model.Model;
 
 public class ModelSquare extends Model

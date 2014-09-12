@@ -1,11 +1,11 @@
-import com.dugsolutions.jacket.image.TextureManager;
+import com.dugsolutions.jacket.image.DummyTextureManager;
+import com.dugsolutions.jacket.image.ITextureManager;
 import com.dugsolutions.jacket.shape.Shape;
 import com.dugsolutions.jacket.shape.Shape.AnimControlOp;
 import com.dugsolutions.jacket.shape.Shape.AnimSet;
 
 public class Main
 {
-
 	public interface ICreate
 	{
 		Shape create();
@@ -13,10 +13,15 @@ public class Main
 
 	static class ProcessData
 	{
+		Shape readData(String filename, ICreate create)
+		{
+			Shape d = create.create();
+			d.readData(filename, mTM);
+			return d;
+		}
 
 		void run(String filename, ICreate create)
 		{
-
 			System.out.println("Writing " + filename);
 			Shape wdata = writeData(filename, create);
 			System.out.println("Reading " + filename);
@@ -43,21 +48,13 @@ public class Main
 			d.writeData(filename);
 			return d;
 		}
-
-		Shape readData(String filename, ICreate create)
-		{
-			Shape d = create.create();
-			d.readData(filename, mTM);
-			return d;
-		}
 	};
 
-	static TextureManager	mTM;
+	static ITextureManager	mTM;
 
 	public static void main(String[] args) throws Exception
 	{
-
-		mTM = new TextureManager();
+		mTM = new DummyTextureManager();
 		ProcessData process = new ProcessData();
 
 		process.run("hank.data", new ICreate()

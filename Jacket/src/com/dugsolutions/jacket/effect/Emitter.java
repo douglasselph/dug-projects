@@ -9,7 +9,7 @@ import java.util.TimerTask;
 
 import android.util.Log;
 
-import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.image.Texture;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.math.Vector3f;
 import com.dugsolutions.jacket.shape.BufferUtils.FloatBuf;

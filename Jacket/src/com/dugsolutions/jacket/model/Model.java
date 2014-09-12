@@ -5,8 +5,7 @@ import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import com.dugsolutions.jacket.image.TextureManager;
-import com.dugsolutions.jacket.image.TextureManager.Texture;
+import com.dugsolutions.jacket.image.Texture;
 import com.dugsolutions.jacket.math.Bounds2D;
 import com.dugsolutions.jacket.math.Bounds3D;
 import com.dugsolutions.jacket.math.BufUtils.FloatBuf;
@@ -20,21 +19,21 @@ import com.dugsolutions.jacket.math.Vector3f;
 
 public class Model
 {
-	static final String					TAG				= "Model";
-	static final Boolean				LOG				= true;
-	protected Bounds3D					mBounds;
-	protected Color4f					mColor;
-	protected FloatBuf					mColorBuf;
-	protected ShortBuf					mIndexBuf;
-	protected int						mIndexSlice;
-	protected int						mIndexMode		= GL10.GL_TRIANGLES;
-	protected Matrix4f					mMatrix;
-	protected Matrix4f					mMatrixMod;
-	protected FloatBuf					mNormalBuf;
-	protected TextureManager.Texture	mTexture;
-	protected FloatBuf					mTextureBuf;
-	protected FloatBuf					mVertexBuf;
-	protected MaterialColors			mColorMaterials	= new MaterialColors();
+	static final String			TAG				= "Model";
+	static final Boolean		LOG				= false;
+	protected Bounds3D			mBounds;
+	protected Color4f			mColor;
+	protected FloatBuf			mColorBuf;
+	protected ShortBuf			mIndexBuf;
+	protected int				mIndexSlice;
+	protected int				mIndexMode		= GL10.GL_TRIANGLES;
+	protected Matrix4f			mMatrix;
+	protected Matrix4f			mMatrixMod;
+	protected FloatBuf			mNormalBuf;
+	protected Texture			mTexture;
+	protected FloatBuf			mTextureBuf;
+	protected FloatBuf			mVertexBuf;
+	protected MaterialColors	mColorMaterials	= new MaterialColors();
 
 	protected void computeBounds(ComputeBounds computeBounds)
 	{
