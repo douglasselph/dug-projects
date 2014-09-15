@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,7 +33,6 @@ import com.dugsolutions.jacket.event.IEventTap;
 import com.dugsolutions.jacket.file.FileUtils;
 import com.dugsolutions.jacket.math.Bounds3D;
 import com.dugsolutions.jacket.math.Color4f;
-import com.dugsolutions.jacket.math.MatrixTrackingGL;
 import com.dugsolutions.jacket.math.Vector3f;
 import com.dugsolutions.jacket.misc.PixelBuffer;
 import com.dugsolutions.jacket.misc.Timing;
@@ -42,7 +42,6 @@ import com.dugsolutions.jacket.shape.Box;
 import com.dugsolutions.jacket.shape.Shape;
 import com.dugsolutions.jacket.view.ButtonGroup;
 import com.dugsolutions.jacket.view.ButtonGroup.OnClickChangedListener;
-import com.dugsolutions.jacket.view.ControlRenderer;
 import com.dugsolutions.jacket.view.ControlSurfaceView;
 import com.dugsolutions.jacket.view.SpinnerControl;
 import com.dugsolutions.slice.MyRenderer.PickShape;
@@ -457,29 +456,16 @@ public class ViewObj extends Activity
 				break;
 			case MENU_SNAPSHOT:
 			{
-				mSurfaceView.setOnAfterNextRender(new OnAfterNextRender()
+				try
 				{
-					public void run(ControlRenderer renderer, MatrixTrackingGL gl)
-					{
-						try
-						{
-							final File file = FileUtils.GetExternalFile("screen.png", true);
-							renderer.snapshot(gl, file);
-							mSurfaceView.post(new Runnable()
-							{
-								public void run()
-								{
-									Toast.makeText(ViewObj.this, "Created " + file.getAbsoluteFile(),
-											Toast.LENGTH_SHORT).show();
-								}
-							});
-						}
-						catch (Exception ex)
-						{
-							Toast.makeText(ViewObj.this, ex.getMessage(), Toast.LENGTH_SHORT).show();
-						}
-					}
-				});
+					final File file = FileUtils.GetExternalFile("screen.png", true);
+					mSurfaceView.snapshot(file);
+					Toast.makeText(ViewObj.this, "Created " + file.getAbsoluteFile(), Toast.LENGTH_SHORT).show();
+				}
+				catch (Exception ex)
+				{
+					Log.e(TAG, ex.getMessage());
+				}
 				break;
 			}
 			case MENU_IMAGE:
@@ -615,7 +601,6 @@ public class ViewObj extends Activity
 
 	void setShape(Shape shape)
 	{
-
 		Timing.Get(this).start("resetChildren");
 		mRoot.resetChildren(shape);
 		Timing.Get(this).end("resetChildren");

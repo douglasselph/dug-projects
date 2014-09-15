@@ -1,20 +1,12 @@
 package com.dugsolutions.jacket.view;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 
 import com.dugsolutions.jacket.event.IEventTap;
-import com.dugsolutions.jacket.image.ImageUtils;
 import com.dugsolutions.jacket.image.TextureManager;
 import com.dugsolutions.jacket.math.Color4f;
 import com.dugsolutions.jacket.misc.Err;
@@ -189,40 +181,40 @@ public class ControlRenderer implements GLSurfaceView.Renderer, IEventTap
 		mView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 	}
 
-	public Bitmap snapshot(GL10 gl)
-	{
-		int width = mWidth;
-		int height = mHeight;
-		int size = width * height;
-		ByteBuffer buf = ByteBuffer.allocateDirect(size * 4);
-		buf.order(ByteOrder.nativeOrder());
-		gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
-		int data[] = new int[size];
-		buf.asIntBuffer().get(data);
-		buf = null;
-		Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-		bitmap.setPixels(data, size - width, -width, 0, 0, width, height);
-		data = null;
-
-		short sdata[] = new short[size];
-		ShortBuffer sbuf = ShortBuffer.wrap(sdata);
-		bitmap.copyPixelsToBuffer(sbuf);
-		for (int i = 0; i < size; ++i)
-		{
-			// BGR-565 to RGB-565
-			short v = sdata[i];
-			sdata[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
-		}
-		sbuf.rewind();
-		bitmap.copyPixelsFromBuffer(sbuf);
-		return bitmap;
-	}
-
-	public void snapshot(GL10 gl, File file) throws IOException
-	{
-		Bitmap bitmap = snapshot(gl);
-		ImageUtils.SaveBitmap(bitmap, file);
-	}
+	// public Bitmap snapshot(GL10 gl)
+	// {
+	// int width = mWidth;
+	// int height = mHeight;
+	// int size = width * height;
+	// ByteBuffer buf = ByteBuffer.allocateDirect(size * 4);
+	// buf.order(ByteOrder.nativeOrder());
+	// gl.glReadPixels(0, 0, width, height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, buf);
+	// int data[] = new int[size];
+	// buf.asIntBuffer().get(data);
+	// buf = null;
+	// Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+	// bitmap.setPixels(data, size - width, -width, 0, 0, width, height);
+	// data = null;
+	//
+	// short sdata[] = new short[size];
+	// ShortBuffer sbuf = ShortBuffer.wrap(sdata);
+	// bitmap.copyPixelsToBuffer(sbuf);
+	// for (int i = 0; i < size; ++i)
+	// {
+	// // BGR-565 to RGB-565
+	// short v = sdata[i];
+	// sdata[i] = (short) (((v & 0x1f) << 11) | (v & 0x7e0) | ((v & 0xf800) >> 11));
+	// }
+	// sbuf.rewind();
+	// bitmap.copyPixelsFromBuffer(sbuf);
+	// return bitmap;
+	// }
+	//
+	// public void snapshot(GL10 gl, File file) throws IOException
+	// {
+	// Bitmap bitmap = snapshot(gl);
+	// ImageUtils.SaveBitmap(bitmap, file);
+	// }
 
 	public String toString()
 	{
