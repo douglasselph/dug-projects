@@ -16,14 +16,13 @@ class Robot:
 
     class MoveMap:
 
-        def __init__(self, parent, game):
+        def __init__(self, parent):
             self._from={}
             self._to={}
             self._chk_fail=[]
             self._failed=[]
             self._dangerous_ok=False
             self._empty_only=False
-            self._game=game
             self._parent=parent
 
         def clear(self):
@@ -33,7 +32,7 @@ class Robot:
 
         # Move the robot to any normal space.
         def move(self, loc):
-            bot=self._game.robots[loc]
+            bot=self._parent._game.robots[loc]
             for dir in self._parent._DIRS:
                 dloc=self._parent.get_loc(bot.location, dir)
                 self.chk_add(loc, dloc)
@@ -157,7 +156,7 @@ class Robot:
                 for collide in collides:
                     floc=collide[0]
                     floc2=collide[1]
-                    if self._game.robots[floc].hp < self._game.robots[floc2].hp:
+                    if self._parent._game.robots[floc].hp < self._parent._game.robots[floc2].hp:
                         self.remove(floc2, floc)
                     else:
                         self.remove(floc, floc2)
@@ -169,7 +168,7 @@ class Robot:
                 if len(self._from[floc]) > 1:
                     occupied=[]
                     for tloc in self._from[floc]:
-                        if self._parent.has_robot(self._game, tloc):
+                        if self._parent.has_robot(tloc):
                             occupied.append(tloc)
                     if occupied > 0 and len(occupied) < len(self._from[floc]):
                         for tloc in occupied:
@@ -179,8 +178,8 @@ class Robot:
 
         # Return True if a location is too dangerous for a robot to move into
         def too_dangerous(self, floc, tloc):
-            bot=self._game.robots[floc]
-            adj=self._parent.AdjacentMap(self._parent, self._game, tloc) 
+            bot=self._parent._game.robots[floc]
+            adj=self._parent.AdjacentMap(self._parent, tloc) 
             if adj.count() > 0:
                 strength=0
                 remove=False
@@ -234,7 +233,7 @@ class Robot:
         def filter_out_occupied(self, moves):
             filtered=[]
             for loc in moves:
-                if not self._parent.has_robot(self._game, loc):
+                if not self._parent.has_robot(loc):
                     filtered.append(loc)
             return filtered
 
@@ -250,7 +249,7 @@ class Robot:
             best_tloc=[]
             best_count=1000
             for tloc in moves:
-                adj = self._parent.AdjacentMap(self._parent, self._game, tloc)
+                adj = self._parent.AdjacentMap(self._parent, tloc)
                 if adj.count() < best_count:
                     best_tloc=[tloc]
                     best_count=adj.count()
@@ -302,18 +301,18 @@ class Robot:
 
     class AdjacentMap:
 
-        def __init__(self, parent, game, loc):
+        def __init__(self, parent, loc):
             self._adj=[]
             self._weakest_loc=None
             self._weakest_hp=1000
             self._strongest_loc=None
             self._strongest_hp=0
-            self._game=game
+            self._parent=parent
             for dir in parent._DIRS:
                 dloc=parent.get_loc(loc, dir)
                 if parent.has_enemy(dloc):
                     self._adj.append(dloc)
-                    ebot=game.robots[dloc]
+                    ebot=parent._game.robots[dloc]
                     if ebot.hp < self._weakest_hp:
                         self._weakest_loc=dloc
                         self._weakest_hp=ebot.hp
@@ -342,15 +341,14 @@ class Robot:
         def get_bots(self):
             bots=[]
             for loc in self._adj:
-                bots.append(self._game.robots[loc])
+                bots.append(self._parent._game.robots[loc])
             return bots
 
     # Base class
     class AttackMap:
 
-        def __init__(self, parent, game, loc):
+        def __init__(self, parent, loc):
             self._parent=parent
-            self._game=game
             self._loc=loc
             self._dirs=[]
 
@@ -359,7 +357,7 @@ class Robot:
 
         def get_bot(self, dir):
             loc = self._parent.get_loc(self._loc, dir)
-            return self._game.robots[loc]
+            return self._parent._game.robots[loc]
 
         def get_loc(self, dir):
             return self._parent.get_loc(self._loc, dir)
@@ -370,8 +368,8 @@ class Robot:
     # Compute diagonal enemies
     class DiagonalMap(AttackMap):
 
-        def __init__(self, parent, game, loc):
-            parent.AttackMap.__init__(self, parent, game, loc)
+        def __init__(self, parent, loc):
+            parent.AttackMap.__init__(self, parent, loc)
             # Check diagonal possibilities
             for diag_dir in self._parent._DIAG:
                 diag_loc=self._parent.get_loc(loc, diag_dir)
@@ -381,8 +379,8 @@ class Robot:
     # Compute 2 sq orthogonal enemies
     class Ortho2sqMap(AttackMap):
 
-        def __init__(self, parent, game, loc):
-            parent.AttackMap.__init__(self, parent, game, loc)
+        def __init__(self, parent, loc):
+            parent.AttackMap.__init__(self, parent, loc)
             # Check 2sq orhtogonal possibilities:
             for dir2 in self._parent._DIR2:
                 loc2=self._parent.get_loc(loc, dir2)
@@ -393,8 +391,8 @@ class Robot:
     # That is one square forward and then one square diagonal.
     class HorseMoveMap(AttackMap):
 
-        def __init__(self, parent, game, loc):
-            parent.AttackMap.__init__(self, parent, game, loc)
+        def __init__(self, parent, loc):
+            parent.AttackMap.__init__(self, parent, loc)
             # Check 2sq orhtogonal possibilities:
             for dir2 in self._parent._HORSEDIR:
                 loc2=self._parent.get_loc(loc, dir2)
@@ -403,10 +401,9 @@ class Robot:
 
     class GuessAttackMap:
 
-        def __init__(self, parent, game, loc):
+        def __init__(self, parent, loc):
 
             self._parent=parent
-            self._game=game
             self._loc=loc
             self._weights={}
             self._missesok=False
@@ -420,7 +417,7 @@ class Robot:
                 self._weights[dir]=0
 
             # Check diagonal possibilities
-            diagMap = self._parent.DiagonalMap(self._parent, self._game, self._loc)
+            diagMap = self._parent.DiagonalMap(self._parent, self._loc)
             for diag_dir in diagMap.get_dirs():
                 for adir in self._parent._DADJ[diag_dir]:
                     tloc=diagMap.get_loc(adir)
@@ -429,7 +426,7 @@ class Robot:
                         self.add_attack(adir, tloc, ebot)
 
             # Check 2sq orthogonal possibilities:
-            orthoMap = self._parent.Ortho2sqMap(self._parent, self._game, self._loc)
+            orthoMap = self._parent.Ortho2sqMap(self._parent, self._loc)
             for dir2 in orthoMap.get_dirs():
                 adir=self._parent._DADJ2[dir2]
                 tloc=orthoMap.get_loc(adir)
@@ -443,7 +440,7 @@ class Robot:
             weight-=self._parent.miss_get(self._loc, tloc)
             if self._parent.is_attacking(ebot.location):
                 weight+=x
-            adj = self._parent.AdjacentMap(self._parent, self._game, tloc)
+            adj = self._parent.AdjacentMap(self._parent, tloc)
             weight += adj.count() * x/2
             self._weights[adir] += weight
 
@@ -481,7 +478,69 @@ class Robot:
             tloc=self.get_best_attack()
             if tloc != None:
                 self._parent.apply_guess_attack(self._loc, tloc)
+    
+    #
+    # Holds the list of target available to attack.
+    # Each target has a "count" and "weight".
+    # The "count" is the number of friendlies within a 3 sq radius.
+    # The "weight" is a weight based on how close the friendlies are to the target.
+    #  The closer the higher overall weight.
+    #
+    class TargetMap:
+        
+        def __init(self, parent):
+            self._parent = parent
+            # Key: eloc, value: count of friendlies within 3
+            self._count={}
+            # Key: eloc, value: weight count of how near friendlies are.
+            self._weight={}
+            # Key: floc, value: list of possible enemy targets
+            self._targets={}
+            # Key: floc, value: assigned eloc target
+            self._assigned={}
+            # Key: eloc, value: list of adjacents next to eloc
+            self._adjacents={}
+            # Key: eloc, value: list of walking dist 2 near eloc
+            self._near={}
 
+            for eloc in parent._ENEMIES:
+                self.count(eloc)
+        
+        def count(self, eloc):
+            self._count[eloc]=0
+            self._weight[eloc]=0
+            for loc in self._parent._FRIENDLIES:
+                dist = rg.dist(loc, eloc)
+                if (dist <= 3):
+                    wdist = rg.dist(loc, eloc)
+
+                    self._count[eloc] += 1
+                    self._weight[eloc] += 5 - wdist
+                    
+                    if loc in self._targets.keys():
+                        self._targets[loc].append(eloc)
+                    else:
+                        self._targets[loc]=[eloc]
+        
+        # For each friendly assign it to one target.
+        def assign(self):
+            self._assigned={}
+            for floc in self._targets.keys():
+                best_eloc=None
+                for eloc in self._targets[floc]:
+                    if best_eloc == None:
+                        best_eloc = eloc
+                    else:
+                        better=False
+                        if self._count[eloc] > self._count[best_eloc]:
+                            better=True
+                        elif self._count[eloc] == self._count[best_eloc]:
+                            if self._weight[eloc] > self._weight[best_eloc]:
+                                better=True
+                            if better:
+                                best_eloc=eloc
+                self._assigned[floc]=best_eloc
+            
     # Size of the GAME MAP.
     _MAPSIZE=19
     # Suicide damage
@@ -513,7 +572,7 @@ class Robot:
                   (-2,0):[(0,-1),(0,1)]}
     # Horse move adjacents
     _HORSEADJ={(1,-2):(0,-1),
-                   (-1,-2):(0,-1),
+               (-1,-2):(0,-1),
                (2,-1):(1,0),
                (2,1):(1,0),
                (1,2):(0,1),
@@ -566,22 +625,24 @@ class Robot:
         else:
             self._LOG=False
 
-        if self.init(game):
-            self.ponder_on_spawned(game)
-            self.ponder_make_way(game)
-            self.ponder_run_away(game, 9, 4)
-            self.ponder_make_way(game)
-            self.ponder_run_away(game, self._SUICIDE_DAMAGE, 2)
-            self.ponder_make_way(game)
-            self.ponder_adj_enemies(game)
-            self.ponder_make_way(game)
-            self.ponder_guard(game)
-            self.ponder_guess_attack(game, False)
-            self.ponder_surround_realize(game)
-            self.ponder_surround_prepare(game)
-            self.ponder_make_way(game)
-            self.ponder_chase_enemy(game)
-            self.ponder_guess_attack(game, True)
+        self._game = game
+
+        if self.init():
+            self.ponder_on_spawned()
+            self.ponder_make_way()
+            self.ponder_run_away(9, 4)
+            self.ponder_make_way()
+            self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
+            self.ponder_make_way()
+            self.ponder_adj_enemies()
+            self.ponder_make_way()
+            self.ponder_guard()
+            self.ponder_guess_attack(False)
+            self.ponder_surround_realize()
+            self.ponder_surround_prepare()
+            self.ponder_make_way()
+            self.ponder_chase_enemy()
+            self.ponder_guess_attack(True)
 
         cmd = self.get_cmd()
         if self._LOG:
@@ -591,27 +652,30 @@ class Robot:
     # The following computes the moves for ALL robots when the first robot move for a new turn are requested.
     # After it is computed, all robots will have moves assigned, and subsequent calls for the same turn
     # will simply return the result.
-    def init(self, game):
-        if self._CURTURN == game.turn:
+    def init(self):
+        if self._CURTURN == self._game.turn:
             return False
 
         # Compute Spawn Turn Coming
-        remainder = game.turn % rg.settings.spawn_every
+        remainder = self._game.turn % rg.settings.spawn_every
         self._STC=(remainder == 0 or remainder == (rg.settings.spawn_every-1))
 
         # Compute friendly and enemy robot locations (Convenience)
         self._FRIENDLIES=[]
         self._ENEMIES=[]
-        for loc in game.robots.keys():
-            bot=game.robots[loc]
+        for loc in self._game.robots.keys():
+            bot=self._game.robots[loc]
             if bot.player_id == self.player_id:
                 self._FRIENDLIES.append(loc)
             else:
                 self._ENEMIES.append(loc)
 
         # Determine misses
-        self.miss_count(game)
+        self.miss_count()
 
+        # Cpmpute targets
+        self._targetmap = self.TargetMap(self)
+        
         self._REMAINING=list(self._FRIENDLIES)
         self._CMDS={}
         self._OCCUPIED=[]
@@ -619,7 +683,7 @@ class Robot:
         self._NEW_MOVES=[]
         self._STAY_PUT=[]
         self._GUESS_ATTACKS=[]
-        self._CURTURN=game.turn
+        self._CURTURN=self._game.turn
 
         return True
 
@@ -628,7 +692,7 @@ class Robot:
     #####################
 
     # Record each miss from last turn attacks
-    def miss_count(self, game):
+    def miss_count(self):
         for floc in self._CMDS.keys():
             if self._CMDS[floc][0] == 'attack':
                 tloc=self._CMDS[floc][1]
@@ -657,9 +721,9 @@ class Robot:
     ####################
 
     # If a robot is on a spawn square and STC is True, then they get the move that robot off.
-    def ponder_on_spawned(self, game):
+    def ponder_on_spawned(self):
 
-        movemap = self.MoveMap(self, game)
+        movemap = self.MoveMap(self)
 
         for loc in self._REMAINING:
             if self.is_spawn(loc):
@@ -669,9 +733,9 @@ class Robot:
 
     # If there are locations that we are OCCUPIED that a robot is
     # currently on, that robot must move off.
-    def ponder_make_way(self, game):
+    def ponder_make_way(self):
         if len(self._NEW_MOVES) > 0:
-            movemap = self.MoveMap(self, game)
+            movemap = self.MoveMap(self)
             movemap.set_empty_only(True)
 
             for loc in self._NEW_MOVES:
@@ -684,10 +748,10 @@ class Robot:
             self._NEW_MOVES=[]
 
     # If there are units close to death, they should run away.
-    def ponder_run_away(self, game, threshold, safe_dist):
-        movemap = self.MoveMap(self, game)
+    def ponder_run_away(self, threshold, safe_dist):
+        movemap = self.MoveMap(self)
         for loc in self._REMAINING:
-            bot=game.robots[loc]
+            bot=self._game.robots[loc]
             if bot.hp <= threshold:
                 # Select a direction farthest from the closest enemy
                 eloc=self.closest_enemy(loc)
@@ -711,7 +775,7 @@ class Robot:
 
     # If there units we previously thought would be better off staying put rather
     # than chasing down an enemy, if they have nothing else to do, then set them to guard
-    def ponder_guard(self, game):
+    def ponder_guard(self):
         guarding=[]
         for loc in self._STAY_PUT:
             if loc in self._REMAINING:
@@ -726,13 +790,13 @@ class Robot:
     #   - If there is only one adjacent, and it has at least one other friendly next to it, attack it
     #   - Dodge
     #   - If unable to dodge then attack.
-    def ponder_adj_enemies(self, game):
-        movemap = self.MoveMap(self, game)
+    def ponder_adj_enemies(self):
+        movemap = self.MoveMap(self)
         suicides=[]
         attacking={}
         for loc in self._REMAINING:
-            bot=game.robots[loc]
-            adj = self.AdjacentMap(self, game, loc)
+            bot=self._game.robots[loc]
+            adj = self.AdjacentMap(self, loc)
             dodge=False
             count = adj.count()
             if count >= 2:
@@ -783,7 +847,7 @@ class Robot:
 
         if len(movemap.get_failed()) > 0:
             for loc in movemap.get_failed():
-                adj = self.AdjacentMap(self, game, loc)
+                adj = self.AdjacentMap(self, loc)
                 attacking[loc]=adj.get_weakest_loc()
 
             for loc in attacking.keys():
@@ -791,9 +855,9 @@ class Robot:
 
     # If an enemy is diagonally adjacent or 2 sq away orthogonally adjacent
     # consider an attack unless the last time we tried there was a miss.
-    def ponder_guess_attack(self, game, missesok):
+    def ponder_guess_attack(self, missesok):
         for loc in self._REMAINING:
-            gmap = self.GuessAttackMap(self, game, loc)
+            gmap = self.GuessAttackMap(self, loc)
             gmap.set_misses_ok(missesok)
             gmap.init();
             gmap.attack()
@@ -802,11 +866,11 @@ class Robot:
     # If 2 or more friendlies are on the diagonals of the same enemy then
     # see if they can all move in for the kill.
     #
-    def ponder_surround_realize(self, game):
+    def ponder_surround_realize(self):
         map={}
         # Find possible targets
         for loc in self._REMAINING:
-            dmap = self.DiagonalMap(self, game, loc)
+            dmap = self.DiagonalMap(self, loc)
             for dir in dmap.get_dirs():
                 dloc = dmap.get_loc(dir)
                 if dloc in map.keys():
@@ -817,7 +881,7 @@ class Robot:
         # See if we have some possible close-in attacks
         for dloc in map.keys():
             if len(map[dloc]) > 1:
-                movemap = self.MoveMap(self, game)
+                movemap = self.MoveMap(self)
                 movemap.set_dangerous_ok(True)
                 for floc in map[dloc]:
                     dir = self.get_dir(floc, dloc)
@@ -837,7 +901,7 @@ class Robot:
         for dloc in map.keys():
             for floc in map[dloc]:
                 if floc in self._REMAINING:
-                    gmap = self.GuessAttackMap(self, game, floc)
+                    gmap = self.GuessAttackMap(self, floc)
                     gmap.set_misses_ok(True)
                     gmap.init()
                     gmap.attack()
@@ -845,16 +909,16 @@ class Robot:
     # If there are robots 2 squares away, either orthogonally or by horse move, 
     # try to move them to the enemy's diagonal.
     #
-    def ponder_surround_prepare(self, game):
-        movemap=self.MoveMap(self, game)
+    def ponder_surround_prepare(self):
+        movemap=self.MoveMap(self)
         # Find feints
         for loc in self._REMAINING:
-            omap = self.Ortho2sqMap(self, game, loc)
+            omap = self.Ortho2sqMap(self, loc)
             for dir in omap.get_dirs():
                 for adir in self._FEINT2[dir]:
                     tloc = self.get_loc(loc, adir)
                     movemap.chk_add(loc, tloc)
-            hmap = self.HorseMoveMap(self, game, loc)
+            hmap = self.HorseMoveMap(self, loc)
             for dir in hmap.get_dirs():
                 adir = self._HORSEADJ[dir]
                 tloc = self.get_loc(loc, adir)
@@ -863,8 +927,8 @@ class Robot:
 
     # Chase down the nearest enemy.
     # We want to be careful here not to collide with other friendlies
-    def ponder_chase_enemy(self, game):
-        movemap=self.MoveMap(self, game)
+    def ponder_chase_enemy(self):
+        movemap=self.MoveMap(self)
         movemap.set_empty_only(True)
         for loc in self._REMAINING:
             closest_eloc=self.closest_enemy(loc)
@@ -879,7 +943,7 @@ class Robot:
 
         # Be more forgiving second time around
         if len(movemap.get_failed()) > 0:
-            movemap2 = self.MoveMap(self, game)
+            movemap2 = self.MoveMap(self)
             for loc in movemap.get_failed():
                 closest_eloc=self.closest_enemy(loc)
 		if closest_eloc != None:
@@ -1000,8 +1064,8 @@ class Robot:
     def get_hp_weight(self, hp):
         return rg.settings.robot_hp - hp
 
-    def has_robot(self, game, loc):
-        return loc in game.robots
+    def has_robot(self, loc):
+        return loc in self._game.robots
 
     def has_friendly(self, loc):
         return loc in self._FRIENDLIES
