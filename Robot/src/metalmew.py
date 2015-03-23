@@ -520,16 +520,8 @@ class Robot:
             self._assigned=[]
             # If we are all out attacking this target or not
             self._attacking=False
-            # List of target squares
-            self._target_squares=[]
-            
-            self.count(self._parent._REMAINING)
-        
-        def count(self, flist):
-            self._friendlies=[]
-            self._adjacents=[]
-            self._near=[]
-            for loc in flist:
+
+            for loc in self._parent._REMAINING:
                 dist = rg.dist(loc, self._eloc)
                 if (dist <= 3):
                     wdist = rg.dist(loc, self._eloc)
@@ -546,6 +538,9 @@ class Robot:
         
         def is_adjacent(self, floc):
             return floc in self._adjacents
+    
+        def is_attacking(self):
+            return self._attacking
         
         def get_weight(self):
             return self._weight
@@ -561,36 +556,19 @@ class Robot:
                 
         # Compute if are all out attacking this target.
         def compute_attacking(self):
-            # Reset _near and _adjacents only from assigned
-            self.compute(self._assigned)
             # If one unit already attacking then yes.
-            if self._eloc in self._parent._ATTACKING:
+            if self._parent.is_attacking(self.eloc):
                 self._attacking=True
             else:
                 count=len(self._near)+len(self._adjacents)
-                self._attacking=(count >= 4)
-                
-        # For all friendlies, have them move or attack based on the situation.
-        # 
-        def do_cmds(self):
-            self.compute_attacking()
-            if self._attacking:
-                self.pounce()
-            else:
-                self.ready_pounce()
-            
-        # Do an all out attack against the target square    
-        def pounce(self):
-            self._target_squares=self._parent._DIRS + self._parent._DIAG + self._parent._DIR2
-        
-        # We are not attacking the target but getting ready to pounce
-        # Therefore the targets squares are all the 2 away squares.
-        def ready_pounce(self):
-            movemap=self.MoveMap(self)
-            self._target_squares=self._parent._DIAG + self._parent._DIR2
+                if len(self._parent._ENEMIES)+2 < len(self._parent._FRIENDLIES):
+                    trigger=3
+                else:
+                    trigger=4
+                self._attacking=(count >= trigger)
             
         # Any robot on an adjacent, which has not yet moved, should move off.
-        def adjacents_move(self, movemap):
+        def adjacents_dodge(self, movemap):
             for floc in self._adjacents:
                 if floc in self._parent._REMAINING:
                     for tdir in self._parent._DIRS:
@@ -598,19 +576,25 @@ class Robot:
         
         # Any robot on an adjacent, should simply attack the weaker nearer robot.
         def adjacents_attack(self):
+            attacking={}
             for floc in self._adjacents:
                 if floc in self._parent._REMAINING:
                     amap=self._parent.AdjacentMap(self._parent, floc)
                     if amap.get_weakest_loc() != None:
-                        self._parent.apply_attack(floc, amap.get_weakest_loc())
-                    
+                        attacking[floc] = amap.get_weakest_loc();
+            
+            for floc in attacking.keys():
+                self._parent.apply_attack(floc, attacking[floc])
+                
         # Any robot 2sq away should close in for the kill
-        def near_attack(self, movemap):
+        def near_attack(self):
+            movemap=self._parent.MoveMap(self._parent)
             for floc in self._near:
                 if floc in self._parent._REMAINING:
                     dirs=self._parent.get_dirs(floc, self._eloc)
                     for tdir in dirs:
                         movemap.chk_add_dir(floc, tdir)
+            movemap.apply()
                         
                     
             
@@ -953,8 +937,18 @@ class Robot:
                 self._ASSIGNED[floc]=bmap.get_target_loc()
                 bmap.add_assigned(floc)
                 
+        movemap = self.MoveMap(self)
         for eloc in self._TARGETS.keys():
-            self._TARGETS[eloc].do_cmds();
+            tmap=self._TARGETS[eloc]
+            tmap.compute_attacking()
+            if tmap.is_attacking():
+                tmap.adjacents_attack()
+                tmap.near_attack()
+            else:
+                tmap.adjacents_dodge(movemap)
+        movemap.apply()
+            
+            
                 
     # If an enemy is diagonally adjacent or 2 sq away orthogonally adjacent
     # consider an attack unless the last time we tried there was a miss.
