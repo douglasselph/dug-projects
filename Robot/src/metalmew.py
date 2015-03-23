@@ -398,72 +398,70 @@ class Robot:
 
     class GuessAttackMap:
 
-        def __init__(self, parent, loc):
-
+        def __init__(self, parent):
             self._parent=parent
-            self._loc=loc
+            # Key: floc, Value: dictionary of the 4 DIRS
             self._weights={}
-            self._missesok=False
+            self._attacking=[]
 
-        def set_misses_ok(self, flag):
-            self._missesok=flag
-
-        def init(self):
-            for tdir in self._parent._DIRS:
-                self._weights[tdir]=0
+        def guess_attack(self, floc):
+            self._weights[floc] = {}
+            for adir in self._parent._DIRS:
+                self._weights[floc][adir] = 0
             # Check diagonal possibilities
-            diagMap = self._parent.DiagonalMap(self._parent, self._loc)
+            diagMap = self._parent.DiagonalMap(self._parent, floc)
             for diag_dir in diagMap.get_dirs():
                 for adir in self._parent._DADJ[diag_dir]:
                     tloc=diagMap.get_loc(adir)
                     if self.is_attackable(tloc):
                         ebot=diagMap.get_bot(diag_dir)
-                        self.add_attack(adir, tloc, ebot)
+                        self.add_attack(floc, adir, tloc, ebot)
             # Check 2sq orthogonal possibilities:
-            orthoMap = self._parent.Ortho2sqMap(self._parent, self._loc)
+            orthoMap = self._parent.Ortho2sqMap(self._parent, floc)
             for dir2 in orthoMap.get_dirs():
                 adir=self._parent._DADJ2[dir2]
                 tloc=orthoMap.get_loc(adir)
                 if self.is_attackable(tloc):
                     ebot = orthoMap.get_bot(dir2)
-                    self.add_attack(adir, tloc, ebot)
+                    self.add_attack(floc, adir, tloc, ebot)
 
         # Add an attack in the given direction, at the target location.
         # The enemy robot that it is near it is ebot.
-        def add_attack(self, adir, tloc, ebot):
+        def add_attack(self, floc, adir, tloc, ebot):
             x = rg.settings.robot_hp/2
             weight = x + self._parent.get_hp_weight(ebot.hp)
-            weight-=self._parent.miss_get(self._loc, tloc)
-            if self._parent.is_attacking(tloc):
+            weight -= self._parent.miss_get(floc, tloc)
+            if self.is_attacking(tloc):
                 weight = self.bounded_reduce(weight, 10)
             if self._parent.is_moving(tloc):
-                weight = self.bounded_reduce(weight, 5)
-            self._weights[adir] += weight
+                weight = self.bounded_reduce(weight, 5)    
+            self._weights[floc][adir] += weight
+            if not tloc in self._attacking:
+                self._attacking.append(tloc)
 
+        def is_attacking(self, tloc):
+            if self._parent.is_attacking(tloc):
+                return True
+            if tloc in self._attacking:
+                return True
+            return False
+            
         def bounded_reduce(self, weight, amt):
             if weight > amt:
                 return weight - amt
             return 1
         
         def is_attackable(self, loc):
-            if not self._parent.is_normal(loc):
-                return False
-            if loc in self._parent._FRIENDLIES:
-                if not self._parent.is_moving(loc):
-                    return False
-            if not self._missesok:
-                if self._parent.miss_get(self._loc, loc) > 0:
-                    return False
-            return True
+            return self._parent.is_normal(loc)
             
-        def get_best_attack(self):
+        def get_best_attack(self, floc):
             largest_dir=[]
             largest_size=-1
-            for tdir in self._weights.keys():
-                if self._weights[tdir] > largest_size:
-                    largest_size=self._weights[tdir]
+            for tdir in self._weights[floc].keys():
+                if self._weights[floc][tdir] > largest_size:
+                    largest_size=self._weights[floc][tdir]
                     largest_dir=[tdir]
-                elif self._weights[tdir] == largest_size:
+                elif self._weights[floc][tdir] == largest_size:
                     largest_dir.append(tdir)
                 
             if largest_size > 0 and len(largest_dir) > 0:
@@ -472,14 +470,15 @@ class Robot:
                 else:
                     select=random.randint(0,len(largest_dir)-1)
                     use_dir=largest_dir[select]
-                tloc=self._parent.get_loc(self._loc, use_dir)
+                tloc=self._parent.get_loc(floc, use_dir)
                 return tloc
             return None
 
-        def attack(self):
-            tloc=self.get_best_attack()
-            if tloc != None:
-                self._parent.apply_guess_attack(self._loc, tloc)
+        def apply(self):
+            for floc in self._weights.keys():
+                tloc=self.get_best_attack(floc)
+                if tloc != None:
+                    self._parent.apply_guess_attack(floc, tloc)
     
     #
     # Analysis of enemy
@@ -932,12 +931,10 @@ class Robot:
     # If an enemy is diagonally adjacent or 2 sq away orthogonally adjacent
     # consider an attack unless the last time we tried there was a miss.
     def ponder_guess_attack(self):
-        remaining=list(self._REMAINING)
-        for loc in remaining:
-            gmap = self.GuessAttackMap(self, loc)
-            gmap.set_misses_ok(True)
-            gmap.init();
-            gmap.attack()
+        gmap = self.GuessAttackMap(self)
+        for floc in self._REMAINING:
+            gmap.guess_attack(floc)
+        gmap.apply()
 
     # Chase down the nearest enemy.
     # We want to be careful here not to collide with other friendlies
