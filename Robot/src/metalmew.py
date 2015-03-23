@@ -370,12 +370,12 @@ class Robot:
         def get_dirs(self):
             return self._dirs
 
-        def get_bot(self, dir):
-            loc = self._parent.get_loc(self._loc, dir)
+        def get_bot(self, tdir):
+            loc = self._parent.get_loc(self._loc, tdir)
             return self._parent._game.robots[loc]
 
-        def get_loc(self, dir):
-            return self._parent.get_loc(self._loc, dir)
+        def get_loc(self, tdir):
+            return self._parent.get_loc(self._loc, tdir)
 
         def count(self):
             return len(self._dirs.keys())
@@ -396,20 +396,8 @@ class Robot:
 
         def __init__(self, parent, loc):
             parent.AttackMap.__init__(self, parent, loc)
-            # Check 2sq orhtogonal possibilities:
+            # Check 2sq orthogonal possibilities:
             for dir2 in self._parent._DIR2:
-                loc2=self._parent.get_loc(loc, dir2)
-                if self._parent.has_enemy(loc2):
-                    self._dirs.append(dir2)
-
-    # Compute 2 sq horse move enemies
-    # That is one square forward and then one square diagonal.
-    class HorseMoveMap(AttackMap):
-
-        def __init__(self, parent, loc):
-            parent.AttackMap.__init__(self, parent, loc)
-            # Check 2sq orhtogonal possibilities:
-            for dir2 in self._parent._HORSEDIR:
                 loc2=self._parent.get_loc(loc, dir2)
                 if self._parent.has_enemy(loc2):
                     self._dirs.append(dir2)
@@ -428,8 +416,8 @@ class Robot:
 
         def init(self):
 
-            for dir in self._parent._DIRS:
-                self._weights[dir]=0
+            for tdir in self._parent._DIRS:
+                self._weights[tdir]=0
 
             # Check diagonal possibilities
             diagMap = self._parent.DiagonalMap(self._parent, self._loc)
@@ -473,12 +461,12 @@ class Robot:
         def get_best_attack(self):
             largest_dir=[]
             largest_size=-1
-            for dir in self._weights.keys():
-                if self._weights[dir] > largest_size:
-                    largest_size=self._weights[dir]
-                    largest_dir=[dir]
-                elif self._weights[dir] == largest_size:
-                    largest_dir.append(dir)
+            for tdir in self._weights.keys():
+                if self._weights[tdir] > largest_size:
+                    largest_size=self._weights[tdir]
+                    largest_dir=[tdir]
+                elif self._weights[tdir] == largest_size:
+                    largest_dir.append(tdir)
             if largest_size > 0 and len(largest_dir) > 0:
                 if len(largest_dir) == 1:
                     use_dir=largest_dir[0]
@@ -503,7 +491,7 @@ class Robot:
     #
     class TargetMap:
         
-        def __init(self, parent, eloc):
+        def __init__(self, parent, eloc):
             self._parent = parent
             self._eloc=eloc
             # Count of friendlies within 3
@@ -557,7 +545,7 @@ class Robot:
         # Compute if are all out attacking this target.
         def compute_attacking(self):
             # If one unit already attacking then yes.
-            if self._parent.is_attacking(self.eloc):
+            if self._parent.is_attacking(self._eloc):
                 self._attacking=True
             else:
                 count=len(self._near)+len(self._adjacents)
@@ -594,9 +582,7 @@ class Robot:
                     dirs=self._parent.get_dirs(floc, self._eloc)
                     for tdir in dirs:
                         movemap.chk_add_dir(floc, tdir)
-            movemap.apply()
-                        
-                    
+            movemap.apply()              
             
     # Size of the GAME MAP.
     _MAPSIZE=19
@@ -703,12 +689,9 @@ class Robot:
             self.ponder_make_way()
             self.ponder_targets()
             self.ponder_guard()
-            self.ponder_guess_attack(False)
-            self.ponder_surround_realize()
-            self.ponder_surround_prepare()
+            self.ponder_guess_attack()
             self.ponder_make_way()
             self.ponder_chase_enemy()
-            self.ponder_guess_attack(True)
 
         cmd = self.get_cmd()
         if self._LOG:
@@ -738,9 +721,6 @@ class Robot:
 
         # Determine misses
         self.miss_count()
-
-        # Cpmpute targets
-        self._targetmap = self.TargetMap(self)
         
         self._REMAINING=list(self._FRIENDLIES)
         self._CMDS={}
@@ -905,7 +885,7 @@ class Robot:
         # Build target maps
         self._TARGETS={}
         for eloc in self._ENEMIES:
-            self._TARGETS[eloc] = self.TargetMap(self)
+            self._TARGETS[eloc] = self.TargetMap(self, eloc)
             
         # Assign each friendly to one target
         # Choose the target with the largest count.
@@ -925,7 +905,7 @@ class Robot:
                     # If the best is an adjacent enemy, this trumps any other enemy that is not.
                     if badj and not tadj:
                         continue
-                    # If the conisder is an adjacent, this immediately trumps the best if not.
+                    # If the consider is an adjacent, this immediately trumps the best if not.
                     if tadj and not badj:
                         bmap=tmap
                     elif tmap.get_count() > bmap.get_count():
@@ -946,78 +926,16 @@ class Robot:
                 tmap.near_attack()
             else:
                 tmap.adjacents_dodge(movemap)
-        movemap.apply()
-            
-            
+        movemap.apply() 
                 
     # If an enemy is diagonally adjacent or 2 sq away orthogonally adjacent
     # consider an attack unless the last time we tried there was a miss.
-    def ponder_guess_attack(self, missesok):
+    def ponder_guess_attack(self):
         for loc in self._REMAINING:
             gmap = self.GuessAttackMap(self, loc)
-            gmap.set_misses_ok(missesok)
+            gmap.set_misses_ok(True)
             gmap.init();
             gmap.attack()
-
-    # 
-    # If 2 or more friendlies are on the diagonals of the same enemy then
-    # see if they can all move in for the kill.
-    #
-    def ponder_surround_realize(self):
-        pmap={}
-        # Find possible targets
-        for loc in self._REMAINING:
-            dmap = self.DiagonalMap(self, loc)
-            for tdir in dmap.get_dirs():
-                dloc = dmap.get_loc(tdir)
-                if dloc in pmap.keys():
-                    pmap[dloc].append(loc)
-                else:
-                    pmap[dloc] = [loc]
-
-        # See if we have some possible close-in attacks
-        for dloc in pmap.keys():
-            if len(pmap[dloc]) > 1:
-                movemap = self.MoveMap(self)
-                movemap.set_dangerous_ok(True)
-                for floc in pmap[dloc]:
-                    tdir = self.get_dir(floc, dloc)
-                    for adir in self._DADJ[tdir]:
-                        movemap.chk_add_dir(floc, adir)
-
-                movemap.detect_problems()
-                moves = movemap.get_moves()
-                if moves.keys() > 1:
-                    for floc in moves.keys():
-                        self.apply_move(floc, moves[floc])
-
-        # At this point, if we don't do anything we are in danger of having the
-        # robot move during ponder_chase_enemies(). Therefore just attack 
-        # one of the diagonals so they don't walk unsupported into the line of fire
-        for dloc in pmap.keys():
-            for floc in pmap[dloc]:
-                if floc in self._REMAINING:
-                    gmap = self.GuessAttackMap(self, floc)
-                    gmap.set_misses_ok(True)
-                    gmap.init()
-                    gmap.attack()
-    # 
-    # If there are robots 2 squares away, either orthogonally or by horse move, 
-    # try to move them to the enemy's diagonal.
-    #
-    def ponder_surround_prepare(self):
-        movemap=self.MoveMap(self)
-        # Find feints
-        for loc in self._REMAINING:
-            omap = self.Ortho2sqMap(self, loc)
-            for tdir in omap.get_dirs():
-                for adir in self._FEINT2[tdir]:
-                    movemap.chk_add_dir(loc, adir)
-            hmap = self.HorseMoveMap(self, loc)
-            for tdir in hmap.get_dirs():
-                adir = self._HORSEADJ[tdir]
-                movemap.chk_add_dir(loc, adir)
-        movemap.apply();
 
     # Chase down the nearest enemy.
     # We want to be careful here not to collide with other friendlies
@@ -1150,8 +1068,8 @@ class Robot:
         else:
             return [(0,ndy),(ndx,0)]
 
-    def get_loc(self, loc, dir):
-        return (loc[0] + dir[0], loc[1] + dir[1])
+    def get_loc(self, loc, tdir):
+        return (loc[0] + tdir[0], loc[1] + tdir[1])
 
     def get_hp_weight(self, hp):
         return rg.settings.robot_hp - hp
@@ -1195,14 +1113,12 @@ class Robot:
         die=random.randint(1,100)
         return die <= chance
 
-    def valid_dir(self, dir):
-        if dir[0] != 0 and dir[1] != 0:
+    def valid_dir(self, tdir):
+        if tdir[0] != 0 and tdir[1] != 0:
             return False
-        if abs(dir[0]) != 1 and abs(dir[1]) != 1:
+        if abs(tdir[0]) != 1 and abs(tdir[1]) != 1:
             return False
-        return True
-    
-          
+        return True 
     #
     # Return the number of friendly robots that can attack or are already attacking the given enemy.
     #

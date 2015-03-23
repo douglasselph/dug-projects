@@ -1,5 +1,3 @@
-virtualenv env
-source env/bin/activate
 rgrun bots/ribbit08.py bots/SfparI.py
 rgrun --game-seed 0 src/metalmew.py bots/terriblebot.py
 rgrun --game-seed 0 src/metalmew.py bots/SfparI.py
