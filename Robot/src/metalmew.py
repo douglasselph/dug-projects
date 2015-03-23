@@ -409,10 +409,8 @@ class Robot:
             self._missesok=flag
 
         def init(self):
-
             for tdir in self._parent._DIRS:
                 self._weights[tdir]=0
-
             # Check diagonal possibilities
             diagMap = self._parent.DiagonalMap(self._parent, self._loc)
             for diag_dir in diagMap.get_dirs():
@@ -421,7 +419,6 @@ class Robot:
                     if self.is_attackable(tloc):
                         ebot=diagMap.get_bot(diag_dir)
                         self.add_attack(adir, tloc, ebot)
-
             # Check 2sq orthogonal possibilities:
             orthoMap = self._parent.Ortho2sqMap(self._parent, self._loc)
             for dir2 in orthoMap.get_dirs():
@@ -438,16 +435,16 @@ class Robot:
             weight = x + self._parent.get_hp_weight(ebot.hp)
             weight-=self._parent.miss_get(self._loc, tloc)
             if self._parent.is_attacking(tloc):
-                if weight > 10:
-                    weight -= 10
-                else:
-                    weight = 1
-            #if self._parent.is_attacking(ebot.location):
-            #    weight+=x
-            #adj = self._parent.AdjacentMap(self._parent, tloc)
-            #weight += adj.count() * x/2
+                weight = self.bounded_reduce(weight, 10)
+            if self._parent.is_moving(tloc):
+                weight = self.bounded_reduce(weight, 5)
             self._weights[adir] += weight
 
+        def bounded_reduce(self, weight, amt):
+            if weight > amt:
+                return weight - amt
+            return 1
+        
         def is_attackable(self, loc):
             if not self._parent.is_normal(loc):
                 return False
@@ -660,7 +657,7 @@ class Robot:
     # DEBUG
     _LOG=False
     _LOOKAT=[]
-    _DEBUG_TURNS=[]
+    _DEBUG_TURNS=[13]
 
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -694,9 +691,7 @@ class Robot:
             self.ponder_guard()
             self.ponder_guess_attack()
             self.ponder_make_way()
-            self.showcmds("BEFORE CHASE")
             self.ponder_chase_enemy()
-            self.showcmds("AFTER CHASE")
 
         cmd = self.get_cmd()
         if self._LOG:
