@@ -17,28 +17,29 @@ class Robot:
     class MoveMap:
 
         def __init__(self, parent):
-            self._from={}
-            self._to={}
-            self._chk_fail=[]
-            self._failed=[]
-            self._dangerous_ok=False
-            self._empty_only=False
-            self._toward_center=True
-            self._filter_old=True
-            self._parent=parent
+            self._from = {}
+            self._to = {}
+            self._chk_fail = []
+            self._failed = []
+            self._dangerous_ok = False
+            self._empty_only = False
+            self._toward_center = True
+            self._filter_old = True
+            self._towards_enemy = False
+            self._parent = parent
             # List of friendlies that have not yet moved, that are blocking a move that would have otherwise occurred
-            self._blocking=[]
+            self._blocking = []
 
         def clear(self):
-            self._from={}
-            self._to={}
-            self._chk_fail=[]
+            self._from = {}
+            self._to = {}
+            self._chk_fail = []
 
         # Move the indicated robot to any normal space.
         def move(self, loc):
-            bot=self._parent._game.robots[loc]
+            bot = self._parent._game.robots[loc]
             for tdir in self._parent._DIRS:
-                dloc=self._parent.get_loc(bot.location, tdir)
+                dloc = self._parent.get_loc(bot.location, tdir)
                 self.chk_add(loc, dloc)
 
         def chk(self, floc, tloc):
@@ -53,7 +54,7 @@ class Robot:
                 self.add(floc, tloc)
                 
         def chk_add_dir(self, floc, tdir):
-            tloc=self._parent.get_loc(floc, tdir)
+            tloc = self._parent.get_loc(floc, tdir)
             self.chk_add(floc, tloc)
 
         def is_ok(self, floc, tloc):
@@ -72,10 +73,10 @@ class Robot:
             return True
 
         def set_empty_only(self, flag):
-            self._empty_only=flag
+            self._empty_only = flag
 
         def set_dangerous_ok(self, flag):
-            self._dangerous_ok=flag
+            self._dangerous_ok = flag
 
         def has(self, floc):
             return floc in self._from.keys()
@@ -99,7 +100,7 @@ class Robot:
             if tloc in self._to.keys():
                 self._to[tloc].append(floc)
             else:
-                self._to[tloc]=[floc]
+                self._to[tloc] = [floc]
                 
         def insert(self, floc, tloc):
             if floc in self._from.keys():
@@ -110,7 +111,7 @@ class Robot:
             if tloc in self._to.keys():
                 self._to[tloc].insert(0, floc)
             else:
-                self._to[tloc]=[floc]
+                self._to[tloc] = [floc]
 
         # Only the attack from floc is attacking tloc
         # Remove all other attacks scheduled
@@ -131,12 +132,12 @@ class Robot:
             self.do_moves()
 
         def show(self, prefix):
-            line=prefix + " FROM:"
+            line = prefix + " FROM:"
             for floc in self._from.keys():
                 line += "[" + str(floc) + ":" 
                 line += str(self._from[floc])
                 line += "];"
-            line+=" TO:"
+            line += " TO:"
             for tloc in self._to.keys():
                 line += "[" + str(tloc) + ":" 
                 line += str(self._to[tloc])
@@ -154,9 +155,9 @@ class Robot:
         def detect_collisions(self):
             for tloc in self._to.keys():
                 if len(self._to[tloc]) > 1:
-                    least_floc=None
-                    least_count=1000
-                    tolist=self._to[tloc]
+                    least_floc = None
+                    least_count = 1000
+                    tolist = self._to[tloc]
                     for floc in tolist:
                         count = len(self._from[floc])
                         if count < least_count:
@@ -167,29 +168,29 @@ class Robot:
         # See if two robots are moving into each other. If so, 
         # then give priority to the lower HP one.
         def detect_bumps(self):
-            collides=[]
+            collides = []
             for floc in self._from.keys():
                 for tloc in self._from[floc]:
                     if tloc in self._from.keys():
                         for tloc2 in self._from[tloc]:
                             if tloc2 == floc:
-                                inList=False
+                                inList = False
                                 for collide in collides:
                                     if collide[0] == floc and collide[1] == tloc:
-                                        inList=True
+                                        inList = True
                                         break
                                     if collide[1] == floc and collide[0] == tloc:
-                                        inList=True
+                                        inList = True
                                         break
                                 if not inList:
-                                    nlist=[]
+                                    nlist = []
                                     nlist.append(floc)
                                     nlist.append(tloc)
                                     collides.append(nlist)
             if len(collides) > 0:
                 for collide in collides:
-                    floc=collide[0]
-                    floc2=collide[1]
+                    floc = collide[0]
+                    floc2 = collide[1]
                     if self._parent._game.robots[floc].hp < self._parent._game.robots[floc2].hp:
                         self.remove(floc2, floc)
                     else:
@@ -200,7 +201,7 @@ class Robot:
         def detect_occupied(self):
             for floc in self._from.keys():
                 if len(self._from[floc]) > 1:
-                    occupied=[]
+                    occupied = []
                     for tloc in self._from[floc]:
                         if self._parent.has_robot(tloc):
                             occupied.append(tloc)
@@ -212,39 +213,39 @@ class Robot:
 
         # Return True if a location is too dangerous for a robot to move into
         def too_dangerous(self, floc, tloc):
-            bot=self._parent._game.robots[floc]
-            adj=self._parent.AdjacentMap(self._parent, tloc) 
+            bot = self._parent._game.robots[floc]
+            adj = self._parent.AdjEnemyMap(self._parent, tloc) 
             if adj.count() > 0:
-                strength=0
+                strength = 0
                 for ebot in adj.get_bots():
                     if ebot.hp >= bot.hp:
                         return True
-                    strength+= ebot.hp
+                    strength += ebot.hp
                 if strength >= bot.hp:
                     return True
             return False
         
         # Actually apply the moves recorded
         def do_moves(self):
-            moves=self.get_moves();
+            moves = self.get_moves();
             for floc in moves.keys():
                 self._parent.apply_move(floc, moves[floc])           
         # Return dictionary of moves we have computed.
         # The key is from, the value is the target
         def get_moves(self):
-            moves={}
+            moves = {}
             for floc in self._from.keys():
-                count=len(self._from[floc])
+                count = len(self._from[floc])
                 if count > 1:
-                    tloc=self.select_move(floc)
+                    tloc = self.select_move(floc)
                 elif count == 1:
-                    tloc=self._from[floc][0]
+                    tloc = self._from[floc][0]
                 else:
                     if not floc in self._failed:
                         self._failed.append(floc)
-                    tloc=None
+                    tloc = None
                 if tloc != None:
-                    moves[floc]=tloc
+                    moves[floc] = tloc
 
             for floc in self._chk_fail:
                 if not floc in self._failed:
@@ -265,62 +266,78 @@ class Robot:
         #   - If STC and on a spawn then everything but spawned
         #
         def select_move(self, floc):
-            choices=self.select_move_filter(floc, True, True, True)
+            choices = self.select_move_filter(floc, True, True, True)
             if len(choices) == 0:
-                choices=self.select_move_filter(floc, self._parent._STC, False, True)
+                choices = self.select_move_filter(floc, self._parent._STC, False, True)
                 if len(choices) == 0 and self._parent._STC:
-                    choices=self.select_move_filter(floc, True, False, False)
+                    choices = self.select_move_filter(floc, True, False, False)
             if len(choices) == 0:
-                choices=list(self._from[floc])
+                choices = list(self._from[floc])
             if len(choices) > 1 and self._filter_old:
-                choices=self.filter_out_old(floc, choices)
+                choices = self.filter_out_old(floc, choices)
             elif len(choices) == 1:
                 return choices[0]
-            safest=self.select_safest(choices)
+            safest = self.select_safest(choices)
             if len(safest) == 1:
                 return safest[0]
             if self._toward_center:
-                return self.select_nearer_to_center(choices)
+                choices = self.filter_nearer_to_center(choices)
+            if len(choices) > 1 and self._towards_enemy and self._parent._game.robots[floc].hp >= rg.settings.robot_hp:
+                choices = self.filter_closer_to_enemy(floc, choices)
             return choices[0]
             
         def select_safest(self, moves):
-            best_tloc=[]
-            best_count=1000
+            best_tloc = []
+            best_count = 1000
             for tloc in moves:
-                adj = self._parent.AdjacentMap(self._parent, tloc)
+                adj = self._parent.AdjEnemyMap(self._parent, tloc)
                 if adj.count() < best_count:
-                    best_tloc=[tloc]
-                    best_count=adj.count()
+                    best_tloc = [tloc]
+                    best_count = adj.count()
                 elif adj.count() == best_count:
                     best_tloc.append(tloc)
             return best_tloc
         
-        def select_nearer_to_center(self, moves):
-            best_loc=None
-            best_w=1000
+        def filter_closer_to_enemy(self, floc, moves):
+            filtered = []
+            best_dist = 1000
+            for tloc in moves:
+                dist = self._parent.get_dist_to_closest_enemy(tloc)
+                if dist < best_dist:
+                    filtered = [tloc]
+                    best_dist = dist
+                elif dist == best_dist:
+                    filtered.append(tloc)
+            return filtered
+                            
+        def filter_nearer_to_center(self, moves):
+            filtered = []
+            best_w = 1000
             for loc in moves:
-                w=self._parent.get_center_weight(loc)
-                if best_loc == None or w < best_w:
+                w = self._parent.get_center_weight(loc)
+                if w < best_w:
                     best_w = w;
-                    best_loc = loc
-            return best_loc
+                    filtered = [loc]
+                elif w == best_w:
+                    filtered.append(loc)
+            return filtered
                 
         
         def select_move_filter(self, floc, filter_spawned, filter_occupied, filter_dangerous):
             # Choose non-spawn square if possible
-            choices=list(self._from[floc])
+            choices = list(self._from[floc])
             if filter_spawned:
-                choices=self.filter_out_spawn(choices)
+                choices = self.filter_out_spawn(choices)
             if filter_occupied:
-                choices=self.filter_out_occupied(choices)
+                choices = self.filter_out_occupied(choices)
             if filter_dangerous:
-                choices=self.filter_out_dangerous(floc, choices)
+                choices = self.filter_out_dangerous(floc, choices)
            
             return choices
 
         # Return a list of all non-spawn squares
         def filter_out_spawn(self, moves):
-            filtered=[]
+            filtered = []
             for loc in moves:
                 if not self._parent.is_spawn(loc):
                     filtered.append(loc)
@@ -328,7 +345,7 @@ class Robot:
 
         # Return a list of all robot free squares
         def filter_out_occupied(self, moves):
-            filtered=[]
+            filtered = []
             for loc in moves:
                 if not self._parent.has_robot(loc):
                     filtered.append(loc)
@@ -336,44 +353,56 @@ class Robot:
 
         # Return a list of all robot free squares
         def filter_out_dangerous(self, floc, moves):
-            filtered=[]
+            filtered = []
             for loc in moves:
                 if not self.too_dangerous(floc, loc):
                     filtered.append(loc)
             return filtered
       
         def filter_out_old(self, floc, moves):
-            robot_id=self._parent._game.robots[floc].robot_id
+            robot_id = self._parent._game.robots[floc].robot_id
             if not robot_id in self._parent._LAST_TURN.keys():
                 return moves
-            filtered=[]
-            last_turn_loc=self._parent._LAST_TURN[robot_id]
+            filtered = []
+            last_turn_loc = self._parent._LAST_TURN[robot_id]
             for loc in moves:
                 if loc != last_turn_loc:
                     filtered.append(loc)
             return filtered
-                
 
-    class AdjacentMap:
+    class AdjFriendMap:
 
         def __init__(self, parent, loc):
-            self._adj=[]
-            self._weakest_loc=None
-            self._weakest_hp=1000
-            self._strongest_loc=None
-            self._strongest_hp=0
-            self._parent=parent
+            self._parent = parent
+            self._count=0
             for tdir in parent._DIRS:
-                dloc=parent.get_loc(loc, tdir)
+                dloc = parent.get_loc(loc, tdir)
+                if self._parent.has_friendly(dloc):
+                    self._count += 1
+                  
+        def count(self):
+            return self._count               
+
+    class AdjEnemyMap:
+
+        def __init__(self, parent, loc):
+            self._adj = []
+            self._weakest_loc = None
+            self._weakest_hp = 1000
+            self._strongest_loc = None
+            self._strongest_hp = 0
+            self._parent = parent
+            for tdir in parent._DIRS:
+                dloc = parent.get_loc(loc, tdir)
                 if parent.has_enemy(dloc):
                     self._adj.append(dloc)
-                    ebot=parent._game.robots[dloc]
+                    ebot = parent._game.robots[dloc]
                     if ebot.hp < self._weakest_hp:
-                        self._weakest_loc=dloc
-                        self._weakest_hp=ebot.hp
+                        self._weakest_loc = dloc
+                        self._weakest_hp = ebot.hp
                     if ebot.hp > self._strongest_hp:
-                        self._strongest_loc=dloc
-                        self._strongest_hp=ebot.hp
+                        self._strongest_loc = dloc
+                        self._strongest_hp = ebot.hp
 
         def count(self):
             return len(self._adj)
@@ -394,7 +423,7 @@ class Robot:
             return self.adj_
 
         def get_bots(self):
-            bots=[]
+            bots = []
             for loc in self._adj:
                 bots.append(self._parent._game.robots[loc])
             return bots
@@ -404,9 +433,9 @@ class Robot:
     class AttackMap:
 
         def __init__(self, parent, loc):
-            self._parent=parent
-            self._loc=loc
-            self._dirs=[]
+            self._parent = parent
+            self._loc = loc
+            self._dirs = []
 
         def get_dirs(self):
             return self._dirs
@@ -428,7 +457,7 @@ class Robot:
             parent.AttackMap.__init__(self, parent, loc)
             # Check diagonal possibilities
             for diag_dir in self._parent._DIAG:
-                diag_loc=self._parent.get_loc(loc, diag_dir)
+                diag_loc = self._parent.get_loc(loc, diag_dir)
                 if self._parent.has_enemy(diag_loc):
                     self._dirs.append(diag_dir)
 
@@ -439,17 +468,17 @@ class Robot:
             parent.AttackMap.__init__(self, parent, loc)
             # Check 2sq orthogonal possibilities:
             for dir2 in self._parent._DIR2:
-                loc2=self._parent.get_loc(loc, dir2)
+                loc2 = self._parent.get_loc(loc, dir2)
                 if self._parent.has_enemy(loc2):
                     self._dirs.append(dir2)
 
     class GuessAttackMap:
 
         def __init__(self, parent):
-            self._parent=parent
+            self._parent = parent
             # Key: floc, Value: dictionary of the 4 DIRS
-            self._weights={}
-            self._attacking=[]
+            self._weights = {}
+            self._attacking = []
 
         def guess_attack(self, floc):
             self._weights[floc] = {}
@@ -459,15 +488,15 @@ class Robot:
             diagMap = self._parent.DiagonalMap(self._parent, floc)
             for diag_dir in diagMap.get_dirs():
                 for adir in self._parent._DADJ[diag_dir]:
-                    tloc=diagMap.get_loc(adir)
+                    tloc = diagMap.get_loc(adir)
                     if self.is_attackable(tloc):
-                        ebot=diagMap.get_bot(diag_dir)
+                        ebot = diagMap.get_bot(diag_dir)
                         self.add_attack(floc, adir, tloc, ebot)
             # Check 2sq orthogonal possibilities:
             orthoMap = self._parent.Ortho2sqMap(self._parent, floc)
             for dir2 in orthoMap.get_dirs():
-                adir=self._parent._DADJ2[dir2]
-                tloc=orthoMap.get_loc(adir)
+                adir = self._parent._DADJ2[dir2]
+                tloc = orthoMap.get_loc(adir)
                 if self.is_attackable(tloc):
                     ebot = orthoMap.get_bot(dir2)
                     self.add_attack(floc, adir, tloc, ebot)
@@ -475,13 +504,15 @@ class Robot:
         # Add an attack in the given direction, at the target location.
         # The enemy robot that it is near it is ebot.
         def add_attack(self, floc, adir, tloc, ebot):
-            x = rg.settings.robot_hp/2
+            x = rg.settings.robot_hp / 2
             weight = x + self._parent.get_hp_weight(ebot.hp)
             weight -= self._parent.miss_get(floc, tloc)
             if self.is_attacking(tloc):
                 weight = self.bounded_reduce(weight, 10)
             if self._parent.is_moving(tloc):
-                weight = self.bounded_reduce(weight, 5)    
+                weight = self.bounded_reduce(weight, 5)
+            if self.has_friendlies(tloc):
+                weight = self.bounded_reduce(weight, 3)
             self._weights[floc][adir] += weight
             if not tloc in self._attacking:
                 self._attacking.append(tloc)
@@ -492,38 +523,42 @@ class Robot:
             if tloc in self._attacking:
                 return True
             return False
-            
+                
+        def is_attackable(self, loc):
+            return self._parent.is_normal(loc)
+        
         def bounded_reduce(self, weight, amt):
             if weight > amt:
                 return weight - amt
             return 1
-        
-        def is_attackable(self, loc):
-            return self._parent.is_normal(loc)
+    
+        def has_friendlies(self, tloc):
+            adjmap=self._parent.AdjFriendMap(self._parent, tloc)
+            return adjmap.count() >= 2
             
         def get_best_attack(self, floc):
-            largest_dir=[]
-            largest_size=-1
+            largest_dir = []
+            largest_size = -1
             for tdir in self._weights[floc].keys():
                 if self._weights[floc][tdir] > largest_size:
-                    largest_size=self._weights[floc][tdir]
-                    largest_dir=[tdir]
+                    largest_size = self._weights[floc][tdir]
+                    largest_dir = [tdir]
                 elif self._weights[floc][tdir] == largest_size:
                     largest_dir.append(tdir)
                 
             if largest_size > 0 and len(largest_dir) > 0:
                 if len(largest_dir) == 1:
-                    use_dir=largest_dir[0]
+                    use_dir = largest_dir[0]
                 else:
-                    select=random.randint(0,len(largest_dir)-1)
-                    use_dir=largest_dir[select]
-                tloc=self._parent.get_loc(floc, use_dir)
+                    select = random.randint(0, len(largest_dir) - 1)
+                    use_dir = largest_dir[select]
+                tloc = self._parent.get_loc(floc, use_dir)
                 return tloc
             return None
 
         def apply(self):
             for floc in self._weights.keys():
-                tloc=self.get_best_attack(floc)
+                tloc = self.get_best_attack(floc)
                 if tloc != None:
                     self._parent.apply_guess_attack(floc, tloc)
     
@@ -538,21 +573,21 @@ class Robot:
         
         def __init__(self, parent, eloc):
             self._parent = parent
-            self._eloc=eloc
+            self._eloc = eloc
             # Count of friendlies within 3
-            self._count=0
+            self._count = 0
             # Weight count of how near friendlies are.
-            self._weight=0
+            self._weight = 0
             # List of friendlies near this target
-            self._friendlies=[]
+            self._friendlies = []
             # List of friendlies adjacent to target
-            self._adjacents=[]
+            self._adjacents = []
             # The list of friendlies with a walk distance of 2 of this target
-            self._near=[]
+            self._near = []
             # the List of friendlies assigned to this target
-            self._assigned=[]
+            self._assigned = []
             # If we are all out attacking this target or not
-            self._attacking=False
+            self._attacking = False
                 
             for loc in self._parent._FRIENDLIES:
                 dist = rg.dist(loc, self._eloc)
@@ -594,14 +629,18 @@ class Robot:
         def compute_attacking(self):
             # If one unit already attacking then yes.
             if self._parent.is_attacking(self._eloc):
-                self._attacking=True
+                self._attacking = True
             else:
-                count=len(self._near)+len(self._adjacents)
-                if len(self._parent._ENEMIES)+2 <= len(self._parent._FRIENDLIES):
-                    trigger=2
+                count = len(self._near) + len(self._adjacents)
+                numenemies=len(self._parent._ENEMIES)
+                numfriendlies=len(self._parent._FRIENDLIES)
+                if numenemies > numfriendlies:
+                    trigger = 4
+                elif numenemies == numfriendlies or numenemies+1 == numfriendlies:
+                    trigger = 3
                 else:
-                    trigger=4
-                self._attacking=(count >= trigger)
+                    trigger = 2
+                self._attacking = (count >= trigger)
             
         # Any robot on an adjacent, which has not yet moved, should move off.
         def adjacents_dodge(self, movemap):
@@ -612,10 +651,10 @@ class Robot:
         
         # Any robot on an adjacent, should simply attack the weaker nearer robot.
         def adjacents_attack(self):
-            attacking={}
+            attacking = {}
             for floc in self._adjacents:
                 if floc in self._parent._REMAINING and floc in self._assigned:
-                    amap=self._parent.AdjacentMap(self._parent, floc)
+                    amap = self._parent.AdjEnemyMap(self._parent, floc)
                     if amap.get_weakest_loc() != None:
                         attacking[floc] = amap.get_weakest_loc();
             
@@ -626,86 +665,86 @@ class Robot:
         def near_attack(self, movemap):
             for floc in self._near:
                 if floc in self._parent._REMAINING and floc in self._assigned:
-                    dirs=self._parent.get_dirs(floc, self._eloc)
+                    dirs = self._parent.get_dirs(floc, self._eloc)
                     for tdir in dirs:
                         movemap.chk_add_dir(floc, tdir)
             
     # Size of the GAME MAP.
-    _MAPSIZE=19
+    _MAPSIZE = 19
     # Suicide damage
-    _SUICIDE_DAMAGE=15
+    _SUICIDE_DAMAGE = 15
     # The turn we last processed globals
-    _CURTURN=0
+    _CURTURN = 0
     # Orthogonal directions
-    _DIRS=[(0,-1),(1,0),(0,1),(-1,0)]
+    _DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     # Diagonal directions
-    _DIAG=[(1,-1),(1,1),(-1,1),(-1,-1)]
+    _DIAG = [(1, -1), (1, 1), (-1, 1), (-1, -1)]
     # 2sq orthogonal directions
-    _DIR2=[(0,-2),(2,0),(0,2),(-2,0)]
+    _DIR2 = [(0, -2), (2, 0), (0, 2), (-2, 0)]
     # Horse move directions
-    _HORSEDIR=[(1,-2),(-1,-2),(2,-1),(2,1),(1,2),(-1,2),(-2,1),(-2,-1)]
+    _HORSEDIR = [(1, -2), (-1, -2), (2, -1), (2, 1), (1, 2), (-1, 2), (-2, 1), (-2, -1)]
     # Diagonal adjacents
-    _DADJ = {(1,-1):[(1,0),(0,-1)],\
-            (1,1)  :[(1,0),(0,1)],\
-            (-1,1) :[(-1,0),(0,1)],\
-            (-1,-1):[(-1,0),(0,-1)]}
+    _DADJ = {(1, -1):[(1, 0), (0, -1)], \
+            (1, 1)  :[(1, 0), (0, 1)], \
+            (-1, 1) :[(-1, 0), (0, 1)], \
+            (-1, -1):[(-1, 0), (0, -1)]}
     # 2sq adjacent directions
-    _DADJ2 = {(0,-2):(0,-1),\
-              (2,0) :(1,0),\
-              (0,2) :(0,1),\
-              (-2,0):(-1,0)}
+    _DADJ2 = {(0, -2):(0, -1), \
+              (2, 0) :(1, 0), \
+              (0, 2) :(0, 1), \
+              (-2, 0):(-1, 0)}
     # 2sq fent directions
-    _FEINT2 = {(0,-2):[(1,0),(-1,0)],\
-               (2,0) :[(0,1),(0,-1)],\
-               (0,2) :[(1,0),(-1,0)],\
-               (-2,0):[(0,-1),(0,1)]}
+    _FEINT2 = {(0, -2):[(1, 0), (-1, 0)], \
+               (2, 0) :[(0, 1), (0, -1)], \
+               (0, 2) :[(1, 0), (-1, 0)], \
+               (-2, 0):[(0, -1), (0, 1)]}
     # Horse move adjacents
-    _HORSEADJ={(1,-2):(0,-1),
-               (-1,-2):(0,-1),
-               (2,-1):(1,0),
-               (2,1):(1,0),
-               (1,2):(0,1),
-               (-1,2):(0,1),
-               (-2,1):(-1,0),
-               (-2,-1):(-1,0)}
-    _DODGE={(0,-1):[(-1,0),(1,0)],
-            (0,1):[(-1,0),(1,0)],
-            (-1,0):[(0,1),(0,-1)],
-            (1,0):[(0,1),(0,-1)]}
+    _HORSEADJ = {(1, -2):(0, -1),
+               (-1, -2):(0, -1),
+               (2, -1):(1, 0),
+               (2, 1):(1, 0),
+               (1, 2):(0, 1),
+               (-1, 2):(0, 1),
+               (-2, 1):(-1, 0),
+               (-2, -1):(-1, 0)}
+    _DODGE = {(0, -1):[(-1, 0), (1, 0)],
+            (0, 1):[(-1, 0), (1, 0)],
+            (-1, 0):[(0, 1), (0, -1)],
+            (1, 0):[(0, 1), (0, -1)]}
 
     # Spawn turn coming: True if new robots are to be spawned soon.
-    _STC=False
+    _STC = False
     # List of commands to issue for each robot, keyed by location. The value is the command. 
-    _CMDS={}
+    _CMDS = {}
     # List of new locations robots are currently intending to move into.
-    _NEW_MOVES=[]
+    _NEW_MOVES = []
     # List of all locations robots are currently intending to move into or intending to stay in
-    _OCCUPIED=[]
+    _OCCUPIED = []
     # List of locations we are attacking
-    _ATTACKING=[]
+    _ATTACKING = []
     # List of empty locations we are attacking because we are guessing an enemy robot might move to it
-    _GUESS_ATTACKS=[]
+    _GUESS_ATTACKS = []
     # A list of misses. Key is the location from, value is a list of attacks missed.
-    _MISSED={}
+    _MISSED = {}
     # The list of locations to apply have the robot guard because they are fine where they are.
-    _STAY_PUT=[]
+    _STAY_PUT = []
     # Convenience: list of locations containing friendly robots
-    _FRIENDLIES=[]
+    _FRIENDLIES = []
     # Convenience: list of locations containing enemy robots
-    _ENEMIES=[]
+    _ENEMIES = []
     # Convenience: list of location containing friedly units that still need moves.
-    _REMAINING=[]
+    _REMAINING = []
     # Target Map for each enemy
-    _TARGETS={}
+    _TARGETS = {}
     # Each friendly is assigned to one target
-    _ASSIGNED={}
+    _ASSIGNED = {}
     # Where a unit friendly was last turn
-    _LAST_TURN={}
+    _LAST_TURN = {}
 
     # DEBUG
-    _LOG=False
-    _LOOKAT=[(16,11)]
-    _DEBUG_TURNS=[36]
+    _LOG = False
+    _LOOKAT = []
+    _DEBUG_TURNS = [7]
 
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -720,22 +759,19 @@ class Robot:
     def act(self, game):
 
         if game.turn in self._DEBUG_TURNS:
-            self._LOG=True
+            self._LOG = True
         else:
-            self._LOG=False
+            self._LOG = False
 
         self._game = game
 
         if self.init():
             self.ponder_on_spawned()
             self.ponder_make_way()
-            self.showcmds("BEFORE RUN AWAY 1")
             self.ponder_run_away(9, 4)
             self.ponder_make_way()
-            self.showcmds("BEFORE RUN AWAY 2")
             self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
             self.ponder_make_way()
-            self.showcmds("BEFORE ADJACENT")
             self.ponder_adj_enemies()
             self.ponder_make_way()
             self.ponder_targets()
@@ -759,13 +795,13 @@ class Robot:
 
         # Compute Spawn Turn Coming
         remainder = self._game.turn % rg.settings.spawn_every
-        self._STC=(remainder == 0 or remainder == (rg.settings.spawn_every-1))
+        self._STC = (remainder == 0 or remainder == (rg.settings.spawn_every - 1))
 
         # Compute friendly and enemy robot locations (Convenience)
-        self._FRIENDLIES=[]
-        self._ENEMIES=[]
+        self._FRIENDLIES = []
+        self._ENEMIES = []
         for loc in self._game.robots.keys():
-            bot=self._game.robots[loc]
+            bot = self._game.robots[loc]
             if bot.player_id == self.player_id:
                 self._FRIENDLIES.append(loc)
             else:
@@ -774,20 +810,20 @@ class Robot:
         # Determine misses
         self.miss_count()
         
-        self._REMAINING=list(self._FRIENDLIES)
-        self._CMDS={}
-        self._OCCUPIED=[]
-        self._ATTACKING=[]
-        self._NEW_MOVES=[]
-        self._STAY_PUT=[]
-        self._GUESS_ATTACKS=[]
-        self._CURTURN=self._game.turn
+        self._REMAINING = list(self._FRIENDLIES)
+        self._CMDS = {}
+        self._OCCUPIED = []
+        self._ATTACKING = []
+        self._NEW_MOVES = []
+        self._STAY_PUT = []
+        self._GUESS_ATTACKS = []
+        self._CURTURN = self._game.turn
         return True
 
     def record_last_turn(self):
-        self._LAST_TURN={}
+        self._LAST_TURN = {}
         for loc in self._FRIENDLIES:
-            robot_id=self._game.robots[loc].robot_id
+            robot_id = self._game.robots[loc].robot_id
             self._LAST_TURN[robot_id] = loc
             
     #####################
@@ -798,7 +834,7 @@ class Robot:
     def miss_count(self):
         for floc in self._CMDS.keys():
             if self._CMDS[floc][0] == 'attack':
-                tloc=self._CMDS[floc][1]
+                tloc = self._CMDS[floc][1]
                 if self.has_enemy(tloc):
                     self.miss_clear(floc)
                 elif floc in self._MISSED.keys():
@@ -812,7 +848,7 @@ class Robot:
 
     def miss_get(self, floc, tloc):
         if floc in self._MISSED.keys():
-            count=0
+            count = 0
             for loc in self._MISSED[floc]:
                 if loc == tloc:
                     count += 1
@@ -826,13 +862,14 @@ class Robot:
     # If a robot is on a spawn square and STC is True, then they get the move that robot off.
     def ponder_on_spawned(self):
 
-        movemap = self.MoveMap(self)
-
-        for loc in self._REMAINING:
-            if self.is_spawn(loc):
-                movemap.move(loc)
-
-        movemap.apply()
+        if self._STC:
+            movemap = self.MoveMap(self)
+    
+            for loc in self._REMAINING:
+                if self.is_spawn(loc):
+                    movemap.move(loc)
+    
+            movemap.apply()
 
     # If there are locations that we are OCCUPIED that a robot is
     # currently on, that robot must move off.
@@ -848,29 +885,29 @@ class Robot:
                     self._OCCUPIED.append(loc)
 
             movemap.apply()
-            self._NEW_MOVES=[]
+            self._NEW_MOVES = []
 
     # If there are units close to death, they should run away.
     def ponder_run_away(self, threshold, safe_dist):
         movemap = self.MoveMap(self)
         for loc in self._REMAINING:
-            bot=self._game.robots[loc]
+            bot = self._game.robots[loc]
             if bot.hp <= threshold:
                 # Select a direction farthest from the closest enemy
-                eloc=self.closest_enemy(loc)
+                eloc = self.closest_enemy(loc)
                 if eloc != None:
-                    dist=rg.dist(loc, eloc)
+                    dist = rg.dist(loc, eloc)
                     if dist < safe_dist:
-                        best_dist=0
+                        best_dist = 0
                         for tdir in self._DIRS:
-                            tloc=self.get_loc(loc, tdir)
-                            tdist=rg.dist(tloc, eloc)
+                            tloc = self.get_loc(loc, tdir)
+                            tdist = rg.dist(tloc, eloc)
                             # Anything moving farther away will do
                             if tdist > dist:
                                 if movemap.chk(loc, tloc):
                                     if tdist >= best_dist:
                                         movemap.insert(loc, tloc)
-                                        best_dist=tdist
+                                        best_dist = tdist
                                     else:
                                         movemap.add(loc, tloc)
       
@@ -887,13 +924,13 @@ class Robot:
     # If there units we previously thought would be better off staying put rather
     # than chasing down an enemy, if they have nothing else to do, then set them to guard
     def ponder_guard(self):
-        guarding=[]
+        guarding = []
         for loc in self._STAY_PUT:
             if loc in self._REMAINING:
                 guarding.append(loc)
         for loc in guarding:
             self.apply_guard(loc)
-        self._STAY_PUT=[]
+        self._STAY_PUT = []
     
     #
     # Consider suicide chance for friendlies with adjacent enemies.
@@ -904,30 +941,30 @@ class Robot:
     #
     def ponder_adj_enemies(self):
         movemap = self.MoveMap(self)
-        suicides=[]
-        attacking={}
+        suicides = []
+        attacking = {}
         for loc in self._REMAINING:
-            bot=self._game.robots[loc]
-            adj = self.AdjacentMap(self, loc)
+            bot = self._game.robots[loc]
+            adj = self.AdjEnemyMap(self, loc)
             count = adj.count()
             if count >= 1:
                 if count >= 4:
-                    consider=rg.settings.robot_hp
+                    consider = rg.settings.robot_hp
                 elif count >= 3:
-                    consider=rg.settings.robot_hp/2
+                    consider = rg.settings.robot_hp / 2
                 elif count >= 2:
-                    consider=rg.settings.robot_hp/3
+                    consider = rg.settings.robot_hp / 3
                 else:
-                    consider=0
+                    consider = 0
                 if bot.hp < consider:
-                    chance=self.get_hp_weight(bot.hp)+20*count
+                    chance = self.get_hp_weight(bot.hp) + 20 * count
                     if self.roll_die(chance):
                         suicides.append(loc)
                         continue
                 if count >= 4 or (bot.hp > adj.get_strongest_hp() and bot.hp > self._SUICIDE_DAMAGE):
-                    attacking[loc]=adj.get_weakest_loc()
+                    attacking[loc] = adj.get_weakest_loc()
                 elif bot.hp < adj.get_weakest_hp():
-                    tdir=self.get_dir(loc, adj.get_strongest_loc())
+                    tdir = self.get_dir(loc, adj.get_strongest_loc())
                     if self.valid_dir(tdir):
                         for ddir in self._DIRS:
                             if ddir != tdir:
@@ -940,15 +977,15 @@ class Robot:
 
         if len(movemap.get_failed()) > 0:
             for loc in movemap.get_failed():
-                adj = self.AdjacentMap(self, loc)
-                attacking[loc]=adj.get_weakest_loc()
+                adj = self.AdjEnemyMap(self, loc)
+                attacking[loc] = adj.get_weakest_loc()
 
         for loc in attacking.keys():
             self.apply_attack(loc, attacking[loc])
 
     def ponder_targets(self):
         # Build target maps
-        self._TARGETS={}
+        self._TARGETS = {}
         for eloc in self._ENEMIES:
             self._TARGETS[eloc] = self.TargetMap(self, eloc)
         
@@ -956,35 +993,35 @@ class Robot:
         # Choose the target with the largest count.
         # If tie, then chose with the largest weight
         #
-        self._ASSIGNED={}
+        self._ASSIGNED = {}
         for floc in self._REMAINING:
-            bmap=None
+            bmap = None
             for eloc in self._TARGETS.keys():
-                tmap=self._TARGETS[eloc]
+                tmap = self._TARGETS[eloc]
                 if tmap.has_friendly(floc):
                     if bmap == None:
-                        bmap=tmap
+                        bmap = tmap
                         continue
-                    badj=bmap.is_adjacent(floc)
-                    tadj=tmap.is_adjacent(floc)
+                    badj = bmap.is_adjacent(floc)
+                    tadj = tmap.is_adjacent(floc)
                     # If the best is an adjacent enemy, this trumps any other enemy that is not.
                     if badj and not tadj:
                         continue
                     # If the consider is an adjacent, this immediately trumps the best if not.
                     if tadj and not badj:
-                        bmap=tmap
+                        bmap = tmap
                     elif tmap.get_count() > bmap.get_count():
-                        bmap=tmap
+                        bmap = tmap
                     elif tmap.get_count() == bmap.get_count():
                         if tmap.get_weight() > bmap.get_weight():
-                            bmap=tmap
+                            bmap = tmap
             if bmap != None:
-                self._ASSIGNED[floc]=bmap.get_target_loc()
+                self._ASSIGNED[floc] = bmap.get_target_loc()
                 bmap.add_assigned(floc)
                 
         movemap = self.MoveMap(self)
         for eloc in self._TARGETS.keys():
-            tmap=self._TARGETS[eloc]
+            tmap = self._TARGETS[eloc]
             tmap.compute_attacking()
             if tmap.is_attacking():
                 tmap.adjacents_attack()
@@ -1005,13 +1042,13 @@ class Robot:
     # Chase down the nearest enemy.
     # We want to be careful here not to collide with other friendlies
     def ponder_chase_enemy(self):
-        movemap=self.MoveMap(self)
+        movemap = self.MoveMap(self)
         movemap.set_empty_only(True)
-        remaining=list(self._REMAINING)
+        remaining = list(self._REMAINING)
         for loc in remaining:
-            closest_eloc=self.closest_enemy(loc)
+            closest_eloc = self.closest_enemy(loc)
             if closest_eloc != None:
-                dirs=self.get_dirs(loc, closest_eloc)
+                dirs = self.get_dirs(loc, closest_eloc)
                 for tdir in dirs:
                     movemap.chk_add_dir(loc, tdir)
                 if not movemap.has(loc):
@@ -1022,9 +1059,9 @@ class Robot:
         if len(movemap.get_failed()) > 0:
             movemap2 = self.MoveMap(self)
             for loc in movemap.get_failed():
-                closest_eloc=self.closest_enemy(loc)
+                closest_eloc = self.closest_enemy(loc)
                 if closest_eloc != None:
-                    notdir=self.get_dir(closest_eloc, loc)
+                    notdir = self.get_dir(closest_eloc, loc)
                     for tdir in self._DIRS:
                         if tdir != notdir:
                             movemap2.chk_add_dir(loc, tdir)
@@ -1078,13 +1115,13 @@ class Robot:
             self._STAY_PUT.append(loc)
 
     def closest_enemy(self, floc):
-        closest_dist=1000
-        closest_eloc=None
+        closest_dist = 1000
+        closest_eloc = None
         for eloc in self._ENEMIES:
-            dist=rg.dist(floc, eloc)
+            dist = rg.dist(floc, eloc)
             if dist < closest_dist:
-                closest_dist=dist
-                closest_eloc=eloc
+                closest_dist = dist
+                closest_eloc = eloc
         return closest_eloc
 
     def get_cmd(self):
@@ -1126,26 +1163,26 @@ class Robot:
             ndy = 0
 
         if ndx == 0:
-            return [(0,ndy)]
+            return [(0, ndy)]
         elif ndy == 0:
-            return [(ndx,0)]
+            return [(ndx, 0)]
         elif adx > ady:
-            return [(ndx,0),(0,ndy)]
+            return [(ndx, 0), (0, ndy)]
         elif ady > adx:
-            return [(0,ndy),(ndx,0)]
+            return [(0, ndy), (ndx, 0)]
         # Return direction which is closest to the center_point first
-        cx1=floc[0]+ndx
-        cy1=floc[1]
-        cx2=floc[0]
-        cy2=floc[1]+ndy
-        w1=self.get_center_weight((cx1,cy2))
-        w2=self.get_center_weight((cx2,cy2))
+        cx1 = floc[0] + ndx
+        cy1 = floc[1]
+        cx2 = floc[0]
+        cy2 = floc[1] + ndy
+        w1 = self.get_center_weight((cx1, cy2))
+        w2 = self.get_center_weight((cx2, cy2))
         if w1 < w2:
-            return [(ndx,0),(0,ndy)]
-        return [(0,ndy),(ndx,0)]
+            return [(ndx, 0), (0, ndy)]
+        return [(0, ndy), (ndx, 0)]
     
     def get_center_weight(self, loc):
-        return abs(loc[0]-rg.CENTER_POINT[0])+abs(loc[1]-rg.CENTER_POINT[1])
+        return abs(loc[0] - rg.CENTER_POINT[0]) + abs(loc[1] - rg.CENTER_POINT[1])
        
     def get_loc(self, loc, tdir):
         return (loc[0] + tdir[0], loc[1] + tdir[1])
@@ -1163,7 +1200,7 @@ class Robot:
         return loc in self._ENEMIES
 
     def is_normal(self, loc):
-        types=rg.loc_types(loc)
+        types = rg.loc_types(loc)
         if 'obstacle' in types or 'invalid' in types:
             return False
         return 'normal' in types
@@ -1189,7 +1226,7 @@ class Robot:
         
     # If we are surrounded then add to suicide chance
     def roll_die(self, chance):
-        die=random.randint(1,100)
+        die = random.randint(1, 100)
         return die <= chance
 
     def valid_dir(self, tdir):
@@ -1198,16 +1235,13 @@ class Robot:
         if abs(tdir[0]) != 1 and abs(tdir[1]) != 1:
             return False
         return True 
-    #
-    # Return the number of friendly robots that can attack or are already attacking the given enemy.
-    #
-    def get_num_possible_attacks(self, eloc):
-        count=0
-        for tdir in self._parent._DIRS:
-            dloc=self._parent.get_loc(eloc, tdir)
-            if dloc in self._REMAINING:
-                count += 1
-            elif self.is_attacking_from_to(dloc, eloc):
-                count += 1
-        return count
+ 
+    def get_dist_to_closest_enemy(self, floc):
+        best = 1000
+        for eloc in self._ENEMIES:
+            dist = rg.dist(floc, eloc)
+            if dist < best:
+                best = dist
+        return best
+            
                 
