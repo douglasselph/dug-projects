@@ -22,10 +22,10 @@ class Robot:
             self._chk_fail = []
             self._failed = []
             self._dangerous_ok = False
-            self._empty_only = False
             self._toward_center = True
             self._filter_old = True
             self._towards_enemy = False
+            self._blocking_allowed=True
             self._parent = parent
             # List of friendlies that have not yet moved, that are blocking a move that would have otherwise occurred
             self._blocking = []
@@ -45,13 +45,15 @@ class Robot:
         def chk(self, floc, tloc):
             if self.is_ok(floc, tloc):
                 return True
-            elif not floc in self._chk_fail:
+            if not floc in self._chk_fail:
                 self._chk_fail.append(floc)
             return False
                 
         def chk_add(self, floc, tloc):
             if self.chk(floc, tloc):
                 self.add(floc, tloc)
+                return True
+            return False
                 
         def chk_add_dir(self, floc, tdir):
             tloc = self._parent.get_loc(floc, tdir)
@@ -60,11 +62,11 @@ class Robot:
         def is_ok(self, floc, tloc):
             if not self._parent.is_normal(tloc): 
                 return False
-            if tloc in self._parent._OCCUPIED or tloc in self._parent._NEW_MOVES:
+            if tloc in self._parent._OCCUPIED or tloc in self._parent._NEW_MOVES or tloc in self._parent._MOVING_INTO:
                 return False
             if self._parent.has_enemy(tloc):
                 return False
-            if self._parent.has_friendly(tloc) and not self._parent.is_moving(tloc):
+            if self._blocking_allowed and self._parent.has_friendly(tloc) and not self._parent.is_moving(tloc):
                 if tloc not in self._blocking:
                     self._blocking.append(tloc)
                 return False
@@ -72,12 +74,15 @@ class Robot:
                 return False
             return True
 
-        def set_empty_only(self, flag):
-            self._empty_only = flag
-
         def set_dangerous_ok(self, flag):
             self._dangerous_ok = flag
 
+        def set_blocking_allowed(self, flag):
+            self._blocking_allowed=flag
+            
+        def clear_blocking(self):
+            self._blocking=[]
+            
         def has(self, floc):
             return floc in self._from.keys()
 
@@ -148,6 +153,7 @@ class Robot:
             self.detect_collisions()
             self.detect_occupied()
             self.detect_bumps()
+            
         # If more than one robot wants to move to the same square, resolve the conflict
         # by letting the robot with fewer choices have that square. The other robot
         # will select another square. In the case of ties, it is possible a robot
@@ -673,6 +679,8 @@ class Robot:
     _MAPSIZE = 19
     # Suicide damage
     _SUICIDE_DAMAGE = 15
+    # Max attack damage
+    _MAX_ATTACK_DAMAGE=10
     # The turn we last processed globals
     _CURTURN = 0
     # Orthogonal directions
@@ -718,6 +726,8 @@ class Robot:
     _CMDS = {}
     # List of new locations robots are currently intending to move into.
     _NEW_MOVES = []
+    # List of locations we are moving into
+    _MOVING_INTO=[]
     # List of all locations robots are currently intending to move into or intending to stay in
     _OCCUPIED = []
     # List of locations we are attacking
@@ -744,7 +754,7 @@ class Robot:
     # DEBUG
     _LOG = False
     _LOOKAT = []
-    _DEBUG_TURNS = [7]
+    _DEBUG_TURNS = []
 
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -768,7 +778,7 @@ class Robot:
         if self.init():
             self.ponder_on_spawned()
             self.ponder_make_way()
-            self.ponder_run_away(9, 4)
+            self.ponder_run_away(self._MAX_ATTACK_DAMAGE, 4)
             self.ponder_make_way()
             self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
             self.ponder_make_way()
@@ -779,6 +789,7 @@ class Robot:
             self.ponder_guess_attack()
             self.ponder_make_way()
             self.ponder_chase_enemy()
+
             self.record_last_turn()
 
         cmd = self.get_cmd()
@@ -815,6 +826,7 @@ class Robot:
         self._OCCUPIED = []
         self._ATTACKING = []
         self._NEW_MOVES = []
+        self._MOVING_INTO = []
         self._STAY_PUT = []
         self._GUESS_ATTACKS = []
         self._CURTURN = self._game.turn
@@ -876,7 +888,6 @@ class Robot:
     def ponder_make_way(self):
         if len(self._NEW_MOVES) > 0:
             movemap = self.MoveMap(self)
-            movemap.set_empty_only(True)
 
             for loc in self._NEW_MOVES:
                 if self.has_friendly(loc) and loc in self._REMAINING:
@@ -898,29 +909,37 @@ class Robot:
                 if eloc != None:
                     dist = rg.dist(loc, eloc)
                     if dist < safe_dist:
-                        best_dist = 0
-                        for tdir in self._DIRS:
-                            tloc = self.get_loc(loc, tdir)
-                            tdist = rg.dist(tloc, eloc)
-                            # Anything moving farther away will do
-                            if tdist > dist:
-                                if movemap.chk(loc, tloc):
-                                    if tdist >= best_dist:
-                                        movemap.insert(loc, tloc)
-                                        best_dist = tdist
-                                    else:
-                                        movemap.add(loc, tloc)
-      
+                        self.do_run_away(movemap, dist, loc, eloc)
                         if not movemap.has(loc):
-                            movemap.add_to_failed(loc)
+                            if len(movemap.get_blocking()) > 0:
+                                movemap.set_blocking_allowed(False)
+                                self.do_run_away(movemap, dist, loc, eloc)
+                                movemap.set_blocking_allowed(True)
+                            if not movemap.has(loc):
+                                movemap.add_to_failed(loc)
                     else:
                         movemap.add_to_failed(loc)
 
         movemap.apply()
 
         for loc in movemap.get_failed():
-            self.apply_stay_put(loc)
+            self.apply_prefer_stay_put(loc)
 
+    def do_run_away(self, movemap, beyond, floc, eloc):
+        best_dist = 0
+        movemap.clear_blocking()
+        for tdir in self._DIRS:
+            tloc = self.get_loc(floc, tdir)
+            tdist = rg.dist(tloc, eloc)
+            # Anything moving farther away will do
+            if tdist > beyond:
+                if movemap.chk(floc, tloc):
+                    if tdist >= best_dist:
+                        movemap.insert(floc, tloc)
+                        best_dist = tdist
+                    else:
+                        movemap.add(floc, tloc)
+      
     # If there units we previously thought would be better off staying put rather
     # than chasing down an enemy, if they have nothing else to do, then set them to guard
     def ponder_guard(self):
@@ -1042,8 +1061,8 @@ class Robot:
     # Chase down the nearest enemy.
     # We want to be careful here not to collide with other friendlies
     def ponder_chase_enemy(self):
+        self.showcmds("BEFORE 1st CHASE")
         movemap = self.MoveMap(self)
-        movemap.set_empty_only(True)
         remaining = list(self._REMAINING)
         for loc in remaining:
             closest_eloc = self.closest_enemy(loc)
@@ -1055,6 +1074,7 @@ class Robot:
                     movemap.add_to_failed(loc)
         movemap.apply()
 
+        self.showcmds("AFTER 1st CHASE")
         # Be more forgiving second time around
         if len(movemap.get_failed()) > 0:
             movemap2 = self.MoveMap(self)
@@ -1079,6 +1099,8 @@ class Robot:
             print "ERROR: location ", floc, " has already moved (not in REMAINING)"
         if not tloc in self._NEW_MOVES:
             self._NEW_MOVES.append(tloc)
+        if not tloc in self._MOVING_INTO:
+            self._MOVING_INTO.append(tloc)
         self.miss_clear(floc)
 
     def apply_attack(self, floc, tloc):
@@ -1110,7 +1132,7 @@ class Robot:
         if not loc in self._OCCUPIED:
             self._OCCUPIED.append(loc)
 
-    def apply_stay_put(self, loc):
+    def apply_prefer_stay_put(self, loc):
         if not loc in self._STAY_PUT:
             self._STAY_PUT.append(loc)
 
@@ -1209,7 +1231,7 @@ class Robot:
         return 'spawn' in rg.loc_types(loc)
 
     def is_occupied(self, loc):
-        return loc in self._OCCUPIED or loc in self._NEW_MOVES or loc in self._ENEMIES
+        return loc in self._OCCUPIED or loc in self._NEW_MOVES or loc in self._ENEMIES or loc in self._MOVING_INTO
 
     def is_moving(self, loc):
         if loc in self._CMDS.keys():
