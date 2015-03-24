@@ -62,7 +62,7 @@ class Robot:
         def is_ok(self, floc, tloc):
             if not self._parent.is_normal(tloc): 
                 return False
-            if tloc in self._parent._OCCUPIED or tloc in self._parent._NEW_MOVES or tloc in self._parent._MOVING_INTO:
+            if tloc in self._parent._OCCUPIED or tloc in self._parent._MOVING_INTO:
                 return False
             if self._parent.has_enemy(tloc):
                 return False
@@ -147,7 +147,7 @@ class Robot:
                 line += "[" + str(tloc) + ":" 
                 line += str(self._to[tloc])
                 line += "];"
-            return line
+            print line
 
         def detect_problems(self):
             self.detect_collisions()
@@ -642,10 +642,8 @@ class Robot:
                 numfriendlies=len(self._parent._FRIENDLIES)
                 if numenemies > numfriendlies:
                     trigger = 4
-                elif numenemies == numfriendlies or numenemies+1 == numfriendlies:
-                    trigger = 3
                 else:
-                    trigger = 2
+                    trigger = 3
                 self._attacking = (count >= trigger)
             
         # Any robot on an adjacent, which has not yet moved, should move off.
@@ -668,7 +666,7 @@ class Robot:
                 self._parent.apply_attack(floc, attacking[floc])
                 
         # Any robot 2sq away should close in for the kill
-        def near_attack(self, movemap):
+        def near_pounce(self, movemap):
             for floc in self._near:
                 if floc in self._parent._REMAINING and floc in self._assigned:
                     dirs = self._parent.get_dirs(floc, self._eloc)
@@ -753,8 +751,8 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = []
-    _DEBUG_TURNS = []
+    _LOOKAT = [(6,8)]
+    _DEBUG_TURNS = [44]
 
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -778,17 +776,23 @@ class Robot:
         if self.init():
             self.ponder_on_spawned()
             self.ponder_make_way()
+            self.showcmds("BEFORE RUN AWAY1")
             self.ponder_run_away(self._MAX_ATTACK_DAMAGE, 4)
+            self.showcmds("AFTER RUN AWAY1")
             self.ponder_make_way()
             self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
+            self.showcmds("AFTER RUN AWAY2")
             self.ponder_make_way()
             self.ponder_adj_enemies()
             self.ponder_make_way()
             self.ponder_targets()
+            self.showcmds("AFTER TARGETS")
             self.ponder_guard()
             self.ponder_guess_attack()
             self.ponder_make_way()
             self.ponder_chase_enemy()
+            self.showcmds("AFTER CHASE")
+
 
             self.record_last_turn()
 
@@ -876,6 +880,7 @@ class Robot:
 
         if self._STC:
             movemap = self.MoveMap(self)
+            movemap.set_blocking_allowed(False)
     
             for loc in self._REMAINING:
                 if self.is_spawn(loc):
@@ -888,6 +893,7 @@ class Robot:
     def ponder_make_way(self):
         if len(self._NEW_MOVES) > 0:
             movemap = self.MoveMap(self)
+            movemap.set_blocking_allowed(False)
 
             for loc in self._NEW_MOVES:
                 if self.has_friendly(loc) and loc in self._REMAINING:
@@ -901,6 +907,7 @@ class Robot:
     # If there are units close to death, they should run away.
     def ponder_run_away(self, threshold, safe_dist):
         movemap = self.MoveMap(self)
+        movemap.set_blocking_allowed(False)
         for loc in self._REMAINING:
             bot = self._game.robots[loc]
             if bot.hp <= threshold:
@@ -1044,7 +1051,7 @@ class Robot:
             tmap.compute_attacking()
             if tmap.is_attacking():
                 tmap.adjacents_attack()
-                tmap.near_attack(movemap)
+                tmap.near_pounce(movemap)
             else:
                 tmap.adjacents_dodge(movemap)
 
