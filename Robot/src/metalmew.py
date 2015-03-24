@@ -23,6 +23,8 @@ class Robot:
             self._failed=[]
             self._dangerous_ok=False
             self._empty_only=False
+            self._toward_center=True
+            self._filter_old=True
             self._parent=parent
             # List of friendlies that have not yet moved, that are blocking a move that would have otherwise occurred
             self._blocking=[]
@@ -39,11 +41,16 @@ class Robot:
                 dloc=self._parent.get_loc(bot.location, tdir)
                 self.chk_add(loc, dloc)
 
-        def chk_add(self, floc, tloc):
+        def chk(self, floc, tloc):
             if self.is_ok(floc, tloc):
-                self.add(floc, tloc)
+                return True
             elif not floc in self._chk_fail:
                 self._chk_fail.append(floc)
+            return False
+                
+        def chk_add(self, floc, tloc):
+            if self.chk(floc, tloc):
+                self.add(floc, tloc)
                 
         def chk_add_dir(self, floc, tdir):
             tloc=self._parent.get_loc(floc, tdir)
@@ -91,6 +98,17 @@ class Robot:
 
             if tloc in self._to.keys():
                 self._to[tloc].append(floc)
+            else:
+                self._to[tloc]=[floc]
+                
+        def insert(self, floc, tloc):
+            if floc in self._from.keys():
+                self._from[floc].insert(0, tloc)
+            else:
+                self._from[floc] = [tloc]
+
+            if tloc in self._to.keys():
+                self._to[tloc].insert(0, floc)
             else:
                 self._to[tloc]=[floc]
 
@@ -248,16 +266,22 @@ class Robot:
         #
         def select_move(self, floc):
             choices=self.select_move_filter(floc, True, True, True)
-            if len(choices) > 0:
-                return self.select_safest(choices)
-            choices=self.select_move_filter(floc, self._parent._STC, False, True)
-            if len(choices) > 0:
-                return self.select_safest(choices)
-            if self._parent._STC:
-                choices=self.select_move_filter(floc, True, False, False)
-                if len(choices) > 0:
-                    return self.select_safest(choices)
-            return self.select_safest(self._from[floc])
+            if len(choices) == 0:
+                choices=self.select_move_filter(floc, self._parent._STC, False, True)
+                if len(choices) == 0 and self._parent._STC:
+                    choices=self.select_move_filter(floc, True, False, False)
+            if len(choices) == 0:
+                choices=list(self._from[floc])
+            if len(choices) > 1 and self._filter_old:
+                choices=self.filter_out_old(floc, choices)
+            elif len(choices) == 1:
+                return choices[0]
+            safest=self.select_safest(choices)
+            if len(safest) == 1:
+                return safest[0]
+            if self._toward_center:
+                return self.select_nearer_to_center(choices)
+            return choices[0]
             
         def select_safest(self, moves):
             best_tloc=[]
@@ -269,7 +293,18 @@ class Robot:
                     best_count=adj.count()
                 elif adj.count() == best_count:
                     best_tloc.append(tloc)
-            return best_tloc[0]
+            return best_tloc
+        
+        def select_nearer_to_center(self, moves):
+            best_loc=None
+            best_w=1000
+            for loc in moves:
+                w=self._parent.get_center_weight(loc)
+                if best_loc == None or w < best_w:
+                    best_w = w;
+                    best_loc = loc
+            return best_loc
+                
         
         def select_move_filter(self, floc, filter_spawned, filter_occupied, filter_dangerous):
             # Choose non-spawn square if possible
@@ -280,8 +315,9 @@ class Robot:
                 choices=self.filter_out_occupied(choices)
             if filter_dangerous:
                 choices=self.filter_out_dangerous(floc, choices)
+           
             return choices
-        
+
         # Return a list of all non-spawn squares
         def filter_out_spawn(self, moves):
             filtered=[]
@@ -306,6 +342,17 @@ class Robot:
                     filtered.append(loc)
             return filtered
       
+        def filter_out_old(self, floc, moves):
+            robot_id=self._parent._game.robots[floc].robot_id
+            if not robot_id in self._parent._LAST_TURN.keys():
+                return moves
+            filtered=[]
+            last_turn_loc=self._parent._LAST_TURN[robot_id]
+            for loc in moves:
+                if loc != last_turn_loc:
+                    filtered.append(loc)
+            return filtered
+                
 
     class AdjacentMap:
 
@@ -652,11 +699,13 @@ class Robot:
     _TARGETS={}
     # Each friendly is assigned to one target
     _ASSIGNED={}
+    # Where a unit friendly was last turn
+    _LAST_TURN={}
 
     # DEBUG
     _LOG=False
-    _LOOKAT=[]
-    _DEBUG_TURNS=[13]
+    _LOOKAT=[(16,11)]
+    _DEBUG_TURNS=[36]
 
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -680,10 +729,13 @@ class Robot:
         if self.init():
             self.ponder_on_spawned()
             self.ponder_make_way()
+            self.showcmds("BEFORE RUN AWAY 1")
             self.ponder_run_away(9, 4)
             self.ponder_make_way()
+            self.showcmds("BEFORE RUN AWAY 2")
             self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
             self.ponder_make_way()
+            self.showcmds("BEFORE ADJACENT")
             self.ponder_adj_enemies()
             self.ponder_make_way()
             self.ponder_targets()
@@ -691,6 +743,7 @@ class Robot:
             self.ponder_guess_attack()
             self.ponder_make_way()
             self.ponder_chase_enemy()
+            self.record_last_turn()
 
         cmd = self.get_cmd()
         if self._LOG:
@@ -729,9 +782,14 @@ class Robot:
         self._STAY_PUT=[]
         self._GUESS_ATTACKS=[]
         self._CURTURN=self._game.turn
-
         return True
 
+    def record_last_turn(self):
+        self._LAST_TURN={}
+        for loc in self._FRIENDLIES:
+            robot_id=self._game.robots[loc].robot_id
+            self._LAST_TURN[robot_id] = loc
+            
     #####################
     # MISS SUPPORT
     #####################
@@ -803,11 +861,19 @@ class Robot:
                 if eloc != None:
                     dist=rg.dist(loc, eloc)
                     if dist < safe_dist:
+                        best_dist=0
                         for tdir in self._DIRS:
                             tloc=self.get_loc(loc, tdir)
                             tdist=rg.dist(tloc, eloc)
+                            # Anything moving farther away will do
                             if tdist > dist:
-                                movemap.chk_add(loc, tloc)
+                                if movemap.chk(loc, tloc):
+                                    if tdist >= best_dist:
+                                        movemap.insert(loc, tloc)
+                                        best_dist=tdist
+                                    else:
+                                        movemap.add(loc, tloc)
+      
                         if not movemap.has(loc):
                             movemap.add_to_failed(loc)
                     else:
@@ -1065,9 +1131,22 @@ class Robot:
             return [(ndx,0)]
         elif adx > ady:
             return [(ndx,0),(0,ndy)]
-        else:
+        elif ady > adx:
             return [(0,ndy),(ndx,0)]
-
+        # Return direction which is closest to the center_point first
+        cx1=floc[0]+ndx
+        cy1=floc[1]
+        cx2=floc[0]
+        cy2=floc[1]+ndy
+        w1=self.get_center_weight((cx1,cy2))
+        w2=self.get_center_weight((cx2,cy2))
+        if w1 < w2:
+            return [(ndx,0),(0,ndy)]
+        return [(0,ndy),(ndx,0)]
+    
+    def get_center_weight(self, loc):
+        return abs(loc[0]-rg.CENTER_POINT[0])+abs(loc[1]-rg.CENTER_POINT[1])
+       
     def get_loc(self, loc, tdir):
         return (loc[0] + tdir[0], loc[1] + tdir[1])
 
