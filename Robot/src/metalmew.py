@@ -394,6 +394,8 @@ class Robot:
             self._strongest_loc = None
             self._strongest_hp = 0
             self._parent = parent
+            self._weakest_adjusted_loc = None
+            self._weakest_adjusted_hp = 1000
             for tdir in parent._DIRS:
                 dloc = parent.get_loc(loc, tdir)
                 if parent.is_enemy(dloc):
@@ -405,6 +407,13 @@ class Robot:
                     if ebot.hp > self._strongest_hp:
                         self._strongest_loc = dloc
                         self._strongest_hp = ebot.hp
+                    count = self._parent.count_friendlies(dloc)
+                    adjusted_hp = ebot.hp
+                    if count > 1:
+                        adjusted_hp -= self._parent._ADJUST_PER_BOT * (count-1)
+                        if adjusted_hp < self._weakest_adjusted_hp:
+                            self._weakest_adjusted_loc = dloc
+                            self._weakest_adjusted_hp = adjusted_hp
 
         def get_count(self):
             return len(self._adj)
@@ -420,7 +429,17 @@ class Robot:
 
         def get_weakest_loc(self):
             return self._weakest_loc
+        
+        # The weakest adjacent enemy who HP is reduced per friendly bot.
+        def get_weakest_adjusted_hp(self):
+            return self._weakest_adjusted_hp
 
+        def get_weakest_adjusted_loc(self):
+            return self._weakest_adjusted_loc
+
+        def has_adjusted(self):
+            return self._weakest_adjusted_loc != None
+        
         def get_locs(self):
             return self.adj_
 
@@ -512,7 +531,7 @@ class Robot:
                 weight = self.bounded_reduce(weight, 10)
             if self._parent.is_moving(tloc):
                 weight = self.bounded_reduce(weight, 5)
-            if self.has_friendlies(tloc):
+            if self._parent.count_friendlies(tloc) >= 2:
                 weight = self.bounded_reduce(weight, 3)
             self._weights[floc][adir] += weight
             if not tloc in self._attacking:
@@ -532,10 +551,6 @@ class Robot:
             if weight > amt:
                 return weight - amt
             return 1
-    
-        def has_friendlies(self, tloc):
-            adjmap=self._parent.AdjFriendMap(self._parent, tloc)
-            return adjmap.get_count() >= 2
             
         def get_best_attack(self, floc):
             largest_dir = []
@@ -750,6 +765,8 @@ class Robot:
     _MAX_ATTACK_DAMAGE=10
     # The turn we last processed globals
     _CURTURN = 0
+    # Amount to adjust HP per adjacent friendly unit, to see if we should dodge it
+    _ADJUST_PER_BOT=8
     # Orthogonal directions
     _DIRS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     # Diagonal directions
@@ -793,7 +810,7 @@ class Robot:
     _FRIENDLIES = []
     # Convenience: list of locations containing enemy robots
     _ENEMIES = []
-    # Convenience: list of location containing friedly units that still need moves.
+    # Convenience: list of location containing friendly units that still need moves.
     _REMAINING = []
     # Target Map for each enemy
     _TARGETS = {}
@@ -804,13 +821,13 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(6,8),(4,9),(3,15)]
-    _DEBUG_TURNS = [44]
-
+    _LOOKAT = [(7,17),(8,16)]
+    _DEBUG_TURNS = [25]
+    
     def showcmd(self, prefix, loc):
         if self._LOG:
             if loc in self._CMDS.keys():
-                print prefix, " CMD: ", loc, "->", self._CMDS[loc]
+                print prefix, "CMD: ", loc, "->", self._CMDS[loc]
 
     def showcmds(self, prefix):
         if self._LOG:
@@ -847,8 +864,6 @@ class Robot:
             self.ponder_make_way()
             self.ponder_chase_enemy()
             self.showcmds("AFTER CHASE")
-
-
             self.record_last_turn()
 
         cmd = self.get_cmd()
@@ -1017,7 +1032,7 @@ class Robot:
     # Consider suicide chance for friendlies with adjacent enemies.
     # If we are surrounded, then force attack if not suicide.
     # Otherwise if we are not too weak, go ahead and attack.
-    # If we are way too weak, run away.
+    # If we are way too weak, run away. But if we have support maybe not.
     # Other cases are decided later.
     #
     def ponder_adj_enemies(self):
@@ -1030,11 +1045,11 @@ class Robot:
             count = adj.get_count()
             if count >= 1:
                 if count >= 4:
-                    consider = rg.settings.robot_hp
-                elif count >= 3:
                     consider = rg.settings.robot_hp / 2
+                elif count >= 3:
+                    consider = rg.settings.robot_hp / 5
                 elif count >= 2:
-                    consider = rg.settings.robot_hp / 3
+                    consider = rg.settings.robot_hp / 10
                 else:
                     consider = 0
                 if bot.hp < consider:
@@ -1044,7 +1059,8 @@ class Robot:
                         continue
                 if count >= 4 or (bot.hp > adj.get_strongest_hp() and bot.hp > self._SUICIDE_DAMAGE):
                     attacking[loc] = adj.get_weakest_loc()
-                elif bot.hp < adj.get_weakest_hp():
+                    continue
+                if adj.has_adjusted() and bot.hp < adj.get_weakest_adjusted_hp():
                     tdir = self.get_dir(loc, adj.get_strongest_loc())
                     if self.valid_dir(tdir):
                         for ddir in self._DIRS:
@@ -1059,7 +1075,8 @@ class Robot:
         if len(movemap.get_failed()) > 0:
             for loc in movemap.get_failed():
                 adj = self.AdjEnemyMap(self, loc)
-                attacking[loc] = adj.get_weakest_loc()
+                if adj.get_count() > 0:
+                    attacking[loc] = adj.get_weakest_loc()
 
         for loc in attacking.keys():
             self.apply_attack(loc, attacking[loc])
@@ -1208,6 +1225,10 @@ class Robot:
                 closest_eloc = eloc
         return closest_eloc
 
+    def count_friendlies(self, loc):
+        adj = self.AdjFriendMap(self, loc)
+        return adj.get_count()
+        
     def get_cmd(self):
         if self.location in self._CMDS.keys():
             return self._CMDS[self.location]
