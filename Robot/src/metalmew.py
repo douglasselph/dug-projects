@@ -156,6 +156,8 @@ class Robot:
         def detect_collisions(self):
             for tloc in self._to.keys():
                 if len(self._to[tloc]) > 1:
+                    if self._parent._LOG:
+                        print "COLLISION ON ", tloc, "->", self._to[tloc]
                     least_floc = None
                     least_count = 1000
                     tolist = self._to[tloc]
@@ -621,6 +623,8 @@ class Robot:
             self._adjacents = []
             # The list of friendlies with a walk distance of 2 of this target
             self._near = []
+            # The list of friendlies that are diagonal to the target (both near AND diagonal)
+            self._diagonals
             # the List of friendlies assigned to this target
             self._assigned = []
             # If we are all out attacking this target or not
@@ -641,13 +645,20 @@ class Robot:
                             self._adjacents.append(loc)
                         elif wdist == 2:
                             self._near.append(loc)
+                            if dist < 2:
+                                self._diagonals.append(loc)
                     else:
                         if wdist == 2:
                             self._near_enemies.append(loc)
                         elif wdist == 1:
                             self._adj_enemies.append(loc)
                         
-                        
+        def show(self):
+            print "TARGET ", self._eloc, " ATTACKING: ", self._attacking
+            print "  ASSIGNED:", self._assigned
+            print "  ADJACENTS: ", self._adjacents
+            print "  NEAR: ", self._near
+            
         def has_friendly(self, floc):
             return floc in self._friendlies
         
@@ -725,6 +736,9 @@ class Robot:
                 if floc in self._parent._REMAINING and floc in self._assigned:
                     dirs = self._parent.get_dirs(floc, self._eloc)
                     for tdir in dirs:
+                        # wAS HERE: Add alternate direction that is okay if there is a collision.
+                        # Compute by seeking 90 degree angle directions, choosing the one toward
+                        # the side with LESS friendlies.
                         movemap.chk_add_dir(floc, tdir)
         
         def is_dangerous(self, floc, tloc):
@@ -821,7 +835,7 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(7,17),(8,16)]
+    _LOOKAT = [(7,17),(8,16),(8,14),(8,15),(10,15),(7,13)]
     _DEBUG_TURNS = [25]
     
     def showcmd(self, prefix, loc):
@@ -1042,22 +1056,23 @@ class Robot:
         for loc in self._REMAINING:
             bot = self._game.robots[loc]
             adj = self.AdjEnemyMap(self, loc)
-            count = adj.get_count()
-            if count >= 1:
-                if count >= 4:
+            num_enemy = adj.get_count()
+            num_normal = self.count_normal(loc)
+            if num_enemy >= 1:
+                if num_enemy >= num_normal:
                     consider = rg.settings.robot_hp / 2
-                elif count >= 3:
+                elif num_enemy >= num_normal-1 and num_enemy > 2:
                     consider = rg.settings.robot_hp / 5
-                elif count >= 2:
+                elif num_enemy >= num_normal-2 and num_enemy > 1:
                     consider = rg.settings.robot_hp / 10
                 else:
                     consider = 0
                 if bot.hp < consider:
-                    chance = self.get_hp_weight(bot.hp) + 20 * count
+                    chance = self.get_hp_weight(bot.hp) + 20 * num_enemy
                     if self.roll_die(chance):
                         suicides.append(loc)
                         continue
-                if count >= 4 or (bot.hp > adj.get_strongest_hp() and bot.hp > self._SUICIDE_DAMAGE):
+                if num_enemy >= num_normal or (bot.hp > adj.get_strongest_hp() and bot.hp > self._SUICIDE_DAMAGE):
                     attacking[loc] = adj.get_weakest_loc()
                     continue
                 if adj.has_adjusted() and bot.hp < adj.get_weakest_adjusted_hp():
@@ -1121,6 +1136,7 @@ class Robot:
         for eloc in self._TARGETS.keys():
             tmap = self._TARGETS[eloc]
             tmap.compute_attacking()
+                
             if tmap.is_attacking():
                 tmap.adjacents_attack()
                 tmap.near_pounce(movemap)
@@ -1228,12 +1244,26 @@ class Robot:
     def count_friendlies(self, loc):
         adj = self.AdjFriendMap(self, loc)
         return adj.get_count()
-        
+    
+    def count_normal(self, loc):
+        count = 0
+        for tdir in self._DIRS:
+            tloc = self.get_loc(loc, tdir)
+            if self.is_normal(tloc):
+                count += 1
+        return count
+    
     def get_cmd(self):
         if self.location in self._CMDS.keys():
             return self._CMDS[self.location]
         return ['guard']
 
+    # Return raw direction, that is, -2,0 is okay
+    def get_raw_dir(self, floc, tloc):
+        dx = tloc[0] - floc[0]
+        dy = tloc[1] - floc[1]
+        return (dx,dy)
+    
     # Return direction of floc to tloc
     def get_dir(self, floc, tloc):
         dx = tloc[0] - floc[0]
