@@ -4,4 +4,4 @@ git clone https://github.com/mpeterv/robotgame-bots.git
 ===
 rgrun bots/ribbit08.py bots/SfparI.py
 rgrun --game-seed 0 src/metalmew.py bots/terriblebot.py
-rgrun --game-seed 0 src/metalmew.py bots/SfparI.py
+rgrun --game-seed 1 src/metalmew.py bots/SfparI.py

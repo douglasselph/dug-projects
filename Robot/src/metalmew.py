@@ -19,6 +19,7 @@ class Robot:
         def __init__(self, parent):
             self._from = {}
             self._to = {}
+            self._alternate = {}
             self._chk_fail = []
             self._failed = []
             self._dangerous_ok = False
@@ -54,10 +55,20 @@ class Robot:
                 self.add(floc, tloc)
                 return True
             return False
+        
+        def chk_add_alternate(self, floc, tloc):
+            if self.chk(floc, tloc):
+                self.add_alternate(floc, tloc)
+                return True
+            return False
                 
         def chk_add_dir(self, floc, tdir):
             tloc = self._parent.get_loc(floc, tdir)
             self.chk_add(floc, tloc)
+
+        def chk_add_dir_alternate(self, floc, tdir):
+            tloc = self._parent.get_loc(floc, tdir)
+            self.chk_add_alternate(floc, tloc)
 
         def is_ok(self, floc, tloc):
             if not self._parent.is_normal(tloc): 
@@ -94,6 +105,7 @@ class Robot:
         
         def get_blocking(self):
             return self._blocking
+        
         # Add the specified possible move for a robot. The robot is identified
         # by the fromloc and it's target move spot by toloc.
         def add(self, floc, tloc):
@@ -106,6 +118,12 @@ class Robot:
                 self._to[tloc].append(floc)
             else:
                 self._to[tloc] = [floc]
+        
+        def add_alternate(self, floc, tloc):
+            if floc in self._alternate.keys():
+                self._alternate[floc].append(tloc)
+            else:
+                self._alternate[floc] = [tloc]
                 
         def insert(self, floc, tloc):
             if floc in self._from.keys():
@@ -145,10 +163,48 @@ class Robot:
             print line
 
         def detect_problems(self):
+            self.detect_alternates()
             self.detect_collisions()
             self.detect_occupied()
             self.detect_bumps()
-            
+        
+        # This code is collision detection, and if it happens, will 
+        # see if one of the robots has an alternate. If so and there
+        # is a tie, that robot will add the alternate to their choice.
+        def detect_alternates(self):
+            if len(self._alternate.keys()) == 0:
+                return
+            alternate={}
+            for tloc in self._to.keys():
+                if len(self._to[tloc]) > 1:
+                    least_floc = []
+                    least_count = 1000
+                    tolist = self._to[tloc]
+                    for floc in tolist:
+                        count = len(self._from[floc])
+                        if count < least_count:
+                            least_floc = [floc]
+                            least_count = count
+                        elif count == least_count:
+                            least_floc.append(floc)
+                        
+                    if len(least_floc) > 1:
+                        has_alts=[]
+                        has_noalts=[]
+                        for floc in least_floc:
+                            if floc in self._alternate.keys():
+                                has_alts.append(floc)
+                            else:
+                                has_noalts.append(floc)
+                        
+                        if len(has_alts) > 0 and len(has_noalts) > 0:
+                            for aloc in has_alts:
+                                alternate[aloc]=self._alternate[aloc][0]
+                
+            for floc in alternate.keys():
+                self.chk_add(floc, alternate[floc])
+                                
+                            
         # If more than one robot wants to move to the same square, resolve the conflict
         # by letting the robot with fewer choices have that square. The other robot
         # will select another square. In the case of ties, it is possible a robot
@@ -156,17 +212,20 @@ class Robot:
         def detect_collisions(self):
             for tloc in self._to.keys():
                 if len(self._to[tloc]) > 1:
-                    if self._parent._LOG:
-                        print "COLLISION ON ", tloc, "->", self._to[tloc]
-                    least_floc = None
+                    least_floc = []
                     least_count = 1000
                     tolist = self._to[tloc]
                     for floc in tolist:
                         count = len(self._from[floc])
                         if count < least_count:
-                            least_floc = floc
+                            least_floc = [floc]
                             least_count = count
-                    self.only(least_floc, tloc)
+                        elif count == least_count:
+                            least_floc.append(floc)
+                        
+                    if len(least_floc) > 0:
+                        self.only(least_floc[0], tloc)
+                            
 
         # See if two robots are moving into each other. If so, 
         # then give priority to the lower HP one.
@@ -392,7 +451,7 @@ class Robot:
         def __init__(self, parent, loc, indir):
             self._parent = parent
             self._count=0
-            dirs = parent._DIRS + parent._DADJ + parent._DADJ2
+            dirs = parent._DIRS + parent._DIAG + parent._DIR2
             for tdir in dirs:
                 if self.match(indir, tdir):
                     dloc = parent.get_loc(loc, tdir)
@@ -644,8 +703,6 @@ class Robot:
             self._adjacents = []
             # The list of friendlies with a walk distance of 2 of this target
             self._near = []
-            # The list of friendlies that are diagonal to the target (both near AND diagonal)
-            self._diagonals
             # the List of friendlies assigned to this target
             self._assigned = []
             # If we are all out attacking this target or not
@@ -666,8 +723,6 @@ class Robot:
                             self._adjacents.append(loc)
                         elif wdist == 2:
                             self._near.append(loc)
-                            if dist < 2:
-                                self._diagonals.append(loc)
                     else:
                         if wdist == 2:
                             self._near_enemies.append(loc)
@@ -761,6 +816,19 @@ class Robot:
                         # Compute by seeking 90 degree angle directions, choosing the one toward
                         # the side with LESS friendlies.
                         movemap.chk_add_dir(floc, tdir)
+                        # Choose only one possible feint direction. The direction with the less friendlies.
+                        # Ignore the other one. Even if the one we chose is unavailable.
+                        if len(dirs) == 1:
+                            best_adir=None
+                            best_count=1000
+                            for adir in self._parent._FEINT[tdir]:
+                                count=self._parent.count_friendlies_in_dir(self._eloc, adir)
+                                if best_adir == None or count < best_count:
+                                    best_adir=adir
+                                    best_count=count
+                        
+                            if best_adir != None:
+                                movemap.chk_add_dir_alternate(floc, best_adir)        
         
         def is_dangerous(self, floc, tloc):
             return self._parent._game.robots[floc].hp < self._parent._game.robots[tloc].hp
@@ -810,9 +878,9 @@ class Robot:
     _DIR2 = [(0, -2), (2, 0), (0, 2), (-2, 0)]
     # Diagonal adjacents
     _DADJ = {(1, -1):[(1, 0), (0, -1)], \
-            (1, 1)  :[(1, 0), (0, 1)], \
-            (-1, 1) :[(-1, 0), (0, 1)], \
-            (-1, -1):[(-1, 0), (0, -1)]}
+             (1, 1) :[(1, 0), (0, 1)], \
+             (-1, 1):[(-1, 0), (0, 1)], \
+             (-1, -1):[(-1, 0), (0, -1)]}
     # 2sq adjacent directions
     _DADJ2 = {(0, -2):(0, -1), \
               (2, 0) :(1, 0), \
