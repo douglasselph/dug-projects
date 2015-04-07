@@ -385,7 +385,28 @@ class Robot:
                     self._count += 1
                   
         def get_count(self):
-            return self._count               
+            return self._count 
+        
+    class AdjFriendMapDir:
+
+        def __init__(self, parent, loc, indir):
+            self._parent = parent
+            self._count=0
+            dirs = parent._DIRS + parent._DADJ + parent._DADJ2
+            for tdir in dirs:
+                if self.match(indir, tdir):
+                    dloc = parent.get_loc(loc, tdir)
+                    if self._parent.is_friendly(dloc):
+                        self._count += 1
+                  
+        def get_count(self):
+            return self._count
+    
+        def match(self, indir, tdir):
+            if indir[0] != 0:
+                return tdir[0] == indir[0]
+            else:
+                return tdir[1] == indir[1]
 
     class AdjEnemyMap:
 
@@ -736,7 +757,7 @@ class Robot:
                 if floc in self._parent._REMAINING and floc in self._assigned:
                     dirs = self._parent.get_dirs(floc, self._eloc)
                     for tdir in dirs:
-                        # wAS HERE: Add alternate direction that is okay if there is a collision.
+                        # WAS HERE: Add alternate direction that is okay if there is a collision.
                         # Compute by seeking 90 degree angle directions, choosing the one toward
                         # the side with LESS friendlies.
                         movemap.chk_add_dir(floc, tdir)
@@ -1245,6 +1266,10 @@ class Robot:
         adj = self.AdjFriendMap(self, loc)
         return adj.get_count()
     
+    def count_friendlies_in_dir(self, loc, indir):
+        adj = self.AdjFriendMapDir(self, loc, indir)
+        return adj.get_count()
+
     def count_normal(self, loc):
         count = 0
         for tdir in self._DIRS:
