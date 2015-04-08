@@ -671,17 +671,26 @@ class Robot:
         # Instead of guess attacking the square, do a feint.
         def apply_feint(self, floc, tloc, movemap):
             dirs=self._parent.get_dirs(floc, tloc)
+            tlocs=[]
             for mdir in dirs:
                 dir1 = self._parent._FEINT[mdir][0]
                 dir2 = self._parent._FEINT[mdir][1]
                 tloc1 = self._parent.get_loc(floc, dir1)
                 tloc2 = self._parent.get_loc(floc, dir2)
                 if self._parent.get_closer_to_center(tloc1, tloc2) == tloc1:
-                    movemap.chk_add(floc, tloc1)
-                    movemap.chk_add(floc, tloc2)
+                    tlocs.append(tloc1)
+                    tlocs.append(tloc2)
                 else:
-                    movemap.chk_add(floc, tloc2)
-                    movemap.chk_add(floc, tloc1)
+                    tlocs.append(tloc2)
+                    tlocs.append(tloc1)
+            was_safe=False
+            for tloc in tlocs:
+                if self._parent.count_enemies(tloc) == 0:
+                    movemap.chk_add(floc, tloc)
+                    was_safe=True
+            if not was_safe:
+                self._parent.apply_guess_attack(floc, tlocs[0])
+
 
     #
     # Analysis of enemy
@@ -924,8 +933,8 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(7,17),(8,16),(8,14),(8,15),(10,15),(7,13)]
-    _DEBUG_TURNS = [25]
+    _LOOKAT = [(8,6),(8,7),(7,7)]
+    _DEBUG_TURNS = [47]
     
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -1332,6 +1341,10 @@ class Robot:
 
     def count_friendlies(self, loc):
         adj = self.AdjFriendMap(self, loc)
+        return adj.get_count()
+    
+    def count_enemies(self, loc):
+        adj = self.AdjEnemyMap(self, loc)
         return adj.get_count()
     
     def count_friendlies_in_dir(self, loc, indir):
