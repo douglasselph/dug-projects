@@ -88,6 +88,8 @@ class Robot:
         def set_dangerous_ok(self, flag):
             self._dangerous_ok = flag
 
+        # Set to True (default) if it is okay for a friendly to block a possible move.
+        # Set to False if friendlies WILL NOT block a possible move. This means then will "make_way" later on.
         def set_blocking_allowed(self, flag):
             self._blocking_allowed=flag
             
@@ -957,13 +959,15 @@ class Robot:
 
         if self.init():
             self.ponder_on_spawned()
+            self.showcmds("AFTER SPAWNED")
             self.ponder_make_way()
-            self.showcmds("BEFORE RUN AWAY1")
+            self.showcmds("AFTER MAKE WAY 1")
             self.ponder_run_away(self._MAX_ATTACK_DAMAGE, 4)
-            self.showcmds("AFTER RUN AWAY1")
+            self.showcmds("AFTER RUN AWAY 1")
             self.ponder_make_way()
+            self.showcmds("AFTER MAKE WAY 2")
             self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
-            self.showcmds("AFTER RUN AWAY2")
+            self.showcmds("AFTER RUN AWAY 2")
             self.ponder_make_way()
             self.ponder_adj_enemies()
             self.showcmds("AFTER ADJ ENEMIES")
@@ -1090,24 +1094,31 @@ class Robot:
     def ponder_run_away(self, threshold, safe_dist):
         movemap = self.MoveMap(self)
         movemap.set_blocking_allowed(False)
-        for loc in self._REMAINING:
-            bot = self._game.robots[loc]
+        for floc in self._REMAINING:
+            bot = self._game.robots[floc]
             if bot.hp <= threshold:
                 # Select a direction farthest from the closest enemy
-                eloc = self.closest_enemy(loc)
+                eloc = self.closest_enemy(floc)
                 if eloc != None:
-                    dist = rg.dist(loc, eloc)
-                    if dist < safe_dist:
-                        self.do_run_away(movemap, dist, loc, eloc)
-                        if not movemap.has(loc):
+                    dist = rg.dist(floc, eloc)
+                    if dist <= 1:
+                        # Next DOOR! Emergency move to empty square.
+                        locs = self.get_safest_adj_locs(floc)
+                        if len(locs) > 0:
+                            for tloc in locs:
+                                movemap.set_blocking_allowed(False)
+                                movemap.add(floc, tloc)
+                    elif dist < safe_dist:
+                        self.do_run_away(movemap, dist, floc, eloc)
+                        if not movemap.has(floc):
                             if len(movemap.get_blocking()) > 0:
                                 movemap.set_blocking_allowed(False)
-                                self.do_run_away(movemap, dist, loc, eloc)
+                                self.do_run_away(movemap, dist, floc, eloc)
                                 movemap.set_blocking_allowed(True)
-                            if not movemap.has(loc):
-                                movemap.add_to_failed(loc)
-                    else:
-                        movemap.add_to_failed(loc)
+                                if not movemap.has(floc):
+                                    movemap.add_to_failed(floc)
+                else:
+                    movemap.add_to_failed(floc)
 
         movemap.apply()
 
@@ -1439,14 +1450,22 @@ class Robot:
     def get_hp_weight(self, hp):
         return rg.settings.robot_hp - hp
 
-    def has_robot(self, loc):
-        return loc in self._game.robots
+    def get_dist_to_closest_enemy(self, floc):
+        best = 1000
+        for eloc in self._ENEMIES:
+            dist = rg.dist(floc, eloc)
+            if dist < best:
+                best = dist
+        return best
+    
+    def has_robot(self, floc):
+        return floc in self._game.robots
 
-    def is_friendly(self, loc):
-        return loc in self._FRIENDLIES
+    def is_friendly(self, floc):
+        return floc in self._FRIENDLIES
 
-    def is_enemy(self, loc):
-        return loc in self._ENEMIES
+    def is_enemy(self, floc):
+        return floc in self._ENEMIES
 
     def is_normal(self, loc):
         types = rg.loc_types(loc)
@@ -1484,13 +1503,17 @@ class Robot:
         if abs(tdir[0]) != 1 and abs(tdir[1]) != 1:
             return False
         return True 
- 
-    def get_dist_to_closest_enemy(self, floc):
-        best = 1000
-        for eloc in self._ENEMIES:
-            dist = rg.dist(floc, eloc)
-            if dist < best:
-                best = dist
-        return best
+    
+    # Return all locations without any adjacent enemies
+    def get_safest_adj_locs(self, floc):
+        locs=[]
+        for tdir in self._DIRS:
+            tloc = self.get_loc(floc, tdir)
+            if not self.is_enemy(tloc):
+                adj = self.AdjEnemyMap(self, tloc)
+                if adj.get_count() == 0:
+                    locs.append(tloc)
+        return locs
+
             
                 
