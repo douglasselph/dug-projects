@@ -76,7 +76,7 @@ class Robot:
                 return False
             
             if self._parent.is_spawn(tloc):
-                if not self._flag_spawn_ok or self._parent._STC:
+                if not self._flag_spawn_ok or self._parent._STC1:
                     return False
                 
             if self._flag_safe_only:
@@ -758,8 +758,10 @@ class Robot:
             (-1, 0):[(0, 1), (0, -1)],
             (1, 0):[(0, 1), (0, -1)]}
 
-    # Spawn turn coming: True if new robots are to be spawned soon.
-    _STC = False
+    # Spawn turn coming: True if new robots are to be spawned next turn
+    _STC1 = False
+    # Spawn turn coming: True if new robots in two turns
+    _STC2 = False
     # List of commands to issue for each robot, keyed by location. The value is the command. 
     _CMDS = {}
     # List of new locations robots are currently intending to move into.
@@ -791,8 +793,8 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(14,15),(14,13),(13,13),(13,14)]
-    _DEBUG_TURNS = [17]
+    _LOOKAT = [(16,11)]
+    _DEBUG_TURNS = [17,18,19]
     
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -834,6 +836,10 @@ class Robot:
             self.showcmds("AFTER TARGETS")
             self.ponder_on_spawned_safe()
             self.showcmds("AFTER SPAWNED SAFE")
+            self.ponder_close_in();
+            self.showcmds("AFTER CLOSE IN")
+            self.ponder_make_way()
+            self.showcmds("AFTER MAKE WAY 5")
             self.ponder_guard()
             self.showcmds("AFTER GUARD")
             self.ponder_guess_attack()
@@ -857,7 +863,8 @@ class Robot:
 
         # Compute Spawn Turn Coming
         remainder = self._game.turn % rg.settings.spawn_every
-        self._STC = (remainder == 0 or remainder == (rg.settings.spawn_every - 1))
+        self._STC1 = (remainder == 0)
+        self._STC2 = (remainder == (rg.settings.spawn_every - 1))
 
         # Compute friendly and enemy robot locations (Convenience)
         self._FRIENDLIES = []
@@ -924,7 +931,7 @@ class Robot:
     # If a robot is on a spawn square and the STC is next turn, then they need to emergency move off.
     def ponder_on_spawned_emergency(self):
 
-        if self._STC:
+        if self._STC1 or self._STC2:
 
             movemap = self.MoveMapFlag(self)
             movemap.set_safe_only(True)
@@ -934,7 +941,8 @@ class Robot:
             for floc in self._REMAINING:
                 if self.is_spawn(floc):
                     movemap.add_moves(floc)
-                    movemap.apply()
+            
+            movemap.apply()
 
             if not movemap.has_failed():
                 return
@@ -951,8 +959,11 @@ class Robot:
             if not movemap.has_failed():
                 return
  
+            movemap.set_spawn_ok(True)
+            movemap.apply_again_failed()
+            
             for floc in movemap.get_failed():
-                print "ponder_on_spawned(): ROBOT ", floc, " FAILED TO MOVE"
+                print "ponder_on_spawned_emergency(): ROBOT ", floc, " FAILED TO MOVE"
                 
     # If a robot is on a spawn square and we have reached this point, move them off to be safe.
     # If they are in the corner, they will move off any way later on with chase_enemy.
@@ -1017,8 +1028,9 @@ class Robot:
             fbot = self._game.robots[floc]
             if fbot.hp <= threshold:
                 # Select a direction farthest from the closest enemy
-                eloc = self.closest_enemy(floc)
-                if eloc != None:
+                eloc = self.get_closest_enemy(floc)
+                dist = rg.dist(floc, eloc)
+                if eloc != None and dist <= safe_dist:
                     movemap.set_farther_than_loc(floc, eloc)
                     # TODO: the moves added should be prioritized by the fartherest the way the higher the choice.
                     movemap.add_moves(floc)
@@ -1031,7 +1043,6 @@ class Robot:
         movemap.apply_again_failed()
         
         # At this point, the unit might suicide later if they still failed
-
         for floc in stay_put:
             self.apply_prefer_stay_put(floc)
      
@@ -1173,7 +1184,24 @@ class Robot:
                 tmap.adjacents_dodge(movemap)
 
         movemap.apply()
-                
+        
+    # Any robots that are 3 away, get priority over guess attacks in order
+    # to increase the number of overall attacking. Move them in.
+    def ponder_close_in(self):
+        movemap = self.MoveMapFlag(self)
+        movemap.set_safe_only(True)
+        movemap.set_spawn_ok(False)
+        movemap.set_unoccupied_only(False)
+        for floc in self._REMAINING:
+            # If nearest enemy is 3 walking steps away then push our way in.
+            eloc = self.get_closest_enemy(floc)
+            dist = rg.wdist(floc, eloc)
+            if dist == 3:
+                dirs = self.get_dirs(floc, eloc)
+                for tdir in dirs:
+                    movemap.add_if_ok_dir(floc, tdir)
+        movemap.apply()
+        
     # If an enemy is diagonally adjacent or 2 sq away orthogonally adjacent
     # consider an attack unless the last time we tried there was a miss.
     def ponder_guess_attack(self):
@@ -1190,7 +1218,7 @@ class Robot:
         movemap.set_unoccupied_only(True)
         remaining = list(self._REMAINING)
         for floc in remaining:
-            closest_eloc = self.closest_enemy(floc)
+            closest_eloc = self.get_closest_enemy(floc)
             if closest_eloc != None:
                 dirs = self.get_dirs(floc, closest_eloc)
                 for tdir in dirs:
@@ -1251,7 +1279,7 @@ class Robot:
             self._STAY_PUT.append(loc)
 
     # Return closest enemy to passed in location
-    def closest_enemy(self, floc):
+    def get_closest_enemy(self, floc):
         closest_dist = 1000
         closest_eloc = None
         for eloc in self._ENEMIES:
