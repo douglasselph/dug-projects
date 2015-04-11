@@ -220,42 +220,6 @@ class Robot:
                 line += "];"
             print line
 
-        # OLD, KEEPING AROUND JUST IN CASE: 
-        def _old_filter_closer_to_enemy(self, floc, moves):
-            filtered = []
-            best_dist = 1000
-            for tloc in moves:
-                dist = self._parent.get_dist_to_closest_enemy(tloc)
-                if dist < best_dist:
-                    filtered = [tloc]
-                    best_dist = dist
-                elif dist == best_dist:
-                    filtered.append(tloc)
-            return filtered
-                            
-        def old_filter_nearer_to_center(self, moves):
-            filtered = []
-            best_w = 1000
-            for loc in moves:
-                w = self._parent.get_center_weight(loc)
-                if w < best_w:
-                    best_w = w;
-                    filtered = [loc]
-                elif w == best_w:
-                    filtered.append(loc)
-            return filtered
-        
-        def OLD_filter_out_old(self, floc, moves):
-            robot_id = self._parent._game.robots[floc].robot_id
-            if not robot_id in self._parent._LAST_TURN.keys():
-                return moves
-            filtered = []
-            last_turn_loc = self._parent._LAST_TURN[robot_id]
-            for loc in moves:
-                if loc != last_turn_loc:
-                    filtered.append(loc)
-            return filtered
-
     class AdjFriendMap:
 
         def __init__(self, parent, loc):
@@ -619,20 +583,24 @@ class Robot:
                 
         # Compute if are all out attacking this target.
         def compute_attacking(self):
-            
-            count = len(self._near) + len(self._adjacents)
             numenemies=len(self._parent._ENEMIES)
             numfriendlies=len(self._parent._FRIENDLIES)
+            ehp = self._parent._game.robots[self._eloc].hp
+                
             if numenemies > numfriendlies:
-                trigger = 4
+                trigger = 4 * ehp
             else:
-                trigger = 3
+                trigger = 3 * ehp
+                
             flag=False
             # If one unit already attacking then yes.
             if self._parent.is_attacking(self._eloc):
                 flag = True
             else:
-                flag = (count >= trigger)
+                fhp = 0
+                for floc in self._near + self._adjacents:
+                    fhp += self._parent._game.robots[floc].hp
+                flag = (fhp >= trigger)
             
             if flag:
                 if not self.is_too_dangerous_to_pounce(trigger):
@@ -705,17 +673,19 @@ class Robot:
             movemap.set_unoccupied_only(True)
             self.near_pounce(movemap)
             moves = movemap.get_moves()
-            count = len(self._adjacents)
+            fhp = 0
+            for floc in self._adjacents:
+                fhp += self._parent._game.robots[floc].hp
             we_outnumber_enemy = (len(self._friendlies) > len(self._enemies))
             for floc in moves.keys():
                 fbot = self._parent._game.robots[floc]
                 adj = self._parent.AdjEnemyMap(self._parent, moves[floc])
                 if adj.get_collective_enemy_hp() <= fbot.hp:
-                    count += 1                
+                    fhp += fbot.hp              
                 elif we_outnumber_enemy and fbot.hp > self._parent._MAX_ATTACK_DAMAGE*adj.get_num_enemies():
-                    count += 1
+                    fhp += fbot.hp
             # If we have so many possible pouncers then accept
-            if count >= trigger:
+            if fhp >= trigger:
                 return False
             
             # If we out number the enemies then attack if only 2.
@@ -791,13 +761,15 @@ class Robot:
     _ASSIGNED = {}
     # To save computing power remember distances to center
     _DIST_TO_CENTER = {}
-    # Where a unit friendly was last turn
+    # Where a unit friendly was last turn, keyed by robot_id
     _LAST_TURN = {}
+    # Possible chase chances keyed by robot_id
+    _CHASE = {}
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(5,14),(3,10),(3,11)]
-    _DEBUG_TURNS = [16,35]
+    _LOOKAT = [(7,7),(14,5),(14,6)]
+    _DEBUG_TURNS = [36]
     
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -827,10 +799,10 @@ class Robot:
             self.showcmds("AFTER RUN AWAY 1")
             self.ponder_make_way()
             self.showcmds("AFTER MAKE WAY 2")
-            self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
-            self.showcmds("AFTER RUN AWAY 2")
-            self.ponder_make_way()
-            self.showcmds("AFTER MAKE WAY 3")
+            #self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
+            #self.showcmds("AFTER RUN AWAY 2")
+            #self.ponder_make_way()
+            #self.showcmds("AFTER MAKE WAY 3")
             self.ponder_adj_enemies()
             self.showcmds("AFTER ADJ ENEMIES")
             self.ponder_make_way()
@@ -879,7 +851,7 @@ class Robot:
                 self._FRIENDLIES.append(loc)
             else:
                 self._ENEMIES.append(loc)
-
+                               
         # Determine misses
         self.miss_count()
         
@@ -898,7 +870,20 @@ class Robot:
         for loc in self._FRIENDLIES:
             robot_id = self._game.robots[loc].robot_id
             self._LAST_TURN[robot_id] = loc
-            
+    
+    def record_chase(self, fbot):
+        fid = fbot.robot_id
+        if fid in self._LAST_TURN.keys():
+            if self.is_enemy(self._LAST_TURN[fid]):
+                if fid in self._CHASE.keys():
+                    self._CHASE[fid] += 1
+                else:
+                    self._CHASE[fid] = 0
+            else:
+                self._CHASE[fid] = 0
+        else:
+            self._CHASE[fid] = 0
+                 
     #####################
     # MISS SUPPORT
     #####################
@@ -1019,6 +1004,7 @@ class Robot:
                 
 
     # If there are units close to death, they should run away.
+    # Special case: if we are being chased, then perhaps stand guard and let them crash into us.
     def ponder_run_away(self, threshold, safe_dist):
         movemap = self.MoveMapFlag(self)
         
@@ -1031,6 +1017,13 @@ class Robot:
         for floc in self._REMAINING:
             fbot = self._game.robots[floc]
             if fbot.hp <= threshold:
+                # Determine if robot is being chased
+                if fbot.hp >= 5:
+                    self.record_chase(fbot)
+                    if self._CHASE[fbot.robot_id] >= 2:
+                        stay_put.append(floc)
+                        self._CHASE[fbot.robot_id] = 0
+                        continue
                 # Select a direction farthest from the closest enemy
                 eloc = self.get_closest_enemy(floc)
                 dist = rg.dist(floc, eloc)
@@ -1061,9 +1054,9 @@ class Robot:
             self.apply_guard(loc)
         self._STAY_PUT = []
     
-    # If we get here, then the robot is assumed to be not too weak yet 
-    # there is not yet enough support for a targeted attack.
-    # Consider suicide, attacking or running away.
+    # Deal with problematic robots adjacent to enemies.
+    # Perhaps suicide. Perhaps attack. Don't move off.
+    # Let ponder_targets() handle it if possible.
     def ponder_adj_enemies(self):
         movemap = self.MoveMapFlag(self)
         
@@ -1083,19 +1076,17 @@ class Robot:
                 max_damage = self._MAX_ATTACK_DAMAGE * num_enemy
 
                 if num_enemy > 1:
+                    # Suicide unless we have enough hp to survive any attack 
+                    # Also to suicide the robot must be very low on hp or be surrounded.
                     if fbot.hp <= max_damage and (fbot.hp <= self._SUICIDE_DAMAGE or num_enemy >= num_normal):
                         suicides.append(floc)
                     elif fbot.hp > adj.get_strongest_hp() or num_enemy >= num_normal:
                         attacking[floc] = adj.get_weakest_loc()
                     else:
                         movemap.add_moves(floc)
-                else:
-                    # If we are stronger than the robot, attack.
-                    # Otherwise move away.
-                    if fbot.hp >= adj.get_weakest_adjusted_hp():
-                        attacking[floc] = adj.get_weakest_adjusted_loc()
-                    else:
-                        movemap.add_moves(floc)
+                # If we are stronger than the robot, attack.
+                elif fbot.hp >= adj.get_weakest_adjusted_hp():
+                    attacking[floc] = adj.get_weakest_adjusted_loc()
 
         # Apply suicides
         for loc in suicides:
@@ -1167,7 +1158,8 @@ class Robot:
         for eloc in self._TARGETS.keys():
             tmap = self._TARGETS[eloc]
             tmap.compute_attacking()
-                
+            if self._LOG:
+                tmap.show()
             if tmap.is_attacking():
                 tmap.adjacents_attack()
                 tmap.near_pounce(movemap)
