@@ -93,6 +93,9 @@ class Robot:
             
             if self._parent.is_occupied(tloc):
                 return False
+            
+            if self._parent.is_moving2(tloc, floc):
+                return False
                 
             if floc in self._farther_than_loc.keys():
                 eloc = self._farther_than_loc[floc]
@@ -793,8 +796,8 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(16,11)]
-    _DEBUG_TURNS = [17,18,19]
+    _LOOKAT = [(5,14),(3,10),(3,11)]
+    _DEBUG_TURNS = [16,35]
     
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -845,6 +848,7 @@ class Robot:
             self.ponder_guess_attack()
             self.showcmds("AFTER GUESS ATTACK")
             self.ponder_make_way()
+            self.showcmds("AFTER MAKE WAY 6")
             self.ponder_chase_enemy()
             self.showcmds("AFTER CHASE")
             self.record_last_turn()
@@ -1057,14 +1061,9 @@ class Robot:
             self.apply_guard(loc)
         self._STAY_PUT = []
     
-    #
-    # If we get here, then the robot is assumed to be not too weak.
-    # Consider suicide chance for friendlies with adjacent enemies.
-    # If we are surrounded, then force attack if not suicide.
-    # Otherwise if we are not too weak, go ahead and attack.
-    # If we are way too weak, run away. But if we have support maybe not.
-    # Other cases are decided later.
-    #
+    # If we get here, then the robot is assumed to be not too weak yet 
+    # there is not yet enough support for a targeted attack.
+    # Consider suicide, attacking or running away.
     def ponder_adj_enemies(self):
         movemap = self.MoveMapFlag(self)
         
@@ -1080,44 +1079,32 @@ class Robot:
             num_enemy = adj.get_count()
             num_normal = self.count_normal(floc)
             if num_enemy >= 1:
-                if num_enemy >= num_normal:
-                    consider = rg.settings.robot_hp / 2
-                elif num_enemy >= num_normal-1 and num_enemy > 2:
-                    consider = rg.settings.robot_hp / 5
-                elif num_enemy >= num_normal-2 and num_enemy > 1:
-                    consider = rg.settings.robot_hp / 10
-                else:
-                    consider = 0
-                if fbot.hp < consider:
-                    chance = self.get_hp_weight(fbot.hp) + 20 * num_enemy
-                    if self.roll_die(chance):
+                # Compute the max amount of damage we might suffer
+                max_damage = self._MAX_ATTACK_DAMAGE * num_enemy
+
+                if num_enemy > 1:
+                    if fbot.hp <= max_damage and (fbot.hp <= self._SUICIDE_DAMAGE or num_enemy >= num_normal):
                         suicides.append(floc)
-                        continue
-                # We are surrounded
-                if num_enemy >= num_normal:
-                    max_damage = self._MAX_ATTACK_DAMAGE * num_enemy
-                    if fbot.hp < max_damage:
-                        suicides.append(floc)
-                    else:
+                    elif fbot.hp > adj.get_strongest_hp() or num_enemy >= num_normal:
                         attacking[floc] = adj.get_weakest_loc()
-                    continue
-                
-                if num_enemy == 1:
+                    else:
+                        movemap.add_moves(floc)
+                else:
                     # If we are stronger than the robot, attack.
                     # Otherwise move away.
                     if fbot.hp >= adj.get_weakest_adjusted_hp():
                         attacking[floc] = adj.get_weakest_adjusted_loc()
                     else:
                         movemap.add_moves(floc)
-                else:
-                    # Too many enemies, run away
-                    movemap.add_moves(floc)
 
+        # Apply suicides
         for loc in suicides:
             self.apply_suicide(loc)
 
+        # Apply moves
         movemap.apply()
         
+        # Be more and more forgiving since we are in a pickle.
         if movemap.has_failed():
             movemap.set_spawn_ok(True)
             movemap.apply_again_failed()
@@ -1125,11 +1112,15 @@ class Robot:
                 movemap.set_unoccupied_only(False)
                 movemap.apply_again_failed()
                 if movemap.has_failed():
-                    for loc in movemap.get_failed():
-                        adj = self.AdjEnemyMap(self, loc)
-                        if adj.get_count() > 0:
-                            attacking[loc] = adj.get_weakest_loc()
-
+                    movemap.set_safe_only(False)
+                    movemap.apply_again_failed()
+                    if movemap.has_failed():
+                        for loc in movemap.get_failed():
+                            adj = self.AdjEnemyMap(self, loc)
+                            if adj.get_count() > 0:
+                                attacking[loc] = adj.get_weakest_loc()
+                            
+        # Apply attacking
         for loc in attacking.keys():
             self.apply_attack(loc, attacking[loc])
 
@@ -1223,7 +1214,6 @@ class Robot:
                 dirs = self.get_dirs(floc, closest_eloc)
                 for tdir in dirs:
                     movemap.add_if_ok_dir(floc, tdir)
-                    
                 if not movemap.has_moves(floc):
                     movemap.add_failed(floc)
                     
@@ -1441,6 +1431,14 @@ class Robot:
         if loc in self._CMDS.keys():
             return self._CMDS[loc][0] == 'move'
         return False
+    
+    # Return true if floc is moving into tloc
+    def is_moving2(self, floc, tloc):
+        if floc in self._CMDS.keys():
+            cmd = self._CMDS[floc]
+            if cmd[0] == 'move' and cmd[1] == tloc:
+                return True
+        return False
 
     def is_attacking(self, loc):
         return loc in self._ATTACKING
@@ -1449,7 +1447,8 @@ class Robot:
         if floc in self._CMDS.keys():
             return self._CMDS[floc][0] == 'attack' and self._CMDS[floc][1] == tloc
         return False
-        
+   
+     
     # If we are surrounded then add to suicide chance
     def roll_die(self, chance):
         die = random.randint(1, 100)
