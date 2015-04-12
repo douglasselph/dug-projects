@@ -151,6 +151,7 @@ class Robot:
         # Apply the moves to the robots.
         def apply(self):
             moves = self.get_moves();
+            
             for floc in moves.keys():
                 self._parent.apply_move(floc, moves[floc])
                         
@@ -167,7 +168,7 @@ class Robot:
                     self.add_failed(floc)
                              
             return moves
-                
+            
         # If more than one robot wants to move to the same square, resolve the conflict
         # by letting the robot with fewer choices have that square. The other robot
         # will select another square. In the case of ties, it is possible a robot
@@ -603,8 +604,9 @@ class Robot:
                 flag = (fhp >= trigger)
             
             if flag:
-                if not self.is_too_dangerous_to_pounce(trigger):
-                    self._attacking = True
+                self._attacking = True
+                #if not self.is_too_dangerous_to_pounce(trigger):
+                #    self._attacking = True
             
         # Any robot on an adjacent, which has not yet moved, should move off.
         def adjacents_dodge(self, movemap):
@@ -619,24 +621,31 @@ class Robot:
                     tdir = self._parent.get_opposite_dir(tdir)
                     movemap.add_if_ok_dir(floc, tdir)
         
-        # Fill the dictionary up with adjacent attacks
-        # That is, the adjacents may not necessarily be attacking the target if
-        # there are other robots weaker next to it.
-        def compute_adj_attacking(self):
-            attacking = {}
+        def adjacents_feint_or_attack(self, movemap):
+            attacking={}
             for floc in self._adjacents:
                 if floc in self._parent._REMAINING and floc in self._assigned:
-                    amap = self._parent.AdjEnemyMap(self._parent, floc)
-                    if amap.get_weakest_loc() != None:
-                        attacking[floc] = amap.get_weakest_loc();
-            return attacking
+                    added=False
+                    # Do feint directions
+                    tdir = self._parent.get_dir(floc, self._eloc)
+                    if tdir in self._parent._FEINT.keys():
+                        # One filled and one empy?
+                        empty_loc=None
+                        has_friendly=False
+                        for ddir in self._parent._FEINT[tdir]:
+                            dloc = self._parent.get_loc(floc, ddir)
+                            if self.has_friendly(dloc):
+                                has_friendly=True
+                            elif not self._parent.has_robot(dloc):
+                                empty_loc=dloc
                         
-        # Any robot on an adjacent, should simply attack the weaker nearer robot.
-        def adjacents_attack(self):
-            attacking = self.compute_adj_attacking()
+                        if empty_loc != None and has_friendly:
+                            added = movemap.add_if_ok(floc, empty_loc)
+                    if not added:
+                        attacking[floc] = self._eloc
             for floc in attacking.keys():
                 self._parent.apply_attack(floc, attacking[floc])
-                
+                        
         # Any robot 2sq away should close in for the kill
         def near_pounce(self, movemap):
             for floc in self._near:
@@ -768,8 +777,8 @@ class Robot:
 
     # DEBUG
     _LOG = False
-    _LOOKAT = [(7,7),(14,5),(14,6)]
-    _DEBUG_TURNS = [36]
+    _LOOKAT = [(13,6),(13,5),(12,5),(14,5),(15,4)]
+    _DEBUG_TURNS = [14]
     
     def showcmd(self, prefix, loc):
         if self._LOG:
@@ -799,10 +808,6 @@ class Robot:
             self.showcmds("AFTER RUN AWAY 1")
             self.ponder_make_way()
             self.showcmds("AFTER MAKE WAY 2")
-            #self.ponder_run_away(self._SUICIDE_DAMAGE, 2)
-            #self.showcmds("AFTER RUN AWAY 2")
-            #self.ponder_make_way()
-            #self.showcmds("AFTER MAKE WAY 3")
             self.ponder_adj_enemies()
             self.showcmds("AFTER ADJ ENEMIES")
             self.ponder_make_way()
@@ -1057,6 +1062,8 @@ class Robot:
     # Deal with problematic robots adjacent to enemies.
     # Perhaps suicide. Perhaps attack. Don't move off.
     # Let ponder_targets() handle it if possible.
+    #
+    # TODO: if enemy is low on health, move into them.
     def ponder_adj_enemies(self):
         movemap = self.MoveMapFlag(self)
         
@@ -1078,7 +1085,7 @@ class Robot:
                 if num_enemy > 1:
                     # Suicide unless we have enough hp to survive any attack 
                     # Also to suicide the robot must be very low on hp or be surrounded.
-                    if fbot.hp <= max_damage and (fbot.hp <= self._SUICIDE_DAMAGE or num_enemy >= num_normal):
+                    if fbot.hp <= max_damage and num_enemy >= num_normal:
                         suicides.append(floc)
                     elif fbot.hp > adj.get_strongest_hp() or num_enemy >= num_normal:
                         attacking[floc] = adj.get_weakest_loc()
@@ -1152,21 +1159,23 @@ class Robot:
                 
         movemap = self.MoveMapFlag(self)
         movemap.set_safe_only(False)
-        movemap.set_spawn_ok(True)
-        movemap.set_unoccupied_only(True)
+        movemap.set_spawn_ok(False)
+        movemap.set_unoccupied_only(False)
 
         for eloc in self._TARGETS.keys():
             tmap = self._TARGETS[eloc]
             tmap.compute_attacking()
-            if self._LOG:
-                tmap.show()
             if tmap.is_attacking():
-                tmap.adjacents_attack()
+                tmap.adjacents_feint_or_attack(movemap)
                 tmap.near_pounce(movemap)
             else:
                 tmap.adjacents_dodge(movemap)
 
         movemap.apply()
+        
+        if movemap.has_failed():
+            movemap.set_spawn_ok(True)
+            movemap.apply_again_failed()
         
     # Any robots that are 3 away, get priority over guess attacks in order
     # to increase the number of overall attacking. Move them in.
@@ -1369,16 +1378,23 @@ class Robot:
     
     # Return the direction order by the ones that get us closer to the center first.
     def get_locs_sorted_by_center(self, floc):
-        elements=[]
+        tlocs=[]
         for fdir in self._DIRS:
             tloc = self.get_loc(floc, fdir)
+            tlocs.append(tloc)
+        return self.get_locs_sorted_by_center_list(tlocs)
+ 
+    # Return the direction order by the ones that get us closer to the center first.
+    def get_locs_sorted_by_center_list(self, locs):
+        elements=[]
+        for tloc in locs:
             elements.append((tloc, self.get_dist_to_center(tloc)))
         eles_sorted=sorted(elements, key=lambda ele: ele[1])
         locs_sorted=[]
         for ele in eles_sorted:
             locs_sorted.append(ele[0])
         return locs_sorted
-    
+   
     def get_dist_to_center(self, loc):
         if not loc in self._DIST_TO_CENTER.keys():
             self._DIST_TO_CENTER[loc] = rg.dist(loc, rg.CENTER_POINT)
