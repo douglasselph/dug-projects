@@ -69,7 +69,7 @@ class Robot:
             # Adjacent square code analysis. Key=DIR, Value=tuple(code, optional count)
             self._adjacents = {}
             
-            for bloc in self._parent._FRIENDLIES:
+            for bloc in self._parent._REMAINING:
                 wdist = rg.wdist(bloc, self._eloc)
                 if wdist == 1:
                     self._friendly1.append(bloc)
@@ -79,8 +79,23 @@ class Robot:
                     self._friendly3.append(bloc):
                 elif wdist <= 5:
                     self._friendly5.append(bloc)
-            
-    
+                    
+        def has_friendly(self, floc):
+            return floc in self._friendly1 + self._friendly2 + self._friendly3 + self._friendly5
+        
+        def has_friendly1(self, floc):
+            return floc in self._friendly1
+        
+        def has_friendly2(self, floc):
+            return floc in self._friendly2
+
+        def has_friendly3(self, floc):
+            return floc in self._friendly3
+        
+        def has_friendly5(self, floc):
+            return floc in self._friendly5
+
+        
     # Size of the GAME MAP.
     _MAPSIZE = 19
     # Suicide damage
@@ -157,6 +172,7 @@ class Robot:
         if self.init():
             self.ponder_on_spawned()
             self.ponder_make_way()
+            self.ponder_assign_targets()
             
         cmd = self.get_cmd()
         if self._LOG:
@@ -190,8 +206,6 @@ class Robot:
         
         self._REMAINING=list(self._FRIENDLIES)
         
-        for eloc in self._ENEMIES:
-            self._TGTMAP[eloc] = self.TargetMap(this, eloc)
         
         return True
  
@@ -257,7 +271,37 @@ class Robot:
             if counter > 20:
                 print "INFINITE LOOP ERROR!"
                 break
+    
+    # 
+    # Each friendly should be assigned to exactly one target map
+    #
+    def ponder_assign_targets(self):
+    
+        for eloc in self._ENEMIES:
+            self._TGTMAP[eloc] = self.TargetMap(this, eloc)
         
+        _ASSIGNED={}
+        
+        mapany={}
+        map1={}
+        map2={}
+        map3={}
+        map5={}
+        
+        for floc in self._REMAINING:
+            for tmap in self._TGTMAP.keys():
+                if tmap.has_friendly(floc):
+                    self.dict_add(mapany, floc, tmap)
+                if tmap.has_friendly1(floc):
+                    self.dict_add(map1, floc, tmap)
+                if tmap.has_friendly2(floc):
+                    self.dict_add(map2, floc, tmap)
+                if tmap.has_friendly3(floc):
+                    self.dict_add(map3, floc, tmap)
+                if tmap.has_friendly5(floc):
+                    self.dict_add(map5, floc, tmap)
+
+
         
     # 
     # CMD SUPPORT 
