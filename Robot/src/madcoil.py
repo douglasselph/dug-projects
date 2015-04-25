@@ -30,6 +30,12 @@ import rg
 import random
 import string
 from twisted.test.test_plugin import AdjacentPackageTests
+from fcntl import flock
+from matplotlib.pyplot import flag
+from __builtin__ import True
+from gnome_sudoku.gnome_sudoku import SafeStdout
+from rgkit.rg import locs_around
+from chardet.test import count
 
 class Robot:
 
@@ -39,18 +45,214 @@ class Robot:
             self._adj = []
             self._parent = parent
             self._tloc = tloc
+            self._surrounded=True
             
             for tdir in parent._DIRS:
                 dloc = parent.get_loc(tloc, tdir)
                 if parent.is_enemy(dloc):
                     self._adj.append(dloc)
+                elif self._parent.is_normal(dloc):
+                    self._surrounded=False
 
         def get_count(self):
             return len(self._adj)
         
         def get_loc(self):
             return self._tloc
+        
+        def get_enemies(self):
+            return self._adj
 
+        def is_surrounded(self):
+            return self._surrounded
+    
+    #
+    # Class to manage a dodging robot.
+    # Usage:
+    #    Call consider() function to prepare a robot to be moved.
+    #    Call various select_*() functions to choose the type of movement to consider.
+    #    Will return False if there was none.
+    #    Call apply() to actually affect the moving map to robots.
+    #
+    class Dodge:
+        
+        def __init__(self, parent):
+            self._parent = parent
+            self._is_enemy={}
+            self._is_spawn={}
+            self._is_friend={}
+            self._is_normal={}
+            self._moving={}
+            self._to={}
+            self._alternates={}
+            self._safe_only=False
+        
+        def set_safe_only(self, flag):
+            self._safe_only=flag
+             
+        def consider(self, floc):
+            for tdir in self._parent._DIRS:
+                tloc=self._parent.get_dir(floc, tdir)
+                if self._parent.is_moving_into(tloc) or self._parent.is_stationary(tloc):
+                    continue
+                if self._parent.is_enemy(tloc):
+                    self._parent.dict_add(self._is_enemy, floc, tloc)
+                elif self._parent.is_friendly(tloc):
+                    self._parent.dict_add(self._is_friend, floc, tloc)
+                if self._parent.is_spawn(tloc):
+                    self._parent.dict_add(self._is_spawn, floc, tloc)
+                elif self._parent.is_normal(tloc):
+                    self._parent.dict_add(self._is_normal, floc, tloc)
+        
+        # Private
+        # Register a move from the 'floc' to the 'tloc'.
+        def _move(self, floc, tloc):
+            self._moving[floc]=tloc
+            # Key: TO location, Value: list of from locations
+            self._parent.dict_add(self._to, tloc, floc)
+        
+        def _score_alternative(self, floc, locs):
+            self._alternates[floc]=locs
+            
+        # Private
+        def _select(self, floc, locs):
+            safe=[]
+            safest=[]
+            safest_count=5
+            for tloc in locs:
+                adj = self._parent.AdjEnemyMap(self._parent, tloc)
+                if adj.get_count() == 0:
+                    safe.append(tloc)
+                elif adj.get_count() < safest_count:
+                    safest=[tloc]
+                    safest_count=adj.get_count()
+                elif adj.get_count() == safest_count:
+                    safest.append(tloc)
+                    safest_count=adj.get_count()
+            if len(safe) > 1:
+                locs=self._parent.get_locs_sorted_by_center_list(safe)
+                self._move(floc, locs[0])
+                self._score_alternates(floc, locs[1:])
+                return True
+            elif len(safe) == 1:
+                self._move(floc, safe[0])
+                return True
+            
+            if not self._safe_only and len(safest) > 0:
+                if len(safest) == 1:
+                    self._move(floc, safest[0])
+                else:
+                    locs=self._parent.get_locs_sorted_by_center_list(safest)
+                    self._move(floc, safest[0])
+                    self._score_alternates(floc, safest[1:])
+                return True
+            return False
+    
+        def select(self):
+            self.set_safe_only(True)
+            self.select_normal()
+            self.select_friend()
+            
+            if self._STC2:
+                self.select_spawn()
+            
+            self.set_safe_only(False)
+            self.select_normal()
+            self.select_friend()
+            self.select_enemy()
+            self.resolve_collisions()
+
+        # Public:      
+        # Move all considering robots to an open square.
+        # SafeOnly: Anything  next to an enemy will not be considered.
+        def select_normal(self):
+            for floc in self._is_normal.keys():
+                if not floc in self._moving.keys():
+                    self._select(floc, self._is_normal[floc])
+        
+        # Public: 
+        # Move all considering robots to a spawn square, if any
+        # SafeOnly: Anything  next to an enemy will not be considered.
+        def select_spawn(self):
+            for floc in self._is_spawn.keys():
+                if not floc in self._moving.keys():
+                    self._select(floc, self._is_spawn[floc])
+
+        # Move all considering robots to square with a friend in it, if any
+        def select_friend(self):
+            for floc in self._is_friend.keys():
+                if not floc in self._moving.keys():
+                    locs=self._parent.get_locs_sorted_by_center_list(self._is_friend[floc])
+                    self._move(floc, locs[0])
+                    if len(locs) > 1:
+                        self._score_alternates(floc, locs[1:])
+        
+        # Move all considering robots to a square with an enemy on it, if any
+        def select_enemy(self):
+            for floc in self._is_enemy.keys():
+                if not floc in self._moving.keys():
+                    weakest=self._parent.get_weakest(self._is_enemy[floc])
+                    if len(weakest) > 1:
+                        locs=self._parent.get_locs_sorted_by_center_list(weakest)
+                        self._move(floc, locs[0])
+                        self._score_alternates(floc, locs[1:])
+                    elif len(weakest) == 1:
+                        self._move(floc, weakest[0])
+                        
+        # Resolve collisions
+        # Any robot moving into the same square, well, only one of them gets to do it.
+        # Choose the one with the fewest alternates. If tied, then select the weakest robot
+        # to get the choice.
+        def resolve_collisions(self):
+            tlocs=self._to.keys()
+            for tloc in tlocs:
+                if len(self._to[tloc]) > 1:
+                    # Choose the ones with the fewest alternates
+                    select=[]
+                    select_count=10
+                    for floc in self._to[tloc]:
+                        if floc in self._alternates.keys():
+                            count=len(self._alternates[floc])
+                        else:
+                            count=0
+                        if count < select_count:
+                            select_count=count
+                            select=[floc]
+                        elif count == select_count:
+                            select.append(floc)
+                    
+                    # From these choose the weakest.
+                    if len(select) > 1:
+                        remaining=list(select)
+                        select=[]
+                        select_hp=60
+                        for floc in remaining:
+                            fbot=self._parent._game[floc]
+                            if fbot.hp < select_hp:
+                                select_hp = fbot.hp
+                                select=[floc]
+                            elif fbot.hp == select_hp:
+                                select.append(floc)
+                                
+                    # From these just choose the first.
+                    if len(select) > 0:
+                        selected=select[0] 
+                        # Everyone else must select their alternative
+                        for floc in self._to[tloc]:
+                           if floc != selected:
+                               if floc in self._alternates.keys():
+                                   tloc2=self._alternates[floc][0]
+                                   self._move(floc, tloc2)
+                                   self._alternates[floc].remove(tloc2)
+                        self._to[tloc]=[selected]
+                    
+        # Apply all moves in the passed dictionary map.
+        def apply(self):
+            for floc in self._move.keys():
+                self._parent.apply_move(floc, self._move[floc])
+
+    class Attack(self, floc, attacking):
+        
     # Analysis of an enemy.
     # This will ultimately define the coil groups.
     class TargetMap:
@@ -95,13 +297,38 @@ class Robot:
         def has_friendly5(self, floc):
             return floc in self._friendly5
 
+        def has_friendly_within3(self, floc):
+            return floc in self._friendly1 or floc in self._friendly2 or floc in self._friendly3
         
+        def get_friendly1(self):
+            return self._friendly1
+        
+        def has_friendly1(self):
+            return len(self._friendly1) > 0
+        
+        # Return the number of friendlies within 3
+        def get_count3(self):
+            return len(self._friendly1 + self._friendly2 + self._friendly3)
+        
+        def remove(self, floc):
+            if self._hasfriendly1(floc):
+                self._friendly1.remove(floc)
+            if self._hasfriendly2(floc):
+                self._friendly2.remove(floc)
+            if self._hasfriendly3(floc):
+                self._friendly3.remove(floc)
+            if self._hasfriendly5(floc):
+                self._friendly5.remove(floc)
+                
     # Size of the GAME MAP.
     _MAPSIZE = 19
     # Suicide damage
     _SUICIDE_DAMAGE = 15
+    # Min attack damage
+    _MIN_ATTACK_DAMAGE=8
     # Max attack damage
     _MAX_ATTACK_DAMAGE=10
+
     # The turn we last processed globals
     _CURTURN = 0
     # Orthogonal directions
@@ -171,7 +398,7 @@ class Robot:
         
         if self.init():
             self.ponder_on_spawned()
-            self.ponder_make_way()
+            self.ponder_adj_enemies()
             self.ponder_assign_targets()
             
         cmd = self.get_cmd()
@@ -206,7 +433,6 @@ class Robot:
         
         self._REMAINING=list(self._FRIENDLIES)
         
-        
         return True
  
      # 
@@ -216,73 +442,87 @@ class Robot:
      # If a robot is on a spawn square and the STC is next turn, then they need to move off.
      def ponder_on_spawned(self):
 
-        if self._STC1 or self._STC2:
-            
-            moving={}
-            is_enemy={}
-            is_spawn={}
-            is_friend={}
+        if self._STC1 or self._STC2:            
+            dodge=self.Dodge(this)
             
             for floc in self._REMAINING:
                 if self.is_spawn(floc):
-                    for tdir in self._DIRS:
-                        tloc=self.get_dir(floc, tdir)
-                        if self.is_enemy(tloc):
-                            self.dict_add(is_enemy, floc, tloc)
-                        elif self.is_friendly(tloc):
-                            self.dict_add(is_friend, floc, tloc)
-                        elif self.is_spawn(tloc):
-                            self.dict_add(is_spawn, floc, tloc)
-                        elif self.is_normal(tloc):
-                            self.dict_add(moving, floc, tloc)
-                        
-                    if not floc in moving.keys():
-                        if floc in is_friend.keys():
-                            moving[floc]=is_friend[floc][0]
-                        if floc in is_spawn.keys():
-                            moving[floc]=is_spawn[floc][0]
-                        elif floc in is_enemy.keys():
-                            moving[floc]=is_enemy[floc][0]
+                    dodge.consider(floc)
             
-            self.select_safest(moving)
+            dodge.select()
+            dodge.apply()
+            self.ponder_make_way()
     
     def ponder_make_way(self):
         
-        while len(self._MAKE_WAY.keys()) > 0: 
-            moving={}
-            is_enemy={}
-            is_friend={}
-            counter=0
+        # Infinite loop safety:
+        counter=0
+        while len(self._MAKE_WAY.keys()) > 0 and counter < 20: 
+            dodge=self.Dodge(this)
             for floc in self._MAKE_WAY.keys():
-                for tdir in self._DIRS:
-                    tloc=self.get_dir(floc, tdir)
-                    if self.is_enemy(tloc):
-                        self.dict_add(is_enemy, floc, tloc)
-                    elif self.is_friendly(tloc):
-                        self.dict_add(is_friend, floc, tloc)
-                    elif self.is_normal(tloc):
-                        self.dict_add(moving, floc, tloc)
-
+                dodge.consider(floc)
             self._MAKE_WAY={}
-            self.select_safest(moving)
-            
-            # Infinite loop safety:
+            dodge.select()
+            dodge.apply()
             counter += 1
-            if counter > 20:
-                print "INFINITE LOOP ERROR!"
-                break
-    
+
+    # Deal with robots surrounded by too many enemies.
+    # If other friendlies are next to one of the robots attack.
+    # If we are alone and low on health then suicide. Low chance.
+    # Guard if we can survive.
+    def ponder_adj_enemies(self):
+        
+        suicides=[]
+        dodge=self.Dodge(this)
+        
+        for floc in self._REMAINING:
+            fadj = self.AdjEnemyMap(this, floc)
+            fbot = self._game.robots[floc]
+            if fadj.is_surrounded():
+                min_damage = self._MIN_ATTACK_DAMAGE * fadj.get_count()
+                if min_damage >= fbot.hp:
+                    suicides.append(floc)
+                    continue
+            elif fadj.get_count() > 1:
+                dodge.consider(floc)
+      
+        for floc in suicides:
+            self.apply_suicide(floc)
+            
+        dodge.select()
+        dodge.apply()
+        
+        self.ponder_make_way()
+  
+    # Assign the given floc to the given target map
+    def assign_tmap(self, to_tmap, floc):
+        for eloc in self._TGTMAP.keys():
+            tmap=self._TGTMAP[eloc]
+            if tmap != to_tmap:
+                tmap.remove(floc)
+        self._ASSIGNED[floc]=tmap
+
     # 
     # Each friendly should be assigned to exactly one target map
+    # At this point we should not have friendles with more than one adjacent enemy
     #
     def ponder_assign_targets(self):
     
         for eloc in self._ENEMIES:
             self._TGTMAP[eloc] = self.TargetMap(this, eloc)
         
-        _ASSIGNED={}
+        assign={}        
+        # First, since all friendlies with more than one adjacent enemy has been dealt with,
+        # the rest should have exactly one. For these we won't choose the adjacent enemy
+        # as the target map, only if there is no support, and there is another close by 
+        # which does have support. That means, we abandon the adjacent for the more supported one.
+        for tmap in self._TGTMAP.keys():
+            if tmap.has_friendly1():
+                if tmap.get_count3() >= 3:
+                    floc=tmap.get_friendly1()[0]
+                    assign[floc]=tmap
         
-        mapany={}
+        mapA={}
         map1={}
         map2={}
         map3={}
@@ -290,17 +530,64 @@ class Robot:
         
         for floc in self._REMAINING:
             for tmap in self._TGTMAP.keys():
-                if tmap.has_friendly(floc):
-                    self.dict_add(mapany, floc, tmap)
                 if tmap.has_friendly1(floc):
                     self.dict_add(map1, floc, tmap)
-                if tmap.has_friendly2(floc):
+                    self.dict_add(mapA, floc, tmap)
+                elif tmap.has_friendly2(floc):
                     self.dict_add(map2, floc, tmap)
-                if tmap.has_friendly3(floc):
+                    self.dict_add(mapA, floc, tmap)
+                elif tmap.has_friendly3(floc):
                     self.dict_add(map3, floc, tmap)
-                if tmap.has_friendly5(floc):
+                    self.dict_add(mapA, floc, tmap)
+                elif tmap.has_friendly5(floc):
                     self.dict_add(map5, floc, tmap)
+                    self.dict_add(mapA, floc, tmap)
 
+        moving={}
+        dodge=self.Dodge(this)
+        dodge.set_move_into_enemy_ok(False)
+        
+        for floc in map1.keys():                
+            if len(map1[floc]) > 1:
+                # Suicide if we are too weak.
+                fadj = self.AdjEnemyMap(this, floc)
+                if fadj.is_surrounded():
+                    # Suicide if too weak
+
+                dodge.apply(floc, moving)
+                if not floc in moving.keys():
+                    # We can't move away. Therefore we need to attack or move into an enemy.
+                    # Choose enemy which has the most friendlies surrounding it.
+                    # If nothing in particular, choose the weakest.
+                    select_eloc=None
+                    select_num_friendlies=0
+                    
+                    for eloc in map1[floc]:
+                        eadj = self.AdjEnemyMap(this, eloc)
+                        if select_eloc == None:
+                            select=True
+                        elif select_num_friendlies > eadj.get_count():
+                            select=True
+                        elif select_eloc.hp > eloc.hp:
+                            select=True
+                        else:
+                            select=False
+                            
+                        if select:
+                            select_eloc=eloc
+                            select_num_friendlies=eadj.get_count()
+                            
+                    # Just attack for now
+                    self.apply_attack(floc, select_eloc)
+                    
+                else:
+                    # Dodge successful, remove from all tmaps.
+                    for tmap in map1[floc]
+                        tmap.remove(floc)
+            else:
+                # If other tmap has much better support and this map does not have support, join other tmap.
+                # Otherwise choose this one.
+                
 
         
     # 
@@ -325,35 +612,14 @@ class Robot:
         self._CMDS[floc] = ['attack', tloc]
         self._REMAINING.remove(floc)
 
-    def apply_suicide(self, loc):
-        self._CMDS[loc] = ['suicide']
-        self._REMAINING.remove(loc)
+    def apply_suicide(self, floc):
+        self._CMDS[floc] = ['suicide']
+        self._REMAINING.remove(floc)
 
-    def apply_guard(self, loc):
-        self._CMDS[loc] = ['guard']
-        self._REMAINING.remove(loc)
-
-
-    # Move to safest square
-    def select_safest(self, moving):
-        for floc in moving.keys():
-            # Select safest square if more than one.
-            if len(moving[floc]) > 1:
-                safest=None
-                for tloc in moving[floc]:
-                    if not self.is_moving_into(tloc):
-                        adj = self.AdjEnemyMap(self, tloc)
-                        if safest == None:
-                            safest=adj
-                        elif adj.get_count() < safest.get_count():
-                            safest=adj
-                if adj != None:
-                    self.apply_move(floc, safest.get_loc())
-            else:
-                tloc=moving[floc][0]
-                if not self.is_moving_into(tloc):
-                    self.apply_move(floc, safest.get_loc())
-  
+    def apply_guard(self, floc):
+        self._CMDS[floc] = ['guard']
+        self._REMAINING.remove(floc)
+            
     # 
     # SUPPORT FUNCTIONS
     #
@@ -377,6 +643,43 @@ class Robot:
     def get_loc(self, loc, tdir):
         return (loc[0] + tdir[0], loc[1] + tdir[1])
 
+    # Return the locations ordered by the ones that get us closer to the center first.
+    def get_locs_sorted_by_center_list(self, locs):
+        elements=[]
+        for tloc in locs:
+            elements.append((tloc, self.get_dist_to_center(tloc)))
+        eles_sorted=sorted(elements, key=lambda ele: ele[1])
+        locs_sorted=[]
+        for ele in eles_sorted:
+            locs_sorted.append(ele[0])
+        return locs_sorted
+   
+    def get_dist_to_center(self, loc):
+        if not loc in self._DIST_TO_CENTER.keys():
+            self._DIST_TO_CENTER[loc] = rg.dist(loc, rg.CENTER_POINT)
+        return self._DIST_TO_CENTER[loc]
+
+    # Return locations holding the robots with the lowest HP.
+    def get_weakest(self, locs):
+        weakest=[]
+        for loc in locs:
+            if loc in self._game.robots.keys():
+                if len(weakest) == 0:
+                    weakest.append(loc)
+                else:
+                    if self._game.robots[loc].hp < self._game.robots[weakest[0]].hp:
+                        weakest=[loc]
+                    elif self._game.robots[loc].hp == self._game.robots[weakest[0]].hp:
+                        weakest.append(loc)
+        return weakest
+    
+    def can_dodge(self, floc):
+        for tdir in self._DIRS:
+            tloc = self.get_loc(floc, tdir)
+            if self.is_normal(tloc) and not self.is_enemy(tloc):
+                return True
+        return False
+    
     def is_friendly(self, floc):
         return floc in self._FRIENDLIES
 
@@ -399,3 +702,11 @@ class Robot:
             if cmd[0] == 'move' and cmd[1] == tloc:
                 return True
         return False
+
+    # Return true if the robot is already going to stay where it is
+    def is_stationary(self, floc):
+        if floc in self._CMDS.keys():
+            cmd = self._CMDS[floc]
+            return cmd[0] != 'move'
+        return False
+            
