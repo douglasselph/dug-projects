@@ -1312,6 +1312,7 @@ class Robot:
         dx = tloc[0] - floc[0]
         dy = tloc[1] - floc[1]
         return (dx,dy)
+    
     # Return direction of floc to tloc
     def get_dir(self, floc, tloc):
         dx = tloc[0] - floc[0]

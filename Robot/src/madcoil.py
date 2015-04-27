@@ -306,9 +306,19 @@ class Robot:
         def has_friendly1(self):
             return len(self._friendly1) > 0
         
-        # Return the number of friendlies within 3
+        def get_count1(self):
+            return len(self._friendly1)
+     
+        # Return the number of friendlies within 2 or 3
+        def get_count23(self):
+            return len(self._friendly2 + self._friendly3)
+        
+         # Return the number of friendlies within 3
         def get_count3(self):
             return len(self._friendly1 + self._friendly2 + self._friendly3)
+       
+        def get_eloc(self):
+            return self._eloc
         
         def remove(self, floc):
             if self._hasfriendly1(floc):
@@ -504,7 +514,7 @@ class Robot:
 
     # 
     # Each friendly should be assigned to exactly one target map
-    # At this point we should not have friendles with more than one adjacent enemy
+    # At this point we should not have friendlies with more than one adjacent enemy
     #
     def ponder_assign_targets(self):
     
@@ -513,83 +523,22 @@ class Robot:
         
         assign={}        
         # First, since all friendlies with more than one adjacent enemy has been dealt with,
-        # the rest should have exactly one. For these we won't choose the adjacent enemy
-        # as the target map, only if there is no support, and there is another close by 
-        # which does have support. That means, we abandon the adjacent for the more supported one.
+        # the rest should have exactly one. For these select them to be part of the logical
+        # adjacent target map if they have enough support. They may end up attacking or 
+        # if we are not ready move away. That will be dealt with later.
         for tmap in self._TGTMAP.keys():
             if tmap.has_friendly1():
-                if tmap.get_count3() >= 3:
+                if tmap.get_count1() > 1:
+                    print "ERROR: target map ", tmap.get_eloc() + " has ", tmap.get_count1(), " unassigned friendlies."
+                if tmap.get_count23() >= 3:
+                    # This tmap has enough potential support.
                     floc=tmap.get_friendly1()[0]
                     assign[floc]=tmap
         
-        mapA={}
-        map1={}
-        map2={}
-        map3={}
-        map5={}
+        for floc in assign.keys():
+            self.assign_tmap(assign[floc], floc)
         
-        for floc in self._REMAINING:
-            for tmap in self._TGTMAP.keys():
-                if tmap.has_friendly1(floc):
-                    self.dict_add(map1, floc, tmap)
-                    self.dict_add(mapA, floc, tmap)
-                elif tmap.has_friendly2(floc):
-                    self.dict_add(map2, floc, tmap)
-                    self.dict_add(mapA, floc, tmap)
-                elif tmap.has_friendly3(floc):
-                    self.dict_add(map3, floc, tmap)
-                    self.dict_add(mapA, floc, tmap)
-                elif tmap.has_friendly5(floc):
-                    self.dict_add(map5, floc, tmap)
-                    self.dict_add(mapA, floc, tmap)
-
-        moving={}
-        dodge=self.Dodge(this)
-        dodge.set_move_into_enemy_ok(False)
-        
-        for floc in map1.keys():                
-            if len(map1[floc]) > 1:
-                # Suicide if we are too weak.
-                fadj = self.AdjEnemyMap(this, floc)
-                if fadj.is_surrounded():
-                    # Suicide if too weak
-
-                dodge.apply(floc, moving)
-                if not floc in moving.keys():
-                    # We can't move away. Therefore we need to attack or move into an enemy.
-                    # Choose enemy which has the most friendlies surrounding it.
-                    # If nothing in particular, choose the weakest.
-                    select_eloc=None
-                    select_num_friendlies=0
-                    
-                    for eloc in map1[floc]:
-                        eadj = self.AdjEnemyMap(this, eloc)
-                        if select_eloc == None:
-                            select=True
-                        elif select_num_friendlies > eadj.get_count():
-                            select=True
-                        elif select_eloc.hp > eloc.hp:
-                            select=True
-                        else:
-                            select=False
-                            
-                        if select:
-                            select_eloc=eloc
-                            select_num_friendlies=eadj.get_count()
-                            
-                    # Just attack for now
-                    self.apply_attack(floc, select_eloc)
-                    
-                else:
-                    # Dodge successful, remove from all tmaps.
-                    for tmap in map1[floc]
-                        tmap.remove(floc)
-            else:
-                # If other tmap has much better support and this map does not have support, join other tmap.
-                # Otherwise choose this one.
-                
-
-        
+        # Now deal with 2 away players, seeing if they have enough support.
     # 
     # CMD SUPPORT 
     #
@@ -623,6 +572,36 @@ class Robot:
     # 
     # SUPPORT FUNCTIONS
     #
+    
+    # Return True if floc can reach tloc by some safe path.
+    # That is, something not obstructed by enemies or adjacent enemies.
+    # Friendlies are ok.
+    def can_reach_safely(self, floc, tloc):
+        if floc == tloc:
+            return True
+        dirs = self.get_dirs(floc, tloc)
+        ok=[]
+        for dir in dirs:
+            nloc = self.get_loc(floc, dir)
+            if nloc == tloc:
+                return True
+            if self.is_enemy(nloc):
+                continue
+            near_enemy=False
+            for adir in self._DIRS:
+                aloc = self.get_loc(nloc, adir)
+                if aloc != tloc and nloc != floc and self.is_enemy(aloc):
+                    near_enemy=True
+                    break
+            if near_enemy:
+                continue
+            ok.append(nloc)
+            
+        for nloc in ok:
+            if self.can_reach(nloc, tloc):
+                return True
+        return False
+        
     def dict_add(self, dict, key, val):
         if key in dict.keys():
             dict[key].append(val)
@@ -639,6 +618,29 @@ class Robot:
                 closest_dist = dist
                 closest_rloc = floc
         return closest_floc
+
+    # Return list of directions from floc to tloc.
+    def get_dirs(self, floc, tloc):
+        dx = tloc[0] - floc[0]
+        dy = tloc[1] - floc[1]
+        adx = abs(dx)
+        ady = abs(dy)
+        if adx != 0:
+            ndx = dx / adx
+        else:
+            ndx = 0
+
+        if ady != 0:
+            ndy = dy / ady
+        else:
+            ndy = 0
+
+        if ndx == 0:
+            return [(0, ndy)]
+        elif ndy == 0:
+            return [(ndx, 0)]
+ 
+        return [(ndx, 0), (0, ndy)]
 
     def get_loc(self, loc, tdir):
         return (loc[0] + tdir[0], loc[1] + tdir[1])
@@ -709,4 +711,7 @@ class Robot:
             cmd = self._CMDS[floc]
             return cmd[0] != 'move'
         return False
-            
+    
+    # Return True if there is a safe walking around from floc to tloc
+    def has_safe_route(self, floc, tloc):
+             
