@@ -1,0 +1,1158 @@
+
+fell.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Tree11
+  rotate: false
+  xy: 1, 695
+  size: 156, 204
+  orig: 156, 204
+  offset: 0, 0
+  index: -1
+Tree12
+  rotate: false
+  xy: 1, 483
+  size: 145, 210
+  orig: 145, 210
+  offset: 0, 0
+  index: -1
+Tree08
+  rotate: false
+  xy: 159, 764
+  size: 111, 135
+  orig: 111, 135
+  offset: 0, 0
+  index: -1
+Tree14
+  rotate: false
+  xy: 1, 328
+  size: 73, 153
+  orig: 73, 153
+  offset: 0, 0
+  index: -1
+Tree13
+  rotate: false
+  xy: 1, 179
+  size: 74, 147
+  orig: 74, 147
+  offset: 0, 0
+  index: -1
+Ridge02
+  rotate: false
+  xy: 272, 802
+  size: 122, 97
+  orig: 122, 97
+  offset: 0, 0
+  index: -1
+Ridge01
+  rotate: false
+  xy: 396, 817
+  size: 117, 82
+  orig: 117, 82
+  offset: 0, 0
+  index: -1
+Tree30
+  rotate: false
+  xy: 1, 67
+  size: 81, 110
+  orig: 81, 110
+  offset: 0, 0
+  index: -1
+cocutos_door_open_1x3
+  rotate: false
+  xy: 1, 1
+  size: 68, 64
+  orig: 68, 64
+  offset: 0, 0
+  index: -1
+Tree28
+  rotate: false
+  xy: 76, 372
+  size: 89, 109
+  orig: 89, 109
+  offset: 0, 0
+  index: -1
+Tree23
+  rotate: false
+  xy: 515, 807
+  size: 93, 92
+  orig: 93, 92
+  offset: 0, 0
+  index: -1
+Tree19
+  rotate: false
+  xy: 610, 804
+  size: 92, 95
+  orig: 92, 95
+  offset: 0, 0
+  index: -1
+Tree24
+  rotate: false
+  xy: 704, 791
+  size: 90, 108
+  orig: 90, 108
+  offset: 0, 0
+  index: -1
+Tree25
+  rotate: false
+  xy: 796, 795
+  size: 86, 104
+  orig: 86, 104
+  offset: 0, 0
+  index: -1
+hive_3x3
+  rotate: false
+  xy: 884, 808
+  size: 77, 91
+  orig: 77, 91
+  offset: 0, 0
+  index: -1
+Boulder01
+  rotate: false
+  xy: 884, 715
+  size: 77, 91
+  orig: 77, 91
+  offset: 0, 0
+  index: -1
+Tree21
+  rotate: false
+  xy: 159, 669
+  size: 83, 93
+  orig: 83, 93
+  offset: 0, 0
+  index: -1
+Tree29
+  rotate: false
+  xy: 148, 566
+  size: 82, 101
+  orig: 82, 101
+  offset: 0, 0
+  index: -1
+catacomb_3x3
+  rotate: false
+  xy: 148, 484
+  size: 81, 80
+  orig: 81, 80
+  offset: 0, 0
+  index: -1
+Tree16
+  rotate: false
+  xy: 167, 366
+  size: 58, 116
+  orig: 58, 116
+  offset: 0, 0
+  index: -1
+rock_1x3
+  rotate: false
+  xy: 71, 1
+  size: 65, 64
+  orig: 65, 64
+  offset: 0, 0
+  index: -1
+StoneFloor04
+  rotate: false
+  xy: 796, 742
+  size: 86, 51
+  orig: 86, 51
+  offset: 0, 0
+  index: -1
+Tree09
+  rotate: false
+  xy: 77, 273
+  size: 76, 97
+  orig: 76, 97
+  offset: 0, 0
+  index: -1
+Tree20
+  rotate: false
+  xy: 77, 179
+  size: 80, 92
+  orig: 80, 92
+  offset: 0, 0
+  index: -1
+Tree17
+  rotate: false
+  xy: 84, 71
+  size: 60, 106
+  orig: 60, 106
+  offset: 0, 0
+  index: -1
+Tree27
+  rotate: false
+  xy: 155, 273
+  size: 71, 91
+  orig: 71, 91
+  offset: 0, 0
+  index: -1
+cocutos_2x3b
+  rotate: false
+  xy: 159, 179
+  size: 65, 92
+  orig: 65, 92
+  offset: 0, 0
+  index: -1
+Tree15
+  rotate: false
+  xy: 146, 72
+  size: 59, 105
+  orig: 59, 105
+  offset: 0, 0
+  index: -1
+hive_door_closed_3x1
+  rotate: false
+  xy: 138, 1
+  size: 65, 68
+  orig: 65, 68
+  offset: 0, 0
+  index: -1
+cocutos_3x2
+  rotate: false
+  xy: 205, 1
+  size: 69, 69
+  orig: 69, 69
+  offset: 0, 0
+  index: -1
+Grass03
+  rotate: false
+  xy: 272, 745
+  size: 85, 55
+  orig: 85, 55
+  offset: 0, 0
+  index: -1
+Rock10
+  rotate: false
+  xy: 244, 659
+  size: 75, 84
+  orig: 75, 84
+  offset: 0, 0
+  index: -1
+Tree18
+  rotate: false
+  xy: 232, 567
+  size: 72, 90
+  orig: 72, 90
+  offset: 0, 0
+  index: -1
+Boulder02
+  rotate: false
+  xy: 321, 656
+  size: 49, 87
+  orig: 49, 87
+  offset: 0, 0
+  index: -1
+cocutos_3x3
+  rotate: false
+  xy: 306, 567
+  size: 74, 87
+  orig: 74, 87
+  offset: 0, 0
+  index: -1
+hive_2x3b
+  rotate: false
+  xy: 207, 77
+  size: 63, 100
+  orig: 63, 100
+  offset: 0, 0
+  index: -1
+catacomb_1x1
+  rotate: false
+  xy: 359, 745
+  size: 46, 55
+  orig: 46, 55
+  offset: 0, 0
+  index: -1
+cocutos_3x2b
+  rotate: false
+  xy: 407, 739
+  size: 75, 76
+  orig: 75, 76
+  offset: 0, 0
+  index: -1
+Clock01
+  rotate: false
+  xy: 372, 661
+  size: 32, 82
+  orig: 32, 82
+  offset: 0, 0
+  index: -1
+cocutos_3x1
+  rotate: false
+  xy: 406, 660
+  size: 69, 77
+  orig: 69, 77
+  offset: 0, 0
+  index: -1
+Tree22
+  rotate: false
+  xy: 382, 562
+  size: 63, 96
+  orig: 63, 96
+  offset: 0, 0
+  index: -1
+Statue03
+  rotate: false
+  xy: 447, 567
+  size: 58, 91
+  orig: 58, 91
+  offset: 0, 0
+  index: -1
+Grass02
+  rotate: false
+  xy: 484, 747
+  size: 84, 58
+  orig: 84, 58
+  offset: 0, 0
+  index: -1
+StoneFloor02
+  rotate: false
+  xy: 570, 749
+  size: 82, 53
+  orig: 82, 53
+  offset: 0, 0
+  index: -1
+Bush04
+  rotate: false
+  xy: 654, 750
+  size: 48, 52
+  orig: 48, 52
+  offset: 0, 0
+  index: -1
+StoneFloor03
+  rotate: false
+  xy: 704, 743
+  size: 83, 46
+  orig: 83, 46
+  offset: 0, 0
+  index: -1
+Statue08
+  rotate: false
+  xy: 227, 392
+  size: 56, 90
+  orig: 56, 90
+  offset: 0, 0
+  index: -1
+Statue01
+  rotate: false
+  xy: 228, 305
+  size: 55, 85
+  orig: 55, 85
+  offset: 0, 0
+  index: -1
+StoneFloor01
+  rotate: false
+  xy: 484, 695
+  size: 83, 50
+  orig: 83, 50
+  offset: 0, 0
+  index: -1
+catacomb_2x3
+  rotate: false
+  xy: 507, 611
+  size: 65, 82
+  orig: 65, 82
+  offset: 0, 0
+  index: -1
+Rock13
+  rotate: false
+  xy: 507, 565
+  size: 67, 44
+  orig: 67, 44
+  offset: 0, 0
+  index: -1
+rock_3x2
+  rotate: false
+  xy: 574, 673
+  size: 70, 74
+  orig: 70, 74
+  offset: 0, 0
+  index: -1
+cocutos_2x2
+  rotate: false
+  xy: 574, 611
+  size: 66, 60
+  orig: 66, 60
+  offset: 0, 0
+  index: -1
+hive_3x1
+  rotate: false
+  xy: 576, 536
+  size: 64, 73
+  orig: 64, 73
+  offset: 0, 0
+  index: -1
+LilyPad03
+  rotate: false
+  xy: 231, 484
+  size: 62, 50
+  orig: 62, 50
+  offset: 0, 0
+  index: -1
+cocutos_door_open_3x1
+  rotate: false
+  xy: 295, 495
+  size: 72, 70
+  orig: 72, 70
+  offset: 0, 0
+  index: -1
+catacomb_archindent_2x3
+  rotate: false
+  xy: 369, 493
+  size: 71, 67
+  orig: 71, 67
+  offset: 0, 0
+  index: -1
+Tree26
+  rotate: false
+  xy: 285, 399
+  size: 56, 83
+  orig: 56, 83
+  offset: 0, 0
+  index: -1
+Plant04
+  rotate: false
+  xy: 285, 319
+  size: 59, 78
+  orig: 59, 78
+  offset: 0, 0
+  index: -1
+rock_3x2b
+  rotate: false
+  xy: 343, 419
+  size: 68, 72
+  orig: 68, 72
+  offset: 0, 0
+  index: -1
+Statue07
+  rotate: false
+  xy: 346, 342
+  size: 63, 75
+  orig: 63, 75
+  offset: 0, 0
+  index: -1
+catacomb_door_open_3x1
+  rotate: false
+  xy: 413, 419
+  size: 53, 72
+  orig: 53, 72
+  offset: 0, 0
+  index: -1
+well01
+  rotate: false
+  xy: 411, 339
+  size: 57, 78
+  orig: 57, 78
+  offset: 0, 0
+  index: -1
+hive_1x2b
+  rotate: false
+  xy: 442, 493
+  size: 58, 67
+  orig: 58, 67
+  offset: 0, 0
+  index: -1
+catacomb_archindent_3x2
+  rotate: false
+  xy: 502, 494
+  size: 67, 69
+  orig: 67, 69
+  offset: 0, 0
+  index: -1
+Rock14
+  rotate: false
+  xy: 571, 491
+  size: 69, 43
+  orig: 69, 43
+  offset: 0, 0
+  index: -1
+rock_3x1
+  rotate: false
+  xy: 468, 420
+  size: 64, 71
+  orig: 64, 71
+  offset: 0, 0
+  index: -1
+hive_3x2b
+  rotate: false
+  xy: 470, 345
+  size: 63, 73
+  orig: 63, 73
+  offset: 0, 0
+  index: -1
+cocutos_door_closed_3x1
+  rotate: false
+  xy: 534, 423
+  size: 70, 66
+  orig: 70, 66
+  offset: 0, 0
+  index: -1
+catacomb_3x2
+  rotate: false
+  xy: 535, 348
+  size: 66, 73
+  orig: 66, 73
+  offset: 0, 0
+  index: -1
+Plant07
+  rotate: false
+  xy: 606, 423
+  size: 43, 66
+  orig: 43, 66
+  offset: 0, 0
+  index: -1
+rock_3x3
+  rotate: false
+  xy: 603, 348
+  size: 63, 73
+  orig: 63, 73
+  offset: 0, 0
+  index: -1
+rock_door_closed_1x3
+  rotate: false
+  xy: 346, 272
+  size: 63, 68
+  orig: 63, 68
+  offset: 0, 0
+  index: -1
+rock_door_closed_3x1
+  rotate: false
+  xy: 411, 272
+  size: 60, 65
+  orig: 60, 65
+  offset: 0, 0
+  index: -1
+Statue05
+  rotate: false
+  xy: 473, 272
+  size: 64, 71
+  orig: 64, 71
+  offset: 0, 0
+  index: -1
+hive_2x2b
+  rotate: false
+  xy: 539, 281
+  size: 69, 65
+  orig: 69, 65
+  offset: 0, 0
+  index: -1
+rock_2x2
+  rotate: false
+  xy: 610, 277
+  size: 61, 69
+  orig: 61, 69
+  offset: 0, 0
+  index: -1
+rock_1x2b
+  rotate: false
+  xy: 285, 257
+  size: 59, 60
+  orig: 59, 60
+  offset: 0, 0
+  index: -1
+cocutos_2x1b
+  rotate: false
+  xy: 228, 242
+  size: 55, 61
+  orig: 55, 61
+  offset: 0, 0
+  index: -1
+rock_2x2d
+  rotate: false
+  xy: 226, 179
+  size: 61, 61
+  orig: 61, 61
+  offset: 0, 0
+  index: -1
+Tree31
+  rotate: false
+  xy: 289, 173
+  size: 52, 82
+  orig: 52, 82
+  offset: 0, 0
+  index: -1
+hive_2x2c
+  rotate: false
+  xy: 272, 102
+  size: 65, 69
+  orig: 65, 69
+  offset: 0, 0
+  index: -1
+rock_door_open_3x1
+  rotate: false
+  xy: 276, 30
+  size: 62, 70
+  orig: 62, 70
+  offset: 0, 0
+  index: -1
+Grass01
+  rotate: false
+  xy: 346, 222
+  size: 82, 48
+  orig: 82, 48
+  offset: 0, 0
+  index: -1
+rock_floor_2x2
+  rotate: false
+  xy: 430, 222
+  size: 80, 48
+  orig: 80, 48
+  offset: 0, 0
+  index: -1
+hive_floor
+  rotate: false
+  xy: 343, 177
+  size: 75, 43
+  orig: 75, 43
+  offset: 0, 0
+  index: -1
+rock_2x3b
+  rotate: false
+  xy: 420, 157
+  size: 70, 63
+  orig: 70, 63
+  offset: 0, 0
+  index: -1
+hive_1x3
+  rotate: false
+  xy: 492, 156
+  size: 61, 64
+  orig: 61, 64
+  offset: 0, 0
+  index: -1
+Rock06
+  rotate: false
+  xy: 512, 222
+  size: 52, 48
+  orig: 52, 48
+  offset: 0, 0
+  index: -1
+Plant03
+  rotate: false
+  xy: 566, 236
+  size: 42, 43
+  orig: 42, 43
+  offset: 0, 0
+  index: -1
+Rock11
+  rotate: false
+  xy: 610, 232
+  size: 64, 43
+  orig: 64, 43
+  offset: 0, 0
+  index: -1
+rock_2x3
+  rotate: false
+  xy: 646, 676
+  size: 69, 65
+  orig: 69, 65
+  offset: 0, 0
+  index: -1
+cocutos_2x3
+  rotate: false
+  xy: 717, 678
+  size: 70, 63
+  orig: 70, 63
+  offset: 0, 0
+  index: -1
+cocutos_2x2c
+  rotate: false
+  xy: 789, 677
+  size: 67, 63
+  orig: 67, 63
+  offset: 0, 0
+  index: -1
+catacomb_floor_3x3
+  rotate: false
+  xy: 858, 672
+  size: 68, 41
+  orig: 68, 41
+  offset: 0, 0
+  index: -1
+Rock01
+  rotate: false
+  xy: 555, 152
+  size: 47, 68
+  orig: 47, 68
+  offset: 0, 0
+  index: -1
+hive_door_open_3x1
+  rotate: false
+  xy: 604, 161
+  size: 64, 69
+  orig: 64, 69
+  offset: 0, 0
+  index: -1
+cocutos_2x2d
+  rotate: false
+  xy: 670, 161
+  size: 62, 69
+  orig: 62, 69
+  offset: 0, 0
+  index: -1
+hive_2x3
+  rotate: false
+  xy: 604, 96
+  size: 67, 63
+  orig: 67, 63
+  offset: 0, 0
+  index: -1
+Statue02
+  rotate: false
+  xy: 673, 95
+  size: 59, 64
+  orig: 59, 64
+  offset: 0, 0
+  index: -1
+catacomb_door_open_1x3
+  rotate: false
+  xy: 339, 102
+  size: 58, 69
+  orig: 58, 69
+  offset: 0, 0
+  index: -1
+catacomb_door_closed_1x3
+  rotate: false
+  xy: 340, 30
+  size: 59, 70
+  orig: 59, 70
+  offset: 0, 0
+  index: -1
+Rock12
+  rotate: false
+  xy: 399, 104
+  size: 64, 51
+  orig: 64, 51
+  offset: 0, 0
+  index: -1
+hive_3x2
+  rotate: false
+  xy: 401, 34
+  size: 65, 68
+  orig: 65, 68
+  offset: 0, 0
+  index: -1
+Rock04
+  rotate: false
+  xy: 465, 107
+  size: 60, 47
+  orig: 60, 47
+  offset: 0, 0
+  index: -1
+Bush01
+  rotate: false
+  xy: 468, 35
+  size: 59, 70
+  orig: 59, 70
+  offset: 0, 0
+  index: -1
+Leaves02
+  rotate: false
+  xy: 276, 3
+  size: 47, 25
+  orig: 47, 25
+  offset: 0, 0
+  index: -1
+Leaves03
+  rotate: false
+  xy: 527, 108
+  size: 55, 42
+  orig: 55, 42
+  offset: 0, 0
+  index: -1
+Statue06
+  rotate: false
+  xy: 529, 39
+  size: 65, 67
+  orig: 65, 67
+  offset: 0, 0
+  index: -1
+catacomb_door_closed_3x1
+  rotate: false
+  xy: 596, 29
+  size: 66, 65
+  orig: 66, 65
+  offset: 0, 0
+  index: -1
+rock_2x2b
+  rotate: false
+  xy: 664, 27
+  size: 65, 66
+  orig: 65, 66
+  offset: 0, 0
+  index: -1
+hive_2x2d
+  rotate: false
+  xy: 642, 604
+  size: 62, 67
+  orig: 62, 67
+  offset: 0, 0
+  index: -1
+WoodFence01
+  rotate: false
+  xy: 642, 535
+  size: 61, 67
+  orig: 61, 67
+  offset: 0, 0
+  index: -1
+Flower01
+  rotate: false
+  xy: 642, 492
+  size: 44, 41
+  orig: 44, 41
+  offset: 0, 0
+  index: -1
+catacomb_archindent_3x1
+  rotate: false
+  xy: 651, 423
+  size: 60, 67
+  orig: 60, 67
+  offset: 0, 0
+  index: -1
+rock_1x1
+  rotate: false
+  xy: 668, 355
+  size: 47, 66
+  orig: 47, 66
+  offset: 0, 0
+  index: -1
+rock_door_open_1x3
+  rotate: false
+  xy: 673, 287
+  size: 60, 66
+  orig: 60, 66
+  offset: 0, 0
+  index: -1
+Plant02
+  rotate: false
+  xy: 676, 232
+  size: 52, 53
+  orig: 52, 53
+  offset: 0, 0
+  index: -1
+cocutos_door_closed_1x3
+  rotate: false
+  xy: 706, 608
+  size: 59, 66
+  orig: 59, 66
+  offset: 0, 0
+  index: -1
+rock_2x2c
+  rotate: false
+  xy: 767, 612
+  size: 66, 63
+  orig: 66, 63
+  offset: 0, 0
+  index: -1
+Rock09
+  rotate: false
+  xy: 835, 608
+  size: 65, 62
+  orig: 65, 62
+  offset: 0, 0
+  index: -1
+catacomb_2x2
+  rotate: false
+  xy: 902, 606
+  size: 59, 64
+  orig: 59, 64
+  offset: 0, 0
+  index: -1
+cocutos_2x1
+  rotate: false
+  xy: 767, 553
+  size: 64, 57
+  orig: 64, 57
+  offset: 0, 0
+  index: -1
+rock_1x2
+  rotate: false
+  xy: 706, 543
+  size: 59, 63
+  orig: 59, 63
+  offset: 0, 0
+  index: -1
+cocutos_1x3
+  rotate: false
+  xy: 833, 542
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+hive_door_closed_1x3
+  rotate: false
+  xy: 899, 544
+  size: 62, 60
+  orig: 62, 60
+  offset: 0, 0
+  index: -1
+Statue04
+  rotate: false
+  xy: 899, 484
+  size: 62, 58
+  orig: 62, 58
+  offset: 0, 0
+  index: -1
+Rock08
+  rotate: false
+  xy: 767, 487
+  size: 64, 64
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+hive_2x1b
+  rotate: false
+  xy: 713, 477
+  size: 52, 64
+  orig: 52, 64
+  offset: 0, 0
+  index: -1
+hive_door_open_1x3
+  rotate: false
+  xy: 833, 475
+  size: 61, 65
+  orig: 61, 65
+  offset: 0, 0
+  index: -1
+Rock02
+  rotate: false
+  xy: 713, 423
+  size: 56, 52
+  orig: 56, 52
+  offset: 0, 0
+  index: -1
+Bush02
+  rotate: false
+  xy: 771, 420
+  size: 60, 65
+  orig: 60, 65
+  offset: 0, 0
+  index: -1
+hive_2x2
+  rotate: false
+  xy: 833, 410
+  size: 61, 63
+  orig: 61, 63
+  offset: 0, 0
+  index: -1
+Tree10
+  rotate: false
+  xy: 896, 417
+  size: 60, 65
+  orig: 60, 65
+  offset: 0, 0
+  index: -1
+hive_1x2
+  rotate: false
+  xy: 717, 360
+  size: 51, 61
+  orig: 51, 61
+  offset: 0, 0
+  index: -1
+hive_2x1
+  rotate: false
+  xy: 770, 354
+  size: 60, 64
+  orig: 60, 64
+  offset: 0, 0
+  index: -1
+Rock05
+  rotate: false
+  xy: 832, 354
+  size: 60, 54
+  orig: 60, 54
+  offset: 0, 0
+  index: -1
+rock_2x1b
+  rotate: false
+  xy: 735, 289
+  size: 59, 63
+  orig: 59, 63
+  offset: 0, 0
+  index: -1
+LilyPad01
+  rotate: false
+  xy: 796, 287
+  size: 55, 65
+  orig: 55, 65
+  offset: 0, 0
+  index: -1
+catacomb_archindent_1x3
+  rotate: false
+  xy: 853, 289
+  size: 54, 63
+  orig: 54, 63
+  offset: 0, 0
+  index: -1
+hive_1x1
+  rotate: false
+  xy: 909, 360
+  size: 52, 55
+  orig: 52, 55
+  offset: 0, 0
+  index: -1
+cocutos_1x2
+  rotate: false
+  xy: 909, 302
+  size: 51, 56
+  orig: 51, 56
+  offset: 0, 0
+  index: -1
+LilyPad04
+  rotate: false
+  xy: 928, 678
+  size: 30, 35
+  orig: 30, 35
+  offset: 0, 0
+  index: -1
+catacomb_2x1
+  rotate: false
+  xy: 731, 32
+  size: 55, 61
+  orig: 55, 61
+  offset: 0, 0
+  index: -1
+LilyPad02
+  rotate: false
+  xy: 909, 257
+  size: 51, 43
+  orig: 51, 43
+  offset: 0, 0
+  index: -1
+catacomb_1x2
+  rotate: false
+  xy: 853, 230
+  size: 54, 57
+  orig: 54, 57
+  offset: 0, 0
+  index: -1
+cocutos_1x1
+  rotate: false
+  xy: 909, 200
+  size: 50, 55
+  orig: 50, 55
+  offset: 0, 0
+  index: -1
+cocutos_2x2b
+  rotate: false
+  xy: 734, 137
+  size: 54, 61
+  orig: 54, 61
+  offset: 0, 0
+  index: -1
+rock_2x1
+  rotate: false
+  xy: 790, 137
+  size: 55, 61
+  orig: 55, 61
+  offset: 0, 0
+  index: -1
+Rock03
+  rotate: false
+  xy: 847, 168
+  size: 56, 60
+  orig: 56, 60
+  offset: 0, 0
+  index: -1
+Rock07
+  rotate: false
+  xy: 847, 115
+  size: 58, 51
+  orig: 58, 51
+  offset: 0, 0
+  index: -1
+WoodFence02
+  rotate: false
+  xy: 907, 139
+  size: 54, 59
+  orig: 54, 59
+  offset: 0, 0
+  index: -1
+Fountain01
+  rotate: false
+  xy: 788, 76
+  size: 57, 59
+  orig: 57, 59
+  offset: 0, 0
+  index: -1
+Rug01
+  rotate: false
+  xy: 788, 23
+  size: 62, 51
+  orig: 62, 51
+  offset: 0, 0
+  index: -1
+Plant01
+  rotate: false
+  xy: 907, 78
+  size: 53, 59
+  orig: 53, 59
+  offset: 0, 0
+  index: -1
+cocutos_1x2b
+  rotate: false
+  xy: 852, 53
+  size: 46, 60
+  orig: 46, 60
+  offset: 0, 0
+  index: -1
+Bush03
+  rotate: false
+  xy: 852, 2
+  size: 47, 49
+  orig: 47, 49
+  offset: 0, 0
+  index: -1
+Plant05
+  rotate: false
+  xy: 901, 24
+  size: 49, 52
+  orig: 49, 52
+  offset: 0, 0
+  index: -1
+Leaves01
+  rotate: false
+  xy: 734, 109
+  size: 27, 26
+  orig: 27, 26
+  offset: 0, 0
+  index: -1
+Plant06
+  rotate: false
+  xy: 730, 239
+  size: 49, 46
+  orig: 49, 46
+  offset: 0, 0
+  index: -1
+LilyPad05
+  rotate: false
+  xy: 781, 240
+  size: 48, 45
+  orig: 48, 45
+  offset: 0, 0
+  index: -1
+
+fell2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Original/Grass02
+  rotate: false
+  xy: 1, 1
+  size: 84, 58
+  orig: 84, 58
+  offset: 0, 0
+  index: -1
+Original/Grass03
+  rotate: false
+  xy: 87, 4
+  size: 85, 55
+  orig: 85, 55
+  offset: 0, 0
+  index: -1
+Original/Grass01
+  rotate: false
+  xy: 174, 11
+  size: 82, 48
+  orig: 82, 48
+  offset: 0, 0
+  index: -1
