@@ -21,7 +21,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class FellDungeon extends ApplicationAdapter {
 	final static String TAG = "FellDungeon";
-	
+
 	static float ADJ = 0.01f;
 
 	class MyInputAdapter extends InputAdapter {
@@ -134,8 +134,6 @@ public class FellDungeon extends ApplicationAdapter {
 	}
 
 	SpriteBatch batch;
-	SpriteBatch batch2;
-	Texture ground;
 	Texture texture;
 	Sprite sprite;
 	Camera cam;
@@ -151,21 +149,21 @@ public class FellDungeon extends ApplicationAdapter {
 
 		textureAtlas = new TextureAtlas(Gdx.files.internal("fell.pack"));
 		AtlasRegion region = textureAtlas.findRegion("Tree11");
-		ground = region.getTexture();
 
 		batch = new SpriteBatch();
-		batch2 = new SpriteBatch();
 
 		texture = new Texture("badlogic.jpg");
 		sprite = new Sprite(texture);
-		sprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		sprite.setSize(200, 200);
+		sprite.setPosition(300, 100);
+		
 		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
 				+ Gdx.graphics.getHeight());
-		
+
 		meshObj1 = new MeshObj(region, 50f, 50f, 300f, 300f);
 		AtlasRegion region2 = textureAtlas.findRegion("Tree12");
 		meshObj2 = new MeshObj(region2, 100f, 100f, 300f, 300f);
-		
+
 		// Camera
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
@@ -193,21 +191,20 @@ public class FellDungeon extends ApplicationAdapter {
 		Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 		cam.update();
-//		batch.setProjectionMatrix(cam.combined);
-//		batch2.setProjectionMatrix(cam.combined);
 
-		// batch.begin();
-		// sprite.draw(batch);
-		// sprite2.draw(batch);
-		// batch.end();
-		
 		meshObj1.render(cam.combined);
 		meshObj2.render(cam.combined);
+
+		batch.setProjectionMatrix(cam.combined);
+		// batch2.setProjectionMatrix(cam.combined);
+
+		batch.begin();
+		sprite.draw(batch);
+		batch.end();
 	}
 
-	//////////////////////////////
+	// ////////////////////////////
 	// MESH SECTION
-	///////////////////////////////
-	
+	// /////////////////////////////
 
 }
