@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -21,7 +20,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 
 public class FellDungeon extends ApplicationAdapter {
 	final static String TAG = "FellDungeon";
-	
+
 	static float ADJ = 0.01f;
 
 	class MyInputAdapter extends InputAdapter {
@@ -133,17 +132,22 @@ public class FellDungeon extends ApplicationAdapter {
 		}
 	}
 
+	static final String SHADER_VERTEX = "shaderVertex.glsl";
+	static final String SHADER_FRAGMENT = "shaderFragment.glsl";
+//	static final String SHADER_VERTEX = "default.vertex.glsl";
+//	static final String SHADER_FRAGMENT = "default.fragment.glsl";
+	
 	SpriteBatch batch;
-	SpriteBatch batch2;
 	Texture ground;
 	Texture texture;
 	Sprite sprite;
+	Sprite sprite2;
+	Mesh mesh;
+	ShaderProgram shaderProgram;
 	Camera cam;
 	boolean adjXY;
 	float startZ;
 	TextureAtlas textureAtlas;
-	MeshObj meshObj1;
-	MeshObj meshObj2;
 
 	@Override
 	public void create() {
@@ -154,19 +158,43 @@ public class FellDungeon extends ApplicationAdapter {
 		ground = region.getTexture();
 
 		batch = new SpriteBatch();
-		batch2 = new SpriteBatch();
-
 		texture = new Texture("badlogic.jpg");
 		sprite = new Sprite(texture);
 		sprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
 				+ Gdx.graphics.getHeight());
-		
-		meshObj1 = new MeshObj(region, 50f, 50f, 300f, 300f);
-		AtlasRegion region2 = textureAtlas.findRegion("Tree12");
-		meshObj2 = new MeshObj(region2, 100f, 100f, 300f, 300f);
-		
-		// Camera
+
+		float x, y; // Mesh location in the world
+		float width, height; // Mesh width and height
+
+		x = y = 50f;
+		width = height = 300f;
+
+		sprite2 = new Sprite(ground);
+		sprite2.setSize(width, height);
+
+		float verts[] = buildVerts(x, y, width, height, region.getU(),
+				region.getV(), region.getU2(), region.getV2(), 1);
+
+		// Create a mesh out of two triangles rendered clockwise without indices
+		mesh = new Mesh(true, verts.length / 5, 0, new VertexAttribute(
+				VertexAttributes.Usage.Position, 3,
+				ShaderProgram.POSITION_ATTRIBUTE), new VertexAttribute(
+				VertexAttributes.Usage.TextureCoordinates, 2,
+				ShaderProgram.TEXCOORD_ATTRIBUTE + "0"));
+
+		mesh.setVertices(verts);
+
+		shaderProgram = new ShaderProgram(Gdx.files.internal(
+				SHADER_VERTEX).readString(), Gdx.files.internal(
+				SHADER_FRAGMENT).readString());
+
+		String log = shaderProgram.getLog();
+		if (!shaderProgram.isCompiled())
+			throw new GdxRuntimeException(log);
+		if (log != null && log.length() != 0)
+			System.out.println("Shader Log: " + log);
+
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
 		cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
@@ -186,28 +214,91 @@ public class FellDungeon extends ApplicationAdapter {
 	public void render() {
 		// Gdx.gl20.glViewport(0, 0, Gdx.graphics.getWidth(),
 		// Gdx.graphics.getHeight());
-		Gdx.gl20.glClearColor(0.6f, 0.2f, 0.2f, 1);
+		Gdx.gl20.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl20.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl20.glEnable(GL20.GL_TEXTURE_2D);
 		Gdx.gl20.glEnable(GL20.GL_BLEND);
 		Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 		cam.update();
-//		batch.setProjectionMatrix(cam.combined);
-//		batch2.setProjectionMatrix(cam.combined);
+		batch.setProjectionMatrix(cam.combined);
 
-		// batch.begin();
-		// sprite.draw(batch);
-		// sprite2.draw(batch);
-		// batch.end();
-		
-		meshObj1.render(cam.combined);
-		meshObj2.render(cam.combined);
+		batch.begin();
+		sprite.draw(batch);
+		sprite2.draw(batch);
+		batch.end();
+
+		ground.bind();
+		shaderProgram.begin();
+		shaderProgram.setUniformMatrix("u_projTrans",
+				batch.getProjectionMatrix());
+		shaderProgram.setUniformi("u_texture", 0);
+		mesh.render(shaderProgram, GL20.GL_TRIANGLES);
+		shaderProgram.end();
 	}
 
-	//////////////////////////////
-	// MESH SECTION
-	///////////////////////////////
-	
+	float[] buildVerts(float startX, float startY, float width, float height,
+			float startU, float startV, float endU, float endV, int size) {
+		float[] verts;
+		int i = 0;
+		float x, y;
+		float u, v;
+		float cellSizeX = width / size;
+		float cellSizeY = height / size;
+		final int count = 6 * 5 * size * size;
+		verts = new float[count];
+		float usize = endU - startU;
+		float vsize = endV - startV;
+		float cellSizeU = usize / size;
+		float cellSizeV = vsize / size;
 
+		for (y = startY, v = endV; y <= height; y += cellSizeY, v -= cellSizeV) {
+			for (x = startX, u = startU; x <= width; x += cellSizeX, u += cellSizeU) {
+				// Bottom left vertex triangle 1
+				verts[i++] = x; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v; // V
+
+				// Top left vertex triangle 1
+				verts[i++] = x; // X
+				verts[i++] = y + cellSizeY; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v - cellSizeV; // V
+
+				// Top right vertex triangle 1
+				verts[i++] = x + cellSizeX;
+				verts[i++] = y + cellSizeY;
+				verts[i++] = 0;
+				verts[i++] = u + cellSizeU;
+				verts[i++] = v - cellSizeV;
+
+				// Bottom left vertex triangle 2
+				verts[i++] = x; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v; // V
+
+				// Top right vertex triangle 2
+				verts[i++] = x + cellSizeX;
+				verts[i++] = y + cellSizeY;
+				verts[i++] = 0;
+				verts[i++] = u + cellSizeU;
+				verts[i++] = v - cellSizeV;
+
+				// Bottom right vertex triangle 2
+				verts[i++] = x + cellSizeX; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u + cellSizeU; // U
+				verts[i++] = v; // V
+			}
+		}
+		Gdx.app.log(TAG, "COUNT=" + count + ", i=" + i);
+		return verts;
+
+	}
 }
