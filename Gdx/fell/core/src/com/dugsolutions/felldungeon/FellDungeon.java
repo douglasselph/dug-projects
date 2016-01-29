@@ -148,61 +148,19 @@ public class FellDungeon extends ApplicationAdapter {
 		sprite = new Sprite(texture);
 		sprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-		float[] verts = new float[30];
-		int i = 0;
+		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
+				+ Gdx.graphics.getHeight());
+
 		float x, y; // Mesh location in the world
 		float width, height; // Mesh width and height
 
 		x = y = 50f;
 		width = height = 300f;
 
-		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
-				+ Gdx.graphics.getHeight());
-
-		// Top Left Vertex Triangle 1
-		verts[i++] = x; // X
-		verts[i++] = y + height; // Y
-		verts[i++] = 0; // Z
-		verts[i++] = 0f; // U
-		verts[i++] = 0f; // V
-
-		// Top Right Vertex Triangle 1
-		verts[i++] = x + width;
-		verts[i++] = y + height;
-		verts[i++] = 0;
-		verts[i++] = 1f;
-		verts[i++] = 0f;
-
-		// Bottom Left Vertex Triangle 1
-		verts[i++] = x;
-		verts[i++] = y;
-		verts[i++] = 0;
-		verts[i++] = 0f;
-		verts[i++] = 1f;
-
-		// Top Right Vertex Triangle 2
-		verts[i++] = x + width;
-		verts[i++] = y + height;
-		verts[i++] = 0;
-		verts[i++] = 1f;
-		verts[i++] = 0f;
-
-		// Bottom Right Vertex Triangle 2
-		verts[i++] = x + width;
-		verts[i++] = y;
-		verts[i++] = 0;
-		verts[i++] = 1f;
-		verts[i++] = 1f;
-
-		// Bottom Left Vertex Triangle 2
-		verts[i++] = x;
-		verts[i++] = y;
-		verts[i++] = 0;
-		verts[i++] = 0f;
-		verts[i] = 1f;
+		float verts[] = buildVerts(x, y, width, height, 2);
 
 		// Create a mesh out of two triangles rendered clockwise without indices
-		mesh = new Mesh(true, 6, 0, new VertexAttribute(
+		mesh = new Mesh(true, verts.length / 5, 0, new VertexAttribute(
 				VertexAttributes.Usage.Position, 3,
 				ShaderProgram.POSITION_ATTRIBUTE), new VertexAttribute(
 				VertexAttributes.Usage.TextureCoordinates, 2,
@@ -259,5 +217,68 @@ public class FellDungeon extends ApplicationAdapter {
 		shaderProgram.setUniformi("u_texture", 0);
 		mesh.render(shaderProgram, GL20.GL_TRIANGLES);
 		shaderProgram.end();
+	}
+
+	float[] buildVerts(float startX, float startY, float width, float height,
+			int size) {
+		float[] verts;
+		int i = 0;
+		float x, y;
+		float u, v;
+		float cellSizeX = width / size;
+		float cellSizeY = height / size;
+		float cellSizeU = 1f / size;
+		float cellSizeV = 1f / size;
+		final int count = 6 * 5 * size * size;
+		verts = new float[count];
+
+		for (y = startY, v = 1; y <= height; y += cellSizeY, v -= cellSizeV) {
+			for (x = startX, u = 0; x <= width; x += cellSizeX, u += cellSizeU) {
+				// Bottom left vertex triangle 1
+				verts[i++] = x; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v; // V
+
+				// Top left vertex triangle 1
+				verts[i++] = x; // X
+				verts[i++] = y + cellSizeY; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v - cellSizeV; // V
+
+				// Top right vertex triangle 1
+				verts[i++] = x + cellSizeX;
+				verts[i++] = y + cellSizeY;
+				verts[i++] = 0;
+				verts[i++] = u + cellSizeU;
+				verts[i++] = v - cellSizeV;
+				
+				// Bottom left vertex triangle 2
+				verts[i++] = x; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u; // U
+				verts[i++] = v; // V
+				
+				// Top right vertex triangle 2
+				verts[i++] = x + cellSizeX;
+				verts[i++] = y + cellSizeY;
+				verts[i++] = 0;
+				verts[i++] = u + cellSizeU;
+				verts[i++] = v - cellSizeV;
+				
+				// Bottom right vertex triangle 2
+				verts[i++] = x + cellSizeX; // X
+				verts[i++] = y; // Y
+				verts[i++] = 0; // Z
+				verts[i++] = u + cellSizeU; // U
+				verts[i++] = v; // V
+			}
+		}
+		Gdx.app.log(TAG, "COUNT=" + count + ", i=" + i);
+		return verts;
+
 	}
 }
