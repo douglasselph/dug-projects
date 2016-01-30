@@ -142,13 +142,15 @@ public class FellDungeon extends ApplicationAdapter {
 	TextureAtlas textureAtlas;
 	MeshObj meshObj1;
 	MeshObj meshObj2;
+	MeshObj2 meshObj3;
+	MeshObj2 meshObj4;
 
 	@Override
 	public void create() {
 		ShaderProgram.pedantic = false;
 
 		textureAtlas = new TextureAtlas(Gdx.files.internal("fell.pack"));
-		AtlasRegion region = textureAtlas.findRegion("Tree11");
+		AtlasRegion region = textureAtlas.findRegion("Grass03");
 
 		batch = new SpriteBatch();
 
@@ -160,9 +162,12 @@ public class FellDungeon extends ApplicationAdapter {
 		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
 				+ Gdx.graphics.getHeight());
 
-		meshObj1 = new MeshObj(region, 50f, 50f, 300f, 300f);
+		meshObj1 = new MeshObj(region, 50f, 50f, 300f, 300f, 2);
 		AtlasRegion region2 = textureAtlas.findRegion("Tree12");
-		meshObj2 = new MeshObj(region2, 100f, 100f, 300f, 300f);
+		meshObj2 = new MeshObj(region2, 100f, 100f, 300f, 300f, 2);
+
+		meshObj3 = new MeshObj2(region, 50f, 50f, 300f, 300f, 2);
+		meshObj4 = new MeshObj2(region2, 100f, 100f, 300f, 300f, 2);
 
 		// Camera
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(),
@@ -178,6 +183,7 @@ public class FellDungeon extends ApplicationAdapter {
 
 		Gdx.app.log(TAG, "VP SIZE=" + cam.viewportWidth + ", "
 				+ cam.viewportHeight);
+
 	}
 
 	@Override
@@ -192,9 +198,11 @@ public class FellDungeon extends ApplicationAdapter {
 
 		cam.update();
 
-		meshObj1.render(cam.combined);
-		meshObj2.render(cam.combined);
-
+		// meshObj1.render(cam.combined);
+		// meshObj2.render(cam.combined);
+		meshObj3.render(cam.combined);
+		meshObj4.render(cam.combined);
+		
 		batch.setProjectionMatrix(cam.combined);
 		// batch2.setProjectionMatrix(cam.combined);
 
@@ -202,9 +210,4 @@ public class FellDungeon extends ApplicationAdapter {
 		sprite.draw(batch);
 		batch.end();
 	}
-
-	// ////////////////////////////
-	// MESH SECTION
-	// /////////////////////////////
-
 }
