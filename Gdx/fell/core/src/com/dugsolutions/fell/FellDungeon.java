@@ -13,7 +13,10 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector3;
 import com.dugsolutions.fell.map.MapGrid;
+import com.dugsolutions.fell.map.gen.GenZConstant;
+import com.dugsolutions.fell.map.gen.GenZMap;
 
 public class FellDungeon extends ApplicationAdapter {
 	final static String TAG = "FellDungeon";
@@ -63,9 +66,8 @@ public class FellDungeon extends ApplicationAdapter {
 			} else {
 				return false;
 			}
-			Gdx.app.log(TAG, "CAM X=" + cam.position.x + ", Y="
-					+ cam.position.y + ", DX=" + cam.direction.x + ", DY="
-					+ cam.direction.y);
+			Gdx.app.log(TAG, "CAM POS=" + cam.position.toString() + ", DIR="
+					+ cam.direction.toString());
 			return true;
 		}
 
@@ -73,11 +75,8 @@ public class FellDungeon extends ApplicationAdapter {
 		public boolean touchDown(int screenX, int screenY, int pointer,
 				int button) {
 			if (button == 1) {
-				cam.direction.y = 0;
-				cam.direction.x = 0;
-				cam.position.z = startZ;
-				cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
-						cam.viewportWidth / 2);
+				cam.direction.set(startDir);
+				cam.position.set(startPos);
 				return true;
 			}
 			return move(screenX, screenY);
@@ -130,6 +129,9 @@ public class FellDungeon extends ApplicationAdapter {
 					cam = ocam;
 					Gdx.app.log(TAG, "ORTHOGRAPHIC");
 				}
+			} else if (character == 'o') {
+				cam.position.set(oPos);
+				cam.direction.set(oDir);
 			}
 			return false;
 		}
@@ -140,7 +142,11 @@ public class FellDungeon extends ApplicationAdapter {
 	Sprite sprite;
 	Camera cam;
 	boolean adjXY;
-	float startZ;
+	Vector3 startPos;
+	Vector3 startDir;
+	Vector3 oPos;
+	Vector3 oDir;
+
 	TextureAtlas textureAtlas;
 	// MeshObj2 meshObj3;
 	// MeshObj2 meshObj4;
@@ -160,13 +166,7 @@ public class FellDungeon extends ApplicationAdapter {
 		}
 		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
 				+ Gdx.graphics.getHeight());
-		// {
-		// AtlasRegion region = textureAtlas.findRegion("Grass03");
-		// AtlasRegion region2 = textureAtlas.findRegion("Tree12");
-		//
-		// meshObj3 = new MeshObj2(region, 50f, 50f, 300f, 300f, 2);
-		// meshObj4 = new MeshObj2(region2, 100f, 100f, 300f, 300f, 2);
-		// }
+
 		initMap();
 		initCamera();
 
@@ -183,7 +183,8 @@ public class FellDungeon extends ApplicationAdapter {
 		mapGrid = new MapGrid();
 		mapGrid.setPosition(50, 50);
 		mapGrid.setSize(w, h, 80f);
-		mapGrid.setBaseZ(0, 3f);
+		mapGrid.setSubdivide(4);
+		mapGrid.setBaseZ(0);
 
 		AtlasRegion grass = textureAtlas.findRegion("Grass01");
 		for (int y = 0; y < h; y++) {
@@ -192,22 +193,37 @@ public class FellDungeon extends ApplicationAdapter {
 			}
 		}
 		mapGrid.build();
+
+		GenZMap zmap = new GenZMap(mapGrid);
+		zmap.setRandomSeed(0);
+		zmap.addGenerator(new GenZConstant(50f));
+		zmap.run();
 	}
-	
-	void initMounds()
-	{
-	
+
+	void initMounds() {
+
 	}
 
 	void initCamera() {
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
-		cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
+
+		// cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
+		// cam.viewportWidth / 2);
+		// cam.direction.set(0, 0, -1);
+
+		startPos = new Vector3(cam.viewportWidth / 2, cam.viewportHeight / 2,
 				cam.viewportWidth / 2);
-		cam.direction.set(0, 0, -1);
+		startDir = new Vector3(0, 0, -1);
+
+		cam.position.set(startPos);
+		cam.direction.set(startDir);
+
 		cam.near = 1;
 		cam.far = 1000;
-		startZ = cam.position.z;
+		
+		oPos = new Vector3(startPos.x, -300f, 570f);
+		oDir = new Vector3(0, 0.92f, -1);
 	}
 
 	@Override

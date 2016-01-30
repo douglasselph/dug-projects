@@ -18,9 +18,9 @@ public class MapSquareUI extends MapSquareData {
 	}
 
 	public void build(float startX, float startY, float width, float height,
-			float startZ, float scaleZ) {
+			float startZ) {
 		build(startX, startY, width, height, region.getU(), region.getV(),
-				region.getU2(), region.getV2(), startZ, scaleZ);
+				region.getU2(), region.getV2(), startZ);
 
 		mesh = new Mesh(true, verts.length / 6, indices.length,
 				new VertexAttribute(VertexAttributes.Usage.Position, 3,
@@ -41,5 +41,11 @@ public class MapSquareUI extends MapSquareData {
 		program.setUniformi("u_texture", 0);
 		mesh.render(program, GL20.GL_TRIANGLES);
 		program.end();
+	}
+	
+	public void setElevations(float startX, float startY, float width, float height, float startZ)
+	{
+		super.setElevations(startX, startY, width, height, startZ);
+		mesh.setVertices(verts);
 	}
 }

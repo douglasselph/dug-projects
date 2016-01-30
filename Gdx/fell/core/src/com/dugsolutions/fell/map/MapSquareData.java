@@ -12,20 +12,27 @@ public class MapSquareData {
 	// how much to subdivide this square;
 	protected short subdivide;
 	// A list of elevations relative to the position of this square.
-	protected short[] elevations;
+	protected float[] elevations;
 
 	protected float[] verts;
 	protected short[] indices;
 
 	/**
-	 * Set the vertex index elevation of the subdivision. The indices run from 0
-	 * bottom left, to the right, then up.
+	 * Set elevation at the specific subdivision index.
+	 * x,y starts lower left, going up/right.
 	 * 
-	 * @param vi
+	 * @param x
+	 * @param y
 	 * @param e
 	 */
-	void setElevation(int vi, short e) {
-		elevations[vi] = e;
+	public void addElevation(int x, int y, float e)
+	{
+		elevations[index(x, y)] += e;
+	}
+	
+	int index(int x, int y)
+	{
+		return y * (subdivide+1) + x;
 	}
 
 	/**
@@ -37,12 +44,11 @@ public class MapSquareData {
 	void setSubdivide(int d) {
 		subdivide = (short) d;
 		int count = (subdivide + 1) * (subdivide + 1);
-		elevations = new short[count];
+		elevations = new float[count];
 	}
 
 	void build(float startX, float startY, float width, float height,
-			float startU, float startV, float endU, float endV, float startZ,
-			float eScale) {
+			float startU, float startV, float endU, float endV, float startZ) {
 
 		if (elevations == null) {
 			setSubdivide(1);
@@ -72,7 +78,7 @@ public class MapSquareData {
 				// Bottom left vertex
 				verts[i++] = x; // X
 				verts[i++] = y; // Y
-				verts[i++] = startZ + elevations[vi] * eScale; // Z
+				verts[i++] = startZ + elevations[vi]; // Z
 				verts[i++] = color;
 				verts[i++] = u; // U
 				verts[i++] = v; // V
@@ -104,6 +110,24 @@ public class MapSquareData {
 				indices[i++] = tR;
 				// Bottom right
 				indices[i++] = bR;
+			}
+		}
+	}
+	
+	public void setElevations(float startX, float startY, float width, float height, float startZ)
+	{
+		float x, y;
+		float cellSizeX = width / subdivide;
+		float cellSizeY = height / subdivide;
+		float endY = startY + height;
+		float endX = startX + width;
+		int i = 0;
+		int vi = 0;
+		for (y = startY; y <= endY; y += cellSizeY) {
+			for (x = startX; x <= endX; x += cellSizeX) {
+				verts[i + 2] = startZ + elevations[vi]; // Z
+				i += 6;
+				vi++;
 			}
 		}
 	}

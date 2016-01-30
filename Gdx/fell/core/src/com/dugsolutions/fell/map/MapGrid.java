@@ -12,8 +12,8 @@ public class MapGrid {
 	int numSquaresX;
 	int numSquaresY;
 	int subdivide = 1; // How much to subdivide each square.
+	int subdividePlusOne;
 	float sideLen; // Real world length of each square side.
-	float elevationScale = 1;
 	float baseZ;
 	float startX;
 	float startY;
@@ -23,14 +23,14 @@ public class MapGrid {
 		shaderProgram = SpriteBatch.createDefaultShader();
 	}
 	
-	int index(int x, int y)
+	int indexSq(int x, int y)
 	{
 		return y * numSquaresX + x;
 	}
 	
 	/**
 	 * Set the region to be displayed at the passed index location.
-	 * x,y lower left. Indexes determined by size asnd subdivision.
+	 * x,y lower left. Indexes determined by size and subdivision.
 	 * Know what you are doing when using x and y.
 	 * @param x
 	 * @param y
@@ -38,7 +38,7 @@ public class MapGrid {
 	 */
 	public void setRegion(int x, int y, AtlasRegion r)
 	{
-		squares[index(x,y)] = new MapSquareUI(r);
+		squares[indexSq(x,y)] = new MapSquareUI(r);
 	}
 
 	/**
@@ -86,19 +86,19 @@ public class MapGrid {
 	}
 	
 	/**
-	 * @return  the max number of indices on the X-axis of the map
+	 * @return the max number of indices on the X-axis of the map
 	 */
 	public int getMaxIndexX()
 	{
-		return subdivide * numSquaresX;
+		return subdivide * numSquaresX + 1;
 	}
 	
 	/**
-	 * @return  the max number of indices on the Y-axis of the map
+	 * @return the max number of indices on the Y-axis of the map
 	 */
 	public int getMaxIndexY()
 	{
-		return subdivide * numSquaresY;
+		return subdivide * numSquaresY + 1;
 	}
 
 	/**
@@ -106,9 +106,30 @@ public class MapGrid {
 	 * @param z
 	 * @param scaleZ
 	 */
-	public void setBaseZ(float z, float scaleZ) {
+	public void setBaseZ(float z) {
 		baseZ = z;
-		elevationScale = scaleZ;
+	}
+	
+	/**
+	 * x,y is lower left running 1 unit per subdivision right and up.
+	 * 
+	 * @param x  
+	 * @param y
+	 * @param z elevation value.
+	 */
+	public void addElevation(int x, int y, float z)
+	{
+		MapSquareUI sq = getSquare(x, y);
+		int sx = x % subdividePlusOne;
+		int sy = y % subdividePlusOne;
+		sq.addElevation(sx, sy, z);
+	}
+	
+	MapSquareUI getSquare(int x, int y)
+	{
+		int sx = x / subdividePlusOne;
+		int sy = y / subdividePlusOne;
+		return squares[indexSq(sx, sy)];
 	}
 
 	/**
@@ -134,6 +155,7 @@ public class MapGrid {
 	public void setSubdivide(int d)
 	{
 		subdivide = d;
+		subdividePlusOne = subdivide + 1;
 	}
 
 	public void build() {
@@ -145,8 +167,27 @@ public class MapGrid {
 
 		for (MapSquareUI sq : squares) {
 			sq.setSubdivide(subdivide);
-			sq.build(x, y, w, h, baseZ, elevationScale);
+			sq.build(x, y, w, h, baseZ);
 
+			if (++cnt >= numSquaresX) {
+				x = startX;
+				y += h;
+				cnt = 0;
+			} else {
+				x += w;
+			}
+		}
+	}
+	
+	public void setElevations()
+	{
+		float x = startX;
+		float y = startY;
+		float w = sideLen;
+		float h = sideLen;
+		int cnt = 0;
+		for (MapSquareUI sq : squares) {
+			sq.setElevations(x, y, w, h, baseZ);
 			if (++cnt >= numSquaresX) {
 				x = startX;
 				y += h;
