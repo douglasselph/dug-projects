@@ -1,4 +1,4 @@
-package com.dugsolutions.felldungeon;
+package com.dugsolutions.fell;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;

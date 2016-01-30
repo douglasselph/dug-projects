@@ -1,23 +1,19 @@
-package com.dugsolutions.felldungeon;
+package com.dugsolutions.fell;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.VertexAttribute;
-import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.utils.GdxRuntimeException;
+import com.dugsolutions.fell.map.MapGrid;
 
 public class FellDungeon extends ApplicationAdapter {
 	final static String TAG = "FellDungeon";
@@ -80,6 +76,8 @@ public class FellDungeon extends ApplicationAdapter {
 				cam.direction.y = 0;
 				cam.direction.x = 0;
 				cam.position.z = startZ;
+				cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
+						cam.viewportWidth / 2);
 				return true;
 			}
 			return move(screenX, screenY);
@@ -106,7 +104,11 @@ public class FellDungeon extends ApplicationAdapter {
 		public boolean keyTyped(char character) {
 			if (character == 'z') {
 				adjXY = !adjXY;
-				Gdx.app.log(TAG, "ADJXY=" + adjXY);
+				if (adjXY) {
+					Gdx.app.log(TAG, "ADJUST POSITION");
+				} else {
+					Gdx.app.log(TAG, "ADJUST DIRECTION");
+				}
 			} else if (character == 'c') {
 				if (cam instanceof OrthographicCamera) {
 					PerspectiveCamera pcam = new PerspectiveCamera(45,
@@ -140,32 +142,64 @@ public class FellDungeon extends ApplicationAdapter {
 	boolean adjXY;
 	float startZ;
 	TextureAtlas textureAtlas;
-	MeshObj2 meshObj3;
-	MeshObj2 meshObj4;
+	// MeshObj2 meshObj3;
+	// MeshObj2 meshObj4;
+	MapGrid mapGrid;
 
 	@Override
 	public void create() {
 		ShaderProgram.pedantic = false;
 
 		textureAtlas = new TextureAtlas(Gdx.files.internal("fell.pack"));
-		AtlasRegion region = textureAtlas.findRegion("Grass03");
-
-		batch = new SpriteBatch();
-
-		texture = new Texture("badlogic.jpg");
-		sprite = new Sprite(texture);
-		sprite.setSize(200, 200);
-		sprite.setPosition(300, 100);
-		
+		{
+			batch = new SpriteBatch();
+			texture = new Texture("badlogic.jpg");
+			sprite = new Sprite(texture);
+			sprite.setSize(200, 200);
+			sprite.setPosition(300, 100);
+		}
 		Gdx.app.log(TAG, "WINDOW SIZE=" + Gdx.graphics.getWidth() + ", "
 				+ Gdx.graphics.getHeight());
+		// {
+		// AtlasRegion region = textureAtlas.findRegion("Grass03");
+		// AtlasRegion region2 = textureAtlas.findRegion("Tree12");
+		//
+		// meshObj3 = new MeshObj2(region, 50f, 50f, 300f, 300f, 2);
+		// meshObj4 = new MeshObj2(region2, 100f, 100f, 300f, 300f, 2);
+		// }
+		initMap();
+		initCamera();
 
-		AtlasRegion region2 = textureAtlas.findRegion("Tree12");
+		Gdx.input.setInputProcessor(new MyInputAdapter());
 
-		meshObj3 = new MeshObj2(region, 50f, 50f, 300f, 300f, 2);
-		meshObj4 = new MeshObj2(region2, 100f, 100f, 300f, 300f, 2);
+		Gdx.app.log(TAG, "VP SIZE=" + cam.viewportWidth + ", "
+				+ cam.viewportHeight);
+	}
 
-		// Camera
+	void initMap() {
+		int w = 5;
+		int h = 5;
+
+		mapGrid = new MapGrid();
+		mapGrid.setPosition(50, 50);
+		mapGrid.setSize(w, h, 80f);
+		mapGrid.setZ(0, 3f);
+
+		AtlasRegion grass = textureAtlas.findRegion("Grass01");
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
+				mapGrid.setRegion(x, y, grass);
+			}
+		}
+		mapGrid.build();
+	}
+	
+	void initMounds()
+	{
+	
+	}
+
+	void initCamera() {
 		cam = new OrthographicCamera(Gdx.graphics.getWidth(),
 				Gdx.graphics.getHeight());
 		cam.position.set(cam.viewportWidth / 2, cam.viewportHeight / 2,
@@ -174,12 +208,6 @@ public class FellDungeon extends ApplicationAdapter {
 		cam.near = 1;
 		cam.far = 1000;
 		startZ = cam.position.z;
-
-		Gdx.input.setInputProcessor(new MyInputAdapter());
-
-		Gdx.app.log(TAG, "VP SIZE=" + cam.viewportWidth + ", "
-				+ cam.viewportHeight);
-
 	}
 
 	@Override
@@ -194,16 +222,14 @@ public class FellDungeon extends ApplicationAdapter {
 
 		cam.update();
 
-		// meshObj1.render(cam.combined);
-		// meshObj2.render(cam.combined);
-		meshObj3.render(cam.combined);
-		meshObj4.render(cam.combined);
-		
-		batch.setProjectionMatrix(cam.combined);
-		// batch2.setProjectionMatrix(cam.combined);
+		// meshObj3.render(cam.combined);
+		// meshObj4.render(cam.combined);
 
-		batch.begin();
-		sprite.draw(batch);
-		batch.end();
+		// batch.setProjectionMatrix(cam.combined);
+		// batch.begin();
+		// sprite.draw(batch);
+		// batch.end();
+
+		mapGrid.render(cam.combined);
 	}
 }
