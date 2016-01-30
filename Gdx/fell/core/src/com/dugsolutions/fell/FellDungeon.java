@@ -183,7 +183,7 @@ public class FellDungeon extends ApplicationAdapter {
 		mapGrid = new MapGrid();
 		mapGrid.setPosition(50, 50);
 		mapGrid.setSize(w, h, 80f);
-		mapGrid.setZ(0, 3f);
+		mapGrid.setBaseZ(0, 3f);
 
 		AtlasRegion grass = textureAtlas.findRegion("Grass01");
 		for (int y = 0; y < h; y++) {
