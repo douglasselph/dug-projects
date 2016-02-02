@@ -72,12 +72,18 @@ public class DesktopDatabaseManager implements DatabaseManager {
 		}
 
 		@Override
-		public void execSQL (String sql) throws SQLiteGdxException {
+		public int execSQL (String sql) throws SQLiteGdxException {
+			int id = 0;
 			try {
 				stmt.executeUpdate(sql);
+				ResultSet result = stmt.getGeneratedKeys();
+				if (result.next()) {
+					id = result.getInt(1);
+				}
 			} catch (SQLException e) {
 				throw new SQLiteGdxException(e);
 			}
+			return id;
 		}
 
 		@Override

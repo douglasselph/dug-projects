@@ -62,12 +62,13 @@ public class AndroidDatabaseManager implements DatabaseManager {
 		}
 
 		@Override
-		public void execSQL (String sql) throws SQLiteGdxException {
+		public int execSQL (String sql) throws SQLiteGdxException {
 			try {
 				database.execSQL(sql);
 			} catch (SQLException e) {
 				throw new SQLiteGdxException(e);
 			}
+			return 0;
 		}
 
 		@Override

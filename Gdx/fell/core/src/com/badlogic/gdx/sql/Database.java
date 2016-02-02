@@ -31,7 +31,7 @@ public interface Database {
 	/** Execute a single SQL statement that is NOT a SELECT or any other SQL statement that returns data.
 	 * @param sql the SQL statement to be executed. Multiple statements separated by semicolons are not supported.
 	 * @throws SQLiteGdxException */
-	public void execSQL (String sql) throws SQLiteGdxException;
+	public int execSQL (String sql) throws SQLiteGdxException;
 
 	/** Runs the provided SQL and returns a {@link DatabaseCursor} over the result set.
 	 * @param sql the SQL query. The SQL string must not be ; terminated
