@@ -67,7 +67,6 @@ public class DbCamera {
 	
 	void update(DatabaseManager db) {
 		if (_id == 0) {
-			
 		}
 	}
 
