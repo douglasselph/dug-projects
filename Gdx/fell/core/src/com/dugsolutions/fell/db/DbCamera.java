@@ -65,7 +65,7 @@ public class DbCamera {
 		return dir_z;
 	}
 	
-	void update(DatabaseManager db) {
+	void update(FellDatabaseHelper db) {
 		if (_id == 0) {
 		}
 	}

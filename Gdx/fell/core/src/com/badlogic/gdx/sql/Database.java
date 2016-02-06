@@ -33,6 +33,15 @@ public interface Database {
 	 * @throws SQLiteGdxException */
 	public int execSQL (String sql) throws SQLiteGdxException;
 
+	/** Insert into the named table the values passed 
+	 * 
+	 * @param table
+	 * @param values
+	 * @return the ROW ID of the row just inserted.
+	 * @throws SQLiteGdxException
+	 */
+	public long insert(String table, ContentValues values) throws SQLiteGdxException;
+	
 	/** Runs the provided SQL and returns a {@link DatabaseCursor} over the result set.
 	 * @param sql the SQL query. The SQL string must not be ; terminated
 	 * @return {@link DatabaseCursor}
