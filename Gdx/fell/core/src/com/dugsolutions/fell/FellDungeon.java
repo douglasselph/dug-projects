@@ -1,5 +1,7 @@
 package com.dugsolutions.fell;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
@@ -14,6 +16,8 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
+import com.dugsolutions.fell.db.DbCamera;
+import com.dugsolutions.fell.db.FellDatabaseHelper;
 import com.dugsolutions.fell.map.MapGrid;
 import com.dugsolutions.fell.map.gen.GenZConstant;
 import com.dugsolutions.fell.map.gen.GenZMap;
@@ -132,8 +136,47 @@ public class FellDungeon extends ApplicationAdapter {
 			} else if (character == 'o') {
 				cam.position.set(oPos);
 				cam.direction.set(oDir);
+			} else if (character == 's') {
+				cameraManager.store();
+			} else if (character == 'n') {
+				cameraManager.load();
+			} else if (character == 'd') {
+				cameraManager.delete();
 			}
 			return false;
+		}
+	}
+
+	class CameraManager {
+		ArrayList<DbCamera> list;
+		int index = -1;
+
+		CameraManager() {
+			list = database.queryCameras();
+		}
+
+		void load() {
+			if (list.size() > 0) {
+				if (++index >= list.size()) {
+					index = 0;
+				}
+				list.get(index).upload(cam);
+			}
+		}
+
+		void store() {
+			database.save(cam);
+		}
+
+		void delete() {
+			if (list.size() >= 0) {
+				for (DbCamera c : list) {
+					if (c.equals(cam)) {
+						database.deleteCamera(c);
+						list.remove(c);
+					}
+				}
+			}
 		}
 	}
 
@@ -151,9 +194,16 @@ public class FellDungeon extends ApplicationAdapter {
 	// MeshObj2 meshObj3;
 	// MeshObj2 meshObj4;
 	MapGrid mapGrid;
+	FellDatabaseHelper database;
+	CameraManager cameraManager;
 
 	@Override
 	public void create() {
+		database = new FellDatabaseHelper();
+		database.open();
+
+		cameraManager = new CameraManager();
+
 		ShaderProgram.pedantic = false;
 
 		textureAtlas = new TextureAtlas(Gdx.files.internal("fell.pack"));
@@ -221,7 +271,7 @@ public class FellDungeon extends ApplicationAdapter {
 
 		cam.near = 1;
 		cam.far = 1000;
-		
+
 		oPos = new Vector3(startPos.x, -300f, 570f);
 		oDir = new Vector3(0, 0.92f, -1);
 	}

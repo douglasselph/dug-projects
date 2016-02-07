@@ -19,7 +19,7 @@ public class AndroidDatabaseManager implements DatabaseManager {
 
 	private Context context;
 
-	private class AndroidDatabase implements Database {
+	class AndroidDatabase implements Database {
 
 		private SQLiteDatabaseHelper helper;
 		private SQLiteDatabase database;
@@ -124,7 +124,6 @@ public class AndroidDatabaseManager implements DatabaseManager {
 			}
 			return database.insert(table, null, avalues);
 		}
-
 	}
 
 	public AndroidDatabaseManager() {

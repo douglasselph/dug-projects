@@ -58,6 +58,10 @@ public abstract class DatabaseHelper {
 		sbuf.append("FROM ");
 		sbuf.append(table);
 
+		if (where != null) {
+			sbuf.append(" WHERE ");
+			sbuf.append(where);
+		}
 		DatabaseCursor cursor;
 
 		try {
@@ -67,6 +71,15 @@ public abstract class DatabaseHelper {
 			return null;
 		}
 		return cursor;
+	}
+
+	public long insert(String table, ContentValues values) {
+		try {
+			return dbHandler.insert(table, values);
+		} catch (Exception ex) {
+			Gdx.app.error(TAG, ex.getMessage());
+		}
+		return 0;
 	}
 
 	public void update(String table, ContentValues values, String whereClause) {
@@ -101,7 +114,21 @@ public abstract class DatabaseHelper {
 		} catch (Exception ex) {
 			Gdx.app.error(TAG, ex.getMessage());
 		}
+	}
 
+	public void delete(String table, String whereClause) {
+		StringBuilder sql = new StringBuilder(120);
+		sql.append("DELETE FROM ");
+		sql.append(table);
+		if (whereClause != null) {
+			sql.append(" ");
+			sql.append(whereClause);
+		}
+		try {
+			dbHandler.execSQL(sql.toString());
+		} catch (Exception ex) {
+			Gdx.app.error(TAG, ex.getMessage());
+		}
 	}
 
 }

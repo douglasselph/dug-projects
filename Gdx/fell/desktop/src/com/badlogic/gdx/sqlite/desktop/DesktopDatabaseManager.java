@@ -19,7 +19,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 /** @author M Rafay Aleem */
 public class DesktopDatabaseManager implements DatabaseManager {
 
-	private class DesktopDatabase implements Database {
+	class DesktopDatabase implements Database {
 
 		private SQLiteDatabaseHelper helper = null;
 

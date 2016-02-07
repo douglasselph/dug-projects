@@ -51,5 +51,7 @@ public interface DatabaseCursor {
 
 	/** Closes the Cursor, releasing all of its resources and making it completely invalid. */
 	public void close ();
+	
+	public int getColumnIndex(String colName);
 
 }
