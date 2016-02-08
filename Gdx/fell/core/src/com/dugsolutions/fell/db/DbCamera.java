@@ -25,7 +25,7 @@ public class DbCamera {
 			+ " tinyint, " + COLUMN_POS_X + " float, " + COLUMN_POS_Y
 			+ " float, " + COLUMN_POS_Z + " float, " + COLUMN_DIR_X
 			+ " float, " + COLUMN_DIR_Y + " float, " + COLUMN_DIR_Z
-			+ " float, " + COLUMN_ENABLE + " smallint);";
+			+ " float);";
 
 	static void Create(StringBuffer sbuf) {
 		sbuf.append(DATABASE_CREATE);
