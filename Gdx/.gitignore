@@ -41,3 +41,5 @@ proguard/
 # Tizen
 Debug/
 Release/
+
+libgdx-gradle-template/
