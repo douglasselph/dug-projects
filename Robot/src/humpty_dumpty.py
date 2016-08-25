@@ -44,7 +44,6 @@
 #           If unable to do so safely, suicide if Adj. Else Guard.
 #   No E within 2:
 #       Move toward other group strategically, forming wall across closest E group.
-#
 # 1+ F 1: (i.e. in group)
 #   1+ Adj E: If healthy, attack shared E. Otherwise run-away/suicide.
 #   1+ Diag E: Move towards shared E.
@@ -75,31 +74,274 @@
 
 class Robot:
 
-    #
-    # Analyze all the immediately adjacent elements next to a given robot.
-    #
-    class MoveMap:
-
-        def __init__(self, parent, tloc):
-            self._parent = parent
-            self._loc = tloc            
-
-    # Compute the danger score next to the given square.
-    class SafeMap:
-
+    # Manages movement collisions between robots that want the same square.
+    class MoveMapFlag:
+        
         def __init__(self, parent):
+            self._from = {}
+            self._to = {}
+            self._failed = []
+            self._parent = parent
+            # True: spawn squares OK unless STC, False: spawn squares not okay
+            self._flag_spawn_ok = True
+            # True: enemy robot count must be 0, False: ignore
+            self._flag_safe_only = True
+            # True: no friends or enemies, False: ignore
+            self._flag_unoccupied_only = True
+            # True: no enemies, False: ignore
+            self._flag_enemy_free = True
+            # Consider only moves that are farther away from this location
+            self._farther_than_loc = {}
+            # Priority given to these robots on ties
+            self._priority = []
+   
+        def set_spawn_ok(self, flag):
+            self._flag_spawn_ok = flag
+        
+        def set_safe_only(self, flag):
+            self._flag_safe_only = flag
+            
+        def set_unoccupied_only(self, flag):
+            self._flag_unoccupied_only = flag
+        
+        def set_enemy_free(self, flag):
+            self._flag_enemy_free = flag
+            
+        def set_farther_than_loc(self, floc, tloc):
+            self._farther_than_loc[floc] = tloc
+        
+        def set_priority(self, floc):
+            if not floc in self._priority:
+                self._priority.append(floc)
+                
+        # Add the specified possible move for a robot. The robot is identified
+        # by the floc and it's target move spot by tloc.
+        #
+        # If a robot is given more than one location to move to, the one given
+        # first takes precedence over later ones.
+        def add(self, floc, tloc):
+            if floc in self._from.keys():
+                if tloc not in self._from[floc]:
+                    self._from[floc].append(tloc)
+            else:
+                self._from[floc] = [tloc]
+
+            if tloc in self._to.keys():
+                if floc not in self._to[tloc]:
+                    self._to[tloc].append(floc)
+            else:
+                self._to[tloc] = [floc]
+
+        def is_ok(self, floc, tloc):
+            if not self._parent.is_normal(tloc):
+                return False
+            
+            if self._parent.is_spawn(tloc):
+                if not self._flag_spawn_ok or self._parent._STC1:
+                    return False
+                
+            if self._flag_safe_only:
+                if self._parent.count_enemies(tloc) > 0:
+                    return False
+            
+            if self._flag_unoccupied_only:
+                if self._parent.has_robot(tloc):
+                    return False
+            
+            if self._flag_enemy_free:
+                if self._parent.is_enemy(tloc):
+                    return False
+            
+            if self._parent.is_occupied(tloc):
+                return False
+            
+            if self._parent.is_moving_into(tloc, floc):
+                return False
+                
+            if floc in self._farther_than_loc.keys():
+                eloc = self._farther_than_loc[floc]
+                fdist = rg.dist(floc, eloc)
+                tdist = rg.dist(tloc, eloc)
+                if tdist <= fdist:
+                    return False
+
+            return True
+        
+        def add_if_ok(self, floc, tloc):
+            if self.is_ok(floc, tloc):
+                self.add(floc, tloc)
+                return True
+            return False
+    
+        def add_if_ok_dir(self, floc, tdir):
+            tloc = self._parent.get_loc(floc, tdir)
+            return self.add_if_ok(floc, tloc)
+        
+        # Add moves to any squares toward the conditions that we have established.
+        # See set_() methods.
+        def add_moves(self, floc):
+            locs=self._parent.get_locs_sorted_by_center(floc)
+            for tloc in locs:
+                if self.is_ok(floc, tloc):
+                    self.add(floc, tloc)
+            if not self.has_moves(floc):
+                self.add_failed(floc)
+                
+        def has_failed(self):
+            return len(self._failed) > 0
+        
+        def reset_moves(self):
+            self._from = {}
+            self._to = {}
+            self._failed = []
+            
+        def apply_again_failed(self):
+            failed = list(self._failed)
+            self.reset_moves()
+            for floc in failed:
+                self.add_moves(floc)
+            self.apply()
+                
+        def add_failed(self, floc):
+            if not floc in self._failed:
+                self._failed.append(floc)
+
+        def get_failed(self):
+            return self._failed
+        
+        # Apply the moves to the robots.
+        def apply(self):
+            moves = self.get_moves();
+            
+            for floc in moves.keys():
+                self._parent.apply_move(floc, moves[floc])
+                        
+        # Return dictionary of moves we have computed.
+        # The key is from, the value is the target
+        def get_moves(self):
+            self.detect_collisions()
+            moves = {}
+            for floc in self._from.keys():
+                if len(self._from[floc]) > 0:
+                    tloc=self._from[floc][0]
+                    moves[floc] = tloc
+                else:
+                    self.add_failed(floc)
+                             
+            return moves
+            
+        # If more than one robot wants to move to the same square, resolve the conflict
+        # by letting the robot with fewer choices have that square. The other robot
+        # will select another square. In the case of ties, it is possible a robot
+        # will be left with no place to go. Add them to the failed list.
+        def detect_collisions(self):
+            for tloc in self._to.keys():
+                if len(self._to[tloc]) > 1:
+                    least_floc = []
+                    least_count = 1000
+                    tolist = self._to[tloc]
+                    for floc in tolist:
+                        count = len(self._from[floc])
+                        if count < least_count:
+                            least_floc = [floc]
+                            least_count = count
+                        elif count == least_count:
+                            if floc in self._priority:
+                                least_floc.insert(0, floc)
+                            else:
+                                least_floc.append(floc)
+                        
+                    if len(least_floc) > 0:
+                        self.only(least_floc[0], tloc)
+        
+        # Only permit the move from the floc to the tloc
+        # Remove all other mvoes
+        def only(self, floc, tloc):
+            for f in self._to[tloc]:
+                if f != floc:
+                    self._from[f].remove(tloc)
+            self._to[tloc] = [floc]
+        
+        def has_moves(self, floc):
+            if floc not in self._from.keys():
+                return False
+            if len(self._from[floc]) > 0:
+                return True
+            return False
+        
+        def show(self, prefix):
+            line = prefix + " FROM:"
+            for floc in self._from.keys():
+                line += "[" + str(floc) + ":" 
+                line += str(self._from[floc])
+                line += "];"
+            line += " TO:"
+            for tloc in self._to.keys():
+                line += "[" + str(tloc) + ":" 
+                line += str(self._to[tloc])
+                line += "];"
+            print line
+
+    # Find the neighbors to a given location.
+    class Neighbors:
+
+        def __init__(self, parent, floc):
 
             self._parent = parent
-            self._score = {}
-                    
-        score = 0
+            self.analyze(floc)
 
-        for tdir in self._parent._DIRS:
-            dloc = self._parent.get_loc(tloc, tdir)
+        def analyze(self, floc):
+            self._floc = floc
+            self._robot = {}
+
+            for tdir in self._parent._DIRS:
+                dloc = self._parent.get_loc(floc, tdir)
+                check(dloc, self._parent._DIST_ADJ)
+                
+            for tdir in self._parent._DIAG:
+                dloc = self._parent.get_loc(floc, tdir)
+                check(dloc, self._parent._DIST_DIAG)
+
+            for tdir in self._parent._MOVE2:
+                dloc = self._parent.get_loc(floc, tdir)
+                check(dloc, self._parent._DIST_2)
+
+            for tdir in self._parent._MOVE3:
+                dloc = self._parent.get_loc(floc, tdir)
+                check(dloc, self._parent.DIST_3)
+        
+        def check(self, dloc, dist):
             if self._parent.is_enemy(dloc):
-                score = score + 1
+                self.add(dloc, dist, self._parent._CODE_E)
+            elif self._parent.is_friendly(dloc):
+                self.add(dloc, dist, self._parent._CODE_F)
 
-        return score
+        def add(self, dloc, dist, code):
+            if not dist in self._robot.keys():
+                self._robot[dist] = {}
+                self._robot[dist][self._parent._CODE_E] = []
+                self._robot[dist][self._parent._CODE_F] = []
+
+            self._robot[dist][code].append(dloc)
+            
+        # Return true if the indicated elements is not within the given distance.
+        # usedist can be _DIST_1, DIST_2, _DIST_3, _DIST_ADJ, or _DIST_DIAG
+        # code may be _CODE_E, _CODE_F, or None
+        #   _CODE_E : Return true if no enemies within the given distance
+        #   _CODE_F : Return true is no friendlies within the given distance
+        #   None : Return true if no enemies nor friendlies within the given distance.
+        def is_alone(self, usedist, code):
+            if usedist in self._parent._DIST_CODES.keys():
+                for dist in self._parent._DIST_CODES[usedist]:
+                    if dist in self._robot.keys():
+                        if code == self._parent._CODE_EF or code in self._robot[dist].keys():
+                            return False
+            else:
+                if usedist in self._robot.keys():
+                    if code == self._parent._CODE_EF or code in self._robot[usedist].keys():
+                        return False
+            return True
+                    
     # Size of the GAME MAP.
     _MAPSIZE = 19
     # Suicide damage
@@ -148,6 +390,20 @@ class Robot:
     _STC1 = False
     # Spawn turn coming: True if new robots in two turns
     _STC2 = False
+    # Codes
+    _CODE_E = "E"
+    _CODE_F = "F"
+    _CODE_EF = None
+    _DIST_ADJ = "1A";
+    _DIST_DIAG = "1D"
+    _DIST_1 = "1"
+    _DIST_2 = "2"
+    _DIST_3 = "3"
+    # Check dist
+    _DIST_CODES = {}
+    _DIST_CODES[_DIST_1] = [_DIST_ADJ, _DIST_DIAG]
+    _DIST_CODES[_DIST_2] = [_DIST_ADJ, _DIST_DIAG, _DIST_2]
+    _DIST_CODES[_DIST_3] = [_DIST_ADJ, _DIST_DIAG, _DIST_2, _DIST_3]
     
     # DEBUG
     _LOG = False
@@ -175,6 +431,9 @@ class Robot:
         
         if self.init():
             self.ponder_on_spawned()
+            self.showcmds("AFTER SPAWNED")
+            self.ponder_make_way()
+            self.showcmds("AFTER MAKE WAY")
             
         cmd = self.get_cmd()
         if self._LOG:
@@ -207,7 +466,40 @@ class Robot:
         self._REMAINING=list(self._FRIENDLIES)
 
         return True
-        
+
+    # If a robot is on a location that another robot wants to move to
+    # then that robots must move off of where they are at.
+    # Considerations:
+    #   - spawn only okay if not STC
+    #   - otherwise every is okay, except prefer non-dangerous
+    def ponder_make_way(self):
+        if len(self._NEW_MOVES) > 0:
+            movemap = self.MoveMapFlag(self)
+            
+            movemap.set_safe_only(True)
+            movemap.set_spawn_ok(True)
+            movemap.set_unoccupied_only(True)
+
+            for floc in self._NEW_MOVES:
+                if self.is_friendly(floc) and floc in self._REMAINING:
+                    movemap.add_moves(floc)
+
+            self._NEW_MOVES = []
+
+            movemap.apply()
+            
+            if not movemap.has_failed():
+                return
+            
+            movemap.set_unoccupied_only(False)
+            movemap.apply_again_failed()
+            
+            if not movemap.has_failed():
+                return
+            
+            movemap.set_safe_only(False)
+            movemap.apply_again_failed()
+
     # Original Idea:
     #   On Spawn Corner:
     #     Move off, toward best F.
@@ -388,7 +680,7 @@ class Robot:
         elements = []
         for tdir in self._DIRS:
             dloc = self.get_loc(tloc, tdir)
-            if self.is_normal(dloc):
+            if self.is_normal(dloc) and not self.is_moving_into(dloc):
                 elements.append((dloc, self.get_danger_score(dloc)))
 
         esorted=sorted(elements, key=lamda ele: ele[1])
@@ -401,10 +693,9 @@ class Robot:
     # have no adjacent enemies and is not a spawn square.
     def get_safe_locs_no_spawn(self, tloc):
         locs = []
-        
         for tdir in self._DIRS:
             dloc = self.get_loc(tloc, tdir)
-            if self.is_normal(dloc) and not self.is_enemy(dloc) and not self.is_spawn(dloc) and self.get_danger_score(dloc) == 0:
+            if self.is_normal(dloc) and not self.is_enemy(dloc) and not self.is_spawn(dloc) and self.get_danger_score(dloc) == 0 and not self.is_moving_into(dloc):
                 locs.append(dloc)
 
         return locs
@@ -416,7 +707,7 @@ class Robot:
         
         for tdir in self._DIRS:
             dloc = self.get_loc(tloc, tdir)
-            if self.is_normal(dloc) and not self.is_enemy(dloc) and self.get_danger_score(dloc) == 0:
+            if self.is_normal(dloc) and not self.is_enemy(dloc) and self.get_danger_score(dloc) == 0 and not self.is_moving_into(dloc):
                 locs.append(dloc)
 
         return locs
