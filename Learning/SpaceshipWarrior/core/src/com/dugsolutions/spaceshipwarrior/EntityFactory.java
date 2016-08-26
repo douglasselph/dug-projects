@@ -30,7 +30,9 @@ public class EntityFactory
 		e.addComponent(sprite);
 		e.addComponent(new Velocity());
 		e.addComponent(new Player());
+		e.addComponent(new Bounds(43));
 
+		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_SHIP);
 		return e;
 	}
 
@@ -42,12 +44,15 @@ public class EntityFactory
 		e.addComponent(new Sprite(Constants.BULLET, Sprite.Layer.PARTICLES));
 		e.addComponent(new Velocity(0, 800));
 		e.addComponent(new Expires(2f));
+		e.addComponent(new Bounds(5));
+
+		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_BULLETS);
 
 		return e;
 	}
 
-	public static Entity createEnemyShip(World world, String name, Sprite.Layer layer, float x, float y, float vx,
-			float vy)
+	public static Entity createEnemyShip(World world, String name, Sprite.Layer layer, float health, float x, float y, float vx,
+			float vy, float boundsRadius)
 	{
 		Entity e = world.createEntity();
 
@@ -62,6 +67,10 @@ public class EntityFactory
 		e.addComponent(sprite);
 
 		e.addComponent(new Velocity(vx, vy));
+		e.addComponent(new Health(health));
+		e.addComponent(new Bounds(boundsRadius));
+
+		world.getManager(GroupManager.class).add(e, Constants.Groups.ENEMY_SHIPS);
 
 		return e;
 	}

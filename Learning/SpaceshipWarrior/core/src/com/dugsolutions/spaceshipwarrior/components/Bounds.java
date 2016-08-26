@@ -2,6 +2,17 @@ package com.dugsolutions.spaceshipwarrior.components;
 
 import com.artemis.Component;
 
-public class Bounds extends Component {
-	public float radius;
+public class Bounds extends Component
+{
+	public Bounds(float radius)
+	{
+		this.radius = radius;
+	}
+
+	public Bounds()
+	{
+		this(0);
+	}
+
+	public float	radius;
 }

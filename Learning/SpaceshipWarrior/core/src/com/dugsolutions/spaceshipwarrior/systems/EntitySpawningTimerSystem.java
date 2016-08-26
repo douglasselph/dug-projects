@@ -20,9 +20,9 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			@Override
 			public void execute()
 			{
-				EntityFactory.createEnemyShip(world, "enemy1", Sprite.Layer.ACTORS_3,
+				EntityFactory.createEnemyShip(world, "enemy1", Sprite.Layer.ACTORS_3, 10,
 						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -40).addToWorld();
+						Constants.FRAME_HEIGHT + 50, 0, -40, 20).addToWorld();
 			}
 		};
 		timer2 = new Timer(6, true)
@@ -30,9 +30,9 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			@Override
 			public void execute()
 			{
-				EntityFactory.createEnemyShip(world, "enemy2", Sprite.Layer.ACTORS_2,
+				EntityFactory.createEnemyShip(world, "enemy2", Sprite.Layer.ACTORS_2, 20,
 						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -30).addToWorld();
+						Constants.FRAME_HEIGHT + 50, 0, -30, 40).addToWorld();
 			}
 		};
 		timer3 = new Timer(12, true)
@@ -40,9 +40,9 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			@Override
 			public void execute()
 			{
-				EntityFactory.createEnemyShip(world, "enemy3", Sprite.Layer.ACTORS_1,
+				EntityFactory.createEnemyShip(world, "enemy3", Sprite.Layer.ACTORS_1, 60,
 						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -20).addToWorld();
+						Constants.FRAME_HEIGHT + 50, 0, -20, 70).addToWorld();
 			}
 		};
 	}

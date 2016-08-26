@@ -2,6 +2,7 @@ package com.dugsolutions.spaceshipwarrior;
 
 import com.artemis.Entity;
 import com.artemis.World;
+import com.artemis.managers.GroupManager;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -11,6 +12,7 @@ import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;
+import com.dugsolutions.spaceshipwarrior.systems.CollisionSystem;
 import com.dugsolutions.spaceshipwarrior.systems.EntitySpawningTimerSystem;
 import com.dugsolutions.spaceshipwarrior.systems.MovementSystem;
 import com.dugsolutions.spaceshipwarrior.systems.PlayerInputSystem;
@@ -39,6 +41,9 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setSystem(new PlayerInputSystem(mCamera));
 		mWorld.setSystem(new MovementSystem());
         mWorld.setSystem(new EntitySpawningTimerSystem());
+        mWorld.setSystem(new CollisionSystem());
+
+        mWorld.setManager(new GroupManager());
 
 		mWorld.initialize();
 
