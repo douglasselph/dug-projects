@@ -17,13 +17,17 @@ import com.dugsolutions.spaceshipwarrior.components.Velocity;
 
 public class EntityFactory
 {
-
 	public static Entity createPlayer(World world, float x, float y)
 	{
 		Entity e = world.createEntity();
 
 		e.addComponent(new Position(x, y));
-		e.addComponent(new Sprite("fighter.png"));
+
+		Sprite sprite = new Sprite(Constants.FIGHTER, Sprite.Layer.ACTORS_3);
+		sprite.r = 93 / 255f;
+		sprite.g = 255 / 255f;
+		sprite.b = 129 / 255f;
+		e.addComponent(sprite);
 		e.addComponent(new Velocity());
 		e.addComponent(new Player());
 
@@ -35,9 +39,29 @@ public class EntityFactory
 		Entity e = world.createEntity();
 
 		e.addComponent(new Position(x, y));
-		e.addComponent(new Sprite("bullet.png"));
+		e.addComponent(new Sprite(Constants.BULLET, Sprite.Layer.PARTICLES));
 		e.addComponent(new Velocity(0, 800));
-		e.addComponent(new Expires(1f));
+		e.addComponent(new Expires(2f));
+
+		return e;
+	}
+
+	public static Entity createEnemyShip(World world, String name, Sprite.Layer layer, float x, float y, float vx,
+			float vy)
+	{
+		Entity e = world.createEntity();
+
+		e.addComponent(new Position(x, y));
+
+		Sprite sprite = new Sprite();
+		sprite.name = name;
+		sprite.r = 255 / 255f;
+		sprite.g = 0 / 255f;
+		sprite.b = 142 / 255f;
+		sprite.layer = layer;
+		e.addComponent(sprite);
+
+		e.addComponent(new Velocity(vx, vy));
 
 		return e;
 	}

@@ -9,16 +9,6 @@ import com.badlogic.gdx.graphics.Texture;
  */
 public class Sprite extends Component
 {
-	public Sprite(String path)
-	{
-		sprite = new Texture(Gdx.files.internal(path));
-	}
-
-	public Sprite()
-	{
-		this("fighter.png");
-	}
-
 	public enum Layer
 	{
 		DEFAULT, BACKGROUND, ACTORS_1, ACTORS_2, ACTORS_3, PARTICLES;
@@ -29,15 +19,30 @@ public class Sprite extends Component
 		}
 	}
 
-	public Texture	sprite;
+	public Sprite(String name, Layer layer)
+	{
+		this.name = name;
+		this.layer = layer;
+	}
+
+	public Sprite(String name)
+	{
+		this(name, Layer.DEFAULT);
+	}
+
+	public Sprite()
+	{
+		this("default", Layer.DEFAULT);
+	}
+
 	public String	name;
-	public float	scaleX	= 1;
-	public float	scaleY	= 1;
-	public float	rotation;
 	public float	r		= 1;
 	public float	g		= 1;
 	public float	b		= 1;
 	public float	a		= 1;
+	public float	scaleX	= 1;
+	public float	scaleY	= 1;
+	public float	rotation;
 	public Layer	layer	= Layer.DEFAULT;
 
 }

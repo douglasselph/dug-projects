@@ -5,11 +5,21 @@ import com.artemis.ComponentMapper;
 import com.artemis.Entity;
 import com.artemis.EntitySystem;
 import com.artemis.annotations.Mapper;
+import com.artemis.utils.Bag;
 import com.artemis.utils.ImmutableBag;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.dugsolutions.spaceshipwarrior.Constants;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by dug on 8/25/16.
@@ -17,12 +27,16 @@ import com.dugsolutions.spaceshipwarrior.components.Sprite;
 public class SpriteRenderSystem extends EntitySystem
 {
 	@Mapper
-	ComponentMapper<Position>	pm;
+	ComponentMapper<Position>					pm;
 	@Mapper
-	ComponentMapper<Sprite>		sm;
+	ComponentMapper<Sprite>						sm;
 
-	private OrthographicCamera	mCamera;
-	private SpriteBatch			mBatch;
+	OrthographicCamera							mCamera;
+	SpriteBatch									mBatch;
+	TextureAtlas								mAtlas;
+	HashMap<String, TextureAtlas.AtlasRegion>	mRegions;
+	Bag<TextureAtlas.AtlasRegion>				mRegionsByEntity;
+	List<Entity>								mSortedEntities;
 
 	@SuppressWarnings("unchecked")
 	public SpriteRenderSystem(OrthographicCamera camera)
@@ -35,6 +49,14 @@ public class SpriteRenderSystem extends EntitySystem
 	protected void initialize()
 	{
 		mBatch = new SpriteBatch();
+		mAtlas = new TextureAtlas(Gdx.files.internal(Constants.PACK_ATLAS), Gdx.files.internal(Constants.TEXTURE));
+		mRegions = new HashMap<String, TextureAtlas.AtlasRegion>();
+		for (TextureAtlas.AtlasRegion r : mAtlas.getRegions())
+		{
+			mRegions.put(r.name, r);
+		}
+		mRegionsByEntity = new Bag<TextureAtlas.AtlasRegion>();
+		mSortedEntities = new ArrayList<Entity>();
 	}
 
 	@Override
@@ -66,16 +88,45 @@ public class SpriteRenderSystem extends EntitySystem
 			Position position = pm.getSafe(e);
 			Sprite sprite = sm.get(e);
 
+			TextureAtlas.AtlasRegion spriteRegion = mRegionsByEntity.get(e.getId());
 			mBatch.setColor(sprite.r, sprite.g, sprite.b, sprite.a);
-			float posx = position.x;
-			float posy = position.y;
-			mBatch.draw(sprite.sprite, posx, posy);
+			float posX = position.x - (spriteRegion.getRegionWidth() / 2 * sprite.scaleX);
+			float posY = position.y - (spriteRegion.getRegionHeight() / 2 * sprite.scaleX);
+			mBatch.draw(spriteRegion, posX, posY, 0, 0, spriteRegion.getRegionWidth(), spriteRegion.getRegionHeight(),
+					sprite.scaleX, sprite.scaleY, sprite.rotation);
 		}
 	}
 
-
 	@Override
-	protected void end() {
+	protected void end()
+	{
 		mBatch.end();
 	}
+
+	@Override
+	protected void inserted(Entity e)
+	{
+		Sprite sprite = sm.get(e);
+		mRegionsByEntity.set(e.getId(), mRegions.get(sprite.name));
+
+		mSortedEntities.add(e);
+
+		Collections.sort(mSortedEntities, new Comparator<Entity>()
+		{
+			@Override
+			public int compare(Entity e1, Entity e2)
+			{
+				Sprite s1 = sm.get(e1);
+				Sprite s2 = sm.get(e2);
+				return s1.layer.compareTo(s2.layer);
+			}
+		});
+	}
+
+	@Override
+	protected void removed(Entity e)
+	{
+		mRegionsByEntity.set(e.getId(), null);
+        mSortedEntities.remove(e);
+    }
 }

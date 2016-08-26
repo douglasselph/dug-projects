@@ -11,6 +11,7 @@ import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;
+import com.dugsolutions.spaceshipwarrior.systems.EntitySpawningTimerSystem;
 import com.dugsolutions.spaceshipwarrior.systems.MovementSystem;
 import com.dugsolutions.spaceshipwarrior.systems.PlayerInputSystem;
 import com.dugsolutions.spaceshipwarrior.systems.SpriteRenderSystem;
@@ -37,6 +38,7 @@ public class SpaceshipWarriorScreen implements Screen
 
 		mWorld.setSystem(new PlayerInputSystem(mCamera));
 		mWorld.setSystem(new MovementSystem());
+        mWorld.setSystem(new EntitySpawningTimerSystem());
 
 		mWorld.initialize();
 
