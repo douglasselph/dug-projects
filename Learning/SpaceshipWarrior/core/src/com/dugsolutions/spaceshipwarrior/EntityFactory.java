@@ -12,6 +12,7 @@ import com.dugsolutions.spaceshipwarrior.components.ParallaxStar;
 import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.ScaleAnimation;
+import com.dugsolutions.spaceshipwarrior.components.SoundEffect;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;
 
@@ -23,7 +24,7 @@ public class EntityFactory
 
 		e.addComponent(new Position(x, y));
 
-		Sprite sprite = new Sprite(Constants.FIGHTER, Sprite.Layer.ACTORS_3);
+		Sprite sprite = new Sprite(Constants.IMG_FIGHTER, Sprite.Layer.ACTORS_3);
 		sprite.r = 93 / 255f;
 		sprite.g = 255 / 255f;
 		sprite.b = 129 / 255f;
@@ -41,18 +42,19 @@ public class EntityFactory
 		Entity e = world.createEntity();
 
 		e.addComponent(new Position(x, y));
-		e.addComponent(new Sprite(Constants.BULLET, Sprite.Layer.PARTICLES));
+		e.addComponent(new Sprite(Constants.IMG_BULLET, Sprite.Layer.PARTICLES));
 		e.addComponent(new Velocity(0, 800));
 		e.addComponent(new Expires(2f));
 		e.addComponent(new Bounds(5));
+		e.addComponent(new SoundEffect(SoundEffect.EFFECT.PEW));
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_BULLETS);
 
 		return e;
 	}
 
-	public static Entity createEnemyShip(World world, String name, Sprite.Layer layer, float health, float x, float y, float vx,
-			float vy, float boundsRadius)
+	public static Entity createEnemyShip(World world, String name, Sprite.Layer layer, float health, float x, float y,
+			float vx, float vy, float boundsRadius)
 	{
 		Entity e = world.createEntity();
 
@@ -71,6 +73,133 @@ public class EntityFactory
 		e.addComponent(new Bounds(boundsRadius));
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.ENEMY_SHIPS);
+
+		return e;
+	}
+
+	public static Entity createParticle(World world, float x, float y)
+	{
+		Entity e = world.createEntity();
+
+		Position position = new Position();
+		position.x = x;
+		position.y = y;
+		e.addComponent(position);
+
+		Sprite sprite = new Sprite();
+		sprite.name = Constants.IMG_PARTICLE;
+		sprite.scaleX = sprite.scaleY = MathUtils.random(0.3f, 0.6f);
+		sprite.r = 1;
+		sprite.g = 216 / 255f;
+		sprite.b = 0;
+		sprite.a = 0.5f;
+		sprite.layer = Sprite.Layer.PARTICLES;
+		e.addComponent(sprite);
+
+		float radians = MathUtils.random(2 * MathUtils.PI);
+		float magnitude = MathUtils.random(400f);
+
+		Velocity velocity = new Velocity(magnitude * MathUtils.cos(radians), magnitude * MathUtils.sin(radians));
+		e.addComponent(velocity);
+
+		e.addComponent(velocity);
+
+		Expires expires = new Expires();
+		expires.delay = 1;
+		e.addComponent(expires);
+
+		ColorAnimation colorAnimation = new ColorAnimation();
+		colorAnimation.alphaAnimate = true;
+		colorAnimation.alphaSpeed = -1f;
+		colorAnimation.alphaMin = 0f;
+		colorAnimation.alphaMax = 1f;
+		colorAnimation.repeat = false;
+		e.addComponent(colorAnimation);
+
+		return e;
+	}
+
+	public static Entity createSmallExplosion(World world, float x, float y)
+	{
+		Entity e = createExplosion(world, x, y, 0.1f);
+
+		e.addComponent(new SoundEffect(SoundEffect.EFFECT.SMALLASPLODE));
+
+		return e;
+	}
+
+	public static Entity createBigExplosion(World world, float x, float y)
+	{
+		Entity e = createExplosion(world, x, y, 0.5f);
+
+		e.addComponent(new SoundEffect(SoundEffect.EFFECT.ASPLODE));
+
+		return e;
+	}
+
+	public static Entity createExplosion(World world, float x, float y, float scale)
+	{
+		Entity e = world.createEntity();
+
+		Position position = new Position();
+		position.x = x;
+		position.y = y;
+		e.addComponent(position);
+
+		Sprite sprite = new Sprite();
+		sprite.name = Constants.IMG_EXPLOSION;
+		sprite.scaleX = sprite.scaleY = scale;
+		sprite.r = 1;
+		sprite.g = 216 / 255f;
+		sprite.b = 0;
+		sprite.a = 0.5f;
+		sprite.layer = Sprite.Layer.PARTICLES;
+		e.addComponent(sprite);
+
+		Expires expires = new Expires();
+		expires.delay = 0.5f;
+		e.addComponent(expires);
+
+		ScaleAnimation scaleAnimation = new ScaleAnimation();
+		scaleAnimation.active = true;
+		scaleAnimation.max = scale;
+		scaleAnimation.min = scale / 100f;
+		scaleAnimation.speed = -3.0f;
+		scaleAnimation.repeat = false;
+		e.addComponent(scaleAnimation);
+
+		return e;
+	}
+
+	public static Entity createStar(World world)
+	{
+		Entity e = world.createEntity();
+
+		Position position = new Position();
+		position.x = MathUtils.random(0, Constants.FRAME_WIDTH);
+		position.y = MathUtils.random(0, Constants.FRAME_HEIGHT);
+		e.addComponent(position);
+
+		Sprite sprite = new Sprite();
+		sprite.name = Constants.IMG_PARTICLE;
+		sprite.scaleX = sprite.scaleY = MathUtils.random(0.5f, 1f);
+		sprite.a = MathUtils.random(0.1f, 0.5f);
+		sprite.layer = Sprite.Layer.BACKGROUND;
+		e.addComponent(sprite);
+
+		Velocity velocity = new Velocity();
+		velocity.vy = MathUtils.random(-10f, -60f);
+		e.addComponent(velocity);
+
+		e.addComponent(new ParallaxStar());
+
+		ColorAnimation colorAnimation = new ColorAnimation();
+		colorAnimation.alphaAnimate = true;
+		colorAnimation.repeat = true;
+		colorAnimation.alphaSpeed = MathUtils.random(0.2f, 0.7f);
+		colorAnimation.alphaMin = 0.1f;
+		colorAnimation.alphaMax = 0.5f;
+		e.addComponent(colorAnimation);
 
 		return e;
 	}

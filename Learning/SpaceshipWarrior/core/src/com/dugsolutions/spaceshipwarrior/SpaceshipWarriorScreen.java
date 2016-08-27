@@ -8,14 +8,22 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;
 import com.dugsolutions.spaceshipwarrior.systems.CollisionSystem;
 import com.dugsolutions.spaceshipwarrior.systems.EntitySpawningTimerSystem;
+import com.dugsolutions.spaceshipwarrior.systems.HealthRenderSystem;
+import com.dugsolutions.spaceshipwarrior.systems.HudRenderSystem;
 import com.dugsolutions.spaceshipwarrior.systems.MovementSystem;
+import com.dugsolutions.spaceshipwarrior.systems.ParallaxStarRepeatingSystem;
 import com.dugsolutions.spaceshipwarrior.systems.PlayerInputSystem;
+import com.dugsolutions.spaceshipwarrior.systems.RemoveOffscreenShipsSystem;
+import com.dugsolutions.spaceshipwarrior.systems.ScaleAnimationSystem;
+import com.dugsolutions.spaceshipwarrior.systems.SoundEffectSystem;
 import com.dugsolutions.spaceshipwarrior.systems.SpriteRenderSystem;
 
 /**
@@ -23,10 +31,16 @@ import com.dugsolutions.spaceshipwarrior.systems.SpriteRenderSystem;
  */
 public class SpaceshipWarriorScreen implements Screen
 {
-	OrthographicCamera	mCamera;
+    static final float ASPECT_RATIO = (float) Constants.FRAME_WIDTH / (float) Constants.FRAME_HEIGHT;
+
+    OrthographicCamera	mCamera;
 	Game				mGame;
 	World				mWorld;
 	SpriteRenderSystem	mSpriteRenderSystem;
+	HudRenderSystem		mHudRenderSystem;
+	HealthRenderSystem	mHealthRenderSystem;
+    SoundEffectSystem   mSoundEffectSystem;
+    PlayerInputSystem   mPlayerInputSystem;
 
 	public SpaceshipWarriorScreen(Game game)
 	{
@@ -35,19 +49,32 @@ public class SpaceshipWarriorScreen implements Screen
 
 		mGame = game;
 
+        mSoundEffectSystem = new SoundEffectSystem();
+
 		mWorld = new World();
-		mSpriteRenderSystem = mWorld.setSystem(new SpriteRenderSystem(mCamera), true);
 
-		mWorld.setSystem(new PlayerInputSystem(mCamera));
+		mWorld.setSystem(mPlayerInputSystem = new PlayerInputSystem(mCamera));
 		mWorld.setSystem(new MovementSystem());
-        mWorld.setSystem(new EntitySpawningTimerSystem());
-        mWorld.setSystem(new CollisionSystem());
+		mWorld.setSystem(new EntitySpawningTimerSystem());
+		mWorld.setSystem(new CollisionSystem());
+		mWorld.setSystem(new ScaleAnimationSystem());
+		mWorld.setSystem(new ParallaxStarRepeatingSystem());
+        mWorld.setSystem(new RemoveOffscreenShipsSystem());
 
-        mWorld.setManager(new GroupManager());
+		mWorld.setSystem(mSpriteRenderSystem = new SpriteRenderSystem(mCamera), true);
+		mWorld.setSystem(mHudRenderSystem = new HudRenderSystem(mCamera), true);
+		mWorld.setSystem(mHealthRenderSystem = new HealthRenderSystem(mCamera), true);
+
+		mWorld.setManager(new GroupManager());
 
 		mWorld.initialize();
 
 		EntityFactory.createPlayer(mWorld, 150, 150).addToWorld();
+
+		for (int i = 0; i < Constants.NUM_STARS; i++)
+		{
+			EntityFactory.createStar(mWorld).addToWorld();
+		}
 	}
 
 	@Override
@@ -61,6 +88,8 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setDelta(delta);
 		mWorld.process();
 		mSpriteRenderSystem.process();
+        mHealthRenderSystem.process();
+        mHudRenderSystem.process();
 	}
 
 	@Override
@@ -84,7 +113,25 @@ public class SpaceshipWarriorScreen implements Screen
 	@Override
 	public void resize(int width, int height)
 	{
+        // Need to copy more code in to get this to work.
+        float aspectRatio = (float) width / (float) height;
+        float scale = 1f;
+        Vector2 crop = new Vector2(0f, 0f);
 
+        if (aspectRatio > ASPECT_RATIO) {
+            scale = (float) height / (float) Constants.FRAME_HEIGHT;
+            crop.x = (width - Constants.FRAME_WIDTH * scale) / 2f;
+        } else if (aspectRatio < ASPECT_RATIO) {
+            scale = (float) width / (float) Constants.FRAME_WIDTH;
+            crop.y = (height - Constants.FRAME_HEIGHT * scale) / 2f;
+        } else {
+            scale = (float) width / (float) Constants.FRAME_WIDTH;
+        }
+
+        float w = (float) Constants.FRAME_WIDTH * scale;
+        float h = (float) Constants.FRAME_HEIGHT * scale;
+        Rectangle viewport = new Rectangle(crop.x, crop.y, w, h);
+//        mPlayerInputSystem.setViewport(viewport);
 	}
 
 	@Override
@@ -96,6 +143,16 @@ public class SpaceshipWarriorScreen implements Screen
 	@Override
 	public void show()
 	{
-
 	}
+
+	void soundOn()
+	{
+		mWorld.setSystem(mSoundEffectSystem);
+	}
+
+    void soundOff()
+    {
+        mWorld.deleteSystem(mSoundEffectSystem);
+    }
+
 }

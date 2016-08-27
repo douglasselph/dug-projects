@@ -10,6 +10,7 @@ import com.artemis.utils.Bag;
 import com.artemis.utils.ImmutableBag;
 import com.artemis.utils.Utils;
 import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.components.Bounds;
 import com.dugsolutions.spaceshipwarrior.components.Health;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -69,7 +70,7 @@ public class CollisionSystem extends EntitySystem
 	@Mapper
 	ComponentMapper<Health>		hm;
 
-	Bag<CollisionPair>	collisionPairs;
+	Bag<CollisionPair>			collisionPairs;
 
 	@SuppressWarnings("unchecked")
 	public CollisionSystem()
@@ -91,13 +92,22 @@ public class CollisionSystem extends EntitySystem
 						Health health = hm.get(ship);
 						health.health -= 10;
 
-						bullet.deleteFromWorld();
+                        Position bp = pm.get(bullet);
+                        EntityFactory.createSmallExplosion(world, bp.x, bp.y).addToWorld();
 
+                        for (int i = 0; i < 50; i++)
+                        {
+                            EntityFactory.createParticle(world, bp.x, bp.y).addToWorld();
+                        }
 						if (health.health <= 0)
 						{
+                            bp = pm.get(ship);
+                            EntityFactory.createBigExplosion(world, bp.x, bp.y).addToWorld();
+
 							ship.deleteFromWorld();
 						}
-					}
+                        bullet.deleteFromWorld();
+                    }
 				}));
 	}
 
@@ -115,5 +125,4 @@ public class CollisionSystem extends EntitySystem
 	{
 		return true;
 	}
-
 }
