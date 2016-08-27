@@ -18,6 +18,17 @@ android {
         applicationId "com.dugsolutions.spaceshipwarrior"
         minSdkVersion 8
         targetSdkVersion 24
+
+        jackOptions {
+            enabled true
+        }
+    }
+    dexOptions {
+        incremental true
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 // called every time gradle gets executed, takes the native dependencies of
@@ -78,8 +89,8 @@ eclipse {
     }
 
     jdt {
-        sourceCompatibility = 1.6
-        targetCompatibility = 1.6
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
     }
 
     classpath {
@@ -117,6 +128,9 @@ idea {
                 }
             }
         }
+
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
     }
 }
 dependencies {
