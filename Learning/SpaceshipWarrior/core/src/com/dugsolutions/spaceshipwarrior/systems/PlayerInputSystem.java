@@ -5,14 +5,12 @@ import com.artemis.ComponentMapper;
 import com.artemis.Entity;
 import com.artemis.annotations.Mapper;
 import com.artemis.systems.EntityProcessingSystem;
-import com.artemis.utils.TrigLUT;
-import com.artemis.utils.Utils;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.dugsolutions.spaceshipwarrior.Adjust;
 import com.dugsolutions.spaceshipwarrior.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -29,13 +27,13 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 	Vector3						mouseVector;
 
 	int							ax, ay;
-	final int					thruster	= 400;
+	final int					thruster	= 40;
 	final float					drag		= 0.4f;
 	boolean						shoot;
 
 	public PlayerInputSystem(OrthographicCamera camera)
 	{
-		super(Aspect.getAspectForAll(Position.class, Velocity.class, Player.class));
+		super(Aspect.getAspectForAll(Position.class, Player.class));
 		this.camera = camera;
 		this.mouseVector = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
 	}
@@ -52,29 +50,34 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 		mouseVector.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 		camera.unproject(mouseVector);
 
-		Velocity vel = vm.get(e);
+		if (ax != 0)
+		{
+			Adjust.getInstance().inc(ax, 0);
+			ax = 0;
+		}
 
-		vel.vx += (ax - drag * vel.vx) * world.getDelta();
-		vel.vy += (ay - drag * vel.vy) * world.getDelta();
+		// float incx = (ax - drag * vel.vx) * world.getDelta();
+		// float incy = (ay - drag * vel.vy) * world.getDelta();
 
 		if (shoot)
 		{
 			Position pos = pm.get(e);
-			EntityFactory.createBullet(world,pos.x+7,pos.y+40).addToWorld();
-			EntityFactory.createBullet(world,pos.x+60,pos.y+40).addToWorld();		}
+			EntityFactory.createBullet(world, pos.x + 7, pos.y + 40).addToWorld();
+			EntityFactory.createBullet(world, pos.x + 60, pos.y + 40).addToWorld();
+		}
 	}
 
 	@Override
 	public boolean keyDown(int keycode)
 	{
-		if (keycode == Input.Keys.UP)
-			ay = thruster;
-		if (keycode == Input.Keys.DOWN)
-			ay = -thruster;
+		// if (keycode == Input.Keys.UP)
+		// ay = thruster;
+		// if (keycode == Input.Keys.DOWN)
+		// ay = -thruster;
 		if (keycode == Input.Keys.RIGHT)
-			ax = thruster;
-		if (keycode == Input.Keys.LEFT)
 			ax = -thruster;
+		if (keycode == Input.Keys.LEFT)
+			ax = thruster;
 		if (keycode == Input.Keys.SPACE)
 			shoot = true;
 		return false;

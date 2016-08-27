@@ -30,6 +30,14 @@ public class ParallaxStarRepeatingSystem extends IntervalEntityProcessingSystem
 		{
 			position.y = Constants.FRAME_HEIGHT;
 		}
+		if (position.x < 0)
+		{
+			position.x += Constants.FRAME_WIDTH;
+		}
+		if (position.x > Constants.FRAME_WIDTH)
+		{
+			position.x -= Constants.FRAME_WIDTH;
+		}
 	}
 
 }

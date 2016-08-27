@@ -18,6 +18,8 @@ import com.dugsolutions.spaceshipwarrior.components.Velocity;
 
 public class EntityFactory
 {
+    static int PLAYER_ID;
+
 	public static Entity createPlayer(World world, float x, float y)
 	{
 		Entity e = world.createEntity();
@@ -29,13 +31,19 @@ public class EntityFactory
 		sprite.g = 255 / 255f;
 		sprite.b = 129 / 255f;
 		e.addComponent(sprite);
-		e.addComponent(new Velocity());
 		e.addComponent(new Player());
 		e.addComponent(new Bounds(43));
+
+        PLAYER_ID = e.getId();
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_SHIP);
 		return e;
 	}
+
+    public static boolean IsPlayer(Entity e)
+    {
+        return PLAYER_ID == e.getId();
+    }
 
 	public static Entity createBullet(World world, float x, float y)
 	{
@@ -100,8 +108,6 @@ public class EntityFactory
 		float magnitude = MathUtils.random(400f);
 
 		Velocity velocity = new Velocity(magnitude * MathUtils.cos(radians), magnitude * MathUtils.sin(radians));
-		e.addComponent(velocity);
-
 		e.addComponent(velocity);
 
 		Expires expires = new Expires();
@@ -190,7 +196,6 @@ public class EntityFactory
 		Velocity velocity = new Velocity();
 		velocity.vy = MathUtils.random(-10f, -60f);
 		e.addComponent(velocity);
-
 		e.addComponent(new ParallaxStar());
 
 		ColorAnimation colorAnimation = new ColorAnimation();
