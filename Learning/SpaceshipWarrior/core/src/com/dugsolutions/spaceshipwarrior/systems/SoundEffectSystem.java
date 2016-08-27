@@ -13,7 +13,6 @@ import com.badlogic.gdx.audio.Sound;
 
 public class SoundEffectSystem extends EntityProcessingSystem
 {
-
 	@Mapper
 	ComponentMapper<SoundEffect>	se;
 
@@ -36,7 +35,6 @@ public class SoundEffectSystem extends EntityProcessingSystem
 	@Override
 	protected void process(Entity e)
 	{
-
 		SoundEffect soundEffect = se.get(e);
 
 		switch (soundEffect.effect)

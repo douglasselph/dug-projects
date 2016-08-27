@@ -49,8 +49,6 @@ public class SpaceshipWarriorScreen implements Screen
 
 		mGame = game;
 
-        mSoundEffectSystem = new SoundEffectSystem();
-
 		mWorld = new World();
 
 		mWorld.setSystem(mPlayerInputSystem = new PlayerInputSystem(mCamera));
@@ -60,6 +58,7 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setSystem(new ScaleAnimationSystem());
 		mWorld.setSystem(new ParallaxStarRepeatingSystem());
         mWorld.setSystem(new RemoveOffscreenShipsSystem());
+        mWorld.setSystem(new SoundEffectSystem());
 
 		mWorld.setSystem(mSpriteRenderSystem = new SpriteRenderSystem(mCamera), true);
 		mWorld.setSystem(mHudRenderSystem = new HudRenderSystem(mCamera), true);
@@ -75,7 +74,8 @@ public class SpaceshipWarriorScreen implements Screen
 		{
 			EntityFactory.createStar(mWorld).addToWorld();
 		}
-	}
+
+    }
 
 	@Override
 	public void render(float delta)
@@ -95,7 +95,6 @@ public class SpaceshipWarriorScreen implements Screen
 	@Override
 	public void dispose()
 	{
-
 	}
 
 	@Override
@@ -147,12 +146,10 @@ public class SpaceshipWarriorScreen implements Screen
 
 	void soundOn()
 	{
-		mWorld.setSystem(mSoundEffectSystem);
 	}
 
     void soundOff()
     {
-        mWorld.deleteSystem(mSoundEffectSystem);
     }
 
 }
