@@ -11,7 +11,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.components.ScaleByDist;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;

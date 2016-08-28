@@ -2,7 +2,7 @@ package com.dugsolutions.spaceshipwarrior.systems;
 
 import com.dugsolutions.spaceshipwarrior.components.ParallaxStar;
 import com.dugsolutions.spaceshipwarrior.components.Position;
-import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 
 import com.artemis.Aspect;
 import com.artemis.ComponentMapper;
@@ -26,17 +26,17 @@ public class ParallaxStarRepeatingSystem extends IntervalEntityProcessingSystem
 	{
 		Position position = pm.get(e);
 
-		if (position.y < 0)
+		if (position.y < Constants.FRAME.getMinY())
 		{
-			position.y = Constants.FRAME_HEIGHT;
+			position.y = Constants.FRAME.getMaxY();
 		}
-		if (position.x < 0)
+		if (position.x < Constants.FRAME.getMinX())
 		{
-			position.x += Constants.FRAME_WIDTH;
+			position.x += Constants.FRAME.getWidth();
 		}
-		if (position.x > Constants.FRAME_WIDTH)
+		if (position.x > Constants.FRAME.getMaxX())
 		{
-			position.x -= Constants.FRAME_WIDTH;
+			position.x -= Constants.FRAME.getWidth();
 		}
 	}
 

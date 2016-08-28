@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
-import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 
 import com.artemis.ComponentMapper;
 import com.artemis.annotations.Mapper;
@@ -60,10 +60,10 @@ public class HudRenderSystem extends VoidEntitySystem {
 	@Override
 	protected void processSystem() {
 		batch.setColor(1, 1, 1, 1);
-		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, Constants.FRAME_HEIGHT - 20);
-		font.draw(batch, "Active entities: " + world.getEntityManager().getActiveEntityCount(), 20, Constants.FRAME_HEIGHT - 40);
-		font.draw(batch, "Total created: " + world.getEntityManager().getTotalCreated(), 20, Constants.FRAME_HEIGHT - 60);
-		font.draw(batch, "Total deleted: " + world.getEntityManager().getTotalDeleted(), 20, Constants.FRAME_HEIGHT - 80);
+		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, Constants.FRAME.getMaxY() - 20);
+		font.draw(batch, "Active entities: " + world.getEntityManager().getActiveEntityCount(), 20, Constants.FRAME.getMaxY() - 40);
+		font.draw(batch, "Total created: " + world.getEntityManager().getTotalCreated(), 20, Constants.FRAME.getMaxY() - 60);
+		font.draw(batch, "Total deleted: " + world.getEntityManager().getTotalDeleted(), 20, Constants.FRAME.getMaxY() - 80);
 	}
 	
 	@Override

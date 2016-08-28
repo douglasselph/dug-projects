@@ -4,7 +4,6 @@ import com.dugsolutions.spaceshipwarrior.components.Bounds;
 import com.dugsolutions.spaceshipwarrior.components.Health;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;
-import com.dugsolutions.spaceshipwarrior.Constants;
 
 import com.artemis.Aspect;
 import com.artemis.ComponentMapper;

@@ -3,8 +3,8 @@ package com.dugsolutions.spaceshipwarrior.systems;
 import com.artemis.systems.VoidEntitySystem;
 import com.artemis.utils.Timer;
 import com.badlogic.gdx.math.MathUtils;
-import com.dugsolutions.spaceshipwarrior.Constants;
-import com.dugsolutions.spaceshipwarrior.EntityFactory;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
+import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 
 public class EntitySpawningTimerSystem extends VoidEntitySystem
@@ -21,8 +21,8 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			public void execute()
 			{
 				EntityFactory.createEnemyShip(world, "enemy1", Sprite.Layer.ACTORS_3, 10,
-						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -40, 20).addToWorld();
+						MathUtils.random(Constants.FRAME.getMinX() + 10, Constants.FRAME.getMaxX() - 10),
+						Constants.FRAME.getMaxY() + 50, 0, -40, 20).addToWorld();
 			}
 		};
 		timer2 = new Timer(6, true)
@@ -31,8 +31,8 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			public void execute()
 			{
 				EntityFactory.createEnemyShip(world, "enemy2", Sprite.Layer.ACTORS_2, 20,
-						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -30, 40).addToWorld();
+						MathUtils.random(Constants.FRAME.getMinX() + 10, Constants.FRAME.getMaxX() - 10),
+						Constants.FRAME.getMaxY() + 50, 0, -30, 40).addToWorld();
 			}
 		};
 		timer3 = new Timer(12, true)
@@ -41,8 +41,8 @@ public class EntitySpawningTimerSystem extends VoidEntitySystem
 			public void execute()
 			{
 				EntityFactory.createEnemyShip(world, "enemy3", Sprite.Layer.ACTORS_1, 60,
-						MathUtils.random(10, Constants.FRAME_WIDTH),
-						Constants.FRAME_HEIGHT + 50, 0, -20, 70).addToWorld();
+						MathUtils.random(Constants.FRAME.getMinX() + 10, Constants.FRAME.getMaxX() - 10),
+						Constants.FRAME.getMaxY() + 50, 0, -20, 70).addToWorld();
 			}
 		};
 	}

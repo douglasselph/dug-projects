@@ -1,6 +1,6 @@
 package com.dugsolutions.spaceshipwarrior.systems;
 
-import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.components.Health;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 

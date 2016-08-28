@@ -1,7 +1,11 @@
-package com.dugsolutions.spaceshipwarrior;
+package com.dugsolutions.spaceshipwarrior.util;
+
+import java.awt.Rectangle;
 
 public class Constants
 {
+	public static final SimpleBounds FRAME = new SimpleBounds(0, 0, 1280, 900);
+
 	public class Groups
 	{
 		public static final String	PLAYER_BULLETS	= "player bullets";
@@ -10,12 +14,10 @@ public class Constants
 		public static final String	ENEMY_BULLETS	= "enemy bullets";
 	}
 
-	public static final int		FRAME_WIDTH			= 1280;
-	public static final int		FRAME_HEIGHT		= 900;
 	public static final int		NUM_STARS			= 500;
 	public static final int		PLAYER_Y			= 150;
 	public static final int 	ENEMY_Y_BOTTOM		= 200;
-	public static final int		ENEMY_REGION_HEIGHT = FRAME_HEIGHT - ENEMY_Y_BOTTOM + FRAME_HEIGHT / 10;
+	public static final int		ENEMY_REGION_HEIGHT = (int) (FRAME.getMaxY() - ENEMY_Y_BOTTOM + FRAME.getHeight() / 10);
 	public static final String	TEXTURE_ORIGINALS	= "texture-originals";
 	public static final String	TEXTURE				= "texture";
 	public static final String	PACK_ATLAS			= TEXTURE + "/pack.atlas";
@@ -33,6 +35,6 @@ public class Constants
 
 	public static float computeScaleFromY(float y)
 	{
-		return 1 - ((y - Constants.ENEMY_Y_BOTTOM) / (float) Constants.ENEMY_REGION_HEIGHT);
+		return 1 - ((y - ENEMY_Y_BOTTOM) / (float) ENEMY_REGION_HEIGHT);
 	}
 }

@@ -11,7 +11,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.dugsolutions.spaceshipwarrior.Adjust;
-import com.dugsolutions.spaceshipwarrior.EntityFactory;
+import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Velocity;

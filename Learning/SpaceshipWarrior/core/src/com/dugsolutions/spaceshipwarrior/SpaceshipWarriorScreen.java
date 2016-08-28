@@ -19,15 +19,16 @@ import com.dugsolutions.spaceshipwarrior.systems.ParallaxStarRepeatingSystem;
 import com.dugsolutions.spaceshipwarrior.systems.PlayerInputSystem;
 import com.dugsolutions.spaceshipwarrior.systems.RemoveOffscreenShipsSystem;
 import com.dugsolutions.spaceshipwarrior.systems.ScaleAnimationSystem;
-import com.dugsolutions.spaceshipwarrior.systems.SoundEffectSystem;
 import com.dugsolutions.spaceshipwarrior.systems.SpriteRenderSystem;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
+import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
 
 /**
  * Created by dug on 8/25/16.
  */
 public class SpaceshipWarriorScreen implements Screen
 {
-	static final float	ASPECT_RATIO	= (float) Constants.FRAME_WIDTH / (float) Constants.FRAME_HEIGHT;
+	static final float	ASPECT_RATIO	= (float) Constants.FRAME.getWidth() / (float) Constants.FRAME.getHeight();
 
 	OrthographicCamera	mCamera;
 	Game				mGame;
@@ -64,9 +65,9 @@ public class SpaceshipWarriorScreen implements Screen
 
 		mWorld.initialize();
 
-		EntityFactory.createPlayer(mWorld, Constants.FRAME_WIDTH / 2, Constants.PLAYER_Y).addToWorld();
+		EntityFactory.createPlayer(mWorld, Constants.FRAME.getMidX(), Constants.PLAYER_Y).addToWorld();
 
-		for (int i = 0; i < Constants.NUM_STARS; i++)
+		for (int i = 0; i < com.dugsolutions.spaceshipwarrior.util.Constants.NUM_STARS; i++)
 		{
 			EntityFactory.createStar(mWorld).addToWorld();
 		}
@@ -117,21 +118,21 @@ public class SpaceshipWarriorScreen implements Screen
 
 		if (aspectRatio > ASPECT_RATIO)
 		{
-			scale = (float) height / (float) Constants.FRAME_HEIGHT;
-			crop.x = (width - Constants.FRAME_WIDTH * scale) / 2f;
+			scale = (float) height / (float) Constants.FRAME.getHeight();
+			crop.x = (width - Constants.FRAME.getWidth() * scale) / 2f;
 		}
 		else if (aspectRatio < ASPECT_RATIO)
 		{
-			scale = (float) width / (float) Constants.FRAME_WIDTH;
-			crop.y = (height - Constants.FRAME_HEIGHT * scale) / 2f;
+			scale = (float) width / (float) Constants.FRAME.getWidth();
+			crop.y = (height - Constants.FRAME.getHeight() * scale) / 2f;
 		}
 		else
 		{
-			scale = (float) width / (float) Constants.FRAME_WIDTH;
+			scale = (float) width / (float) Constants.FRAME.getWidth();
 		}
 
-		float w = (float) Constants.FRAME_WIDTH * scale;
-		float h = (float) Constants.FRAME_HEIGHT * scale;
+		float w = (float) Constants.FRAME.getWidth() * scale;
+		float h = (float) Constants.FRAME.getHeight() * scale;
 		Rectangle viewport = new Rectangle(crop.x, crop.y, w, h);
 		// mPlayerInputSystem.setViewport(viewport);
 	}
@@ -144,14 +145,6 @@ public class SpaceshipWarriorScreen implements Screen
 
 	@Override
 	public void show()
-	{
-	}
-
-	void soundOn()
-	{
-	}
-
-	void soundOff()
 	{
 	}
 
