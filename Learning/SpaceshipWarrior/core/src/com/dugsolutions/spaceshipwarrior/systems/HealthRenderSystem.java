@@ -1,5 +1,6 @@
 package com.dugsolutions.spaceshipwarrior.systems;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.components.Health;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -26,11 +27,11 @@ public class HealthRenderSystem extends EntityProcessingSystem
 	ComponentMapper<Health>		hm;
 
 	private SpriteBatch			batch;
-	private OrthographicCamera	camera;
+	private Camera				camera;
 	private BitmapFont			font;
 
 	@SuppressWarnings("unchecked")
-	public HealthRenderSystem(OrthographicCamera camera)
+	public HealthRenderSystem(Camera camera)
 	{
 		super(Aspect.getAspectForAll(Position.class, Health.class));
 		this.camera = camera;

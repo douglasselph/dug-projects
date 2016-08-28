@@ -2,6 +2,7 @@ package com.dugsolutions.spaceshipwarrior.systems;
 
 import java.util.HashMap;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 import com.dugsolutions.spaceshipwarrior.util.Constants;
@@ -19,27 +20,31 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-public class HudRenderSystem extends VoidEntitySystem {
+public class HudRenderSystem extends VoidEntitySystem
+{
 	@Mapper
-	ComponentMapper<Position> pm;
+	ComponentMapper<Position>				pm;
 	@Mapper
-	ComponentMapper<Sprite> sm;
+	ComponentMapper<Sprite>					sm;
 
-	private HashMap<String, AtlasRegion> regions;
-	private TextureAtlas textureAtlas;
-	private SpriteBatch batch;
-	private OrthographicCamera camera;
-	private BitmapFont font;
+	private HashMap<String, AtlasRegion>	regions;
+	private TextureAtlas					textureAtlas;
+	private SpriteBatch						batch;
+	private Camera							camera;
+	private BitmapFont						font;
 
-	public HudRenderSystem(OrthographicCamera camera) {
+	public HudRenderSystem(Camera camera)
+	{
 		this.camera = camera;
 	}
 
 	@Override
-	protected void initialize() {
+	protected void initialize()
+	{
 		regions = new HashMap<String, AtlasRegion>();
 		textureAtlas = new TextureAtlas(Constants.PACK_ATLAS);
-		for (AtlasRegion r : textureAtlas.getRegions()) {
+		for (AtlasRegion r : textureAtlas.getRegions())
+		{
 			regions.put(r.name, r);
 		}
 		batch = new SpriteBatch();
@@ -52,22 +57,28 @@ public class HudRenderSystem extends VoidEntitySystem {
 	}
 
 	@Override
-	protected void begin() {
+	protected void begin()
+	{
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 	}
 
 	@Override
-	protected void processSystem() {
+	protected void processSystem()
+	{
 		batch.setColor(1, 1, 1, 1);
 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 20, Constants.FRAME.getMaxY() - 20);
-		font.draw(batch, "Active entities: " + world.getEntityManager().getActiveEntityCount(), 20, Constants.FRAME.getMaxY() - 40);
-		font.draw(batch, "Total created: " + world.getEntityManager().getTotalCreated(), 20, Constants.FRAME.getMaxY() - 60);
-		font.draw(batch, "Total deleted: " + world.getEntityManager().getTotalDeleted(), 20, Constants.FRAME.getMaxY() - 80);
+		font.draw(batch, "Active entities: " + world.getEntityManager().getActiveEntityCount(), 20,
+				Constants.FRAME.getMaxY() - 40);
+		font.draw(batch, "Total created: " + world.getEntityManager().getTotalCreated(), 20,
+				Constants.FRAME.getMaxY() - 60);
+		font.draw(batch, "Total deleted: " + world.getEntityManager().getTotalDeleted(), 20,
+				Constants.FRAME.getMaxY() - 80);
 	}
-	
+
 	@Override
-	protected void end() {
+	protected void end()
+	{
 		batch.end();
 	}
 

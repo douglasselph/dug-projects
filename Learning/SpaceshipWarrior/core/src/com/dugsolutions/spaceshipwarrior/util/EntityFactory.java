@@ -27,7 +27,7 @@ public class EntityFactory
 
 		e.addComponent(new Position(x, y));
 
-		Sprite sprite = new Sprite(com.dugsolutions.spaceshipwarrior.util.Constants.IMG_FIGHTER, Sprite.Layer.ACTORS_3);
+		Sprite sprite = new Sprite(Constants.IMG_FIGHTER, Sprite.Layer.ACTORS_3);
 		sprite.r = 93 / 255f;
 		sprite.g = 255 / 255f;
 		sprite.b = 129 / 255f;
@@ -37,8 +37,7 @@ public class EntityFactory
 
 		PLAYER_ID = e.getId();
 
-		world.getManager(GroupManager.class)
-				.add(e, com.dugsolutions.spaceshipwarrior.util.Constants.Groups.PLAYER_SHIP);
+		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_SHIP);
 		return e;
 	}
 
@@ -52,15 +51,14 @@ public class EntityFactory
 		Entity e = world.createEntity();
 
 		e.addComponent(new Position(x, y));
-		e.addComponent(new Sprite(com.dugsolutions.spaceshipwarrior.util.Constants.IMG_BULLET, Sprite.Layer.PARTICLES));
+		e.addComponent(new Sprite(Constants.IMG_BULLET, Sprite.Layer.PARTICLES));
 		e.addComponent(new Velocity(0, 800));
 		e.addComponent(new Expires(2f));
 		e.addComponent(new Bounds(5));
 		e.addComponent(new ScaleByDist());
 		e.addComponent(new SoundEffect(SoundEffect.EFFECT.PEW));
 
-		world.getManager(GroupManager.class).add(e,
-				com.dugsolutions.spaceshipwarrior.util.Constants.Groups.PLAYER_BULLETS);
+		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_BULLETS);
 
 		return e;
 	}
@@ -85,15 +83,14 @@ public class EntityFactory
 		e.addComponent(new Bounds(boundsRadius));
 		e.addComponent(new ScaleByDist());
 
-		world.getManager(GroupManager.class)
-				.add(e, com.dugsolutions.spaceshipwarrior.util.Constants.Groups.ENEMY_SHIPS);
+		world.getManager(GroupManager.class).add(e, Constants.Groups.ENEMY_SHIPS);
 
 		return e;
 	}
 
 	public static Entity createParticle(World world, float x, float y)
 	{
-		float scaleDistY = com.dugsolutions.spaceshipwarrior.util.Constants.computeScaleFromY(y);
+		float scaleDistY = Constants.computeScaleFromY(y);
 		float scale = MathUtils.random(0.3f, 0.6f);
 
 		Entity e = world.createEntity();
@@ -104,7 +101,7 @@ public class EntityFactory
 		e.addComponent(position);
 
 		Sprite sprite = new Sprite();
-		sprite.name = com.dugsolutions.spaceshipwarrior.util.Constants.IMG_PARTICLE;
+		sprite.name = Constants.IMG_PARTICLE;
 		sprite.scaleX = sprite.scaleY = scale * scaleDistY;
 		sprite.r = 1;
 		sprite.g = 216 / 255f;
@@ -162,7 +159,7 @@ public class EntityFactory
 
 	public static Entity createExplosion(World world, float x, float y, float scale)
 	{
-		float scaleDistY = com.dugsolutions.spaceshipwarrior.util.Constants.computeScaleFromY(y);
+		float scaleDistY = Constants.computeScaleFromY(y);
 		float useScale = scale * scaleDistY;
 
 		Entity e = world.createEntity();
@@ -173,7 +170,7 @@ public class EntityFactory
 		e.addComponent(position);
 
 		Sprite sprite = new Sprite();
-		sprite.name = com.dugsolutions.spaceshipwarrior.util.Constants.IMG_EXPLOSION;
+		sprite.name = Constants.IMG_EXPLOSION;
 		sprite.scaleX = sprite.scaleY = useScale;
 		sprite.r = 1;
 		sprite.g = 216 / 255f;
@@ -207,7 +204,7 @@ public class EntityFactory
 		e.addComponent(position);
 
 		Sprite sprite = new Sprite();
-		sprite.name = com.dugsolutions.spaceshipwarrior.util.Constants.IMG_STAR;
+		sprite.name = Constants.IMG_STAR;
 		sprite.scaleX = sprite.scaleY = MathUtils.random(0.5f, 1f);
 		sprite.a = MathUtils.random(0.1f, 0.5f);
 		sprite.layer = Sprite.Layer.BACKGROUND;

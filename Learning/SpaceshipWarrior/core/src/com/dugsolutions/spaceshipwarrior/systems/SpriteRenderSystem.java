@@ -8,6 +8,7 @@ import com.artemis.annotations.Mapper;
 import com.artemis.utils.Bag;
 import com.artemis.utils.ImmutableBag;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -34,7 +35,7 @@ public class SpriteRenderSystem extends EntitySystem
 	@Mapper
 	ComponentMapper<ScaleByDist>				em;
 
-	OrthographicCamera							mCamera;
+	Camera										mCamera;
 	SpriteBatch									mBatch;
 	TextureAtlas								mAtlas;
 	HashMap<String, TextureAtlas.AtlasRegion>	mRegions;
@@ -42,7 +43,7 @@ public class SpriteRenderSystem extends EntitySystem
 	List<Entity>								mSortedEntities;
 
 	@SuppressWarnings("unchecked")
-	public SpriteRenderSystem(OrthographicCamera camera)
+	public SpriteRenderSystem(Camera camera)
 	{
 		super(Aspect.getAspectForOne(Position.class, Sprite.class, ScaleByDist.class));
 		this.mCamera = camera;

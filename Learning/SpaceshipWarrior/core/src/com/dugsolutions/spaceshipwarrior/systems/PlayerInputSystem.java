@@ -8,6 +8,7 @@ import com.artemis.systems.EntityProcessingSystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.dugsolutions.spaceshipwarrior.Adjust;
@@ -23,7 +24,7 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 	@Mapper
 	ComponentMapper<Position>	pm;
 
-	OrthographicCamera			camera;
+	Camera						camera;
 	Vector3						mouseVector;
 
 	int							ax, ay;
@@ -31,7 +32,7 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 	final float					drag		= 0.4f;
 	boolean						shoot;
 
-	public PlayerInputSystem(OrthographicCamera camera)
+	public PlayerInputSystem(Camera camera)
 	{
 		super(Aspect.getAspectForAll(Position.class, Player.class));
 		this.camera = camera;
