@@ -1,79 +1,62 @@
 package com.dugsolutions.spaceshipwarrior;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 
 public class Adjust
 {
 	public static Adjust getInstance()
 	{
-        return sAdjust;
+		return sAdjust;
 	}
 
-    public static void Init()
-    {
-        new Adjust();
-    }
+	public static void Init()
+	{
+		new Adjust();
+	}
 
 	static Adjust	sAdjust;
 
-	float			max, may;
-	float			dax, day;
-	float			lax, lay;
+    float           counter;
+	Matrix4			mx = new Matrix4();
+    Matrix4         dx = new Matrix4();
+    Vector3         tx = new Vector3();
 
 	public Adjust()
 	{
 		sAdjust = this;
+        mx.idt();
+        dx.idt();
 	}
 
 	public void inc(float x, float y)
 	{
-		max += x;
-		may += y;
-		lax += x;
-		lay += y;
-		dax = 0;
-		day = 0;
+        mx.translate(x, y, 0);
+        dx.idt();
+        counter += 1;
 	}
 
 	public void next(float delta)
 	{
-        if (lax != 0)
-        {
-            dax = max * delta;
-            lax -= dax;
+        dx.idt();
 
-            if ((max > 0 && lax < 0) || (max < 0 && lax > 0))
-            {
-                lax = 0;
-            }
+        if (counter > 0)
+        {
+            mx.getTranslation(tx);
+            counter -= delta;
+            tx.scl(delta);
+            dx.setTranslation(tx);
         }
         else
         {
-            dax = 0;
+            counter = 0;
         }
-		if (lay != 0)
-		{
-			day = may * delta;
-			lay -= day;
+	}
 
-            if ((may > 0 && lay < 0) || (may < 0 && lay > 0))
-            {
-                lay = 0;
-            }
-		}
-        else
-        {
-            day = 0;
-        }
+    public Matrix4 getMx()
+    {
+        return dx;
     }
 
-	public float getDeltaX()
-	{
-		return dax;
-	}
-
-	public float getDeltaY()
-	{
-		return day;
-	}
 }

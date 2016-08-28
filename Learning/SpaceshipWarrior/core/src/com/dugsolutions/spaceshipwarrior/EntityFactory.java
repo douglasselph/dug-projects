@@ -6,6 +6,7 @@ import com.artemis.managers.GroupManager;
 import com.badlogic.gdx.math.MathUtils;
 import com.dugsolutions.spaceshipwarrior.components.Bounds;
 import com.dugsolutions.spaceshipwarrior.components.ColorAnimation;
+import com.dugsolutions.spaceshipwarrior.components.ScaleByDist;
 import com.dugsolutions.spaceshipwarrior.components.Expires;
 import com.dugsolutions.spaceshipwarrior.components.Health;
 import com.dugsolutions.spaceshipwarrior.components.ParallaxStar;
@@ -54,6 +55,7 @@ public class EntityFactory
 		e.addComponent(new Velocity(0, 800));
 		e.addComponent(new Expires(2f));
 		e.addComponent(new Bounds(5));
+        e.addComponent(new ScaleByDist());
 		e.addComponent(new SoundEffect(SoundEffect.EFFECT.PEW));
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_BULLETS);
@@ -79,6 +81,7 @@ public class EntityFactory
 		e.addComponent(new Velocity(vx, vy));
 		e.addComponent(new Health(health));
 		e.addComponent(new Bounds(boundsRadius));
+        e.addComponent(new ScaleByDist());
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.ENEMY_SHIPS);
 
@@ -87,6 +90,9 @@ public class EntityFactory
 
 	public static Entity createParticle(World world, float x, float y)
 	{
+        float scaleDistY = Constants.computeScaleFromY(y);
+        float scale = MathUtils.random(0.3f, 0.6f);
+
 		Entity e = world.createEntity();
 
 		Position position = new Position();
@@ -96,7 +102,7 @@ public class EntityFactory
 
 		Sprite sprite = new Sprite();
 		sprite.name = Constants.IMG_PARTICLE;
-		sprite.scaleX = sprite.scaleY = MathUtils.random(0.3f, 0.6f);
+		sprite.scaleX = sprite.scaleY = scale * scaleDistY;
 		sprite.r = 1;
 		sprite.g = 216 / 255f;
 		sprite.b = 0;
@@ -125,26 +131,37 @@ public class EntityFactory
 		return e;
 	}
 
-	public static Entity createSmallExplosion(World world, float x, float y)
+	public static void createSmallExplosion(World world, float x, float y)
 	{
 		Entity e = createExplosion(world, x, y, 0.1f);
 
 		e.addComponent(new SoundEffect(SoundEffect.EFFECT.SMALLASPLODE));
+        e.addToWorld();
 
-		return e;
+         createBurst(world, x, y);
 	}
 
-	public static Entity createBigExplosion(World world, float x, float y)
+	public static void createBigExplosion(World world, float x, float y)
 	{
 		Entity e = createExplosion(world, x, y, 0.5f);
 
 		e.addComponent(new SoundEffect(SoundEffect.EFFECT.ASPLODE));
-
-		return e;
+		e.addToWorld();
 	}
+
+    static void createBurst(World world, float x, float y)
+    {
+        for (int i = 0; i < 50; i++)
+        {
+            EntityFactory.createParticle(world, x, y).addToWorld();
+        }
+    }
 
 	public static Entity createExplosion(World world, float x, float y, float scale)
 	{
+        float scaleDistY = Constants.computeScaleFromY(y);
+        float useScale = scale * scaleDistY;
+
 		Entity e = world.createEntity();
 
 		Position position = new Position();
@@ -154,7 +171,7 @@ public class EntityFactory
 
 		Sprite sprite = new Sprite();
 		sprite.name = Constants.IMG_EXPLOSION;
-		sprite.scaleX = sprite.scaleY = scale;
+		sprite.scaleX = sprite.scaleY = useScale;
 		sprite.r = 1;
 		sprite.g = 216 / 255f;
 		sprite.b = 0;
@@ -168,8 +185,8 @@ public class EntityFactory
 
 		ScaleAnimation scaleAnimation = new ScaleAnimation();
 		scaleAnimation.active = true;
-		scaleAnimation.max = scale;
-		scaleAnimation.min = scale / 100f;
+		scaleAnimation.max = useScale;
+		scaleAnimation.min = useScale / 100f;
 		scaleAnimation.speed = -3.0f;
 		scaleAnimation.repeat = false;
 		e.addComponent(scaleAnimation);
@@ -187,7 +204,7 @@ public class EntityFactory
 		e.addComponent(position);
 
 		Sprite sprite = new Sprite();
-		sprite.name = Constants.IMG_PARTICLE;
+		sprite.name = Constants.IMG_STAR;
 		sprite.scaleX = sprite.scaleY = MathUtils.random(0.5f, 1f);
 		sprite.a = MathUtils.random(0.1f, 0.5f);
 		sprite.layer = Sprite.Layer.BACKGROUND;

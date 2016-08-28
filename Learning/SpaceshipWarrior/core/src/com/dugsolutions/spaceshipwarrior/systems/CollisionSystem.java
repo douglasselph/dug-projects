@@ -93,16 +93,12 @@ public class CollisionSystem extends EntitySystem
 						health.health -= 10;
 
                         Position bp = pm.get(bullet);
-                        EntityFactory.createSmallExplosion(world, bp.x, bp.y).addToWorld();
+                        EntityFactory.createSmallExplosion(world, bp.x, bp.y);
 
-                        for (int i = 0; i < 50; i++)
-                        {
-                            EntityFactory.createParticle(world, bp.x, bp.y).addToWorld();
-                        }
 						if (health.health <= 0)
 						{
                             bp = pm.get(ship);
-                            EntityFactory.createBigExplosion(world, bp.x, bp.y).addToWorld();
+                            EntityFactory.createBigExplosion(world, bp.x, bp.y);
 
 							ship.deleteFromWorld();
 						}

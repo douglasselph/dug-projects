@@ -13,6 +13,9 @@ public class Constants
 	public static final int		FRAME_WIDTH			= 1280;
 	public static final int		FRAME_HEIGHT		= 900;
 	public static final int		NUM_STARS			= 500;
+	public static final int		PLAYER_Y			= 150;
+	public static final int 	ENEMY_Y_BOTTOM		= 200;
+	public static final int		ENEMY_REGION_HEIGHT = FRAME_HEIGHT - ENEMY_Y_BOTTOM + FRAME_HEIGHT / 10;
 	public static final String	TEXTURE_ORIGINALS	= "texture-originals";
 	public static final String	TEXTURE				= "texture";
 	public static final String	PACK_ATLAS			= TEXTURE + "/pack.atlas";
@@ -21,9 +24,15 @@ public class Constants
 	public static final String	IMG_BULLET			= "bullet";
 	public static final String	IMG_PARTICLE		= "particle";
 	public static final String	IMG_EXPLOSION		= "explosion";
+	public static final String  IMG_STAR			= "star";
 
 	public static final String FONT_NORMAL 			= "fonts/normal.fnt";
 	public static final String FONT_HUD				= "fonts/normal.fnt";
 	public static final String FONT_IMG_NORMAL		= "fonts/normal_0.png";
 	public static final String FONT_IMG_HUD			= "fonts/normal_0.png";
+
+	public static float computeScaleFromY(float y)
+	{
+		return 1 - ((y - Constants.ENEMY_Y_BOTTOM) / (float) Constants.ENEMY_REGION_HEIGHT);
+	}
 }

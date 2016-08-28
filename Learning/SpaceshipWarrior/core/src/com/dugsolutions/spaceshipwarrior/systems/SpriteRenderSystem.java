@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.dugsolutions.spaceshipwarrior.Constants;
+import com.dugsolutions.spaceshipwarrior.components.ScaleByDist;
 import com.dugsolutions.spaceshipwarrior.components.Position;
 import com.dugsolutions.spaceshipwarrior.components.Sprite;
 
@@ -30,6 +31,8 @@ public class SpriteRenderSystem extends EntitySystem
 	ComponentMapper<Position>					pm;
 	@Mapper
 	ComponentMapper<Sprite>						sm;
+	@Mapper
+	ComponentMapper<ScaleByDist>				em;
 
 	OrthographicCamera							mCamera;
 	SpriteBatch									mBatch;
@@ -41,7 +44,7 @@ public class SpriteRenderSystem extends EntitySystem
 	@SuppressWarnings("unchecked")
 	public SpriteRenderSystem(OrthographicCamera camera)
 	{
-		super(Aspect.getAspectForAll(Position.class, Sprite.class));
+		super(Aspect.getAspectForOne(Position.class, Sprite.class, ScaleByDist.class));
 		this.mCamera = camera;
 	}
 
@@ -50,13 +53,13 @@ public class SpriteRenderSystem extends EntitySystem
 	{
 		mBatch = new SpriteBatch();
 		mAtlas = new TextureAtlas(Gdx.files.internal(Constants.PACK_ATLAS), Gdx.files.internal(Constants.TEXTURE));
-		mRegions = new HashMap<String, TextureAtlas.AtlasRegion>();
+		mRegions = new HashMap<>();
 		for (TextureAtlas.AtlasRegion r : mAtlas.getRegions())
 		{
 			mRegions.put(r.name, r);
 		}
-		mRegionsByEntity = new Bag<TextureAtlas.AtlasRegion>();
-		mSortedEntities = new ArrayList<Entity>();
+		mRegionsByEntity = new Bag<>();
+		mSortedEntities = new ArrayList<>();
 	}
 
 	@Override
@@ -83,17 +86,26 @@ public class SpriteRenderSystem extends EntitySystem
 
 	protected void process(Entity e)
 	{
-		if (pm.has(e))
+		if (pm.has(e) && sm.has(e))
 		{
-			Position position = pm.getSafe(e);
+			Position position = pm.get(e);
 			Sprite sprite = sm.get(e);
 
 			TextureAtlas.AtlasRegion spriteRegion = mRegionsByEntity.get(e.getId());
 			mBatch.setColor(sprite.r, sprite.g, sprite.b, sprite.a);
-			float posX = position.x - (spriteRegion.getRegionWidth() / 2 * sprite.scaleX);
-			float posY = position.y - (spriteRegion.getRegionHeight() / 2 * sprite.scaleX);
+			float scaleX = sprite.scaleX;
+			float scaleY = sprite.scaleY;
+
+			if (em.has(e))
+			{
+				float scale = Constants.computeScaleFromY(position.y);
+				scaleX *= scale;
+				scaleY *= scale;
+			}
+			float posX = position.x - (spriteRegion.getRegionWidth() / 2 * scaleX);
+			float posY = position.y - (spriteRegion.getRegionHeight() / 2 * scaleY);
 			mBatch.draw(spriteRegion, posX, posY, 0, 0, spriteRegion.getRegionWidth(), spriteRegion.getRegionHeight(),
-					sprite.scaleX, sprite.scaleY, sprite.rotation);
+					scaleX, scaleY, sprite.rotation);
 		}
 	}
 
@@ -127,6 +139,6 @@ public class SpriteRenderSystem extends EntitySystem
 	protected void removed(Entity e)
 	{
 		mRegionsByEntity.set(e.getId(), null);
-        mSortedEntities.remove(e);
-    }
+		mSortedEntities.remove(e);
+	}
 }

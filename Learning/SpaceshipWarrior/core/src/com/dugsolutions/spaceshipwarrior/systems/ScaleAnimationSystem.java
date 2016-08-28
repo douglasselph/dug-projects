@@ -29,8 +29,9 @@ public class ScaleAnimationSystem extends EntityProcessingSystem
 		{
 			Sprite sprite = sm.get(e);
 
-			sprite.scaleX += scaleAnimation.speed * world.delta;
-			sprite.scaleY = sprite.scaleX;
+			float value = scaleAnimation.speed * world.delta;
+			sprite.scaleX += value;
+			sprite.scaleY += value;
 
 			if (sprite.scaleX > scaleAnimation.max)
 			{
@@ -40,6 +41,16 @@ public class ScaleAnimationSystem extends EntityProcessingSystem
 			else if (sprite.scaleX < scaleAnimation.min)
 			{
 				sprite.scaleX = scaleAnimation.min;
+				scaleAnimation.active = false;
+			}
+			if (sprite.scaleY > scaleAnimation.max)
+			{
+				sprite.scaleY = scaleAnimation.max;
+				scaleAnimation.active = false;
+			}
+			else if (sprite.scaleY < scaleAnimation.min)
+			{
+				sprite.scaleY = scaleAnimation.min;
 				scaleAnimation.active = false;
 			}
 		}

@@ -6,6 +6,8 @@ import com.artemis.Entity;
 import com.artemis.annotations.Mapper;
 import com.artemis.systems.EntityProcessingSystem;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 import com.dugsolutions.spaceshipwarrior.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.Adjust;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -17,6 +19,8 @@ public class MovementSystem extends EntityProcessingSystem
 	ComponentMapper<Position>	pm;
 	@Mapper
 	ComponentMapper<Velocity>	vm;
+
+	Vector3						tmp	= new Vector3();
 
 	public MovementSystem()
 	{
@@ -34,25 +38,14 @@ public class MovementSystem extends EntityProcessingSystem
 
 		if (!EntityFactory.IsPlayer(e))
 		{
-			Adjust adjust = Adjust.getInstance();
-			position.x += adjust.getDeltaX();
-			position.y += adjust.getDeltaY();
-		}
+            tmp.set(position.x, position.y, 0);
 
-		// Expires expires = e.getComponent(Expires.class);
-		//
-		// if (position.x < 0)
-		// {
-		// position.x = 0;
-		// }
-		// if (position.y < 0)
-		// {
-		// position.y = 0;
-		// }
-		// if (position.x > SpaceshipWarrior.FRAME_WIDTH + 200)
-		// {
-		// position.x = SpaceshipWarrior.FRAME_WIDTH;
-		// }
+            Matrix4 mx = Adjust.getInstance().getMx();
+            tmp.mul(mx);
+
+            position.x = tmp.x;
+            position.y = tmp.y;
+		}
 	}
 
 }

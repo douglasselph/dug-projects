@@ -1,6 +1,5 @@
 package com.dugsolutions.spaceshipwarrior;
 
-import com.artemis.Entity;
 import com.artemis.World;
 import com.artemis.managers.GroupManager;
 import com.badlogic.gdx.Game;
@@ -10,12 +9,9 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.dugsolutions.spaceshipwarrior.components.Player;
-import com.dugsolutions.spaceshipwarrior.components.Position;
-import com.dugsolutions.spaceshipwarrior.components.Sprite;
-import com.dugsolutions.spaceshipwarrior.components.Velocity;
 import com.dugsolutions.spaceshipwarrior.systems.CollisionSystem;
 import com.dugsolutions.spaceshipwarrior.systems.EntitySpawningTimerSystem;
+import com.dugsolutions.spaceshipwarrior.systems.ExpiringSystem;
 import com.dugsolutions.spaceshipwarrior.systems.HealthRenderSystem;
 import com.dugsolutions.spaceshipwarrior.systems.HudRenderSystem;
 import com.dugsolutions.spaceshipwarrior.systems.MovementSystem;
@@ -57,7 +53,8 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setSystem(new ScaleAnimationSystem());
 		mWorld.setSystem(new ParallaxStarRepeatingSystem());
 		mWorld.setSystem(new RemoveOffscreenShipsSystem());
-		mWorld.setSystem(new SoundEffectSystem());
+        mWorld.setSystem(new ExpiringSystem());
+//		mWorld.setSystem(new SoundEffectSystem());
 
 		mWorld.setSystem(mSpriteRenderSystem = new SpriteRenderSystem(mCamera), true);
 		mWorld.setSystem(mHudRenderSystem = new HudRenderSystem(mCamera), true);
@@ -67,7 +64,7 @@ public class SpaceshipWarriorScreen implements Screen
 
 		mWorld.initialize();
 
-		EntityFactory.createPlayer(mWorld, Constants.FRAME_WIDTH / 2, 150).addToWorld();
+		EntityFactory.createPlayer(mWorld, Constants.FRAME_WIDTH / 2, Constants.PLAYER_Y).addToWorld();
 
 		for (int i = 0; i < Constants.NUM_STARS; i++)
 		{
@@ -89,8 +86,8 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setDelta(delta);
 		mWorld.process();
 		mSpriteRenderSystem.process();
-		mHealthRenderSystem.process();
-		mHudRenderSystem.process();
+//		mHealthRenderSystem.process();
+//		mHudRenderSystem.process();
 	}
 
 	@Override

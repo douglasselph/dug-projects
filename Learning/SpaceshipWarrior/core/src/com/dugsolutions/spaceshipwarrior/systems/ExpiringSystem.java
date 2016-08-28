@@ -29,7 +29,7 @@ public class ExpiringSystem extends EntityProcessingSystem
 	{
 		Expires exp = em.get(e);
 		exp.delay -= world.getDelta();
-		if (exp.delay <= 0)
+		if (exp.isExpired())
 		{
 			e.deleteFromWorld();
 		}
