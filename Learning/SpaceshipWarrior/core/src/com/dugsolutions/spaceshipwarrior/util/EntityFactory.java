@@ -35,6 +35,10 @@ public class EntityFactory
 		e.addComponent(new Player());
 		e.addComponent(new Bounds(43));
 
+		if (!Constants.CENTRAL_PLAYER)
+		{
+			e.addComponent(new Velocity());
+		}
 		PLAYER_ID = e.getId();
 
 		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_SHIP);
@@ -55,9 +59,13 @@ public class EntityFactory
 		e.addComponent(new Velocity(0, 800));
 		e.addComponent(new Expires(2f));
 		e.addComponent(new Bounds(5));
-		e.addComponent(new ScaleByDist());
 		e.addComponent(new SoundEffect(SoundEffect.EFFECT.PEW));
 
+		if (Constants.CENTRAL_PLAYER)
+		{
+			e.addComponent(new ScaleByDist());
+
+		}
 		world.getManager(GroupManager.class).add(e, Constants.Groups.PLAYER_BULLETS);
 
 		return e;
@@ -81,8 +89,11 @@ public class EntityFactory
 		e.addComponent(new Velocity(vx, vy));
 		e.addComponent(new Health(health));
 		e.addComponent(new Bounds(boundsRadius));
-		e.addComponent(new ScaleByDist());
 
+		if (Constants.CENTRAL_PLAYER)
+		{
+			e.addComponent(new ScaleByDist());
+		}
 		world.getManager(GroupManager.class).add(e, Constants.Groups.ENEMY_SHIPS);
 
 		return e;
@@ -90,7 +101,16 @@ public class EntityFactory
 
 	public static Entity createParticle(World world, float x, float y)
 	{
-		float scaleDistY = Constants.computeScaleFromY(y);
+		float scaleDistY;
+
+		if (Constants.CENTRAL_PLAYER)
+		{
+			scaleDistY = Constants.computeScaleFromY(y);
+		}
+		else
+		{
+			scaleDistY = 1;
+		}
 		float scale = MathUtils.random(0.3f, 0.6f);
 
 		Entity e = world.createEntity();
@@ -159,7 +179,16 @@ public class EntityFactory
 
 	public static Entity createExplosion(World world, float x, float y, float scale)
 	{
-		float scaleDistY = Constants.computeScaleFromY(y);
+		float scaleDistY;
+
+		if (Constants.CENTRAL_PLAYER)
+		{
+			scaleDistY = Constants.computeScaleFromY(y);
+		}
+		else
+		{
+			scaleDistY = 1;
+		}
 		float useScale = scale * scaleDistY;
 
 		Entity e = world.createEntity();

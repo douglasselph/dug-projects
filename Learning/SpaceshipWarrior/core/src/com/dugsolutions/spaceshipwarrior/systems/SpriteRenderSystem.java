@@ -9,7 +9,6 @@ import com.artemis.utils.Bag;
 import com.artemis.utils.ImmutableBag;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.dugsolutions.spaceshipwarrior.util.Constants;
@@ -97,11 +96,14 @@ public class SpriteRenderSystem extends EntitySystem
 			float scaleX = sprite.scaleX;
 			float scaleY = sprite.scaleY;
 
-			if (em.has(e))
+			if (Constants.CENTRAL_PLAYER)
 			{
-				float scale = Constants.computeScaleFromY(position.y);
-				scaleX *= scale;
-				scaleY *= scale;
+				if (em.has(e))
+				{
+					float scale = Constants.computeScaleFromY(position.y);
+					scaleX *= scale;
+					scaleY *= scale;
+				}
 			}
 			float posX = position.x - (spriteRegion.getRegionWidth() / 2 * scaleX);
 			float posY = position.y - (spriteRegion.getRegionHeight() / 2 * scaleY);

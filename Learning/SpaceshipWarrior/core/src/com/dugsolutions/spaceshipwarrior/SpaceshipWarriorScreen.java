@@ -21,6 +21,7 @@ import com.dugsolutions.spaceshipwarrior.systems.ParallaxStarRepeatingSystem;
 import com.dugsolutions.spaceshipwarrior.systems.PlayerInputSystem;
 import com.dugsolutions.spaceshipwarrior.systems.RemoveOffscreenShipsSystem;
 import com.dugsolutions.spaceshipwarrior.systems.ScaleAnimationSystem;
+import com.dugsolutions.spaceshipwarrior.systems.SoundEffectSystem;
 import com.dugsolutions.spaceshipwarrior.systems.SpriteRenderSystem;
 import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
@@ -71,7 +72,11 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setSystem(new ParallaxStarRepeatingSystem());
 		mWorld.setSystem(new RemoveOffscreenShipsSystem());
 		mWorld.setSystem(new ExpiringSystem());
-		// mWorld.setSystem(new SoundEffectSystem());
+
+		if (Constants.HAS_SOUND)
+		{
+			mWorld.setSystem(new SoundEffectSystem());
+		}
 
 		mWorld.setSystem(mSpriteRenderSystem = new SpriteRenderSystem(mCamera), true);
 		mWorld.setSystem(mHudRenderSystem = new HudRenderSystem(mCamera), true);
@@ -83,7 +88,7 @@ public class SpaceshipWarriorScreen implements Screen
 
 		EntityFactory.createPlayer(mWorld, Constants.FRAME.getMidX(), Constants.PLAYER_Y).addToWorld();
 
-		for (int i = 0; i < com.dugsolutions.spaceshipwarrior.util.Constants.NUM_STARS; i++)
+		for (int i = 0; i < Constants.NUM_STARS; i++)
 		{
 			EntityFactory.createStar(mWorld).addToWorld();
 		}
@@ -103,8 +108,12 @@ public class SpaceshipWarriorScreen implements Screen
 		mWorld.setDelta(delta);
 		mWorld.process();
 		mSpriteRenderSystem.process();
-		// mHealthRenderSystem.process();
-		// mHudRenderSystem.process();
+
+		if (!Constants.CENTRAL_PLAYER)
+		{
+			mHealthRenderSystem.process();
+			mHudRenderSystem.process();
+		}
 	}
 
 	@Override

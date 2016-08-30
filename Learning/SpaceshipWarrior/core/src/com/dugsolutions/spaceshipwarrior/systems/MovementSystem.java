@@ -7,6 +7,7 @@ import com.artemis.annotations.Mapper;
 import com.artemis.systems.EntityProcessingSystem;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.Adjust;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -35,15 +36,18 @@ public class MovementSystem extends EntityProcessingSystem
 		position.x += velocity.vx * world.getDelta();
 		position.y += velocity.vy * world.getDelta();
 
-		if (!EntityFactory.IsPlayer(e))
+		if (Constants.CENTRAL_PLAYER)
 		{
-            tmp.set(position.x, position.y, 0);
+			if (!EntityFactory.IsPlayer(e))
+			{
+				tmp.set(position.x, position.y, 0);
 
-            Matrix4 mx = Adjust.getInstance().getMx();
-            tmp.mul(mx);
+				Matrix4 mx = Adjust.getInstance().getMx();
+				tmp.mul(mx);
 
-            position.x = tmp.x;
-            position.y = tmp.y;
+				position.x = tmp.x;
+				position.y = tmp.y;
+			}
 		}
 	}
 

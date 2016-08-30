@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
 import com.dugsolutions.spaceshipwarrior.Adjust;
+import com.dugsolutions.spaceshipwarrior.util.Constants;
 import com.dugsolutions.spaceshipwarrior.util.EntityFactory;
 import com.dugsolutions.spaceshipwarrior.components.Player;
 import com.dugsolutions.spaceshipwarrior.components.Position;
@@ -51,15 +52,20 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 		mouseVector.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 		camera.unproject(mouseVector);
 
-		if (ax != 0)
+		if (Constants.CENTRAL_PLAYER)
 		{
-			Adjust.getInstance().inc(ax, 0);
-			ax = 0;
+			if (ax != 0)
+			{
+				Adjust.getInstance().inc(ax, 0);
+				ax = 0;
+			}
 		}
-
-		// float incx = (ax - drag * vel.vx) * world.getDelta();
-		// float incy = (ay - drag * vel.vy) * world.getDelta();
-
+		else
+		{
+			Velocity vel = vm.get(e);
+			vel.vx += (ax - drag * vel.vx) * world.getDelta();
+			vel.vy += (ay - drag * vel.vy) * world.getDelta();
+		}
 		if (shoot)
 		{
 			Position pos = pm.get(e);
@@ -71,14 +77,24 @@ public class PlayerInputSystem extends EntityProcessingSystem implements InputPr
 	@Override
 	public boolean keyDown(int keycode)
 	{
-		// if (keycode == Input.Keys.UP)
-		// ay = thruster;
-		// if (keycode == Input.Keys.DOWN)
-		// ay = -thruster;
-		if (keycode == Input.Keys.RIGHT)
-			ax = -thruster;
-		if (keycode == Input.Keys.LEFT)
-			ax = thruster;
+		if (Constants.CENTRAL_PLAYER)
+		{
+			if (keycode == Input.Keys.RIGHT)
+				ax = -thruster;
+			if (keycode == Input.Keys.LEFT)
+				ax = thruster;
+		}
+		else
+		{
+			if (keycode == Input.Keys.UP)
+				ay = thruster;
+			if (keycode == Input.Keys.DOWN)
+				ay = -thruster;
+			if (keycode == Input.Keys.RIGHT)
+				ax = thruster;
+			if (keycode == Input.Keys.LEFT)
+				ax = -thruster;
+		}
 		if (keycode == Input.Keys.SPACE)
 			shoot = true;
 		return false;
