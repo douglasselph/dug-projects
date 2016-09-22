@@ -1,4 +1,4 @@
-JAR=runnable-texturepacker.jar
+JAR=../../../bin/runnable-texturepacker.jar
 INPUT=../android/assets/texture-originals/
 OUTPUT=../android/assets/texture
 PACKNAME=pack
