@@ -6,11 +6,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class SpriteAnimation extends Component
 {
-
-	public Animation	animation;
-	public float		stateTime;
-	public float		frameDuration;
-	public int			playMode;
+	public Animation			animation;
+	public float				stateTime;
+	public float				frameDuration;
+	public Animation.PlayMode	playMode;
 
 	public TextureRegion getFrame()
 	{

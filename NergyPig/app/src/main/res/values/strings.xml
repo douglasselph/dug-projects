@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">NergyPig</string>
+    <string name="action_settings">Rules</string>
+    <string name="pig_nerd">Stats</string>
+    <string name="pig_fight">Fight</string>
+</resources>
