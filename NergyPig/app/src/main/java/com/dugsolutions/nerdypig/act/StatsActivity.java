@@ -1,19 +1,16 @@
-package com.dugsolutions.nerdypig;
+package com.dugsolutions.nerdypig.act;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
+import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
+import com.dugsolutions.nerdypig.act.MainActivity;
 
 public class StatsActivity extends AppCompatActivity {
 
@@ -22,6 +19,7 @@ public class StatsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(R.string.title_activity_stats);
         setSupportActionBar(toolbar);
 
         ActionBar bar = getSupportActionBar();
@@ -31,18 +29,6 @@ public class StatsActivity extends AppCompatActivity {
         textView.setMovementMethod(new ScrollingMovementMethod());
     }
 
-    /**
-     * This is called when the Home (Up) button is pressed in the Action Bar.
-     */
-    public static boolean navigateUp(Activity act, Class claz)
-    {
-        Intent parentActivityIntent = new Intent(act, claz);
-        parentActivityIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        act.startActivity(parentActivityIntent);
-        act.finish();
-        return true;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
@@ -50,7 +36,7 @@ public class StatsActivity extends AppCompatActivity {
 
         if (itemId == android.R.id.home)
         {
-            return navigateUp(this, MainActivity.class);
+            return MyApplication.navigateUp(this, MainActivity.class);
         }
         return super.onOptionsItemSelected(item);
     }

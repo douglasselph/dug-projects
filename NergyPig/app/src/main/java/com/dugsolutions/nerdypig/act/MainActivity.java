@@ -1,9 +1,7 @@
-package com.dugsolutions.nerdypig;
+package com.dugsolutions.nerdypig.act;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -34,6 +32,12 @@ public class MainActivity extends AppCompatActivity
 			}
 		});
 		btn = (Button) findViewById(R.id.pig_fight);
+		btn.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				showBattleActivity();
+			}
+		});
 	}
 
 	@Override
@@ -55,15 +59,29 @@ public class MainActivity extends AppCompatActivity
 		// noinspection SimplifiableIfStatement
 		if (id == R.id.action_rules)
 		{
+			showRulesActivity();
 			return true;
 		}
-
 		return super.onOptionsItemSelected(item);
 	}
 
 	void showStatsActivity()
 	{
 		Intent intent = new Intent(this, StatsActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
+	}
+
+	void showBattleActivity()
+	{
+		Intent intent = new Intent(this, BattleActivity.class);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
+	}
+
+	void showRulesActivity()
+	{
+		Intent intent = new Intent(this, RulesActivity.class);
 		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(intent);
 	}
