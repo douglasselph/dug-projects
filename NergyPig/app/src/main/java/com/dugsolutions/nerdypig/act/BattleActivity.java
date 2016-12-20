@@ -8,8 +8,8 @@ import android.widget.Toolbar;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.db.BattleLine;
-import com.dugsolutions.nerdypig.db.BattleStrategy;
+import com.dugsolutions.nerdypig.battle.BattleLine;
+import com.dugsolutions.nerdypig.battle.BattleStrategy;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 
 public class BattleActivity extends FragmentActivity implements PlayerFragment.OnListFragmentInteractionListener

@@ -8,12 +8,12 @@ import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.act.PlayerFragment.OnListFragmentInteractionListener;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.db.BattleStrategy;
+import com.dugsolutions.nerdypig.battle.BattleStrategy;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link com.dugsolutions.nerdypig.db.BattleStrategy} and makes a call
+ * {@link RecyclerView.Adapter} that can display a {@link BattleStrategy} and makes a call
  * to the
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.

@@ -1,9 +1,9 @@
-package com.dugsolutions.nerdypig.db;
+package com.dugsolutions.nerdypig.battle;
 
 import android.util.Log;
 
-import com.dugsolutions.nerdypig.game.Strategy;
-import java.util.ArrayList;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
+
 import java.util.List;
 
 /**
@@ -21,7 +21,7 @@ public class BattleStrategies
 		mStrategies = BattleLine.getSelectedBattleLines();
 	}
 
-	public Strategy[] getStrategies()
+	public StrategyHolder[] getStrategies()
 	{
 		int maxGames = 0;
 
@@ -32,7 +32,7 @@ public class BattleStrategies
 				maxGames = item.getMaxTurn();
 			}
 		}
-		Strategy[] strategies = new Strategy[maxGames+1];
+		StrategyHolder[] strategies = new StrategyHolder[maxGames+1];
 
 		for (BattleStrategy item : mStrategies)
 		{

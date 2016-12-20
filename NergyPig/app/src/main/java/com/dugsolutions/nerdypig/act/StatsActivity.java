@@ -11,8 +11,8 @@ import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.db.BattleLine;
-import com.dugsolutions.nerdypig.db.BattleStrategy;
+import com.dugsolutions.nerdypig.battle.BattleLine;
+import com.dugsolutions.nerdypig.battle.BattleStrategy;
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 import com.dugsolutions.nerdypig.game.Games;

@@ -11,8 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.db.BattleLine;
-import com.dugsolutions.nerdypig.db.BattleStrategy;
+import com.dugsolutions.nerdypig.battle.BattleLine;
+import com.dugsolutions.nerdypig.battle.BattleStrategy;
 
 /**
  * A fragment representing a list of Items.

@@ -1,21 +1,20 @@
-package com.dugsolutions.nerdypig.db;
+package com.dugsolutions.nerdypig.battle;
 
 import com.dugsolutions.nerdypig.game.Strategy;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.dugsolutions.nerdypig.db.BattleLine.mSelectedPoints;
 
 /**
  * Created by dug on 12/19/16.
  */
 
-public class BattleStrategy extends Strategy
+public class BattleStrategy extends StrategyHolder
 {
 	ArrayList<Short> mAssigned = new ArrayList<>();
 
-	public BattleStrategy(Strategy.Kind type, int count)
+	public BattleStrategy(Strategy type, int count)
     {
         super(type, count);
     }
@@ -55,7 +54,7 @@ public class BattleStrategy extends Strategy
 
 	public void incBattlePoints()
 	{
-		mAssigned.add(new Short(mSelectedPoints++));
+		mAssigned.add(new Short(BattleLine.mSelectedPoints++));
 	}
 
 	public void clearBattlePoints()

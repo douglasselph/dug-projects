@@ -8,7 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.dugsolutions.nerdypig.act.StatsActivity;
-import com.dugsolutions.nerdypig.db.BattleStrategies;
+import com.dugsolutions.nerdypig.battle.BattleStrategies;
 import com.dugsolutions.nerdypig.db.DatabaseManager;
 
 import java.util.ArrayList;

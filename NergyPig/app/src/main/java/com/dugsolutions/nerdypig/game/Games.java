@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.db.BattleStrategies;
+import com.dugsolutions.nerdypig.battle.BattleStrategies;
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 
@@ -22,14 +22,14 @@ public class Games implements Player.QueryStrategy
 
 	class StrategyCount
 	{
-		Strategy[]	mStrategies;
+		StrategyHolder[]	mStrategies;
 		int			mCount;
 		int[]		mWin;
 
 		StrategyCount(Game game)
 		{
-			Strategy[] strategies = game.getUsed();
-			mStrategies = new Strategy[strategies.length];
+			StrategyHolder[] strategies = game.getUsed();
+			mStrategies = new StrategyHolder[strategies.length];
 			for (int i = 0; i < strategies.length; i++)
 			{
 				mStrategies[i] = strategies[i];
@@ -44,7 +44,7 @@ public class Games implements Player.QueryStrategy
 			mWin[game.getWinner()] = 1;
 		}
 
-		boolean match(Strategy[] strategies)
+		boolean match(StrategyHolder[] strategies)
 		{
 			if (strategies.length != mStrategies.length)
 			{
@@ -72,7 +72,7 @@ public class Games implements Player.QueryStrategy
 			sbuf.append("\t");
 			for (int i = 0; i < mStrategies.length; i++)
 			{
-				Strategy strategy = mStrategies[i];
+				StrategyHolder strategy = mStrategies[i];
 
 				if (i > 0)
 				{
@@ -130,7 +130,7 @@ public class Games implements Player.QueryStrategy
 
 	class PlayerStrategyList
 	{
-		Strategy[] mStrategies;
+		StrategyHolder[] mStrategies;
 
 		PlayerStrategyList(BattleStrategies strategies)
 		{
@@ -293,12 +293,12 @@ public class Games implements Player.QueryStrategy
 	}
 
 	@Override
-	public Strategy getStrategy(int playerI)
+	public StrategyHolder getStrategy(int playerI)
 	{
 		return getStrategy(mStrategies.get(playerI).mStrategies);
 	}
 
-	Strategy getStrategy(Strategy[] strategies)
+	StrategyHolder getStrategy(StrategyHolder[] strategies)
 	{
 		float gamePercent = (float) mGameNumber / (float) mNumGames;
 		float strategyF = strategies.length * gamePercent;

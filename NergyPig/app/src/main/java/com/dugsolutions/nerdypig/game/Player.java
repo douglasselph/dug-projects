@@ -14,15 +14,15 @@ public class Player
 {
     public interface QueryStrategy
     {
-        Strategy getStrategy(int playerI);
+        StrategyHolder getStrategy(int playerI);
     }
-	Strategy			mStrategy;
+	StrategyHolder mStrategy;
 	String				mDesc;
 	int					mWins;
 	ArrayList<Integer>	mValues;
     QueryStrategy       mQueryStrategy;
 
-	public Player(Strategy strategy, String desc)
+	public Player(StrategyHolder strategy, String desc)
 	{
 		mStrategy = strategy;
 		mDesc = desc;
@@ -36,7 +36,7 @@ public class Player
         mValues = new ArrayList<>();
     }
 
-	public Strategy getStrategy(int playerI)
+	public StrategyHolder getStrategy(int playerI)
 	{
         if (mStrategy == null)
         {

@@ -10,7 +10,7 @@ public class Game
 	Games		mMaster;
 	int			mTurn;
 	int			mPlayerScore[];
-	Strategy[]	mUsed;
+	StrategyHolder[]	mUsed;
 
 	public Game(Games master)
 	{
@@ -47,7 +47,7 @@ public class Game
 	{
 		mTurn++;
 
-		mUsed = new Strategy[mMaster.getNumPlayers()];
+		mUsed = new StrategyHolder[mMaster.getNumPlayers()];
 		boolean gameOver = false;
 
 		for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
@@ -68,12 +68,12 @@ public class Game
 		}
 	}
 
-	int playTurn(Strategy strategy)
+	int playTurn(StrategyHolder strategy)
 	{
 		int sum = 0;
 		int roll;
 
-		if (strategy.getKind() == Strategy.Kind.STOP_AFTER_NUM_ROLLS)
+		if (strategy.getKind() == Strategy.STOP_AFTER_NUM_ROLLS)
 		{
 			for (int count = 0; count < strategy.getCount(); count++)
 			{
@@ -85,7 +85,7 @@ public class Game
 				sum += roll;
 			}
 		}
-		else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_SUM)
+		else if (strategy.getKind() == Strategy.STOP_AFTER_REACHED_SUM)
 		{
 			while (sum < strategy.getCount())
 			{
@@ -97,7 +97,7 @@ public class Game
 				sum += roll;
 			}
 		}
-		else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_EVEN)
+		else if (strategy.getKind() == Strategy.STOP_AFTER_REACHED_EVEN)
 		{
 			int countEven = 0;
 
@@ -165,7 +165,7 @@ public class Game
 		return mPlayerScore[i];
 	}
 
-	public Strategy[] getUsed()
+	public StrategyHolder[] getUsed()
 	{
 		return mUsed;
 	}
