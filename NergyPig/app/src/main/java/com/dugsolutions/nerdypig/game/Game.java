@@ -7,7 +7,7 @@ import com.dugsolutions.nerdypig.db.GameEnd;
  */
 public class Game
 {
-    Games       mMaster;
+    Games mMaster;
 	int			mTurn;
 	int			mPlayerScore[];
 
@@ -49,7 +49,7 @@ public class Game
         for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
         {
             Player player = mMaster.getPlayer(playerI);
-            int sum = playTurn(player.getStrategy());
+            int sum = playTurn(player.getStrategy(playerI));
             mPlayerScore[playerI] += sum;
 
             if (mMaster.getGameEnd() == GameEnd.END_POINTS && mPlayerScore[playerI] >= mMaster.getMaxScore())

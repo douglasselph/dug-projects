@@ -12,10 +12,15 @@ import java.util.ArrayList;
 
 public class Player
 {
+    public interface QueryStrategy
+    {
+        Strategy getStrategy(int playerI);
+    }
 	Strategy			mStrategy;
 	String				mDesc;
 	int					mWins;
 	ArrayList<Integer>	mValues;
+    QueryStrategy       mQueryStrategy;
 
 	public Player(Strategy strategy, String desc)
 	{
@@ -24,8 +29,19 @@ public class Player
 		mValues = new ArrayList<>();
 	}
 
-	public Strategy getStrategy()
+    public Player(QueryStrategy strategy, String desc)
+    {
+        mQueryStrategy = strategy;
+        mDesc = desc;
+        mValues = new ArrayList<>();
+    }
+
+	public Strategy getStrategy(int playerI)
 	{
+        if (mStrategy == null)
+        {
+            return mQueryStrategy.getStrategy(playerI);
+        }
 		return mStrategy;
 	}
 
@@ -52,9 +68,9 @@ public class Player
 		sbuf.append(", WINS=");
 
 		double percent = (double) mWins / (double) numGames;
-
-		sbuf.append(String.format("%.2g", percent));
-		sbuf.append("%%");
+        int percentI = (int) (percent * 100);
+		sbuf.append(String.format("%d", percentI));
+		sbuf.append("%");
 		sbuf.append(" [");
 		sbuf.append(mWins);
 		sbuf.append("]");

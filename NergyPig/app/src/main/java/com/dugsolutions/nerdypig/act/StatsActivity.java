@@ -11,24 +11,27 @@ import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.act.MainActivity;
 import com.dugsolutions.nerdypig.db.BattleLine;
+import com.dugsolutions.nerdypig.db.BattleStrategy;
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 import com.dugsolutions.nerdypig.game.Games;
 import com.dugsolutions.nerdypig.game.Player;
 
-import java.util.ArrayList;
-
 public class StatsActivity extends AppCompatActivity
 {
+	public static final String	ACTION_STATS	= "stats";
+	public static final String	ACTION_BATTLE	= "battle";
 
-	TextView mStats;
+	TextView					mStats;
+	MyApplication				mApp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		mApp = (MyApplication) getApplicationContext();
+
 		setContentView(R.layout.activity_stats);
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		toolbar.setTitle(R.string.title_activity_stats);
@@ -37,8 +40,8 @@ public class StatsActivity extends AppCompatActivity
 		ActionBar bar = getSupportActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
 
-        mStats = (TextView) findViewById(R.id.stats);
-        mStats.setMovementMethod(new ScrollingMovementMethod());
+		mStats = (TextView) findViewById(R.id.stats);
+		mStats.setMovementMethod(new ScrollingMovementMethod());
 	}
 
 	@Override
@@ -58,7 +61,7 @@ public class StatsActivity extends AppCompatActivity
 	{
 		super.onResume();
 
-        mStats.setText(run());
+		mStats.setText(run());
 	}
 
 	Context getContext()
@@ -69,14 +72,22 @@ public class StatsActivity extends AppCompatActivity
 	String run()
 	{
 		StringBuffer sbuf = new StringBuffer();
-		sbuf.append(getPrelude());
 
-		for (BattleLine.BattleItem battle : BattleLine.getItems())
+		if (getIntent().getAction() == ACTION_STATS)
 		{
-			Player player = new Player(battle, battle.toString(getContext()));
-			ArrayList<Player> list = new ArrayList<>();
-			list.add(player);
-			Games games = new Games(list);
+			sbuf.append(getPrelude());
+
+			for (BattleStrategy battle : BattleLine.getItems())
+			{
+				Player player = new Player(battle, battle.toString(getContext()));
+				Games games = new Games(player);
+				games.play();
+				sbuf.append(games.toString(getContext()));
+			}
+		}
+		else
+		{
+			Games games = new Games(getContext(), mApp.getPlayer1(), mApp.getPlayer2());
 			games.play();
 			sbuf.append(games.toString(getContext()));
 		}

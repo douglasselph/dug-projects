@@ -10,7 +10,6 @@ import com.dugsolutions.nerdypig.R;
 
 public class Strategy
 {
-
 	public enum Kind
 	{
 		STOP_AFTER_NUM_ROLLS, // Stop after indicated num of rolls

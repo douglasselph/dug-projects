@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 
+import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
 
 public class MainActivity extends AppCompatActivity
@@ -67,9 +68,8 @@ public class MainActivity extends AppCompatActivity
 
 	void showStatsActivity()
 	{
-		Intent intent = new Intent(this, StatsActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		startActivity(intent);
+		MyApplication app = (MyApplication) getApplicationContext();
+		app.showStatsActivity(this, StatsActivity.ACTION_STATS);
 	}
 
 	void showBattleActivity()

@@ -11,14 +11,14 @@
         \t2. You decide to stop. In which case all the points you have accumulated thus far are kept in your overall total.\n
         The game is over as soon as:\n
     </string>
-    <string name="point_threshold">Point Reached</string>
+    <string name="point_threshold">Points Reached</string>
     <string name="turns_threshold">After This Many Turns</string>
     <string name="entry_error">Entry Error</string>
     <string name="error_positive">Entry must be a positive number</string>
     <string name="num_games">Number of games to run</string>
-    <string name="battle_title_player1">Player 1: %d points left</string>
-    <string name="battle_title_player2">Player 2: %d points left</string>
+    <string name="battle_title_player">Player %1$d: %2$d points left</string>
     <string name="battle_title_result">Battle - Result</string>
+    <string name="battle_player">Player %d</string>
     <string name="strategy_rolls">Stop after %d rolls</string>
     <string name="strategy_points">Stop after %d points</string>
     <string name="strategy_even">Stop after %d even numbers encountered</string>
@@ -31,6 +31,5 @@
     <string name="report_score">SCORE=%g</string>
     <string name="error_turns">NO TURNS PLAYED</string>
     <string name="error_score">NO SCORE</string>
-
 
 </resources>

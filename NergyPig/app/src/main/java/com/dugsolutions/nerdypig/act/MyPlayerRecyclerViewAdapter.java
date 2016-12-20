@@ -7,13 +7,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.act.PlayerFragment.OnListFragmentInteractionListener;
-import com.dugsolutions.nerdypig.db.BattleLine.BattleItem;
 import com.dugsolutions.nerdypig.R;
+import com.dugsolutions.nerdypig.db.BattleStrategy;
 
 import java.util.List;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link BattleItem} and makes a call to the
+ * {@link RecyclerView.Adapter} that can display a {@link com.dugsolutions.nerdypig.db.BattleStrategy} and makes a call
+ * to the
  * specified {@link OnListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
@@ -24,7 +25,7 @@ public class MyPlayerRecyclerViewAdapter extends RecyclerView.Adapter<MyPlayerRe
 		public final View		mView;
 		public final TextView	mIdView;
 		public final TextView	mContentView;
-		public BattleItem		mItem;
+		public BattleStrategy	mItem;
 
 		public ViewHolder(View view)
 		{
@@ -40,21 +41,21 @@ public class MyPlayerRecyclerViewAdapter extends RecyclerView.Adapter<MyPlayerRe
 			return super.toString() + " '" + mContentView.getText() + "'";
 		}
 
-        void refreshId()
-        {
-            mIdView.setText(mItem.getId());
-        }
+		void refreshId()
+		{
+			mIdView.setText(mItem.getId());
+		}
 
-        void refreshText()
-        {
-            mContentView.setText(mItem.toString(mView.getContext()));
-        }
+		void refreshText()
+		{
+			mContentView.setText(mItem.toString(mView.getContext()));
+		}
 	}
 
-	private final List<BattleItem>					mValues;
+	private final List<BattleStrategy>				mValues;
 	private final OnListFragmentInteractionListener	mListener;
 
-	public MyPlayerRecyclerViewAdapter(List<BattleItem> items, OnListFragmentInteractionListener listener)
+	public MyPlayerRecyclerViewAdapter(List<BattleStrategy> items, OnListFragmentInteractionListener listener)
 	{
 		mValues = items;
 		mListener = listener;
@@ -71,22 +72,23 @@ public class MyPlayerRecyclerViewAdapter extends RecyclerView.Adapter<MyPlayerRe
 	public void onBindViewHolder(final ViewHolder holder, int position)
 	{
 		holder.mItem = mValues.get(position);
-        holder.refreshId();
-        holder.refreshText();
+		holder.refreshId();
+		holder.refreshText();
 
 		holder.mView.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
-                holder.mItem.incBattlePoints();
-                holder.refreshId();
+				holder.mItem.incBattlePoints();
+				holder.refreshId();
 
 				if (null != mListener)
 				{
-					// Notify the active callbacks interface (the activity, if the
-					// fragment is attached to one) that an item has been selected.
-					mListener.onListFragmentInteraction(holder.mItem);
+					if (mListener.onListFragmentInteraction(holder.mItem))
+					{
+						notifyDataSetChanged();
+					}
 				}
 			}
 		});

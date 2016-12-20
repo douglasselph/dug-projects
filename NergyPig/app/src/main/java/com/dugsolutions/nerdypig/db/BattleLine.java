@@ -7,65 +7,23 @@ import java.util.List;
 
 public class BattleLine
 {
-	/**
-	 * A dummy item representing a piece of content.
-	 */
-	public static class BattleItem extends Strategy
-	{
-		short		mAssigned;	// How many battle points assigned to this strategy
-
-		public BattleItem(Kind type, int count)
-		{
-			super(type, count);
-		}
-
-		public String getId()
-		{
-			if (mAssigned > 0)
-			{
-				return String.valueOf(mAssigned);
-			}
-			return "";
-		}
-
-		public int getBattlePoints()
-		{
-			return mAssigned;
-		}
-
-		public void incBattlePoints()
-		{
-			mAssigned++;
-		}
-
-		public void clearBattlePoints()
-		{
-			mAssigned = 0;
-		}
-
-		public BattleItem dup()
-		{
-			return new BattleItem(mType, mCount);
-		}
-	}
-
-	public static List<BattleItem> getItems()
+	public static List<BattleStrategy> getItems()
 	{
 		return ITEMS;
 	}
 
+	static short mSelectedPoints;
+
 	public static void clearBattlePoints()
 	{
-		for (BattleItem item : ITEMS)
+		for (BattleStrategy item : ITEMS)
 		{
 			item.clearBattlePoints();
 		}
+		mSelectedPoints = 0;
 	}
 
-	/**
-	 * An array of sample (dummy) items.
-	 */
-	static final List<BattleItem> ITEMS = new ArrayList<>();
+	static final List<BattleStrategy> ITEMS = new ArrayList<>();
 
 	static
 	{
@@ -80,14 +38,28 @@ public class BattleLine
 		addItem(createItem(Strategy.Kind.STOP_AFTER_REACHED_EVEN, 2));
 	}
 
-	private static void addItem(BattleItem item)
+	private static void addItem(BattleStrategy item)
 	{
 		ITEMS.add(item);
 	}
 
-	private static BattleItem createItem(Strategy.Kind type, int count)
+	private static BattleStrategy createItem(Strategy.Kind type, int count)
 	{
-		return new BattleItem(type, count);
+		return new BattleStrategy(type, count);
+	}
+
+	public static List<BattleStrategy> getSelectedBattleLines()
+	{
+		ArrayList<BattleStrategy> list = new ArrayList<>();
+
+		for (BattleStrategy item : ITEMS)
+		{
+			if (item.getBattlePoints() > 0)
+			{
+				list.add(item.dup());
+			}
+		}
+		return list;
 	}
 
 }

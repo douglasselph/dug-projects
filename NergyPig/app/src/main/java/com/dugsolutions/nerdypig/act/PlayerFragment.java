@@ -12,7 +12,7 @@ import android.view.ViewGroup;
 
 import com.dugsolutions.nerdypig.R;
 import com.dugsolutions.nerdypig.db.BattleLine;
-import com.dugsolutions.nerdypig.db.BattleLine.BattleItem;
+import com.dugsolutions.nerdypig.db.BattleStrategy;
 
 /**
  * A fragment representing a list of Items.
@@ -34,13 +34,10 @@ public class PlayerFragment extends Fragment
 	 */
 	public interface OnListFragmentInteractionListener
 	{
-		// TODO: Update argument type and name
-		void onListFragmentInteraction(BattleItem item);
+		boolean onListFragmentInteraction(BattleStrategy item);
 	}
 
-	// TODO: Customize parameter argument names
 	static final String					ARG_COLUMN_COUNT	= "column-count";
-	// TODO: Customize parameters
 	int									mColumnCount		= 1;
 	OnListFragmentInteractionListener	mListener;
 
@@ -52,7 +49,6 @@ public class PlayerFragment extends Fragment
 	{
 	}
 
-	// TODO: Customize parameter initialization
 	@SuppressWarnings("unused")
 	public static PlayerFragment newInstance(int columnCount)
 	{
