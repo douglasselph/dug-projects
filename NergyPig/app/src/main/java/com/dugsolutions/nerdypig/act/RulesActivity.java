@@ -26,20 +26,23 @@ import com.dugsolutions.nerdypig.db.GlobalInt;
 
 public class RulesActivity extends AppCompatActivity
 {
-	EditText	mMaxTurns;
-	EditText	mEndPoints;
-	EditText	mNumGames;
-	RadioButton	mRbMaxTurns;
-	RadioButton	mRbEndPoints;
+	EditText		mMaxTurns;
+	EditText		mEndPoints;
+	EditText		mNumGames;
+	RadioButton		mRbMaxTurns;
+	RadioButton		mRbEndPoints;
+	Toolbar			mToolbar;
+	MyApplication	mApp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_rules);
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-		toolbar.setTitle(R.string.title_activity_rules);
-		setSupportActionBar(toolbar);
+		mApp = (MyApplication) getApplicationContext();
+		mToolbar = (Toolbar) findViewById(R.id.toolbar);
+		setTitle();
+		setSupportActionBar(mToolbar);
 
 		ActionBar bar = getSupportActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
@@ -50,8 +53,7 @@ public class RulesActivity extends AppCompatActivity
 			@Override
 			public void onClick(View view)
 			{
-				Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null)
-						.show();
+				mApp.doEmail(RulesActivity.this);
 			}
 		});
 
@@ -209,5 +211,14 @@ public class RulesActivity extends AppCompatActivity
 			return MyApplication.navigateUp(this, MainActivity.class);
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	void setTitle()
+	{
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(getString(R.string.title_activity_rules));
+		sbuf.append(" - ");
+		sbuf.append(mApp.getVersion());
+		mToolbar.setTitle(sbuf.toString());
 	}
 }

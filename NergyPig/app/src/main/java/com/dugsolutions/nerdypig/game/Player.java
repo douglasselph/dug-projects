@@ -81,7 +81,7 @@ public class Player
 	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append(mDesc);
-		sbuf.append(". ");
+		sbuf.append(": ");
 		if (mValues.size() == 0)
 		{
 			sbuf.append(ctx.getString(R.string.error_turns));
@@ -90,6 +90,7 @@ public class Player
 		{
 			sbuf.append(ctx.getString(R.string.report_turns, getValueAverage()));
 		}
+        sbuf.append(".");
 		return sbuf.toString();
 	}
 
@@ -97,7 +98,7 @@ public class Player
 	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append(mDesc);
-		sbuf.append(". ");
+		sbuf.append(": ");
 		if (mValues.size() == 0)
 		{
 			sbuf.append(ctx.getString(R.string.error_score));
@@ -106,7 +107,8 @@ public class Player
 		{
 			sbuf.append(ctx.getString(R.string.report_score, getValueAverage()));
 		}
-		return sbuf.toString();
+        sbuf.append(".");
+        return sbuf.toString();
 	}
 
 	double getValueAverage()

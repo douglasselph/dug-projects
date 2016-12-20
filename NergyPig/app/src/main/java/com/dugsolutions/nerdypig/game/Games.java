@@ -1,6 +1,7 @@
 package com.dugsolutions.nerdypig.game;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.dugsolutions.nerdypig.R;
 import com.dugsolutions.nerdypig.db.BattleStrategies;
@@ -17,16 +18,136 @@ import java.util.Random;
 
 public class Games implements Player.QueryStrategy
 {
-	GameEnd			mGameEnd;
-	int				mMaxTurns;
-	int				mMaxScore;
-	int				mNumGames;
-	List<Player>	mPlayers;
-	Strategy[]		mStrategies1;
-	Strategy[]		mStrategies2;
-	Random			mRandom;
-	int				mTies;
-	int 			mGameNumber;
+	static final String TAG = "Games";
+
+	class StrategyCount
+	{
+		Strategy[]	mStrategies;
+		int			mCount;
+		int[]		mWin;
+
+		StrategyCount(Game game)
+		{
+			Strategy[] strategies = game.getUsed();
+			mStrategies = new Strategy[strategies.length];
+			for (int i = 0; i < strategies.length; i++)
+			{
+				mStrategies[i] = strategies[i];
+
+				if (strategies[i] == null)
+				{
+					Log.e(TAG, "ERROR NULL STRATEGY ENCOUNTERED");
+				}
+			}
+			mCount = 1;
+			mWin = new int[strategies.length];
+			mWin[game.getWinner()] = 1;
+		}
+
+		boolean match(Strategy[] strategies)
+		{
+			if (strategies.length != mStrategies.length)
+			{
+				return false;
+			}
+			for (int i = 0; i < strategies.length; i++)
+			{
+				if (strategies[i] != mStrategies[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		void inc(Game game)
+		{
+			mCount++;
+			mWin[game.getWinner()]++;
+		}
+
+		String getDesc(Context ctx)
+		{
+			StringBuffer sbuf = new StringBuffer();
+			sbuf.append("\t");
+			for (int i = 0; i < mStrategies.length; i++)
+			{
+				Strategy strategy = mStrategies[i];
+
+				if (i > 0)
+				{
+					sbuf.append(" VS\n\t");
+				}
+				sbuf.append("\t");
+				sbuf.append(strategy.toString(ctx));
+				sbuf.append(" [WINS=");
+				sbuf.append(mWin[i]);
+				sbuf.append("]");
+			}
+			float percent = (float) mCount / (float) mNumGames;
+			sbuf.append("\n\t\t\t[USED=");
+			sbuf.append((int) (percent * 100));
+			sbuf.append("%]");
+			return sbuf.toString();
+		}
+	}
+
+	class PlayerStrategyDesc
+	{
+		ArrayList<StrategyCount> mList = new ArrayList<>();
+
+		void store(Game game)
+		{
+			if (mList.size() > 0)
+			{
+				StrategyCount last = mList.get(mList.size() - 1);
+				if (last.match(game.getUsed()))
+				{
+					last.inc(game);
+				}
+				else
+				{
+					mList.add(new StrategyCount(game));
+				}
+			}
+			else
+			{
+				mList.add(new StrategyCount(game));
+			}
+		}
+
+		public String getDesc(Context ctx)
+		{
+			StringBuffer sbuf = new StringBuffer();
+			for (StrategyCount sc : mList)
+			{
+				sbuf.append(sc.getDesc(ctx));
+				sbuf.append("\n");
+			}
+			return sbuf.toString();
+		}
+	}
+
+	class PlayerStrategyList
+	{
+		Strategy[] mStrategies;
+
+		PlayerStrategyList(BattleStrategies strategies)
+		{
+			mStrategies = strategies.getStrategies();
+		}
+	}
+
+	GameEnd						mGameEnd;
+	int							mMaxTurns;
+	int							mMaxScore;
+	int							mNumGames;
+	List<Player>				mPlayers;
+	List<PlayerStrategyList>	mStrategies;
+	PlayerStrategyDesc			mStrategyDesc;
+	Random						mRandom;
+	int							mTies;
+	int							mGameNumber;
 
 	public Games(Player player)
 	{
@@ -39,7 +160,7 @@ public class Games implements Player.QueryStrategy
 		mRandom = new Random(System.currentTimeMillis());
 	}
 
-	public Games(Context ctx, BattleStrategies player1, BattleStrategies player2)
+	public Games(Context ctx, List<BattleStrategies> players)
 	{
 		mGameEnd = GlobalInt.getGameEnd();
 		mMaxTurns = GlobalInt.getMaxTurns();
@@ -47,10 +168,14 @@ public class Games implements Player.QueryStrategy
 		mNumGames = GlobalInt.getNumGames();
 		mRandom = new Random(System.currentTimeMillis());
 		mPlayers = new ArrayList<>();
-		mPlayers.add(new Player(this, ctx.getString(R.string.battle_player, 1)));
-		mPlayers.add(new Player(this, ctx.getString(R.string.battle_player, 2)));
-		mStrategies1 = player1.getStrategies();
-		mStrategies2 = player2.getStrategies();
+		mStrategies = new ArrayList<>();
+		mStrategyDesc = new PlayerStrategyDesc();
+
+		for (int i = 0; i < players.size(); i++)
+		{
+			mPlayers.add(new Player(this, ctx.getString(R.string.battle_player, i + 1)));
+			mStrategies.add(new PlayerStrategyList(players.get(i)));
+		}
 	}
 
 	void reset()
@@ -81,6 +206,7 @@ public class Games implements Player.QueryStrategy
 				{
 					getPlayer(game.getWinner()).win();
 				}
+				mStrategyDesc.store(game);
 			}
 			else
 			{
@@ -142,6 +268,7 @@ public class Games implements Player.QueryStrategy
 				sbuf.append(ctx.getString(R.string.report_tie, mTies));
 				sbuf.append("\n");
 			}
+			sbuf.append(getStrategiesDesc(ctx));
 		}
 		else
 		{
@@ -168,18 +295,20 @@ public class Games implements Player.QueryStrategy
 	@Override
 	public Strategy getStrategy(int playerI)
 	{
-		if (playerI == 0)
-		{
-			return getStrategy(mStrategies1);
-		}
-		return getStrategy(mStrategies2);
+		return getStrategy(mStrategies.get(playerI).mStrategies);
 	}
 
-	Strategy getStrategy(Strategy [] strategies)
+	Strategy getStrategy(Strategy[] strategies)
 	{
 		float gamePercent = (float) mGameNumber / (float) mNumGames;
 		float strategyF = strategies.length * gamePercent;
 		int strategyI = (int) strategyF;
 		return strategies[strategyI];
 	}
+
+	String getStrategiesDesc(Context ctx)
+	{
+		return mStrategyDesc.getDesc(ctx);
+	}
+
 }

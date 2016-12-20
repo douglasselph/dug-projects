@@ -66,16 +66,16 @@ public class BattleActivity extends FragmentActivity implements PlayerFragment.O
 		{
 			refresh = true;
 
-			if (mApp.getPlayer1() == null)
+			if (mApp.getPlayer(0) == null)
 			{
-				mApp.storePlayer1();
+				mApp.storePlayer();
 				BattleLine.clearBattlePoints();
 				mBattlePointsLeft = GlobalInt.getBattlePoints();
 				updateTitle();
 			}
 			else
 			{
-				mApp.storePlayer2();
+				mApp.storePlayer();
 				showStatsActivity();
 			}
 		}
@@ -88,7 +88,7 @@ public class BattleActivity extends FragmentActivity implements PlayerFragment.O
 
 	void updateTitle()
 	{
-		if (mApp.getPlayer1() == null)
+		if (mApp.getPlayer(0) == null)
 		{
 			mToolbar.setTitle(getString(R.string.battle_title_player, 1, mBattlePointsLeft));
 		}

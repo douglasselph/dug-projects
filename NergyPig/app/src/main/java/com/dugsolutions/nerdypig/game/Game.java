@@ -7,15 +7,16 @@ import com.dugsolutions.nerdypig.db.GameEnd;
  */
 public class Game
 {
-    Games mMaster;
+	Games		mMaster;
 	int			mTurn;
 	int			mPlayerScore[];
+	Strategy[]	mUsed;
 
 	public Game(Games master)
 	{
-        mMaster = master;
+		mMaster = master;
 		mTurn = 0;
-        mPlayerScore = new int[master.getNumPlayers()];
+		mPlayerScore = new int[master.getNumPlayers()];
 	}
 
 	public void play()
@@ -44,115 +45,128 @@ public class Game
 
 	void playNextTurn()
 	{
-        mTurn++;
+		mTurn++;
 
-        for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
-        {
-            Player player = mMaster.getPlayer(playerI);
-            int sum = playTurn(player.getStrategy(playerI));
-            mPlayerScore[playerI] += sum;
+		mUsed = new Strategy[mMaster.getNumPlayers()];
+		boolean gameOver = false;
 
-            if (mMaster.getGameEnd() == GameEnd.END_POINTS && mPlayerScore[playerI] >= mMaster.getMaxScore())
-            {
-                break;
-            }
-        }
+		for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
+		{
+			Player player = mMaster.getPlayer(playerI);
+			mUsed[playerI] = player.getStrategy(playerI);
+
+			if (!gameOver)
+			{
+				int sum = playTurn(mUsed[playerI]);
+				mPlayerScore[playerI] += sum;
+
+				if (mMaster.getGameEnd() == GameEnd.END_POINTS && mPlayerScore[playerI] >= mMaster.getMaxScore())
+				{
+					gameOver = true;
+				}
+			}
+		}
 	}
 
-    int playTurn(Strategy strategy)
-    {
-        int sum = 0;
-        int roll;
+	int playTurn(Strategy strategy)
+	{
+		int sum = 0;
+		int roll;
 
-        if (strategy.getKind() == Strategy.Kind.STOP_AFTER_NUM_ROLLS)
-        {
-            for (int count = 0; count < strategy.getCount(); count++)
-            {
-                roll = mMaster.getRoll();
-                if (roll == 1)
-                {
-                    return 0;
-                }
-                sum += roll;
-            }
-        }
-        else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_SUM)
-        {
-            while (sum < strategy.getCount())
-            {
-                roll = mMaster.getRoll();
-                if (roll == 1)
-                {
-                    return 0;
-                }
-                sum += roll;
-            }
-        }
-        else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_EVEN)
-        {
-            int countEven = 0;
+		if (strategy.getKind() == Strategy.Kind.STOP_AFTER_NUM_ROLLS)
+		{
+			for (int count = 0; count < strategy.getCount(); count++)
+			{
+				roll = mMaster.getRoll();
+				if (roll == 1)
+				{
+					return 0;
+				}
+				sum += roll;
+			}
+		}
+		else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_SUM)
+		{
+			while (sum < strategy.getCount())
+			{
+				roll = mMaster.getRoll();
+				if (roll == 1)
+				{
+					return 0;
+				}
+				sum += roll;
+			}
+		}
+		else if (strategy.getKind() == Strategy.Kind.STOP_AFTER_REACHED_EVEN)
+		{
+			int countEven = 0;
 
-            while (countEven < strategy.getCount())
-            {
-                roll = mMaster.getRoll();
-                if (roll == 1)
-                {
-                    return 0;
-                }
-                sum += roll;
+			while (countEven < strategy.getCount())
+			{
+				roll = mMaster.getRoll();
+				if (roll == 1)
+				{
+					return 0;
+				}
+				sum += roll;
 
-                if (roll % 2 == 0)
-                {
-                    countEven++;
-                }
-            }
-        }
-        return sum;
-    }
+				if (roll % 2 == 0)
+				{
+					countEven++;
+				}
+			}
+		}
+		return sum;
+	}
 
-    public int getWinner()
-    {
-        int maxScore = 0;
-        int winner = -1;
+	public int getWinner()
+	{
+		int maxScore = 0;
+		int winner = -1;
 
-        for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
-        {
-            if (mPlayerScore[playerI] > maxScore)
-            {
-                winner = playerI;
-                maxScore = mPlayerScore[playerI];
-            }
-        }
-        return winner;
-    }
+		for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
+		{
+			if (mPlayerScore[playerI] > maxScore)
+			{
+				winner = playerI;
+				maxScore = mPlayerScore[playerI];
+			}
+		}
+		return winner;
+	}
 
-    public boolean isTie()
-    {
-        int maxScore = 0;
-        boolean isTie = false;
+	public boolean isTie()
+	{
+		int maxScore = 0;
+		boolean isTie = false;
 
-        for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
-        {
-            if (mPlayerScore[playerI] > maxScore)
-            {
-                isTie = false;
-                maxScore = mPlayerScore[playerI];
-            }
-            else if (mPlayerScore[playerI] == maxScore)
-            {
-                isTie = true;
-            }
-        }
-        return isTie;
-    }
+		for (int playerI = 0; playerI < mMaster.getNumPlayers(); playerI++)
+		{
+			if (mPlayerScore[playerI] > maxScore)
+			{
+				isTie = false;
+				maxScore = mPlayerScore[playerI];
+			}
+			else if (mPlayerScore[playerI] == maxScore)
+			{
+				isTie = true;
+			}
+		}
+		return isTie;
+	}
 
-    public int getTurn()
-    {
-        return mTurn;
-    }
+	public int getTurn()
+	{
+		return mTurn;
+	}
 
-    public int getScore(int i)
-    {
-        return mPlayerScore[i];
-    }
+	public int getScore(int i)
+	{
+		return mPlayerScore[i];
+	}
+
+	public Strategy[] getUsed()
+	{
+		return mUsed;
+	}
 }

@@ -76,6 +76,7 @@ public class StatsActivity extends AppCompatActivity
 		if (getIntent().getAction() == ACTION_STATS)
 		{
 			sbuf.append(getPrelude());
+			sbuf.append("-------\n");
 
 			for (BattleStrategy battle : BattleLine.getItems())
 			{
@@ -87,7 +88,7 @@ public class StatsActivity extends AppCompatActivity
 		}
 		else
 		{
-			Games games = new Games(getContext(), mApp.getPlayer1(), mApp.getPlayer2());
+			Games games = new Games(getContext(), mApp.getPlayers());
 			games.play();
 			sbuf.append(games.toString(getContext()));
 		}

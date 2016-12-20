@@ -45,7 +45,6 @@ public class Strategy
 		else
 		{
 			sbuf.append(ctx.getString(R.string.unknown));
-
 		}
 		return sbuf.toString();
 	}

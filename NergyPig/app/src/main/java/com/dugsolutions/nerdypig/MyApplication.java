@@ -3,10 +3,16 @@ package com.dugsolutions.nerdypig;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.dugsolutions.nerdypig.act.StatsActivity;
 import com.dugsolutions.nerdypig.db.BattleStrategies;
 import com.dugsolutions.nerdypig.db.DatabaseManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by dug on 12/18/16.
@@ -14,14 +20,15 @@ import com.dugsolutions.nerdypig.db.DatabaseManager;
 
 public class MyApplication extends Application
 {
-	public static final String TAG = "NerdyPig";
+	public static final String	TAG			= "NerdyPig";
+
+	static final String			EMAIL_TO	= "douglasselph@gmail.com";
 
 	public MyApplication()
 	{
 	}
 
-	BattleStrategies mPlayer1;
-	BattleStrategies mPlayer2;
+	ArrayList<BattleStrategies> mPlayers = new ArrayList<>();
 
 	/**
 	 * This is called when the Home (Up) button is pressed in the Action Bar.
@@ -51,30 +58,76 @@ public class MyApplication extends Application
 		act.startActivity(intent);
 	}
 
-	public void storePlayer1()
+	public void storePlayer()
 	{
-		mPlayer1 = new BattleStrategies();
-	}
-
-	public void storePlayer2()
-	{
-		mPlayer2 = new BattleStrategies();
+		mPlayers.add(new BattleStrategies());
 	}
 
 	public void clearPlayers()
 	{
-		mPlayer1 = null;
-		mPlayer2 = null;
+		mPlayers.clear();
 	}
 
-	public BattleStrategies getPlayer1()
+	public List<BattleStrategies> getPlayers()
 	{
-		return mPlayer1;
+		return mPlayers;
 	}
 
-	public BattleStrategies getPlayer2()
+	public BattleStrategies getPlayer(int i)
 	{
-		return mPlayer2;
+		if (i >= mPlayers.size())
+		{
+			return null;
+		}
+		return mPlayers.get(i);
+	}
+
+	public String getVersion()
+	{
+		StringBuilder sbuf = new StringBuilder();
+		try
+		{
+			String version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+			sbuf.append("v");
+			sbuf.append(version);
+		}
+		catch (Exception e)
+		{
+
+			Log.i(TAG, e.getMessage());
+
+		}
+		return sbuf.toString();
+	}
+
+	public void doEmail(Activity act)
+	{
+		doEmail(act, EMAIL_TO);
+	}
+
+	public void doEmail(Activity act, String to)
+	{
+		Intent emailIntent = new Intent(Intent.ACTION_SEND);
+		emailIntent.setData(Uri.parse("mailto:"));
+		emailIntent.setType("text/plain");
+		if (to != null)
+		{
+			String[] TO = {
+					to };
+			emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+		}
+		emailIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+		emailIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.email_body));
+
+		try
+		{
+			act.startActivity(Intent.createChooser(emailIntent, getString(R.string.email_subject)));
+		}
+		catch (android.content.ActivityNotFoundException ex)
+		{
+			Log.e(TAG, ex.getMessage());
+			Toast.makeText(act, getString(R.string.email_failed), Toast.LENGTH_SHORT).show();
+		}
 	}
 
 }
