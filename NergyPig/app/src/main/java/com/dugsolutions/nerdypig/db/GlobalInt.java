@@ -28,19 +28,72 @@ public class GlobalInt
 	static final String		NAME_END_POINTS				= "end_points";
 	static final String		NAME_MAX_TURNS				= "max_turns";
 	static final String		NAME_NUM_GAMES				= "num_games";
-    static final String     NAME_END_TYPE               = "end_type";
-
-	static SQLiteDatabase	mDb;
+	static final String		NAME_END_TYPE				= "end_type";
+	static final String		NAME_BATTLE_POINTS			= "battle_ooints";
 
 	public static void create(SQLiteDatabase db) throws SQLException
 	{
-		mDb = db;
 		db.execSQL(TABLE_GLOBALS_INT_CREATE);
 	}
 
 	public static void deleteAll()
 	{
-		mDb.delete(TABLE_GLOBALS_INT, null, null);
+		DatabaseManager.getDB().delete(TABLE_GLOBALS_INT, null, null);
+	}
+
+	static Integer query(String key, int defaultValue)
+	{
+		Integer value = defaultValue;
+		try
+		{
+			Cursor cursor = DatabaseManager.getDB().query(TABLE_GLOBALS_INT, new String[] {
+					KEY_VALUE }, KEY_NAME + "=?",
+					new String[] {
+							key },
+					null, null, null);
+			if (cursor.moveToFirst())
+			{
+				value = cursor.getInt(0);
+			}
+			cursor.close();
+		}
+		catch (Exception ex)
+		{
+			Log.e(TAG, "KEY=" + key + ": " + ex.getMessage());
+		}
+		return value;
+	}
+
+	static void set(String key, int value)
+	{
+		SQLiteDatabase db = DatabaseManager.getDB();
+		db.beginTransaction();
+		try
+		{
+			setRaw(key, value);
+			db.setTransactionSuccessful();
+		}
+		catch (Exception ex)
+		{
+			Log.e(TAG, ex.getMessage());
+		}
+		finally
+		{
+			db.endTransaction();
+		}
+	}
+
+	static void setRaw(String key, int value)
+	{
+		SQLiteDatabase db = DatabaseManager.getDB();
+		ContentValues values = new ContentValues();
+		values.put(KEY_VALUE, value);
+		if (db.update(TABLE_GLOBALS_INT, values, KEY_NAME + "=?", new String[] {
+				key }) == 0)
+		{
+			values.put(KEY_NAME, key);
+			db.insert(TABLE_GLOBALS_INT, null, values);
+		}
 	}
 
 	public static int getEndPoints()
@@ -58,83 +111,39 @@ public class GlobalInt
 		return query(NAME_MAX_TURNS, 20);
 	}
 
-    public static void setMaxTurns(int value)
-    {
-        set(NAME_MAX_TURNS, value);
-    }
-
+	public static void setMaxTurns(int value)
+	{
+		set(NAME_MAX_TURNS, value);
+	}
 
 	public static int getNumGames()
 	{
 		return query(NAME_NUM_GAMES, 1000);
 	}
 
-    public static void setNumGames(int value)
-    {
-        set(NAME_NUM_GAMES, value);
-    }
-
-    public static GameEnd getGameEnd()
-    {
-        return GameEnd.from(query(NAME_END_TYPE, GameEnd.END_POINTS.ordinal()));
-    }
-
-    public static void setGameEnd(GameEnd value)
-    {
-        set(NAME_END_TYPE, value.ordinal());
-    }
-
-    static Integer query(String key, int defaultValue)
+	public static void setNumGames(int value)
 	{
-		Integer value = defaultValue;
-		try
-		{
-			Cursor cursor = mDb.query(TABLE_GLOBALS_INT, new String[] {
-					KEY_VALUE }, KEY_NAME + "=?",
-					new String[] {
-							key },
-					null, null, null);
-			if (cursor.moveToFirst())
-			{
-				value = cursor.getInt(0);
-			}
-			cursor.close();
-		}
-		catch (Exception ex)
-		{
-			Log.e(TAG, ex.getMessage());
-		}
-		return value;
+		set(NAME_NUM_GAMES, value);
 	}
 
-	static void set(String key, int value)
+	public static GameEnd getGameEnd()
 	{
-		mDb.beginTransaction();
-		try
-		{
-			setRaw(key, value);
-			mDb.setTransactionSuccessful();
-		}
-		catch (Exception ex)
-		{
-			Log.e(TAG, ex.getMessage());
-		}
-		finally
-		{
-			mDb.endTransaction();
-		}
+		return GameEnd.from(query(NAME_END_TYPE, GameEnd.END_POINTS.ordinal()));
 	}
 
-	static void setRaw(String key, int value)
+	public static void setGameEnd(GameEnd value)
 	{
-		ContentValues values = new ContentValues();
-		values.put(KEY_VALUE, value);
-		if (mDb.update(TABLE_GLOBALS_INT, values, KEY_NAME + "=?", new String[] {
-				key }) == 0)
-		{
-			values.put(KEY_NAME, key);
-			mDb.insert(TABLE_GLOBALS_INT, null, values);
-		}
+		set(NAME_END_TYPE, value.ordinal());
+	}
+
+	public static int getBattlePoints()
+	{
+		return query(NAME_BATTLE_POINTS, 10);
+	}
+
+	public static void setBattlePoints(int value)
+	{
+		set(NAME_BATTLE_POINTS, value);
 	}
 
 }

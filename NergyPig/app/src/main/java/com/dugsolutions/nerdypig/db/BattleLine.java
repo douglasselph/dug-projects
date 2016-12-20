@@ -1,42 +1,22 @@
 package com.dugsolutions.nerdypig.db;
 
-import android.content.Context;
-
-import com.dugsolutions.nerdypig.R;
+import com.dugsolutions.nerdypig.game.Strategy;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-/**
- * Helper class for providing sample content for user interfaces created by
- * Android template wizards.
- * <p>
- * TODO: Replace all uses of this class before publishing your app.
- */
 public class BattleLine
 {
-	public enum BattleType
-	{
-		STOP_AFTER_NUM_ROLLS, // Stop after indicated num of rolls
-		STOP_AFTER_REACHED_SUM, // Stop after indicated sum reached
-		STOP_AFTER_REACHED_EVEN, // Stop after reached even number count reached.
-	}
-
 	/**
 	 * A dummy item representing a piece of content.
 	 */
-	public static class BattleItem
+	public static class BattleItem extends Strategy
 	{
-		final BattleType	mType;
-		final int			mCount;
-		short				mAssigned;	// How many battle points assigned to this strategy
+		short		mAssigned;	// How many battle points assigned to this strategy
 
-		public BattleItem(BattleType type, int count)
+		public BattleItem(Kind type, int count)
 		{
-			mType = type;
-			mCount = count;
+			super(type, count);
 		}
 
 		public String getId()
@@ -46,30 +26,6 @@ public class BattleLine
 				return String.valueOf(mAssigned);
 			}
 			return "";
-		}
-
-		public String toString(Context ctx)
-		{
-			StringBuffer sbuf = new StringBuffer();
-
-			if (mType == BattleType.STOP_AFTER_NUM_ROLLS)
-			{
-				sbuf.append(ctx.getString(R.string.strategy_rolls, mCount));
-			}
-			else if (mType == BattleType.STOP_AFTER_REACHED_SUM)
-			{
-				sbuf.append(ctx.getString(R.string.strategy_points, mCount));
-			}
-			else if (mType == BattleType.STOP_AFTER_REACHED_EVEN)
-			{
-				sbuf.append(ctx.getString(R.string.strategy_even, mCount));
-			}
-			else
-			{
-				sbuf.append(ctx.getString(R.string.unknown));
-
-			}
-			return sbuf.toString();
 		}
 
 		public int getBattlePoints()
@@ -113,15 +69,15 @@ public class BattleLine
 
 	static
 	{
-		for (int rolls = 3; rolls <= 6; rolls++)
+		for (int rolls = 3; rolls <= 7; rolls++)
 		{
-			addItem(createItem(BattleType.STOP_AFTER_NUM_ROLLS, rolls));
+			addItem(createItem(Strategy.Kind.STOP_AFTER_NUM_ROLLS, rolls));
 		}
 		for (int sum = 20; sum < 30; sum++)
 		{
-			addItem(createItem(BattleType.STOP_AFTER_REACHED_SUM, sum));
+			addItem(createItem(Strategy.Kind.STOP_AFTER_REACHED_SUM, sum));
 		}
-		addItem(createItem(BattleType.STOP_AFTER_REACHED_EVEN, 2));
+		addItem(createItem(Strategy.Kind.STOP_AFTER_REACHED_EVEN, 2));
 	}
 
 	private static void addItem(BattleItem item)
@@ -129,7 +85,7 @@ public class BattleLine
 		ITEMS.add(item);
 	}
 
-	private static BattleItem createItem(BattleType type, int count)
+	private static BattleItem createItem(Strategy.Kind type, int count)
 	{
 		return new BattleItem(type, count);
 	}

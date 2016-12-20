@@ -79,7 +79,7 @@ public class PlayerFragment extends Fragment
 	{
 		View topView = inflater.inflate(R.layout.fragment_battle_list, container, false);
 		View view = topView.findViewById(R.id.list);
-		
+
 		// Set the adapter
 		if (view instanceof RecyclerView)
 		{

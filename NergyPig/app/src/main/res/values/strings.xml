@@ -6,23 +6,31 @@
     <string name="pig_fight">Fight</string>
     <string name="title_activity_stats">Stats</string>
     <string name="title_activity_rules">Rules</string>
-    <string name="title_activity_battle">Battle</string>
     <string name="rules_overview">Try and get as many points as you can by rolling a 6 sided die as many times as you want and keeping a running total of your pips. Your turn is over until one of two things occur:\n
         \t1. You roll a one. Pig Out! In which case all the points you have accumulated are lost.\n
         \t2. You decide to stop. In which case all the points you have accumulated thus far are kept in your overall total.\n
         The game is over as soon as:\n
     </string>
-    <string name="point_threshold">Point Threshold</string>
+    <string name="point_threshold">Point Reached</string>
     <string name="turns_threshold">After This Many Turns</string>
     <string name="entry_error">Entry Error</string>
     <string name="error_positive">Entry must be a positive number</string>
-    <string name="num_games">Number of games to test each strategy</string>
-    <string name="battle_title_player1">Battle - Player 1</string>
-    <string name="battle_title_player2">Battle - Player 2</string>
+    <string name="num_games">Number of games to run</string>
+    <string name="battle_title_player1">Player 1: %d points left</string>
+    <string name="battle_title_player2">Player 2: %d points left</string>
     <string name="battle_title_result">Battle - Result</string>
     <string name="strategy_rolls">Stop after %d rolls</string>
     <string name="strategy_points">Stop after %d points</string>
     <string name="strategy_even">Stop after %d even numbers encountered</string>
     <string name="unknown">Unknown</string>
+    <string name="report_tie">Ties=%d</string>
+    <string name="game_over_points">Game over after %d points reached</string>
+    <string name="game_over_turns">Game over after %d turns</string>
+    <string name="game_count">Games played=%d</string>
+    <string name="report_turns">TURNS=%g</string>
+    <string name="report_score">SCORE=%g</string>
+    <string name="error_turns">NO TURNS PLAYED</string>
+    <string name="error_score">NO SCORE</string>
+
 
 </resources>

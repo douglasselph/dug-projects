@@ -31,7 +31,6 @@
         </activity>
         <activity
             android:name=".act.BattleActivity"
-            android:label="@string/title_activity_battle"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>

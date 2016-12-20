@@ -19,7 +19,7 @@ public class DatabaseManager
 		if (sInstance == null)
 		{
 			sInstance = new DatabaseManager(app);
-            sInstance.open();
+			sInstance.open();
 		}
 	}
 
@@ -28,6 +28,11 @@ public class DatabaseManager
 	public static DatabaseManager getInstance()
 	{
 		return sInstance;
+	}
+
+	public static SQLiteDatabase getDB()
+	{
+		return getInstance().mDb;
 	}
 
 	static final String			TAG					= "DB";

@@ -110,25 +110,32 @@ public class RulesActivity extends AppCompatActivity
 			}
 		});
 		mRbEndPoints = (RadioButton) findViewById(R.id.rb_points);
+		mRbMaxTurns = (RadioButton) findViewById(R.id.rb_turns);
+
 		mRbEndPoints.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
 		{
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
 			{
-                GlobalInt.setGameEnd(GameEnd.END_POINTS);
-                mRbMaxTurns.setSelected(false);
+				if (isChecked)
+				{
+					GlobalInt.setGameEnd(GameEnd.END_POINTS);
+					mRbMaxTurns.setChecked(false);
+				}
 			}
 		});
-		mRbMaxTurns = (RadioButton) findViewById(R.id.rb_points);
-        mRbMaxTurns.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-        {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
-            {
-                GlobalInt.setGameEnd(GameEnd.MAX_TURNS);
-                mRbEndPoints.setSelected(false);
-            }
-        });
+		mRbMaxTurns.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+		{
+			@Override
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+			{
+				if (isChecked)
+				{
+					GlobalInt.setGameEnd(GameEnd.MAX_TURNS);
+					mRbEndPoints.setChecked(false);
+				}
+			}
+		});
 	}
 
 	int queryValue(TextView tv)
@@ -182,13 +189,13 @@ public class RulesActivity extends AppCompatActivity
 
 		if (GlobalInt.getGameEnd() == GameEnd.END_POINTS)
 		{
-			mRbEndPoints.setSelected(true);
-			mRbMaxTurns.setSelected(false);
+			mRbEndPoints.setChecked(true);
+			mRbMaxTurns.setChecked(false);
 		}
 		else
 		{
-			mRbEndPoints.setSelected(false);
-			mRbMaxTurns.setSelected(true);
+			mRbEndPoints.setChecked(false);
+			mRbMaxTurns.setChecked(true);
 		}
 	}
 
