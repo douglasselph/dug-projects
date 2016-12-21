@@ -13,11 +13,16 @@ import static com.dugsolutions.nerdypig.MyApplication.TAG;
 
 public class Game
 {
+	public enum ResultReport
+	{
+		ONE_ROLLED, GAME_WON, AI_CONTINUE, AI_STOP, HUMAN_CONTINUE;
+	}
+
 	protected int			mTurn;
 	protected int			mPlayerScore[];
 	protected int			mCurScore;
 	protected int			mCurCount;
-	protected int 			mActivePlayer;
+	protected int			mActivePlayer;
 	protected final GameEnd	mGameEnd;
 	protected final int		mMaxTurns;
 	protected final int		mMaxScore;
@@ -142,47 +147,61 @@ public class Game
 	 *
 	 * @param strategy
 	 * @param roll
-     * @return true if the player gets another roll.
-     */
-	public boolean applyRoll(StrategyHolder strategy, int roll)
+	 * @return true if the player gets another roll.
+	 */
+	public ResultReport applyRoll(StrategyHolder strategy, int roll)
 	{
 		if (roll == 1)
 		{
 			mCurScore = 0;
-			Log.d(TAG, "ROLL WAS 1!");
-			return false;
+			return ResultReport.ONE_ROLLED;
 		}
 		mCurScore += roll;
 
-		Log.d(TAG, "CUR SCORE NOW " + mCurScore);
-
 		if (didWin(mCurScore))
 		{
-			Log.d(TAG, "DID WIN!");
-			return false;
+			return ResultReport.GAME_WON;
 		}
 		if (strategy.getStrategy() == Strategy.STOP_AFTER_NUM_ROLLS)
 		{
 			mCurCount++;
-			Log.d(TAG, "CUR COUNT IS NOW " + mCurCount);
 
-			return mCurCount < strategy.getCount();
+			if (mCurCount < strategy.getCount())
+			{
+				return ResultReport.AI_CONTINUE;
+			}
+			else
+			{
+				return ResultReport.AI_STOP;
+			}
 		}
 		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_SUM)
 		{
-			Log.d(TAG, "SCORE IS " + mCurScore + ", STOPPING COUNT IS " + strategy.getCount());
-
-			return mCurScore < strategy.getCount();
+			if (mCurScore < strategy.getCount())
+			{
+				return ResultReport.AI_CONTINUE;
+			}
+			else
+			{
+				return ResultReport.AI_STOP;
+			}
 		}
 		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_EVEN)
 		{
-            if (roll % 2 == 0)
-            {
+			if (roll % 2 == 0)
+			{
 				mCurCount++;
-            }
-            return mCurCount< strategy.getCount();
+			}
+			if (mCurCount < strategy.getCount())
+			{
+				return ResultReport.AI_CONTINUE;
+			}
+			else
+			{
+				return ResultReport.AI_STOP;
+			}
 		}
-		return true;
+		return ResultReport.HUMAN_CONTINUE;
 	}
 
 	public void applyStop()

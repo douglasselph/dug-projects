@@ -49,7 +49,7 @@ public class DieHelper
 		void onFinished(int value);
 	}
 
-	static final int	ROLL_DELAY		= 200;
+	static final int	ROLL_DELAY		= 400;
 	static final int	DEFAULT_COUNT	= 5;
 
 	MyHandler			mHandler		= new MyHandler();
@@ -114,7 +114,7 @@ public class DieHelper
 		switch (face)
 		{
 			case 0:
-				mPicture.setImageResource(R.drawable.dice3d);
+				mPicture.setImageResource(R.drawable.dice3droll);
 				break;
 			case 1:
 				mPicture.setImageResource(R.drawable.one);

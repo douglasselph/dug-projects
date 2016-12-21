@@ -1,6 +1,8 @@
 package com.dugsolutions.nerdypig.act;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,13 +17,25 @@ import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 import com.dugsolutions.nerdypig.game.Game;
-import com.dugsolutions.nerdypig.game.Strategy;
 import com.dugsolutions.nerdypig.game.StrategyHolder;
 import com.dugsolutions.nerdypig.util.DieHelper;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class BattlePlayActivity extends AppCompatActivity
 {
-	static final String TAG = MyApplication.TAG;
+	class MyHandler extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			mDieHelper.roll();
+		}
+	}
+
+	static final String	TAG				= MyApplication.TAG;
+	static final int	DELAYED_ROLL	= 2000;
 
 	Toolbar				mToolbar;
 	TextView			mScore1;
@@ -30,6 +44,7 @@ public class BattlePlayActivity extends AppCompatActivity
 	TextView			mDesc2;
 	TextView			mCurScore;
 	TextView			mGameEndView;
+	TextView			mReportView;
 	ImageView			mDie;
 	DieHelper			mDieHelper;
 	Button				mRoll;
@@ -37,6 +52,7 @@ public class BattlePlayActivity extends AppCompatActivity
 	Game				mGame;
 	MyApplication		mApp;
 	StrategyHolder[]	mPlayer;
+	MyHandler			mHandler		= new MyHandler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -60,6 +76,7 @@ public class BattlePlayActivity extends AppCompatActivity
 		mStop = (Button) findViewById(R.id.stop);
 		mGameEndView = (TextView) findViewById(R.id.game_win);
 		mGameEndView.setText(GlobalInt.getGameEnd().toString(this));
+		mReportView = (TextView) findViewById(R.id.report);
 
 		mPlayer = new StrategyHolder[2];
 		mPlayer[0] = mApp.getPlayer(0);
@@ -70,28 +87,8 @@ public class BattlePlayActivity extends AppCompatActivity
 			@Override
 			public void onFinished(int value)
 			{
-				Log.d(TAG, "ROLL=" + value);
+				applyRoll(value);
 
-				if (mGame.applyRoll(getCurStrategy(), value))
-				{
-					checkAutoRoll();
-					updateCurScore();
-				}
-				else if (mGame.isGameRunning())
-				{
-					if (!isHuman())
-					{
-						applyStop();
-					}
-					else
-					{
-						updateCurScore();
-					}
-				}
-				else
-				{
-					updatePlayerTitle();
-				}
 			}
 		});
 
@@ -119,11 +116,15 @@ public class BattlePlayActivity extends AppCompatActivity
 			}
 		});
 		mGame = new Game(2);
+		mDesc1.setText(mApp.getPlayer(0).getDesc(this));
+		mDesc2.setText(mApp.getPlayer(1).getDesc(this));
 
 		setActivePlayer(0);
 
-		mDesc1.setText(mApp.getPlayer(0).getDesc(this));
-		mDesc2.setText(mApp.getPlayer(1).getDesc(this));
+		if (!isHuman())
+		{
+			mDieHelper.roll();
+		}
 	}
 
 	@Override
@@ -184,24 +185,13 @@ public class BattlePlayActivity extends AppCompatActivity
 		mGame.setNextActivePlayer();
 		updateCurScore();
 		updatePlayerTitle();
-		checkAutoRoll();
 	}
 
 	void setActivePlayer(int playerI)
 	{
 		mGame.setActivePlayer(playerI);
-		mDieHelper.setPicture(0);
 		updateCurScore();
 		updatePlayerTitle();
-		checkAutoRoll();
-	}
-
-	void checkAutoRoll()
-	{
-		if (!isHuman())
-		{
-			mDieHelper.roll();
-		}
 	}
 
 	void applyStop()
@@ -209,5 +199,62 @@ public class BattlePlayActivity extends AppCompatActivity
 		mGame.applyStop();
 		updateSavedScore();
 		setNextActivePlayer();
+
+		if (!isHuman())
+		{
+			mDieHelper.roll();
+		}
+	}
+
+	void applyRoll(int value)
+	{
+		Game.ResultReport result = mGame.applyRoll(getCurStrategy(), value);
+
+		if (result == Game.ResultReport.ONE_ROLLED)
+		{
+			updateCurScore();
+			setNextActivePlayer();
+
+			if (!isHuman())
+			{
+				mHandler.sendEmptyMessageDelayed(0, DELAYED_ROLL);
+			}
+		}
+		else if (mGame.isGameRunning())
+		{
+			if (isHuman())
+			{
+				updateCurScore();
+				setReport(0);
+			}
+			else if (result == Game.ResultReport.AI_STOP)
+			{
+				applyStop();
+				setReport(R.string.report_ai_stop);
+				mDieHelper.setPicture(0);
+			}
+			else
+			{
+				mDieHelper.roll();
+			}
+		}
+		else
+		{
+			updatePlayerTitle();
+			setReport(0);
+			mDieHelper.setPicture(0);
+		}
+	}
+
+	void setReport(int resId)
+	{
+		if (resId == 0)
+		{
+			mReportView.setText("");
+		}
+		else
+		{
+			mReportView.setText(getString(resId));
+		}
 	}
 }
