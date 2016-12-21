@@ -87,7 +87,7 @@ public class MyApplication extends Application
 	{
 		for (StrategyHolder strategy : mPlayers)
 		{
-			if (strategy.getStrategy() == Strategy.HUMAN)
+			if (strategy.isHuman())
 			{
 				return true;
 			}

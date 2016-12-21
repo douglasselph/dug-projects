@@ -1,7 +1,10 @@
 package com.dugsolutions.nerdypig.act;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,8 +26,77 @@ public class StatsActivity extends AppCompatActivity
 	public static final String	ACTION_STATS	= "stats";
 	public static final String	ACTION_BATTLE	= "battle";
 
-	TextView					mStats;
-	MyApplication				mApp;
+	class RunGamesTask extends AsyncTask<Integer, Integer, Integer>
+	{
+		@Override
+		protected Integer doInBackground(Integer... params)
+		{
+			if (getIntent().getAction() == ACTION_BATTLE)
+			{
+				AutoGames games = new AutoGames(getContext(), mApp.getPlayers());
+				games.play();
+				Message msg = new Message();
+				msg.obj = games.toString(getContext());
+				mHandler.sendMessage(msg);
+			}
+			else
+			{
+				for (StrategyHolder battle : BattleLine.getItems())
+				{
+					if (!battle.isHuman())
+					{
+						Player player = new Player(battle, battle.getName(getContext()));
+						AutoGames games = new AutoGames(player);
+						games.play();
+
+						Message msg = new Message();
+						msg.obj = games.toString(getContext());
+						mHandler.sendMessage(msg);
+					}
+				}
+			}
+			return null;
+		}
+
+		@Override
+		protected void onCancelled(Integer result)
+		{
+
+		}
+
+		@Override
+		protected void onPostExecute(Integer result)
+		{
+		}
+
+		@Override
+		protected void onProgressUpdate(Integer... values)
+		{
+			super.onProgressUpdate(values);
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			mStats.setText(getPrelude());
+			mStats.append("---------\n");
+		}
+	}
+
+	class MyHandler extends Handler
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			String str = (String) msg.obj;
+			mStats.append(str);
+		}
+	}
+
+	TextView		mStats;
+	MyApplication	mApp;
+	RunGamesTask	mRunGames;
+	MyHandler		mHandler = new MyHandler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -42,6 +114,9 @@ public class StatsActivity extends AppCompatActivity
 
 		mStats = (TextView) findViewById(R.id.stats);
 		mStats.setMovementMethod(new ScrollingMovementMethod());
+
+		mRunGames = new RunGamesTask();
+		mRunGames.execute();
 	}
 
 	@Override
@@ -60,39 +135,11 @@ public class StatsActivity extends AppCompatActivity
 	protected void onResume()
 	{
 		super.onResume();
-
-		mStats.setText(run());
 	}
 
 	Context getContext()
 	{
 		return this;
-	}
-
-	String run()
-	{
-		StringBuffer sbuf = new StringBuffer();
-
-		sbuf.append(getPrelude());
-		sbuf.append("-------\n");
-
-		if (getIntent().getAction() == ACTION_BATTLE)
-		{
-			AutoGames games = new AutoGames(getContext(), mApp.getPlayers());
-			games.play();
-			sbuf.append(games.toString(getContext()));
-		}
-		else
-		{
-			for (StrategyHolder battle : BattleLine.getItems())
-			{
-				Player player = new Player(battle, battle.getName(getContext()));
-				AutoGames games = new AutoGames(player);
-				games.play();
-				sbuf.append(games.toString(getContext()));
-			}
-		}
-		return sbuf.toString();
 	}
 
 	public String getPrelude()
@@ -101,14 +148,7 @@ public class StatsActivity extends AppCompatActivity
 
 		sbuf.append(getString(R.string.game_count, GlobalInt.getNumGames()));
 		sbuf.append("\n");
-		if (GlobalInt.getGameEnd() == GameEnd.MAX_TURNS)
-		{
-			sbuf.append(getString(R.string.game_over_turns, GlobalInt.getMaxTurns()));
-		}
-		else
-		{
-			sbuf.append(getString(R.string.game_over_points, GlobalInt.getEndPoints()));
-		}
+		sbuf.append(GlobalInt.getGameEnd().toString(this));
 		sbuf.append("\n");
 
 		return sbuf.toString();

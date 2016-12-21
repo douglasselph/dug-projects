@@ -1,6 +1,7 @@
 package com.dugsolutions.nerdypig.game;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
@@ -15,7 +16,7 @@ import java.util.Random;
  * Created by dug on 12/19/16.
  */
 
-public class AutoGames
+public class AutoGames implements AutoGame.InfoQuery
 {
 	static final String	TAG	= MyApplication.TAG + ".AutoGames";
 
@@ -65,11 +66,12 @@ public class AutoGames
 	public void play()
 	{
 		reset();
+
 		mTies = 0;
+		AutoGame game = new AutoGame(this);
 
 		for (mGameNumber = 0; mGameNumber < mNumGames; mGameNumber++)
 		{
-			AutoGame game = new AutoGame(this);
 			game.play();
 
 			if (mPlayers.size() > 1)

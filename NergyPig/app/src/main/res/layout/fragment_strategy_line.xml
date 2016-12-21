@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/text_margin"
         android:textSize="15sp"
+        android:background="@drawable/btn_transparent"
         android:textAppearance="?attr/textAppearanceListItem"/>
 
 </LinearLayout>

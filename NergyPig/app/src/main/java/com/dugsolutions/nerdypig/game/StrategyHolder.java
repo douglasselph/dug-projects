@@ -32,12 +32,12 @@ public class StrategyHolder
 
 	public String getName(Context ctx)
 	{
-		return mStrategy.getName(ctx);
+		return mStrategy.getName(ctx, mCount);
 	}
 
 	public String getDesc(Context ctx)
 	{
-		return mStrategy.getDesc(ctx);
+		return mStrategy.getDesc(ctx, mCount);
 	}
 
 	public int getCount()
@@ -58,5 +58,10 @@ public class StrategyHolder
 	public void setSelected()
 	{
 		mSelected = true;
+	}
+
+	public boolean isHuman()
+	{
+		return mStrategy == Strategy.HUMAN;
 	}
 }

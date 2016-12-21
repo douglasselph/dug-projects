@@ -24,13 +24,21 @@ public enum Strategy
         mResDesc = desc;
 	}
 
-    String getName(Context ctx)
+    String getName(Context ctx, int value)
     {
-        return ctx.getString(mResName);
+        if (this == HUMAN)
+        {
+            return ctx.getString(mResName);
+        }
+        return ctx.getString(mResName, value);
     }
 
-    String getDesc(Context ctx)
+    String getDesc(Context ctx, int value)
     {
-        return ctx.getString(mResDesc);
+        if (this == HUMAN)
+        {
+            return ctx.getString(mResDesc);
+        }
+        return ctx.getString(mResDesc, value);
     }
 }

@@ -20,6 +20,7 @@
     <string name="battle_title_result">Battle - Result</string>
     <string name="battle_player">Player %d</string>
     <string name="battle_player_turn">Player %d\'s Turn</string>
+    <string name="battle_player_wins">Player %d WON</string>
     <string name="strategy_rolls_name">Rolls %d</string>
     <string name="strategy_rolls_desc">Stop after %d rolls</string>
     <string name="strategy_points_name">Points %d</string>

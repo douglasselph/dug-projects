@@ -6,6 +6,7 @@ import android.os.Message;
 import android.widget.ImageView;
 
 import com.dugsolutions.nerdypig.R;
+import com.dugsolutions.nerdypig.db.GlobalInt;
 import com.dugsolutions.nerdypig.util.SoundHelper;
 
 import java.util.Random;
@@ -48,14 +49,14 @@ public class DieHelper
 		void onFinished(int value);
 	}
 
-	static final int	ROLL_DELAY	= 200;
-	static final int 	DEFAULT_COUNT = 5;
+	static final int	ROLL_DELAY		= 200;
+	static final int	DEFAULT_COUNT	= 5;
 
-	MyHandler			mHandler	= new MyHandler();
+	MyHandler			mHandler		= new MyHandler();
 	ImageView			mPicture;
-	SoundHelper mSound;
+	SoundHelper			mSound;
 	int					mRollCount;
-	Timer				mTimer		= new Timer();
+	Timer				mTimer			= new Timer();
 	Random				mRandom;
 	OnFinished			mListener;
 
@@ -77,7 +78,11 @@ public class DieHelper
 		if (mRollCount <= 0)
 		{
 			mPicture.setImageResource(R.drawable.dice3droll);
-			mSound.play();
+
+			if (GlobalInt.hasAudio())
+			{
+				mSound.play();
+			}
 			next();
 		}
 	}
@@ -96,14 +101,21 @@ public class DieHelper
 
 	void pause()
 	{
-		mSound.pause();
+		if (GlobalInt.hasAudio())
+		{
+			mSound.pause();
+		}
 		mTimer.cancel();
+		mTimer = new Timer();
 	}
 
 	public void setPicture(int face)
 	{
 		switch (face)
 		{
+			case 0:
+				mPicture.setImageResource(R.drawable.dice3d);
+				break;
 			case 1:
 				mPicture.setImageResource(R.drawable.one);
 				break;

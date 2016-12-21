@@ -5,20 +5,23 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
 import com.dugsolutions.nerdypig.game.BattleLine;
 import com.dugsolutions.nerdypig.game.StrategyHolder;
 
-public class BattlePrepActivity extends ActionBarActivity implements PlayerFragment.OnListFragmentInteractionListener
+public class BattlePrepActivity extends AppCompatActivity implements PlayerFragment.OnListFragmentInteractionListener
 {
-	static final String	TAG	= "BattlePrepActivity";
-
 	Toolbar				mToolbar;
 	MyApplication		mApp;
+	TextView			mPlayer1Name;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -26,6 +29,7 @@ public class BattlePrepActivity extends ActionBarActivity implements PlayerFragm
 		super.onCreate(savedInstanceState);
 		mApp = (MyApplication) getApplicationContext();
 		setContentView(R.layout.activity_battle_prep);
+		mPlayer1Name = (TextView) findViewById(R.id.player1_name);
 		mToolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(mToolbar);
 		ActionBar bar = getSupportActionBar();
@@ -62,10 +66,12 @@ public class BattlePrepActivity extends ActionBarActivity implements PlayerFragm
 			mApp.storePlayer();
 			BattleLine.clearSelected();
 			updateTitle();
+			updatePlayer1Text();
 		}
 		else
 		{
 			mApp.storePlayer();
+
 
 			if (mApp.hasHuman())
 			{
@@ -99,5 +105,16 @@ public class BattlePrepActivity extends ActionBarActivity implements PlayerFragm
 	{
 		Intent intent = new Intent(this, BattlePlayActivity.class);
 		startActivity(intent);
+	}
+
+	void updatePlayer1Text()
+	{
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(getString(R.string.player_1));
+		sbuf.append(": ");
+		sbuf.append(mApp.getPlayer(0).getDesc(this));
+
+		mPlayer1Name.setText(sbuf.toString());
+		mPlayer1Name.setVisibility(View.VISIBLE);
 	}
 }

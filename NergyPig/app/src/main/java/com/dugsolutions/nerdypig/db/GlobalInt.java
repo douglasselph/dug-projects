@@ -29,10 +29,7 @@ public class GlobalInt
 	static final String	NAME_MAX_TURNS				= "max_turns";
 	static final String	NAME_NUM_GAMES				= "num_games";
 	static final String	NAME_END_TYPE				= "end_type";
-	static final String	NAME_CUR_SCORE				= "cur_score";
-	static final String NAME_CUR_COUNT				= "cur_count";
-	static final String	NAME_SAVED_SCORE_			= "save_";
-	static final String	NAME_ACTIVE_PLAYER			= "active_player";
+	static final String NAME_AUDIO_ON				= "audio_on";
 
 	public static void create(SQLiteDatabase db) throws SQLException
 	{
@@ -139,52 +136,21 @@ public class GlobalInt
 		set(NAME_END_TYPE, value.ordinal());
 	}
 
-	public static int getActivePlayer()
-	{
-		return query(NAME_ACTIVE_PLAYER, 0);
-	}
-
-	public static void setActivePlayer(int i)
-	{
-		set(NAME_ACTIVE_PLAYER, i);
-	}
-
-	public static int getCurScore()
-	{
-		return query(NAME_CUR_SCORE, 0);
-	}
-
-	public static void setCurScore(int score)
-	{
-		set(NAME_CUR_SCORE, score);
-	}
-
-	public static int getCurCount()
-	{
-		return query(NAME_CUR_COUNT, 0);
-	}
-
-	public static void setCurCount(int score)
-	{
-		set(NAME_CUR_COUNT, score);
-	}
-
-	public static int getSavedScore(int playerI)
-	{
-		return query(concat(NAME_SAVED_SCORE_, playerI), 0);
-	}
-
-	public static void setSavedScore(int playerI, int score)
-	{
-		set(concat(NAME_SAVED_SCORE_, playerI), score);
-	}
-
 	static String concat(String prefix, int i)
 	{
 		StringBuffer sbuf = new StringBuffer();
 		sbuf.append(prefix);
 		sbuf.append(String.valueOf(i));
 		return sbuf.toString();
+	}
+	public static boolean hasAudio()
+	{
+		return query(NAME_AUDIO_ON, 0) != 0;
+	}
+
+	public static void setAudio(boolean value)
+	{
+		set(NAME_AUDIO_ON, value ? 1 : 0);
 	}
 
 }

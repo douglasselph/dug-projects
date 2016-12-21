@@ -1,7 +1,11 @@
 package com.dugsolutions.nerdypig.game;
 
+import android.util.Log;
+
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
+
+import static com.dugsolutions.nerdypig.MyApplication.TAG;
 
 /**
  * Created by dug on 12/20/16.
@@ -11,6 +15,9 @@ public class Game
 {
 	protected int			mTurn;
 	protected int			mPlayerScore[];
+	protected int			mCurScore;
+	protected int			mCurCount;
+	protected int 			mActivePlayer;
 	protected final GameEnd	mGameEnd;
 	protected final int		mMaxTurns;
 	protected final int		mMaxScore;
@@ -34,7 +41,7 @@ public class Game
 		return mPlayerScore[i];
 	}
 
-	protected boolean isGameRunning()
+	public boolean isGameRunning()
 	{
 		if (mGameEnd == GameEnd.MAX_TURNS)
 		{
@@ -48,6 +55,14 @@ public class Game
 			}
 		}
 		return true;
+	}
+
+	protected void restart()
+	{
+		for (int playerI = 0; playerI < mPlayerScore.length; playerI++)
+		{
+			mPlayerScore[playerI] = 0;
+		}
 	}
 
 	protected boolean didWin(int score)
@@ -91,39 +106,90 @@ public class Game
 		return winner;
 	}
 
-	public void addScore(int playerI, int roll)
+	public int getCurScore()
 	{
-		mPlayerScore[playerI] += roll;
+		return mCurScore;
 	}
 
+	public int getActivePlayer()
+	{
+		return mActivePlayer;
+	}
+
+	int getNumPlayers()
+	{
+		return mPlayerScore.length;
+	}
+
+	public void setNextActivePlayer()
+	{
+		if (++mActivePlayer >= getNumPlayers())
+		{
+			mActivePlayer = 0;
+		}
+		mCurCount = 0;
+		mCurScore = 0;
+	}
+
+	public void setActivePlayer(int i)
+	{
+		mActivePlayer = i;
+		mCurCount = 0;
+		mCurScore = 0;
+	}
+
+	/**
+	 *
+	 * @param strategy
+	 * @param roll
+     * @return true if the player gets another roll.
+     */
 	public boolean applyRoll(StrategyHolder strategy, int roll)
 	{
 		if (roll == 1)
 		{
-			GlobalInt.setCurScore(0);
+			mCurScore = 0;
+			Log.d(TAG, "ROLL WAS 1!");
 			return false;
 		}
-		GlobalInt.setCurScore(GlobalInt.getCurScore() + roll);
+		mCurScore += roll;
 
+		Log.d(TAG, "CUR SCORE NOW " + mCurScore);
+
+		if (didWin(mCurScore))
+		{
+			Log.d(TAG, "DID WIN!");
+			return false;
+		}
 		if (strategy.getStrategy() == Strategy.STOP_AFTER_NUM_ROLLS)
 		{
-            GlobalInt.setCurCount(GlobalInt.getCurCount() + 1);
-            return GlobalInt.getCurCount() < strategy.getCount();
+			mCurCount++;
+			Log.d(TAG, "CUR COUNT IS NOW " + mCurCount);
+
+			return mCurCount < strategy.getCount();
 		}
 		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_SUM)
 		{
-            GlobalInt.setCurCount(GlobalInt.getCurCount() + 1);
-            return GlobalInt.getCurScore() < strategy.getCount();
+			Log.d(TAG, "SCORE IS " + mCurScore + ", STOPPING COUNT IS " + strategy.getCount());
+
+			return mCurScore < strategy.getCount();
 		}
 		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_EVEN)
 		{
             if (roll % 2 == 0)
             {
-                GlobalInt.setCurCount(GlobalInt.getCurCount() + 1);
+				mCurCount++;
             }
-            return GlobalInt.getCurCount() < strategy.getCount();
+            return mCurCount< strategy.getCount();
 		}
 		return true;
+	}
+
+	public void applyStop()
+	{
+		mPlayerScore[mActivePlayer] += mCurScore;
+		mCurScore = 0;
+		mCurCount = 0;
 	}
 
 }
