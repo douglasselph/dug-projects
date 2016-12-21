@@ -40,7 +40,7 @@ public class BattlePrepListViewAdapter extends RecyclerView.Adapter<BattlePrepLi
 
 		void refreshText()
 		{
-			mDesc.setText(mItem.getName(mView.getContext()));
+			mDesc.setText(mItem.getDesc(mView.getContext()));
 		}
 	}
 

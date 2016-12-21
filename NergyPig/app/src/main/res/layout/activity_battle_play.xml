@@ -24,4 +24,13 @@
 
     <include layout="@layout/content_battle_play"/>
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_sound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        android:background="@drawable/btn_transparent"
+        app:srcCompat="@drawable/sound_on"/>
+
 </android.support.design.widget.CoordinatorLayout>

@@ -4,6 +4,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -21,41 +22,47 @@ import com.dugsolutions.nerdypig.game.Game;
 import com.dugsolutions.nerdypig.game.StrategyHolder;
 import com.dugsolutions.nerdypig.util.DieHelper;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class BattlePlayActivity extends AppCompatActivity
 {
+	static final int ROLL = 0;
+
 	class MyHandler extends Handler
 	{
 		@Override
 		public void handleMessage(Message msg)
 		{
-			mDieHelper.roll();
+			switch (msg.what)
+			{
+				case ROLL:
+					mDieHelper.roll();
+					updateRolls(0);
+					break;
+			}
 		}
 	}
 
-	static final String	TAG				= MyApplication.TAG;
-	static final int	DELAYED_ROLL	= 2000;
+	static final String		TAG				= MyApplication.TAG;
+	static final int		DELAYED_ROLL	= 1000;
 
-	Toolbar				mToolbar;
-	TextView			mScore1;
-	TextView			mScore2;
-	TextView			mDesc1;
-	TextView			mDesc2;
-	TextView			mCurScore;
-	TextView			mGameEndView;
-	TextView			mReportView;
-	TextView			mPlayer1NameView;
-	TextView			mPlayer2NameView;
-	ImageView			mDie;
-	DieHelper			mDieHelper;
-	Button				mRoll;
-	Button				mStop;
-	Game				mGame;
-	MyApplication		mApp;
-	StrategyHolder[]	mPlayer;
-	MyHandler			mHandler		= new MyHandler();
+	Toolbar					mToolbar;
+	TextView				mScore1;
+	TextView				mScore2;
+	TextView				mDesc1;
+	TextView				mDesc2;
+	TextView				mCurScore;
+	TextView				mGameEndView;
+	TextView				mReportView;
+	TextView				mPlayer1NameView;
+	TextView				mPlayer2NameView;
+	FloatingActionButton	mSoundFAB;
+	ImageView				mDie;
+	DieHelper				mDieHelper;
+	Button					mRoll;
+	Button					mStop;
+	Game					mGame;
+	MyApplication			mApp;
+	StrategyHolder[]		mPlayer;
+	MyHandler				mHandler		= new MyHandler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -68,6 +75,18 @@ public class BattlePlayActivity extends AppCompatActivity
 		setSupportActionBar(mToolbar);
 		ActionBar bar = getSupportActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
+
+		mSoundFAB = (FloatingActionButton) findViewById(R.id.fab_sound);
+		mSoundFAB.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
+			{
+				GlobalInt.setAudio(!GlobalInt.hasAudio());
+				updateSound();
+			}
+		});
+		updateSound();
 
 		mScore1 = (TextView) findViewById(R.id.player1_score);
 		mScore2 = (TextView) findViewById(R.id.player2_score);
@@ -93,10 +112,8 @@ public class BattlePlayActivity extends AppCompatActivity
 			public void onFinished(int value)
 			{
 				applyRoll(value);
-
 			}
 		});
-
 		mRoll.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -108,7 +125,6 @@ public class BattlePlayActivity extends AppCompatActivity
 				}
 			}
 		});
-
 		mStop.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
@@ -267,12 +283,11 @@ public class BattlePlayActivity extends AppCompatActivity
 			{
 				updateRolls(R.string.report_ai_stop);
 				mDieHelper.setPicture(0);
-
 				applyStop();
 			}
 			else
 			{
-				mDieHelper.roll();
+				mHandler.sendEmptyMessageDelayed(0, DELAYED_ROLL);
 			}
 		}
 		else
@@ -280,6 +295,7 @@ public class BattlePlayActivity extends AppCompatActivity
 			updatePlayerTitle();
 			setReport(0);
 			mDieHelper.setPicture(0);
+			hideControls();
 		}
 	}
 
@@ -324,4 +340,17 @@ public class BattlePlayActivity extends AppCompatActivity
 		}
 		mReportView.setText(sbuf.toString());
 	}
+
+	void updateSound()
+	{
+		if (GlobalInt.hasAudio())
+		{
+			mSoundFAB.setImageResource(R.drawable.sound_on);
+		}
+		else
+		{
+			mSoundFAB.setImageResource(R.drawable.sound_off);
+		}
+	}
+
 }

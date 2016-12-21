@@ -95,7 +95,7 @@ public class Player
 		return sbuf.toString();
 	}
 
-	double getValueAverage()
+	public double getValueAverage()
 	{
 		int total = 0;
 		for (Integer i : mValues)

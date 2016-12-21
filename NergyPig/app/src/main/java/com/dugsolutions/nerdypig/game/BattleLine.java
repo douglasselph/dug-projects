@@ -8,7 +8,6 @@ import java.util.List;
 
 public class BattleLine
 {
-
 	static final List<StrategyHolder> ITEMS = new ArrayList<>();
 
 	static
@@ -19,7 +18,7 @@ public class BattleLine
 		{
 			addItem(createItem(Strategy.STOP_AFTER_NUM_ROLLS, rolls));
 		}
-		for (int sum = 20; sum < 30; sum++)
+		for (int sum = 15; sum < 30; sum++)
 		{
 			addItem(createItem(Strategy.STOP_AFTER_REACHED_SUM, sum));
 		}

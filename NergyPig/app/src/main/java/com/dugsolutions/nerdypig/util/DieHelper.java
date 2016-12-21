@@ -1,6 +1,7 @@
 package com.dugsolutions.nerdypig.util;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.ImageView;
@@ -19,44 +20,13 @@ import java.util.TimerTask;
 
 public class DieHelper
 {
-	class MyHandler extends Handler
-	{
-		@Override
-		public void handleMessage(Message msg)
-		{
-			int value = mRandom.nextInt(6) + 1;
-
-			if (--mRollCount > 0)
-			{
-				next();
-			}
-			else
-			{
-				setPicture(value);
-
-				pause();
-
-				if (mListener != null)
-				{
-					mListener.onFinished(value);
-				}
-			}
-		}
-	}
-
 	public interface OnFinished
 	{
 		void onFinished(int value);
 	}
 
-	static final int	ROLL_DELAY		= 1;
-	static final int	DEFAULT_COUNT	= 5;
-
-	MyHandler			mHandler		= new MyHandler();
 	ImageView			mPicture;
 	SoundHelper			mSound;
-	int					mRollCount;
-	Timer				mTimer			= new Timer();
 	Random				mRandom;
 	OnFinished			mListener;
 
@@ -70,43 +40,18 @@ public class DieHelper
 
 	public void roll()
 	{
-		roll(DEFAULT_COUNT);
-	}
+		int value = mRandom.nextInt(6) + 1;
 
-	public void roll(int count)
-	{
-		if (mRollCount <= 0)
-		{
-			mPicture.setImageResource(R.drawable.dice3droll);
+		setPicture(value);
 
-			if (GlobalInt.hasAudio())
-			{
-				mSound.play();
-			}
-			next();
-		}
-	}
-
-	void next()
-	{
-		mTimer.schedule(new TimerTask()
-		{
-			@Override
-			public void run()
-			{
-				mHandler.sendEmptyMessage(0);
-			}
-		}, ROLL_DELAY);
-	}
-
-	void pause()
-	{
 		if (GlobalInt.hasAudio())
 		{
-			mSound.pause();
+			mSound.play();
 		}
-		mTimer.cancel();
-		mTimer = new Timer();
+		if (mListener != null)
+		{
+			mListener.onFinished(value);
+		}
 	}
 
 	public void setPicture(int face)

@@ -28,6 +28,9 @@ public class StatsActivity extends AppCompatActivity
 
 	class RunGamesTask extends AsyncTask<Integer, Integer, Integer>
 	{
+		StrategyHolder	mBest;
+		double			mBestValue;
+
 		@Override
 		protected Integer doInBackground(Integer... params)
 		{
@@ -52,6 +55,28 @@ public class StatsActivity extends AppCompatActivity
 						Message msg = new Message();
 						msg.obj = games.toString(getContext());
 						mHandler.sendMessage(msg);
+
+						if (games.getNumPlayers() == 1)
+						{
+							double value = games.getPlayer(0).getValueAverage();
+
+							if (games.getGameEnd() == GameEnd.MAX_TURNS)
+							{
+								if (mBest == null || value > mBestValue)
+								{
+									mBest = battle;
+									mBestValue = value;
+								}
+							}
+							else
+							{
+								if (mBest == null || value < mBestValue)
+								{
+									mBest = battle;
+									mBestValue = value;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -67,6 +92,16 @@ public class StatsActivity extends AppCompatActivity
 		@Override
 		protected void onPostExecute(Integer result)
 		{
+			if (mBest != null)
+			{
+				Message msg = new Message();
+				StringBuffer sbuf = new StringBuffer();
+				sbuf.append(getString(R.string.best));
+				sbuf.append(mBest.getDesc(getContext()));
+				sbuf.append("\n");
+				msg.obj = sbuf.toString();
+				mHandler.sendMessage(msg);
+			}
 		}
 
 		@Override
@@ -96,7 +131,7 @@ public class StatsActivity extends AppCompatActivity
 	TextView		mStats;
 	MyApplication	mApp;
 	RunGamesTask	mRunGames;
-	MyHandler		mHandler = new MyHandler();
+	MyHandler		mHandler	= new MyHandler();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)

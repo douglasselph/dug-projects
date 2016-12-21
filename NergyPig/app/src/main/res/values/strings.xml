@@ -28,7 +28,7 @@
     <string name="strategy_even_name">Even %d</string>
     <string name="strategy_even_desc">Stop after %d even numbers encountered</string>
     <string name="strategy_human_name">Human</string>
-    <string name="strategy_human_desc">Human Sus</string>
+    <string name="strategy_human_desc">Human</string>
     <string name="unknown">Unknown</string>
     <string name="report_tie">Ties=%d</string>
     <string name="game_over_points">Game over after %d points reached.</string>
@@ -45,9 +45,10 @@
     <string name="player_1">Player 1</string>
     <string name="player_2">Player 2</string>
     <string name="roll">ROLL</string>
-    <string name="stop">STOP</string>
+    <string name="stop">KEEP</string>
     <string name="report_one">One was rolled</string>
     <string name="report_ai_stop">Last roll was kept</string>
     <string name="report_ai_rolls">AI got these rolls: </string>
+    <string name="best">BEST WAS:\n\t</string>
 
 </resources>
