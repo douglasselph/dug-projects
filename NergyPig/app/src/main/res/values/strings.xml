@@ -50,5 +50,6 @@
     <string name="report_ai_stop">Last roll was kept</string>
     <string name="report_ai_rolls">AI got these rolls: </string>
     <string name="best">BEST WAS:\n\t</string>
+    <string name="ai_turn">Continue</string>
 
 </resources>

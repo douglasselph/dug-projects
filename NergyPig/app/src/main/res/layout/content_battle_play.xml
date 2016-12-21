@@ -107,6 +107,13 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:text="@string/stop"/>
+
+        <Button
+            android:id="@+id/ai_continue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ai_turn"
+            android:visibility="gone"/>
     </LinearLayout>
 
     <TextView

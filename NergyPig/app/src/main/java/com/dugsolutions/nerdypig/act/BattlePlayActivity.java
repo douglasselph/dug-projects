@@ -35,7 +35,6 @@ public class BattlePlayActivity extends AppCompatActivity
 			{
 				case ROLL:
 					mDieHelper.roll();
-					updateRolls(0);
 					break;
 			}
 		}
@@ -59,6 +58,7 @@ public class BattlePlayActivity extends AppCompatActivity
 	DieHelper				mDieHelper;
 	Button					mRoll;
 	Button					mStop;
+	Button					mContinue;
 	Game					mGame;
 	MyApplication			mApp;
 	StrategyHolder[]		mPlayer;
@@ -96,6 +96,7 @@ public class BattlePlayActivity extends AppCompatActivity
 		mDie = (ImageView) findViewById(R.id.die);
 		mRoll = (Button) findViewById(R.id.roll);
 		mStop = (Button) findViewById(R.id.stop);
+		mContinue = (Button) findViewById(R.id.ai_continue);
 		mGameEndView = (TextView) findViewById(R.id.game_win);
 		mGameEndView.setText(GlobalInt.getGameEnd().toString(this));
 		mReportView = (TextView) findViewById(R.id.report);
@@ -134,6 +135,15 @@ public class BattlePlayActivity extends AppCompatActivity
 				{
 					applyStop();
 				}
+			}
+		});
+		mContinue.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				hideControls();
+				mDieHelper.roll();
 			}
 		});
 		mGame = new Game(2);
@@ -231,15 +241,6 @@ public class BattlePlayActivity extends AppCompatActivity
 		mGame.clearRolls();
 		updateCurScore();
 		updatePlayerTitle();
-
-		if (isHuman())
-		{
-			showControls();
-		}
-		else
-		{
-			hideControls();
-		}
 	}
 
 	void applyStop()
@@ -248,9 +249,13 @@ public class BattlePlayActivity extends AppCompatActivity
 		updateSavedScore();
 		setNextActivePlayer();
 
-		if (!isHuman())
+		if (isHuman())
 		{
-			mDieHelper.roll();
+			showControls();
+		}
+		else
+		{
+			showContinue();
 		}
 	}
 
@@ -267,9 +272,13 @@ public class BattlePlayActivity extends AppCompatActivity
 			updateCurScore();
 			setNextActivePlayer();
 
-			if (!isHuman())
+			if (isHuman())
 			{
-				mHandler.sendEmptyMessageDelayed(0, DELAYED_ROLL);
+				showControls();
+			}
+			else
+			{
+				showContinue();
 			}
 		}
 		else if (mGame.isGameRunning())
@@ -315,12 +324,21 @@ public class BattlePlayActivity extends AppCompatActivity
 	{
 		mRoll.setVisibility(View.INVISIBLE);
 		mStop.setVisibility(View.INVISIBLE);
+		mContinue.setVisibility(View.GONE);
 	}
 
 	void showControls()
 	{
 		mRoll.setVisibility(View.VISIBLE);
 		mStop.setVisibility(View.VISIBLE);
+		mContinue.setVisibility(View.GONE);
+	}
+
+	void showContinue()
+	{
+		mContinue.setVisibility(View.VISIBLE);
+		mRoll.setVisibility(View.GONE);
+		mStop.setVisibility(View.GONE);
 	}
 
 	void updateRolls(int suffix)
