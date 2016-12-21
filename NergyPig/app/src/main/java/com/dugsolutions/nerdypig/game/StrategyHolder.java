@@ -10,28 +10,34 @@ import com.dugsolutions.nerdypig.R;
 
 public class StrategyHolder
 {
-	final protected Strategy	mType;
+	final protected Strategy	mStrategy;
 	final protected int			mCount;
+	boolean						mSelected;
 
 	public StrategyHolder(Strategy type, int count)
 	{
-		mType = type;
+		mStrategy = type;
 		mCount = count;
-	}
-
-	public String toString(Context ctx)
-	{
-		return mType.getString(ctx);
 	}
 
 	public StrategyHolder dup()
 	{
-		return new StrategyHolder(mType, mCount);
+		return new StrategyHolder(mStrategy, mCount);
 	}
 
-	public Strategy getKind()
+	public Strategy getStrategy()
 	{
-		return mType;
+		return mStrategy;
+	}
+
+	public String getName(Context ctx)
+	{
+		return mStrategy.getName(ctx);
+	}
+
+	public String getDesc(Context ctx)
+	{
+		return mStrategy.getDesc(ctx);
 	}
 
 	public int getCount()
@@ -39,4 +45,18 @@ public class StrategyHolder
 		return mCount;
 	}
 
+	public boolean isSelected()
+	{
+		return mSelected;
+	}
+
+	public void clearSelected()
+	{
+		mSelected = false;
+	}
+
+	public void setSelected()
+	{
+		mSelected = true;
+	}
 }

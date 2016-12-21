@@ -1,22 +1,22 @@
 package com.dugsolutions.nerdypig.act;
 
-import android.app.ActionBar;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
-import android.widget.Toolbar;
+import android.support.v7.widget.Toolbar;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.battle.BattleLine;
-import com.dugsolutions.nerdypig.battle.BattleStrategy;
-import com.dugsolutions.nerdypig.db.GlobalInt;
+import com.dugsolutions.nerdypig.game.BattleLine;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
 
-public class BattleActivity extends FragmentActivity implements PlayerFragment.OnListFragmentInteractionListener
+public class BattlePrepActivity extends ActionBarActivity implements PlayerFragment.OnListFragmentInteractionListener
 {
-	static final String	TAG	= "BattleActivity";
+	static final String	TAG	= "BattlePrepActivity";
 
-	int					mBattlePointsLeft;
 	Toolbar				mToolbar;
 	MyApplication		mApp;
 
@@ -25,13 +25,12 @@ public class BattleActivity extends FragmentActivity implements PlayerFragment.O
 	{
 		super.onCreate(savedInstanceState);
 		mApp = (MyApplication) getApplicationContext();
-		setContentView(R.layout.activity_battle);
+		setContentView(R.layout.activity_battle_prep);
 		mToolbar = (Toolbar) findViewById(R.id.toolbar);
-		setActionBar(mToolbar);
-		ActionBar bar = getActionBar();
+		setSupportActionBar(mToolbar);
+		ActionBar bar = getSupportActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
-		BattleLine.clearBattlePoints();
-		mBattlePointsLeft = GlobalInt.getBattlePoints();
+		BattleLine.clearSelected();
 		mApp.clearPlayers();
 	}
 
@@ -56,50 +55,49 @@ public class BattleActivity extends FragmentActivity implements PlayerFragment.O
 
 	// Return true if entire data set has changed.
 	@Override
-	public boolean onListFragmentInteraction(BattleStrategy item)
+	public void onListFragmentInteraction(StrategyHolder item)
 	{
-		boolean refresh = false;
-
-		mBattlePointsLeft--;
-
-		if (mBattlePointsLeft <= 0)
+		if (mApp.getPlayer(0) == null)
 		{
-			refresh = true;
-
-			if (mApp.getPlayer(0) == null)
-			{
-				mApp.storePlayer();
-				BattleLine.clearBattlePoints();
-				mBattlePointsLeft = GlobalInt.getBattlePoints();
-				updateTitle();
-			}
-			else
-			{
-				mApp.storePlayer();
-				showStatsActivity();
-			}
+			mApp.storePlayer();
+			BattleLine.clearSelected();
+			updateTitle();
 		}
 		else
 		{
-			updateTitle();
+			mApp.storePlayer();
+
+			if (mApp.hasHuman())
+			{
+				showBattleActivity();
+			}
+			else
+			{
+				showStatsActivity();
+			}
 		}
-		return refresh;
 	}
 
 	void updateTitle()
 	{
 		if (mApp.getPlayer(0) == null)
 		{
-			mToolbar.setTitle(getString(R.string.battle_title_player, 1, mBattlePointsLeft));
+			mToolbar.setTitle(getString(R.string.battle_title_player, 1));
 		}
 		else
 		{
-			mToolbar.setTitle(getString(R.string.battle_title_player, 2, mBattlePointsLeft));
+			mToolbar.setTitle(getString(R.string.battle_title_player, 2));
 		}
 	}
 
 	void showStatsActivity()
 	{
 		mApp.showStatsActivity(this, StatsActivity.ACTION_BATTLE);
+	}
+
+	public void showBattleActivity()
+	{
+		Intent intent = new Intent(this, BattlePlayActivity.class);
+		startActivity(intent);
 	}
 }

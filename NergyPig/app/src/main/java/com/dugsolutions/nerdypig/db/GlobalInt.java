@@ -14,22 +14,25 @@ import com.dugsolutions.nerdypig.MyApplication;
 
 public class GlobalInt
 {
-	static final String		TAG							= "GlobalInt";
+	static final String	TAG							= "GlobalInt";
 
-	static final String		TABLE_GLOBALS_INT			= "globals_int";
+	static final String	TABLE_GLOBALS_INT			= "globals_int";
 
-	static final String		KEY_NAME					= DatabaseManager.KEY_NAME;
-	static final String		KEY_ROWID					= DatabaseManager.KEY_ROWID;
-	static final String		KEY_VALUE					= DatabaseManager.KEY_VALUE;
+	static final String	KEY_NAME					= DatabaseManager.KEY_NAME;
+	static final String	KEY_ROWID					= DatabaseManager.KEY_ROWID;
+	static final String	KEY_VALUE					= DatabaseManager.KEY_VALUE;
 
-	static final String		TABLE_GLOBALS_INT_CREATE	= "create table " + TABLE_GLOBALS_INT + " (" + KEY_ROWID
+	static final String	TABLE_GLOBALS_INT_CREATE	= "create table " + TABLE_GLOBALS_INT + " (" + KEY_ROWID
 			+ " integer primary key autoincrement, " + KEY_NAME + " text, " + KEY_VALUE + " integer);";
 
-	static final String		NAME_END_POINTS				= "end_points";
-	static final String		NAME_MAX_TURNS				= "max_turns";
-	static final String		NAME_NUM_GAMES				= "num_games";
-	static final String		NAME_END_TYPE				= "end_type";
-	static final String		NAME_BATTLE_POINTS			= "battle_ooints";
+	static final String	NAME_END_POINTS				= "end_points";
+	static final String	NAME_MAX_TURNS				= "max_turns";
+	static final String	NAME_NUM_GAMES				= "num_games";
+	static final String	NAME_END_TYPE				= "end_type";
+	static final String	NAME_CUR_SCORE				= "cur_score";
+	static final String NAME_CUR_COUNT				= "cur_count";
+	static final String	NAME_SAVED_SCORE_			= "save_";
+	static final String	NAME_ACTIVE_PLAYER			= "active_player";
 
 	public static void create(SQLiteDatabase db) throws SQLException
 	{
@@ -136,14 +139,52 @@ public class GlobalInt
 		set(NAME_END_TYPE, value.ordinal());
 	}
 
-	public static int getBattlePoints()
+	public static int getActivePlayer()
 	{
-		return query(NAME_BATTLE_POINTS, 10);
+		return query(NAME_ACTIVE_PLAYER, 0);
 	}
 
-	public static void setBattlePoints(int value)
+	public static void setActivePlayer(int i)
 	{
-		set(NAME_BATTLE_POINTS, value);
+		set(NAME_ACTIVE_PLAYER, i);
+	}
+
+	public static int getCurScore()
+	{
+		return query(NAME_CUR_SCORE, 0);
+	}
+
+	public static void setCurScore(int score)
+	{
+		set(NAME_CUR_SCORE, score);
+	}
+
+	public static int getCurCount()
+	{
+		return query(NAME_CUR_COUNT, 0);
+	}
+
+	public static void setCurCount(int score)
+	{
+		set(NAME_CUR_COUNT, score);
+	}
+
+	public static int getSavedScore(int playerI)
+	{
+		return query(concat(NAME_SAVED_SCORE_, playerI), 0);
+	}
+
+	public static void setSavedScore(int playerI, int score)
+	{
+		set(concat(NAME_SAVED_SCORE_, playerI), score);
+	}
+
+	static String concat(String prefix, int i)
+	{
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(prefix);
+		sbuf.append(String.valueOf(i));
+		return sbuf.toString();
 	}
 
 }

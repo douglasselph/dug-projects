@@ -12,15 +12,10 @@ import java.util.ArrayList;
 
 public class Player
 {
-    public interface QueryStrategy
-    {
-        StrategyHolder getStrategy(int playerI);
-    }
-	StrategyHolder mStrategy;
+	StrategyHolder		mStrategy;
 	String				mDesc;
 	int					mWins;
 	ArrayList<Integer>	mValues;
-    QueryStrategy       mQueryStrategy;
 
 	public Player(StrategyHolder strategy, String desc)
 	{
@@ -29,19 +24,8 @@ public class Player
 		mValues = new ArrayList<>();
 	}
 
-    public Player(QueryStrategy strategy, String desc)
-    {
-        mQueryStrategy = strategy;
-        mDesc = desc;
-        mValues = new ArrayList<>();
-    }
-
-	public StrategyHolder getStrategy(int playerI)
+	public StrategyHolder getStrategy()
 	{
-        if (mStrategy == null)
-        {
-            return mQueryStrategy.getStrategy(playerI);
-        }
 		return mStrategy;
 	}
 
@@ -68,7 +52,7 @@ public class Player
 		sbuf.append(", WINS=");
 
 		double percent = (double) mWins / (double) numGames;
-        int percentI = (int) (percent * 100);
+		int percentI = (int) (percent * 100);
 		sbuf.append(String.format("%d", percentI));
 		sbuf.append("%");
 		sbuf.append(" [");
@@ -90,7 +74,7 @@ public class Player
 		{
 			sbuf.append(ctx.getString(R.string.report_turns, getValueAverage()));
 		}
-        sbuf.append(".");
+		sbuf.append(".");
 		return sbuf.toString();
 	}
 
@@ -107,8 +91,8 @@ public class Player
 		{
 			sbuf.append(ctx.getString(R.string.report_score, getValueAverage()));
 		}
-        sbuf.append(".");
-        return sbuf.toString();
+		sbuf.append(".");
+		return sbuf.toString();
 	}
 
 	double getValueAverage()

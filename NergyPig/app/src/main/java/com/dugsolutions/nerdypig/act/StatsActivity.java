@@ -11,12 +11,12 @@ import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.battle.BattleLine;
-import com.dugsolutions.nerdypig.battle.BattleStrategy;
+import com.dugsolutions.nerdypig.game.BattleLine;
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
-import com.dugsolutions.nerdypig.game.Games;
+import com.dugsolutions.nerdypig.game.AutoGames;
 import com.dugsolutions.nerdypig.game.Player;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
 
 public class StatsActivity extends AppCompatActivity
 {
@@ -73,24 +73,24 @@ public class StatsActivity extends AppCompatActivity
 	{
 		StringBuffer sbuf = new StringBuffer();
 
-		if (getIntent().getAction() == ACTION_STATS)
-		{
-			sbuf.append(getPrelude());
-			sbuf.append("-------\n");
+		sbuf.append(getPrelude());
+		sbuf.append("-------\n");
 
-			for (BattleStrategy battle : BattleLine.getItems())
-			{
-				Player player = new Player(battle, battle.toString(getContext()));
-				Games games = new Games(player);
-				games.play();
-				sbuf.append(games.toString(getContext()));
-			}
+		if (getIntent().getAction() == ACTION_BATTLE)
+		{
+			AutoGames games = new AutoGames(getContext(), mApp.getPlayers());
+			games.play();
+			sbuf.append(games.toString(getContext()));
 		}
 		else
 		{
-			Games games = new Games(getContext(), mApp.getPlayers());
-			games.play();
-			sbuf.append(games.toString(getContext()));
+			for (StrategyHolder battle : BattleLine.getItems())
+			{
+				Player player = new Player(battle, battle.getName(getContext()));
+				AutoGames games = new AutoGames(player);
+				games.play();
+				sbuf.append(games.toString(getContext()));
+			}
 		}
 		return sbuf.toString();
 	}

@@ -8,8 +8,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.dugsolutions.nerdypig.act.StatsActivity;
-import com.dugsolutions.nerdypig.battle.BattleStrategies;
 import com.dugsolutions.nerdypig.db.DatabaseManager;
+import com.dugsolutions.nerdypig.game.BattleLine;
+import com.dugsolutions.nerdypig.game.Strategy;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ public class MyApplication extends Application
 	{
 	}
 
-	ArrayList<BattleStrategies> mPlayers = new ArrayList<>();
+	ArrayList<StrategyHolder> mPlayers = new ArrayList<>();
 
 	/**
 	 * This is called when the Home (Up) button is pressed in the Action Bar.
@@ -53,14 +55,13 @@ public class MyApplication extends Application
 	public void showStatsActivity(Activity act, String action)
 	{
 		Intent intent = new Intent(this, StatsActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		intent.setAction(action);
 		act.startActivity(intent);
 	}
 
 	public void storePlayer()
 	{
-		mPlayers.add(new BattleStrategies());
+		mPlayers.add(BattleLine.getSelectedStrategy());
 	}
 
 	public void clearPlayers()
@@ -68,18 +69,30 @@ public class MyApplication extends Application
 		mPlayers.clear();
 	}
 
-	public List<BattleStrategies> getPlayers()
+	public List<StrategyHolder> getPlayers()
 	{
 		return mPlayers;
 	}
 
-	public BattleStrategies getPlayer(int i)
+	public StrategyHolder getPlayer(int i)
 	{
 		if (i >= mPlayers.size())
 		{
 			return null;
 		}
 		return mPlayers.get(i);
+	}
+
+	public boolean hasHuman()
+	{
+		for (StrategyHolder strategy : mPlayers)
+		{
+			if (strategy.getStrategy() == Strategy.HUMAN)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public String getVersion()

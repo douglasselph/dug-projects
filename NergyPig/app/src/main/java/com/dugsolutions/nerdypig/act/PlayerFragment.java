@@ -11,8 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.dugsolutions.nerdypig.R;
-import com.dugsolutions.nerdypig.battle.BattleLine;
-import com.dugsolutions.nerdypig.battle.BattleStrategy;
+import com.dugsolutions.nerdypig.game.BattleLine;
+import com.dugsolutions.nerdypig.game.StrategyHolder;
 
 /**
  * A fragment representing a list of Items.
@@ -34,7 +34,7 @@ public class PlayerFragment extends Fragment
 	 */
 	public interface OnListFragmentInteractionListener
 	{
-		boolean onListFragmentInteraction(BattleStrategy item);
+		void onListFragmentInteraction(StrategyHolder item);
 	}
 
 	static final String					ARG_COLUMN_COUNT	= "column-count";
@@ -89,7 +89,7 @@ public class PlayerFragment extends Fragment
 			{
 				recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
 			}
-			recyclerView.setAdapter(new MyPlayerRecyclerViewAdapter(BattleLine.getItems(), mListener));
+			recyclerView.setAdapter(new BattlePrepListViewAdapter(BattleLine.getItems(), mListener));
 		}
 		return view;
 	}

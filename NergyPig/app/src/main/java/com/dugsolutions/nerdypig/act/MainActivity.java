@@ -74,15 +74,13 @@ public class MainActivity extends AppCompatActivity
 
 	void showBattleActivity()
 	{
-		Intent intent = new Intent(this, BattleActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		Intent intent = new Intent(this, BattlePrepActivity.class);
 		startActivity(intent);
 	}
 
 	void showRulesActivity()
 	{
 		Intent intent = new Intent(this, RulesActivity.class);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		startActivity(intent);
 	}
 

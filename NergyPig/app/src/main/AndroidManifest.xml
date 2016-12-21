@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.dugsolutions.nerdypig"
-    >
+          package="com.dugsolutions.nerdypig">
 
     <application
         android:name=".MyApplication"
@@ -31,7 +30,12 @@
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
-            android:name=".act.BattleActivity"
+            android:name=".act.BattlePrepActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".act.BattlePlayActivity"
+            android:label="@string/title_activity_battle_play"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
     </application>
