@@ -48,5 +48,6 @@
     <string name="stop">STOP</string>
     <string name="report_one">One was rolled</string>
     <string name="report_ai_stop">Last roll was kept</string>
+    <string name="report_ai_rolls">AI got these rolls: </string>
 
 </resources>

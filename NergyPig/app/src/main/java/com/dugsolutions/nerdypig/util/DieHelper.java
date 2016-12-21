@@ -26,14 +26,14 @@ public class DieHelper
 		{
 			int value = mRandom.nextInt(6) + 1;
 
-			setPicture(value);
-
 			if (--mRollCount > 0)
 			{
 				next();
 			}
 			else
 			{
+				setPicture(value);
+
 				pause();
 
 				if (mListener != null)
@@ -49,7 +49,7 @@ public class DieHelper
 		void onFinished(int value);
 	}
 
-	static final int	ROLL_DELAY		= 400;
+	static final int	ROLL_DELAY		= 1;
 	static final int	DEFAULT_COUNT	= 5;
 
 	MyHandler			mHandler		= new MyHandler();

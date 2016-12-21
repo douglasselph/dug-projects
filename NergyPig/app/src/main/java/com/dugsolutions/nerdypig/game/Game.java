@@ -5,6 +5,9 @@ import android.util.Log;
 import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.dugsolutions.nerdypig.MyApplication.TAG;
 
 /**
@@ -18,14 +21,15 @@ public class Game
 		ONE_ROLLED, GAME_WON, AI_CONTINUE, AI_STOP, HUMAN_CONTINUE;
 	}
 
-	protected int			mTurn;
-	protected int			mPlayerScore[];
-	protected int			mCurScore;
-	protected int			mCurCount;
-	protected int			mActivePlayer;
-	protected final GameEnd	mGameEnd;
-	protected final int		mMaxTurns;
-	protected final int		mMaxScore;
+	protected int					mTurn;
+	protected int					mPlayerScore[];
+	protected int					mCurScore;
+	protected int					mCurCount;
+	protected int					mActivePlayer;
+	protected final GameEnd			mGameEnd;
+	protected final int				mMaxTurns;
+	protected final int				mMaxScore;
+	protected ArrayList<Integer>	mRolls = new ArrayList<>();
 
 	public Game(int numPlayers)
 	{
@@ -151,6 +155,8 @@ public class Game
 	 */
 	public ResultReport applyRoll(StrategyHolder strategy, int roll)
 	{
+		mRolls.add(roll);
+
 		if (roll == 1)
 		{
 			mCurScore = 0;
@@ -209,6 +215,16 @@ public class Game
 		mPlayerScore[mActivePlayer] += mCurScore;
 		mCurScore = 0;
 		mCurCount = 0;
+	}
+
+	public List<Integer> getRolls()
+	{
+		return mRolls;
+	}
+
+	public void clearRolls()
+	{
+		mRolls.clear();
 	}
 
 }
