@@ -32,16 +32,9 @@ public class AutoGame extends Game
 
 	public void play()
 	{
-
 		for (int playerI = 0; playerI < mPlayers.length; playerI++)
 		{
 			mPlayers[playerI] = mQuery.getPlayer(playerI);
-
-			if (mPlayers[playerI].getStrategy().isHuman())
-			{
-				Log.e(TAG, "Invalid HUMAN strategy in auto game play");
-				return;
-			}
 		}
         mTurn = 0;
         restart();

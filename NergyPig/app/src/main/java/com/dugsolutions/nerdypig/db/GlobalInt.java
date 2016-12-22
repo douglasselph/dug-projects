@@ -30,6 +30,7 @@ public class GlobalInt
 	static final String	NAME_NUM_GAMES				= "num_games";
 	static final String	NAME_END_TYPE				= "end_type";
 	static final String NAME_AUDIO_ON				= "audio_on";
+	static final String NAME_BATTLE_AI_FIRST		= "ai_first";
 
 	public static void create(SQLiteDatabase db) throws SQLException
 	{
@@ -151,6 +152,16 @@ public class GlobalInt
 	public static void setAudio(boolean value)
 	{
 		set(NAME_AUDIO_ON, value ? 1 : 0);
+	}
+
+	public static boolean isAIFirst()
+	{
+		return query(NAME_BATTLE_AI_FIRST, 1) != 0;
+	}
+
+	public static void setAIFirst(boolean value)
+	{
+		set(NAME_BATTLE_AI_FIRST, value ? 1 : 0);
 	}
 
 }

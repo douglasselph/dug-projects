@@ -12,8 +12,6 @@ public class BattleLine
 
 	static
 	{
-		addItem(createItem(Strategy.HUMAN, 0));
-
 		for (int rolls = 3; rolls <= 7; rolls++)
 		{
 			addItem(createItem(Strategy.STOP_AFTER_NUM_ROLLS, rolls));

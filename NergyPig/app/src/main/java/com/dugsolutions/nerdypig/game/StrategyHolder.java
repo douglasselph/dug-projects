@@ -59,9 +59,4 @@ public class StrategyHolder
 	{
 		mSelected = true;
 	}
-
-	public boolean isHuman()
-	{
-		return mStrategy == Strategy.HUMAN;
-	}
 }

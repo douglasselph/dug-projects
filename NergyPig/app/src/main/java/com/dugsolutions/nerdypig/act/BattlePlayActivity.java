@@ -8,7 +8,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -62,7 +61,7 @@ public class BattlePlayActivity extends AppCompatActivity
 	Button					mContinue;
 	Game					mGame;
 	MyApplication			mApp;
-	StrategyHolder[]		mPlayer;
+	StrategyHolder			mPlayer;
 	MyHandler				mHandler		= new MyHandler();
 
 	@Override
@@ -103,9 +102,7 @@ public class BattlePlayActivity extends AppCompatActivity
 		mPlayer1NameView = (TextView) findViewById(R.id.player1_name);
 		mPlayer2NameView = (TextView) findViewById(R.id.player2_name);
 
-		mPlayer = new StrategyHolder[2];
-		mPlayer[0] = mApp.getPlayer(0);
-		mPlayer[1] = mApp.getPlayer(1);
+		mPlayer = mApp.getPlayer();
 
 		mDieHelper = new DieHelper(this, mDie, new DieHelper.OnFinished()
 		{
@@ -149,9 +146,17 @@ public class BattlePlayActivity extends AppCompatActivity
 			}
 		});
 		mGame = new Game(2);
-		mDesc1.setText(mApp.getPlayer(0).getDesc(this));
-		mDesc2.setText(mApp.getPlayer(1).getDesc(this));
 
+		if (GlobalInt.isAIFirst())
+		{
+			mDesc1.setText(mApp.getPlayer().getDesc(this));
+			mDesc2.setText(R.string.you);
+		}
+		else
+		{
+			mDesc2.setText(mApp.getPlayer().getDesc(this));
+			mDesc1.setText(R.string.you);
+		}
 		setActivePlayer(0);
 
 		if (!isHuman())
@@ -176,12 +181,11 @@ public class BattlePlayActivity extends AppCompatActivity
 
 	StrategyHolder getCurStrategy()
 	{
-		return mPlayer[mGame.getActivePlayer()];
-	}
-
-	boolean isHuman()
-	{
-		return getCurStrategy().isHuman();
+		if (mGame.isHuman())
+		{
+			return null;
+		}
+		return mPlayer;
 	}
 
 	void setNextActivePlayer()
@@ -262,6 +266,16 @@ public class BattlePlayActivity extends AppCompatActivity
 			{
 				setReport(0);
 			}
+			else if (result == Game.ResultReport.GAME_WON)
+			{
+				updateRolls(R.string.report_ai_stop);
+				mDieHelper.setPicture(0);
+				applyStop();
+				setReport(0);
+				hideControls();
+				updatePlayerTitle();
+
+			}
 			else if (result == Game.ResultReport.AI_STOP)
 			{
 				updateRolls(R.string.report_ai_stop);
@@ -281,6 +295,11 @@ public class BattlePlayActivity extends AppCompatActivity
 			mDieHelper.setPicture(0);
 			hideControls();
 		}
+	}
+
+	boolean isHuman()
+	{
+		return mGame.isHuman();
 	}
 
 	void setReport(int resId)
@@ -311,7 +330,7 @@ public class BattlePlayActivity extends AppCompatActivity
 
 	void showContinue()
 	{
-		mContinue.setText(getString(R.string.ai_turn, getActivePlayerDesc()));
+		mContinue.setText(getString(R.string.ai_turn));
 		mContinue.setVisibility(View.VISIBLE);
 		mRoll.setVisibility(View.GONE);
 		mStop.setVisibility(View.GONE);
@@ -357,8 +376,8 @@ public class BattlePlayActivity extends AppCompatActivity
 
 	void updateSavedScore()
 	{
-		mScore1.setText(Integer.toString(mGame.getScore(0)));
-		mScore2.setText(Integer.toString(mGame.getScore(1)));
+		mScore1.setText(Integer.toString(mGame.getTotalScore(0)));
+		mScore2.setText(Integer.toString(mGame.getTotalScore(1)));
 	}
 
 	void updateCurScore()

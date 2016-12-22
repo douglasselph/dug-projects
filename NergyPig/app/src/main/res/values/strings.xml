@@ -16,7 +16,7 @@
     <string name="entry_error">Entry Error</string>
     <string name="error_positive">Entry must be a positive number</string>
     <string name="num_games">Number of games to run</string>
-    <string name="battle_title_player">Player %d: Select Strategy</string>
+    <string name="battle_title">Choose Opponent</string>
     <string name="battle_title_result">Battle - Result</string>
     <string name="battle_player">Player %d</string>
     <string name="battle_player_turn">Player %d\'s Turn</string>
@@ -27,8 +27,7 @@
     <string name="strategy_points_desc">Stop after %d points</string>
     <string name="strategy_even_name">Even %d</string>
     <string name="strategy_even_desc">Stop after %d even numbers encountered</string>
-    <string name="strategy_human_name">Human</string>
-    <string name="strategy_human_desc">Human</string>
+    <string name="you">YOU</string>
     <string name="unknown">Unknown</string>
     <string name="report_tie">Ties=%d</string>
     <string name="game_over_points">Game over after %d points reached.</string>
@@ -50,6 +49,6 @@
     <string name="report_ai_stop">Last roll was kept</string>
     <string name="report_ai_rolls">AI got these rolls: </string>
     <string name="best">BEST WAS:\n\t</string>
-    <string name="ai_turn">Start %s\'s turn</string>
+    <string name="ai_turn">Start AI turn</string>
 
 </resources>

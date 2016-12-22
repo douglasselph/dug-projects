@@ -19,9 +19,8 @@ import com.dugsolutions.nerdypig.game.StrategyHolder;
 
 public class BattlePrepActivity extends AppCompatActivity implements PlayerFragment.OnListFragmentInteractionListener
 {
-	Toolbar				mToolbar;
-	MyApplication		mApp;
-	TextView			mPlayer1Name;
+	Toolbar			mToolbar;
+	MyApplication	mApp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -29,20 +28,18 @@ public class BattlePrepActivity extends AppCompatActivity implements PlayerFragm
 		super.onCreate(savedInstanceState);
 		mApp = (MyApplication) getApplicationContext();
 		setContentView(R.layout.activity_battle_prep);
-		mPlayer1Name = (TextView) findViewById(R.id.player1_name);
 		mToolbar = (Toolbar) findViewById(R.id.toolbar);
+		mToolbar.setTitle(getString(R.string.battle_title));
 		setSupportActionBar(mToolbar);
 		ActionBar bar = getSupportActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
 		BattleLine.clearSelected();
-		mApp.clearPlayers();
 	}
 
 	@Override
 	protected void onResume()
 	{
 		super.onResume();
-		updateTitle();
 	}
 
 	@Override
@@ -61,39 +58,9 @@ public class BattlePrepActivity extends AppCompatActivity implements PlayerFragm
 	@Override
 	public void onListFragmentInteraction(StrategyHolder item)
 	{
-		if (mApp.getPlayer(0) == null)
-		{
-			mApp.storePlayer();
-			BattleLine.clearSelected();
-			updateTitle();
-			updatePlayer1Text();
-		}
-		else
-		{
-			mApp.storePlayer();
-
-
-			if (mApp.hasHuman())
-			{
-				showBattleActivity();
-			}
-			else
-			{
-				showStatsActivity();
-			}
-		}
-	}
-
-	void updateTitle()
-	{
-		if (mApp.getPlayer(0) == null)
-		{
-			mToolbar.setTitle(getString(R.string.battle_title_player, 1));
-		}
-		else
-		{
-			mToolbar.setTitle(getString(R.string.battle_title_player, 2));
-		}
+		mApp.storePlayer();
+		BattleLine.clearSelected();
+		showBattleActivity();
 	}
 
 	void showStatsActivity()
@@ -107,14 +74,4 @@ public class BattlePrepActivity extends AppCompatActivity implements PlayerFragm
 		startActivity(intent);
 	}
 
-	void updatePlayer1Text()
-	{
-		StringBuffer sbuf = new StringBuffer();
-		sbuf.append(getString(R.string.player_1));
-		sbuf.append(": ");
-		sbuf.append(mApp.getPlayer(0).getDesc(this));
-
-		mPlayer1Name.setText(sbuf.toString());
-		mPlayer1Name.setVisibility(View.VISIBLE);
-	}
 }

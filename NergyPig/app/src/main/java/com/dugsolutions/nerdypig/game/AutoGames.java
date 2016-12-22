@@ -1,7 +1,6 @@
 package com.dugsolutions.nerdypig.game;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
@@ -93,7 +92,7 @@ public class AutoGames implements AutoGame.InfoQuery
 				}
 				else
 				{
-					getPlayer(0).addValue(game.getScore(0));
+					getPlayer(0).addValue(game.getTotalScore(0));
 				}
 			}
 		}

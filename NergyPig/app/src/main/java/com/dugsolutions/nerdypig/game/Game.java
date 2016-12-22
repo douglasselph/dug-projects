@@ -45,7 +45,12 @@ public class Game
 		return mTurn;
 	}
 
-	public int getScore(int i)
+	public int getTotalScore()
+	{
+		return getTotalScore(getActivePlayer());
+	}
+
+	public int getTotalScore(int i)
 	{
 		return mPlayerScore[i];
 	}
@@ -172,47 +177,50 @@ public class Game
 		}
 		mCurScore += roll;
 
-		if (didWin(mCurScore))
+		if (didWin(getTotalScore() + mCurScore))
 		{
 			return ResultReport.GAME_WON;
 		}
-		if (strategy.getStrategy() == Strategy.STOP_AFTER_NUM_ROLLS)
+		if (strategy != null)
 		{
-			mCurCount++;
-
-			if (mCurCount < strategy.getCount())
-			{
-				return ResultReport.AI_CONTINUE;
-			}
-			else
-			{
-				return ResultReport.AI_STOP;
-			}
-		}
-		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_SUM)
-		{
-			if (mCurScore < strategy.getCount())
-			{
-				return ResultReport.AI_CONTINUE;
-			}
-			else
-			{
-				return ResultReport.AI_STOP;
-			}
-		}
-		else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_EVEN)
-		{
-			if (roll % 2 == 0)
+			if (strategy.getStrategy() == Strategy.STOP_AFTER_NUM_ROLLS)
 			{
 				mCurCount++;
+
+				if (mCurCount < strategy.getCount())
+				{
+					return ResultReport.AI_CONTINUE;
+				}
+				else
+				{
+					return ResultReport.AI_STOP;
+				}
 			}
-			if (mCurCount < strategy.getCount())
+			else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_SUM)
 			{
-				return ResultReport.AI_CONTINUE;
+				if (mCurScore < strategy.getCount())
+				{
+					return ResultReport.AI_CONTINUE;
+				}
+				else
+				{
+					return ResultReport.AI_STOP;
+				}
 			}
-			else
+			else if (strategy.getStrategy() == Strategy.STOP_AFTER_REACHED_EVEN)
 			{
-				return ResultReport.AI_STOP;
+				if (roll % 2 == 0)
+				{
+					mCurCount++;
+				}
+				if (mCurCount < strategy.getCount())
+				{
+					return ResultReport.AI_CONTINUE;
+				}
+				else
+				{
+					return ResultReport.AI_STOP;
+				}
 			}
 		}
 		return ResultReport.HUMAN_CONTINUE;
@@ -235,4 +243,29 @@ public class Game
 		mRolls.clear();
 	}
 
+	public boolean isHuman()
+	{
+		if (getActivePlayer() == 0)
+		{
+			if (GlobalInt.isAIFirst())
+			{
+				return false;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			if (GlobalInt.isAIFirst())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
 }

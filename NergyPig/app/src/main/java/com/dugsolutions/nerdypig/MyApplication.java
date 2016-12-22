@@ -30,7 +30,7 @@ public class MyApplication extends Application
 	{
 	}
 
-	ArrayList<StrategyHolder> mPlayers = new ArrayList<>();
+	StrategyHolder mPlayer;
 
 	/**
 	 * This is called when the Home (Up) button is pressed in the Action Bar.
@@ -61,38 +61,12 @@ public class MyApplication extends Application
 
 	public void storePlayer()
 	{
-		mPlayers.add(BattleLine.getSelectedStrategy());
+		mPlayer = BattleLine.getSelectedStrategy();
 	}
 
-	public void clearPlayers()
+	public StrategyHolder getPlayer()
 	{
-		mPlayers.clear();
-	}
-
-	public List<StrategyHolder> getPlayers()
-	{
-		return mPlayers;
-	}
-
-	public StrategyHolder getPlayer(int i)
-	{
-		if (i >= mPlayers.size())
-		{
-			return null;
-		}
-		return mPlayers.get(i);
-	}
-
-	public boolean hasHuman()
-	{
-		for (StrategyHolder strategy : mPlayers)
-		{
-			if (strategy.isHuman())
-			{
-				return true;
-			}
-		}
-		return false;
+		return mPlayer;
 	}
 
 	public String getVersion()

@@ -14,13 +14,6 @@
     tools:context="com.dugsolutions.nerdypig.act.BattlePrepActivity"
     tools:showIn="@layout/activity_battle_prep">
 
-    <TextView
-        android:id="@+id/player1_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        />
-
     <fragment
         android:id="@+id/player_fragment"
         android:name="com.dugsolutions.nerdypig.act.PlayerFragment"

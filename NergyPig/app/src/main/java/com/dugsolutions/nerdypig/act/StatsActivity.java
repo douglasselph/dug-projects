@@ -34,49 +34,32 @@ public class StatsActivity extends AppCompatActivity
 		@Override
 		protected Integer doInBackground(Integer... params)
 		{
-			if (getIntent().getAction() == ACTION_BATTLE)
+			for (StrategyHolder battle : BattleLine.getItems())
 			{
-				AutoGames games = new AutoGames(getContext(), mApp.getPlayers());
+				Player player = new Player(battle, battle.getName(getContext()));
+				AutoGames games = new AutoGames(player);
 				games.play();
+
 				Message msg = new Message();
 				msg.obj = games.toString(getContext());
 				mHandler.sendMessage(msg);
-			}
-			else
-			{
-				for (StrategyHolder battle : BattleLine.getItems())
+
+				double value = games.getPlayer(0).getValueAverage();
+
+				if (games.getGameEnd() == GameEnd.MAX_TURNS)
 				{
-					if (!battle.isHuman())
+					if (mBest == null || value > mBestValue)
 					{
-						Player player = new Player(battle, battle.getName(getContext()));
-						AutoGames games = new AutoGames(player);
-						games.play();
-
-						Message msg = new Message();
-						msg.obj = games.toString(getContext());
-						mHandler.sendMessage(msg);
-
-						if (games.getNumPlayers() == 1)
-						{
-							double value = games.getPlayer(0).getValueAverage();
-
-							if (games.getGameEnd() == GameEnd.MAX_TURNS)
-							{
-								if (mBest == null || value > mBestValue)
-								{
-									mBest = battle;
-									mBestValue = value;
-								}
-							}
-							else
-							{
-								if (mBest == null || value < mBestValue)
-								{
-									mBest = battle;
-									mBestValue = value;
-								}
-							}
-						}
+						mBest = battle;
+						mBestValue = value;
+					}
+				}
+				else
+				{
+					if (mBest == null || value < mBestValue)
+					{
+						mBest = battle;
+						mBestValue = value;
 					}
 				}
 			}
