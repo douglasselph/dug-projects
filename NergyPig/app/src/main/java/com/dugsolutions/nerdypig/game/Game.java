@@ -29,7 +29,7 @@ public class Game
 	protected final GameEnd			mGameEnd;
 	protected final int				mMaxTurns;
 	protected final int				mMaxScore;
-	protected ArrayList<Integer>	mRolls = new ArrayList<>();
+	protected ArrayList<Integer>	mRolls	= new ArrayList<>();
 
 	public Game(int numPlayers)
 	{
@@ -77,6 +77,14 @@ public class Game
 	protected boolean didWin(int score)
 	{
 		return (mGameEnd == GameEnd.END_POINTS) && (score >= mMaxScore);
+	}
+
+	public void chkIncTurn()
+	{
+		if (mActivePlayer == getNumPlayers() - 1)
+		{
+			mTurn++;
+		}
 	}
 
 	public boolean isTie()

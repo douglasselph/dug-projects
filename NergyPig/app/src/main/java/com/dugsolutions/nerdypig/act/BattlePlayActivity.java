@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import com.dugsolutions.nerdypig.MyApplication;
 import com.dugsolutions.nerdypig.R;
+import com.dugsolutions.nerdypig.db.GameEnd;
 import com.dugsolutions.nerdypig.db.GlobalInt;
 import com.dugsolutions.nerdypig.game.Game;
 import com.dugsolutions.nerdypig.game.StrategyHolder;
@@ -98,7 +99,6 @@ public class BattlePlayActivity extends AppCompatActivity
 		mStop = (Button) findViewById(R.id.stop);
 		mContinue = (Button) findViewById(R.id.ai_continue);
 		mGameEndView = (TextView) findViewById(R.id.game_win);
-		mGameEndView.setText(GlobalInt.getGameEnd().toString(this));
 		mReportView = (TextView) findViewById(R.id.report);
 		mPlayer1NameView = (TextView) findViewById(R.id.player1_name);
 		mPlayer2NameView = (TextView) findViewById(R.id.player2_name);
@@ -122,6 +122,7 @@ public class BattlePlayActivity extends AppCompatActivity
 			{
 				if (mGame.isGameRunning() && isHuman())
 				{
+					setReport(0);
 					mDieHelper.roll();
 				}
 			}
@@ -142,6 +143,7 @@ public class BattlePlayActivity extends AppCompatActivity
 			@Override
 			public void onClick(View v)
 			{
+				setReport(0);
 				hideControls();
 				mDieHelper.roll();
 			}
@@ -154,8 +156,10 @@ public class BattlePlayActivity extends AppCompatActivity
 
 		if (!isHuman())
 		{
+			hideControls();
 			mDieHelper.roll();
 		}
+		updateGameEnd();
 	}
 
 	@Override
@@ -168,50 +172,6 @@ public class BattlePlayActivity extends AppCompatActivity
 			return MyApplication.navigateUp(this, MainActivity.class);
 		}
 		return super.onOptionsItemSelected(item);
-	}
-
-	void updatePlayerTitle()
-	{
-		if (mGame.isGameRunning())
-		{
-			mToolbar.setTitle(getString(R.string.battle_player_turn, mGame.getActivePlayer() + 1));
-
-			if (mGame.getActivePlayer() == 0)
-			{
-				mPlayer1NameView.setTypeface(null, Typeface.BOLD);
-				mPlayer2NameView.setTypeface(null, Typeface.NORMAL);
-			}
-			else
-			{
-				mPlayer1NameView.setTypeface(null, Typeface.NORMAL);
-				mPlayer2NameView.setTypeface(null, Typeface.BOLD);
-			}
-		}
-		else
-		{
-			int winner = mGame.getWinner();
-			if (winner >= 0)
-			{
-				mToolbar.setTitle(getString(R.string.battle_player_wins, winner + 1));
-			}
-			else
-			{
-				mToolbar.setTitle("");
-			}
-			mPlayer1NameView.setTypeface(null, Typeface.NORMAL);
-			mPlayer2NameView.setTypeface(null, Typeface.NORMAL);
-		}
-	}
-
-	void updateSavedScore()
-	{
-		mScore1.setText(Integer.toString(mGame.getScore(0)));
-		mScore2.setText(Integer.toString(mGame.getScore(1)));
-	}
-
-	void updateCurScore()
-	{
-		mCurScore.setText(Integer.toString(mGame.getCurScore()));
 	}
 
 	StrategyHolder getCurStrategy()
@@ -239,15 +199,22 @@ public class BattlePlayActivity extends AppCompatActivity
 	void setup()
 	{
 		mGame.clearRolls();
-		updateCurScore();
 		updatePlayerTitle();
+		updateGameEnd();
+
+		if (isHuman())
+		{
+			updateCurScore();
+		}
 	}
 
 	void applyStop()
 	{
+		mGame.chkIncTurn();
 		mGame.applyStop();
 		updateSavedScore();
 		setNextActivePlayer();
+		mDieHelper.setPicture(0);
 
 		if (isHuman())
 		{
@@ -263,13 +230,21 @@ public class BattlePlayActivity extends AppCompatActivity
 	{
 		Game.ResultReport result = mGame.applyRoll(getCurStrategy(), value);
 
+		updateCurScore();
+
 		if (result == Game.ResultReport.ONE_ROLLED)
 		{
-			if (!isHuman())
+			mGame.chkIncTurn();
+
+			if (isHuman())
+			{
+				updateRolls(0);
+				setReport(R.string.report_one);
+			}
+			else
 			{
 				updateRolls(R.string.report_one);
 			}
-			updateCurScore();
 			setNextActivePlayer();
 
 			if (isHuman())
@@ -285,7 +260,6 @@ public class BattlePlayActivity extends AppCompatActivity
 		{
 			if (isHuman())
 			{
-				updateCurScore();
 				setReport(0);
 			}
 			else if (result == Game.ResultReport.AI_STOP)
@@ -296,6 +270,7 @@ public class BattlePlayActivity extends AppCompatActivity
 			}
 			else
 			{
+				updateRolls(0);
 				mHandler.sendEmptyMessageDelayed(0, DELAYED_ROLL);
 			}
 		}
@@ -336,9 +311,59 @@ public class BattlePlayActivity extends AppCompatActivity
 
 	void showContinue()
 	{
+		mContinue.setText(getString(R.string.ai_turn, getActivePlayerDesc()));
 		mContinue.setVisibility(View.VISIBLE);
 		mRoll.setVisibility(View.GONE);
 		mStop.setVisibility(View.GONE);
+	}
+
+	String getActivePlayerDesc()
+	{
+		return getString(R.string.battle_player_turn, mGame.getActivePlayer() + 1);
+	}
+
+	void updatePlayerTitle()
+	{
+		if (mGame.isGameRunning())
+		{
+			mToolbar.setTitle(getActivePlayerDesc());
+
+			if (mGame.getActivePlayer() == 0)
+			{
+				mPlayer1NameView.setTypeface(null, Typeface.BOLD);
+				mPlayer2NameView.setTypeface(null, Typeface.NORMAL);
+			}
+			else
+			{
+				mPlayer1NameView.setTypeface(null, Typeface.NORMAL);
+				mPlayer2NameView.setTypeface(null, Typeface.BOLD);
+			}
+		}
+		else
+		{
+			int winner = mGame.getWinner();
+			if (winner >= 0)
+			{
+				mToolbar.setTitle(getString(R.string.battle_player_wins, winner + 1));
+			}
+			else
+			{
+				mToolbar.setTitle("");
+			}
+			mPlayer1NameView.setTypeface(null, Typeface.NORMAL);
+			mPlayer2NameView.setTypeface(null, Typeface.NORMAL);
+		}
+	}
+
+	void updateSavedScore()
+	{
+		mScore1.setText(Integer.toString(mGame.getScore(0)));
+		mScore2.setText(Integer.toString(mGame.getScore(1)));
+	}
+
+	void updateCurScore()
+	{
+		mCurScore.setText(Integer.toString(mGame.getCurScore()));
 	}
 
 	void updateRolls(int suffix)
@@ -371,4 +396,17 @@ public class BattlePlayActivity extends AppCompatActivity
 		}
 	}
 
+	void updateGameEnd()
+	{
+		StringBuffer sbuf = new StringBuffer();
+		sbuf.append(GlobalInt.getGameEnd().toString(this));
+
+		if (GlobalInt.getGameEnd() == GameEnd.MAX_TURNS)
+		{
+			sbuf.append(" [TURN ");
+			sbuf.append(mGame.getTurn() + 1);
+			sbuf.append("]");
+		}
+		mGameEndView.setText(sbuf.toString());
+	}
 }

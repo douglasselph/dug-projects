@@ -19,7 +19,9 @@
         android:id="@+id/overview"
         android:layout_column="0"
         android:layout_columnSpan="2"
-        android:layout_margin="@dimen/text_margin"
+        android:layout_marginLeft="@dimen/text_margin"
+        android:layout_marginRight="@dimen/text_margin"
+        android:layout_marginTop="@dimen/text_margin"
         android:layout_row="0"
         android:scrollbars="vertical"
         android:text="@string/rules_overview"
@@ -51,16 +53,16 @@
         android:ems="3"
         android:inputType="number"/>
 
-    <TextView
-        android:layout_column="0"
-        android:layout_row="3"
-        android:text="@string/num_games"/>
-
     <EditText
         android:id="@+id/edit_games"
         android:layout_column="1"
         android:layout_row="3"
         android:ems="3"
         android:inputType="number"/>
+
+    <TextView
+        android:layout_column="0"
+        android:layout_row="3"
+        android:text="@string/num_games"/>
 
 </GridLayout>

@@ -18,7 +18,7 @@ public class BattleLine
 		{
 			addItem(createItem(Strategy.STOP_AFTER_NUM_ROLLS, rolls));
 		}
-		for (int sum = 15; sum < 30; sum++)
+		for (int sum = 17; sum < 29; sum++)
 		{
 			addItem(createItem(Strategy.STOP_AFTER_REACHED_SUM, sum));
 		}
