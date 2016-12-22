@@ -63,6 +63,11 @@ public class MainActivity extends AppCompatActivity
 			showRulesActivity();
 			return true;
 		}
+		else if (id == R.id.action_test)
+		{
+			showTestActivity();
+			return true;
+		}
 		return super.onOptionsItemSelected(item);
 	}
 
@@ -81,6 +86,12 @@ public class MainActivity extends AppCompatActivity
 	void showRulesActivity()
 	{
 		Intent intent = new Intent(this, RulesActivity.class);
+		startActivity(intent);
+	}
+
+	void showTestActivity()
+	{
+		Intent intent = new Intent(this, TestRollDice.class);
 		startActivity(intent);
 	}
 

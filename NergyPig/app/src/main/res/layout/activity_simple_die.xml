@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/diceContainer"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:gravity="center"
+              android:orientation="vertical"
+              android:padding="10dip">
+
+    <ImageView
+        android:id="@+id/die1"
+        android:layout_width="150dip"
+        android:layout_height="150dip"
+        android:layout_marginBottom="15dip"
+        android:src="@drawable/test_d6"/>
+
+    <ImageView
+        android:id="@+id/die2"
+        android:layout_width="150dip"
+        android:layout_height="150dip"
+        android:src="@drawable/test_d6"/>
+</LinearLayout>

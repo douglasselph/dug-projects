@@ -38,6 +38,8 @@
             android:label="@string/title_activity_battle_play"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
+        <activity android:name=".act.TestRollDice">
+        </activity>
     </application>
 
 </manifest>
