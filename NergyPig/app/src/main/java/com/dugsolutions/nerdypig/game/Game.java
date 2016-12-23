@@ -245,7 +245,12 @@ public class Game
 
 	public boolean isHuman()
 	{
-		if (getActivePlayer() == 0)
+		return isHuman(getActivePlayer());
+	}
+
+	public boolean isHuman(int pos)
+	{
+		if (pos == 0)
 		{
 			if (GlobalInt.isAIFirst())
 			{

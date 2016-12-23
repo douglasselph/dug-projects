@@ -72,15 +72,6 @@ public class TestRollDice2 extends AppCompatActivity
 		View dice = findViewById(R.id.dice);
 
 		int dieWidth = dice.getWidth();
-		int dieHeight = dice.getHeight();
-//		int [] screenLoc = new int[2];
-//		dice.getLocationOnScreen(screenLoc);
-
-//		Display display = getWindowManager().getDefaultDisplay();
-//		Point size = new Point();
-//		display.getSize(size);
-//		int screenWidth = size.x;
-//		int screenHeight = size.y;
 
 		View parent = (View) dice.getParent();
 		int parentWidth = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
