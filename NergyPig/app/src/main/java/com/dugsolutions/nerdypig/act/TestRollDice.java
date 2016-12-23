@@ -51,7 +51,7 @@ public class TestRollDice extends AppCompatActivity implements SensorEventListen
 	{
 		paused = false;
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_simple_die);
+		setContentView(R.layout.activity_test_roll_dice);
 //		setTitle(getString(R.string.app_title));
 		res = getResources();
 		for (int i = 0; i < 6; i++)

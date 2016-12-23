@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity
 
 	void showTestActivity()
 	{
-		Intent intent = new Intent(this, TestRollDice.class);
+		Intent intent = new Intent(this, TestRollDice2.class);
 		startActivity(intent);
 	}
 

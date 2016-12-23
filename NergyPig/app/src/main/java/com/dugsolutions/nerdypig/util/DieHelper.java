@@ -1,18 +1,12 @@
 package com.dugsolutions.nerdypig.util;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Message;
 import android.widget.ImageView;
 
 import com.dugsolutions.nerdypig.R;
 import com.dugsolutions.nerdypig.db.GlobalInt;
-import com.dugsolutions.nerdypig.util.SoundHelper;
 
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by dug on 12/20/16.
@@ -62,22 +56,22 @@ public class DieHelper
 				mPicture.setImageResource(R.drawable.dice3droll);
 				break;
 			case 1:
-				mPicture.setImageResource(R.drawable.one);
+				mPicture.setImageResource(R.drawable.die1);
 				break;
 			case 2:
-				mPicture.setImageResource(R.drawable.two);
+				mPicture.setImageResource(R.drawable.die2);
 				break;
 			case 3:
-				mPicture.setImageResource(R.drawable.three);
+				mPicture.setImageResource(R.drawable.die3);
 				break;
 			case 4:
-				mPicture.setImageResource(R.drawable.four);
+				mPicture.setImageResource(R.drawable.die4);
 				break;
 			case 5:
-				mPicture.setImageResource(R.drawable.five);
+				mPicture.setImageResource(R.drawable.die5);
 				break;
 			case 6:
-				mPicture.setImageResource(R.drawable.six);
+				mPicture.setImageResource(R.drawable.die6);
 				break;
 		}
 	}

@@ -40,6 +40,8 @@
         </activity>
         <activity android:name=".act.TestRollDice">
         </activity>
+        <activity android:name=".act.TestRollDice2">
+        </activity>
     </application>
 
 </manifest>
