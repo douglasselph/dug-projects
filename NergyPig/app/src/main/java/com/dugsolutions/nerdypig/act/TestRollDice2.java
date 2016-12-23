@@ -3,10 +3,13 @@ package com.dugsolutions.nerdypig.act;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
@@ -68,39 +71,47 @@ public class TestRollDice2 extends AppCompatActivity
 	{
 		View dice = findViewById(R.id.dice);
 
-//		AnimatorSet set = new AnimatorSet();
-//		ArrayList<Animator> list = new ArrayList<>();
-//		ObjectAnimator oa = ObjectAnimator.ofFloat(dice, "xFraction", 0f, 0.5f);
-//		list.add(oa);
-//		ObjectAnimator oa2 = ObjectAnimator.ofFloat(dice, "xFraction", 0.5f, 0.3f);
-//		list.add(oa2);
-//		set.playSequentially(list);
-//		set.setDuration(2000);
-//		set.setInterpolator(new DecelerateInterpolator());
-//		set.start();
+		int dieWidth = dice.getWidth();
+		int dieHeight = dice.getHeight();
+//		int [] screenLoc = new int[2];
+//		dice.getLocationOnScreen(screenLoc);
+
+//		Display display = getWindowManager().getDefaultDisplay();
+//		Point size = new Point();
+//		display.getSize(size);
+//		int screenWidth = size.x;
+//		int screenHeight = size.y;
+
+		View parent = (View) dice.getParent();
+		int parentWidth = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
+
+		float distToEdge = parentWidth - dice.getX() - dieWidth;
+		float unitsToEdge = distToEdge / (float) dieWidth;
+
+		final int initialTime = 500;
+		final int endingTime = 650;
+		final float verticalDist = (8 * mRand.nextFloat() - 4) / 10f;
 
 		AnimationSet set = new AnimationSet(true);
-		set.setInterpolator(new DecelerateInterpolator());
 		set.setFillAfter(true);
-		set.setDuration(3000);
 
 		TranslateAnimation tanim = new TranslateAnimation(
 				TranslateAnimation.RELATIVE_TO_SELF, 0.0f,
-				TranslateAnimation.RELATIVE_TO_SELF, 2,
+				TranslateAnimation.RELATIVE_TO_SELF, unitsToEdge,
 				TranslateAnimation.RELATIVE_TO_SELF, 0.0f,
-				TranslateAnimation.RELATIVE_TO_SELF, 0.3f);
+				TranslateAnimation.RELATIVE_TO_SELF, verticalDist);
+		tanim.setDuration(initialTime);
 		set.addAnimation(tanim);
 		TranslateAnimation tanim2 = new TranslateAnimation(
 				TranslateAnimation.RELATIVE_TO_SELF, 0f,
-				TranslateAnimation.RELATIVE_TO_SELF, -1f,
+				TranslateAnimation.RELATIVE_TO_SELF, -unitsToEdge/2,
 				TranslateAnimation.RELATIVE_TO_SELF, 0.0f,
-				TranslateAnimation.RELATIVE_TO_SELF, 0.2f);
-		tanim2.setStartOffset(1500);
+				TranslateAnimation.RELATIVE_TO_SELF, verticalDist);
+		tanim2.setStartOffset(initialTime);
+		tanim2.setDuration(endingTime);
+		tanim2.setInterpolator(new DecelerateInterpolator());
 		set.addAnimation(tanim2);
-//		tanim.setFillAfter(true);
-//		tanim.setDuration(2000);
 
-//		Animation shake = AnimationUtils.loadAnimation(view.getContext(), R.anim.test2_shake4);
  		dice.startAnimation(set);
 
 		mDiceHandler.sendMessageDelayed(Message.obtain(mDiceHandler, 0, 7), 200);
