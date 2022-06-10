@@ -1,26 +1,22 @@
 package com.dugsolutions.fell
 
 import com.badlogic.gdx.ApplicationAdapter
-import com.badlogic.gdx.InputAdapter
-import com.dugsolutions.fell.FellDungeon
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.*
-import com.dugsolutions.fell.db.DbCamera
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.Sprite
-import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
-import com.dugsolutions.fell.map.MapGrid
-import com.dugsolutions.fell.db.FellDatabaseHelper
 import com.badlogic.gdx.graphics.glutils.ShaderProgram
-import com.dugsolutions.fell.FellDungeon.MyInputAdapter
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion
-import com.dugsolutions.fell.map.gen2.GenZMap
+import com.badlogic.gdx.math.Vector3
+import com.dugsolutions.fell.data.MeshObj2
+import com.dugsolutions.fell.db.DbCamera
+import com.dugsolutions.fell.db.FellDatabaseHelper
+import com.dugsolutions.fell.map.MapGrid
 import com.dugsolutions.fell.map.gen2.GenZConstant
-import java.util.ArrayList
+import com.dugsolutions.fell.map.gen2.GenZMap
 
 class FellDungeon : ApplicationAdapter() {
-
 
     companion object {
         const val TAG = "FellDungeon"
@@ -83,10 +79,7 @@ class FellDungeon : ApplicationAdapter() {
             } else {
                 return false
             }
-            Gdx.app.log(
-                TAG, adjXY.toString() + ": camera POS=" + camera.position.toString() + ", DIR="
-                        + camera.direction.toString()
-            )
+            logCamera()
             return true
         }
 
@@ -113,55 +106,69 @@ class FellDungeon : ApplicationAdapter() {
         override fun scrolled(amountX: Float, amountY: Float): Boolean {
             val camera = cam ?: return false
             camera.position.z += 10 * amountX
-            Gdx.app.log(TAG, "Z=" + camera.position.z)
+            log("Z=" + camera.position.z)
             return true
         }
 
         override fun keyTyped(character: Char): Boolean {
             val camera = cam ?: return false
             val manager = cameraManager ?: return false
-            if (character == 'z') {
-                adjXY = !adjXY
-                if (adjXY) {
-                    Gdx.app.log(TAG, "ADJUST POSITION")
-                } else {
-                    Gdx.app.log(TAG, "ADJUST DIRECTION")
+            when (character) {
+                'z' -> {
+                    adjXY = !adjXY
+                    if (adjXY) {
+                        log("ADJUST POSITION")
+                    } else {
+                        log("ADJUST DIRECTION")
+                    }
                 }
-            } else if (character == 'c') {
-                if (camera is OrthographicCamera) {
-                    val pcam = PerspectiveCamera(
-                        45f,
-                        camera.viewportWidth, camera.viewportHeight
-                    )
-                    pcam.position.set(camera.position)
-                    pcam.direction.set(camera.direction)
-                    pcam.near = camera.near
-                    pcam.far = camera.far
-                    cam = pcam
-                    Gdx.app.log(TAG, "PERSPECTIVE")
-                } else {
-                    val ocam = OrthographicCamera(
-                        camera.viewportWidth, camera.viewportHeight
-                    )
-                    ocam.position.set(camera.position)
-                    ocam.direction.set(camera.direction)
-                    ocam.near = camera.near
-                    ocam.far = camera.far
-                    cam = ocam
-                    Gdx.app.log(TAG, "ORTHOGRAPHIC")
+                'c' -> {
+                    if (camera is OrthographicCamera) {
+                        val pcam = PerspectiveCamera(
+                            45f,
+                            camera.viewportWidth, camera.viewportHeight
+                        )
+                        pcam.position.set(camera.position)
+                        pcam.direction.set(camera.direction)
+                        pcam.near = camera.near
+                        pcam.far = camera.far
+                        cam = pcam
+                        log("PERSPECTIVE")
+                    } else {
+                        val ocam = OrthographicCamera(
+                            camera.viewportWidth, camera.viewportHeight
+                        )
+                        ocam.position.set(camera.position)
+                        ocam.direction.set(camera.direction)
+                        ocam.near = camera.near
+                        ocam.far = camera.far
+                        cam = ocam
+                        log("ORTHOGRAPHIC")
+                    }
                 }
-            } else if (character == 'o') {
-                camera.position.set(oPos)
-                camera.direction.set(oDir)
-            } else if (character == 's') {
-                manager.store()
-            } else if (character == 'n') {
-                manager.load()
-            } else if (character == 'd') {
-                manager.delete()
-            } else if (character == 'Z') {
-                zoomIn = !zoomIn
-                (camera as? OrthographicCamera)?.zoom = 0f
+                'o' -> {
+                    camera.position.set(oPos)
+                    camera.direction.set(oDir)
+                }
+                's' -> {
+                    manager.store()
+                }
+                'n' -> {
+                    manager.load()
+                }
+                'd' -> {
+                    manager.delete()
+                }
+                'Z' -> {
+                    zoomIn = !zoomIn
+                    (camera as? OrthographicCamera)?.zoom = 1f
+                    logCamera()
+                }
+                'p' -> {
+                    camera.position.x = 0f
+                    camera.position.y = 0f
+                    logCamera()
+                }
             }
             return false
         }
@@ -215,20 +222,18 @@ class FellDungeon : ApplicationAdapter() {
         }
     }
 
-    var batch: SpriteBatch? = null
-    var texture: Texture? = null
-    var sprite: Sprite? = null
+    private var batch: SpriteBatch? = null
+    private var texture: Texture? = null
+    private var sprite: Sprite? = null
     var cam: Camera? = null
     var adjXY = true
     var startPos: Vector3? = null
     var startDir: Vector3? = null
     var oPos: Vector3? = null
     var oDir: Vector3? = null
-    private var textureAtlas: TextureAtlas? = null
+    private lateinit var textureAtlas: TextureAtlas
 
-    // MeshObj2 meshObj3;
-    // MeshObj2 meshObj4;
-    var mapGrid: MapGrid? = null
+    private var mapGrid: MapGrid? = null
     var database: FellDatabaseHelper? = null
     var cameraManager: CameraManager? = null
 
@@ -253,21 +258,22 @@ class FellDungeon : ApplicationAdapter() {
         initMap()
         initCamera()
         Gdx.input.inputProcessor = MyInputAdapter()
-        Gdx.app.log(
-            TAG, "VP SIZE=" + cam!!.viewportWidth + ", "
-                    + cam!!.viewportHeight
-        )
+        cam?.let { cam ->
+            Gdx.app.log(
+                TAG, "VP SIZE=" + cam.viewportWidth + ", " + cam.viewportHeight
+            )
+        }
     }
 
     private fun initMap() {
         val w = 5
         val h = 5
         val mapGrid = MapGrid()
-        mapGrid.setPosition(50f, 50f)
+        mapGrid.setPosition(0f, 0f)
         mapGrid.setSize(w, h, 80f)
-        mapGrid.setSubdivide(4)
-        mapGrid.setBaseZ(0f)
-        val grass = textureAtlas?.findRegion("Grass01")
+        mapGrid.subdivide = 4
+        mapGrid.baseZ = 0f
+        val grass = textureAtlas.findRegion("Grass01")
         for (y in 0 until h) {
             for (x in 0 until w) {
                 mapGrid.setRegion(x, y, grass)
@@ -279,6 +285,7 @@ class FellDungeon : ApplicationAdapter() {
         zmap.setRandomSeed(0)
         zmap.addGenerator(GenZConstant(50f))
         zmap.run()
+        log("MAP SIZE = " + mapGrid.mapSize + ", pos=" + mapGrid.position)
     }
 
     private fun initCamera() {
@@ -316,14 +323,32 @@ class FellDungeon : ApplicationAdapter() {
         Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA)
         camera.update()
 
-        // meshObj3.render(cam.combined);
-        // meshObj4.render(cam.combined);
-
-        // batch.setProjectionMatrix(cam.combined);
-        // batch.begin();
-        // sprite.draw(batch);
-        // batch.end();
+        batch?.let { batch ->
+            sprite?.let { sprite ->
+                batch.projectionMatrix = camera.combined
+                batch.begin()
+                sprite.draw(batch)
+                batch.end()
+            }
+        }
         mapGrid?.render(camera.combined)
+    }
+
+    fun log(msg: String) {
+        Gdx.app.log(TAG, msg)
+    }
+
+    private fun logCamera() {
+        val camera = cam ?: return
+        val sbuf = StringBuffer()
+        sbuf.append("camera POS=" + camera.position.toString())
+        if (camera.direction != Vector3(0f, 0f, -1f)) {
+            sbuf.append(", DIR=" + camera.direction.toString())
+        }
+        if (camera is OrthographicCamera && camera.zoom != 1f) {
+            sbuf.append(", ZOOM=" + camera.zoom)
+        }
+        log(sbuf.toString())
     }
 
 }
