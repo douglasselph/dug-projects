@@ -75,19 +75,21 @@ class ObjectFactory(private val world: World) {
         val x: Float,
         val y: Float,
         val radius: Float,
+        val rotate: Boolean = false,
         val material: Material
     )
 
-    fun circle(params: BoxParams): Body {
+    fun circle(params: CircleParams): Body {
         return with(params) {
             val bodyDef = BodyDef()
             bodyDef.type = type
             bodyDef.position.set(x, y)
+            bodyDef.fixedRotation = !rotate
 
             val body = world.createBody(bodyDef)
 
-            val shape = PolygonShape()
-            shape.setAsBox(width, height)
+            val shape = CircleShape()
+            shape.radius = radius/2
 
             val fixtureDef = material.fixture()
             fixtureDef.shape = shape
@@ -100,7 +102,5 @@ class ObjectFactory(private val world: World) {
     }
 
     // endregion public
-
-
 
 }

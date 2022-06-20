@@ -6,6 +6,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.utils.viewport.FillViewport
 import com.badlogic.gdx.utils.viewport.Viewport
 import com.kreash.devblog.common.display.GameColors
+import com.kreash.devblog.common.display.ScreenArrange
 import com.kreash.devblog.common.log.Log
 import com.kreash.devblog.common.observable.MvcViewImpl
 import com.kreash.devblog.screens.main.repo.WorldRepo
@@ -26,17 +27,7 @@ class MainMvcViewImpl :
     private val colors = GameColors()
     private val camera: OrthographicCamera by lazy { OrthographicCamera(WORLD_WIDTH, WORLD_HEIGHT) }
     private val viewport: Viewport by lazy { FillViewport(WORLD_WIDTH, WORLD_HEIGHT, camera) }
-    private val renderer: Box2DDebugRenderer by lazy {
-        Box2DDebugRenderer(
-            true,
-            true,
-            true,
-            true,
-            true,
-            true
-        )
-    }
-
+    private val renderer: Box2DDebugRenderer by lazy { Box2DDebugRenderer() }
     // region MvcView
 
     override val screen: Screen
@@ -49,6 +40,9 @@ class MainMvcViewImpl :
     override fun show() {
 //        viewport.apply()
 //        center()
+
+        camera.setToOrtho(false, ScreenArrange.screenWidth / 2f, ScreenArrange.screenHeight / 2f)
+
         listeners.forEach { it.onShown() }
     }
 
@@ -76,6 +70,7 @@ class MainMvcViewImpl :
 
     override fun dispose() {
         listeners.forEach { it.onDisposed() }
+        renderer.dispose()
     }
 
     // endregion Screen
