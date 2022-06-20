@@ -1,8 +1,8 @@
 package com.kreash.devblog.screens.main
 
 import com.badlogic.gdx.Screen
-import com.badlogic.gdx.physics.box2d.World
 import com.kreash.devblog.common.observable.MvcControl
+import com.kreash.devblog.screens.main.data.WorldObj
 import com.kreash.devblog.screens.main.repo.WorldRepo
 
 class MainMvcControl(
@@ -10,7 +10,6 @@ class MainMvcControl(
     private val repo: WorldRepo
 ) : MvcControl,
     MainMvcView.Listener {
-
 
     init {
         mvcView.registerListener(this)
@@ -28,12 +27,14 @@ class MainMvcControl(
     override fun onShown() {
     }
 
-    override fun onRender(delta: Float): World {
+    override fun onRender(delta: Float) {
         repo.step(delta)
-        return repo.render()
+        mvcView.setCameraPosition(repo.cameraPosition)
+        mvcView.render(repo.main)
     }
 
     override fun onDisposed() {
+        repo.dispose()
         mvcView.unregisterListeners()
     }
 

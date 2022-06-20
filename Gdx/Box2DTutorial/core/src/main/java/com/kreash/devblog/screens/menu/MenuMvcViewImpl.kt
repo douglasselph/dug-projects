@@ -11,7 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import com.kreash.devblog.common.display.GameColors
-import com.kreash.devblog.common.display.ScreenArrange
+import com.kreash.devblog.common.display.ScreenTool
 import com.kreash.devblog.common.log.Log
 import com.kreash.devblog.common.observable.MvcViewImpl
 import com.kreash.devblog.common.string.Strings
@@ -76,7 +76,7 @@ class MenuMvcViewImpl :
 
     override fun show() {
         Gdx.input.inputProcessor = stage
-        ScreenArrange.fit(camera, table, SCALE)
+        ScreenTool.fit(camera, table, SCALE)
     }
 
     override fun render(delta: Float) {
