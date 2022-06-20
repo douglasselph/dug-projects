@@ -5,6 +5,7 @@ import com.kreash.devblog.common.observable.MvcControl
 import com.kreash.devblog.screens.main.MainMvcControl
 import com.kreash.devblog.screens.main.MainMvcView
 import com.kreash.devblog.screens.main.MainMvcViewImpl
+import com.kreash.devblog.screens.main.repo.WorldRepo
 import com.kreash.devblog.screens.menu.MenuMvcControl
 import com.kreash.devblog.screens.menu.MenuMvcView
 import com.kreash.devblog.screens.menu.MenuMvcViewImpl
@@ -47,11 +48,13 @@ class ObjGraphScreens(
     }
 
     // MAIN
+    private val mainRepo: WorldRepo by lazy { WorldRepo() }
     private val mainMvcView: MainMvcView by lazy { MainMvcViewImpl() }
 
     val mainMvcControl: MainMvcControl by lazy {
         MainMvcControl(
-            mainMvcView
+            mainMvcView,
+            mainRepo
         )
     }
 

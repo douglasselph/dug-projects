@@ -9,6 +9,7 @@ class GameColors {
     // region public
 
     val black: Color = Color.BLACK
+    val red: Color= Color.RED
 
     fun clear(color: Color) {
         Gdx.gl.glClearColor(color.r, color.g, color.b, color.a)
