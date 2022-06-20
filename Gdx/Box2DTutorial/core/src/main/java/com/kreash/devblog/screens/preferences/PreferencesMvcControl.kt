@@ -14,6 +14,10 @@ class PreferencesMvcControl(
 ) : MvcControl,
     PreferencesMvcView.Listener {
 
+    init {
+        mvcView.registerListener(this)
+    }
+
     // region MvcControl
 
     override val screen: Screen
@@ -48,6 +52,10 @@ class PreferencesMvcControl(
 
     override fun onBackPressed() {
         screenNav.navigateTo(ScreenNav.Destination.MENU)
+    }
+
+    override fun onDisposed() {
+        mvcView.unregisterListeners()
     }
 
     // endregion PreferencesMvcView.Listener

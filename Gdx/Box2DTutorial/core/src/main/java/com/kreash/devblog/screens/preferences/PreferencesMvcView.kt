@@ -11,6 +11,7 @@ interface PreferencesMvcView : MvcView<PreferencesMvcView.Listener> {
         fun onSoundVolumeAdjusted(value: Float)
         fun onBackPressed()
         fun onShown()
+        fun onDisposed()
     }
 
     var musicEnabled: Boolean

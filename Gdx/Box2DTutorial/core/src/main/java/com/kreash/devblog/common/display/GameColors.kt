@@ -1,4 +1,4 @@
-package com.kreash.devblog.common.colors
+package com.kreash.devblog.common.display
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color

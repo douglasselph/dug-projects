@@ -2,11 +2,15 @@ package com.kreash.devblog.screens.preferences
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.kreash.devblog.common.colors.GameColors
+import com.kreash.devblog.common.display.GameColors
+import com.kreash.devblog.common.display.ScreenArrange
+import com.kreash.devblog.common.log.Log
 import com.kreash.devblog.common.observable.MvcViewImpl
+import com.kreash.devblog.common.string.Strings
 import com.kreash.devblog.screens.data.GameSkin
 
 class PreferencesMvcViewImpl :
@@ -16,40 +20,36 @@ class PreferencesMvcViewImpl :
 
     companion object {
         private const val DEBUG = false
+        private const val TAG = "PreferencesMvcView"
+        private val log = Log(TAG)
+        private const val SCALE = 1.3f
     }
 
-    private val stage: Stage by lazy { Stage(ScreenViewport()) }
+    private val camera: OrthographicCamera by lazy { OrthographicCamera() }
+    private val viewport: ScreenViewport by lazy { ScreenViewport(camera) }
+    private val stage: Stage by lazy { Stage(viewport) }
     private val skin: Skin by lazy { GameSkin.GLASSY.skin }
     private val colors = GameColors()
     private val table: Table by lazy {
         val table = Table()
         table.setFillParent(true)
         table.debug = DEBUG
+        stage.clear()
         stage.addActor(table)
-        val titleLabel = Label("Preferences", skin)
-        val volumeMusicLabel = Label(null, skin)
-        val volumeSoundLabel = Label(null, skin)
-        val enabledMusicLabel = Label(null, skin)
-        val enabledSoundLabel = Label(null, skin)
+        val titleLabel = Label(Strings.Preferences, skin)
         table.add(titleLabel).colspan(2)
         table.row().pad(10f, 0f, 0f, 10f)
-        table.add(enabledMusicLabel).left()
-        table.add(musicCheckbox)
-        table.row().pad(10f, 0f, 0f, 10f)
-        table.add(volumeMusicLabel).left()
+        table.add(musicCheckbox).left()
         table.add(musicSlider)
         table.row().pad(10f, 0f, 0f, 10f)
-        table.add(enabledSoundLabel).left()
-        table.add(soundCheckbox)
-        table.row().pad(10f, 0f, 0f, 10f)
-        table.add(volumeSoundLabel).left()
+        table.add(soundCheckbox).left()
         table.add(soundSlider)
         table.row().pad(10f, 0f, 0f, 10f)
         table.add(backButton).colspan(2)
         table
     }
     private val musicCheckbox: CheckBox by lazy {
-        val checkbox = CheckBox(null, skin)
+        val checkbox = CheckBox(Strings.MusicVolume, skin)
         checkbox.addListener {
             val value = checkbox.isChecked
             listeners.forEach { it.onMusicEnabledChanged(value) }
@@ -68,7 +68,7 @@ class PreferencesMvcViewImpl :
     }
 
     private val soundCheckbox: CheckBox by lazy {
-        val checkbox = CheckBox(null, skin)
+        val checkbox = CheckBox(Strings.SoundVolume, skin)
         checkbox.addListener {
             val value = checkbox.isChecked
             listeners.forEach { it.onSoundEnabledChanged(value) }
@@ -86,7 +86,7 @@ class PreferencesMvcViewImpl :
         slider
     }
     private val backButton: TextButton by lazy {
-        val button = TextButton("Back", skin, "small")
+        val button = TextButton(Strings.Back, skin, "small")
         button.addListener {
             listeners.forEach { it.onBackPressed() }
             false
@@ -132,7 +132,7 @@ class PreferencesMvcViewImpl :
 
     override fun show() {
         Gdx.input.inputProcessor = stage
-        table
+        ScreenArrange.fit(camera, table, SCALE)
         listeners.forEach { it.onShown() }
     }
 
@@ -156,6 +156,7 @@ class PreferencesMvcViewImpl :
 
     override fun dispose() {
         stage.dispose()
+        listeners.forEach { it.onDisposed() }
     }
 
     // endregion Screen
