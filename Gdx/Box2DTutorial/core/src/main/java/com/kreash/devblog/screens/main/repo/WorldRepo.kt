@@ -1,15 +1,22 @@
 package com.kreash.devblog.screens.main.repo
 
 import com.badlogic.gdx.math.Vector2
-import com.kreash.devblog.common.display.KeyDetect
+import com.kreash.devblog.common.gdx.ScreenTool
+import com.kreash.devblog.screens.data.KeyEvent
 import com.kreash.devblog.screens.main.data.WorldObj
 
 class WorldRepo(
     private val createWorld: () -> WorldObj
 ) {
 
+    companion object {
+        private val triggerRight: Int
+            get() = ScreenTool.screenWidth - ScreenTool.screenWidth/4
+
+        private val triggerLeft: Int
+            get() = ScreenTool.screenWidth/4
+    }
     private var obj: WorldObj? = null
-    private val detect = KeyDetect()
 
     // region public
 
@@ -28,7 +35,6 @@ class WorldRepo(
 
     fun step(delta: Float) {
         main.step(delta)
-        inputDetect()
     }
 
     fun dispose() {
@@ -36,17 +42,34 @@ class WorldRepo(
         obj = null
     }
 
-    // endregion public
-
-    private fun inputDetect() {
+    fun onKeyDown(event: KeyEvent) {
         var horizontalForce = 0f
-        detect.detect { key ->
-            when (key) {
-                KeyDetect.Key.LEFT -> horizontalForce -= 1
-                KeyDetect.Key.RIGHT -> horizontalForce += 1
-            }
+        if (event == KeyEvent.LEFT) {
+            horizontalForce -= 1
+        } else if (event == KeyEvent.RIGHT) {
+            horizontalForce += 1
         }
         main.setPlayerLinearVelocity(horizontalForce)
     }
+
+    fun onKeyUp(event: KeyEvent) {
+        main.setPlayerLinearVelocity(0f)
+    }
+
+    fun onMouseDown(screenX: Int, screenY: Int) {
+        var horizontalForce = 0f
+        if (screenX < triggerLeft) {
+            horizontalForce -= 1
+        } else if (screenX > triggerRight) {
+            horizontalForce += 1
+        }
+        main.setPlayerLinearVelocity(horizontalForce)
+    }
+
+    fun onMouseUp(screenX: Int, screenY: Int) {
+        main.setPlayerLinearVelocity(0f)
+    }
+
+    // endregion public
 
 }

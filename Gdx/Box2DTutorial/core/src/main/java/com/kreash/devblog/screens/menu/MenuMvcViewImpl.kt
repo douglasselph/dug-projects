@@ -10,8 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.kreash.devblog.common.display.GameColors
-import com.kreash.devblog.common.display.ScreenTool
+import com.kreash.devblog.common.gdx.GameColors
+import com.kreash.devblog.common.gdx.ScreenTool
 import com.kreash.devblog.common.log.Log
 import com.kreash.devblog.common.observable.MvcViewImpl
 import com.kreash.devblog.common.string.Strings

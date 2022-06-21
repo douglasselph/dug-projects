@@ -1,4 +1,4 @@
-package com.kreash.devblog.common.display
+package com.kreash.devblog.common.gdx
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.OrthographicCamera

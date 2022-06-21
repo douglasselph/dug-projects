@@ -2,7 +2,7 @@ package com.kreash.devblog.screens.main
 
 import com.badlogic.gdx.Screen
 import com.kreash.devblog.common.observable.MvcControl
-import com.kreash.devblog.screens.main.data.WorldObj
+import com.kreash.devblog.screens.data.KeyEvent
 import com.kreash.devblog.screens.main.repo.WorldRepo
 
 class MainMvcControl(
@@ -38,5 +38,21 @@ class MainMvcControl(
         mvcView.unregisterListeners()
     }
 
-    // endregion MainMvcView.Listener
+    override fun onKeyDown(key: KeyEvent) {
+        repo.onKeyDown(key)
+    }
+
+    override fun onKeyUp(key: KeyEvent) {
+        repo.onKeyUp(key)
+    }
+
+    override fun onMouseDown(screenX: Int, screenY: Int) {
+        repo.onMouseDown(screenX, screenY)
+    }
+
+    override fun onMouseUp(screenX: Int, screenY: Int) {
+        repo.onMouseUp(screenX, screenY)
+    }
+
+// endregion MainMvcView.Listener
 }

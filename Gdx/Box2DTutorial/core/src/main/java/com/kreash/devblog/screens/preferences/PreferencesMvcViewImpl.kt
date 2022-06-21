@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.kreash.devblog.common.display.GameColors
-import com.kreash.devblog.common.display.ScreenTool
+import com.kreash.devblog.common.gdx.GameColors
+import com.kreash.devblog.common.gdx.ScreenTool
 import com.kreash.devblog.common.log.Log
 import com.kreash.devblog.common.observable.MvcViewImpl
 import com.kreash.devblog.common.string.Strings
