@@ -17,6 +17,7 @@ interface WorldObj {
 
     fun step(delta: Float)
     fun setPlayerLinearVelocity(xForce: Float)
+    fun setPlayerVerticalForce(yForce: Float)
     fun dispose()
 
 }

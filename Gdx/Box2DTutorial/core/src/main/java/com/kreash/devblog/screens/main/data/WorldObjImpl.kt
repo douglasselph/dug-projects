@@ -91,36 +91,14 @@ class WorldObjImpl : WorldObj {
         player.setLinearVelocity(xForce, player.linearVelocity.y)
     }
 
+    override fun setPlayerVerticalForce(yForce: Float) {
+        player.applyForceToCenter(0f, yForce, true)
+    }
+
     override fun dispose() {
         world.dispose()
     }
 
     // endregion WorldObj
-
-//    private val movable1: Body by lazy {
-//        val obj = factory.box(
-//            ObjFactory.BoxParams(
-//                BodyDef.BodyType.KinematicBody,
-//                x = MOVABLE_XPOS, y = MOVABLE_YPOS,
-//                width = MOVABLE_WIDTH, height = MOVABLE_HEIGHT,
-//                ObjFactoryImpl.Material.STEEL
-//            )
-//        )
-//        obj.setLinearVelocity(MOVABLE_VX, MOVABLE_VY)
-//        obj
-//    }
-//
-//    private val movable2: Body by lazy {
-//        val obj = factory.box(
-//            ObjFactoryImpl.BoxParams(
-//                BodyDef.BodyType.KinematicBody,
-//                x = MOVABLE_XPOS, y = MOVABLE_YPOS,
-//                width = MOVABLE_WIDTH, height = MOVABLE_HEIGHT,
-//                ObjFactoryImpl.Material.STEEL
-//            )
-//        )
-//        obj.setLinearVelocity(MOVABLE_VY, MOVABLE_VX)
-//        obj
-//    }
 
 }

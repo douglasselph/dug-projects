@@ -29,7 +29,10 @@ class MainMvcControl(
 
     override fun onRender(delta: Float) {
         repo.step(delta)
-        mvcView.setCameraPosition(repo.cameraPosition)
+        mvcView.camera
+            .setPosition(repo.cameraPosition)
+            .setZoom(repo.cameraZoom)
+            .apply()
         mvcView.render(repo.main)
     }
 

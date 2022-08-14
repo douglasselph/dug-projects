@@ -17,6 +17,13 @@ interface MainMvcView : MvcView<MainMvcView.Listener> {
         fun onMouseUp(screenX: Int, screenY: Int)
     }
 
-    fun setCameraPosition(position: Vector2)
+    interface Camera {
+        fun setPosition(position: Vector2): Camera
+        fun setZoom(zoom: Float): Camera
+        fun apply()
+    }
+
+    val camera: Camera
     fun render(main: WorldObj)
+
 }

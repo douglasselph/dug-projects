@@ -26,7 +26,7 @@ class MainMvcViewImpl :
     }
 
     private val colors = GameColors()
-    private val camera: OrthographicCamera by lazy { OrthographicCamera() }
+    private val cam: OrthographicCamera by lazy { OrthographicCamera() }
     private val renderer: Box2DDebugRenderer by lazy { Box2DDebugRenderer() }
     private val inputController = object : InputController() {
 
@@ -62,16 +62,11 @@ class MainMvcViewImpl :
     override val screen: Screen
         get() = this
 
-    override fun setCameraPosition(position: Vector2) {
-        val cam = camera.position
-        cam.x = position.x * PPM
-        cam.y = position.y * PPM
-        camera.position.set(cam)
-        camera.update()
-    }
+    override val camera: MainMvcView.Camera
+        get() = CameraImpl()
 
     override fun render(main: WorldObj) {
-        main.render(renderer, camera)
+        main.render(renderer, cam)
     }
 
     // endregion MvcView
@@ -80,7 +75,7 @@ class MainMvcViewImpl :
 
     override fun show() {
         Gdx.input.inputProcessor = inputController
-        camera.setToOrtho(false, ScreenTool.screenWidth / 2f, ScreenTool.screenHeight / 2f)
+        cam.setToOrtho(false, ScreenTool.screenWidth / 2f, ScreenTool.screenHeight / 2f)
         listeners.forEach { it.onShown() }
     }
 
@@ -90,7 +85,7 @@ class MainMvcViewImpl :
     }
 
     override fun resize(width: Int, height: Int) {
-        camera.setToOrtho(false, width / 2f, height / 2f)
+        cam.setToOrtho(false, width / 2f, height / 2f)
     }
 
     override fun pause() {
@@ -109,6 +104,30 @@ class MainMvcViewImpl :
 
     // endregion Screen
 
+    // region Camera
+
+    private inner class CameraImpl : MainMvcView.Camera {
+
+        override fun setPosition(position: Vector2): MainMvcView.Camera {
+            val mod = cam.position
+            mod.x = position.x * PPM
+            mod.y = position.y * PPM
+            cam.position.set(mod)
+            return this
+        }
+
+        override fun setZoom(zoom: Float): MainMvcView.Camera {
+            cam.zoom = zoom
+            return this
+        }
+
+        override fun apply() {
+            cam.update()
+        }
+    }
+
+    // endregion Camera
+
     private fun convert(keycode: Int): KeyEvent? {
         return when (keycode) {
             Input.Keys.LEFT -> {
@@ -119,6 +138,9 @@ class MainMvcViewImpl :
             }
             Input.Keys.UP -> {
                 KeyEvent.UP
+            }
+            Input.Keys.DOWN -> {
+                KeyEvent.DOWN
             }
             else -> {
                 return null
