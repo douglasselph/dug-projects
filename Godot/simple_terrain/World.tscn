@@ -1,15 +1,16 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/zylann.hterrain/hterrain.gd" type="Script" id=1]
 [ext_resource path="res://World.tres" type="Resource" id=2]
 [ext_resource path="res://t_data/data.hterrain" type="Resource" id=3]
 [ext_resource path="res://t_data2/data.hterrain" type="Resource" id=4]
+[ext_resource path="res://t_data3/data.hterrain" type="Resource" id=5]
 
-[sub_resource type="ProceduralSky" id=1]
+[sub_resource type="ProceduralSky" id=3]
 
 [sub_resource type="Environment" id=2]
 background_mode = 2
-background_sky = SubResource( 1 )
+background_sky = SubResource( 3 )
 
 [node name="World" type="Spatial"]
 
@@ -39,7 +40,7 @@ shader_params/u_triplanar = false
 shader_params/u_tile_reduction = Plane( 1, 1, 1, 1 )
 
 [node name="HTerrain2" type="Spatial" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 550, 0, 0 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 512, 0, 0 )
 script = ExtResource( 1 )
 lod_scale = 2.0
 _terrain_data = ExtResource( 4 )
@@ -56,3 +57,22 @@ shader_params/u_ground_uv_scale = 20
 shader_params/u_depth_blending = true
 shader_params/u_triplanar = false
 shader_params/u_tile_reduction = Plane( 1, 1, 1, 1 )
+
+[node name="HTerrain3" type="Spatial" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 512 )
+script = ExtResource( 1 )
+lod_scale = 2.0
+_terrain_data = ExtResource( 5 )
+chunk_size = 32
+collision_enabled = true
+collision_layer = 1
+collision_mask = 1
+shader_type = "Classic4Lite"
+custom_shader = null
+custom_globalmap_shader = null
+texture_set = ExtResource( 2 )
+render_layers = 1
+shader_params/u_ground_uv_scale = 20
+shader_params/u_depth_blending = true
+shader_params/u_triplanar = false
+shader_params/u_tile_reduction = Plane( 0, 0, 0, 0 )

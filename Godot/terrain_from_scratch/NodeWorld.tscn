@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=2]
+
+[sub_resource type="ProceduralSky" id=2]
+
+[sub_resource type="Environment" id=1]
+background_mode = 2
+background_sky = SubResource( 2 )
+
+[node name="NodeWorld" type="Spatial"]
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 1, 0, 0, 0, -0.707107, 0.707107, 0, -0.707107, -0.707107, 0, 0, 0 )
+light_color = Color( 0.886275, 0.901961, 0.360784, 1 )
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 1 )
+
+[node name="Spatial" type="Spatial" parent="."]
