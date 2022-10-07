@@ -1,5 +1,0 @@
-[gd_scene format=2]
-
-[node name="SimonHeightMap" type="Spatial"]
-
-[node name="MeshInstance" type="MeshInstance" parent="."]

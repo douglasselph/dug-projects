@@ -1,10 +1,10 @@
 [gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://addons/zylann.hterrain/hterrain.gd" type="Script" id=1]
-[ext_resource path="res://World.tres" type="Resource" id=2]
-[ext_resource path="res://t_data/data.hterrain" type="Resource" id=3]
-[ext_resource path="res://t_data2/data.hterrain" type="Resource" id=4]
-[ext_resource path="res://t_data3/data.hterrain" type="Resource" id=5]
+[ext_resource path="res://hterrain/World.tres" type="Resource" id=2]
+[ext_resource path="res://hterrain/t_data/data.hterrain" type="Resource" id=3]
+[ext_resource path="res://hterrain/t_data2/data.hterrain" type="Resource" id=4]
+[ext_resource path="res://hterrain/t_data3/data.hterrain" type="Resource" id=5]
 
 [sub_resource type="ProceduralSky" id=3]
 
