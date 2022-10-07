@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [sub_resource type="Shader" id=2]
 code = "shader_type spatial;
@@ -26,13 +26,7 @@ material = SubResource( 3 )
 subdivide_width = 255
 subdivide_depth = 255
 
-[sub_resource type="PlaneMesh" id=6]
-
 [node name="TerrainBlock" type="Spatial"]
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
-visible = false
 mesh = SubResource( 1 )
-
-[node name="MeshInstance2" type="MeshInstance" parent="."]
-mesh = SubResource( 6 )
