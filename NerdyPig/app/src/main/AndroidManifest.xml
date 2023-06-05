@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:name=".MyApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/logo"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:targetApi="31">
+        <activity
+            android:name=".act.MainActivity"
+            android:exported="true"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".act.StatsActivity"
+            android:label="@string/title_activity_stats"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".act.RulesActivity"
+            android:label="@string/title_activity_rules"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".act.BattlePrepActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".act.BattlePlayActivity"
+            android:label="@string/title_activity_battle_play"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".act.TestRollDice"
+            android:theme="@style/AppTheme" />
+        <activity
+            android:name=".act.TestRollDice2"
+            android:theme="@style/AppTheme" />
+
+    </application>
+
+</manifest>
