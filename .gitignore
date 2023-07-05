@@ -28,3 +28,6 @@ proguard/
 
 # Log Files
 *.log
+
+__pycache__
+.idea
