@@ -1,3 +1,4 @@
+# package src.data
 from typing import List
 from enum import Enum
 from Card import Card, CardComposite, card_ordinal
@@ -22,18 +23,21 @@ class LineID(Enum):
 
 
 class Line:
-    _cards: List[CardComposite]
-    _faceUp: List[bool]
     maxSize: int
+    _intention: IntentionID
+    _intentionFaceUp: bool
+    _cards: List[CardComposite]
+    _cardsFaceUp: bool
 
     def __init__(self, max_size: int):
         self.maxSize = max_size
+        self._intention = IntentionID.NONE
+        self._intentionFaceUp = False
         self._cards = []
-        self._faceUp = []
+        self._cardsFaceUp = False
 
     def add(self, card: CardComposite) -> bool:
         self._cards.append(card)
-        self._faceUp.append(False)
         return len(self._cards) <= self.maxSize
 
     def can_add(self) -> bool:
@@ -52,58 +56,62 @@ class Line:
         return self._cards[position]
 
     def pull(self, position: int) -> CardComposite:
-        self._faceUp.pop(position)
         return self._cards.pop(position)
 
-    def is_face_up(self, position: int) -> bool:
-        return self._faceUp[position]
+    def is_intention_face_up(self) -> bool:
+        return self._intentionFaceUp
 
-    def has_face_up(self) -> bool:
-        return any(self._faceUp)
+    def are_cards_face_up(self) -> bool:
+        return self._cardsFaceUp
 
-    def show(self, position: int):
-        self._faceUp[position] = True
+    def show_intention(self):
+        self._intentionFaceUp = True
 
-    def discard_face_up(self):
-        discarded_cards = []
-        new_cards = []
-        new_face_up = []
+    def show_cards(self):
+        self._cardsFaceUp = True
 
-        for card, is_face_up in zip(self._cards, self._faceUp):
-            if is_face_up:
-                discarded_cards.append(card)
-            else:
-                new_cards.append(card)
-                new_face_up.append(is_face_up)
-
-        self._cards = new_cards
-        self._faceUp = new_face_up
-
+    def discard(self):
+        discarded_cards = self._cards
+        self._cards = []
+        self._intention = IntentionID.NONE
+        self._intentionFaceUp = False
+        self._cardsFaceUp = False
         return discarded_cards
+
+    def set_intention(self, coin: IntentionID) -> bool:
+        if coin == IntentionID.NONE:
+            return True
+        if len(self._cards) > 0 and self._intention != IntentionID.NONE:
+            return False
+        self._intention = coin
+        return True
+
+    @property
+    def intention(self) -> IntentionID:
+        return self._intention
 
 
 class ManeuverPlate:
     central_maneuver_card: Card
     level: int
     _lines: List[Line]
-    _coins: List[IntentionID]
 
     def __init__(self):
         self.central_maneuver_card = Card.MANEUVER_BUST_A_CUT
         self.level = 1
         self._lines = [Line(5), Line(4), Line(3), Line(3)]
-        self._coins = [IntentionID.NONE, IntentionID.NONE, IntentionID.NONE, IntentionID.NONE]
 
     def add_card(self, line: LineID, card: CardComposite, coin: IntentionID) -> bool:
         pos = self._position(line)
-        self._coins[pos] = coin
+        self._lines[pos].set_intention(coin)
         return self._lines[pos].add(card)
 
     # Return
-    def all_card_values(self) -> List[int]:
+    def player_line_values(self) -> List[int]:
         card_values = []
 
         for line in self._lines:
+            card_values.append(line.intention.value)
             for position in range(line.maxSize):
                 if line.has_card(position):
                     card = line.query(position)
@@ -113,13 +121,17 @@ class ManeuverPlate:
 
         return card_values
 
-    def visible_card_values(self) -> List[int]:
+    def other_line_values(self) -> List[int]:
         card_values = []
 
         for line in self._lines:
+            if line.is_intention_face_up():
+                card_values.append(line.intention.value)
+            else:
+                card_values.append(IntentionID.FACE_DOWN.value)
             for position in range(line.maxSize):
                 if line.has_card(position):
-                    if line.is_face_up(position):
+                    if line.are_cards_face_up():
                         card = line.query(position)
                         card_values.append(card_ordinal(card))
                     else:
@@ -128,23 +140,6 @@ class ManeuverPlate:
                     card_values.append(0)  # Append 0 if no card is present
 
         return card_values
-
-    def all_intention_values(self) -> List[int]:
-        intention_values = []
-        for coin in self._coins:
-            intention_values.append(coin.value)
-        return intention_values
-
-    # Return IntentionID.FACE_DOWN if no cards in the line are face up.
-    def visible_intention_values(self) -> List:
-        intention_values = []
-        for index, coin in enumerate(self._coins):
-            if self._lines[index].has_face_up():
-                intention_values.append(coin.value)
-            else:
-                intention_values.append(IntentionID.FACE_DOWN)
-
-        return intention_values
 
     @staticmethod
     def _position(line: LineID) -> int:

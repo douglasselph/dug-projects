@@ -6,26 +6,20 @@ from src.data.Card import CardComposite, Card, card_ordinal
 
 class Deck:
 
-    size: int
     _draw: List[CardComposite]
     _faceUp: List[CardComposite]
 
-    def __init__(self, size: int):
-        self.size = size
-        self._draw = [Card.NONE] * size
+    def __init__(self):
+        self._draw = []
         self._faceUp = []
 
     def append(self, value: CardComposite) -> Deck:
-        # Scan for the next card in the array that is available
-        for i in range(0, len(self._draw)):
-            if self._draw[i] == Card.NONE:
-                self._draw[i] = value
-                break
+        self._draw.append(value)
         return self
 
     def draw(self) -> CardComposite:
-        card = self._draw[0]
-        self._faceUp.append(self._draw.pop(0))
+        card = self._draw.pop(0)
+        self._faceUp.append(card)
         return card
 
     @property
