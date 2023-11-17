@@ -27,8 +27,8 @@ class TurnPhase(Enum):
 class Game:
 
     def __init__(self):
+        self.turnPhase = TurnPhase.NONE
         self.agentPlayer = Player()
         self.opponent = Player()
-        self.turnPhase = TurnPhase.NONE
         self.commonDrawDeck = Deck()
 
