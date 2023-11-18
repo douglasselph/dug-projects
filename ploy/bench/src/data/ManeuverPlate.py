@@ -88,6 +88,8 @@ class Line:
 
 
 class ManeuverPlate:
+
+    line_card_sizes = [5, 4, 3, 3]
     central_maneuver_card: Card
     level: int
     lines: List[Line]
@@ -95,26 +97,41 @@ class ManeuverPlate:
     def __init__(self):
         self.central_maneuver_card = Card.MANEUVER_BUST_A_CUT
         self.level = 1
-        self.lines = [Line(5), Line(4), Line(3), Line(3)]
+        self.lines = []
+        for size in self.line_card_sizes:
+            self.lines.append(Line(size))
 
     def add_card(self, line: LineID, card: CardComposite, coin: IntentionID) -> bool:
         pos = self._position(line)
         self.lines[pos].set_intention(coin)
         return self.lines[pos].add(card)
 
-    # Return
-    def agent_line_values(self) -> List[int]:
-        card_values = []
-
+    @property
+    def line_sizes(self) -> List[int]:
+        sizes = []
         for line in self.lines:
-            card_values.append(line.intention.value)
-            for position in range(line.maxSize):
-                if line.has_card(position):
-                    card = line.query(position)
-                    card_values.append(card_ordinal(card))
-                else:
-                    card_values.append(0)  # Append 0 if no card is present
+            sizes.append(line.maxSize)
+        return sizes
 
+    @property
+    def lines_num_cards(self) -> List[int]:
+        num_cards = []
+        for line in self.lines:
+            num_cards.append(len(line.cards))
+        return num_cards
+
+    def line_intention_id(self, position: int) -> IntentionID:
+        return self.lines[position].intention
+
+    def line_card_values(self, position: int) -> List[int]:
+        card_values = []
+        line = self.lines[position]
+        for position in range(line.maxSize):
+            if line.has_card(position):
+                card = line.query(position)
+                card_values.append(card_ordinal(card))
+            else:
+                card_values.append(0)  # Append 0 if no card is present
         return card_values
 
     def opponent_line_values(self) -> List[int]:

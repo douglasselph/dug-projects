@@ -1,4 +1,5 @@
 # package: src
+from __future__ import annotations
 from enum import Enum, auto
 
 import numpy as np
@@ -7,6 +8,7 @@ from keras.models import Model
 
 from src.data.Game import Game
 from src.data.Card import Card
+from src.data.ManeuverPlate import ManeuverPlate, IntentionID
 
 
 class OutputLine(Enum):
@@ -31,7 +33,9 @@ class OutputIntention(Enum):
 #   - Lines count= 4
 #   - IntentionID count= 4 (includes no intention ID).
 #
-class InputModelPlaceCard:
+class PlaceCardModel:
+
+    _line_card_sizes = ManeuverPlate.line_card_sizes
     _num_unique_cards = len(Card)
     _place_cards_look_ahead_distance = 8
     _common_face_up_card_look_back_distance = 8
@@ -39,7 +43,6 @@ class InputModelPlaceCard:
     _num_output_lines = 4
     _num_output_intentions = 4
     _output_size = _num_output_lines * _num_output_intentions
-
     _model: Model
 
     def define_model(self):
@@ -71,16 +74,16 @@ class InputModelPlaceCard:
         #
         # Agent ManeuverPlate of 4 lines
         #
-        layer_agent_line_5 = self._build_agent_line(5)
-        layer_agent_line_4 = self._build_agent_line(4)
-        layer_agent_line_3a = self._build_agent_line(3)
-        layer_agent_line_3b = self._build_agent_line(3)
+        layer_agent_line_1 = self._build_agent_line(self._line_card_sizes[0])
+        layer_agent_line_2 = self._build_agent_line(self._line_card_sizes[1])
+        layer_agent_line_3 = self._build_agent_line(self._line_card_sizes[2])
+        layer_agent_line_4 = self._build_agent_line(self._line_card_sizes[3])
 
         combined_plate = concatenate([
-            layer_agent_line_5,
-            layer_agent_line_4,
-            layer_agent_line_3a,
-            layer_agent_line_3b
+            layer_agent_line_1,
+            layer_agent_line_2,
+            layer_agent_line_3,
+            layer_agent_line_4
         ])
         layer_plate = Dense(15, activation='relu')(combined_plate)
         #
@@ -141,6 +144,43 @@ class InputModelPlaceCard:
         combined = concatenate([layer_intention_coin, layer_line_cards])
         return Dense(12, activation='relu')(combined)
 
+    def predict(self, game: Game) -> (OutputLine, OutputIntention):
+        #
+        # next_cardIDs_to_place (_place_cards_look_ahead_distance)
+        #
+        data_next_cards_to_place = np.array(game.nn_next_cards(self._place_cards_look_ahead_distance))
+        data_agent_energy = np.array([game.agent_energy], dtype=float).reshape((1,))
+        data_agent_pips = np.array([game.agent_pips], dtype=float).reshape((1,))
+        data_personal_stash_remaining = np.array([game.agent_stash_cards_total], dtype=float).reshape((1,))
+        data_agent_lines = self._gather_lines(game.agentPlayer)
+        data_opponent_energy = np.array([game.opponent_energy], dtype=float).reshape((1,))
+        data_opponent_pips = np.array([game.opponent_pips], dtype=float).reshape((1,))
+        data_opponent_line_num_cards = np.array([game.opponent_lines_num_cards], dtype=float).reshape((4,))
+        data_common_face_up = \
+            np.array(game.nn_common_draw_deck_face_up_cards(self._common_face_up_card_look_back_distance))
+
+        input_data = [
+            data_next_cards_to_place,
+            data_agent_energy,
+            data_agent_pips,
+            data_personal_stash_remaining,
+            data_agent_lines,
+            data_opponent_energy,
+            data_opponent_pips,
+            data_opponent_line_num_cards,
+            data_common_face_up
+        ]
+        predicted_output = self._model.predict(input_data)
+        return self.decode_prediction(predicted_output)
+
+    def _gather_lines(self, game: Game) -> [np.ndarray]:
+        data_agent_lines = []
+        for i in range(len(self._line_card_sizes)):
+            intention_coin_data = np.array([game.agent_line_intention_id(i).value], dtype=float).reshape((1,))
+            line_cards_data = np.array(game.agent_line_card_values(i), dtype=int).reshape((self._line_card_sizes[i],))
+            data_agent_lines.append((intention_coin_data, line_cards_data))
+        return data_agent_lines
+
     @staticmethod
     def one_hot_encode(line: OutputLine, intention: OutputIntention) -> np.ndarray:
         # Calculate the index
@@ -163,37 +203,4 @@ class InputModelPlaceCard:
         intention = OutputIntention(intention_index)
 
         return line, intention
-
-    def predict(self, game: Game) -> (OutputLine, OutputIntention):
-        #
-        # next_cardIDs_to_place (_place_cards_look_ahead_distance)
-        #
-        data_next_cards_to_place = np.array(game.nn_next_cards(self._place_cards_look_ahead_distance))
-        data_agent_energy = np.array([game.agent_energy()], dtype=float).reshape((1,))
-        data_agent_pips = np.array([game.agent_pips()], dtype=float).reshape((1,))
-        data_personal_stash_remaining = np.array([game.agent_stash_cards_total()], dtype=float).reshape((1,))
-        data_agent_lines = []
-        
-        data_opponent_energy = np.random.rand(1)
-        data_opponent_pips = np.random.rand(1)
-        data_opponent_line_num_cards = np.random.randint(0, 10, size=(4,))
-        data_common_face_up = np.random.randint(0, _num_unique_cards, size=(_common_face_up_card_look_back_distance,))
-
-        #
-        # Agent: Energy, PIPS, Personal Stash Deck Size
-        #
-        #
-        # Agent ManeuverPlate of 4 lines.
-        # Each Line: IntentionID, CardID, CardID, CardID...
-        #
-        #
-        # Opponent observation:
-        # Energy, PIPS, Line numbers cards (for Line5, Line4, Line3, Line3)
-        #
-        #
-        # Common deck observation:
-        # First N cards face up, with top most card first for _common_face_up_card_look_back_distance
-        #
-        predicted_output = self._model.predict(input_data)
-        return self.decode_prediction(predicted_output)
 

@@ -6,8 +6,6 @@ from src.data.Card import CardComposite, Card, card_ordinal
 
 class Deck:
 
-    _separator = -2
-
     _draw: List[CardComposite]
     _faceUp: List[CardComposite]
 
@@ -62,20 +60,14 @@ class Deck:
         return combined
 
     #
-    # Return a neural net conditioned array of representing a unknown deck.
-    # Ensure the array returned is of size 'size'.
+    # Return a neural net conditioned array of the face up cards, and only of the face up cards.
+    # The first card return is the top most face up card.
+    # Must return exactly size elements. If there are more available, then they will be clipped.
+    # If there are less, then 0 will be appended.
     #
-    # The first cards will be the face up cards, which are all known, where the first card is on top.
-    # Then the seperator.
-    # Then a simple integer indicating the number of cards left in the deck.
-    #
-    def nn_value_hidden_draw(self, size: int) -> List[int]:
-        face_up_array = [card_ordinal(card) for card in self._faceUp]
-        combined = face_up_array + [self._separator] + [len(self._draw)]
-        if len(combined) > size:
-            face_up_array = [card_ordinal(card) for card in self._faceUp[:size-2]]
-            combined = face_up_array + [self._separator] + [len(self._draw)]
-        else:
-            combined += [0] * (size - len(combined))
-        return combined
+    def nn_face_up_cards(self, size: int) -> List[int]:
+        face_up_array = [card_ordinal(card) for card in self._faceUp[:size]]
+        if len(face_up_array) < size:
+            face_up_array += [0] * (size - len(face_up_array))
+        return face_up_array
 

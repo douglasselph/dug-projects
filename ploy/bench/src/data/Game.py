@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import List
 from src.data.Player import Player
 from src.data.Deck import Deck
+from src.data.ManeuverPlate import IntentionID
 
 
 class TurnPhase(Enum):
@@ -43,12 +44,40 @@ class Game:
     def nn_next_cards(self, size: int) -> List[int]:
         return self.agentPlayer.nn_next_cards(size)
 
+    @property
     def agent_energy(self) -> int:
         return self.agentPlayer.energy
 
+    @property
     def agent_pips(self) -> int:
         return self.agentPlayer.pips
 
+    @property
     def agent_stash_cards_total(self) -> int:
         return self.agentPlayer.stash_cards_total
+
+    @property
+    def agent_line_sizes(self) -> List[int]:
+        return self.agentPlayer.line_sizes
+
+    def agent_line_intention_id(self, line_position: int) -> IntentionID:
+        return self.agentPlayer.line_intention_id(line_position)
+
+    def agent_line_card_values(self, line_position: int) -> List[int]:
+        return self.agentPlayer.line_card_values(line_position)
+
+    @property
+    def opponent_energy(self) -> int:
+        return self.opponent.energy
+
+    @property
+    def opponent_pips(self) -> int:
+        return self.opponent.pips
+
+    @property
+    def opponent_lines_num_cards(self) -> List[int]:
+        return self.opponent.lines_num_cards
+
+    def nn_common_draw_deck_face_up_cards(self, size: int) -> List[int]:
+        return self.commonDrawDeck.nn_face_up_cards(size)
 
