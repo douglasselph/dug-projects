@@ -40,21 +40,25 @@ class Deck:
             return None
         return self._faceUp.pop(0)
 
+    @property
+    def cards_total(self) -> int:
+        return len(self._faceUp) + len(self._draw)
+
     #
-    # Return a neural net conditioned array of numbers representing a known deck.
-    # Ensure the array returned is of size 'size'.
+    # Return an array of the next cards in the deck, starting with the face up cards and proceeding to the
+    # drawn cards Ensure the array returned is of size 'size'. Do not report more than this number of cards.
+    # If less than this number of cards available, then fill in with zeros.
     #
-    # The order is the top card is the top most face card, following by the rest of the face up cards,
-    # followed by the seperator number followed by the face down cards. Extra slots are padded with zeros.
-    #
-    def nn_value_all_visible(self, size: int) -> List[int]:
-        face_up_array = [card_ordinal(card) for card in self._faceUp]
-        face_down_array = [card_ordinal(card) for card in self._draw]
-        combined = face_up_array + [self._separator] + face_down_array
-        if len(combined) > size:
-            combined = combined[:size]
+    def nn_next_cards(self, size: int) -> List[int]:
+        face_up_array = [card_ordinal(card) for card in self._faceUp[:size]]
+        if len(face_up_array) < size:
+            remainder = size - len(face_up_array)
+            face_down_array = [card_ordinal(card) for card in self._draw[:remainder]]
+            combined = face_up_array + face_down_array
+            if len(combined) < size:
+                combined += [0] * (size - len(combined))
         else:
-            combined += [0] * (size - len(combined))
+            combined = face_up_array
         return combined
 
     #
