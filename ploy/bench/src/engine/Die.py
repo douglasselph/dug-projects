@@ -1,0 +1,37 @@
+from __future__ import annotations
+import random
+
+
+class Die:
+
+    def __init__(self, sides: int, value: int = 0):
+        super().__init__()
+        self.sides = sides
+        self.value = value
+
+    @property
+    def average(self) -> float:
+        return (self.sides + 1) / 2
+
+    def roll(self) -> Die:
+        self.value = self.rand()
+        return self
+
+    @property
+    def max_value(self) -> int:
+        return self.sides
+
+    def __eq__(self, other):
+        if isinstance(other, Die):
+            if self.sides == other.sides and self.value == other.value:
+                return True
+        return False
+
+    @staticmethod
+    def factory(sides: int, value: int = 0) -> Die:
+        return Die(sides, value)
+
+    def rand(self) -> int:
+        return random.randint(1, self.sides)
+
+

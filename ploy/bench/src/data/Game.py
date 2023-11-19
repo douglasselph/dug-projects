@@ -7,6 +7,7 @@ from src.data.ManeuverPlate import IntentionID
 from src.data.Decision import DecisionIntention, DecisionLine
 from src.data.GameStat import GameStat
 
+
 class TurnPhase(Enum):
     NONE = 0
     DEAL = auto()
@@ -34,8 +35,7 @@ class InitiativeOn(Enum):
 
 
 class Game:
-
-    _scale_reward = 10
+    _scale_reward = 20
 
     def __init__(self):
         self.turnPhase = TurnPhase.NONE
@@ -119,8 +119,8 @@ class Game:
 
         agent_wounds = self.agentPlayer.nn_wound_value
         opponent_wounds = self.opponent.nn_wound_value
-        agent_energy_loss = self.agentPlayer.energy_loss
-        opponent_energy_loss = self.opponent.energy_loss
+        agent_energy_loss = self.agentPlayer.nn_energy_loss
+        opponent_energy_loss = self.opponent.nn_energy_loss
         num_turns = self.stat.num_turns
 
         if base > 0:
@@ -134,5 +134,3 @@ class Game:
             base_reward = opponent_wounds + opponent_energy_loss - agent_wounds - agent_energy_loss
 
         return base_reward / num_turns * self._scale_reward
-
-

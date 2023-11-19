@@ -251,7 +251,7 @@ class PlaceCardModel:
             # Initialize total loss
             total_loss = 0
 
-            # Iterate over remembered game states and their corresponding predictions
+            # Iterate over remembered engine states and their corresponding predictions
             for state, predicted_output in zip(self._inputs, self._predictions):
                 # Convert state to appropriate input format if necessary
                 state_input = np.array([state])  # Example: convert to NumPy array

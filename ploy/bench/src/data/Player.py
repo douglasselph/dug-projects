@@ -7,6 +7,7 @@ from src.data.Deck import Deck
 class Player:
 
     _max_energy = 20
+    _loss_energy = 6  # If energy reaches this level this is too close to losing.
 
     plate: ManeuverPlate
     energy: int
@@ -53,5 +54,9 @@ class Player:
         return self.draw.nn_wound_value
 
     @property
-    def energy_loss(self) -> int:
-        return self._max_energy - self.energy
+    def nn_energy_loss(self) -> int:
+        if self.energy < 0:
+            return self._loss_energy
+        if self.energy >= self._loss_energy:
+            return 0
+        return self._loss_energy - self.energy

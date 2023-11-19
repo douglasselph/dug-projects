@@ -45,6 +45,14 @@ class Deck:
     def cards_total(self) -> int:
         return len(self._faceUp) + len(self._draw)
 
+    @property
+    def draw_deck(self) -> List[CardComposite]:
+        return self._draw
+
+    @property
+    def faceUp_deck(self) -> List[CardComposite]:
+        return self._faceUp
+
     #
     # Return an array of the next cards in the deck, starting with the face up cards and proceeding to the
     # drawn cards Ensure the array returned is of size 'size'. Do not report more than this number of cards.
