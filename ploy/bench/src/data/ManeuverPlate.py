@@ -70,7 +70,7 @@ class Line:
     def show_cards(self):
         self.cardsFaceUp = True
 
-    def discard(self):
+    def discard(self) -> List[CardComposite]:
         discarded_cards = self.cards
         self.cards = []
         self.intention = IntentionID.NONE
@@ -134,25 +134,19 @@ class ManeuverPlate:
                 card_values.append(0)  # Append 0 if no card is present
         return card_values
 
-    def opponent_line_values(self) -> List[int]:
-        card_values = []
-
+    def discard(self) -> List[CardComposite]:
+        cards: List[CardComposite] = []
         for line in self.lines:
-            if line.is_intention_face_up():
-                card_values.append(line.intention.value)
-            else:
-                card_values.append(IntentionID.FACE_DOWN.value)
-            for position in range(line.maxSize):
-                if line.has_card(position):
-                    if line.are_cards_face_up():
-                        card = line.query(position)
-                        card_values.append(card_ordinal(card))
-                    else:
-                        card_values.append(card_ordinal(Card.FACE_DOWN))
-                else:
-                    card_values.append(0)  # Append 0 if no card is present
+            if line.cardsFaceUp:
+                cards.extend(line.discard())
+        return cards
 
-        return card_values
+    def discard_all(self) -> List[CardComposite]:
+        cards: List[CardComposite] = []
+        for line in self.lines:
+            line.cardsFaceUp = True
+            cards.extend(line.discard())
+        return cards
 
     @staticmethod
     def _position(line: LineID) -> int:

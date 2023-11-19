@@ -6,6 +6,8 @@ from src.data.Deck import Deck
 
 class Player:
 
+    _max_energy = 20
+
     plate: ManeuverPlate
     energy: int
     pips: int
@@ -15,7 +17,7 @@ class Player:
 
     def __init__(self):
         self.plate = ManeuverPlate()
-        self.energy = 20
+        self.energy = self._max_energy
         self.pips = 0
         self.draw = Deck()
         self.stash = Deck()
@@ -41,3 +43,15 @@ class Player:
     @property
     def lines_num_cards(self) -> List[int]:
         return self.plate.lines_num_cards
+
+    def discard_all(self):
+        cards = self.plate.discard_all()
+        self.draw.extend(cards)
+
+    @property
+    def nn_wound_value(self) -> int:
+        return self.draw.nn_wound_value
+
+    @property
+    def energy_loss(self) -> int:
+        return self._max_energy - self.energy

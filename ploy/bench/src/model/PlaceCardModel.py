@@ -1,31 +1,19 @@
 # package: src
 from __future__ import annotations
-from enum import Enum, auto
+from typing import List
 
 import numpy as np
+import tensorflow as tf
 from keras.layers import Input, Embedding, Flatten, Dense, concatenate
 from keras.models import Model
 
 from src.data.Game import Game
 from src.data.Card import Card
-from src.data.ManeuverPlate import ManeuverPlate, IntentionID
+from src.data.ManeuverPlate import ManeuverPlate
+from src.data.Decision import DecisionLine, DecisionIntention
 
 _num_unique_cards = len(Card)
 _embedding_size = 10
-
-
-class OutputLine(Enum):
-    LINE_1 = 1
-    LINE_2 = 2
-    LINE_3 = 3
-    LINE_4 = 4
-
-
-class OutputIntention(Enum):
-    NONE = 0
-    ATTACK = 1
-    DEFEND = 2
-    DEPLOY = 3
 
 
 #
@@ -56,14 +44,16 @@ class _AgentLine:
 #   - IntentionID count= 4 (includes no intention ID).
 #
 class PlaceCardModel:
-
     _line_card_sizes = ManeuverPlate.line_card_sizes
     _place_cards_look_ahead_distance = 8
     _common_face_up_card_look_back_distance = 8
     _num_output_lines = 4
     _num_output_intentions = 4
     _output_size = _num_output_lines * _num_output_intentions
+
     _model: Model
+    _predictions: List[(DecisionLine, DecisionIntention)]
+    _inputs: List[List[np.ndarray]]
 
     def __init__(self):
         #
@@ -166,8 +156,10 @@ class PlaceCardModel:
             input_common_face_up
         ]
         self._model = Model(inputs=all_inputs, outputs=output_layer)
+        self._predictions = []
+        self._inputs = []
 
-    def predict(self, game: Game) -> (OutputLine, OutputIntention):
+    def predict(self, game: Game) -> (DecisionLine, DecisionIntention):
         #
         # next_cardIDs_to_place (_place_cards_look_ahead_distance)
         #
@@ -183,18 +175,24 @@ class PlaceCardModel:
             np.array(game.nn_common_draw_deck_face_up_cards(self._common_face_up_card_look_back_distance))
 
         input_data = [
-            data_next_cards_to_place,
-            data_agent_energy,
-            data_agent_pips,
-            data_personal_stash_remaining
-        ] + data_agent_lines + [
-            data_opponent_energy,
-            data_opponent_pips,
-            data_opponent_line_num_cards,
-            data_common_face_up
-        ]
+                         data_next_cards_to_place,
+                         data_agent_energy,
+                         data_agent_pips,
+                         data_personal_stash_remaining
+                     ] + data_agent_lines + [
+                         data_opponent_energy,
+                         data_opponent_pips,
+                         data_opponent_line_num_cards,
+                         data_common_face_up
+                     ]
         predicted_output = self._model.predict(input_data)
-        return self.decode_prediction(predicted_output)
+        masked_predicted_output = self.detect_illegal_moves(game, predicted_output)
+        final_prediction = self.decode_prediction(masked_predicted_output)
+
+        self._predictions.append(final_prediction)
+        self._inputs.append(input_data)
+
+        return final_prediction
 
     def _gather_lines(self, game: Game) -> [np.ndarray]:
         data_agent_lines = []
@@ -206,16 +204,23 @@ class PlaceCardModel:
         return data_agent_lines
 
     @staticmethod
-    def one_hot_encode(line: OutputLine, intention: OutputIntention) -> np.ndarray:
-        # Calculate the index
-        index = (line.value - 1) * 4 + intention.value
-        # Create a one-hot encoded vector
-        one_hot = np.zeros(16)
-        one_hot[index] = 1
-        return one_hot
+    def detect_illegal_moves(game: Game, prediction: np.ndarray) -> np.ndarray:
+        # Create a mask for legal moves
+        legal_mask = np.zeros_like(prediction, dtype=bool)
+
+        # Populate the mask
+        for i in range(prediction.size):
+            line_index = i // 4
+            intention_index = i % 4
+            line = DecisionLine(line_index + 1)
+            intention = DecisionIntention(intention_index)
+            legal_mask[i] = game.is_legal(line, intention)
+
+        # Apply the mask: set illegal move probabilities to -inf
+        return np.where(legal_mask, prediction, -np.inf)
 
     @staticmethod
-    def decode_prediction(prediction: float) -> (OutputLine, OutputIntention):
+    def decode_prediction(prediction: np.ndarray) -> (DecisionLine, DecisionIntention):
         # Find the index of the highest probability
         index = np.argmax(prediction)
 
@@ -223,7 +228,55 @@ class PlaceCardModel:
         line_index = index // 4  # Integer division to find the line
         intention_index = index % 4  # Modulo operation to find the intention
 
-        line = OutputLine(line_index + 1)  # Adding 1 because enum starts at 1
-        intention = OutputIntention(intention_index)
+        line = DecisionLine(line_index + 1)  # Adding 1 because enum starts at 1
+        intention = DecisionIntention(intention_index)
 
         return line, intention
+
+    @staticmethod
+    def one_hot_encode(line: DecisionLine, intention: DecisionIntention) -> np.ndarray:
+        # Calculate the index
+        index = (line.value - 1) * 4 + intention.value
+        # Create a one-hot encoded vector
+        one_hot = np.zeros(16)
+        one_hot[index] = 1
+        return one_hot
+
+    def train(self, reward: int):
+        # Assuming categorical cross-entropy loss
+        loss_fn = tf.keras.losses.CategoricalCrossentropy()
+        optimizer = tf.keras.optimizers.Adam()
+
+        with tf.GradientTape() as tape:
+            # Initialize total loss
+            total_loss = 0
+
+            # Iterate over remembered game states and their corresponding predictions
+            for state, predicted_output in zip(self._inputs, self._predictions):
+                # Convert state to appropriate input format if necessary
+                state_input = np.array([state])  # Example: convert to NumPy array
+
+                # Get model's output for this state
+                model_output = self._model(state_input, training=True)
+
+                # Calculate loss
+                loss = loss_fn(predicted_output, model_output)
+
+                # Adjust loss based on reward
+                adjusted_loss = loss * reward  # This can be modified depending on how you want to use the reward
+
+                # Accumulate the adjusted loss
+                total_loss += adjusted_loss
+
+            # Compute gradients
+            gradients = tape.gradient(total_loss, self._model.trainable_variables)
+
+            # Update model weights
+            optimizer.apply_gradients(zip(gradients, self._model.trainable_variables))
+
+        self._inputs = []
+        self._predictions = []
+
+        return total_loss
+
+

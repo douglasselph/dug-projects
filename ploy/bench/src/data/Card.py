@@ -309,7 +309,7 @@ class CardWound(Enum):
     WOUND_MINOR = 1001
     WOUND_ACUTE = 1002
     WOUND_GRAVE = 1003
-    WOUND_DIR = 1004
+    WOUND_DIRE = 1004
 
     def __str__(self) -> str:
         if self == CardWound.WOUND_MINOR:
@@ -318,7 +318,7 @@ class CardWound(Enum):
             return "Acute Wound"
         if self == CardWound.WOUND_GRAVE:
             return "Grave Wound"
-        if self == CardWound.WOUND_DIR:
+        if self == CardWound.WOUND_DIRE:
             return "Dire Wound"
         return ""
 
@@ -329,7 +329,7 @@ class CardWound(Enum):
             return 1
         if self == CardWound.WOUND_GRAVE:
             return 2
-        if self == CardWound.WOUND_DIR:
+        if self == CardWound.WOUND_DIRE:
             return 4
         return 0
 
@@ -340,7 +340,7 @@ class CardWound(Enum):
             return 0
         if self == CardWound.WOUND_GRAVE:
             return 1
-        if self == CardWound.WOUND_DIR:
+        if self == CardWound.WOUND_DIRE:
             return 2
         return 0
 
@@ -354,6 +354,21 @@ def card_title(card: CardComposite) -> str:
     if isinstance(card, CardWound):
         return str(card)
     return ""
+
+
+def card_wound_value(card: CardComposite) -> int:
+    if isinstance(card, Card):
+        return 0
+    if isinstance(card, CardWound):
+        if card == CardWound.WOUND_MINOR:
+            return 1
+        if card == CardWound.WOUND_ACUTE:
+            return 2
+        if card == CardWound.WOUND_GRAVE:
+            return 4
+        if card == CardWound.WOUND_DIRE:
+            return 8
+    return 0
 
 
 def card_regular(card: CardComposite) -> Optional[Card]:
