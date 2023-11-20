@@ -1,7 +1,7 @@
 # package src.data
 from __future__ import annotations
 from typing import List, Optional
-from src.data.Card import CardComposite, card_ordinal, card_wound_value
+from src.data.Card import CardComposite, card_ordinal, card_wound_value, Card
 
 
 class Deck:
@@ -21,9 +21,11 @@ class Deck:
     def extend(self, value: List[CardComposite]):
         self._draw.extend(value)
 
-    def draw(self) -> CardComposite:
-        card = self._draw.pop(0)
-        self._faceUp.insert(0, card)
+    def draw(self, count: int = 1) -> CardComposite:
+        card = Card.NONE
+        for i in range(count):
+            card = self._draw.pop(0)
+            self._faceUp.insert(0, card)
         return card
 
     @property

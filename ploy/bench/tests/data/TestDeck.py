@@ -69,12 +69,7 @@ class TestDeck(unittest.TestCase):
         card4 = CardWound.WOUND_ACUTE
         self.SUT.extend([card1, card2, card3, card4])
         # Act
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
+        self.SUT.draw(6)
         # Assert
         count_faceUp = self.SUT.faceUp_deck
         self.assertEqual(4, count_faceUp)
@@ -146,8 +141,7 @@ class TestDeck(unittest.TestCase):
         card3 = CardWound.WOUND_GRAVE
         card4 = CardWound.WOUND_ACUTE
         self.SUT.extend([card1, card2, card3, card4])
-        self.SUT.draw()
-        self.SUT.draw()
+        self.SUT.draw(2)
         # Act
         count = self.SUT.cards_total
         # Assert
@@ -174,10 +168,7 @@ class TestDeck(unittest.TestCase):
         card3 = CardWound.WOUND_GRAVE
         card4 = CardWound.WOUND_ACUTE
         self.SUT.extend([card1, card2, card3, card4])
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
+        self.SUT.draw(4)
         size = 8
         # Act
         cards = self.SUT.nn_face_up_cards(size)
@@ -191,14 +182,7 @@ class TestDeck(unittest.TestCase):
         card3 = CardWound.WOUND_GRAVE
         card4 = CardWound.WOUND_ACUTE
         self.SUT.extend([card1, card2, card3, card4, card1, card2, card3, card4])
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
-        self.SUT.draw()
+        self.SUT.draw(8)
         size = 4
         # Act
         cards = self.SUT.nn_face_up_cards(size)
@@ -223,3 +207,35 @@ class TestDeck(unittest.TestCase):
         self.assertEqual(Card.NONE, cards[2])
         self.assertEqual(Card.NONE, cards[3])
 
+    def test_nn_wound_value_adds_up_as_expected(self):
+        # Arrange
+        self.SUT.extend([
+            Card.D20_CUTASTROPHE,
+            Card.D10_INNER_PIERCE,
+            CardWound.WOUND_GRAVE,
+            Card.D6_SLIT_TIGHT,
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_DIRE
+        ])
+        self.SUT.draw(4)
+        expected_value = 1 + 4 + 8
+        # Act
+        value = self.SUT.nn_wound_value
+        # Assert
+        self.assertEqual(expected_value, value)
+
+    def test_nn_wound_value_adds_up_as_expected2(self):
+        # Arrange
+        self.SUT.extend([
+            Card.D20_CUTASTROPHE,
+            Card.D10_INNER_PIERCE,
+            CardWound.WOUND_GRAVE,
+            CardWound.WOUND_ACUTE,
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_DIRE
+        ])
+        expected_value = 1 + 2 + 4 + 8
+        # Act
+        value = self.SUT.nn_wound_value
+        # Assert
+        self.assertEqual(expected_value, value)

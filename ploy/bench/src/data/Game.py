@@ -3,7 +3,6 @@ from enum import Enum, auto
 from typing import List, Optional
 from src.data.Player import Player
 from src.data.Deck import Deck
-from src.data.ManeuverPlate import IntentionID
 from src.data.Decision import DecisionIntention, DecisionLine
 from src.data.GameStat import GameStat
 
@@ -28,7 +27,7 @@ class TurnPhase(Enum):
     CLEANUP = 6
 
 
-class InitiativeOn(Enum):
+class PlayerID(Enum):
     NONE = 0
     PLAYER_1 = 1
     PLAYER_2 = 2
@@ -39,7 +38,7 @@ class Game:
 
     def __init__(self):
         self.turnPhase = TurnPhase.NONE
-        self.initiativeOn = InitiativeOn.NONE
+        self.initiativeOn = PlayerID.NONE
         self.agentPlayer = Player()
         self.opponent = Player()
         self.commonDrawDeck = Deck()
@@ -64,7 +63,7 @@ class Game:
     def agent_line_sizes(self) -> List[int]:
         return self.agentPlayer.line_sizes
 
-    def agent_line_intention_id(self, line_position: int) -> IntentionID:
+    def agent_line_intention_id(self, line_position: int) -> DecisionIntention:
         return self.agentPlayer.line_intention_id(line_position)
 
     def agent_line_card_values(self, line_position: int) -> List[int]:

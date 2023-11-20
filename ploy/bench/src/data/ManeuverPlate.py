@@ -1,40 +1,23 @@
 # package src.data
 from typing import List
-from enum import Enum
-from Card import Card, CardComposite, card_ordinal
 
-
-class IntentionID(Enum):
-    NONE = 0
-    FACE_DOWN = 1
-    ATTACK = 2
-    DEFEND = 3
-    DEPLOY = 4
-
-
-class LineID(Enum):
-    NONE = 0
-    LINE_1 = 1
-    LINE_2 = 2
-    LINE_3 = 3
-    LINE_4 = 4
-    LINE_5 = 5
-    LINE_6 = 6
+from src.data.Card import Card, CardComposite, card_ordinal
+from src.data.Decision import DecisionLine, DecisionIntention
 
 
 class Line:
     maxSize: int
-    intention: IntentionID
-    intentionFaceUp: bool
+    intention: DecisionIntention
+    intention_face_up: bool
     cards: List[CardComposite]
-    cardsFaceUp: bool
+    cards_face_up: bool
 
     def __init__(self, max_size: int):
         self.maxSize = max_size
-        self.intention = IntentionID.NONE
-        self.intentionFaceUp = False
+        self.intention = DecisionIntention.NONE
+        self.intention_face_up = False
         self.cards = []
-        self.cardsFaceUp = False
+        self.cards_face_up = False
 
     def add(self, card: CardComposite) -> bool:
         self.cards.append(card)
@@ -46,11 +29,11 @@ class Line:
     def replace(self, card: CardComposite, position: int):
         self.cards[position] = card
 
-    def legal(self, position: int) -> bool:
+    def can_take_card(self, position: int) -> bool:
         return position < self.maxSize
 
     def has_card(self, position: int) -> bool:
-        return self.legal(position) and self.cards[position] != Card.NONE
+        return self.can_take_card(position) and self.cards[position] != Card.NONE
 
     def query(self, position: int) -> CardComposite:
         return self.cards[position]
@@ -58,37 +41,31 @@ class Line:
     def pull(self, position: int) -> CardComposite:
         return self.cards.pop(position)
 
-    def is_intention_face_up(self) -> bool:
-        return self.intentionFaceUp
-
-    def are_cards_face_up(self) -> bool:
-        return self.cardsFaceUp
-
-    def show_intention(self):
-        self.intentionFaceUp = True
-
-    def show_cards(self):
-        self.cardsFaceUp = True
+    @property
+    def is_at_max(self) -> bool:
+        return len(self.cards) >= self.maxSize
 
     def discard(self) -> List[CardComposite]:
         discarded_cards = self.cards
         self.cards = []
-        self.intention = IntentionID.NONE
-        self.intentionFaceUp = False
-        self.cardsFaceUp = False
+        self.intention = DecisionIntention.NONE
+        self.intention_face_up = False
+        self.cards_face_up = False
         return discarded_cards
 
-    def set_intention(self, coin: IntentionID) -> bool:
-        if coin == IntentionID.NONE:
-            return True
-        if len(self.cards) > 0 and self.intention != IntentionID.NONE:
-            return False
+    def set_intention(self, coin: DecisionIntention):
         self.intention = coin
-        return True
+
+    @property
+    def is_set_intention_legal(self) -> bool:
+        return self.intention == DecisionIntention.NONE
+
+    @property
+    def is_add_card_legal(self) -> bool:
+        return len(self.cards) < self.maxSize
 
 
 class ManeuverPlate:
-
     line_card_sizes = [5, 4, 3, 3]
     central_maneuver_card: Card
     level: int
@@ -101,10 +78,18 @@ class ManeuverPlate:
         for size in self.line_card_sizes:
             self.lines.append(Line(size))
 
-    def add_card(self, line: LineID, card: CardComposite, coin: IntentionID) -> bool:
+    def add_card(self, card: CardComposite, line: DecisionLine, coin: DecisionIntention):
         pos = self._position(line)
         self.lines[pos].set_intention(coin)
-        return self.lines[pos].add(card)
+        self.lines[pos].add(card)
+
+    def is_set_intention_legal(self, line: DecisionLine) -> bool:
+        pos = self._position(line)
+        return self.lines[pos].is_set_intention_legal
+
+    def is_add_card_legal(self, line: DecisionLine) -> bool:
+        pos = self._position(line)
+        return self.lines[pos].is_add_card_legal
 
     @property
     def line_sizes(self) -> List[int]:
@@ -120,7 +105,7 @@ class ManeuverPlate:
             num_cards.append(len(line.cards))
         return num_cards
 
-    def line_intention_id(self, position: int) -> IntentionID:
+    def line_intention_id(self, position: int) -> DecisionIntention:
         return self.lines[position].intention
 
     def line_card_values(self, position: int) -> List[int]:
@@ -134,20 +119,48 @@ class ManeuverPlate:
                 card_values.append(0)  # Append 0 if no card is present
         return card_values
 
+    def set_intention_face_up(self, line: DecisionLine):
+        pos = self._position(line)
+        self.lines[pos].intention_face_up = True
+
+    def set_line_face_up(self, line: DecisionLine):
+        pos = self._position(line)
+        self.lines[pos].cards_face_up = True
+
+    def reveal_intention_on_all_lines(self):
+        for line in self.lines:
+            line.intention_face_up = True
+
+    def reveal_intentions_if_maxed(self):
+        for line in self.lines:
+            if line.is_at_max:
+                line.intention_face_up = True
+
+    def reveal_cards_with_revealed_intentions(self):
+        for line in self.lines:
+            if line.intention_face_up:
+                line.cards_face_up = True
+
+    def has_intention(self, coin: DecisionIntention) -> bool:
+        for line in self.lines:
+            if line.intention == coin:
+                return True
+        return False
+
     def discard(self) -> List[CardComposite]:
         cards: List[CardComposite] = []
         for line in self.lines:
-            if line.cardsFaceUp:
+            if line.cards_face_up:
                 cards.extend(line.discard())
         return cards
 
     def discard_all(self) -> List[CardComposite]:
         cards: List[CardComposite] = []
         for line in self.lines:
-            line.cardsFaceUp = True
+            line.cards_face_up = True
             cards.extend(line.discard())
         return cards
 
     @staticmethod
-    def _position(line: LineID) -> int:
+    def _position(line: DecisionLine) -> int:
         return line.value - 1

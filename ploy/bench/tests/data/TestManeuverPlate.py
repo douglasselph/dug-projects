@@ -1,5 +1,8 @@
 import unittest
+from src.data.ManeuverPlate import ManeuverPlate
 
 
 class TestManeuverPlate(unittest.TestCase):
-    pass
+
+    def setUp(self):
+        self.SUT = ManeuverPlate()
