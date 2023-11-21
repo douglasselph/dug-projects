@@ -1,4 +1,5 @@
 # package src.data
+from __future__ import annotations
 from enum import Enum
 from typing import Union, Optional
 import random
@@ -17,6 +18,23 @@ class DieSides(Enum):
         if self == DieSides.NONE:
             return 0
         return random.randint(1, self.value)
+
+    @property
+    def sides(self) -> int:
+        return self.value
+
+    def downgrade(self) -> DieSides:
+        if self == DieSides.D20:
+            return DieSides.D12
+        if self == DieSides.D12:
+            return DieSides.D10
+        if self == DieSides.D10:
+            return DieSides.D8
+        if self == DieSides.D8:
+            return DieSides.D6
+        if self == DieSides.D6:
+            return DieSides.D4
+        return DieSides.NONE
 
 
 class CardCost:
@@ -67,6 +85,7 @@ class TrashBonusPips(TrashBonus):
 # the existing neural net.
 #
 class Card(Enum):
+
     NONE = 0  # No card
     FACE_DOWN = 1  # The card is present but the specific card is unknown
     D4_SCARED_OUT_OF_YOUR_WHITTLES = 40
@@ -131,6 +150,7 @@ class Card(Enum):
             return "To Die Four"
         return "Unset"
 
+    @property
     def description(self) -> str:
         if self == Card.NONE:
             return "None"
@@ -174,6 +194,7 @@ class Card(Enum):
             return "Draw a card and apply to this line."
         return "Unset"
 
+    @property
     def cost(self) -> CardCost:
         if self == Card.NONE:
             return CardCost(0)
@@ -217,6 +238,7 @@ class Card(Enum):
             return CardCostEnergy(4, 1)
         return CardCost(0)
 
+    @property
     def trash(self) -> TrashBonus:
         if self == Card.NONE:
             return TrashBonus()
@@ -260,6 +282,7 @@ class Card(Enum):
             return TrashBonusDie(DieSides.D4)
         return TrashBonus()
 
+    @property
     def die_bonus(self) -> DieSides:
         if self == Card.NONE:
             return DieSides.NONE
@@ -303,8 +326,53 @@ class Card(Enum):
             return DieSides.D4
         return DieSides.NONE
 
+    @property
+    def ff_value(self) -> int:
+        if self == Card.NONE:
+            return 0
+        if self == Card.FACE_DOWN:
+            return 0
+        if self == Card.D4_SCARED_OUT_OF_YOUR_WHITTLES:
+            return 4
+        if self == Card.D4_D10_SLASH_AND_BURN:
+            return 5
+        if self == Card.D6_SLIT_TIGHT:
+            return 6
+        if self == Card.D6_D12_EXECUTIVE_INCISION:
+            return 7
+        if self == Card.D8_UNDERCOVER_CHOP:
+            return 8
+        if self == Card.D8_D20_MY_INCISION_IS_FINAL:
+            return 9
+        if self == Card.D10_INNER_PIERCE:
+            return 10
+        if self == Card.D12_PROFESSIONAL_STABOTAGE:
+            return 12
+        if self == Card.D20_CUTASTROPHE:
+            return 20
+        if self == Card.MANEUVER_BUST_A_CUT:
+            return 7
+        if self == Card.MANEUVER_CUTTING_RIPOSTE:
+            return 6
+        if self == Card.MANEUVER_FEELING_FEINT:
+            return 5
+        if self == Card.MANEUVER_FEINT_HEARTED:
+            return 1
+        if self == Card.MANEUVER_IN_HEW_OF:
+            return 6
+        if self == Card.MANEUVER_KEEP_THE_PIERCE:
+            return 8
+        if self == Card.MANEUVER_NICK_TO_DEATH:
+            return 7
+        if self == Card.MANEUVER_PRECISION:
+            return 20
+        if self == Card.MANEUVER_TO_DIE_FOUR:
+            return 13
+        return 0
+
 
 class CardWound(Enum):
+
     WOUND_NONE = 1000
     WOUND_MINOR = 1001
     WOUND_ACUTE = 1002

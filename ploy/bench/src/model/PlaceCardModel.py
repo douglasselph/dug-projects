@@ -23,7 +23,7 @@ class _AgentLine:
 
     def __init__(self, max_cards: int):
         self.input_intention_coin = Input(shape=(1,), name=f"{max_cards}: line intention coin")
-        self.input_line_cards = Input(shape=(max_cards,), name=f"{max_cards}: line cards")
+        self.input_line_cards = Input(shape=(max_cards,), name=f"{max_cards}: line maneuver")
 
         embedding_line_cards = \
             Embedding(input_dim=_num_unique_cards, output_dim=_embedding_size)(self.input_line_cards)
@@ -68,7 +68,7 @@ class PlaceCardModel:
         #
         input_agent_energy = Input(shape=(1,), name='agent energy')
         input_agent_pips = Input(shape=(1,), name='agent pips')
-        input_personal_stash_remaining = Input(shape=(1,), name="personal stash cards remaining")
+        input_personal_stash_remaining = Input(shape=(1,), name="personal stash maneuver remaining")
 
         layer_agent_energy = Dense(10, activation='relu')(input_agent_energy)
         layer_agent_pips = Dense(10, activation='relu')(input_agent_pips)
@@ -98,11 +98,11 @@ class PlaceCardModel:
         layer_plate = Dense(15, activation='relu')(combined_plate)
         #
         # Opponent observation:
-        # Energy, PIPS, Line numbers cards (for Line5, Line4, Line3, Line3)
+        # Energy, PIPS, Line numbers maneuver (for Line5, Line4, Line3, Line3)
         #
         input_opponent_energy = Input(shape=(1,), name='opponent energy')
         input_opponent_pips = Input(shape=(1,), name='opponent pips')
-        input_opponent_line_num_cards = Input(shape=(4,), name="opponent numbers of cards in line")
+        input_opponent_line_num_cards = Input(shape=(4,), name="opponent numbers of maneuver in line")
 
         layer_opponent_energy = Dense(10, activation='relu')(input_opponent_energy)
         layer_opponent_pips = Dense(10, activation='relu')(input_opponent_pips)
@@ -116,10 +116,10 @@ class PlaceCardModel:
         layer_opponent = Dense(15, activation='relu')(combined_opponent)
         #
         # Common deck observation:
-        # First N cards face up, with top most card first for _common_face_up_card_look_back_distance
+        # First N maneuver face up, with top most card first for _common_face_up_card_look_back_distance
         #
         input_common_face_up = Input(shape=(self._common_face_up_card_look_back_distance,),
-                                     name="face up cards on common deck")
+                                     name="face up maneuver on common deck")
         embedding_common_face_up = \
             Embedding(input_dim=_num_unique_cards, output_dim=_embedding_size)(input_common_face_up)
         layer_common_face_up = Flatten()(embedding_common_face_up)

@@ -56,9 +56,9 @@ class Deck:
         return self._faceUp
 
     #
-    # Return an array of the next cards in the deck, starting with the face up cards and proceeding to the
-    # drawn cards Ensure the array returned is of size 'size'. Do not report more than this number of cards.
-    # If less than this number of cards available, then fill in with zeros.
+    # Return an array of the next maneuver in the deck, starting with the face up maneuver and proceeding to the
+    # drawn maneuver Ensure the array returned is of size 'size'. Do not report more than this number of maneuver.
+    # If less than this number of maneuver available, then fill in with zeros.
     #
     def nn_next_cards(self, size: int) -> List[int]:
         face_up_array = [card_ordinal(card) for card in self._faceUp[:size]]
@@ -73,7 +73,7 @@ class Deck:
         return combined
 
     #
-    # Return a neural net conditioned array of the face up cards, and only of the face up cards.
+    # Return a neural net conditioned array of the face up maneuver, and only of the face up maneuver.
     # The first card return is the top most face up card.
     # Must return exactly size elements. If there are more available, then they will be clipped.
     # If there are less, then 0 will be appended.

@@ -1,8 +1,9 @@
 # package src.data
 from typing import List
 
-from src.data.Card import Card, CardComposite, card_ordinal
+from src.data.Card import Card, CardComposite, card_ordinal, DieSides
 from src.data.Decision import DecisionLine, DecisionIntention
+from src.data.maneuver.ManeuverFeelingFeint import maneuver_feeling_feint
 
 
 class Line:
@@ -53,6 +54,9 @@ class Line:
         self.cards_face_up = False
         return discarded_cards
 
+    def remove(self, card: Card):
+        self.cards.remove(card)
+
     def set_intention(self, coin: DecisionIntention):
         self.intention = coin
 
@@ -63,6 +67,14 @@ class Line:
     @property
     def is_add_card_legal(self) -> bool:
         return len(self.cards) < self.maxSize
+
+    def collect_dice(self) -> List[DieSides]:
+        result: List[DieSides] = []
+        for card in self.cards:
+            bonus = card.die_bonus
+            if bonus != DieSides.NONE:
+                result.append(bonus)
+        return result
 
 
 class ManeuverPlate:
@@ -136,10 +148,29 @@ class ManeuverPlate:
             if line.is_at_max:
                 line.intention_face_up = True
 
+    def reveal_intentions_of(self, coin: DecisionIntention):
+        for line in self.lines:
+            if line.intention == coin:
+                line.intention_face_up = True
+
     def reveal_cards_with_revealed_intentions(self):
         for line in self.lines:
             if line.intention_face_up:
                 line.cards_face_up = True
+
+    def collect_dice_for(self, coin: DecisionIntention) -> List[DieSides]:
+        result: List[DieSides] = []
+        for line in self.lines:
+            if line.cards_face_up and line.intention == coin:
+                result.extend(line.collect_dice())
+        return result
+
+    def collect_face_up_cards_for(self, coin: DecisionIntention) -> List[CardComposite]:
+        result: List[CardComposite] = []
+        for line in self.lines:
+            if line.cards_face_up and line.intention == coin:
+                result.extend(line.cards)
+        return result
 
     def has_intention(self, coin: DecisionIntention) -> bool:
         for line in self.lines:
@@ -160,6 +191,16 @@ class ManeuverPlate:
             line.cards_face_up = True
             cards.extend(line.discard())
         return cards
+
+    def apply_feeling_feint(self, coin: DecisionIntention):
+        times = 0
+        for line in self.lines:
+            if line.intention == coin:
+                for card in line.cards:
+                    if card == Card.MANEUVER_FEELING_FEINT:
+                        times += 1
+        for time in range(times):
+            maneuver_feeling_feint(self, coin)
 
     @staticmethod
     def _position(line: DecisionLine) -> int:

@@ -2,7 +2,7 @@
 from typing import List
 from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
-from src.data.Card import CardComposite
+from src.data.Card import CardComposite, DieSides, Card
 from src.data.Decision import DecisionLine, DecisionIntention
 
 
@@ -26,6 +26,7 @@ class Player:
         self.draw = Deck()
         self.stash = Deck()
         self.fatal_received = False
+        self.draw_one_less_card = False
 
     def append_to_draw(self, card: CardComposite):
         self.draw.append(card)
@@ -114,3 +115,25 @@ class Player:
 
     def reveal_cards_with_revealed_intentions(self):
         self.plate.reveal_cards_with_revealed_intentions()
+
+    def reveal_intentions_with_intention(self, coin: DecisionIntention):
+        self.plate.reveal_intentions_of(coin)
+
+    def collect_dice_for(self, coin: DecisionIntention) -> List[DieSides]:
+        return self.plate.collect_dice_for(coin)
+
+    def collect_face_up_cards_for(self, coin: DecisionIntention) -> List[CardComposite]:
+        return self.plate.collect_face_up_cards_for(coin)
+
+    def apply_feeling_feint(self, coin: DecisionIntention):
+        self.plate.apply_feeling_feint(coin)
+
+    def apply_to_die_four(self, coin: DecisionIntention):
+        for line in self.plate.lines:
+            if line.intention == coin and line.intention_face_up:
+                for card in line.cards:
+                    if card == Card.MANEUVER_TO_DIE_FOUR:
+                        card = self.draw.draw()
+                        if card != Card.NONE:
+                            line.add(card)
+
