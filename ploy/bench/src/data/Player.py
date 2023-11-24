@@ -1,13 +1,13 @@
 # package src.data
-from typing import List
+from typing import List, Optional
+import random
 from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
-from src.data.Card import CardComposite, DieSides, Card
+from src.data.Card import CardComposite, DieSides, Card, CardWound
 from src.data.Decision import DecisionLine, DecisionIntention
 
 
 class Player:
-
     _max_energy = 20
     _loss_energy = 6  # If energy reaches this level this is too close to losing.
     _hand_size = 4
@@ -77,10 +77,6 @@ class Player:
     def has_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_intention(coin)
 
-    @property
-    def line_sizes(self):
-        return self.plate.line_sizes
-
     def line_intention_id(self, position: int) -> DecisionIntention:
         return self.plate.line_intention_id(position)
 
@@ -94,6 +90,42 @@ class Player:
     def discard_all(self):
         cards = self.plate.discard_all()
         self.draw.extend(cards)
+        self._lose_energy_from_wounds(cards)
+
+    def discard(self):
+        cards = self.plate.discard()
+        self.draw.extend(cards)
+        self._lose_energy_from_wounds(cards)
+
+    def upgrade_lowest_wound(self):
+        wounds = self.plate.wounds
+        lowest: Optional[CardWound] = None
+        for wound in wounds:
+            if lowest is None or lowest.value > wound.value:
+                lowest = wound
+        if lowest is None:
+            self.draw.append(CardWound.WOUND_MINOR)
+        else:
+            if lowest.upgrade is None:
+                self.fatal_received = True
+                self.plate.remove(lowest)
+            else:
+                self.plate.replace_wound(lowest, lowest.upgrade)
+
+    def upgrade_highest_wound(self):
+        wounds = self.plate.wounds
+        highest: Optional[CardWound] = None
+        for wound in wounds:
+            if highest is None or highest.value < wound.value:
+                highest = wound
+        if highest is None:
+            self.draw.append(CardWound.WOUND_MINOR)
+        else:
+            if highest.upgrade is None:
+                self.fatal_received = True
+                self.plate.remove(highest)
+            else:
+                self.plate.replace_wound(highest, highest.upgrade)
 
     @property
     def nn_wound_value(self) -> int:
@@ -125,6 +157,10 @@ class Player:
     def collect_face_up_cards_for(self, coin: DecisionIntention) -> List[CardComposite]:
         return self.plate.collect_face_up_cards_for(coin)
 
+    @property
+    def central_maneuver_card(self) -> Card:
+        return self.plate.central_maneuver_card
+
     def apply_feeling_feint(self, coin: DecisionIntention):
         self.plate.apply_feeling_feint(coin)
 
@@ -136,4 +172,49 @@ class Player:
                         card = self.draw.draw()
                         if card != Card.NONE:
                             line.add(card)
+
+    def _lose_energy_from_wounds(self, cards: [CardComposite]):
+        for card in cards:
+            if isinstance(card, CardWound):
+                self.energy -= card.energy_penalty
+
+    def reduce_reach(self):
+        self.plate.reduce_reach()
+
+    def add_penalty_coin(self):
+        value = random.randint(1, 3)
+        for i in range(3):
+            coin = self.coin_for(value)
+            if self.plate.num_intention_coins_for(coin) > 0:
+                self.plate.penalty_coins.append(coin)
+                return
+            value = value + 1
+            if value >= 4:
+                value = 1
+
+    @staticmethod
+    def coin_for(value) -> Optional[DecisionIntention]:
+        for coin in DecisionIntention:
+            if coin.value == value:
+                return coin
+        return None
+
+    def trash_random_card(self) -> Optional[Card]:
+        face_up_lines = self.plate.face_up_lines
+        line_index = random.randint(0, len(face_up_lines)-1)
+        for i in range(len(face_up_lines)):
+            line = face_up_lines[line_index]
+            card_index = random.randint(0, len(line.cards)-1)
+            for j in range(len(line.cards)):
+                card = line.cards[card_index]
+                if isinstance(card, Card):
+                    line.remove(card)
+                    return card
+                card_index = card_index + 1
+                if card_index >= len(line.cards):
+                    card_index = 0
+            line_index = line_index + 1
+            if line_index >= len(face_up_lines):
+                line_index = 0
+        return None
 

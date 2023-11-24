@@ -2,7 +2,7 @@ from typing import Optional, List
 from src.engine.DieCollection import DieCollection
 from src.engine.DieValues import DieValues
 from src.data.Card import CardComposite
-from src.data.Card import DieSides, Card
+from src.data.Card import DieSides, Card, CardWound
 from src.data.maneuver.ManeuverCuttingRiposte import maneuver_cutting_riposte
 from src.data.maneuver.ManeuverInHewOf import maneuver_in_hew_of
 from src.data.maneuver.ManeuverKeepThePierce import maneuver_keep_the_pierce
@@ -11,7 +11,6 @@ from src.data.maneuver.ManeuverPrecision import maneuver_precision
 
 
 class IncidentBundle:
-
     attacker_cards: List[CardComposite]
     defender_cards: List[CardComposite]
     attacker_dice: Optional[DieCollection]
@@ -76,9 +75,24 @@ class IncidentBundle:
 
     @property
     def attacker_total(self) -> int:
-        return self.attacker_values.total
+        return self.attacker_values.total - self.attacker_wounds
 
     @property
     def defender_total(self) -> int:
-        return self.defender_values.total
+        return self.defender_values.total - self.defender_wounds
 
+    @property
+    def attacker_wounds(self) -> int:
+        wound = 0
+        for card in self.attacker_cards:
+            if isinstance(card, CardWound):
+                wound += card.pip_penalty
+        return wound
+
+    @property
+    def defender_wounds(self) -> int:
+        wound = 0
+        for card in self.defender_cards:
+            if isinstance(card, CardWound):
+                wound += card.pip_penalty
+        return wound

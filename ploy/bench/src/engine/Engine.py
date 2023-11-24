@@ -6,6 +6,37 @@ from src.engine.Die import Die
 from src.engine.IncidentBundle import IncidentBundle
 
 
+def _apply_secondary_affliction(player: Player, sides: DieSides):
+    value = Die(sides).roll()
+    if value == 1:
+        player.pips = 0
+    elif value == 2:
+        player.draw_one_less_card = True
+    elif value == 3:
+        player.discard_all()
+    elif value == 4:
+        player.energy -= 1
+    elif value == 5:
+        player.energy -= 1
+    elif value == 6:
+        player.upgrade_lowest_wound()
+    elif value == 7:
+        player.add_penalty_coin()
+    elif value == 8:
+        player.reduce_reach()
+    elif value == 9:
+        card = player.trash_random_card()
+        add_card_to_trash(card)
+    elif value == 10:
+        player.reduce_reach()
+        player.reduce_reach()
+    elif value == 11:
+        player.upgrade_highest_wound()
+    else:
+        _apply_secondary_affliction(player, sides)
+        _apply_secondary_affliction(player, sides)
+
+
 class Engine:
 
     def __init__(self, game: Game):
@@ -70,8 +101,10 @@ class Engine:
                 self.game.initiativeOn = PlayerID.PLAYER_1
 
     def _resolve_attack(self, attacker: Player, defender: Player) -> bool:
+
         if not attacker.has_intention(DecisionIntention.ATTACK):
             return False
+
         attacker.reveal_intentions_with_intention(DecisionIntention.ATTACK)
         defender.reveal_intentions_with_intention(DecisionIntention.DEFEND)
         attacker.reveal_cards_with_revealed_intentions()
@@ -86,6 +119,8 @@ class Engine:
         incident = IncidentBundle()
         incident.attacker_cards = attacker.collect_face_up_cards_for(DecisionIntention.ATTACK)
         incident.defender_cards = defender.collect_face_up_cards_for(DecisionIntention.DEFEND)
+        incident.attacker_cards.append(attacker.central_maneuver_card)
+        incident.defender_cards.append(defender.central_maneuver_card)
         incident.attacker_pull_dice()
         incident.defender_pull_dice()
         incident.apply_cards_pre_roll()
@@ -95,72 +130,49 @@ class Engine:
         wounds = incident.attacker_total - incident.defender_total
 
         if wounds >= 0:
-            self._apply_wound_to(defender, wounds)
+            self._apply_wound_to(defender, wounds, attacker)
         else:
-            self._apply_wound_to(attacker, wounds)
+            self._apply_wound_to(attacker, wounds, defender)
 
         return True
 
-    def _apply_wound_to(self, player: Player, wounds: int):
+    @staticmethod
+    def _apply_wound_to(player: Player, wounds: int, attacker: Player):
         if wounds <= 6:
             return
         if wounds <= 16:
             player.draw.append(CardWound.WOUND_MINOR)
         elif wounds <= 22:
             player.draw.append(CardWound.WOUND_MINOR)
-            self._apply_secondary_affliction(player, DieSides.D4)
+            _apply_secondary_affliction(player, DieSides.D4)
         elif wounds <= 29:
             player.draw.append(CardWound.WOUND_ACUTE)
-            self._apply_secondary_affliction(player, DieSides.D6)
+            _apply_secondary_affliction(player, DieSides.D6)
         elif wounds <= 36:
             player.draw.append(CardWound.WOUND_ACUTE)
-            self._apply_secondary_affliction(player, DieSides.D8)
+            _apply_secondary_affliction(player, DieSides.D8)
         elif wounds <= 44:
             player.draw.append(CardWound.WOUND_GRAVE)
-            self._apply_secondary_affliction(player, DieSides.D10)
+            _apply_secondary_affliction(player, DieSides.D10)
         elif wounds <= 52:
             player.draw.append(CardWound.WOUND_GRAVE)
-            self._apply_secondary_affliction(player, DieSides.D12)
+            _apply_secondary_affliction(player, DieSides.D12)
         elif wounds <= 59:
             player.draw.append(CardWound.WOUND_DIRE)
-            self._apply_secondary_affliction(player, DieSides.D12)
+            _apply_secondary_affliction(player, DieSides.D12)
         elif wounds <= 69:
-            # Fatal
+            player.fatal_received = True
             pass
         elif wounds <= 76:
-            # Fatal (-1)
+            player.fatal_received = True
+            attacker.energy -= 1
             pass
         elif wounds <= 84:
-            # Fatal (-2)
+            player.fatal_received = True
+            attacker.energy -= 2
             pass
         else:
-            # Fatal (-3)
-            pass
-
-    def _apply_secondary_affliction(self, player: Player, sides: DieSides):
-        value = Die(sides).roll()
-        if value == 1:
-            player.pips = 0
-        elif value == 2:
-            player.draw_one_less_card = True
-        elif value == 3:
-            pass
-        elif value == 4:
-            pass
-        elif value == 5:
-            pass
-        elif value == 6:
-            pass
-        elif value == 7:
-            pass
-        elif value == 8:
-            pass
-        elif value == 9:
-            pass
-        elif value == 10:
-            pass
-        elif value == 11:
-            pass
-        else:
+            player.fatal_received = True
+            attacker.energy -= 3
             pass
 

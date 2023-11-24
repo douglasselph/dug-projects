@@ -390,6 +390,7 @@ class CardWound(Enum):
             return "Dire Wound"
         return ""
 
+    @property
     def pip_penalty(self) -> int:
         if self == CardWound.WOUND_MINOR:
             return 0
@@ -401,6 +402,7 @@ class CardWound(Enum):
             return 4
         return 0
 
+    @property
     def energy_penalty(self) -> int:
         if self == CardWound.WOUND_MINOR:
             return 0
@@ -411,6 +413,16 @@ class CardWound(Enum):
         if self == CardWound.WOUND_DIRE:
             return 2
         return 0
+
+    @property
+    def upgrade(self) -> Optional[CardWound]:
+        if self == CardWound.WOUND_MINOR:
+            return CardWound.WOUND_ACUTE
+        if self == CardWound.WOUND_ACUTE:
+            return CardWound.WOUND_GRAVE
+        if self == CardWound.WOUND_GRAVE:
+            return CardWound.WOUND_DIRE
+        return None
 
 
 CardComposite = Union[Card, CardWound]

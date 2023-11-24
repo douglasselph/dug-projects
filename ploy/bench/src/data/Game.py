@@ -59,10 +59,6 @@ class Game:
     def agent_stash_cards_total(self) -> int:
         return self.agentPlayer.stash_cards_total
 
-    @property
-    def agent_line_sizes(self) -> List[int]:
-        return self.agentPlayer.line_sizes
-
     def agent_line_intention_id(self, line_position: int) -> DecisionIntention:
         return self.agentPlayer.line_intention_id(line_position)
 

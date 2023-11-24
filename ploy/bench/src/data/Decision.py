@@ -15,3 +15,4 @@ class DecisionIntention(Enum):
     DEFEND = 2
     DEPLOY = 3
 
+

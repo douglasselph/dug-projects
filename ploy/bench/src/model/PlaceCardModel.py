@@ -44,7 +44,8 @@ class _AgentLine:
 #   - IntentionID count= 4 (includes no intention ID).
 #
 class PlaceCardModel:
-    _line_card_sizes = ManeuverPlate.line_card_sizes
+
+    _line_card_sizes = ManeuverPlate.initial_line_card_sizes
     _place_cards_look_ahead_distance = 8
     _common_face_up_card_look_back_distance = 8
     _num_output_lines = 4
