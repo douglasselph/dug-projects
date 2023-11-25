@@ -36,6 +36,11 @@ class DieSides(Enum):
             return DieSides.D4
         return DieSides.NONE
 
+    def average(self) -> float:
+        if self.value == 0:
+            return 0
+        return (self.value + 1) / 2
+
 
 class CardCost:
     pips: int
@@ -63,21 +68,27 @@ class CardCostEnergy(CardCost):
 
 
 class TrashBonus:
-    pass
+
+    def __init__(self):
+        self.valid = False
 
 
 class TrashBonusDie(TrashBonus):
     sides: DieSides
 
     def __init__(self, sides: DieSides):
+        super().__init__()
         self.sides = sides
+        self.valid = True
 
 
 class TrashBonusPips(TrashBonus):
     pips: int
 
     def __init__(self, pips: int):
+        super().__init__()
         self.pips = pips
+        self.valid = True
 
 
 #
@@ -281,6 +292,50 @@ class Card(Enum):
         if self == Card.MANEUVER_TO_DIE_FOUR:
             return TrashBonusDie(DieSides.D4)
         return TrashBonus()
+
+    @property
+    def trash_choice_value(self) -> int:
+        if self == Card.NONE:
+            return 0
+        if self == Card.FACE_DOWN:
+            return 0
+        if self == Card.D4_SCARED_OUT_OF_YOUR_WHITTLES:
+            return 8
+        if self == Card.D4_D10_SLASH_AND_BURN:
+            return 10
+        if self == Card.D6_SLIT_TIGHT:
+            return 9
+        if self == Card.D6_D12_EXECUTIVE_INCISION:
+            return 12
+        if self == Card.D8_UNDERCOVER_CHOP:
+            return 7
+        if self == Card.D8_D20_MY_INCISION_IS_FINAL:
+            return 14
+        if self == Card.D10_INNER_PIERCE:
+            return 6
+        if self == Card.D12_PROFESSIONAL_STABOTAGE:
+            return 4
+        if self == Card.D20_CUTASTROPHE:
+            return 2
+        if self == Card.MANEUVER_BUST_A_CUT:
+            return 0
+        if self == Card.MANEUVER_CUTTING_RIPOSTE:
+            return 0
+        if self == Card.MANEUVER_FEELING_FEINT:
+            return 0
+        if self == Card.MANEUVER_FEINT_HEARTED:
+            return 16
+        if self == Card.MANEUVER_IN_HEW_OF:
+            return 0
+        if self == Card.MANEUVER_KEEP_THE_PIERCE:
+            return 0
+        if self == Card.MANEUVER_NICK_TO_DEATH:
+            return 0
+        if self == Card.MANEUVER_PRECISION:
+            return 0
+        if self == Card.MANEUVER_TO_DIE_FOUR:
+            return 0
+        return 0
 
     @property
     def die_bonus(self) -> DieSides:

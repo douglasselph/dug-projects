@@ -1,4 +1,5 @@
 from typing import Optional, List
+import random
 from src.engine.DieCollection import DieCollection
 from src.engine.DieValues import DieValues
 from src.data.Card import CardComposite
@@ -96,3 +97,5 @@ class IncidentBundle:
             if isinstance(card, CardWound):
                 wound += card.pip_penalty
         return wound
+
+

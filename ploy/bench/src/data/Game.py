@@ -42,6 +42,7 @@ class Game:
         self.agentPlayer = Player()
         self.opponent = Player()
         self.commonDrawDeck = Deck()
+        self.trash = Deck()
         self.stat = GameStat()
 
     def nn_next_cards(self, size: int) -> List[int]:

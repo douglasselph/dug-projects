@@ -128,6 +128,14 @@ class Player:
                 self.plate.replace_wound(highest, highest.upgrade)
 
     @property
+    def draw_cards(self) -> List[CardComposite]:
+        return self.draw.faceUp_deck + self.draw.draw_deck
+
+    @property
+    def num_draw_cards(self) -> int:
+        return len(self.draw_cards)
+
+    @property
     def nn_wound_value(self) -> int:
         return self.draw.nn_wound_value
 
@@ -217,4 +225,16 @@ class Player:
             if line_index >= len(face_up_lines):
                 line_index = 0
         return None
+
+    def trash(self, card_to_trash: Card) -> bool:
+        face_up_lines = self.plate.face_up_lines
+        for line_index in range(len(face_up_lines)):
+            line = face_up_lines[line_index]
+            for card_index in range(len(line.cards)):
+                card = line.cards[card_index]
+                if isinstance(card, Card) and card == card_to_trash:
+                    line.remove(card)
+                    return True
+        return False
+
 
