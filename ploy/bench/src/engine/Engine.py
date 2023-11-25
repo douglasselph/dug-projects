@@ -5,7 +5,7 @@ from src.data.Game import Game, PlayerID
 from src.data.Player import Player
 from src.data.Card import Card, CardWound, DieSides, CardComposite, TrashBonusDie, TrashBonus, TrashBonusPips
 from src.engine.Die import Die
-from src.engine.IncidentBundle import IncidentBundle
+from src.engine.IncidentBundle import IncidentBundleCombat, IncidentBundleDeploy
 
 
 class Engine:
@@ -62,6 +62,7 @@ class Engine:
     #     Defender reveal supporting lines
     #     Resolve
     def resolve_attacks(self):
+
         if self.game.initiativeOn == PlayerID.PLAYER_1:
             self._resolve_attack(self.game.agentPlayer, self.game.opponent)
             if self._resolve_attack(self.game.opponent, self.game.agentPlayer):
@@ -85,9 +86,11 @@ class Engine:
         defender.apply_to_die_four(DecisionIntention.DEFEND)
 
         attacker.apply_feeling_feint(DecisionIntention.ATTACK)
-        defender.apply_feeling_feint(DecisionIntention.DEFEND)
 
-        incident = IncidentBundle()
+        if defender.has_revealed_intention(DecisionIntention.DEFEND):
+            defender.apply_feeling_feint(DecisionIntention.DEFEND)
+
+        incident = IncidentBundleCombat()
         incident.attacker_cards = attacker.collect_face_up_cards_for(DecisionIntention.ATTACK)
         incident.defender_cards = defender.collect_face_up_cards_for(DecisionIntention.DEFEND)
         incident.attacker_cards.append(attacker.central_maneuver_card)
@@ -186,29 +189,29 @@ class Engine:
     def _add_card_to_trash(self, card: Card):
         self.game.trash.append(card)
 
-    def _apply_attacker_trash_pre_roll(self, incident: IncidentBundle, attacker: Player) -> TrashBonus:
+    def _apply_attacker_trash_pre_roll(self, incident: IncidentBundleCombat, attacker: Player) -> TrashBonus:
         bonus = self._acquire_attacker_bonus(incident, attacker)
         if isinstance(bonus, TrashBonusDie):
             incident.attacker_dice.add_die(bonus.sides)
         return bonus
 
-    def _apply_defender_trash_pre_roll(self, incident: IncidentBundle, defender: Player) -> TrashBonus:
+    def _apply_defender_trash_pre_roll(self, incident: IncidentBundleCombat, defender: Player) -> TrashBonus:
         bonus = self._acquire_defender_bonus(incident, defender)
         if isinstance(bonus, TrashBonusDie):
             incident.defender_dice.add_die(bonus.sides)
         return bonus
 
     @staticmethod
-    def _apply_attacker_trash_post_roll(incident: IncidentBundle, bonus: TrashBonus):
+    def _apply_attacker_trash_post_roll(incident: IncidentBundleCombat, bonus: TrashBonus):
         if isinstance(bonus, TrashBonusPips):
             incident.attacker_values.add(Die(DieSides.D4, bonus.pips))
 
     @staticmethod
-    def _apply_defender_trash_post_roll(incident: IncidentBundle, bonus: TrashBonus):
+    def _apply_defender_trash_post_roll(incident: IncidentBundleCombat, bonus: TrashBonus):
         if isinstance(bonus, TrashBonusPips):
             incident.defender_values.add(Die(DieSides.D4, bonus.pips))
 
-    def _acquire_attacker_bonus(self, incident: IncidentBundle, attacker: Player) -> TrashBonus:
+    def _acquire_attacker_bonus(self, incident: IncidentBundleCombat, attacker: Player) -> TrashBonus:
         if not self._should_trash(incident.attacker_cards, attacker.num_draw_cards):
             return TrashBonus()
         card = self._select_card_to_trash(incident.attacker_cards)
@@ -218,7 +221,7 @@ class Engine:
             self.game.trash.append(card)
         return bonus
 
-    def _acquire_defender_bonus(self, incident: IncidentBundle, defender: Player) -> TrashBonus:
+    def _acquire_defender_bonus(self, incident: IncidentBundleCombat, defender: Player) -> TrashBonus:
         if not self._should_trash(incident.defender_cards, defender.num_draw_cards):
             return TrashBonus()
         card = self._select_card_to_trash(incident.defender_cards)
@@ -257,3 +260,27 @@ class Engine:
                     selected_card = card
                     selected_card_value = value
         return selected_card
+
+    ###############################################################################
+    # Deploy Resolve:
+    def resolve_deploy(self):
+
+        self._resolve_deploy_part1(self.game.agentPlayer)
+        self._resolve_deploy_part1(self.game.opponent)
+
+    @staticmethod
+    def _resolve_deploy_part1(self, player: Player):
+
+        player.reveal_intentions_with_intention(DecisionIntention.DEPLOY)
+        player.reveal_cards_with_revealed_intentions()
+        player.apply_feeling_feint(DecisionIntention.DEPLOY)
+
+        if player.has_revealed_intention(DecisionIntention.DEPLOY):
+            player.apply_feeling_feint(DecisionIntention.DEPLOY)
+
+        incident = IncidentBundleDeploy()
+        incident.cards = player.collect_face_up_cards_for(DecisionIntention.DEPLOY)
+        incident.cards.append(player.central_maneuver_card)
+        incident.pull_dice()
+
+        bonus = self._apply_attacker_trash_pre_roll(incident, attacker)

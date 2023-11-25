@@ -196,6 +196,12 @@ class ManeuverPlate:
                 return True
         return False
 
+    def has_revealed_intention(self, coin: DecisionIntention) -> bool:
+        for line in self.lines:
+            if line.intention == coin and line.intention_face_up:
+                return True
+        return False
+
     def discard(self) -> List[CardComposite]:
         cards: List[CardComposite] = []
         for line in self.lines:

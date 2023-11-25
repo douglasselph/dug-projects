@@ -77,6 +77,9 @@ class Player:
     def has_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_intention(coin)
 
+    def has_revealed_intention(self, coin: DecisionIntention) -> bool:
+        return self.plate.has_revealed_intention(coin)
+
     def line_intention_id(self, position: int) -> DecisionIntention:
         return self.plate.line_intention_id(position)
 
