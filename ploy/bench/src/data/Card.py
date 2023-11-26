@@ -44,27 +44,16 @@ class DieSides(Enum):
 
 class CardCost:
     pips: int
-
-    def __init__(self, pips: int):
-        self.pips = pips
-
-
-class CardCostDieOrEnergy(CardCost):
-    sides: DieSides
+    sides: Optional[DieSides]
     energy: int
 
-    def __init__(self, pips: int, sides: DieSides, energy: int):
-        super().__init__(pips)
-        self.sides = sides
-        self.energy = energy
+    def __init__(self, pips: int, energy: int = 0, sides: DieSides = None):
+        self.pips = pips  # Always this
+        self.energy = energy  # Then this,
+        self.sides = sides  # Or this
 
-
-class CardCostEnergy(CardCost):
-    energy: int
-
-    def __init__(self, pips: int, energy: int):
-        super().__init__(pips)
-        self.energy = energy
+    def can_afford(self, pips: int, energy: int) -> bool:
+        return pips >= self.pips and energy > self.energy
 
 
 class TrashBonus:
@@ -96,7 +85,6 @@ class TrashBonusPips(TrashBonus):
 # the existing neural net.
 #
 class Card(Enum):
-
     NONE = 0  # No card
     FACE_DOWN = 1  # The card is present but the specific card is unknown
     D4_SCARED_OUT_OF_YOUR_WHITTLES = 40
@@ -224,13 +212,13 @@ class Card(Enum):
         if self == Card.D8_D20_MY_INCISION_IS_FINAL:
             return CardCost(10)
         if self == Card.D10_INNER_PIERCE:
-            return CardCostDieOrEnergy(10, DieSides.D8, 1)
+            return CardCost(10, 1, DieSides.D8)
         if self == Card.D12_PROFESSIONAL_STABOTAGE:
-            return CardCostDieOrEnergy(10, DieSides.D10, 1)
+            return CardCost(10, 1, DieSides.D10)
         if self == Card.D20_CUTASTROPHE:
-            return CardCostDieOrEnergy(12, DieSides.D12, 2)
+            return CardCost(12, 2, DieSides.D12)
         if self == Card.MANEUVER_BUST_A_CUT:
-            return CardCostEnergy(5, 1)
+            return CardCost(5, 1)
         if self == Card.MANEUVER_CUTTING_RIPOSTE:
             return CardCost(7)
         if self == Card.MANEUVER_FEELING_FEINT:
@@ -238,15 +226,15 @@ class Card(Enum):
         if self == Card.MANEUVER_FEINT_HEARTED:
             return CardCost(1)
         if self == Card.MANEUVER_IN_HEW_OF:
-            return CardCostEnergy(5, 1)
+            return CardCost(5, 1)
         if self == Card.MANEUVER_KEEP_THE_PIERCE:
-            return CardCostEnergy(7, 1)
+            return CardCost(7, 1)
         if self == Card.MANEUVER_NICK_TO_DEATH:
             return CardCost(12)
         if self == Card.MANEUVER_PRECISION:
-            return CardCostEnergy(10, 1)
+            return CardCost(10, 1)
         if self == Card.MANEUVER_TO_DIE_FOUR:
-            return CardCostEnergy(4, 1)
+            return CardCost(4, 1)
         return CardCost(0)
 
     @property
@@ -427,7 +415,6 @@ class Card(Enum):
 
 
 class CardWound(Enum):
-
     WOUND_NONE = 1000
     WOUND_MINOR = 1001
     WOUND_ACUTE = 1002

@@ -47,10 +47,12 @@ class Deck:
     def cards_total(self) -> int:
         return len(self._faceUp) + len(self._draw)
 
+    # First card in list is the next card to draw.
     @property
     def draw_deck(self) -> List[CardComposite]:
         return self._draw
 
+    # First card in list is the most face up card.
     @property
     def faceUp_deck(self) -> List[CardComposite]:
         return self._faceUp

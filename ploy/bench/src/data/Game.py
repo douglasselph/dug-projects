@@ -5,6 +5,7 @@ from src.data.Player import Player
 from src.data.Deck import Deck
 from src.data.Decision import DecisionIntention, DecisionLine
 from src.data.GameStat import GameStat
+from src.data.Card import CardComposite
 
 
 class TurnPhase(Enum):
@@ -44,6 +45,7 @@ class Game:
         self.commonDrawDeck = Deck()
         self.trash = Deck()
         self.stat = GameStat()
+        self.endOfGame = False
 
     def nn_next_cards(self, size: int) -> List[int]:
         return self.agentPlayer.nn_next_cards(size)
@@ -82,7 +84,13 @@ class Game:
         return self.commonDrawDeck.nn_face_up_cards(size)
 
     def is_legal(self, line: DecisionLine, intention: DecisionIntention):
-        return True
+        return self.agentPlayer.is_legal(line, intention)
+
+    def common_cards_face_up(self) -> List[CardComposite]:
+        return self.commonDrawDeck.faceUp_deck
+
+    def common_cards_draw(self) -> List[CardComposite]:
+        return self.commonDrawDeck.draw_deck
 
     def compute_reward(self) -> int:
         base = 0

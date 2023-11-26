@@ -91,13 +91,15 @@ class Player:
         return self.plate.lines_num_cards
 
     def discard_all(self):
-        cards = self.plate.discard_all()
-        self.draw.extend(cards)
-        self._lose_energy_from_wounds(cards)
+        self._discard(self.plate.discard_all())
 
     def discard(self):
-        cards = self.plate.discard()
+        self._discard(self.plate.discard())
+
+    def _discard(self, cards: List[CardComposite]):
         self.draw.extend(cards)
+        cards = self._filter_wounds(cards)
+        cards = self._upgrade_wounds(cards)
         self._lose_energy_from_wounds(cards)
 
     def upgrade_lowest_wound(self):
@@ -135,8 +137,26 @@ class Player:
         return self.draw.faceUp_deck + self.draw.draw_deck
 
     @property
-    def num_draw_cards(self) -> int:
+    def num_cards_draw(self) -> int:
         return len(self.draw_cards)
+
+    @property
+    def num_cards_stash(self) -> int:
+        return self.stash.cards_total
+
+    @property
+    def stash_cards_face_up(self) -> List[CardComposite]:
+        return self.stash.faceUp_deck
+
+    @property
+    def stash_cards_draw(self) -> List[CardComposite]:
+        return self.stash.draw_deck
+
+    def plate_has_sides(self, card: DieSides) -> bool:
+        return self.plate.has_sides(card)
+
+    def plate_remove_sides(self, card: DieSides) -> Optional[Card]:
+        return self.plate.remove_sides(card)
 
     @property
     def nn_wound_value(self) -> int:
@@ -184,10 +204,41 @@ class Player:
                         if card != Card.NONE:
                             line.add(card)
 
-    def _lose_energy_from_wounds(self, cards: [CardComposite]):
+    @staticmethod
+    def _filter_wounds(cards: List[CardComposite]) -> List[CardWound]:
+        result: List[CardWound] = []
         for card in cards:
             if isinstance(card, CardWound):
-                self.energy -= card.energy_penalty
+                result.append(card)
+        return result
+
+    def _lose_energy_from_wounds(self, cards: List[CardWound]):
+        for card in cards:
+            self.energy -= card.energy_penalty
+
+    def _upgrade_wounds(self, cards: List[CardWound]) -> List[CardWound]:
+        count = cards.count(CardWound.WOUND_ACUTE)
+        if count > 1:
+            cards = self._remove_two_of(cards, CardWound.WOUND_ACUTE)
+            cards.append(CardWound.WOUND_GRAVE)
+
+        count = cards.count(CardWound.WOUND_GRAVE)
+        if count > 1:
+            cards = self._remove_two_of(cards, CardWound.WOUND_GRAVE)
+            cards.append(CardWound.WOUND_DIRE)
+
+        count = cards.count(CardWound.WOUND_DIRE)
+        if count > 1:
+            cards = self._remove_two_of(cards, CardWound.WOUND_DIRE)
+            self.fatal_received = True
+
+        return cards
+
+    @staticmethod
+    def _remove_two_of(cards: List[CardWound], which: CardWound) -> List[CardWound]:
+        for i in range(2):
+            cards.remove(which)
+        return cards
 
     def reduce_reach(self):
         self.plate.reduce_reach()
@@ -212,10 +263,10 @@ class Player:
 
     def trash_random_card(self) -> Optional[Card]:
         face_up_lines = self.plate.face_up_lines
-        line_index = random.randint(0, len(face_up_lines)-1)
+        line_index = random.randint(0, len(face_up_lines) - 1)
         for i in range(len(face_up_lines)):
             line = face_up_lines[line_index]
-            card_index = random.randint(0, len(line.cards)-1)
+            card_index = random.randint(0, len(line.cards) - 1)
             for j in range(len(line.cards)):
                 card = line.cards[card_index]
                 if isinstance(card, Card):
@@ -239,5 +290,3 @@ class Player:
                     line.remove(card)
                     return True
         return False
-
-

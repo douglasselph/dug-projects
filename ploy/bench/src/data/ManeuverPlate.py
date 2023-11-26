@@ -38,6 +38,20 @@ class Line:
     def has_card(self, position: int) -> bool:
         return self.can_take_card(position) and self.cards[position] != Card.NONE
 
+    def has_sides(self, sides: DieSides) -> bool:
+        for card in self.cards:
+            if isinstance(card, Card):
+                if card.die_bonus == sides:
+                    return True
+        return False
+
+    def remove_sides(self, sides: DieSides) -> Optional[Card]:
+        for card in self.cards:
+            if isinstance(card, Card):
+                if card.die_bonus == sides:
+                    return card
+        return None
+
     def query(self, position: int) -> CardComposite:
         return self.cards[position]
 
@@ -201,6 +215,21 @@ class ManeuverPlate:
             if line.intention == coin and line.intention_face_up:
                 return True
         return False
+
+    def has_sides(self, sides: DieSides) -> bool:
+        for line in self.lines:
+            if line.cards_face_up:
+                if line.has_sides(sides):
+                    return True
+        return False
+
+    def remove_sides(self, sides: DieSides) -> Optional[Card]:
+        for line in self.lines:
+            if line.cards_face_up:
+                card = line.remove_sides(sides)
+                if card:
+                    return card
+        return None
 
     def discard(self) -> List[CardComposite]:
         cards: List[CardComposite] = []
