@@ -1,5 +1,6 @@
 import random
 from typing import List, Optional
+from src.decision.Decisions import Decisions
 from src.data.Decision import DecisionLine, DecisionIntention
 from src.data.Game import Game, PlayerID
 from src.data.Player import Player
@@ -11,8 +12,9 @@ from src.data.Stats import StatsAttack, StatsDeploy
 
 class Engine:
 
-    def __init__(self, game: Game):
+    def __init__(self, game: Game, decisions: Decisions):
         self.game = game
+        self.decisions = decisions
 
     ############################################################################
     # Draw Hand of 4 maneuver for all players.
@@ -24,10 +26,23 @@ class Engine:
     # Place the next card in the draw hand to the indicated place on the plate.
     # Return True if successful.
     # Return False if illegal indication.
-    def agent_place_card(self, line: DecisionLine, coin: DecisionIntention) -> bool:
+
+    def place_cards(self):
+        was_legal = False
+
+        while not was_legal:
+            line, coin = self.decisions.placeCard.forAgent(self.game)
+            was_legal = self._agent_place_card(line, coin)
+
+        was_legal = False
+        while not was_legal:
+            line, coin = self.decisions.placeCard.forOpponent(self.game)
+            was_legal = self._opponent_place_card(line, coin)
+
+    def _agent_place_card(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         return self._place_card(self.game.agentPlayer, line, coin)
 
-    def opponent_place_card(self, line: DecisionLine, coin: DecisionIntention) -> bool:
+    def _opponent_place_card(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         return self._place_card(self.game.opponent, line, coin)
 
     @staticmethod

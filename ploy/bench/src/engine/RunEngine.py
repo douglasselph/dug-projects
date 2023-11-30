@@ -1,28 +1,41 @@
 from src.engine.Engine import Engine
 from src.data.Game import Game
 from src.data.Stats import StatsAll
+from src.decision.Decisions import Decisions
+
+
+
+class RunEngineParams:
+    times: int
+    summary_at_step: int
+    decisions: Decisions
+
+    def __init__(self):
+        self.times = 1000
+        self.summary_at_step = 100
+        self.decisions = Decisions()
 
 
 class RunEngine:
 
-    def __init__(self, times: int, step: int):
-        self.times = times
-        self.summary_at_step = step
+    def __init__(self, params: RunEngineParams):
+        self.params = params
         self.stats = StatsAll()
 
     def run(self):
 
-        for game_count in range(self.times):
+        for game_count in range(self.params.times):
             game = Game()
-            engine = Engine(game)
+            engine = Engine(game, self.params.decisions)
 
             while not game.endOfGame:
                 game.stat.turns += 1
                 engine.draw_hands()
-                # Place Cards
+                engine.place_cards()
                 engine.reveal_intentions()
                 game.stat.add(engine.resolve_attacks())
                 game.stat.add2(engine.resolve_deploy())
                 engine.cleanup()
 
             self.stats.apply(game.stat)
+
