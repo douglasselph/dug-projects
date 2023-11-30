@@ -44,6 +44,10 @@ class Deck:
         return self._faceUp.pop(0)
 
     @property
+    def has_face_up_card(self) -> bool:
+        return self.query_face_up_card() is not None
+
+    @property
     def cards_total(self) -> int:
         return len(self._faceUp) + len(self._draw)
 

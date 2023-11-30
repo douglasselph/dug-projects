@@ -45,7 +45,7 @@ class Player:
 
     @property
     def has_cards_to_play(self) -> bool:
-        return len(self.draw.faceUp_deck) > 0
+        return self.draw.has_face_up_card
 
     @property
     def has_cards_to_draw(self) -> bool:

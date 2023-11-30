@@ -28,16 +28,20 @@ class Engine:
     # Return False if illegal indication.
 
     def place_cards(self):
-        was_legal = False
 
-        while not was_legal:
-            line, coin = self.decisions.placeCard.forAgent(self.game)
-            was_legal = self._agent_place_card(line, coin)
+        self.decisions.placeCard.prepare(self.game)
 
-        was_legal = False
-        while not was_legal:
-            line, coin = self.decisions.placeCard.forOpponent(self.game)
-            was_legal = self._opponent_place_card(line, coin)
+        while self.game.agentPlayer.has_cards_to_play or self.game.opponent.has_cards_to_play:
+
+            if self.game.agentPlayer.has_cards_to_play:
+                line, coin = self.decisions.placeCard.decision_agent()
+                was_legal = self._agent_place_card(line, coin)
+                self.decisions.placeCard.result_agent(line, coin, was_legal)
+
+            if self.game.opponent.has_cards_to_play:
+                line, coin = self.decisions.placeCard.decision_opponent()
+                was_legal = self._opponent_place_card(line, coin)
+                self.decisions.placeCard.result_opponent(line, coin, was_legal)
 
     def _agent_place_card(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         return self._place_card(self.game.agentPlayer, line, coin)
@@ -49,7 +53,6 @@ class Engine:
     def _place_card(pl: Player, line: DecisionLine, coin: DecisionIntention) -> bool:
         if not pl.is_legal(line, coin):
             return False
-
         return pl.play_to_plate(line, coin)
 
     def agent_has_cards_to_place(self) -> bool:
@@ -217,7 +220,7 @@ class Engine:
         self.game.trash.append(card)
 
     def _apply_trash_pre_roll(self, incident: IncidentBundle, player: Player) -> TrashBonus:
-        bonus = self._acquire_bonus(incident, player)
+        bonus = self._select_card_to_trash(incident, player)
         if isinstance(bonus, TrashBonusDie):
             incident.dice.add_die(bonus.sides)
         return bonus
@@ -227,45 +230,13 @@ class Engine:
         if isinstance(bonus, TrashBonusPips):
             incident.values.add(Die(DieSides.D4, bonus.pips))
 
-    def _acquire_bonus(self, incident: IncidentBundle, player: Player) -> TrashBonus:
-        if not self._should_trash(incident.cards, player.num_cards_draw):
-            return TrashBonus()
-        card = self._select_card_to_trash(incident.cards)
-        bonus = card.trash
-        if isinstance(bonus, TrashBonusDie) or isinstance(bonus, TrashBonusPips):
+    def _select_card_to_trash(self, incident: IncidentBundle, player: Player) -> TrashBonus:
+        card = self.decisions.trash.select_card_to_trash(incident.cards, player)
+        if card:
             player.trash(card)
             self.game.trash.append(card)
-        return bonus
-
-    def _should_trash(self, cards: List[CardComposite], num_cards: int) -> bool:
-        current_average = self._average_of(cards)
-        if current_average < 30 or current_average > 52:
-            return False
-        if num_cards < 14:
-            return False
-        chance = (current_average - 30) / 5
-        roll = random.randint(1, 6)
-        return roll <= chance
-
-    @staticmethod
-    def _average_of(cards: [CardComposite]) -> float:
-        result = 0
-        for card in cards:
-            if isinstance(card, Card):
-                result += card.die_bonus.average()
-        return result
-
-    @staticmethod
-    def _select_card_to_trash(cards: List[CardComposite]) -> Optional[Card]:
-        selected_card: Optional[Card] = None
-        selected_card_value = 0
-        for card in cards:
-            if isinstance(card, Card):
-                value = card.trash_choice_value
-                if value > selected_card_value:
-                    selected_card = card
-                    selected_card_value = value
-        return selected_card
+            return card.trash
+        return TrashBonus()
 
     ###############################################################################
     # Deploy Resolve:
