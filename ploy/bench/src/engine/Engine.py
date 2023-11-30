@@ -3,9 +3,10 @@ from typing import List, Optional
 from src.data.Decision import DecisionLine, DecisionIntention
 from src.data.Game import Game, PlayerID
 from src.data.Player import Player
-from src.data.Card import Card, CardWound, DieSides, CardComposite, TrashBonusDie, TrashBonus, TrashBonusPips, CardCost
+from src.data.Card import *
 from src.engine.Die import Die
 from src.engine.IncidentBundle import IncidentBundle
+from src.data.Stats import StatsAttack, StatsDeploy
 
 
 class Engine:
@@ -61,21 +62,25 @@ class Engine:
     #     Attacker reveal supporting lines
     #     Defender reveal supporting lines
     #     Resolve
-    def resolve_attacks(self):
-
+    def resolve_attacks(self) -> StatsAttack:
         if self.game.initiativeOn == PlayerID.PLAYER_1:
-            self._resolve_attack(self.game.agentPlayer, self.game.opponent)
-            if self._resolve_attack(self.game.opponent, self.game.agentPlayer):
+            stats1 = self._resolve_attack(self.game.agentPlayer, self.game.opponent)
+            stats2 = self._resolve_attack(self.game.opponent, self.game.agentPlayer)
+            if stats2.did_attack:
                 self.game.initiativeOn = PlayerID.PLAYER_2
         else:
-            self._resolve_attack(self.game.opponent, self.game.agentPlayer)
-            if self._resolve_attack(self.game.agentPlayer, self.game.opponent):
+            stats2 = self._resolve_attack(self.game.opponent, self.game.agentPlayer)
+            stats1 = self._resolve_attack(self.game.agentPlayer, self.game.opponent)
+            if stats1.did_attack:
                 self.game.initiativeOn = PlayerID.PLAYER_1
+        return StatsAttack().add(stats1, stats2)
 
-    def _resolve_attack(self, attacker: Player, defender: Player) -> bool:
+    def _resolve_attack(self, attacker: Player, defender: Player) -> StatsAttack:
+
+        stats = StatsAttack()
 
         if not attacker.has_intention(DecisionIntention.ATTACK):
-            return False
+            return stats
 
         attacker.reveal_intentions_with_intention(DecisionIntention.ATTACK)
         defender.reveal_intentions_with_intention(DecisionIntention.DEFEND)
@@ -117,50 +122,51 @@ class Engine:
         wounds = incident_attacker.total - incident_defender.total
 
         if wounds >= 0:
-            self._apply_wound_to(defender, wounds, attacker)
+            wound = self._apply_wound_to(defender, wounds, attacker)
         else:
-            self._apply_wound_to(attacker, wounds, defender)
+            wound = self._apply_wound_to(attacker, wounds, defender)
 
-        return True
+        stats.set(incident_attacker.total, incident_defender.total, wound)
 
-    def _apply_wound_to(self, player: Player, wounds: int, attacker: Player):
+        return stats
+
+    def _apply_wound_to(self, player: Player, wounds: int, attacker: Player) -> Optional[CardWound]:
+        wound: Optional[CardWound] = None
         if wounds <= 6:
-            return
+            return None
         if wounds <= 16:
-            player.draw.append(CardWound.WOUND_MINOR)
+            wound = CardWound.WOUND_MINOR
         elif wounds <= 22:
-            player.draw.append(CardWound.WOUND_MINOR)
+            wound = CardWound.WOUND_MINOR
             self._apply_secondary_affliction(player, DieSides.D4)
         elif wounds <= 29:
-            player.draw.append(CardWound.WOUND_ACUTE)
+            wound = CardWound.WOUND_ACUTE
             self._apply_secondary_affliction(player, DieSides.D6)
         elif wounds <= 36:
-            player.draw.append(CardWound.WOUND_ACUTE)
+            wound = CardWound.WOUND_ACUTE
             self._apply_secondary_affliction(player, DieSides.D8)
         elif wounds <= 44:
-            player.draw.append(CardWound.WOUND_GRAVE)
+            wound = CardWound.WOUND_GRAVE
             self._apply_secondary_affliction(player, DieSides.D10)
         elif wounds <= 52:
-            player.draw.append(CardWound.WOUND_GRAVE)
+            wound = CardWound.WOUND_GRAVE
             self._apply_secondary_affliction(player, DieSides.D12)
         elif wounds <= 59:
-            player.draw.append(CardWound.WOUND_DIRE)
+            wound = CardWound.WOUND_DIRE
             self._apply_secondary_affliction(player, DieSides.D12)
         elif wounds <= 69:
             player.fatal_received = True
-            pass
         elif wounds <= 76:
             player.fatal_received = True
             attacker.energy -= 1
-            pass
         elif wounds <= 84:
             player.fatal_received = True
             attacker.energy -= 2
-            pass
         else:
             player.fatal_received = True
             attacker.energy -= 3
-            pass
+        player.draw.append(wound)
+        return wound
 
     def _apply_secondary_affliction(self, player: Player, sides: DieSides):
         value = Die(sides).roll()
@@ -249,10 +255,12 @@ class Engine:
     ###############################################################################
     # Deploy Resolve:
 
-    def resolve_deploy(self):
+    def resolve_deploy(self) -> StatsDeploy:
 
-        self._resolve_deploy_gather_pips(self.game.agentPlayer)
-        self._resolve_deploy_gather_pips(self.game.opponent)
+        stats = StatsDeploy()
+
+        stats.agent_roll = self._resolve_deploy_gather_pips(self.game.agentPlayer)
+        stats.opponent_roll = self._resolve_deploy_gather_pips(self.game.opponent)
 
         for count in range(10):
             if self.game.initiativeOn == PlayerID.PLAYER_1:
@@ -262,11 +270,20 @@ class Engine:
                 buy2 = DeployBuy(self.game, self.game.opponent, self.game.agentPlayer)
                 buy1 = DeployBuy(self.game, self.game.agentPlayer, self.game.opponent)
 
+            if buy1.did_activity:
+                stats.cards += 1
+            if buy2.did_activity:
+                stats.cards += 1
+
+            stats.blocks += buy1.blocks + buy2.blocks
+
             if not buy1.did_activity and not buy2.did_activity:
                 break
 
+        return stats
+
     @staticmethod
-    def _resolve_deploy_gather_pips(player: Player):
+    def _resolve_deploy_gather_pips(player: Player) -> int:
 
         player.reveal_intentions_with_intention(DecisionIntention.DEPLOY)
         player.reveal_cards_with_revealed_intentions()
@@ -285,6 +302,8 @@ class Engine:
         incident.apply_cards_post_roll(incident.values)
 
         player.pips += incident.total
+
+        return incident.total
 
     ###############################################################################
     # Cleanup:
@@ -322,10 +341,10 @@ class DeployBuy:
         self.stash_card_face_up: Optional[Card] = None
         self.common_card_face_up: Optional[CardComposite] = None
         self.opponent_card_face_up: Optional[CardComposite] = None
+        self.did_activity = False
+        self.blocks = 0
 
-        if player.pips == 0:
-            self.did_activity = False
-        else:
+        if player.pips > 0:
             self._resolve_deploy_choose_card()
             self.did_activity = self._resolve_buy_card()
 
@@ -395,6 +414,7 @@ class DeployBuy:
         if self.chooseOpponentStash:
             if self.opponent.pips > self.opponent_block_value:
                 self.opponent.pips -= self.opponent_block_value + 1
+                self.blocks += 1
             else:
                 card = self.opponent_card_face_up
                 cost = card.cost
@@ -411,6 +431,7 @@ class DeployBuy:
         if self.choosePersonalStash:
             if self.opponent.pips > self.stash_blocked_value:
                 self.opponent.pips -= self.stash_blocked_value + 1
+                self.blocks += 1
             else:
                 card = self.stash_card_face_up
                 cost = card.cost
@@ -427,6 +448,7 @@ class DeployBuy:
         if self.chooseCommonDrawDeck:
             if self.opponent.pips > self.common_block_value:
                 self.opponent.pips -= self.common_block_value + 1
+                self.blocks += 1
             else:
                 card = self.common_card_face_up
                 cost = card.cost

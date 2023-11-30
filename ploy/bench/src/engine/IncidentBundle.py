@@ -1,7 +1,5 @@
 from typing import Optional, List
-import random
-from src.engine.DieCollection import DieCollection
-from src.engine.DieValues import DieValues
+
 from src.data.Card import CardComposite
 from src.data.Card import DieSides, Card, CardWound
 from src.data.maneuver.ManeuverCuttingRiposte import maneuver_cutting_riposte
@@ -9,6 +7,8 @@ from src.data.maneuver.ManeuverInHewOf import maneuver_in_hew_of
 from src.data.maneuver.ManeuverKeepThePierce import maneuver_keep_the_pierce
 from src.data.maneuver.ManeuverNickToDeath import maneuver_nick_to_death
 from src.data.maneuver.ManeuverPrecision import maneuver_precision
+from src.engine.DieCollection import DieCollection
+from src.engine.DieValues import DieValues
 
 
 class IncidentBundle:

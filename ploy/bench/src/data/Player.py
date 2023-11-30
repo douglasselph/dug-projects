@@ -74,6 +74,13 @@ class Player:
     def stash_cards_total(self) -> int:
         return self.stash.cards_total
 
+    @property
+    def energy_loss(self) -> int:
+        value = self._max_energy - self.energy
+        if value < 0:
+            return 0
+        return value
+
     def has_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_intention(coin)
 

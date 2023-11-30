@@ -1,0 +1,3 @@
+
+class BasePlaceCard:
+    pass

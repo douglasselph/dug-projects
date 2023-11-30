@@ -4,9 +4,8 @@ from typing import List, Optional
 from src.data.Player import Player
 from src.data.Deck import Deck
 from src.data.Decision import DecisionIntention, DecisionLine
-from src.data.GameStat import GameStat
+from src.data.Stats import StatsGame
 from src.data.Card import CardComposite
-
 
 class TurnPhase(Enum):
     NONE = 0
@@ -44,7 +43,7 @@ class Game:
         self.opponent = Player()
         self.commonDrawDeck = Deck()
         self.trash = Deck()
-        self.stat = GameStat()
+        self.stat = StatsGame()
         self.endOfGame = False
 
     def nn_next_cards(self, size: int) -> List[int]:
