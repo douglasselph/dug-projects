@@ -313,12 +313,16 @@ class DeployBuy:
         self.opponent = opponent
         self.commonDrawDeck = game.commonDrawDeck
 
-        self.chooseCommonDrawDeck = False
-        self.chooseOpponentStash = False
-        self.choosePersonalStash = False
+        # Move this section into decision tree:
+        self.draw_from_common_draw_deck = False
+        self.draw_from_opponent_stash = False
+        self.draw_from_personal_stash = False
         self.stash_block_value = 0
         self.common_block_value = 0
         self.opponent_block_value = 0
+        self.stash_draw_okay = True
+        self.common_draw_okay = True
+
         self.stash_blocked_value = 0
         self.common_blocked_value = 0
         self.opponent_blocked_value = 0
@@ -343,18 +347,18 @@ class DeployBuy:
         stash_can_afford = False
         stash_card_value = 0
         self.stash_block_value = 0
-        self.choosePersonalStash = False
+        self.draw_from_personal_stash = False
         self.common_card_face_up: Optional[CardComposite] = None
         self.common_has_draw = False
         common_can_afford = False
         common_card_value = 0
         self.common_block_value = 0
-        self.chooseCommonDrawDeck = False
+        self.draw_from_common_draw_deck = False
         self.opponent_card_face_up: Optional[CardComposite] = None
         opponent_can_afford = False
         opponent_card_value = 0
         self.opponent_block_value = 0
-        self.chooseOpponentStash = False
+        self.draw_from_opponent_stash = False
 
         if player.num_cards_stash > 0:
             cards = player.stash_cards_face_up
@@ -387,17 +391,17 @@ class DeployBuy:
 
         if opponent_card_value > 0 and opponent_can_afford:
             if opponent_card_value > stash_card_value and opponent_card_value > common_card_value:
-                self.chooseOpponentStash = True
+                self.draw_from_opponent_stash = True
 
         if stash_card_value > 0 and stash_can_afford:
             if stash_card_value > common_card_value:
-                self.choosePersonalStash = True
+                self.draw_from_personal_stash = True
 
         if common_card_value > 0 and common_can_afford:
-            self.chooseCommonDrawDeck = True
+            self.draw_from_common_draw_deck = True
 
     def _resolve_buy_card(self) -> bool:
-        if self.chooseOpponentStash:
+        if self.draw_from_opponent_stash:
             if self.opponent.pips > self.opponent_block_value:
                 self.opponent.pips -= self.opponent_block_value + 1
                 self.blocks += 1
@@ -414,7 +418,7 @@ class DeployBuy:
                 self.player.draw.append(card)
                 return True
 
-        if self.choosePersonalStash:
+        if self.draw_from_personal_stash:
             if self.opponent.pips > self.stash_blocked_value:
                 self.opponent.pips -= self.stash_blocked_value + 1
                 self.blocks += 1
@@ -431,7 +435,7 @@ class DeployBuy:
                 self.player.draw.append(card)
                 return True
 
-        if self.chooseCommonDrawDeck:
+        if self.draw_from_common_draw_deck:
             if self.opponent.pips > self.common_block_value:
                 self.opponent.pips -= self.common_block_value + 1
                 self.blocks += 1
@@ -449,12 +453,12 @@ class DeployBuy:
                 return True
 
         if self.player.pips > 0:
-            if self.stash_has_draw:
+            if self.stash_has_draw and self.stash_draw_okay:
                 self.player.draw.draw()
                 self.player.pips -= 1
                 return True
 
-            if self.common_has_draw:
+            if self.common_has_draw and self.common_draw_okay:
                 self.commonDrawDeck.draw()
                 self.player.pips -= 1
                 return True
