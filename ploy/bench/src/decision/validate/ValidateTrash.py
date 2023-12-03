@@ -1,22 +1,22 @@
-from typing import List, Optional
 import random
-from src.decision.base.BaseTrash import BaseTrash
+from typing import List, Optional
+
 from src.data.Card import Card, CardComposite
-from src.data.Player import Player
+from src.decision.base.BaseTrash import BaseTrash
 
 
 class ValidateTrash(BaseTrash):
 
-    def select_card_to_trash(self, cards: List[CardComposite], player: Player) -> Optional[Card]:
-        if not self._should_trash(cards, player):
+    def select_card_to_trash(self, cards: List[CardComposite]) -> Optional[Card]:
+        if not self._should_trash(cards):
             return None
         return self._select_card_to_trash(cards)
 
-    def _should_trash(self, cards: List[CardComposite], player: Player) -> bool:
+    def _should_trash(self, cards: List[CardComposite]) -> bool:
         current_average = self._average_of(cards)
         if current_average < 30 or current_average > 52:
             return False
-        if player.num_cards_draw < 14:
+        if self.player.num_cards_draw < 14:
             return False
         chance = (current_average - 30) / 5
         roll = random.randint(1, 6)

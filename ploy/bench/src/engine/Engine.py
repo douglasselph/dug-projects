@@ -1,13 +1,11 @@
-import random
-from typing import List, Optional
-from src.decision.Decisions import Decisions
-from src.data.Decision import DecisionLine, DecisionIntention
+from src.data.Card import *
+from src.data.Decision import *
 from src.data.Game import Game, PlayerID
 from src.data.Player import Player
-from src.data.Card import *
+from src.data.Stats import StatsAttack, StatsDeploy
+from src.decision.Decisions import Decisions
 from src.engine.Die import Die
 from src.engine.IncidentBundle import IncidentBundle
-from src.data.Stats import StatsAttack, StatsDeploy
 
 
 class Engine:
@@ -29,7 +27,7 @@ class Engine:
 
     def place_cards(self):
 
-        self.decisions.placeCard.prepare(self.game)
+        self.decisions.placeCard.set_game(self.game)
 
         while self.game.agentPlayer.has_cards_to_play or self.game.opponent.has_cards_to_play:
 
@@ -55,9 +53,11 @@ class Engine:
             return False
         return pl.play_to_plate(line, coin)
 
+    @property
     def agent_has_cards_to_place(self) -> bool:
         return self.game.agentPlayer.has_cards_to_play
 
+    @property
     def opponent_has_cards_to_place(self) -> bool:
         return self.game.opponent.has_cards_to_play
 
@@ -231,7 +231,10 @@ class Engine:
             incident.values.add(Die(DieSides.D4, bonus.pips))
 
     def _select_card_to_trash(self, incident: IncidentBundle, player: Player) -> TrashBonus:
-        card = self.decisions.trash.select_card_to_trash(incident.cards, player)
+        card = self.decisions.trash.\
+            set_game(self.game).\
+            set_player(player).\
+            select_card_to_trash(incident.cards)
         if card:
             player.trash(card)
             self.game.trash.append(card)
@@ -248,23 +251,36 @@ class Engine:
         stats.agent_roll = self._resolve_deploy_gather_pips(self.game.agentPlayer)
         stats.opponent_roll = self._resolve_deploy_gather_pips(self.game.opponent)
 
-        for count in range(10):
+        agent_okay = True
+        opponent_okay = True
+
+        while agent_okay or opponent_okay:
             if self.game.initiativeOn == PlayerID.PLAYER_1:
-                buy1 = DeployBuy(self.game, self.game.agentPlayer, self.game.opponent)
-                buy2 = DeployBuy(self.game, self.game.opponent, self.game.agentPlayer)
+                if agent_okay:
+                    agent_okay = self._resolve_deploy_buy_card(
+                        self.game.agentPlayer,
+                        self.game.opponent,
+                        stats
+                    )
+                if opponent_okay:
+                    opponent_okay = self._resolve_deploy_buy_card(
+                        self.game.opponent,
+                        self.game.agentPlayer,
+                        stats
+                    )
             else:
-                buy2 = DeployBuy(self.game, self.game.opponent, self.game.agentPlayer)
-                buy1 = DeployBuy(self.game, self.game.agentPlayer, self.game.opponent)
-
-            if buy1.did_activity:
-                stats.cards += 1
-            if buy2.did_activity:
-                stats.cards += 1
-
-            stats.blocks += buy1.blocks + buy2.blocks
-
-            if not buy1.did_activity and not buy2.did_activity:
-                break
+                if opponent_okay:
+                    opponent_okay = self._resolve_deploy_buy_card(
+                        self.game.opponent,
+                        self.game.agentPlayer,
+                        stats
+                    )
+                if agent_okay:
+                    agent_okay = self._resolve_deploy_buy_card(
+                        self.game.agentPlayer,
+                        self.game.opponent,
+                        stats
+                    )
 
         return stats
 
@@ -291,6 +307,57 @@ class Engine:
 
         return incident.total
 
+    def _resolve_deploy_buy_card(self, player: Player, opponent: Player, stats: StatsDeploy) -> bool:
+
+        self.decisions.deployChooseCard.set_game(self.game)
+        decision = self.decisions.deployChooseCard.card_to_acquire(player, opponent)
+        if decision == DecisionDeck.NONE:
+            return False
+        if decision == DecisionDeck.PERSONAL_STASH_DRAW:
+            player.draw.draw()
+            player.pips -= 1
+            return True
+        if decision == DecisionDeck.COMMON_DRAW:
+            self.game.commonDrawDeck.draw()
+            player.pips -= 1
+            return True
+        if decision == DecisionDeck.OPPONENT_STASH_FACE_UP:
+            card = opponent.stash_cards_face_up[0]
+        elif decision == DecisionDeck.PERSONAL_STASH_FACE_UP:
+            card = player.stash_cards_face_up[0]
+        else:
+            card = self.game.common_cards_face_up[0]
+
+        block_value = self.decisions.deployBlock\
+            .set_game(self.game)\
+            .set_player(opponent).acquire_block_value(decision, card)
+
+        if block_value > 0:
+            opponent.pips -= block_value
+            stats.blocks += 1
+            return True
+
+        # Buy card
+        player.pips -= card.cost.pips
+
+        if card.cost.sides != DieSides.NONE and player.plate_has_sides(card.cost.sides):
+            trashed_card = player.plate_remove_sides(card.cost.sides)
+            self.game.trash.append(trashed_card)
+        elif card.cost.energy > 0:
+            player.energy -= card.cost.energy
+
+        player.draw.append(card)
+
+        if decision == DecisionDeck.OPPONENT_STASH_FACE_UP:
+            opponent.stash_pull_face_up_card()
+            return True
+        elif decision == DecisionDeck.PERSONAL_STASH_FACE_UP:
+            player.stash_pull_face_up_card()
+            return True
+        else:
+            self.game.common_pull_face_up_card()
+            return True
+
     ###############################################################################
     # Cleanup:
     def cleanup(self):
@@ -303,174 +370,3 @@ class Engine:
             self.game.opponent.fatal_received or \
             self.game.opponent.energy <= 0
 
-
-class DeployBuy:
-
-    def __init__(self, game: Game, player: Player, opponent: Player):
-
-        self.game = game
-        self.player = player
-        self.opponent = opponent
-        self.commonDrawDeck = game.commonDrawDeck
-
-        # Move this section into decision tree:
-        self.draw_from_common_draw_deck = False
-        self.draw_from_opponent_stash = False
-        self.draw_from_personal_stash = False
-        self.stash_block_value = 0
-        self.common_block_value = 0
-        self.opponent_block_value = 0
-        self.stash_draw_okay = True
-        self.common_draw_okay = True
-
-        self.stash_blocked_value = 0
-        self.common_blocked_value = 0
-        self.opponent_blocked_value = 0
-        self.stash_has_draw = False
-        self.common_has_draw = False
-        self.stash_card_face_up: Optional[Card] = None
-        self.common_card_face_up: Optional[CardComposite] = None
-        self.opponent_card_face_up: Optional[CardComposite] = None
-        self.did_activity = False
-        self.blocks = 0
-
-        if player.pips > 0:
-            self._resolve_deploy_choose_card()
-            self.did_activity = self._resolve_buy_card()
-
-    def _resolve_deploy_choose_card(self):
-
-        player = self.player
-        opponent = self.opponent
-        self.stash_card_face_up: Optional[CardComposite] = None
-        self.stash_has_draw = False
-        stash_can_afford = False
-        stash_card_value = 0
-        self.stash_block_value = 0
-        self.draw_from_personal_stash = False
-        self.common_card_face_up: Optional[CardComposite] = None
-        self.common_has_draw = False
-        common_can_afford = False
-        common_card_value = 0
-        self.common_block_value = 0
-        self.draw_from_common_draw_deck = False
-        self.opponent_card_face_up: Optional[CardComposite] = None
-        opponent_can_afford = False
-        opponent_card_value = 0
-        self.opponent_block_value = 0
-        self.draw_from_opponent_stash = False
-
-        if player.num_cards_stash > 0:
-            cards = player.stash_cards_face_up
-            if len(cards) > 0:
-                self.stash_card_face_up = cards[0]
-                stash_can_afford = self._can_afford(self.stash_card_face_up.cost, player)
-                stash_card_value = self.stash_card_face_up.ff_value
-                self.stash_block_value = player.pips - self.stash_card_face_up.cost.pips
-
-            self.stash_has_draw = len(player.stash_cards_draw) > 0
-
-        common_cards = self.commonDrawDeck
-        if common_cards.cards_total > 0:
-            cards = common_cards.faceUp_deck
-            if len(cards) > 0:
-                self.common_card_face_up = cards[0]
-                common_can_afford = self._can_afford(self.stash_card_face_up.cost, player)
-                common_card_value = self.common_card_face_up.ff_value
-                self.common_block_value = player.pips - self.stash_card_face_up.cost.pips
-
-            self.common_has_draw = len(common_cards.draw_deck) > 0
-
-        if opponent.num_cards_stash > 0:
-            cards = opponent.stash_cards_face_up
-            if len(cards) > 0:
-                self.opponent_card_face_up = cards[0]
-                opponent_can_afford = self._can_afford(self.opponent_card_face_up.cost, player)
-                opponent_card_value = self.opponent_card_face_up.ff_value
-                self.opponent_block_value = player.pips - self.opponent_card_face_up.cost.pips
-
-        if opponent_card_value > 0 and opponent_can_afford:
-            if opponent_card_value > stash_card_value and opponent_card_value > common_card_value:
-                self.draw_from_opponent_stash = True
-
-        if stash_card_value > 0 and stash_can_afford:
-            if stash_card_value > common_card_value:
-                self.draw_from_personal_stash = True
-
-        if common_card_value > 0 and common_can_afford:
-            self.draw_from_common_draw_deck = True
-
-    def _resolve_buy_card(self) -> bool:
-        if self.draw_from_opponent_stash:
-            if self.opponent.pips > self.opponent_block_value:
-                self.opponent.pips -= self.opponent_block_value + 1
-                self.blocks += 1
-            else:
-                card = self.opponent_card_face_up
-                cost = card.cost
-                self.player.pips -= cost.pips
-
-                if cost.sides != DieSides.NONE and self.player.plate_has_sides(cost.sides):
-                    trashed_card = self.player.plate_remove_sides(cost.sides)
-                    self.game.trash.append(trashed_card)
-                elif cost.energy > 0:
-                    self.player.energy -= cost.energy
-                self.player.draw.append(card)
-                return True
-
-        if self.draw_from_personal_stash:
-            if self.opponent.pips > self.stash_blocked_value:
-                self.opponent.pips -= self.stash_blocked_value + 1
-                self.blocks += 1
-            else:
-                card = self.stash_card_face_up
-                cost = card.cost
-                self.player.pips -= cost.pips
-
-                if cost.sides != DieSides.NONE and self.player.plate_has_sides(cost.sides):
-                    trashed_card = self.player.plate_remove_sides(cost.sides)
-                    self.game.trash.append(trashed_card)
-                elif cost.energy > 0:
-                    self.player.energy -= cost.energy
-                self.player.draw.append(card)
-                return True
-
-        if self.draw_from_common_draw_deck:
-            if self.opponent.pips > self.common_block_value:
-                self.opponent.pips -= self.common_block_value + 1
-                self.blocks += 1
-            else:
-                card = self.common_card_face_up
-                cost = card.cost
-                self.player.pips -= cost.pips
-
-                if cost.sides != DieSides.NONE and self.player.plate_has_sides(cost.sides):
-                    trashed_card = self.player.plate_remove_sides(cost.sides)
-                    self.game.trash.append(trashed_card)
-                elif cost.energy > 0:
-                    self.player.energy -= cost.energy
-                self.player.draw.append(card)
-                return True
-
-        if self.player.pips > 0:
-            if self.stash_has_draw and self.stash_draw_okay:
-                self.player.draw.draw()
-                self.player.pips -= 1
-                return True
-
-            if self.common_has_draw and self.common_draw_okay:
-                self.commonDrawDeck.draw()
-                self.player.pips -= 1
-                return True
-
-        return False
-
-    @staticmethod
-    def _can_afford(card: CardCost, player: Player) -> bool:
-        if player.pips < card.pips:
-            return False
-        if not player.plate_has_sides(card.sides):
-            return False
-        if player.energy <= 5:
-            return False
-        return True

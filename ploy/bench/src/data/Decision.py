@@ -16,3 +16,11 @@ class DecisionIntention(Enum):
     DEPLOY = 3
 
 
+class DecisionDeck(Enum):
+    NONE = 0
+    PERSONAL_STASH_FACE_UP = 1
+    PERSONAL_STASH_DRAW = 2
+    COMMON_FACE_UP = 3
+    COMMON_DRAW = 4
+    OPPONENT_STASH_FACE_UP = 5
+

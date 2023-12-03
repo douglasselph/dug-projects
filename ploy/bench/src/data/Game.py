@@ -85,12 +85,18 @@ class Game:
     def is_legal(self, line: DecisionLine, intention: DecisionIntention):
         return self.agentPlayer.is_legal(line, intention)
 
+    @property
     def common_cards_face_up(self) -> List[CardComposite]:
         return self.commonDrawDeck.faceUp_deck
 
+    @property
     def common_cards_draw(self) -> List[CardComposite]:
         return self.commonDrawDeck.draw_deck
 
+    def common_pull_face_up_card(self) -> CardComposite:
+        return self.commonDrawDeck.pull_face_up_card()
+
+    @property
     def compute_reward(self) -> int:
         base = 0
         if self.agentPlayer.fatal_received:

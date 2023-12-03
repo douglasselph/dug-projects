@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Tuple
 from src.data.Decision import DecisionLine, DecisionIntention
 from src.data.Game import Game
@@ -5,8 +6,11 @@ from src.data.Game import Game
 
 class BasePlaceCard:
 
-    def prepare(self, game: Game):
-        pass
+    game: Game
+
+    def set_game(self, game: Game) -> BasePlaceCard:
+        self.game = game
+        return self
 
     def decision_agent(self) -> Tuple[DecisionLine, DecisionIntention]:
         return DecisionLine.LINE_1, DecisionIntention.DEPLOY

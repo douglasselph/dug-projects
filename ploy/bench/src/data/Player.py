@@ -154,10 +154,12 @@ class Player:
     @property
     def stash_cards_face_up(self) -> List[CardComposite]:
         return self.stash.faceUp_deck
-
     @property
     def stash_cards_draw(self) -> List[CardComposite]:
         return self.stash.draw_deck
+
+    def stash_pull_face_up_card(self) -> CardComposite:
+        return self.stash.pull_face_up_card()
 
     def plate_has_sides(self, card: DieSides) -> bool:
         return self.plate.has_sides(card)
