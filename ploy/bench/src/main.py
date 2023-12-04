@@ -2,7 +2,7 @@ import argparse
 import sys
 from typing import List
 
-from src.engine.RunEngine import RunEngine
+from src.engine.RunEngine import RunEngine, RunEngineParams
 
 
 class MainArgs:
@@ -51,7 +51,10 @@ def main(cmdline_args):
     if args.has_error:
         args.print_error()
     else:
-        run = RunEngine(args.times, args.step)
+        params = RunEngineParams()
+        params.times = args.times
+        params.summary_at_step = args.step
+        run = RunEngine(params)
         run.run()
 
 

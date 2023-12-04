@@ -4,10 +4,10 @@ from src.data.Deck import Deck
 from src.data.Card import Card, CardWound
 
 
-class TestDeck(unittest.TestCase):
+class TestManeuverFeelingFeint(unittest.TestCase):
 
     def setUp(self):
-        self.SUT = Deck()
+        self.SUT = Card()
 
     def test_append_places_new_cards_on_bottom(self):
         # Arrange
@@ -55,7 +55,7 @@ class TestDeck(unittest.TestCase):
         confirm_dr_card1 = self.SUT.draw_deck[0]
         confirm_dr_card2 = self.SUT.draw_deck[1]
         confirm_dr_card3 = self.SUT.draw_deck[2]
-        confirm_up_card1 = self.SUT.face_up_deck[0]
+        confirm_up_card1 = self.SUT.faceUp_deck[0]
         self.assertEqual(card2, confirm_dr_card1)
         self.assertEqual(card3, confirm_dr_card2)
         self.assertEqual(card4, confirm_dr_card3)
@@ -71,7 +71,7 @@ class TestDeck(unittest.TestCase):
         # Act
         self.SUT.draw(6)
         # Assert
-        count_faceUp = self.SUT.face_up_deck
+        count_faceUp = self.SUT.faceUp_deck
         self.assertEqual(4, count_faceUp)
         count_draw = self.SUT.draw_deck
         self.assertEqual(0, count_draw)
@@ -161,24 +161,6 @@ class TestDeck(unittest.TestCase):
         # Assert
         self.assertEqual(3, count)
 
-    def test_has_face_up_card(self):
-        # Arrange
-        card1 = Card.D20_CUTASTROPHE
-        card2 = Card.D10_INNER_PIERCE
-        card3 = CardWound.WOUND_GRAVE
-        card4 = CardWound.WOUND_ACUTE
-        self.SUT.extend([card1, card2, card3, card4])
-        has_card_before = self.SUT.has_face_up_card
-        self.SUT.draw()
-        # Act
-        has_card = self.SUT.has_face_up_card
-        self.SUT.pull_face_up_card()
-        has_card_after = self.SUT.has_face_up_card
-        # Assert
-        self.assertFalse(has_card_before)
-        self.assertTrue(has_card)
-        self.assertFalse(has_card_after)
-
     def test_nn_face_up_cards_less_than_size_ensure_size_returned(self):
         # Arrange
         card1 = Card.D20_CUTASTROPHE
@@ -224,56 +206,6 @@ class TestDeck(unittest.TestCase):
         self.assertEqual(Card.NONE, cards[1])
         self.assertEqual(Card.NONE, cards[2])
         self.assertEqual(Card.NONE, cards[3])
-
-    def test_nn_next_cards_less_than_size_ensure_size_returned(self):
-        # Arrange
-        card1 = Card.D20_CUTASTROPHE
-        card2 = Card.D10_INNER_PIERCE
-        card3 = CardWound.WOUND_GRAVE
-        card4 = CardWound.WOUND_ACUTE
-        self.SUT.extend([card1, card2, card3, card4])
-        self.SUT.draw(2)
-        size = 8
-        # Act
-        cards = self.SUT.nn_next_cards(size)
-        # Assert
-        self.assertEqual(size, len(cards))
-
-    def test_nn_next_cards_more_than_size_ensure_size_returned(self):
-        # Arrange
-        card1 = Card.D20_CUTASTROPHE
-        card2 = Card.D10_INNER_PIERCE
-        card3 = CardWound.WOUND_GRAVE
-        card4 = CardWound.WOUND_ACUTE
-        self.SUT.extend([card1, card2, card3, card4, card1, card2, card3, card4])
-        self.SUT.draw(2)
-        size = 4
-        # Act
-        cards = self.SUT.nn_next_cards(size)
-        # Assert
-        self.assertEqual(size, len(cards))
-
-    def test_nn_next_cards_when_not_enough_returns_0_for_remainder(self):
-        # Arrange
-        card1 = Card.D20_CUTASTROPHE
-        card2 = Card.D10_INNER_PIERCE
-        card3 = CardWound.WOUND_GRAVE
-        card4 = CardWound.WOUND_ACUTE
-        self.SUT.extend([card1, card2, card3, card4])
-        self.SUT.draw(2)
-        size = 8
-        # Act
-        cards = self.SUT.nn_next_cards(size)
-        # Assert
-        self.assertEqual(size, len(cards))
-        self.assertEqual(card1, cards[0])
-        self.assertEqual(card1, cards[1])
-        self.assertEqual(card1, cards[2])
-        self.assertEqual(card1, cards[3])
-        self.assertEqual(Card.NONE, cards[4])
-        self.assertEqual(Card.NONE, cards[5])
-        self.assertEqual(Card.NONE, cards[6])
-        self.assertEqual(Card.NONE, cards[7])
 
     def test_nn_wound_value_adds_up_as_expected(self):
         # Arrange

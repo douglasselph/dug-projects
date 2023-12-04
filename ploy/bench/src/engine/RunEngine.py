@@ -37,5 +37,4 @@ class RunEngine:
                 game.stat.add2(engine.resolve_deploy())
                 engine.cleanup()
 
-            self.stats.apply(game.stat)
-
+            game.apply_stats(self.stats)

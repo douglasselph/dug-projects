@@ -1,11 +1,12 @@
 # src.data
 from enum import Enum, auto
-from typing import List, Optional
+from typing import List
 from src.data.Player import Player
 from src.data.Deck import Deck
 from src.data.Decision import DecisionIntention, DecisionLine
-from src.data.Stats import StatsGame
+from src.data.Stats import StatsGame, StatsAll
 from src.data.Card import CardComposite
+
 
 class TurnPhase(Enum):
     NONE = 0
@@ -87,7 +88,7 @@ class Game:
 
     @property
     def common_cards_face_up(self) -> List[CardComposite]:
-        return self.commonDrawDeck.faceUp_deck
+        return self.commonDrawDeck.face_up_deck
 
     @property
     def common_cards_draw(self) -> List[CardComposite]:
@@ -143,3 +144,61 @@ class Game:
             base_reward = opponent_wounds + opponent_energy_loss - agent_wounds - agent_energy_loss
 
         return base_reward / num_turns * self._scale_reward
+
+    def apply_stats(self, all: StatsAll):
+        all.games += 1
+        all.total_turns = self.stat.turns
+
+        if self.stat.turns > all.highest_turns:
+            all.highest_turns = self.stat.turns
+        if all.lowest_turns == 0 or all.lowest_turns < self.stat.turns:
+            all.lowest_turns = self.stat.turns
+
+        if self.agentPlayer.fatal_received:
+            if self.opponent.fatal_received:
+                all.ties += 1
+            else:
+                all.fatal_loss += 1
+        elif self.opponent.fatal_received:
+            all.fatal_wins += 1
+        elif self.agentPlayer.energy <= 0:
+            if self.opponent.energy <= 0:
+                all.ties += 1
+            else:
+                all.energy_loss += 1
+        elif self.opponent.energy <= 0:
+            all.energy_wins += 1
+
+        all.total_num_attacks += self.stat.num_attacks
+        all.total_num_defends += self.stat.num_defends
+        all.total_num_deploys += self.stat.num_deploys
+        all.total_attack_roll += self.stat.total_attack_roll
+        all.total_defend_roll += self.stat.total_defend_roll
+        all.total_deploy_roll += self.stat.total_deploy_roll
+        all.total_draw_deck_size_agent += self.agentPlayer.num_cards_draw
+        all.total_draw_deck_size_opponent += self.opponent.num_cards_draw
+        all.total_agent_energy_lost += self.agentPlayer.energy_loss
+        all.total_opponent_energy_lost += self.opponent.energy_loss
+
+        for wound in self.stat.agent_wounds:
+            if wound not in all.total_agent_wounds:
+                all.total_agent_wounds[wound] = 0
+            all.total_agent_wounds[wound] += 1
+        for wound in self.stat.opponent_wounds:
+            if wound not in all.total_opponent_wounds:
+                all.total_opponent_wounds[wound] = 0
+            all.total_opponent_wounds[wound] += 1
+
+        if self.stat.highest_attack_roll > all.highest_attack_roll:
+            all.highest_attack_roll = self.stat.highest_attack_roll
+        if self.stat.highest_defend_roll > all.highest_defend_roll:
+            all.highest_defend_roll = self.stat.highest_defend_roll
+        if self.stat.highest_deploy_roll > all.highest_deploy_roll:
+            all.highest_deploy_roll = self.stat.highest_deploy_roll
+
+        if self.stat.lowest_attack_roll < all.lowest_attack_roll:
+            all.lowest_attack_roll = self.stat.lowest_attack_roll
+        if self.stat.lowest_defend_roll < all.lowest_defend_roll:
+            all.lowest_defend_roll = self.stat.lowest_defend_roll
+        if self.stat.lowest_deploy_roll < all.lowest_deploy_roll:
+            all.lowest_deploy_roll = self.stat.lowest_deploy_roll

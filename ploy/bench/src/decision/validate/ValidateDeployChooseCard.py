@@ -38,7 +38,7 @@ class ValidateDeployChooseCard(BaseDeployChooseCard):
 
         common_cards = common_draw_deck
         if common_cards.cards_total > 0:
-            cards = common_cards.faceUp_deck
+            cards = common_cards.face_up_deck
             if len(cards) > 0:
                 common_card_face_up = cards[0]
                 common_can_afford = self._can_afford(stash_card_face_up.cost, player)

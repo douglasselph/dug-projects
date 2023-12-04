@@ -5,6 +5,7 @@ from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
 from src.data.Card import CardComposite, DieSides, Card, CardWound
 from src.data.Decision import DecisionLine, DecisionIntention
+from src.data.maneuver.ManeuverFeelingFeint import maneuver_apply_feeling_feint
 
 
 class Player:
@@ -141,7 +142,7 @@ class Player:
 
     @property
     def draw_cards(self) -> List[CardComposite]:
-        return self.draw.faceUp_deck + self.draw.draw_deck
+        return self.draw.face_up_deck + self.draw.draw_deck
 
     @property
     def num_cards_draw(self) -> int:
@@ -153,7 +154,7 @@ class Player:
 
     @property
     def stash_cards_face_up(self) -> List[CardComposite]:
-        return self.stash.faceUp_deck
+        return self.stash.face_up_deck
     @property
     def stash_cards_draw(self) -> List[CardComposite]:
         return self.stash.draw_deck
@@ -202,7 +203,7 @@ class Player:
         return self.plate.central_maneuver_card
 
     def apply_feeling_feint(self, coin: DecisionIntention):
-        self.plate.apply_feeling_feint(coin)
+        maneuver_apply_feeling_feint(self.plate, coin)
 
     def apply_to_die_four(self, coin: DecisionIntention):
         for line in self.plate.lines:

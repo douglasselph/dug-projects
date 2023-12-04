@@ -1,6 +1,5 @@
 # package src.data
 from enum import Enum
-from src.data.Deck import Deck
 
 
 class SlabID(Enum):
@@ -11,8 +10,3 @@ class SlabID(Enum):
     SELF_STASH_FACE_UP = 4
     OPPONENT_FACE_UP = 5
 
-
-class Slab:
-
-    def __init__(self):
-        self._deck = Deck()

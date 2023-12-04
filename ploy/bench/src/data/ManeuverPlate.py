@@ -3,7 +3,6 @@ from typing import List, Optional
 
 from src.data.Card import Card, CardComposite, card_ordinal, DieSides, CardWound
 from src.data.Decision import DecisionLine, DecisionIntention
-from src.data.maneuver.ManeuverFeelingFeint import maneuver_feeling_feint
 
 
 class Line:
@@ -264,16 +263,6 @@ class ManeuverPlate:
                         line.add(new_wound)
                         return True
         return False
-
-    def apply_feeling_feint(self, coin: DecisionIntention):
-        times = 0
-        for line in self.lines:
-            if line.intention == coin:
-                for card in line.cards:
-                    if card == Card.MANEUVER_FEELING_FEINT:
-                        times += 1
-        for time in range(times):
-            maneuver_feeling_feint(self, coin)
 
     def reduce_reach(self):
         choice: Optional[Line] = None
