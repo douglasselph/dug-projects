@@ -197,9 +197,9 @@ class PlaceCardModel:
 
     def _gather_lines(self, game: Game) -> [np.ndarray]:
         data_agent_lines = []
-        for i in range(len(self._line_card_sizes)):
-            intention_coin_data = np.array([game.agent_line_intention_id(i).value], dtype=float).reshape((1,))
-            line_cards_data = np.array(game.agent_line_card_values(i), dtype=int).reshape((self._line_card_sizes[i],))
+        for line in DecisionLine:
+            intention_coin_data = np.array([game.agent_line_intention_id(line).value], dtype=float).reshape((1,))
+            line_cards_data = np.array(game.agent_line_card_values(line), dtype=int).reshape((self._line_card_sizes[i],))
             data_agent_lines.append(intention_coin_data)
             data_agent_lines.append(line_cards_data)
         return data_agent_lines
@@ -215,7 +215,7 @@ class PlaceCardModel:
             intention_index = i % 4
             line = DecisionLine(line_index + 1)
             intention = DecisionIntention(intention_index)
-            legal_mask[i] = game.is_legal(line, intention)
+            legal_mask[i] = game.is_legal_on_agent_plate(line, intention)
 
         # Apply the mask: set illegal move probabilities to -inf
         return np.where(legal_mask, prediction, -np.inf)

@@ -113,12 +113,12 @@ class ManeuverPlate:
             self.lines.append(Line(size))
 
     def add_card(self, card: CardComposite, line: DecisionLine, coin: DecisionIntention):
-        pos = self._position(line)
+        pos = line.pos
         self.lines[pos].set_intention(coin)
         self.lines[pos].add(card)
 
     def is_set_intention_legal(self, line: DecisionLine, coin: DecisionIntention) -> bool:
-        pos = self._position(line)
+        pos = line.pos
         line = self.lines[pos]
         if not line.is_set_intention_legal:
             return False
@@ -138,8 +138,7 @@ class ManeuverPlate:
         return 3 - penalty
 
     def is_add_card_legal(self, line: DecisionLine) -> bool:
-        pos = self._position(line)
-        return self.lines[pos].is_add_card_legal
+        return self.lines[line.pos].is_add_card_legal
 
     @property
     def lines_num_cards(self) -> List[int]:
@@ -148,12 +147,12 @@ class ManeuverPlate:
             num_cards.append(len(line.cards))
         return num_cards
 
-    def line_intention_id(self, position: int) -> DecisionIntention:
-        return self.lines[position].intention
+    def get_line_intention_id(self, line: DecisionLine) -> DecisionIntention:
+        return self.lines[line.pos].intention
 
-    def line_card_values(self, position: int) -> List[int]:
+    def line_card_values(self, line: DecisionLine) -> List[int]:
         card_values = []
-        line = self.lines[position]
+        line = self.lines[line.pos]
         for position in range(line.maxSize):
             if line.has_card(position):
                 card = line.query(position)
@@ -163,12 +162,10 @@ class ManeuverPlate:
         return card_values
 
     def set_intention_face_up(self, line: DecisionLine):
-        pos = self._position(line)
-        self.lines[pos].intention_face_up = True
+        self.lines[line.pos].intention_face_up = True
 
     def set_line_face_up(self, line: DecisionLine):
-        pos = self._position(line)
-        self.lines[pos].cards_face_up = True
+        self.lines[line.pos].cards_face_up = True
 
     def reveal_intention_on_all_lines(self):
         for line in self.lines:
@@ -290,6 +287,3 @@ class ManeuverPlate:
                 result.append(line)
         return result
 
-    @staticmethod
-    def _position(line: DecisionLine) -> int:
-        return line.value - 1

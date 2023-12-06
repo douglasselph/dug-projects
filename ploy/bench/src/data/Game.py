@@ -62,11 +62,11 @@ class Game:
     def agent_stash_cards_total(self) -> int:
         return self.agentPlayer.stash_cards_total
 
-    def agent_line_intention_id(self, line_position: int) -> DecisionIntention:
-        return self.agentPlayer.line_intention_id(line_position)
+    def agent_line_intention_id(self, line: DecisionLine) -> DecisionIntention:
+        return self.agentPlayer.line_intention_id(line)
 
-    def agent_line_card_values(self, line_position: int) -> List[int]:
-        return self.agentPlayer.line_card_values(line_position)
+    def agent_line_card_values(self, line: DecisionLine) -> List[int]:
+        return self.agentPlayer.line_card_values(line)
 
     @property
     def opponent_energy(self) -> int:
@@ -83,7 +83,7 @@ class Game:
     def nn_common_draw_deck_face_up_cards(self, size: int) -> List[int]:
         return self.commonDrawDeck.nn_face_up_cards(size)
 
-    def is_legal(self, line: DecisionLine, intention: DecisionIntention):
+    def is_legal_on_agent_plate(self, line: DecisionLine, intention: DecisionIntention):
         return self.agentPlayer.is_legal(line, intention)
 
     @property

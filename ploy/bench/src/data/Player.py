@@ -88,12 +88,13 @@ class Player:
     def has_revealed_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_revealed_intention(coin)
 
-    def line_intention_id(self, position: int) -> DecisionIntention:
-        return self.plate.line_intention_id(position)
+    def line_intention_id(self, line: DecisionLine) -> DecisionIntention:
+        return self.plate.get_line_intention_id(line)
 
-    def line_card_values(self, position: int) -> List[int]:
-        return self.plate.line_card_values(position)
+    def line_card_values(self, line: DecisionLine) -> List[int]:
+        return self.plate.line_card_values(line)
 
+    # Return list of the number of cards in eah line
     @property
     def lines_num_cards(self) -> List[int]:
         return self.plate.lines_num_cards

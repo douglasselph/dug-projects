@@ -1,4 +1,5 @@
 # src.data
+from __future__ import annotations
 from enum import Enum
 
 
@@ -7,6 +8,10 @@ class DecisionLine(Enum):
     LINE_2 = 2
     LINE_3 = 3
     LINE_4 = 4
+
+    @property
+    def pos(self) -> int:
+        return self.value - 1
 
 
 class DecisionIntention(Enum):

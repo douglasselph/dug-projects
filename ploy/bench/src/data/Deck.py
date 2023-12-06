@@ -83,6 +83,7 @@ class Deck:
     # The first card return is the top most face up card.
     # Must return exactly size elements. If there are more available, then they will be clipped.
     # If there are less, then 0 will be appended.
+    # The ordinal values of the cards are returned (see card_ordinal)
     #
     def nn_face_up_cards(self, size: int) -> List[int]:
         face_up_array = [card_ordinal(card) for card in self._faceUp[:size]]
