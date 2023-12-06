@@ -6,6 +6,7 @@ from src.data.Deck import Deck
 from src.data.Decision import DecisionIntention, DecisionLine
 from src.data.Stats import StatsGame, StatsAll
 from src.data.Card import CardComposite
+from src.data.RewardConstants import RewardConstants
 
 
 class TurnPhase(Enum):
@@ -35,7 +36,6 @@ class PlayerID(Enum):
 
 
 class Game:
-    _scale_reward = 20
 
     def __init__(self):
         self.turnPhase = TurnPhase.NONE
@@ -98,107 +98,119 @@ class Game:
         return self.commonDrawDeck.pull_face_up_card()
 
     @property
-    def compute_reward(self) -> int:
+    def compute_base_reward(self) -> int:
         base = 0
         if self.agentPlayer.fatal_received:
             if self.opponent.fatal_received:
                 # Tie
                 base += 0
             else:
-                base -= 100
+                base += RewardConstants.BASE_PENALTY_LOSS
         elif self.agentPlayer.energy <= 0:
             if self.opponent.fatal_received:
-                # Won, but just barely.
-                base += 50
+                base += RewardConstants.BASE_REWARD_WIN - RewardConstants.EXHAUSTED_WIN_PENALTY
             elif self.opponent.energy <= 0:
                 # Tie
                 base += 0
             else:
                 # Loss
-                base -= 100
+                base += RewardConstants.BASE_PENALTY_LOSS
         else:
             if self.opponent.fatal_received:
                 # Won
-                base += 100
+                base += RewardConstants.BASE_REWARD_WIN
             elif self.opponent.energy <= 0:
                 # Won
-                base += 100
+                base += RewardConstants.BASE_REWARD_WIN
+
+        return base
+
+    @property
+    def compute_wound_reward(self) -> int:
 
         self.agentPlayer.discard_all()
         self.opponent.discard_all()
 
-        agent_wounds = self.agentPlayer.nn_wound_value
-        opponent_wounds = self.opponent.nn_wound_value
-        agent_energy_loss = self.agentPlayer.nn_energy_loss
-        opponent_energy_loss = self.opponent.nn_energy_loss
-        num_turns = self.stat.num_turns
+        agent_wounds = self.agentPlayer.compute_wound_penalty_value
+        opponent_wounds = self.opponent.compute_wound_penalty_value
 
-        if base > 0:
-            # Core Win
-            base_reward = base - agent_wounds - agent_energy_loss
-        elif base < 0:
-            # Core Loss
-            base_reward = base + opponent_wounds + opponent_energy_loss
-        else:
-            # Tie
-            base_reward = opponent_wounds + opponent_energy_loss - agent_wounds - agent_energy_loss
+        return opponent_wounds - agent_wounds
 
-        return base_reward / num_turns * self._scale_reward
+    @property
+    def compute_energy_penalty(self) -> int:
+        if self.agent_energy < RewardConstants.ENERGY_PENALTY_THRESHOLD:
+            return RewardConstants.ENERGY_PENALTY_THRESHOLD - self.agent_energy
+        return 0
 
-    def apply_stats(self, all: StatsAll):
-        all.games += 1
-        all.total_turns = self.stat.turns
+    @property
+    def turns(self) -> int:
+        return self.stat.turns
 
-        if self.stat.turns > all.highest_turns:
-            all.highest_turns = self.stat.turns
-        if all.lowest_turns == 0 or all.lowest_turns < self.stat.turns:
-            all.lowest_turns = self.stat.turns
+    # Reward formula:
+    #   BASE - ENERGY_PENALTY * ENERGY_SCALE - WOUND_PENALTY * WOUND_SCALE - TURNS * TURN_SCALE
+    @property
+    def compute_reward(self) -> int:
+        return self.compute_base_reward - \
+            self.compute_energy_penalty * RewardConstants.ENERGY_PENALTY_SCALE - \
+            self.compute_wound_reward * RewardConstants.WOUND_PENALTY_SCALE - \
+            self.turns * RewardConstants.TURNS_PENALTY_SCALE
+
+    def apply_to_all_stats(self, stats_all: StatsAll):
+        stats_all.games += 1
+        stats_all.total_turns = self.stat.turns
+
+        if self.stat.turns > stats_all.highest_turns:
+            stats_all.highest_turns = self.stat.turns
+
+        if stats_all.lowest_turns == 0 or stats_all.lowest_turns < self.stat.turns:
+            stats_all.lowest_turns = self.stat.turns
 
         if self.agentPlayer.fatal_received:
             if self.opponent.fatal_received:
-                all.ties += 1
+                stats_all.ties += 1
             else:
-                all.fatal_loss += 1
+                stats_all.fatal_loss += 1
+
         elif self.opponent.fatal_received:
-            all.fatal_wins += 1
+            stats_all.fatal_wins += 1
         elif self.agentPlayer.energy <= 0:
             if self.opponent.energy <= 0:
-                all.ties += 1
+                stats_all.ties += 1
             else:
-                all.energy_loss += 1
+                stats_all.energy_loss += 1
         elif self.opponent.energy <= 0:
-            all.energy_wins += 1
+            stats_all.energy_wins += 1
 
-        all.total_num_attacks += self.stat.num_attacks
-        all.total_num_defends += self.stat.num_defends
-        all.total_num_deploys += self.stat.num_deploys
-        all.total_attack_roll += self.stat.total_attack_roll
-        all.total_defend_roll += self.stat.total_defend_roll
-        all.total_deploy_roll += self.stat.total_deploy_roll
-        all.total_draw_deck_size_agent += self.agentPlayer.num_cards_draw
-        all.total_draw_deck_size_opponent += self.opponent.num_cards_draw
-        all.total_agent_energy_lost += self.agentPlayer.energy_loss
-        all.total_opponent_energy_lost += self.opponent.energy_loss
+        stats_all.total_num_attacks += self.stat.num_attacks
+        stats_all.total_num_defends += self.stat.num_defends
+        stats_all.total_num_deploys += self.stat.num_deploys
+        stats_all.total_attack_roll += self.stat.total_attack_roll
+        stats_all.total_defend_roll += self.stat.total_defend_roll
+        stats_all.total_deploy_roll += self.stat.total_deploy_roll
+        stats_all.total_draw_deck_size_agent += self.agentPlayer.num_cards_draw
+        stats_all.total_draw_deck_size_opponent += self.opponent.num_cards_draw
+        stats_all.total_agent_energy_lost += self.agentPlayer.energy_loss
+        stats_all.total_opponent_energy_lost += self.opponent.energy_loss
 
         for wound in self.stat.agent_wounds:
-            if wound not in all.total_agent_wounds:
-                all.total_agent_wounds[wound] = 0
-            all.total_agent_wounds[wound] += 1
+            if wound not in stats_all.total_agent_wounds:
+                stats_all.total_agent_wounds[wound] = 0
+            stats_all.total_agent_wounds[wound] += 1
         for wound in self.stat.opponent_wounds:
-            if wound not in all.total_opponent_wounds:
-                all.total_opponent_wounds[wound] = 0
-            all.total_opponent_wounds[wound] += 1
+            if wound not in stats_all.total_opponent_wounds:
+                stats_all.total_opponent_wounds[wound] = 0
+            stats_all.total_opponent_wounds[wound] += 1
 
-        if self.stat.highest_attack_roll > all.highest_attack_roll:
-            all.highest_attack_roll = self.stat.highest_attack_roll
-        if self.stat.highest_defend_roll > all.highest_defend_roll:
-            all.highest_defend_roll = self.stat.highest_defend_roll
-        if self.stat.highest_deploy_roll > all.highest_deploy_roll:
-            all.highest_deploy_roll = self.stat.highest_deploy_roll
+        if self.stat.highest_attack_roll > stats_all.highest_attack_roll:
+            stats_all.highest_attack_roll = self.stat.highest_attack_roll
+        if self.stat.highest_defend_roll > stats_all.highest_defend_roll:
+            stats_all.highest_defend_roll = self.stat.highest_defend_roll
+        if self.stat.highest_deploy_roll > stats_all.highest_deploy_roll:
+            stats_all.highest_deploy_roll = self.stat.highest_deploy_roll
 
-        if self.stat.lowest_attack_roll < all.lowest_attack_roll:
-            all.lowest_attack_roll = self.stat.lowest_attack_roll
-        if self.stat.lowest_defend_roll < all.lowest_defend_roll:
-            all.lowest_defend_roll = self.stat.lowest_defend_roll
-        if self.stat.lowest_deploy_roll < all.lowest_deploy_roll:
-            all.lowest_deploy_roll = self.stat.lowest_deploy_roll
+        if self.stat.lowest_attack_roll < stats_all.lowest_attack_roll:
+            stats_all.lowest_attack_roll = self.stat.lowest_attack_roll
+        if self.stat.lowest_defend_roll < stats_all.lowest_defend_roll:
+            stats_all.lowest_defend_roll = self.stat.lowest_defend_roll
+        if self.stat.lowest_deploy_roll < stats_all.lowest_deploy_roll:
+            stats_all.lowest_deploy_roll = self.stat.lowest_deploy_roll

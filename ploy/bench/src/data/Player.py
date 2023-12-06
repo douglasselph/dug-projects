@@ -10,7 +10,6 @@ from src.data.maneuver.ManeuverFeelingFeint import maneuver_apply_feeling_feint
 
 class Player:
     _max_energy = 20
-    _loss_energy = 6  # If energy reaches this level this is too close to losing.
     _hand_size = 4
 
     plate: ManeuverPlate
@@ -74,13 +73,6 @@ class Player:
     @property
     def stash_cards_total(self) -> int:
         return self.stash.cards_total
-
-    @property
-    def energy_loss(self) -> int:
-        value = self._max_energy - self.energy
-        if value < 0:
-            return 0
-        return value
 
     def has_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_intention(coin)
@@ -156,9 +148,14 @@ class Player:
     @property
     def stash_cards_face_up(self) -> List[CardComposite]:
         return self.stash.face_up_deck
+
     @property
     def stash_cards_draw(self) -> List[CardComposite]:
         return self.stash.draw_deck
+
+    @property
+    def energy_loss(self) -> int:
+        return self._max_energy - self.energy
 
     def stash_pull_face_up_card(self) -> CardComposite:
         return self.stash.pull_face_up_card()
@@ -170,16 +167,8 @@ class Player:
         return self.plate.remove_sides(card)
 
     @property
-    def nn_wound_value(self) -> int:
-        return self.draw.nn_wound_value
-
-    @property
-    def nn_energy_loss(self) -> int:
-        if self.energy < 0:
-            return self._loss_energy
-        if self.energy >= self._loss_energy:
-            return 0
-        return self._loss_energy - self.energy
+    def compute_wound_penalty_value(self) -> int:
+        return self.draw.compute_wound_penalty_value
 
     def reveal_intentions_if_maxed(self):
         self.plate.reveal_intentions_if_maxed()

@@ -1,7 +1,7 @@
 # package src.data
 from __future__ import annotations
 from typing import List, Optional
-from src.data.Card import CardComposite, card_ordinal, card_wound_value, Card
+from src.data.Card import CardComposite, card_ordinal, card_wound_penalty_value, Card
 
 
 class Deck:
@@ -92,10 +92,10 @@ class Deck:
         return face_up_array
 
     @property
-    def nn_wound_value(self) -> int:
+    def compute_wound_penalty_value(self) -> int:
         cards = self._faceUp + self._draw
         wounds = 0
         for card in cards:
-            wounds += card_wound_value(card)
+            wounds += card_wound_penalty_value(card)
         return wounds
 

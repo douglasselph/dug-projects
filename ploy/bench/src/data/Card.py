@@ -2,6 +2,7 @@
 from __future__ import annotations
 from enum import Enum
 from typing import Union, Optional
+from src.data.RewardConstants import RewardConstants
 import random
 
 
@@ -478,18 +479,18 @@ def card_title(card: CardComposite) -> str:
     return ""
 
 
-def card_wound_value(card: CardComposite) -> int:
+def card_wound_penalty_value(card: CardComposite) -> int:
     if isinstance(card, Card):
         return 0
     if isinstance(card, CardWound):
         if card == CardWound.WOUND_MINOR:
-            return 1
+            return RewardConstants.WOUND_PENALTY_MINOR
         if card == CardWound.WOUND_ACUTE:
-            return 2
+            return RewardConstants.WOUND_PENALTY_ACUTE
         if card == CardWound.WOUND_GRAVE:
-            return 4
+            return RewardConstants.WOUND_PENALTY_GRAVE
         if card == CardWound.WOUND_DIRE:
-            return 8
+            return RewardConstants.WOUND_PENALTY_DIRE
     return 0
 
 

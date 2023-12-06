@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, List
 from src.data.Card import CardWound
+from src.data.Game import Game
 
 
 class StatsAll:

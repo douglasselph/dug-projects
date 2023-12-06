@@ -220,7 +220,7 @@ class TestStats(unittest.TestCase):
         self.SUT.draw(4)
         expected_value = 1 + 4 + 8
         # Act
-        value = self.SUT.nn_wound_value
+        value = self.SUT.compute_wound_penalty_value
         # Assert
         self.assertEqual(expected_value, value)
 
@@ -236,6 +236,6 @@ class TestStats(unittest.TestCase):
         ])
         expected_value = 1 + 2 + 4 + 8
         # Act
-        value = self.SUT.nn_wound_value
+        value = self.SUT.compute_wound_penalty_value
         # Assert
         self.assertEqual(expected_value, value)
