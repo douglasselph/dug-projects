@@ -131,8 +131,8 @@ class Game:
         self.agentPlayer.discard_all()
         self.opponent.discard_all()
 
-        agent_wounds = self.agentPlayer.compute_wound_penalty_value
-        opponent_wounds = self.opponent.compute_wound_penalty_value
+        agent_wounds = self.agentPlayer.compute_draw_wound_penalty_value
+        opponent_wounds = self.opponent.compute_draw_wound_penalty_value
 
         return opponent_wounds - agent_wounds
 
@@ -187,8 +187,8 @@ class Game:
         stats_all.total_attack_roll += self.stat.total_attack_roll
         stats_all.total_defend_roll += self.stat.total_defend_roll
         stats_all.total_deploy_roll += self.stat.total_deploy_roll
-        stats_all.total_draw_deck_size_agent += self.agentPlayer.num_cards_draw
-        stats_all.total_draw_deck_size_opponent += self.opponent.num_cards_draw
+        stats_all.total_draw_deck_size_agent += self.agentPlayer.num_all_draw_cards
+        stats_all.total_draw_deck_size_opponent += self.opponent.num_all_draw_cards
         stats_all.total_agent_energy_lost += self.agentPlayer.energy_loss
         stats_all.total_opponent_energy_lost += self.opponent.energy_loss
 
@@ -214,3 +214,29 @@ class Game:
             stats_all.lowest_defend_roll = self.stat.lowest_defend_roll
         if self.stat.lowest_deploy_roll < stats_all.lowest_deploy_roll:
             stats_all.lowest_deploy_roll = self.stat.lowest_deploy_roll
+
+    # TODO:
+    def cleanup(self):
+        self._upgrade_face_up_wounds()
+        self._lose_energy_from_face_up_wounds()
+        self.discard_face_up()
+        self.endOfGame = \
+            self.agentPlayer.fatal_received or \
+            self.agentPlayer.energy <= 0 or \
+            self.opponent.fatal_received or \
+            self.opponent.energy <= 0
+
+    # TODO: Unit test
+    def _upgrade_face_up_wounds(self):
+        self.agentPlayer.upgrade_face_up_wounds()
+        self.opponent.upgrade_face_up_wounds()
+
+    # TODO: Unit test
+    def _lose_energy_from_face_up_wounds(self):
+        self.agentPlayer.lose_energy_from_face_up_wounds()
+        self.opponent.lose_energy_from_face_up_wounds()
+
+    # TODO: Unit test
+    def discard_face_up(self):
+        self.agentPlayer.discard_face_up()
+        self.opponent.discard_face_up()

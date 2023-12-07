@@ -9,7 +9,6 @@ from src.data.maneuver.ManeuverFeelingFeint import maneuver_apply_feeling_feint
 
 
 class Player:
-
     _max_energy = 20
     _hand_size = 4
 
@@ -93,131 +92,14 @@ class Player:
         return self.plate.lines_num_cards
 
     def discard_all(self):
-        self._discard(self.plate.discard_all())
+        self.draw.extend(self.plate.discard_all())
 
     def discard_face_up(self):
-        self._discard(self.plate.discard_face_up())
+        self.draw.extend(self.plate.discard_face_up())
 
-    def _discard(self, cards: List[CardComposite]):
-        self.draw.extend(cards)
-        cards = self._filter_wounds(cards)
-        cards = self._upgrade_wounds(cards)
-        self._lose_energy_from_wounds(cards)
+    def upgrade_face_up_wounds(self) -> List[CardComposite]:
+        cards = self.plate.wounds_face_up
 
-    def upgrade_lowest_wound(self):
-        wounds = self.plate.wounds_face_up
-        lowest: Optional[CardWound] = None
-        for wound in wounds:
-            if lowest is None or lowest.value > wound.value:
-                lowest = wound
-        if lowest is None:
-            self.draw.append(CardWound.WOUND_MINOR)
-        else:
-            if lowest.upgrade is None:
-                self.fatal_received = True
-                self.plate.remove_on_face_up(lowest)
-            else:
-                self.plate.replace_wound_face_up(lowest, lowest.upgrade)
-
-    def upgrade_highest_wound(self):
-        wounds = self.plate.wounds_face_up
-        highest: Optional[CardWound] = None
-        for wound in wounds:
-            if highest is None or highest.value < wound.value:
-                highest = wound
-        if highest is None:
-            self.draw.append(CardWound.WOUND_MINOR)
-        else:
-            if highest.upgrade is None:
-                self.fatal_received = True
-                self.plate.remove_on_face_up(highest)
-            else:
-                self.plate.replace_wound_face_up(highest, highest.upgrade)
-
-    @property
-    def draw_cards(self) -> List[CardComposite]:
-        return self.draw.face_up_deck + self.draw.draw_deck
-
-    @property
-    def num_cards_draw(self) -> int:
-        return len(self.draw_cards)
-
-    @property
-    def num_cards_stash(self) -> int:
-        return self.stash.cards_total
-
-    @property
-    def stash_cards_face_up(self) -> List[CardComposite]:
-        return self.stash.face_up_deck
-
-    @property
-    def stash_cards_draw(self) -> List[CardComposite]:
-        return self.stash.draw_deck
-
-    @property
-    def energy_loss(self) -> int:
-        return self._max_energy - self.energy
-
-    def stash_pull_face_up_card(self) -> CardComposite:
-        return self.stash.pull_face_up_card()
-
-    def plate_has_sides(self, intention: DecisionIntention, card: DieSides) -> bool:
-        return self.plate.has_sides_on_face_up(intention, card)
-
-    def plate_remove_sides(self, intention: DecisionIntention, card: DieSides) -> Optional[Card]:
-        return self.plate.remove_sides_on_face_up(intention, card)
-
-    @property
-    def compute_wound_penalty_value(self) -> int:
-        return self.draw.compute_wound_penalty_value
-
-    def reveal_intentions_if_maxed(self):
-        self.plate.reveal_intentions_if_maxed()
-
-    def reveal_all_intentions(self):
-        self.plate.reveal_intention_on_all_lines()
-
-    def reveal_cards_with_revealed_intentions(self):
-        self.plate.reveal_cards_with_revealed_intentions()
-
-    def reveal_intentions_with_intention(self, coin: DecisionIntention):
-        self.plate.reveal_intentions_of(coin)
-
-    def collect_dice_for(self, coin: DecisionIntention) -> List[DieSides]:
-        return self.plate.collect_dice_for(coin)
-
-    def collect_face_up_cards_for(self, coin: DecisionIntention) -> List[CardComposite]:
-        return self.plate.collect_face_up_cards_for(coin)
-
-    @property
-    def central_maneuver_card(self) -> Card:
-        return self.plate.central_maneuver_card
-
-    def apply_feeling_feint(self, coin: DecisionIntention):
-        maneuver_apply_feeling_feint(self.plate, coin)
-
-    def apply_to_die_four(self, coin: DecisionIntention):
-        for line in self.plate.lines:
-            if line.intention == coin and line.intention_face_up:
-                for card in line.cards:
-                    if card == Card.MANEUVER_TO_DIE_FOUR:
-                        card = self.draw.draw()
-                        if card != Card.NONE:
-                            line.add(card)
-
-    @staticmethod
-    def _filter_wounds(cards: List[CardComposite]) -> List[CardWound]:
-        result: List[CardWound] = []
-        for card in cards:
-            if isinstance(card, CardWound):
-                result.append(card)
-        return result
-
-    def _lose_energy_from_wounds(self, cards: List[CardWound]):
-        for card in cards:
-            self.energy -= card.energy_penalty
-
-    def _upgrade_wounds(self, cards: List[CardWound]) -> List[CardWound]:
         count = cards.count(CardWound.WOUND_ACUTE)
         if count > 1:
             cards = self._remove_two_of(cards, CardWound.WOUND_ACUTE)
@@ -241,9 +123,121 @@ class Player:
             cards.remove(which)
         return cards
 
+    def lose_energy_from_face_up_wounds(self):
+        cards = self.plate.wounds_face_up
+        for card in cards:
+            self.energy -= card.energy_penalty
+
+    def upgrade_lowest_face_up_wound(self):
+        wounds = self.plate.wounds_face_up
+        lowest: Optional[CardWound] = None
+        for wound in wounds:
+            if lowest is None or lowest.value > wound.value:
+                lowest = wound
+        if lowest is None:
+            self.draw.append(CardWound.WOUND_MINOR)
+        else:
+            if lowest.upgrade is None:
+                self.fatal_received = True
+                self.plate.remove_on_face_up(lowest)
+            else:
+                self.plate.replace_wound_face_up(lowest, lowest.upgrade)
+
+    def upgrade_highest_face_up_wound(self):
+        wounds = self.plate.wounds_face_up
+        highest: Optional[CardWound] = None
+        for wound in wounds:
+            if highest is None or highest.value < wound.value:
+                highest = wound
+        if highest is None:
+            self.draw.append(CardWound.WOUND_MINOR)
+        else:
+            if highest.upgrade is None:
+                self.fatal_received = True
+                self.plate.remove_on_face_up(highest)
+            else:
+                self.plate.replace_wound_face_up(highest, highest.upgrade)
+
+    @property
+    def all_draw_cards(self) -> List[CardComposite]:
+        return self.draw.face_up_deck + self.draw.draw_deck
+
+    @property
+    def num_all_draw_cards(self) -> int:
+        return len(self.all_draw_cards)
+
+    @property
+    def num_cards_stash(self) -> int:
+        return self.stash.cards_total
+
+    @property
+    def stash_cards_face_up(self) -> List[CardComposite]:
+        return self.stash.face_up_deck
+
+    @property
+    def stash_cards_draw(self) -> List[CardComposite]:
+        return self.stash.draw_deck
+
+    @property
+    def energy_loss(self) -> int:
+        return self._max_energy - self.energy
+
+    def stash_pull_face_up_card(self) -> CardComposite:
+        return self.stash.pull_face_up_card()
+
+    def plate_has_face_up_sides(self, intention: DecisionIntention, card: DieSides) -> bool:
+        return self.plate.has_face_up_sides(intention, card)
+
+    def plate_remove_sides(self, intention: DecisionIntention, card: DieSides) -> Optional[Card]:
+        return self.plate.remove_sides_on_face_up(intention, card)
+
+    @property
+    def compute_draw_wound_penalty_value(self) -> int:
+        return self.draw.compute_wound_penalty_value
+
+    def reveal_intentions_if_maxed(self):
+        self.plate.reveal_intentions_if_maxed()
+
+    def reveal_all_intentions(self):
+        self.plate.reveal_intention_on_all_lines()
+
+    def reveal_cards_with_revealed_intentions(self):
+        self.plate.reveal_cards_with_revealed_intentions()
+
+    def reveal_intentions_of(self, coin: DecisionIntention):
+        self.plate.reveal_intentions_of(coin)
+
+    def collect_dice_for(self, coin: DecisionIntention) -> List[DieSides]:
+        return self.plate.collect_dice_for(coin)
+
+    def collect_face_up_cards_for(self, coin: DecisionIntention) -> List[CardComposite]:
+        return self.plate.collect_face_up_cards_for(coin)
+
+    @property
+    def central_maneuver_card(self) -> Card:
+        return self.plate.central_maneuver_card
+
+    # TODO: need to move logic to DecisionTree.
+    def apply_feeling_feint(self, coin: DecisionIntention):
+        maneuver_apply_feeling_feint(self.plate, coin)
+
+    # TODO: requires some additional processing, just in case card is a maneuver card.
+    def apply_to_die_four(self, coin: DecisionIntention) -> List[CardComposite]:
+        drawn = []
+        for line in self.plate.lines:
+            if line.intention == coin and line.intention_face_up:
+                for card in line.cards:
+                    if card == Card.MANEUVER_TO_DIE_FOUR:
+                        card = self.draw.draw()
+                        if card != Card.NONE:
+                            line.add(card)
+                            drawn.append(card)
+        return drawn
+
     def reduce_reach_on(self, line: DecisionLine):
         self.plate.reduce_reach_on(line)
 
+    # TODO: Move to decision tree
     def add_penalty_coin(self):
         value = random.randint(1, 3)
         for i in range(3):
@@ -255,14 +249,7 @@ class Player:
             if value >= 4:
                 value = 1
 
-    @staticmethod
-    def coin_for(value) -> Optional[DecisionIntention]:
-        for coin in DecisionIntention:
-            if coin.value == value:
-                return coin
-        return None
-
-    def trash_random_card(self) -> Optional[Card]:
+    def trash_one_random_face_up_plate_cards(self) -> Optional[Card]:
         face_up_lines = self.plate.face_up_lines
         line_index = random.randint(0, len(face_up_lines) - 1)
         for i in range(len(face_up_lines)):
@@ -281,7 +268,7 @@ class Player:
                 line_index = 0
         return None
 
-    def trash(self, card_to_trash: Card) -> bool:
+    def trash_face_up_card(self, card_to_trash: Card) -> bool:
         face_up_lines = self.plate.face_up_lines
         for line_index in range(len(face_up_lines)):
             line = face_up_lines[line_index]

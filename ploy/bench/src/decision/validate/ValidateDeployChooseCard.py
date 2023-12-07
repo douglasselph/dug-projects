@@ -83,7 +83,7 @@ class ValidateDeployChooseCard(BaseDeployChooseCard):
     def _can_afford(card: CardCost, player: Player) -> bool:
         if player.pips < card.pips:
             return False
-        if not player.plate_has_sides(card.sides):
+        if not player.plate_has_face_up_sides(card.sides):
             return False
         if player.energy <= 5:
             return False

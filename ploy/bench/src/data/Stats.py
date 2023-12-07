@@ -66,8 +66,8 @@ class StatsAll:
         self.total_attack_roll += game.stat.total_attack_roll
         self.total_defend_roll += game.stat.total_defend_roll
         self.total_deploy_roll += game.stat.total_deploy_roll
-        self.total_draw_deck_size_agent += game.agentPlayer.num_cards_draw
-        self.total_draw_deck_size_opponent += game.opponent.num_cards_draw
+        self.total_draw_deck_size_agent += game.agentPlayer.num_all_draw_cards
+        self.total_draw_deck_size_opponent += game.opponent.num_all_draw_cards
         self.total_agent_energy_lost += game.agentPlayer.energy_loss
         self.total_opponent_energy_lost += game.opponent.energy_loss
 

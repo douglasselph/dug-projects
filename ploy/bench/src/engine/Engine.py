@@ -100,8 +100,8 @@ class Engine:
         if not attacker.plate_has_intention(DecisionIntention.ATTACK):
             return stats
 
-        attacker.reveal_intentions_with_intention(DecisionIntention.ATTACK)
-        defender.reveal_intentions_with_intention(DecisionIntention.DEFEND)
+        attacker.reveal_intentions_of(DecisionIntention.ATTACK)
+        defender.reveal_intentions_of(DecisionIntention.DEFEND)
         attacker.reveal_cards_with_revealed_intentions()
         defender.reveal_cards_with_revealed_intentions()
 
@@ -199,19 +199,19 @@ class Engine:
         elif value == 5:
             player.energy -= 1
         elif value == 6:
-            player.upgrade_lowest_wound()
+            player.upgrade_lowest_face_up_wound()
         elif value == 7:
             player.add_penalty_coin()
         elif value == 8:
             player.reduce_reach()
         elif value == 9:
-            card = player.trash_random_card()
+            card = player.trash_one_random_face_up_plate_cards()
             self._add_card_to_trash(card)
         elif value == 10:
             player.reduce_reach()
             player.reduce_reach()
         elif value == 11:
-            player.upgrade_highest_wound()
+            player.upgrade_highest_face_up_wound()
         else:
             self._apply_secondary_affliction(player, sides)
             self._apply_secondary_affliction(player, sides)
@@ -236,7 +236,7 @@ class Engine:
             set_player(player).\
             select_card_to_trash(incident.cards)
         if card:
-            player.trash(card)
+            player.trash_face_up_card(card)
             self.game.trash.append(card)
             return card.trash
         return TrashBonus()
@@ -287,7 +287,7 @@ class Engine:
     @staticmethod
     def _resolve_deploy_gather_pips(player: Player) -> int:
 
-        player.reveal_intentions_with_intention(DecisionIntention.DEPLOY)
+        player.reveal_intentions_of(DecisionIntention.DEPLOY)
         player.reveal_cards_with_revealed_intentions()
         player.apply_feeling_feint(DecisionIntention.DEPLOY)
 
@@ -340,7 +340,7 @@ class Engine:
         # Buy card
         player.pips -= card.cost.pips
 
-        if card.cost.sides != DieSides.NONE and player.plate_has_sides(card.cost.sides):
+        if card.cost.sides != DieSides.NONE and player.plate_has_face_up_sides(card.cost.sides):
             trashed_card = player.plate_remove_sides(card.cost.sides)
             self.game.trash.append(trashed_card)
         elif card.cost.energy > 0:
@@ -361,12 +361,5 @@ class Engine:
     ###############################################################################
     # Cleanup:
     def cleanup(self):
-
-        self.game.agentPlayer.discard_face_up()
-        self.game.opponent.discard_face_up()
-        self.game.endOfGame = \
-            self.game.agentPlayer.fatal_received or \
-            self.game.agentPlayer.energy <= 0 or \
-            self.game.opponent.fatal_received or \
-            self.game.opponent.energy <= 0
+        self.game.cleanup()
 

@@ -304,7 +304,7 @@ class TestManeuverPlate(unittest.TestCase):
     def test_has_sides_on_face_up__with_none__returns_false(self):
         # Arrange
         # Act
-        has = self.SUT.has_sides_on_face_up(DecisionIntention.ATTACK, DieSides.D6)
+        has = self.SUT.has_face_up_sides(DecisionIntention.ATTACK, DieSides.D6)
         # Assert
         self.assertFalse(has)
 
@@ -317,7 +317,7 @@ class TestManeuverPlate(unittest.TestCase):
         self.SUT.add_card(Card.D6_SLIT_TIGHT, DecisionLine.LINE_3, DecisionIntention.DEPLOY)
         self.SUT.add_card(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES, DecisionLine.LINE_4, DecisionIntention.DEPLOY)
         # Act
-        has = self.SUT.has_sides_on_face_up(DecisionIntention.DEPLOY, DieSides.D6)
+        has = self.SUT.has_face_up_sides(DecisionIntention.DEPLOY, DieSides.D6)
         # Assert
         self.assertFalse(has)
 
@@ -331,7 +331,7 @@ class TestManeuverPlate(unittest.TestCase):
         self.SUT.add_card(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES, DecisionLine.LINE_4, DecisionIntention.DEPLOY)
         self.SUT.set_line_face_up(DecisionLine.LINE_3)
         # Act
-        has = self.SUT.has_sides_on_face_up(DecisionIntention.DEPLOY, DieSides.D6)
+        has = self.SUT.has_face_up_sides(DecisionIntention.DEPLOY, DieSides.D6)
         # Assert
         self.assertTrue(has)
 
@@ -345,7 +345,7 @@ class TestManeuverPlate(unittest.TestCase):
         self.SUT.add_card(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES, DecisionLine.LINE_4, DecisionIntention.DEPLOY)
         self.SUT.set_line_face_up(DecisionLine.LINE_3)
         # Act
-        has = self.SUT.has_sides_on_face_up(DecisionIntention.ATTACK, DieSides.D6)
+        has = self.SUT.has_face_up_sides(DecisionIntention.ATTACK, DieSides.D6)
         # Assert
         self.assertFalse(has)
 

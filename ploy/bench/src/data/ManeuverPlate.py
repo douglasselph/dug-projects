@@ -213,7 +213,7 @@ class ManeuverPlate:
                 return True
         return False
 
-    def has_sides_on_face_up(self, intention: DecisionIntention, sides: DieSides) -> bool:
+    def has_face_up_sides(self, intention: DecisionIntention, sides: DieSides) -> bool:
         for line in self.lines:
             if line.cards_face_up and line.intention == intention:
                 if line.has_sides(sides):

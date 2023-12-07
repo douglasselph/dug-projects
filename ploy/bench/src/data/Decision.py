@@ -1,6 +1,7 @@
 # src.data
 from __future__ import annotations
 from enum import Enum
+from typing import Optional
 
 
 class DecisionLine(Enum):
@@ -29,3 +30,9 @@ class DecisionDeck(Enum):
     COMMON_DRAW = 4
     OPPONENT_STASH_FACE_UP = 5
 
+
+def coin_for(value) -> Optional[DecisionIntention]:
+    for coin in DecisionIntention:
+        if coin.value == value:
+            return coin
+    return None

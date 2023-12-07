@@ -16,7 +16,7 @@ class ValidateTrash(BaseTrash):
         current_average = self._average_of(cards)
         if current_average < 30 or current_average > 52:
             return False
-        if self.player.num_cards_draw < 14:
+        if self.player.num_all_draw_cards < 14:
             return False
         chance = (current_average - 30) / 5
         roll = random.randint(1, 6)
