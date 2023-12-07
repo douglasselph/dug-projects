@@ -95,7 +95,7 @@ class Player:
         self._discard(self.plate.discard_all())
 
     def discard(self):
-        self._discard(self.plate.discard())
+        self._discard(self.plate.discard_face_up())
 
     def _discard(self, cards: List[CardComposite]):
         self.draw.extend(cards)
@@ -104,7 +104,7 @@ class Player:
         self._lose_energy_from_wounds(cards)
 
     def upgrade_lowest_wound(self):
-        wounds = self.plate.wounds
+        wounds = self.plate.wounds_face_up
         lowest: Optional[CardWound] = None
         for wound in wounds:
             if lowest is None or lowest.value > wound.value:
@@ -114,12 +114,12 @@ class Player:
         else:
             if lowest.upgrade is None:
                 self.fatal_received = True
-                self.plate.remove(lowest)
+                self.plate.remove_on_face_up(lowest)
             else:
-                self.plate.replace_wound(lowest, lowest.upgrade)
+                self.plate.replace_wound_face_up(lowest, lowest.upgrade)
 
     def upgrade_highest_wound(self):
-        wounds = self.plate.wounds
+        wounds = self.plate.wounds_face_up
         highest: Optional[CardWound] = None
         for wound in wounds:
             if highest is None or highest.value < wound.value:
@@ -129,9 +129,9 @@ class Player:
         else:
             if highest.upgrade is None:
                 self.fatal_received = True
-                self.plate.remove(highest)
+                self.plate.remove_on_face_up(highest)
             else:
-                self.plate.replace_wound(highest, highest.upgrade)
+                self.plate.replace_wound_face_up(highest, highest.upgrade)
 
     @property
     def draw_cards(self) -> List[CardComposite]:
@@ -161,10 +161,10 @@ class Player:
         return self.stash.pull_face_up_card()
 
     def plate_has_sides(self, card: DieSides) -> bool:
-        return self.plate.has_sides(card)
+        return self.plate.has_sides_on_face_up(card)
 
     def plate_remove_sides(self, card: DieSides) -> Optional[Card]:
-        return self.plate.remove_sides(card)
+        return self.plate.remove_sides_on_face_up(card)
 
     @property
     def compute_wound_penalty_value(self) -> int:

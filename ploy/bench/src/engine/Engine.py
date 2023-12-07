@@ -362,8 +362,8 @@ class Engine:
     # Cleanup:
     def cleanup(self):
 
-        self.game.agentPlayer.discard()
-        self.game.opponent.discard()
+        self.game.agentPlayer.discard_face_up()
+        self.game.opponent.discard_face_up()
         self.game.endOfGame = \
             self.game.agentPlayer.fatal_received or \
             self.game.agentPlayer.energy <= 0 or \

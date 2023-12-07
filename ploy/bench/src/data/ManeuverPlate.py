@@ -25,6 +25,7 @@ class Line:
         self.cards.append(card)
         return len(self.cards) <= self.limit
 
+    @property
     def can_add(self) -> bool:
         return len(self.cards) < self.limit
 
@@ -212,26 +213,27 @@ class ManeuverPlate:
                 return True
         return False
 
-    def has_sides(self, sides: DieSides) -> bool:
+    def has_sides_on_face_up(self, intention: DecisionIntention, sides: DieSides) -> bool:
         for line in self.lines:
-            if line.cards_face_up:
+            if line.cards_face_up and line.intention == intention:
                 if line.has_sides(sides):
                     return True
         return False
 
-    def remove_sides(self, sides: DieSides) -> Optional[Card]:
+    def remove_sides_on_face_up(self, intention: DecisionIntention, sides: DieSides) -> Optional[Card]:
         for line in self.lines:
-            if line.cards_face_up:
+            if line.cards_face_up and line.intention == intention:
                 card = line.remove_sides(sides)
                 if card:
                     return card
         return None
 
-    def discard(self) -> List[CardComposite]:
+    def discard_face_up(self) -> List[CardComposite]:
         cards: List[CardComposite] = []
         for line in self.lines:
             if line.cards_face_up:
                 cards.extend(line.discard())
+                line.cards_face_up = False
         return cards
 
     def discard_all(self) -> List[CardComposite]:
@@ -242,7 +244,7 @@ class ManeuverPlate:
         return cards
 
     @property
-    def wounds(self) -> List[CardWound]:
+    def wounds_face_up(self) -> List[CardWound]:
         cards: List[CardWound] = []
         for line in self.lines:
             if line.cards_face_up:
@@ -251,7 +253,7 @@ class ManeuverPlate:
                         cards.append(card)
         return cards
 
-    def replace_wound(self, wound: CardWound, new_wound: CardWound) -> bool:
+    def replace_wound_face_up(self, wound: CardWound, new_wound: CardWound) -> bool:
         for line in self.lines:
             if line.cards_face_up:
                 for card in line.cards:
@@ -261,16 +263,10 @@ class ManeuverPlate:
                         return True
         return False
 
-    def reduce_reach(self):
-        choice: Optional[Line] = None
-        for line in self.lines:
-            if not line.is_at_max and line.limit > 1:
-                if choice is None or choice.limit > line.limit:
-                    choice = line
-        if choice is not None:
-            choice.penalty += 1
+    def reduce_reach_on(self, line: DecisionLine):
+        self.lines[line.pos].penalty += 1
 
-    def remove(self, match: CardComposite):
+    def remove_on_face_up(self, match: CardComposite):
         for line in self.lines:
             if line.cards_face_up:
                 for card in line.cards:
