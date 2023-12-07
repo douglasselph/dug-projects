@@ -21,6 +21,8 @@ class Deck:
     def extend(self, value: List[CardComposite]):
         self._draw.extend(value)
 
+    # Draw the top most draw from the draw deck (element 0)
+    # as the new first most face up card (element 0)
     def draw(self, count: int = 1) -> CardComposite:
         card = Card.NONE
         for i in range(count):

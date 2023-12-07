@@ -29,14 +29,14 @@ class Engine:
 
         self.decisions.placeCard.set_game(self.game)
 
-        while self.game.agentPlayer.has_cards_to_play or self.game.opponent.has_cards_to_play:
+        while self.game.agentPlayer.has_face_up_cards or self.game.opponent.has_face_up_cards:
 
-            if self.game.agentPlayer.has_cards_to_play:
+            if self.game.agentPlayer.has_face_up_cards:
                 line, coin = self.decisions.placeCard.decision_agent()
                 was_legal = self._agent_place_card(line, coin)
                 self.decisions.placeCard.result_agent(line, coin, was_legal)
 
-            if self.game.opponent.has_cards_to_play:
+            if self.game.opponent.has_face_up_cards:
                 line, coin = self.decisions.placeCard.decision_opponent()
                 was_legal = self._opponent_place_card(line, coin)
                 self.decisions.placeCard.result_opponent(line, coin, was_legal)
@@ -49,17 +49,17 @@ class Engine:
 
     @staticmethod
     def _place_card(pl: Player, line: DecisionLine, coin: DecisionIntention) -> bool:
-        if not pl.is_legal(line, coin):
+        if not pl.is_legal_intention(line, coin):
             return False
         return pl.play_to_plate(line, coin)
 
     @property
     def agent_has_cards_to_place(self) -> bool:
-        return self.game.agentPlayer.has_cards_to_play
+        return self.game.agentPlayer.has_face_up_cards
 
     @property
     def opponent_has_cards_to_place(self) -> bool:
-        return self.game.opponent.has_cards_to_play
+        return self.game.opponent.has_face_up_cards
 
     ###############################################################################
     # Reveal: any plate line at max has its intention coin revealed
@@ -97,7 +97,7 @@ class Engine:
 
         stats = StatsAttack()
 
-        if not attacker.has_intention(DecisionIntention.ATTACK):
+        if not attacker.plate_has_intention(DecisionIntention.ATTACK):
             return stats
 
         attacker.reveal_intentions_with_intention(DecisionIntention.ATTACK)

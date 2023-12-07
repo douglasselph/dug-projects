@@ -9,6 +9,7 @@ from src.data.maneuver.ManeuverFeelingFeint import maneuver_apply_feeling_feint
 
 
 class Player:
+
     _max_energy = 20
     _hand_size = 4
 
@@ -44,7 +45,7 @@ class Player:
         self.draw.draw(self._hand_size)
 
     @property
-    def has_cards_to_play(self) -> bool:
+    def has_face_up_cards(self) -> bool:
         return self.draw.has_face_up_card
 
     @property
@@ -55,7 +56,7 @@ class Player:
         card = self.draw.pull_face_up_card()
         return self.plate.add_card(card, line, coin)
 
-    def is_legal(self, line: DecisionLine, coin: DecisionIntention) -> bool:
+    def is_legal_intention(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         line = self.plate.lines[line.value]
         count = len(line.cards)
         max_size = line.maxSize
@@ -74,19 +75,19 @@ class Player:
     def stash_cards_total(self) -> int:
         return self.stash.cards_total
 
-    def has_intention(self, coin: DecisionIntention) -> bool:
+    def plate_has_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_intention(coin)
 
     def has_revealed_intention(self, coin: DecisionIntention) -> bool:
         return self.plate.has_revealed_intention(coin)
 
-    def line_intention_id(self, line: DecisionLine) -> DecisionIntention:
-        return self.plate.get_line_intention_id(line)
+    def line_intention_of(self, line: DecisionLine) -> DecisionIntention:
+        return self.plate.line_intention_of(line)
 
     def line_card_values(self, line: DecisionLine) -> List[int]:
         return self.plate.line_card_values(line)
 
-    # Return list of the number of cards in eah line
+    # Return list of the number of cards in each line
     @property
     def lines_num_cards(self) -> List[int]:
         return self.plate.lines_num_cards
@@ -94,7 +95,7 @@ class Player:
     def discard_all(self):
         self._discard(self.plate.discard_all())
 
-    def discard(self):
+    def discard_face_up(self):
         self._discard(self.plate.discard_face_up())
 
     def _discard(self, cards: List[CardComposite]):
@@ -160,11 +161,11 @@ class Player:
     def stash_pull_face_up_card(self) -> CardComposite:
         return self.stash.pull_face_up_card()
 
-    def plate_has_sides(self, card: DieSides) -> bool:
-        return self.plate.has_sides_on_face_up(card)
+    def plate_has_sides(self, intention: DecisionIntention, card: DieSides) -> bool:
+        return self.plate.has_sides_on_face_up(intention, card)
 
-    def plate_remove_sides(self, card: DieSides) -> Optional[Card]:
-        return self.plate.remove_sides_on_face_up(card)
+    def plate_remove_sides(self, intention: DecisionIntention, card: DieSides) -> Optional[Card]:
+        return self.plate.remove_sides_on_face_up(intention, card)
 
     @property
     def compute_wound_penalty_value(self) -> int:
@@ -240,8 +241,8 @@ class Player:
             cards.remove(which)
         return cards
 
-    def reduce_reach(self):
-        self.plate.reduce_reach()
+    def reduce_reach_on(self, line: DecisionLine):
+        self.plate.reduce_reach_on(line)
 
     def add_penalty_coin(self):
         value = random.randint(1, 3)

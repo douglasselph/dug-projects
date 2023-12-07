@@ -126,7 +126,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Arrange
         line = DecisionLine.LINE_3
         # Act
-        intention = self.SUT.get_line_intention_id(line)
+        intention = self.SUT.line_intention_of(line)
         # Assert
         self.assertEquals(DecisionIntention.NONE, intention)
 
@@ -136,7 +136,7 @@ class TestManeuverPlate(unittest.TestCase):
         self.SUT.add_card(Card.D20_CUTASTROPHE, line, DecisionIntention.DEPLOY)
         self.SUT.add_card(Card.D12_PROFESSIONAL_STABOTAGE, line, DecisionIntention.ATTACK)
         # Act
-        intention = self.SUT.get_line_intention_id(line)
+        intention = self.SUT.line_intention_of(line)
         # Assert
         self.assertEquals(DecisionIntention.DEPLOY, intention)
 

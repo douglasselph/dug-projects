@@ -63,7 +63,7 @@ class Game:
         return self.agentPlayer.stash_cards_total
 
     def agent_line_intention_id(self, line: DecisionLine) -> DecisionIntention:
-        return self.agentPlayer.line_intention_id(line)
+        return self.agentPlayer.line_intention_of(line)
 
     def agent_line_card_values(self, line: DecisionLine) -> List[int]:
         return self.agentPlayer.line_card_values(line)
@@ -84,7 +84,7 @@ class Game:
         return self.commonDrawDeck.nn_face_up_cards(size)
 
     def is_legal_on_agent_plate(self, line: DecisionLine, intention: DecisionIntention):
-        return self.agentPlayer.is_legal(line, intention)
+        return self.agentPlayer.is_legal_intention(line, intention)
 
     @property
     def common_cards_face_up(self) -> List[CardComposite]:

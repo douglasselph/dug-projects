@@ -148,7 +148,7 @@ class ManeuverPlate:
             num_cards.append(len(line.cards))
         return num_cards
 
-    def get_line_intention_id(self, line: DecisionLine) -> DecisionIntention:
+    def line_intention_of(self, line: DecisionLine) -> DecisionIntention:
         return self.lines[line.pos].intention
 
     def line_card_values(self, line: DecisionLine) -> List[int]:
