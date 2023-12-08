@@ -1,12 +1,11 @@
 import unittest
 from unittest.mock import Mock
 
-from src.data.Game import Game
-from src.data.Card import CardWound, Card, card_ordinal
+from src.data.Card import CardWound, Card, card_ordinal, card_regular
 from src.data.Decision import DecisionLine, DecisionIntention
-from src.data.RewardConstants import RewardConstants
-from src.data.stat.StatsAll import StatsAll
+from src.data.Game import Game
 from src.data.Player import Player
+from src.data.RewardConstants import RewardConstants
 
 
 class TestGame(unittest.TestCase):
@@ -60,17 +59,25 @@ class TestGame(unittest.TestCase):
         # Assert
         self.assertEqual(DecisionIntention.ATTACK, intention)
 
-    def test_agent_line_card_values__returns_expected_values(self):
+    def test_agent_line_card_values__returns_ord_of_cards_with_zeros(self):
         # Arrange
-        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, Card.D4_SCARED_OUT_OF_YOUR_WHITTLES)
-        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, Card.D8_UNDERCOVER_CHOP)
-        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, Card.D12_PROFESSIONAL_STABOTAGE)
+        self.SUT.agentPlayer.append_to_draw(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES)
+        self.SUT.agentPlayer.append_to_draw(Card.D8_UNDERCOVER_CHOP)
+        self.SUT.agentPlayer.append_to_draw(Card.D12_PROFESSIONAL_STABOTAGE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.DEPLOY)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.DEFEND)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.NONE)
+        expected_values = [
+            card_ordinal(Card.D12_PROFESSIONAL_STABOTAGE),
+            card_ordinal(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES),
+            0
+        ]
         # Act
         values = self.SUT.agent_line_card_values(DecisionLine.LINE_3)
         # Assert
-        self.assertEqual(2, len(values))
-        self.assertEqual(card_ordinal(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES), values[0])
-        self.assertEqual(card_ordinal(Card.D12_PROFESSIONAL_STABOTAGE), values[1])
+        self.assertEqual(len(expected_values), len(values))
+        self.assertEqual(expected_values, values)
 
     def test_opponent_energy__returns_as_expected(self):
         # Arrange
@@ -111,59 +118,67 @@ class TestGame(unittest.TestCase):
         self.SUT.commonDrawDeck.append(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES)
         self.SUT.commonDrawDeck.append(Card.D12_PROFESSIONAL_STABOTAGE)
         self.SUT.commonDrawDeck.draw(2)
+        expected_cards = [
+            card_ordinal(Card.D12_PROFESSIONAL_STABOTAGE),
+            card_ordinal(Card.MANEUVER_BUST_A_CUT),
+            0,
+            0,
+        ]
         # Act
-        value = self.SUT.nn_common_draw_deck_face_up_cards(4)
+        values = self.SUT.nn_common_draw_deck_face_up_cards(4)
         # Assert
-        self.assertEqual(4, len(value))
-        self.assertEqual(card_ordinal(Card.MANEUVER_BUST_A_CUT), value[0])
-        self.assertEqual(card_ordinal(Card.D12_PROFESSIONAL_STABOTAGE), value[1])
-        self.assertEqual(0, value[2])
-        self.assertEqual(0, value[3])
+        self.assertEqual(4, len(values))
+        self.assertEqual(expected_cards, values)
 
     def test_nn_common_draw_deck_face_up_cards_more_than_expected__returns_clipped(self):
         # Arrange
-        self.SUT.commonDrawDeck.append(Card.MANEUVER_BUST_A_CUT)
-        self.SUT.commonDrawDeck.append(Card.D12_PROFESSIONAL_STABOTAGE)
-        self.SUT.commonDrawDeck.append(CardWound.WOUND_ACUTE)
-        self.SUT.commonDrawDeck.append(Card.D20_CUTASTROPHE)
-        self.SUT.commonDrawDeck.append(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES)
-        self.SUT.commonDrawDeck.append(Card.D12_PROFESSIONAL_STABOTAGE)
-        self.SUT.commonDrawDeck.draw(6)
+        cards = [
+            Card.MANEUVER_BUST_A_CUT,
+            Card.D12_PROFESSIONAL_STABOTAGE,
+            CardWound.WOUND_ACUTE,
+            Card.D20_CUTASTROPHE,
+            Card.D4_SCARED_OUT_OF_YOUR_WHITTLES,
+            Card.D12_PROFESSIONAL_STABOTAGE
+        ]
+        for card in cards:
+            self.SUT.commonDrawDeck.append(card)
+        self.SUT.commonDrawDeck.draw(len(cards))
+        ord_values = []
+        for card in reversed(cards):
+            ord_values.append(card_ordinal(card))
+        expected_cards = ord_values[:4]
         # Act
-        value = self.SUT.nn_common_draw_deck_face_up_cards(4)
+        values = self.SUT.nn_common_draw_deck_face_up_cards(4)
         # Assert
-        self.assertEqual(4, len(value))
-        self.assertEqual(card_ordinal(Card.MANEUVER_BUST_A_CUT), value[0])
-        self.assertEqual(card_ordinal(Card.D12_PROFESSIONAL_STABOTAGE), value[1])
-        self.assertEqual(CardWound.WOUND_ACUTE, value[2])
-        self.assertEqual(Card.D20_CUTASTROPHE, value[3])
+        self.assertEqual(4, len(values))
+        self.assertEqual(expected_cards, values)
 
-    def test_is_legal__for_wrong_intention__returns_false(self):
+    def test_is_legal_intention_on_agent_plate__for_wrong_intention__returns_false(self):
         # Arrange
         line = DecisionLine.LINE_4
         intention = DecisionIntention.ATTACK
         self.SUT.agentPlayer.play_to_plate(line, DecisionIntention.DEFEND)
         # Act
-        is_legal = self.SUT.is_legal_on_agent_plate(line, intention)
+        is_legal = self.SUT.is_legal_intention_on_agent_plate(line, intention)
         # Assert
         self.assertFalse(is_legal)
 
-    def test_is_legal__for_correct_intention__returns_true(self):
+    def test_is_legal_intention_on_agent_plate__for_correct_intention__returns_true(self):
         # Arrange
         line = DecisionLine.LINE_1
         intention = DecisionIntention.ATTACK
         self.SUT.agentPlayer.play_to_plate(line, DecisionIntention.ATTACK)
         # Act
-        is_legal = self.SUT.is_legal_on_agent_plate(line, intention)
+        is_legal = self.SUT.is_legal_intention_on_agent_plate(line, intention)
         # Assert
         self.assertTrue(is_legal)
 
-    def test_is_legal__for_no_intention__returns_true(self):
+    def test_is_legal_intention_on_agent_plate__for_no_intention__returns_true(self):
         # Arrange
         line = DecisionLine.LINE_1
         intention = DecisionIntention.ATTACK
         # Act
-        is_legal = self.SUT.is_legal_on_agent_plate(line, intention)
+        is_legal = self.SUT.is_legal_intention_on_agent_plate(line, intention)
         # Assert
         self.assertTrue(is_legal)
 
@@ -178,8 +193,8 @@ class TestGame(unittest.TestCase):
         cards = self.SUT.common_cards_face_up
         # Assert
         self.assertEqual(2, len(cards))
-        self.assertEqual(Card.MANEUVER_IN_HEW_OF, cards[0])
-        self.assertEqual(Card.D20_CUTASTROPHE, cards[1])
+        self.assertEqual(Card.D20_CUTASTROPHE, cards[0])
+        self.assertEqual(Card.MANEUVER_IN_HEW_OF, cards[1])
 
     def test_common_cards_draw__returns_expected_positive_size(self):
         # Arrange
@@ -202,10 +217,11 @@ class TestGame(unittest.TestCase):
         self.SUT.commonDrawDeck.append(Card.D12_PROFESSIONAL_STABOTAGE)
         self.SUT.commonDrawDeck.append(Card.D6_D12_EXECUTIVE_INCISION)
         self.SUT.commonDrawDeck.draw(2)
+        expected_card = Card.D20_CUTASTROPHE
         # Act
-        card = self.SUT.common_pull_face_up_card
+        card = self.SUT.common_pull_face_up_card()
         # Assert
-        self.assertEqual(Card.D20_CUTASTROPHE, card)
+        self.assertEqual(expected_card, card_regular(card))
 
     def test_compute_base_reward__both_fatal__returns_zero(self):
         # Arrange
@@ -348,203 +364,243 @@ class TestGame(unittest.TestCase):
         self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
         self.SUT.agentPlayer.energy = 2
         expected_value = RewardConstants.BASE_REWARD_WIN - \
-                         RewardConstants.TURNS_PENALTY_SCALE * turns - \
-                         self.SUT.compute_wound_reward * RewardConstants.WOUND_PENALTY_SCALE - \
-                         self.SUT.compute_energy_penalty * RewardConstants.ENERGY_PENALTY_SCALE
+            RewardConstants.TURNS_PENALTY_SCALE * turns - \
+            self.SUT.compute_wound_reward * RewardConstants.WOUND_PENALTY_SCALE - \
+            self.SUT.compute_energy_penalty * RewardConstants.ENERGY_PENALTY_SCALE
         # Act
         value = self.SUT.compute_reward
         # Assert
         self.assertEqual(expected_value, value)
 
-    def test_apply_to_all_stats__number_of_games_advanced(self):
+    def test_cleanup__has_some_face_up_matching_wounds__wounds_upgraded(self):
         # Arrange
-        all_stats = StatsAll()
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.games)
-
-    def test_apply_to_all_stats__highest_of_turns_advanced(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.turns = 10
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(10, all_stats.highest_turns)
-
-    def test_apply_to_all_stats__lowest_of_turns_advanced(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.turns = 10
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(10, all_stats.lowest_turns)
-
-    def test_apply_to_all_stats__with_existing__highest_of_turns_not_advanced(self):
-        # Arrange
-        all_stats = StatsAll()
-        all_stats.highest_turns = 12
-        self.SUT.stat.turns = 10
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(12, all_stats.highest_turns)
-
-    def test_apply_to_all_stats__with_existing__lowest_of_turns_not_advanced(self):
-        # Arrange
-        all_stats = StatsAll()
-        all_stats.lowest_turns = 5
-        self.SUT.stat.turns = 10
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(5, all_stats.lowest_turns)
-
-    def test_apply_to_all_stats__both_fatal__ties_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.agentPlayer.fatal_received = True
-        self.SUT.opponent.fatal_received = True
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.ties)
-
-    def test_apply_to_all_stats__agent_fatal__loss_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.agentPlayer.fatal_received = True
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.fatal_loss)
-
-    def test_apply_to_all_stats__opponent_fatal__win_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.opponent.fatal_received = True
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.fatal_wins)
-
-    def test_apply_to_all_stats__both_no_energy__tie_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.opponent.energy = 0
-        self.SUT.agentPlayer.energy = 0
-        all_stats.ties = 3
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(4, all_stats.ties)
-
-    def test_apply_to_all_stats__no_energy__loss_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.agentPlayer.energy = 0
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.energy_loss)
-
-    def test_apply_to_all_stats__opponent_no_energy__loss_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.opponent.energy = 0
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(1, all_stats.energy_wins)
-
-    def test_apply_to_all_stats__combat_num_totals_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.num_attacks = 10
-        self.SUT.stat.num_defends = 5
-        self.SUT.stat.num_deploys = 7
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(10, all_stats.total_num_attacks)
-        self.assertEqual(5, all_stats.total_num_defends)
-        self.assertEqual(7, all_stats.total_num_deploys)
-
-    def test_apply_to_all_stats__combat_rolls_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.total_attack_roll = 100
-        self.SUT.stat.total_defend_roll = 50
-        self.SUT.stat.total_deploy_roll = 75
-        # Act
-        self.SUT.apply_to_all_stats(all_stats)
-        # Assert
-        self.assertEqual(100, all_stats.total_attack_roll)
-        self.assertEqual(50, all_stats.total_defend_roll)
-        self.assertEqual(75, all_stats.total_deploy_roll)
-
-    def test_apply_to_all_stats__num_cards_draw_increased(self):
-        # Arrange
-        all_stats = StatsAll()
-        self.SUT.agentPlayer.extend_to_draw([
-            Card.D12_PROFESSIONAL_STABOTAGE,
-            Card.D10_INNER_PIERCE,
-            Card.D8_UNDERCOVER_CHOP,
-            Card.D6_SLIT_TIGHT,
-            Card.D4_SCARED_OUT_OF_YOUR_WHITTLES
-        ])
-        self.SUT.opponent.extend_to_draw([
-            Card.D12_PROFESSIONAL_STABOTAGE,
-            Card.D10_INNER_PIERCE,
-            Card.D8_UNDERCOVER_CHOP,
-            Card.D6_SLIT_TIGHT,
-            Card.D4_SCARED_OUT_OF_YOUR_WHITTLES,
-            CardWound.WOUND_ACUTE,
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_3)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_1)
+        expected_cards = [
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_MINOR,
             CardWound.WOUND_DIRE
-        ])
+        ]
         # Act
-        self.SUT.apply_to_all_stats(all_stats)
+        self.SUT.cleanup()
         # Assert
-        self.assertEqual(5, all_stats.total_draw_deck_size_agent)
-        self.assertEqual(7, all_stats.total_draw_deck_size_opponent)
+        cards = self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(expected_cards, cards)
 
-    def test_apply_to_all_stats__energy_loss_accumulated(self):
+    def test_cleanup__has_lots_face_up_matching_wounds__wounds_upgraded(self):
         # Arrange
-        all_stats = StatsAll()
-        self.SUT.agentPlayer.energy = 12
-        self.SUT.opponent.energy = 8
-        expected_agent_value = 8
-        expected_opponent_value = 12
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_3)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_1)
+        expected_cards = [
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_ACUTE
+        ]
         # Act
-        self.SUT.apply_to_all_stats(all_stats)
+        self.SUT.cleanup()
         # Assert
-        self.assertEqual(expected_agent_value, all_stats.total_agent_energy_lost)
-        self.assertEqual(expected_opponent_value, all_stats.total_opponent_energy_lost)
+        cards = self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(expected_cards, cards)
+        self.assertTrue(self.SUT.agentPlayer.fatal_received)
 
-    def test_apply_to_all_stats__highest_combat_rolls_increased(self):
+    def test_cleanup__has_wounds_chained__wounds_upgraded_via_chaining(self):
         # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.highest_attack_roll = 100
-        self.SUT.stat.highest_defend_roll = 90
-        self.SUT.stat.highest_deploy_roll = 80
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_1)
+        expected_cards = [
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_DIRE
+        ]
         # Act
-        self.SUT.apply_to_all_stats(all_stats)
+        self.SUT.cleanup()
         # Assert
-        self.assertEqual(100, all_stats.highest_attack_roll)
-        self.assertEqual(90, all_stats.highest_defend_roll)
-        self.assertEqual(80, all_stats.highest_deploy_roll)
+        cards = self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(expected_cards, cards)
 
-    def test_apply_to_all_stats__lowest_combat_rolls_increased(self):
+    def test_cleanup__matching_wounds_but_not_face_up__nothing_done(self):
         # Arrange
-        all_stats = StatsAll()
-        self.SUT.stat.lowest_attack_roll = 100
-        self.SUT.stat.lowest_defend_roll = 90
-        self.SUT.stat.lowest_deploy_roll = 80
+        self.SUT.opponent.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.opponent.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.opponent.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.opponent.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.opponent.draw_hand()
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        expected_cards = [
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_MINOR,
+            CardWound.WOUND_GRAVE,
+            CardWound.WOUND_GRAVE
+        ]
         # Act
-        self.SUT.apply_to_all_stats(all_stats)
+        self.SUT.cleanup()
         # Assert
-        self.assertEqual(100, all_stats.lowest_attack_roll)
-        self.assertEqual(90, all_stats.lowest_defend_roll)
-        self.assertEqual(80, all_stats.lowest_deploy_roll)
+        self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(2, len(self.SUT.opponent.plate.lines[DecisionLine.LINE_2.pos].cards))
+        self.assertEqual(2, len(self.SUT.opponent.plate.lines[DecisionLine.LINE_3.pos].cards))
+
+    def test_cleanup__has_matching_dire_wounds__upgraded_to_fatal(self):
+        # Arrange
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_3)
+        expected_cards = []
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.agentPlayer.fatal_received)
+        cards = self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(expected_cards, cards)
+
+    def test_cleanup__has_chaining_wounds__chaining_upgraded_to_fatal(self):
+        # Arrange
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_3)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_2)
+        expected_cards = [
+            CardWound.WOUND_MINOR
+        ]
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.agentPlayer.fatal_received)
+        cards = self.SUT.agentPlayer.draw_hand()
+        self.assertEqual(expected_cards, cards)
+
+    def test_cleanup__has_some_face_up_wounds__lose_energy_from_wounds(self):
+        # Arrange
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_MINOR)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_GRAVE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_DIRE)
+        self.SUT.agentPlayer.append_to_draw(CardWound.WOUND_ACUTE)
+        self.SUT.agentPlayer.draw_hand()
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_3)
+        self.SUT.agentPlayer.plate.set_line_face_up(DecisionLine.LINE_1)
+        expected_energy_loss = CardWound.WOUND_MINOR.energy_penalty + \
+            CardWound.WOUND_GRAVE.energy_penalty + \
+            CardWound.WOUND_DIRE.energy_penalty
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertEqual(expected_energy_loss, self.SUT.agentPlayer.energy_loss)
+
+    def test_cleanup__has_face_up_cards__face_up_cards_discarded(self):
+        # Arrange
+        self.SUT.opponent.append_to_draw(Card.D20_CUTASTROPHE)
+        self.SUT.opponent.append_to_draw(Card.D12_PROFESSIONAL_STABOTAGE)
+        self.SUT.opponent.append_to_draw(Card.D10_INNER_PIERCE)
+        self.SUT.opponent.append_to_draw(Card.D8_UNDERCOVER_CHOP)
+        self.SUT.opponent.draw_hand()
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_1, DecisionIntention.DEPLOY)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_1, DecisionIntention.DEPLOY)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_1, DecisionIntention.DEPLOY)
+        self.SUT.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.DEPLOY)
+        self.SUT.opponent.plate.set_line_face_up(DecisionLine.LINE_1)
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertEqual([], self.SUT.opponent.plate.lines[DecisionLine.LINE_1.pos].cards)
+        self.assertEqual([Card.D20_CUTASTROPHE], self.SUT.opponent.plate.lines[DecisionLine.LINE_2.pos].cards)
+
+    def test_cleanup__nothing__endOfGame_false(self):
+        # Arrange
+        self.SUT.agentPlayer.fatal_received = True
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.endOfGame)
+
+    def test_cleanup__agentPlayer_fatal__endOfGame_true(self):
+        # Arrange
+        self.SUT.agentPlayer.fatal_received = True
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.endOfGame)
+
+    def test_cleanup__opponent_fatal__endOfGame_true(self):
+        # Arrange
+        self.SUT.opponent.fatal_received = True
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.endOfGame)
+
+    def test_cleanup__agentPlayer_energy_zero__endOfGame_true(self):
+        # Arrange
+        self.SUT.agentPlayer.energy = 0
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.endOfGame)
+
+    def test_cleanup__opponent_opponent_zero__endOfGame_true(self):
+        # Arrange
+        self.SUT.opponent.energy = 0
+        # Act
+        self.SUT.cleanup()
+        # Assert
+        self.assertTrue(self.SUT.endOfGame)
+

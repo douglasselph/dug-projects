@@ -6,6 +6,7 @@ from src.data.Decision import DecisionLine, DecisionIntention
 
 
 class Line:
+
     maxSize: int
     intention: DecisionIntention
     intention_face_up: bool
@@ -29,14 +30,11 @@ class Line:
     def can_add(self) -> bool:
         return len(self.cards) < self.limit
 
-    def replace(self, card: CardComposite, position: int):
-        self.cards[position] = card
-
     def can_take_card(self, position: int) -> bool:
         return position < self.limit
 
     def has_card(self, position: int) -> bool:
-        return self.can_take_card(position) and self.cards[position] != Card.NONE
+        return position < len(self.cards) and self.can_take_card(position) and self.cards[position] != Card.NONE
 
     def has_sides(self, sides: DieSides) -> bool:
         for card in self.cards:
@@ -52,10 +50,14 @@ class Line:
                     return card
         return None
 
-    def query(self, position: int) -> CardComposite:
+    def query(self, position: int) -> Optional[CardComposite]:
+        if position >= len(self.cards):
+            return Card.NONE
         return self.cards[position]
 
-    def pull(self, position: int) -> CardComposite:
+    def pull(self, position: int) -> Optional[CardComposite]:
+        if position >= len(self.cards):
+            return Card.NONE
         return self.cards.pop(position)
 
     @property
@@ -153,10 +155,10 @@ class ManeuverPlate:
 
     def line_card_values(self, line: DecisionLine) -> List[int]:
         card_values = []
-        line = self.lines[line.pos]
-        for position in range(line.maxSize):
-            if line.has_card(position):
-                card = line.query(position)
+        for_line = self.lines[line.pos]
+        for position in range(for_line.maxSize):
+            if for_line.has_card(position):
+                card = for_line.query(position)
                 card_values.append(card_ordinal(card))
             else:
                 card_values.append(0)  # Append 0 if no card is present
@@ -266,14 +268,14 @@ class ManeuverPlate:
     def reduce_reach_on(self, line: DecisionLine):
         self.lines[line.pos].penalty += 1
 
-    def remove_on_face_up(self, match: CardComposite):
+    def remove_on_face_up(self, match: CardComposite) -> Optional[Line]:
         for line in self.lines:
             if line.cards_face_up:
                 for card in line.cards:
                     if card == match:
                         line.remove(card)
-                        return True
-        return False
+                        return line
+        return None
 
     @property
     def face_up_lines(self) -> List[Line]:

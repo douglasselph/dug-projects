@@ -23,12 +23,14 @@ class Deck:
 
     # Draw the top most draw from the draw deck (element 0)
     # as the new first most face up card (element 0)
-    def draw(self, count: int = 1) -> CardComposite:
-        card = Card.NONE
+    def draw(self, count: int = 1) -> List[CardComposite]:
+        cards = []
         for i in range(count):
-            card = self._draw.pop(0)
-            self._faceUp.insert(0, card)
-        return card
+            if len(self._draw) > 0:
+                card = self._draw.pop(0)
+                self._faceUp.insert(0, card)
+                cards.append(card)
+        return cards
 
     @property
     def can_draw(self) -> bool:

@@ -85,9 +85,9 @@ class StatsAll:
         if game.stat.highest_deploy_roll > self.highest_deploy_roll:
             self.highest_deploy_roll = game.stat.highest_deploy_roll
 
-        if game.stat.lowest_attack_roll < self.lowest_attack_roll:
+        if game.stat.lowest_attack_roll < self.lowest_attack_roll or self.lowest_attack_roll == 0:
             self.lowest_attack_roll = game.stat.lowest_attack_roll
-        if game.stat.lowest_defend_roll < self.lowest_defend_roll:
+        if game.stat.lowest_defend_roll < self.lowest_defend_roll or self.lowest_defend_roll == 0:
             self.lowest_defend_roll = game.stat.lowest_defend_roll
-        if game.stat.lowest_deploy_roll < self.lowest_deploy_roll:
+        if game.stat.lowest_deploy_roll < self.lowest_deploy_roll or self.lowest_deploy_roll == 0:
             self.lowest_deploy_roll = game.stat.lowest_deploy_roll

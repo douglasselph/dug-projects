@@ -36,7 +36,6 @@ class PlayerID(Enum):
 
 
 class Game:
-
     def __init__(self):
         self.turnPhase = TurnPhase.NONE
         self.initiativeOn = PlayerID.NONE
@@ -83,7 +82,7 @@ class Game:
     def nn_common_draw_deck_face_up_cards(self, size: int) -> List[int]:
         return self.commonDrawDeck.nn_face_up_cards(size)
 
-    def is_legal_on_agent_plate(self, line: DecisionLine, intention: DecisionIntention):
+    def is_legal_intention_on_agent_plate(self, line: DecisionLine, intention: DecisionIntention):
         return self.agentPlayer.is_legal_intention(line, intention)
 
     @property

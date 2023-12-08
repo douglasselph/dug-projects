@@ -5,7 +5,7 @@ from src.data.Card import CardWound
 
 class TestCard(unittest.TestCase):
 
-    def test_wound_upgrade_as_expected(self):
+    def test_wound_upgrade__as_expected(self):
         # Arrange
         card = CardWound.WOUND_MINOR
         # Act
@@ -17,7 +17,7 @@ class TestCard(unittest.TestCase):
         self.assertEqual(CardWound.WOUND_GRAVE, card2)
         self.assertEqual(CardWound.WOUND_DIRE, card3)
 
-    def test_wound_energy_penalty_increases(self):
+    def test_wound_energy_penalty__increases(self):
         # Assert
         self.assertTrue(CardWound.WOUND_MINOR.energy_penalty <= CardWound.WOUND_ACUTE.energy_penalty)
         self.assertTrue(CardWound.WOUND_ACUTE.energy_penalty <= CardWound.WOUND_GRAVE.energy_penalty)

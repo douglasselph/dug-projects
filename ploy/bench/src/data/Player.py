@@ -39,8 +39,8 @@ class Player:
     def extend_to_stash(self, cards: List[CardComposite]):
         self.stash.extend(cards)
 
-    def draw_hand(self):
-        self.draw.draw(self._hand_size)
+    def draw_hand(self) -> List[CardComposite]:
+        return self.draw.draw(self._hand_size)
 
     @property
     def has_face_up_cards(self) -> bool:
@@ -55,7 +55,7 @@ class Player:
         return self.plate.add_card(card, line, coin)
 
     def is_legal_intention(self, line: DecisionLine, coin: DecisionIntention) -> bool:
-        line = self.plate.lines[line.value]
+        line = self.plate.lines[line.pos]
         count = len(line.cards)
         max_size = line.maxSize
         if count >= max_size:
@@ -65,6 +65,7 @@ class Player:
             if current != coin and current != DecisionIntention.NONE:
                 return False
         line.set_intention(coin)
+        return True
 
     def nn_next_cards(self, size: int) -> List[int]:
         return self.draw.nn_next_cards(size)
@@ -96,31 +97,20 @@ class Player:
     def discard_face_up(self):
         self.draw.extend(self.plate.discard_face_up())
 
-    def upgrade_face_up_wounds(self) -> List[CardComposite]:
+    def upgrade_face_up_wounds(self):
         cards = self.plate.wounds_face_up
-
-        count = cards.count(CardWound.WOUND_ACUTE)
-        if count > 1:
-            cards = self._remove_two_of(cards, CardWound.WOUND_ACUTE)
-            cards.append(CardWound.WOUND_GRAVE)
-
-        count = cards.count(CardWound.WOUND_GRAVE)
-        if count > 1:
-            cards = self._remove_two_of(cards, CardWound.WOUND_GRAVE)
-            cards.append(CardWound.WOUND_DIRE)
-
-        count = cards.count(CardWound.WOUND_DIRE)
-        if count > 1:
-            cards = self._remove_two_of(cards, CardWound.WOUND_DIRE)
-            self.fatal_received = True
-
-        return cards
-
-    @staticmethod
-    def _remove_two_of(cards: List[CardWound], which: CardWound) -> List[CardWound]:
-        for i in range(2):
-            cards.remove(which)
-        return cards
+        for wound in [CardWound.WOUND_ACUTE, CardWound.WOUND_GRAVE, CardWound.WOUND_DIRE]:
+            count = cards.count(wound)
+            while count > 1:
+                self.plate.remove_on_face_up(wound)
+                line = self.plate.remove_on_face_up(wound)
+                cards.remove(wound)
+                if wound == CardWound.WOUND_DIRE:
+                    self.fatal_received = True
+                else:
+                    line.add(wound.upgrade)
+                    cards.append(wound.upgrade)
+                count -= 2
 
     def lose_energy_from_face_up_wounds(self):
         cards = self.plate.wounds_face_up

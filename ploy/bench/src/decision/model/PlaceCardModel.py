@@ -215,7 +215,7 @@ class PlaceCardModel:
             intention_index = i % 4
             line = DecisionLine(line_index + 1)
             intention = DecisionIntention(intention_index)
-            legal_mask[i] = game.is_legal_on_agent_plate(line, intention)
+            legal_mask[i] = game.is_legal_intention_on_agent_plate(line, intention)
 
         # Apply the mask: set illegal move probabilities to -inf
         return np.where(legal_mask, prediction, -np.inf)
