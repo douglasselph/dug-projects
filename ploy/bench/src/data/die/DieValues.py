@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List
-from src.engine.Die import Die
+from src.data.die.Die import Die
 
 
 class DieValues:

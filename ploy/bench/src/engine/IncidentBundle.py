@@ -2,13 +2,13 @@ from typing import Optional, List
 
 from src.data.Card import CardComposite
 from src.data.Card import DieSides, Card, CardWound
-from src.data.maneuver.ManeuverCuttingRiposte import maneuver_cutting_riposte
-from src.data.maneuver.ManeuverInHewOf import maneuver_in_hew_of
-from src.data.maneuver.ManeuverKeepThePierce import maneuver_keep_the_pierce
-from src.data.maneuver.ManeuverNickToDeath import maneuver_nick_to_death
-from src.data.maneuver.ManeuverPrecision import maneuver_precision
-from src.engine.DieCollection import DieCollection
-from src.engine.DieValues import DieValues
+from src.data.maneuver.ManeuverCuttingRiposte import ManeuverCuttingRiposte
+from src.data.maneuver.ManeuverInHewOf import ManeuverInHewOf
+from src.data.maneuver.ManeuverKeepThePierce import ManeuverKeepThePierce
+from src.data.maneuver.ManeuverNickToDeath import ManeuverNickToDeath
+from src.data.maneuver.ManeuverPrecision import ManeuverPrecision
+from src.data.die.DieCollection import DieCollection
+from src.data.die.DieValues import DieValues
 
 
 class IncidentBundle:
@@ -61,16 +61,16 @@ class IncidentBundle:
     def _apply_card_pre_roll(card: CardComposite, own: DieCollection, opponent: Optional[DieCollection]):
         if card == Card.MANEUVER_CUTTING_RIPOSTE:
             if opponent is not None:
-                maneuver_cutting_riposte(opponent)
-        elif card == Card.MANEUVER_NICK_TO_DEATH:
-            maneuver_nick_to_death(own)
+                ManeuverCuttingRiposte().apply(opponent)
 
     @staticmethod
     def _apply_card_post_roll(card: CardComposite, own: DieValues, opponent: Optional[DieValues]):
         if card == Card.MANEUVER_IN_HEW_OF:
-            maneuver_in_hew_of(own)
+            ManeuverInHewOf().apply(own)
         elif card == Card.MANEUVER_KEEP_THE_PIERCE:
             if opponent is not None:
-                maneuver_keep_the_pierce(own, opponent)
+                ManeuverKeepThePierce().apply(own, opponent)
         elif card == Card.MANEUVER_PRECISION:
-            maneuver_precision(own)
+            ManeuverPrecision().apply(own)
+        elif card == Card.MANEUVER_NICK_TO_DEATH:
+            ManeuverNickToDeath().apply(own)

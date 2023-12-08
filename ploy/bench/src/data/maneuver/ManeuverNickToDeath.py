@@ -1,10 +1,14 @@
-from src.engine.DieCollection import DieCollection
-from src.engine.Die import Die
+from src.data.die.DieValues import DieValues
 from src.data.Card import DieSides
 
 
-# Roll a D4 to determine how many D4’s are added to the roll.
-def maneuver_nick_to_death(dice: DieCollection):
-    d4_value = Die(DieSides.D4).roll()
-    for i in range(d4_value.value):
-        dice.add_die(DieSides.D4)
+# Add two to the value of each D4 rolled
+# TODO: Apply this new rule to the actual cards.
+class ManeuverNickToDeath:
+
+    @staticmethod
+    def apply(dice: DieValues):
+        for die in dice.values:
+            if die.sides == DieSides.D4:
+                die.value += 2
+

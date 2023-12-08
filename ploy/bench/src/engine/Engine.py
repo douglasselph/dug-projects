@@ -4,8 +4,9 @@ from src.data.Game import Game, PlayerID
 from src.data.Player import Player
 from src.data.Stats import StatsAttack, StatsDeploy
 from src.decision.Decisions import Decisions
-from src.engine.Die import Die
+from src.data.die.Die import Die
 from src.engine.IncidentBundle import IncidentBundle
+from src.data.maneuver.ManeuverFeelingFeint import ManeuverFeelingFeint
 
 
 class Engine:
@@ -108,10 +109,10 @@ class Engine:
         attacker.apply_to_die_four(DecisionIntention.ATTACK)
         defender.apply_to_die_four(DecisionIntention.DEFEND)
 
-        attacker.apply_feeling_feint(DecisionIntention.ATTACK)
+        self._apply_feeling_feint(attacker, DecisionIntention.ATTACK)
 
         if defender.has_revealed_intention(DecisionIntention.DEFEND):
-            defender.apply_feeling_feint(DecisionIntention.DEFEND)
+            self._apply_feeling_feint(defender, DecisionIntention.DEFEND)
 
         incident_attacker = IncidentBundle()
         incident_defender = IncidentBundle()
@@ -147,6 +148,9 @@ class Engine:
         stats.set(incident_attacker.total, incident_defender.total, wound)
 
         return stats
+
+    def _apply_feeling_feint(self, player: Player, coin: DecisionIntention):
+        ManeuverFeelingFeint(self.decisions.feelingFeint).apply(player.plate, coin)
 
     def _apply_wound_to(self, player: Player, wounds: int, attacker: Player) -> Optional[CardWound]:
         wound: Optional[CardWound] = None
@@ -231,9 +235,9 @@ class Engine:
             incident.values.add(Die(DieSides.D4, bonus.pips))
 
     def _select_card_to_trash(self, incident: IncidentBundle, player: Player) -> TrashBonus:
-        card = self.decisions.trash.\
-            set_game(self.game).\
-            set_player(player).\
+        card = self.decisions.trash. \
+            set_game(self.game). \
+            set_player(player). \
             select_card_to_trash(incident.cards)
         if card:
             player.trash_face_up_card(card)
@@ -328,8 +332,8 @@ class Engine:
         else:
             card = self.game.common_cards_face_up[0]
 
-        block_value = self.decisions.deployBlock\
-            .set_game(self.game)\
+        block_value = self.decisions.deployBlock \
+            .set_game(self.game) \
             .set_player(opponent).acquire_block_value(decision, card)
 
         if block_value > 0:
@@ -362,4 +366,3 @@ class Engine:
     # Cleanup:
     def cleanup(self):
         self.game.cleanup()
-

@@ -1,6 +1,6 @@
 from typing import List
-from src.engine.DieValues import DieValues
-from src.engine.Die import Die
+from src.data.die.DieValues import DieValues
+from src.data.die.Die import Die
 from src.data.Card import DieSides
 
 

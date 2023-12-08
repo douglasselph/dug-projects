@@ -1,17 +1,19 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from src.DieCollection import DieCollection
+from src.data.die.DieCollection import DieCollection
+from src.data.die.Die import DieSides
 
 
 class TestDieCollection(unittest.TestCase):
-
-    default_sides = [4, 6, 8, 10, 12, 20]
+    default_sides = [
+        DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10, DieSides.D12, DieSides.D20
+    ]
 
     def setUp(self):
         self.SUT = DieCollection(self.default_sides)
 
     @patch('src.Die.Die.factory')
-    def test_roll_single_die(self, mock_factory):
+    def test_roll__single_die(self, mock_factory):
         # Arrange
         mock_die = MagicMock()
         sample_die_rolls = [2, 3, 4, 5, 6, 10]
@@ -23,4 +25,3 @@ class TestDieCollection(unittest.TestCase):
         self.assertEqual(len(sample_die_rolls), values.num)
         for index, value in enumerate(values):
             self.assertEqual(sample_die_rolls[index], value)
-

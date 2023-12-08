@@ -1,34 +1,35 @@
 import unittest
-from src.engine.Die import Die
+from src.data.die.Die import *
 
 
-class TestDieValues(unittest.TestCase):
+class TestDie(unittest.TestCase):
 
-    def test_average_8(self):
+    def test_average__8(self):
         # Arrange
-        die = Die(8)
+        die = Die(DieSides.D8)
         # Act
         average = die.average
         # Assert
         self.assertEqual(4.5, average)
 
-    def test_average_20(self):
+    def test_average__20(self):
         # Arrange
-        die = Die(20)
+        die = Die(DieSides.D20)
         # Act
         average = die.average
         # Assert
         self.assertEqual(10.5, average)
 
-    def test_roll_20(self):
+    def test_roll__all__within_range(self):
         # Arrange
-        sides_list = [4, 6, 8, 10, 12, 20]
         count = 100
         # Act
-        for sides in sides_list:
+        for sides in DieSides:
+            if sides == DieSides.NONE:
+                continue
             for i in range(count):
                 value = Die(sides).roll().value
                 # Assert
                 self.assertTrue(value >= 1)
-                self.assertTrue(value <= sides)
+                self.assertTrue(value <= sides.value)
 

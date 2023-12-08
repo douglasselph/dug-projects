@@ -5,7 +5,6 @@ from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
 from src.data.Card import CardComposite, DieSides, Card, CardWound
 from src.data.Decision import DecisionLine, DecisionIntention
-from src.data.maneuver.ManeuverFeelingFeint import maneuver_apply_feeling_feint
 
 
 class Player:
@@ -216,10 +215,6 @@ class Player:
     @property
     def central_maneuver_card(self) -> Card:
         return self.plate.central_maneuver_card
-
-    # TODO: need to move logic to DecisionTree.
-    def apply_feeling_feint(self, coin: DecisionIntention):
-        maneuver_apply_feeling_feint(self.plate, coin)
 
     # TODO: requires some additional processing, just in case card is a maneuver card.
     def apply_to_die_four(self, coin: DecisionIntention) -> List[CardComposite]:
