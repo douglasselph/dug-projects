@@ -2,7 +2,7 @@ from src.data.Card import *
 from src.data.Decision import *
 from src.data.Game import Game, PlayerID
 from src.data.Player import Player
-from src.data.Stats import StatsAttack, StatsDeploy
+from src.data.stat.StatsAll import StatsAttack, StatsDeploy
 from src.decision.Decisions import Decisions
 from src.data.die.Die import Die
 from src.engine.IncidentBundle import IncidentBundle

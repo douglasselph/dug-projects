@@ -1,6 +1,6 @@
 from src.engine.Engine import Engine
 from src.data.Game import Game
-from src.data.Stats import StatsAll
+from src.data.stat.StatsAll import StatsAll
 from src.decision.Decisions import Decisions
 
 

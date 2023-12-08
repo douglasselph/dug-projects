@@ -1,6 +1,6 @@
 import unittest
 
-from src.data.Card import Card, CardWound
+from src.data.Card import CardWound
 
 
 class TestCard(unittest.TestCase):

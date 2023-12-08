@@ -5,7 +5,8 @@ from src.data.Game import Game
 from src.data.Card import CardWound, Card, card_ordinal
 from src.data.Decision import DecisionLine, DecisionIntention
 from src.data.RewardConstants import RewardConstants
-from src.data.Stats import StatsAll
+from src.data.stat.StatsAll import StatsAll
+from src.data.Player import Player
 
 
 class TestGame(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestGame(unittest.TestCase):
 
     def test_nn_next_cards__calls_player_next_cards(self):
         # Arrange
-        player_mock = Mock()
+        player_mock = Mock(spec=Player)
         self.SUT.agentPlayer = player_mock
         # Act
         self.SUT.nn_next_cards(8)

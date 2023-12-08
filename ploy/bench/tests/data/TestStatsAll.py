@@ -1,6 +1,6 @@
 import unittest
 
-from src.data.Stats import *
+from src.data.stat.StatsAll import *
 from src.data.Game import Game
 
 
