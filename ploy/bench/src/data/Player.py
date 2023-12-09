@@ -4,8 +4,7 @@ import random
 from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
 from src.data.Card import CardComposite, DieSides, Card, CardWound
-from src.data.Decision import DecisionLine, DecisionIntention
-from src.decision.base.BaseAddPenalty import BaseAddPenalty
+from src.data.Decision import DecisionLine, DecisionIntention, coin_for
 
 
 class Player:
@@ -207,9 +206,8 @@ class Player:
     def central_maneuver_card(self) -> Card:
         return self.plate.central_maneuver_card
 
-    # TODO: requires some additional processing, just in case card is a maneuver card.
-    def apply_to_die_four(self, coin: DecisionIntention) -> [CardComposite]:
-        drawn: [CardComposite] = []
+    def apply_to_die_four(self, coin: DecisionIntention):
+        new_cards: [CardComposite] = []
         for line in self.plate.lines:
             if line.intention == coin and line.intention_face_up:
                 for card in line.cards:
@@ -217,16 +215,30 @@ class Player:
                         cards = self.draw.draw()
                         if len(cards) > 0:
                             line.add(cards[0])
-                            drawn.append(cards[0])
-        return drawn
+                            new_cards.append(cards[0])
+
+        for drawn in new_cards:
+            if drawn == Card.MANEUVER_TO_DIE_FOUR:
+                self.apply_to_die_four(coin)
 
     def reduce_reach_on(self, line: DecisionLine):
         self.plate.reduce_reach_on(line)
 
-    def add_penalty_coin(self, decision: BaseAddPenalty):
-        coin = decision.select_coin_to_penalize(self)
-        if self.plate.num_held_intention_coins_for(coin) > 0:
-            self.plate.penalty_coins.append(coin)
+    def add_random_penalty_coin(self) -> Optional[DecisionIntention]:
+        value = self.rand3()
+        for i in range(3):
+            coin = coin_for(value)
+            if self.plate.num_held_intention_coins_for(coin) > 0:
+                self.plate.penalty_coins.append(coin)
+                return coin
+            value += 1
+            if value > 3:
+                value = 1
+        return None
+
+    @staticmethod
+    def rand3() -> int:
+        return random.randint(1, 3)
 
     def trash_one_random_face_up_plate_cards(self) -> Optional[Card]:
         face_up_lines = self.plate.face_up_lines
@@ -257,3 +269,5 @@ class Player:
                     line.remove(card)
                     return True
         return False
+
+

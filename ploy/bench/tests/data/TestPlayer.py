@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from src.data.Player import Player
 from src.data.Card import Card, CardWound, DieSides
@@ -792,18 +792,11 @@ class TestPlayer(unittest.TestCase):
         # Assert
         self.assertEqual(Card.MANEUVER_BUST_A_CUT, card)
 
-    # TODO: need to move logic to DecisionTree.
-    def test_apply_feeling_feint(self):
-        # Arrange
-        # Act
-        self.SUT.apply_feeling_feint(DecisionIntention.ATTACK)
-        # Assert
-
-    # TODO: requires some additional processing, just in case card is a maneuver card.
+    # TODO: Add unit tests for normal as well if the drawn cards are more to_die_four cards.
     def test_apply_to_die_four(self):
         # Arrange
         # Act
-        self.SUT.apply_to_die_four()
+        self.SUT.apply_to_die_four(DecisionIntention.ATTACK)
         # Assert
 
     def test_reduce_reach_on__expected_call_made(self):
@@ -815,11 +808,27 @@ class TestPlayer(unittest.TestCase):
         # Assert
         mock_plate.reduce_reach_on.assert_called_once_with(DecisionLine.LINE_2)
 
-    # TODO: Move to decision tree
-    def test_add_penalty_coin(self):
+    @patch('src.data.Player.Player.rand3')
+    def test_add_random_penalty_coin__for_available__add_penalty(self, mock_rand):
         # Arrange
+        mock_rand.return_value = 1
         # Act
-        self.SUT.add_penalty_coin()
+        coin = self.SUT.add_random_penalty_coin()
+        # Assert
+        self.assertEqual(2, self.SUT.plate.num_held_intention_coins_for(coin))
+
+    @patch('src.data.Player.Player.rand3')
+    def test_add_random_penalty_coin__for_unavailable__add_penalty_to_next(self, mock_rand):
+        # Arrange
+        mock_rand.return_value = 1
+        self.SUT.plate.penalty_coins.append(coin_for(1))
+        self.SUT.plate.penalty_coins.append(coin_for(1))
+        self.SUT.plate.penalty_coins.append(coin_for(1))
+        # Act
+        coin = self.SUT.add_random_penalty_coin()
+        # Assert
+        self.assertEqual(2, self.SUT.plate.num_held_intention_coins_for(coin_for(2)))
+        self.assertEqual(2, self.SUT.plate.num_held_intention_coins_for(coin))
 
     def test_trash_one_random_face_up_plate_cards__trash_all_cards__all_non_wound_cards_trashed(self):
         # Arrange
