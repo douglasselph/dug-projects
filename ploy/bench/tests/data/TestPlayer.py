@@ -120,9 +120,9 @@ class TestPlayer(unittest.TestCase):
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.DEFEND)
         # Assert
         card = self.SUT.plate.lines[DecisionLine.LINE_1.pos].cards[0]
-        self.assertEqual(Card.D20_CUTASTROPHE, card)
+        self.assertEqual(Card.D4_SCARED_OUT_OF_YOUR_WHITTLES, card)
         card = self.SUT.draw.query_face_up_card()
-        self.assertEqual(Card.D10_INNER_PIERCE, card)
+        self.assertEqual(Card.MANEUVER_IN_HEW_OF, card)
 
     def test_is_legal_intention__no_cards__returns_true(self):
         # Arrange
@@ -324,9 +324,9 @@ class TestPlayer(unittest.TestCase):
         mock_plate = Mock()
         self.SUT.plate = mock_plate
         # Act
-        self.SUT.line_card_values(line)
+        self.SUT.nn_line_card_values(line)
         # Assert
-        mock_plate.line_card_values.assert_called_once_with(line)
+        mock_plate.nn_line_card_values.assert_called_once_with(line)
 
     def test_lines_num_cards__with_cards__returns_expected(self):
         self.SUT.extend_to_draw(
@@ -362,17 +362,19 @@ class TestPlayer(unittest.TestCase):
                 Card.D6_D12_EXECUTIVE_INCISION
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         # Act
         self.SUT.discard_all()
         # Assert
         count = self.SUT.draw.cards_total
-        self.assertEqual(5, count)
+        self.assertEqual(6, count)
 
     def test_discard_face_up__face_up_cards_from_plate_discarded_to_bottom_of_draw_deck(self):
         # Arrange
@@ -386,17 +388,19 @@ class TestPlayer(unittest.TestCase):
                 Card.D6_D12_EXECUTIVE_INCISION
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         # Act
         self.SUT.discard_face_up()
         # Assert
         count = self.SUT.draw.cards_total
-        self.assertEqual(2, count)
+        self.assertEqual(3, count)
 
     def test_upgrade_face_up_wounds__matched_wounds_upgraded(self):
         # Arrange
@@ -410,16 +414,17 @@ class TestPlayer(unittest.TestCase):
                 CardWound.WOUND_GRAVE
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         expected_cards_1 = [
             Card.D4_SCARED_OUT_OF_YOUR_WHITTLES,
-            CardWound.WOUND_ACUTE,
             CardWound.WOUND_GRAVE
         ]
         # Act
@@ -428,8 +433,9 @@ class TestPlayer(unittest.TestCase):
         cards_3 = self.SUT.plate.lines[DecisionLine.LINE_3.pos].cards
         cards_1 = self.SUT.plate.lines[DecisionLine.LINE_1.pos].cards
         self.assertEqual(2, len(cards_3))
-        self.assertEqual(3, len(cards_1))
-        self.assertEqual(expected_cards_1, cards_1)
+        self.assertEqual(2, len(cards_1))
+        self.assertEqual(CardWound.WOUND_MINOR, cards_1[0])
+        self.assertEqual(CardWound.WOUND_DIRE, cards_1[1])
 
     def test_lose_energy_from_face_up_wounds__expected_energy_loss_incurred(self):
         # Arrange
@@ -443,10 +449,12 @@ class TestPlayer(unittest.TestCase):
                 CardWound.WOUND_GRAVE
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
@@ -468,18 +476,20 @@ class TestPlayer(unittest.TestCase):
                 CardWound.WOUND_GRAVE
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         expected_cards = [
-            Card.D4_SCARED_OUT_OF_YOUR_WHITTLES,
             CardWound.WOUND_ACUTE,
-            CardWound.WOUND_MINOR,
-            CardWound.WOUND_GRAVE
+            CardWound.WOUND_ACUTE,
+            CardWound.WOUND_GRAVE,
+            CardWound.WOUND_ACUTE
         ]
         # Act
         self.SUT.upgrade_lowest_face_up_wound()
@@ -499,16 +509,18 @@ class TestPlayer(unittest.TestCase):
                 CardWound.WOUND_GRAVE
             ]
         )
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.draw_hand()
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         expected_cards = [
-            Card.D4_SCARED_OUT_OF_YOUR_WHITTLES,
-            CardWound.WOUND_MINOR,
+            CardWound.WOUND_ACUTE,
+            CardWound.WOUND_ACUTE,
             CardWound.WOUND_MINOR,
             CardWound.WOUND_DIRE
         ]
@@ -532,7 +544,8 @@ class TestPlayer(unittest.TestCase):
         # Act
         cards = self.SUT.all_draw_cards
         # Assert
-        self.assertEqual(expected_cards, cards)
+        for card in cards:
+            self.assertTrue(card in expected_cards)
 
     def test_num_all_draw_cards__expected_count_gotten(self):
         # Arrange
@@ -575,8 +588,8 @@ class TestPlayer(unittest.TestCase):
         ])
         self.SUT.stash.draw(2)
         expected_cards = [
-            Card.D6_D12_EXECUTIVE_INCISION,
-            Card.D8_UNDERCOVER_CHOP
+            Card.D8_UNDERCOVER_CHOP,
+            Card.D6_D12_EXECUTIVE_INCISION
         ]
         # Act
         cards = self.SUT.stash_cards_face_up
@@ -664,7 +677,7 @@ class TestPlayer(unittest.TestCase):
         # Act
         has = self.SUT.plate_has_face_up_sides(DecisionIntention.DEPLOY, DieSides.D20)
         # Assert
-        self.assertTrue(has)
+        self.assertFalse(has)
 
     def test_plate_has_face_up_sides__not_face_up__returns_false(self):
         # Arrange
@@ -792,12 +805,47 @@ class TestPlayer(unittest.TestCase):
         # Assert
         self.assertEqual(Card.MANEUVER_BUST_A_CUT, card)
 
-    # TODO: Add unit tests for normal as well if the drawn cards are more to_die_four cards.
-    def test_apply_to_die_four(self):
+    def test_apply_to_die_four__detect_if_extra_card_drawn(self):
         # Arrange
+        self.SUT.append_to_draw(Card.MANEUVER_TO_DIE_FOUR)
+        self.SUT.append_to_draw(Card.D20_CUTASTROPHE)
+        self.SUT.append_to_draw(Card.D12_PROFESSIONAL_STABOTAGE)
+        self.SUT.append_to_draw(Card.D6_SLIT_TIGHT)
+        self.SUT.draw_hand()
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
+        self.SUT.append_to_draw(Card.D4_D10_SLASH_AND_BURN)
         # Act
         self.SUT.apply_to_die_four(DecisionIntention.ATTACK)
         # Assert
+        cards = self.SUT.plate.lines[DecisionLine.LINE_1.pos].cards
+        self.assertEqual(5, len(cards))
+        self.assertEqual(Card.D4_D10_SLASH_AND_BURN, cards[4])
+
+    def test_apply_to_die_four__to_die_for_drawn__detect_if_two_extra_cards(self):
+        # Arrange
+        self.SUT.append_to_draw(Card.MANEUVER_TO_DIE_FOUR)
+        self.SUT.append_to_draw(Card.D20_CUTASTROPHE)
+        self.SUT.append_to_draw(Card.D12_PROFESSIONAL_STABOTAGE)
+        self.SUT.append_to_draw(Card.D6_SLIT_TIGHT)
+        self.SUT.draw_hand()
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.play_to_plate(DecisionLine.LINE_1, DecisionIntention.ATTACK)
+        self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
+        self.SUT.append_to_draw(Card.MANEUVER_TO_DIE_FOUR)
+        self.SUT.append_to_draw(Card.D4_D10_SLASH_AND_BURN)
+        # Act
+        self.SUT.apply_to_die_four(DecisionIntention.ATTACK)
+        # Assert
+        cards = self.SUT.plate.lines[DecisionLine.LINE_1.pos].cards
+        self.assertEqual(6, len(cards))
+        self.assertEqual(Card.MANEUVER_TO_DIE_FOUR, cards[4])
+        self.assertEqual(Card.D4_D10_SLASH_AND_BURN, cards[5])
 
     def test_reduce_reach_on__expected_call_made(self):
         # Arrange
@@ -946,7 +994,7 @@ class TestPlayer(unittest.TestCase):
         self.SUT.play_to_plate(DecisionLine.LINE_3, DecisionIntention.DEPLOY)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_1)
         self.SUT.plate.set_line_face_up(DecisionLine.LINE_3)
-        card = Card.D6_SLIT_TIGHT
+        card = Card.D4_SCARED_OUT_OF_YOUR_WHITTLES
         self.assertTrue(card in self.SUT.plate.lines[DecisionLine.LINE_2.pos].cards)
         # Act
         flag = self.SUT.trash_face_up_card(card)

@@ -52,6 +52,8 @@ class Player:
 
     def play_to_plate(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         card = self.draw.pull_face_up_card()
+        if card == Card.NONE:
+            return False
         return self.plate.add_card(card, line, coin)
 
     def is_legal_intention(self, line: DecisionLine, coin: DecisionIntention) -> bool:
@@ -83,7 +85,7 @@ class Player:
     def line_intention_of(self, line: DecisionLine) -> DecisionIntention:
         return self.plate.line_intention_of(line)
 
-    def line_card_values(self, line: DecisionLine) -> List[int]:
+    def nn_line_card_values(self, line: DecisionLine) -> List[int]:
         return self.plate.nn_line_card_values(line)
 
     # Return list of the number of cards in each line
@@ -188,7 +190,7 @@ class Player:
         self.plate.reveal_intentions_if_maxed()
 
     def reveal_all_intentions(self):
-        self.plate.reveal_intention_on_all_lines()
+        self.plate.reveal_all_intentions()
 
     def reveal_cards_with_revealed_intentions(self):
         self.plate.reveal_cards_with_revealed_intentions()
@@ -209,7 +211,7 @@ class Player:
     def apply_to_die_four(self, coin: DecisionIntention):
         new_cards: [CardComposite] = []
         for line in self.plate.lines:
-            if line.intention == coin and line.intention_face_up:
+            if line.intention == coin and line.cards_face_up:
                 for card in line.cards:
                     if card == Card.MANEUVER_TO_DIE_FOUR:
                         cards = self.draw.draw()
@@ -245,15 +247,17 @@ class Player:
         line_index = random.randint(0, len(face_up_lines) - 1)
         for i in range(len(face_up_lines)):
             line = face_up_lines[line_index]
-            card_index = random.randint(0, len(line.cards) - 1)
-            for j in range(len(line.cards)):
-                card = line.cards[card_index]
-                if isinstance(card, Card):
-                    line.remove(card)
-                    return card
-                card_index = card_index + 1
-                if card_index >= len(line.cards):
-                    card_index = 0
+            num_cards = len(line.cards)
+            if num_cards > 0:
+                card_index = random.randint(0, num_cards - 1)
+                for j in range(num_cards):
+                    card = line.cards[card_index]
+                    if isinstance(card, Card):
+                        line.remove(card)
+                        return card
+                    card_index = card_index + 1
+                    if card_index >= num_cards:
+                        card_index = 0
             line_index = line_index + 1
             if line_index >= len(face_up_lines):
                 line_index = 0

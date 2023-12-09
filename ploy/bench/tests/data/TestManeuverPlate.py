@@ -169,7 +169,7 @@ class TestManeuverPlate(unittest.TestCase):
     def test_reveal_intention_on_all_lines__as_expected(self):
         # Arrange
         # Act
-        self.SUT.reveal_intention_on_all_lines()
+        self.SUT.reveal_all_intentions()
         # Assert
         for line in DecisionLine:
             self.assertTrue(self.SUT.lines[line.pos].intention_face_up)

@@ -65,7 +65,7 @@ class Game:
         return self.agentPlayer.line_intention_of(line)
 
     def agent_line_card_values(self, line: DecisionLine) -> List[int]:
-        return self.agentPlayer.line_card_values(line)
+        return self.agentPlayer.nn_line_card_values(line)
 
     @property
     def opponent_energy(self) -> int:

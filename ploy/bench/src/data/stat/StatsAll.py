@@ -40,7 +40,7 @@ class StatsAll:
 
         if game.stat.turns > self.highest_turns:
             self.highest_turns = game.stat.turns
-        if self.lowest_turns == 0 or self.lowest_turns < game.stat.turns:
+        if self.lowest_turns == 0 or self.lowest_turns > game.stat.turns:
             self.lowest_turns = game.stat.turns
 
         if game.agentPlayer.fatal_received:

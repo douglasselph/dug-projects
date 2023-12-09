@@ -175,7 +175,7 @@ class ManeuverPlate:
     def set_line_face_up(self, line: DecisionLine):
         self.lines[line.pos].cards_face_up = True
 
-    def reveal_intention_on_all_lines(self):
+    def reveal_all_intentions(self):
         for line in self.lines:
             line.intention_face_up = True
 
