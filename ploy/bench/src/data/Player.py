@@ -5,6 +5,7 @@ from src.data.ManeuverPlate import ManeuverPlate
 from src.data.Deck import Deck
 from src.data.Card import CardComposite, DieSides, Card, CardWound
 from src.data.Decision import DecisionLine, DecisionIntention
+from src.decision.base.BaseAddPenalty import BaseAddPenalty
 
 
 class Player:
@@ -84,7 +85,7 @@ class Player:
         return self.plate.line_intention_of(line)
 
     def line_card_values(self, line: DecisionLine) -> List[int]:
-        return self.plate.line_card_values(line)
+        return self.plate.nn_line_card_values(line)
 
     # Return list of the number of cards in each line
     @property
@@ -207,32 +208,25 @@ class Player:
         return self.plate.central_maneuver_card
 
     # TODO: requires some additional processing, just in case card is a maneuver card.
-    def apply_to_die_four(self, coin: DecisionIntention) -> List[CardComposite]:
-        drawn = []
+    def apply_to_die_four(self, coin: DecisionIntention) -> [CardComposite]:
+        drawn: [CardComposite] = []
         for line in self.plate.lines:
             if line.intention == coin and line.intention_face_up:
                 for card in line.cards:
                     if card == Card.MANEUVER_TO_DIE_FOUR:
-                        card = self.draw.draw()
-                        if card != Card.NONE:
-                            line.add(card)
-                            drawn.append(card)
+                        cards = self.draw.draw()
+                        if len(cards) > 0:
+                            line.add(cards[0])
+                            drawn.append(cards[0])
         return drawn
 
     def reduce_reach_on(self, line: DecisionLine):
         self.plate.reduce_reach_on(line)
 
-    # TODO: Move to decision tree
-    def add_penalty_coin(self):
-        value = random.randint(1, 3)
-        for i in range(3):
-            coin = self.coin_for(value)
-            if self.plate.num_intention_coins_for(coin) > 0:
-                self.plate.penalty_coins.append(coin)
-                return
-            value = value + 1
-            if value >= 4:
-                value = 1
+    def add_penalty_coin(self, decision: BaseAddPenalty):
+        coin = decision.select_coin_to_penalize(self)
+        if self.plate.num_held_intention_coins_for(coin) > 0:
+            self.plate.penalty_coins.append(coin)
 
     def trash_one_random_face_up_plate_cards(self) -> Optional[Card]:
         face_up_lines = self.plate.face_up_lines

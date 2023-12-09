@@ -713,7 +713,6 @@ class TestPlayer(unittest.TestCase):
         # Assert
         mock_plate.remove_sides_on_face_up.assert_called_once_with(intention, DieSides.D20)
 
-
     def test_compute_draw_wound_penalty_value__returns_expected_value(self):
         # Arrange
         self.SUT.draw.extend([

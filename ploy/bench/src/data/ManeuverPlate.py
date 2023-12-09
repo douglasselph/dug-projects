@@ -47,6 +47,7 @@ class Line:
         for card in self.cards:
             if isinstance(card, Card):
                 if card.die_bonus == sides:
+                    self.cards.remove(card)
                     return card
         return None
 
@@ -101,6 +102,7 @@ class Line:
 
 class ManeuverPlate:
 
+    held_coins_per_intention = 3
     initial_line_card_sizes = [5, 4, 3, 3]
     central_maneuver_card: Card
     level: int
@@ -117,7 +119,8 @@ class ManeuverPlate:
 
     def add_card(self, card: CardComposite, line: DecisionLine, coin: DecisionIntention):
         pos = line.pos
-        self.lines[pos].set_intention(coin)
+        if self.lines[pos].intention == DecisionIntention.NONE or len(self.lines[pos].cards) == 0:
+            self.lines[pos].set_intention(coin)
         self.lines[pos].add(card)
 
     def is_set_intention_legal(self, line: DecisionLine, coin: DecisionIntention) -> bool:
@@ -125,20 +128,22 @@ class ManeuverPlate:
         line = self.lines[pos]
         if not line.is_set_intention_legal:
             return False
-        count = 0
-        for check in self.lines:
-            if line != check and check.intention == coin:
-                count += 1
-        if count < self.num_intention_coins_for(coin):
-            return True
-        return False
+        count = self.num_used_intentions_coins_for(coin)
+        return count < self.num_held_intention_coins_for(coin)
 
-    def num_intention_coins_for(self, coin: DecisionIntention) -> int:
+    def num_held_intention_coins_for(self, coin: DecisionIntention) -> int:
         penalty = 0
         for check in self.penalty_coins:
             if check == coin:
                 penalty += 1
-        return 3 - penalty
+        return self.held_coins_per_intention - penalty
+
+    def num_used_intentions_coins_for(self, coin: DecisionIntention) -> int:
+        count = 0
+        for line in self.lines:
+            if line.intention == coin:
+                count += 1
+        return count
 
     def is_add_card_legal(self, line: DecisionLine) -> bool:
         return self.lines[line.pos].is_add_card_legal
@@ -153,7 +158,7 @@ class ManeuverPlate:
     def line_intention_of(self, line: DecisionLine) -> DecisionIntention:
         return self.lines[line.pos].intention
 
-    def line_card_values(self, line: DecisionLine) -> List[int]:
+    def nn_line_card_values(self, line: DecisionLine) -> List[int]:
         card_values = []
         for_line = self.lines[line.pos]
         for position in range(for_line.maxSize):

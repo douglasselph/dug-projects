@@ -8,6 +8,7 @@ from src.decision.validate.ValidateTrash import ValidateTrash
 from src.decision.validate.ValidateDeployChooseCard import ValidateDeployChooseCard
 from src.decision.validate.ValidateDeployBlock import ValidateDeployBlock
 from src.decision.validate.ValidateFeelingFeint import ValidateFeelingFeint
+from src.decision.validate.ValidateAddPenalty import ValidateAddPenalty
 
 
 class Decisions:
@@ -24,4 +25,5 @@ class Decisions:
         self.deployChooseCard = ValidateDeployChooseCard()
         self.deployBlock = ValidateDeployBlock()
         self.feelingFeint = ValidateFeelingFeint()
+        self.add_penalty = ValidateAddPenalty()
 

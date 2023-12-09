@@ -71,16 +71,22 @@ class TestManeuverPlate(unittest.TestCase):
         # Assert
         self.assertFalse(is_legal)
 
-    def test_num_intention_coins_for__returns_expected(self):
+    def test_num_held_intention_coins_for__with_nothing_played__returns_expected(self):
         # Arrange
-        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_1, DecisionIntention.ATTACK)
-        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_2, DecisionIntention.ATTACK)
-        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_3, DecisionIntention.DEPLOY)
-        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_4, DecisionIntention.DEFEND)
         # Act
-        count = self.SUT.num_intention_coins_for(DecisionIntention.ATTACK)
+        count = self.SUT.num_held_intention_coins_for(DecisionIntention.ATTACK)
         # Assert
-        self.assertEquals(2, count)
+        self.assertEquals(3, count)
+
+    def test_num_used_intentions_coins_for__with_2_played__returns_2(self):
+        # Arrange
+        intention = DecisionIntention.DEPLOY
+        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_1, intention)
+        self.SUT.add_card(Card.D10_INNER_PIERCE, DecisionLine.LINE_2, intention)
+        # Act
+        count = self.SUT.num_used_intentions_coins_for(intention)
+        # Assert
+        self.assertEqual(2, count)
 
     def test_is_add_card_legal__returns_true(self):
         # Arrange
@@ -130,7 +136,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Assert
         self.assertEquals(DecisionIntention.NONE, intention)
 
-    def test_get_line_intention_id__set_after_set__returns_first_set(self):
+    def test_line_intention_of__set_after_set__returns_last_set(self):
         # Arrange
         line = DecisionLine.LINE_3
         self.SUT.add_card(Card.D20_CUTASTROPHE, line, DecisionIntention.DEPLOY)
@@ -138,12 +144,12 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         intention = self.SUT.line_intention_of(line)
         # Assert
-        self.assertEquals(DecisionIntention.DEPLOY, intention)
+        self.assertEqual(DecisionIntention.DEPLOY, intention)
 
     def test_line_card_values(self):
         # Arrange
         # Act
-        self.SUT.line_card_values(DecisionLine.LINE_1)
+        self.SUT.nn_line_card_values(DecisionLine.LINE_1)
         # Assert
 
     def test_set_intention_face_up__as_expected(self):
@@ -229,7 +235,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         dice = self.SUT.collect_dice_for(DecisionIntention.DEPLOY)
         # Assert
-        self.assertEquals(expected_value, dice)
+        self.assertEqual(expected_value, dice)
 
     def test_collect_face_up_cards_for__for_face_up_only__returns_expected_cards(self):
         # Arrange
@@ -251,7 +257,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         cards = self.SUT.collect_face_up_cards_for(DecisionIntention.DEPLOY)
         # Assert
-        self.assertEquals(expected_value, cards)
+        self.assertEqual(expected_value, cards)
 
     def test_has_intention__with_none__returns_false(self):
         # Arrange
@@ -299,7 +305,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         has = self.SUT.has_revealed_intention(DecisionIntention.DEFEND)
         # Assert
-        self.assertFalse(has)
+        self.assertTrue(has)
 
     def test_has_sides_on_face_up__with_none__returns_false(self):
         # Arrange
@@ -450,10 +456,10 @@ class TestManeuverPlate(unittest.TestCase):
         cards = self.SUT.discard_all()
         # Assert
         card_counts = self.SUT.lines_num_cards
-        self.assertEquals([0, 0, 0, 0], card_counts)
+        self.assertEqual([0, 0, 0, 0], card_counts)
         self.assertFalse(self.SUT.lines[DecisionLine.LINE_1.pos].cards_face_up)
         self.assertFalse(self.SUT.lines[DecisionLine.LINE_4.pos].cards_face_up)
-        self.assertEquals(8, len(cards))
+        self.assertEqual(8, len(cards))
 
     def test_wounds_face_up__has_none__returns_none(self):
         # Arrange
@@ -470,7 +476,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         cards = self.SUT.wounds_face_up
         # Assert
-        self.assertEquals(0, len(cards))
+        self.assertEqual(0, len(cards))
 
     def test_wounds_face_up__has_wounds_but_not_on_face_up__returns_none(self):
         # Arrange
@@ -488,7 +494,7 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         cards = self.SUT.wounds_face_up
         # Assert
-        self.assertEquals(0, len(cards))
+        self.assertEqual(0, len(cards))
 
     def test_wounds_face_up__has_wounds_on_face_up__returns_wounds(self):
         # Arrange
@@ -509,8 +515,8 @@ class TestManeuverPlate(unittest.TestCase):
         # Act
         cards = self.SUT.wounds_face_up
         # Assert
-        self.assertEquals(2, len(cards))
-        self.assertEquals(expected_value, cards)
+        self.assertEqual(2, len(cards))
+        self.assertEqual(expected_value, cards)
 
     def test_replace_wound_face_up__no_wounds_on_face_up__nothing_done(self):
         # Arrange
@@ -530,14 +536,15 @@ class TestManeuverPlate(unittest.TestCase):
             card_ordinal(Card.D20_CUTASTROPHE),
             card_ordinal(CardWound.WOUND_MINOR),
             card_ordinal(Card.D8_D20_MY_INCISION_IS_FINAL),
-            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION)
+            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION),
+            0
         ]
         # Act
         done = self.SUT.replace_wound_face_up(CardWound.WOUND_MINOR, CardWound.WOUND_ACUTE)
         # Assert
         self.assertFalse(done)
-        values = self.SUT.line_card_values(DecisionLine.LINE_1)
-        self.assertEquals(expected_values, values)
+        values = self.SUT.nn_line_card_values(DecisionLine.LINE_1)
+        self.assertEqual(expected_values, values)
 
     def test_replace_wound_face_up__wounds_on_face_up__card_replaced(self):
         # Arrange
@@ -555,16 +562,17 @@ class TestManeuverPlate(unittest.TestCase):
         self.SUT.set_line_face_up(DecisionLine.LINE_1)
         expected_values = [
             card_ordinal(Card.D20_CUTASTROPHE),
-            card_ordinal(CardWound.WOUND_ACUTE),
             card_ordinal(Card.D8_D20_MY_INCISION_IS_FINAL),
-            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION)
+            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION),
+            card_ordinal(CardWound.WOUND_ACUTE),
+            0
         ]
         # Act
         done = self.SUT.replace_wound_face_up(CardWound.WOUND_MINOR, CardWound.WOUND_ACUTE)
         # Assert
-        self.assertFalse(done)
-        values = self.SUT.line_card_values(DecisionLine.LINE_1)
-        self.assertEquals(expected_values, values)
+        self.assertTrue(done)
+        values = self.SUT.nn_line_card_values(DecisionLine.LINE_1)
+        self.assertEqual(expected_values, values)
 
     def test_reduce_reach_on__penalty_applied(self):
         # Arrange
@@ -595,13 +603,14 @@ class TestManeuverPlate(unittest.TestCase):
         expected_values = [
             card_ordinal(Card.D20_CUTASTROPHE),
             card_ordinal(Card.D8_D20_MY_INCISION_IS_FINAL),
-            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION)
+            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION),
+            0, 0
         ]
         # Act
         done = self.SUT.remove_on_face_up(CardWound.WOUND_MINOR)
         # Assert
         self.assertTrue(done)
-        values = self.SUT.line_card_values(DecisionLine.LINE_1)
+        values = self.SUT.nn_line_card_values(DecisionLine.LINE_1)
         self.assertEquals(expected_values, values)
 
     def test_remove_on_face_up__has_card_but_not_face_up__nothing_done(self):
@@ -622,14 +631,15 @@ class TestManeuverPlate(unittest.TestCase):
             card_ordinal(Card.D20_CUTASTROPHE),
             card_ordinal(CardWound.WOUND_MINOR),
             card_ordinal(Card.D8_D20_MY_INCISION_IS_FINAL),
-            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION)
+            card_ordinal(Card.D6_D12_EXECUTIVE_INCISION),
+            0
         ]
         # Act
         done = self.SUT.remove_on_face_up(CardWound.WOUND_MINOR)
         # Assert
         self.assertFalse(done)
-        values = self.SUT.line_card_values(DecisionLine.LINE_1)
-        self.assertEquals(expected_values, values)
+        values = self.SUT.nn_line_card_values(DecisionLine.LINE_1)
+        self.assertEqual(expected_values, values)
 
     def test_face_up_lines__returns_face_up_lines(self):
         # Arrange

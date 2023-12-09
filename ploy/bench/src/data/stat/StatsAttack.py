@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Optional
 from src.data.Card import CardWound
 
+
 class StatsAttack:
 
     def __init__(self):
