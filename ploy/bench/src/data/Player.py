@@ -8,6 +8,7 @@ from src.data.Decision import DecisionLine, DecisionIntention, coin_for
 
 
 class Player:
+
     _max_energy = 20
     _hand_size = 4
 
@@ -54,7 +55,8 @@ class Player:
         card = self.draw.pull_face_up_card()
         if card == Card.NONE:
             return False
-        return self.plate.add_card(card, line, coin)
+        self.plate.add_card(card, line, coin)
+        return True
 
     def is_legal_intention(self, line: DecisionLine, coin: DecisionIntention) -> bool:
         line = self.plate.lines[line.pos]

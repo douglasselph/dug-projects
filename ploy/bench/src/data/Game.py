@@ -165,17 +165,17 @@ class Game:
             self.opponent.fatal_received or \
             self.opponent.energy <= 0
 
-    # TODO: Unit test
+    # TODO: Unit support
     def _upgrade_face_up_wounds(self):
         self.agentPlayer.upgrade_face_up_wounds()
         self.opponent.upgrade_face_up_wounds()
 
-    # TODO: Unit test
+    # TODO: Unit support
     def _lose_energy_from_face_up_wounds(self):
         self.agentPlayer.lose_energy_from_face_up_wounds()
         self.opponent.lose_energy_from_face_up_wounds()
 
-    # TODO: Unit test
+    # TODO: Unit support
     def discard_face_up(self):
         self.agentPlayer.discard_face_up()
         self.opponent.discard_face_up()

@@ -14,6 +14,7 @@ class Engine:
     def __init__(self, game: Game, decisions: Decisions):
         self.game = game
         self.decisions = decisions
+        self.decisions.placeCard.set_game(self.game)
 
     ############################################################################
     # Draw Hand of 4 maneuver for all players.
@@ -27,8 +28,6 @@ class Engine:
     # Return False if illegal indication.
 
     def place_cards(self):
-
-        self.decisions.placeCard.set_game(self.game)
 
         while self.game.agentPlayer.has_face_up_cards or self.game.opponent.has_face_up_cards:
 
