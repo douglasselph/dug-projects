@@ -7,30 +7,30 @@ from src.die.DieCollection import DieCollection
 
 class Move:
 
-    def __init__(self):
-        self.who: PlayerID = PlayerID.NONE
+    def __init__(self, pid: PlayerID):
+        self.who: PlayerID = pid
         self.bout: int = 0
 
 
 class MoveDeclare(Move):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pid: PlayerID):
+        super().__init__(pid)
         self.intention: IntentionID = IntentionID.NONE
         self.die: DieSides = DieSides.NONE
 
 
 class MoveSupport(Move):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pid: PlayerID):
+        super().__init__(pid)
         self.dice: DieCollection = DieCollection([])
 
 
 class MoveExecute(Move):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, pid: PlayerID):
+        super().__init__(pid)
         self.self_roll_value = 0
         self.other_roll_value = 0
         self.post_hp = 0

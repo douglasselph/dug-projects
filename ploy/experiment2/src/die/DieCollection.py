@@ -55,5 +55,9 @@ class DieCollection:
                 best = side
         return best
 
+    @property
+    def lowest(self) -> DieSides:
+        return min(self.sides, key=lambda x: x.value)
+
     def __str__(self) -> str:
         return f"DieCollection({str(self.sides)})"

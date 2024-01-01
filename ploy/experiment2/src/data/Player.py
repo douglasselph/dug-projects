@@ -6,6 +6,7 @@ from src.data.Moves import MoveDeclare
 
 
 class Player:
+
     hp: int
     dice: DieCollection
 
@@ -26,5 +27,14 @@ class Player:
     def apply_declaration(self, declaration: MoveDeclare):
         self.declaration = declaration.intention
         self.declared_die = declaration.die
+
+    @property
+    def dice_average(self) -> float:
+        return self.dice.average
+
+    @property
+    def die_lowest(self) -> DieSides:
+        return self.dice.lowest
+
 
 

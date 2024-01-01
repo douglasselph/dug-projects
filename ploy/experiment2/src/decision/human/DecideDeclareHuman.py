@@ -5,7 +5,7 @@ from src.data.Moves import MoveDeclare
 from src.decision.base import DecideDeclareBase
 
 
-class DecideDeclareValidate(DecideDeclareBase):
+class DecideDeclareHuman(DecideDeclareBase):
 
     def decide(self, pid: PlayerID) -> Optional[MoveDeclare]:
         return None

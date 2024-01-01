@@ -34,6 +34,7 @@ class DieSides(Enum):
             return DieSides.D4
         return DieSides.NONE
 
+    @property
     def average(self) -> float:
         if self.value == 0:
             return 0

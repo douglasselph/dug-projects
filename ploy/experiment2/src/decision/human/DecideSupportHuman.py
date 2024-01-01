@@ -5,7 +5,7 @@ from src.data.Moves import MoveSupport
 from src.decision.base.DecideSupportBase import DecideSupportBase
 
 
-class DecideSupportValidate(DecideSupportBase):
+class DecideSupportHuman(DecideSupportBase):
 
     def decide(self, pid: PlayerID) -> Optional[MoveSupport]:
         return None
