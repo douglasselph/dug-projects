@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Get the full path to the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Add the project directory to PYTHONPATH
+export PYTHONPATH="${SCRIPT_DIR}:${PYTHONPATH}"
+
+# Run the Python script
+python3 "${SCRIPT_DIR}/src/main.py" "$@"

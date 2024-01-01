@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import unittest
-from unittest.mock import Mock
 
-from src.data.Game import Game
-from src.engine.Engine import Engine
-from src.decision.Decisions import Decisions
-from src.data.Decision import DecisionLine
+from src.data.Card import Card
 from src.data.Decision import DecisionIntention
-from src.data.Player import Player
+from src.data.Decision import DecisionLine
+from src.data.Game import Game, PlayerID
+from src.decision.Decisions import Decisions
+from src.engine.Engine import Engine
 from tests.engine.support.TestPlaceCard import TestPlaceCard
 from tests.engine.support.TestPlayer import TestPlayer
-from src.data.Card import Card
+from tests.engine.support.TestRevealSupportingLine import TestRevealSupportingLine
 
 
 class TestEngine(unittest.TestCase):
@@ -51,6 +50,7 @@ class TestEngine(unittest.TestCase):
         self.game.agentPlayer.extend_to_draw(self.sample_cards)
         self.game.opponent.extend_to_draw(self.sample_cards)
         self.test_place_card = TestPlaceCard()
+        self.test_reveal_supporting_line = TestRevealSupportingLine()
         self.test_player = TestPlayer()
         self.test_opponent = TestPlayer()
         self.test_player.extend_to_draw(self.sample_cards)
@@ -61,25 +61,20 @@ class TestEngine(unittest.TestCase):
         self.test_place_card.opponent_result_coin.extend(self.sample_coins)
         self.decisions = Decisions()
         self.decisions.placeCard = self.test_place_card
+        self.decisions.revealSupportingLine = self.test_reveal_supporting_line
         self.SUT = Engine(self.game, self.decisions)
         self.SUT.draw_hands()
+        self.game.initiativeOn = PlayerID.PLAYER_1
 
     def test_initialization__decisions__all_set_games_were_done(self):
         # Arrange
         # Act
         # Assert
+        self.assertEqual(self.game, self.decisions.deployBlock.game)
+        self.assertEqual(self.game, self.decisions.deployChooseCard.game)
         self.assertEqual(self.game, self.decisions.placeCard.game)
-
-    def test_draw_hands__verify_all_players_draw_hand_call_is_made(self):
-        # Arrange
-        player_mock = Mock(spec=Player)
-        opponent_mock = Mock(spec=Player)
-        self.SUT.game.agentPlayer = player_mock
-        self.SUT.game.opponent = opponent_mock
-        # Act
-        # Assert
-        player_mock.draw_hand.assert_called()
-        opponent_mock.draw_hand.assert_called()
+        self.assertEqual(self.game, self.decisions.revealSupportingLine.game)
+        self.assertEqual(self.game, self.decisions.trash.game)
 
     def test_place_cards__all_face_up_cards_were_placed_when_complete(self):
         # Arrange
@@ -91,7 +86,7 @@ class TestEngine(unittest.TestCase):
         self.assertEqual(0, len(agent_cards))
         self.assertEqual(0, len(opponent_cards))
 
-    def test_place_cards__for_each_card__decision_tree_called_with_card(self):
+    def test_place_cards__for_each_card__decision_tree_result_called(self):
         # Arrange
         # Act
         self.SUT.place_cards()
@@ -128,3 +123,47 @@ class TestEngine(unittest.TestCase):
         # Assert
         self.assertEqual(pattern, self.test_place_card.agent_got_legal)
         self.assertEqual(pattern, self.test_place_card.opponent_got_legal)
+
+    def test_reveal_intentions__still_has_cards_to_draw__reveal_intentions_only_if_maxed(self):
+        # Arrange
+        self.game.agentPlayer = self.test_player
+        self.game.opponent = self.test_opponent
+        self.SUT.draw_hands()
+        # Act
+        self.SUT.reveal_intentions()
+        # Assert
+        self.assertTrue(self.test_player.got_reveal_intentions_if_maxed)
+        self.assertTrue(self.test_opponent.got_reveal_intentions_if_maxed)
+
+    def test_reveal_intentions__does_not_still_has_cards_to_draw__reveal_all_intentions(self):
+        # Arrange
+        self.game.agentPlayer = self.test_player
+        self.game.opponent = self.test_opponent
+        self.SUT.draw_hands()
+        self.SUT.place_cards()
+        self.SUT.draw_hands()
+        self.SUT.place_cards()
+        # Act
+        self.SUT.reveal_intentions()
+        # Assert
+        self.assertFalse(self.test_player.got_reveal_intentions_if_maxed)
+        self.assertFalse(self.test_opponent.got_reveal_intentions_if_maxed)
+        self.assertTrue(self.test_player.got_reveal_all_intentions)
+        self.assertTrue(self.test_opponent.got_reveal_all_intentions)
+
+    def test_resolve_attacks__has_revealed_attack_intention__calls_supporting_line_reveal_decision(self):
+        # Arrange
+        self.game.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.agentPlayer.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.game.opponent.play_to_plate(DecisionLine.LINE_2, DecisionIntention.ATTACK)
+        self.SUT.reveal_intentions()
+        # Act
+        self.SUT.resolve_attacks()
+        # Assert
+        self.assertTrue(self.test_reveal_supporting_line.got_apply)
+

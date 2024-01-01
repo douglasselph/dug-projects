@@ -14,7 +14,11 @@ class Engine:
     def __init__(self, game: Game, decisions: Decisions):
         self.game = game
         self.decisions = decisions
-        self.decisions.placeCard.set_game(self.game)
+        self.decisions.deployBlock.set_game(game)
+        self.decisions.deployChooseCard.set_game(game)
+        self.decisions.placeCard.set_game(game)
+        self.decisions.revealSupportingLine.set_game(game)
+        self.decisions.trash.set_game(game)
 
     ############################################################################
     # Draw Hand of 4 maneuver for all players.
@@ -53,14 +57,6 @@ class Engine:
             return False
         return pl.play_to_plate(line, coin)
 
-    @property
-    def agent_has_cards_to_place(self) -> bool:
-        return self.game.agentPlayer.has_face_up_cards
-
-    @property
-    def opponent_has_cards_to_place(self) -> bool:
-        return self.game.opponent.has_face_up_cards
-
     ###############################################################################
     # Reveal: any plate line at max has its intention coin revealed
     def reveal_intentions(self):
@@ -97,11 +93,12 @@ class Engine:
 
         stats = StatsAttack()
 
-        if not attacker.plate_has_intention(DecisionIntention.ATTACK):
+        if not attacker.has_revealed_intention(DecisionIntention.ATTACK):
             return stats
 
-        attacker.reveal_intentions_of(DecisionIntention.ATTACK)
-        defender.reveal_intentions_of(DecisionIntention.DEFEND)
+        self.decisions.revealSupportingLine.apply(attacker, DecisionIntention.ATTACK)
+        self.decisions.revealSupportingLine.apply(defender, DecisionIntention.ATTACK)
+
         attacker.reveal_cards_with_revealed_intentions()
         defender.reveal_cards_with_revealed_intentions()
 

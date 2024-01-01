@@ -4,7 +4,6 @@ from src.data.stat.StatsAll import StatsAll
 from src.decision.Decisions import Decisions
 
 
-
 class RunEngineParams:
     times: int
     summary_at_step: int
