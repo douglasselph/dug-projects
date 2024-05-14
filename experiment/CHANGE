@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Check if an argument is provided
+if [ -z "$1" ]; then
+  echo "Usage: $0 <arg>"
+  exit 1
+fi
+
+# Create the file with the given argument
+touch "CHANGE_$1"
+
+# Print a success message
+echo "File CHANGE_$1 created successfully."
