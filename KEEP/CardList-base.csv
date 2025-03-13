@@ -1,0 +1,11 @@
+Card,Flourish Type,Resilience,Cost,Primary Effect,Primary Value,Match With,Match Effect,Match Value,Trash Effect,Trash Value
+Base Total +2,Seedling,0,1,AddToTotal,2,-,-,-,-,-
+Base Total +3,Root,3,6,AddToTotal,3,-,-,-,-,-
+Base Reroll,Root,3,7,RerollAccept2nd,1,-,-,-,-,-
+Base Total +4,Canopy,3,8,AddToTotal,4,-,-,-,-,-
+Base Defense 6,Canopy,6,6,-,-,-,-,-,-,-
+Base Total +5,Vine,2,10,AddToTotal,5,-,-,-,-,-
+Base Retain,Vine,4,10,RetainCard,1,-,-,-,-,-
+Base Reroll 2,Vine,4,14,RerollAccept2nd,2,-,-,-,-,-
+Base Power Reroll,Bloom,1,17,RerollTakeBetter,2,-,-,-,-,-
+Base Total +7,Bloom,1,21,AddToTotal,7,-,-,-,-,-

@@ -1,0 +1,141 @@
+
+Gnome Garden Game Design Summary (April 2025)
+
+Overall Game Vision
+
+Goal: Build a game where strategy, deck-building, dice-rolling, and combat phases blend into an evolving experience.
+
+Theme: Players cultivate and grow their own plant-creatures through a dual-phase game (Cultivation Phase and Battle Phase).
+
+Key Emphases:
+
+Fun dice rolling
+
+Meaningful deck-building choices
+
+A strategic "build" arc followed by a tense "combat" arc
+
+Avoidance of "dead" turns or "hopeless" games for players
+
+Major Components
+
+Players have Supply, Planting Lab (later Tangle Field), and Compost Bin.
+
+Dice: D4, D6, D8, D10, D12, D20
+
+Cards are of five "Flourish Types": Seedling, Root, Canopy, Vine, Bloom
+
+Phases
+
+Cultivation Phase: Players grow their Plant Creature by buying cards/dice.
+
+Battle Phase: Players use what they've grown to fight each other.
+
+Chain Order System
+
+Determined each round by pip total of rolled dice.
+
+Tie-breaker is based on the First Player Token (gained during Chain setup).
+
+Targeting during card play is limited to adjacent players in Chain Order.
+
+Card play occurs one card at a time, highest pip total goes first.
+
+Battle Phase Highlights
+
+Players absorb damage with any mix of cards or dice.
+
+No requirement that cards absorb damage first.
+
+If a player can't absorb all damage, they lose their whole hand, but nothing from their Supply or Compost.
+
+Victory by elimination (no dice or cards left).
+
+Bloom and Transition Rules
+
+Each player may only acquire two Blooms.
+
+After second Bloom, player enters Dormancy (misses next turn).
+
+Once two players have acquired second Blooms (regardless of player count), Transition Phase begins.
+
+Remaining players are automatically awarded Blooms and Bonus Dice and go into Dormancy.
+
+Post-Dormancy, normal gameplay resumes.
+
+Dormancy in Battle Phase
+
+A Dormant player:
+
+May not play cards or roll dice
+
+Has a pip total of 0
+
+May still absorb damage if targeted
+
+Returns to full play after Dormancy
+
+Simulation Architecture
+
+Baseline Player Setup
+
+Starts with:
+
+2D4, 2D6
+
+4 Seedling Cards: 2x (AddToTotal +2), 2x (AddToTotal +3)
+
+Can buy more of these simple Seedling cards
+
+Prioritizes dice buying unless cards are needed for balance
+
+Testing Player Setup
+
+Same starting deck as baseline
+
+Can purchase a "Test Card" (with the special effect being evaluated)
+
+Simulation Metrics
+
+Win Rate (Player B vs Player A)
+
+Average pip gap at endgame
+
+Lead changes per game
+
+Game length
+
+Testing Programs Recommended
+
+Single Card Evaluation: 1 copy of Test Card
+
+Multiple Card Access: 2 copies allowed
+
+Late vs Early Insertion: Buy allowed after Turn 10 only
+
+Cheap vs Expensive Simulation: Test effects at various acquisition costs
+
+Card Effect Assessment Plan
+
+Each effect tested should be scored by its:
+
+Win rate improvement
+
+Game acceleration/deceleration
+
+Lead change influence
+
+Pip gap narrowing or widening
+
+Stronger cards cost more, but cheap cards with utility are also valuable.
+
+Notes on "Draw 1 Die" Effect
+
+Expected minor positive impact
+
+Should be low-cost card (likely cost 2–4)
+
+Simulation will validate impact
+
+
+

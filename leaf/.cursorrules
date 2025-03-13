@@ -1,0 +1,239 @@
+{
+    "version": "1.0",
+    "rules": {
+        "law_of_demeter": {
+            "pattern": "(?!.*?\\.[^\\s]*\\.[^\\s]*\\.[^\\s]*)",
+            "description": "Methods should only call methods on immediate dependencies (Law of Demeter). Avoid chains of method calls like 'a.b.c.d()'",
+            "examples": {
+                "violations": [
+                    "state.cardsInHand.cards.contains(card)",
+                    "player.getState().getHand().getCards()"
+                ],
+                "compliant": [
+                    "state.hasCardInHand(card)",
+                    "hand.containsCard(card)"
+                ]
+            },
+            "applies_to": ["**/*.kt"],
+            "rationale": "Reduces coupling, improves maintainability, and follows the principle of least knowledge"
+        },
+        "test_naming_convention": {
+            "pattern": "^[a-zA-Z]+_[a-zA-Z]+[a-zA-Z0-9]*_[a-zA-Z]+[a-zA-Z0-9]*$",
+            "description": "Test function names should follow the pattern: function_condition_expectedResult",
+            "examples": [
+                "get_whenStackExists_returnsCorrectCards",
+                "empty_whenNewMarketCreated_returnsEmptyStacks",
+                "getAllCards_withPopulatedMarket_returnsAllCards"
+            ],
+            "applies_to": ["**/*Test.kt"],
+            "test_function_identifiers": ["@Test"]
+        },
+        "test_structure": {
+            "pattern": "(?s).*// Arrange.*// Act.*// Assert.*",
+            "description": "Test functions should follow the Arrange/Act/Assert pattern with clear section comments",
+            "examples": [
+                "// Arrange\nval input = ...\n\n// Act\nval result = ...\n\n// Assert\nassertEquals(...)",
+                "// Arrange - Using mock data\n...\n// Act & Assert\nassertThrows..."
+            ],
+            "applies_to": ["**/*Test.kt"],
+            "test_function_identifiers": ["@Test"]
+        },
+        "test_string_constants": {
+            "pattern": "(?!.*companion\\s*object\\s*\\{[^}]*private\\s+const\\s+val\\s+[A-Z_]+\\s*=\\s*\"[^\"]+\"[^}]*\\}).*\"[^\"]+\"",
+            "description": "String literals in test files should be defined as constants in the companion object",
+            "examples": {
+                "violations": [
+                    "assertEquals(\"Card Name\", card.name)",
+                    "getCard(\"Invalid Card\")"
+                ],
+                "compliant": [
+                    "assertEquals(CARD_NAME, card.name)",
+                    "getCard(INVALID_CARD)"
+                ]
+            },
+            "applies_to": ["**/*Test.kt"],
+            "rationale": "Improves maintainability and reduces the risk of typos in test strings"
+        },
+        "die_creation": {
+            "pattern": "Die\\(\\d+\\)",
+            "description": "Use predefined die constants (Die.D4, Die.D6, etc.) instead of Die(n) constructor",
+            "examples": {
+                "violations": [
+                    "val d6 = Die(6)",
+                    "val d8 = Die(8)"
+                ],
+                "compliant": [
+                    "val d6 = Die.D6",
+                    "val d8 = Die.D8"
+                ]
+            },
+            "applies_to": ["**/*.kt"],
+            "rationale": "Ensures consistent die creation and prevents potential errors from manual die creation"
+        },
+        "mockk_just_runs": {
+            "pattern": "just\\s+runs",
+            "description": "Use 'just Runs' (capital R) instead of 'just runs' in MockK tests",
+            "examples": {
+                "violations": [
+                    "every { mock.method() } just runs",
+                    "every { mock.voidMethod() } just runs"
+                ],
+                "compliant": [
+                    "every { mock.method() } just Runs",
+                    "every { mock.voidMethod() } just Runs"
+                ]
+            },
+            "applies_to": ["**/*Test.kt"],
+            "rationale": "Ensures correct capitalization for MockK's just Runs operator"
+        }
+    },
+    "documentation": {
+        "project_scope": {
+            "file": "doc/Project.md",
+            "description": "Project goals, analysis capabilities, and implementation architecture",
+            "required_for": [
+                "development scope",
+                "simulation requirements",
+                "analysis features",
+                "success metrics",
+                "implementation architecture"
+            ]
+        },
+        "design_principles": {
+            "file": "doc/Design.md",
+            "description": "Project purpose, game design principles, and analysis priorities",
+            "required_for": [
+                "implementation decisions",
+                "simulation goals",
+                "balance testing",
+                "success metrics",
+                "feature prioritization"
+            ]
+        },
+        "game_rules": {
+            "file": "Rules.md",
+            "description": "Complete game rules and mechanics documentation",
+            "required_for": ["game logic", "card effects", "player interactions"]
+        },
+        "card_definitions": {
+            "file": "data/CardList.csv",
+            "description": "Card Almanac - definitive reference for all cards, their attributes, and effects",
+            "required_for": ["card implementation", "market setup", "effect resolution"]
+        }
+    },
+    "project_structure": {
+        "core_components": {
+            "player": {
+                "base_path": "src/main/kotlin/dugsolutions/leaf/player",
+                "key_files": {
+                    "Player.kt": "Main player class managing game state and actions",
+                    "components/PlayerState.kt": "Immutable player state data",
+                    "decisions/PlayerDecision.kt": "Base interface for all player decisions",
+                    "decisions/CardPlayDecision.kt": "Logic for playing cards",
+                    "decisions/DamageAbsorptionDecision.kt": "Logic for handling damage",
+                    "decisions/DiceAcquisitionDecision.kt": "Logic for acquiring dice"
+                }
+            },
+            "game": {
+                "base_path": "src/main/kotlin/dugsolutions/leaf/game",
+                "key_files": {
+                    "Game.kt": "Core game logic and state management",
+                    "GameState.kt": "Immutable game state data",
+                    "GameController.kt": "Manages game flow and player interactions",
+                    "Controls.kt": "Game configuration constants"
+                }
+            },
+            "components": {
+                "base_path": "src/main/kotlin/dugsolutions/leaf/components",
+                "key_files": {
+                    "CardID.kt": "Card identifier type and generation",
+                    "Die.kt": "Dice implementation",
+                    "GameCard.kt": "Card implementation",
+                    "GameCards.kt": "Collection of game cards",
+                    "GameCardIDs.kt": "Collection of card identifiers",
+                    "Dice.kt": "Collection of dice"
+                }
+            },
+            "market": {
+                "base_path": "src/main/kotlin/dugsolutions/leaf/market",
+                "key_files": {
+                    "Market.kt": "Market implementation",
+                    "MarketState.kt": "Immutable market state",
+                    "MarketManager.kt": "Market operations manager"
+                }
+            }
+        },
+        "key_relationships": {
+            "Player": ["PlayerState", "GameCardIDs", "Dice", "Die"],
+            "Game": ["GameState", "Market", "Player"],
+            "GameController": ["Game", "PlayerDecision"],
+            "Market": ["MarketState", "GameCards", "GameCardIDs"]
+        }
+    },
+    "chronicle_module": {
+        "description": "The chronicle module handles game reporting and statistics tracking for the Leaf game system",
+        "domain_models": {
+            "GameSummary": {
+                "description": "Represents statistics from a single game",
+                "key_properties": {
+                    "placeDistribution": "List of player IDs ordered by final position (index 0 = first place)",
+                    "playerIdUnderTest": "ID of the player being analyzed",
+                    "playerIdOfFirstPlayer": "ID of the player who went first (-1 if unknown)",
+                    "totalTurns": "Total number of turns in the game",
+                    "battleTransitionOnTurn": "Turn when game transitioned to Battle Phase",
+                    "narrowestBattleGap": "Smallest score gap between players",
+                    "widestBattleGap": "Widest score gap between players",
+                    "numberOfFlips": "Number of lead changes during the game",
+                    "maxScore": "Maximum score reached"
+                }
+            },
+            "GameSummaries": {
+                "description": "Aggregated statistics from multiple games",
+                "key_properties": {
+                    "numberOfGames": "Total count of games analyzed",
+                    "numberOfWinsPlayerUnderTest": "Count of games where player under test won",
+                    "placeDistributionPlayerUnderTest": "Distribution of player's final positions",
+                    "playerWhoWonWasFirst": "Count of games where first player won"
+                }
+            },
+            "Summary": {
+                "description": "Statistical summary for a specific metric",
+                "properties": ["largest", "smallest", "average", "standardDeviation"]
+            }
+        },
+        "report_generation": {
+            "GenerateGameSummaries": {
+                "description": "Creates aggregated summaries from individual game summaries",
+                "implementation_details": [
+                    "Uses placeDistribution to determine if player under test won (position 0)",
+                    "Builds distribution of places for the player under test",
+                    "Tracks whether the player who went first also won",
+                    "Calculates statistical summaries for various game metrics"
+                ]
+            },
+            "ReportGameSummary": "Formats individual game summary data for reports",
+            "ReportGameSummaries": "Formats aggregated game summaries for reports"
+        },
+        "testing": {
+            "constants": {
+                "PLAYER_A_ID": "Usually the player under test (1)",
+                "PLAYER_B_ID": "Secondary player (2)",
+                "PLAYER_C_ID": "Tertiary player (3)"
+            },
+            "scenarios": {
+                "PLAYER_A_FIRST_AND_WINS": "Player A goes first and wins",
+                "PLAYER_A_FIRST_BUT_LOSES": "Player A goes first but loses",
+                "PLAYER_B_FIRST_AND_WINS": "Player B goes first and wins",
+                "PLAYER_B_FIRST_BUT_LOSES": "Player B goes first but loses",
+                "NO_FIRST_PLAYER_INFO": "No first player information available",
+                "PLAYER_A_COMES_IN_THIRD": "Player A finishes in third place",
+                "PLAYER_A_NOT_IN_RESULTS": "Player A not in the results"
+            },
+            "critical_assertions": [
+                "Verifying numberOfWinsPlayerUnderTest correctly counts first place finishes",
+                "Ensuring placeDistributionPlayerUnderTest accurately reflects finishing positions",
+                "Confirming playerWhoWonWasFirst properly tracks first player wins"
+            ]
+        }
+    }
+} 

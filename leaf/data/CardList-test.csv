@@ -1,0 +1,33 @@
+Card;Flourish Type;Resilience;Cost;Primary Effect;Primary Value;Match With;Match Effect;Match Value;Trash Effect;Trash Value
+SeedReduce;Seedling;-;-;ReduceCostRoot;2;1;ReduceCostRoot;2;GainFreeRoot;1
+SeedDrawCard;Seedling;-;-;DrawCard;1;1;ReduceCostRoot;2;ReduceCostRoot;3
+SeedUpgrade;Seedling;-;-;UpgradeD4;1;1;UpgradeD6;1;UpgradeD4D6;1
+SeedDrawDie;Seedling;-;-;ReduceCostRoot;1;1;DrawDie;1;ReduceCostRoot;2
+RootReduce;Root;4;8;ReduceCostCanopy;2;1;ReduceCostCanopy;2;-;-
+RootUpgrade;Root;5;10;UpgradeD4D6;1;1;UpgradeAny;1;-;-
+RootAdjust;Root;6;12;AdjustBy;2;1;DrawDie;1;- ;-
+RootReroll;Root;4;8;RerollAccept2nd;1;1;RerollTakeBetter;1;-;-
+RootRetain;Root;5;10;RetainCard;1;1;RetainDieReroll;1;-;-
+RootAdd;Root;6;12;AdjustBy;2;1;AddToTotal;2;-;-
+CanopyDeflect;Canopy;9;R,9;Deflect;2;Root;Deflect;2;Deflect;All
+CanopyDrawCard;Canopy;20;R,20;DrawCard;1;Root;RetainCard;1;-;-
+CanopyReduceVine;Canopy;21;R,12;ReduceCostVine;2;Root;ReplayVine;1;-;-
+CanopyReroll;Canopy;15;R,14;RerollTakeBetter;1;Root;RetainDieReroll;1;-;-
+CanopyRetain;Canopy;22;R,22;RetainCard;1;Root;RetainDie;2;-;-
+CanopyThorn;Canopy;25;R,12;Thorn;1;Root;Thorn;1;Thorn;2
+VineAddToTotal;Vine;3;C,15;AddToTotal;2;Canopy;AddToTotal;2;Thorn;4
+VineAdjustBy;Vine;5;C,20;AdjustBy;2;1;RerollTakeBetter;2;Thorn;2
+VineThornyDeflect;Vine;4;C,16;Thorn;1;1;Deflect;1;-;-
+VineDiscard;Vine;6;C,10;DiscardCard;1;1;DiscardDie;1;Discard;3
+VineDraw;Vine;5;C,12;DrawThenDiscard;2;Canopy;DrawDie;1;-;-
+VineReroll;Vine;3;C,20;RerollAllMax;1;Canopy;RerollTakeBetter;1;Thorn;2
+VineUseOpponent;Vine;3;C,25;UseOpponentCard;1;1;UseOpponentDie;1;-;-
+BloomAddToTotal;Bloom;1;C,22;AddToTotal;5;1;AdjustToMax;1;-;-
+BloomAdjustBy;Bloom;2;C,20;AdjustToMax;1;1;AdjustBy;2;AdjustToMinOrMax;2
+BloomDiscard;Bloom;1;C,S1,10;DiscardDie;2;1;DiscardCard;1;Discard;2
+BloomDrawDie;Bloom;1;C,S1,10;DrawDie;3;Canopy;ReuseDie;1;DrawDie;3
+BloomDrawCompost;Bloom;2;C,25;DrawDieCompost;2;Canopy;DrawDie;1;-;-
+BloomDrawAny;Bloom;1;C,30;DrawDieAny;1;1;DrawCardCompost;1;-;-
+BloomReroll;Bloom;2;C,16;RerollTakeBetter;3;1;RerollAllMax;1;-;-
+BloomReuse;Bloom;1;C,32;ReuseDie;2;1;ReuseCard;2;Thorn;1
+BloomUseOpponent;Bloom;2;C,27;UseOpponentDie;2;1;UseOpponentCard;1;-;-

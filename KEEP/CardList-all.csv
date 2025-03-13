@@ -1,0 +1,35 @@
+Card,Flourish Type,Resilience,Cost,Primary Effect,Primary Value,Match With,Match Effect,Match Value,Trash Effect,Trash Value
+Sprouting Husk,Seedling,0,Free,ReduceCost,2,-,-,-,GainCanopy,1
+Fertile Core,Seedling,0,Free,UpgradeD4D6,1,-,-,-,GainRoot,1
+Emerging Shoot,Seedling,0,Free,DrawThenDiscard,2,-,-,-,UpgradeAny,1
+Deep Burrow,Seedling,0,Free,AddToDie,2,Canopy,DrawDie,1,GainCanopy,1
+Winding Sprout,Seedling,0,Free,RerollAccept2nd,1,-,-,-,GainVine,1
+Dormant Kernel,Seedling,0,Free,RetainDie,1,-,-,-,GainRoot,1
+Feeder Root,Root,2,4,DrawCard,1,1,DrawCard,1,,
+Fungal Mycelium,Root,2,5,DrawDie,1,2,DrawDieCompost,1,,
+Taproot Nexus,Root,3,6,UpgradeAnyDiscard,1,3,UpgradeAnyDiscard,1,,
+Regrowth,Root,3,5,RerollAccept2nd,1,Canopy,RerollAccept2nd,1,,
+Burrowing Tendrils,Root,4,6,RetainCard,1,4,DrawCard,1,,
+Verdant Conduit,Root,4,7,UseOpponentCard,1,Bloom,UseOpponentDie,1,,
+Deep Taproot,Root,5,9,UpgradeAnyDiscard,2,Canopy,UpgradeAnyDiscard,1,,
+Subterranean Web,Root,4,10,DrawDieCompost,1,Vine,DrawDie,1,,
+Photosynthetic Relay,Root,7,3,FlourishOverride,1,1,ReduceCost,2,,
+Umbrella Fronds,Canopy,10,13,-,-,Root,Deflect,3,,
+Bastion Bark,Canopy,12,17,RetainCard,1,Root,RetainDie,1,,
+Skyshade Canopy,Canopy,15,19,DrawCard,1,1,DrawCard,1,,
+Shielded Vines,Canopy,18,21,Thorn,2,3,Thorn,1,,
+Ancient Boughs,Canopy,20,23,Deflect,3,Root,Thorn,2,,
+Interwoven Canopy,Canopy,14,18,ReplayVine,1,Root,ReuseCard,1,,
+Strangler Vine,Vine,3,6,AdjustBy,2,Root,AdjustBy,2,,
+Clinging Tendril,Vine,3,6,RerollMax,1,Root,AdjustBy,2,,
+Thorn Lash,Vine,4,8,AddToTotal,2,Canopy,AddToTotal,2,,
+Spiny Bramble,Vine,5,9,Thorn ,1,Canopy,Thorn,2,,
+Entangling Vines,Vine,4,10,RetainDieReroll,1,1,DiscardDice,1,,
+Piercing Creeper,Vine,6,9,RetainDieReroll,1,Root,RetainDieReroll,1,,
+Flourishing Scent,Bloom,1,15,RerollAccept2nd,2,Root,RerollTakeBetter,1,,
+Luminous Blossom,Bloom,1,19,DrawDie,3,1,Thorn,1,,
+Solar Bloom,Bloom,1,18,AdjustToMax,1,1,AdjustToMinOrMax,1,,
+Explosive Spores,Bloom,2,16,Discard,1,2,Thorn,2,,
+Verdant Nova,Bloom,1,17,DrawDieAny,1,1,Thorn,1,,
+Nectar Cascade,Bloom,2,24,ReuseDie,2,1,ReuseCard,1,,
+Twilight Bloom,Bloom,2,22,RerollTakeBetter,2,Root,DiscardCard,1,,
