@@ -4,10 +4,9 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.SimpleCost
+import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.di.GameCardIDsFactory
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MarketStacksTest {
@@ -80,15 +78,12 @@ class MarketStacksTest {
 
         mockGameCard1 = mockk {
             every { id } returns CARD_ID_1
-            every { cost } returns SimpleCost(2)
         }
         mockGameCard2 = mockk {
             every { id } returns CARD_ID_2
-            every { cost } returns SimpleCost(4)
         }
         mockGameCard3 = mockk {
             every { id } returns CARD_ID_3
-            every { cost } returns SimpleCost(6)
         }
 
         every { mockGameCards.cards } returns listOf(mockGameCard1, mockGameCard2, mockGameCard3)

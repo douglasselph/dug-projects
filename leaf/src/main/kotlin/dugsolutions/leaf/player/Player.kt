@@ -2,7 +2,6 @@ package dugsolutions.leaf.player
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
@@ -14,23 +13,21 @@ import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.di.DecisionDirectorFactory
 import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.player.components.DeckManager
+import dugsolutions.leaf.player.components.DrawHand
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.effect.EffectsList
-import kotlin.math.max
-import kotlin.math.min
 
 open class Player(
     private val deckManager: DeckManager,
     private val cardManager: CardManager,
     private val retainedComponents: StackManager,
     private val dieFactory: DieFactory,
-    private val chronicle: GameChronicle,
     private val costScore: CostScore,
+    private val drawIntoHand: DrawHand,
     private val decisionDirectorFactory: DecisionDirectorFactory
 ) {
     companion object {
-        private const val HAND_SIZE = 4
         private var NextID = 1
 
         fun resetID() {
@@ -39,31 +36,28 @@ open class Player(
     }
 
     open val id = NextID++
-    var name: String = "Player $id"
 
-    val bloomCount: Int
-        get() = deckManager.bloomCount
+    var name: String = "Player $id"
 
     var incomingDamage: Int = 0
     var thornDamage: Int = 0
     var deflectDamage: Int = 0
     var cardsReused: MutableList<GameCard> = mutableListOf()
     var pipModifier: Int = 0
-
-    open val pipTotal: Int
-        get() = deckManager.pipTotal + pipModifier
-
-    val effectsList: EffectsList = EffectsList()
-
-    // Player state properties
-
     var hasPassed: Boolean = false
     var wasHit: Boolean = false
     var isDormant: Boolean = false
     var bonusDie: Die? = null
+    val effectsList: EffectsList = EffectsList()
 
-    private val handSize: Int
+    val handSize: Int
         get() = deckManager.handSize
+
+    val bloomCount: Int
+        get() = deckManager.bloomCount
+
+    open val pipTotal: Int
+        get() = deckManager.pipTotal + pipModifier
 
     val decisionDirector: DecisionDirector by lazy { decisionDirectorFactory(this) }
 
@@ -208,54 +202,21 @@ open class Player(
         deckManager.addDieToCompost(die)
     }
 
+    open fun addCardToFloralArray(cardID: CardID) {
+        deckManager.addCardToFloralArray(cardID)
+    }
+
     // Game flow methods
     fun setupInitialDeck(seedlings: GameCards) {
         deckManager.setup(seedlings, dieFactory.startingDice)
     }
 
-    fun draw(preferredCardCount: Int) {
-        val spaceLeft = HAND_SIZE - handSize
-        if (spaceLeft <= 0) return
-
-        // If supply is low, take everything from supply first
-        if (cardsInSupplyCount + diceInSupplyCount < spaceLeft) {
-            // Draw all remaining cards from supply
-            repeat(cardsInSupplyCount) { drawCard() }
-            // Draw all remaining dice from supply
-            repeat(diceInSupplyCount) { drawDie() }
-            
-            // Calculate remaining space after taking all supply
-            val remainingSpace = spaceLeft - (cardsInSupplyCount + diceInSupplyCount)
-            if (remainingSpace <= 0) {
-                chronicle(GameChronicle.Moment.DRAW_HAND(this))
-                return
-            }
-
-            // If we haven't met preferredCardCount, try to draw more cards
-            val cardsStillNeeded = preferredCardCount - cardsInHand.size
-            if (cardsStillNeeded > 0) {
-                repeat(minOf(cardsStillNeeded, remainingSpace)) { drawCard() }
-            }
-            
-            // Fill remaining space with dice
-            val finalSpaceLeft = HAND_SIZE - handSize
-            repeat(finalSpaceLeft) { drawDie() }
-        } else {
-            // Normal case - supply is plentiful
-            val cardsLeft = max(0, preferredCardCount - cardsInHand.size)
-            val cardsLeftToDraw = min(spaceLeft, cardsLeft)
-            
-            // Draw cards first
-            repeat(cardsLeftToDraw) { drawCard() }
-            // Then draw dice to fill remaining space
-            val diceLeft = max(0, HAND_SIZE - handSize)
-            repeat(diceLeft) { drawDie() }
-        }
-        chronicle(GameChronicle.Moment.DRAW_HAND(this))
+    fun drawHand(preferredCardCount: Int) {
+        drawIntoHand(this, preferredCardCount)
     }
 
     fun drawHand() {
-        draw(decisionDirector.drawCountDecision())
+        drawHand(decisionDirector.drawCountDecision())
     }
 
     fun drawCard(): CardID? {

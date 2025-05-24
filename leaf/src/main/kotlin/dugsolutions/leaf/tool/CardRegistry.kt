@@ -31,6 +31,7 @@ class CardRegistry(
             "GainFreeRoot" to CardEffect.GAIN_FREE_ROOT,
             "GainFreeCanopy" to CardEffect.GAIN_FREE_CANOPY,
             "GainFreeVine" to CardEffect.GAIN_FREE_VINE,
+            "PlaceInArray" to CardEffect.PLACE_IN_ARRAY,
             "ReduceCostRoot" to CardEffect.REDUCE_COST_ROOT,
             "ReduceCostCanopy" to CardEffect.REDUCE_COST_CANOPY,
             "ReduceCostVine" to CardEffect.REDUCE_COST_VINE,
@@ -83,27 +84,32 @@ class CardRegistry(
         val parts = line.split(DELIMITER).map { it.trim() }
 
         // Skip empty lines or header rows
-        if (parts.isEmpty() || parts[0].isEmpty() || parts[0].startsWith("Flourish Type:") || parts.size < 10) {
+        if (parts.isEmpty() || parts[0].isEmpty() || parts[0].startsWith("Card") || parts.size < 10) {
             throw IllegalArgumentException("Invalid card line: $line")
         }
 
-        // Parse effects and their values
+        val name = parts[0]
+        val id = GenCardID.generateId(name)
+        val flourishType = parseFlourishType(parts[1])
+        val resilience = parts[2].toIntOrNull() ?: 0
+        val cost = parseCost(parts[3])
         val primaryEffect = parseEffect(parts[4])
         val primaryValue = parseValue(parts[5])
+        val matchWith = parseMatchWith(parts[6])
         val matchEffect = parseEffect(parts[7])
         val matchValue = parseValue(parts[8])
         val trashEffect = parseEffect(parts[9])
         val trashValue = parseValue(parts[10])
 
         return GameCard(
-            id = GenCardID.generateId(parts[0]),
-            name = parts[0],
-            type = parseFlourishType(parts[1]),
-            resilience = parts[2].toIntOrNull() ?: 0,
-            cost = parseCost(parts[3]),
+            id = id,
+            name = name,
+            type = flourishType,
+            resilience = resilience,
+            cost = cost,
             primaryEffect = primaryEffect,
             primaryValue = primaryValue,
-            matchWith = parseMatchWith(parts[6]),
+            matchWith = matchWith,
             matchEffect = matchEffect,
             matchValue = matchValue,
             trashEffect = trashEffect,
@@ -117,6 +123,7 @@ class CardRegistry(
             "Root" -> FlourishType.ROOT
             "Canopy" -> FlourishType.CANOPY
             "Vine" -> FlourishType.VINE
+            "Flower" -> FlourishType.FLOWER
             "Bloom" -> FlourishType.BLOOM
             else -> throw IllegalArgumentException("Unknown flourish type: $type")
         }
@@ -146,7 +153,13 @@ class CardRegistry(
         return when {
             match.isEmpty() || match == "-" -> MatchWith.None
             match.toIntOrNull() != null -> MatchWith.OnRoll(match.toInt())
-            else -> MatchWith.OnFlourishType(parseFlourishType(match))
+            else -> {
+                try {
+                    MatchWith.OnFlourishType(parseFlourishType(match))
+                } catch (ex: Exception) {
+                    MatchWith.FlowerOrBloom(match)
+                }
+            }
         }
     }
 }

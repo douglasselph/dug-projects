@@ -12,6 +12,7 @@ class DeckManager(
     private val supply: StackManager,
     private val hand: StackManager,
     private val compost: StackManager,
+    private val floralArray: StackManager,
     private val dieFactory: DieFactory
 ) {
 
@@ -81,15 +82,11 @@ class DeckManager(
     }
 
     fun removeCardFromHand(cardId: CardID): Boolean {
-        if (!hand.hasCard(cardId)) return false
-        hand.removeCard(cardId)
-        return true
+        return hand.removeCard(cardId)
     }
 
     fun removeDieFromHand(die: Die): Boolean {
-        if (!hand.hasDie(die)) return false
-        hand.removeDie(die)
-        return true
+        return hand.removeDie(die)
     }
 
     fun addCardToSupply(cardId: CardID): Boolean {
@@ -126,6 +123,14 @@ class DeckManager(
 
     fun addDieToCompost(die: DieValue): Boolean {
         return compost.addDie(die.dieFrom(dieFactory))
+    }
+
+    fun addCardToFloralArray(cardId: CardID): Boolean {
+        return floralArray.addCard(cardId)
+    }
+
+    fun removeCardFromFloralArray(cardId: CardID): Boolean {
+        return floralArray.removeCard(cardId)
     }
 
     // Drawing operations
@@ -196,6 +201,7 @@ class DeckManager(
         supply.clear()
         hand.clear()
         compost.clear()
+        floralArray.clear()
     }
 
     fun trashSeedlingCards() {

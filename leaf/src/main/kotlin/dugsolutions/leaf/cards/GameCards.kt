@@ -37,9 +37,6 @@ data class GameCards(
     fun take(n: Int): GameCards =
         create(cards.take(n))
 
-    fun drop(n: Int): GameCards =
-        create(cards.drop(n))
-
     operator fun plus(other: GameCards): GameCards =
         create(cards + other.cards)
 

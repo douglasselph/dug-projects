@@ -74,7 +74,7 @@ class Game(
             val player = playerFactory(config.dieFactory)
             playersList.add(player)
             config.setup(i, player)
-            player.draw(2)
+            player.drawHand(2)
         }
         players = playerOrder(playersList)
     }

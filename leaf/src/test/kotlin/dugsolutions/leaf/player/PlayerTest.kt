@@ -16,14 +16,10 @@ import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.di.GameCardIDsFactory
 import dugsolutions.leaf.di.GameCardsFactory
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseCardEvaluator
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseDieEvaluator
 import dugsolutions.leaf.player.components.DeckManager
+import dugsolutions.leaf.player.components.DrawHand
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.DecisionDirector
-import dugsolutions.leaf.player.decisions.DecisionDrawCount
 import dugsolutions.leaf.tool.Randomizer
 import io.mockk.every
 import io.mockk.mockk
@@ -58,6 +54,7 @@ class PlayerTest {
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
     private lateinit var gameChronicle: GameChronicle
     private lateinit var costScore: CostScore
+    private lateinit var drawHand: DrawHand
 
     private lateinit var SUT: Player
     private lateinit var SUT2: Player
@@ -73,6 +70,7 @@ class PlayerTest {
         cardManager.loadCards(FakeCards.ALL_CARDS)
         gameCardIDsFactory = GameCardIDsFactory(cardManager, randomizer)
         deckManager = DeckManager(
+            StackManager(cardManager, gameCardIDsFactory),
             StackManager(cardManager, gameCardIDsFactory),
             StackManager(cardManager, gameCardIDsFactory),
             StackManager(cardManager, gameCardIDsFactory),
@@ -103,8 +101,8 @@ class PlayerTest {
             cardManager,
             mockRetainedComponents,
             mockDieFactory,
-            gameChronicle,
             costScore,
+            drawHand,
             mockDecisionDirectorFactory,
         )
         SUT2 = Player(
@@ -112,8 +110,8 @@ class PlayerTest {
             cardManager,
             mockRetainedComponents,
             mockDieFactory,
-            gameChronicle,
             costScore,
+            drawHand,
             mockDecisionDirectorFactory
         )
     }
@@ -388,7 +386,7 @@ class PlayerTest {
 
         // Act
         SUT2.setupInitialDeck(sampleSeedlings)
-        SUT2.draw(2)
+        SUT2.drawHand(2)
 
         // Assert
         val cards = SUT2.cardsInHand
@@ -398,49 +396,19 @@ class PlayerTest {
     }
 
     @Test
-    fun draw_whenSupplyEmpty_resuppliesFirst() {
+    fun drawHand_delegatesToDrawHandComponent() {
         // Arrange
-        every { mockDeckManager.isSupplyEmpty } returns true
+        val preferredCardCount = 3
+        every { mockDeckManager.handSize } returns 0
         every { mockDeckManager.drawCard() } returns CARD_ID_1
         every { mockDeckManager.drawDie() } returns D6
-        every { mockDeckManager.getItemsInHand() } returns emptyList()
-        every { mockDeckManager.handSize } returns 0
 
         // Act
-        SUT.draw(1)
+        SUT.drawHand(preferredCardCount)
 
         // Assert
-        verify { mockDeckManager.resupply() }
         verify { mockDeckManager.drawCard() }
         verify { mockDeckManager.drawDie() }
-    }
-
-    @Test
-    fun drawCard_whenSupplyEmpty_resuppliesFirst() {
-        // Arrange
-        every { mockDeckManager.isSupplyEmpty } returns true
-        every { mockDeckManager.drawCard() } returns CARD_ID_1
-
-        // Act
-        val result = SUT.drawCard()
-
-        // Assert
-        verify { mockDeckManager.resupply() }
-        assertEquals(CARD_ID_1, result)
-    }
-
-    @Test
-    fun drawDie_whenHandEmpty_resuppliesFirst() {
-        // Arrange
-        every { mockDeckManager.isSupplyEmpty } returns true
-        every { mockDeckManager.drawDie() } returns D6
-
-        // Act
-        val result = SUT.drawDie()
-
-        // Assert
-        verify { mockDeckManager.resupply() }
-        assertEquals(D6, result)
     }
 
     @Test
@@ -500,133 +468,6 @@ class PlayerTest {
 
         // Assert
         verify(exactly = 1) { mockDeckManager.trashSeedlingCards() }
-    }
-
-    @Test
-    fun drawHand_callsDrawWithCountFromDecision() {
-        // Arrange
-        SUT.discardHand()
-        val cardCount = 3
-        val sampleResult = cardCount
-        every { mockDecisionDirector.drawCountDecision() } returns sampleResult
-        every { mockDeckManager.handSize } returns 0
-
-        // Act
-        SUT.drawHand()
-
-        // Assert
-        verify(exactly = 3) { mockDeckManager.drawCard() }
-    }
-
-    @Test
-    fun draw_whenLowSupply_takesAllSupplyFirst() {
-        // Arrange
-        SUT2.addCardToSupply(FakeCards.fakeRoot.id)
-        SUT2.addDieToSupply(D6)
-        SUT2.addCardToCompost(FakeCards.fakeRoot2.id)
-        SUT2.addDieToCompost(D4)
-
-        // Act
-        SUT2.draw(3) // Try to draw 3 cards, but supply only has 1 card and 1 die
-
-        // Assert
-        assertEquals(2, SUT2.cardsInHand.size)
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot))
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot2))
-        assertEquals(2, SUT2.diceInHand.size)
-        assertTrue(SUT2.diceInHand.dice.contains(D6))
-        assertTrue(SUT2.diceInHand.dice.contains(D4))
-    }
-
-    @Test
-    fun draw_whenLowSupplyAndPreferredCountNotMet_triesToDrawMoreCards() {
-        // Arrange
-        SUT2.addCardToSupply(FakeCards.fakeRoot.id)
-        SUT2.addDieToSupply(D6)
-        SUT2.addCardToCompost(FakeCards.fakeRoot2.id)
-        SUT2.addCardToCompost(FakeCards.fakeVine.id)
-        SUT2.addDieToCompost(D4)
-        SUT2.addDieToCompost(D8)
-
-        // Act
-        SUT2.draw(2) // Try to draw 2 cards, but supply only has 1 card and 1 die
-
-        // Assert
-        assertEquals(2, SUT2.cardsInHand.size)
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot))
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot2))
-        assertEquals(2, SUT2.diceInHand.size)
-        assertTrue(SUT2.diceInHand.dice.contains(D6))
-        assertTrue(SUT2.diceInHand.dice.contains(D4))
-    }
-
-    @Test
-    fun draw_whenLowSupplyAndPreferredCountMet_fillsWithDice() {
-        // Arrange
-        SUT2.addCardToSupply(FakeCards.fakeRoot.id)
-        SUT2.addCardToSupply(FakeCards.fakeRoot2.id)
-        SUT2.addDieToSupply(D6)
-        SUT2.addCardToCompost(FakeCards.fakeBloom.id)
-        SUT2.addCardToCompost(FakeCards.fakeVine.id)
-        SUT2.addDieToCompost(D4)
-        SUT2.addDieToCompost(D8)
-
-        // Act
-        SUT2.draw(1) // Try to draw 1 card, but supply has 2 cards and 1 die
-
-        // Assert
-        assertEquals(2, SUT2.cardsInHand.size)
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot))
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot2))
-        assertEquals(2, SUT2.diceInHand.size)
-        assertTrue(SUT2.diceInHand.dice.contains(D6))
-        assertTrue(SUT2.diceInHand.dice.contains(D4))
-    }
-
-    @Test
-    fun draw_whenSupplyEmptyAndCompostAvailable_usesCompost() {
-        // Arrange
-        SUT2.addCardToCompost(FakeCards.fakeRoot.id)
-        SUT2.addCardToCompost(FakeCards.fakeRoot2.id)
-        SUT2.addCardToCompost(FakeCards.fakeBloom.id)
-        SUT2.addCardToCompost(FakeCards.fakeVine.id)
-        SUT2.addDieToCompost(D4)
-        SUT2.addDieToCompost(D6)
-        SUT2.addDieToCompost(D8)
-
-        // Act
-        SUT2.draw(1)
-
-        // Assert
-        assertEquals(1, SUT2.cardsInHand.size)
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot))
-        assertEquals(3, SUT2.diceInHand.size)
-        assertTrue(SUT2.diceInHand.dice.contains(D6))
-        assertTrue(SUT2.diceInHand.dice.contains(D4))
-        assertTrue(SUT2.diceInHand.dice.contains(D8))
-    }
-
-    @Test
-    fun draw_whenLowSupplyAndPartialHand_considersExistingHand() {
-        // Arrange
-        SUT2.addCardToHand(FakeCards.fakeRoot.id)
-        SUT2.addCardToSupply(FakeCards.fakeRoot2.id)
-        SUT2.addCardToCompost(FakeCards.fakeBloom.id)
-        SUT2.addCardToCompost(FakeCards.fakeVine.id)
-        SUT2.addDieToSupply(D4)
-        SUT2.addDieToSupply(D6)
-        SUT2.addDieToCompost(D8)
-
-        // Act
-        SUT2.draw(3) // Try to draw 3 cards, but already have 1 card and supply has 1 card
-
-        // Assert
-        assertEquals(2, SUT2.cardsInHand.size)
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot))
-        assertTrue(SUT2.cardsInHand.contains(FakeCards.fakeRoot2))
-        assertEquals(2, SUT2.diceInHand.size)
-        assertTrue(SUT2.diceInHand.dice.contains(D6))
-        assertTrue(SUT2.diceInHand.dice.contains(D4))
     }
 
     // endregion Game Flow Tests

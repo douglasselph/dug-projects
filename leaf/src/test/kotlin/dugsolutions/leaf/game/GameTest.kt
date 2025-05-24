@@ -222,8 +222,8 @@ class GameTest {
         SUT.setup(customConfig)
         
         // Assert
-        verify { mockPlayer1.draw(2) }
-        verify { mockPlayer2.draw(2) }
+        verify { mockPlayer1.drawHand(2) }
+        verify { mockPlayer2.drawHand(2) }
     }
 
     @Test

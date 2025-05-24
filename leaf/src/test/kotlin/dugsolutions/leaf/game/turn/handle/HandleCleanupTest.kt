@@ -37,7 +37,7 @@ class HandleCleanupTest {
             every { id } returns CARD_ID_2
             every { type } returns FlourishType.BLOOM
         }
-        every { mockPlayer.draw(any()) } just Runs
+        every { mockPlayer.drawHand(any()) } just Runs
         
         // Default setup for supply counts
         every { mockPlayer.diceInSupplyCount } returns 1

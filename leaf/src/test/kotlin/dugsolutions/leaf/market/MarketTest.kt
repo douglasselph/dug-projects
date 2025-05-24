@@ -4,10 +4,9 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.SimpleCost
+import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.di.GameCardIDsFactory
@@ -74,8 +73,8 @@ class MarketTest {
         mockGameCardsUseCase = mockk(relaxed = true)
 
         // Setup mock cards
-        mockGameCard1 = mockk { every { id } returns CARD_ID_1; every { cost } returns SimpleCost(1) }
-        mockGameCard2 = mockk { every { id } returns CARD_ID_2; every { cost } returns SimpleCost(2) }
+        mockGameCard1 = mockk { every { id } returns CARD_ID_1; }
+        mockGameCard2 = mockk { every { id } returns CARD_ID_2; }
 
         mockMarketStacks = mockk(relaxed = true)
         market = Market(mockMarketStacks, mockGameCardsUseCase)

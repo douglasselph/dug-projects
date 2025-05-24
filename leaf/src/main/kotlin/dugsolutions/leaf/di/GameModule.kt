@@ -68,6 +68,7 @@ import dugsolutions.leaf.market.domain.GameCardsUseCase
 import dugsolutions.leaf.market.local.MarketStacks
 import dugsolutions.leaf.market.scenario.ScenarioMarketCheap
 import dugsolutions.leaf.player.components.DeckManager
+import dugsolutions.leaf.player.components.DrawHand
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionBestCardPurchaseCoreStrategy
 import dugsolutions.leaf.player.effect.CardEffectProcessor
@@ -143,6 +144,7 @@ val gameModule: Module = module {
             supply = get(),
             hand = get(),
             compost = get(),
+            floralArray = get(),
             dieFactory = get()
         )
     }
@@ -161,6 +163,7 @@ val gameModule: Module = module {
     single { HasDieValue() }
     single { HasFlourishType(get()) }
     single { ManagePurchasedFloralTypes() }
+    single { DrawHand(get()) }
 
     single { Game(get(), get(), get(), get(), get(), get(), get()) }
 
