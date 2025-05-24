@@ -14,45 +14,12 @@ import dugsolutions.leaf.components.MatchWith
 class FakeCards {
     companion object {
         // Card IDs
-        private const val CARD_ID_1 = 1
-        private const val CARD_ID_2 = 2
-        private const val CARD_ID_3 = 3
-        private const val CARD_ID_4 = 4
-        private const val CARD_ID_5 = 5
-        private const val CARD_ID_6 = 6
-        private const val CARD_ID_7 = 7
-        private const val CARD_ID_8 = 8
-        private const val CARD_ID_9 = 9
-        private const val CARD_ID_10 = 10
-        private const val CARD_ID_11 = 11
-        private const val CARD_ID_12 = 12
-        private const val CARD_ID_13 = 13
-        private const val CARD_ID_14 = 14
-        private const val CARD_ID_15 = 15
-
-        // Card names
-        private const val CARD_NAME_1 = "Test Seedling"
-        private const val CARD_NAME_2 = "Test Root"
-        private const val CARD_NAME_3 = "Test Canopy"
-        private const val CARD_NAME_4 = "Test Vine"
-        private const val CARD_NAME_5 = "Test Bloom"
-        private const val CARD_NAME_6 = "Test None"
-        private const val CARD_NAME_7 = "Spring Bloom"
-        private const val CARD_NAME_8 = "Sprouting Seed"
-        private const val CARD_NAME_9 = "Tiny Sprout"
-        private const val CARD_NAME_10 = "Young Plant"
-        private const val CARD_NAME_11 = "Growing Seedling"
-        private const val CARD_NAME_12 = "Thorny Vine"
-        private const val CARD_NAME_13 = "Sheltering Canopy"
-        private const val CARD_NAME_14 = "Nourishing Root"
-        private const val CARD_NAME_15 = "Dark Bloom"
-
+        private var ID = 0
 
         // Basic test cards
-
         val fakeNone = GameCard(
-            id = CARD_ID_6,
-            name = CARD_NAME_6,
+            id = ++ID,
+            name = "Test None",
             type = FlourishType.NONE,
             resilience = 0,
             cost = Cost(emptyList()),
@@ -62,33 +29,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
-        )
-
-        val fakeBloom = GameCard(
-            id = CARD_ID_7,
-            name = CARD_NAME_7,
-            type = FlourishType.BLOOM,
-            resilience = 1,
-            cost = Cost(
-                listOf(
-                    CostElement.FlourishTypePresent(FlourishType.VINE),
-                    CostElement.SingleDieMinimum(12),
-                    CostElement.TotalDiceMinimum(17)
-                )
-            ),
-            primaryEffect = CardEffect.DRAW_DIE,
-            primaryValue = 3,
-            matchWith = MatchWith.None,
-            matchEffect = null,
-            matchValue = 0,
-            trashEffect = CardEffect.UPGRADE_D6,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeSeedling = GameCard(
-            id = CARD_ID_8,
-            name = CARD_NAME_8,
+            id = ++ID,
+            name = "Sprouting Seed",
             type = FlourishType.SEEDLING,
             resilience = 2,
             cost = Cost(emptyList()),
@@ -98,12 +45,13 @@ class FakeCards {
             matchEffect = CardEffect.REDUCE_COST_ROOT,
             matchValue = 2,
             trashEffect = CardEffect.GAIN_FREE_ROOT,
-            trashValue = 1
+            trashValue = 1,
+            thorn = 0
         )
 
         val fakeSeedling2 = GameCard(
-            id = CARD_ID_9,
-            name = CARD_NAME_9,
+            id = ++ID,
+            name = "Tiny Sprout",
             type = FlourishType.SEEDLING,
             resilience = 1,
             cost = Cost(emptyList()),
@@ -113,12 +61,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeSeedling3 = GameCard(
-            id = CARD_ID_10,
-            name = CARD_NAME_10,
+            id = ++ID,
+            name = "Young Plant",
             type = FlourishType.SEEDLING,
             resilience = 2,
             cost = Cost(emptyList()),
@@ -128,12 +77,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeSeedling4 = GameCard(
-            id = CARD_ID_11,
-            name = CARD_NAME_11,
+            id = ++ID,
+            name = "Growing Seedling",
             type = FlourishType.SEEDLING,
             resilience = 3,
             cost = Cost(emptyList()),
@@ -143,12 +93,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeSeedling5 = GameCard(
-            id = CARD_ID_1,
-            name = CARD_NAME_1,
+            id = ++ID,
+            name = "Test Seedling",
             type = FlourishType.SEEDLING,
             resilience = 1,
             cost = Cost(emptyList()),
@@ -158,12 +109,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeVine = GameCard(
-            id = CARD_ID_12,
-            name = CARD_NAME_12,
+            id = ++ID,
+            name = "Thorny Vine",
             type = FlourishType.VINE,
             resilience = 4,
             cost = Cost(listOf(
@@ -176,13 +128,14 @@ class FakeCards {
             matchWith = MatchWith.None,
             matchEffect = null,
             matchValue = 0,
-            trashEffect = CardEffect.THORN,
-            trashValue = 2
+            trashEffect = CardEffect.REUSE_DIE,
+            trashValue = 1,
+            thorn = 2
         )
 
         val fakeVine2 = GameCard(
-            id = CARD_ID_4,
-            name = CARD_NAME_4,
+            id = ++ID,
+            name = "Test Vine",
             type = FlourishType.VINE,
             resilience = 4,
             cost = Cost(listOf(
@@ -196,12 +149,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeCanopy = GameCard(
-            id = CARD_ID_13,
-            name = CARD_NAME_13,
+            id = ++ID,
+            name = "Sheltering Canopy",
             type = FlourishType.CANOPY,
             resilience = 5,
             cost = Cost(listOf(
@@ -215,12 +169,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeCanopy2 = GameCard(
-            id = CARD_ID_3,
-            name = CARD_NAME_3,
+            id = ++ID,
+            name = "Test Canopy",
             type = FlourishType.CANOPY,
             resilience = 3,
             cost = Cost(listOf(
@@ -234,12 +189,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeRoot = GameCard(
-            id = CARD_ID_14,
-            name = CARD_NAME_14,
+            id = ++ID,
+            name = "Nourishing Root",
             type = FlourishType.ROOT,
             resilience = 2,
             cost = Cost(listOf(
@@ -252,12 +208,13 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeRoot2 = GameCard(
-            id = CARD_ID_2,
-            name = CARD_NAME_2,
+            id = ++ID,
+            name = "Test Root",
             type = FlourishType.ROOT,
             resilience = 2,
             cost = Cost(listOf(
@@ -270,12 +227,97 @@ class FakeCards {
             matchEffect = null,
             matchValue = 0,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
+        )
+
+        val fakeFlower = GameCard(
+            id = ++ID,
+            name = "Spring Flower",
+            type = FlourishType.FLOWER,
+            resilience = 1,
+            cost = Cost(
+                listOf(
+                    CostElement.FlourishTypePresent(FlourishType.VINE),
+                    CostElement.SingleDieMinimum(12),
+                    CostElement.TotalDiceMinimum(17)
+                )
+            ),
+            primaryEffect = CardEffect.ADORN,
+            primaryValue = 3,
+            matchWith = MatchWith.None,
+            matchEffect = null,
+            matchValue = 0,
+            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashValue = 10,
+            thorn = 0
+        )
+
+        val fakeFlower2 = GameCard(
+            id = ++ID,
+            name = "Test Flower",
+            type = FlourishType.FLOWER,
+            resilience = 1,
+            cost = Cost(listOf(
+                CostElement.FlourishTypePresent(FlourishType.VINE),
+                CostElement.SingleDieMinimum(18),
+                CostElement.TotalDiceMinimum(22)
+            )),
+            primaryEffect = CardEffect.ADORN,
+            primaryValue = 1,
+            matchWith = MatchWith.None,
+            matchEffect = null,
+            matchValue = 0,
+            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashValue = 10,
+            thorn = 0
+        )
+
+        val fakeFlower3 = GameCard(
+            id = ++ID,
+            name = "Dark Flower",
+            type = FlourishType.FLOWER,
+            resilience = 1,
+            cost = Cost(listOf(
+                CostElement.FlourishTypePresent(FlourishType.VINE),
+                CostElement.SingleDieMinimum(17),
+                CostElement.TotalDiceMinimum(21)
+            )),
+            primaryEffect = CardEffect.ADORN,
+            primaryValue = 1,
+            matchWith = MatchWith.None,
+            matchEffect = null,
+            matchValue = 0,
+            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashValue = 10,
+            thorn = 0
+        )
+
+        val fakeBloom = GameCard(
+            id = ++ID,
+            name = "Spring Bloom",
+            type = FlourishType.BLOOM,
+            resilience = 1,
+            cost = Cost(
+                listOf(
+                    CostElement.FlourishTypePresent(FlourishType.VINE),
+                    CostElement.SingleDieMinimum(12),
+                    CostElement.TotalDiceMinimum(17)
+                )
+            ),
+            primaryEffect = CardEffect.ADD_TO_TOTAL,
+            primaryValue = 3,
+            matchWith = MatchWith.Flower(fakeFlower.id),
+            matchEffect = CardEffect.ADD_TO_TOTAL,
+            matchValue = 1,
+            trashEffect = CardEffect.DEFLECT,
+            trashValue = 4,
+            thorn = 0
         )
 
         val fakeBloom2 = GameCard(
-            id = CARD_ID_5,
-            name = CARD_NAME_5,
+            id = ++ID,
+            name = "Test Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
             cost = Cost(listOf(
@@ -283,18 +325,19 @@ class FakeCards {
                 CostElement.SingleDieMinimum(18),
                 CostElement.TotalDiceMinimum(22)
             )),
-            primaryEffect = CardEffect.USE_OPPONENT_CARD,
+            primaryEffect = CardEffect.DRAW_DIE,
             primaryValue = 1,
-            matchWith = MatchWith.None,
-            matchEffect = null,
-            matchValue = 0,
+            matchWith = MatchWith.Flower(fakeFlower2.id),
+            matchEffect = CardEffect.DRAW_DIE,
+            matchValue = 1,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         val fakeBloom3 = GameCard(
-            id = CARD_ID_15,
-            name = CARD_NAME_15,
+            id = ++ID,
+            name = "Dark Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
             cost = Cost(listOf(
@@ -302,17 +345,17 @@ class FakeCards {
                 CostElement.SingleDieMinimum(17),
                 CostElement.TotalDiceMinimum(21)
             )),
-            primaryEffect = CardEffect.DRAW_CARD,
+            primaryEffect = CardEffect.ADJUST_BY,
             primaryValue = 1,
-            matchWith = MatchWith.None,
-            matchEffect = null,
-            matchValue = 0,
+            matchWith = MatchWith.Flower(fakeFlower3.id),
+            matchEffect = CardEffect.ADJUST_BY,
+            matchValue = 1,
             trashEffect = null,
-            trashValue = 0
+            trashValue = 0,
+            thorn = 0
         )
 
         // Collections of card
-
         val ALL_SEEDLINGS = listOf(
             fakeSeedling,
             fakeSeedling2,
@@ -342,6 +385,12 @@ class FakeCards {
             fakeBloom3
         )
 
-        val ALL_CARDS = ALL_SEEDLINGS + ALL_ROOT + ALL_CANOPY + ALL_VINE + ALL_BLOOM
+        val ALL_FLOWER = listOf(
+            fakeFlower,
+            fakeFlower2,
+            fakeFlower3
+        )
+
+        val ALL_CARDS = ALL_SEEDLINGS + ALL_ROOT + ALL_CANOPY + ALL_VINE + ALL_BLOOM + ALL_FLOWER
     }
 } 

@@ -10,7 +10,10 @@ class PlayerOrder(
     private val chronicle: GameChronicle
 ) {
 
-    private var hadReroll = false
+    companion object {
+        private const val maxAttempts = 20
+    }
+    private var numberOfRerolls = 0
 
     /**
      * Determine Chain Order
@@ -19,16 +22,17 @@ class PlayerOrder(
      * that round, which governs the order of card play and resolution effects.
      *
      * 🪙 Tie-Breaking
-     * If two or more players are tied for the highest position, all players reroll their dice
-     * until there is one clear winner for the highest.
+     * If two or more players are tied for the highest position, the tied players must choose one die
+     * in which to reroll. After this this chain order is evaluated again. This process continues until
+     * there is one player has has the undisputed highest value.
      *
      * If players are tied otherwise in their pip total the player closest clockwise to the highest
      * ranking player is considered higher in the Chain Order.
      *
-     * @return List of players in order (lowest to highest)
+     * @return List of players in order (highest to lowest)
      */
     operator fun invoke(players: List<Player>): List<Player> {
-        hadReroll = false
+        numberOfRerolls = 0
         // Establish there is but one highest ranking player
         val highestRankingPlayerIndex = ensureExactlyOneHighestRankingPlayer(players)
 
@@ -55,7 +59,7 @@ class PlayerOrder(
         )
 
         // Log the ordering event
-        chronicle(GameChronicle.Moment.ORDERING(sortedPositions.map { it.player }, hadReroll))
+        chronicle(GameChronicle.Moment.ORDERING(sortedPositions.map { it.player }, numberOfRerolls))
 
         // Return the players in order
         return sortedPositions.map { it.player }
@@ -67,7 +71,7 @@ class PlayerOrder(
      * @return the index of the highest ranking player.
      */
     private fun ensureExactlyOneHighestRankingPlayer(players: List<Player>): Int {
-        for (i in 0..10) {
+        while (numberOfRerolls < maxAttempts) {
             val positions = players.mapIndexed { index, player ->
                 PlayerPosition(
                     playerIndex = index,
@@ -76,18 +80,28 @@ class PlayerOrder(
                 )
             }
             val sortedPositions = positions.sortedByDescending { it.totalPips }
+            
+            // If no dice have been rolled yet, return the first player
             if (sortedPositions[0].totalPips == 0) {
                 return 0
             }
-            if (sortedPositions[0].totalPips == sortedPositions[1].totalPips) {
-                players.forEach { player -> player.diceInHand.reroll() }
-                hadReroll = true
-            } else {
-                return sortedPositions[0].playerIndex
+
+            // Check if there's a tie for highest position
+            val highestPips = sortedPositions[0].totalPips
+            val tiedPlayers = sortedPositions.filter { it.totalPips == highestPips }
+            
+            if (tiedPlayers.size == 1) {
+                // We have a clear winner
+                return tiedPlayers[0].playerIndex
             }
+
+            // Only the tied players reroll one die
+            tiedPlayers.forEach { position ->
+                position.player.decisionDirector.rerollOneDie()
+            }
+            numberOfRerolls++
         }
-        println("Could not resolve highest rolled player")
-        return 0
+        throw IllegalStateException("Could not resolve highest ranking player after $maxAttempts attempts")
     }
 
     /**

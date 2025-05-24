@@ -3,7 +3,7 @@ package dugsolutions.leaf.game.turn.local
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.effect.AppliedEffect
+import dugsolutions.leaf.player.domain.AppliedEffect
 import dugsolutions.leaf.player.effect.EffectsList
 import io.mockk.every
 import io.mockk.mockk
@@ -18,9 +18,10 @@ class CardIsFreeTest {
         private const val PLAYER_NAME = "Test Player"
     }
 
-    private lateinit var SUT: CardIsFree
     private lateinit var player: Player
     private lateinit var effectsList: EffectsList
+
+    private lateinit var SUT: CardIsFree
 
     @BeforeEach
     fun setup() {
@@ -137,7 +138,7 @@ class CardIsFreeTest {
     fun invoke_whenNonMarketBenefitEffect_returnsFalse() {
         // Arrange
         val card = FakeCards.fakeRoot
-        val effect = AppliedEffect.ThornEffect(damage = 1)
+        val effect = AppliedEffect.AdjustDieRoll(1)
         every { effectsList.iterator() } returns listOf(effect).iterator()
 
         // Act

@@ -27,16 +27,18 @@ class DecisionDamageAbsorptionCoreStrategyTest {
 
     @BeforeEach
     fun setup() {
+
         val randomizer = RandomizerTD()
         costScore = mockk(relaxed = true)
         val gameCardsFactory = GameCardsFactory(randomizer, costScore)
         cardManager = CardManager(gameCardsFactory)
         cardManager.loadCards(FakeCards.ALL_CARDS)
         player = PlayerTD(1, cardManager)
-        SUT = DecisionDamageAbsorptionCoreStrategy(player, cardManager)
         sampleDie = SampleDie(RandomizerTD())
         player.addCardToCompost(FakeCards.fakeBloom.id)
         player.addDieToCompost(sampleDie.d10)
+
+        SUT = DecisionDamageAbsorptionCoreStrategy(player, cardManager)
 
         // Verify dice resilience values (sides)
         assertEquals(4, sampleDie.d4.sides)
@@ -96,7 +98,7 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         
         // Assert
         assertNotNull(result)
-        assertEquals(listOf(card.id), result.cardIds)
+        assertEquals(listOf(card), result.cards)
         assertTrue(result.dice.isEmpty())
     }
 
@@ -123,7 +125,7 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         
         // Assert
         assertNotNull(result)
-        assertTrue(result.cardIds.isEmpty())
+        assertTrue(result.cards.isEmpty())
         assertEquals(listOf(die), result.dice)
     }
     
@@ -149,21 +151,24 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // The optimal combo would be either one card (2) + d6 (6) = 8, or
         // both cards (4) + d4 (4) = 8
         assertNotNull(result)
-        val cardsIds = result.cardIds
-        if (cardsIds.size == 1) {
+        val cards = result.cards
+        if (cards.size == 1) {
             assertEquals(1, result.dice.size)
             assertEquals(sampleDie.d6.sides, result.dice[0].sides)
-        } else if (cardsIds.size == 2) {
+        } else if (cards.size == 2) {
             assertEquals(1, result.dice.size)
             assertEquals(sampleDie.d4.sides, result.dice[0].sides)
         } else {
-            assertTrue(cardsIds.size <= 2)
+            assertTrue(cards.size <= 2)
         }
     }
     
     @Test
     fun invoke_whenOnlyCardsInHandAndPreservationNeeded_preservesOneCard() {
         // Arrange
+        val d4 = sampleDie.d4
+        val d6 = sampleDie.d6
+
         // Verify resilience values
         assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
         assertEquals(4, FakeCards.fakeVine.resilience, "Vine resilience must be 4 for this test")
@@ -177,8 +182,8 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         player.addCardToHand(FakeCards.fakeVine.id)
         player.addCardToHand(FakeCards.fakeCanopy.id)
         // Add dice to all places
-        player.addDieToHand(sampleDie.d4)
-        player.addDieToCompost(sampleDie.d6)
+        player.addDieToHand(d4)
+        player.addDieToCompost(d6)
         
         // Act
         val result = SUT()
@@ -186,13 +191,11 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // Assert
         assertNotNull(result)
         // It should preserve one card (the most valuable = Canopy) and use the others plus the die
-        assertEquals(2, result.cardIds.size)
+        assertEquals(2, result.cards.size)
         assertEquals(1, result.dice.size)
-        assertTrue(!result.cardIds.contains(FakeCards.fakeCanopy.id))
-        assertTrue(
-            result.cardIds.containsAll(listOf(FakeCards.fakeSeedling.id, FakeCards.fakeVine.id))
-        )
-        assertTrue(result.dice.contains(sampleDie.d4))
+        assertEquals(FakeCards.fakeSeedling.id, result.cards[0].id)
+        assertEquals(FakeCards.fakeVine.id, result.cards[1].id)
+        assertEquals(d4, result.dice[0])
     }
     
     @Test
@@ -217,7 +220,7 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // Assert
         assertNotNull(result)
         // It should preserve the die (d8) and use others card + other dice
-        assertEquals(2, result.cardIds.size)
+        assertEquals(2, result.cards.size)
         assertEquals(0, result.dice.size)
     }
     
@@ -246,7 +249,7 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // Assert
         assertNotNull(result)
         // It should use everything in hand since damage is too high
-        assertEquals(2, result.cardIds.size)
+        assertEquals(2, result.cards.size)
         assertEquals(2, result.dice.size)
     }
     
@@ -265,7 +268,7 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // Assert
         assertNotNull(result)
         // It has no choice but to return the card
-        assertEquals(1, result.cardIds.size)
+        assertEquals(1, result.cards.size)
         assertEquals(0, result.dice.size)
     }
     
@@ -289,11 +292,11 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // Assert
         assertNotNull(result)
         // Should use vine + seedling + d4 = 10 instead of using the BLOOM card which would give it a 9, but bloom is off limits.
-        assertEquals(2, result.cardIds.size)
+        assertEquals(2, result.cards.size)
         assertEquals(1, result.dice.size)
-        assertFalse(result.cardIds.contains(FakeCards.fakeBloom.id))
-        assertTrue(result.cardIds.contains(FakeCards.fakeVine.id))
-        assertTrue(result.cardIds.contains(FakeCards.fakeSeedling.id))
+        assertFalse(result.cards.contains(FakeCards.fakeBloom))
+        assertTrue(result.cards.contains(FakeCards.fakeVine))
+        assertTrue(result.cards.contains(FakeCards.fakeSeedling))
         assertEquals(sampleDie.d4.sides, result.dice[0].sides)
     }
     
@@ -320,8 +323,107 @@ class DecisionDamageAbsorptionCoreStrategyTest {
         // rather than seedling(2) + d4(4) = 6 (exact match but more items)
         // rather than vine(4) + d4(4) = 8 (wasteful)
         assertNotNull(result)
-        assertEquals(0, result.cardIds.size)
+        assertEquals(0, result.cards.size)
         assertEquals(1, result.dice.size)
         assertEquals(sampleDie.d6.sides, result.dice[0].sides)
+    }
+
+    @Test
+    fun invoke_whenFloralArrayCardsPresent_canOnlyBeUsedWithRegularCards() {
+        // Arrange
+        // Verify resilience values
+        assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
+        assertEquals(4, FakeCards.fakeVine.resilience, "Vine resilience must be 4 for this test")
+        
+        player.incomingDamage = 6
+        // Add regular cards to hand
+        player.addCardToHand(FakeCards.fakeSeedling.id)
+        player.addCardToHand(FakeCards.fakeVine.id)
+        // Add flower card to floral array
+        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        
+        // Act
+        val result = SUT()
+        
+        // Assert
+        assertNotNull(result)
+        // Should use vine(4) + seedling(2) = 6 (exact match)
+        // rather than just using the flower card which would be invalid
+        assertEquals(2, result.cards.size)
+        assertEquals(0, result.dice.size)
+        assertTrue(result.cards.contains(FakeCards.fakeVine))
+        assertTrue(result.cards.contains(FakeCards.fakeSeedling))
+    }
+
+    @Test
+    fun invoke_whenFloralArrayCardsEnhanceResilience_usesEnhancedValue() {
+        // Arrange
+        // Verify resilience values
+        assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
+        assertEquals(10, FakeCards.fakeFlower.trashValue, "Flower trash value must be 3 for this test")
+        
+        player.incomingDamage = 5
+        // Add regular card to hand
+        player.addCardToHand(FakeCards.fakeSeedling.id)
+        // Add flower card to floral array
+        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        
+        // Act
+        val result = SUT()
+        
+        // Assert
+        assertNotNull(result)
+        // Should use seedling(2) + flower enhancement(3) = 5 (exact match)
+        assertEquals(1, result.cards.size)
+        assertEquals(0, result.dice.size)
+        assertTrue(result.cards.contains(FakeCards.fakeSeedling))
+    }
+
+    @Test
+    fun invoke_whenOnlyFloralArrayCardsPresent_ignoresCombination() {
+        // Arrange
+        // Verify resilience values
+        assertEquals(10, FakeCards.fakeFlower.trashValue, "Flower trash value must be 10 for this test")
+        
+        player.incomingDamage = 3
+        // Add only flower cards to floral array
+        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        player.addCardToFloralArray(FakeCards.fakeFlower2.id)
+        
+        // Act
+        val result = SUT()
+        
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun invoke_whenFloralArrayCardsEnhanceMultipleCards_usesBestCombination() {
+        // Arrange
+        // Verify resilience values
+        assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
+        assertEquals(4, FakeCards.fakeVine.resilience, "Vine resilience must be 4 for this test")
+        assertEquals(10, FakeCards.fakeFlower.trashValue, "Flower trash value must be 10 for this test")
+        
+        player.incomingDamage = 7
+        // Add regular cards to hand
+        player.addCardToHand(FakeCards.fakeSeedling.id)
+        player.addCardToHand(FakeCards.fakeVine.id)
+        // Add flower card to floral array
+        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        
+        // Act
+        val result = SUT()
+        
+        // Assert
+        assertNotNull(result)
+        // Should use vine(4) + flower enhancement(3) = 7 (exact match)
+        // rather than seedling(2) + flower enhancement(3) = 5 (not enough)
+        // or vine(4) + seedling(2) = 6 (not enough)
+        assertEquals(1, result.cards.size)
+        assertEquals(1, result.floralCards.size)
+        assertEquals(0, result.dice.size)
+        assertEquals(FakeCards.fakeSeedling.id, result.cards[0].id)
+        assertEquals(FakeCards.fakeFlower.id, result.floralCards[0].id)
     }
 } 

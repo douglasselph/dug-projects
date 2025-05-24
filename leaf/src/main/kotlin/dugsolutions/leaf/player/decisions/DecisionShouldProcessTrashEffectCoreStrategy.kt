@@ -10,33 +10,13 @@ import dugsolutions.leaf.components.GameCard
  * Algorithm:
  * 1. For each card, track how many times it has been seen
  * 2. When a card is seen:
+ *    - If a card effect target's a die and there is not available die then do not trash.
+ *    - If a card effect target's a die, and the only die available is one that allows a match effect, do not trash.
  *    - If card has no effects (primary or match), always trash
- *    - Otherwise, check if we've seen it enough times to trigger trash
- * 3. Trash trigger is determined by:
- *    - Card-specific trigger in trashTriggerCard map
+ * 3. Then Trash trigger is determined by:
+ *    - Card-specific trigger in trashTriggerCard map. This allows an AI like behavior to determine the right time to trash a card.
+ *        The failure here, is context is normally important, but for the purposes of this engine perhaps can be ignored.
  *    - Falls back to general trigger (default 3) if no specific trigger
- *
- * Example:
- * ```kotlin
- * val strategy = DecisionShouldProcessTrashEffectCoreStrategy()
- *
- * // Set specific trigger for a card
- * strategy.trashTriggerCard[cardId] = 2  // Trash after 2nd sight
- *
- * // Change general trigger
- * strategy.trashTriggerGeneral = 4  // Default to 4th sight
- *
- * // First sight of card
- * strategy(card)  // Returns false
- *
- * // Second sight of card
- * strategy(card)  // Returns true if card-specific trigger is 2
- *
- * // Third sight of card
- * strategy(card)  // Returns true if using general trigger (3)
- * ```
- *
- * Note: Call reset() between games to clear tracking.
  */
 class DecisionShouldProcessTrashEffectCoreStrategy : DecisionShouldProcessTrashEffect {
 
@@ -51,7 +31,7 @@ class DecisionShouldProcessTrashEffectCoreStrategy : DecisionShouldProcessTrashE
     val trashTriggerCard = mutableMapOf<CardID, Int>()
     var trashTriggerGeneral = TRASH_TRIGGER
 
-    override fun invoke(card: GameCard): Boolean {
+    override fun invoke(card: GameCard): DecisionShouldProcessTrashEffect.Result {
         // Only certain TrashEffects apply toward being able to trash here.
         when (card.trashEffect) {
             CardEffect.GAIN_FREE_ROOT,
@@ -61,13 +41,14 @@ class DecisionShouldProcessTrashEffectCoreStrategy : DecisionShouldProcessTrashE
             CardEffect.UPGRADE_ANY,
             CardEffect.UPGRADE_D4,
             CardEffect.UPGRADE_D6,
-            CardEffect.UPGRADE_D4_D6 -> {}
+            CardEffect.UPGRADE_D4_D6 -> {
+            }
 
-            else -> return false
+            else -> return DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED
         }
         // If card has no effects, always trash
         if (card.primaryEffect == null && card.matchEffect == null) {
-            return true
+            return DecisionShouldProcessTrashEffect.Result.TRASH
         }
         // Get the current count for this card, defaulting to 0 if not seen before
         val currentCount = trackMap.getOrDefault(card.id, 0)
@@ -79,7 +60,11 @@ class DecisionShouldProcessTrashEffectCoreStrategy : DecisionShouldProcessTrashE
         trackMap[card.id] = currentCount + 1
 
         // Check if we've reached or exceeded the trigger threshold
-        return currentCount + 1 >= triggerThreshold
+        return if (currentCount + 1 >= triggerThreshold) {
+            DecisionShouldProcessTrashEffect.Result.TRASH
+        } else {
+            DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
+        }
     }
 
     /**

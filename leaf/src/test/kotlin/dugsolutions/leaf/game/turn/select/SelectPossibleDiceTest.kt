@@ -3,7 +3,7 @@ package dugsolutions.leaf.game.turn.select
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.market.Market
+import dugsolutions.leaf.grove.Grove
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -18,17 +18,17 @@ class SelectPossibleDiceTest {
     private lateinit var SUT: SelectPossibleDice
     
     // Dependencies
-    private lateinit var market: Market
+    private lateinit var grove: Grove
     private lateinit var dieFactory: DieFactory
     
     @BeforeEach
     fun setup() {
         // Create mock dependencies
-        market = mockk(relaxed = true)
+        grove = mockk(relaxed = true)
         dieFactory = mockk(relaxed = true)
         
         // Create the test subject
-        SUT = SelectPossibleDice(market, dieFactory)
+        SUT = SelectPossibleDice(grove, dieFactory)
     }
     
     @Test
@@ -39,7 +39,7 @@ class SelectPossibleDiceTest {
         val d6 = mockk<Die>(relaxed = true)
         val d8 = mockk<Die>(relaxed = true)
         
-        every { market.getAvailableDiceSides() } returns sides
+        every { grove.getAvailableDiceSides() } returns sides
         every { dieFactory(DieSides.D4.value) } returns d4
         every { dieFactory(DieSides.D6.value) } returns d6
         every { dieFactory(DieSides.D8.value) } returns d8
@@ -52,7 +52,7 @@ class SelectPossibleDiceTest {
         assertTrue(result.contains(d4))
         assertTrue(result.contains(d6))
         assertTrue(result.contains(d8))
-        verify { market.getAvailableDiceSides() }
+        verify { grove.getAvailableDiceSides() }
         verify { dieFactory(DieSides.D4.value) }
         verify { dieFactory(DieSides.D6.value) }
         verify { dieFactory(DieSides.D8.value) }
@@ -61,14 +61,14 @@ class SelectPossibleDiceTest {
     @Test
     fun invoke_whenNoDiceAvailable_returnsEmptyList() {
         // Arrange
-        every { market.getAvailableDiceSides() } returns emptyList()
+        every { grove.getAvailableDiceSides() } returns emptyList()
         
         // Act
         val result = SUT()
         
         // Assert
         assertTrue(result.isEmpty())
-        verify { market.getAvailableDiceSides() }
+        verify { grove.getAvailableDiceSides() }
         verify(exactly = 0) { dieFactory(any<Int>()) }
     }
     
@@ -80,7 +80,7 @@ class SelectPossibleDiceTest {
         val d20 = mockk<Die>(relaxed = true)
         val d10 = mockk<Die>(relaxed = true)
         
-        every { market.getAvailableDiceSides() } returns sides
+        every { grove.getAvailableDiceSides() } returns sides
         every { dieFactory(DieSides.D6.value) } returns d6
         every { dieFactory(DieSides.D20.value) } returns d20
         every { dieFactory(DieSides.D10.value) } returns d10

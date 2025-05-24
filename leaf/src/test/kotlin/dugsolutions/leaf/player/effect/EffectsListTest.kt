@@ -1,5 +1,6 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.player.domain.AppliedEffect
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -8,9 +9,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class EffectsListTest {
+
     companion object {
-        private const val CARD_ID_1 = 1
-        private const val CARD_ID_2 = 2
         private const val ADJUSTMENT_AMOUNT = 3
     }
 
@@ -24,8 +24,8 @@ class EffectsListTest {
     @BeforeEach
     fun setup() {
         SUT = EffectsList()
-        mockEffect1 = AppliedEffect.DrawCards(2, trashAfterUse = CARD_ID_1)
-        mockEffect2 = AppliedEffect.DrawDice(1, trashAfterUse = CARD_ID_2)
+        mockEffect1 = AppliedEffect.DrawCards(2)
+        mockEffect2 = AppliedEffect.DrawDice(1)
         adjustDieRollEffect = AppliedEffect.AdjustDieRoll(ADJUSTMENT_AMOUNT)
         adjustToMaxEffect = AppliedEffect.AdjustDieToMax()
     }

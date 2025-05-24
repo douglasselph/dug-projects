@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.decisions
 
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseCardEvaluator
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseDieEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
@@ -10,17 +10,20 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class DecisionAcquireSelectCoreStrategyTest {
+
     private lateinit var player: Player
+    private lateinit var mockBestCard: AcquireCardEvaluator.BestChoice
+    private lateinit var mockBestDie: AcquireDieEvaluator.BestChoice
+
     private lateinit var SUT: DecisionAcquireSelectCoreStrategy
-    private lateinit var mockBestCard: PurchaseCardEvaluator.BestChoice
-    private lateinit var mockBestDie: PurchaseDieEvaluator.BestChoice
 
     @BeforeEach
     fun setup() {
         player = mockk(relaxed = true)
-        SUT = DecisionAcquireSelectCoreStrategy(player)
         mockBestCard = mockk(relaxed = true)
         mockBestDie = mockk(relaxed = true)
+
+        SUT = DecisionAcquireSelectCoreStrategy(player)
     }
 
     @Test

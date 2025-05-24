@@ -20,8 +20,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DeckManagerTest {
+
     companion object {
-        // Card IDs
         private const val CARD_ID_1 = 1
         private const val CARD_ID_2 = 2
     }
@@ -29,9 +29,10 @@ class DeckManagerTest {
     private lateinit var supply: StackManager
     private lateinit var hand: StackManager
     private lateinit var compost: StackManager
-    private lateinit var deckManager: DeckManager
     private lateinit var randomizer: Randomizer
     private lateinit var dieFactory: DieFactory
+
+    private lateinit var SUT: DeckManager
 
     private lateinit var d4: Die
     private lateinit var d6: Die
@@ -39,32 +40,25 @@ class DeckManagerTest {
 
     @BeforeEach
     fun setup() {
-        // Create mock stack managers
         supply = mockk(relaxed = true)
         hand = mockk(relaxed = true)
         compost = mockk(relaxed = true)
         randomizer = Randomizer.create()
         dieFactory = DieFactoryRandom(randomizer)
 
-        // Create test dice
         d4 = dieFactory(DieSides.D4)
         d6 = dieFactory(DieSides.D6)
         d8 = dieFactory(DieSides.D8)
 
-        // Initialize deck manager
-        deckManager = DeckManager(supply, hand, compost, dieFactory)
+        SUT = DeckManager(supply, hand, compost, dieFactory)
 
         every { compost.addCard(any()) } returns true
         every { compost.addDie(any()) } returns true
-        every { hand.clear() } just Runs
-        every { supply.clear() } just Runs
-        every { compost.clear() } just Runs
         every { hand.addCard(any()) } returns true
         every { supply.addCard(any()) } returns true
         every { compost.addCard(any()) } returns true
     }
 
-    // Properties tests
     @Test
     fun handSize_returnsCorrectTotal() {
         // Arrange
@@ -72,7 +66,7 @@ class DeckManagerTest {
         every { hand.diceCount } returns 3
 
         // Act
-        val result = deckManager.handSize
+        val result = SUT.handSize
 
         // Assert
         assertEquals(5, result)
@@ -84,7 +78,7 @@ class DeckManagerTest {
         every { supply.isEmpty } returns true
 
         // Act
-        val result = deckManager.isSupplyEmpty
+        val result = SUT.isSupplyEmpty
 
         // Assert
         assertTrue(result)
@@ -96,7 +90,7 @@ class DeckManagerTest {
         every { supply.isEmpty } returns false
 
         // Act
-        val result = deckManager.isSupplyEmpty
+        val result = SUT.isSupplyEmpty
 
         // Assert
         assertFalse(result)
@@ -108,21 +102,7 @@ class DeckManagerTest {
         every { hand.pipTotal } returns 7
 
         // Act
-        val result = deckManager.pipTotal
-
-        // Assert
-        assertEquals(7, result)
-    }
-
-    @Test
-    fun bloomCount_returnsSumOfAllStacks() {
-        // Arrange
-        every { supply.bloomCount } returns 4
-        every { hand.bloomCount } returns 1
-        every { compost.bloomCount } returns 2
-
-        // Act
-        val result = deckManager.bloomCount
+        val result = SUT.pipTotal
 
         // Assert
         assertEquals(7, result)
@@ -140,7 +120,7 @@ class DeckManagerTest {
         every { supply.addAllDice(startingDice) } just Runs
 
         // Act
-        deckManager.setup(seedlings, startingDice)
+        SUT.setup(seedlings, startingDice)
 
         // Assert
         verify { supply.addAllCards(ids) }
@@ -154,7 +134,7 @@ class DeckManagerTest {
         every { hand.hasCard(CARD_ID_1) } returns true
 
         // Act
-        val result = deckManager.hasCardInHand(CARD_ID_1)
+        val result = SUT.hasCardInHand(CARD_ID_1)
 
         // Assert
         assertTrue(result)
@@ -166,7 +146,7 @@ class DeckManagerTest {
         every { hand.hasDie(d6) } returns true
 
         // Act
-        val result = deckManager.hasDieInHand(d6)
+        val result = SUT.hasDieInHand(d6)
 
         // Assert
         assertTrue(result)
@@ -182,13 +162,12 @@ class DeckManagerTest {
         every { hand.getItems() } returns items
 
         // Act
-        val result = deckManager.getItemsInHand()
+        val result = SUT.getItemsInHand()
 
         // Assert
         assertEquals(items, result)
     }
 
-    // Discard tests
     @Test
     fun discard_whenCardExists_movesToCompost() {
         // Arrange
@@ -197,7 +176,7 @@ class DeckManagerTest {
         every { compost.addCard(CARD_ID_1) } returns true
 
         // Act
-        val result = deckManager.discard(CARD_ID_1)
+        val result = SUT.discard(CARD_ID_1)
 
         // Assert
         assertTrue(result)
@@ -213,7 +192,7 @@ class DeckManagerTest {
         every { compost.addDie(d6) } returns true
 
         // Act
-        val result = deckManager.discard(d6)
+        val result = SUT.discard(d6)
 
         // Assert
         assertTrue(result)
@@ -231,7 +210,7 @@ class DeckManagerTest {
         every { compost.addDie(die) } returns true
 
         // Act
-        val result = deckManager.discard(dieValue)
+        val result = SUT.discard(dieValue)
 
         // Assert
         assertTrue(result)
@@ -246,7 +225,7 @@ class DeckManagerTest {
         every { hand.hasDie(dieValue) } returns false
 
         // Act
-        val result = deckManager.discard(dieValue)
+        val result = SUT.discard(dieValue)
 
         // Assert
         assertFalse(result)
@@ -254,7 +233,6 @@ class DeckManagerTest {
         verify(exactly = 0) { compost.addDie(any()) }
     }
 
-    // Drawing tests
     @Test
     fun drawCard_whenSupplyHasCard_addsToHand() {
         // Arrange
@@ -262,7 +240,7 @@ class DeckManagerTest {
         every { hand.addCard(CARD_ID_1) } returns true
 
         // Act
-        val result = deckManager.drawCard()
+        val result = SUT.drawCard()
 
         // Assert
         assertEquals(CARD_ID_1, result)
@@ -277,7 +255,7 @@ class DeckManagerTest {
         every { hand.addDie(d6) } returns true
 
         // Act
-        val result = deckManager.drawDie()
+        val result = SUT.drawDie()
 
         // Assert
         assertEquals(d6, result)
@@ -292,7 +270,7 @@ class DeckManagerTest {
         every { hand.addDie(d8) } returns true
 
         // Act
-        val result = deckManager.drawBestDie()
+        val result = SUT.drawBestDie()
 
         // Assert
         assertEquals(d8, result)
@@ -300,7 +278,6 @@ class DeckManagerTest {
         verify { hand.addDie(d8) }
     }
 
-    // Resource cycling tests
     @Test
     fun resupply_movesAllItemsFromCompostToSupply() {
         // Arrange
@@ -314,12 +291,25 @@ class DeckManagerTest {
         every { supply.addAllDice(any()) } just Runs
 
         // Act
-        deckManager.resupply()
+        SUT.resupply()
 
         // Assert
         verify { supply.addAllCards(listOf(CARD_ID_1, CARD_ID_2)) }
         verify { supply.addAllDice(listOf(d6)) }
         verify { compost.clear() }
+        verify { supply.shuffle() }
+    }
+
+    @Test
+    fun resupply_whenCompostEmpty_stillShufflesSupply() {
+        // Arrange
+        every { compost.getItems() } returns emptyList()
+
+        // Act
+        SUT.resupply()
+
+        // Assert
+        verify { supply.shuffle() }
     }
 
     @Test
@@ -333,7 +323,7 @@ class DeckManagerTest {
         every { hand.getItems() } returns items
 
         // Act
-        deckManager.discardHand()
+        SUT.discardHand()
 
         // Assert
         verify { compost.addCard(CARD_ID_1) }
@@ -345,7 +335,7 @@ class DeckManagerTest {
     @Test
     fun clear_clearsAllStacks() {
         // Act
-        deckManager.clear()
+        SUT.clear()
 
         // Assert
         verify { supply.clear() }
@@ -359,7 +349,7 @@ class DeckManagerTest {
         every { supply.addCard(CARD_ID_1) } returns true
 
         // Act
-        val result = deckManager.addCardToSupply(CARD_ID_1)
+        val result = SUT.addCardToSupply(CARD_ID_1)
 
         // Assert
         assertTrue(result)
@@ -372,7 +362,7 @@ class DeckManagerTest {
         every { supply.addCard(CARD_ID_1) } returns false
 
         // Act
-        val result = deckManager.addCardToSupply(CARD_ID_1)
+        val result = SUT.addCardToSupply(CARD_ID_1)
 
         // Assert
         assertFalse(result)
@@ -385,7 +375,7 @@ class DeckManagerTest {
         every { supply.addDie(d6) } returns true
 
         // Act
-        val result = deckManager.addDieToSupply(d6)
+        val result = SUT.addDieToSupply(d6)
 
         // Assert
         assertTrue(result)
@@ -398,7 +388,7 @@ class DeckManagerTest {
         every { supply.addDie(d6) } returns false
 
         // Act
-        val result = deckManager.addDieToSupply(d6)
+        val result = SUT.addDieToSupply(d6)
 
         // Assert
         assertFalse(result)
@@ -413,7 +403,7 @@ class DeckManagerTest {
         every { supply.addDie(die) } returns true
 
         // Act
-        val result = deckManager.addDieToSupply(dieValue)
+        val result = SUT.addDieToSupply(dieValue)
 
         // Assert
         assertTrue(result)
@@ -428,7 +418,7 @@ class DeckManagerTest {
         every { supply.addDie(die) } returns false
 
         // Act
-        val result = deckManager.addDieToSupply(dieValue)
+        val result = SUT.addDieToSupply(dieValue)
 
         // Assert
         assertFalse(result)
@@ -443,7 +433,7 @@ class DeckManagerTest {
         every { hand.addDie(die) } returns true
 
         // Act
-        val result = deckManager.addDieToHand(dieValue)
+        val result = SUT.addDieToHand(dieValue)
 
         // Assert
         assertTrue(result)
@@ -458,7 +448,7 @@ class DeckManagerTest {
         every { hand.addDie(die) } returns false
 
         // Act
-        val result = deckManager.addDieToHand(dieValue)
+        val result = SUT.addDieToHand(dieValue)
 
         // Assert
         assertFalse(result)
@@ -473,7 +463,7 @@ class DeckManagerTest {
         every { compost.addDie(die) } returns true
 
         // Act
-        val result = deckManager.addDieToCompost(dieValue)
+        val result = SUT.addDieToCompost(dieValue)
 
         // Assert
         assertTrue(result)
@@ -488,7 +478,7 @@ class DeckManagerTest {
         every { compost.addDie(die) } returns false
 
         // Act
-        val result = deckManager.addDieToCompost(dieValue)
+        val result = SUT.addDieToCompost(dieValue)
 
         // Assert
         assertFalse(result)
@@ -498,7 +488,7 @@ class DeckManagerTest {
     @Test
     fun trashSeedlingCards_trashesCardsFromAllStacks() {
         // Act
-        deckManager.trashSeedlingCards()
+        SUT.trashSeedlingCards()
 
         // Assert
         verify { supply.trashSeedlingCards() }

@@ -21,6 +21,7 @@ class ShouldProcessMatchEffect(
             is MatchWith.None -> false
             is MatchWith.OnRoll -> shouldProcessOnRoll(card.matchWith.value, player)
             is MatchWith.OnFlourishType -> shouldProcessOnFlourishType(card.matchWith.type, player)
+            is MatchWith.Flower -> player.flowerCount(card) > 0
         }
     }
 

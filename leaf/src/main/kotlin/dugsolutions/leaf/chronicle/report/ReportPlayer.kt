@@ -18,9 +18,8 @@ class ReportPlayer {
         val handItems = combineNonEmpty(cardsInHand, diceInHand)
         val compostItems = combineNonEmpty(cardsInCompost, diceInCompost)
         val score = player.score
-        val dormant = if (player.isDormant) " [DORMANT]" else ""
-        
-        return "${player.name}: Supply=[$supplyItems], Hand=[$handItems], Compost=[$compostItems], Score=[$score]$dormant"
+
+        return "${player.name}: Supply=[$supplyItems], Hand=[$handItems], Compost=[$compostItems], Score=[$score]"
     }
     
     // Helper function to combine strings only if they're non-empty

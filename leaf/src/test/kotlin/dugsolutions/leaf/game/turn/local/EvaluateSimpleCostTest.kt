@@ -3,9 +3,9 @@ package dugsolutions.leaf.game.turn.local
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
-import dugsolutions.leaf.game.purchase.credit.CombinationGenerator
-import dugsolutions.leaf.game.purchase.domain.Combination
-import dugsolutions.leaf.game.purchase.domain.Combinations
+import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.domain.Combination
+import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk

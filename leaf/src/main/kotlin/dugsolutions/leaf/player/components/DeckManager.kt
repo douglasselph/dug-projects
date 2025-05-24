@@ -2,9 +2,9 @@ package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.HandItem
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.di.DieFactory
 
@@ -15,7 +15,6 @@ class DeckManager(
     private val dieFactory: DieFactory
 ) {
 
-    // Properties
     val handSize: Int
         get() = hand.cardCount + hand.diceCount
 
@@ -27,9 +26,6 @@ class DeckManager(
 
     val allDice: Dice
         get() = Dice(supply.dice.dice + hand.dice.dice + compost.dice.dice)
-
-    val bloomCount: Int
-        get() = supply.bloomCount + hand.bloomCount + compost.bloomCount
 
     // Setup
     fun setup(seedlings: GameCards, startingDice: List<Die>) {
@@ -81,15 +77,11 @@ class DeckManager(
     }
 
     fun removeCardFromHand(cardId: CardID): Boolean {
-        if (!hand.hasCard(cardId)) return false
-        hand.removeCard(cardId)
-        return true
+        return hand.removeCard(cardId)
     }
 
     fun removeDieFromHand(die: Die): Boolean {
-        if (!hand.hasDie(die)) return false
-        hand.removeDie(die)
-        return true
+        return hand.removeDie(die)
     }
 
     fun addCardToSupply(cardId: CardID): Boolean {
@@ -180,6 +172,7 @@ class DeckManager(
             }
         })
         compost.clear()
+        supply.shuffle()
     }
 
     fun discardHand() {

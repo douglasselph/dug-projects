@@ -2,8 +2,8 @@ package dugsolutions.leaf.chronicle.report
 
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.PlayersScoreData
-import dugsolutions.leaf.player.components.PlayerScoreData
+import dugsolutions.leaf.player.domain.PlayersScoreData
+import dugsolutions.leaf.player.domain.PlayerScoreData
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

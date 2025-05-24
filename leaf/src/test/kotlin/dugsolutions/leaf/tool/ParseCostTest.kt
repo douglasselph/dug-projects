@@ -202,15 +202,14 @@ class ParseCostTest {
     @Test
     fun invoke_whenAllFlourishTypes_returnsCorrectCost() {
         // Act
-        val result = SUT("R,C,V,B")
+        val result = SUT("R,C,V")
 
         // Assert
         assertCostEquals(
             Cost(listOf(
                 CostElement.FlourishTypePresent(FlourishType.ROOT),
                 CostElement.FlourishTypePresent(FlourishType.CANOPY),
-                CostElement.FlourishTypePresent(FlourishType.VINE),
-                CostElement.FlourishTypePresent(FlourishType.BLOOM)
+                CostElement.FlourishTypePresent(FlourishType.VINE)
             )),
             result
         )

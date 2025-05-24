@@ -9,7 +9,7 @@ class CardEffectsProcessor(
     private val chronicle: GameChronicle
 ) {
     operator fun invoke(card: GameCard, player: Player) {
-        val cardEffects = cardEffectProcessor.processCardEffect(card, player)
+        val cardEffects = cardEffectProcessor(card, player)
         player.effectsList.addAll(cardEffects)
         if (cardEffects.isNotEmpty()) {
             chronicle(GameChronicle.Moment.PLAY_CARD(player, card))

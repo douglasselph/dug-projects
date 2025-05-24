@@ -12,12 +12,13 @@ import kotlin.test.assertEquals
 
 class SelectDieToRerollTest {
 
-    private lateinit var SUT: SelectDieToReroll
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: Randomizer
     private lateinit var d4: Die
     private lateinit var d6: Die
     private lateinit var d8: Die
+
+    private lateinit var SUT: SelectDieToReroll
 
     @BeforeEach
     fun setup() {

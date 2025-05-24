@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.decisions
 
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseCardEvaluator
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseDieEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
 import dugsolutions.leaf.player.Player
 
 /**
@@ -52,8 +52,8 @@ class DecisionAcquireSelectCoreStrategy(
     var preferenceDie = 0
 
     override fun invoke(
-        bestCard: PurchaseCardEvaluator.BestChoice?,
-        bestDie: PurchaseDieEvaluator.BestChoice?
+        bestCard: AcquireCardEvaluator.BestChoice?,
+        bestDie: AcquireDieEvaluator.BestChoice?
     ): DecisionAcquireSelect.BuyItem {
         val scoreCards = player.totalCardCount + preferenceCard
         val scoreDice = player.totalDiceCount + preferenceDie

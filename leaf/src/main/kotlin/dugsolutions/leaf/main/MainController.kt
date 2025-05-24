@@ -2,12 +2,10 @@ package dugsolutions.leaf.main
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.market.scenario.ScenarioMarketCheap
 import dugsolutions.leaf.simulator.GameEvent
 import dugsolutions.leaf.simulator.GameSimulator
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.game.Game
-import dugsolutions.leaf.market.Market
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,8 +14,6 @@ import kotlinx.coroutines.launch
 class MainController(
     private val gameSimulator: GameSimulator,
     private val game: Game,
-    private val market: Market,
-    private val scenarioMarketCheap: ScenarioMarketCheap,
     private val cardManager: CardManager,
     private val dieFactory: DieFactoryRandom,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -45,7 +41,6 @@ class MainController(
             gameSimulator.runGamesSequentially(
                 numGames,
                 setup = {
-                    scenarioMarketCheap(numPlayers)
                     game.setup(
                         Game.Config(
                             numPlayers = 2,

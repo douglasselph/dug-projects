@@ -5,6 +5,7 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.player.domain.AppliedEffect
 import java.io.File
 
 class CardRegistry(
@@ -17,6 +18,7 @@ class CardRegistry(
             "AdjustBy" to CardEffect.ADJUST_BY,
             "AdjustToMax" to CardEffect.ADJUST_TO_MAX,
             "AdjustToMinOrMax" to CardEffect.ADJUST_TO_MIN_OR_MAX,
+            "Adorn" to CardEffect.ADORN,
             "Deflect" to CardEffect.DEFLECT,
             "Discard" to CardEffect.DISCARD,
             "DiscardCard" to CardEffect.DISCARD_CARD,
@@ -31,6 +33,7 @@ class CardRegistry(
             "GainFreeRoot" to CardEffect.GAIN_FREE_ROOT,
             "GainFreeCanopy" to CardEffect.GAIN_FREE_CANOPY,
             "GainFreeVine" to CardEffect.GAIN_FREE_VINE,
+            "PlaceInArray" to CardEffect.ADORN,
             "ReduceCostRoot" to CardEffect.REDUCE_COST_ROOT,
             "ReduceCostCanopy" to CardEffect.REDUCE_COST_CANOPY,
             "ReduceCostVine" to CardEffect.REDUCE_COST_VINE,
@@ -42,8 +45,9 @@ class CardRegistry(
             "RetainDieReroll" to CardEffect.RETAIN_DIE_REROLL,
             "ReuseCard" to CardEffect.REUSE_CARD,
             "ReuseDie" to CardEffect.REUSE_DIE,
+            "ReuseAny" to CardEffect.REUSE_ANY,
             "ReplayVine" to CardEffect.REPLAY_VINE,
-            "Thorn" to CardEffect.THORN,
+            "ResilienceBoost" to CardEffect.RESILIENCE_BOOST,
             "UpgradeAnyRetain" to CardEffect.UPGRADE_ANY_RETAIN,
             "UpgradeAny" to CardEffect.UPGRADE_ANY,
             "UpgradeD4" to CardEffect.UPGRADE_D4,
@@ -83,31 +87,37 @@ class CardRegistry(
         val parts = line.split(DELIMITER).map { it.trim() }
 
         // Skip empty lines or header rows
-        if (parts.isEmpty() || parts[0].isEmpty() || parts[0].startsWith("Flourish Type:") || parts.size < 10) {
+        if (parts.isEmpty() || parts[0].isEmpty() || parts.size < 11) {
             throw IllegalArgumentException("Invalid card line: $line")
         }
-
-        // Parse effects and their values
+        val name = parts[0]
+        val id = GenCardID.generateId(name)
+        val flourishType = parseFlourishType(parts[1])
+        val resilience = parts[2].toIntOrNull() ?: 0
+        val cost = parseCost(parts[3])
         val primaryEffect = parseEffect(parts[4])
         val primaryValue = parseValue(parts[5])
+        val matchWith = parseMatchWith(parts[6])
         val matchEffect = parseEffect(parts[7])
         val matchValue = parseValue(parts[8])
         val trashEffect = parseEffect(parts[9])
         val trashValue = parseValue(parts[10])
+        val thornValue = parseValue(parts[11])
 
         return GameCard(
-            id = GenCardID.generateId(parts[0]),
-            name = parts[0],
-            type = parseFlourishType(parts[1]),
-            resilience = parts[2].toIntOrNull() ?: 0,
-            cost = parseCost(parts[3]),
+            id = id,
+            name = name,
+            type = flourishType,
+            resilience = resilience,
+            cost = cost,
             primaryEffect = primaryEffect,
             primaryValue = primaryValue,
-            matchWith = parseMatchWith(parts[6]),
+            matchWith = matchWith,
             matchEffect = matchEffect,
             matchValue = matchValue,
             trashEffect = trashEffect,
-            trashValue = trashValue
+            trashValue = trashValue,
+            thorn = thornValue
         )
     }
 
@@ -117,6 +127,7 @@ class CardRegistry(
             "Root" -> FlourishType.ROOT
             "Canopy" -> FlourishType.CANOPY
             "Vine" -> FlourishType.VINE
+            "Flower" -> FlourishType.FLOWER
             "Bloom" -> FlourishType.BLOOM
             else -> throw IllegalArgumentException("Unknown flourish type: $type")
         }
@@ -146,7 +157,21 @@ class CardRegistry(
         return when {
             match.isEmpty() || match == "-" -> MatchWith.None
             match.toIntOrNull() != null -> MatchWith.OnRoll(match.toInt())
-            else -> MatchWith.OnFlourishType(parseFlourishType(match))
+            else -> {
+                flowerOf(match)?.let { card ->
+                    MatchWith.Flower(card.id)
+                } ?: run {
+                    MatchWith.OnFlourishType(parseFlourishType(match))
+                }
+            }
         }
     }
+
+    private fun flowerOf(name: String): GameCard? {
+        if (cards.contains(name)) {
+            return cards[name]
+        }
+        return null
+    }
+
 }

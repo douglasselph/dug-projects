@@ -19,7 +19,6 @@ class StackManager(
 
     val dice: Dice = Dice()
 
-    // Properties
     val cardCount: Int
         get() = cards.size
 
@@ -108,6 +107,10 @@ class StackManager(
         seedlingCards.forEach { cardId ->
             cards.remove(cardId)
         }
+    }
+
+    fun shuffle() {
+        cards.shuffle()
     }
 
 } 

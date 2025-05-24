@@ -4,7 +4,7 @@ import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.game.purchase.cost.ApplyCost
+import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.player.Player
 
 class HandleDieUpgrade(

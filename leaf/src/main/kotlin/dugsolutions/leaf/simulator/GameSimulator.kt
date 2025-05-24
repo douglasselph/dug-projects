@@ -1,7 +1,7 @@
 package dugsolutions.leaf.simulator
 
 import dugsolutions.leaf.game.RunGame
-import dugsolutions.leaf.player.components.PlayersScoreData
+import dugsolutions.leaf.player.domain.PlayersScoreData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope

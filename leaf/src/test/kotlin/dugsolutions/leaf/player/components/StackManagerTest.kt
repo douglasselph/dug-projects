@@ -24,7 +24,6 @@ import dugsolutions.leaf.components.die.DieValue
 class StackManagerTest {
 
     companion object {
-        // Card IDs
         private const val CARD_ID_1 = 1
         private const val CARD_ID_2 = 2
         private const val CARD_ID_3 = 3

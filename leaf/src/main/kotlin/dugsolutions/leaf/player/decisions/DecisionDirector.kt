@@ -13,5 +13,8 @@ class DecisionDirector(
     var damageAbsorptionDecision: DecisionDamageAbsorption = DecisionDamageAbsorptionCoreStrategy(player, cardManager)
     var shouldProcessTrashEffect: DecisionShouldProcessTrashEffect = DecisionShouldProcessTrashEffectCoreStrategy()
     var bestCardPurchase: DecisionBestCardPurchase = DecisionBestCardPurchaseCoreStrategy(player)
+    var shouldTargetPlayer: DecisionShouldTargetPlayer = DecisionShouldTargetPlayerCoreStrategy(player)
+    var rerollOneDie: DecisionRerollOneDie = DecisionRerollOneDieCoreStrategy(player)
+    var bestBloomCard: DecisionBestBloomCard = DecisionBestBloomCardCoreStrategy()
 
 }

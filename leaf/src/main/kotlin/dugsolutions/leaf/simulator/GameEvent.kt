@@ -1,8 +1,7 @@
 package dugsolutions.leaf.simulator
 
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.player.components.PlayerScoreData
-import dugsolutions.leaf.player.components.PlayersScoreData
+import dugsolutions.leaf.player.domain.PlayersScoreData
 
 
 sealed class GameEvent {

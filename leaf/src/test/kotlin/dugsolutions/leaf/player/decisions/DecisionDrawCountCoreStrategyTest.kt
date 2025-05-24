@@ -11,20 +11,23 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class DecisionDrawCountCoreStrategyTest {
+
     companion object {
         private const val CARD_ID_1 = 1
     }
 
     private lateinit var mockPlayer: Player
-    private lateinit var drawCountDecision: DecisionDrawCount
     private lateinit var sampleCard1: GameCard
     private lateinit var sampleCard2: GameCard
+
+    private lateinit var SUT: DecisionDrawCount
 
     @BeforeEach
     fun setup() {
         // Create mock dependencies
         mockPlayer = mockk(relaxed = true)
-        drawCountDecision = DecisionDrawCountCoreStrategy(mockPlayer)
+
+        SUT = DecisionDrawCountCoreStrategy(mockPlayer)
 
         sampleCard1 = FakeCards.fakeCanopy
         sampleCard2 = FakeCards.fakeVine
@@ -38,7 +41,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE, result) // Commons.HAND_SIZE
@@ -52,7 +55,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1, sampleCard2)
 
         // Act
-        val cardCount = drawCountDecision()
+        val cardCount = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE-2, cardCount)
@@ -66,7 +69,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(0, result)
@@ -80,7 +83,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(2, result) // Commons.HAND_SIZE / 2
@@ -94,7 +97,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns listOf(mockk { every { id } returns CARD_ID_1 })
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(1, result) // (Commons.HAND_SIZE / 2) - 1
@@ -108,7 +111,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE-1, result)
@@ -122,7 +125,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1)
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE-2, result)
@@ -136,7 +139,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(1, result)
@@ -150,7 +153,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns List(5) { sampleCard1 }
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(0, result)
@@ -166,7 +169,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(1, result)
@@ -182,7 +185,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE-1, result) // More cards (4) than dice (3) after including compost
@@ -198,7 +201,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE/2, result) // Equal cards (3) and dice (3) after including compost
@@ -214,7 +217,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(1, result) // More dice (4) than cards (2) after including compost
@@ -230,7 +233,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(0, result) // No cards available even with compost
@@ -246,7 +249,7 @@ class DecisionDrawCountCoreStrategyTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1, sampleCard2)
 
         // Act
-        val result = drawCountDecision()
+        val result = SUT()
 
         // Assert
         assertEquals(Commons.HAND_SIZE-3, result) // More cards than dice, but with 2 cards in hand

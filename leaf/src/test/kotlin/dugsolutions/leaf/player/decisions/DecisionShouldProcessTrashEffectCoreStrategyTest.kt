@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -34,7 +35,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertFalse(result)
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, result)
     }
 
     @Test
@@ -46,7 +47,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertFalse(result)
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, result)
     }
 
     @Test
@@ -59,7 +60,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertTrue(result)
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, result)
     }
 
     @Test
@@ -73,7 +74,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertTrue(result)
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, result)
     }
 
     @Test
@@ -92,10 +93,10 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val differentCardThirdTime = SUT(differentCard)
 
         // Assert
-        assertFalse(differentCardFirstTime, "First time seeing different card should be false")
-        assertTrue(fakeCardThirdTime, "Third time for first card should be true")
-        assertFalse(differentCardSecondTime, "Second time for different card should be false")
-        assertTrue(differentCardThirdTime, "Third time for different card should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, differentCardFirstTime, "First time seeing different card should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, fakeCardThirdTime, "Third time for first card should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, differentCardSecondTime, "Second time for different card should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, differentCardThirdTime, "Third time for different card should be true")
     }
 
     @Test
@@ -109,9 +110,9 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val thirdTime = SUT(fakeCard)
 
         // Assert
-        assertFalse(firstTime, "First time should be false")
-        assertTrue(secondTime, "Second time should be true")
-        assertTrue(thirdTime, "Third time should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, firstTime, "First time should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, secondTime, "Second time should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, thirdTime, "Third time should be true")
     }
 
     @Test
@@ -123,7 +124,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertTrue(result, "Should trash on first sight when general trigger is 1")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, result, "Should trash on first sight when general trigger is 1")
     }
 
     @Test
@@ -136,8 +137,8 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val secondTime = SUT(fakeCard)
 
         // Assert
-        assertFalse(firstTime, "First time should be false")
-        assertTrue(secondTime, "Second time should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, firstTime, "First time should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, secondTime, "Second time should be true")
     }
 
     @Test
@@ -151,7 +152,7 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val result = SUT(fakeCard)
 
         // Assert
-        assertFalse(result, "After reset, should be like seeing card for first time")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, result, "After reset, should be like seeing card for first time")
     }
 
     @Test
@@ -167,8 +168,8 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val thirdTime = SUT(fakeCard)
 
         // Assert
-        assertFalse(secondTime, "Second time after reset should still be false")
-        assertTrue(thirdTime, "Third time after reset should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, secondTime, "Second time after reset should still be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, thirdTime, "Third time after reset should be true")
     }
 
     @Test
@@ -186,18 +187,18 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val thirdTime = SUT(cardWithoutEffects)
 
         // Assert
-        assertTrue(firstTime, "First time seeing card without effects should be true")
-        assertTrue(secondTime, "Second time seeing card without effects should be true")
-        assertTrue(thirdTime, "Third time seeing card without effects should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, firstTime, "First time seeing card without effects should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, secondTime, "Second time seeing card without effects should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, thirdTime, "Third time seeing card without effects should be true")
     }
 
     @Test
     fun invoke_whenCardHasNoTrashEffect_returnsFalse() {
         // Act
         val result = SUT(fakeNoEffect)
-        
+
         // Assert
-        assertFalse(result, "Card with no trash effect should return false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, result, "Card with no trash effect should return false")
     }
 
     @Test
@@ -206,11 +207,11 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val firstTime = SUT(fakeVineUnsupported)
         val secondTime = SUT(fakeVineUnsupported)
         val thirdTime = SUT(fakeVineUnsupported)
-        
+
         // Assert
-        assertFalse(firstTime, "First time seeing card with unsupported trash effect should be false")
-        assertFalse(secondTime, "Second time seeing card with unsupported trash effect should be false")
-        assertFalse(thirdTime, "Third time seeing card with unsupported trash effect should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, firstTime, "First time seeing card with unsupported trash effect should be TRASH_IF_NEEDED")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, secondTime, "Second time seeing card with unsupported trash effect should be TRASH_IF_NEEDED")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, thirdTime, "Third time seeing card with unsupported trash effect should be TRASH_IF_NEEDED")
     }
 
     @Test
@@ -219,11 +220,11 @@ class DecisionShouldProcessTrashEffectCoreStrategyTest {
         val firstTime = SUT(fakeCard)
         val secondTime = SUT(fakeCard)
         val thirdTime = SUT(fakeCard)
-        
+
         // Assert
-        assertFalse(firstTime, "First time seeing card with supported trash effect should be false")
-        assertFalse(secondTime, "Second time seeing card with supported trash effect should be false")
-        assertTrue(thirdTime, "Third time seeing card with supported trash effect should be true")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, firstTime, "First time seeing card with supported trash effect should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH, secondTime, "Second time seeing card with supported trash effect should be false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, thirdTime, "Third time seeing card with supported trash effect should be true")
     }
 
 } 

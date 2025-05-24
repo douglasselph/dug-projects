@@ -13,24 +13,26 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class HasFlourishTypeTest {
+
     companion object {
         private const val CARD_ID_1 = 1
         private const val CARD_ID_2 = 2
     }
 
-    private lateinit var SUT: HasFlourishType
     private lateinit var mockCardManager: CardManager
     private lateinit var mockCard: HandItem.Card
     private lateinit var mockDice: HandItem.Dice
     private lateinit var mockDie: Die
     private lateinit var mockGameCard: GameCard
 
+    private lateinit var SUT: HasFlourishType
+
     @BeforeEach
     fun setup() {
-        mockCardManager = mockk()
-        mockDie = mockk()
+        mockCardManager = mockk(relaxed = true)
+        mockDie = mockk(relaxed = true)
         mockDice = HandItem.Dice(mockDie)
-        mockGameCard = mockk {
+        mockGameCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
             every { type } returns FlourishType.ROOT
         }

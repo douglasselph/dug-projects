@@ -11,7 +11,7 @@ import dugsolutions.leaf.player.Player
  * Decision Rules (in order of priority):
  * 1. Highest evaluation score wins
  * 2. If tied, least owned card wins
- * 3. If still tied, lowest flourish type priority wins (ROOT=0, CANOPY=1, VINE=2, BLOOM=3)
+ * 3. If still tied, lowest flourish type priority wins (ROOT=0, CANOPY=1, VINE=2, FLOWER=3)
  * 
  * Evaluation Score Rules:
  * - Each card can have specific evaluation rules based on how many copies are owned
@@ -65,7 +65,7 @@ class DecisionBestCardPurchaseCoreStrategy(
         FlourishType.ROOT to 0,
         FlourishType.CANOPY to 1,
         FlourishType.VINE to 2,
-        FlourishType.BLOOM to 3
+        FlourishType.FLOWER to 3
     )
 
     private data class Score(
@@ -80,7 +80,7 @@ class DecisionBestCardPurchaseCoreStrategy(
         }
 
         // Get counts of each card in player's deck
-        val cardCounts = player.allCards.groupBy { it.id }
+        val cardCounts = player.allCardsInDeck.groupBy { it.id }
             .mapValues { it.value.size }
 
         // Calculate evaluation scores for each card

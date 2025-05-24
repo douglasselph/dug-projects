@@ -15,11 +15,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ShouldProcessMatchEffectTest {
-    companion object {
-        private const val CARD_ID_1 = 1
-    }
 
-    private lateinit var shouldProcessMatchEffect: ShouldProcessMatchEffect
     private lateinit var mockHasDieValue: HasDieValue
     private lateinit var mockHasFlourishType: HasFlourishType
     private lateinit var mockCardManager: CardManager
@@ -28,17 +24,19 @@ class ShouldProcessMatchEffectTest {
     private lateinit var mockD4: Die
     private lateinit var mockD6: Die
 
+    private lateinit var SUT: ShouldProcessMatchEffect
+
     @BeforeEach
     fun setup() {
-        mockHasDieValue = mockk()
-        mockCardManager = mockk()
-        mockHasFlourishType = mockk()
-        mockPlayer = mockk()
-        mockCard = mockk()
-        mockD4 = mockk()
-        mockD6 = mockk()
+        mockHasDieValue = mockk(relaxed = true)
+        mockCardManager = mockk(relaxed = true)
+        mockHasFlourishType = mockk(relaxed = true)
+        mockPlayer = mockk(relaxed = true)
+        mockCard = mockk(relaxed = true)
+        mockD4 = mockk(relaxed = true)
+        mockD6 = mockk(relaxed = true)
 
-        shouldProcessMatchEffect = ShouldProcessMatchEffect(mockHasDieValue, mockHasFlourishType)
+        SUT = ShouldProcessMatchEffect(mockHasDieValue, mockHasFlourishType)
     }
 
     @Test
@@ -47,7 +45,7 @@ class ShouldProcessMatchEffectTest {
         every { mockCard.matchWith } returns MatchWith.None
 
         // Act
-        val result = shouldProcessMatchEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertFalse(result)
@@ -61,7 +59,7 @@ class ShouldProcessMatchEffectTest {
         every { mockHasDieValue(any(), 6) } returns true
 
         // Act
-        val result = shouldProcessMatchEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertTrue(result)
@@ -75,7 +73,7 @@ class ShouldProcessMatchEffectTest {
         every { mockHasDieValue(any(), 6) } returns false
 
         // Act
-        val result = shouldProcessMatchEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertFalse(result)
@@ -89,7 +87,7 @@ class ShouldProcessMatchEffectTest {
         every { mockHasFlourishType(any(), FlourishType.ROOT) } returns true
 
         // Act
-        val result = shouldProcessMatchEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertTrue(result)
@@ -103,7 +101,7 @@ class ShouldProcessMatchEffectTest {
         every { mockHasFlourishType(any(), FlourishType.ROOT) } returns false
 
         // Act
-        val result = shouldProcessMatchEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertFalse(result)

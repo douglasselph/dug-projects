@@ -13,18 +13,18 @@ import kotlin.test.assertNull
 
 class SelectDieToRetainTest {
 
-    private lateinit var SUT: SelectDieToRetain
-
     private lateinit var mockRandomizer: Randomizer
     private lateinit var sampleDie: SampleDie
     private lateinit var d4: Die
     private lateinit var d6: Die
     private lateinit var d8: Die
 
+    private lateinit var SUT: SelectDieToRetain
+
     @BeforeEach
     fun setup() {
         // Initialize test components
-        mockRandomizer = mockk()
+        mockRandomizer = mockk(relaxed = true)
         sampleDie = SampleDie()
         
         // Create test dice with fixed values

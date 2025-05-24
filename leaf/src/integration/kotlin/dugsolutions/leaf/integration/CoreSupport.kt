@@ -19,16 +19,12 @@ import dugsolutions.leaf.di.GameCardsFactory
 import dugsolutions.leaf.di.gameModule
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
-import dugsolutions.leaf.game.turn.config.PlayerBattlePhaseCheck2D20
-import dugsolutions.leaf.game.turn.config.PlayerBattlePhaseCheckBloom
-import dugsolutions.leaf.market.Market
-import dugsolutions.leaf.market.domain.MarketCardConfig
-import dugsolutions.leaf.market.domain.MarketConfig
-import dugsolutions.leaf.market.domain.MarketDiceConfig
-import dugsolutions.leaf.market.domain.MarketStackConfig
-import dugsolutions.leaf.market.domain.MarketStackID
-import dugsolutions.leaf.market.scenario.ScenarioMarketCheap
-import dugsolutions.leaf.player.decisions.DecisionDirector
+import dugsolutions.leaf.grove.Grove
+import dugsolutions.leaf.grove.domain.MarketCardConfig
+import dugsolutions.leaf.grove.domain.MarketConfig
+import dugsolutions.leaf.grove.domain.MarketDiceConfig
+import dugsolutions.leaf.grove.domain.MarketStackConfig
+import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerDefault
@@ -47,22 +43,18 @@ class CoreSupport(
 ) : KoinTest {
     companion object {
         private const val TEST_CARD_LIST = Commons.TEST_CARD_LIST
-        private const val TRANSITION_2D20 = false
     }
 
     private lateinit var cardManager: CardManager
     private lateinit var dieFactory: DieFactory
-    private lateinit var market: Market
+    private lateinit var grove: Grove
     private lateinit var game: Game
     private lateinit var cardRegistry: CardRegistry
-    private lateinit var scenarioMarketCheap: ScenarioMarketCheap
     private lateinit var chronicle: GameChronicle
     private lateinit var runGame: RunGame
     private lateinit var writeGameResults: WriteGameResults
     private lateinit var writeChronicleResults: WriteChronicleResults
     private lateinit var reportGameSummaries: ReportGameSummaries
-    private lateinit var readyBattlePhase2D20: PlayerBattlePhaseCheck2D20
-    private lateinit var readyBattlePhaseBloom: PlayerBattlePhaseCheckBloom
     private lateinit var generateGameSummary: GenerateGameSummary
     private lateinit var writeGameSummaries: WriteGameSummaries
     private lateinit var randomizer: Randomizer
@@ -97,15 +89,12 @@ class CoreSupport(
         randomizer = get()
         cardManager = get()
         dieFactory = get()
-        market = get()
+        grove = get()
         game = get()
         cardRegistry = get()
-        scenarioMarketCheap = get()
         chronicle = get()
         gameCardsFactory = get()
         runGame = get()
-        readyBattlePhase2D20 = get()
-        readyBattlePhaseBloom = get()
         writeChronicleResults = get()
         writeGameResults = get()
         writeGameSummaries = get()
@@ -208,7 +197,7 @@ class CoreSupport(
     // region Support
 
     private fun baseSetup() {
-        market.setup(marketConfig)
+        grove.setup(marketConfig)
         var playerUnderTest = true
         game.setup(
             Game.Config(
@@ -222,7 +211,6 @@ class CoreSupport(
                         player.setupInitialDeck(otherSeedlings)
                     }
                 },
-                playerBattlePhaseCheck = if (TRANSITION_2D20) readyBattlePhase2D20 else readyBattlePhaseBloom
             )
         )
     }
@@ -251,17 +239,18 @@ class CoreSupport(
         val roots = getCards(FlourishType.ROOT)
         val vines = getCards(FlourishType.VINE)
         val canopies = getCards(FlourishType.CANOPY)
-        val blooms = getCards(FlourishType.BLOOM)
+        val flowers = getCards(FlourishType.FLOWER)
+
+        val numCards = numPlayers * 3
+        val numWild = numPlayers * 2
+        val numFlowers = numPlayers + 2
 
         // Create joint cards from roots[2,3], vines[2,3], and canopies[2,3]
         val joints = (listOf(
             roots[2], roots[3],  // Third and fourth root cards
             vines[2], vines[3],  // Third and fourth vine cards
             canopies[2], canopies[3]  // Third and fourth canopy cards
-        ).flatMap { card -> List(numPlayers * 2) { card } }).shuffled()
-
-        val numCards = numPlayers * 4
-        val numBlooms = numPlayers * Commons.BLOOM_COUNT
+        ).flatMap { card -> List(numWild) { card } }).shuffled()
 
         return MarketConfig(
             stacks = listOf(
@@ -271,8 +260,9 @@ class CoreSupport(
                 getMarketStackConfig(MarketStackID.CANOPY_2, List(numCards) { canopies[1] }),
                 getMarketStackConfig(MarketStackID.VINE_1, List(numCards) { vines[0] }),
                 getMarketStackConfig(MarketStackID.VINE_2, List(numCards) { vines[1] }),
-                getMarketStackConfig(MarketStackID.BLOOM_1, List(numBlooms) { blooms[0] }),
-                getMarketStackConfig(MarketStackID.BLOOM_2, List(numBlooms) { blooms[1] }),
+                getMarketStackConfig(MarketStackID.FLOWER_1, List(numFlowers) { flowers[0] }),
+                getMarketStackConfig(MarketStackID.FLOWER_2, List(numFlowers) { flowers[1] }),
+                getMarketStackConfig(MarketStackID.FLOWER_3, List(numFlowers) { flowers[2] }),
                 getMarketStackConfig(MarketStackID.JOINT_RCV, joints)
             ),
             dice = listOf(

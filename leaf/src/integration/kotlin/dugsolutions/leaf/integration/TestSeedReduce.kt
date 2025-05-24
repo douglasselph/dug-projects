@@ -2,7 +2,7 @@ package dugsolutions.leaf.integration
 
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.market.domain.MarketConfig
+import dugsolutions.leaf.grove.domain.MarketConfig
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

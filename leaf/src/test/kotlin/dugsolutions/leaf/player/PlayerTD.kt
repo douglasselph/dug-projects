@@ -13,26 +13,29 @@ import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.di.GameCardIDsFactory
 import dugsolutions.leaf.player.components.DeckManager
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.tool.RandomizerTD
 import io.mockk.mockk
 
 class PlayerTD private constructor(
     deckManager: DeckManager,
+    floralArray: FloralArray,
     cardManager: CardManager,
     retainedComponents: StackManager,
     private val dieFactory: DieFactory,
-    chronicle: GameChronicle,
     costScore: CostScore,
-    decisionDirectorFactory: DecisionDirectorFactory
+    decisionDirectorFactory: DecisionDirectorFactory,
+    chronicle: GameChronicle
 ) : Player(
     deckManager,
+    floralArray,
     cardManager,
     retainedComponents,
     dieFactory,
-    chronicle,
     costScore,
-    decisionDirectorFactory
+    decisionDirectorFactory,
+    chronicle
 ) {
 
     companion object {
@@ -46,21 +49,23 @@ class PlayerTD private constructor(
 
         operator fun invoke(name: String, id: Int): PlayerTD {
             val deckManager = mockk<DeckManager>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val retainedComponents = mockk<StackManager>(relaxed = true)
-            val dieFactory = DieFactoryRandom(randomizerTD)
             val chronicle = mockk<GameChronicle>(relaxed = true)
-            val costScore = mockk<CostScore>(relaxed = true)
+            val dieFactory = DieFactoryRandom(randomizerTD)
+            val costScore = CostScore()
             val decisionDirectorFactory = DecisionDirectorFactory(cardManager)
 
             return PlayerTD(
                 deckManager,
+                floralArray,
                 cardManager,
                 retainedComponents,
                 dieFactory,
-                chronicle,
                 costScore,
-                decisionDirectorFactory
+                decisionDirectorFactory,
+                chronicle
             ).apply {
                 this.id = id
                 this.name = name
@@ -92,21 +97,23 @@ class PlayerTD private constructor(
             val supplyStack = StackManager(cardManager, gameCardIDsFactory)
             val handStack = StackManager(cardManager, gameCardIDsFactory)
             val compostStack = StackManager(cardManager, gameCardIDsFactory)
+            val floralArray = FloralArray(cardManager, gameCardIDsFactory)
             val dieFactory = DieFactoryRandom(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, compostStack, dieFactory)
             val retainedComponents = mockk<StackManager>(relaxed = true)
-            val chronicle = mockk<GameChronicle>(relaxed = true)
-            val costScore = mockk<CostScore>(relaxed = true)
+            val costScore = CostScore()
             val decisionDirectorFactory = DecisionDirectorFactory(cardManager)
+            val chronicle = mockk<GameChronicle>(relaxed = true)
 
             return PlayerTD(
                 deckManager,
+                floralArray,
                 cardManager,
                 retainedComponents,
                 dieFactory,
-                chronicle,
                 costScore,
-                decisionDirectorFactory
+                decisionDirectorFactory,
+                chronicle
             ).apply {
                 this.id = id
                 this.name = name
@@ -116,8 +123,6 @@ class PlayerTD private constructor(
     }
 
     override var id = 0
-
-    // Override decision-related properties and methods
 
     override fun toString(): String {
         return "PlayerImplTD('$name')"

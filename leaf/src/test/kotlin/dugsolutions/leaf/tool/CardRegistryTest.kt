@@ -1,18 +1,15 @@
 package dugsolutions.leaf.tool
 
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.components.CardEffect
+import dugsolutions.leaf.components.FlourishType
+import dugsolutions.leaf.components.MatchWith
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.io.path.absolutePathString
-import kotlin.io.path.createTempFile
-import kotlin.io.path.writeText
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class CardRegistryTest {
@@ -102,6 +99,59 @@ class CardRegistryTest {
         
         // Assert that there are no duplicates
         assertTrue(duplicates.isEmpty(), "Found duplicate card IDs: $duplicates")
+    }
+
+    @Test
+    fun loadFromCsv_verifyBloomAndFlowerRequirements() {
+        // Arrange
+        cardRegistry.loadFromCsv(Commons.TEST_CARD_LIST)
+        val cards = cardRegistry.getAllCards()
+        
+        // Get all flower cards for reference
+        val flowerCards = cards.filter { it.type == FlourishType.FLOWER }
+        val flowerIds = flowerCards.map { it.id }
+        
+        // Track invalid bloom cards
+        val invalidBlooms = mutableListOf<String>()
+        
+        // Check all bloom cards
+        cards.filter { it.type == FlourishType.BLOOM }.forEach { bloomCard ->
+            when (val matchWith = bloomCard.matchWith) {
+                is MatchWith.Flower -> {
+                    // Verify the referenced flower ID exists
+                    if (matchWith.flowerCardId !in flowerIds) {
+                        invalidBlooms.add("Bloom card '${bloomCard.name}' references non-existent flower ID ${matchWith.flowerCardId}")
+                    }
+                }
+                else -> {
+                    invalidBlooms.add("Bloom card '${bloomCard.name}' does not have MatchWith.Flower")
+                }
+            }
+        }
+        
+        // Track invalid flower cards
+        val invalidFlowers = mutableListOf<String>()
+        
+        // Check all flower cards have ADORN effect
+        flowerCards.forEach { flowerCard ->
+            if (flowerCard.primaryEffect != CardEffect.ADORN) {
+                invalidFlowers.add("Flower card '${flowerCard.name}' does not have ADORN as primary effect")
+            }
+        }
+        
+        // Assert
+        val errorMessage = buildString {
+            if (invalidBlooms.isNotEmpty()) {
+                appendLine("Invalid bloom cards:")
+                invalidBlooms.forEach { appendLine("  - $it") }
+            }
+            if (invalidFlowers.isNotEmpty()) {
+                appendLine("Invalid flower cards:")
+                invalidFlowers.forEach { appendLine("  - $it") }
+            }
+        }
+        
+        assertTrue(invalidBlooms.isEmpty() && invalidFlowers.isEmpty(), errorMessage)
     }
 
     @Test

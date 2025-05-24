@@ -4,8 +4,8 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.game.purchase.cost.ApplyCostTD
-import dugsolutions.leaf.game.purchase.domain.Combination
+import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
+import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.tool.Randomizer
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
 
 class HandleDieUpgradeTest {
 
-    private lateinit var SUT: HandleDieUpgrade
     private lateinit var mockPlayer: Player
     private lateinit var mockEvaluateSimpleCost: EvaluateSimpleCost
     private lateinit var applyCost: ApplyCostTD
@@ -35,6 +34,8 @@ class HandleDieUpgradeTest {
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: Randomizer
     private lateinit var mockCombination: Combination
+
+    private lateinit var SUT: HandleDieUpgrade
 
     @BeforeEach
     fun setup() {

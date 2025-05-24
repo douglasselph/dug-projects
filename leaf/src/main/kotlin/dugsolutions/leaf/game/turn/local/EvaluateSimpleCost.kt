@@ -1,8 +1,8 @@
 package dugsolutions.leaf.game.turn.local
 
-import dugsolutions.leaf.game.purchase.credit.CombinationGenerator
-import dugsolutions.leaf.game.purchase.domain.Combination
-import dugsolutions.leaf.game.purchase.domain.totalValue
+import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.domain.Combination
+import dugsolutions.leaf.game.acquire.domain.totalValue
 import dugsolutions.leaf.player.Player
 
 class EvaluateSimpleCost(

@@ -1,13 +1,11 @@
 package dugsolutions.leaf.game.turn
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.game.battle.HandleAbsorbDamage
+import dugsolutions.leaf.game.acquire.HandleGroveAcquisition
 import dugsolutions.leaf.game.battle.HandleDeliverDamage
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.game.purchase.HandleMarketAcquisition
 import dugsolutions.leaf.game.turn.handle.HandleCleanup
 import dugsolutions.leaf.game.turn.handle.HandleGetTarget
-import dugsolutions.leaf.game.turn.handle.HandlePassOrPlay
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.PlayerTD
 import io.mockk.every
@@ -16,22 +14,20 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 
 class PlayerTurnTest {
 
-    private lateinit var SUT: PlayerTurn
 
     private lateinit var mockPlayerRound: PlayerRound
     private lateinit var playerRoundTD: PlayerRoundTD
     private lateinit var mockPlayerOrder: PlayerOrder
     private lateinit var mockHandleDeliverDamage: HandleDeliverDamage
-    private lateinit var handlePlayOrPass: HandlePassOrPlay
-    private lateinit var mockHandleMarketAcquisition: HandleMarketAcquisition
-    private lateinit var mockHandleAbsorbDamage: HandleAbsorbDamage
+    private lateinit var mockHandleGroveAcquisition: HandleGroveAcquisition
     private lateinit var mockHandleGetTarget: HandleGetTarget
     private lateinit var mockHandleCleanup: HandleCleanup
-    
+
+    private lateinit var SUT: PlayerTurn
+
     private lateinit var player1: PlayerTD
     private lateinit var player2: PlayerTD
     private lateinit var player3: PlayerTD
@@ -44,10 +40,8 @@ class PlayerTurnTest {
         mockPlayerRound = mockk(relaxed = true)
         mockPlayerOrder = mockk(relaxed = true)
         mockHandleDeliverDamage = mockk(relaxed = true)
-        handlePlayOrPass = HandlePassOrPlay()
         mockHandleGetTarget = mockk(relaxed = true)
-        mockHandleMarketAcquisition = mockk(relaxed = true)
-        mockHandleAbsorbDamage = mockk(relaxed = true)
+        mockHandleGroveAcquisition = mockk(relaxed = true)
         mockHandleCleanup = mockk(relaxed = true)
         
         // Create mock players
@@ -85,12 +79,11 @@ class PlayerTurnTest {
             mockPlayerRound,
             mockPlayerOrder,
             mockHandleDeliverDamage,
-            handlePlayOrPass,
             mockHandleGetTarget,
-            mockHandleMarketAcquisition,
-            mockHandleAbsorbDamage,
+            mockHandleGroveAcquisition,
             mockHandleCleanup
         )
+
     }
 
     @Test
@@ -100,9 +93,9 @@ class PlayerTurnTest {
         SUT(players, GamePhase.CULTIVATION)
         
         // Assert
-        verify { mockHandleMarketAcquisition(player1) }
-        verify { mockHandleMarketAcquisition(player2) }
-        verify { mockHandleMarketAcquisition(player3) }
+        verify { mockHandleGroveAcquisition(player1) }
+        verify { mockHandleGroveAcquisition(player2) }
+        verify { mockHandleGroveAcquisition(player3) }
         verify { mockHandleCleanup(player1) }
         verify { mockHandleCleanup(player2) }
         verify { mockHandleCleanup(player3) }
@@ -124,35 +117,6 @@ class PlayerTurnTest {
         
         // Assert
         verify { mockHandleDeliverDamage(players) }
-        verify { mockHandleAbsorbDamage(player1) }
-        verify { mockHandleAbsorbDamage(player2) }
-        verify { mockHandleAbsorbDamage(player3) }
-    }
-
-    @Test
-    fun invoke_hitsClearedAtTheStartOfEachRound() {
-        // Arrange
-        players.forEach { it.wasHit = true }
-        
-        // Act
-        SUT(players, GamePhase.CULTIVATION)
-        
-        // Assert
-        players.forEach { assertFalse(it.wasHit) }
-    }
-
-    @Test
-    fun invoke_clearsPassedBeforeStarting() {
-        // Arrange
-        players.forEach { it.hasPassed = true }
-
-        // Act
-        SUT(players, GamePhase.CULTIVATION)
-        
-        // Assert
-        verify { mockHandleGetTarget(player1, players) }
-        verify { mockHandleGetTarget(player2, players) }
-        verify { mockHandleGetTarget(player3, players) }
     }
 
     @Test
@@ -166,9 +130,9 @@ class PlayerTurnTest {
         
         // Assert
         verifyOrder {
-            mockHandleMarketAcquisition(player3)
-            mockHandleMarketAcquisition(player1)
-            mockHandleMarketAcquisition(player2)
+            mockHandleGroveAcquisition(player3)
+            mockHandleGroveAcquisition(player1)
+            mockHandleGroveAcquisition(player2)
         }
     }
 }
@@ -181,7 +145,6 @@ private class PlayerRoundTD {
 
     operator fun invoke(player: PlayerTD, target: PlayerTD?): Boolean {
         if (player.cardsInHand.isEmpty()) {
-            player.hasPassed = true
             return false
         }
         val card = player.cardsInHand.first()
@@ -190,7 +153,6 @@ private class PlayerRoundTD {
             if (attacks.containsKey(player.id)) {
                 if (attacks[player.id] == target.id) {
                     attacks.remove(player.id)
-                    target.wasHit = true
                 }
             }
         }

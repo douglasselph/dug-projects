@@ -17,42 +17,37 @@ import dugsolutions.leaf.chronicle.report.WriteChronicleResults
 import dugsolutions.leaf.chronicle.report.WriteGameResults
 import dugsolutions.leaf.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.chronicle.report.WriteToFile
-import dugsolutions.leaf.components.DieCost
 import dugsolutions.leaf.components.CostScore
+import dugsolutions.leaf.components.DieCost
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
-import dugsolutions.leaf.game.domain.GameTurn
-import dugsolutions.leaf.game.purchase.PurchaseItem
-import dugsolutions.leaf.game.purchase.cost.ApplyCost
-import dugsolutions.leaf.game.purchase.cost.ApplyEffects
-import dugsolutions.leaf.game.purchase.credit.CombinationGenerator
-import dugsolutions.leaf.game.purchase.credit.EffectToCredits
-import dugsolutions.leaf.game.purchase.evaluator.EvaluateBestDiePurchase
-import dugsolutions.leaf.game.purchase.evaluator.EvaluateCardPurchases
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseCardEvaluator
-import dugsolutions.leaf.game.purchase.evaluator.PurchaseDieEvaluator
+import dugsolutions.leaf.game.acquire.AcquireItem
+import dugsolutions.leaf.game.acquire.HandleGroveAcquisition
+import dugsolutions.leaf.game.acquire.ManageAcquiredFloralTypes
+import dugsolutions.leaf.game.acquire.cost.ApplyCost
+import dugsolutions.leaf.game.acquire.cost.ApplyEffects
+import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.credit.EffectToCredits
+import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.EvaluateBestDiePurchase
+import dugsolutions.leaf.game.acquire.evaluator.EvaluateCardPurchases
+import dugsolutions.leaf.game.battle.BattlePhaseTransition
+import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
-import dugsolutions.leaf.game.battle.HandleBattleEffects
-import dugsolutions.leaf.game.turn.handle.HandleCleanup
 import dugsolutions.leaf.game.battle.HandleDeliverDamage
-import dugsolutions.leaf.game.turn.handle.HandleDrawEffect
-import dugsolutions.leaf.game.turn.handle.HandleGetTarget
-import dugsolutions.leaf.game.turn.handle.HandleLocalCardEffect
-import dugsolutions.leaf.game.purchase.HandleMarketAcquisition
-import dugsolutions.leaf.game.purchase.ManagePurchasedFloralTypes
-import dugsolutions.leaf.game.turn.handle.HandleOpponentEffects
-import dugsolutions.leaf.game.turn.handle.HandlePassOrPlay
+import dugsolutions.leaf.game.battle.MatchingBloomCard
+import dugsolutions.leaf.game.domain.GameTurn
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerRound
 import dugsolutions.leaf.game.turn.PlayerTurn
-import dugsolutions.leaf.game.turn.config.PlayerBattlePhaseCheck2D20
-import dugsolutions.leaf.game.turn.config.PlayerBattlePhaseCheckBloom
-import dugsolutions.leaf.game.turn.config.PlayerReadyForBattlePhase
-import dugsolutions.leaf.game.turn.config.PlayerSetupForBattlePhase
-import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
-import dugsolutions.leaf.game.turn.local.CardIsFree
+import dugsolutions.leaf.game.turn.handle.HandleCardEffect
+import dugsolutions.leaf.game.turn.handle.HandleCleanup
 import dugsolutions.leaf.game.turn.handle.HandleDieUpgrade
+import dugsolutions.leaf.game.turn.handle.HandleGetTarget
 import dugsolutions.leaf.game.turn.handle.HandleLimitedDieUpgrade
+import dugsolutions.leaf.game.turn.local.CardIsFree
+import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.game.turn.select.SelectBestDie
 import dugsolutions.leaf.game.turn.select.SelectCardToRetain
 import dugsolutions.leaf.game.turn.select.SelectDieToAdjust
@@ -61,17 +56,18 @@ import dugsolutions.leaf.game.turn.select.SelectDieToReroll
 import dugsolutions.leaf.game.turn.select.SelectDieToRetain
 import dugsolutions.leaf.game.turn.select.SelectPossibleCards
 import dugsolutions.leaf.game.turn.select.SelectPossibleDice
+import dugsolutions.leaf.grove.Grove
+import dugsolutions.leaf.grove.domain.GameCardsUseCase
+import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.info.GatherPlayerInfo
-import dugsolutions.leaf.market.Market
-import dugsolutions.leaf.market.domain.GameCardsUseCase
-import dugsolutions.leaf.market.local.MarketStacks
-import dugsolutions.leaf.market.scenario.ScenarioMarketCheap
 import dugsolutions.leaf.player.components.DeckManager
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionBestCardPurchaseCoreStrategy
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
+import dugsolutions.leaf.player.effect.CardsEffectsProcessor
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
 import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
@@ -119,24 +115,15 @@ val gameModule: Module = module {
     single { Dispatchers.IO }
 
     single { TransformMomentToEntry(get(), get(), get(), get()) }
-    single { PlayerBattlePhaseCheck2D20(get(), get()) }
-    single { PlayerBattlePhaseCheckBloom(get()) }
-    single { PlayerSetupForBattlePhase(get()) }
 
     single {
         MainController(
-            get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get()
         )
     }
 
-    single { ScenarioMarketCheap(get(), get()) }
-
-    factory {
-        StackManager(
-            get(),
-            get()
-        )
-    }
+    factory { FloralArray(get(), get()) }
+    factory { StackManager(get(), get()) }
 
     factory {
         DeckManager(
@@ -152,6 +139,7 @@ val gameModule: Module = module {
             cardManager = get(),
             retainedStack = { get() },
             deckManager = { get() },
+            floralArray = { get() },
             decisionDirectorFactory = get(),
             costScore = get(),
             chronicle = get()
@@ -160,9 +148,12 @@ val gameModule: Module = module {
 
     single { HasDieValue() }
     single { HasFlourishType(get()) }
-    single { ManagePurchasedFloralTypes() }
+    single { ManageAcquiredFloralTypes() }
+    single { MatchingBloomCard(get()) }
+    single { BestFlowerCards(get()) }
+    single { BattlePhaseTransition(get(), get()) }
 
-    single { Game(get(), get(), get(), get(), get(), get(), get()) }
+    single { Game(get(), get(), get(), get(), get(), get()) }
 
     single { RunGame(get(), get(), get()) }
     single { GameSimulator(get()) }
@@ -186,12 +177,12 @@ val gameModule: Module = module {
     single { DecisionDirectorFactory(get()) }
 
     single { GameCardsUseCase(get()) }
-    single { Market(get(), get()) }
+    single { Grove(get(), get()) }
     single { GatherPlayerInfo() }
     single { PlayerUnderTest(get()) }
 
     single {
-        MarketStacks(
+        GroveStacks(
             cardManager = get(),
             gameCardIDsFactory = get(),
             dieFactory = get()
@@ -200,30 +191,26 @@ val gameModule: Module = module {
 
     single {
         PlayerTurn(
-            get(), get(), get(), get(),
-            get(), get(), get(), get()
+            get(), get(), get(),
+            get(), get(), get()
         )
     }
 
-    single {
-        PlayerRound(
-            get(), get(),
-            get(), get()
-        )
-    }
-
+    single { PlayerRound(get(), get()) }
     single { DieCost() }
-    single { HandleDeliverDamage(get()) }
+    single { HandleDeliverDamage(get(), get()) }
     single { HandleCleanup() }
-    single { HandleDrawEffect(get(), get(), get()) }
     single { HandleAbsorbDamage(get()) }
-    single { HandleMarketAcquisition(get(), get(), get()) }
-    single { HandleBattleEffects(get(), get(), get()) }
-    single { HandlePassOrPlay() }
-    single { HandleOpponentEffects(get(), get(), get()) }
-    single { HandleGetTarget(get()) }
+    single { HandleGroveAcquisition(get(), get(), get()) }
+    single { HandleGetTarget() }
     single { HandleDieUpgrade(get(), get(), get()) }
     single { HandleLimitedDieUpgrade(get()) }
+    single {
+        HandleCardEffect(
+            get(), get(), get(), get(), get(),
+            get(), get(), get(), get(), get()
+        )
+    }
     single { SelectBestDie(get(), get(), get()) }
     single { SelectCardToRetain(get()) }
     single { SelectDieToReroll() }
@@ -237,8 +224,8 @@ val gameModule: Module = module {
     single { ApplyEffects() }
     single { ApplyCost(get()) }
     single { CombinationGenerator(get()) }
-    single { PlayerReadyForBattlePhase(get()) }
 
+    single { CardsEffectsProcessor(get()) }
     single { CardEffectsProcessor(get(), get()) }
     single { CardEffectProcessor(get()) }
     single { EvaluateBestDiePurchase(get()) }
@@ -246,11 +233,9 @@ val gameModule: Module = module {
     single { EvaluateSimpleCost(get()) }
 
     single { DecisionBestCardPurchaseCoreStrategy(get()) }
-    single { PurchaseCardEvaluator(get()) }
-    single { PurchaseDieEvaluator(get(), get()) }
-    single { PurchaseItem(get(), get(), get(), get(), get(), get()) }
-
-    single { HandleLocalCardEffect(get(), get(), get(), get(), get(), get()) }
+    single { AcquireCardEvaluator(get()) }
+    single { AcquireDieEvaluator(get(), get()) }
+    single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
 
     single {
         ShouldProcessMatchEffect(

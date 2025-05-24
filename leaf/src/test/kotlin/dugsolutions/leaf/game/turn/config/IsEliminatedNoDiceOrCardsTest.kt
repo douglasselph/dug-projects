@@ -18,10 +18,11 @@ class IsEliminatedNoDiceOrCardsTest {
         private const val PLAYER_NAME = "Test Player"
     }
 
-    private lateinit var isEliminated: IsEliminatedNoDiceOrCards
     private lateinit var player: PlayerTD
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: RandomizerTD
+
+    private lateinit var SUT: IsEliminatedNoDiceOrCards
 
     @BeforeEach
     fun setup() {
@@ -33,7 +34,7 @@ class IsEliminatedNoDiceOrCardsTest {
         player = PlayerTD(PLAYER_NAME, PLAYER_ID)
         
         // Create the handler
-        isEliminated = IsEliminatedNoDiceOrCards()
+        SUT = IsEliminatedNoDiceOrCards()
     }
     
     private fun setupPlayerWithCardsAndDice(cardCount: Int, diceCount: Int) {
@@ -66,7 +67,7 @@ class IsEliminatedNoDiceOrCardsTest {
         setupPlayerWithCardsAndDice(0, 0)
         
         // Act
-        val result = isEliminated(player)
+        val result = SUT(player)
         
         // Assert
         assertTrue(result, "Player with no cards and no dice should be eliminated")
@@ -78,7 +79,7 @@ class IsEliminatedNoDiceOrCardsTest {
         setupPlayerWithCardsAndDice(0, 3)
         
         // Act
-        val result = isEliminated(player)
+        val result = SUT(player)
         
         // Assert
         assertFalse(result, "Player with no cards but with dice should NOT be eliminated")
@@ -90,7 +91,7 @@ class IsEliminatedNoDiceOrCardsTest {
         setupPlayerWithCardsAndDice(2, 0)
         
         // Act
-        val result = isEliminated(player)
+        val result = SUT(player)
         
         // Assert
         assertFalse(result, "Player with no dice but with cards should NOT be eliminated")
@@ -102,7 +103,7 @@ class IsEliminatedNoDiceOrCardsTest {
         setupPlayerWithCardsAndDice(2, 3)
         
         // Act
-        val result = isEliminated(player)
+        val result = SUT(player)
         
         // Assert
         assertFalse(result, "Player with both cards and dice should not be eliminated")
@@ -114,7 +115,7 @@ class IsEliminatedNoDiceOrCardsTest {
         setupPlayerWithCardsAndDice(3, 5)
         
         // Act
-        val result = isEliminated(player)
+        val result = SUT(player)
         
         // Assert
         assertFalse(result, "Player with many cards and dice should not be eliminated")

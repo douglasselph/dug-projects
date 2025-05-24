@@ -116,8 +116,13 @@
             "required_for": ["game logic", "card effects", "player interactions"]
         },
         "card_definitions": {
-            "file": "data/CardList.csv",
+            "file": "data/CardList-all.csv",
             "description": "Card Almanac - definitive reference for all cards, their attributes, and effects",
+            "required_for": ["card implementation", "market setup", "effect resolution"]
+        },
+        "testing_card_definitions": {
+            "file": "data/CardList-test.csv",
+            "description": "Card Almanac - definitive reference for all card used for integration tests, their attributes, and effects",
             "required_for": ["card implementation", "market setup", "effect resolution"]
         }
     },

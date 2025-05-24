@@ -12,8 +12,9 @@ import kotlin.test.assertNull
 
 class SelectCardToRetainTest {
 
-    private lateinit var SUT: SelectCardToRetain
     private lateinit var costScore: CostScore
+
+    private lateinit var SUT: SelectCardToRetain
 
     // Using FakeCards instead of mocks
     private val fakeSeedling = FakeCards.fakeSeedling       // SEEDLING type

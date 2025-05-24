@@ -2,7 +2,7 @@ package dugsolutions.leaf.game.turn.local
 
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.effect.AppliedEffect
+import dugsolutions.leaf.player.domain.AppliedEffect
 
 class CardIsFree {
 

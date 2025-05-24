@@ -4,11 +4,12 @@ import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.player.decisions.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.domain.AppliedEffect
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,23 +23,24 @@ class CardEffectProcessorTest {
         private const val TEST_VALUE = 3
     }
 
-    private lateinit var SUT: CardEffectProcessor
     private lateinit var mockShouldProcessMatchEffect: ShouldProcessMatchEffect
     private lateinit var mockPlayer: Player
     private lateinit var mockCard: GameCard
 
+    private lateinit var SUT: CardEffectProcessor
+
     @BeforeEach
     fun setup() {
-        mockShouldProcessMatchEffect = mockk()
-        mockPlayer = mockk()
-        mockCard = mockk {
+        mockShouldProcessMatchEffect = mockk(relaxed = true)
+        mockPlayer = mockk(relaxed = true)
+        mockCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
         }
         SUT = CardEffectProcessor(mockShouldProcessMatchEffect)
-        // Set up removeCardFromHand for tests that need it
+
         every { mockPlayer.removeCardFromHand(any()) } returns true
         every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns false
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns false
+        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
     }
 
     @Test
@@ -49,7 +51,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns null
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(emptyList(), result)
@@ -67,7 +69,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns null
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(1, result.size)
@@ -89,7 +91,7 @@ class CardEffectProcessorTest {
         every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns true
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(2, result.size)
@@ -111,7 +113,7 @@ class CardEffectProcessorTest {
         every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns false
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(1, result.size)
@@ -129,17 +131,16 @@ class CardEffectProcessorTest {
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns CardEffect.DISCARD
         every { mockCard.trashValue } returns 1
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns true
+        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(2, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
         assertTrue(result[1] is AppliedEffect.Discard)
-        assertEquals(CARD_ID_1, (result[1] as AppliedEffect.Discard).trashAfterUse)
-        
+
         // Verify card IS removed from hand for trash effects
         verify(exactly = 1) { mockPlayer.removeCardFromHand(CARD_ID_1) }
     }
@@ -154,18 +155,17 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns CardEffect.DISCARD
         every { mockCard.trashValue } returns 1
         every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns true
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns true
+        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(3, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
         assertTrue(result[1] is AppliedEffect.DrawDice)
         assertTrue(result[2] is AppliedEffect.Discard)
-        assertEquals(CARD_ID_1, (result[2] as AppliedEffect.Discard).trashAfterUse)
-        
+
         // Verify card IS removed from hand for trash effects
         verify(exactly = 1) { mockPlayer.removeCardFromHand(CARD_ID_1) }
     }
@@ -180,7 +180,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns null
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(1, result.size)
@@ -216,30 +216,11 @@ class CardEffectProcessorTest {
             CardEffect.UPGRADE_ANY_RETAIN -> assertTrue(appliedEffect is AppliedEffect.UpgradeDie)
             CardEffect.UPGRADE_ANY -> assertTrue(appliedEffect is AppliedEffect.UpgradeDie)
             CardEffect.UPGRADE_D4_D6 -> assertTrue(appliedEffect is AppliedEffect.UpgradeDie)
-            CardEffect.THORN -> assertTrue(appliedEffect is AppliedEffect.ThornEffect)
             CardEffect.DEFLECT -> assertTrue(appliedEffect is AppliedEffect.DeflectDamage)
             CardEffect.REUSE_CARD -> assertTrue(appliedEffect is AppliedEffect.Reuse)
             CardEffect.REPLAY_VINE -> assertTrue(appliedEffect is AppliedEffect.Replay)
             else -> { /* Just skip any effect types not explicitly handled */ }
         }
-    }
-    
-    @Test
-    fun processCardEffect_withThornEffect_returnsCorrectThornValue() {
-        // Arrange
-        every { mockCard.primaryEffect } returns CardEffect.THORN
-        every { mockCard.primaryValue } returns TEST_VALUE
-        every { mockCard.matchEffect } returns null
-        every { mockCard.trashEffect } returns null
-
-        // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
-
-        // Assert
-        assertEquals(1, result.size)
-        assertTrue(result[0] is AppliedEffect.ThornEffect)
-        assertEquals(TEST_VALUE, (result[0] as AppliedEffect.ThornEffect).damage)
-        assertNull((result[0] as AppliedEffect.ThornEffect).trashAfterUse)
     }
     
     @Test
@@ -251,7 +232,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns null
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(1, result.size)
@@ -259,7 +240,6 @@ class CardEffectProcessorTest {
         val drawCards = result[0] as AppliedEffect.DrawCards
         assertEquals(TEST_VALUE, drawCards.count)
         assertTrue(drawCards.fromCompost)
-        assertNull(drawCards.trashAfterUse)
     }
     
     @Test
@@ -271,7 +251,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns null
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(1, result.size)
@@ -280,30 +260,28 @@ class CardEffectProcessorTest {
         assertEquals(FlourishType.CANOPY, marketBenefit.type)
         assertEquals(0, marketBenefit.costReduction)
         assertTrue(marketBenefit.isFree)
-        assertNull(marketBenefit.trashAfterUse)
     }
     
     @Test
     fun processCardEffect_withTrashEffect_setsTrashAfterUseCorrectly() {
         // Arrange
-        every { mockCard.primaryEffect } returns CardEffect.THORN
+        every { mockCard.primaryEffect } returns CardEffect.UPGRADE_ANY
         every { mockCard.primaryValue } returns TEST_VALUE
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns CardEffect.DRAW_CARD
         every { mockCard.trashValue } returns TEST_VALUE
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns true
+        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
-        val result = SUT.processCardEffect(mockCard, mockPlayer)
+        val result = SUT(mockCard, mockPlayer)
 
         // Assert
         assertEquals(2, result.size)
-        assertTrue(result[0] is AppliedEffect.ThornEffect)
+        assertTrue(result[0] is AppliedEffect.UpgradeDie)
         assertTrue(result[1] is AppliedEffect.DrawCards)
         val drawCards = result[1] as AppliedEffect.DrawCards
         assertEquals(TEST_VALUE, drawCards.count)
-        assertEquals(CARD_ID_1, drawCards.trashAfterUse)
-        
+
         // Verify card IS removed from hand for trash effects
         verify(exactly = 1) { mockPlayer.removeCardFromHand(CARD_ID_1) }
     }

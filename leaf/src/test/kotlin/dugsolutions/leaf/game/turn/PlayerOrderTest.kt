@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
  */
 class PlayerOrderTest {
 
-    private lateinit var SUT: PlayerOrder
     private val randomizer = RandomizerTD()
     private val sampleDie = SampleDie(randomizer)
     private val tdPlayer1 = PlayerTD(1)
@@ -28,6 +27,7 @@ class PlayerOrderTest {
     private val tdPlayer4 = PlayerTD(4)
     private lateinit var mockGameChronicle: GameChronicle
 
+    private lateinit var SUT: PlayerOrder
 
     private val d6: Die
         get() = sampleDie.d6
@@ -48,7 +48,7 @@ class PlayerOrderTest {
     @BeforeEach
     fun setup() {
         // Initialize random components
-        mockGameChronicle = mockk()
+        mockGameChronicle = mockk(relaxed = true)
         SUT = PlayerOrder(mockGameChronicle)
         
         // Mock the chronicle
@@ -133,7 +133,14 @@ class PlayerOrderTest {
         setupDiceInHand(tdPlayer3, player3Dice)
         setupDiceInHand(tdPlayer4, player4Dice)
 
-        randomizer.setValues(listOf(4, 2, 5, 1))
+        randomizer.setValues(
+            listOf(
+                4, // Tie break#1.1 -> player2
+                2, // Tie break#1.2 -> player4
+                5, // Tie break#2.1 -> player1
+                1  // Tie break#2.2 -> player3
+            )
+        )
 
         // Act
         val result = SUT(listOf(tdPlayer1, tdPlayer2, tdPlayer3, tdPlayer4))
@@ -141,10 +148,10 @@ class PlayerOrderTest {
         // Assert
         // High group (8 pips): Player2, Player4
         // Low group (6 pips): Player3 (closest to highest), Player1
-        assertEquals(tdPlayer3, result[0]) // 8 pips, highest after reroll
-        assertEquals(tdPlayer1, result[1]) // 8 pips
-        assertEquals(tdPlayer2, result[2]) // 6 pips, closest to highest player
-        assertEquals(tdPlayer4, result[3]) // 6 pips
+        assertEquals(tdPlayer1, result[0]) // 5 pips, highest after reroll
+        assertEquals(tdPlayer2, result[1]) // 4 pips
+        assertEquals(tdPlayer4, result[2]) // 2 pips
+        assertEquals(tdPlayer3, result[3]) // 1 pips
     }
 
     @Test

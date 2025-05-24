@@ -1,8 +1,6 @@
 package dugsolutions.leaf.player.decisions
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
 import io.mockk.every
@@ -13,24 +11,25 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class DecisionBestCardPurchaseCoreStrategyTest {
-    private lateinit var player: Player
-    private lateinit var SUT: DecisionBestCardPurchaseCoreStrategy
 
-    // Test cards with different flourish types
+    private lateinit var player: Player
+
     private lateinit var rootCard1: GameCard
     private lateinit var rootCard2: GameCard
     private lateinit var canopyCard1: GameCard
     private lateinit var canopyCard2: GameCard
     private lateinit var vineCard1: GameCard
     private lateinit var vineCard2: GameCard
-    private lateinit var bloomCard1: GameCard
-    private lateinit var bloomCard2: GameCard
+    private lateinit var flowerCard1: GameCard
+    private lateinit var flowerCard2: GameCard
+
+    private lateinit var SUT: DecisionBestCardPurchaseCoreStrategy
 
     @BeforeEach
     fun setup() {
         // Setup mock player
         player = mockk(relaxed = true)
-        every { player.allCards } returns emptyList()
+        every { player.allCardsInDeck } returns emptyList()
         
         // Create the strategy
         SUT = DecisionBestCardPurchaseCoreStrategy(player)
@@ -42,8 +41,8 @@ class DecisionBestCardPurchaseCoreStrategyTest {
         canopyCard2 = FakeCards.fakeCanopy.copy(id = 4)
         vineCard1 = FakeCards.fakeVine.copy(id = 5)
         vineCard2 = FakeCards.fakeVine.copy(id = 6)
-        bloomCard1 = FakeCards.fakeBloom.copy(id = 7)
-        bloomCard2 = FakeCards.fakeBloom.copy(id = 8)
+        flowerCard1 = FakeCards.fakeFlower.copy(id = 7)
+        flowerCard2 = FakeCards.fakeFlower2.copy(id = 8)
     }
 
     @Test
@@ -88,7 +87,7 @@ class DecisionBestCardPurchaseCoreStrategyTest {
     fun invoke_whenSameEvaluationDifferentCounts_returnsLeastOwned() {
         // Arrange
         val cards = listOf(rootCard1, rootCard2)
-        every { player.allCards } returns listOf(rootCard1, rootCard1) // rootCard1 appears twice
+        every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // rootCard1 appears twice
         
         // Set same evaluation for both cards
         SUT.evaluationMap[rootCard1.id] = DecisionBestCardPurchaseCoreStrategy.CountsInHand(
@@ -108,7 +107,7 @@ class DecisionBestCardPurchaseCoreStrategyTest {
     @Test
     fun invoke_whenSameEvaluationAndCount_returnsByFlourishTypePriority() {
         // Arrange
-        val cards = listOf(rootCard1, canopyCard1, vineCard1, bloomCard1)
+        val cards = listOf(rootCard1, canopyCard1, vineCard1, flowerCard1)
         
         // Set same evaluation and count for all cards
         cards.forEach { card ->
@@ -141,7 +140,7 @@ class DecisionBestCardPurchaseCoreStrategyTest {
     fun invoke_whenEvaluationThresholds_usesCorrectThreshold() {
         // Arrange
         val cards = listOf(rootCard1)
-        every { player.allCards } returns listOf(rootCard1, rootCard1) // count = 2
+        every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // count = 2
         
         // Set evaluation thresholds
         SUT.evaluationMap[rootCard1.id] = DecisionBestCardPurchaseCoreStrategy.CountsInHand(

@@ -78,6 +78,16 @@ class Dice(dice: List<Die> = emptyList()) {
         return _dice.any { it.equals(die) }
     }
 
+    /**
+     * Returns true if any die in the collection satisfies the given predicate.
+     *
+     * @param predicate The predicate to test against each die
+     * @return true if any die satisfies the predicate, false otherwise
+     */
+    fun any(predicate: (Die) -> Boolean): Boolean {
+        return _dice.any(predicate)
+    }
+
     // Add two Dice collections together
     operator fun plus(other: Dice): Dice = Dice(_dice + other.dice)
 

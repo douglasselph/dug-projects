@@ -2,9 +2,8 @@ package dugsolutions.leaf.game.turn.select
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.game.purchase.ManagePurchasedFloralTypes
-import dugsolutions.leaf.market.Market
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.game.acquire.ManageAcquiredFloralTypes
+import dugsolutions.leaf.grove.Grove
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -14,75 +13,62 @@ import kotlin.test.assertTrue
 
 class SelectPossibleCardsTest {
 
-    companion object {
-        private const val PLAYER_ID = 1
-        private const val PLAYER_NAME = "Test Player"
-    }
+    private lateinit var grove: Grove
+    private lateinit var manageAcquiredFloralTypes: ManageAcquiredFloralTypes
 
     private lateinit var SUT: SelectPossibleCards
-
-    private lateinit var market: Market
-    private lateinit var managePurchasedFloralTypes: ManagePurchasedFloralTypes
-    private lateinit var player: Player
 
     @BeforeEach
     fun setup() {
         // Create mock dependencies
-        market = mockk(relaxed = true)
-        managePurchasedFloralTypes = mockk(relaxed = true)
+        grove = mockk(relaxed = true)
+        manageAcquiredFloralTypes = mockk(relaxed = true)
         
         // Create SelectPossibleCards instance
-        SUT = SelectPossibleCards(market, managePurchasedFloralTypes)
-        
-        // Create mock player
-        player = mockk(relaxed = true)
-        every { player.id } returns PLAYER_ID
-        every { player.name } returns PLAYER_NAME
+        SUT = SelectPossibleCards(grove, manageAcquiredFloralTypes)
     }
 
     @Test
     fun invoke_whenNoCardsPurchasedAndEnoughPips_returnsAllEligibleCards() {
         // Arrange
         val rootCard = FakeCards.fakeRoot
-        val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
-        val topCards = listOf(rootCard, bloomCard, seedlingCard)
+        val flowerCard = FakeCards.fakeFlower
+        val vineCard = FakeCards.fakeVine
+        val topCards = listOf(rootCard, flowerCard, vineCard)
         
-        every { market.getTopShowingCards() } returns topCards
-        every { player.bloomCount } returns 0
-        every { managePurchasedFloralTypes.has(any()) } returns false
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(any()) } returns false
         
         // Act
-        val result = SUT(player)
+        val result = SUT()
         
         // Assert
         assertEquals(3, result.size)
         assertTrue(result.contains(rootCard))
-        assertTrue(result.contains(bloomCard))
-        assertTrue(result.contains(seedlingCard))
+        assertTrue(result.contains(flowerCard))
+        assertTrue(result.contains(vineCard))
     }
 
     @Test
     fun invoke_whenTypeAlreadyPurchased_excludesThatType() {
         // Arrange
         val rootCard = FakeCards.fakeRoot
-        val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
-        val topCards = listOf(rootCard, bloomCard, seedlingCard)
+        val flowerCard = FakeCards.fakeFlower
+        val vineCard = FakeCards.fakeVine
+        val topCards = listOf(rootCard, flowerCard, vineCard)
         
-        every { market.getTopShowingCards() } returns topCards
-        every { player.bloomCount } returns 0
-        every { managePurchasedFloralTypes.has(FlourishType.ROOT) } returns true
-        every { managePurchasedFloralTypes.has(FlourishType.BLOOM) } returns false
-        every { managePurchasedFloralTypes.has(FlourishType.SEEDLING) } returns false
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(FlourishType.ROOT) } returns true
+        every { manageAcquiredFloralTypes.has(FlourishType.FLOWER) } returns false
+        every { manageAcquiredFloralTypes.has(FlourishType.VINE) } returns false
         
         // Act
-        val result = SUT(player)
+        val result = SUT()
         
         // Assert
         assertEquals(2, result.size)
-        assertTrue(result.contains(bloomCard))
-        assertTrue(result.contains(seedlingCard))
+        assertTrue(result.contains(flowerCard))
+        assertTrue(result.contains(vineCard))
     }
 
     @Test
@@ -90,20 +76,40 @@ class SelectPossibleCardsTest {
         // Arrange
         val rootCard = FakeCards.fakeRoot
         val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
-        val topCards = listOf(rootCard, bloomCard, seedlingCard)
+        val vineCard = FakeCards.fakeVine
+        val topCards = listOf(rootCard, bloomCard, vineCard)
         
-        every { market.getTopShowingCards() } returns topCards
-        every { player.bloomCount } returns 2  // Max blooms reached
-        every { managePurchasedFloralTypes.has(any()) } returns false
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(any()) } returns false
         
         // Act
-        val result = SUT(player)
+        val result = SUT()
         
         // Assert
         assertEquals(2, result.size)
         assertTrue(result.contains(rootCard))
-        assertTrue(result.contains(seedlingCard))
+        assertTrue(result.contains(vineCard))
+    }
+
+    @Test
+    fun invoke_withSeedlingsAndBlooms_ignores() {
+        // Arrange
+        val rootCard = FakeCards.fakeRoot
+        val bloomCard = FakeCards.fakeBloom
+        val seedlingCard = FakeCards.fakeSeedling
+        val canopyCard = FakeCards.fakeCanopy
+        val topCards = listOf(rootCard, bloomCard, seedlingCard, canopyCard)
+
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(any()) } returns false
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        assertEquals(2, result.size)
+        assertTrue(result.contains(rootCard))
+        assertTrue(result.contains(canopyCard))
     }
 
     @Test
@@ -113,22 +119,22 @@ class SelectPossibleCardsTest {
         val bloomCard = FakeCards.fakeBloom
         val seedlingCard = FakeCards.fakeSeedling
         val canopyCard = FakeCards.fakeCanopy
-        val topCards = listOf(rootCard, bloomCard, seedlingCard, canopyCard)
+        val vineCard = FakeCards.fakeVine
+        val flowerCard = FakeCards.fakeFlower2
+        val topCards = listOf(rootCard, bloomCard, seedlingCard, canopyCard, flowerCard, vineCard)
         
-        every { market.getTopShowingCards() } returns topCards
-        every { player.bloomCount } returns 2  // Max blooms reached
-        every { managePurchasedFloralTypes.has(FlourishType.ROOT) } returns false
-        every { managePurchasedFloralTypes.has(FlourishType.BLOOM) } returns false
-        every { managePurchasedFloralTypes.has(FlourishType.SEEDLING) } returns true
-        every { managePurchasedFloralTypes.has(FlourishType.CANOPY) } returns false
-        
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(any()) } returns false
+        every { manageAcquiredFloralTypes.has(FlourishType.CANOPY) } returns true
+
         // Act
-        val result = SUT(player)
+        val result = SUT()
         
         // Assert
-        assertEquals(2, result.size)
+        assertEquals(3, result.size)
         assertTrue(result.contains(rootCard))
-        assertTrue(result.contains(canopyCard))
+        assertTrue(result.contains(vineCard))
+        assertTrue(result.contains(flowerCard))
     }
 
     @Test
@@ -138,13 +144,12 @@ class SelectPossibleCardsTest {
         val seedlingCard = FakeCards.fakeSeedling
         val topCards = listOf(bloomCard, seedlingCard)
         
-        every { market.getTopShowingCards() } returns topCards
-        every { player.bloomCount } returns 2  // Max blooms reached
-        every { managePurchasedFloralTypes.has(FlourishType.BLOOM) } returns false
-        every { managePurchasedFloralTypes.has(FlourishType.SEEDLING) } returns true
+        every { grove.getTopShowingCards() } returns topCards
+        every { manageAcquiredFloralTypes.has(FlourishType.FLOWER) } returns false
+        every { manageAcquiredFloralTypes.has(FlourishType.SEEDLING) } returns true
         
         // Act
-        val result = SUT(player)
+        val result = SUT()
         
         // Assert
         assertTrue(result.isEmpty())

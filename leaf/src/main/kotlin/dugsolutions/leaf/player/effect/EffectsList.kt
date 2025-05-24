@@ -1,5 +1,7 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.player.domain.AppliedEffect
+
 class EffectsList : Iterable<AppliedEffect> {
     private val effects = mutableListOf<AppliedEffect>()
 

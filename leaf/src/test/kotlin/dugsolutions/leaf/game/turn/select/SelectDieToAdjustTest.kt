@@ -13,12 +13,13 @@ import kotlin.test.assertNull
 
 class SelectDieToAdjustTest {
 
-    private lateinit var SUT: SelectDieToAdjust
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: Randomizer
     private lateinit var d4: Die
     private lateinit var d6: Die
     private lateinit var d8: Die
+
+    private lateinit var SUT: SelectDieToAdjust
 
     @BeforeEach
     fun setup() {

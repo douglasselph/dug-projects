@@ -18,10 +18,11 @@ class IsEliminatedNoDiceNorCardsTest {
         private const val PLAYER_NAME = "Test Player"
     }
 
-    private lateinit var SUT: IsEliminatedNoDiceNorCards
     private lateinit var player: PlayerTD
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: RandomizerTD
+
+    private lateinit var SUT: IsEliminatedNoDiceNorCards
 
     @BeforeEach
     fun setup() {

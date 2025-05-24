@@ -15,8 +15,6 @@ import kotlin.test.assertNull
 
 class SelectDieToMaxTest {
 
-    private lateinit var SUT: SelectDieToMax
-
     private lateinit var mockBloomCard: GameCard
     private lateinit var mockRootCard: GameCard
     private lateinit var dieFactory: DieFactory
@@ -24,6 +22,8 @@ class SelectDieToMaxTest {
     private lateinit var d4: Die
     private lateinit var d6: Die
     private lateinit var d8: Die
+
+    private lateinit var SUT: SelectDieToMax
 
     @BeforeEach
     fun setup() {

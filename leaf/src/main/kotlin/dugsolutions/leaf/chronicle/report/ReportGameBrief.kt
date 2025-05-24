@@ -1,6 +1,6 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.player.components.PlayersScoreData
+import dugsolutions.leaf.player.domain.PlayersScoreData
 
 class ReportGameBrief(
     private val reportPlayer: ReportPlayer

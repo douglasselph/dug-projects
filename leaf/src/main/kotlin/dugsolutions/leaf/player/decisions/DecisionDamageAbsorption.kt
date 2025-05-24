@@ -1,13 +1,13 @@
 package dugsolutions.leaf.player.decisions
 
-import dugsolutions.leaf.components.CardID
+import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.player.Player
 
 interface DecisionDamageAbsorption {
 
     data class Result(
-        val cardIds: List<CardID>,
+        val cards: List<GameCard>,
+        val floralCards: List<GameCard>,
         val dice: List<Die>
     )
 

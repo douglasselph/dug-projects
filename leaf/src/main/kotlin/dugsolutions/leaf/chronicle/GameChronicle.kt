@@ -6,9 +6,10 @@ import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.game.domain.GameTurn
-import dugsolutions.leaf.game.purchase.domain.Combination
+import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.PlayersScoreData
+import dugsolutions.leaf.player.domain.ExtendedHandItem
+import dugsolutions.leaf.player.domain.PlayersScoreData
 
 class GameChronicle(
     private val gameTurn: GameTurn,
@@ -22,9 +23,10 @@ class GameChronicle(
         data class ADD_TO_THORN(val player: Player, val amount: Int): Moment()
 
         data class ADD_TO_TOTAL(val player: Player, val amount: Int): Moment()
+        data class ADORN(val player: Player, val cardId: CardID): Moment()
         data class DELIVER_DAMAGE(
-            val defenders: List<Player>, val damageToDefender: Int,
-            val attackers: List<Player>, val damageToAttacker: Int
+            val defender: Player, val damageToDefender: Int,
+            val attacker: Player, val damageToAttacker: Int
         ) : Moment()
         data class DRAW_CARD(val player: Player, val cardId: CardID) : Moment()
         data class DRAW_DIE(val player: Player, val die: Die): Moment()
@@ -37,7 +39,7 @@ class GameChronicle(
         data class EVENT_BATTLE(val result: PlayersScoreData): Moment()
         data class FINISHED(val result: PlayersScoreData) : Moment()
 
-        data class ORDERING(val players: List<Player>, val hadReroll: Boolean) : Moment()
+        data class ORDERING(val players: List<Player>, val numberOfRerolls: Int) : Moment()
         data class PLAY_CARD(val player: Player, val card: GameCard): Moment()
 
         data class REROLL(val player: Player, val die: Die): Moment()
@@ -45,7 +47,7 @@ class GameChronicle(
         data class RETAIN_DIE(val player: Player, val die: Die): Moment()
         data class REUSE_CARD(val player: Player, val card: GameCard): Moment()
         data class SET_TO_MAX(val player: Player) : Moment()
-        data class TRASH_CARD(val player: Player, val cardId: CardID): Moment()
+        data class TRASH_CARD(val player: Player, val card: GameCard, val floralArray: Boolean = false): Moment()
         data class TRASH_DIE(val player: Player, val die: Die): Moment()
         data class UPGRADE_DIE(val player: Player, val die: Die): Moment()
 

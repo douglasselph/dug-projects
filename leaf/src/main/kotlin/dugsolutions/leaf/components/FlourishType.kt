@@ -6,5 +6,6 @@ enum class FlourishType {
     ROOT,
     CANOPY,
     VINE,
+    FLOWER,
     BLOOM
 } 

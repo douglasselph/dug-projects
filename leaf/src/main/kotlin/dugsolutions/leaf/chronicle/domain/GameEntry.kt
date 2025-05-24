@@ -1,8 +1,9 @@
 package dugsolutions.leaf.chronicle.domain
 
 import dugsolutions.leaf.components.CardID
+import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieValues
-import dugsolutions.leaf.game.purchase.domain.Combination
+import dugsolutions.leaf.game.acquire.domain.Combination
 
 /**
  * Base class for all chronicle entries.
@@ -55,6 +56,12 @@ data class AddToTotalEntry(
     override val playerId: Int,
     override val turn: Int,
     val amount: Int
+) : ChronicleEntry(playerId, turn)
+
+data class AdornEntry(
+    override val playerId: Int,
+    override val turn: Int,
+    val cardId: CardID
 ) : ChronicleEntry(playerId, turn)
 
 data class DeliverDamageEntry(
@@ -143,7 +150,8 @@ data class OrderingEntry(
     override val playerId: Int = 0,
     override val turn: Int,
     val playerIdOrder: List<Int>,
-    val reports: List<String>
+    val reports: List<String>,
+    val numberRerolls: Int = 0
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
         val buffer = StringBuffer()
@@ -195,7 +203,7 @@ data class ReuseCardEntry(
 data class TrashCardEntry(
     override val playerId: Int,
     override val turn: Int,
-    val cardId: CardID
+    val card: GameCard
 ) : ChronicleEntry(playerId, turn)
 
 data class TrashDieEntry(

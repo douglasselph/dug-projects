@@ -1,194 +1,150 @@
 Copyright © 2025 Douglas Selph. All rights reserved.
+# Leaf & Let Die - Game Rules
 
-# Leaf to Legend: Game Rules
+## Overview
 
-## Theme & Overview
-In Leaf & Let Die, players become Gnome Gardeners cultivating vibrant gardens that nurture powerful Plant Creatures. Each garden is a thriving ecosystem where fruits, herbs, seeds, flowers, and roots interact to create a formidable botanical force. Players must master both cultivation and combat to emerge victorious as their colony's guardian.
+In **Leaf & Let Die**, players assume the roles of **Gnome Gardeners**, cultivating vibrant gardens filled with diverse botanical resources that will empower their central **Plant Creature**. Each garden is more than just a single plant—it's a thriving ecosystem where seeds, roots, and flowers interact, enriching the soil and environment to nurture a formidable Plant Creature.
 
-## Core Game Flow
-The game unfolds across two distinct phases:
-1. **Cultivation Phase**: Players develop their gardens by acquiring cards and dice from the Garden Market
-2. **Battle Phase** (The Tangle): Plant Creatures engage in tactical combat using their cultivated resources
+Gameplay unfolds across two distinct yet interconnected phases:
+
+* **Cultivation Phase**: Players grow their gardens using dice and cards.
+* **Battle Phase (Tangle Phase)**: Players command their Plant Creatures in battle.
+
+The goal is to be the last player standing after all others have been eliminated.
+
+---
 
 ## Components
 
-### Cards
-- Different Flourish Types:
-  - Seedling (Starting cards)
-  - Root
-  - Canopy
-  - Vine
-  - Bloom
-  - Special categories (Soil, Blight)
+* **Cultivation Cards**
+* **Dice**: D4, D6, D8, D10, D12, D20
+* **Placards**:
 
-### Card Attributes
-- Name
-- Flourish Type
-- Resilience (damage absorption value)
-- Cost (in pips)
-- Primary Effect
-- Match Effect (triggered by specific conditions)
-- Trash Effect (final effect when card is eliminated)
+  * Garden Market Supply Placards
+  * Player Garden Mat:
 
-### Dice
-- Available types: D4, D6, D8, D10, D12, D20
-- Each die's cost equals its number of sides
-- Represents both cultivation resources and combat power
-- Resilience value equals number of sides
+    * Supply (left)
+    * Planting Lab/Tangle Field (center)
+    * Compost Bin (right)
+* **Card Types**:
 
-### Player Components
-- Player Garden Mat with three sections:
-  1. Supply (Left) - Draw pile for cards and dice
-  2. Planting Lab/Tangle Field (Center) - Active play area
-     - Side 1: Planting Lab (Cultivation Phase)
-     - Side 2: Tangle Field (Battle Phase)
-  3. Compost Bin (Right) - Discard pile
+  * Root
+  * Canopy
+  * Vine
+  * Flower (linked to Bloom cards)
 
-## Game Setup
+---
 
-### Garden Market Setup
-1. **Root, Canopy, and Vine Sections**
-   - Two face-up stacks per type
-   - 8 identical cards per stack
-   - Only two different cards available per type
+## Game Phases
 
-2. **Miscellaneous Stack**
-   - Mixed Root, Canopy, and Vine cards
-   - Two different kinds of each type (6 unique cards total)
-   - Top card available for purchase
-   - May discard top card once per turn
+### Phase 1: Cultivation Phase
 
-3. **Bloom Section**
-   - 3 Bloom card stacks
-   - (Number of players + 1) cards per stack
-   - One type per stack
-   - Includes Dormancy cards
+#### Game Setup
 
-4. **Bonus Dice Placement** (based on player count)
-   - 2 Players: D20, D12
-   - 3 Players: Add D10
-   - 4 Players: Add D8
-   - 5 Players: Add D6
-   - 6 Players: Add D4
+The Cultivation Grove is the central play area where players acquire Cultivation Cards and dice to develop their Plant Creature. The market is divided into three sections:
 
-### Player Setup
-1. Each player receives:
-   - Player Garden Mat
-   - 2 D4s and 2 D6s
-   - Starting deck of Seedling cards
+Root, Canopy, and Vine Sections
+Each of these three Flourish Types has two face-up stacks of available cards. Each stack contains three times the number of players in identical cards of a specific kind from its Flourish Type. This means you'll have two different kinds of cards per Flourish Type available in these face-up stacks, allowing players to focus on specific cultivation strategies.
 
-2. Initial Setup:
-   - Roll both D4s into Planting Lab
-   - Draw 2 cards
-   - First player determined by highest D4 roll (D12 tiebreaker)
+Wild Growth Section
+This stack contains a mix of Root, Canopy, and Vine cards, shuffled together. It consists of two cards per player for each of the three Flourish Types, providing a third option for each type. The top card of this stack is always available for purchase, and on a player's turn, they may purchase the top card or discard it once to reveal a new option.
 
-## Phase 1: The Cultivation Phase
+Bloom Potential Section
+Set up three Bloom displays, each representing a different way your Plant Creature might develop. Each display contains multiple Bloom cards placed face-up, along with a stack of Flower cards available for purchase. The number of Flower cards varies with player count:
+* 2 players: 4 Flower cards per type
+* 3 players: 5 Flower cards per type
+* 4 players: 6 Flower cards per type
 
-### Turn Structure
-1. **Use Dice & Play Cards**
-   - Use Planting Lab dice for purchases
-   - Play any number of cards from hand
+Player Setup
+Each player receives:
 
-2. **Acquire New Cards & Dice**
-   - Purchase Cultivation Cards using dice pips
-   - Buy new dice (cost = number of sides)
-   - Limited to one card per Flourish Type per turn unless modified by effects
+  * **Player Garden Mat**
+  * **2 D4s (rolled to Planting Lab)**
+  * **2 D6s (placed in Supply)**
+  * **Seedling deck**: Draw 2 into hand, 2 into Supply
 
-3. **Cleanup**
-   - Discard used components to Compost Bin
-   - Draw new hand (4 total items, any mix)
-   - Shuffle Compost into Supply if needed
+#### Chain Order
 
-### Special Rules
+* Determined by total rolled pip values (lowest to highest).
+* Ties: reroll or clockwise from highest.
+* No dice rolled = pip total of 0.
 
-#### Bloom Acquisition & Dormancy
-- Maximum 2 Bloom cards per player
-- Upon second Bloom, receive highest remaining Bonus Die
-- Dormancy triggered after each Bloom:
-  - Skip next turn
-  - After Dormancy, move all Compost to Supply
-  - Keep Dormancy card as Bloom counter
+#### Card Play
 
-#### Card Effect Clarifications
-- "Lowest die" means lowest-sided available
-- Die upgrades follow sequence (D4→D6→D8→D10→D12→D20)
-  - D12→D20 costs additional 8 pips
-- Deflection negates damage without component loss
-- Thorn damages attacker
-- Retained components:
-  - Set aside for next turn
-  - Don't count toward hand limit
-  - Dice retain current value
-- Reused components available immediately
-- Trash effects grant one final activation
+* Highest Chain Order plays first, then clockwise.
+* Players play 1 card or pass.
+* A player can only be targeted by one card at a time per round.
+* Passing ends further card play that round.
 
-## Phase 2: The Battle Phase (The Tangle)
+#### Card Acquisition
 
-### Phase Transition
-1. Flip Planting Lab to Tangle Field
-2. Remove Garden Market
-3. Return all Compost to Supply
-4. Shuffle decks
-5. Draw new hands (4 items)
-6. Roll drawn dice into Tangle Field
+During the Cultivation Phase, once all card plays have resolved, players may acquire cards and dice in Chain Order. This is when you can strengthen your Plant Creature by adding new capabilities to your garden.
 
-### Round Structure
-1. **Determine Chain Order**
-   - Ordered low to high by total pip value
-   - Ties broken by highest-sided Bonus Die
+When acquiring cards, you have three main options. First, you can add to your garden's foundation by acquiring Flourish Cards - these are the Root, Canopy, and Vine cards that form the basis of your Plant Creature's abilities. You may acquire up to one card of each Flourish Type per turn, spending rolled dice that match the card's cost. These cards go directly to your hand, ready to be played in future turns.
 
-2. **Play Cards**
-   - Bottom-up order
-   - Target adjacent chain positions only
-   - Middle positions may target up or down
+Second, you can nurture your Plant Creature's potential by acquiring Flower cards. These special cards represent your creature's developing capabilities and are placed in your Budding stack, a separate deck that tracks your Plant Creature's growth. You may acquire one Flower card per turn, again spending rolled dice matching its cost. These cards will later be shuffled into your main deck during the Battle Phase, allowing your Plant Creature to fully bloom.
 
-3. **Redetermine Chain Order**
-   - Recalculate based on modified dice values
-   - Same tiebreaker rules
+Finally, you can strengthen your cultivation techniques by acquiring new dice from the supply. To do this, spend pip totals equal to the die's number of sides - for example, spending 6 pips to acquire a D6. These new dice go to your hand, ready to be used in future turns.
 
-4. **Apply Damage**
-   - Bottom-up processing
-   - Damage = Difference in adjacent chain positions' totals
-   - Defender chooses damage absorption order
-   - Components lost even if not fully utilized
-   - Retained components immune to damage
-   - Damage limited to current hand
+When spending dice to acquire anything, you must use the full value of the die. You cannot split a die's value between multiple purchases. While card effects may modify these acquisition limits, you always have the option to acquire nothing on your turn if you prefer to save your resources.
 
-5. **Bonus Die Exchange**
-   - After damage resolution
-   - Current die to Neutral Nymph Pool
-   - Take die from pool (last player gives to bottom)
+---
 
-### Elimination
-Players are eliminated when they have either:
-- No cards remaining, OR
-- No dice remaining
+### Transition to Battle Phase
 
-## Victory
-Last player with both cards and dice remaining wins, becoming their colony's guardian.
+The game transitions to Battle Phase when any three stacks of cards are exhausted. This includes any combination of Root, Canopy, Vine, Wild Growth, or Flower stacks. Once this occurs, the current round completes, and then the transition process begins.
 
-### Turn Order
+During the transition, each player counts their collected Flower cards by type. Each player receives exactly two Blooms based on their Flower counts. If a player has Flowers of only one type, they receive two Blooms of that type. If they have Flowers of multiple types, they receive Blooms for their two highest Flower counts. In case of ties, such as having one Flower of each type, the player chooses which Blooms they want. A player must have at least one Flower of a type to receive its Bloom, and players who acquired no Flowers receive no Blooms.
 
-#### Initial Game Setup & Cultivation Phase
-1. **First Player Determination**
-   - Each player rolls their initial two D4 dice
-   - Player with lowest pip total goes first
-   - Ties are broken by rolling a D12 (higher roll wins)
-   - After first player is determined, play proceeds clockwise
+After the Bloom distribution is complete, players prepare their Plant Creatures for battle. This is when all their careful cultivation comes to fruition. Each player takes their entire deck of accumulated cards, including their collected Flower cards, and combines it with their newly acquired Bloom cards. This combined deck represents their fully developed Plant Creature, with the Flowers now ready to bloom into their full potential. The deck is then shuffled and placed in their Supply, along with all their dice.
 
-2. **Cultivation Phase Flow**
-   - Players take turns in clockwise order from first player
-   - Each player may make purchases or pass
-   - Phase continues until trigger conditions are met
+The Garden Market is removed, as the Cultivation Phase has ended. Each player flips their Planting Lab to become their Tangle Field, transforming their cultivation area into a battlefield. The dice that once represented cultivation techniques now become the energy and power of their Plant Creature in battle.
 
-#### Battle Phase
-1. **Chain Position Determination**
-   - Order is determined by total pip value (highest to lowest)
-   - Ties are broken by highest single die value
-   - Any remaining ties are broken by current chain position (lower position goes first)
-   - Example: Player A (total 12, highest die 8) goes before Player B (total 12, highest die 6)
+---
 
-2. **Chain Resolution**
-   - Combat resolves from bottom to top of chain
-   - Players may only target adjacent positions
-   - Middle positions may target up or down 
+### Phase 2: Battle Phase (Tangle Phase)
+
+#### Flowers and Blooms in Battle
+
+During the Battle Phase, Flowers and Blooms work together to create powerful effects. When you play a Flower card from your hand, you place it on your Flower Mantle - a special area that represents your Plant Creature's current bloom state. Unlike other cards, Flowers on your Mantle are not discarded during cleanup. They remain there until used by a Bloom card.
+
+Bloom cards are powerful abilities that draw their strength from the Flowers on your Mantle. When you play a Bloom card, you can discard Flowers from your Mantle to enhance its effect. Matching Flowers (of the same type as the Bloom) count one-for-one, while non-matching Flowers count two-for-one. For example, if a Bloom requires three Flower power, you could either discard three matching Flowers, or six non-matching Flowers, or any combination that adds up to the required power.
+
+After a Bloom card is played and its effect is resolved, it is discarded to your Compost pile. The Flowers used to power the Bloom are also discarded. Any remaining Flowers stay on your Mantle, ready to power future Bloom cards. This creates interesting strategic decisions - do you use your Flowers now for a smaller effect, or save them for a more powerful Bloom later?
+
+#### Applying Damage
+
+* Starting from lowest in Chain Order, players take damage from the next higher.
+* Highest player takes damage from the one below.
+* Damage = rolled pip total.
+
+#### Absorbing Damage
+
+* Use cards/dice from hand.
+* Cards absorb damage = Resilience value.
+* Dice absorb damage = number of sides.
+* All absorbing items are lost permanently.
+* Over-absorption still costs the item.
+* If unable to absorb all damage:
+
+  * Lose entire hand
+  * Flower Mantle cards move to Compost
+  * If used for absorption, Flower Mantle cards are lost permanently
+
+#### New Round
+
+* Discard hand (cards + dice) to Compost.
+* Draw 4 new items from Supply (any combo).
+* Roll dice.
+* When Supply is empty, reshuffle Compost into Supply.
+
+---
+
+## Victory Conditions
+
+* A player is eliminated if they have **no cards or no dice**.
+* The **last player remaining** wins the game.
+
+---
+
+Happy Cultivating, and may your garden grow strong enough to win the Leaf & Let Die showdown!

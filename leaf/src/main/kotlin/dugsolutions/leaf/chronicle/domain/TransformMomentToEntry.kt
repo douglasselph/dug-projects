@@ -62,6 +62,13 @@ class TransformMomentToEntry(
                     amount = moment.amount
                 )
 
+            is GameChronicle.Moment.ADORN ->
+                AdornEntry(
+                    playerId = moment.player.id,
+                    turn = gameTurn.turn,
+                    cardId = moment.cardId
+                )
+
             is GameChronicle.Moment.DELIVER_DAMAGE ->
                 DeliverDamageEntry(
                     playerId = 0,
@@ -145,7 +152,8 @@ class TransformMomentToEntry(
                     playerId = players.firstOrNull()?.id ?: 0, // Using first player as the actor
                     turn = gameTurn.turn,
                     playerIdOrder = players.map { it.id },
-                    reports = if (hadReroll) players.sortedBy { it.name }.map { reportPlayer(it) } else emptyList()
+                    reports = if (numberOfRerolls > 0) players.sortedBy { it.name }.map { reportPlayer(it) } else emptyList(),
+                    numberRerolls = numberOfRerolls
                 )
             }
 
@@ -197,7 +205,7 @@ class TransformMomentToEntry(
                 TrashCardEntry(
                     playerId = moment.player.id,
                     turn = gameTurn.turn,
-                    cardId = moment.cardId
+                    card = moment.card
                 )
 
             is GameChronicle.Moment.TRASH_DIE ->

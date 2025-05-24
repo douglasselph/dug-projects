@@ -5,17 +5,18 @@ data class GameCard(
     val name: String,
     val type: FlourishType,
     val resilience: Int,
+    val thorn: Int,
     val cost: Cost,
     val primaryEffect: CardEffect?,
     val primaryValue: Int,
     val matchWith: MatchWith,
     val matchEffect: CardEffect?,
     val matchValue: Int,
-    val  trashEffect: CardEffect?,
+    val trashEffect: CardEffect?,
     val trashValue: Int
 ) {
     override fun toString(): String {
-        return "GameCard(id=$id, name='$name', type=$type, resilience=$resilience, " +
+        return "GameCard(id=$id, name='$name', type=$type, resilience=$resilience, thorn=$thorn, " +
                "cost=[$cost], " +
                "primaryEffect=$primaryEffect, primaryValue=$primaryValue, " +
                "matchWith=$matchWith, matchEffect=$matchEffect, matchValue=$matchValue, " +
@@ -31,6 +32,7 @@ data class GameCard(
         if (name != other.name) return false
         if (type != other.type) return false
         if (resilience != other.resilience) return false
+        if (thorn != other.thorn) return false
         if (cost.elements != other.cost.elements) return false
         if (primaryEffect != other.primaryEffect) return false
         if (primaryValue != other.primaryValue) return false
@@ -47,6 +49,7 @@ data class GameCard(
         var result = name.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + resilience
+        result = 31 * result + thorn
         result = 31 * result + cost.elements.hashCode()
         result = 31 * result + (primaryEffect?.hashCode() ?: 0)
         result = 31 * result + primaryValue
@@ -57,5 +60,8 @@ data class GameCard(
         result = 31 * result + trashValue
         return result
     }
+
+    val flowerCardId: CardID?
+        get() = if (matchWith is MatchWith.Flower) matchWith.flowerCardId else null
 
 }

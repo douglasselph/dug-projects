@@ -15,7 +15,6 @@ import kotlin.test.assertTrue
 
 class HasDieValueTest {
 
-    private lateinit var hasDieValue: HasDieValue
     private lateinit var sampleHandCard: HandItem.Card
     private lateinit var sampleHandDice: HandItem.Dice
     private lateinit var sampleDie: Die
@@ -23,13 +22,15 @@ class HasDieValueTest {
     private lateinit var randomizer: Randomizer
     private lateinit var dieFactory: DieFactory
 
+    private lateinit var SUT: HasDieValue
+
     @BeforeEach
     fun setup() {
         randomizer = Randomizer.create()
         dieFactory = DieFactoryRandom(randomizer)
         mockGameCard = mockk()
 
-        hasDieValue = HasDieValue()
+        SUT = HasDieValue()
 
         sampleHandCard = HandItem.Card(mockGameCard)
         sampleDie = dieFactory(DieSides.D8)
@@ -39,7 +40,7 @@ class HasDieValueTest {
     @Test
     fun invoke_whenEmptyList_returnsFalse() {
         // Act
-        val result = hasDieValue(emptyList(), 6)
+        val result = SUT(emptyList(), 6)
 
         // Assert
         assertFalse(result)
@@ -48,7 +49,7 @@ class HasDieValueTest {
     @Test
     fun invoke_whenOnlyCards_returnsFalse() {
         // Act
-        val result = hasDieValue(listOf(sampleHandCard), 6)
+        val result = SUT(listOf(sampleHandCard), 6)
 
         // Assert
         assertFalse(result)
@@ -58,7 +59,7 @@ class HasDieValueTest {
     fun invoke_whenDiceWithMatchingValue_returnsTrue() {
         // Act
         sampleDie.adjustTo(6)
-        val result = hasDieValue(listOf(sampleHandDice), 6)
+        val result = SUT(listOf(sampleHandDice), 6)
 
         // Assert
         assertTrue(result)
@@ -70,7 +71,7 @@ class HasDieValueTest {
         sampleDie.adjustTo(3)
 
         // Act
-        val result = hasDieValue(listOf(sampleHandDice), 4)
+        val result = SUT(listOf(sampleHandDice), 4)
 
         // Assert
         assertFalse(result)
@@ -80,7 +81,7 @@ class HasDieValueTest {
     fun invoke_whenMixedItemsWithMatchingDice_returnsTrue() {
         // Act
         sampleDie.adjustTo(6)
-        val result = hasDieValue(listOf(sampleHandCard, sampleHandDice), 6)
+        val result = SUT(listOf(sampleHandCard, sampleHandDice), 6)
 
         // Assert
         assertTrue(result)

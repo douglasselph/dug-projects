@@ -10,8 +10,7 @@ class ParseCost {
         private val FLOURISH_TYPE_MAP = mapOf(
             "R" to FlourishType.ROOT,
             "C" to FlourishType.CANOPY,
-            "V" to FlourishType.VINE,
-            "B" to FlourishType.BLOOM
+            "V" to FlourishType.VINE
         )
     }
     operator fun invoke(value: String): Cost {
@@ -58,7 +57,7 @@ class ParseCost {
                     costElements.add(CostElement.TotalDiceExact(value))
                 }
 
-                // Flourish Type Present: e.g., "R", "C", "V", "B"
+                // Flourish Type Present: e.g., "R", "C", "V"
                 FLOURISH_TYPE_MAP.containsKey(element) -> {
                     val flourishType = FLOURISH_TYPE_MAP[element]
                         ?: throw IllegalArgumentException("Unknown flourish type: $element")
