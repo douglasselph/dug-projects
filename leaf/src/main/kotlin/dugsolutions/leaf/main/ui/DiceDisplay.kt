@@ -7,13 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,7 @@ fun DiceDisplay(dice: DiceInfo) {
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
             .padding(8.dp)
-            .widthIn(max = 350.dp)  // Add maximum width constraint
+            .shadow(4.dp, RoundedCornerShape(8.dp))
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -41,7 +42,6 @@ fun DiceDisplay(dice: DiceInfo) {
             // Process dice in groups of 3
             dice.values.chunked(3).forEach { rowDice ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Create up to 3 dice boxes in this row
@@ -49,7 +49,9 @@ fun DiceDisplay(dice: DiceInfo) {
                         Surface(
                             border = BorderStroke(1.dp, Color.Black),
                             shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .width(100.dp)
+                                .shadow(2.dp, RoundedCornerShape(4.dp))
                         ) {
                             Text(
                                 text = dieValue,
@@ -61,19 +63,7 @@ fun DiceDisplay(dice: DiceInfo) {
                             )
                         }
                     }
-                    // Fill remaining space with empty boxes if needed
-                    repeat(3 - rowDice.size) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth()
-                            )
-                        }
-                    }
+
                 }
             }
         }

@@ -54,8 +54,8 @@ fun PlayerDisplay(player: PlayerInfo) {
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     // Cards in hand
                     Box {
@@ -81,8 +81,8 @@ fun PlayerDisplay(player: PlayerInfo) {
             }
 
             // Supply and Compost sections
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Supply section
                 Box {
@@ -116,8 +116,8 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Player Display Preview",
         state = WindowState(
-            width = 1200.dp,
-            height = 800.dp
+            width = 800.dp,
+            height = 1000.dp
         )
     ) {
         val gatherCardInfo = GatherCardInfo()
