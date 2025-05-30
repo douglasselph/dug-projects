@@ -19,7 +19,6 @@ class GroveStacks(
 
     private val stacks: MutableMap<MarketStackID, GameCardIDs> = mutableMapOf()
     private val diceSupply: DiceSupply = DiceSupply()
-    private val bonusDice: Dice = Dice()
 
     init {
         for (stackId in MarketStackID.entries) {
@@ -52,30 +51,10 @@ class GroveStacks(
 
     fun clearAll() {
         diceSupply.clear()
-        bonusDice.clear()
         for (stackId in MarketStackID.entries) {
             stacks[stackId]?.clear()
         }
     }
-
-    fun setBonusDice(diceSides: List<DieSides>) {
-        bonusDice.clear()
-        for (side in diceSides) {
-            bonusDice.add(dieFactory(side))
-        }
-    }
-
-    fun useNextBonusDie(): Die? {
-        if (bonusDice.isEmpty()) {
-            return null
-        }
-        val die = bonusDice.dice[0]
-        bonusDice.remove(die)
-        return die
-    }
-
-    val numBonusDice: Int
-        get() = bonusDice.size
 
     fun setDiceCount(sides: DieSides, count: Int) {
         diceSupply.addMany(sides, count)

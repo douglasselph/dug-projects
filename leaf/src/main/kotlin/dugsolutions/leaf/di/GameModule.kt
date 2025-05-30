@@ -1,6 +1,7 @@
 package dugsolutions.leaf.di
 
 import dugsolutions.leaf.cards.CardManager
+import dugsolutions.leaf.cards.GetCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
 import dugsolutions.leaf.chronicle.domain.TestOutputFile
@@ -59,6 +60,8 @@ import dugsolutions.leaf.game.turn.select.SelectPossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
+import dugsolutions.leaf.grove.scenario.ScenarioBase
+import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.info.GatherPlayerInfo
 import dugsolutions.leaf.player.components.DeckManager
@@ -94,6 +97,7 @@ val gameModule: Module = module {
     single { CardManager(get()) }
     single { GameCardIDsFactory(get(), get()) }
     single { GameCardsFactory(get(), get()) }
+    single { GetCards(get(), get()) }
 
     // Common randomizer used by both die factories
     single<Randomizer> { RandomizerDefault() }
@@ -118,7 +122,7 @@ val gameModule: Module = module {
 
     single {
         MainController(
-            get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get()
         )
     }
 
@@ -245,4 +249,7 @@ val gameModule: Module = module {
     }
     single { PlayerOrder(get()) }
     single { GameTurn() }
+
+    single { ScenarioBasicConfig(get()) }
+
 } 

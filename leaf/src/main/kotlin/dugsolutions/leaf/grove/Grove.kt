@@ -29,7 +29,6 @@ class Grove(
         for (diceConfig in config.dice) {
             stacks.addDie(count = diceConfig.count, sides = diceConfig.sides.value)
         }
-        stacks.setBonusDice(config.bonusDie)
     }
 
     // Query methods for available items
