@@ -8,4 +8,5 @@ data class MainDomain(
     val showDrawCount: Boolean = false,
     val showRunButton: Boolean = false,
     val stepModeEnabled: Boolean = false,
+    val showNextButton: Boolean = false
 )

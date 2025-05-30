@@ -22,7 +22,9 @@ class MainApplication : KoinComponent {
                         MainScreenArgs(
                             state = mainController.state,
                             onDrawCountChosen = { mainController.onDrawCountChosen(it) },
-                            onRunButtonPressed = { mainController.onRunPressed() }
+                            onRunButtonPressed = { mainController.onRunPressed() },
+                            onStepEnabledToggled = { mainController.onStepEnabledToggled(it) },
+                            onNextButtonPressed = { mainController.onNextButtonPressed() }
                         )
                     )
                 }

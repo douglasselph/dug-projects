@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Button
+import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -27,7 +28,9 @@ import kotlinx.coroutines.flow.StateFlow
 data class MainScreenArgs(
     val state: StateFlow<MainDomain>,
     val onDrawCountChosen: (value: Int) -> Unit = {},
-    val onRunButtonPressed: () -> Unit = {}
+    val onRunButtonPressed: () -> Unit = {},
+    val onStepEnabledToggled: (value: Boolean) -> Unit = {},
+    val onNextButtonPressed: () -> Unit= {}
 )
 
 @Composable
@@ -51,11 +54,33 @@ fun MainScreen(args: MainScreenArgs) {
                 style = MaterialTheme.typography.h4
             )
             
-            if (state.showRunButton) {
-                Button(
-                    onClick = { args.onRunButtonPressed() }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("Run")
+                    Checkbox(
+                        checked = state.stepModeEnabled,
+                        onCheckedChange = { args.onStepEnabledToggled(it) }
+                    )
+                    Text("Step Mode")
+                }
+                if (state.showNextButton) {
+                    Button(
+                        onClick = { args.onNextButtonPressed() }
+                    ) {
+                        Text("Next")
+                    }
+                }
+                if (state.showRunButton) {
+                    Button(
+                        onClick = { args.onRunButtonPressed() }
+                    ) {
+                        Text("Run")
+                    }
                 }
             }
         }

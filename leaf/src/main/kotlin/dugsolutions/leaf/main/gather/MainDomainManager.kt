@@ -40,6 +40,16 @@ class MainDomainManager(
             }
         }
 
+    var showNextButton: Boolean
+        get() = state.value.showNextButton
+        set(value) {
+            _state.update { currentState ->
+                currentState.copy(
+                    showNextButton = value
+                )
+            }
+        }
+
     fun update() {
         _state.update { currentState ->
             currentState.copy(

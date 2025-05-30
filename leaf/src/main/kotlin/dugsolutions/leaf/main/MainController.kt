@@ -80,7 +80,7 @@ class MainController(
                     is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput("Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}")
                     is GameEvent.Completed -> mainDomainManager.addSimulationOutput("Game completed")
                     GameEvent.WaitForStep -> {
-                        
+                        mainDomainManager.showNextButton = true
                     }
                 }
             }
@@ -89,5 +89,16 @@ class MainController(
 
     private fun seedlings(): GameCards {
         return getCards(FlourishType.SEEDLING).take(4)
+    }
+
+    fun onStepEnabledToggled(value: Boolean) {
+        runGame.stepMode = value
+    }
+
+    fun onNextButtonPressed() {
+        scope.launch {
+            runGame.continueToNextStep()
+            mainDomainManager.showNextButton = false
+        }
     }
 }
