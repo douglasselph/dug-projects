@@ -13,7 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.main.domain.DiceInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
 
 @Composable
 fun SectionDisplay(
@@ -76,6 +79,8 @@ fun SectionDisplay(
 
 // Preview window for testing section display
 fun main() = application {
+    val gatherDiceInfo = GatherDiceInfo()
+    val sampleDie = SampleDie()
     Window(
         onCloseRequest = ::exitApplication,
         title = "Section Display Preview",
@@ -92,14 +97,14 @@ fun main() = application {
             SectionDisplay(
                 title = "Supply",
                 cardCount = 42,
-                dice = DiceInfo(listOf("D6", "D8", "D10"))
+                dice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d12)), values = false)
             )
 
             // Second example - Compost section
             SectionDisplay(
                 title = "Compost",
                 cardCount = 7,
-                dice = DiceInfo(listOf("D4", "D4", "D6"))
+                dice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4, sampleDie.d10)), values = false)
             )
         }
     }

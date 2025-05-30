@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -19,14 +20,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.main.domain.DiceInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
 
 @Composable
 fun DiceDisplay(dice: DiceInfo) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
+            .widthIn(max = 350.dp)  // Add maximum width constraint
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -58,7 +64,6 @@ fun DiceDisplay(dice: DiceInfo) {
                     // Fill remaining space with empty boxes if needed
                     repeat(3 - rowDice.size) {
                         Surface(
-                            border = BorderStroke(1.dp, Color.Black),
                             shape = RoundedCornerShape(4.dp),
                             modifier = Modifier.weight(1f)
                         ) {
@@ -79,6 +84,8 @@ fun DiceDisplay(dice: DiceInfo) {
 
 // Preview window for testing dice display
 fun main() = application {
+    val gatherDiceInfo = GatherDiceInfo()
+    val sampleDie = SampleDie()
     Window(
         onCloseRequest = ::exitApplication,
         title = "Dice Display Preview",
@@ -92,21 +99,15 @@ fun main() = application {
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             // First example - Standard dice
-            val standardDice = DiceInfo(listOf(
-                "2D4", "D6", "2D8",
-                "D10", "D12",
-                "D20", "D20", "D20",
-                "D4"
+            val standardDice = Dice(listOf(
+                sampleDie.d4, sampleDie.d4, sampleDie.d6,
+                sampleDie.d8, sampleDie.d8, sampleDie.d10,
+                sampleDie.d12, sampleDie.d20, sampleDie.d20,
+                sampleDie.d20.adjustTo(19)
             ))
-            DiceDisplay(standardDice)
-
-            // Second example - Custom dice
-            val customDice = DiceInfo(listOf(
-                "D6", "D6", "D6",
-                "D8", "D8",
-                "D10"
-            ))
-            DiceDisplay(customDice)
+            DiceDisplay(gatherDiceInfo(standardDice, values=true))
+            DiceDisplay(gatherDiceInfo(standardDice, values=false))
+            DiceDisplay(gatherDiceInfo(Dice(listOf(sampleDie.d6)), values=false))
         }
     }
 }

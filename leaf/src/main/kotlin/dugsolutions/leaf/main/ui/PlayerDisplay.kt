@@ -1,7 +1,12 @@
 package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -18,9 +23,11 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.main.domain.DiceInfo
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
 
 @Composable
 fun PlayerDisplay(player: PlayerInfo) {
@@ -48,15 +55,14 @@ fun PlayerDisplay(player: PlayerInfo) {
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Cards in hand
-                    Box(modifier = Modifier.weight(3f)) {
+                    Box {
                         CardRowDisplay(player.handCards)
                     }
                     // Dice in hand
-                    Box(modifier = Modifier.weight(1f)) {
+                    Box {
                         DiceDisplay(player.handDice)
                     }
                 }
@@ -76,11 +82,10 @@ fun PlayerDisplay(player: PlayerInfo) {
 
             // Supply and Compost sections
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Supply section
-                Box(modifier = Modifier.weight(1f)) {
+                Box {
                     SectionDisplay(
                         title = "Supply",
                         cardCount = player.supplyCardCount,
@@ -89,7 +94,7 @@ fun PlayerDisplay(player: PlayerInfo) {
                 }
 
                 // Compost section
-                Box(modifier = Modifier.weight(1f)) {
+                Box {
                     SectionDisplay(
                         title = "Compost",
                         cardCount = player.compostCardCount,
@@ -104,7 +109,9 @@ fun PlayerDisplay(player: PlayerInfo) {
 // region Preview
 
 // Preview window for testing player display
-fun playerDisplayMain() = application {
+fun main() = application {
+    val gatherDiceInfo = GatherDiceInfo()
+    val sampleDie = SampleDie()
     Window(
         onCloseRequest = ::exitApplication,
         title = "Player Display Preview",
@@ -154,8 +161,8 @@ fun playerDisplayMain() = application {
                     )
                 )
             ),
-            handDice = DiceInfo(listOf("D6", "D8", "D10")),
-            supplyDice = DiceInfo(listOf("D4", "D6", "D8")),
+            handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10)), true),
+            supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
             floralArray = listOf(
                 gatherCardInfo(
                     GameCard(
@@ -177,7 +184,7 @@ fun playerDisplayMain() = application {
             ),
             supplyCardCount = 42,
             compostCardCount = 7,
-            compostDice = DiceInfo(listOf("D4", "D4"))
+            compostDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
 
         PlayerDisplay(samplePlayer)
