@@ -22,15 +22,23 @@ class GatherCardInfo {
             type = floralType(type) ?: "?",
             resilience = resilience,
             thorn = thorn,
-            primary = effectString(primaryEffect, primaryValue),
-            match = effectString(matchEffect, matchValue, matchString(matchWith)),
-            trash = effectString(trashEffect, trashValue)
+            primary = effectLine(primaryEffect, primaryValue),
+            match = effectLine(matchEffect, matchValue, matchString(matchWith)),
+            trash = effectLine(trashEffect, trashValue)
         )
     }
 
-    private fun effectString(effect: CardEffect?, value: Int, prefix: String? = null): String? {
+    private fun effectLine(effect: CardEffect?, value: Int, prefix: String? = null): String? {
         effect ?: return null
-        return (prefix ?: "") + " " + effect.name + " $value"
+        return (prefix ?: "") + " " + effectName(effect) + " $value"
+    }
+
+    private fun effectName(effect: CardEffect): String {
+        return effect.name
+            .split("_")
+            .joinToString("") { word ->
+                word.lowercase().replaceFirstChar { it.uppercase() }
+            }
     }
 
     private fun matchString(match: MatchWith): String? {

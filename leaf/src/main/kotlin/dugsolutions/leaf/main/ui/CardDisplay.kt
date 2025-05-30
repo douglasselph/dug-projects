@@ -1,6 +1,5 @@
 package dugsolutions.leaf.main.ui
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.components.*
 import dugsolutions.leaf.main.domain.CardInfo
@@ -50,88 +50,65 @@ fun CardDisplay(cardInfo: CardInfo) {
 
                 // Type indicator
                 if (cardInfo.type.isNotEmpty()) {
-                    Surface(
-                        border = BorderStroke(1.dp, MaterialTheme.colors.primary),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    ) {
-                        Text(
-                            text = cardInfo.type,
-                            style = MaterialTheme.typography.caption,
-                            color = MaterialTheme.colors.primary,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                    Indicator(cardInfo.type, MaterialTheme.colors.primary)
                 }
 
                 // Resilience value
                 if (cardInfo.resilience > 0) {
-                    Surface(
-                        border = BorderStroke(1.dp, Color.Green),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    ) {
-                        Text(
-                            text = cardInfo.resilience.toString(),
-                            style = MaterialTheme.typography.caption,
-                            color = Color.Green,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                    Indicator(cardInfo.resilience.toString(), Color.Red)
                 }
 
                 // Thorn value
                 if (cardInfo.thorn > 0) {
-                    Surface(
-                        border = BorderStroke(1.dp, Color.Red),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    ) {
-                        Text(
-                            text = cardInfo.thorn.toString(),
-                            style = MaterialTheme.typography.caption,
-                            color = Color.Red,
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                    Indicator(cardInfo.thorn.toString(), Color.Blue)
                 }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Effect rows
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Primary effect
-                if (cardInfo.primary != null) {
-                    EffectBox(
-                        label = "P",
-                        text = cardInfo.primary,
-                        color = MaterialTheme.colors.primary
-                    )
-                }
+            // Primary effect
+            if (cardInfo.primary != null) {
+                EffectBox(
+                    label = "P",
+                    text = cardInfo.primary,
+                    color = MaterialTheme.colors.primary
+                )
+            }
 
-                // Match effect
-                if (cardInfo.match != null) {
-                    EffectBox(
-                        label = "M",
-                        text = cardInfo.match,
-                        color = Color.Blue
-                    )
-                }
+            // Match effect
+            if (cardInfo.match != null) {
+                EffectBox(
+                    label = "M",
+                    text = cardInfo.match,
+                    color = Color.Blue
+                )
+            }
 
-                // Trash effect
-                if (cardInfo.trash != null) {
-                    EffectBox(
-                        label = "T",
-                        text = cardInfo.trash,
-                        color = Color.Red
-                    )
-                }
+            // Trash effect
+            if (cardInfo.trash != null) {
+                EffectBox(
+                    label = "T",
+                    text = cardInfo.trash,
+                    color = Color.Red
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun Indicator(text: String, color: Color) {
+    Surface(
+        border = BorderStroke(1.dp, color),
+        shape = RoundedCornerShape(4.dp),
+        modifier = Modifier.padding(horizontal = 2.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.caption,
+            color = color,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+        )
     }
 }
 
@@ -166,44 +143,55 @@ private fun EffectBox(
     }
 }
 
-// Preview helper function
+// region Preview
+
+fun main() = application {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "Card Display Preview",
+        state = WindowState(
+            width = 1200.dp,
+            height = 400.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // First row with 5 cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PreviewSeedlingCard()
+                PreviewRootCard()
+                PreviewCanopyCard()
+                PreviewVineCard()
+                PreviewFlowerCard()
+            }
+
+            // Second row with 4 cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PreviewBloomCard()
+                PreviewCardWithAllEffects()
+                PreviewCardWithNoEffects()
+                PreviewCardWithOnlyPrimary()
+            }
+        }
+    }
+}
+
 @Composable
 private fun PreviewCard(gameCard: GameCard) {
     val gatherCardInfo = GatherCardInfo()
     CardDisplay(gatherCardInfo(gameCard))
 }
 
-// Preview window for testing cards
-fun main() = application {
-    Window(
-        onCloseRequest = ::exitApplication,
-        title = "Card Display Preview"
-    ) {
-        // Create a sample card for preview
-        val sampleCard = GameCard(
-            id = 1,
-            name = "Sprouting Seed",
-            type = FlourishType.SEEDLING,
-            resilience = 2,
-            cost = Cost(emptyList()),
-            primaryEffect = CardEffect.DRAW_CARD,
-            primaryValue = 1,
-            matchWith = MatchWith.None,
-            matchEffect = CardEffect.REDUCE_COST_ROOT,
-            matchValue = 2,
-            trashEffect = CardEffect.GAIN_FREE_ROOT,
-            trashValue = 1,
-            thorn = 0
-        )
-        
-        PreviewCard(sampleCard)
-    }
-}
-
-// Preview cards for each FlourishType
-@Preview
 @Composable
-fun PreviewSeedlingCard() {
+private fun PreviewSeedlingCard() {
     PreviewCard(
         GameCard(
             id = 1,
@@ -223,9 +211,8 @@ fun PreviewSeedlingCard() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewRootCard() {
+private fun PreviewRootCard() {
     PreviewCard(
         GameCard(
             id = 2,
@@ -245,9 +232,8 @@ fun PreviewRootCard() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewCanopyCard() {
+private fun PreviewCanopyCard() {
     PreviewCard(
         GameCard(
             id = 3,
@@ -267,9 +253,8 @@ fun PreviewCanopyCard() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewVineCard() {
+private fun PreviewVineCard() {
     PreviewCard(
         GameCard(
             id = 4,
@@ -289,9 +274,8 @@ fun PreviewVineCard() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewFlowerCard() {
+private fun PreviewFlowerCard() {
     PreviewCard(
         GameCard(
             id = 5,
@@ -311,9 +295,8 @@ fun PreviewFlowerCard() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewBloomCard() {
+private fun PreviewBloomCard() {
     PreviewCard(
         GameCard(
             id = 6,
@@ -334,9 +317,8 @@ fun PreviewBloomCard() {
 }
 
 // Preview cards for different effect combinations
-@Preview
 @Composable
-fun PreviewCardWithAllEffects() {
+private fun PreviewCardWithAllEffects() {
     PreviewCard(
         GameCard(
             id = 7,
@@ -356,9 +338,8 @@ fun PreviewCardWithAllEffects() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewCardWithNoEffects() {
+private fun PreviewCardWithNoEffects() {
     PreviewCard(
         GameCard(
             id = 8,
@@ -378,9 +359,8 @@ fun PreviewCardWithNoEffects() {
     )
 }
 
-@Preview
 @Composable
-fun PreviewCardWithOnlyPrimary() {
+private fun PreviewCardWithOnlyPrimary() {
     PreviewCard(
         GameCard(
             id = 9,
@@ -398,4 +378,7 @@ fun PreviewCardWithOnlyPrimary() {
             thorn = 0
         )
     )
-} 
+}
+
+
+// endregion Preview

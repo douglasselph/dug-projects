@@ -29,6 +29,8 @@ dependencies {
     
     implementation(kotlin("reflect"))
     implementation(compose.desktop.currentOs)
+    implementation(compose.material)
+    implementation(compose.runtime)
     
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
