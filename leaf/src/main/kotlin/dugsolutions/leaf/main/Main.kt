@@ -4,8 +4,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.di.gameModule
-import dugsolutions.leaf.main.ui.MainScreen
-import dugsolutions.leaf.main.ui.MainScreenArgs
 import org.koin.core.context.startKoin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

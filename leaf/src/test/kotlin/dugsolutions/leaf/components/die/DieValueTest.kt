@@ -6,10 +6,8 @@ import dugsolutions.leaf.tool.Randomizer
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
-import kotlin.test.assertNotSame
 
 class DieValueTest {
     companion object {

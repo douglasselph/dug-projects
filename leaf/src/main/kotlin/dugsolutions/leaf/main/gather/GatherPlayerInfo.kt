@@ -4,26 +4,21 @@ import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.player.Player
 
 class GatherPlayerInfo(
-    private val gatherCardInfo: GatherCardInfo
+    private val gatherCardInfo: GatherCardInfo,
+    private val gatherDiceInfo: GatherDiceInfo
 ) {
 
     operator fun invoke(player: Player): PlayerInfo {
         // Dice in hand "D4=1" style
-        val handDice = player.diceInHand.dice.map { "D${it.sides}=${it.value}"}
+        val handDice = gatherDiceInfo(player.diceInHand, values = true)
 
         val handCards = player.cardsInHand.map { gatherCardInfo(it) }
 
         // Format dice in supply as "4D4 3D6" style
-        val supplyDice = player.diceInSupply.dice
-            .groupBy { it.sides }
-            .map { (sides, dice) -> "${dice.size}D$sides" }
-            .sorted()
+        val supplyDice = gatherDiceInfo(player.diceInSupply, values = false)
 
         // Format dice in compost as "4D4 3D6" style
-        val compostDice = player.diceInCompost.dice
-            .groupBy { it.sides }
-            .map { (sides, dice) -> "${dice.size}D$sides" }
-            .sorted()
+        val compostDice = gatherDiceInfo(player.diceInCompost, values = false)
 
         val floralArray = player.floralCards.map { gatherCardInfo(it) }
 

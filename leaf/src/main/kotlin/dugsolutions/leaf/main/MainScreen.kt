@@ -1,4 +1,4 @@
-package dugsolutions.leaf.main.ui
+package dugsolutions.leaf.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

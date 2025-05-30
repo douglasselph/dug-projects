@@ -63,6 +63,7 @@ import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainUseCase
@@ -122,8 +123,9 @@ val gameModule: Module = module {
 
     single { TransformMomentToEntry(get(), get(), get(), get()) }
     single { GatherCardInfo() }
+    single { GatherDiceInfo() }
     single { GatherGroveInfo(get(), get()) }
-    single { GatherPlayerInfo(get()) }
+    single { GatherPlayerInfo(get(), get()) }
     single { MainDomainUseCase(get(), get(), get()) }
 
     single {
