@@ -4,7 +4,7 @@ import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
 import io.mockk.confirmVerified
 import io.mockk.every

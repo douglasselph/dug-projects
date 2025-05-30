@@ -72,11 +72,11 @@ class Game(
         players = playerOrder(playersList)
     }
 
-    fun runOneCultivationTurn() {
+    suspend fun runOneCultivationTurn() {
         playerTurn(players, GamePhase.CULTIVATION)
     }
 
-    fun runOneBattleTurn() {
+    suspend fun runOneBattleTurn() {
         playerTurn(players, GamePhase.BATTLE)
     }
 

@@ -13,7 +13,7 @@ import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
 import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionAcquireSelect
+import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

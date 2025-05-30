@@ -241,7 +241,7 @@ open class Player(
         drawHand(chronicle, preferredCardCount)
     }
 
-    fun drawHand() {
+    suspend fun drawHand() {
         drawHand(decisionDirector.drawCountDecision())
     }
 

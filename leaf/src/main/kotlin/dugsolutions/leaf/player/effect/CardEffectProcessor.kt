@@ -6,7 +6,7 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
 
 /**

@@ -3,13 +3,9 @@ package dugsolutions.leaf.game.battle
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionDamageAbsorption
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

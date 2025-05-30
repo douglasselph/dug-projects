@@ -60,14 +60,16 @@ import dugsolutions.leaf.game.turn.select.SelectPossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
-import dugsolutions.leaf.grove.scenario.ScenarioBase
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.main.MainController
-import dugsolutions.leaf.main.info.GatherPlayerInfo
+import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherGroveInfo
+import dugsolutions.leaf.main.gather.GatherPlayerInfo
+import dugsolutions.leaf.main.gather.MainDomainUseCase
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.DecisionBestCardPurchaseCoreStrategy
+import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
 import dugsolutions.leaf.player.effect.CardsEffectsProcessor
@@ -89,6 +91,9 @@ object DieFactoryConfig {
 }
 
 val gameModule: Module = module {
+
+    single { Dispatchers.Main }
+    single { Dispatchers.IO }
 
     single { CostScore() }
     single { ParseCost() }
@@ -115,14 +120,15 @@ val gameModule: Module = module {
     single { DieFactoryUniform(get()) }
     single { DieFactoryRandom(get()) }
 
-    single { Dispatchers.Main }
-    single { Dispatchers.IO }
-
     single { TransformMomentToEntry(get(), get(), get(), get()) }
+    single { GatherCardInfo() }
+    single { GatherGroveInfo(get(), get()) }
+    single { GatherPlayerInfo(get()) }
+    single { MainDomainUseCase(get(), get(), get()) }
 
     single {
         MainController(
-            get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
 
@@ -182,7 +188,6 @@ val gameModule: Module = module {
 
     single { GameCardsUseCase(get()) }
     single { Grove(get(), get()) }
-    single { GatherPlayerInfo() }
     single { PlayerUnderTest(get()) }
 
     single {
@@ -236,7 +241,7 @@ val gameModule: Module = module {
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
 
-    single { DecisionBestCardPurchaseCoreStrategy(get()) }
+    single { DecisionBestCardPurchaseBaseline(get()) }
     single { AcquireCardEvaluator(get()) }
     single { AcquireDieEvaluator(get(), get()) }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
