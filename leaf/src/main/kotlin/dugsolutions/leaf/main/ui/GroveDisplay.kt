@@ -19,6 +19,7 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
@@ -44,7 +45,7 @@ fun GroveDisplay(grove: GroveInfo) {
             )
 
             // Stacks in rows of 3
-            grove.stacks.chunked(3).forEach { rowStacks ->
+            reorder(grove.stacks).chunked(3).forEach { rowStacks ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -57,6 +58,36 @@ fun GroveDisplay(grove: GroveInfo) {
             }
         }
     }
+}
+
+private fun reorder(stacks: List<StackInfo>): List<StackInfo> {
+    // First, separate stacks into their types
+    val rootStacks = stacks.filter { it.stack == MarketStackID.ROOT_1 || it.stack == MarketStackID.ROOT_2 }
+    val vineStacks = stacks.filter { it.stack == MarketStackID.VINE_1 || it.stack == MarketStackID.VINE_2 }
+    val canopyStacks = stacks.filter { it.stack == MarketStackID.CANOPY_1 || it.stack == MarketStackID.CANOPY_2 }
+    val otherStacks = stacks.filter {
+        it.stack != MarketStackID.ROOT_1 &&
+                it.stack != MarketStackID.ROOT_2 &&
+                it.stack != MarketStackID.VINE_1 &&
+                it.stack != MarketStackID.VINE_2 &&
+                it.stack != MarketStackID.CANOPY_1 &&
+                it.stack != MarketStackID.CANOPY_2
+    }
+
+    // Create triplets of ROOT, VINE, CANOPY
+    val reorderedStacks = mutableListOf<StackInfo>()
+    val tripletCount = minOf(rootStacks.size, vineStacks.size, canopyStacks.size)
+
+    for (i in 0 until tripletCount) {
+        reorderedStacks.add(rootStacks[i])
+        reorderedStacks.add(vineStacks[i])
+        reorderedStacks.add(canopyStacks[i])
+    }
+
+    // Add remaining stacks in their original order
+    reorderedStacks.addAll(otherStacks)
+
+    return reorderedStacks
 }
 
 // region Preview
@@ -76,7 +107,7 @@ fun main() = application {
         val sampleGrove = GroveInfo(
             stacks = listOf(
                 StackInfo(
-                    name = "Root Stack",
+                    stack = MarketStackID.ROOT_1,
                     topCard = gatherCardInfo(
                         GameCard(
                             id = 2,
@@ -97,7 +128,28 @@ fun main() = application {
                     numCards = 28
                 ),
                 StackInfo(
-                    name = "Canopy Stack",
+                    stack = MarketStackID.ROOT_2,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 2,
+                            name = "Nourishing Root",
+                            type = FlourishType.ROOT,
+                            resilience = 3,
+                            cost = Cost(listOf(CostElement.SingleDieMinimum(2))),
+                            primaryEffect = CardEffect.DRAW_DIE,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 28
+                ),
+                StackInfo(
+                    stack = MarketStackID.CANOPY_1,
                     topCard = gatherCardInfo(
                         GameCard(
                             id = 3,
@@ -118,7 +170,28 @@ fun main() = application {
                     numCards = 15
                 ),
                 StackInfo(
-                    name = "Vine Stack",
+                    stack = MarketStackID.CANOPY_2,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 3,
+                            name = "Sheltering Canopy",
+                            type = FlourishType.CANOPY,
+                            resilience = 4,
+                            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
+                            primaryEffect = CardEffect.DEFLECT,
+                            primaryValue = 2,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 15
+                ),
+                StackInfo(
+                    stack = MarketStackID.VINE_1,
                     topCard = gatherCardInfo(
                         GameCard(
                             id = 1,
@@ -139,9 +212,109 @@ fun main() = application {
                     numCards = 42
                 ),
                 StackInfo(
-                    name = "Empty Stack",
-                    topCard = null,
-                    numCards = 0
+                    stack = MarketStackID.VINE_2,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 1,
+                            name = "Long Vine",
+                            type = FlourishType.VINE,
+                            resilience = 2,
+                            cost = Cost(emptyList()),
+                            primaryEffect = CardEffect.DRAW_CARD,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 42
+                ),
+                StackInfo(
+                    stack = MarketStackID.FLOWER_1,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 4,
+                            name = "Blooming Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 3,
+                            cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                            primaryEffect = CardEffect.DRAW_CARD,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 20
+                ),
+                StackInfo(
+                    stack = MarketStackID.FLOWER_2,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 4,
+                            name = "Blooming Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 3,
+                            cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                            primaryEffect = CardEffect.DRAW_CARD,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 20
+                ),
+                StackInfo(
+                    stack = MarketStackID.FLOWER_3,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 4,
+                            name = "Blooming Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 3,
+                            cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                            primaryEffect = CardEffect.DRAW_CARD,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 20
+                ),
+                StackInfo(
+                    stack = MarketStackID.JOINT_RCV,
+                    topCard = gatherCardInfo(
+                        GameCard(
+                            id = 5,
+                            name = "Wild Growth",
+                            type = FlourishType.ROOT,
+                            resilience = 3,
+                            cost = Cost(listOf(CostElement.SingleDieMinimum(3))),
+                            primaryEffect = CardEffect.DRAW_CARD,
+                            primaryValue = 2,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = null,
+                            trashValue = 0,
+                            thorn = 0
+                        )
+                    ),
+                    numCards = 10
                 )
             )
         )

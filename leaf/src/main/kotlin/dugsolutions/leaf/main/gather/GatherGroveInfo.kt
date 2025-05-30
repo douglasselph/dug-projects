@@ -19,7 +19,7 @@ class GatherGroveInfo(
     private fun get(stack: MarketStackID): StackInfo {
         val card = grove.getCardsFor(stack)?.getCard(0)
         return StackInfo(
-            name = stack.name,
+            stack = stack,
             topCard = card?.let { gatherCardInfo(it) },
             numCards = grove.getCardsFor(stack)?.size ?: 0
         )

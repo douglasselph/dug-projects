@@ -20,6 +20,7 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
@@ -98,7 +99,7 @@ fun main() = application {
         ) {
             // First example - Stack with card
             val stackWithCard = StackInfo(
-                name = "Root Stack",
+                stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
                     GameCard(
                         id = 1,
@@ -120,13 +121,6 @@ fun main() = application {
             )
             StackInfoDisplay(stackWithCard)
 
-            // Second example - Empty stack
-            val emptyStack = StackInfo(
-                name = "Empty Stack",
-                topCard = null,
-                numCards = 0
-            )
-            StackInfoDisplay(emptyStack)
         }
     }
 }
