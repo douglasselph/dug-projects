@@ -1,28 +1,31 @@
 package dugsolutions.leaf.main
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.ui.decision.DrawCountDecisionDisplay
+import dugsolutions.leaf.main.ui.parts.GroveDisplay
+import dugsolutions.leaf.main.ui.parts.PlayerDisplay
 import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
-    val onRunButtonClicked: () -> Unit,
     val state: StateFlow<MainDomain>,
-    val onNumPlayersChanged: (Int) -> Unit
+    val onDrawCountChosen: (value: Int) -> Unit = {}
 )
 
 @Composable
@@ -30,36 +33,69 @@ fun MainScreen(args: MainScreenArgs) {
     val state by args.state.collectAsState()
     
     Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Select Number of Players")
-        
+        // Turn number display
+        Text(
+            text = "Turn ${state.turn}",
+            style = MaterialTheme.typography.h4,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+
+        // Players row
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            for (players in 2..6) {
-                OutlinedButton(
-                    onClick = { args.onNumPlayersChanged(players) },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        backgroundColor = if (state.players.size == players) MaterialTheme.colors.primary else MaterialTheme.colors.surface
-                    )
-                ) {
-                    Text(
-                        text = players.toString(),
-                        color = if (state.players.size == players) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
-                    )
-                }
+            state.players.forEach { player ->
+                PlayerDisplay(player = player)
             }
         }
 
-        Button(
-            onClick = { args.onRunButtonClicked() },
-            modifier = Modifier.width(120.dp)
+        // Grove display (if available)
+        state.groveInfo?.let { groveInfo ->
+            GroveDisplay(grove = groveInfo)
+        }
+
+        if (state.showDrawCount) {
+            DrawCountDecisionDisplay(args.onDrawCountChosen)
+        }
+
+        // Simulation output
+        val height = MaterialTheme.typography.body1.fontSize.value.dp * 7
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height * 1.5f)
+                .background(MaterialTheme.colors.surface),
+            elevation = 4.dp
         ) {
-            Text("Run")
+            val listState = rememberLazyListState()
+            val lastIndex = remember(state.simulationOutput.size) { state.simulationOutput.size - 1 }
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(state.simulationOutput.size) { index ->
+                    Text(
+                        text = state.simulationOutput[index],
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            // Auto-scroll to bottom when output changes
+            LaunchedEffect(state.simulationOutput.size) {
+                if (lastIndex >= 0) {
+                    listState.animateScrollToItem(lastIndex)
+                }
+            }
         }
     }
 } 

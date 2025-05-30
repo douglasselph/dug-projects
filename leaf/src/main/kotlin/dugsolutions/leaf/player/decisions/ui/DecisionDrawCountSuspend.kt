@@ -8,7 +8,10 @@ class DecisionDrawCountSuspend : DecisionDrawCount {
 
     // region DecisionDrawCount
 
+    var onDrawCountRequest: () -> Unit = {}
+
     override suspend operator fun invoke(): Int {
+        onDrawCountRequest()
         return drawCountChannel.waitForDecision()
     }
 

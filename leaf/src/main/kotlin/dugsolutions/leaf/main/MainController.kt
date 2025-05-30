@@ -9,7 +9,7 @@ import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.main.domain.MainDomain
-import dugsolutions.leaf.main.gather.MainDomainUseCase
+import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
 import dugsolutions.leaf.simulator.GameEvent
 import dugsolutions.leaf.tool.Randomizer
@@ -28,7 +28,7 @@ class MainController(
     private val getCards: GetCards,
     private val randomizer: Randomizer,
     private val runGame: RunGame,
-    private val mainDomainUseCase: MainDomainUseCase,
+    private val mainDomainManager: MainDomainManager,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     // Create a coroutine scope using the provided dispatcher
@@ -36,15 +36,21 @@ class MainController(
 
     private val decisionDrawCountSuspend = DecisionDrawCountSuspend()
 
-    // Expose the state flow
-    val state: StateFlow<MainDomain> = mainDomainUseCase.state
-
-    fun setNumPlayers(numPlayers: Int) {
-        // Not yet implemented
+    init {
+        decisionDrawCountSuspend.onDrawCountRequest = {
+            mainDomainManager.showDrawCount = true
+        }
     }
 
+    // Expose the state flow
+    val state: StateFlow<MainDomain> = mainDomainManager.state
+
     fun update() {
-        mainDomainUseCase.update()
+        mainDomainManager.update()
+    }
+
+    fun onDrawCountChosen(value: Int) {
+        decisionDrawCountSuspend.provide(value)
     }
 
     fun run() {
@@ -69,12 +75,12 @@ class MainController(
                 println("Game event: $gameEvent")
 
                 when (gameEvent) {
-                    is GameEvent.Started -> mainDomainUseCase.addSimulationOutput("Game started")
-                    is GameEvent.TurnProgress -> mainDomainUseCase.addSimulationOutput(
+                    is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
+                    is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput(
                         "Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}"
                     )
 
-                    is GameEvent.Completed -> mainDomainUseCase.addSimulationOutput("Game completed")
+                    is GameEvent.Completed -> mainDomainManager.addSimulationOutput("Game completed")
                     GameEvent.WaitForStep -> {
                     }
                 }

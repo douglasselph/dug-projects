@@ -1,4 +1,4 @@
-package dugsolutions.leaf.main.ui
+package dugsolutions.leaf.main.ui.parts
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*

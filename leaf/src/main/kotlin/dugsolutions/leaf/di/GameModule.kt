@@ -66,7 +66,7 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
-import dugsolutions.leaf.main.gather.MainDomainUseCase
+import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
@@ -126,7 +126,7 @@ val gameModule: Module = module {
     single { GatherDiceInfo() }
     single { GatherGroveInfo(get(), get()) }
     single { GatherPlayerInfo(get(), get()) }
-    single { MainDomainUseCase(get(), get(), get()) }
+    single { MainDomainManager(get(), get(), get(), get()) }
 
     single {
         MainController(

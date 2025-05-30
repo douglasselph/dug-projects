@@ -1,4 +1,4 @@
-package dugsolutions.leaf.main.ui
+package dugsolutions.leaf.main.ui.parts
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,6 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith

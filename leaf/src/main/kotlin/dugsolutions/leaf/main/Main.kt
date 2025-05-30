@@ -20,9 +20,8 @@ class MainApplication : KoinComponent {
                 MaterialTheme {
                     MainScreen(
                         MainScreenArgs(
-                            onRunButtonClicked = { mainController.run() },
-                            state = mainController.state,
-                            onNumPlayersChanged = { mainController.setNumPlayers(it) }
+                            onDrawCountChosen = { mainController.onDrawCountChosen(it) },
+                            state = mainController.state
                         )
                     )
                 }
