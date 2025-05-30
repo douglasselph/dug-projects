@@ -26,6 +26,11 @@ data class Combination(
         buffer.append("values:$values)")
         return buffer.toString()
     }
+
+    val simplicityScore: Int
+        get() {
+            return values.dice.size + adjusted.size
+        }
 }
 
 data class Combinations(

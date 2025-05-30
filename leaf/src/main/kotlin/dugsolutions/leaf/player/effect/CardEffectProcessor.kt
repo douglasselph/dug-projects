@@ -6,7 +6,7 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
 
 /**
@@ -14,7 +14,7 @@ import dugsolutions.leaf.player.domain.AppliedEffect
  * This class coordinates between different effect types and their application to players.
  */
 class CardEffectProcessor(
-    private val shouldProcessMatchEffect: ShouldProcessMatchEffect
+    private val canProcessMatchEffect: CanProcessMatchEffect
 ) {
 
     private val effects = mutableListOf<AppliedEffect>()
@@ -27,14 +27,16 @@ class CardEffectProcessor(
         player: Player
     ): List<AppliedEffect> {
         effects.clear()
-        
+
         // Process primary effect
         if (card.primaryEffect != null) {
             processEffect(card, card.primaryEffect, card.primaryValue)
         }
         // Process match effect if applicable
         if (card.matchEffect != null) {
-            if (shouldProcessMatchEffect(card, player)) {
+            val result = canProcessMatchEffect(card, player)
+            if (result.possible) {
+                result.dieCost?.let { player.discard(result.dieCost) }
                 processEffect(card, card.matchEffect, matchValue(player, card))
             }
         }
@@ -47,9 +49,11 @@ class CardEffectProcessor(
                     // Remove card now
                     player.removeCardFromHand(card.id)
                 }
+
                 DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED -> {
                     player.effectsList.add(AppliedEffect.TrashIfNeeded(card))
                 }
+
                 else -> {}
             }
         }
@@ -75,7 +79,7 @@ class CardEffectProcessor(
             CardEffect.ADJUST_TO_MAX -> AppliedEffect.AdjustDieToMax()
 
             CardEffect.ADJUST_TO_MIN_OR_MAX -> AppliedEffect.AdjustDieToMax(minOrMax = true)
-            
+
             CardEffect.ADORN -> AppliedEffect.Adorn(card.id)
 
             CardEffect.DEFLECT -> AppliedEffect.DeflectDamage(value)

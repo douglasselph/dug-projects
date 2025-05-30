@@ -8,10 +8,13 @@ import dugsolutions.leaf.game.turn.handle.HandleCleanup
 import dugsolutions.leaf.game.turn.handle.HandleGetTarget
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.PlayerTD
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -43,7 +46,7 @@ class PlayerTurnTest {
         mockHandleGetTarget = mockk(relaxed = true)
         mockHandleGroveAcquisition = mockk(relaxed = true)
         mockHandleCleanup = mockk(relaxed = true)
-        
+
         // Create mock players
         player1 = PlayerTD(1)
         player2 = PlayerTD(2)
@@ -58,7 +61,7 @@ class PlayerTurnTest {
         player3.addCardToHand(card3)
 
         // Setup basic player properties
-        
+
         players = listOf(player1, player2, player3)
 
         every { mockHandleGetTarget(player1, players) } returns player2
@@ -87,22 +90,22 @@ class PlayerTurnTest {
     }
 
     @Test
-    fun invoke_whenCultivationPhase_handlesMarketAcquisition() {
+    fun invoke_whenCultivationPhase_handlesMarketAcquisition() = runBlocking {
         // Arrange
         // Act
         SUT(players, GamePhase.CULTIVATION)
-        
+
         // Assert
-        verify { mockHandleGroveAcquisition(player1) }
-        verify { mockHandleGroveAcquisition(player2) }
-        verify { mockHandleGroveAcquisition(player3) }
-        verify { mockHandleCleanup(player1) }
-        verify { mockHandleCleanup(player2) }
-        verify { mockHandleCleanup(player3) }
+        coVerify { mockHandleGroveAcquisition(player1) }
+        coVerify { mockHandleGroveAcquisition(player2) }
+        coVerify { mockHandleGroveAcquisition(player3) }
+        coVerify { mockHandleCleanup(player1) }
+        coVerify { mockHandleCleanup(player2) }
+        coVerify { mockHandleCleanup(player3) }
     }
 
     @Test
-    fun invoke_whenBattlePhase_handlesDamageDelivery() {
+    fun invoke_whenBattlePhase_handlesDamageDelivery() = runBlocking {
         // Arrange
         val card1 = FakeCards.fakeBloom
         val card2 = FakeCards.fakeSeedling
@@ -114,22 +117,22 @@ class PlayerTurnTest {
 
         // Act
         SUT(players, GamePhase.BATTLE)
-        
+
         // Assert
         verify { mockHandleDeliverDamage(players) }
     }
 
     @Test
-    fun invoke_enteringIntoBattlePhase_reordersPlayers() {
+    fun invoke_enteringIntoBattlePhase_reordersPlayers() = runBlocking {
         // Arrange
         val reorderedPlayers = listOf(player3, player1, player2)
         every { mockPlayerOrder(any()) } returns players andThen reorderedPlayers
-        
+
         // Act
         SUT(players, GamePhase.CULTIVATION)
-        
+
         // Assert
-        verifyOrder {
+        coVerifyOrder {
             mockHandleGroveAcquisition(player3)
             mockHandleGroveAcquisition(player1)
             mockHandleGroveAcquisition(player2)
@@ -141,7 +144,7 @@ class PlayerTurnTest {
 
 private class PlayerRoundTD {
 
-    val attacks = mutableMapOf<Int,Int>()
+    val attacks = mutableMapOf<Int, Int>()
 
     operator fun invoke(player: PlayerTD, target: PlayerTD?): Boolean {
         if (player.cardsInHand.isEmpty()) {

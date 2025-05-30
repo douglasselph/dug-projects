@@ -3,10 +3,9 @@ package dugsolutions.leaf.game
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.game.domain.GameTurn
-import dugsolutions.leaf.simulator.GameEvent
+import dugsolutions.leaf.main.domain.GameEvent
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 
 class RunGame(
@@ -14,16 +13,15 @@ class RunGame(
     private val gameTurn: GameTurn,
     private val chronicle: GameChronicle
 ) {
-
     private val stepChannel = Channel<Unit>(Channel.UNLIMITED)
-    private val _enableStepMode = MutableStateFlow(false)
+
+    // region public
+
+    var stepMode: Boolean = false
 
     operator fun invoke(): Flow<GameEvent> = flow {
-
         chronicle.clear()
-
         emit(GameEvent.Started)
-
         gameTurn.turn = 0
 
         while (game.inCultivationPhase) {
@@ -38,7 +36,7 @@ class RunGame(
             )
             game.detectBattlePhase()
 
-            if (_enableStepMode.value) {
+            if (stepMode) {
                 emit(GameEvent.WaitForStep)
                 stepChannel.receive() // Wait for user to continue
             }
@@ -57,7 +55,7 @@ class RunGame(
                     playersScoreData = game.score
                 )
             )
-            if (_enableStepMode.value) {
+            if (stepMode) {
                 emit(GameEvent.WaitForStep)
                 stepChannel.receive() // Wait for user to continue
             }
@@ -67,14 +65,10 @@ class RunGame(
         emit(GameEvent.Completed(data))
     }
 
-    var stepMode: Boolean
-        get() = _enableStepMode.value
-        set(value) {
-            _enableStepMode.value = value
-        }
-
-    // Method to continue to next step when in step mode
     suspend fun continueToNextStep() {
         stepChannel.send(Unit)
     }
+
+    // endregion public
+
 }

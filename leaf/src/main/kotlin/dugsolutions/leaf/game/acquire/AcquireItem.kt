@@ -9,7 +9,7 @@ import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
 import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionAcquireSelect
+import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 
 class AcquireItem(
     private val combinationGenerator: CombinationGenerator,
@@ -21,11 +21,12 @@ class AcquireItem(
     private val chronicle: GameChronicle
 ) {
 
-    operator fun invoke(player: Player, marketCards: List<GameCard>) {
+    suspend operator fun invoke(player: Player, marketCards: List<GameCard>): Boolean {
         val combinations = combinationGenerator(player)
         val bestCardChoice = acquireCardEvaluator(player, combinations, marketCards)
         val bestDieChoice = acquireDieEvaluator(combinations)
         val bestChoice = player.decisionDirector.acquireSelectDecision(bestCardChoice, bestDieChoice)
+        var result = false
         when (bestChoice) {
             is DecisionAcquireSelect.BuyItem.Card -> {
                 val card = bestChoice.item.card
@@ -36,23 +37,26 @@ class AcquireItem(
                     } else {
                         player.addCardToCompost(card.id)
                     }
+                    chronicle(GameChronicle.Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
+                    result = true
                 }
                 manageAcquiredFloralTypes.add(card.type)
-                chronicle(GameChronicle.Moment.ACQUIRE_CARD(player, card, combination))
             }
             is DecisionAcquireSelect.BuyItem.Die -> {
                 val die = bestChoice.item.die
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
                     player.addDieToCompost(die)
+                    chronicle(GameChronicle.Moment.ACQUIRE_DIE(player, die, combination))
+                    result = true
                 }
-                chronicle(GameChronicle.Moment.ACQUIRE_DIE(player, die, combination))
             }
-            else -> {
-                player.discardHand()
+            DecisionAcquireSelect.BuyItem.None -> {
             }
         }
+        // If result is false, is this something the chronicle should know?
+        return result
     }
 
 }

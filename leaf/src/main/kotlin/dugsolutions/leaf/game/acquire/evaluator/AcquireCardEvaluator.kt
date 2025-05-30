@@ -10,40 +10,51 @@ class AcquireCardEvaluator(
     private val evaluateCardPurchases: EvaluateCardPurchases
 ) {
 
-    data class BestChoice(
+    data class Choice(
         val card: GameCard,
         val combination: Combination
     )
 
-    operator fun invoke(
+    suspend operator fun invoke(
         player: Player,
         combinations: Combinations,
         marketCards: List<GameCard>
-    ): BestChoice? {
+    ): Choice? {
         val flourishTypesHeld = player.cardsInHand.getFlourishTypes()
-        val bestChoices = mutableListOf<BestChoice>()
+        val choices = mutableListOf<Choice>()
         
         for (combination in combinations) {
             val possibleCards = evaluateCardPurchases(marketCards, flourishTypesHeld, combination)
-            if (possibleCards.isNotEmpty()) {
-                val bestCardOf = player.decisionDirector.bestCardPurchase(possibleCards)
-                bestChoices.add(
-                    BestChoice(
-                        bestCardOf,
-                        combination
-                    )
-               )
+            for (card in possibleCards) {
+                choices.add(Choice(card, combination))
             }
         }
-        if (bestChoices.isEmpty()) {
+        if (choices.isEmpty()) {
             return null
         }
-        val bestCards = bestChoices.map { it.card }
-        val bestCardOf = player.decisionDirector.bestCardPurchase(bestCards)
-        val winningChoice = bestChoices.firstOrNull { it.card == bestCardOf } ?: return null
-        return BestChoice(
+        simplify(choices)
+
+        val possibleCards = choices.map { it.card }
+        val bestCardOf = player.decisionDirector.bestCardPurchase(possibleCards)
+        val winningChoice = choices.firstOrNull { it.card == bestCardOf } ?: return null
+        return Choice(
             bestCardOf,
             winningChoice.combination
         )
     }
+
+    private fun simplify(choices: MutableList<Choice>) {
+        // Group choices by card
+        val choicesByCard = choices.groupBy { it.card }
+        
+        // For each card, keep only the choice with the lowest simplicity score
+        val simplifiedChoices = choicesByCard.map { (_, cardChoices) ->
+            cardChoices.minByOrNull { it.combination.simplicityScore }
+        }.filterNotNull()
+        
+        // Clear and update the original list
+        choices.clear()
+        choices.addAll(simplifiedChoices)
+    }
+
 }

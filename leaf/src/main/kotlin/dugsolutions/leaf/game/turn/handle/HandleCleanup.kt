@@ -4,7 +4,7 @@ import dugsolutions.leaf.player.Player
 
 class HandleCleanup {
 
-    operator fun invoke(player: Player) {
+    suspend operator fun invoke(player: Player) {
         // Discard remaining hand
         player.discardHand()
 

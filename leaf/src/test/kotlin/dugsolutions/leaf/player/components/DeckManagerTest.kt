@@ -25,7 +25,6 @@ class DeckManagerTest {
         private const val CARD_ID_1 = 1
         private const val CARD_ID_2 = 2
     }
-
     private lateinit var supply: StackManager
     private lateinit var hand: StackManager
     private lateinit var compost: StackManager
@@ -113,11 +112,9 @@ class DeckManagerTest {
     fun setup_addsCardsAndDiceToSupply() {
         // Arrange
         val ids = listOf(CARD_ID_1, CARD_ID_2)
-        val seedlings = mockk<GameCards>()
+        val seedlings = mockk<GameCards>(relaxed = true)
         val startingDice = listOf(d4, d6)
         every { seedlings.cardIds } returns ids
-        every { supply.addAllCards(ids) } just Runs
-        every { supply.addAllDice(startingDice) } just Runs
 
         // Act
         SUT.setup(seedlings, startingDice)
@@ -287,8 +284,6 @@ class DeckManagerTest {
             HandItem.Card(mockk { every { id } returns CARD_ID_2 })
         )
         every { compost.getItems() } returns items
-        every { supply.addAllCards(any()) } just Runs
-        every { supply.addAllDice(any()) } just Runs
 
         // Act
         SUT.resupply()

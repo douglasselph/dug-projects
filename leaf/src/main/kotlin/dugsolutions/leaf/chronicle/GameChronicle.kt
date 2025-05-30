@@ -5,11 +5,11 @@ import dugsolutions.leaf.chronicle.domain.TransformMomentToEntry
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.game.domain.GameTurn
 import dugsolutions.leaf.game.acquire.domain.Combination
+import dugsolutions.leaf.game.domain.GameTurn
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.domain.ExtendedHandItem
 import dugsolutions.leaf.player.domain.PlayersScoreData
+import kotlinx.coroutines.flow.FlowCollector
 
 class GameChronicle(
     private val gameTurn: GameTurn,
@@ -19,7 +19,7 @@ class GameChronicle(
     sealed class Moment {
         data class ACQUIRE_CARD(val player: Player, val card: GameCard, val paid: Combination): Moment()
         data class ACQUIRE_DIE(val player: Player, val die: Die, val paid: Combination): Moment()
-        data class ADJUST_DIE(val player: Player, val amount: Int): Moment()
+        data class ADJUST_DIE(val player: Player, val die: Die, val amount: Int): Moment()
         data class ADD_TO_THORN(val player: Player, val amount: Int): Moment()
 
         data class ADD_TO_TOTAL(val player: Player, val amount: Int): Moment()
@@ -55,6 +55,7 @@ class GameChronicle(
 
     // Cache to store all chronicle entries
     private val entries = mutableListOf<ChronicleEntry>()
+    private var lastNewEntriesIndex = 0
 
     /**
      * Records a game moment by transforming it into a chronicle entry and storing it.
@@ -73,9 +74,20 @@ class GameChronicle(
     fun getEntries(): List<ChronicleEntry> = entries.toList()
     
     /**
+     * Returns only the new entries since the last call to getNewEntries().
+     * The first call returns all entries.
+     */
+    fun getNewEntries(): List<ChronicleEntry> {
+        val newEntries = entries.subList(lastNewEntriesIndex, entries.size)
+        lastNewEntriesIndex = entries.size
+        return newEntries.toList()
+    }
+    
+    /**
      * Clears all recorded entries.
      */
     fun clear() {
         entries.clear()
+        lastNewEntriesIndex = 0
     }
 }

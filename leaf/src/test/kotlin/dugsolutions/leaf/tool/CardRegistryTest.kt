@@ -19,7 +19,7 @@ class CardRegistryTest {
 
     @BeforeEach
     fun setup() {
-        parseCost = mockk(relaxed = true)
+        parseCost = ParseCost()
         cardRegistry = CardRegistry(parseCost)
     }
 

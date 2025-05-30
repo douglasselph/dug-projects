@@ -4,7 +4,7 @@ import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -23,7 +23,7 @@ class CardEffectProcessorTest {
         private const val TEST_VALUE = 3
     }
 
-    private lateinit var mockShouldProcessMatchEffect: ShouldProcessMatchEffect
+    private lateinit var mockCanProcessMatchEffect: CanProcessMatchEffect
     private lateinit var mockPlayer: Player
     private lateinit var mockCard: GameCard
 
@@ -31,15 +31,15 @@ class CardEffectProcessorTest {
 
     @BeforeEach
     fun setup() {
-        mockShouldProcessMatchEffect = mockk(relaxed = true)
+        mockCanProcessMatchEffect = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         mockCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
         }
-        SUT = CardEffectProcessor(mockShouldProcessMatchEffect)
+        SUT = CardEffectProcessor(mockCanProcessMatchEffect)
 
         every { mockPlayer.removeCardFromHand(any()) } returns true
-        every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns false
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(false)
         every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
     }
 
@@ -88,7 +88,7 @@ class CardEffectProcessorTest {
         every { mockCard.matchEffect } returns CardEffect.DRAW_DIE
         every { mockCard.matchValue } returns 1
         every { mockCard.trashEffect } returns null
-        every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns true
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true)
 
         // Act
         val result = SUT(mockCard, mockPlayer)
@@ -110,7 +110,7 @@ class CardEffectProcessorTest {
         every { mockCard.matchEffect } returns CardEffect.DRAW_DIE
         every { mockCard.matchValue } returns 1
         every { mockCard.trashEffect } returns null
-        every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns false
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(false)
 
         // Act
         val result = SUT(mockCard, mockPlayer)
@@ -154,7 +154,7 @@ class CardEffectProcessorTest {
         every { mockCard.matchValue } returns 1
         every { mockCard.trashEffect } returns CardEffect.DISCARD
         every { mockCard.trashValue } returns 1
-        every { mockShouldProcessMatchEffect(mockCard, mockPlayer) } returns true
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true)
         every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
@@ -284,5 +284,27 @@ class CardEffectProcessorTest {
 
         // Verify card IS removed from hand for trash effects
         verify(exactly = 1) { mockPlayer.removeCardFromHand(CARD_ID_1) }
+    }
+
+    @Test
+    fun processCardEffect_whenMatchEffectWithDieCost_discardsMatchingDie() {
+        // Arrange
+        val mockDie = mockk<dugsolutions.leaf.components.die.Die>(relaxed = true)
+        every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
+        every { mockCard.primaryValue } returns 2
+        every { mockCard.matchEffect } returns CardEffect.DRAW_DIE
+        every { mockCard.matchValue } returns 1
+        every { mockCard.trashEffect } returns null
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true, dieCost = mockDie)
+        every { mockPlayer.discard(mockDie) } returns true
+
+        // Act
+        val result = SUT(mockCard, mockPlayer)
+
+        // Assert
+        assertEquals(2, result.size)
+        assertTrue(result[0] is AppliedEffect.DrawCards)
+        assertTrue(result[1] is AppliedEffect.DrawDice)
+        verify(exactly = 1) { mockPlayer.discard(mockDie) }
     }
 } 

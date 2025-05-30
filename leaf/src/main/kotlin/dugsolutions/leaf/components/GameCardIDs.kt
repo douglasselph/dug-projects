@@ -19,6 +19,11 @@ class GameCardIDs(
 
     operator fun get(index: Int): CardID = _cards[index]
 
+    // TODO: Unit test
+    fun getCard(index: Int): GameCard? {
+        return cardManager.getCard(get(index))
+    }
+
     operator fun plus(other: GameCardIDs): GameCardIDs = GameCardIDs(
         cardManager,
         _cards + other.cardIds,

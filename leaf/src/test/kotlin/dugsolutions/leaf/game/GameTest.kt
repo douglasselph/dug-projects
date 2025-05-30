@@ -15,9 +15,11 @@ import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminatedNoDiceNorCards
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -90,7 +92,8 @@ class GameTest {
 
         // Setup card manager to return seedling cards
         every { mockGameCards.cards } returns listOf(
-            fakeSeedlingCard1, fakeSeedlingCard2, fakeSeedlingCard3, fakeSeedlingCard4)
+            fakeSeedlingCard1, fakeSeedlingCard2, fakeSeedlingCard3, fakeSeedlingCard4
+        )
 
         // Setup player factory to return mock players
         every { mockPlayerFactory(any()) } returns mockPlayer1 andThen mockPlayer2 andThen mockPlayer3
@@ -126,7 +129,7 @@ class GameTest {
         val score1 = PlayerScore(10, 5, 2)
         val score2 = PlayerScore(20, 8, 3)
         val score3 = PlayerScore(15, 6, 4)
-        
+
         every { mockPlayer1.score } returns score1
         every { mockPlayer2.score } returns score2
         every { mockPlayer3.score } returns score3
@@ -136,7 +139,7 @@ class GameTest {
 
         // Act
         val result = SUT.score
-        
+
         // Assert
         assertEquals(GAME_TURN, result.turn)
         assertEquals(3, result.players.size)
@@ -160,7 +163,7 @@ class GameTest {
 
         // Act
         SUT.setup(customConfig)
-        
+
         // Assert
         verify(exactly = 2) { mockPlayerFactory(mockDieFactory) }
         verify { mockPlayerOrder(any()) }
@@ -182,7 +185,7 @@ class GameTest {
 
         // Act
         SUT.setup(customConfig)
-        
+
         // Assert
         verify { setupFunction(0, mockPlayer1) }
         verify { setupFunction(1, mockPlayer2) }
@@ -200,17 +203,17 @@ class GameTest {
         // Reset expectations
         every { mockPlayerFactory(any()) } returns mockPlayer1 andThen mockPlayer2
         every { mockPlayerOrder(any()) } returns listOf(mockPlayer1, mockPlayer2)
-        
+
         // Act
         SUT.setup(customConfig)
-        
+
         // Assert
         verify { mockPlayer1.drawHand(2) }
         verify { mockPlayer2.drawHand(2) }
     }
 
     @Test
-    fun runOneCultivationTurn_callsPlayerTurnWithCultivationPhase() {
+    fun runOneCultivationTurn_callsPlayerTurnWithCultivationPhase() = runBlocking {
         // Arrange
         SUT.setup(sampleConfig)
 
@@ -218,11 +221,11 @@ class GameTest {
         SUT.runOneCultivationTurn()
 
         // Assert
-        verify { mockPlayerTurn(SUT.players, GamePhase.CULTIVATION) }
+        coVerify { mockPlayerTurn(SUT.players, GamePhase.CULTIVATION) }
     }
 
     @Test
-    fun runOneBattleTurn_callsPlayerTurnWithBattlePhase() {
+    fun runOneBattleTurn_callsPlayerTurnWithBattlePhase() = runBlocking {
         // Arrange
         SUT.setup(sampleConfig)
 
@@ -230,7 +233,7 @@ class GameTest {
         SUT.runOneBattleTurn()
 
         // Assert
-        verify { mockPlayerTurn(SUT.players, GamePhase.BATTLE) }
+        coVerify { mockPlayerTurn(SUT.players, GamePhase.BATTLE) }
     }
 
     @Test

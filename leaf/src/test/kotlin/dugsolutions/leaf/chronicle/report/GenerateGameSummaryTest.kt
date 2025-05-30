@@ -51,7 +51,7 @@ class GenerateGameSummaryTest {
         private fun createOrderingEntry(turn: Int, playerIdOrder: List<Int>): OrderingEntry {
             return OrderingEntry(
                 turn = turn,
-                playerIdOrder = playerIdOrder,
+                playerOrder = playerIdOrder,
                 reports = emptyList()
             )
         }

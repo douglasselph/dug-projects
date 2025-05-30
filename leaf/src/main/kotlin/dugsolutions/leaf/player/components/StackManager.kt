@@ -82,8 +82,9 @@ class StackManager(
     }
 
     // Bulk operations
-    fun addAllCards(cardIds: List<CardID>) {
+    fun addAllCards(cardIds: List<CardID>): StackManager {
         cards.addAll(cardIds)
+        return this
     }
 
     fun addAllDice(diceList: List<Die>) {

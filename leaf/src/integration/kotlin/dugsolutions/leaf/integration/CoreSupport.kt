@@ -25,6 +25,7 @@ import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig
 import dugsolutions.leaf.grove.domain.MarketStackConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
+import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerDefault
@@ -61,6 +62,7 @@ class CoreSupport(
     private lateinit var marketConfig: MarketConfig
     private lateinit var playerUnderTestSeedlings: GameCards
     private lateinit var otherSeedlings: GameCards
+    private lateinit var scenarioBasicConfig: ScenarioBasicConfig
 
     lateinit var gameCardsFactory: GameCardsFactory
 
@@ -100,6 +102,7 @@ class CoreSupport(
         writeGameSummaries = get()
         generateGameSummary = get()
         reportGameSummaries = get()
+        scenarioBasicConfig = get()
 
         cardRegistry.loadFromCsv(TEST_CARD_LIST)
         cardManager.loadCards(cardRegistry)
@@ -198,14 +201,12 @@ class CoreSupport(
 
     private fun baseSetup() {
         grove.setup(marketConfig)
-        var playerUnderTest = true
         game.setup(
             Game.Config(
                 numPlayers = 2,
                 dieFactory = dieFactory,
-                setup = { _, player ->
-                    if (playerUnderTest) {
-                        playerUnderTest = false
+                setup = { index, player ->
+                    if (index == 0) {
                         player.setupInitialDeck(playerUnderTestSeedlings)
                     } else {
                         player.setupInitialDeck(otherSeedlings)
@@ -223,58 +224,8 @@ class CoreSupport(
         return requireNotNull(cardManager.getCard(name)) { "$name not found" }
     }
 
-    fun getMarketStackConfig(
-        which: MarketStackID,
-        cards: List<GameCard>
-    ): MarketStackConfig {
-        val stack = mutableListOf<MarketCardConfig>()
-        for (card in cards) {
-            stack.add(MarketCardConfig(card, 8))
-        }
-        return MarketStackConfig(which, stack)
-    }
-
     fun marketBasicConfig(numPlayers: Int): MarketConfig {
-
-        val roots = getCards(FlourishType.ROOT)
-        val vines = getCards(FlourishType.VINE)
-        val canopies = getCards(FlourishType.CANOPY)
-        val flowers = getCards(FlourishType.FLOWER)
-
-        val numCards = numPlayers * 3
-        val numWild = numPlayers * 2
-        val numFlowers = numPlayers + 2
-
-        // Create joint cards from roots[2,3], vines[2,3], and canopies[2,3]
-        val joints = (listOf(
-            roots[2], roots[3],  // Third and fourth root cards
-            vines[2], vines[3],  // Third and fourth vine cards
-            canopies[2], canopies[3]  // Third and fourth canopy cards
-        ).flatMap { card -> List(numWild) { card } }).shuffled()
-
-        return MarketConfig(
-            stacks = listOf(
-                getMarketStackConfig(MarketStackID.ROOT_1, List(numCards) { roots[0] }),
-                getMarketStackConfig(MarketStackID.ROOT_2, List(numCards) { roots[1] }),
-                getMarketStackConfig(MarketStackID.CANOPY_1, List(numCards) { canopies[0] }),
-                getMarketStackConfig(MarketStackID.CANOPY_2, List(numCards) { canopies[1] }),
-                getMarketStackConfig(MarketStackID.VINE_1, List(numCards) { vines[0] }),
-                getMarketStackConfig(MarketStackID.VINE_2, List(numCards) { vines[1] }),
-                getMarketStackConfig(MarketStackID.FLOWER_1, List(numFlowers) { flowers[0] }),
-                getMarketStackConfig(MarketStackID.FLOWER_2, List(numFlowers) { flowers[1] }),
-                getMarketStackConfig(MarketStackID.FLOWER_3, List(numFlowers) { flowers[2] }),
-                getMarketStackConfig(MarketStackID.JOINT_RCV, joints)
-            ),
-            dice = listOf(
-                MarketDiceConfig(DieSides.D4, numPlayers * 2),
-                MarketDiceConfig(DieSides.D6, numPlayers * 2),
-                MarketDiceConfig(DieSides.D8, numPlayers * 3),
-                MarketDiceConfig(DieSides.D10, numPlayers * 3),
-                MarketDiceConfig(DieSides.D12, numPlayers * 2),
-                MarketDiceConfig(DieSides.D20, numPlayers * 2),
-            ),
-            bonusDie = listOf(DieSides.D20, DieSides.D12, DieSides.D10, DieSides.D8, DieSides.D6, DieSides.D4).take(numPlayers)
-        )
+        return scenarioBasicConfig(numPlayers)
     }
 
     // endregion Support

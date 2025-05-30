@@ -66,13 +66,13 @@ class HandleCardEffect(
                 if (effect.canTargetPlayer && player.decisionDirector.shouldTargetPlayer(target, effect.adjustment)) {
                     selectDieToAdjust(target.diceInHand, -effect.adjustment)?.let { die ->
                         target.diceInHand.adjust(die, -effect.adjustment)
-                        chronicle(GameChronicle.Moment.ADJUST_DIE(target, -effect.adjustment))
+                        chronicle(GameChronicle.Moment.ADJUST_DIE(target, die, -effect.adjustment))
                     }
                 } else {
                     selectDieToAdjust(player.diceInHand, effect.adjustment)?.let { selectedDie ->
                         if (player.diceInHand.adjust(selectedDie, effect.adjustment)) {
                             chronicle(
-                                GameChronicle.Moment.ADJUST_DIE(player, effect.adjustment)
+                                GameChronicle.Moment.ADJUST_DIE(player, selectedDie, effect.adjustment)
                             )
                         }
                     }
@@ -84,7 +84,7 @@ class HandleCardEffect(
                 // Choose die with with the greatest difference against MAX.
                 selectDieToMax(player.diceInHand)?.let { die ->
                     val amount = die.adjustToMax()
-                    chronicle(GameChronicle.Moment.ADJUST_DIE(player, amount))
+                    chronicle(GameChronicle.Moment.ADJUST_DIE(player, die, amount))
                 }
                 true
             }

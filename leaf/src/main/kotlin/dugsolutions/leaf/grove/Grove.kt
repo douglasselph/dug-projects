@@ -16,20 +16,18 @@ class Grove(
 
 ) {
 
+    // TODO: Unit test
     fun setup(config: MarketConfig) {
         stacks.clearAll()
         for (stackConfig in config.stacks) {
             stackConfig.cards?.let {
                 stacks.add(stackConfig.which, gameCardsUseCase(stackConfig.cards))
-            }
-            stackConfig.cards2?.let { gameCards ->
-                stacks.add(stackConfig.which, gameCards)
+                stacks.shuffle(stackConfig.which)
             }
         }
         for (diceConfig in config.dice) {
             stacks.addDie(count = diceConfig.count, sides = diceConfig.sides.value)
         }
-        stacks.setBonusDice(config.bonusDie)
     }
 
     // Query methods for available items

@@ -16,7 +16,7 @@ class PlayerTurn(
     private val handleCleanup: HandleCleanup
 ) {
 
-    operator fun invoke(players: List<Player>, phase: GamePhase) {
+    suspend operator fun invoke(players: List<Player>, phase: GamePhase) {
         var orderedPlayers = playerOrder(players)
         orderedPlayers.forEach { player ->
             val target = handleGetTarget(player, orderedPlayers)

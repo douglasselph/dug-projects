@@ -19,8 +19,8 @@ class GenerateGameSummary(
         val orderingEntry = entries.filterIsInstance<OrderingEntry>().firstOrNull()
         
         // Get the player ID who had the first move (if available)
-        val playerIdOfFirstPlayer = if (orderingEntry != null && orderingEntry.playerIdOrder.isNotEmpty()) {
-            orderingEntry.playerIdOrder.first()
+        val playerIdOfFirstPlayer = if (orderingEntry != null && orderingEntry.playerOrder.isNotEmpty()) {
+            orderingEntry.playerOrder.first()
         } else {
             -1 // No player order information available
         }

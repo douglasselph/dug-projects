@@ -13,6 +13,7 @@ class ParseCost {
             "V" to FlourishType.VINE
         )
     }
+
     operator fun invoke(value: String): Cost {
         // Handle special cases
         if (value.equals("Free", ignoreCase = true)) {
@@ -23,7 +24,7 @@ class ParseCost {
         }
         // Parse comma-separated cost elements
         val costElements = mutableListOf<CostElement>()
-        val elements = value.split(",").map { it.trim() }
+        val elements = value.split(" ").map { it.trim() }
 
         for (element in elements) {
             when {

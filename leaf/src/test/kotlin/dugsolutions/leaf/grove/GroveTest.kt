@@ -96,7 +96,6 @@ class GroveTest {
         val mockConfig = mockk<MarketConfig> {
             every { stacks } returns emptyList()
             every { dice } returns emptyList()
-            every { bonusDie } returns emptyList()
         }
         
         // Act
@@ -112,7 +111,6 @@ class GroveTest {
         val mockMarketCardConfig = mockk<MarketStackConfig> {
             every { which } returns MarketStackID.ROOT_1
             every { cards } returns listOf(mockk())
-            every { cards2 } returns null
         }
         
         val mockGameCards = mockk<GameCards>()
@@ -121,7 +119,6 @@ class GroveTest {
         val mockConfig = mockk<MarketConfig> {
             every { stacks } returns listOf(mockMarketCardConfig)
             every { dice } returns emptyList()
-            every { bonusDie } returns emptyList()
         }
         
         // Act
@@ -130,30 +127,7 @@ class GroveTest {
         // Assert
         verify { mockGroveStacks.add(MarketStackID.ROOT_1, mockGameCards) }
     }
-    
-    @Test
-    fun setup_whenStackConfigsWithCards2_addsCardsToStacks() {
-        // Arrange
-        val mockGameCards = mockk<GameCards>()
-        val mockMarketCardConfig = mockk<MarketStackConfig> {
-            every { which } returns MarketStackID.JOINT_RCV
-            every { cards } returns null
-            every { cards2 } returns mockGameCards
-        }
-        
-        val mockConfig = mockk<MarketConfig> {
-            every { stacks } returns listOf(mockMarketCardConfig)
-            every { dice } returns emptyList()
-            every { bonusDie } returns emptyList()
-        }
-        
-        // Act
-        SUT.setup(mockConfig)
-        
-        // Assert
-        verify { mockGroveStacks.add(MarketStackID.JOINT_RCV, mockGameCards) }
-    }
-    
+
     @Test
     fun setup_whenDiceConfigsProvided_addsDiceToSupply() {
         // Arrange
@@ -165,7 +139,6 @@ class GroveTest {
         val mockConfig = mockk<MarketConfig> {
             every { stacks } returns emptyList()
             every { dice } returns listOf(mockDiceConfig)
-            every { bonusDie } returns emptyList()
         }
         
         // Act
@@ -173,24 +146,6 @@ class GroveTest {
         
         // Assert
         verify { mockGroveStacks.addDie( DieSides.D6.value, 4) }
-    }
-    
-    @Test
-    fun setup_whenBonusDieProvided_setsBonusDice() {
-        // Arrange
-        val bonusDice = listOf(DieSides.D20, DieSides.D12)
-        
-        val mockConfig = mockk<MarketConfig> {
-            every { stacks } returns emptyList()
-            every { dice } returns emptyList()
-            every { bonusDie } returns bonusDice
-        }
-        
-        // Act
-        SUT.setup(mockConfig)
-        
-        // Assert
-        verify { mockGroveStacks.setBonusDice(bonusDice) }
     }
 
     @Test

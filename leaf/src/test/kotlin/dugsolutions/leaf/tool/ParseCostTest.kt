@@ -84,6 +84,18 @@ class ParseCostTest {
     }
 
     @Test
+    fun invoke_whenRootMinimumCost_returnsCorrectCost() {
+        // Act
+        val result = SUT("R 9")
+
+        // Assert
+        assertCostEquals(
+            Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT), CostElement.TotalDiceMinimum(9))),
+            result
+        )
+    }
+
+    @Test
     fun invoke_whenPlainNumber_returnsTotalDiceMinimum() {
         // Act
         val result = SUT("8")
@@ -98,7 +110,7 @@ class ParseCostTest {
     @Test
     fun invoke_whenMultipleElementsWithPlainNumber_returnsCorrectCost() {
         // Act
-        val result = SUT("8,R,S6+")
+        val result = SUT("8 R S6+")
 
         // Assert
         assertCostEquals(
@@ -138,7 +150,7 @@ class ParseCostTest {
     @Test
     fun invoke_whenMultipleElements_returnsCorrectCost() {
         // Act
-        val result = SUT("S6+,M10+,R")
+        val result = SUT("S6+ M10+ R")
 
         // Assert
         assertCostEquals(
@@ -154,7 +166,7 @@ class ParseCostTest {
     @Test
     fun invoke_whenMultipleElements2_returnsCorrectCost() {
         // Act
-        val result = SUT("S6+,10,R")
+        val result = SUT("S6+ 10 R")
 
         // Assert
         assertCostEquals(
@@ -187,7 +199,7 @@ class ParseCostTest {
     fun invoke_whenInvalidDieFormat_throwsException() {
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
-            SUT("S6++")
+            SUT("S6+++")
         }
     }
 
@@ -202,7 +214,7 @@ class ParseCostTest {
     @Test
     fun invoke_whenAllFlourishTypes_returnsCorrectCost() {
         // Act
-        val result = SUT("R,C,V")
+        val result = SUT("R C V")
 
         // Assert
         assertCostEquals(
@@ -218,7 +230,7 @@ class ParseCostTest {
     @Test
     fun invoke_whenComplexCombination_returnsCorrectCost() {
         // Act
-        val result = SUT("S6+,M12,R,C")
+        val result = SUT("S6+ M12 R C")
 
         // Assert
         assertCostEquals(

@@ -11,10 +11,13 @@ import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.DecisionDirector
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -40,7 +43,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_withEmptyMarketCards_returnsNull() {
+    fun invoke_withEmptyMarketCards_returnsNull() = runBlocking {
         // Arrange
         val marketCards = emptyList<GameCard>()
         val combinations = createCombinations(listOf(
@@ -56,7 +59,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_whenNoPossibleCards_returnsNull() {
+    fun invoke_whenNoPossibleCards_returnsNull() = runBlocking {
         // Arrange
         val card = createGameCard("Test Card")
         val marketCards = listOf(card)
@@ -74,7 +77,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_withOneCombinationOnePossibleCard_returnsCard() {
+    fun invoke_withOneCombinationOnePossibleCard_returnsCard() = runBlocking {
         // Arrange
         val card = createGameCard("Test Card")
         val marketCards = listOf(card)
@@ -83,7 +86,7 @@ class AcquireCardEvaluatorTest {
         
         every { mockPlayer.cardsInHand } returns emptyList()
         every { mockEvaluateCardPurchases(marketCards, any(), combination) } returns listOf(card)
-        every { mockDecisionDirector.bestCardPurchase(listOf(card)) } returns card
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card)) } returns card
         
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -94,7 +97,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_withMultipleCombinations_returnsCardWithBestCombination() {
+    fun invoke_withMultipleCombinations_returnsCardWithBestCombination() = runBlocking {
         // Arrange
         val card = createGameCard("Test Card")
         val marketCards = listOf(card)
@@ -109,7 +112,7 @@ class AcquireCardEvaluatorTest {
         
         // When asked which card is best among identical options, return the first one
         val cardsCaptor = slot<List<GameCard>>()
-        every { mockDecisionDirector.bestCardPurchase(capture(cardsCaptor)) } answers { cardsCaptor.captured[0] }
+        coEvery { mockDecisionDirector.bestCardPurchase(capture(cardsCaptor)) } answers { cardsCaptor.captured[0] }
         
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -120,7 +123,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_withMultipleCards_selectsBestCardAccordingToDirector() {
+    fun invoke_withMultipleCards_selectsBestCardAccordingToDirector() = runBlocking {
         // Arrange
         val card1 = createGameCard("Card 1")
         val card2 = createGameCard("Card 2")
@@ -131,8 +134,8 @@ class AcquireCardEvaluatorTest {
         
         every { mockPlayer.cardsInHand } returns emptyList()
         every { mockEvaluateCardPurchases(marketCards, any(), combination) } returns listOf(card1, card2)
-        every { mockDecisionDirector.bestCardPurchase(listOf(card1, card2)) } returns card2
-        every { mockDecisionDirector.bestCardPurchase(listOf(card2)) } returns card2
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card1, card2)) } returns card2
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card2)) } returns card2
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -143,7 +146,7 @@ class AcquireCardEvaluatorTest {
     }
     
     @Test
-    fun invoke_withMultipleCombinationsForDifferentCards_selectsBestOverallCard() {
+    fun invoke_withMultipleCombinationsForDifferentCards_selectsBestOverallCard() = runBlocking {
         // Arrange
         val card1 = createGameCard("Card 1")
         val card2 = createGameCard("Card 2")
@@ -162,10 +165,10 @@ class AcquireCardEvaluatorTest {
         every { mockEvaluateCardPurchases(marketCards, any(), combination3) } returns listOf(card3)
         
         // Director prefers card2 over all others
-        every { mockDecisionDirector.bestCardPurchase(listOf(card1)) } returns card1
-        every { mockDecisionDirector.bestCardPurchase(listOf(card2)) } returns card2
-        every { mockDecisionDirector.bestCardPurchase(listOf(card3)) } returns card3
-        every { mockDecisionDirector.bestCardPurchase(listOf(card1, card2, card3)) } returns card2
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card1)) } returns card1
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card2)) } returns card2
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card3)) } returns card3
+        coEvery { mockDecisionDirector.bestCardPurchase(listOf(card1, card2, card3)) } returns card2
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -175,7 +178,7 @@ class AcquireCardEvaluatorTest {
         assertEquals(combination2, result?.combination, "Should return the combination that was used for card2")
         
         // Verify that the final decision was made with all best cards
-        verify { mockDecisionDirector.bestCardPurchase(listOf(card1, card2, card3)) }
+        coVerify { mockDecisionDirector.bestCardPurchase(listOf(card1, card2, card3)) }
     }
     
     private fun createCombinations(combinations: List<Combination>): Combinations {

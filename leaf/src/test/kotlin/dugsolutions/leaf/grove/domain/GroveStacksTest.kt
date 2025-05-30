@@ -91,8 +91,8 @@ class GroveStacksTest {
         every { mockCardManager.getCard(CARD_ID_2) } returns mockGameCard2
         every { mockCardManager.getCard(CARD_ID_3) } returns mockGameCard3
 
-        SUT = GroveStacks(mockCardManager, mockGameCardIDsFactory, dieFactory)
-        SUT2 = GroveStacks(mockCardManager, gameCardIDsFactory, dieFactory)
+        SUT = GroveStacks(mockCardManager, mockGameCardIDsFactory)
+        SUT2 = GroveStacks(mockCardManager, gameCardIDsFactory)
     }
 
     private fun createGameCards(cards: List<GameCard>): GameCards {
@@ -200,47 +200,6 @@ class GroveStacksTest {
     // endregion Stack Management Tests
 
     // region Dice Management Tests
-
-    @Test
-    fun setBonusDice_addsAllDiceInList() {
-        // Arrange
-        val diceSides = listOf(DieSides.D20, DieSides.D12, DieSides.D10)
-        
-        // Act
-        SUT.setBonusDice(diceSides)
-
-        // Assert
-        assertEquals(3, SUT.numBonusDice)
-        assertEquals(20, SUT.useNextBonusDie()?.sides)
-        assertEquals(12, SUT.useNextBonusDie()?.sides)
-        assertEquals(10, SUT.useNextBonusDie()?.sides)
-    }
-
-    @Test
-    fun setBonusDice_withEmptyList_doesNothing() {
-        // Arrange
-        val emptyList = emptyList<DieSides>()
-        
-        // Act
-        SUT.setBonusDice(emptyList)
-
-        // Assert
-        assertEquals(0, SUT.numBonusDice)
-    }
-    
-    @Test
-    fun setBonusDice_replacesExistingBonusDice() {
-        // Arrange
-        SUT.setBonusDice(listOf(DieSides.D6, DieSides.D6))
-        assertEquals(2, SUT.numBonusDice)
-        
-        // Act
-        SUT.setBonusDice(listOf(DieSides.D20))
-        
-        // Assert
-        assertEquals(1, SUT.numBonusDice)
-        assertEquals(20, SUT.useNextBonusDie()?.sides)
-    }
 
     @Test
     fun setDiceCount_setsAllValidDiceToCount() {

@@ -12,6 +12,7 @@ import dugsolutions.leaf.components.MatchWith
  * Each card has a unique ID, name, and flourish type.
  */
 class FakeCards {
+
     companion object {
         // Card IDs
         private var ID = 0

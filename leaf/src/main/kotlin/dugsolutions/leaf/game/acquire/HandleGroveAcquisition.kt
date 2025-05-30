@@ -15,7 +15,7 @@ class HandleGroveAcquisition(
 
     data class NoEndInSiteException(val msg: String) : Exception(msg)
 
-    operator fun invoke(player: Player) {
+    suspend operator fun invoke(player: Player) {
         manageAcquiredFloralTypes.clear()
         var count = 0
         while (player.diceInHand.isNotEmpty()) {
@@ -23,7 +23,10 @@ class HandleGroveAcquisition(
                 throw NoEndInSiteException("Grove acquisition loop exceeded maximum iterations ($FAILSAFE). Possible infinite loop detected.")
             }
             val cardsPossible = selectPossibleCards()
-            acquireItem(player, cardsPossible)
+            if (!acquireItem(player, cardsPossible)) {
+                // Is this something the chronicle should know?
+                break
+            }
         }
     }
 

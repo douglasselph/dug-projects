@@ -59,19 +59,24 @@ import dugsolutions.leaf.game.turn.select.SelectPossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
+import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
+import dugsolutions.leaf.main.CardOperations
 import dugsolutions.leaf.main.MainController
-import dugsolutions.leaf.main.info.GatherPlayerInfo
+import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
+import dugsolutions.leaf.main.gather.GatherGroveInfo
+import dugsolutions.leaf.main.gather.GatherPlayerInfo
+import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.DecisionBestCardPurchaseCoreStrategy
+import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
+import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
 import dugsolutions.leaf.player.effect.CardsEffectsProcessor
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
-import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
-import dugsolutions.leaf.simulator.GameSimulator
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.ParseCost
 import dugsolutions.leaf.tool.Randomizer
@@ -87,6 +92,9 @@ object DieFactoryConfig {
 
 val gameModule: Module = module {
 
+    single { Dispatchers.Main }
+    single { Dispatchers.IO }
+
     single { CostScore() }
     single { ParseCost() }
 
@@ -94,6 +102,7 @@ val gameModule: Module = module {
     single { CardManager(get()) }
     single { GameCardIDsFactory(get(), get()) }
     single { GameCardsFactory(get(), get()) }
+    single { CardOperations(get(), get(), get()) }
 
     // Common randomizer used by both die factories
     single<Randomizer> { RandomizerDefault() }
@@ -111,14 +120,16 @@ val gameModule: Module = module {
     single { DieFactoryUniform(get()) }
     single { DieFactoryRandom(get()) }
 
-    single { Dispatchers.Main }
-    single { Dispatchers.IO }
-
     single { TransformMomentToEntry(get(), get(), get(), get()) }
+    single { GatherCardInfo() }
+    single { GatherDiceInfo() }
+    single { GatherGroveInfo(get(), get()) }
+    single { GatherPlayerInfo(get(), get()) }
+    single { MainDomainManager(get(), get(), get(), get()) }
 
     single {
         MainController(
-            get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
 
@@ -154,9 +165,7 @@ val gameModule: Module = module {
     single { BattlePhaseTransition(get(), get()) }
 
     single { Game(get(), get(), get(), get(), get(), get()) }
-
     single { RunGame(get(), get(), get()) }
-    single { GameSimulator(get()) }
 
     single { GameChronicle(get(), get()) }
     single { WriteToFile() }
@@ -178,14 +187,12 @@ val gameModule: Module = module {
 
     single { GameCardsUseCase(get()) }
     single { Grove(get(), get()) }
-    single { GatherPlayerInfo() }
     single { PlayerUnderTest(get()) }
 
     single {
         GroveStacks(
             cardManager = get(),
-            gameCardIDsFactory = get(),
-            dieFactory = get()
+            gameCardIDsFactory = get()
         )
     }
 
@@ -232,17 +239,20 @@ val gameModule: Module = module {
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
 
-    single { DecisionBestCardPurchaseCoreStrategy(get()) }
+    single { DecisionBestCardPurchaseBaseline(get()) }
     single { AcquireCardEvaluator(get()) }
     single { AcquireDieEvaluator(get(), get()) }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
 
     single {
-        ShouldProcessMatchEffect(
+        CanProcessMatchEffect(
             hasDieValue = get(),
             hasFlourishType = get()
         )
     }
     single { PlayerOrder(get()) }
     single { GameTurn() }
+
+    single { ScenarioBasicConfig(get()) }
+
 } 

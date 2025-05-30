@@ -8,6 +8,7 @@ import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import io.mockk.mockk
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
@@ -39,11 +40,12 @@ class HasDieValueTest {
 
     @Test
     fun invoke_whenEmptyList_returnsFalse() {
+        // Arrange
         // Act
         val result = SUT(emptyList(), 6)
 
         // Assert
-        assertFalse(result)
+        assertEquals(null, result)
     }
 
     @Test
@@ -52,17 +54,18 @@ class HasDieValueTest {
         val result = SUT(listOf(sampleHandCard), 6)
 
         // Assert
-        assertFalse(result)
+        assertEquals(null, result)
     }
 
     @Test
     fun invoke_whenDiceWithMatchingValue_returnsTrue() {
         // Act
         sampleDie.adjustTo(6)
+
         val result = SUT(listOf(sampleHandDice), 6)
 
         // Assert
-        assertTrue(result)
+        assertEquals(sampleDie, result)
     }
 
     @Test
@@ -74,7 +77,7 @@ class HasDieValueTest {
         val result = SUT(listOf(sampleHandDice), 4)
 
         // Assert
-        assertFalse(result)
+        assertEquals(null, result)
     }
 
     @Test
@@ -84,6 +87,6 @@ class HasDieValueTest {
         val result = SUT(listOf(sampleHandCard, sampleHandDice), 6)
 
         // Assert
-        assertTrue(result)
+        assertEquals(sampleDie, result)
     }
 } 

@@ -6,14 +6,12 @@ import dugsolutions.leaf.components.GameCard
 
 data class MarketConfig(
     val stacks: List<MarketStackConfig>,
-    val dice: List<MarketDiceConfig>,
-    val bonusDie: List<DieSides>
+    val dice: List<MarketDiceConfig>
 )
 
 data class MarketStackConfig(
     val which: MarketStackID,
-    val cards: List<MarketCardConfig>? = null,
-    val cards2: GameCards? = null
+    val cards: List<MarketCardConfig>? = null
 )
 
 data class MarketCardConfig(

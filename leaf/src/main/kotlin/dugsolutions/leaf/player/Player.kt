@@ -42,14 +42,12 @@ open class Player(
 
     open val id = NextID++
 
-    private val defaultName: String
-        get() = "Player $id"
+    fun setDefaultName(): Player {
+        name = "Player $id"
+        return this
+    }
 
-    var name: String = ""
-        get() {
-            return field.ifEmpty { defaultName }
-        }
-
+    var name: String = "Player Unset"
     var incomingDamage: Int = 0
     var deflectDamage: Int = 0
     var cardsReused: MutableList<GameCard> = mutableListOf()
@@ -241,7 +239,7 @@ open class Player(
         drawHand(chronicle, preferredCardCount)
     }
 
-    fun drawHand() {
+    suspend fun drawHand() {
         drawHand(decisionDirector.drawCountDecision())
     }
 

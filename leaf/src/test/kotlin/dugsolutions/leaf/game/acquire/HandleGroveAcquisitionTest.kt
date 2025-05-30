@@ -3,14 +3,15 @@ package dugsolutions.leaf.game.acquire
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.turn.select.SelectPossibleCards
 import dugsolutions.leaf.player.Player
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import kotlin.test.assertEquals
 
 class HandleGroveAcquisitionTest {
 
@@ -29,76 +30,77 @@ class HandleGroveAcquisitionTest {
         mockManageAcquiredFloralTypes = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         sampleDie = SampleDie()
-        
+
         SUT = HandleGroveAcquisition(
             mockSelectPossibleCards,
             mockAcquireItem,
             mockManageAcquiredFloralTypes
         )
+        coEvery { mockAcquireItem(any(), any()) } returns true
     }
 
     @Test
-    fun invoke_whenNoDiceInHand_onlyClearsTypes() {
+    fun invoke_whenNoDiceInHand_onlyClearsTypes() = runBlocking {
         // Arrange
         every { mockPlayer.diceInHand.isNotEmpty() } returns false
-        
+
         // Act
         SUT(mockPlayer)
-        
+
         // Assert
         verify { mockManageAcquiredFloralTypes.clear() }
         verify(exactly = 0) { mockSelectPossibleCards() }
-        verify(exactly = 0) { mockAcquireItem(any(), any()) }
+        coVerify(exactly = 0) { mockAcquireItem(any(), any()) }
     }
 
     @Test
-    fun invoke_withDiceInHand_loopsUntilNoDice() {
+    fun invoke_withDiceInHand_loopsUntilNoDice() = runBlocking {
         // Arrange
 
         // Set up to run loop 3 times
         every { mockPlayer.diceInHand.isNotEmpty() } returnsMany listOf(true, true, true, false)
-        
+
         val possibleCards1 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
         val possibleCards2 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
         val possibleCards3 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
-        
+
         every { mockSelectPossibleCards() } returnsMany listOf(possibleCards1, possibleCards2, possibleCards3)
-        
+
         // Act
         SUT(mockPlayer)
-        
+
         // Assert
         verify { mockManageAcquiredFloralTypes.clear() }
         verify(exactly = 3) { mockSelectPossibleCards() }
-        verify { mockAcquireItem(mockPlayer, possibleCards1) }
-        verify { mockAcquireItem(mockPlayer, possibleCards2) }
-        verify { mockAcquireItem(mockPlayer, possibleCards3) }
+        coVerify { mockAcquireItem(mockPlayer, possibleCards1) }
+        coVerify { mockAcquireItem(mockPlayer, possibleCards2) }
+        coVerify { mockAcquireItem(mockPlayer, possibleCards3) }
     }
 
     @Test
-    fun invoke_withEmptyPossibleCards_stillContinuesLoop() {
+    fun invoke_withEmptyPossibleCards_stillContinuesLoop() = runBlocking {
         // Arrange
 
         // Set up to run loop 2 times
         every { mockPlayer.diceInHand.isNotEmpty() } returnsMany listOf(true, true, false)
-        
+
         val emptyCards = emptyList<dugsolutions.leaf.components.GameCard>()
         val possibleCards = listOf(mockk<dugsolutions.leaf.components.GameCard>())
-        
+
         every { mockSelectPossibleCards() } returnsMany listOf(emptyCards, possibleCards)
-        
+
         // Act
         SUT(mockPlayer)
-        
+
         // Assert
         verify { mockManageAcquiredFloralTypes.clear() }
         verify(exactly = 2) { mockSelectPossibleCards() }
-        verify { mockAcquireItem(mockPlayer, emptyCards) }
-        verify { mockAcquireItem(mockPlayer, possibleCards) }
+        coVerify { mockAcquireItem(mockPlayer, emptyCards) }
+        coVerify { mockAcquireItem(mockPlayer, possibleCards) }
     }
 
     @Test
-    fun invoke_whenLoopExceedsFailsafe_throwsException() {
+    fun invoke_whenLoopExceedsFailsafe_throwsException() = runBlocking {
         // Arrange
         // Set up to always return true for isNotEmpty to force infinite loop
         every { mockPlayer.diceInHand.isNotEmpty() } returns true

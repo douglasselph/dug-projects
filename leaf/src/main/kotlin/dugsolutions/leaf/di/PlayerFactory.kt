@@ -28,6 +28,6 @@ class PlayerFactory(
             dieFactory = dieFactory,
             costScore = costScore,
             chronicle = chronicle
-        )
+        ).setDefaultName()
     }
 } 

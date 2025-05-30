@@ -40,14 +40,14 @@ class CardRegistry(
             "RerollAccept2nd" to CardEffect.REROLL_ACCEPT_2ND,
             "RerollAllMax" to CardEffect.REROLL_ALL_MAX,
             "RerollTakeBetter" to CardEffect.REROLL_TAKE_BETTER,
+            "ReplayVine" to CardEffect.REPLAY_VINE,
+            "ResilienceBoost" to CardEffect.RESILIENCE_BOOST,
             "RetainCard" to CardEffect.RETAIN_CARD,
             "RetainDie" to CardEffect.RETAIN_DIE,
             "RetainDieReroll" to CardEffect.RETAIN_DIE_REROLL,
             "ReuseCard" to CardEffect.REUSE_CARD,
             "ReuseDie" to CardEffect.REUSE_DIE,
             "ReuseAny" to CardEffect.REUSE_ANY,
-            "ReplayVine" to CardEffect.REPLAY_VINE,
-            "ResilienceBoost" to CardEffect.RESILIENCE_BOOST,
             "UpgradeAnyRetain" to CardEffect.UPGRADE_ANY_RETAIN,
             "UpgradeAny" to CardEffect.UPGRADE_ANY,
             "UpgradeD4" to CardEffect.UPGRADE_D4,
@@ -92,7 +92,7 @@ class CardRegistry(
         }
         val name = parts[0]
         val id = GenCardID.generateId(name)
-        val flourishType = parseFlourishType(parts[1])
+        val flourishType = parseFlourishType(parts[1]) ?: throw IllegalArgumentException("Unknown flourish type: ${parts[1]}")
         val resilience = parts[2].toIntOrNull() ?: 0
         val cost = parseCost(parts[3])
         val primaryEffect = parseEffect(parts[4])
@@ -121,7 +121,7 @@ class CardRegistry(
         )
     }
 
-    private fun parseFlourishType(type: String): FlourishType {
+    private fun parseFlourishType(type: String): FlourishType? {
         return when (type.trim()) {
             "Seedling" -> FlourishType.SEEDLING
             "Root" -> FlourishType.ROOT
@@ -129,7 +129,7 @@ class CardRegistry(
             "Vine" -> FlourishType.VINE
             "Flower" -> FlourishType.FLOWER
             "Bloom" -> FlourishType.BLOOM
-            else -> throw IllegalArgumentException("Unknown flourish type: $type")
+            else -> null
         }
     }
 
@@ -158,10 +158,14 @@ class CardRegistry(
             match.isEmpty() || match == "-" -> MatchWith.None
             match.toIntOrNull() != null -> MatchWith.OnRoll(match.toInt())
             else -> {
-                flowerOf(match)?.let { card ->
-                    MatchWith.Flower(card.id)
+                parseFlourishType(match)?.let {
+                    type -> MatchWith.OnFlourishType(type)
                 } ?: run {
-                    MatchWith.OnFlourishType(parseFlourishType(match))
+                    flowerOf(match)?.let { card ->
+                        MatchWith.Flower(card.id)
+                    } ?: run {
+                        throw IllegalArgumentException("Unknown flower: $match")
+                    }
                 }
             }
         }

@@ -29,7 +29,7 @@ class DeckManager(
 
     // Setup
     fun setup(seedlings: GameCards, startingDice: List<Die>) {
-        supply.addAllCards(seedlings.cardIds)
+        supply.addAllCards(seedlings.cardIds).shuffle()
         supply.addAllDice(startingDice)
     }
 

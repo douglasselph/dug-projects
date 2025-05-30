@@ -44,7 +44,7 @@ class TransformMomentToEntry(
                 AdjustDieEntry(
                     playerId = moment.player.id,
                     turn = gameTurn.turn,
-                    dieSides = 0,
+                    die = moment.die.copy,
                     adjustment = moment.amount
                 )
 
@@ -97,7 +97,7 @@ class TransformMomentToEntry(
                 DrawHandEntry(
                     playerId = moment.player.id,
                     turn = gameTurn.turn,
-                    cards = moment.player.cardsInHand.map { it.id },
+                    cards = moment.player.cardsInHand.mapNotNull { cardManager.getCard(it.id)?.name },
                     dice = DieValues(moment.player.diceInHand.copy)
                 )
 
@@ -149,9 +149,9 @@ class TransformMomentToEntry(
 
             is GameChronicle.Moment.ORDERING -> with(moment) {
                 OrderingEntry(
-                    playerId = players.firstOrNull()?.id ?: 0, // Using first player as the actor
+                    playerId = players.firstOrNull()?.id ?: 0,
                     turn = gameTurn.turn,
-                    playerIdOrder = players.map { it.id },
+                    playerOrder = players.map { it.id },
                     reports = if (numberOfRerolls > 0) players.sortedBy { it.name }.map { reportPlayer(it) } else emptyList(),
                     numberRerolls = numberOfRerolls
                 )
@@ -169,7 +169,8 @@ class TransformMomentToEntry(
                 RerollEntry(
                     playerId = moment.player.id,
                     turn = gameTurn.turn,
-                    dieSides = moment.die.sides
+                    dieSides = moment.die.sides,
+                    newValue = moment.die.value
                 )
 
             is GameChronicle.Moment.RETAIN_CARD ->
@@ -219,7 +220,7 @@ class TransformMomentToEntry(
                 UpgradeDieEntry(
                     playerId = moment.player.id,
                     turn = gameTurn.turn,
-                    dieSides = moment.die.sides
+                    newSides = moment.die.sides
                 )
 
         }

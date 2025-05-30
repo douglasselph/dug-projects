@@ -2,6 +2,7 @@ package dugsolutions.leaf.chronicle.domain
 
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.game.acquire.domain.Combination
 
@@ -37,7 +38,7 @@ data class AcquireDieEntry(
 data class AdjustDieEntry(
     override val playerId: Int,
     override val turn: Int,
-    val dieSides: Int,
+    val die: DieValue,
     val adjustment: Int
 ) : ChronicleEntry(playerId, turn)
 
@@ -86,11 +87,11 @@ data class DrawDieEntry(
 data class DrawHandEntry(
     override val playerId: Int,
     override val turn: Int,
-    val cards: List<CardID>,
+    val cards: List<String>,
     val dice: DieValues
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
-        return "DrawHandEntry(playerId=$playerId, turn=$turn, cardIds=$cards, dice=$dice)"
+        return "DrawHandEntry(playerId=$playerId, turn=$turn, cards=$cards, dice=$dice)"
     }
 }
 
@@ -149,19 +150,19 @@ data class Finished(
 data class OrderingEntry(
     override val playerId: Int = 0,
     override val turn: Int,
-    val playerIdOrder: List<Int>,
+    val playerOrder: List<Int>,
     val reports: List<String>,
     val numberRerolls: Int = 0
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
         val buffer = StringBuffer()
         if (reports.isNotEmpty()) {
-            buffer.append("Reordered on turn $turn: $playerIdOrder")
+            buffer.append("Reordered on turn $turn: $playerOrder")
             for (report in reports) {
                 buffer.append("\n    $report")
             }
         } else {
-            buffer.append("Order on turn $turn: $playerIdOrder")
+            buffer.append("Order on turn $turn: $playerOrder")
         }
         return buffer.toString()
     }
@@ -177,7 +178,8 @@ data class PlayCardEntry(
 data class RerollEntry(
     override val playerId: Int,
     override val turn: Int,
-    val dieSides: Int
+    val dieSides: Int,
+    val newValue: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class RetainCardEntry(
@@ -215,5 +217,5 @@ data class TrashDieEntry(
 data class UpgradeDieEntry(
     override val playerId: Int,
     override val turn: Int,
-    val dieSides: Int
+    val newSides: Int
 ) : ChronicleEntry(playerId, turn)
