@@ -40,6 +40,7 @@ class MainController(
         decisionDrawCountSuspend.onDrawCountRequest = {
             mainDomainManager.showDrawCount = true
         }
+        mainDomainManager.showRunButton = true
     }
 
     // Expose the state flow
@@ -51,9 +52,11 @@ class MainController(
 
     fun onDrawCountChosen(value: Int) {
         decisionDrawCountSuspend.provide(value)
+        mainDomainManager.showDrawCount = false
     }
 
-    fun run() {
+    fun onRunPressed() {
+        mainDomainManager.showRunButton = false
         val numPlayers = 2
         (randomizer as RandomizerDefault).seed = 24
         grove.setup(scenarioBasicConfig(numPlayers))
@@ -71,17 +74,13 @@ class MainController(
         )
         scope.launch {
             runGame().collect { gameEvent ->
-                // You can optionally process game events here if needed
-                println("Game event: $gameEvent")
-
+                update()
                 when (gameEvent) {
                     is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
-                    is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput(
-                        "Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}"
-                    )
-
+                    is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput("Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}")
                     is GameEvent.Completed -> mainDomainManager.addSimulationOutput("Game completed")
                     GameEvent.WaitForStep -> {
+                        
                     }
                 }
             }

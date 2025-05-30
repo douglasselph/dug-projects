@@ -10,7 +10,7 @@ import org.koin.core.component.inject
 
 class MainApplication : KoinComponent {
     private val mainController: MainController by inject()
-    
+
     fun run() {
         application {
             Window(
@@ -20,8 +20,9 @@ class MainApplication : KoinComponent {
                 MaterialTheme {
                     MainScreen(
                         MainScreenArgs(
+                            state = mainController.state,
                             onDrawCountChosen = { mainController.onDrawCountChosen(it) },
-                            state = mainController.state
+                            onRunButtonPressed = { mainController.onRunPressed() }
                         )
                     )
                 }
@@ -35,7 +36,7 @@ fun main() {
     startKoin {
         modules(gameModule)
     }
-    
+
     // Run the application
     MainApplication().run()
 } 

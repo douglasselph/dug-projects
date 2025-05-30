@@ -30,6 +30,16 @@ class MainDomainManager(
             }
         }
 
+    var showRunButton: Boolean
+        get() = state.value.showRunButton
+        set(value) {
+            _state.update { currentState ->
+                currentState.copy(
+                    showRunButton = value
+                )
+            }
+        }
+
     fun update() {
         _state.update { currentState ->
             currentState.copy(

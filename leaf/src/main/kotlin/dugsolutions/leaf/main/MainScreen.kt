@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -25,7 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
     val state: StateFlow<MainDomain>,
-    val onDrawCountChosen: (value: Int) -> Unit = {}
+    val onDrawCountChosen: (value: Int) -> Unit = {},
+    val onRunButtonPressed: () -> Unit = {}
 )
 
 @Composable
@@ -39,11 +41,24 @@ fun MainScreen(args: MainScreenArgs) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Turn number display
-        Text(
-            text = "Turn ${state.turn}",
-            style = MaterialTheme.typography.h4,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Turn ${state.turn}",
+                style = MaterialTheme.typography.h4
+            )
+            
+            if (state.showRunButton) {
+                Button(
+                    onClick = { args.onRunButtonPressed() }
+                ) {
+                    Text("Run")
+                }
+            }
+        }
 
         // Players row
         Row(
