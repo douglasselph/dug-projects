@@ -5,7 +5,7 @@ import dugsolutions.leaf.chronicle.domain.AnalysisResults
 import dugsolutions.leaf.chronicle.domain.DominancePeriod
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.Finished
-import dugsolutions.leaf.chronicle.domain.EventBattle
+import dugsolutions.leaf.chronicle.domain.EventBattleTransition
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.chronicle.domain.TurnData
 
@@ -17,7 +17,7 @@ class ReportGameAnalysis(
         val entries = chronicle.getEntries()
         val turnEntries = entries.filterIsInstance<EventTurn>()
         val finishedEntry = entries.filterIsInstance<Finished>().firstOrNull()
-        val battleEntry = entries.filterIsInstance<EventBattle>().firstOrNull()
+        val battleEntries = entries.filterIsInstance<EventBattleTransition>()
 
         if (turnEntries.isEmpty()) {
             return listOf("Not enough data for analysis")
@@ -30,16 +30,16 @@ class ReportGameAnalysis(
             allTurnData.add(processTurnEntry(entry))
         }
 
-        // Process Battle entry if available - but only if it's not duplicating a turn we already processed
-        battleEntry?.let { entry ->
+        if (battleEntries.isNotEmpty()) {
             // Check if we already have an entry for this turn
-            val turnExists = allTurnData.any { it.turn == entry.turn }
+            val battleTransitionTurn = battleEntries.first().turn
+            val turnExists = allTurnData.any { it.turn == battleTransitionTurn }
 
             if (turnExists) {
                 // If we already have this turn, just mark it as the battle begin turn
                 val updatedData = allTurnData.toMutableList()
                 for (i in updatedData.indices) {
-                    if (updatedData[i].turn == entry.turn) {
+                    if (updatedData[i].turn == battleTransitionTurn) {
                         updatedData[i] = updatedData[i].copy(isBattleBegin = true)
                     }
                 }
@@ -47,7 +47,7 @@ class ReportGameAnalysis(
                 allTurnData.addAll(updatedData)
             } else {
                 // If no entry exists for this turn, add a new one
-                allTurnData.add(processBattleEntry(entry))
+                allTurnData.add(processBattleEntry(battleEntries))
             }
         }
 
@@ -82,16 +82,17 @@ class ReportGameAnalysis(
         })
     }
     
-    private fun processBattleEntry(entry: EventBattle): TurnData {
+    private fun processBattleEntry(entries: List<EventBattleTransition>): TurnData {
         // Battle entry may have scores or may just be a marker
-        val playerScores = entry.scores.map { score ->
+        val playerScores = entries.map { entry ->
             PlayerScore(
-                playerId = score.data.playerId,
-                scoreDice = score.data.scoreDice,
-                scoreCards = score.data.scoreCards
+                playerId = entry.score.playerId,
+                scoreDice = entry.score.scoreDice,
+                scoreCards = entry.score.scoreCards
             )
         }
-        return processScores(entry.turn, playerScores, isBattleBegin = true)
+        val turn = entries.first().turn
+        return processScores(turn, playerScores, isBattleBegin = true)
     }
     
     private fun processFinishedEntry(entry: Finished): TurnData {
@@ -279,7 +280,7 @@ class ReportGameAnalysis(
                 .firstOrNull { it != winnerId } ?: return report
 
             report.add("\nTurn-by-Turn Score Progression:")
-            report.add("Turn | Winner P${winnerId} | Player P${otherPlayerId} | Gap | Leader")
+            report.add("Turn | Winner P${winnerId}    | Player P${otherPlayerId}    | Gap | Leader")
             report.add("-".repeat(50))
             
             turnDataList.forEach { turn ->

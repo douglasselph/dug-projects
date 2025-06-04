@@ -6,7 +6,7 @@ import dugsolutions.leaf.player.domain.PlayersScoreData
 
 sealed class GameEvent {
     data object Started : GameEvent()
-    data class TurnProgress(
+    data class TurnComplete(
         val phase: GamePhase,
         val playersScoreData: PlayersScoreData
     ) : GameEvent()

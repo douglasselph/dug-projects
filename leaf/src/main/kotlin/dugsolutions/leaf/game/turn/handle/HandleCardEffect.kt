@@ -2,6 +2,7 @@ package dugsolutions.leaf.game.turn.handle
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.game.turn.select.SelectCardToRetain
@@ -52,13 +53,14 @@ class HandleCardEffect(
 
             is AppliedEffect.AddToTotal -> {
                 player.pipModifier += effect.amount
-                chronicle(GameChronicle.Moment.ADD_TO_TOTAL(player, effect.amount))
+                chronicle(Moment.ADD_TO_TOTAL(player, effect.amount))
                 true
             }
 
             is AppliedEffect.Adorn -> {
                 player.addCardToFloralArray(effect.flowerCard)
-                chronicle(GameChronicle.Moment.ADORN(player, effect.flowerCard))
+                player.removeCardFromHand(effect.flowerCard)
+                chronicle(Moment.ADORN(player, effect.flowerCard))
                 true
             }
 
@@ -66,13 +68,13 @@ class HandleCardEffect(
                 if (effect.canTargetPlayer && player.decisionDirector.shouldTargetPlayer(target, effect.adjustment)) {
                     selectDieToAdjust(target.diceInHand, -effect.adjustment)?.let { die ->
                         target.diceInHand.adjust(die, -effect.adjustment)
-                        chronicle(GameChronicle.Moment.ADJUST_DIE(target, die, -effect.adjustment))
+                        chronicle(Moment.ADJUST_DIE(target, die, -effect.adjustment))
                     }
                 } else {
                     selectDieToAdjust(player.diceInHand, effect.adjustment)?.let { selectedDie ->
                         if (player.diceInHand.adjust(selectedDie, effect.adjustment)) {
                             chronicle(
-                                GameChronicle.Moment.ADJUST_DIE(player, selectedDie, effect.adjustment)
+                                Moment.ADJUST_DIE(player, selectedDie, effect.adjustment)
                             )
                         }
                     }
@@ -84,14 +86,14 @@ class HandleCardEffect(
                 // Choose die with with the greatest difference against MAX.
                 selectDieToMax(player.diceInHand)?.let { die ->
                     val amount = die.adjustToMax()
-                    chronicle(GameChronicle.Moment.ADJUST_DIE(player, die, amount))
+                    chronicle(Moment.ADJUST_DIE(player, die, amount))
                 }
                 true
             }
 
             is AppliedEffect.DeflectDamage -> {
                 player.deflectDamage += effect.amount
-                chronicle(GameChronicle.Moment.DEFLECT_DAMAGE(player, effect.amount))
+                chronicle(Moment.DEFLECT_DAMAGE(player, effect.amount))
                 true
             }
 
@@ -103,7 +105,7 @@ class HandleCardEffect(
                         player.drawCard()
                     }
                     cardId?.let {
-                        chronicle(GameChronicle.Moment.DRAW_CARD(player, cardId))
+                        chronicle(Moment.DRAW_CARD(player, cardId))
                         cardManager.getCard(cardId)?.let { newCards.add(it) }
                     }
                 }
@@ -127,7 +129,7 @@ class HandleCardEffect(
                     }
                     die?.let {
                         diceAdjusted = true
-                        chronicle(GameChronicle.Moment.DRAW_DIE(player, die))
+                        chronicle(Moment.DRAW_DIE(player, die))
                     }
                 }
                 true
@@ -144,14 +146,14 @@ class HandleCardEffect(
                     val cardToDiscard = target.cardsInHand.minByOrNull { costScore(it.cost) }
                     if (cardToDiscard != null) {
                         target.discard(cardToDiscard.id)
-                        chronicle(GameChronicle.Moment.DISCARD_CARD(target, cardToDiscard))
+                        chronicle(Moment.DISCARD_CARD(target, cardToDiscard))
                     }
                 } else if (effect.diceOnly) {
                     // Choose the die with the lowest rolled value
                     val dieToDiscard = target.diceInHand.dice.minByOrNull { it.value }
                     if (dieToDiscard != null) {
                         target.discard(dieToDiscard)
-                        chronicle(GameChronicle.Moment.DISCARD_DIE(target, dieToDiscard))
+                        chronicle(Moment.DISCARD_DIE(target, dieToDiscard))
                     }
                 } else {
                     // If any die rolled a 1 or 2, choose one of them (the lowest).
@@ -161,13 +163,13 @@ class HandleCardEffect(
                         val dieToDiscard = lowDice.minByOrNull { it.value }
                         if (dieToDiscard != null) {
                             target.discard(dieToDiscard)
-                            chronicle(GameChronicle.Moment.DISCARD_DIE(target, dieToDiscard))
+                            chronicle(Moment.DISCARD_DIE(target, dieToDiscard))
                         }
                     } else {
                         val cardToDiscard = target.cardsInHand.minByOrNull { costScore(it.cost) }
                         if (cardToDiscard != null) {
                             target.discard(cardToDiscard.id)
-                            chronicle(GameChronicle.Moment.DISCARD_CARD(target, cardToDiscard))
+                            chronicle(Moment.DISCARD_CARD(target, cardToDiscard))
                         }
                     }
                 }
@@ -176,9 +178,10 @@ class HandleCardEffect(
 
             is AppliedEffect.RerollDie -> {
                 selectDieToReroll(player.diceInHand)?.let { die ->
+                    val beforeValue = die.value
                     die.roll()
                     diceAdjusted = true
-                    chronicle(GameChronicle.Moment.REROLL(player, die))
+                    chronicle(Moment.REROLL(player, die, beforeValue))
                 }
                 true
             }
@@ -186,7 +189,7 @@ class HandleCardEffect(
             is AppliedEffect.RetainCard -> {
                 selectCardToRetain(player.cardsInHand, null)?.let { card ->
                     player.retainCard(card.id)
-                    chronicle(GameChronicle.Moment.RETAIN_CARD(player, card))
+                    chronicle(Moment.RETAIN_CARD(player, card))
                 }
                 // Choose BLOOM card, then VINE, then CANOPY, then ROOT
                 // Choose card with the largest COST.
@@ -196,7 +199,7 @@ class HandleCardEffect(
             is AppliedEffect.RetainDie -> {
                 selectDieToRetain(player.diceInHand)?.let { die ->
                     player.retainDie(die)
-                    chronicle(GameChronicle.Moment.RETAIN_DIE(player, die))
+                    chronicle(Moment.RETAIN_DIE(player, die))
                 }
                 true
             }
@@ -204,7 +207,7 @@ class HandleCardEffect(
             is AppliedEffect.Reuse -> {
                 selectCardToRetain(player.cardsInHand, effect.flourishType)?.let { card ->
                     player.cardsReused.add(card)
-                    chronicle(GameChronicle.Moment.REUSE_CARD(player, card))
+                    chronicle(Moment.REUSE_CARD(player, card))
                 }
                 true
             }
@@ -216,7 +219,7 @@ class HandleCardEffect(
                     handleDieUpgrade(player, effect.discardAfterUse)
                 }
                 die?.let {
-                    chronicle(GameChronicle.Moment.UPGRADE_DIE(player, die))
+                    chronicle(Moment.UPGRADE_DIE(player, die))
                 }
                 true
             }

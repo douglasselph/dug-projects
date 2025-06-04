@@ -39,9 +39,8 @@ enum class CardEffect(
     REUSE_ANY("Reuse VALUE cards or dice"),
     UPGRADE_ANY_RETAIN("Upgrade VALUE dice then use. (D12 -> D20 costs 8)"),
     UPGRADE_ANY("Upgrade VALUE dice then discard. (D12 -> D20 costs 8)"),
-    UPGRADE_D4("Upgrade a D4 then discard"),
-    UPGRADE_D6("Upgrade a D6 then discard"),
-    UPGRADE_D4_D6("Upgrade a D4 or D6 then discard"),
+    UPGRADE_D4("Upgrade a D4 and retain"),
+    UPGRADE_D4_D6("Upgrade a D4 or D6 and retain"),
     USE_OPPONENT_CARD("Use VALUE of opponent's cards"),
     USE_OPPONENT_DIE("Use VALUE of opponent's dice")
 } 

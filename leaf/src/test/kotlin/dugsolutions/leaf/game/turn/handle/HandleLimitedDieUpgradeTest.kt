@@ -4,10 +4,9 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.MissingDieException
 import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.RandomizerTD
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -20,39 +19,26 @@ import org.junit.jupiter.api.assertThrows
 
 class HandleLimitedDieUpgradeTest {
 
+    private val sampleDie = SampleDie()
+    private val mockPlayer: Player = mockk(relaxed = true)
+    private val mockGrove = mockk<Grove>(relaxed = true)
+    private val mockDieFactory: DieFactory = mockk(relaxed = true)
+    private val d4: Die = sampleDie.d4
+    private val d6: Die = sampleDie.d6
+    private val d8: Die = sampleDie.d8
+    private val d10: Die = sampleDie.d10
+
     // Test subject
-    private lateinit var SUT: HandleLimitedDieUpgrade
-    
-    // Dependencies
-    private lateinit var dieFactory: DieFactory
-    private lateinit var sampleDie: SampleDie
-    
-    // Test data
-    private lateinit var mockPlayer: Player
-    private lateinit var d4: Die
-    private lateinit var d6: Die
-    private lateinit var d8: Die
-    private lateinit var d10: Die
-    private lateinit var randomizer: RandomizerTD
+    private val SUT: HandleLimitedDieUpgrade = HandleLimitedDieUpgrade(mockDieFactory, mockGrove)
 
     @BeforeEach
     fun setup() {
-        // Setup dependencies
-        mockPlayer = mockk(relaxed = true)
-        randomizer = RandomizerTD()
-        dieFactory = DieFactoryRandom(randomizer)
-        sampleDie = SampleDie(randomizer)
+
+        every { mockDieFactory(DieSides.D4) } returns d4
+        every { mockDieFactory(DieSides.D6) } returns d6
+        every { mockDieFactory(DieSides.D8) } returns d8
+        every { mockDieFactory(DieSides.D10) } returns d10
         
-        // Create the test subject
-        SUT = HandleLimitedDieUpgrade(dieFactory)
-        
-        // Create test dice
-        d4 = sampleDie.d4
-        d6 = sampleDie.d6
-        d8 = sampleDie.d8
-        d10 = sampleDie.d10
-        
-        // Default player behavior
         every { mockPlayer.removeDieFromHand(any()) } returns true
     }
     
@@ -66,7 +52,9 @@ class HandleLimitedDieUpgradeTest {
         
         // Assert
         verify { mockPlayer.removeDieFromHand(d4) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d6) }
+        verify { mockGrove.removeDie(d6) }
+        verify { mockGrove.addDie(d4) }
         assertNotNull(result)
         assertEquals(6, result?.sides)
     }
@@ -81,7 +69,9 @@ class HandleLimitedDieUpgradeTest {
         
         // Assert
         verify { mockPlayer.removeDieFromHand(d6) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockGrove.removeDie(d8) }
+        verify { mockGrove.addDie(d6) }
         assertNotNull(result)
         assertEquals(8, result?.sides)
     }
@@ -97,6 +87,8 @@ class HandleLimitedDieUpgradeTest {
         // Assert
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
         verify(exactly = 0) { mockPlayer.addDieToHand(any<Die>()) }
+        verify(exactly = 0) { mockGrove.removeDie(any()) }
+        verify(exactly = 0) { mockGrove.addDie(any()) }
         assertNull(result)
     }
     
@@ -111,6 +103,8 @@ class HandleLimitedDieUpgradeTest {
         // Assert
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
         verify(exactly = 0) { mockPlayer.addDieToHand(any<Die>()) }
+        verify(exactly = 0) { mockGrove.removeDie(any()) }
+        verify(exactly = 0) { mockGrove.addDie(any()) }
         assertNull(result)
     }
     
@@ -125,7 +119,9 @@ class HandleLimitedDieUpgradeTest {
         
         // Assert
         verify { mockPlayer.removeDieFromHand(d6) }
-        verify { mockPlayer.addDieToCompost(any<Die>()) }
+        verify { mockPlayer.addDieToCompost(d8) }
+        verify { mockGrove.addDie(d6) }
+        verify { mockGrove.removeDie(d8) }
         assertNotNull(result)
         assertEquals(8, result?.sides)
     }
@@ -142,7 +138,7 @@ class HandleLimitedDieUpgradeTest {
         verify { mockPlayer.removeDieFromHand(d8) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(d4) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(d6) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d10) }
         assertNotNull(result)
         assertEquals(10, result?.sides)
     }

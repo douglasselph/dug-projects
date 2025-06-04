@@ -27,11 +27,15 @@ class MainApplication : KoinComponent {
                     MainScreen(
                         MainScreenArgs(
                             state = mainController.state,
-                            onDrawCountChosen = { mainController.onDrawCountChosen(it) },
-                            onRunButtonPressed = { mainController.onRunPressed() },
+                            onDrawCountChosen = { player, value -> mainController.onDrawCountChosen(player, value) },
+                            onActionButtonPressed = { action -> mainController.onActionPressed(action) },
+                            onBooleanInstructionChosen = { choice -> mainController.onBooleanInstructionResponse(choice) },
                             onStepEnabledToggled = { mainController.onStepEnabledToggled(it) },
-                            onNextButtonPressed = { mainController.onNextButtonPressed() },
-                            onGroveCardSelected = { card -> mainController.onGroveCardSelected(card) }
+                            onAskTrashToggled = { mainController.onAskTrashToggled(it) },
+                            onGroveItemSelected = { item -> mainController.onGroveItemSelected(item) },
+                            onHandCardSelected = { player, card -> mainController.onHandCardSelected(player, card) },
+                            onFloralCardSelected = { player, card -> mainController.onFloralCardSelected(player, card) },
+                            onDieSelected = { player, card -> mainController.onDieSelected(player, card) }
                         )
                     )
                 }

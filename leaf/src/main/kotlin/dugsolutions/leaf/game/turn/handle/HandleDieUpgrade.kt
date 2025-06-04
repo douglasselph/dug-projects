@@ -3,14 +3,16 @@ package dugsolutions.leaf.game.turn.handle
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
+import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 
 class HandleDieUpgrade(
     private val evaluateSimpleCost: EvaluateSimpleCost,
     private val applyCost: ApplyCost,
-    private val dieFactory: DieFactory
+    private val dieFactory: DieFactory,
+    private val grove: Grove
 ) {
 
     companion object {
@@ -37,9 +39,11 @@ class HandleDieUpgrade(
         }
         // Remove the die being upgraded
         player.removeDieFromHand(dieToUpgrade)
+        grove.addDie(dieToUpgrade)
 
         // Add the new die
         player.addDieToHand(newDie.roll())
+        grove.removeDie(newDie)
 
         if (discardAfterUse) {
             player.discard(newDie)

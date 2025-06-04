@@ -1,20 +1,21 @@
 package dugsolutions.leaf.game.acquire
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
+import dugsolutions.leaf.game.acquire.evaluator.PossibleBestDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 
 class AcquireItem(
     private val combinationGenerator: CombinationGenerator,
-    private val acquireCardEvaluator: AcquireCardEvaluator,
-    private val acquireDieEvaluator: AcquireDieEvaluator,
+    private val possibleCards: PossibleCards,
+    private val possibleBestDice: PossibleBestDice,
     private val manageAcquiredFloralTypes: ManageAcquiredFloralTypes,
     private val applyCost: ApplyCost,
     private val grove: Grove,
@@ -23,9 +24,13 @@ class AcquireItem(
 
     suspend operator fun invoke(player: Player, marketCards: List<GameCard>): Boolean {
         val combinations = combinationGenerator(player)
-        val bestCardChoice = acquireCardEvaluator(player, combinations, marketCards)
-        val bestDieChoice = acquireDieEvaluator(combinations)
-        val bestChoice = player.decisionDirector.acquireSelectDecision(bestCardChoice, bestDieChoice)
+        val possibleCards = possibleCards(player, combinations, marketCards)
+        val possibleDice = possibleBestDice(combinations)
+        val decisionDirector = player.decisionDirector
+        if (possibleCards.isEmpty() && possibleDice.isEmpty()) {
+            return false
+        }
+        val bestChoice = decisionDirector.acquireSelectDecision(possibleCards, possibleDice)
         var result = false
         when (bestChoice) {
             is DecisionAcquireSelect.BuyItem.Card -> {
@@ -37,7 +42,7 @@ class AcquireItem(
                     } else {
                         player.addCardToCompost(card.id)
                     }
-                    chronicle(GameChronicle.Moment.ACQUIRE_CARD(player, card, combination))
+                    chronicle(Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
                     result = true
                 }
@@ -48,7 +53,8 @@ class AcquireItem(
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
                     player.addDieToCompost(die)
-                    chronicle(GameChronicle.Moment.ACQUIRE_DIE(player, die, combination))
+                    chronicle(Moment.ACQUIRE_DIE(player, die, combination))
+                    grove.removeDie(die)
                     result = true
                 }
             }

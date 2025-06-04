@@ -1,10 +1,10 @@
 package dugsolutions.leaf.game
 
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.PlayerFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.PlayerFactory
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminated
@@ -19,7 +19,7 @@ class Game(
     private val playerFactory: PlayerFactory,
     private val playerOrder: PlayerOrder,
     private val grove: Grove,
-    private val gameTurn: GameTurn,
+    private val gameTime: GameTime,
     private val battlePhaseTransition: BattlePhaseTransition
 ) {
 
@@ -28,8 +28,8 @@ class Game(
     val score: PlayersScoreData
         get() {
             return PlayersScoreData(
-                turn = gameTurn.turn,
-                players = players.map { player -> PlayerScoreData(player, player.score ) }
+                turn = gameTime.turn,
+                players = players.map { player -> PlayerScoreData(player, player.score) }
             )
         }
 
@@ -39,19 +39,15 @@ class Game(
     val isGameFinished: Boolean
         get() = players.count { !isEliminated(it) } <= 1
 
-    var inCultivationPhase: Boolean = true
-        private set
-
     data class Config(
         val numPlayers: Int,
         val isEliminated: IsEliminated? = null,
-        val dieFactory: DieFactory,
         val setup: (index: Int, player: Player) -> Unit
     )
 
     private fun clear() {
-        gameTurn.turn = 0
-        inCultivationPhase = true
+        gameTime.turn = 0
+        gameTime.phase = GamePhase.CULTIVATION
         players = emptyList()
     }
 
@@ -64,7 +60,7 @@ class Game(
         val playersList = mutableListOf<Player>()
 
         for (i in 0 until config.numPlayers) {
-            val player = playerFactory(config.dieFactory)
+            val player = playerFactory()
             playersList.add(player)
             config.setup(i, player)
             player.drawHand(2)
@@ -81,11 +77,12 @@ class Game(
     }
 
     fun detectBattlePhase() {
-        inCultivationPhase = !grove.readyForBattlePhase
+        gameTime.phase = if (grove.readyForBattlePhase) GamePhase.BATTLE else GamePhase.CULTIVATION
     }
 
-    fun setupBattlePhase() {
+    suspend fun setupBattlePhase() {
         battlePhaseTransition(players)
     }
+
 
 }

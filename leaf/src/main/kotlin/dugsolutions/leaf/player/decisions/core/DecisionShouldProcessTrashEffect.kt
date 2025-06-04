@@ -16,7 +16,7 @@ interface DecisionShouldProcessTrashEffect {
         TRASH_IF_NEEDED
     }
 
-    operator fun invoke(card: GameCard): Result
+    suspend operator fun invoke(card: GameCard): Result
     fun reset()
 
 }

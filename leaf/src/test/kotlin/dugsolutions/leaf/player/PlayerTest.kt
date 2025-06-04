@@ -12,13 +12,14 @@ import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
+import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.ExtendedHandItem
@@ -43,6 +44,7 @@ class PlayerTest {
     private lateinit var mockRetainedComponents: StackManager
     private lateinit var mockFloralArray: FloralArray
     private lateinit var floralArray: FloralArray
+    private lateinit var floralCount: FloralCount
     private lateinit var cardManager: CardManager
     private lateinit var mockDecisionDirectorFactory: DecisionDirectorFactory
     private lateinit var mockDecisionDirector: DecisionDirector
@@ -65,7 +67,7 @@ class PlayerTest {
     @BeforeEach
     fun setup() {
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
         costScore = CostScore()
         mockDeckManager = mockk(relaxed = true)
         mockFloralArray = mockk(relaxed = true)
@@ -82,7 +84,8 @@ class PlayerTest {
             StackManager(cardManager, gameCardIDsFactory),
             dieFactory
         )
-        floralArray = FloralArray(cardManager, gameCardIDsFactory)
+        floralCount = FloralCount()
+        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
         mockRetainedComponents = mockk(relaxed = true)
         mockDecisionDirector = mockk(relaxed = true)
         mockDecisionDirectorFactory = mockk(relaxed = true)
@@ -110,8 +113,7 @@ class PlayerTest {
             mockRetainedComponents,
             mockDieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
         SUT2 = Player(
             deckManager,
@@ -120,8 +122,7 @@ class PlayerTest {
             mockRetainedComponents,
             mockDieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
     }
 

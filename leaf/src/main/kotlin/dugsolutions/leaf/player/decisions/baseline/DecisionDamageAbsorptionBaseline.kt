@@ -4,6 +4,7 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption.*
@@ -44,6 +45,7 @@ import dugsolutions.leaf.player.domain.ExtendedHandItem
  */
 class DecisionDamageAbsorptionBaseline(
     private val player: Player,
+    cardEffectBattleScoreFactory: CardEffectBattleScoreFactory,
     val cardManager: CardManager
 ) : DecisionDamageAbsorption {
 
@@ -57,9 +59,11 @@ class DecisionDamageAbsorptionBaseline(
                     items.none { it is ExtendedHandItem.Card }
     }
 
-    override operator fun invoke(): Result? {
+    private val cardEffectBattleScore = cardEffectBattleScoreFactory(player)
+
+    override suspend operator fun invoke(): Result {
         if (player.incomingDamage <= 0) {
-            return null
+            return Result()
         }
         val amount = player.incomingDamage
         val handItems = player.getExtendedItems()
@@ -69,26 +73,26 @@ class DecisionDamageAbsorptionBaseline(
         val onlyDiceInHand = player.diceInCompost.isEmpty() && player.diceInSupply.isEmpty()
 
         // Generate all valid combinations that can absorb damage
-        val validCombinations = generateCombinations(handItems, amount)
-            .filter { combination ->
-                // Filter out combinations where the card is only the Flower card -- as this is not a legal play
-                if (combination.hasOnlyFlowerCards) {
-                    false
+        val allCombinations = generateCombinations(handItems, amount)
+        val validCombinations = allCombinations.filter { combination ->
+            // Filter out combinations where the card is only the Flower card -- as this is not a legal play
+            if (combination.hasOnlyFlowerCards) {
+                false
                 // Filter out combinations that would remove all cards if we only have cards in hand
-                } else if (onlyCardsInHand) {
-                    val cardItemsInCombo = combination.items.filterIsInstance<ExtendedHandItem.Card>()
-                    val handCardItems = handItems.filterIsInstance<ExtendedHandItem.Card>()
-                    cardItemsInCombo.size < handCardItems.size
+            } else if (onlyCardsInHand) {
+                val cardItemsInCombo = combination.items.filterIsInstance<ExtendedHandItem.Card>()
+                val handCardItems = handItems.filterIsInstance<ExtendedHandItem.Card>()
+                cardItemsInCombo.size < handCardItems.size
                 // Filter out combinations that would remove all dice if we only have dice in hand
-                } else if (onlyDiceInHand) {
-                    val diceItemsInCombo = combination.items.filterIsInstance<ExtendedHandItem.Dice>()
-                    val handDiceItems = handItems.filterIsInstance<ExtendedHandItem.Dice>()
-                    diceItemsInCombo.size < handDiceItems.size
-                } else {
-                    // No restrictions if we have cards/dice elsewhere
-                    true
-                }
+            } else if (onlyDiceInHand) {
+                val diceItemsInCombo = combination.items.filterIsInstance<ExtendedHandItem.Dice>()
+                val handDiceItems = handItems.filterIsInstance<ExtendedHandItem.Dice>()
+                diceItemsInCombo.size < handDiceItems.size
+            } else {
+                // No restrictions if we have cards/dice elsewhere
+                true
             }
+        }
 
         // There is no combination we like -- so we need to get rid of everything.
         if (validCombinations.isEmpty()) {
@@ -145,10 +149,6 @@ class DecisionDamageAbsorptionBaseline(
                 val dice = handItems.filterIsInstance<ExtendedHandItem.Dice>()
                 val floralCards = handItems.filterIsInstance<ExtendedHandItem.FloralArray>()
 
-                // If nothing to remove, return null
-                if (cards.isEmpty() && dice.isEmpty()) {
-                    return null
-                }
                 return Result(
                     cards = cards.map { it.card },
                     dice = dice.map { it.die },
@@ -156,9 +156,8 @@ class DecisionDamageAbsorptionBaseline(
                 )
             }
         }
-
         // Select the best combination based on scoring
-        val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return null
+        val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return Result()
 
         // Convert the best combination back to cards and dice
         val selectedCards = bestCombination.items.filterIsInstance<ExtendedHandItem.Card>()
@@ -193,8 +192,10 @@ class DecisionDamageAbsorptionBaseline(
 
             // Only consider combinations that meet or exceed the damage
             if (totalValue >= targetDamage) {
-                // Score this combination (lower is better)
-                val overallScore = scoreItemCombination(combo, totalValue, targetDamage)
+                // Score this combination (lower is more likely to be used)
+                val waste = totalValue - targetDamage
+                val itemScore = scoreItemCombination(combo)
+                val overallScore = itemScore + waste // Only slight consideration of waste value
 
                 results.add(
                     ItemCombination(
@@ -231,31 +232,17 @@ class DecisionDamageAbsorptionBaseline(
     }
 
     private fun scoreItemCombination(
-        items: List<ExtendedHandItem>,
-        total: Int,
-        targetDamage: Int
+        items: List<ExtendedHandItem>
     ): Int {
-        // Lower score is better
+        // Lower score means more likely to be used to absorb damage.
         var score = 0
 
         // Extract cards and dice for scoring
         val cards = items.filterIsInstance<ExtendedHandItem.Card>()
         val dice = items.filterIsInstance<ExtendedHandItem.Dice>()
 
-        // Penalize for excessive damage absorption (waste)
-        score += (total - targetDamage) * 50
-
-        // Penalize for number of items used
-        score += items.size * 75
-
-        // Prefer not using FLOWER cards if possible
-        score += cards.count { it.card.type == FlourishType.FLOWER } * 120
-
-        // Prefer not using BLOOM cards if possible
-        score += cards.count { it.card.type == FlourishType.BLOOM } * 200
-
-        // Prefer using smaller dice over larger ones (less waste)
-        score += dice.sumOf { it.die.sides * 10 }
+        score += dice.sumOf { it.die.sides }
+        score += cards.sumOf { cardEffectBattleScore(it.card) }
 
         return score
     }

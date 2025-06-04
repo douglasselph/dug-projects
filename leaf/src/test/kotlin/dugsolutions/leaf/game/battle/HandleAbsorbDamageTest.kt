@@ -2,13 +2,18 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
+import net.bytebuddy.matcher.DeclaringAnnotationMatcher
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -38,39 +43,39 @@ class HandleAbsorbDamageTest {
     }
 
     @Test
-    fun invoke_whenNoIncomingDamage_doesNothing() {
+    fun invoke_whenNoIncomingDamage_doesNothing() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns false
+        every { mockPlayer.incomingDamage } returns 0
 
         // Act
         SUT(mockPlayer)
 
         // Assert
-        verify(exactly = 0) { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify(exactly = 0) { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
     }
 
     @Test
-    fun invoke_whenNoAbsorptionDecision_doesNothing() {
+    fun invoke_whenNoAbsorptionDecision_doesNothing() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns null
+        every { mockPlayer.incomingDamage } returns 2
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result()
 
         // Act
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
     }
 
     @Test
-    fun invoke_whenAbsorptionResultWithCards_removesCards() {
+    fun invoke_whenAbsorptionResultWithCards_removesCards() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 7
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1, fakeCard2),
             dice = emptyList(),
             floralCards = emptyList()
@@ -80,7 +85,7 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify { mockPlayer.removeCardFromHand(fakeCard1.id) }
         verify { mockPlayer.removeCardFromHand(fakeCard2.id) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
@@ -88,7 +93,7 @@ class HandleAbsorbDamageTest {
     }
 
     @Test
-    fun invoke_whenAbsorptionResultWithDice_removesDice() {
+    fun invoke_whenAbsorptionResultWithDice_removesDice() = runBlocking {
         // Arrange
         val d4 = sampleDie.d4
         val d6 = sampleDie.d6
@@ -96,8 +101,8 @@ class HandleAbsorbDamageTest {
         val d10 = sampleDie.d10
         val d12 = sampleDie.d12
         val d20 = sampleDie.d20
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 5
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = emptyList(),
             dice = listOf(d4, d6, d8, d10, d12, d20),
             floralCards = emptyList()
@@ -107,7 +112,7 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
         verify { mockPlayer.removeDieFromHand(d4) }
         verify { mockPlayer.removeDieFromHand(d6) }
@@ -118,12 +123,12 @@ class HandleAbsorbDamageTest {
     }
 
     @Test
-    fun invoke_whenAbsorptionResultWithCardsAndDice_removesBoth() {
+    fun invoke_whenAbsorptionResultWithCardsAndDice_removesBoth() = runBlocking {
         // Arrange
         val d4 = sampleDie.d4
         val d6 = sampleDie.d6
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 2
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = listOf(d4, d6),
             floralCards = emptyList()
@@ -133,7 +138,7 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify { mockPlayer.removeCardFromHand(fakeCard1.id) }
         verify { mockPlayer.removeDieFromHand(d4) }
         verify { mockPlayer.removeDieFromHand(d6) }
@@ -141,12 +146,12 @@ class HandleAbsorbDamageTest {
     }
 
     @Test
-    fun invoke_whenAbsorptionResultWithFloralCards_removesFloralCards() {
+    fun invoke_whenAbsorptionResultWithFloralCards_removesFloralCards() = runBlocking {
         // Arrange
         val floralCard1 = FakeCards.fakeFlower
         val floralCard2 = FakeCards.fakeFlower2
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 1
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = emptyList(),
             dice = emptyList(),
             floralCards = listOf(floralCard1, floralCard2)
@@ -156,7 +161,7 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
         verify { mockPlayer.removeCardFromFloralArray(floralCard1.id) }
@@ -164,12 +169,12 @@ class HandleAbsorbDamageTest {
     }
 
     @Test
-    fun invoke_whenHandEmptyAfterAbsorption_clearsFloralArray() {
+    fun invoke_whenHandEmptyAfterAbsorption_clearsFloralArray() = runBlocking {
         // Arrange
         val floralCard1 = FakeCards.fakeFlower
         val floralCard2 = FakeCards.fakeFlower2
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 2
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = emptyList(),
             floralCards = emptyList()
@@ -181,19 +186,19 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify { mockPlayer.removeCardFromHand(fakeCard1.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockGameChronicle(GameChronicle.Moment.TRASH_CARD(mockPlayer, floralCard1, floralArray = true)) }
-        verify { mockGameChronicle(GameChronicle.Moment.TRASH_CARD(mockPlayer, floralCard2, floralArray = true)) }
+        verify { mockGameChronicle(Moment.TRASH_CARD(mockPlayer, floralCard1, floralArray = true)) }
+        verify { mockGameChronicle(Moment.TRASH_CARD(mockPlayer, floralCard2, floralArray = true)) }
     }
 
     @Test
-    fun invoke_whenHandNotEmptyAfterAbsorption_doesNotClearFloralArray() {
+    fun invoke_whenHandNotEmptyAfterAbsorption_doesNotClearFloralArray() = runBlocking {
         // Arrange
         val remainingCard = mockk<GameCard>(relaxed = true)
-        every { mockPlayer.hasIncomingDamage() } returns true
-        every { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
+        every { mockPlayer.incomingDamage } returns 6
+        coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = emptyList(),
             floralCards = emptyList()
@@ -204,7 +209,7 @@ class HandleAbsorbDamageTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
+        coVerify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify { mockPlayer.removeCardFromHand(fakeCard1.id) }
         verify(exactly = 0) { mockPlayer.clearFloralCards() }
     }

@@ -33,6 +33,8 @@ dependencies {
     implementation(compose.runtime)
     implementation(compose.foundation)
     implementation(compose.material3)
+    implementation(compose.ui)
+    implementation(compose.uiTooling)
     
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -50,6 +52,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit5"))
     testImplementation("io.mockk:mockk:1.13.8")  // Add MockK for mocking
+    testImplementation("io.github.serpro69:kotlin-faker:1.15.0")  // Add kfaker for test data generation
     
     // Configure test task to use JUnit Platform
     tasks.test {

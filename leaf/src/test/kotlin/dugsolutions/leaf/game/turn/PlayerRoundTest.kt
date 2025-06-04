@@ -7,11 +7,14 @@ import dugsolutions.leaf.player.effect.CardEffectsProcessor
 import dugsolutions.leaf.player.effect.CardsEffectsProcessor
 import dugsolutions.leaf.player.effect.EffectsList
 import io.mockk.Runs
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -51,35 +54,35 @@ class PlayerRoundTest {
     }
 
     @Test
-    fun invoke_whenCalled_processesEffectsInCorrectOrder() {
+    fun invoke_whenCalled_processesEffectsInCorrectOrder() = runBlocking {
         // Act
         SUT(mockPlayer, mockOpponent)
 
         // Assert
         verify { mockEffectsList.clear() }
-        verify { mockCardsEffectsProcessor(sampleCards, mockPlayer) }
+        coVerify { mockCardsEffectsProcessor(sampleCards, mockPlayer) }
 
         verify { mockHandleCardEffect(mockPlayer, mockOpponent) }
     }
 
     @Test
-    fun invoke_whenCalled_processesAllEffects() {
+    fun invoke_whenCalled_processesAllEffects() = runBlocking {
         // Arrange
         // Act
         SUT(mockPlayer, mockOpponent)
 
         // Assert
-        verify { mockCardsEffectsProcessor(any(), any()) }
+        coVerify { mockCardsEffectsProcessor(any(), any()) }
         verify(exactly = 1) { mockHandleCardEffect(any(), any()) }
     }
 
     @Test
-    fun invoke_whenCalled_clearsEffectsListFirst() {
+    fun invoke_whenCalled_clearsEffectsListFirst() = runBlocking{
         // Act
         SUT(mockPlayer, mockOpponent)
 
         // Assert
-        verifyOrder {
+        coVerifyOrder {
             mockEffectsList.clear()
             mockCardsEffectsProcessor(any(), any())
             mockHandleCardEffect(any(), any())

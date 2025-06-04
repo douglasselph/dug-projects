@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 import kotlin.math.max
 
@@ -9,7 +10,7 @@ class HandleDeliverDamage(
     private val chronicle: GameChronicle
 ) {
 
-    operator fun invoke(players: List<Player>) {
+    suspend operator fun invoke(players: List<Player>) {
         // Sorts players by pipTotal in descending order (highest to lowest)
         // When pipTotals are equal, uses original player index as tiebreaker
         // Returns only the sorted Player objects, discarding the indices used for sorting
@@ -33,24 +34,38 @@ class HandleDeliverDamage(
             val attacker = reversedPlayers[i + 1]
 
             // Calculate damage to be delivered
-            val damage = attacker.pipTotal - defender.pipTotal
+            val attackerPipTotal = attacker.pipTotal
+            val defenderPipTotal = defender.pipTotal
+            val damage = attackerPipTotal - defenderPipTotal
 
             // Skip if no damage to deliver (tie of lowest versus highest)
             if (damage > 0) {
                 defender.incomingDamage += max(0, damage - defender.deflectDamage)
                 if (defender.incomingDamage > 0) {
-                    val thornDamage = handleAbsorbDamage(defender)
-                    if (thornDamage > 0) {
-                        attacker.incomingDamage += thornDamage
-                    }
                     chronicle(
-                        GameChronicle.Moment.DELIVER_DAMAGE(
-                            defender, damage,
-                            attacker, thornDamage
+                        Moment.DELIVER_DAMAGE(
+                            defender = defender, damageToDefender = damage,
+                            defenderPipTotal = defenderPipTotal, attackerPipTotal = attackerPipTotal
                         )
                     )
+                    val thornDamage = handleAbsorbDamage(defender)
+                    if (thornDamage > 0) {
+
+                        attacker.incomingDamage += thornDamage
+                        chronicle(
+                            Moment.THORN_DAMAGE(player = attacker, thornDamage = thornDamage)
+                        )
+                    }
                 }
             }
+        }
+        val topPlayer = sortedPlayers[0]
+        val remainingDamage = max(0, topPlayer.incomingDamage - topPlayer.deflectDamage)
+        if (remainingDamage > 0) {
+            chronicle(
+                Moment.DELIVER_DAMAGE(defender = topPlayer, damageToDefender = remainingDamage)
+            )
+            handleAbsorbDamage(topPlayer)
         }
     }
 } 

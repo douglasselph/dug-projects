@@ -19,12 +19,13 @@ import androidx.compose.ui.window.application
 import androidx.compose.foundation.clickable
 import dugsolutions.leaf.components.*
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.Colors
+import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
 @Composable
 fun CardDisplay(
     cardInfo: CardInfo,
-    highlight: Boolean = false,
     onSelected: () -> Unit = {}
 ) {
     Card(
@@ -32,13 +33,17 @@ fun CardDisplay(
             .width(200.dp)
             .padding(4.dp)
             .then(
-                if (highlight) {
+                if (cardInfo.highlight != HighlightInfo.NONE) {
                     Modifier.clickable(onClick = onSelected)
                 } else Modifier
             ),
         elevation = 4.dp,
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = if (highlight) Color(0xFFFFF9C4) else MaterialTheme.colors.surface
+        backgroundColor = when (cardInfo.highlight) {
+            HighlightInfo.SELECTABLE ->  Colors.SelectableColor
+            HighlightInfo.SELECTED -> Colors.SelectedColor
+            else -> MaterialTheme.colors.surface
+        }
     ) {
         Column(
             modifier = Modifier
@@ -217,9 +222,17 @@ fun main() = application {
 }
 
 @Composable
-private fun PreviewCard(gameCard: GameCard, highlight: Boolean = false) {
+private fun PreviewCard(
+    gameCard: GameCard,
+    highlight: HighlightInfo = HighlightInfo.NONE
+) {
     val gatherCardInfo = GatherCardInfo()
-    CardDisplay(gatherCardInfo(gameCard), highlight)
+    CardDisplay(
+        gatherCardInfo(
+            incoming = gameCard,
+            highlight = highlight
+        )
+    )
 }
 
 @Composable
@@ -260,7 +273,8 @@ private fun PreviewRootCard() {
             trashEffect = CardEffect.RETAIN_DIE,
             trashValue = 1,
             thorn = 0
-        ), highlight = true
+        ),
+        highlight = HighlightInfo.SELECTED
     )
 }
 
@@ -323,7 +337,7 @@ private fun PreviewFlowerCard() {
             trashEffect = CardEffect.RESILIENCE_BOOST,
             trashValue = 5,
             thorn = 0
-        ), highlight = true
+        ), highlight = HighlightInfo.SELECTABLE
     )
 }
 

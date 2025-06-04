@@ -3,7 +3,7 @@ package dugsolutions.leaf.cards
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerTD
 import io.mockk.mockk

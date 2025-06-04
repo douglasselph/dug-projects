@@ -4,7 +4,9 @@ import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player
 import io.mockk.mockk
 
-class ApplyCostTD : ApplyCost(mockk(relaxed = true)) {
+class ApplyCostTD : ApplyCost(
+    applyEffects = mockk(relaxed = true)
+) {
     // Track what was passed into the function
     val gotPlayers = mutableListOf<Player>()
     val gotCombinations = mutableListOf<Combination>()
@@ -16,7 +18,7 @@ class ApplyCostTD : ApplyCost(mockk(relaxed = true)) {
     // Control the response if needed
     var respondWithException: Throwable? = null
 
-    override fun invoke(
+    override operator fun invoke(
         player: Player,
         combination: Combination,
         acquireItem: (player: Player) -> Unit
@@ -31,6 +33,7 @@ class ApplyCostTD : ApplyCost(mockk(relaxed = true)) {
 
         // Invoke the callback
         acquireItem(player)
+
         callbackWasInvoked = true
     }
 }

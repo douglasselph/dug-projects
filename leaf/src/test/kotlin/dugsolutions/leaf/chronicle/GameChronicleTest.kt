@@ -1,10 +1,9 @@
 package dugsolutions.leaf.chronicle
 
 import dugsolutions.leaf.chronicle.domain.ChronicleEntry
-import dugsolutions.leaf.chronicle.domain.TransformMomentToEntry
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.chronicle.local.TransformMomentToEntry
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
@@ -21,11 +20,11 @@ class GameChronicleTest {
         private const val CARD_ID_3 = 3
     }
 
-    private val mockGameTurn = mockk<GameTurn>(relaxed = true)
+    private val mockGameTime = mockk<GameTime>(relaxed = true)
     private val mockTransformMomentToEntry = mockk<TransformMomentToEntry>(relaxed = true)
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val mockEntry = mockk<ChronicleEntry>(relaxed = true)
-    private val SUT = GameChronicle(mockGameTurn, mockTransformMomentToEntry)
+    private val SUT = GameChronicle(mockGameTime, mockTransformMomentToEntry)
 
     @BeforeEach
     fun setup() {
@@ -44,8 +43,8 @@ class GameChronicleTest {
     @Test
     fun getEntries_whenHasEntries_returnsAllEntries() {
         // Arrange
-        val moment1 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
         SUT(moment1)
         SUT(moment2)
 
@@ -61,8 +60,8 @@ class GameChronicleTest {
     @Test
     fun getNewEntries_whenFirstCall_returnsAllEntries() {
         // Arrange
-        val moment1 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
         SUT(moment1)
         SUT(moment2)
 
@@ -78,9 +77,9 @@ class GameChronicleTest {
     @Test
     fun getNewEntries_whenCalledMultipleTimes_returnsOnlyNewEntries() {
         // Arrange
-        val moment1 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
-        val moment3 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_3)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment3 = Moment.DRAW_CARD(mockPlayer, CARD_ID_3)
         
         SUT(moment1)
         SUT(moment2)
@@ -98,8 +97,8 @@ class GameChronicleTest {
     @Test
     fun clear_whenCalled_removesAllEntries() {
         // Arrange
-        val moment1 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = GameChronicle.Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
         SUT(moment1)
         SUT(moment2)
 

@@ -5,7 +5,7 @@ import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
-import dugsolutions.leaf.main.CardOperations
+import dugsolutions.leaf.main.local.CardOperations
 
 class ScenarioBasicConfig(
     cardOperations: CardOperations
@@ -19,7 +19,7 @@ class ScenarioBasicConfig(
         val flowers = getGameCards(FlourishType.FLOWER)
 
         val numCards = numPlayers * 3
-        val numWild = numPlayers * 2
+        val numWild = numPlayers
         val numFlowers = numPlayers + 2
 
         require(roots.size > 3) { "Not enough root cards defined. Found only ${roots.size}" }
@@ -33,6 +33,7 @@ class ScenarioBasicConfig(
             vines[2], vines[3],         // Third and fourth vine cards
             canopies[2], canopies[3]    // Third and fourth canopy cards
         )
+        val diceCount = numPlayers * 2
         return MarketConfig(
             stacks = listOf(
                 getMarketStackConfig(MarketStackID.ROOT_1, listOf(roots[0]), numCards),
@@ -47,12 +48,12 @@ class ScenarioBasicConfig(
                 getMarketStackConfig(MarketStackID.JOINT_RCV, joints, numWild)
             ),
             dice = listOf(
-                MarketDiceConfig(DieSides.D4, numPlayers * 2),
-                MarketDiceConfig(DieSides.D6, numPlayers * 2),
-                MarketDiceConfig(DieSides.D8, numPlayers * 3),
-                MarketDiceConfig(DieSides.D10, numPlayers * 3),
-                MarketDiceConfig(DieSides.D12, numPlayers * 2),
-                MarketDiceConfig(DieSides.D20, numPlayers * 2),
+                MarketDiceConfig(DieSides.D4, diceCount),
+                MarketDiceConfig(DieSides.D6, diceCount),
+                MarketDiceConfig(DieSides.D8, diceCount),
+                MarketDiceConfig(DieSides.D10, diceCount),
+                MarketDiceConfig(DieSides.D12, diceCount),
+                MarketDiceConfig(DieSides.D20, diceCount),
             )
         )
     }

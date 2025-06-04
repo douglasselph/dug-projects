@@ -1,15 +1,18 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
+import io.mockk.coEvery
 import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,6 +27,8 @@ class CardEffectProcessorTest {
     }
 
     private lateinit var mockCanProcessMatchEffect: CanProcessMatchEffect
+    private lateinit var mockShouldProcessMatchEffect: ShouldProcessMatchEffect
+    private lateinit var mockChronicle: GameChronicle
     private lateinit var mockPlayer: Player
     private lateinit var mockCard: GameCard
 
@@ -32,19 +37,22 @@ class CardEffectProcessorTest {
     @BeforeEach
     fun setup() {
         mockCanProcessMatchEffect = mockk(relaxed = true)
+        mockShouldProcessMatchEffect = mockk(relaxed = true)
+        mockChronicle = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         mockCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
         }
-        SUT = CardEffectProcessor(mockCanProcessMatchEffect)
+        SUT = CardEffectProcessor(mockCanProcessMatchEffect, mockShouldProcessMatchEffect, mockChronicle)
 
         every { mockPlayer.removeCardFromHand(any()) } returns true
         every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(false)
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        coEvery { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        every { mockShouldProcessMatchEffect(mockCard) } returns true
     }
 
     @Test
-    fun processCardEffect_whenNoEffects_returnsEmptyList() {
+    fun processCardEffect_whenNoEffects_returnsEmptyList() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns null
         every { mockCard.matchEffect } returns null
@@ -55,13 +63,13 @@ class CardEffectProcessorTest {
 
         // Assert
         assertEquals(emptyList(), result)
-        
+
         // Verify card is not removed from hand
         confirmVerified(mockPlayer)
     }
 
     @Test
-    fun processCardEffect_whenOnlyPrimaryEffect_returnsPrimaryEffect() {
+    fun processCardEffect_whenOnlyPrimaryEffect_returnsPrimaryEffect() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
         every { mockCard.primaryValue } returns 2
@@ -75,13 +83,13 @@ class CardEffectProcessorTest {
         assertEquals(1, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
         assertEquals(2, (result[0] as AppliedEffect.DrawCards).count)
-        
+
         // Verify card is not removed from hand
         confirmVerified(mockPlayer)
     }
 
     @Test
-    fun processCardEffect_whenMatchEffectAndShouldProcess_returnsBothEffects() {
+    fun processCardEffect_whenMatchEffectAndShouldProcess_returnsBothEffects() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
         every { mockCard.primaryValue } returns 2
@@ -97,13 +105,13 @@ class CardEffectProcessorTest {
         assertEquals(2, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
         assertTrue(result[1] is AppliedEffect.DrawDice)
-        
+
         // Verify card is not removed from hand
         confirmVerified(mockPlayer)
     }
 
     @Test
-    fun processCardEffect_whenMatchEffectAndShouldNotProcess_returnsOnlyPrimaryEffect() {
+    fun processCardEffect_whenMatchEffectAndShouldNotProcess_returnsOnlyPrimaryEffect() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
         every { mockCard.primaryValue } returns 2
@@ -118,20 +126,42 @@ class CardEffectProcessorTest {
         // Assert
         assertEquals(1, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
-        
+
         // Verify card is not removed from hand
         confirmVerified(mockPlayer)
     }
 
     @Test
-    fun processCardEffect_whenTrashEffect_returnsAllEffectsAndRemovesCardFromHand() {
+    fun processCardEffect_whenMatchEffectAndShouldNotProcess_returnsBothEffects() = runBlocking {
+        // Arrange
+        every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
+        every { mockCard.primaryValue } returns 2
+        every { mockCard.matchEffect } returns CardEffect.DRAW_DIE
+        every { mockCard.matchValue } returns 1
+        every { mockCard.trashEffect } returns null
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true)
+        every { mockShouldProcessMatchEffect(mockCard) } returns false
+
+        // Act
+        val result = SUT(mockCard, mockPlayer)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertTrue(result[0] is AppliedEffect.DrawCards)
+
+        // Verify card is not removed from hand
+        confirmVerified(mockPlayer)
+    }
+
+    @Test
+    fun processCardEffect_whenTrashEffect_returnsAllEffectsAndRemovesCardFromHand() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
         every { mockCard.primaryValue } returns 2
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns CardEffect.DISCARD
         every { mockCard.trashValue } returns 1
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        coEvery { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
         val result = SUT(mockCard, mockPlayer)
@@ -146,7 +176,7 @@ class CardEffectProcessorTest {
     }
 
     @Test
-    fun processCardEffect_whenAllEffects_returnsAllEffectsInOrderAndRemovesCard() {
+    fun processCardEffect_whenAllEffects_returnsAllEffectsInOrderAndRemovesCard() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
         every { mockCard.primaryValue } returns 2
@@ -155,7 +185,7 @@ class CardEffectProcessorTest {
         every { mockCard.trashEffect } returns CardEffect.DISCARD
         every { mockCard.trashValue } returns 1
         every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true)
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        coEvery { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
         val result = SUT(mockCard, mockPlayer)
@@ -169,10 +199,10 @@ class CardEffectProcessorTest {
         // Verify card IS removed from hand for trash effects
         verify(exactly = 1) { mockPlayer.removeCardFromHand(CARD_ID_1) }
     }
-    
+
     @ParameterizedTest
     @EnumSource(CardEffect::class)
-    fun processEffect_forAllEffectTypes_returnsCorrectAppliedEffect(effectType: CardEffect) {
+    fun processEffect_forAllEffectTypes_returnsCorrectAppliedEffect(effectType: CardEffect) = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns effectType
         every { mockCard.primaryValue } returns TEST_VALUE
@@ -185,7 +215,7 @@ class CardEffectProcessorTest {
         // Assert
         assertEquals(1, result.size)
         val appliedEffect = result[0]
-        
+
         // Verify the applied effect type matches the expected type for the card effect
         when (effectType) {
             CardEffect.ADD_TO_DIE -> assertTrue(appliedEffect is AppliedEffect.AdjustDieRoll)
@@ -219,12 +249,13 @@ class CardEffectProcessorTest {
             CardEffect.DEFLECT -> assertTrue(appliedEffect is AppliedEffect.DeflectDamage)
             CardEffect.REUSE_CARD -> assertTrue(appliedEffect is AppliedEffect.Reuse)
             CardEffect.REPLAY_VINE -> assertTrue(appliedEffect is AppliedEffect.Replay)
-            else -> { /* Just skip any effect types not explicitly handled */ }
+            else -> { /* Just skip any effect types not explicitly handled */
+            }
         }
     }
-    
+
     @Test
-    fun processCardEffect_withDrawCardsEffect_returnsCorrectCountAndFromCompost() {
+    fun processCardEffect_withDrawCardsEffect_returnsCorrectCountAndFromCompost() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD_COMPOST
         every { mockCard.primaryValue } returns TEST_VALUE
@@ -241,9 +272,9 @@ class CardEffectProcessorTest {
         assertEquals(TEST_VALUE, drawCards.count)
         assertTrue(drawCards.fromCompost)
     }
-    
+
     @Test
-    fun processCardEffect_withMarketBenefitEffect_returnsCorrectTypeAndValues() {
+    fun processCardEffect_withMarketBenefitEffect_returnsCorrectTypeAndValues() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.GAIN_FREE_CANOPY
         every { mockCard.primaryValue } returns TEST_VALUE
@@ -261,16 +292,16 @@ class CardEffectProcessorTest {
         assertEquals(0, marketBenefit.costReduction)
         assertTrue(marketBenefit.isFree)
     }
-    
+
     @Test
-    fun processCardEffect_withTrashEffect_setsTrashAfterUseCorrectly() {
+    fun processCardEffect_withTrashEffect_setsTrashAfterUseCorrectly() = runBlocking {
         // Arrange
         every { mockCard.primaryEffect } returns CardEffect.UPGRADE_ANY
         every { mockCard.primaryValue } returns TEST_VALUE
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns CardEffect.DRAW_CARD
         every { mockCard.trashValue } returns TEST_VALUE
-        every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        coEvery { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
 
         // Act
         val result = SUT(mockCard, mockPlayer)
@@ -287,7 +318,7 @@ class CardEffectProcessorTest {
     }
 
     @Test
-    fun processCardEffect_whenMatchEffectWithDieCost_discardsMatchingDie() {
+    fun processCardEffect_whenMatchEffectWithDieCost_discardsMatchingDie() = runBlocking {
         // Arrange
         val mockDie = mockk<dugsolutions.leaf.components.die.Die>(relaxed = true)
         every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD

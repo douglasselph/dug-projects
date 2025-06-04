@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.Cost
 import dugsolutions.leaf.components.CostElement
@@ -23,12 +25,24 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 
+data class PlayerDisplayClickListeners(
+    val onDrawCountChosen: (value: Int) -> Unit = {},
+    val onHandCardSelected: (value: CardInfo) -> Unit = {},
+    val onFloralCardSelected: (value: CardInfo) -> Unit = {},
+    val onDieSelected: (value: DieInfo) -> Unit = {}
+)
+
 @Composable
-fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = {}) {
+fun PlayerDisplay(
+    player: PlayerInfo,
+    listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
+) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -38,36 +52,26 @@ fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = 
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Player name
-            Text(
-                text = player.name,
-                style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            // Player name and score
+            Row(
+                modifier = Modifier.padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = player.name,
+                    style = MaterialTheme.typography.h5
+                )
+                Text(
+                    text = player.infoLine,
+                    style = MaterialTheme.typography.subtitle1,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
 
             if (player.showDrawCount) {
-                DrawCountDecisionDisplay { value -> onDrawCountChosen(value) }
+                DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
             } else {
-                Column {
-                    Text(
-                        text = "Hand",
-                        style = MaterialTheme.typography.h6,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // Cards in hand
-                        Box {
-                            CardRowDisplay(player.handCards)
-                        }
-                        // Dice in hand
-                        Box {
-                            DiceDisplay(player.handDice)
-                        }
-                    }
-                }
-
+                HandDisplay(player, listeners)
             }
 
             // Floral array (only if not empty)
@@ -78,7 +82,9 @@ fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = 
                         style = MaterialTheme.typography.h6,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    CardRowDisplay(player.floralArray)
+                    CardRowDisplay(player.floralArray) { cardInfo ->
+                        listeners.onFloralCardSelected(cardInfo)
+                    }
                 }
             }
 
@@ -123,13 +129,14 @@ fun main() = application {
         )
     ) {
         val gatherCardInfo = GatherCardInfo()
-        
+        val infoLine = PlayerScore(1, scoreDice = 10, scoreCards = 15).toString()
         // Sample player data
         val samplePlayer = PlayerInfo(
             name = "Player 1",
+            infoLine = infoLine,
             handCards = listOf(
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 1,
                         name = "Sprouting Seed",
                         type = FlourishType.SEEDLING,
@@ -146,7 +153,7 @@ fun main() = application {
                     )
                 ),
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 2,
                         name = "Nourishing Root",
                         type = FlourishType.ROOT,
@@ -167,7 +174,7 @@ fun main() = application {
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
             floralArray = listOf(
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 3,
                         name = "Sheltering Canopy",
                         type = FlourishType.CANOPY,
@@ -188,7 +195,6 @@ fun main() = application {
             compostCardCount = 7,
             compostDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
-
         PlayerDisplay(samplePlayer)
     }
 }

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.game.acquire
 
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.turn.select.SelectPossibleCards
 import dugsolutions.leaf.player.Player
@@ -15,27 +16,23 @@ import org.junit.jupiter.api.Test
 
 class HandleGroveAcquisitionTest {
 
-    private lateinit var mockSelectPossibleCards: SelectPossibleCards
-    private lateinit var mockAcquireItem: AcquireItem
-    private lateinit var mockManageAcquiredFloralTypes: ManageAcquiredFloralTypes
-    private lateinit var mockPlayer: Player
+    private val mockSelectPossibleCards: SelectPossibleCards = mockk(relaxed = true)
+    private val mockAcquireItem: AcquireItem = mockk(relaxed = true)
+    private val mockManageAcquiredFloralTypes: ManageAcquiredFloralTypes = mockk(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
+    private val mockPlayer: Player = mockk(relaxed = true)
     private lateinit var sampleDie: SampleDie
 
-    private lateinit var SUT: HandleGroveAcquisition
+    private val SUT: HandleGroveAcquisition = HandleGroveAcquisition(
+        mockSelectPossibleCards,
+        mockAcquireItem,
+        mockManageAcquiredFloralTypes,
+        mockChronicle
+    )
 
     @BeforeEach
     fun setup() {
-        mockSelectPossibleCards = mockk(relaxed = true)
-        mockAcquireItem = mockk(relaxed = true)
-        mockManageAcquiredFloralTypes = mockk(relaxed = true)
-        mockPlayer = mockk(relaxed = true)
         sampleDie = SampleDie()
-
-        SUT = HandleGroveAcquisition(
-            mockSelectPossibleCards,
-            mockAcquireItem,
-            mockManageAcquiredFloralTypes
-        )
         coEvery { mockAcquireItem(any(), any()) } returns true
     }
 

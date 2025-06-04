@@ -4,11 +4,23 @@ import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.main.domain.DieInfo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 
 class GatherDiceInfoTest {
+
+    companion object {
+        private const val D4_VALUE = "D4=1"
+        private const val D6_VALUE = "D6=3"
+        private const val D8_VALUE = "D8=5"
+        private const val D20_VALUE = "D20=15"
+        private const val D4_COUNT = "2D4"
+        private const val D6_COUNT = "2D6"
+        private const val D8_COUNT = "1D8"
+        private const val D20_COUNT = "1D20"
+    }
 
     private lateinit var sampleDie: SampleDie
     private lateinit var SUT: GatherDiceInfo
@@ -32,7 +44,12 @@ class GatherDiceInfoTest {
         val result = SUT(dice, values = true)
 
         // Assert
-        assertEquals(listOf("D4=1", "D6=3", "D8=5"), result.values)
+        val expectedValues = listOf(
+            DieInfo(index = 0, value = D4_VALUE, backingDie = dice.dice[0]),
+            DieInfo(index = 1, value = D6_VALUE, backingDie = dice.dice[1]),
+            DieInfo(index = 2, value = D8_VALUE, backingDie = dice.dice[2])
+        )
+        assertEquals(expectedValues, result.values)
     }
 
     @Test
@@ -50,7 +67,12 @@ class GatherDiceInfoTest {
         val result = SUT(dice, values = false)
 
         // Assert
-        assertEquals(listOf("2D4", "2D6", "1D8"), result.values)
+        val expectedValues = listOf(
+            DieInfo(value = D4_COUNT),
+            DieInfo(value = D6_COUNT),
+            DieInfo(value = D8_COUNT)
+        )
+        assertEquals(expectedValues, result.values)
     }
 
     @Test
@@ -77,7 +99,9 @@ class GatherDiceInfoTest {
         val resultWithoutValues = SUT(dice, values = false)
 
         // Assert
-        assertEquals(listOf("D20=15"), resultWithValues.values)
-        assertEquals(listOf("1D20"), resultWithoutValues.values)
+        val expectedWithValues = listOf(DieInfo(index = 0, value = D20_VALUE, backingDie = dice.dice[0]))
+        val expectedWithoutValues = listOf(DieInfo(value = D20_COUNT))
+        assertEquals(expectedWithValues, resultWithValues.values)
+        assertEquals(expectedWithoutValues, resultWithoutValues.values)
     }
 } 

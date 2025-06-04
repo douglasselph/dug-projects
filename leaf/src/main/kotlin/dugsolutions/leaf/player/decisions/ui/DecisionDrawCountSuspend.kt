@@ -4,13 +4,13 @@ import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 
 class DecisionDrawCountSuspend : DecisionDrawCount {
 
-    private val drawCountChannel = DecisionSuspensionChannel<Int>()
+    private val channel = DecisionSuspensionChannel<Int>()
 
     // region DecisionDrawCount
 
     override suspend operator fun invoke(): Int {
         onDrawCountRequest()
-        return drawCountChannel.waitForDecision()
+        return channel.waitForDecision()
     }
 
     // endregion DecisionDrawCount
@@ -20,7 +20,7 @@ class DecisionDrawCountSuspend : DecisionDrawCount {
     var onDrawCountRequest: () -> Unit = {}
 
     fun provide(count: Int) {
-        drawCountChannel.provideDecision(count)
+        channel.provideDecision(count)
     }
 
     // endregion public

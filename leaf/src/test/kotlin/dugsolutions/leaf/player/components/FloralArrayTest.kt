@@ -1,10 +1,8 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.di.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
 import dugsolutions.leaf.cards.FakeCards
 import io.mockk.every
 import io.mockk.mockk
@@ -19,6 +17,7 @@ class FloralArrayTest {
     private lateinit var cardManager: CardManager
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
     private lateinit var gameCardIDs: GameCardIDs
+    private lateinit var floralCount: FloralCount
     private lateinit var floralArray: FloralArray
 
     @BeforeEach
@@ -26,8 +25,9 @@ class FloralArrayTest {
         cardManager = mockk(relaxed = true)
         gameCardIDsFactory = mockk(relaxed = true)
         gameCardIDs = mockk(relaxed = true)
+        floralCount = mockk(relaxed = true)
         every { gameCardIDsFactory(any()) } returns gameCardIDs
-        floralArray = FloralArray(cardManager, gameCardIDsFactory)
+        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
     }
 
     @Test
@@ -75,70 +75,19 @@ class FloralArrayTest {
     }
 
     @Test
-    fun floralCount_whenNoMatchingCards_returnsZero() {
+    fun floralCount_whenCalled_delegatesToFloralCount() {
         // Arrange
         val flower = FakeCards.fakeFlower
-        every { gameCardIDs.cardIds } returns emptyList()
-
-        // Act
-        val result = floralArray.floralCount(flower.id)
-
-        // Assert
-        assertEquals(0, result)
-    }
-
-    @Test
-    fun floralCount_whenOneMatchingCard_returnsOne() {
-        // Arrange
-        val flower = FakeCards.fakeFlower
-        every { gameCardIDs.cardIds } returns listOf(flower.id)
+        val cardIds = listOf(flower.id)
+        every { gameCardIDs.cardIds } returns cardIds
+        every { floralCount(cardIds, flower.id) } returns 1
 
         // Act
         val result = floralArray.floralCount(flower.id)
 
         // Assert
         assertEquals(1, result)
-    }
-
-    @Test
-    fun floralCount_whenTwoMatchingCards_returnsTwo() {
-        // Arrange
-        val flower = FakeCards.fakeFlower
-        every { gameCardIDs.cardIds } returns listOf(flower.id, flower.id)
-
-        // Act
-        val result = floralArray.floralCount(flower.id)
-
-        // Assert
-        assertEquals(2, result)
-    }
-
-    @Test
-    fun floralCount_whenOneMatchingAndTwoNonMatching_returnsTwo() {
-        // Arrange
-        val flower = FakeCards.fakeFlower
-        val otherFlower = FakeCards.fakeFlower2
-        every { gameCardIDs.cardIds } returns listOf(flower.id, otherFlower.id, otherFlower.id)
-
-        // Act
-        val result = floralArray.floralCount(flower.id)
-
-        // Assert
-        assertEquals(2, result) // 1 matching + (2 non-matching / 2) = 1 + 1 = 2
-    }
-
-    @Test
-    fun floralCount_whenOneMatchingAndThreeNonMatching_returnsTwo() {
-        // Arrange
-        val flower = FakeCards.fakeFlower
-        val otherFlower = FakeCards.fakeFlower2
-        every { gameCardIDs.cardIds } returns listOf(flower.id, otherFlower.id, otherFlower.id, otherFlower.id)
-
-        // Act
-        val result = floralArray.floralCount(flower.id)
-
-        // Assert
-        assertEquals(2, result) // 1 matching + (3 non-matching / 2) = 1 + 1 = 2
+        verify { floralCount(cardIds, flower.id) }
     }
 
     @Test

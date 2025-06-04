@@ -2,20 +2,17 @@ package dugsolutions.leaf.grove.domain
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.tool.Randomizer
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -56,7 +53,7 @@ class GroveStacksTest {
     @BeforeEach
     fun setup() {
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
         mockCardManager = mockk(relaxed = true)
         mockGameCardIDsFactory = mockk(relaxed = true)
         mockGameCardIDs = mockk(relaxed = true)

@@ -12,19 +12,14 @@ import dugsolutions.leaf.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.di.DieFactoryConfig
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.di.gameModule
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
-import dugsolutions.leaf.grove.domain.MarketCardConfig
 import dugsolutions.leaf.grove.domain.MarketConfig
-import dugsolutions.leaf.grove.domain.MarketDiceConfig
-import dugsolutions.leaf.grove.domain.MarketStackConfig
-import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.Randomizer
@@ -77,8 +72,6 @@ class CoreSupport(
         } catch (e: Exception) {
             // Ignore if Koin wasn't started
         }
-        // Set the flag to use uniform dice before starting Koin
-        DieFactoryConfig.useUniformDice = true
 
         // Start Koin with test modules
         startKoin {
@@ -89,8 +82,11 @@ class CoreSupport(
 
         // Get the dependencies after Koin is started
         randomizer = get()
-        cardManager = get()
         dieFactory = get()
+
+        dieFactory.config = DieFactory.Config.UNIFORM
+
+        cardManager = get()
         grove = get()
         game = get()
         cardRegistry = get()
@@ -204,7 +200,6 @@ class CoreSupport(
         game.setup(
             Game.Config(
                 numPlayers = 2,
-                dieFactory = dieFactory,
                 setup = { index, player ->
                     if (index == 0) {
                         player.setupInitialDeck(playerUnderTestSeedlings)

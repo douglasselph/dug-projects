@@ -1,7 +1,12 @@
 package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -10,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
@@ -21,14 +25,20 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.grove.domain.MarketStackID
-import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.GroveInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
+import dugsolutions.leaf.main.domain.ItemInfo
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
+
 
 @Composable
-fun GroveDisplay(grove: GroveInfo, onCardSelected: (cardInfo: CardInfo) -> Unit = {}) {
+fun GroveDisplay(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -40,43 +50,79 @@ fun GroveDisplay(grove: GroveInfo, onCardSelected: (cardInfo: CardInfo) -> Unit 
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Grove title and selection instruction
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Grove",
-                    style = MaterialTheme.typography.h5,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                grove.selectText?.let { text ->
-                    Surface(
-                        color = Color(0xFFFFF9C4),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text(
-                            text = "Select card: $text",
-                            style = MaterialTheme.typography.subtitle1,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+            GroveTitle(grove)
+            if (grove.dice.values.isNotEmpty()) {
+                DiceDisplay(
+                    dice = grove.dice,
+                    elementsPerRow = grove.dice.values.size
+                ) { die -> onSelected(ItemInfo.Die(die)) }
+            }
+            GroveCards(grove, onSelected)
+        }
+    }
+}
+
+@Composable
+private fun GroveTitle(grove: GroveInfo) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left side: Grove title and quantities grouped together
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Grove",
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            grove.quantities?.let {
+                Surface(
+                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(4.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colors.primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = grove.quantities,
+                        style = MaterialTheme.typography.caption,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
                 }
             }
+        }
+        
+        // Right side: instruction (unchanged)
+        grove.instruction?.let { text ->
+            Surface(
+                color = Colors.SelectableColor,
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.subtitle1,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
 
-            // Stacks in rows of 3
-            reorder(grove.stacks).chunked(3).forEach { rowStacks ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    rowStacks.forEach { stack ->
-                        Box {
-                            StackInfoDisplay(stack) { card ->
-                                onCardSelected(card)
-                            }
-                        }
+@Composable
+private fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
+    // Stacks in rows of 3
+    reorder(grove.stacks).chunked(3).forEach { rowStacks ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            rowStacks.forEach { stack ->
+                Box {
+                    StackInfoDisplay(stack) { card ->
+                        onSelected(ItemInfo.Card(card))
                     }
                 }
             }
@@ -119,6 +165,9 @@ private fun reorder(stacks: List<StackInfo>): List<StackInfo> {
 // Preview window for testing grove display
 fun main() = application {
     val gatherCardInfo = GatherCardInfo()
+    val gatherDiceInfo = GatherDiceInfo()
+    val sampleDie = SampleDie()
+
     Window(
         onCloseRequest = ::exitApplication,
         title = "Grove Display Preview",
@@ -129,12 +178,25 @@ fun main() = application {
     ) {
         // Sample grove data
         val sampleGrove = GroveInfo(
-            selectText = "Select for Player 1",
+            instruction = "Select for Player 1",
+            quantities = "2D4 3D6 4D8 4D10 4D12 4D20",
+            dice = gatherDiceInfo(
+                Dice(
+                    listOf(
+                        sampleDie.d4,
+                        sampleDie.d6,
+                        sampleDie.d8,
+                        sampleDie.d10,
+                        sampleDie.d12,
+                        sampleDie.d20
+                    )
+                ), values = false
+            ),
             stacks = listOf(
                 StackInfo(
                     stack = MarketStackID.ROOT_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -155,7 +217,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.ROOT_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -176,7 +238,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -197,7 +259,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -218,7 +280,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -239,7 +301,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -259,9 +321,8 @@ fun main() = application {
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_1,
-                    highlight = true,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -275,14 +336,15 @@ fun main() = application {
                             trashEffect = null,
                             trashValue = 0,
                             thorn = 0
-                        )
+                        ),
+                        highlight = HighlightInfo.SELECTABLE
                     ),
                     numCards = 20
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -296,14 +358,15 @@ fun main() = application {
                             trashEffect = null,
                             trashValue = 0,
                             thorn = 0
-                        )
+                        ),
+                        highlight = HighlightInfo.SELECTED
                     ),
                     numCards = 20
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -324,7 +387,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.JOINT_RCV,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 5,
                             name = "Wild Growth",
                             type = FlourishType.ROOT,

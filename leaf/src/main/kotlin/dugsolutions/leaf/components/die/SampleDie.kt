@@ -1,6 +1,6 @@
 package dugsolutions.leaf.components.die
 
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 
 class SampleDie(

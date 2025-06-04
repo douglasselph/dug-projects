@@ -2,7 +2,6 @@ package dugsolutions.leaf.player
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
@@ -12,12 +11,12 @@ import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.components.drawHand
+import dugsolutions.leaf.player.components.drawNewHand
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.ExtendedHandItem
 import dugsolutions.leaf.player.effect.EffectsList
@@ -29,8 +28,7 @@ open class Player(
     private val retainedComponents: StackManager,
     private val dieFactory: DieFactory,
     private val costScore: CostScore,
-    private val decisionDirectorFactory: DecisionDirectorFactory,
-    private val chronicle: GameChronicle
+    private val decisionDirectorFactory: DecisionDirectorFactory
 ) {
     companion object {
         private var NextID = 1
@@ -59,6 +57,9 @@ open class Player(
 
     open val pipTotal: Int
         get() = deckManager.pipTotal + pipModifier
+
+    val diceTotal: Int
+        get() = deckManager.pipTotal
 
     val decisionDirector: DecisionDirector by lazy { decisionDirectorFactory(this) }
 
@@ -138,11 +139,8 @@ open class Player(
     val allCardsInDeck: List<GameCard>
         get() = cardsInSupply + cardsInHand + cardsInCompost
 
-    val floralCards: List<GameCard>
+    open val floralCards: List<GameCard>
         get() = floralArray.cards
-
-    // Game phase methods
-    fun hasIncomingDamage(): Boolean = incomingDamage > 0
 
     // Hand management methods
     fun hasCardInHand(cardId: CardID): Boolean =
@@ -151,7 +149,7 @@ open class Player(
     fun hasDieInHand(die: Die): Boolean =
         deckManager.hasDieInHand(die)
 
-    fun getItemsInHand(): List<HandItem> =
+    open fun getItemsInHand(): List<HandItem> =
         deckManager.getItemsInHand()
 
     fun getExtendedItems(): List<ExtendedHandItem> {
@@ -236,7 +234,7 @@ open class Player(
     }
 
     fun drawHand(preferredCardCount: Int) {
-        drawHand(chronicle, preferredCardCount)
+        drawNewHand(preferredCardCount)
     }
 
     suspend fun drawHand() {
@@ -297,8 +295,8 @@ open class Player(
         cardsReused.clear()
     }
 
-    fun trashSeedlingCards() {
-        deckManager.trashSeedlingCards()
+    fun trashSeedlingCards(): List<CardID> {
+        return deckManager.trashSeedlingCards()
     }
 
     fun clearFloralCards() {

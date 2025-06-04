@@ -11,7 +11,7 @@ class PlayerRound(
     private val cardsEffectsProcessor: CardsEffectsProcessor,
     private val handleCardEffect: HandleCardEffect
 ) {
-    operator fun invoke(player: Player, target: Player) {
+    suspend operator fun invoke(player: Player, target: Player) {
 
         player.effectsList.clear()
 

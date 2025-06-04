@@ -3,8 +3,8 @@ package dugsolutions.leaf.game.turn.select
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -24,7 +24,7 @@ class SelectDieToRerollTest {
     fun setup() {
         // Initialize random components
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
 
         // Create test dice
         d4 = dieFactory(DieSides.D4)

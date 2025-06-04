@@ -3,15 +3,16 @@ package dugsolutions.leaf.main.domain
 import dugsolutions.leaf.grove.domain.MarketStackID
 
 data class GroveInfo(
-    val stacks: List<StackInfo>,
-    val selectText: String? = null
+    val stacks: List<StackInfo> = emptyList(),
+    val dice: DiceInfo = DiceInfo(),
+    val instruction: String? = null,
+    val quantities: String? = null
 )
 
 data class StackInfo(
     val stack: MarketStackID,
     val topCard: CardInfo?,
-    val numCards: Int,
-    val highlight: Boolean = false
+    val numCards: Int
 ) {
 
     val name: String

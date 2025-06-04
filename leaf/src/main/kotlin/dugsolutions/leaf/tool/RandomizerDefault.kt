@@ -14,13 +14,23 @@ class RandomizerDefault : Randomizer {
             random = value?.let { Random(value) } ?: Random.Default
         }
 
-    override fun nextBoolean(): Boolean = random.nextBoolean()
+    override fun nextBoolean(): Boolean {
+        return random.nextBoolean()
+    }
 
-    override fun nextInt(from: Int, until: Int): Int = random.nextInt(from, until)
+    override fun nextInt(from: Int, until: Int): Int {
+        return random.nextInt(from, until)
+    }
 
-    override fun nextInt(until: Int): Int = random.nextInt(until)
+    override fun nextInt(until: Int): Int {
+        return random.nextInt(until)
+    }
 
-    override fun <T> randomOrNull(list: List<T>): T? = list.randomOrNull(random)
+    override fun <T> randomOrNull(list: List<T>): T? {
+        return list.randomOrNull(random)
+    }
 
-    override fun <T> shuffled(list: List<T>): List<T> = list.shuffled(random)
+    override fun <T> shuffled(list: List<T>): List<T> {
+        return list.shuffled(random)
+    }
 }

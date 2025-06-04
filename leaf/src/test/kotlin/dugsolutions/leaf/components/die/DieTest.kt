@@ -1,7 +1,7 @@
 package dugsolutions.leaf.components.die
 
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import io.mockk.every
 import io.mockk.mockk
@@ -9,10 +9,8 @@ import io.mockk.spyk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -31,7 +29,7 @@ class DieTest {
     fun setup() {
         // Initialize random components
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
 
         // Create test die
         SUT = dieFactory(DieSides.D6)

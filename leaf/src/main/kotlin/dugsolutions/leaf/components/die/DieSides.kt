@@ -21,4 +21,9 @@ enum class DieSides(val value: Int) {
             }
         }
     }
+
+    override fun toString(): String {
+        return "D$value"
+    }
+
 }

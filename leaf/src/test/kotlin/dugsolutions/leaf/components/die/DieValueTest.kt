@@ -1,7 +1,7 @@
 package dugsolutions.leaf.components.die
 
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
@@ -23,7 +23,7 @@ class DieValueTest {
     @BeforeEach
     fun setup() {
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
         sampleDie = SampleDie(randomizer)
 
         SUT = DieValue(TEST_SIDES, TEST_VALUE)

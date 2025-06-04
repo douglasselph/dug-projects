@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import io.mockk.mockk
 import io.mockk.every
+import io.mockk.verify
 
 class GameCardIDsTest {
     private lateinit var cardManager: CardManager
@@ -398,5 +399,159 @@ class GameCardIDsTest {
         
         // Assert
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun getCard_whenIndexInRange_returnsCorrectCard() {
+        // Arrange
+        val cardId = createTestCardId(42)
+        val mockCard = mockk<GameCard>()
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            cardId,
+            createTestCardId(3)
+        ), randomizer)
+        every { cardManager.getCard(cardId) } returns mockCard
+
+        // Act
+        val result = cards.getCard(1)
+
+        // Assert
+        assertEquals(mockCard, result)
+        verify { cardManager.getCard(cardId) }
+    }
+
+    @Test
+    fun getCard_whenIndexNegative_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2),
+            createTestCardId(3)
+        ), randomizer)
+
+        // Act
+        val result = cards.getCard(-1)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenIndexBeyondSize_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2),
+            createTestCardId(3)
+        ), randomizer)
+
+        // Act
+        val result = cards.getCard(3)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenCardManagerReturnsNull_returnsNull() {
+        // Arrange
+        val cardId = createTestCardId(42)
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            cardId,
+            createTestCardId(3)
+        ), randomizer)
+        every { cardManager.getCard(cardId) } returns null
+
+        // Act
+        val result = cards.getCard(1)
+
+        // Assert
+        assertNull(result)
+        verify { cardManager.getCard(cardId) }
+    }
+
+    @Test
+    fun getCard_whenEmptyCollectionAndIndexZero_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, emptyList(), randomizer)
+
+        // Act
+        val result = cards.getCard(0)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenSingleItemAndIndexZero_returnsCorrectCard() {
+        // Arrange
+        val cardId = createTestCardId(42)
+        val mockCard = mockk<GameCard>()
+        val cards = GameCardIDs(cardManager, listOf(cardId), randomizer)
+        every { cardManager.getCard(cardId) } returns mockCard
+
+        // Act
+        val result = cards.getCard(0)
+
+        // Assert
+        assertEquals(mockCard, result)
+        verify { cardManager.getCard(cardId) }
+    }
+
+    @Test
+    fun getCard_whenAccessingLastValidIndex_returnsCorrectCard() {
+        // Arrange
+        val lastCardId = createTestCardId(99)
+        val mockCard = mockk<GameCard>()
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2),
+            lastCardId
+        ), randomizer)
+        every { cardManager.getCard(lastCardId) } returns mockCard
+
+        // Act
+        val result = cards.getCard(2) // Last valid index for size 3
+
+        // Assert
+        assertEquals(mockCard, result)
+        verify { cardManager.getCard(lastCardId) }
+    }
+
+    @Test
+    fun getCard_whenIndexEqualsSize_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2)
+        ), randomizer)
+
+        // Act
+        val result = cards.getCard(2) // Index equals size
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenValidIndex_passesCorrectCardIdToManager() {
+        // Arrange
+        val targetCardId = createTestCardId(123)
+        val mockCard = mockk<GameCard>()
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            targetCardId,
+            createTestCardId(3)
+        ), randomizer)
+        every { cardManager.getCard(targetCardId) } returns mockCard
+
+        // Act
+        val result = cards.getCard(1)
+
+        // Assert
+        assertEquals(mockCard, result)
+        verify(exactly = 1) { cardManager.getCard(targetCardId) }
     }
 } 

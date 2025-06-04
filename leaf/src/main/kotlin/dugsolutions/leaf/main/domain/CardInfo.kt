@@ -1,6 +1,7 @@
 package dugsolutions.leaf.main.domain
 
 data class CardInfo(
+    val index: Int,
     val name: String,
     val type: String,
     val resilience: Int,
@@ -8,5 +9,6 @@ data class CardInfo(
     val primary: String?,
     val match: String?,
     val trash: String?,
-    val thorn: Int
+    val thorn: Int,
+    val highlight: HighlightInfo
 )

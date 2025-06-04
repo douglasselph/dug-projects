@@ -7,10 +7,13 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.domain.AppliedEffect
 import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -61,23 +64,23 @@ class CardEffectsProcessorTest {
     }
 
     @Test
-    fun invoke_whenSingleCard_processesCardAndAddsEffects() {
+    fun invoke_whenSingleCard_processesCardAndAddsEffects() = runBlocking {
         // Arrange
-        every { mockCardEffectProcessor(mockCard1, mockPlayer) } returns listOf(mockEffect1)
+        coEvery { mockCardEffectProcessor(mockCard1, mockPlayer) } returns listOf(mockEffect1)
 
         // Act
         SUT(mockCard1, mockPlayer)
 
         // Assert
-        verify { mockCardEffectProcessor(mockCard1, mockPlayer) }
+        coVerify { mockCardEffectProcessor(mockCard1, mockPlayer) }
         verify { mockEffectsList.addAll(listOf(mockEffect1)) }
     }
 
     @Test
-    fun invoke_whenMultipleCards_processesAllCardsAndAddsAllEffects() {
+    fun invoke_whenMultipleCards_processesAllCardsAndAddsAllEffects() = runBlocking {
         // Arrange
-        every { mockCardEffectProcessor(mockCard1, mockPlayer) } returns listOf(mockEffect1)
-        every { mockCardEffectProcessor(mockCard2, mockPlayer) } returns listOf(mockEffect2)
+        coEvery { mockCardEffectProcessor(mockCard1, mockPlayer) } returns listOf(mockEffect1)
+        coEvery { mockCardEffectProcessor(mockCard2, mockPlayer) } returns listOf(mockEffect2)
 
         // Act
         for (card in listOf(mockCard1, mockCard2)) {
@@ -85,23 +88,23 @@ class CardEffectsProcessorTest {
         }
 
         // Assert
-        verify { mockCardEffectProcessor(mockCard1, mockPlayer) }
-        verify { mockCardEffectProcessor(mockCard2, mockPlayer) }
+        coVerify { mockCardEffectProcessor(mockCard1, mockPlayer) }
+        coVerify { mockCardEffectProcessor(mockCard2, mockPlayer) }
         verify { mockEffectsList.addAll(listOf(mockEffect1)) }
         verify { mockEffectsList.addAll(listOf(mockEffect2)) }
     }
 
     @Test
-    fun invoke_whenCardHasNoEffects_doesNotAddToEffectsList() {
+    fun invoke_whenCardHasNoEffects_doesNotAddToEffectsList() = runBlocking {
         // Arrange
         val emptyList = emptyList<AppliedEffect>()
-        every { mockCardEffectProcessor(mockCard1, mockPlayer) } returns emptyList
+        coEvery { mockCardEffectProcessor(mockCard1, mockPlayer) } returns emptyList
 
         // Act
         SUT(mockCard1, mockPlayer)
 
         // Assert
-        verify { mockCardEffectProcessor(mockCard1, mockPlayer) }
+        coVerify { mockCardEffectProcessor(mockCard1, mockPlayer) }
         verify { mockEffectsList.addAll(emptyList) }
     }
 } 

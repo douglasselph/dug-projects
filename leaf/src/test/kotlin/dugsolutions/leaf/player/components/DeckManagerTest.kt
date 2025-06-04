@@ -5,12 +5,10 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
@@ -43,7 +41,7 @@ class DeckManagerTest {
         hand = mockk(relaxed = true)
         compost = mockk(relaxed = true)
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
 
         d4 = dieFactory(DieSides.D4)
         d6 = dieFactory(DieSides.D6)

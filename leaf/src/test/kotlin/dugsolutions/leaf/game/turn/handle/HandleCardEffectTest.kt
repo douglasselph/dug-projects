@@ -2,6 +2,7 @@ package dugsolutions.leaf.game.turn.handle
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.CardOrDie
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.FlourishType
@@ -141,7 +142,7 @@ class HandleCardEffectTest {
         // Assert
         verify { mockDie.roll() }
         verify { effectsList.remove(REROLL_DIE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.REROLL>()) }
+        verify { mockChronicle(any<Moment.REROLL>()) }
     }
 
     @Test
@@ -161,7 +162,7 @@ class HandleCardEffectTest {
         // Assert
         verify { mockPlayer.retainCard(CARD_ID_1) }
         verify { effectsList.remove(RETAIN_CARD_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.RETAIN_CARD>()) }
+        verify { mockChronicle(any<Moment.RETAIN_CARD>()) }
     }
 
     @Test
@@ -180,7 +181,7 @@ class HandleCardEffectTest {
         // Assert
         verify { mockPlayer.retainDie(mockDie) }
         verify { effectsList.remove(RETAIN_DIE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.RETAIN_DIE>()) }
+        verify { mockChronicle(any<Moment.RETAIN_DIE>()) }
     }
 
     @Test
@@ -202,7 +203,7 @@ class HandleCardEffectTest {
         // Assert
         verify { cardsReused.add(mockCard) }
         verify { effectsList.remove(REUSE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.REUSE_CARD>()) }
+        verify { mockChronicle(any<Moment.REUSE_CARD>()) }
     }
 
     @Test
@@ -221,7 +222,7 @@ class HandleCardEffectTest {
         // Assert
         verify { mockHandleDieUpgrade(mockPlayer, false) }
         verify { effectsList.remove(UPGRADE_DIE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.UPGRADE_DIE>()) }
+        verify { mockChronicle(any<Moment.UPGRADE_DIE>()) }
     }
 
     @Test
@@ -240,7 +241,7 @@ class HandleCardEffectTest {
         // Assert
         verify { mockHandleLimitedDieUpgrade(mockPlayer, any(), false) }
         verify { effectsList.remove(SMALL_UPGRADE_DIE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.UPGRADE_DIE>()) }
+        verify { mockChronicle(any<Moment.UPGRADE_DIE>()) }
     }
 
     @Test
@@ -260,7 +261,28 @@ class HandleCardEffectTest {
         // Assert
         verify { mockPlayer.deflectDamage += 2 }
         verify { effectsList.remove(DEFLECT_DAMAGE_EFFECT) }
-        verify { mockChronicle(any<GameChronicle.Moment.DEFLECT_DAMAGE>()) }
+        verify { mockChronicle(any<Moment.DEFLECT_DAMAGE>()) }
+    }
+
+    @Test
+    fun invoke_whenAdornEffect_addsToFloralArrayAndRemovesFromHand() {
+        // Arrange
+        val cardId = 5
+        val adornEffect = AppliedEffect.Adorn(flowerCard = cardId)
+        val effectsList = mockk<EffectsList>(relaxed = true) {
+            every { copy() } returns listOf(adornEffect)
+            every { remove(any()) } just Runs
+        }
+        every { mockPlayer.effectsList } returns effectsList
+
+        // Act
+        SUT(mockPlayer, mockTarget)
+
+        // Assert
+        verify { mockPlayer.addCardToFloralArray(cardId) }
+        verify { mockPlayer.removeCardFromHand(cardId) }
+        verify { effectsList.remove(adornEffect) }
+        verify { mockChronicle(match { it is Moment.ADORN && it.cardId == cardId }) }
     }
 
     @Test
@@ -292,7 +314,7 @@ class HandleCardEffectTest {
         verify { effectsList.remove(RETAIN_DIE_EFFECT) }
 
         // Verify chronicle was called for each effect
-        verify { mockChronicle(any<GameChronicle.Moment.REROLL>()) }
-        verify { mockChronicle(any<GameChronicle.Moment.RETAIN_DIE>()) }
+        verify { mockChronicle(any<Moment.REROLL>()) }
+        verify { mockChronicle(any<Moment.RETAIN_DIE>()) }
     }
 } 

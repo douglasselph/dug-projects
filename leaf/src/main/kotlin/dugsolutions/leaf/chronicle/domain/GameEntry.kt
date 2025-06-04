@@ -5,6 +5,9 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.game.acquire.domain.Combination
+import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.domain.AppliedEffect
 
 /**
  * Base class for all chronicle entries.
@@ -35,11 +38,20 @@ data class AcquireDieEntry(
     val paid: Combination
 ) : ChronicleEntry(playerId, turn)
 
+data class AcquireNone(
+    override val playerId: Int,
+    override val turn: Int,
+    val diceTotal: Int,
+    val pipModifier: Int,
+    val effects: String
+) : ChronicleEntry(playerId, turn)
+
 data class AdjustDieEntry(
     override val playerId: Int,
     override val turn: Int,
     val die: DieValue,
-    val adjustment: Int
+    val adjustment: Int,
+    val dice: String
 ) : ChronicleEntry(playerId, turn)
 
 data class AdjustDieToMax(
@@ -56,7 +68,8 @@ data class AddToThornEntry(
 data class AddToTotalEntry(
     override val playerId: Int,
     override val turn: Int,
-    val amount: Int
+    val amount: Int,
+    val pips: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class AdornEntry(
@@ -84,11 +97,11 @@ data class DrawDieEntry(
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
-data class DrawHandEntry(
+data class DrawnHandEntry(
     override val playerId: Int,
     override val turn: Int,
     val cards: List<String>,
-    val dice: DieValues
+    val dice: String
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
         return "DrawHandEntry(playerId=$playerId, turn=$turn, cards=$cards, dice=$dice)"
@@ -111,7 +124,7 @@ data class DiscardCardEntry(
 data class DiscardDieEntry(
     override val playerId: Int,
     override val turn: Int,
-    val dieSides: Int
+    val die: DieValue
 ) : ChronicleEntry(playerId, turn)
 
 data class ScoreInfo(
@@ -120,20 +133,25 @@ data class ScoreInfo(
 
 data class EventTurn(
     override val turn: Int,
+    val gamePhase: GamePhase,
     val reports: List<String>,
     val scores: List<ScoreInfo>
 ) : ChronicleEntry(0, turn) {
     override fun toString(): String {
-        return "=== Turn $turn ===\n" + reports.joinToString("\n")
+        val phase = if (gamePhase == GamePhase.CULTIVATION) "Cultivation" else "Battle"
+        return "=== $phase Turn $turn ===\n" + reports.joinToString("\n")
     }
 }
 
-data class EventBattle(
+data class EventBattleTransition(
     override val turn: Int,
-    val scores: List<ScoreInfo>
-) : ChronicleEntry(0, turn) {
+    val score: PlayerScore,
+    val trashedSeedlings: List<String>
+) : ChronicleEntry(score.playerId, turn) {
     override fun toString(): String {
-        return "+++ Battle Begins on Turn $turn +++"
+        val trashed = trashedSeedlings.joinToString(",")
+        val trashedReport = if (trashed.isEmpty()) ": No seedlings" else ": $trashed"
+        return "+++ Battle Begins Player $playerId $trashedReport +++"
     }
 }
 
@@ -146,6 +164,11 @@ data class Finished(
         return "Game Over ${turn}\n" + reports.joinToString("\n")
     }
 }
+
+data class InfoEntry(
+    override val turn: Int,
+    val message: String
+) : ChronicleEntry(0, turn)
 
 data class OrderingEntry(
     override val playerId: Int = 0,
@@ -179,7 +202,9 @@ data class RerollEntry(
     override val playerId: Int,
     override val turn: Int,
     val dieSides: Int,
-    val newValue: Int
+    val before: Int,
+    val newValue: Int,
+    val dice: String
 ) : ChronicleEntry(playerId, turn)
 
 data class RetainCardEntry(
@@ -206,12 +231,23 @@ data class TrashCardEntry(
     override val playerId: Int,
     override val turn: Int,
     val card: GameCard
-) : ChronicleEntry(playerId, turn)
+) : ChronicleEntry(playerId, turn) {
+    override fun toString(): String {
+        return "TrashCardEntry(card=${card.id}, playerId=$playerId, turn=$turn)"
+    }
+}
 
 data class TrashDieEntry(
     override val playerId: Int,
     override val turn: Int,
     val dieSides: Int
+) : ChronicleEntry(playerId, turn)
+
+data class TrashForEffect(
+    override val playerId: Int,
+    override val turn: Int,
+    val card: String,
+    val status: DecisionShouldProcessTrashEffect.Result
 ) : ChronicleEntry(playerId, turn)
 
 data class UpgradeDieEntry(

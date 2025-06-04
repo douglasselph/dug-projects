@@ -5,7 +5,6 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.player.domain.AppliedEffect
 import java.io.File
 
 class CardRegistry(
@@ -51,7 +50,6 @@ class CardRegistry(
             "UpgradeAnyRetain" to CardEffect.UPGRADE_ANY_RETAIN,
             "UpgradeAny" to CardEffect.UPGRADE_ANY,
             "UpgradeD4" to CardEffect.UPGRADE_D4,
-            "UpgradeD6" to CardEffect.UPGRADE_D6,
             "UpgradeD4D6" to CardEffect.UPGRADE_D4_D6,
             "UseOpponentCard" to CardEffect.USE_OPPONENT_CARD,
             "UseOpponentDie" to CardEffect.USE_OPPONENT_DIE
@@ -156,7 +154,8 @@ class CardRegistry(
     private fun parseMatchWith(match: String): MatchWith {
         return when {
             match.isEmpty() || match == "-" -> MatchWith.None
-            match.toIntOrNull() != null -> MatchWith.OnRoll(match.toInt())
+            match.startsWith("d") -> MatchWith.OnRoll(match.substring(1).toInt(), discardDie = true)
+            match.startsWith("k") -> MatchWith.OnRoll(match.substring(1).toInt(), discardDie = false)
             else -> {
                 parseFlourishType(match)?.let {
                     type -> MatchWith.OnFlourishType(type)

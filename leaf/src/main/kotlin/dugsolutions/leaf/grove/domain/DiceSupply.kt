@@ -1,5 +1,6 @@
 package dugsolutions.leaf.grove.domain
 
+import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.DieSides
 
 class DiceSupply(initialSupply: Map<Int, Int> = emptyMap()) {
@@ -15,6 +16,12 @@ class DiceSupply(initialSupply: Map<Int, Int> = emptyMap()) {
         fun empty(): DiceSupply =
             DiceSupply(VALID_DICE_SIDES.associateWith { 0 })
     }
+
+    val allDice: Dice
+        get() {
+            val dice = Dice()
+            return dice
+        }
 
     fun getQuantity(sides: Int): Int = _supply[sides] ?: 0
 

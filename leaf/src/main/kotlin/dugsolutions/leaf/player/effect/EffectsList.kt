@@ -3,6 +3,7 @@ package dugsolutions.leaf.player.effect
 import dugsolutions.leaf.player.domain.AppliedEffect
 
 class EffectsList : Iterable<AppliedEffect> {
+
     private val effects = mutableListOf<AppliedEffect>()
 
     fun clear() {
@@ -46,4 +47,10 @@ class EffectsList : Iterable<AppliedEffect> {
     fun isEmpty(): Boolean = effects.isEmpty()
 
     override fun iterator(): Iterator<AppliedEffect> = effects.iterator()
+
+    override fun toString(): String {
+        return "$effects"
+    }
+
+
 } 

@@ -1,7 +1,7 @@
 package dugsolutions.leaf.chronicle.report
 
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.EventBattle
+import dugsolutions.leaf.chronicle.domain.EventBattleTransition
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.GameSummary
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
@@ -15,7 +15,7 @@ class GenerateGameSummary(
     operator fun invoke(): GameSummary {
         val entries = chronicle.getEntries()
         val turnEntries = entries.filterIsInstance<EventTurn>()
-        val battleEntry = entries.filterIsInstance<EventBattle>().firstOrNull()
+        val battleEntry = entries.filterIsInstance<EventBattleTransition>().firstOrNull()
         val orderingEntry = entries.filterIsInstance<OrderingEntry>().firstOrNull()
         
         // Get the player ID who had the first move (if available)

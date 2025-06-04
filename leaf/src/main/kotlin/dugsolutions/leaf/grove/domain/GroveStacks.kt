@@ -2,14 +2,12 @@ package dugsolutions.leaf.grove.domain
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.GameCardIDsFactory
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
 
 class GroveStacks(
     private val cardManager: CardManager,

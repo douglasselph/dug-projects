@@ -1,5 +1,7 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.CardOrDie
 import dugsolutions.leaf.components.FlourishType
@@ -14,7 +16,9 @@ import dugsolutions.leaf.player.domain.AppliedEffect
  * This class coordinates between different effect types and their application to players.
  */
 class CardEffectProcessor(
-    private val canProcessMatchEffect: CanProcessMatchEffect
+    private val canProcessMatchEffect: CanProcessMatchEffect,
+    private val shouldProcessMatchEffect: ShouldProcessMatchEffect,
+    private val chronicle: GameChronicle
 ) {
 
     private val effects = mutableListOf<AppliedEffect>()
@@ -22,7 +26,7 @@ class CardEffectProcessor(
     /**
      * Process a card effect and return the list of applied effects
      */
-    operator fun invoke(
+    suspend operator fun invoke(
         card: GameCard,
         player: Player
     ): List<AppliedEffect> {
@@ -35,23 +39,27 @@ class CardEffectProcessor(
         // Process match effect if applicable
         if (card.matchEffect != null) {
             val result = canProcessMatchEffect(card, player)
-            if (result.possible) {
-                result.dieCost?.let { player.discard(result.dieCost) }
+            if (result.possible && shouldProcessMatchEffect(card)) {
+                result.dieCost?.let {
+                    chronicle(Moment.DISCARD_DIE(player, result.dieCost))
+                    player.discard(result.dieCost)
+                }
                 processEffect(card, card.matchEffect, matchValue(player, card))
             }
         }
         // See if we should trash this card right now.
         // This is only taking into consideration non-battle affecting trash effects.
         card.trashEffect?.let {
-            when (player.decisionDirector.shouldProcessTrashEffect(card)) {
+            when (val result = player.decisionDirector.shouldProcessTrashEffect(card)) {
                 DecisionShouldProcessTrashEffect.Result.TRASH -> {
                     processEffect(card, card.trashEffect, card.trashValue)
-                    // Remove card now
                     player.removeCardFromHand(card.id)
+                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
                 }
 
                 DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED -> {
                     player.effectsList.add(AppliedEffect.TrashIfNeeded(card))
+                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
                 }
 
                 else -> {}
@@ -74,7 +82,7 @@ class CardEffectProcessor(
 
             CardEffect.ADD_TO_TOTAL -> AppliedEffect.AddToTotal(value)
 
-            CardEffect.ADJUST_BY -> AppliedEffect.AdjustDieRoll(value, canTargetPlayer = true)
+            CardEffect.ADJUST_BY -> AppliedEffect.AdjustDieRoll(value, canTargetPlayer = false)
 
             CardEffect.ADJUST_TO_MAX -> AppliedEffect.AdjustDieToMax()
 
@@ -166,11 +174,9 @@ class CardEffectProcessor(
 
             CardEffect.UPGRADE_ANY -> AppliedEffect.UpgradeDie(discardAfterUse = true)
 
-            CardEffect.UPGRADE_D4 -> AppliedEffect.UpgradeDie(discardAfterUse = true, only = listOf(DieSides.D4))
+            CardEffect.UPGRADE_D4 -> AppliedEffect.UpgradeDie(discardAfterUse = false, only = listOf(DieSides.D4))
 
-            CardEffect.UPGRADE_D6 -> AppliedEffect.UpgradeDie(discardAfterUse = true, only = listOf(DieSides.D6))
-
-            CardEffect.UPGRADE_D4_D6 -> AppliedEffect.UpgradeDie(discardAfterUse = true, only = listOf(DieSides.D4, DieSides.D6))
+            CardEffect.UPGRADE_D4_D6 -> AppliedEffect.UpgradeDie(discardAfterUse = false, only = listOf(DieSides.D4, DieSides.D6))
 
             CardEffect.USE_OPPONENT_CARD -> AppliedEffect.UseOpponent(cardOrDie = CardOrDie.Card)
 
@@ -186,4 +192,5 @@ class CardEffectProcessor(
             player.flowerCount(card)
         } else card.matchValue
     }
+
 } 

@@ -1,6 +1,6 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.chronicle.domain.TestOutputFile
+import dugsolutions.leaf.chronicle.local.TestOutputFile
 
 class WriteGameResults(
     private val writeChronicleResults: WriteChronicleResults,

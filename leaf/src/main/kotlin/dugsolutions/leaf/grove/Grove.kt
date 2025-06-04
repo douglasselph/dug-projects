@@ -13,7 +13,6 @@ import dugsolutions.leaf.grove.domain.MarketStackID
 class Grove(
     private val stacks: GroveStacks,
     private val gameCardsUseCase: GameCardsUseCase
-
 ) {
 
     // TODO: Unit test
@@ -35,8 +34,14 @@ class Grove(
 
     fun getAvailableDiceSides(): List<Int> = stacks.getAvailableDiceSides()
 
+    fun getDiceQuantity(sides: Int): Int = stacks.getDiceQuantity(sides)
+
     fun removeCard(cardId: CardID) {
         stacks.removeTopShowingCardOf(cardId)
+    }
+
+    fun addDie(die: Die) {
+        stacks.addDie(die.sides)
     }
 
     fun removeDie(die: Die) {

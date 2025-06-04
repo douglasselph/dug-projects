@@ -3,11 +3,13 @@ package dugsolutions.leaf.game.turn.handle
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 
 class HandleLimitedDieUpgrade(
-    private val dieFactory: DieFactory
+    private val dieFactory: DieFactory,
+    private val grove: Grove
 ) {
     operator fun invoke(player: Player, only: List<DieSides>, discardAfterUse: Boolean): Die? {
         val dice = player.diceInHand
@@ -34,6 +36,8 @@ class HandleLimitedDieUpgrade(
 
         // Acquire the new die
         val newDie = dieFactory(nextDieSize).roll()
+        grove.removeDie(newDie)
+        grove.addDie(dieToUpgrade)
 
         if (discardAfterUse) {
             player.addDieToCompost(newDie)

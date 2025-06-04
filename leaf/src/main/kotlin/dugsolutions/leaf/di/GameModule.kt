@@ -3,8 +3,8 @@ package dugsolutions.leaf.di
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
-import dugsolutions.leaf.chronicle.domain.TestOutputFile
-import dugsolutions.leaf.chronicle.domain.TransformMomentToEntry
+import dugsolutions.leaf.chronicle.local.TestOutputFile
+import dugsolutions.leaf.chronicle.local.TransformMomentToEntry
 import dugsolutions.leaf.chronicle.report.GenerateGameSummaries
 import dugsolutions.leaf.chronicle.report.GenerateGameSummary
 import dugsolutions.leaf.chronicle.report.ReportDamage
@@ -19,6 +19,14 @@ import dugsolutions.leaf.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.chronicle.report.WriteToFile
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.DieCost
+import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactoryUniform
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.di.factory.PlayerFactory
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.game.acquire.AcquireItem
@@ -28,16 +36,14 @@ import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.cost.ApplyEffects
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
 import dugsolutions.leaf.game.acquire.credit.EffectToCredits
-import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.EvaluateBestDiePurchase
-import dugsolutions.leaf.game.acquire.evaluator.EvaluateCardPurchases
+import dugsolutions.leaf.game.acquire.evaluator.PossibleBestDice
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
 import dugsolutions.leaf.game.battle.HandleDeliverDamage
 import dugsolutions.leaf.game.battle.MatchingBloomCard
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerRound
 import dugsolutions.leaf.game.turn.PlayerTurn
@@ -48,6 +54,7 @@ import dugsolutions.leaf.game.turn.handle.HandleGetTarget
 import dugsolutions.leaf.game.turn.handle.HandleLimitedDieUpgrade
 import dugsolutions.leaf.game.turn.local.CardIsFree
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
+import dugsolutions.leaf.game.turn.select.SelectAllDice
 import dugsolutions.leaf.game.turn.select.SelectBestDie
 import dugsolutions.leaf.game.turn.select.SelectCardToRetain
 import dugsolutions.leaf.game.turn.select.SelectDieToAdjust
@@ -60,23 +67,33 @@ import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
-import dugsolutions.leaf.main.CardOperations
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.local.CardOperations
+import dugsolutions.leaf.main.local.MainDecisions
+import dugsolutions.leaf.main.local.SelectGather
+import dugsolutions.leaf.main.local.SelectItem
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
+import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
+import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
+import dugsolutions.leaf.player.decisions.local.EffectBattleScore
+import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
+import dugsolutions.leaf.player.decisions.local.GroveNearingTransition
 import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
 import dugsolutions.leaf.player.effect.CardsEffectsProcessor
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
+import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.ParseCost
 import dugsolutions.leaf.tool.Randomizer
@@ -84,11 +101,6 @@ import dugsolutions.leaf.tool.RandomizerDefault
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
 import org.koin.dsl.module
-
-// A global flag to determine whether to use uniform or random dice
-object DieFactoryConfig {
-    var useUniformDice = false
-}
 
 val gameModule: Module = module {
 
@@ -104,36 +116,28 @@ val gameModule: Module = module {
     single { GameCardsFactory(get(), get()) }
     single { CardOperations(get(), get(), get()) }
 
-    // Common randomizer used by both die factories
     single<Randomizer> { RandomizerDefault() }
-
-    // Provide the DieFactory based on the current configuration
-    single<DieFactory> {
-        if (DieFactoryConfig.useUniformDice) {
-            DieFactoryUniform(get())
-        } else {
-            DieFactoryRandom(get())
-        }
-    }
-
-    // Keep factories available for explicit usage if needed
-    single { DieFactoryUniform(get()) }
-    single { DieFactoryRandom(get()) }
+    single { DieFactory(get()) }
 
     single { TransformMomentToEntry(get(), get(), get(), get()) }
     single { GatherCardInfo() }
     single { GatherDiceInfo() }
-    single { GatherGroveInfo(get(), get()) }
+    single { GatherGroveInfo(get(), get(), get()) }
     single { GatherPlayerInfo(get(), get()) }
-    single { MainDomainManager(get(), get(), get(), get()) }
+    single { SelectItem() }
+    single { SelectGather(get()) }
+    single { MainDomainManager(get(), get(), get(), get(), get(), get()) }
+    single { MainDecisions(get(), get()) }
 
     single {
         MainController(
-            get(), get(), get(), get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
 
-    factory { FloralArray(get(), get()) }
+    single { FloralCount() }
+
+    factory { FloralArray(get(), get(), get()) }
     factory { StackManager(get(), get()) }
 
     factory {
@@ -153,7 +157,7 @@ val gameModule: Module = module {
             floralArray = { get() },
             decisionDirectorFactory = get(),
             costScore = get(),
-            chronicle = get()
+            dieFactory = get()
         )
     }
 
@@ -162,7 +166,7 @@ val gameModule: Module = module {
     single { ManageAcquiredFloralTypes() }
     single { MatchingBloomCard(get()) }
     single { BestFlowerCards(get()) }
-    single { BattlePhaseTransition(get(), get()) }
+    single { BattlePhaseTransition(get(), get(), get()) }
 
     single { Game(get(), get(), get(), get(), get(), get()) }
     single { RunGame(get(), get(), get()) }
@@ -183,11 +187,12 @@ val gameModule: Module = module {
     single { WriteChronicleResults(get(), get()) }
     single { WriteGameSummaries(get(), get(), get(), get()) }
 
-    single { DecisionDirectorFactory(get()) }
+    single { DecisionDirectorFactory(get(), get(), get(), get(), get()) }
 
     single { GameCardsUseCase(get()) }
     single { Grove(get(), get()) }
     single { PlayerUnderTest(get()) }
+    single { GroveNearingTransition(get()) }
 
     single {
         GroveStacks(
@@ -199,19 +204,20 @@ val gameModule: Module = module {
     single {
         PlayerTurn(
             get(), get(), get(),
-            get(), get(), get()
+            get(), get(), get(), get()
         )
     }
 
     single { PlayerRound(get(), get()) }
     single { DieCost() }
+
     single { HandleDeliverDamage(get(), get()) }
     single { HandleCleanup() }
     single { HandleAbsorbDamage(get()) }
-    single { HandleGroveAcquisition(get(), get(), get()) }
+    single { HandleGroveAcquisition(get(), get(), get(), get()) }
     single { HandleGetTarget() }
-    single { HandleDieUpgrade(get(), get(), get()) }
-    single { HandleLimitedDieUpgrade(get()) }
+    single { HandleDieUpgrade(get(), get(), get(), get()) }
+    single { HandleLimitedDieUpgrade(get(), get()) }
     single {
         HandleCardEffect(
             get(), get(), get(), get(), get(),
@@ -226,6 +232,7 @@ val gameModule: Module = module {
     single { SelectDieToAdjust() }
     single { SelectPossibleCards(get(), get()) }
     single { SelectPossibleDice(get(), get()) }
+    single { SelectAllDice(get(), get()) }
     single { CardIsFree() }
     single { EffectToCredits() }
     single { ApplyEffects() }
@@ -234,24 +241,23 @@ val gameModule: Module = module {
 
     single { CardsEffectsProcessor(get()) }
     single { CardEffectsProcessor(get(), get()) }
-    single { CardEffectProcessor(get()) }
-    single { EvaluateBestDiePurchase(get()) }
+    single { CardEffectProcessor(get(), get(), get()) }
+    single { CanProcessMatchEffect(get(), get()) }
+    single { ShouldProcessMatchEffect(get()) }
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
-
-    single { DecisionBestCardPurchaseBaseline(get()) }
+    single { PossibleCards(get()) }
+    single { PossibleBestDice(get(), get()) }
+    single { BestCardEvaluator() }
     single { AcquireCardEvaluator(get()) }
-    single { AcquireDieEvaluator(get(), get()) }
+    single { AcquireDieEvaluator() }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
 
-    single {
-        CanProcessMatchEffect(
-            hasDieValue = get(),
-            hasFlourishType = get()
-        )
-    }
+    single { EffectBattleScore() }
+    single { CardEffectBattleScoreFactory(get(), get()) }
+
     single { PlayerOrder(get()) }
-    single { GameTurn() }
+    single { GameTime() }
 
     single { ScenarioBasicConfig(get()) }
 

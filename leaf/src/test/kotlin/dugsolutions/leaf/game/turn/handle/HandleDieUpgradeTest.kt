@@ -2,13 +2,13 @@ package dugsolutions.leaf.game.turn.handle
 
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
+import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -22,46 +22,41 @@ import org.junit.jupiter.api.Test
 
 class HandleDieUpgradeTest {
 
-    private lateinit var mockPlayer: Player
-    private lateinit var mockEvaluateSimpleCost: EvaluateSimpleCost
+    private val mockPlayer: Player = mockk(relaxed = true)
+    private val mockEvaluateSimpleCost: EvaluateSimpleCost = mockk(relaxed = true)
     private lateinit var applyCost: ApplyCostTD
-    private lateinit var d4: Die
-    private lateinit var d6: Die
-    private lateinit var d8: Die
-    private lateinit var d10: Die
-    private lateinit var d12: Die
-    private lateinit var d20: Die
-    private lateinit var dieFactory: DieFactory
-    private lateinit var randomizer: Randomizer
-    private lateinit var mockCombination: Combination
+    private val sampleDie = SampleDie()
+    private val d4: Die = sampleDie.d4
+    private val d6: Die = sampleDie.d6
+    private val d8: Die = sampleDie.d8
+    private val d10: Die = sampleDie.d10
+    private val d12: Die = sampleDie.d12
+    private val d20: Die = sampleDie.d20
+    private val mockDieFactory: DieFactory = mockk(relaxed = true)
+    private val mockCombination: Combination = mockk(relaxed = true)
+    private val mockGrove = mockk<Grove>(relaxed = true)
 
     private lateinit var SUT: HandleDieUpgrade
 
     @BeforeEach
     fun setup() {
-        mockPlayer = mockk(relaxed = true)
-        mockEvaluateSimpleCost = mockk(relaxed = true)
         applyCost = ApplyCostTD()
-        mockCombination = mockk(relaxed = true)
-
-        // Initialize random components
-        randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
 
         // Create the test subject with the correct constructor parameters
         SUT = HandleDieUpgrade(
             mockEvaluateSimpleCost,
             applyCost,
-            dieFactory
+            mockDieFactory,
+            mockGrove
         )
 
         // Create test dice
-        d4 = dieFactory(DieSides.D4)
-        d6 = dieFactory(DieSides.D6)
-        d8 = dieFactory(DieSides.D8)
-        d10 = dieFactory(DieSides.D10)
-        d12 = dieFactory(DieSides.D12)
-        d20 = dieFactory(DieSides.D20)
+        every { mockDieFactory(DieSides.D4) } returns d4
+        every { mockDieFactory(DieSides.D6) } returns d6
+        every { mockDieFactory(DieSides.D8) } returns d8
+        every { mockDieFactory(DieSides.D10) } returns d10
+        every { mockDieFactory(DieSides.D12) } returns d12
+        every { mockDieFactory(DieSides.D20) } returns d20
 
         // Default behavior
         every { mockPlayer.pipTotal } returns 10
@@ -88,7 +83,9 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d4) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d6) }
+        verify { mockGrove.addDie(d4) }
+        verify { mockGrove.removeDie(d6) }
         assertNotNull(result)
         assertEquals(6, result?.sides)
     }
@@ -104,7 +101,9 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d6) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockGrove.addDie(d6) }
+        verify { mockGrove.removeDie(d8) }
         assertNotNull(result)
         assertEquals(8, result?.sides)
     }
@@ -120,7 +119,9 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d8) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d10) }
+        verify { mockGrove.addDie(d8) }
+        verify { mockGrove.removeDie(d10) }
         assertNotNull(result)
         assertEquals(10, result?.sides)
     }
@@ -136,7 +137,9 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d10) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d12) }
+        verify { mockGrove.addDie(d10) }
+        verify { mockGrove.removeDie(d12) }
         assertNotNull(result)
         assertEquals(12, result?.sides)
     }
@@ -153,8 +156,10 @@ class HandleDieUpgradeTest {
         // Assert
         verify { mockEvaluateSimpleCost(mockPlayer, 20) }
         verify { mockPlayer.removeDieFromHand(d12) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
-        
+        verify { mockPlayer.addDieToHand(d20) }
+        verify { mockGrove.addDie(d12) }
+        verify { mockGrove.removeDie(d20) }
+
         // Check if ApplyCost was called with correct parameters
         assertEquals(1, applyCost.gotPlayers.size)
         assertEquals(mockPlayer, applyCost.gotPlayers[0])
@@ -199,6 +204,8 @@ class HandleDieUpgradeTest {
         // Assert
         verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
         verify(exactly = 0) { mockPlayer.addDieToHand(any<Die>()) }
+        verify(exactly = 0) { mockGrove.addDie(any()) }
+        verify(exactly = 0) { mockGrove.removeDie(any()) }
         
         // Verify ApplyCost was not called
         assertTrue(applyCost.gotPlayers.isEmpty())
@@ -220,8 +227,11 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d6) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
-        verify { mockPlayer.discard(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockPlayer.discard(d8) }
+        verify { mockGrove.addDie(d6) }
+        verify { mockGrove.removeDie(d8) }
+
         assertNotNull(result)
         assertEquals(8, result?.sides)
     }
@@ -237,7 +247,9 @@ class HandleDieUpgradeTest {
 
         // Assert
         verify { mockPlayer.removeDieFromHand(d8) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
+        verify { mockPlayer.addDieToHand(d10) }
+        verify { mockGrove.addDie(d8) }
+        verify { mockGrove.removeDie(d10) }
         assertNotNull(result)
         assertEquals(10, result?.sides)
     }
@@ -254,8 +266,10 @@ class HandleDieUpgradeTest {
         // Assert
         verify { mockEvaluateSimpleCost(mockPlayer, 20) }
         verify { mockPlayer.removeDieFromHand(d8) }
-        verify { mockPlayer.addDieToHand(any<Die>()) }
-        
+        verify { mockPlayer.addDieToHand(d10) }
+        verify { mockGrove.addDie(d8) }
+        verify { mockGrove.removeDie(d10) }
+
         // Check ApplyCost was not called for failed D12 upgrade
         assertFalse(applyCost.gotPlayers.contains(mockPlayer))
         assertFalse(applyCost.gotCombinations.contains(mockCombination))

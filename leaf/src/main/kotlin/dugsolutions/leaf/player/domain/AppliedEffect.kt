@@ -56,13 +56,20 @@ sealed class AppliedEffect {
         val drawHighest: Boolean = false,
     ) : AppliedEffect()
 
-    data object FlourishOverride: AppliedEffect()
+    data object FlourishOverride : AppliedEffect()
 
     data class MarketBenefit(
         val type: FlourishType? = null,
         val costReduction: Int = 0,
         val isFree: Boolean = false,
-    ) : AppliedEffect()
+    ) : AppliedEffect() {
+
+        override fun toString(): String {
+            return if (isFree) {
+                "$type-FREE"
+            } else "$type-$costReduction"
+        }
+    }
 
     data object RetainCard : AppliedEffect()
 
@@ -88,7 +95,7 @@ sealed class AppliedEffect {
 
     data class ResilienceBoost(
         val amount: Int
-    ): AppliedEffect()
+    ) : AppliedEffect()
 
     data class TrashIfNeeded(
         val card: GameCard

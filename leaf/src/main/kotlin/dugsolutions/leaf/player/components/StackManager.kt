@@ -8,7 +8,7 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
 
 class StackManager(
     private val cardManager: CardManager,
@@ -101,13 +101,14 @@ class StackManager(
         dice.clear()
     }
 
-    fun trashSeedlingCards() {
+    fun trashSeedlingCards(): List<CardID> {
         val seedlingCards = cards.cardIds.filter { cardId ->
             cardManager.getCard(cardId)?.type == FlourishType.SEEDLING
         }
         seedlingCards.forEach { cardId ->
             cards.remove(cardId)
         }
+        return seedlingCards
     }
 
     fun shuffle() {

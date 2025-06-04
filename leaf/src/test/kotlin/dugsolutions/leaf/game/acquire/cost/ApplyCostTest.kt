@@ -7,9 +7,9 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryUniform
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryUniform
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.game.acquire.domain.Adjusted
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player
@@ -47,7 +47,8 @@ class ApplyCostTest {
         val cardManager = CardManager(gameCardsFactory)
         cardManager.loadCards(FakeCards.ALL_CARDS)
         fakePlayer = PlayerTD(2, cardManager)
-        dieFactory = DieFactoryUniform(randomizer)
+        dieFactory = DieFactory(randomizer)
+        dieFactory.config = DieFactory.Config.UNIFORM
 
         // Create test dice
         testDie1 = DieValue(6, 3)

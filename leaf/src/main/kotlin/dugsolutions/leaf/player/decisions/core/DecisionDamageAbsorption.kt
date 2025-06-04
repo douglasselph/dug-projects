@@ -6,11 +6,16 @@ import dugsolutions.leaf.components.die.Die
 interface DecisionDamageAbsorption {
 
     data class Result(
-        val cards: List<GameCard>,
-        val floralCards: List<GameCard>,
-        val dice: List<Die>
-    )
+        val cards: List<GameCard> = emptyList(),
+        val floralCards: List<GameCard> = emptyList(),
+        val dice: List<Die> = emptyList()
+    ) {
+        val allEmpty: Boolean
+            get() {
+                return cards.isEmpty() && floralCards.isEmpty() && dice.isEmpty()
+            }
+    }
 
-    operator fun invoke(): Result?
+    suspend operator fun invoke(): Result
 
 }

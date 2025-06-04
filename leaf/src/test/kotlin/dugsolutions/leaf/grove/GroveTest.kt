@@ -7,10 +7,10 @@ import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig
@@ -57,7 +57,7 @@ class GroveTest {
     @BeforeEach
     fun setup() {
         randomizer = Randomizer.create()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
         mockCardManager = mockk(relaxed = true)
         mockGameCardIDsFactory = mockk(relaxed = true)
         every { mockGameCardIDsFactory(any()) } answers {
@@ -200,6 +200,19 @@ class GroveTest {
 
         // Assert
         verify { mockGroveStacks.removeDie(die.sides) }
+    }
+
+    @Test
+    fun addDie_delegatesToMarketStacks() {
+        // Arrange
+        val die = dieFactory(DieSides.D8)
+        every { mockGroveStacks.addDie(die.sides) } returns true
+
+        // Act
+        SUT.addDie(die)
+
+        // Assert
+        verify { mockGroveStacks.addDie(die.sides) }
     }
     
     @Test

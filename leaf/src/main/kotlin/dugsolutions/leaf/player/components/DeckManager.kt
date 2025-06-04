@@ -6,7 +6,7 @@ import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 
 class DeckManager(
     private val supply: StackManager,
@@ -191,9 +191,11 @@ class DeckManager(
         compost.clear()
     }
 
-    fun trashSeedlingCards() {
-        supply.trashSeedlingCards()
-        hand.trashSeedlingCards()
-        compost.trashSeedlingCards()
+    fun trashSeedlingCards(): List<CardID> {
+        val trashed = mutableListOf<CardID>()
+        trashed.addAll(supply.trashSeedlingCards())
+        trashed.addAll(hand.trashSeedlingCards())
+        trashed.addAll(compost.trashSeedlingCards())
+        return trashed
     }
 } 

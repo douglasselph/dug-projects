@@ -7,11 +7,11 @@ import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerTD
@@ -27,6 +27,7 @@ class DrawHandTest {
 
     private lateinit var deckManager: DeckManager
     private lateinit var mockDeckManager: DeckManager
+    private lateinit var floralCount: FloralCount
     private lateinit var floralArray: FloralArray
     private lateinit var cardManager: CardManager
     private lateinit var mockRetainedComponents: StackManager
@@ -47,7 +48,7 @@ class DrawHandTest {
     @BeforeEach
     fun setup() {
         randomizer = RandomizerTD()
-        dieFactory = DieFactoryRandom(randomizer)
+        dieFactory = DieFactory(randomizer)
         costScore = CostScore()
         val gameCardsFactory = GameCardsFactory(randomizer, costScore)
         cardManager = CardManager(gameCardsFactory)
@@ -60,7 +61,8 @@ class DrawHandTest {
             dieFactory
         )
         mockDeckManager = mockk(relaxed = true)
-        floralArray = FloralArray(cardManager, gameCardIDsFactory)
+        floralCount = FloralCount()
+        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
         mockRetainedComponents = mockk(relaxed = true)
         mockDecisionDirectorFactory = mockk(relaxed = true)
         mockGameChronicle = mockk(relaxed = true)
@@ -76,8 +78,7 @@ class DrawHandTest {
             mockRetainedComponents,
             dieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
         samplePlayer2 = Player(
             deckManager,
@@ -86,8 +87,7 @@ class DrawHandTest {
             mockRetainedComponents,
             dieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
     }
 
@@ -101,13 +101,12 @@ class DrawHandTest {
         every { mockDeckManager.handSize } returns 0
 
         // Act
-        samplePlayer.drawHand(mockGameChronicle, 1)
+        samplePlayer.drawHand(1)
 
         // Assert
         verify { mockDeckManager.resupply() }
         verify { mockDeckManager.drawCard() }
         verify { mockDeckManager.drawDie() }
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer)) }
     }
 
     @Test
@@ -119,7 +118,7 @@ class DrawHandTest {
         samplePlayer2.addDieToCompost(D4)
 
         // Act
-        samplePlayer2.drawHand(mockGameChronicle, 3) // Try to draw 3 cards, but supply only has 1 card and 1 die
+        samplePlayer2.drawHand(3) // Try to draw 3 cards, but supply only has 1 card and 1 die
 
         // Assert
         assertEquals(2, samplePlayer2.cardsInHand.size)
@@ -128,7 +127,6 @@ class DrawHandTest {
         assertEquals(2, samplePlayer2.diceInHand.size)
         assertTrue(samplePlayer2.diceInHand.dice.contains(D6))
         assertTrue(samplePlayer2.diceInHand.dice.contains(D4))
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer2)) }
     }
 
     @Test
@@ -142,7 +140,7 @@ class DrawHandTest {
         samplePlayer2.addDieToCompost(D8)
 
         // Act
-        samplePlayer2.drawHand(mockGameChronicle, 2) // Try to draw 2 cards, but supply only has 1 card and 1 die
+        samplePlayer2.drawHand(2) // Try to draw 2 cards, but supply only has 1 card and 1 die
 
         // Assert
         assertEquals(2, samplePlayer2.cardsInHand.size)
@@ -151,7 +149,6 @@ class DrawHandTest {
         assertEquals(2, samplePlayer2.diceInHand.size)
         assertEquals(D4, samplePlayer2.diceInHand.dice[0])
         assertEquals(D6, samplePlayer2.diceInHand.dice[1])
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer2)) }
     }
 
     @Test
@@ -166,7 +163,7 @@ class DrawHandTest {
         samplePlayer2.addDieToCompost(D8)
 
         // Act
-        samplePlayer2.drawHand(mockGameChronicle, 1) // Try to draw 1 card, but supply has 2 cards and 1 die
+        samplePlayer2.drawHand(1) // Try to draw 1 card, but supply has 2 cards and 1 die
 
         // Assert
         assertEquals(2, samplePlayer2.cardsInHand.size)
@@ -175,7 +172,6 @@ class DrawHandTest {
         assertEquals(2, samplePlayer2.diceInHand.size)
         assertTrue(samplePlayer2.diceInHand.dice.contains(D6))
         assertTrue(samplePlayer2.diceInHand.dice.contains(D4))
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer2)) }
     }
 
     @Test
@@ -190,7 +186,7 @@ class DrawHandTest {
         samplePlayer2.addDieToCompost(D8)
 
         // Act
-        samplePlayer2.drawHand(mockGameChronicle, 1)
+        samplePlayer2.drawHand(1)
 
         // Assert
         assertEquals(1, samplePlayer2.cardsInHand.size)
@@ -199,7 +195,6 @@ class DrawHandTest {
         assertEquals(D4, samplePlayer2.diceInHand.dice[0])
         assertEquals(D6, samplePlayer2.diceInHand.dice[1])
         assertEquals(D8, samplePlayer2.diceInHand.dice[2])
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer2)) }
     }
 
     @Test
@@ -214,7 +209,7 @@ class DrawHandTest {
         samplePlayer2.addDieToCompost(D8)
 
         // Act
-        samplePlayer2.drawHand(mockGameChronicle, 3) // Try to draw 3 cards, but already have 1 card and supply has 1 card
+        samplePlayer2.drawHand(3) // Try to draw 3 cards, but already have 1 card and supply has 1 card
 
         // Assert
         assertEquals(2, samplePlayer2.cardsInHand.size)
@@ -223,7 +218,6 @@ class DrawHandTest {
         assertEquals(2, samplePlayer2.diceInHand.size)
         assertTrue(samplePlayer2.diceInHand.dice.contains(D6))
         assertTrue(samplePlayer2.diceInHand.dice.contains(D4))
-        verify { mockGameChronicle(GameChronicle.Moment.DRAW_HAND(samplePlayer2)) }
     }
 
     @Test
@@ -236,7 +230,7 @@ class DrawHandTest {
         )
 
         // Act
-        samplePlayer.drawHand(mockGameChronicle, 1)
+        samplePlayer.drawHand(1)
 
         // Assert
         verify(exactly = 0) { mockDeckManager.drawCard() }

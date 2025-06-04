@@ -4,10 +4,11 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.di.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
 
 class FloralArray(
     private val cardManager: CardManager,
+    private val floralCount: FloralCount,
     gameCardIDsFactory: GameCardIDsFactory
 ) {
 
@@ -27,10 +28,7 @@ class FloralArray(
     }
 
     fun floralCount(flowerCardID: CardID): Int {
-        val matchingCount = stack.cardIds.count { it == flowerCardID }
-        val nonMatchingCount = stack.cardIds.count { it != flowerCardID }
-        val bonusCount = nonMatchingCount / 2  // Integer division automatically truncates odd numbers
-        return matchingCount + bonusCount
+        return floralCount(stack.cardIds, flowerCardID)
     }
 
     fun clear() {

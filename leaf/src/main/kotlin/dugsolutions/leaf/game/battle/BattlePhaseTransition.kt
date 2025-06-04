@@ -1,17 +1,20 @@
 package dugsolutions.leaf.game.battle
 
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 
 class BattlePhaseTransition(
     private val bestFlowerCards: BestFlowerCards,
-    private val matchingBloomCard: MatchingBloomCard
+    private val matchingBloomCard: MatchingBloomCard,
+    private val chronicle: GameChronicle
 ) {
 
-    operator fun invoke(players: List<Player>) {
+    suspend operator fun invoke(players: List<Player>) {
         players.forEach { player -> invoke(player) }
     }
 
-    private operator fun invoke(player: Player) {
+    private suspend operator fun invoke(player: Player) {
 
         val bestMatchingFlowerCards = bestFlowerCards(player)
         val bestMatchingBloomCards = bestMatchingFlowerCards.map { matchingBloomCard(it) }
@@ -27,14 +30,15 @@ class BattlePhaseTransition(
                 bestMatchingBloomCards[1]?.let { card -> player.addCardToSupply(card.id) }
             }
         }
-
         // Move all flower cards to supply
         player.floralCards.forEach {
             flowerCard -> player.addCardToSupply(flowerCard.id)
         }
-
-        // Clear floral cards and resupply
+        val trashed = player.trashSeedlingCards()
         player.clearFloralCards()
-        player.resupply()
+        player.reset()
+        player.drawHand()
+
+        chronicle(Moment.EVENT_BATTLE_TRANSITION(player, trashed))
     }
 }
