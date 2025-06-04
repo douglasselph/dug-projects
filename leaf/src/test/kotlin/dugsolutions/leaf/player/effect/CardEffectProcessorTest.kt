@@ -1,5 +1,6 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
@@ -24,6 +25,7 @@ class CardEffectProcessorTest {
     }
 
     private lateinit var mockCanProcessMatchEffect: CanProcessMatchEffect
+    private lateinit var mockChronicle: GameChronicle
     private lateinit var mockPlayer: Player
     private lateinit var mockCard: GameCard
 
@@ -32,11 +34,12 @@ class CardEffectProcessorTest {
     @BeforeEach
     fun setup() {
         mockCanProcessMatchEffect = mockk(relaxed = true)
+        mockChronicle = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         mockCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
         }
-        SUT = CardEffectProcessor(mockCanProcessMatchEffect)
+        SUT = CardEffectProcessor(mockCanProcessMatchEffect, mockChronicle)
 
         every { mockPlayer.removeCardFromHand(any()) } returns true
         every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(false)

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.turn
 
 import dugsolutions.leaf.cards.FakeCards
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.game.acquire.HandleGroveAcquisition
 import dugsolutions.leaf.game.battle.HandleDeliverDamage
 import dugsolutions.leaf.game.domain.GamePhase
@@ -28,6 +29,7 @@ class PlayerTurnTest {
     private lateinit var mockHandleGroveAcquisition: HandleGroveAcquisition
     private lateinit var mockHandleGetTarget: HandleGetTarget
     private lateinit var mockHandleCleanup: HandleCleanup
+    private lateinit var mockGameChronicle: GameChronicle
 
     private lateinit var SUT: PlayerTurn
 
@@ -46,6 +48,7 @@ class PlayerTurnTest {
         mockHandleGetTarget = mockk(relaxed = true)
         mockHandleGroveAcquisition = mockk(relaxed = true)
         mockHandleCleanup = mockk(relaxed = true)
+        mockGameChronicle = mockk(relaxed = true)
 
         // Create mock players
         player1 = PlayerTD(1)
@@ -84,7 +87,8 @@ class PlayerTurnTest {
             mockHandleDeliverDamage,
             mockHandleGetTarget,
             mockHandleGroveAcquisition,
-            mockHandleCleanup
+            mockHandleCleanup,
+            mockGameChronicle
         )
 
     }

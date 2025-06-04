@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.acquire
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
@@ -37,7 +38,7 @@ class AcquireItem(
                     } else {
                         player.addCardToCompost(card.id)
                     }
-                    chronicle(GameChronicle.Moment.ACQUIRE_CARD(player, card, combination))
+                    chronicle(Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
                     result = true
                 }
@@ -48,7 +49,7 @@ class AcquireItem(
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
                     player.addDieToCompost(die)
-                    chronicle(GameChronicle.Moment.ACQUIRE_DIE(player, die, combination))
+                    chronicle(Moment.ACQUIRE_DIE(player, die, combination))
                     result = true
                 }
             }

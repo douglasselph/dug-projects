@@ -5,6 +5,8 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.game.acquire.domain.Combination
+import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 
 /**
  * Base class for all chronicle entries.
@@ -84,7 +86,7 @@ data class DrawDieEntry(
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
-data class DrawHandEntry(
+data class DrawnHandEntry(
     override val playerId: Int,
     override val turn: Int,
     val cards: List<String>,
@@ -120,11 +122,13 @@ data class ScoreInfo(
 
 data class EventTurn(
     override val turn: Int,
+    val gamePhase: GamePhase,
     val reports: List<String>,
     val scores: List<ScoreInfo>
 ) : ChronicleEntry(0, turn) {
     override fun toString(): String {
-        return "=== Turn $turn ===\n" + reports.joinToString("\n")
+        val phase = if (gamePhase == GamePhase.CULTIVATION) "Cultivation" else "Battle"
+        return "=== $phase Turn $turn ===\n" + reports.joinToString("\n")
     }
 }
 
@@ -212,6 +216,13 @@ data class TrashDieEntry(
     override val playerId: Int,
     override val turn: Int,
     val dieSides: Int
+) : ChronicleEntry(playerId, turn)
+
+data class TrashForEffect(
+    override val playerId: Int,
+    override val turn: Int,
+    val card: String,
+    val status: DecisionShouldProcessTrashEffect.Result
 ) : ChronicleEntry(playerId, turn)
 
 data class UpgradeDieEntry(

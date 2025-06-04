@@ -19,7 +19,7 @@ class ScenarioBasicConfig(
         val flowers = getGameCards(FlourishType.FLOWER)
 
         val numCards = numPlayers * 3
-        val numWild = numPlayers * 2
+        val numWild = numPlayers
         val numFlowers = numPlayers + 2
 
         require(roots.size > 3) { "Not enough root cards defined. Found only ${roots.size}" }

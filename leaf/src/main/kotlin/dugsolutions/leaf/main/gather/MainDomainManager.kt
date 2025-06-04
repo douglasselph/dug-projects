@@ -2,8 +2,7 @@ package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.game.Game
-import dugsolutions.leaf.game.domain.GameTurn
-import dugsolutions.leaf.game.turn.select.SelectPossibleCards
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.player.Player
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.update
 
 class MainDomainManager(
     private val game: Game,
-    private val gameTurn: GameTurn,
+    private val gameTime: GameTime,
     private val gatherPlayerInfo: GatherPlayerInfo,
     private val gatherGroveInfo: GatherGroveInfo,
 ) {
@@ -90,7 +89,7 @@ class MainDomainManager(
     fun setHighlightGroveCardsForSelection(possibleCards: List<GameCard>, player: Player) {
         _state.update { currentState ->
             currentState.copy(
-                turn = gameTurn.turn,
+                turn = gameTime.turn,
                 groveInfo = gatherGroveInfo(possibleCards, player),
             )
         }
@@ -103,7 +102,7 @@ class MainDomainManager(
     fun update() {
         _state.update { currentState ->
             currentState.copy(
-                turn = gameTurn.turn,
+                turn = gameTime.turn,
                 players = game.players.map { gatherPlayerInfo(it) },
                 groveInfo = gatherGroveInfo()
             )

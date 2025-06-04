@@ -37,7 +37,7 @@ import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
 import dugsolutions.leaf.game.battle.HandleDeliverDamage
 import dugsolutions.leaf.game.battle.MatchingBloomCard
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerRound
 import dugsolutions.leaf.game.turn.PlayerTurn
@@ -152,8 +152,7 @@ val gameModule: Module = module {
             deckManager = { get() },
             floralArray = { get() },
             decisionDirectorFactory = get(),
-            costScore = get(),
-            chronicle = get()
+            costScore = get()
         )
     }
 
@@ -199,7 +198,7 @@ val gameModule: Module = module {
     single {
         PlayerTurn(
             get(), get(), get(),
-            get(), get(), get()
+            get(), get(), get(), get()
         )
     }
 
@@ -234,7 +233,7 @@ val gameModule: Module = module {
 
     single { CardsEffectsProcessor(get()) }
     single { CardEffectsProcessor(get(), get()) }
-    single { CardEffectProcessor(get()) }
+    single { CardEffectProcessor(get(), get()) }
     single { EvaluateBestDiePurchase(get()) }
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
@@ -251,7 +250,7 @@ val gameModule: Module = module {
         )
     }
     single { PlayerOrder(get()) }
-    single { GameTurn() }
+    single { GameTime() }
 
     single { ScenarioBasicConfig(get()) }
 

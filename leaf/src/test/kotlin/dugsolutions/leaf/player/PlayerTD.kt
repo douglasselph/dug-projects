@@ -25,8 +25,7 @@ class PlayerTD private constructor(
     retainedComponents: StackManager,
     private val dieFactory: DieFactory,
     costScore: CostScore,
-    decisionDirectorFactory: DecisionDirectorFactory,
-    chronicle: GameChronicle
+    decisionDirectorFactory: DecisionDirectorFactory
 ) : Player(
     deckManager,
     floralArray,
@@ -34,8 +33,7 @@ class PlayerTD private constructor(
     retainedComponents,
     dieFactory,
     costScore,
-    decisionDirectorFactory,
-    chronicle
+    decisionDirectorFactory
 ) {
 
     companion object {
@@ -52,7 +50,6 @@ class PlayerTD private constructor(
             val floralArray = mockk<FloralArray>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val retainedComponents = mockk<StackManager>(relaxed = true)
-            val chronicle = mockk<GameChronicle>(relaxed = true)
             val dieFactory = DieFactoryRandom(randomizerTD)
             val costScore = CostScore()
             val decisionDirectorFactory = DecisionDirectorFactory(cardManager)
@@ -64,8 +61,7 @@ class PlayerTD private constructor(
                 retainedComponents,
                 dieFactory,
                 costScore,
-                decisionDirectorFactory,
-                chronicle
+                decisionDirectorFactory
             ).apply {
                 this.id = id
                 this.name = name
@@ -112,8 +108,7 @@ class PlayerTD private constructor(
                 retainedComponents,
                 dieFactory,
                 costScore,
-                decisionDirectorFactory,
-                chronicle
+                decisionDirectorFactory
             ).apply {
                 this.id = id
                 this.name = name

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.turn
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 
 /**
@@ -59,7 +60,7 @@ class PlayerOrder(
         )
 
         // Log the ordering event
-        chronicle(GameChronicle.Moment.ORDERING(sortedPositions.map { it.player }, numberOfRerolls))
+        chronicle(Moment.ORDERING(sortedPositions.map { it.player }, numberOfRerolls))
 
         // Return the players in order
         return sortedPositions.map { it.player }

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 import kotlin.math.max
 
@@ -44,7 +45,7 @@ class HandleDeliverDamage(
                         attacker.incomingDamage += thornDamage
                     }
                     chronicle(
-                        GameChronicle.Moment.DELIVER_DAMAGE(
+                        Moment.DELIVER_DAMAGE(
                             defender, damage,
                             attacker, thornDamage
                         )

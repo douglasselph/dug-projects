@@ -1,13 +1,14 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.common.Commons.HAND_SIZE
 import dugsolutions.leaf.player.Player
 import kotlin.math.max
 import kotlin.math.min
 
 
-fun Player.drawHand(chronicle: GameChronicle, preferredCardCount: Int) {
+fun Player.drawNewHand(preferredCardCount: Int) {
     val spaceLeft = HAND_SIZE - handSize
     if (spaceLeft <= 0) return
 
@@ -21,7 +22,6 @@ fun Player.drawHand(chronicle: GameChronicle, preferredCardCount: Int) {
         // Calculate remaining space after taking all supply
         val remainingSpace = spaceLeft - (cardsInSupplyCount + diceInSupplyCount)
         if (remainingSpace <= 0) {
-            chronicle(GameChronicle.Moment.DRAW_HAND(this))
             return
         }
 
@@ -45,5 +45,4 @@ fun Player.drawHand(chronicle: GameChronicle, preferredCardCount: Int) {
         val diceLeft = max(0, HAND_SIZE - handSize)
         repeat(diceLeft) { drawDie() }
     }
-    chronicle(GameChronicle.Moment.DRAW_HAND(this))
 }

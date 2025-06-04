@@ -110,8 +110,7 @@ class PlayerTest {
             mockRetainedComponents,
             mockDieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
         SUT2 = Player(
             deckManager,
@@ -120,8 +119,7 @@ class PlayerTest {
             mockRetainedComponents,
             mockDieFactory,
             costScore,
-            mockDecisionDirectorFactory,
-            mockGameChronicle
+            mockDecisionDirectorFactory
         )
     }
 

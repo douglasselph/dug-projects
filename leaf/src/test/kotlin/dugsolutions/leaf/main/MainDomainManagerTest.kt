@@ -2,9 +2,8 @@ package dugsolutions.leaf.main
 
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.game.Game
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.GroveInfo
-import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
@@ -27,7 +26,7 @@ class MainDomainManagerTest {
         private const val TURN = 5
     }
     private val mockGame = mockk<Game>(relaxed = true)
-    private val gameTurn = GameTurn()
+    private val gameTime = GameTime()
     private val gatherCardInfo = GatherCardInfo()
     private val gatherDiceInfo = GatherDiceInfo()
     private val gatherPlayerInfo = GatherPlayerInfo(gatherCardInfo, gatherDiceInfo)
@@ -35,7 +34,7 @@ class MainDomainManagerTest {
     private val mockPlayer1 = mockk<Player>(relaxed = true)
     private val mockPlayer2 = mockk<Player>(relaxed = true)
     private val mockGroveInfo = mockk<GroveInfo>(relaxed = true)
-    private val SUT = MainDomainManager(mockGame, gameTurn, gatherPlayerInfo, gatherGroveInfo)
+    private val SUT = MainDomainManager(mockGame, gameTime, gatherPlayerInfo, gatherGroveInfo)
 
     @BeforeEach
     fun setup() {
@@ -61,7 +60,7 @@ class MainDomainManagerTest {
     @Test
     fun update_whenGameHasPlayersAndGrove_updatesAllComponents() = runBlocking {
         // Arrange
-        gameTurn.turn = TURN
+        gameTime.turn = TURN
 
         // Act
         SUT.update()

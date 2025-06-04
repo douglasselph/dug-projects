@@ -2,6 +2,7 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.player.Player
@@ -184,8 +185,8 @@ class HandleAbsorbDamageTest {
         verify { mockPlayer.decisionDirector.damageAbsorptionDecision() }
         verify { mockPlayer.removeCardFromHand(fakeCard1.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockGameChronicle(GameChronicle.Moment.TRASH_CARD(mockPlayer, floralCard1, floralArray = true)) }
-        verify { mockGameChronicle(GameChronicle.Moment.TRASH_CARD(mockPlayer, floralCard2, floralArray = true)) }
+        verify { mockGameChronicle(Moment.TRASH_CARD(mockPlayer, floralCard1, floralArray = true)) }
+        verify { mockGameChronicle(Moment.TRASH_CARD(mockPlayer, floralCard2, floralArray = true)) }
     }
 
     @Test

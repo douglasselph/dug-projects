@@ -4,7 +4,7 @@ import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.PlayerFactory
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminated
@@ -19,8 +19,8 @@ class Game(
     private val playerFactory: PlayerFactory,
     private val playerOrder: PlayerOrder,
     private val grove: Grove,
-    private val gameTurn: GameTurn,
-    private val battlePhaseTransition: BattlePhaseTransition
+    private val gameTime: GameTime,
+    private val battlePhaseTransition: BattlePhaseTransition,
 ) {
 
     var isEliminated: IsEliminated = IsEliminatedNoDiceNorCards()
@@ -28,8 +28,8 @@ class Game(
     val score: PlayersScoreData
         get() {
             return PlayersScoreData(
-                turn = gameTurn.turn,
-                players = players.map { player -> PlayerScoreData(player, player.score ) }
+                turn = gameTime.turn,
+                players = players.map { player -> PlayerScoreData(player, player.score) }
             )
         }
 
@@ -50,7 +50,7 @@ class Game(
     )
 
     private fun clear() {
-        gameTurn.turn = 0
+        gameTime.turn = 0
         inCultivationPhase = true
         players = emptyList()
     }
@@ -87,5 +87,6 @@ class Game(
     fun setupBattlePhase() {
         battlePhaseTransition(players)
     }
+
 
 }

@@ -156,7 +156,6 @@ class DecisionDamageAbsorptionBaseline(
                 )
             }
         }
-
         // Select the best combination based on scoring
         val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return null
 

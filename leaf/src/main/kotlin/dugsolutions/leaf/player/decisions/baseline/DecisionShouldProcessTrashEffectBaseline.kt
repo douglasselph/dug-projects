@@ -2,6 +2,7 @@ package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.CardID
+import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 
@@ -33,23 +34,25 @@ class DecisionShouldProcessTrashEffectBaseline : DecisionShouldProcessTrashEffec
     var trashTriggerGeneral = TRASH_TRIGGER
 
     override fun invoke(card: GameCard): DecisionShouldProcessTrashEffect.Result {
-        // Only certain TrashEffects apply toward being able to trash here.
-        when (card.trashEffect) {
-            CardEffect.GAIN_FREE_ROOT,
-            CardEffect.GAIN_FREE_CANOPY,
-            CardEffect.GAIN_FREE_VINE,
-            CardEffect.UPGRADE_ANY_RETAIN,
-            CardEffect.UPGRADE_ANY,
-            CardEffect.UPGRADE_D4,
-            CardEffect.UPGRADE_D6,
-            CardEffect.UPGRADE_D4_D6 -> {
-            }
-
-            else -> return DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED
-        }
         // If card has no effects, always trash
         if (card.primaryEffect == null && card.matchEffect == null) {
             return DecisionShouldProcessTrashEffect.Result.TRASH
+        }
+        if (card.type != FlourishType.SEEDLING) {
+            // Only certain TrashEffects apply toward being able to trash here.
+            when (card.trashEffect) {
+                CardEffect.GAIN_FREE_ROOT,
+                CardEffect.GAIN_FREE_CANOPY,
+                CardEffect.GAIN_FREE_VINE,
+                CardEffect.UPGRADE_ANY_RETAIN,
+                CardEffect.UPGRADE_ANY,
+                CardEffect.UPGRADE_D4,
+                CardEffect.UPGRADE_D6,
+                CardEffect.UPGRADE_D4_D6 -> {
+                }
+
+                else -> return DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED
+            }
         }
         // Get the current count for this card, defaulting to 0 if not seen before
         val currentCount = trackMap.getOrDefault(card.id, 0)

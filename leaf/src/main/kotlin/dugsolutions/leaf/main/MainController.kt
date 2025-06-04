@@ -82,6 +82,18 @@ class MainController(
         }
     }
 
+    fun onStepEnabledToggled(value: Boolean) {
+        runGame.stepMode = value
+        mainDomainManager.setStepMode(value)
+    }
+
+    fun onNextButtonPressed() {
+        scope.launch {
+            runGame.continueToNextStep()
+            mainDomainManager.clearShowNextButton()
+        }
+    }
+
     // endregion public
 
     private fun update() {
@@ -120,17 +132,6 @@ class MainController(
         return cardOperations.getGameCards(FlourishType.SEEDLING).take(4)
     }
 
-    fun onStepEnabledToggled(value: Boolean) {
-        runGame.stepMode = value
-        mainDomainManager.setStepMode(value)
-    }
-
-    fun onNextButtonPressed() {
-        scope.launch {
-            runGame.continueToNextStep()
-            mainDomainManager.clearShowNextButton()
-        }
-    }
 
     private fun createDecisionDrawCountSuspend(player: Player): DecisionDrawCount {
         val value = DecisionDrawCountSuspend()

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.acquire
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.Die
@@ -128,7 +129,7 @@ class AcquireItemTest {
         verify { mockPlayer.addCardToCompost(TEST_ID) }
         verify(exactly = 0) { mockPlayer.addCardToFloralArray(any()) }
         verify { mockManageAcquiredFloralTypes.add(SAMPLE_TYPE) }
-        verify { mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>()) }
+        verify { mockChronicle(any<Moment.ACQUIRE_CARD>()) }
     }
 
     @Test
@@ -153,7 +154,7 @@ class AcquireItemTest {
         verify { mockPlayer.addCardToFloralArray(FLOWER_ID) }
         verify(exactly = 0) { mockPlayer.addCardToCompost(any()) }
         verify { mockManageAcquiredFloralTypes.add(FlourishType.FLOWER) }
-        verify { mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>()) }
+        verify { mockChronicle(any<Moment.ACQUIRE_CARD>()) }
     }
 
     @Test
@@ -176,7 +177,7 @@ class AcquireItemTest {
 
         // Verify other interactions through mocks
         verify { mockPlayer.addDieToCompost(mockDie) }
-        verify { mockChronicle(any<GameChronicle.Moment.ACQUIRE_DIE>()) }
+        verify { mockChronicle(any<Moment.ACQUIRE_DIE>()) }
         verify(exactly = 0) { mockManageAcquiredFloralTypes.add(any()) }
     }
 
@@ -252,7 +253,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(mockCardChoice, mockDieBestChoice)
             mockPlayer.addCardToCompost(TEST_ID)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>())
+            mockChronicle(any<Moment.ACQUIRE_CARD>())
             mockManageAcquiredFloralTypes.add(SAMPLE_TYPE)
         }
     }
@@ -275,7 +276,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(mockCardChoice, mockDieBestChoice)
             mockPlayer.addDieToCompost(mockDie)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_DIE>())
+            mockChronicle(any<Moment.ACQUIRE_DIE>())
         }
     }
 
@@ -317,7 +318,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(null, mockDieBestChoice)
             mockPlayer.addDieToCompost(mockDie)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_DIE>())
+            mockChronicle(any<Moment.ACQUIRE_DIE>())
         }
     }
 
@@ -338,7 +339,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(mockCardChoice, null)
             mockPlayer.addCardToCompost(TEST_ID)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>())
+            mockChronicle(any<Moment.ACQUIRE_CARD>())
             mockManageAcquiredFloralTypes.add(SAMPLE_TYPE)
         }
     }
@@ -362,7 +363,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(mockCardChoice, mockDieBestChoice)
             mockPlayer.addCardToCompost(TEST_ID)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>())
+            mockChronicle(any<Moment.ACQUIRE_CARD>())
             mockGrove.removeCard(TEST_ID)
             mockManageAcquiredFloralTypes.add(SAMPLE_TYPE)
         }
@@ -387,7 +388,7 @@ class AcquireItemTest {
             mockAcquireDieEvaluator(mockCombinations)
             mockPlayer.decisionDirector.acquireSelectDecision(mockFlowerCardChoice, mockDieBestChoice)
             mockPlayer.addCardToFloralArray(FLOWER_ID)
-            mockChronicle(any<GameChronicle.Moment.ACQUIRE_CARD>())
+            mockChronicle(any<Moment.ACQUIRE_CARD>())
             mockGrove.removeCard(FLOWER_ID)
             mockManageAcquiredFloralTypes.add(FlourishType.FLOWER)
         }

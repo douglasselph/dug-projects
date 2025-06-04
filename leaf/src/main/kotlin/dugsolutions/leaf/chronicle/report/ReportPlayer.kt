@@ -12,14 +12,17 @@ class ReportPlayer {
         val diceInHand = player.diceInHand.values()
         val cardsInCompost = cardsOf(player.cardsInCompost)
         val diceInCompost = player.diceInCompost.toString()
+        val floralArray = cardsOf(player.floralCards)
         
         // Combine strings, but only include non-empty ones
         val supplyItems = combineNonEmpty(cardsInSupply, diceInSupply)
         val handItems = combineNonEmpty(cardsInHand, diceInHand)
         val compostItems = combineNonEmpty(cardsInCompost, diceInCompost)
+        val floralItems = combineNonEmpty(floralArray)
+
         val score = player.score
 
-        return "${player.name}: Supply=[$supplyItems], Hand=[$handItems], Compost=[$compostItems], Score=[$score]"
+        return "${player.name}: Supply=[$supplyItems], Hand=[$handItems], Compost=[$compostItems], Floral=[$floralItems], Score=[$score]"
     }
     
     // Helper function to combine strings only if they're non-empty

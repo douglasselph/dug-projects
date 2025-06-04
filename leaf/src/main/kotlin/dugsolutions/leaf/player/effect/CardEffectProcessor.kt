@@ -1,5 +1,7 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.CardOrDie
 import dugsolutions.leaf.components.FlourishType
@@ -14,7 +16,8 @@ import dugsolutions.leaf.player.domain.AppliedEffect
  * This class coordinates between different effect types and their application to players.
  */
 class CardEffectProcessor(
-    private val canProcessMatchEffect: CanProcessMatchEffect
+    private val canProcessMatchEffect: CanProcessMatchEffect,
+    private val chronicle: GameChronicle
 ) {
 
     private val effects = mutableListOf<AppliedEffect>()
@@ -43,15 +46,17 @@ class CardEffectProcessor(
         // See if we should trash this card right now.
         // This is only taking into consideration non-battle affecting trash effects.
         card.trashEffect?.let {
-            when (player.decisionDirector.shouldProcessTrashEffect(card)) {
+            when (val result = player.decisionDirector.shouldProcessTrashEffect(card)) {
                 DecisionShouldProcessTrashEffect.Result.TRASH -> {
                     processEffect(card, card.trashEffect, card.trashValue)
                     // Remove card now
                     player.removeCardFromHand(card.id)
+                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
                 }
 
                 DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED -> {
                     player.effectsList.add(AppliedEffect.TrashIfNeeded(card))
+                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
                 }
 
                 else -> {}

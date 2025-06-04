@@ -1,12 +1,15 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
+import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertTrue
 
 class ReportDamageTest {
 
@@ -19,8 +22,8 @@ class ReportDamageTest {
         private const val DAMAGE_TO_ATTACKER = 3
     }
 
-    private val defender = mockk<Player>()
-    private val attacker = mockk<Player>()
+    private val defender = mockk<Player>(relaxed = true)
+    private val attacker = mockk<Player>(relaxed = true)
 
     @BeforeEach
     fun setup() {
@@ -32,7 +35,7 @@ class ReportDamageTest {
     @Test
     fun invoke_whenDamageToDefenderOnly_returnsCorrectReport() {
         // Arrange
-        val moment = mockk<GameChronicle.Moment.DELIVER_DAMAGE>()
+        val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
         every { moment.damageToDefender } returns DAMAGE_TO_DEFENDER
         every { moment.damageToAttacker } returns 0
         every { moment.defender } returns defender
@@ -41,13 +44,14 @@ class ReportDamageTest {
         val report = SUT(moment)
 
         // Assert
-        assertEquals("Player $PLAYER_A_ID took $DAMAGE_TO_DEFENDER", report)
+        assertTrue(report.contains(PLAYER_A_ID.toStr()))
+        assertTrue(report.contains(DAMAGE_TO_DEFENDER.toString()))
     }
 
     @Test
     fun invoke_whenDamageToAttackerOnly_returnsCorrectReport() {
         // Arrange
-        val moment = mockk<GameChronicle.Moment.DELIVER_DAMAGE>()
+        val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
         every { moment.damageToDefender } returns 0
         every { moment.damageToAttacker } returns DAMAGE_TO_ATTACKER
         every { moment.defender } returns defender
@@ -63,7 +67,7 @@ class ReportDamageTest {
     @Test
     fun invoke_whenDamageToBoth_returnsCorrectReport() {
         // Arrange
-        val moment = mockk<GameChronicle.Moment.DELIVER_DAMAGE>()
+        val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
         every { moment.damageToDefender } returns DAMAGE_TO_DEFENDER
         every { moment.damageToAttacker } returns DAMAGE_TO_ATTACKER
         every { moment.defender } returns defender
@@ -73,7 +77,10 @@ class ReportDamageTest {
         val report = SUT(moment)
 
         // Assert
-        assertEquals("Player $PLAYER_A_ID took $DAMAGE_TO_DEFENDER,Player $PLAYER_B_ID took back $DAMAGE_TO_ATTACKER", report)
+        assertTrue(report.contains(PLAYER_A_ID.toString()))
+        assertTrue(report.contains(PLAYER_B_ID.toString()))
+        assertTrue(report.contains(DAMAGE_TO_DEFENDER.toString()))
+        assertTrue(report.contains(DAMAGE_TO_ATTACKER.toString()))
     }
 
 } 

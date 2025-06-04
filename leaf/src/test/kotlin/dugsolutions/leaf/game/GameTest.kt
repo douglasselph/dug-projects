@@ -9,7 +9,7 @@ import dugsolutions.leaf.di.DieFactory
 import dugsolutions.leaf.di.PlayerFactory
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminatedNoDiceNorCards
@@ -53,7 +53,7 @@ class GameTest {
     private lateinit var mockGameCards: GameCards
     private lateinit var sampleConfig: Game.Config
     private lateinit var mockDie: Die
-    private val gameTurn = GameTurn()
+    private val gameTime = GameTime()
 
     private lateinit var SUT: Game
 
@@ -117,10 +117,10 @@ class GameTest {
             mockPlayerFactory,
             mockPlayerOrder,
             mockGrove,
-            gameTurn,
+            gameTime,
             mockBattlePhaseTransition,
         )
-        gameTurn.turn = GAME_TURN
+        gameTime.turn = GAME_TURN
     }
 
     @Test
@@ -135,7 +135,7 @@ class GameTest {
         every { mockPlayer3.score } returns score3
 
         SUT.setup(sampleConfig)
-        gameTurn.turn = GAME_TURN
+        gameTime.turn = GAME_TURN
 
         // Act
         val result = SUT.score

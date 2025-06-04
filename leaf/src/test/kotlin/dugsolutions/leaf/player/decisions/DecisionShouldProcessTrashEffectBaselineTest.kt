@@ -199,7 +199,7 @@ class DecisionShouldProcessTrashEffectBaselineTest {
         val result = SUT(fakeNoEffect)
 
         // Assert
-        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED, result, "Card with no trash effect should return false")
+        assertEquals(DecisionShouldProcessTrashEffect.Result.TRASH, result, "Card with no trash effect should return false")
     }
 
     @Test

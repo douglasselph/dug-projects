@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.player.PlayerTD
 import io.mockk.Runs
@@ -77,13 +78,13 @@ class HandleDeliverDamageTest {
         
         // Verify the chronicle is called with the correct groupings
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE &&
             it.defender.id == player1.id &&
             it.attacker.id == player2.id
         }) }
         
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player2.id &&
             it.attacker.id == player3.id
         }) }
@@ -112,13 +113,13 @@ class HandleDeliverDamageTest {
         
         // Verify chronicle includes thorn damage
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.damageToDefender == 2 && // 5 - 3
             it.damageToAttacker == 1    // Thorn
         }) }
         
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.damageToDefender == 2 && // 7 - 5
             it.damageToAttacker == 2    // Thorn
         }) }
@@ -162,7 +163,7 @@ class HandleDeliverDamageTest {
         
         // Chronicle should record the group damage
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player1.id &&
             it.attacker.id == player3.id
         }) }
@@ -202,7 +203,7 @@ class HandleDeliverDamageTest {
         
         // Verify chronicle for high->mid damage
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player2.id &&
             it.attacker.id == player1.id &&
             it.damageToDefender == 5 &&  // 10-5
@@ -211,7 +212,7 @@ class HandleDeliverDamageTest {
         
         // Verify chronicle for mid->low damage
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player4.id &&
             it.attacker.id == player3.id &&
             it.damageToDefender == 3     // 5-2
@@ -264,7 +265,7 @@ class HandleDeliverDamageTest {
         
         // Verify chronicle
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE &&
+            it is Moment.DELIVER_DAMAGE &&
             it.defender.id == player3.id &&
             it.attacker.id == player2.id &&
             it.damageToDefender == 5
@@ -297,13 +298,13 @@ class HandleDeliverDamageTest {
         
         // Verify chronicle
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player1.id &&
             it.attacker.id == player2.id
         }) }
         
         verify { mockGameChronicle(match { 
-            it is GameChronicle.Moment.DELIVER_DAMAGE && 
+            it is Moment.DELIVER_DAMAGE && 
             it.defender.id == player2.id &&
             it.attacker.id == player3.id
         }) }

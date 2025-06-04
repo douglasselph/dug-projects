@@ -8,6 +8,7 @@ import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
 import dugsolutions.leaf.chronicle.domain.ScoreInfo
+import dugsolutions.leaf.game.domain.GamePhase
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -33,6 +34,7 @@ class GenerateGameSummaryTest {
         // Create an EventTurn implementation for testing
         private fun createEventTurn(turn: Int, scores: List<ScoreInfo>): EventTurn {
             return EventTurn(
+                gamePhase = GamePhase.CULTIVATION,
                 turn = turn,
                 reports = emptyList(), // Empty reports for test simplicity
                 scores = scores

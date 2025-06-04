@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.domain
 
-class GameTurn {
+class GameTime {
 
     var turn: Int = 0
 

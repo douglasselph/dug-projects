@@ -1,8 +1,9 @@
 package dugsolutions.leaf.game
 
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.domain.GamePhase
-import dugsolutions.leaf.game.domain.GameTurn
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.GameEvent
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.flow
 
 class RunGame(
     private val game: Game,
-    private val gameTurn: GameTurn,
+    private val gameTime: GameTime,
     private val chronicle: GameChronicle
 ) {
     private val stepChannel = Channel<Unit>(Channel.UNLIMITED)
@@ -22,11 +23,11 @@ class RunGame(
     operator fun invoke(): Flow<GameEvent> = flow {
         chronicle.clear()
         emit(GameEvent.Started)
-        gameTurn.turn = 0
+        gameTime.turn = 0
 
         while (game.inCultivationPhase) {
-            gameTurn.turn++
-            chronicle(GameChronicle.Moment.EVENT_TURN(game.players))
+            gameTime.turn++
+            chronicle(Moment.EVENT_TURN(game.players, GamePhase.CULTIVATION))
             game.runOneCultivationTurn()
             emit(
                 GameEvent.TurnProgress(
@@ -40,14 +41,15 @@ class RunGame(
                 emit(GameEvent.WaitForStep)
                 stepChannel.receive() // Wait for user to continue
             }
+
         }
         game.setupBattlePhase()
 
-        chronicle(GameChronicle.Moment.EVENT_BATTLE(game.score))
+        chronicle(Moment.EVENT_BATTLE(game.score))
 
         while (!game.isGameFinished) {
-            gameTurn.turn++
-            chronicle(GameChronicle.Moment.EVENT_TURN(game.players))
+            gameTime.turn++
+            chronicle(Moment.EVENT_TURN(game.players, GamePhase.BATTLE))
             game.runOneBattleTurn()
             emit(
                 GameEvent.TurnProgress(
@@ -59,9 +61,12 @@ class RunGame(
                 emit(GameEvent.WaitForStep)
                 stepChannel.receive() // Wait for user to continue
             }
+            if (gameTime.turn >= 58) {
+                println("At the end of turn 58")
+            }
         }
         val data = game.score
-        chronicle(GameChronicle.Moment.FINISHED(data))
+        chronicle(Moment.FINISHED(data))
         emit(GameEvent.Completed(data))
     }
 
