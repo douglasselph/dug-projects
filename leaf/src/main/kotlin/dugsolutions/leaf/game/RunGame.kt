@@ -25,9 +25,9 @@ class RunGame(
         emit(GameEvent.Started)
         gameTime.turn = 0
 
-        while (game.inCultivationPhase) {
+        while (gameTime.phase == GamePhase.CULTIVATION) {
             gameTime.turn++
-            chronicle(Moment.EVENT_TURN(game.players, GamePhase.CULTIVATION))
+            chronicle(Moment.EVENT_TURN(game.players))
             game.runOneCultivationTurn()
             emit(
                 GameEvent.TurnProgress(
@@ -49,7 +49,7 @@ class RunGame(
 
         while (!game.isGameFinished) {
             gameTime.turn++
-            chronicle(Moment.EVENT_TURN(game.players, GamePhase.BATTLE))
+            chronicle(Moment.EVENT_TURN(game.players))
             game.runOneBattleTurn()
             emit(
                 GameEvent.TurnProgress(
@@ -60,9 +60,6 @@ class RunGame(
             if (stepMode) {
                 emit(GameEvent.WaitForStep)
                 stepChannel.receive() // Wait for user to continue
-            }
-            if (gameTime.turn >= 58) {
-                println("At the end of turn 58")
             }
         }
         val data = game.score

@@ -6,6 +6,7 @@ import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.CardOrDie
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
@@ -17,6 +18,7 @@ import dugsolutions.leaf.player.domain.AppliedEffect
  */
 class CardEffectProcessor(
     private val canProcessMatchEffect: CanProcessMatchEffect,
+    private val shouldProcessMatchEffect: ShouldProcessMatchEffect,
     private val chronicle: GameChronicle
 ) {
 
@@ -38,7 +40,7 @@ class CardEffectProcessor(
         // Process match effect if applicable
         if (card.matchEffect != null) {
             val result = canProcessMatchEffect(card, player)
-            if (result.possible) {
+            if (result.possible && shouldProcessMatchEffect(card)) {
                 result.dieCost?.let { player.discard(result.dieCost) }
                 processEffect(card, card.matchEffect, matchValue(player, card))
             }
@@ -191,4 +193,5 @@ class CardEffectProcessor(
             player.flowerCount(card)
         } else card.matchValue
     }
+
 } 

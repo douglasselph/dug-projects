@@ -77,6 +77,7 @@ import dugsolutions.leaf.player.effect.CardEffectsProcessor
 import dugsolutions.leaf.player.effect.CardsEffectsProcessor
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
+import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
 import dugsolutions.leaf.tool.CardRegistry
 import dugsolutions.leaf.tool.ParseCost
 import dugsolutions.leaf.tool.Randomizer
@@ -233,7 +234,9 @@ val gameModule: Module = module {
 
     single { CardsEffectsProcessor(get()) }
     single { CardEffectsProcessor(get(), get()) }
-    single { CardEffectProcessor(get(), get()) }
+    single { CardEffectProcessor(get(), get(), get()) }
+    single { CanProcessMatchEffect(get(), get()) }
+    single { ShouldProcessMatchEffect(get()) }
     single { EvaluateBestDiePurchase(get()) }
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
@@ -243,12 +246,6 @@ val gameModule: Module = module {
     single { AcquireDieEvaluator(get(), get()) }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
 
-    single {
-        CanProcessMatchEffect(
-            hasDieValue = get(),
-            hasFlourishType = get()
-        )
-    }
     single { PlayerOrder(get()) }
     single { GameTime() }
 

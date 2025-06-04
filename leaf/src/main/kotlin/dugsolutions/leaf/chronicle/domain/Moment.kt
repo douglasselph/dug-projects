@@ -28,7 +28,7 @@ sealed class Moment {
     data class DEFLECT_DAMAGE(val player: Player, val amount: Int): Moment()
     data class DISCARD_CARD(val player: Player, val cardId: GameCard): Moment()
     data class DISCARD_DIE(val player: Player, val die: Die): Moment()
-    data class EVENT_TURN(val players: List<Player>, val phase: GamePhase) : Moment()
+    data class EVENT_TURN(val players: List<Player>) : Moment()
     data class EVENT_BATTLE(val result: PlayersScoreData): Moment()
     data class FINISHED(val result: PlayersScoreData) : Moment()
 

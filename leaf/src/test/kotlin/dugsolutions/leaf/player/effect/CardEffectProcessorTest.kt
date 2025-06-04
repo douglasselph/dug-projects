@@ -25,6 +25,7 @@ class CardEffectProcessorTest {
     }
 
     private lateinit var mockCanProcessMatchEffect: CanProcessMatchEffect
+    private lateinit var mockShouldProcessMatchEffect: ShouldProcessMatchEffect
     private lateinit var mockChronicle: GameChronicle
     private lateinit var mockPlayer: Player
     private lateinit var mockCard: GameCard
@@ -34,16 +35,18 @@ class CardEffectProcessorTest {
     @BeforeEach
     fun setup() {
         mockCanProcessMatchEffect = mockk(relaxed = true)
+        mockShouldProcessMatchEffect = mockk(relaxed = true)
         mockChronicle = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         mockCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
         }
-        SUT = CardEffectProcessor(mockCanProcessMatchEffect, mockChronicle)
+        SUT = CardEffectProcessor(mockCanProcessMatchEffect, mockShouldProcessMatchEffect, mockChronicle)
 
         every { mockPlayer.removeCardFromHand(any()) } returns true
         every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(false)
         every { mockPlayer.decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        every { mockShouldProcessMatchEffect(mockCard) } returns true
     }
 
     @Test
@@ -122,6 +125,28 @@ class CardEffectProcessorTest {
         assertEquals(1, result.size)
         assertTrue(result[0] is AppliedEffect.DrawCards)
         
+        // Verify card is not removed from hand
+        confirmVerified(mockPlayer)
+    }
+
+    @Test
+    fun processCardEffect_whenMatchEffectAndShouldNotProcess_returnsBothEffects() {
+        // Arrange
+        every { mockCard.primaryEffect } returns CardEffect.DRAW_CARD
+        every { mockCard.primaryValue } returns 2
+        every { mockCard.matchEffect } returns CardEffect.DRAW_DIE
+        every { mockCard.matchValue } returns 1
+        every { mockCard.trashEffect } returns null
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(true)
+        every { mockShouldProcessMatchEffect(mockCard) } returns false
+
+        // Act
+        val result = SUT(mockCard, mockPlayer)
+
+        // Assert
+        assertEquals(1, result.size)
+        assertTrue(result[0] is AppliedEffect.DrawCards)
+
         // Verify card is not removed from hand
         confirmVerified(mockPlayer)
     }

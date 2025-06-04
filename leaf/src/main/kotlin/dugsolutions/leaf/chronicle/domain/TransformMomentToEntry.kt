@@ -124,7 +124,7 @@ class TransformMomentToEntry(
 
             is Moment.EVENT_TURN ->
                 EventTurn(
-                    gamePhase = moment.phase,
+                    gamePhase = gameTime.phase,
                     turn = gameTime.turn,
                     reports = moment.players.sortedBy { it.name }.map { reportPlayer(it) },
                     scores = moment.players.map { player -> ScoreInfo(player.score) }

@@ -39,9 +39,6 @@ class Game(
     val isGameFinished: Boolean
         get() = players.count { !isEliminated(it) } <= 1
 
-    var inCultivationPhase: Boolean = true
-        private set
-
     data class Config(
         val numPlayers: Int,
         val isEliminated: IsEliminated? = null,
@@ -51,7 +48,7 @@ class Game(
 
     private fun clear() {
         gameTime.turn = 0
-        inCultivationPhase = true
+        gameTime.phase = GamePhase.CULTIVATION
         players = emptyList()
     }
 
@@ -81,7 +78,7 @@ class Game(
     }
 
     fun detectBattlePhase() {
-        inCultivationPhase = !grove.readyForBattlePhase
+        gameTime.phase = if (grove.readyForBattlePhase) GamePhase.BATTLE else GamePhase.CULTIVATION
     }
 
     fun setupBattlePhase() {
