@@ -101,13 +101,14 @@ class StackManager(
         dice.clear()
     }
 
-    fun trashSeedlingCards() {
+    fun trashSeedlingCards(): List<CardID> {
         val seedlingCards = cards.cardIds.filter { cardId ->
             cardManager.getCard(cardId)?.type == FlourishType.SEEDLING
         }
         seedlingCards.forEach { cardId ->
             cards.remove(cardId)
         }
+        return seedlingCards
     }
 
     fun shuffle() {

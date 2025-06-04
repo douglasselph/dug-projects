@@ -6,6 +6,7 @@ import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 
 /**
@@ -132,12 +133,15 @@ data class EventTurn(
     }
 }
 
-data class EventBattle(
+data class EventBattleTransition(
     override val turn: Int,
-    val scores: List<ScoreInfo>
-) : ChronicleEntry(0, turn) {
+    val score: PlayerScore,
+    val trashedSeedlings: List<String>
+) : ChronicleEntry(score.playerId, turn) {
     override fun toString(): String {
-        return "+++ Battle Begins on Turn $turn +++"
+        val trashed = trashedSeedlings.joinToString(",")
+        val trashedReport = if (trashed.isEmpty()) ": No seedlings" else ": $trashed"
+        return "+++ Battle Begins Player $playerId $trashedReport +++"
     }
 }
 

@@ -45,8 +45,6 @@ class RunGame(
         }
         game.setupBattlePhase()
 
-        chronicle(Moment.EVENT_BATTLE(game.score))
-
         while (!game.isGameFinished) {
             gameTime.turn++
             chronicle(Moment.EVENT_TURN(game.players))

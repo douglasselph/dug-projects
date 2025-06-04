@@ -191,9 +191,11 @@ class DeckManager(
         compost.clear()
     }
 
-    fun trashSeedlingCards() {
-        supply.trashSeedlingCards()
-        hand.trashSeedlingCards()
-        compost.trashSeedlingCards()
+    fun trashSeedlingCards(): List<CardID> {
+        val trashed = mutableListOf<CardID>()
+        trashed.addAll(supply.trashSeedlingCards())
+        trashed.addAll(hand.trashSeedlingCards())
+        trashed.addAll(compost.trashSeedlingCards())
+        return trashed
     }
 } 

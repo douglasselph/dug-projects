@@ -1,6 +1,36 @@
-package dugsolutions.leaf.chronicle.domain
+package dugsolutions.leaf.chronicle.local
 
 import dugsolutions.leaf.cards.CardManager
+import dugsolutions.leaf.chronicle.domain.AcquireCardEntry
+import dugsolutions.leaf.chronicle.domain.AcquireDieEntry
+import dugsolutions.leaf.chronicle.domain.AddToThornEntry
+import dugsolutions.leaf.chronicle.domain.AddToTotalEntry
+import dugsolutions.leaf.chronicle.domain.AdjustDieEntry
+import dugsolutions.leaf.chronicle.domain.AdjustDieToMax
+import dugsolutions.leaf.chronicle.domain.AdornEntry
+import dugsolutions.leaf.chronicle.domain.ChronicleEntry
+import dugsolutions.leaf.chronicle.domain.DeflectDamageEntry
+import dugsolutions.leaf.chronicle.domain.DeliverDamageEntry
+import dugsolutions.leaf.chronicle.domain.DiscardCardEntry
+import dugsolutions.leaf.chronicle.domain.DiscardDieEntry
+import dugsolutions.leaf.chronicle.domain.DrawCardEntry
+import dugsolutions.leaf.chronicle.domain.DrawDieEntry
+import dugsolutions.leaf.chronicle.domain.DrawnHandEntry
+import dugsolutions.leaf.chronicle.domain.EventBattleTransition
+import dugsolutions.leaf.chronicle.domain.EventTurn
+import dugsolutions.leaf.chronicle.domain.Finished
+import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.chronicle.domain.OrderingEntry
+import dugsolutions.leaf.chronicle.domain.PlayCardEntry
+import dugsolutions.leaf.chronicle.domain.RerollEntry
+import dugsolutions.leaf.chronicle.domain.RetainCardEntry
+import dugsolutions.leaf.chronicle.domain.RetainDieEntry
+import dugsolutions.leaf.chronicle.domain.ReuseCardEntry
+import dugsolutions.leaf.chronicle.domain.ScoreInfo
+import dugsolutions.leaf.chronicle.domain.TrashCardEntry
+import dugsolutions.leaf.chronicle.domain.TrashDieEntry
+import dugsolutions.leaf.chronicle.domain.TrashForEffect
+import dugsolutions.leaf.chronicle.domain.UpgradeDieEntry
 import dugsolutions.leaf.chronicle.report.ReportDamage
 import dugsolutions.leaf.chronicle.report.ReportGameBrief
 import dugsolutions.leaf.chronicle.report.ReportPlayer
@@ -130,12 +160,11 @@ class TransformMomentToEntry(
                     scores = moment.players.map { player -> ScoreInfo(player.score) }
                 )
 
-            is Moment.EVENT_BATTLE ->
-                EventBattle(
+            is Moment.EVENT_BATTLE_TRANSITION ->
+                EventBattleTransition(
                     turn = gameTime.turn + 1,
-                    scores = moment.result.players.map { data ->
-                        ScoreInfo(data.player.score)
-                    }
+                    score = moment.player.score,
+                    trashedSeedlings = moment.trashedSeedlings.mapNotNull { cardManager.getCard(it)?.name }
                 )
 
             is Moment.FINISHED ->

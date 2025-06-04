@@ -81,7 +81,7 @@ class Game(
         gameTime.phase = if (grove.readyForBattlePhase) GamePhase.BATTLE else GamePhase.CULTIVATION
     }
 
-    suspend fun setupBattlePhase() { // TODO: Unit test
+    suspend fun setupBattlePhase() {
         battlePhaseTransition(players)
     }
 

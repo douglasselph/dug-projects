@@ -1,7 +1,7 @@
 package dugsolutions.leaf.chronicle.report
 
 import dugsolutions.leaf.chronicle.domain.GameSummary
-import dugsolutions.leaf.chronicle.domain.TestOutputFile
+import dugsolutions.leaf.chronicle.local.TestOutputFile
 
 class WriteGameSummaries(
     private val testOutputFile: TestOutputFile,

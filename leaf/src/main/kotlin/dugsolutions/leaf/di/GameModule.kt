@@ -3,8 +3,8 @@ package dugsolutions.leaf.di
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
-import dugsolutions.leaf.chronicle.domain.TestOutputFile
-import dugsolutions.leaf.chronicle.domain.TransformMomentToEntry
+import dugsolutions.leaf.chronicle.local.TestOutputFile
+import dugsolutions.leaf.chronicle.local.TransformMomentToEntry
 import dugsolutions.leaf.chronicle.report.GenerateGameSummaries
 import dugsolutions.leaf.chronicle.report.GenerateGameSummary
 import dugsolutions.leaf.chronicle.report.ReportDamage
@@ -174,7 +174,7 @@ val gameModule: Module = module {
     single { ManageAcquiredFloralTypes() }
     single { MatchingBloomCard(get()) }
     single { BestFlowerCards(get()) }
-    single { BattlePhaseTransition(get(), get()) }
+    single { BattlePhaseTransition(get(), get(), get()) }
 
     single { Game(get(), get(), get(), get(), get(), get()) }
     single { RunGame(get(), get(), get()) }

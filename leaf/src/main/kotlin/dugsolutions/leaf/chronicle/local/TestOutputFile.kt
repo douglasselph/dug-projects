@@ -1,4 +1,4 @@
-package dugsolutions.leaf.chronicle.domain
+package dugsolutions.leaf.chronicle.local
 
 import java.io.File
 

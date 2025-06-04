@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
 import io.mockk.coVerify
@@ -17,6 +18,7 @@ class BattlePhaseTransitionTest {
     private lateinit var mockPlayer: Player
     private lateinit var mockBestFlowerCards: BestFlowerCards
     private lateinit var mockMatchingBloomCard: MatchingBloomCard
+    private lateinit var mockChronicle: GameChronicle
 
     private lateinit var SUT: BattlePhaseTransition
 
@@ -25,8 +27,9 @@ class BattlePhaseTransitionTest {
         mockPlayer = mockk(relaxed = true)
         mockBestFlowerCards = mockk(relaxed = true)
         mockMatchingBloomCard = mockk(relaxed = true)
+        mockChronicle = mockk(relaxed = true)
 
-        SUT = BattlePhaseTransition(mockBestFlowerCards, mockMatchingBloomCard)
+        SUT = BattlePhaseTransition(mockBestFlowerCards, mockMatchingBloomCard, mockChronicle)
     }
 
     @Test
@@ -63,6 +66,8 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.addCardToSupply(flower1.id) }
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.reset() }
+        verify { mockPlayer.trashSeedlingCards() }
+        verify { mockChronicle(any()) }
         coVerify { mockPlayer.drawHand() }
     }
 
@@ -88,6 +93,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower2.id) }
         verify { mockPlayer.clearFloralCards() }
+        verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
         coVerify { mockPlayer.drawHand() }
     }
@@ -121,6 +127,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower2.id) }
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower3.id) }
         verify { mockPlayer.clearFloralCards() }
+        verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
         coVerify { mockPlayer.drawHand() }
     }
@@ -154,6 +161,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower2.id) }
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower3.id) }
         verify { mockPlayer.clearFloralCards() }
+        verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
         coVerify { mockPlayer.drawHand() }
     }
@@ -180,6 +188,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 1) { mockPlayer.addCardToSupply(bloom1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(bloom2.id) }
         verify { mockPlayer.clearFloralCards() }
+        verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
         coVerify { mockPlayer.drawHand() }
     }
@@ -201,6 +210,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 2) { mockPlayer.addCardToSupply(bloom1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower1.id) }
         verify { mockPlayer.clearFloralCards() }
+        verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
         coVerify { mockPlayer.drawHand() }
     }
@@ -236,6 +246,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer2.addCardToSupply(flower1.id) }
         verify { mockPlayer2.clearFloralCards() }
         verify { mockPlayer2.reset() }
+        verify { mockPlayer.trashSeedlingCards() }
         coVerify { mockPlayer.drawHand() }
     }
 

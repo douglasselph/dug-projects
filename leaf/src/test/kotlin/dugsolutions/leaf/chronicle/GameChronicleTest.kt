@@ -2,7 +2,7 @@ package dugsolutions.leaf.chronicle
 
 import dugsolutions.leaf.chronicle.domain.ChronicleEntry
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.chronicle.domain.TransformMomentToEntry
+import dugsolutions.leaf.chronicle.local.TransformMomentToEntry
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.player.Player
 import io.mockk.every

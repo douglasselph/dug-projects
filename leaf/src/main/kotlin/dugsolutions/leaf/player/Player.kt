@@ -295,8 +295,8 @@ open class Player(
         cardsReused.clear()
     }
 
-    fun trashSeedlingCards() {
-        deckManager.trashSeedlingCards()
+    fun trashSeedlingCards(): List<CardID> {
+        return deckManager.trashSeedlingCards()
     }
 
     fun clearFloralCards() {
