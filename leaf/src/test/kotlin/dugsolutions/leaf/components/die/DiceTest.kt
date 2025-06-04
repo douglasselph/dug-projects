@@ -292,7 +292,7 @@ class DiceTest {
         val result = SUT.toString()
 
         // Assert
-        assertEquals("1D4, 1D6, 1D8, 1D12", result)
+        assertEquals("1D4,1D6,1D8,1D12", result)
     }
 
     @Test
@@ -306,7 +306,7 @@ class DiceTest {
         val result = SUT.toString()
 
         // Assert
-        assertEquals("2D4, 2D6", result)
+        assertEquals("2D4,2D6", result)
     }
 
     @Test

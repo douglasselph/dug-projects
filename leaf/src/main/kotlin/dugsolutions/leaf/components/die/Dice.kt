@@ -189,7 +189,7 @@ class Dice(dice: List<Die> = emptyList()) {
                 .sortedBy { it.key } // Sort by number of sides
                 .filter { it.value.isNotEmpty() } // Ensure we don't include empty groups
                 .map { (sides, diceList) -> "${diceList.size}D$sides" }
-                .joinToString(", ")
+                .joinToString(",")
         }
     }
 

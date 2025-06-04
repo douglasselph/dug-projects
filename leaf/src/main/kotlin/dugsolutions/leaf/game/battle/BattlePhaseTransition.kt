@@ -7,11 +7,11 @@ class BattlePhaseTransition(
     private val matchingBloomCard: MatchingBloomCard
 ) {
 
-    operator fun invoke(players: List<Player>) {
+    suspend operator fun invoke(players: List<Player>) {
         players.forEach { player -> invoke(player) }
     }
 
-    private operator fun invoke(player: Player) {
+    private suspend operator fun invoke(player: Player) {
 
         val bestMatchingFlowerCards = bestFlowerCards(player)
         val bestMatchingBloomCards = bestMatchingFlowerCards.map { matchingBloomCard(it) }
@@ -32,9 +32,8 @@ class BattlePhaseTransition(
         player.floralCards.forEach {
             flowerCard -> player.addCardToSupply(flowerCard.id)
         }
-
-        // Clear floral cards and resupply
         player.clearFloralCards()
-        player.resupply()
+        player.reset()
+        player.drawHand()
     }
 }

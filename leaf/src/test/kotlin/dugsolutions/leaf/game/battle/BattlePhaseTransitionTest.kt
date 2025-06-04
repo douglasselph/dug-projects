@@ -3,9 +3,11 @@ package dugsolutions.leaf.game.battle
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,7 +30,7 @@ class BattlePhaseTransitionTest {
     }
 
     @Test
-    fun invoke_whenNoFlowerCards_doesNotAddAnyBlooms() {
+    fun invoke_whenNoFlowerCards_doesNotAddAnyBlooms() = runBlocking {
         // Arrange
         every { mockBestFlowerCards(mockPlayer) } returns emptyList()
         every { mockPlayer.floralCards } returns emptyList()
@@ -39,11 +41,12 @@ class BattlePhaseTransitionTest {
         // Assert
         verify(exactly = 0) { mockPlayer.addCardToSupply(any()) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
     @Test
-    fun invoke_whenSingleTypeFlowers_addsTwoBloomsOfThatType() {
+    fun invoke_whenSingleTypeFlowers_addsTwoBloomsOfThatType() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val bloom = FakeCards.fakeBloom
@@ -59,11 +62,12 @@ class BattlePhaseTransitionTest {
         verify(exactly = 2) { mockPlayer.addCardToSupply(bloom.id) }
         verify { mockPlayer.addCardToSupply(flower1.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
     @Test
-    fun invoke_whenTwoFlowerTypes_addsTwoBlooms() {
+    fun invoke_whenTwoFlowerTypes_addsTwoBlooms() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val flower2 = FakeCards.fakeFlower2
@@ -84,11 +88,12 @@ class BattlePhaseTransitionTest {
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower2.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
     @Test
-    fun invoke_whenManyFlowerTypes_gathersBloomOfMostFlowers() {
+    fun invoke_whenManyFlowerTypes_gathersBloomOfMostFlowers() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val flower2 = FakeCards.fakeFlower2
@@ -116,11 +121,12 @@ class BattlePhaseTransitionTest {
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower2.id) }
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower3.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
     @Test
-    fun invoke_whenManyFlowerTypes2_gathersBloomOfMostFlowers() {
+    fun invoke_whenManyFlowerTypes2_gathersBloomOfMostFlowers() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val flower2 = FakeCards.fakeFlower2
@@ -148,11 +154,12 @@ class BattlePhaseTransitionTest {
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower2.id) }
         verify(exactly = 2) { mockPlayer.addCardToSupply(flower3.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
     @Test
-    fun invoke_whenSinglePlayerWithTwoFlowerCards_addsCardsToSupplyAndClearsFloralArray() {
+    fun invoke_whenSinglePlayerWithTwoFlowerCards_addsCardsToSupplyAndClearsFloralArray() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val flower2 = FakeCards.fakeFlower2
@@ -166,18 +173,19 @@ class BattlePhaseTransitionTest {
 
         // Act
         SUT(listOf(mockPlayer))
-        
+
         // Assert
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower2.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(bloom1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(bloom2.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
-    
+
     @Test
-    fun invoke_whenSinglePlayerWithOneFlowerCard_addsCardTwiceToSupply() {
+    fun invoke_whenSinglePlayerWithOneFlowerCard_addsCardTwiceToSupply() = runBlocking {
         // Arrange
         val flower1 = FakeCards.fakeFlower
         val bloom1 = FakeCards.fakeBloom
@@ -188,16 +196,17 @@ class BattlePhaseTransitionTest {
 
         // Act
         SUT(listOf(mockPlayer))
-        
+
         // Assert
         verify(exactly = 2) { mockPlayer.addCardToSupply(bloom1.id) }
         verify(exactly = 1) { mockPlayer.addCardToSupply(flower1.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
+        verify { mockPlayer.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
-    
+
     @Test
-    fun invoke_whenMultiplePlayers_processesEachPlayer() {
+    fun invoke_whenMultiplePlayers_processesEachPlayer() = runBlocking {
         // Arrange
         val mockPlayer2 = mockk<Player>(relaxed = true)
         val flower1 = FakeCards.fakeFlower
@@ -214,19 +223,20 @@ class BattlePhaseTransitionTest {
 
         // Act
         SUT(listOf(mockPlayer, mockPlayer2))
-        
+
         // Assert
         verify { mockPlayer.addCardToSupply(flower1.id) }
         verify { mockPlayer.addCardToSupply(flower2.id) }
         verify { mockPlayer.addCardToSupply(bloom1.id) }
         verify { mockPlayer.addCardToSupply(bloom2.id) }
         verify { mockPlayer.clearFloralCards() }
-        verify { mockPlayer.resupply() }
-        
+        verify { mockPlayer.reset() }
+
         verify(exactly = 2) { mockPlayer2.addCardToSupply(bloom1.id) }
         verify { mockPlayer2.addCardToSupply(flower1.id) }
         verify { mockPlayer2.clearFloralCards() }
-        verify { mockPlayer2.resupply() }
+        verify { mockPlayer2.reset() }
+        coVerify { mockPlayer.drawHand() }
     }
 
 } 
