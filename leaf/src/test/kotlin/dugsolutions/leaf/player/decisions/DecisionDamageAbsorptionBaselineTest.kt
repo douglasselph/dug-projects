@@ -4,10 +4,13 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD
 import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
+import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.tool.RandomizerTD
+import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.BeforeEach
@@ -23,23 +26,28 @@ class DecisionDamageAbsorptionBaselineTest {
     private lateinit var player: PlayerTD
     private lateinit var sampleDie: SampleDie
     private lateinit var costScore: CostScore
+    private lateinit var cardEffectBattleScoreFactory: CardEffectBattleScoreFactory
+    private lateinit var cardEffectBattleScore: CardEffectBattleScore
 
     private lateinit var SUT: DecisionDamageAbsorptionBaseline
 
     @BeforeEach
     fun setup() {
-
         val randomizer = RandomizerTD()
         costScore = mockk(relaxed = true)
         val gameCardsFactory = GameCardsFactory(randomizer, costScore)
         cardManager = CardManager(gameCardsFactory)
         cardManager.loadCards(FakeCards.ALL_CARDS)
+        cardEffectBattleScoreFactory = mockk(relaxed = true)
+        cardEffectBattleScore = mockk(relaxed = true)
         player = PlayerTD(1, cardManager)
         sampleDie = SampleDie(RandomizerTD())
         player.addCardToCompost(FakeCards.fakeBloom.id)
         player.addDieToCompost(sampleDie.d10)
+        player.useDeckManager = false
+        every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
-        SUT = DecisionDamageAbsorptionBaseline(player, cardManager)
+        SUT = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
 
         // Verify dice resilience values (sides)
         assertEquals(4, sampleDie.d4.sides)
@@ -87,12 +95,16 @@ class DecisionDamageAbsorptionBaselineTest {
         assertEquals(4, card.resilience, "Card resilience value must be 4 for this test")
         
         player.incomingDamage = card.resilience
-        player.addCardToHand(card.id)
-        player.addCardToHand(FakeCards.fakeCanopy.id)
+        player.addCardToHand(card)
+        player.addCardToHand(FakeCards.fakeCanopy)
         
         // Verify die resilience value
         assertEquals(4, sampleDie.d4.sides, "Die sides must be 4 for this test")
         player.addDieToHand(sampleDie.d4)
+        
+        // Mock card effect battle score to prefer the vine card
+        every { cardEffectBattleScore(card) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 2
         
         // Act
         val result = SUT()
@@ -121,6 +133,9 @@ class DecisionDamageAbsorptionBaselineTest {
         assertEquals(5, FakeCards.fakeCanopy.resilience, "Card resilience must be 5 for this test")
         player.addCardToHand(FakeCards.fakeCanopy.id)
         
+        // Mock card effect battle score to prefer using dice over cards
+        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 2
+        
         // Act
         val result = SUT()
         
@@ -144,6 +159,10 @@ class DecisionDamageAbsorptionBaselineTest {
         player.addCardToHand(FakeCards.fakeRoot.id)
         player.addDieToHand(sampleDie.d4)
         player.addDieToHand(sampleDie.d6)
+        
+        // Mock card effect battle score to prefer using one card + d6
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeRoot) } returns 2
         
         // Act
         val result = SUT()
@@ -179,12 +198,17 @@ class DecisionDamageAbsorptionBaselineTest {
         
         player.incomingDamage = 10
         // Add 3 cards to hand
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeVine.id)
-        player.addCardToHand(FakeCards.fakeCanopy.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeVine)
+        player.addCardToHand(FakeCards.fakeCanopy)
         // Add dice to all places
         player.addDieToHand(d4)
         player.addDieToCompost(d6)
+        
+        // Mock card effect battle score to prefer preserving Canopy
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 2
+        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 3
         
         // Act
         val result = SUT()
@@ -212,8 +236,14 @@ class DecisionDamageAbsorptionBaselineTest {
         val d8 = sampleDie.d8
         player.addDieToHand(d8)
         // Add cards to various places
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeCanopy.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeCanopy)
+        // All cards are not allowed if these are our last cards.
+        player.addCardToSupply(FakeCards.fakeVine)
+        
+        // Mock card effect battle score to prefer using cards over d8
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 2
+        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 5
         
         // Act
         val result = SUT()
@@ -235,14 +265,18 @@ class DecisionDamageAbsorptionBaselineTest {
         
         player.incomingDamage = 20
         // Add cards to hand
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeVine.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeVine)
         // Add dice to hand
         player.addDieToHand(sampleDie.d4)
         player.addDieToHand(sampleDie.d6)
         // Cards and dice in other places
-        player.addCardToCompost(FakeCards.fakeCanopy.id)
+        player.addCardToCompost(FakeCards.fakeCanopy)
         player.addDieToCompost(sampleDie.d8)
+        
+        // Mock card effect battle score to prefer using all available resources
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 2
         
         // Act
         val result = SUT()
@@ -261,7 +295,10 @@ class DecisionDamageAbsorptionBaselineTest {
         assertEquals(5, FakeCards.fakeCanopy.resilience, "Canopy resilience must be 5 for this test")
         
         player.incomingDamage = 5
-        player.addCardToHand(FakeCards.fakeCanopy.id)
+        player.addCardToHand(FakeCards.fakeCanopy)
+        
+        // Mock card effect battle score
+        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 1
         
         // Act
         val result = SUT()
@@ -282,10 +319,15 @@ class DecisionDamageAbsorptionBaselineTest {
         assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
 
         player.incomingDamage = 9
-        player.addCardToHand(FakeCards.fakeBloom.id)
-        player.addCardToHand(FakeCards.fakeVine.id)
-        player.addCardToHand(FakeCards.fakeSeedling.id)
+        player.addCardToHand(FakeCards.fakeBloom)
+        player.addCardToHand(FakeCards.fakeVine)
+        player.addCardToHand(FakeCards.fakeSeedling)
         player.addDieToHand(sampleDie.d4)
+        
+        // Mock card effect battle score to prefer using non-bloom cards
+        every { cardEffectBattleScore(FakeCards.fakeBloom) } returns 6
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 2
         
         // Act
         val result = SUT()
@@ -310,11 +352,17 @@ class DecisionDamageAbsorptionBaselineTest {
         assertEquals(1, FakeCards.fakeSeedling2.resilience, "Seedling2 resilience must be 1 for this test")
 
         player.incomingDamage = 6
-        player.addCardToHand(FakeCards.fakeVine.id)
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeSeedling2.id)
+        player.addCardToHand(FakeCards.fakeVine)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeSeedling2)
         player.addDieToHand(sampleDie.d6)
         player.addDieToHand(sampleDie.d4)
+        
+        // Mock card effect battle score to prefer using d6
+        every { cardEffectBattleScore(any()) } returns 10
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 8
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 7
+        every { cardEffectBattleScore(FakeCards.fakeSeedling2) } returns 9
         
         // Act
         val result = SUT()
@@ -335,13 +383,19 @@ class DecisionDamageAbsorptionBaselineTest {
         // Verify resilience values
         assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
         assertEquals(4, FakeCards.fakeVine.resilience, "Vine resilience must be 4 for this test")
+        assertEquals(1, FakeCards.fakeFlower.resilience, "Flower resilience expected to be 1 for this test")
         
         player.incomingDamage = 6
         // Add regular cards to hand
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeVine.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeVine)
         // Add flower card to floral array
-        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        player.addCardToFloralArray(FakeCards.fakeFlower)
+        
+        // Mock card effect battle score to prefer using regular cards
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 2
+        every { cardEffectBattleScore(FakeCards.fakeFlower) } returns 3
         
         // Act
         val result = SUT()
@@ -350,9 +404,10 @@ class DecisionDamageAbsorptionBaselineTest {
         assertNotNull(result)
         // Should use vine(4) + seedling(2) = 6 (exact match)
         // rather than just using the flower card which would be invalid
-        assertEquals(2, result.cards.size)
+        assertEquals(1, result.cards.size)
+        assertEquals(1, result.floralCards.size)
         assertEquals(0, result.dice.size)
-        assertTrue(result.cards.contains(FakeCards.fakeVine))
+        assertTrue(result.floralCards.contains(FakeCards.fakeFlower))
         assertTrue(result.cards.contains(FakeCards.fakeSeedling))
     }
 
@@ -365,9 +420,13 @@ class DecisionDamageAbsorptionBaselineTest {
         
         player.incomingDamage = 5
         // Add regular card to hand
-        player.addCardToHand(FakeCards.fakeSeedling.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
         // Add flower card to floral array
-        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        player.addCardToFloralArray(FakeCards.fakeFlower)
+        
+        // Mock card effect battle score to prefer using seedling with flower enhancement
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeFlower) } returns 2
         
         // Act
         val result = SUT()
@@ -391,6 +450,10 @@ class DecisionDamageAbsorptionBaselineTest {
         player.addCardToFloralArray(FakeCards.fakeFlower.id)
         player.addCardToFloralArray(FakeCards.fakeFlower2.id)
         
+        // Mock card effect battle score
+        every { cardEffectBattleScore(FakeCards.fakeFlower) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeFlower2) } returns 2
+        
         // Act
         val result = SUT()
         
@@ -408,10 +471,15 @@ class DecisionDamageAbsorptionBaselineTest {
         
         player.incomingDamage = 7
         // Add regular cards to hand
-        player.addCardToHand(FakeCards.fakeSeedling.id)
-        player.addCardToHand(FakeCards.fakeVine.id)
+        player.addCardToHand(FakeCards.fakeSeedling)
+        player.addCardToHand(FakeCards.fakeVine)
         // Add flower card to floral array
-        player.addCardToFloralArray(FakeCards.fakeFlower.id)
+        player.addCardToFloralArray(FakeCards.fakeFlower)
+        
+        // Mock card effect battle score to prefer using seedling with flower enhancement
+        every { cardEffectBattleScore(FakeCards.fakeSeedling) } returns 1
+        every { cardEffectBattleScore(FakeCards.fakeVine) } returns 2
+        every { cardEffectBattleScore(FakeCards.fakeFlower) } returns 3
         
         // Act
         val result = SUT()

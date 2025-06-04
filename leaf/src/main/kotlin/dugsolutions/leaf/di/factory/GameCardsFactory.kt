@@ -1,4 +1,4 @@
-package dugsolutions.leaf.di
+package dugsolutions.leaf.di.factory
 
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.CostScore

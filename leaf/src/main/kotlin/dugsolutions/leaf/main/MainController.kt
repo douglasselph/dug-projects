@@ -3,7 +3,7 @@ package dugsolutions.leaf.main
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove

@@ -3,16 +3,15 @@ package dugsolutions.leaf.player.components
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerTD
@@ -28,6 +27,7 @@ class DrawHandTest {
 
     private lateinit var deckManager: DeckManager
     private lateinit var mockDeckManager: DeckManager
+    private lateinit var floralCount: FloralCount
     private lateinit var floralArray: FloralArray
     private lateinit var cardManager: CardManager
     private lateinit var mockRetainedComponents: StackManager
@@ -61,7 +61,8 @@ class DrawHandTest {
             dieFactory
         )
         mockDeckManager = mockk(relaxed = true)
-        floralArray = FloralArray(cardManager, gameCardIDsFactory)
+        floralCount = FloralCount()
+        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
         mockRetainedComponents = mockk(relaxed = true)
         mockDecisionDirectorFactory = mockk(relaxed = true)
         mockGameChronicle = mockk(relaxed = true)

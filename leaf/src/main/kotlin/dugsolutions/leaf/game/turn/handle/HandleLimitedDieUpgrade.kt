@@ -3,7 +3,7 @@ package dugsolutions.leaf.game.turn.handle
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.player.Player
 
 class HandleLimitedDieUpgrade(

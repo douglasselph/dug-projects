@@ -5,9 +5,9 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import io.mockk.every
 import io.mockk.mockk

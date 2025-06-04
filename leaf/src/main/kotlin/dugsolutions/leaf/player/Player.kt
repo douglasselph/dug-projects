@@ -11,8 +11,8 @@ import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
@@ -136,7 +136,7 @@ open class Player(
     val allCardsInDeck: List<GameCard>
         get() = cardsInSupply + cardsInHand + cardsInCompost
 
-    val floralCards: List<GameCard>
+    open val floralCards: List<GameCard>
         get() = floralArray.cards
 
     // Game phase methods
@@ -149,7 +149,7 @@ open class Player(
     fun hasDieInHand(die: Die): Boolean =
         deckManager.hasDieInHand(die)
 
-    fun getItemsInHand(): List<HandItem> =
+    open fun getItemsInHand(): List<HandItem> =
         deckManager.getItemsInHand()
 
     fun getExtendedItems(): List<ExtendedHandItem> {

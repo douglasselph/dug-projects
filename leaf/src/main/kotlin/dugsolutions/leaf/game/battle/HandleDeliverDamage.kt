@@ -34,7 +34,9 @@ class HandleDeliverDamage(
             val attacker = reversedPlayers[i + 1]
 
             // Calculate damage to be delivered
-            val damage = attacker.pipTotal - defender.pipTotal
+            val attackerPipTotal = attacker.pipTotal
+            val defenderPipTotal = defender.pipTotal
+            val damage = attackerPipTotal - defenderPipTotal
 
             // Skip if no damage to deliver (tie of lowest versus highest)
             if (damage > 0) {
@@ -46,8 +48,8 @@ class HandleDeliverDamage(
                     }
                     chronicle(
                         Moment.DELIVER_DAMAGE(
-                            defender, damage,
-                            attacker, thornDamage
+                            defender = defender, damageToDefender = damage, defenderPipTotal = defenderPipTotal,
+                            attacker = attacker, damageToAttacker = thornDamage, attackerPipTotal = attackerPipTotal
                         )
                     )
                 }

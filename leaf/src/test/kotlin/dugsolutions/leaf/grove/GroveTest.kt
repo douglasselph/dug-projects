@@ -7,10 +7,10 @@ import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig

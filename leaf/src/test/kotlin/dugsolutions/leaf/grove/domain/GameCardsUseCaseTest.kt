@@ -2,7 +2,7 @@ package dugsolutions.leaf.grove.domain
 
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

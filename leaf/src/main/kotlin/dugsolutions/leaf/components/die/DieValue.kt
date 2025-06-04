@@ -1,6 +1,6 @@
 package dugsolutions.leaf.components.die
 
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import kotlin.math.max
 import kotlin.math.min
 

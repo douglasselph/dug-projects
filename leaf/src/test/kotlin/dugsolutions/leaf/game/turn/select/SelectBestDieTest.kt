@@ -3,7 +3,7 @@ package dugsolutions.leaf.game.turn.select
 import dugsolutions.leaf.components.DieCost
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.DieFactory
+import dugsolutions.leaf.di.factory.DieFactory
 import dugsolutions.leaf.game.acquire.domain.Credit
 import dugsolutions.leaf.game.acquire.domain.Credits
 import dugsolutions.leaf.grove.Grove

@@ -19,6 +19,14 @@ import dugsolutions.leaf.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.chronicle.report.WriteToFile
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.DieCost
+import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactoryUniform
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.di.factory.PlayerFactory
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.game.acquire.AcquireItem
@@ -69,8 +77,10 @@ import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
+import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
+import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
@@ -134,7 +144,9 @@ val gameModule: Module = module {
         )
     }
 
-    factory { FloralArray(get(), get()) }
+    single { FloralCount() }
+
+    factory { FloralArray(get(), get(), get()) }
     factory { StackManager(get(), get()) }
 
     factory {
@@ -183,7 +195,7 @@ val gameModule: Module = module {
     single { WriteChronicleResults(get(), get()) }
     single { WriteGameSummaries(get(), get(), get(), get()) }
 
-    single { DecisionDirectorFactory(get()) }
+    single { DecisionDirectorFactory(get(), get()) }
 
     single { GameCardsUseCase(get()) }
     single { Grove(get(), get()) }
@@ -205,6 +217,7 @@ val gameModule: Module = module {
 
     single { PlayerRound(get(), get()) }
     single { DieCost() }
+
     single { HandleDeliverDamage(get(), get()) }
     single { HandleCleanup() }
     single { HandleAbsorbDamage(get()) }
@@ -245,6 +258,9 @@ val gameModule: Module = module {
     single { AcquireCardEvaluator(get()) }
     single { AcquireDieEvaluator(get(), get()) }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
+
+    single { EffectBattleScore() }
+    single { CardEffectBattleScoreFactory(get(), get()) }
 
     single { PlayerOrder(get()) }
     single { GameTime() }

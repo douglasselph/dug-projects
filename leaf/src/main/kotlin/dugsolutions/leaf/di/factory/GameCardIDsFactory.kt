@@ -1,4 +1,4 @@
-package dugsolutions.leaf.di
+package dugsolutions.leaf.di.factory
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.components.CardID

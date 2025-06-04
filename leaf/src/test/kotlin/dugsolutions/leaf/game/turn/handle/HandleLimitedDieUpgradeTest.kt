@@ -4,8 +4,8 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.components.die.MissingDieException
 import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.tool.RandomizerTD
 import io.mockk.every

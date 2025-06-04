@@ -2,8 +2,8 @@ package dugsolutions.leaf.game.turn.config
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.player.PlayerTD
 import dugsolutions.leaf.tool.RandomizerTD
 import org.junit.jupiter.api.Assertions.assertFalse

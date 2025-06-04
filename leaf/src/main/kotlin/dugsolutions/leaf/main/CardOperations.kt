@@ -5,7 +5,7 @@ import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.common.Commons.TEST_CARD_LIST
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.tool.CardRegistry
 

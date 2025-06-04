@@ -4,15 +4,13 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
 import dugsolutions.leaf.tool.Randomizer
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class HasDieValueTest {
 

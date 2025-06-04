@@ -5,18 +5,25 @@ import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.components.HandItem
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.DecisionDirectorFactory
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryRandom
-import dugsolutions.leaf.di.GameCardIDsFactory
+import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.di.factory.DecisionDirectorFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.di.factory.GameCardIDsFactory
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
+import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
+import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
+import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 import dugsolutions.leaf.tool.RandomizerTD
+import io.mockk.every
 import io.mockk.mockk
+import kotlin.reflect.jvm.internal.impl.metadata.ProtoBuf.Effect
 
 class PlayerTD private constructor(
     deckManager: DeckManager,
@@ -50,9 +57,13 @@ class PlayerTD private constructor(
             val floralArray = mockk<FloralArray>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val retainedComponents = mockk<StackManager>(relaxed = true)
+            val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
+            val cardEffectBattleScore = mockk<CardEffectBattleScore>(relaxed = true)
             val dieFactory = DieFactoryRandom(randomizerTD)
             val costScore = CostScore()
-            val decisionDirectorFactory = DecisionDirectorFactory(cardManager)
+            val decisionDirectorFactory = DecisionDirectorFactory(cardManager, cardEffectBattleScoreFactory)
+
+            every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
             return PlayerTD(
                 deckManager,
@@ -93,13 +104,15 @@ class PlayerTD private constructor(
             val supplyStack = StackManager(cardManager, gameCardIDsFactory)
             val handStack = StackManager(cardManager, gameCardIDsFactory)
             val compostStack = StackManager(cardManager, gameCardIDsFactory)
-            val floralArray = FloralArray(cardManager, gameCardIDsFactory)
+            val floralCount = FloralCount()
+            val floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
             val dieFactory = DieFactoryRandom(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, compostStack, dieFactory)
             val retainedComponents = mockk<StackManager>(relaxed = true)
+            val effectBattleScore = EffectBattleScore()
+            val cardEffectBattleScoreFactory = CardEffectBattleScoreFactory(effectBattleScore, floralCount)
             val costScore = CostScore()
-            val decisionDirectorFactory = DecisionDirectorFactory(cardManager)
-            val chronicle = mockk<GameChronicle>(relaxed = true)
+            val decisionDirectorFactory = DecisionDirectorFactory(cardManager, cardEffectBattleScoreFactory)
 
             return PlayerTD(
                 deckManager,
@@ -174,6 +187,7 @@ class PlayerTD private constructor(
     private val _cardsInHand = mutableListOf<GameCard>()
     private val _cardsInSupply = mutableListOf<GameCard>()
     private val _cardsInCompost = mutableListOf<GameCard>()
+    private val _floralCards = mutableListOf<GameCard>()
 
     override val cardsInHand: List<GameCard>
         get() = if (useDeckManager) super.cardsInHand else _cardsInHand
@@ -183,6 +197,9 @@ class PlayerTD private constructor(
 
     override val cardsInCompost: List<GameCard>
         get() = if (useDeckManager) super.cardsInCompost else _cardsInCompost
+
+    override val floralCards: List<GameCard>
+        get() = if (useDeckManager) super.floralCards else _floralCards
 
     fun addCardToHand(card: GameCard) {
         super.addCardToHand(card.id)
@@ -203,6 +220,16 @@ class PlayerTD private constructor(
         list.forEach { addCardToSupply(it) }
     }
 
+    fun addCardToFloralArray(card: GameCard) {
+        super.addCardToFloralArray(card.id)
+        _floralCards.add(card)
+    }
+
+    fun addCardToCompost(card: GameCard) {
+        super.addCardToCompost(card.id)
+        _cardsInCompost.add(card)
+    }
+
     override fun removeCardFromHand(cardId: CardID): Boolean {
         _cardsInHand.find { it.id == cardId }?.let { _cardsInHand.remove(it) }
         return super.removeCardFromHand(cardId)
@@ -215,6 +242,10 @@ class PlayerTD private constructor(
     }
 
     var gotCardIds = mutableListOf<CardID>()
+
+    override fun getItemsInHand(): List<HandItem> {
+        return _cardsInHand.map { HandItem.Card(it) } + _diceInHand.dice.map { HandItem.Dice(it) }
+    }
 
     override fun discard(cardId: CardID): Boolean {
         super.discard(cardId)

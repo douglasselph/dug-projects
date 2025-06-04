@@ -7,9 +7,9 @@ import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.di.DieFactory
-import dugsolutions.leaf.di.DieFactoryUniform
-import dugsolutions.leaf.di.GameCardsFactory
+import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.di.factory.DieFactoryUniform
+import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.game.acquire.domain.Adjusted
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player

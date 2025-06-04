@@ -18,8 +18,8 @@ sealed class Moment {
     data class ADD_TO_TOTAL(val player: Player, val amount: Int): Moment()
     data class ADORN(val player: Player, val cardId: CardID): Moment()
     data class DELIVER_DAMAGE(
-        val defender: Player, val damageToDefender: Int,
-        val attacker: Player, val damageToAttacker: Int
+        val defender: Player, val damageToDefender: Int, val defenderPipTotal: Int,
+        val attacker: Player, val damageToAttacker: Int, val attackerPipTotal: Int
     ) : Moment()
     data class DRAW_CARD(val player: Player, val cardId: CardID) : Moment()
     data class DRAW_DIE(val player: Player, val die: Die): Moment()

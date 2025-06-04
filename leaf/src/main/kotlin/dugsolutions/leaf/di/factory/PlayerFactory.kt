@@ -1,7 +1,6 @@
-package dugsolutions.leaf.di
+package dugsolutions.leaf.di.factory
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.components.CostScore
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.components.DeckManager
