@@ -139,9 +139,6 @@ open class Player(
     open val floralCards: List<GameCard>
         get() = floralArray.cards
 
-    // Game phase methods
-    fun hasIncomingDamage(): Boolean = incomingDamage > 0
-
     // Hand management methods
     fun hasCardInHand(cardId: CardID): Boolean =
         deckManager.hasCardInHand(cardId)

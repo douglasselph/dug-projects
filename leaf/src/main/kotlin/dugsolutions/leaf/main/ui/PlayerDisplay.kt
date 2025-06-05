@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.Cost
 import dugsolutions.leaf.components.CostElement
@@ -50,12 +52,21 @@ fun PlayerDisplay(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Player name
-            Text(
-                text = player.name,
-                style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            // Player name and score
+            Row(
+                modifier = Modifier.padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = player.name,
+                    style = MaterialTheme.typography.h5
+                )
+                Text(
+                    text = "Score: ${player.score}",
+                    style = MaterialTheme.typography.subtitle1,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
 
             if (player.showDrawCount) {
                 DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
@@ -145,6 +156,7 @@ fun main() = application {
         // Sample player data
         val samplePlayer = PlayerInfo(
             name = "Player 1",
+            score = PlayerScore(1, scoreDice = 10, scoreCards = 15),
             handCards = listOf(
                 gatherCardInfo(
                     incoming = GameCard(

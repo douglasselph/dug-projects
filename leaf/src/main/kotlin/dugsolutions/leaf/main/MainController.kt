@@ -39,9 +39,9 @@ class MainController(
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(dispatcher)
+    private var updateGrove: Boolean = false
 
     init {
-        mainDomainManager.setActionButton(ActionButton.RUN)
         chronicle.hasNewEntry = {
             reportNewEntries()
         }
@@ -64,6 +64,7 @@ class MainController(
         mainDomainManager.setActionButton(ActionButton.NONE)
         scope.launch {
             runGame().collect { gameEvent ->
+                mainDomainManager.updatePlayerData() // TODO: Unit tests
                 when (gameEvent) {
                     is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
                     is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput("Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}")
@@ -71,6 +72,9 @@ class MainController(
                     GameEvent.WaitForStep -> {
                         mainDomainManager.setActionButton(ActionButton.NEXT)
                     }
+                }
+                if (updateGrove) {
+                    mainDomainManager.clearGroveCardHighlights()
                 }
             }
         }
@@ -95,6 +99,7 @@ class MainController(
 
     fun onGroveCardSelected(cardInfo: CardInfo) {
         mainDecisions.onGroveCardSelected(cardInfo)
+        updateGrove = true
     }
 
     fun onStepEnabledToggled(value: Boolean) {
@@ -134,6 +139,7 @@ class MainController(
             )
         )
         mainDomainManager.initialize()
+        mainDomainManager.setActionButton(ActionButton.RUN)
     }
 
     private fun seedlings(): GameCards {

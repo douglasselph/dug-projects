@@ -100,7 +100,7 @@ class TransformMomentToEntry(
 
             is Moment.DELIVER_DAMAGE ->
                 DeliverDamageEntry(
-                    playerId = moment.attacker.id,
+                    playerId = moment.defender.id,
                     turn = gameTime.turn,
                     report = reportDamage(moment)
                 )
@@ -229,6 +229,13 @@ class TransformMomentToEntry(
                 AdjustDieToMax(
                     playerId = moment.player.id,
                     turn = gameTime.turn
+                )
+
+            is Moment.THORN_DAMAGE ->
+                DeliverDamageEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    report = reportDamage(moment)
                 )
 
             is Moment.TRASH_CARD ->

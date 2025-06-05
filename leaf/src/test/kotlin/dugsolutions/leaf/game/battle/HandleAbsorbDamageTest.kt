@@ -45,7 +45,7 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenNoIncomingDamage_doesNothing() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns false
+        every { mockPlayer.incomingDamage } returns 0
 
         // Act
         SUT(mockPlayer)
@@ -59,7 +59,7 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenNoAbsorptionDecision_doesNothing() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 2
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result()
 
         // Act
@@ -74,7 +74,7 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenAbsorptionResultWithCards_removesCards() = runBlocking {
         // Arrange
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 7
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1, fakeCard2),
             dice = emptyList(),
@@ -101,7 +101,7 @@ class HandleAbsorbDamageTest {
         val d10 = sampleDie.d10
         val d12 = sampleDie.d12
         val d20 = sampleDie.d20
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 5
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = emptyList(),
             dice = listOf(d4, d6, d8, d10, d12, d20),
@@ -127,7 +127,7 @@ class HandleAbsorbDamageTest {
         // Arrange
         val d4 = sampleDie.d4
         val d6 = sampleDie.d6
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 2
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = listOf(d4, d6),
@@ -150,7 +150,7 @@ class HandleAbsorbDamageTest {
         // Arrange
         val floralCard1 = FakeCards.fakeFlower
         val floralCard2 = FakeCards.fakeFlower2
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 1
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = emptyList(),
             dice = emptyList(),
@@ -173,7 +173,7 @@ class HandleAbsorbDamageTest {
         // Arrange
         val floralCard1 = FakeCards.fakeFlower
         val floralCard2 = FakeCards.fakeFlower2
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 2
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = emptyList(),
@@ -197,7 +197,7 @@ class HandleAbsorbDamageTest {
     fun invoke_whenHandNotEmptyAfterAbsorption_doesNotClearFloralArray() = runBlocking {
         // Arrange
         val remainingCard = mockk<GameCard>(relaxed = true)
-        every { mockPlayer.hasIncomingDamage() } returns true
+        every { mockPlayer.incomingDamage } returns 6
         coEvery { mockPlayer.decisionDirector.damageAbsorptionDecision() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = emptyList(),

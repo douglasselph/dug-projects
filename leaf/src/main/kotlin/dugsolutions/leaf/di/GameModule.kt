@@ -76,6 +76,7 @@ import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.main.local.MainDecisions
+import dugsolutions.leaf.main.local.SelectGather
 import dugsolutions.leaf.main.local.SelectItem
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
@@ -139,6 +140,7 @@ val gameModule: Module = module {
     single { GatherGroveInfo(get(), get()) }
     single { GatherPlayerInfo(get(), get()) }
     single { SelectItem() }
+    single { SelectGather(get()) }
     single { MainDomainManager(get(), get(), get(), get(), get(), get()) }
     single { MainDecisions(get(), get()) }
 

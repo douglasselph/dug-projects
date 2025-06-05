@@ -21,6 +21,9 @@ class GameCardIDs(
 
     // TODO: Unit test
     fun getCard(index: Int): GameCard? {
+        if (index < 0 || index >= _cards.size) {
+            return null
+        }
         return cardManager.getCard(get(index))
     }
 

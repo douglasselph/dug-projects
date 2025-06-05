@@ -14,7 +14,7 @@ class HandleAbsorbDamage(
      */
     suspend operator fun invoke(player: Player): Int {
         // Only handle damage if the player has incoming damage
-        if (!player.hasIncomingDamage()) return 0
+        if (player.incomingDamage <= 0) return 0
 
         // Decide how to absorb damage
         val result = player.decisionDirector.damageAbsorptionDecision()

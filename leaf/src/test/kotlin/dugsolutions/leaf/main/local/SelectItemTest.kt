@@ -1,5 +1,6 @@
 package dugsolutions.leaf.main.local
 
+import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.CardInfoFaker
 import dugsolutions.leaf.main.domain.DiceInfo
@@ -28,6 +29,7 @@ class SelectItemTest {
     fun setup() {
         mockPlayerInfo = PlayerInfo(
             name = PLAYER_NAME,
+            score = PlayerScore(1, 0, 0),
             handCards = emptyList(),
             handDice = DiceInfo(emptyList()),
             supplyDice = DiceInfo(emptyList()),

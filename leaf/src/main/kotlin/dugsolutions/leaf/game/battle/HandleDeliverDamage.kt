@@ -42,18 +42,30 @@ class HandleDeliverDamage(
             if (damage > 0) {
                 defender.incomingDamage += max(0, damage - defender.deflectDamage)
                 if (defender.incomingDamage > 0) {
-                    val thornDamage = handleAbsorbDamage(defender)
-                    if (thornDamage > 0) {
-                        attacker.incomingDamage += thornDamage
-                    }
                     chronicle(
                         Moment.DELIVER_DAMAGE(
-                            defender = defender, damageToDefender = damage, defenderPipTotal = defenderPipTotal,
-                            attacker = attacker, damageToAttacker = thornDamage, attackerPipTotal = attackerPipTotal
+                            defender = defender, damageToDefender = damage,
+                            defenderPipTotal = defenderPipTotal, attackerPipTotal = attackerPipTotal
                         )
                     )
+                    val thornDamage = handleAbsorbDamage(defender)
+                    if (thornDamage > 0) {
+
+                        attacker.incomingDamage += thornDamage
+                        chronicle(
+                            Moment.THORN_DAMAGE(player = attacker, thornDamage = thornDamage)
+                        )
+                    }
                 }
             }
+        }
+        val topPlayer = sortedPlayers[0]
+        val remainingDamage = max(0, topPlayer.incomingDamage - topPlayer.deflectDamage)
+        if (remainingDamage > 0) {
+            chronicle(
+                Moment.DELIVER_DAMAGE(defender = topPlayer, damageToDefender = remainingDamage)
+            )
+            handleAbsorbDamage(topPlayer)
         }
     }
 } 

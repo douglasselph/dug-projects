@@ -214,7 +214,11 @@ data class TrashCardEntry(
     override val playerId: Int,
     override val turn: Int,
     val card: GameCard
-) : ChronicleEntry(playerId, turn)
+) : ChronicleEntry(playerId, turn) {
+    override fun toString(): String {
+        return "TrashCardEntry(card=${card.id}, playerId=$playerId, turn=$turn)"
+    }
+}
 
 data class TrashDieEntry(
     override val playerId: Int,

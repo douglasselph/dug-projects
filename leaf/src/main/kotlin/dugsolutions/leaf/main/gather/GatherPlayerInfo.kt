@@ -28,6 +28,7 @@ class GatherPlayerInfo(
 
         return PlayerInfo(
             name = player.name,
+            score = player.score,
             handCards = handCards,
             handDice = handDice,
             supplyDice = supplyDice,

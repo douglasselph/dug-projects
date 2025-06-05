@@ -97,7 +97,16 @@ class MainDomainManager(
         _state.update { currentState ->
             currentState.copy(
                 turn = gameTime.turn,
-                groveInfo = gatherGroveInfo(),
+                groveInfo = gatherGroveInfo()
+            )
+        }
+    }
+
+    fun updatePlayerData() {
+        _state.update { currentState ->
+            currentState.copy(
+                turn = gameTime.turn,
+                players = game.players.map { gatherPlayerInfo(it) }
             )
         }
     }

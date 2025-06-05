@@ -1,7 +1,10 @@
 package dugsolutions.leaf.main.domain
 
+import dugsolutions.leaf.chronicle.domain.PlayerScore
+
 data class PlayerInfo(
     val name: String,
+    val score: PlayerScore,
     val handCards: List<CardInfo>,
     val handDice: DiceInfo,
     val supplyDice: DiceInfo,

@@ -18,8 +18,8 @@ sealed class Moment {
     data class ADD_TO_TOTAL(val player: Player, val amount: Int): Moment()
     data class ADORN(val player: Player, val cardId: CardID): Moment()
     data class DELIVER_DAMAGE(
-        val defender: Player, val damageToDefender: Int, val defenderPipTotal: Int,
-        val attacker: Player, val damageToAttacker: Int, val attackerPipTotal: Int
+        val defender: Player, val damageToDefender: Int,
+        val defenderPipTotal: Int = 0, val attackerPipTotal: Int = 0
     ) : Moment()
     data class DRAW_CARD(val player: Player, val cardId: CardID) : Moment()
     data class DRAW_DIE(val player: Player, val die: Die): Moment()
@@ -43,5 +43,6 @@ sealed class Moment {
     data class TRASH_CARD(val player: Player, val card: GameCard, val floralArray: Boolean = false): Moment()
     data class TRASH_DIE(val player: Player, val die: Die): Moment()
     data class TRASH_FOR_EFFECT(val player: Player, val card: GameCard, val status: DecisionShouldProcessTrashEffect.Result): Moment()
+    data class THORN_DAMAGE(val player: Player, val thornDamage: Int) : Moment()
     data class UPGRADE_DIE(val player: Player, val die: Die): Moment()
 }

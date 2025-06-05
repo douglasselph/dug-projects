@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import io.mockk.mockk
 import io.mockk.every
+import io.mockk.verify
 
 class GameCardIDsTest {
     private lateinit var cardManager: CardManager
@@ -398,5 +399,76 @@ class GameCardIDsTest {
         
         // Assert
         assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun getCard_whenIndexInRange_returnsCorrectCard() {
+        // Arrange
+        val cardId = createTestCardId(42)
+        val mockCard = mockk<GameCard>()
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            cardId,
+            createTestCardId(3)
+        ), randomizer)
+        every { cardManager.getCard(cardId) } returns mockCard
+
+        // Act
+        val result = cards.getCard(1)
+
+        // Assert
+        assertEquals(mockCard, result)
+        verify { cardManager.getCard(cardId) }
+    }
+
+    @Test
+    fun getCard_whenIndexNegative_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2),
+            createTestCardId(3)
+        ), randomizer)
+
+        // Act
+        val result = cards.getCard(-1)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenIndexBeyondSize_returnsNull() {
+        // Arrange
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            createTestCardId(2),
+            createTestCardId(3)
+        ), randomizer)
+
+        // Act
+        val result = cards.getCard(3)
+
+        // Assert
+        assertNull(result)
+    }
+
+    @Test
+    fun getCard_whenCardManagerReturnsNull_returnsNull() {
+        // Arrange
+        val cardId = createTestCardId(42)
+        val cards = GameCardIDs(cardManager, listOf(
+            createTestCardId(1),
+            cardId,
+            createTestCardId(3)
+        ), randomizer)
+        every { cardManager.getCard(cardId) } returns null
+
+        // Act
+        val result = cards.getCard(1)
+
+        // Assert
+        assertNull(result)
+        verify { cardManager.getCard(cardId) }
     }
 } 

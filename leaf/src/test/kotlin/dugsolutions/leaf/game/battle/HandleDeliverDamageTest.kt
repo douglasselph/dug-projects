@@ -6,6 +6,7 @@ import dugsolutions.leaf.components.die.DieValue
 import dugsolutions.leaf.player.PlayerTD
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -55,7 +56,6 @@ class HandleDeliverDamageTest {
         player4.diceInHand.clear()
 
         // Configure chronicle mock
-        every { mockGameChronicle(any()) } just Runs
         coEvery { mockHandleAbsorbDamage(any()) } returns 0
 
     }
@@ -81,17 +81,13 @@ class HandleDeliverDamageTest {
         // Verify the chronicle is called with the correct groupings
         verify {
             mockGameChronicle(match {
-                it is Moment.DELIVER_DAMAGE &&
-                        it.defender.id == player1.id &&
-                        it.attacker.id == player2.id
+                it is Moment.DELIVER_DAMAGE && it.defender.id == player1.id
             })
         }
 
         verify {
             mockGameChronicle(match {
-                it is Moment.DELIVER_DAMAGE &&
-                        it.defender.id == player2.id &&
-                        it.attacker.id == player3.id
+                it is Moment.DELIVER_DAMAGE && it.defender.id == player2.id
             })
         }
     }
@@ -121,16 +117,22 @@ class HandleDeliverDamageTest {
         verify {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
-                        it.damageToDefender == 2 && // 5 - 3
-                        it.damageToAttacker == 1    // Thorn
+                        it.damageToDefender == 2 // 5 - 3
+            })
+            mockGameChronicle(match {
+                it is Moment.THORN_DAMAGE &&
+                        it.thornDamage == 1    // Thorn
             })
         }
 
         verify {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
-                        it.damageToDefender == 2 && // 7 - 5
-                        it.damageToAttacker == 2    // Thorn
+                        it.damageToDefender == 2 // 7 - 5
+            })
+            mockGameChronicle(match {
+                it is Moment.THORN_DAMAGE &&
+                        it.thornDamage == 2    // Thorn
             })
         }
     }
@@ -174,15 +176,13 @@ class HandleDeliverDamageTest {
         // Chronicle should record the group damage
         verify {
             mockGameChronicle(match {
-                it is Moment.DELIVER_DAMAGE &&
-                        it.defender.id == player1.id &&
-                        it.attacker.id == player3.id
+                it is Moment.DELIVER_DAMAGE && it.defender.id == player1.id
             })
         }
     }
 
     @Test
-    fun invoke_whenTwoTiedDefendersWithThorn_eachAttackerGetsThornDamage() = runBlocking {
+    fun invoke_whenTwoTiedDefendersWithThorn_attackerGetsWithCorrectThornDamage() = runBlocking {
         // Arrange
         // Set up pip totals with combination of dice and modifiers
         player1.addDieToHand(DieValue(6, 6))  // 6 pips
@@ -213,26 +213,24 @@ class HandleDeliverDamageTest {
         // Lowest player gets hit by the tied group
         assertEquals(3, player4.incomingDamage)  // 5-2
 
-        // Verify chronicle for high->mid damage
         verify {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
                         it.defender.id == player2.id &&
-                        it.attacker.id == player1.id &&
-                        it.damageToDefender == 5 &&  // 10-5
-                        it.damageToAttacker == 1    // Thorn: 1
+                        it.damageToDefender == 5  // 10-5
             })
-        }
-
-        // Verify chronicle for mid->low damage
-        verify {
+            mockGameChronicle(match {
+                it is Moment.THORN_DAMAGE &&
+                        it.player.id == player1.id &&
+                        it.thornDamage == 1    // Thorn: 1
+            })
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
                         it.defender.id == player4.id &&
-                        it.attacker.id == player3.id &&
                         it.damageToDefender == 3     // 5-2
             })
         }
+
     }
 
     @Test
@@ -284,7 +282,6 @@ class HandleDeliverDamageTest {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
                         it.defender.id == player3.id &&
-                        it.attacker.id == player2.id &&
                         it.damageToDefender == 5
             })
         }
@@ -318,17 +315,52 @@ class HandleDeliverDamageTest {
         verify {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
-                        it.defender.id == player1.id &&
-                        it.attacker.id == player2.id
+                        it.defender.id == player1.id
             })
         }
 
         verify {
             mockGameChronicle(match {
                 it is Moment.DELIVER_DAMAGE &&
-                        it.defender.id == player2.id &&
-                        it.attacker.id == player3.id
+                        it.defender.id == player2.id
             })
         }
+    }
+
+    @Test
+    fun invoke_whenHighestPipPlayerGetsThornDamage_handlesAbsorbDamage() = runBlocking {
+        // Arrange
+        // Setup pip totals with dice
+        player1.addDieToHand(DieValue(6, 3))  // 3 pips (lowest)
+        player2.addDieToHand(DieValue(8, 7))  // 7 pips (highest)
+
+        // Player1 has thorn damage that will hit player2
+        coEvery { mockHandleAbsorbDamage(player1) } returns 2
+
+        val players = listOf(player1, player2)
+
+        // Act
+        SUT(players)
+
+        // Assert
+        assertEquals(4, player1.incomingDamage)  // No damage from above
+        assertEquals(2, player2.incomingDamage)  // 7-3 = 4 damage from player1
+
+        // Verify chronicle for the damage
+        verify {
+            mockGameChronicle(match {
+                it is Moment.DELIVER_DAMAGE &&
+                        it.defender.id == player1.id &&
+                        it.damageToDefender == 4  // 7-3
+            })
+            mockGameChronicle(match {
+                it is Moment.THORN_DAMAGE &&
+                        it.player.id == player2.id &&
+                        it.thornDamage == 2     // Thorn: 2
+            })
+        }
+
+        // Verify that handleAbsorbDamage was called for player2
+        coVerify { mockHandleAbsorbDamage(player2) }
     }
 } 

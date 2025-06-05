@@ -3,12 +3,12 @@ Seed Reduce;Seedling;-;-;ReduceCostRoot;3;-;-;-;GainFreeRoot;1;0
 Seed Reroll;Seedling;-;-;RerollAccept2nd;1;-;-;-;ReduceCostRoot;3;0
 Seed Upgrade;Seedling;-;-;UpgradeD4;1;-;-;-;UpgradeD4D6;1;0
 Seed Adjust;Seedling;-;-;AdjustBy;2;-;-;-;AddToTotal;4;0
-Root Reduce;Root;8;8;ReduceCostCanopy;2;1;ReduceCostCanopy;2;-;-;0
-Root Upgrade;Root;10;10;UpgradeD4D6;1;2;UpgradeAny;1;-;-;0
-Root Adjust;Root;12;12;DrawCard;1;2;DrawDie;1;- ;-;0
-Root Reroll;Root;8;8;RerollAccept2nd;1;1;RerollTakeBetter;1;-;-;0
-Root Retain;Root;10;10;RetainCard;1;1;RetainDieReroll;1;-;-;0
-Root Add;Root;12;12;AdjustBy;2;1;AdjustBy;3;-;-;0
+Root Reduce;Root;12;8;ReduceCostCanopy;2;1;ReduceCostCanopy;2;-;-;0
+Root Upgrade;Root;8;10;UpgradeD4D6;1;2;UpgradeAny;1;-;-;0
+Root Adjust;Root;10;12;DrawCard;1;2;DrawDie;1;- ;-;0
+Root Reroll;Root;7;8;RerollAccept2nd;1;1;RerollTakeBetter;1;-;-;0
+Root Retain;Root;12;10;RetainCard;1;1;RetainDieReroll;1;-;-;0
+Root Add;Root;11;15;AdjustBy;2;1;AdjustBy;3;-;-;0
 Canopy Deflect;Canopy;11;R 9;Deflect;2;Root;Deflect;4;-;-;1
 Canopy Draw Card;Canopy;20;R 12;DrawCard;1;Root;RetainCard;1;-;-;1
 Canopy Reduce Vine;Canopy;21;R 12;ReduceCostVine;3;Root;ReplayVine;1;-;-;1

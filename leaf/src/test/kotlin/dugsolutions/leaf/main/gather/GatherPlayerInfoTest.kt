@@ -1,5 +1,6 @@
 package dugsolutions.leaf.main.gather
 
+import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.Cost
 import dugsolutions.leaf.components.FlourishType
@@ -53,7 +54,7 @@ class GatherPlayerInfoTest {
     @Test
     fun invoke_whenPlayerHasAllComponents_returnsCompletePlayerInfo() {
         // Arrange
-        val mockPlayer = mockk<Player>()
+        val mockPlayer = mockk<Player>(relaxed = true)
 
         // Setup hand cards
         val handCard = GameCard(
@@ -73,6 +74,7 @@ class GatherPlayerInfoTest {
         )
         every { mockPlayer.cardsInHand } returns listOf(handCard)
         every { mockGatherCardInfo(any(), handCard, any()) } returns mockCardInfo
+        every { mockPlayer.score } returns PlayerScore(1, 3, 3)
 
         // Setup hand dice
         val handDice = Dice(listOf(sampleDie.d6.adjustTo(4)))
@@ -150,7 +152,7 @@ class GatherPlayerInfoTest {
     @Test
     fun invoke_whenPlayerHasEmptyComponents_returnsEmptyPlayerInfo() {
         // Arrange
-        val mockPlayer = mockk<Player>()
+        val mockPlayer = mockk<Player>(relaxed = true)
         every { mockPlayer.cardsInHand } returns emptyList()
         every { mockPlayer.diceInHand } returns Dice(emptyList())
         every { mockPlayer.diceInSupply } returns Dice(emptyList())
@@ -159,6 +161,7 @@ class GatherPlayerInfoTest {
         every { mockPlayer.cardsInSupplyCount } returns 0
         every { mockPlayer.cardsInCompostCount } returns 0
         every { mockPlayer.name } returns EMPTY_PLAYER_NAME
+        every { mockPlayer.score } returns PlayerScore(1, 0, 0)
 
         every { mockGatherDiceInfo(any(), any()) } returns DiceInfo(emptyList())
 

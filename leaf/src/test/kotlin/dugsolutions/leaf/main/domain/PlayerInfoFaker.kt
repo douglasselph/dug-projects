@@ -1,5 +1,6 @@
 package dugsolutions.leaf.main.domain
 
+import dugsolutions.leaf.chronicle.domain.PlayerScore
 import io.github.serpro69.kfaker.Faker
 import io.github.serpro69.kfaker.fakerConfig
 
@@ -36,6 +37,7 @@ object PlayerInfoFaker {
     ): PlayerInfo {
         return PlayerInfo(
             name = name,
+            score = PlayerScore(1, scoreCards = 5, scoreDice = 3),
             handCards = CardInfoFaker.createList(handCardCount),
             handDice = DiceInfo(DieInfoFaker.createList(handDieCount)),
             supplyDice = DiceInfo(DieInfoFaker.createList(supplyDieCount)),

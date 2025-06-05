@@ -13,8 +13,6 @@ import kotlin.test.assertTrue
 
 class ReportDamageTest {
 
-    private lateinit var SUT: ReportDamage
-
     companion object {
         private const val PLAYER_A_ID = 1
         private const val PLAYER_B_ID = 2
@@ -24,6 +22,8 @@ class ReportDamageTest {
 
     private val defender = mockk<Player>(relaxed = true)
     private val attacker = mockk<Player>(relaxed = true)
+
+    private lateinit var SUT: ReportDamage
 
     @BeforeEach
     fun setup() {
@@ -37,9 +37,7 @@ class ReportDamageTest {
         // Arrange
         val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
         every { moment.damageToDefender } returns DAMAGE_TO_DEFENDER
-        every { moment.damageToAttacker } returns 0
         every { moment.defender } returns defender
-        every { moment.attacker } returns attacker
         // Act
         val report = SUT(moment)
 
@@ -49,19 +47,17 @@ class ReportDamageTest {
     }
 
     @Test
-    fun invoke_whenDamageToAttackerOnly_returnsCorrectReport() {
+    fun invoke_thornDamage_whenDamageToAttackerOnly_returnsCorrectReport() {
         // Arrange
-        val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
-        every { moment.damageToDefender } returns 0
-        every { moment.damageToAttacker } returns DAMAGE_TO_ATTACKER
-        every { moment.defender } returns defender
-        every { moment.attacker } returns attacker
+        val moment = mockk<Moment.THORN_DAMAGE>(relaxed = true)
+        every { moment.thornDamage } returns DAMAGE_TO_ATTACKER
+        every { moment.player } returns attacker
 
         // Act
         val report = SUT(moment)
 
         // Assert
-        assertEquals("Player $PLAYER_B_ID took back $DAMAGE_TO_ATTACKER", report)
+        assertEquals("Player $PLAYER_B_ID took thorn damage of $DAMAGE_TO_ATTACKER", report)
     }
 
     @Test
@@ -69,17 +65,28 @@ class ReportDamageTest {
         // Arrange
         val moment = mockk<Moment.DELIVER_DAMAGE>(relaxed = true)
         every { moment.damageToDefender } returns DAMAGE_TO_DEFENDER
-        every { moment.damageToAttacker } returns DAMAGE_TO_ATTACKER
         every { moment.defender } returns defender
-        every { moment.attacker } returns attacker
 
         // Act
         val report = SUT(moment)
 
         // Assert
         assertTrue(report.contains(PLAYER_A_ID.toString()))
-        assertTrue(report.contains(PLAYER_B_ID.toString()))
         assertTrue(report.contains(DAMAGE_TO_DEFENDER.toString()))
+    }
+
+    @Test
+    fun invoke_thornDamage_whenDamageToBoth_returnsCorrectReport() {
+        // Arrange
+        val moment = mockk<Moment.THORN_DAMAGE>(relaxed = true)
+        every { moment.thornDamage } returns DAMAGE_TO_ATTACKER
+        every { moment.player } returns attacker
+
+        // Act
+        val report = SUT(moment)
+
+        // Assert
+        assertTrue(report.contains(PLAYER_B_ID.toString()))
         assertTrue(report.contains(DAMAGE_TO_ATTACKER.toString()))
     }
 
