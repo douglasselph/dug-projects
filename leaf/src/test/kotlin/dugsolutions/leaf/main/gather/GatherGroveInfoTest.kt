@@ -10,8 +10,11 @@ import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
+import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -21,28 +24,33 @@ import org.junit.jupiter.api.Test
 class GatherGroveInfoTest {
 
     companion object {
-        private val testCard = GameCard(
-            id = 1,
-            name = "Test Card",
-            type = FlourishType.ROOT,
-            resilience = 3,
-            cost = Cost(emptyList()),
-            primaryEffect = CardEffect.DRAW_CARD,
-            primaryValue = 1,
-            matchWith = MatchWith.None,
-            matchEffect = null,
-            matchValue = 0,
-            trashEffect = null,
-            trashValue = 0,
-            thorn = 0
-        )
+        private const val TEST_CARD_NAME = "Test Card"
+        private const val PLAYER_NAME = "Test Player"
         private const val NUM_CARDS = 5
+        private const val PIP_TOTAL = 10
     }
+
+    private val testCard = GameCard(
+        id = 1,
+        name = TEST_CARD_NAME,
+        type = FlourishType.ROOT,
+        resilience = 3,
+        cost = Cost(emptyList()),
+        primaryEffect = CardEffect.DRAW_CARD,
+        primaryValue = 1,
+        matchWith = MatchWith.None,
+        matchEffect = null,
+        matchValue = 0,
+        trashEffect = null,
+        trashValue = 0,
+        thorn = 0
+    )
 
     private val mockGrove = mockk<Grove>(relaxed = true)
     private val mockGatherCardInfo = mockk<GatherCardInfo>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private lateinit var mockCards: GameCardIDs
+    private lateinit var mockPlayer: Player
 
     private lateinit var SUT: GatherGroveInfo
 
@@ -54,8 +62,12 @@ class GatherGroveInfoTest {
         every { mockCards.getCard(0) } returns testCard
         every { mockCards.size } returns NUM_CARDS
 
+        mockPlayer = mockk<Player>()
+        every { mockPlayer.name } returns PLAYER_NAME
+        every { mockPlayer.pipTotal } returns PIP_TOTAL
+
         every { mockGrove.getCardsFor(any()) } returns mockCards
-        every { mockGatherCardInfo(testCard) } returns mockCardInfo
+        every { mockGatherCardInfo(any(), any(), any()) } returns mockCardInfo
         every { mockCardInfo.name } returns testCard.name
     }
 
@@ -67,10 +79,12 @@ class GatherGroveInfoTest {
 
         // Assert
         assertEquals(MarketStackID.entries.size, result.stacks.size)
-        result.stacks.forEach { stack ->
+        result.stacks.forEachIndexed { index, stack ->
             assertEquals(NUM_CARDS, stack.numCards)
             assertEquals(mockCardInfo, stack.topCard)
+            verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.NONE) }
         }
+        assertNull(result.selectText)
     }
 
     @Test
@@ -87,6 +101,7 @@ class GatherGroveInfoTest {
             assertEquals(0, stack.numCards)
             assertNull(stack.topCard)
         }
+        assertNull(result.selectText)
     }
 
     @Test
@@ -116,5 +131,32 @@ class GatherGroveInfoTest {
                 assertEquals(0, stack.numCards)
                 assertNull(stack.topCard)
             }
+        assertNull(result.selectText)
+    }
+
+    @Test
+    fun invoke_whenHighlightProvided_returnsHighlightedCards() {
+        // Arrange
+        val highlightCards = listOf(testCard)
+
+        // Act
+        val result = SUT(highlight = highlightCards)
+
+        // Assert
+        result.stacks.forEachIndexed { index, stack ->
+            if (stack.topCard != null) {
+                verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.SELECTABLE) }
+            }
+        }
+    }
+
+    @Test
+    fun invoke_whenSelectForPlayerProvided_returnsSelectText() {
+        // Arrange
+        // Act
+        val result = SUT(selectForPlayer = mockPlayer)
+
+        // Assert
+        assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.selectText)
     }
 } 

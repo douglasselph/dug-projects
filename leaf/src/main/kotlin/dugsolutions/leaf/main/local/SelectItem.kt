@@ -1,12 +1,15 @@
 package dugsolutions.leaf.main.local
 
+import dugsolutions.leaf.cards.CardManager
+import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.PlayerInfo
+import dugsolutions.leaf.main.domain.SelectedItems
 
-class ItemSelected {
+class SelectItem {
 
     // region public
 
@@ -51,6 +54,7 @@ class ItemSelected {
             )
         )
     }
+
 
     // endregion public
 

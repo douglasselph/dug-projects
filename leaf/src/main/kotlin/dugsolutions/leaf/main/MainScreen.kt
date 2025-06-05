@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
@@ -78,6 +80,19 @@ fun MainScreen(args: MainScreenArgs) {
                             onCheckedChange = { args.onStepEnabledToggled(it) }
                         )
                         Text("Step Mode")
+                    }
+                    state.actionInstruction?.let { instruction ->
+                        Surface(
+                            color = Colors.SelectableColor,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(
+                                text = instruction,
+                                style = MaterialTheme.typography.body1,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                     state.actionButton.text?.let { actionText ->
                         Button(

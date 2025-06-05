@@ -219,4 +219,19 @@ class Dice(dice: List<Die> = emptyList()) {
             return if (index in _dice.indices) _dice[index] else null
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Dice
+
+        return _dice == other._dice
+    }
+
+    override fun hashCode(): Int {
+        return _dice.hashCode()
+    }
+
+
 }

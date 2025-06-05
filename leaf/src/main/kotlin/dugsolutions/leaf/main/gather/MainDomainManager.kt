@@ -8,7 +8,9 @@ import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
-import dugsolutions.leaf.main.local.ItemSelected
+import dugsolutions.leaf.main.domain.SelectedItems
+import dugsolutions.leaf.main.local.SelectGather
+import dugsolutions.leaf.main.local.SelectItem
 import dugsolutions.leaf.player.Player
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +22,8 @@ class MainDomainManager(
     private val gameTime: GameTime,
     private val gatherPlayerInfo: GatherPlayerInfo,
     private val gatherGroveInfo: GatherGroveInfo,
-    private val itemSelected: ItemSelected
+    private val selectItem: SelectItem,
+    private val selectGather: SelectGather
 ) {
     private val _state = MutableStateFlow(MainDomain())
 
@@ -62,11 +65,12 @@ class MainDomainManager(
         }
     }
 
-    fun setActionButton(value: ActionButton) {
+    fun setActionButton(value: ActionButton, instruction: String? = null) {
         _state.update { currentState ->
             currentState.copy(
                 turn = gameTime.turn,
-                actionButton = value
+                actionButton = value,
+                actionInstruction = instruction
             )
         }
     }
@@ -131,7 +135,7 @@ class MainDomainManager(
                 turn = gameTime.turn,
                 players = currentState.players.map { playerInfo ->
                     if (playerInfo.name == player.name) {
-                        itemSelected.handCard(playerInfo, cardInfo)
+                        selectItem.handCard(playerInfo, cardInfo)
                     } else {
                         playerInfo
                     }
@@ -146,7 +150,7 @@ class MainDomainManager(
                 turn = gameTime.turn,
                 players = currentState.players.map { playerInfo ->
                     if (playerInfo.name == player.name) {
-                        itemSelected.floralCard(playerInfo, cardInfo)
+                        selectItem.floralCard(playerInfo, cardInfo)
                     } else {
                         playerInfo
                     }
@@ -161,13 +165,17 @@ class MainDomainManager(
                 turn = gameTime.turn,
                 players = currentState.players.map { playerInfo ->
                     if (playerInfo.name == player.name) {
-                        itemSelected.die(playerInfo, dieInfo)
+                        selectItem.die(playerInfo, dieInfo)
                     } else {
                         playerInfo
                     }
                 }
             )
         }
+    }
+
+    fun gatherSelected(): SelectedItems {
+        return selectGather(_state.value)
     }
 
     fun addSimulationOutput(message: String) {

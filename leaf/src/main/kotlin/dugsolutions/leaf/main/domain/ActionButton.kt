@@ -5,5 +5,6 @@ enum class ActionButton(val text: String?) {
     NONE(null),
     RUN("Run"),
     NEXT("Next"),
+    DONE("Done")
 
 }

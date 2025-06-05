@@ -6,10 +6,18 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.main.domain.HighlightInfo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
 class GatherCardInfoTest {
+
+    companion object {
+        private const val TEST_CARD_NAME = "Test Card"
+        private const val BASIC_CARD_NAME = "Basic Card"
+        private const val ROLL_MATCH_CARD_NAME = "Roll Match Card"
+        private const val TYPE_MATCH_CARD_NAME = "Type Match Card"
+    }
 
     private val SUT = GatherCardInfo()
 
@@ -18,7 +26,7 @@ class GatherCardInfoTest {
         // Arrange
         val card = GameCard(
             id = 1,
-            name = "Test Card",
+            name = TEST_CARD_NAME,
             type = FlourishType.ROOT,
             resilience = 3,
             cost = Cost(listOf(CostElement.SingleDieMinimum(2))),
@@ -33,16 +41,18 @@ class GatherCardInfoTest {
         )
 
         // Act
-        val result = SUT(card)
+        val result = SUT(index = 5, incoming = card)
 
         // Assert
-        assertEquals("Test Card", result.name)
+        assertEquals(5, result.index)
+        assertEquals(TEST_CARD_NAME, result.name)
         assertEquals("R", result.type)
         assertEquals(3, result.resilience)
         assertEquals(1, result.thorn)
         assertEquals("DrawCard 2", result.primary)
         assertEquals("V DrawDie 1", result.match)
         assertEquals("Deflect 3", result.trash)
+        assertEquals(HighlightInfo.NONE, result.highlight)
     }
 
     @Test
@@ -50,7 +60,7 @@ class GatherCardInfoTest {
         // Arrange
         val card = GameCard(
             id = 1,
-            name = "Basic Card",
+            name = BASIC_CARD_NAME,
             type = FlourishType.VINE,
             resilience = 2,
             cost = Cost(emptyList()),
@@ -65,16 +75,18 @@ class GatherCardInfoTest {
         )
 
         // Act
-        val result = SUT(card)
+        val result = SUT(index = 0, incoming = card)
 
         // Assert
-        assertEquals("Basic Card", result.name)
+        assertEquals(0, result.index)
+        assertEquals(BASIC_CARD_NAME, result.name)
         assertEquals("V", result.type)
         assertEquals(2, result.resilience)
         assertEquals(0, result.thorn)
         assertNull(result.primary)
         assertNull(result.match)
         assertNull(result.trash)
+        assertEquals(HighlightInfo.NONE, result.highlight)
     }
 
     @Test
@@ -82,7 +94,7 @@ class GatherCardInfoTest {
         // Arrange
         val card = GameCard(
             id = 1,
-            name = "Roll Match Card",
+            name = ROLL_MATCH_CARD_NAME,
             type = FlourishType.CANOPY,
             resilience = 4,
             cost = Cost(emptyList()),
@@ -97,10 +109,12 @@ class GatherCardInfoTest {
         )
 
         // Act
-        val result = SUT(card)
+        val result = SUT(index = 2, incoming = card)
 
         // Assert
+        assertEquals(2, result.index)
         assertEquals("6 DrawDie 1", result.match)
+        assertEquals(HighlightInfo.NONE, result.highlight)
     }
 
     @Test
@@ -108,7 +122,7 @@ class GatherCardInfoTest {
         // Arrange
         val card = GameCard(
             id = 1,
-            name = "Type Match Card",
+            name = TYPE_MATCH_CARD_NAME,
             type = FlourishType.FLOWER,
             resilience = 3,
             cost = Cost(emptyList()),
@@ -123,9 +137,39 @@ class GatherCardInfoTest {
         )
 
         // Act
-        val result = SUT(card)
+        val result = SUT(index = 3, incoming = card)
 
         // Assert
+        assertEquals(3, result.index)
         assertEquals("R DrawDie 1", result.match)
+        assertEquals(HighlightInfo.NONE, result.highlight)
+    }
+
+    @Test
+    fun invoke_whenHighlightProvided_returnsCardInfoWithHighlight() {
+        // Arrange
+        val card = GameCard(
+            id = 1,
+            name = TEST_CARD_NAME,
+            type = FlourishType.ROOT,
+            resilience = 3,
+            cost = Cost(emptyList()),
+            primaryEffect = null,
+            primaryValue = 0,
+            matchWith = MatchWith.None,
+            matchEffect = null,
+            matchValue = 0,
+            trashEffect = null,
+            trashValue = 0,
+            thorn = 0
+        )
+        val highlight = HighlightInfo.SELECTED
+
+        // Act
+        val result = SUT(index = 1, incoming = card, highlight = highlight)
+
+        // Assert
+        assertEquals(1, result.index)
+        assertEquals(highlight, result.highlight)
     }
 } 

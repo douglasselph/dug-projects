@@ -12,7 +12,11 @@ class GatherDiceInfo {
             // Dice "D4=1" style
             DiceInfo(
                 incoming.dice.mapIndexed { index, die ->
-                    DieInfo(index = index, value = "D${die.sides}=${die.value}")
+                    DieInfo(
+                        index = index,
+                        value = "D${die.sides}=${die.value}",
+                        backingDie = die
+                    )
                 }
             )
         } else {

@@ -56,6 +56,7 @@ class MainController(
         when(actionButton) {
             ActionButton.RUN -> onRunPressed()
             ActionButton.NEXT -> onNextButtonPressed()
+            ActionButton.DONE -> onDoneButtonPressed()
             ActionButton.NONE -> {}
         }
     }
@@ -79,6 +80,12 @@ class MainController(
         scope.launch {
             runGame.continueToNextStep()
             mainDomainManager.setActionButton(ActionButton.NONE)
+        }
+    }
+
+    private fun onDoneButtonPressed() {
+        scope.launch {
+            mainDecisions.onPlayerSelectionComplete()
         }
     }
 
