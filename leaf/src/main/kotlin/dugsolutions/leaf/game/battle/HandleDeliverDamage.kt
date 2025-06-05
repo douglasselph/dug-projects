@@ -10,7 +10,7 @@ class HandleDeliverDamage(
     private val chronicle: GameChronicle
 ) {
 
-    operator fun invoke(players: List<Player>) {
+    suspend operator fun invoke(players: List<Player>) {
         // Sorts players by pipTotal in descending order (highest to lowest)
         // When pipTotals are equal, uses original player index as tiebreaker
         // Returns only the sorted Player objects, discarding the indices used for sorting

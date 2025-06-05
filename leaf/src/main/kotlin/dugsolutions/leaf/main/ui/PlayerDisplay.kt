@@ -23,12 +23,24 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 
+data class PlayerDisplayClickListeners(
+    val onDrawCountChosen: (value: Int) -> Unit = {},
+    val onHandCardSelected: (value: CardInfo) -> Unit = {},
+    val onFloralCardSelected: (value: CardInfo) -> Unit = {},
+    val onDieSelected: (value: DieInfo) -> Unit = {}
+)
+
 @Composable
-fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = {}) {
+fun PlayerDisplay(
+    player: PlayerInfo,
+    listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
+) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -46,7 +58,7 @@ fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = 
             )
 
             if (player.showDrawCount) {
-                DrawCountDecisionDisplay { value -> onDrawCountChosen(value) }
+                DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
             } else {
                 Column {
                     Text(
@@ -59,11 +71,15 @@ fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = 
                     ) {
                         // Cards in hand
                         Box {
-                            CardRowDisplay(player.handCards)
+                            CardRowDisplay(player.handCards) { cardInfo ->
+                                listeners.onHandCardSelected(cardInfo)
+                            }
                         }
                         // Dice in hand
                         Box {
-                            DiceDisplay(player.handDice)
+                            DiceDisplay(player.handDice) { dieValue ->
+                                listeners.onDieSelected(dieValue)
+                            }
                         }
                     }
                 }
@@ -78,7 +94,9 @@ fun PlayerDisplay(player: PlayerInfo, onDrawCountChosen: (value: Int) -> Unit = 
                         style = MaterialTheme.typography.h6,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    CardRowDisplay(player.floralArray)
+                    CardRowDisplay(player.floralArray) { cardInfo ->
+                        listeners.onFloralCardSelected(cardInfo)
+                    }
                 }
             }
 
@@ -123,13 +141,13 @@ fun main() = application {
         )
     ) {
         val gatherCardInfo = GatherCardInfo()
-        
+
         // Sample player data
         val samplePlayer = PlayerInfo(
             name = "Player 1",
             handCards = listOf(
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 1,
                         name = "Sprouting Seed",
                         type = FlourishType.SEEDLING,
@@ -146,7 +164,7 @@ fun main() = application {
                     )
                 ),
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 2,
                         name = "Nourishing Root",
                         type = FlourishType.ROOT,
@@ -167,7 +185,7 @@ fun main() = application {
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
             floralArray = listOf(
                 gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 3,
                         name = "Sheltering Canopy",
                         type = FlourishType.CANOPY,
@@ -188,7 +206,6 @@ fun main() = application {
             compostCardCount = 7,
             compostDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
-
         PlayerDisplay(samplePlayer)
     }
 }

@@ -12,7 +12,7 @@ class GatherPlayerInfo(
         // Dice in hand "D4=1" style
         val handDice = gatherDiceInfo(player.diceInHand, values = true)
 
-        val handCards = player.cardsInHand.map { gatherCardInfo(it) }
+        val handCards = player.cardsInHand.mapIndexed { index, item -> gatherCardInfo(index, item) }
 
         // Format dice in supply as "4D4 3D6" style
         val supplyDice = gatherDiceInfo(player.diceInSupply, values = false)
@@ -20,7 +20,7 @@ class GatherPlayerInfo(
         // Format dice in compost as "4D4 3D6" style
         val compostDice = gatherDiceInfo(player.diceInCompost, values = false)
 
-        val floralArray = player.floralCards.map { gatherCardInfo(it) }
+        val floralArray = player.floralCards.mapIndexed { index, item -> gatherCardInfo(index, item) }
 
         // Get counts for supply and compost cards
         val supplyCardCount = player.cardsInSupplyCount

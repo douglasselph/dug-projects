@@ -15,6 +15,8 @@ class GameChronicle(
     private var lastNewEntriesIndex = 0
     private val lock = Any()
 
+    var hasNewEntry: (entry: ChronicleEntry) -> Unit = {}
+
     /**
      * Records a game moment by transforming it into a chronicle entry and storing it.
      */
@@ -24,6 +26,7 @@ class GameChronicle(
         synchronized(lock) {
             // Store the entry in the cache
             entries.add(entry)
+            hasNewEntry(entry)
         }
     }
 

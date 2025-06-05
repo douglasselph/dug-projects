@@ -20,26 +20,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.MainDomain
-import dugsolutions.leaf.main.ui.DrawCountDecisionDisplay
+import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.ui.GroveDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplay
+import dugsolutions.leaf.main.ui.PlayerDisplayClickListeners
+import dugsolutions.leaf.player.Player
 import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
     val state: StateFlow<MainDomain>,
     val onDrawCountChosen: (value: Int) -> Unit = {},
-    val onRunButtonPressed: () -> Unit = {},
+    val onActionButtonPressed: (action: ActionButton) -> Unit = {},
     val onStepEnabledToggled: (value: Boolean) -> Unit = {},
-    val onNextButtonPressed: () -> Unit= {},
-    val onGroveCardSelected: (card: CardInfo) -> Unit = {}
+    val onGroveCardSelected: (card: CardInfo) -> Unit = {},
+    val onHandCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
+    val onFloralCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
+    val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> }
 )
 
 @Composable
 fun MainScreen(args: MainScreenArgs) {
     val state by args.state.collectAsState()
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +65,6 @@ fun MainScreen(args: MainScreenArgs) {
                     text = "Turn ${state.turn}",
                     style = MaterialTheme.typography.h4
                 )
-                
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -74,18 +79,11 @@ fun MainScreen(args: MainScreenArgs) {
                         )
                         Text("Step Mode")
                     }
-                    if (state.showNextButton) {
+                    state.actionButton.text?.let { actionText ->
                         Button(
-                            onClick = { args.onNextButtonPressed() }
+                            onClick = { args.onActionButtonPressed(state.actionButton) }
                         ) {
-                            Text("Next")
-                        }
-                    }
-                    if (state.showRunButton) {
-                        Button(
-                            onClick = { args.onRunButtonPressed() }
-                        ) {
-                            Text("Run")
+                            Text(actionText)
                         }
                     }
                 }
@@ -118,9 +116,15 @@ fun MainScreen(args: MainScreenArgs) {
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         state.players.forEach { player ->
-                            PlayerDisplay(player = player) { drawCount ->
-                                args.onDrawCountChosen(drawCount)
-                            }
+                            PlayerDisplay(
+                                player = player,
+                                listeners = PlayerDisplayClickListeners(
+                                    onDrawCountChosen = args.onDrawCountChosen,
+                                    onHandCardSelected = { args.onHandCardSelected(player, it) },
+                                    onFloralCardSelected = { args.onFloralCardSelected(player, it) },
+                                    onDieSelected = { args.onDieSelected(player, it) }
+                                )
+                            )
                         }
                     }
 

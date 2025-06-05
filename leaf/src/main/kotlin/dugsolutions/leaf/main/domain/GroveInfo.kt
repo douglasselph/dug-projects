@@ -10,8 +10,7 @@ data class GroveInfo(
 data class StackInfo(
     val stack: MarketStackID,
     val topCard: CardInfo?,
-    val numCards: Int,
-    val highlight: Boolean = false
+    val numCards: Int
 ) {
 
     val name: String

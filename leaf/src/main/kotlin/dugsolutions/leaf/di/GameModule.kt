@@ -68,13 +68,15 @@ import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
-import dugsolutions.leaf.main.CardOperations
+import dugsolutions.leaf.main.local.CardOperations
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.local.MainDecisions
+import dugsolutions.leaf.main.local.ItemSelected
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.FloralCount
@@ -136,11 +138,13 @@ val gameModule: Module = module {
     single { GatherDiceInfo() }
     single { GatherGroveInfo(get(), get()) }
     single { GatherPlayerInfo(get(), get()) }
-    single { MainDomainManager(get(), get(), get(), get()) }
+    single { ItemSelected() }
+    single { MainDomainManager(get(), get(), get(), get(), get()) }
+    single { MainDecisions(get(), get(), get()) }
 
     single {
         MainController(
-            get(), get(), get(), get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
 

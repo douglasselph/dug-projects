@@ -8,15 +8,15 @@ import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
+import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
-import dugsolutions.leaf.main.domain.MainDomain
-import dugsolutions.leaf.main.gather.MainDomainManager
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
-import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
-import dugsolutions.leaf.player.decisions.ui.DecisionBestCardPurchaseSuspend
-import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.GameEvent
+import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.PlayerInfo
+import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.local.CardOperations
+import dugsolutions.leaf.main.local.MainDecisions
 import dugsolutions.leaf.tool.Randomizer
 import dugsolutions.leaf.tool.RandomizerDefault
 import kotlinx.coroutines.CoroutineDispatcher
@@ -34,16 +34,17 @@ class MainController(
     private val randomizer: Randomizer,
     private val runGame: RunGame,
     private val mainDomainManager: MainDomainManager,
+    private val mainDecisions: MainDecisions,
     private val chronicle: GameChronicle,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(dispatcher)
 
-    private var decisionDrawCountSuspend: DecisionDrawCountSuspend = DecisionDrawCountSuspend()
-    private var decisionBestCardPurchaseSuspend: DecisionBestCardPurchaseSuspend = DecisionBestCardPurchaseSuspend()
-
     init {
-        mainDomainManager.setShowRunButton(true)
+        mainDomainManager.setActionButton(ActionButton.RUN)
+        chronicle.hasNewEntry = {
+            reportNewEntries()
+        }
         setup()
     }
 
@@ -51,35 +52,42 @@ class MainController(
 
     val state: StateFlow<MainDomain> = mainDomainManager.state
 
-    fun onRunPressed() {
-        mainDomainManager.clearShowRunButton()
-        update()
+    fun onActionPressed(actionButton: ActionButton) {
+        when(actionButton) {
+            ActionButton.RUN -> onRunPressed()
+            ActionButton.NEXT -> onNextButtonPressed()
+            ActionButton.NONE -> {}
+        }
+    }
+    private fun onRunPressed() {
+        mainDomainManager.setActionButton(ActionButton.NONE)
         scope.launch {
             runGame().collect { gameEvent ->
-                update()
                 when (gameEvent) {
                     is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
                     is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput("Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}")
                     is GameEvent.Completed -> mainDomainManager.addSimulationOutput("Game completed")
                     GameEvent.WaitForStep -> {
-                        mainDomainManager.setShowNextButton(true)
+                        mainDomainManager.setActionButton(ActionButton.NEXT)
                     }
                 }
             }
         }
     }
 
+    private fun onNextButtonPressed() {
+        scope.launch {
+            runGame.continueToNextStep()
+            mainDomainManager.setActionButton(ActionButton.NONE)
+        }
+    }
+
     fun onDrawCountChosen(value: Int) {
-        decisionDrawCountSuspend.provide(value)
-        mainDomainManager.clearShowDrawCount()
-        update()
+        mainDecisions.onDrawCountChosen(value)
     }
 
     fun onGroveCardSelected(cardInfo: CardInfo) {
-        cardOperations.getCard(cardInfo)?.let { card ->
-            decisionBestCardPurchaseSuspend.provide(card)
-            mainDomainManager.clearGroveCardHighlights()
-        }
+        mainDecisions.onGroveCardSelected(cardInfo)
     }
 
     fun onStepEnabledToggled(value: Boolean) {
@@ -87,25 +95,19 @@ class MainController(
         mainDomainManager.setStepMode(value)
     }
 
-    fun onNextButtonPressed() {
-        scope.launch {
-            runGame.continueToNextStep()
-            mainDomainManager.clearShowNextButton()
-        }
+    fun onHandCardSelected(player: PlayerInfo, card: CardInfo) {
+        mainDomainManager.setHandCardSelected(player, card)
+    }
+
+    fun onFloralCardSelected(player: PlayerInfo, card: CardInfo) {
+        mainDomainManager.setFloralCardSelected(player, card)
+    }
+
+    fun onDieSelected(player: PlayerInfo, die: DieInfo) {
+        mainDomainManager.setDieSelected(player, die)
     }
 
     // endregion public
-
-    private fun update() {
-        reportNewEntries()
-        mainDomainManager.update()
-    }
-
-    private fun reportNewEntries() {
-        chronicle.getNewEntries().forEach { entry ->
-            mainDomainManager.addSimulationOutput(entry.toString())
-        }
-    }
 
     private fun setup() {
         cardOperations.setup()
@@ -118,40 +120,23 @@ class MainController(
                 dieFactory = dieFactory,
                 setup = { index, player ->
                     if (index == 0) {
-                        player.decisionDirector.drawCountDecision = createDecisionDrawCountSuspend(player)
-                        player.decisionDirector.bestCardPurchase = createDecisionBestCardPurchaseSuspend(player)
+                        mainDecisions.setup(player)
                     }
                     player.setupInitialDeck(seedlings())
                 },
             )
         )
-        update()
+        mainDomainManager.initialize()
     }
 
     private fun seedlings(): GameCards {
         return cardOperations.getGameCards(FlourishType.SEEDLING).take(4)
     }
 
-
-    private fun createDecisionDrawCountSuspend(player: Player): DecisionDrawCount {
-        val value = DecisionDrawCountSuspend()
-        value.onDrawCountRequest = {
-            update()
-            mainDomainManager.setShowDrawCount(player, true)
-            decisionDrawCountSuspend = value
+    private fun reportNewEntries() {
+        chronicle.getNewEntries().forEach { entry ->
+            mainDomainManager.addSimulationOutput(entry.toString())
         }
-        return value
     }
-
-    private fun createDecisionBestCardPurchaseSuspend(player: Player): DecisionBestCardPurchase {
-        val value = DecisionBestCardPurchaseSuspend()
-        value.onBestCardPurchase = { possibleCards ->
-            update()
-            mainDomainManager.setHighlightGroveCardsForSelection(possibleCards, player)
-            decisionBestCardPurchaseSuspend = value
-        }
-        return value
-    }
-
 
 }

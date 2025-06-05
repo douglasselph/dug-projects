@@ -280,7 +280,7 @@ class ReportGameAnalysis(
                 .firstOrNull { it != winnerId } ?: return report
 
             report.add("\nTurn-by-Turn Score Progression:")
-            report.add("Turn | Winner P${winnerId} | Player P${otherPlayerId} | Gap | Leader")
+            report.add("Turn | Winner P${winnerId}    | Player P${otherPlayerId}    | Gap | Leader")
             report.add("-".repeat(50))
             
             turnDataList.forEach { turn ->

@@ -5,7 +5,7 @@ import dugsolutions.leaf.components.die.DieSides
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
-import dugsolutions.leaf.main.CardOperations
+import dugsolutions.leaf.main.local.CardOperations
 
 class ScenarioBasicConfig(
     cardOperations: CardOperations

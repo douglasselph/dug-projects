@@ -21,8 +21,10 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
+import kotlinx.coroutines.selects.select
 
 @Composable
 fun StackInfoDisplay(stack: StackInfo, onSelected: (card: CardInfo) -> Unit = {}) {
@@ -52,7 +54,7 @@ fun StackInfoDisplay(stack: StackInfo, onSelected: (card: CardInfo) -> Unit = {}
                 // Top card if it exists
                 if (stack.topCard != null) {
                     Box {
-                        CardDisplay(stack.topCard, stack.highlight) {
+                        CardDisplay(stack.topCard) {
                             onSelected(stack.topCard)
                         }
                     }
@@ -103,7 +105,7 @@ fun main() = application {
             val stackWithCard = StackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 1,
                         name = "Long Root",
                         type = FlourishType.ROOT,
@@ -126,9 +128,8 @@ fun main() = application {
             // First example - Stack with card
             val stackWithCard2 = StackInfo(
                 stack = MarketStackID.ROOT_1,
-                highlight = true,
                 topCard = gatherCardInfo(
-                    GameCard(
+                    incoming = GameCard(
                         id = 1,
                         name = "Long Root 2",
                         type = FlourishType.ROOT,
@@ -142,7 +143,8 @@ fun main() = application {
                         trashEffect = null,
                         trashValue = 0,
                         thorn = 0
-                    )
+                    ),
+                    highlight = HighlightInfo.SELECTABLE
                 ),
                 numCards = 42
             )

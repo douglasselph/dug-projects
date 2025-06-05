@@ -25,7 +25,10 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 
 
 @Composable
-fun CardRowDisplay(cards: List<CardInfo>) {
+fun CardRowDisplay(
+    cards: List<CardInfo>,
+    onSelected: (card: CardInfo) -> Unit = {}
+) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -36,7 +39,7 @@ fun CardRowDisplay(cards: List<CardInfo>) {
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             cards.forEach { cardInfo ->
-                CardDisplay(cardInfo)
+                CardDisplay(cardInfo) { onSelected(cardInfo) }
             }
         }
     }
@@ -61,7 +64,7 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 1,
                             name = "Sprouting Seed",
                             type = FlourishType.SEEDLING,
@@ -78,7 +81,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -95,7 +98,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -118,7 +121,7 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Thorny Vine",
                             type = FlourishType.VINE,
@@ -135,7 +138,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
@@ -152,7 +155,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 6,
                             name = "Spring Bloom",
                             type = FlourishType.BLOOM,

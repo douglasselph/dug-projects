@@ -12,12 +12,15 @@ class HandleAbsorbDamage(
      * Deal with the incoming damage that a player has to face.
      * Return the amount of thorn damage the attacker then needs to face in turn.
      */
-    operator fun invoke(player: Player): Int {
+    suspend operator fun invoke(player: Player): Int {
         // Only handle damage if the player has incoming damage
         if (!player.hasIncomingDamage()) return 0
 
         // Decide how to absorb damage
-        val result = player.decisionDirector.damageAbsorptionDecision() ?: return 0
+        val result = player.decisionDirector.damageAbsorptionDecision()
+        if (result.allEmpty) {
+            return 0
+        }
         var thornDamage = 0
         // Apply decision
         result.cards.forEach { card ->

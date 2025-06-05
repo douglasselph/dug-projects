@@ -6,7 +6,7 @@ import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.grove.domain.MarketCardConfig
 import dugsolutions.leaf.grove.domain.MarketStackConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
-import dugsolutions.leaf.main.CardOperations
+import dugsolutions.leaf.main.local.CardOperations
 
 open class ScenarioBase(
     private val cardOperations: CardOperations

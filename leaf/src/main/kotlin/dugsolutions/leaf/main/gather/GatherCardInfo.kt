@@ -12,11 +12,17 @@ import dugsolutions.leaf.components.FlourishType.VINE
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
 
 class GatherCardInfo {
 
-    operator fun invoke(incoming: GameCard): CardInfo = with(incoming) {
+    operator fun invoke(
+        index: Int = 0,
+        incoming: GameCard,
+        highlight: HighlightInfo = HighlightInfo.NONE
+    ): CardInfo = with(incoming) {
         return CardInfo(
+            index = index,
             name = name,
             type = floralType(type) ?: "?",
             resilience = resilience,
@@ -24,7 +30,8 @@ class GatherCardInfo {
             thorn = thorn,
             primary = effectLine(primaryEffect, primaryValue),
             match = effectLine(matchEffect, matchValue, matchString(matchWith)),
-            trash = effectLine(trashEffect, trashValue)
+            trash = effectLine(trashEffect, trashValue),
+            highlight = highlight
         )
     }
 

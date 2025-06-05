@@ -123,7 +123,7 @@ class PlayerTurnTest {
         SUT(players, GamePhase.BATTLE)
 
         // Assert
-        verify { mockHandleDeliverDamage(players) }
+        coVerify { mockHandleDeliverDamage(players) }
     }
 
     @Test

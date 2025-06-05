@@ -61,9 +61,9 @@ class DecisionDamageAbsorptionBaseline(
 
     private val cardEffectBattleScore = cardEffectBattleScoreFactory(player)
 
-    override operator fun invoke(): Result? {
+    override suspend operator fun invoke(): Result {
         if (player.incomingDamage <= 0) {
-            return null
+            return Result()
         }
         val amount = player.incomingDamage
         val handItems = player.getExtendedItems()
@@ -149,10 +149,6 @@ class DecisionDamageAbsorptionBaseline(
                 val dice = handItems.filterIsInstance<ExtendedHandItem.Dice>()
                 val floralCards = handItems.filterIsInstance<ExtendedHandItem.FloralArray>()
 
-                // If nothing to remove, return null
-                if (cards.isEmpty() && dice.isEmpty()) {
-                    return null
-                }
                 return Result(
                     cards = cards.map { it.card },
                     dice = dice.map { it.die },
@@ -161,7 +157,7 @@ class DecisionDamageAbsorptionBaseline(
             }
         }
         // Select the best combination based on scoring
-        val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return null
+        val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return Result()
 
         // Convert the best combination back to cards and dice
         val selectedCards = bestCombination.items.filterIsInstance<ExtendedHandItem.Card>()

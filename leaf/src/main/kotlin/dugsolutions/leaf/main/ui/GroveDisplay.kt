@@ -24,6 +24,7 @@ import dugsolutions.leaf.components.MatchWith
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.GroveInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
@@ -134,7 +135,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.ROOT_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -155,7 +156,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.ROOT_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -176,7 +177,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -197,7 +198,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -218,7 +219,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_1,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -239,7 +240,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -259,9 +260,8 @@ fun main() = application {
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_1,
-                    highlight = true,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -275,14 +275,15 @@ fun main() = application {
                             trashEffect = null,
                             trashValue = 0,
                             thorn = 0
-                        )
+                        ),
+                        highlight = HighlightInfo.SELECTABLE
                     ),
                     numCards = 20
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -296,14 +297,15 @@ fun main() = application {
                             trashEffect = null,
                             trashValue = 0,
                             thorn = 0
-                        )
+                        ),
+                        highlight = HighlightInfo.SELECTED
                     ),
                     numCards = 20
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -324,7 +326,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.JOINT_RCV,
                     topCard = gatherCardInfo(
-                        GameCard(
+                        incoming = GameCard(
                             id = 5,
                             name = "Wild Growth",
                             type = FlourishType.ROOT,

@@ -10,4 +10,14 @@ data class PlayerInfo(
     val compostCardCount: Int,
     val compostDice: DiceInfo,
     val showDrawCount: Boolean = false
-)
+) {
+
+    fun copyForItemSelect(): PlayerInfo {
+        return copy(
+            handCards = handCards.map { it.copy(highlight = HighlightInfo.SELECTABLE) },
+            handDice = handDice.copyForItemSelect(),
+            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+        )
+    }
+
+}
