@@ -65,7 +65,6 @@ class PossibleCardsTest {
     @Test
     fun invoke_whenMultipleChoicesForSameCard_returnsSimplifiedChoice() {
         // Arrange
-        val player = mockk<Player>()
         val combination1 = FakeCombination.combinationD6
         val combination2 = FakeCombination.combinationD8
         val combinations = Combinations(listOf(combination1, combination2))
@@ -76,7 +75,7 @@ class PossibleCardsTest {
         every { evaluateCardPurchases(marketCards, any(), combination2) } returns listOf(FakeCards.fakeRoot)
 
         // Act
-        val result = SUT(player, combinations, marketCards)
+        val result = SUT(mockPlayer, combinations, marketCards)
 
         // Assert
         assertEquals(1, result.size)
@@ -86,7 +85,6 @@ class PossibleCardsTest {
     @Test
     fun invoke_whenNoValidCards_returnsEmptyList() {
         // Arrange
-        val player = mockk<Player>()
         val combination = FakeCombination.combinationD10
         val combinations = Combinations(listOf(combination))
         
@@ -95,7 +93,7 @@ class PossibleCardsTest {
         every { evaluateCardPurchases(marketCards, any(), combination) } returns emptyList()
 
         // Act
-        val result = SUT(player, combinations, marketCards)
+        val result = SUT(mockPlayer, combinations, marketCards)
 
         // Assert
         assertTrue(result.isEmpty())

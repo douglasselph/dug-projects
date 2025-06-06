@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 
 class BestCardEvaluatorTest {
 
-    private lateinit var player: Player
+    private val mockPlayer = mockk<Player>(relaxed = true)
 
     private lateinit var rootCard1: GameCard
     private lateinit var rootCard2: GameCard
@@ -29,11 +29,10 @@ class BestCardEvaluatorTest {
     @BeforeEach
     fun setup() {
         // Setup mock player
-        player = mockk(relaxed = true)
-        every { player.allCardsInDeck } returns emptyList()
+        every { mockPlayer.allCardsInDeck } returns emptyList()
 
         // Create the strategy
-        SUT = BestCardEvaluator(player)
+        SUT = BestCardEvaluator()
 
         // Create test cards with different flourish types
         rootCard1 = FakeCards.fakeRoot.copy(id = 1)
@@ -51,7 +50,7 @@ class BestCardEvaluatorTest {
         // Act & Assert
         assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                SUT(emptyList())
+                SUT(mockPlayer, emptyList())
             }
         }
     }
@@ -62,7 +61,7 @@ class BestCardEvaluatorTest {
         val cards = listOf(rootCard1)
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard1, result)
@@ -80,7 +79,7 @@ class BestCardEvaluatorTest {
         )
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard2, result)
@@ -90,7 +89,7 @@ class BestCardEvaluatorTest {
     fun invoke_whenSameEvaluationDifferentCounts_returnsLeastOwned() = runBlocking {
         // Arrange
         val cards = listOf(rootCard1, rootCard2)
-        every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // rootCard1 appears twice
+        every { mockPlayer.allCardsInDeck } returns listOf(rootCard1, rootCard1) // rootCard1 appears twice
 
         // Set same evaluation for both cards
         SUT.evaluationMap[rootCard1.id] = BestCardEvaluator.CountsInHand(
@@ -101,7 +100,7 @@ class BestCardEvaluatorTest {
         )
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard2, result)
@@ -120,7 +119,7 @@ class BestCardEvaluatorTest {
         }
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard1, result) // ROOT has highest priority (0)
@@ -133,7 +132,7 @@ class BestCardEvaluatorTest {
         SUT.generalEvaluation = 5
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard1, result) // Both have same evaluation and count, ROOT has priority
@@ -143,7 +142,7 @@ class BestCardEvaluatorTest {
     fun invoke_whenEvaluationThresholds_usesCorrectThreshold() = runBlocking {
         // Arrange
         val cards = listOf(rootCard1)
-        every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // count = 2
+        every { mockPlayer.allCardsInDeck } returns listOf(rootCard1, rootCard1) // count = 2
 
         // Set evaluation thresholds
         SUT.evaluationMap[rootCard1.id] = BestCardEvaluator.CountsInHand(
@@ -154,7 +153,7 @@ class BestCardEvaluatorTest {
         )
 
         // Act
-        val result = SUT(cards)
+        val result = SUT(mockPlayer, cards)
 
         // Assert
         assertEquals(rootCard1, result) // Should use evaluation 3 as count is 2

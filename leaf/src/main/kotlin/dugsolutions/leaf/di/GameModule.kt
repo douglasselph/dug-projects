@@ -261,7 +261,7 @@ val gameModule: Module = module {
     single { EvaluateSimpleCost(get()) }
     single { PossibleCards(get()) }
     single { PossibleDice(get(), get()) }
-    single { BestCardEvaluator(get()) }
+    single { BestCardEvaluator() }
     single { AcquireCardEvaluator(get()) }
     single { AcquireDieEvaluator() }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }

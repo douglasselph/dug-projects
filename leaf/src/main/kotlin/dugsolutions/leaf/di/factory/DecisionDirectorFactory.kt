@@ -19,7 +19,8 @@ class DecisionDirectorFactory(
             cardEffectBattleScoreFactory,
             cardManager,
             acquireCardEvaluator,
-            acquireDieEvaluator)
+            acquireDieEvaluator
+        )
     }
 
 }

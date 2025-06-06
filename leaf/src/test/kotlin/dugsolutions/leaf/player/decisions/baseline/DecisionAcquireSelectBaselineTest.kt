@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 
 class DecisionAcquireSelectBaselineTest {
 
-    private lateinit var player: Player
+    private val mockPlayer = mockk<Player>(relaxed = true)
     private val acquireCardEvaluator = mockk<AcquireCardEvaluator>(relaxed = true)
     private val acquireDieEvaluator = mockk<AcquireDieEvaluator>(relaxed = true)
     private val mockBestCard = mockk<ChoiceCard>()
@@ -25,18 +25,17 @@ class DecisionAcquireSelectBaselineTest {
 
     @BeforeEach
     fun setup() {
-        player = mockk(relaxed = true)
-        SUT = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
+        SUT = DecisionAcquireSelectBaseline(mockPlayer, acquireCardEvaluator, acquireDieEvaluator)
     }
 
     @Test
     fun invoke_whenCardScoreLowerAndBestCardExists_returnsCard() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 2
-        every { player.totalDiceCount } returns 3
+        every { mockPlayer.totalCardCount } returns 2
+        every { mockPlayer.totalDiceCount } returns 3
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -49,11 +48,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenCardScoreLowerButNoBestCard_returnsDie() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 2
-        every { player.totalDiceCount } returns 3
+        every { mockPlayer.totalCardCount } returns 2
+        every { mockPlayer.totalDiceCount } returns 3
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns null
+        every { acquireCardEvaluator(mockPlayer, any()) } returns null
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -66,11 +65,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenDieScoreLower_returnsDie() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 3
-        every { player.totalDiceCount } returns 2
+        every { mockPlayer.totalCardCount } returns 3
+        every { mockPlayer.totalDiceCount } returns 2
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -83,11 +82,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenScoresEqual_returnsDie() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 2
-        every { player.totalDiceCount } returns 2
+        every { mockPlayer.totalCardCount } returns 2
+        every { mockPlayer.totalDiceCount } returns 2
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -100,11 +99,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenPreferenceCardNegative_biasesTowardsCards() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 3
-        every { player.totalDiceCount } returns 2
+        every { mockPlayer.totalCardCount } returns 3
+        every { mockPlayer.totalDiceCount } returns 2
         SUT.preferenceCard = -2  // Makes card score = 1
         SUT.preferenceDie = 0    // Makes die score = 2
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -117,11 +116,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenPreferenceDieNegative_biasesTowardsDice() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 2
-        every { player.totalDiceCount } returns 3
+        every { mockPlayer.totalCardCount } returns 2
+        every { mockPlayer.totalDiceCount } returns 3
         SUT.preferenceCard = 0    // Makes card score = 2
         SUT.preferenceDie = -2    // Makes die score = 1
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -134,11 +133,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenBothPreferencesSet_usesCombinedScores() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 3
-        every { player.totalDiceCount } returns 3
+        every { mockPlayer.totalCardCount } returns 3
+        every { mockPlayer.totalDiceCount } returns 3
         SUT.preferenceCard = -1  // Makes card score = 2
         SUT.preferenceDie = -2   // Makes die score = 1
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns mockBestDie
 
         // Act
@@ -151,11 +150,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenNoBestDieAndCardScoreHigher_returnsNone() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 3
-        every { player.totalDiceCount } returns 2
+        every { mockPlayer.totalCardCount } returns 3
+        every { mockPlayer.totalDiceCount } returns 2
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns mockBestCard
+        every { acquireCardEvaluator(mockPlayer, any()) } returns mockBestCard
         every { acquireDieEvaluator(any()) } returns null
 
         // Act
@@ -168,11 +167,11 @@ class DecisionAcquireSelectBaselineTest {
     @Test
     fun invoke_whenBothBestChoicesNull_returnsNone() = runBlocking {
         // Arrange
-        every { player.totalCardCount } returns 2
-        every { player.totalDiceCount } returns 2
+        every { mockPlayer.totalCardCount } returns 2
+        every { mockPlayer.totalDiceCount } returns 2
         SUT.preferenceCard = 0
         SUT.preferenceDie = 0
-        every { acquireCardEvaluator(any()) } returns null
+        every { acquireCardEvaluator(mockPlayer, any()) } returns null
         every { acquireDieEvaluator(any()) } returns null
 
         // Act

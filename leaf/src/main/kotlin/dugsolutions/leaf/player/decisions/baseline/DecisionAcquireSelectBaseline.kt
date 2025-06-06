@@ -56,14 +56,14 @@ class DecisionAcquireSelectBaseline(
     var preferenceCard = 0
     var preferenceDie = 0
 
-    suspend override fun invoke(
+    override suspend fun invoke(
         possibleCards: List<ChoiceCard>,
         possibleDice: List<ChoiceDie>
     ): DecisionAcquireSelect.BuyItem {
         val scoreCards = player.totalCardCount + preferenceCard
         val scoreDice = player.totalDiceCount + preferenceDie
 
-        val bestCard = acquireCardEvaluator(possibleCards)
+        val bestCard = acquireCardEvaluator(player, possibleCards)
         val bestDie = acquireDieEvaluator(possibleDice)
 
         return if (scoreCards < scoreDice && bestCard != null) {

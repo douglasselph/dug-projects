@@ -18,6 +18,9 @@ import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
+import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 import dugsolutions.leaf.tool.RandomizerTD
@@ -59,10 +62,13 @@ class PlayerTD private constructor(
             val retainedComponents = mockk<StackManager>(relaxed = true)
             val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
             val cardEffectBattleScore = mockk<CardEffectBattleScore>(relaxed = true)
+            val acquireCardEvaluator = mockk<AcquireCardEvaluator>(relaxed = true)
+            val acquireDieEvaluator = mockk<AcquireDieEvaluator>(relaxed = true)
             val dieFactory = DieFactoryRandom(randomizerTD)
             val costScore = CostScore()
-            val decisionDirectorFactory = DecisionDirectorFactory(cardManager, cardEffectBattleScoreFactory)
-
+            val decisionDirectorFactory = DecisionDirectorFactory(
+                cardManager, cardEffectBattleScoreFactory, acquireCardEvaluator, acquireDieEvaluator
+            )
             every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
             return PlayerTD(
@@ -112,7 +118,12 @@ class PlayerTD private constructor(
             val effectBattleScore = EffectBattleScore()
             val cardEffectBattleScoreFactory = CardEffectBattleScoreFactory(effectBattleScore, floralCount)
             val costScore = CostScore()
-            val decisionDirectorFactory = DecisionDirectorFactory(cardManager, cardEffectBattleScoreFactory)
+            val bestCardEvaluator = BestCardEvaluator()
+            val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
+            val acquireDieEvaluator = AcquireDieEvaluator()
+            val decisionDirectorFactory = DecisionDirectorFactory(
+                cardManager, cardEffectBattleScoreFactory, acquireCardEvaluator, acquireDieEvaluator
+            )
 
             return PlayerTD(
                 deckManager,

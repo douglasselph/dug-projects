@@ -26,7 +26,8 @@ class AcquireItem(
         val combinations = combinationGenerator(player)
         val possibleCards = possibleCards(player, combinations, marketCards)
         val possibleDice = possibleDice(combinations)
-        val bestChoice = player.decisionDirector.acquireSelectDecision(possibleCards, possibleDice)
+        val decisionDirector = player.decisionDirector
+        val bestChoice = decisionDirector.acquireSelectDecision(possibleCards, possibleDice)
         var result = false
         when (bestChoice) {
             is DecisionAcquireSelect.BuyItem.Card -> {

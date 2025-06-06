@@ -45,9 +45,7 @@ import dugsolutions.leaf.player.Player
  * )
  * ```
  */
-class BestCardEvaluator(
-    private val player: Player
-)  {
+class BestCardEvaluator {
 
     data class CountInHand(
         val countInHand: Int,
@@ -74,7 +72,7 @@ class BestCardEvaluator(
         val count: Int
     )
     
-    operator fun invoke(possibleCards: List<GameCard>): GameCard {
+    operator fun invoke(player: Player, possibleCards: List<GameCard>): GameCard {
         if (possibleCards.isEmpty()) {
             throw IllegalArgumentException("Cannot decide best purchase from empty list")
         }
