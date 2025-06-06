@@ -1,7 +1,6 @@
 package dugsolutions.leaf.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +11,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,7 +25,7 @@ import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.top.MainOutput
 import dugsolutions.leaf.main.top.MainPlayerSection
 import dugsolutions.leaf.main.top.MainTitle
-import dugsolutions.leaf.main.ui.DraggableDivider
+import dugsolutions.leaf.main.top.DraggableDivider
 import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
@@ -42,54 +42,52 @@ data class MainScreenArgs(
 @Composable
 fun MainScreen(args: MainScreenArgs) {
     val state by args.state.collectAsState()
-    var dividerPosition by remember { mutableStateOf(0.7f) }
+    val initialValue = 300.dp
+    var outputHeight by remember { mutableStateOf(initialValue) }
+    var adjustBy by remember { mutableIntStateOf(0) }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // Title bar (fixed at top)
+        MainTitle(
+            state = state,
+            args = args,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        // Player section (expands to fill available space)
+        MainPlayerSection(
+            state = state,
+            args = args,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        )
+
+        // Divider
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .background(MaterialTheme.colors.onSurface)
         ) {
-            // Title bar (fixed at top)
-            MainTitle(
-                state,
-                args,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MaterialTheme.colors.onSurface)
-            )
-
-            // Scrollable content area with dynamic height
-            MainPlayerSection(
-                state,
-                args,
-                modifier = Modifier
-                    .weight(dividerPosition)
-                    .fillMaxWidth()
-            )
-
-            // Draggable divider
             DraggableDivider(
-                onPositionChange = { newPosition ->
-                    dividerPosition = newPosition
+                onValueChange = { newValue ->
+                    adjustBy = newValue
+                    outputHeight = initialValue - adjustBy.dp
                 }
             )
-
-            // Output area with dynamic height
-            MainOutput(
-                state = state,
-                modifier = Modifier
-                    .weight(1f - dividerPosition)
-                    .fillMaxWidth()
-            )
         }
+
+        // Output section (fixed height controlled by divider)
+        MainOutput(
+            state = state,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(outputHeight)
+        )
     }
 } 
