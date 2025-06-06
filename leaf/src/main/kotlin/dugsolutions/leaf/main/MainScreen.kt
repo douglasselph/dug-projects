@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
+import dugsolutions.leaf.main.domain.ItemInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.top.MainOutput
@@ -33,7 +34,7 @@ data class MainScreenArgs(
     val onDrawCountChosen: (value: Int) -> Unit = {},
     val onActionButtonPressed: (action: ActionButton) -> Unit = {},
     val onStepEnabledToggled: (value: Boolean) -> Unit = {},
-    val onGroveCardSelected: (card: CardInfo) -> Unit = {},
+    val onGroveCardSelected: (card: ItemInfo) -> Unit = {},
     val onHandCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
     val onFloralCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
     val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> }

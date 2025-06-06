@@ -1,14 +1,14 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
+import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
-import dugsolutions.leaf.player.decisions.ui.DecisionBestCardPurchaseSuspend
+import dugsolutions.leaf.player.decisions.ui.DecisionAcquireSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDamageAbsorptionSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
 
@@ -18,12 +18,12 @@ class MainDecisions(
 ) {
 
     private var decisionDrawCountSuspend: DecisionDrawCountSuspend = DecisionDrawCountSuspend()
-    private var decisionBestCardPurchaseSuspend: DecisionBestCardPurchaseSuspend = DecisionBestCardPurchaseSuspend()
+    private var decisionAcquireSelectSuspend: DecisionAcquireSelectSuspend = DecisionAcquireSelectSuspend()
     private var decisionDamageAbsorptionSuspend: DecisionDamageAbsorptionSuspend = DecisionDamageAbsorptionSuspend()
 
     fun setup(player: Player) {
         player.decisionDirector.drawCountDecision = createDecisionDrawCountSuspend(player)
-        player.decisionDirector.bestCardPurchase = createDecisionBestCardPurchaseSuspend(player)
+        player.decisionDirector.acquireSelectDecision = createDecisionAcquireSelectSuspend(player)
         player.decisionDirector.damageAbsorptionDecision = createDecisionDamageAbsorptionSuspend(player)
     }
 
@@ -32,6 +32,7 @@ class MainDecisions(
     private fun createDecisionDrawCountSuspend(player: Player): DecisionDrawCount {
         val value = DecisionDrawCountSuspend()
         value.onDrawCountRequest = {
+            mainDomainManager.updatePlayerData()
             mainDomainManager.setShowDrawCount(player, true)
             decisionDrawCountSuspend = value
         }
@@ -47,20 +48,27 @@ class MainDecisions(
 
     // region GroveCard
 
-    private fun createDecisionBestCardPurchaseSuspend(player: Player): DecisionBestCardPurchase {
-        val value = DecisionBestCardPurchaseSuspend()
-        value.onBestCardPurchase = { possibleCards ->
-            mainDomainManager.setHighlightGroveCardsForSelection(possibleCards, player)
-            decisionBestCardPurchaseSuspend = value
+    private fun createDecisionAcquireSelectSuspend(player: Player): DecisionAcquireSelect {
+        val value = DecisionAcquireSelectSuspend()
+        value.onBestPurchase = { possibleCards, possibleDice ->
+            mainDomainManager.updatePlayerData()
+            mainDomainManager.setHighlightGroveItemsForSelection(possibleCards, possibleDice, player)
+            decisionAcquireSelectSuspend = value
         }
         return value
     }
 
     fun onGroveCardSelected(cardInfo: CardInfo) {
         cardOperations.getCard(cardInfo)?.let { card ->
-            decisionBestCardPurchaseSuspend.provide(card)
+            decisionAcquireSelectSuspend.provide(card)
             mainDomainManager.clearGroveCardHighlights()
         }
+    }
+
+    fun onGroveDieSelected(dieInfo: DieInfo) {
+        require(dieInfo.backingDie != null)
+        decisionAcquireSelectSuspend.provide(dieInfo.backingDie)
+        mainDomainManager.clearGroveCardHighlights()
     }
 
     // endregion GroveCard
@@ -70,6 +78,7 @@ class MainDecisions(
     private fun createDecisionDamageAbsorptionSuspend(player: Player): DecisionDamageAbsorption {
         val value = DecisionDamageAbsorptionSuspend()
         value.onDamageAbsorptionRequest = {
+            mainDomainManager.updatePlayerData()
             mainDomainManager.setAllowPlayerItemSelect(player)
             val amount = player.incomingDamage
             mainDomainManager.setActionButton(ActionButton.DONE, "Select cards and/or dice to absorb $amount damage.")

@@ -1,10 +1,9 @@
-package dugsolutions.leaf.player.decisions
+package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.baseline.DecisionDrawCountBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import io.mockk.every
 import io.mockk.mockk

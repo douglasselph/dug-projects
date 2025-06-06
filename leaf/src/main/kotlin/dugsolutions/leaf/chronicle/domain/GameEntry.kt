@@ -155,6 +155,11 @@ data class Finished(
     }
 }
 
+data class InfoEntry(
+    override val turn: Int,
+    val message: String
+) : ChronicleEntry(0, turn)
+
 data class OrderingEntry(
     override val playerId: Int = 0,
     override val turn: Int,

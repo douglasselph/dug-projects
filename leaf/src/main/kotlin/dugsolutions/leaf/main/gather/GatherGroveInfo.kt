@@ -1,8 +1,11 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
+import dugsolutions.leaf.main.domain.DiceInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.StackInfo
@@ -14,12 +17,14 @@ class GatherGroveInfo(
 ) {
 
     operator fun invoke(
-        highlight: List<GameCard> = emptyList(),
+        highlightCard: List<GameCard> = emptyList(),
+        highlightDie: List<Die> = emptyList(),
         selectForPlayer: Player? = null
     ): GroveInfo {
         return GroveInfo(
-            stacks = MarketStackID.entries.mapIndexed() { index, stack -> get(index, stack, highlight) },
-            selectText = selectForPlayer?.let { it.name + " PIPS " + it.pipTotal }
+            stacks = MarketStackID.entries.mapIndexed { index, stack -> get(index, stack, highlightCard) },
+            dice = get(highlightDie),
+            instruction = selectForPlayer?.let { it.name + " PIPS " + it.pipTotal }
         )
     }
 
@@ -30,6 +35,22 @@ class GatherGroveInfo(
             stack = stack,
             topCard = card?.let { gatherCardInfo(index = index, incoming = it, highlight = highlightCard) },
             numCards = grove.getCardsFor(stack)?.size ?: 0
+        )
+    }
+
+    private fun get(highlightDie: List<Die>): DiceInfo {
+        if (highlightDie.isEmpty()) {
+            return DiceInfo()
+        }
+        return DiceInfo(
+            values = highlightDie.mapIndexed { index, die ->
+                DieInfo(
+                    index,
+                    value = die.sides.toString(),
+                    highlight = HighlightInfo.SELECTABLE,
+                    backingDie = die
+                )
+            }
         )
     }
 }

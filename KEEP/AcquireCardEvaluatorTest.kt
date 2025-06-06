@@ -11,12 +11,13 @@ import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.DecisionDirector
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

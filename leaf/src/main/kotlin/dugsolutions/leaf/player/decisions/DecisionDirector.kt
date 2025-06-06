@@ -5,7 +5,6 @@ import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.baseline.DecisionAcquireSelectBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionBestBloomCardBaseline
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDrawCountBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionRerollOneDieBaseline
@@ -13,22 +12,24 @@ import dugsolutions.leaf.player.decisions.baseline.DecisionShouldProcessTrashEff
 import dugsolutions.leaf.player.decisions.baseline.DecisionShouldTargetPlayerBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionBestBloomCard
-import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import dugsolutions.leaf.player.decisions.core.DecisionRerollOneDie
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.decisions.core.DecisionShouldTargetPlayer
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 
 class DecisionDirector(
     player: Player,
     cardEffectBattleScoreFactory: CardEffectBattleScoreFactory,
-    cardManager: CardManager
+    cardManager: CardManager,
+    acquireCardEvaluator: AcquireCardEvaluator,
+    acquireDieEvaluator: AcquireDieEvaluator
 ) {
 
-    var bestCardPurchase: DecisionBestCardPurchase = DecisionBestCardPurchaseBaseline(player)
-    var acquireSelectDecision: DecisionAcquireSelect = DecisionAcquireSelectBaseline(player)
     var drawCountDecision: DecisionDrawCount = DecisionDrawCountBaseline(player)
+    var acquireSelectDecision: DecisionAcquireSelect = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
     var damageAbsorptionDecision: DecisionDamageAbsorption = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
     var shouldProcessTrashEffect: DecisionShouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline()
     var shouldTargetPlayer: DecisionShouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)

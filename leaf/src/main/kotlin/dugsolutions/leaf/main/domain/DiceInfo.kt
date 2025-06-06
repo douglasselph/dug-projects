@@ -3,7 +3,7 @@ package dugsolutions.leaf.main.domain
 import dugsolutions.leaf.components.die.Die
 
 data class DiceInfo(
-    val values: List<DieInfo>
+    val values: List<DieInfo> = emptyList()
 ) {
 
     fun copyForItemSelect(): DiceInfo {

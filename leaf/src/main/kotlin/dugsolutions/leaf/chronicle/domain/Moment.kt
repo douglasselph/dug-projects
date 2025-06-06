@@ -31,6 +31,7 @@ sealed class Moment {
     data class EVENT_TURN(val players: List<Player>) : Moment()
     data class EVENT_BATTLE_TRANSITION(val player: Player, val trashedSeedlings: List<CardID>) : Moment()
     data class FINISHED(val result: PlayersScoreData) : Moment()
+    data class INFO(val message: String): Moment()
 
     data class ORDERING(val players: List<Player>, val numberOfRerolls: Int) : Moment()
     data class PLAY_CARD(val player: Player, val card: GameCard): Moment()

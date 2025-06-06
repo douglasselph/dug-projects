@@ -19,6 +19,7 @@ import dugsolutions.leaf.chronicle.domain.DrawnHandEntry
 import dugsolutions.leaf.chronicle.domain.EventBattleTransition
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.Finished
+import dugsolutions.leaf.chronicle.domain.InfoEntry
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayCardEntry
@@ -174,6 +175,12 @@ class TransformMomentToEntry(
                     scores = moment.result.players.map { data ->
                         ScoreInfo(data.score)
                     }
+                )
+
+            is Moment.INFO ->
+                InfoEntry(
+                    turn = gameTime.turn,
+                    message = moment.message
                 )
 
             is Moment.ORDERING -> with(moment) {

@@ -1,9 +1,8 @@
-package dugsolutions.leaf.player.decisions
+package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.CardEffect
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.player.decisions.baseline.DecisionShouldProcessTrashEffectBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import io.mockk.every
 import io.mockk.mockk

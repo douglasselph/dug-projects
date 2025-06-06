@@ -1,10 +1,9 @@
-package dugsolutions.leaf.player.decisions.baseline
+package dugsolutions.leaf.player.decisions.local
 
 import dugsolutions.leaf.components.CardID
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
 
 /**
  * Strategy for determining the best card to purchase from a list of available cards.
@@ -46,9 +45,9 @@ import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
  * )
  * ```
  */
-class DecisionBestCardPurchaseBaseline(
+class BestCardEvaluator(
     private val player: Player
-) : DecisionBestCardPurchase {
+)  {
 
     data class CountInHand(
         val countInHand: Int,
@@ -75,7 +74,7 @@ class DecisionBestCardPurchaseBaseline(
         val count: Int
     )
     
-    override suspend operator fun invoke(possibleCards: List<GameCard>): GameCard {
+    operator fun invoke(possibleCards: List<GameCard>): GameCard {
         if (possibleCards.isEmpty()) {
             throw IllegalArgumentException("Cannot decide best purchase from empty list")
         }

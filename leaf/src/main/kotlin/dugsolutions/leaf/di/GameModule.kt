@@ -36,10 +36,12 @@ import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.cost.ApplyEffects
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
 import dugsolutions.leaf.game.acquire.credit.EffectToCredits
-import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import dugsolutions.leaf.game.acquire.evaluator.EvaluateBestDiePurchase
-import dugsolutions.leaf.game.acquire.evaluator.EvaluateCardPurchases
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
+import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
@@ -82,7 +84,7 @@ import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
+import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.CardEffectProcessor
@@ -256,13 +258,13 @@ val gameModule: Module = module {
     single { CardEffectProcessor(get(), get(), get()) }
     single { CanProcessMatchEffect(get(), get()) }
     single { ShouldProcessMatchEffect(get()) }
-    single { EvaluateBestDiePurchase(get()) }
     single { EvaluateCardPurchases() }
     single { EvaluateSimpleCost(get()) }
-
-    single { DecisionBestCardPurchaseBaseline(get()) }
+    single { PossibleCards(get()) }
+    single { PossibleDice(get(), get()) }
+    single { BestCardEvaluator(get()) }
     single { AcquireCardEvaluator(get()) }
-    single { AcquireDieEvaluator(get(), get()) }
+    single { AcquireDieEvaluator() }
     single { AcquireItem(get(), get(), get(), get(), get(), get(), get()) }
 
     single { EffectBattleScore() }

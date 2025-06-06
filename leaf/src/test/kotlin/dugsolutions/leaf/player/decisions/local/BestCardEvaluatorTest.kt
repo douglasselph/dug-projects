@@ -1,9 +1,8 @@
-package dugsolutions.leaf.player.decisions
+package dugsolutions.leaf.player.decisions.local
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestCardPurchaseBaseline
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -12,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class DecisionBestCardPurchaseBaselineTest {
+class BestCardEvaluatorTest {
 
     private lateinit var player: Player
 
@@ -25,7 +24,7 @@ class DecisionBestCardPurchaseBaselineTest {
     private lateinit var flowerCard1: GameCard
     private lateinit var flowerCard2: GameCard
 
-    private lateinit var SUT: DecisionBestCardPurchaseBaseline
+    private lateinit var SUT: BestCardEvaluator
 
     @BeforeEach
     fun setup() {
@@ -34,7 +33,7 @@ class DecisionBestCardPurchaseBaselineTest {
         every { player.allCardsInDeck } returns emptyList()
 
         // Create the strategy
-        SUT = DecisionBestCardPurchaseBaseline(player)
+        SUT = BestCardEvaluator(player)
 
         // Create test cards with different flourish types
         rootCard1 = FakeCards.fakeRoot.copy(id = 1)
@@ -73,11 +72,11 @@ class DecisionBestCardPurchaseBaselineTest {
     fun invoke_whenMultipleCardsWithDifferentEvaluations_returnsHighestEvaluation() = runBlocking {
         // Arrange
         val cards = listOf(rootCard1, rootCard2)
-        SUT.evaluationMap[rootCard1.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
-            listOf(DecisionBestCardPurchaseBaseline.CountInHand(0, 1))
+        SUT.evaluationMap[rootCard1.id] = BestCardEvaluator.CountsInHand(
+            listOf(BestCardEvaluator.CountInHand(0, 1))
         )
-        SUT.evaluationMap[rootCard2.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
-            listOf(DecisionBestCardPurchaseBaseline.CountInHand(0, 2))
+        SUT.evaluationMap[rootCard2.id] = BestCardEvaluator.CountsInHand(
+            listOf(BestCardEvaluator.CountInHand(0, 2))
         )
 
         // Act
@@ -94,11 +93,11 @@ class DecisionBestCardPurchaseBaselineTest {
         every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // rootCard1 appears twice
 
         // Set same evaluation for both cards
-        SUT.evaluationMap[rootCard1.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
-            listOf(DecisionBestCardPurchaseBaseline.CountInHand(0, 1))
+        SUT.evaluationMap[rootCard1.id] = BestCardEvaluator.CountsInHand(
+            listOf(BestCardEvaluator.CountInHand(0, 1))
         )
-        SUT.evaluationMap[rootCard2.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
-            listOf(DecisionBestCardPurchaseBaseline.CountInHand(0, 1))
+        SUT.evaluationMap[rootCard2.id] = BestCardEvaluator.CountsInHand(
+            listOf(BestCardEvaluator.CountInHand(0, 1))
         )
 
         // Act
@@ -115,8 +114,8 @@ class DecisionBestCardPurchaseBaselineTest {
 
         // Set same evaluation and count for all cards
         cards.forEach { card ->
-            SUT.evaluationMap[card.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
-                listOf(DecisionBestCardPurchaseBaseline.CountInHand(0, 1))
+            SUT.evaluationMap[card.id] = BestCardEvaluator.CountsInHand(
+                listOf(BestCardEvaluator.CountInHand(0, 1))
             )
         }
 
@@ -147,10 +146,10 @@ class DecisionBestCardPurchaseBaselineTest {
         every { player.allCardsInDeck } returns listOf(rootCard1, rootCard1) // count = 2
 
         // Set evaluation thresholds
-        SUT.evaluationMap[rootCard1.id] = DecisionBestCardPurchaseBaseline.CountsInHand(
+        SUT.evaluationMap[rootCard1.id] = BestCardEvaluator.CountsInHand(
             listOf(
-                DecisionBestCardPurchaseBaseline.CountInHand(0, 1),  // 0-1 cards
-                DecisionBestCardPurchaseBaseline.CountInHand(2, 3)   // 2+ cards
+                BestCardEvaluator.CountInHand(0, 1),  // 0-1 cards
+                BestCardEvaluator.CountInHand(2, 3)   // 2+ cards
             )
         )
 

@@ -1,8 +1,7 @@
-package dugsolutions.leaf.player.decisions
+package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestBloomCardBaseline
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

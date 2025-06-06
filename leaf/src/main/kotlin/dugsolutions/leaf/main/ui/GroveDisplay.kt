@@ -21,15 +21,22 @@ import dugsolutions.leaf.components.CostElement
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.Colors
+import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
+import dugsolutions.leaf.main.domain.ItemInfo
 import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
+import dugsolutions.leaf.main.gather.GatherDiceInfo
+
 
 @Composable
-fun GroveDisplay(grove: GroveInfo, onCardSelected: (cardInfo: CardInfo) -> Unit = {}) {
+fun GroveDisplay(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -41,43 +48,57 @@ fun GroveDisplay(grove: GroveInfo, onCardSelected: (cardInfo: CardInfo) -> Unit 
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Grove title and selection instruction
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            GroveTitle(grove)
+            if (grove.dice.values.isNotEmpty()) {
+                DiceDisplay(
+                    dice = grove.dice,
+                    elementsPerRow = grove.dice.values.size
+                ) { die -> onSelected(ItemInfo.Die(die)) }
+            }
+            GroveCards(grove, onSelected)
+        }
+    }
+}
+
+@Composable
+private fun GroveTitle(grove: GroveInfo) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Grove",
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        grove.instruction?.let { text ->
+            Surface(
+                color = Colors.SelectableColor,
+                shape = RoundedCornerShape(4.dp),
+                modifier = Modifier.padding(start = 8.dp)
             ) {
                 Text(
-                    text = "Grove",
-                    style = MaterialTheme.typography.h5,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    text = text,
+                    style = MaterialTheme.typography.subtitle1,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
-                grove.selectText?.let { text ->
-                    Surface(
-                        color = Color(0xFFFFF9C4),
-                        shape = RoundedCornerShape(4.dp),
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text(
-                            text = "Select card: $text",
-                            style = MaterialTheme.typography.subtitle1,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
             }
+        }
+    }
+}
 
-            // Stacks in rows of 3
-            reorder(grove.stacks).chunked(3).forEach { rowStacks ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    rowStacks.forEach { stack ->
-                        Box {
-                            StackInfoDisplay(stack) { card ->
-                                onCardSelected(card)
-                            }
-                        }
+@Composable
+private fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
+    // Stacks in rows of 3
+    reorder(grove.stacks).chunked(3).forEach { rowStacks ->
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            rowStacks.forEach { stack ->
+                Box {
+                    StackInfoDisplay(stack) { card ->
+                        onSelected(ItemInfo.Card(card))
                     }
                 }
             }
@@ -120,6 +141,9 @@ private fun reorder(stacks: List<StackInfo>): List<StackInfo> {
 // Preview window for testing grove display
 fun main() = application {
     val gatherCardInfo = GatherCardInfo()
+    val gatherDiceInfo = GatherDiceInfo()
+    val sampleDie = SampleDie()
+
     Window(
         onCloseRequest = ::exitApplication,
         title = "Grove Display Preview",
@@ -130,7 +154,19 @@ fun main() = application {
     ) {
         // Sample grove data
         val sampleGrove = GroveInfo(
-            selectText = "Select for Player 1",
+            instruction = "Select for Player 1",
+            dice = gatherDiceInfo(
+                Dice(
+                    listOf(
+                        sampleDie.d4,
+                        sampleDie.d6,
+                        sampleDie.d8,
+                        sampleDie.d10,
+                        sampleDie.d12,
+                        sampleDie.d20
+                    )
+                ), values = false
+            ),
             stacks = listOf(
                 StackInfo(
                     stack = MarketStackID.ROOT_1,

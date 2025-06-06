@@ -1,23 +1,17 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.FakeCards.Companion.fakeFlower
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Dice
 import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.ActionButton
-import dugsolutions.leaf.main.domain.CardInfoFaker
-import dugsolutions.leaf.main.domain.DieInfoFaker
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
-import dugsolutions.leaf.main.domain.PlayerInfoFaker
 import dugsolutions.leaf.main.domain.SelectedItems
 import dugsolutions.leaf.main.local.SelectGather
 import dugsolutions.leaf.main.local.SelectItem
-import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.PlayerTD
 import io.mockk.every
 import io.mockk.mockk
@@ -142,7 +136,7 @@ class MainDomainManagerTest {
         every { gatherGroveInfo(possibleCards, fakePlayer1) } returns updatedGroveInfo
 
         // Act
-        SUT.setHighlightGroveCardsForSelection(possibleCards, fakePlayer1)
+        SUT.setHighlightGroveItemsForSelection(possibleCards, fakePlayer1)
 
         // Assert
         val state = SUT.state.first()

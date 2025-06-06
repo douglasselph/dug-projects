@@ -6,16 +6,16 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 
 class AcquireItem(
     private val combinationGenerator: CombinationGenerator,
-    private val acquireCardEvaluator: AcquireCardEvaluator,
-    private val acquireDieEvaluator: AcquireDieEvaluator,
+    private val possibleCards: PossibleCards,
+    private val possibleDice: PossibleDice,
     private val manageAcquiredFloralTypes: ManageAcquiredFloralTypes,
     private val applyCost: ApplyCost,
     private val grove: Grove,
@@ -24,9 +24,9 @@ class AcquireItem(
 
     suspend operator fun invoke(player: Player, marketCards: List<GameCard>): Boolean {
         val combinations = combinationGenerator(player)
-        val bestCardChoice = acquireCardEvaluator(player, combinations, marketCards)
-        val bestDieChoice = acquireDieEvaluator(combinations)
-        val bestChoice = player.decisionDirector.acquireSelectDecision(bestCardChoice, bestDieChoice)
+        val possibleCards = possibleCards(player, combinations, marketCards)
+        val possibleDice = possibleDice(combinations)
+        val bestChoice = player.decisionDirector.acquireSelectDecision(possibleCards, possibleDice)
         var result = false
         when (bestChoice) {
             is DecisionAcquireSelect.BuyItem.Card -> {

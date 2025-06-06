@@ -6,6 +6,7 @@ import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.game.turn.select.SelectPossibleDice
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

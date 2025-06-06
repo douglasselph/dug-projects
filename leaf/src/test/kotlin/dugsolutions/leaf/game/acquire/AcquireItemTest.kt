@@ -10,8 +10,8 @@ import dugsolutions.leaf.game.acquire.cost.ApplyEffects
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.Combinations
-import dugsolutions.leaf.game.acquire.evaluator.AcquireCardEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.AcquireDieEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect

@@ -12,6 +12,7 @@ import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.GameEvent
+import dugsolutions.leaf.main.domain.ItemInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
@@ -64,7 +65,7 @@ class MainController(
         mainDomainManager.setActionButton(ActionButton.NONE)
         scope.launch {
             runGame().collect { gameEvent ->
-                mainDomainManager.updatePlayerData() // TODO: Unit tests
+                mainDomainManager.updatePlayerData()
                 when (gameEvent) {
                     is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
                     is GameEvent.TurnProgress -> mainDomainManager.addSimulationOutput("Turn ${gameEvent.playersScoreData.turn}: ${gameEvent.phase}")
@@ -97,9 +98,17 @@ class MainController(
         mainDecisions.onDrawCountChosen(value)
     }
 
-    fun onGroveCardSelected(cardInfo: CardInfo) {
-        mainDecisions.onGroveCardSelected(cardInfo)
-        updateGrove = true
+    fun onGroveItemSelected(item: ItemInfo) {
+        when(item) {
+            is ItemInfo.Card -> {
+                mainDecisions.onGroveCardSelected(item.value)
+                updateGrove = true
+            }
+            is ItemInfo.Die -> {
+                mainDecisions.onGroveDieSelected(item.value)
+                updateGrove = true
+            }
+        }
     }
 
     fun onStepEnabledToggled(value: Boolean) {

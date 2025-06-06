@@ -1,4 +1,4 @@
-package dugsolutions.leaf.player.decisions
+package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
@@ -7,7 +7,6 @@ import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
 import dugsolutions.leaf.di.factory.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.tool.RandomizerTD
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DecisionDamageAbsorptionBaselineTest {

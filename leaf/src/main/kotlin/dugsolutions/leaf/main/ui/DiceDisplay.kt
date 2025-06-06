@@ -32,6 +32,7 @@ import dugsolutions.leaf.main.gather.GatherDiceInfo
 @Composable
 fun DiceDisplay(
     dice: DiceInfo,
+    elementsPerRow: Int = 3,
     onDieSelected: (die: DieInfo) -> Unit = {}
 ) {
     Surface(
@@ -45,8 +46,8 @@ fun DiceDisplay(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Process dice in groups of 3
-            dice.values.chunked(3).forEach { rowDice ->
+            // Process dice in groups of elementsPerRow
+            dice.values.chunked(elementsPerRow).forEach { rowDice ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -91,12 +92,13 @@ fun DiceDisplay(
 fun main() = application {
     val gatherDiceInfo = GatherDiceInfo()
     val sampleDie = SampleDie()
+
     Window(
         onCloseRequest = ::exitApplication,
         title = "Dice Display Preview",
         state = WindowState(
             width = 400.dp,
-            height = 800.dp
+            height = 1200.dp
         )
     ) {
         Column(
@@ -126,6 +128,22 @@ fun main() = application {
                 }
             )
             DiceDisplay(withHighlights)
+            DiceDisplay(
+                gatherDiceInfo(
+                    Dice(
+                        listOf(
+                            sampleDie.d4,
+                            sampleDie.d6,
+                            sampleDie.d8,
+                            sampleDie.d10,
+                            sampleDie.d12,
+                            sampleDie.d20
+                        )
+                    ), values = false
+                ),
+                elementsPerRow = 1
+            )
+
         }
     }
 }

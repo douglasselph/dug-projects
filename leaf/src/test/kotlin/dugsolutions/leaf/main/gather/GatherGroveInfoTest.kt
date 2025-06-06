@@ -6,7 +6,6 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
@@ -84,7 +83,7 @@ class GatherGroveInfoTest {
             assertEquals(mockCardInfo, stack.topCard)
             verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.NONE) }
         }
-        assertNull(result.selectText)
+        assertNull(result.instruction)
     }
 
     @Test
@@ -101,7 +100,7 @@ class GatherGroveInfoTest {
             assertEquals(0, stack.numCards)
             assertNull(stack.topCard)
         }
-        assertNull(result.selectText)
+        assertNull(result.instruction)
     }
 
     @Test
@@ -131,7 +130,7 @@ class GatherGroveInfoTest {
                 assertEquals(0, stack.numCards)
                 assertNull(stack.topCard)
             }
-        assertNull(result.selectText)
+        assertNull(result.instruction)
     }
 
     @Test
@@ -157,6 +156,6 @@ class GatherGroveInfoTest {
         val result = SUT(selectForPlayer = mockPlayer)
 
         // Assert
-        assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.selectText)
+        assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
     }
 } 

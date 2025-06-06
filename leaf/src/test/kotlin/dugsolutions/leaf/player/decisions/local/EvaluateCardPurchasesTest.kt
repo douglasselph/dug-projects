@@ -1,4 +1,4 @@
-package dugsolutions.leaf.game.acquire.evaluator
+package dugsolutions.leaf.player.decisions.local
 
 import dugsolutions.leaf.components.Cost
 import dugsolutions.leaf.components.CostElement

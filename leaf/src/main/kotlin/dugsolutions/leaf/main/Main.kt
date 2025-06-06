@@ -30,7 +30,7 @@ class MainApplication : KoinComponent {
                             onDrawCountChosen = { mainController.onDrawCountChosen(it) },
                             onActionButtonPressed = { mainController.onActionPressed(it) },
                             onStepEnabledToggled = { mainController.onStepEnabledToggled(it) },
-                            onGroveCardSelected = { card -> mainController.onGroveCardSelected(card) },
+                            onGroveCardSelected = { card -> mainController.onGroveItemSelected(card) },
                             onHandCardSelected = { player, card -> mainController.onHandCardSelected(player, card) },
                             onFloralCardSelected = { player, card -> mainController.onFloralCardSelected(player, card) },
                             onDieSelected = { player, card -> mainController.onDieSelected(player, card) }

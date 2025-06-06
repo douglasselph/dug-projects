@@ -1,6 +1,7 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.components.die.Die
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.ActionButton
@@ -84,11 +85,15 @@ class MainDomainManager(
         }
     }
 
-    fun setHighlightGroveCardsForSelection(possibleCards: List<GameCard>, player: Player) {
+    fun setHighlightGroveItemsForSelection(
+        possibleCards: List<GameCard>,
+        possibleDice: List<Die>,
+        player: Player
+    ) {
         _state.update { currentState ->
             currentState.copy(
                 turn = gameTime.turn,
-                groveInfo = gatherGroveInfo(possibleCards, player),
+                groveInfo = gatherGroveInfo(possibleCards, possibleDice, player),
             )
         }
     }

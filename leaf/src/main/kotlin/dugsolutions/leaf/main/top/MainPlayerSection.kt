@@ -56,8 +56,8 @@ fun MainPlayerSection(
 
             // Grove display (if available)
             state.groveInfo?.let { groveInfo ->
-                GroveDisplay(grove = groveInfo) { card ->
-                    args.onGroveCardSelected(card)
+                GroveDisplay(grove = groveInfo) { item ->
+                    args.onGroveCardSelected(item)
                 }
             }
         }
