@@ -1,42 +1,31 @@
 package dugsolutions.leaf.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Checkbox
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
-import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
-import dugsolutions.leaf.main.ui.GroveDisplay
-import dugsolutions.leaf.main.ui.PlayerDisplay
-import dugsolutions.leaf.main.ui.PlayerDisplayClickListeners
+import dugsolutions.leaf.main.top.MainOutput
+import dugsolutions.leaf.main.top.MainPlayerSection
+import dugsolutions.leaf.main.top.MainTitle
+import dugsolutions.leaf.main.ui.DraggableDivider
 import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
@@ -53,6 +42,7 @@ data class MainScreenArgs(
 @Composable
 fun MainScreen(args: MainScreenArgs) {
     val state by args.state.collectAsState()
+    var dividerPosition by remember { mutableStateOf(0.7f) }
 
     Box(
         modifier = Modifier
@@ -64,51 +54,11 @@ fun MainScreen(args: MainScreenArgs) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Title bar (fixed at top)
-            Row(
+            MainTitle(
+                state,
+                args,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Turn ${state.turn}",
-                    style = MaterialTheme.typography.h4
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Checkbox(
-                            checked = state.stepModeEnabled,
-                            onCheckedChange = { args.onStepEnabledToggled(it) }
-                        )
-                        Text("Step Mode")
-                    }
-                    state.actionInstruction?.let { instruction ->
-                        Surface(
-                            color = Colors.SelectableColor,
-                            shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Text(
-                                text = instruction,
-                                style = MaterialTheme.typography.body1,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                    state.actionButton.text?.let { actionText ->
-                        Button(
-                            onClick = { args.onActionButtonPressed(state.actionButton) }
-                        ) {
-                            Text(actionText)
-                        }
-                    }
-                }
-            }
+            )
 
             Box(
                 modifier = Modifier
@@ -117,85 +67,29 @@ fun MainScreen(args: MainScreenArgs) {
                     .background(MaterialTheme.colors.onSurface)
             )
 
-            // Scrollable content area
-            Box(
+            // Scrollable content area with dynamic height
+            MainPlayerSection(
+                state,
+                args,
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(dividerPosition)
                     .fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Players row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        state.players.forEach { player ->
-                            PlayerDisplay(
-                                player = player,
-                                listeners = PlayerDisplayClickListeners(
-                                    onDrawCountChosen = args.onDrawCountChosen,
-                                    onHandCardSelected = { args.onHandCardSelected(player, it) },
-                                    onFloralCardSelected = { args.onFloralCardSelected(player, it) },
-                                    onDieSelected = { args.onDieSelected(player, it) }
-                                )
-                            )
-                        }
-                    }
-
-                    // Grove display (if available)
-                    state.groveInfo?.let { groveInfo ->
-                        GroveDisplay(grove = groveInfo) { card ->
-                            args.onGroveCardSelected(card)
-                        }
-                    }
-                }
-            }
-
-            // Black line divider
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MaterialTheme.colors.onSurface)
             )
 
-            // Output area (fixed at bottom)
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = 4.dp
-            ) {
-                val height = MaterialTheme.typography.body1.fontSize.value.dp * 7
-                val listState = rememberLazyListState()
-                val lastIndex = remember(state.simulationOutput.size) { state.simulationOutput.size - 1 }
-
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(height * 3f)
-                ) {
-                    items(state.simulationOutput.size) { index ->
-                        Text(
-                            text = state.simulationOutput[index],
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                        )
-                    }
+            // Draggable divider
+            DraggableDivider(
+                onPositionChange = { newPosition ->
+                    dividerPosition = newPosition
                 }
+            )
 
-                // Auto-scroll to bottom when output changes
-                LaunchedEffect(state.simulationOutput.size) {
-                    if (lastIndex >= 0) {
-                        listState.animateScrollToItem(lastIndex)
-                    }
-                }
-            }
+            // Output area with dynamic height
+            MainOutput(
+                state = state,
+                modifier = Modifier
+                    .weight(1f - dividerPosition)
+                    .fillMaxWidth()
+            )
         }
     }
 } 
