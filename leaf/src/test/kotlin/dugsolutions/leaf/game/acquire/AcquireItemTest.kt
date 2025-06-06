@@ -10,6 +10,8 @@ import dugsolutions.leaf.game.acquire.cost.ApplyEffects
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.Combinations
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import dugsolutions.leaf.grove.Grove
@@ -35,9 +37,9 @@ class AcquireItemTest {
 
     // Dependencies
     private lateinit var mockCombinationGenerator: CombinationGenerator
-    private lateinit var mockAcquireCardEvaluator: AcquireCardEvaluator
-    private lateinit var mockAcquireDieEvaluator: AcquireDieEvaluator
     private lateinit var mockManageAcquiredFloralTypes: ManageAcquiredFloralTypes
+    private val mockPossibleCards = mockk<PossibleCards>(relaxed = true)
+    private val mockPossibleDice = mockk<PossibleDice>(relaxed = true)
     private lateinit var mockApplyEffects: ApplyEffects
     private lateinit var applyCostTD: ApplyCostTD
     private lateinit var mockChronicle: GameChronicle
@@ -49,10 +51,7 @@ class AcquireItemTest {
     private lateinit var mockFlowerCard: GameCard
     private lateinit var mockCombination: Combination
     private lateinit var mockDie: Die
-    private lateinit var mockCardChoice: AcquireCardEvaluator.Choice
-    private lateinit var mockFlowerCardChoice: AcquireCardEvaluator.Choice
     private lateinit var mockDieChoice: DecisionAcquireSelect.BuyItem.Die
-    private lateinit var mockDieBestChoice: AcquireDieEvaluator.BestChoice
     private lateinit var mockCombinations: Combinations
     private lateinit var mockMarketCards: List<GameCard>
 
@@ -63,8 +62,6 @@ class AcquireItemTest {
     fun setup() {
         // Setup mocks
         mockCombinationGenerator = mockk(relaxed = true)
-        mockAcquireCardEvaluator = mockk(relaxed = true)
-        mockAcquireDieEvaluator = mockk(relaxed = true)
         mockManageAcquiredFloralTypes = mockk(relaxed = true)
         mockApplyEffects = mockk(relaxed = true)
         applyCostTD = ApplyCostTD()
@@ -75,8 +72,8 @@ class AcquireItemTest {
         // Create the test subject
         SUT = AcquireItem(
             mockCombinationGenerator,
-            mockAcquireCardEvaluator,
-            mockAcquireDieEvaluator,
+            mockPossibleCards,
+            mockPossibleDice,
             mockManageAcquiredFloralTypes,
             applyCostTD,
             mockGrove,
@@ -98,9 +95,6 @@ class AcquireItemTest {
         mockMarketCards = listOf(mockCard, mockFlowerCard)
 
         // Setup card and die choices
-        mockCardChoice = AcquireCardEvaluator.Choice(mockCard, mockCombination)
-        mockFlowerCardChoice = AcquireCardEvaluator.Choice(mockFlowerCard, mockCombination)
-        mockDieBestChoice = AcquireDieEvaluator.BestChoice(mockDie, mockCombination)
         mockDieChoice = DecisionAcquireSelect.BuyItem.Die(mockDieBestChoice)
 
         // Default behavior - generate combinations

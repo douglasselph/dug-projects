@@ -24,6 +24,10 @@ object FakeCombination {
         DieValues(Dice(listOf(sampleDie.d10)).copy),
         addToTotal = 0
     )
+    val combinationD12 = Combination(
+        DieValues(Dice(listOf(sampleDie.d12)).copy),
+        addToTotal = 1
+    )
     val combinationD4D6 = Combination(
         DieValues(Dice(listOf(sampleDie.d4, sampleDie.d6)).copy),
         addToTotal = 0

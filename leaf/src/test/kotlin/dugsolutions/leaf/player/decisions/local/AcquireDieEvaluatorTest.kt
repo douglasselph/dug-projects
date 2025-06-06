@@ -1,10 +1,7 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
-import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

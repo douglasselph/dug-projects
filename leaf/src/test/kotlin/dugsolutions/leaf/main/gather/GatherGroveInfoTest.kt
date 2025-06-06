@@ -6,6 +6,7 @@ import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.GameCardIDs
 import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
@@ -17,6 +18,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -50,6 +52,7 @@ class GatherGroveInfoTest {
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private lateinit var mockCards: GameCardIDs
     private lateinit var mockPlayer: Player
+    private val sampleDie = SampleDie()
 
     private lateinit var SUT: GatherGroveInfo
 
@@ -84,6 +87,8 @@ class GatherGroveInfoTest {
             verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.NONE) }
         }
         assertNull(result.instruction)
+        assertNotNull(result.dice)
+        assertTrue(result.dice.values.isEmpty())
     }
 
     @Test
@@ -101,6 +106,8 @@ class GatherGroveInfoTest {
             assertNull(stack.topCard)
         }
         assertNull(result.instruction)
+        assertNotNull(result.dice)
+        assertTrue(result.dice.values.isEmpty())
     }
 
     @Test
@@ -131,21 +138,44 @@ class GatherGroveInfoTest {
                 assertNull(stack.topCard)
             }
         assertNull(result.instruction)
+        assertNotNull(result.dice)
+        assertTrue(result.dice.values.isEmpty())
     }
 
     @Test
-    fun invoke_whenHighlightProvided_returnsHighlightedCards() {
+    fun invoke_whenHighlightCardProvided_returnsHighlightedCards() {
         // Arrange
         val highlightCards = listOf(testCard)
 
         // Act
-        val result = SUT(highlight = highlightCards)
+        val result = SUT(highlightCard = highlightCards)
 
         // Assert
         result.stacks.forEachIndexed { index, stack ->
             if (stack.topCard != null) {
                 verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.SELECTABLE) }
             }
+        }
+        assertNotNull(result.dice)
+        assertTrue(result.dice.values.isEmpty())
+    }
+
+    @Test
+    fun invoke_whenHighlightDieProvided_returnsHighlightedDice() {
+        // Arrange
+        val highlightDice = listOf(sampleDie.d6, sampleDie.d8)
+
+        // Act
+        val result = SUT(highlightDie = highlightDice)
+
+        // Assert
+        assertNotNull(result.dice)
+        assertEquals(2, result.dice.values.size)
+        result.dice.values.forEachIndexed { index, dieInfo ->
+            assertEquals(index, dieInfo.index)
+            assertEquals(highlightDice[index].sides.toString(), dieInfo.value)
+            assertEquals(HighlightInfo.SELECTABLE, dieInfo.highlight)
+            assertEquals(highlightDice[index], dieInfo.backingDie)
         }
     }
 
@@ -156,6 +186,43 @@ class GatherGroveInfoTest {
         val result = SUT(selectForPlayer = mockPlayer)
 
         // Assert
+        assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
+        assertNotNull(result.dice)
+        assertTrue(result.dice.values.isEmpty())
+    }
+
+    @Test
+    fun invoke_whenAllParametersProvided_returnsCompleteInfo() {
+        // Arrange
+        val highlightCards = listOf(testCard)
+        val highlightDice = listOf(sampleDie.d6, sampleDie.d8)
+
+        // Act
+        val result = SUT(
+            highlightCard = highlightCards,
+            highlightDie = highlightDice,
+            selectForPlayer = mockPlayer
+        )
+
+        // Assert
+        // Check stacks
+        result.stacks.forEachIndexed { index, stack ->
+            if (stack.topCard != null) {
+                verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.SELECTABLE) }
+            }
+        }
+
+        // Check dice
+        assertNotNull(result.dice)
+        assertEquals(2, result.dice.values.size)
+        result.dice.values.forEachIndexed { index, dieInfo ->
+            assertEquals(index, dieInfo.index)
+            assertEquals(highlightDice[index].sides.toString(), dieInfo.value)
+            assertEquals(HighlightInfo.SELECTABLE, dieInfo.highlight)
+            assertEquals(highlightDice[index], dieInfo.backingDie)
+        }
+
+        // Check instruction
         assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
     }
 } 

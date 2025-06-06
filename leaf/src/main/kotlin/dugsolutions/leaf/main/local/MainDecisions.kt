@@ -87,7 +87,7 @@ class MainDecisions(
         return value
     }
 
-    fun onPlayerSelectionComplete() {
+    fun  onPlayerSelectionComplete() {
         val selected = mainDomainManager.gatherSelected()
         decisionDamageAbsorptionSuspend.provide(
             DecisionDamageAbsorption.Result(

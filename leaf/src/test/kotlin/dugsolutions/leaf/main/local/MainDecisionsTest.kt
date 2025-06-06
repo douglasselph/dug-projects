@@ -1,13 +1,15 @@
 package dugsolutions.leaf.main.local
 
 import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.SelectedItems
 import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionBestCardPurchase
+import dugsolutions.leaf.player.PlayerTD
+import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import io.mockk.every
@@ -26,18 +28,22 @@ class MainDecisionsTest {
 
     private val mockMainDomainManager = mockk<MainDomainManager>(relaxed = true)
     private val mockCardOperations = mockk<CardOperations>(relaxed = true)
+    private val fakePlayer = PlayerTD(1)
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val mockGameCard = mockk<GameCard>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
+    private val mockDieInfo = mockk<DieInfo>(relaxed = true)
     private val mockSelectedItems = mockk<SelectedItems>(relaxed = true)
+    private val sampleDie = SampleDie()
 
     private val SUT = MainDecisions(mockMainDomainManager, mockCardOperations)
 
     @BeforeEach
     fun setup() {
-        every { mockPlayer.incomingDamage } returns DAMAGE_AMOUNT
+        every { fakePlayer.incomingDamage } returns DAMAGE_AMOUNT
         every { mockCardOperations.getCard(mockCardInfo) } returns mockGameCard
         every { mockMainDomainManager.gatherSelected() } returns mockSelectedItems
+        every { mockDieInfo.backingDie } returns sampleDie.d6
     }
 
     @Test
@@ -48,7 +54,7 @@ class MainDecisionsTest {
 
         // Assert
         verify { mockPlayer.decisionDirector.drawCountDecision = any<DecisionDrawCount>() }
-        verify { mockPlayer.decisionDirector.bestCardPurchase = any<DecisionBestCardPurchase>() }
+        verify { mockPlayer.decisionDirector.acquireSelectDecision = any<DecisionAcquireSelect>() }
         verify { mockPlayer.decisionDirector.damageAbsorptionDecision = any<DecisionDamageAbsorption>() }
     }
 
@@ -86,6 +92,28 @@ class MainDecisionsTest {
     }
 
     @Test
+    fun onGroveDieSelected_whenDieExists_updatesState() {
+        // Arrange
+        // Act
+        SUT.onGroveDieSelected(mockDieInfo)
+
+        // Assert
+        verify { mockMainDomainManager.clearGroveCardHighlights() }
+    }
+
+    @Test
+    fun onGroveDieSelected_whenDieDoesNotExist_doesNotUpdateState() {
+        // Arrange
+        every { mockDieInfo.backingDie } returns null
+
+        // Act
+        SUT.onGroveDieSelected(mockDieInfo)
+
+        // Assert
+        verify(exactly = 0) { mockMainDomainManager.clearGroveCardHighlights() }
+    }
+
+    @Test
     fun onPlayerSelectionComplete_whenCalled_updatesState() {
         // Arrange
         // Act
@@ -95,5 +123,21 @@ class MainDecisionsTest {
         verify { mockMainDomainManager.gatherSelected() }
         verify { mockMainDomainManager.clearAllowPlayerItemSelect() }
         verify { mockMainDomainManager.setActionButton(ActionButton.NONE) }
+    }
+
+    @Test
+    fun onPlayerSelectionComplete_whenCalled_providesSelectedItems() {
+        // Arrange
+        val mockCards = listOf(mockGameCard)
+        val mockDice = listOf(sampleDie.d6)
+        every { mockSelectedItems.cards } returns mockCards
+        every { mockSelectedItems.dice } returns mockDice
+        SUT.setup(fakePlayer)
+
+        // Act
+        SUT.onPlayerSelectionComplete()
+
+        // Assert
+        // TODO: This is hard.
     }
 } 

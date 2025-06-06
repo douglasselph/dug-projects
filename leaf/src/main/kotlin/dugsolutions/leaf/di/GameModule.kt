@@ -36,12 +36,8 @@ import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.cost.ApplyEffects
 import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
 import dugsolutions.leaf.game.acquire.credit.EffectToCredits
-import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
-import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
-import dugsolutions.leaf.game.acquire.evaluator.EvaluateBestDiePurchase
 import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
 import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
-import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
@@ -70,13 +66,13 @@ import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
-import dugsolutions.leaf.main.local.CardOperations
 import dugsolutions.leaf.main.MainController
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.local.CardOperations
 import dugsolutions.leaf.main.local.MainDecisions
 import dugsolutions.leaf.main.local.SelectGather
 import dugsolutions.leaf.main.local.SelectItem
@@ -84,8 +80,11 @@ import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.FloralCount
 import dugsolutions.leaf.player.components.StackManager
+import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
+import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
 import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.CardEffectProcessor
 import dugsolutions.leaf.player.effect.CardEffectsProcessor
@@ -203,7 +202,7 @@ val gameModule: Module = module {
     single { WriteChronicleResults(get(), get()) }
     single { WriteGameSummaries(get(), get(), get(), get()) }
 
-    single { DecisionDirectorFactory(get(), get()) }
+    single { DecisionDirectorFactory(get(), get(), get(), get()) }
 
     single { GameCardsUseCase(get()) }
     single { Grove(get(), get()) }

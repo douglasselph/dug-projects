@@ -1,12 +1,7 @@
 package dugsolutions.leaf.player.decisions.local
 
-
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.DieValues
-import dugsolutions.leaf.components.die.SampleDie
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
-import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import io.mockk.every
 import io.mockk.mockk
@@ -20,9 +15,10 @@ class AcquireCardEvaluatorTest {
         private val fakeCard1 = FakeCards.fakeRoot
         private val fakeCard2 = FakeCards.fakeCanopy
         private val fakeCard3 = FakeCards.fakeFlower
+        private val fakeCard4 = FakeCards.fakeVine
+        private val fakeCard5 = FakeCards.fakeSeedling
     }
     private val bestCardEvaluator = mockk<BestCardEvaluator>(relaxed = true)
-
     private val SUT = AcquireCardEvaluator(bestCardEvaluator)
 
     @Test
@@ -55,4 +51,84 @@ class AcquireCardEvaluatorTest {
         assertNull(result)
     }
 
+    @Test
+    fun invoke_whenSingleChoice_returnsThatChoice() {
+        // Arrange
+        val choice = ChoiceCard(fakeCard1, FakeCombination.combinationD6)
+        every { bestCardEvaluator(listOf(fakeCard1)) } returns fakeCard1
+
+        // Act
+        val result = SUT(listOf(choice))
+
+        // Assert
+        assertEquals(choice, result)
+    }
+
+    @Test
+    fun invoke_whenMultipleChoicesForSameCard_returnsFirstChoice() {
+        // Arrange
+        val choice1 = ChoiceCard(fakeCard1, FakeCombination.combinationD6)
+        val choice2 = ChoiceCard(fakeCard1, FakeCombination.combinationD8)
+        every { bestCardEvaluator(listOf(fakeCard1)) } returns fakeCard1
+
+        // Act
+        val result = SUT(listOf(choice1, choice2))
+
+        // Assert
+        assertEquals(choice1, result)
+    }
+
+    @Test
+    fun invoke_whenBestCardIsLastInList_returnsCorrectChoice() {
+        // Arrange
+        val choice1 = ChoiceCard(fakeCard1, FakeCombination.combinationD6)
+        val choice2 = ChoiceCard(fakeCard2, FakeCombination.combinationD8)
+        val choice3 = ChoiceCard(fakeCard3, FakeCombination.combinationD10)
+        val choice4 = ChoiceCard(fakeCard4, FakeCombination.combinationD12)
+        val choice5 = ChoiceCard(fakeCard5, FakeCombination.combinationD4D6D8)
+
+        every { bestCardEvaluator(listOf(fakeCard1, fakeCard2, fakeCard3, fakeCard4, fakeCard5)) } returns fakeCard5
+
+        // Act
+        val result = SUT(listOf(choice1, choice2, choice3, choice4, choice5))
+
+        // Assert
+        assertEquals(choice5, result)
+    }
+
+    @Test
+    fun invoke_whenBestCardIsFirstInList_returnsCorrectChoice() {
+        // Arrange
+        val choice1 = ChoiceCard(fakeCard1, FakeCombination.combinationD6)
+        val choice2 = ChoiceCard(fakeCard2, FakeCombination.combinationD8)
+        val choice3 = ChoiceCard(fakeCard3, FakeCombination.combinationD10)
+        val choice4 = ChoiceCard(fakeCard4, FakeCombination.combinationD12)
+        val choice5 = ChoiceCard(fakeCard5, FakeCombination.combinationD6Plus5)
+
+        every { bestCardEvaluator(listOf(fakeCard1, fakeCard2, fakeCard3, fakeCard4, fakeCard5)) } returns fakeCard1
+
+        // Act
+        val result = SUT(listOf(choice1, choice2, choice3, choice4, choice5))
+
+        // Assert
+        assertEquals(choice1, result)
+    }
+
+    @Test
+    fun invoke_whenBestCardIsMiddleInList_returnsCorrectChoice() {
+        // Arrange
+        val choice1 = ChoiceCard(fakeCard1, FakeCombination.combinationD6)
+        val choice2 = ChoiceCard(fakeCard2, FakeCombination.combinationD8)
+        val choice3 = ChoiceCard(fakeCard3, FakeCombination.combinationD10)
+        val choice4 = ChoiceCard(fakeCard4, FakeCombination.combinationD12)
+        val choice5 = ChoiceCard(fakeCard5, FakeCombination.combinationD4D6D8)
+
+        every { bestCardEvaluator(listOf(fakeCard1, fakeCard2, fakeCard3, fakeCard4, fakeCard5)) } returns fakeCard3
+
+        // Act
+        val result = SUT(listOf(choice1, choice2, choice3, choice4, choice5))
+
+        // Assert
+        assertEquals(choice3, result)
+    }
 } 

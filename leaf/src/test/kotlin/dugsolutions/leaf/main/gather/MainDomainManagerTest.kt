@@ -129,19 +129,54 @@ class MainDomainManagerTest {
     }
 
     @Test
-    fun setHighlightGroveCardsForSelection_whenCalled_updatesGroveInfo() = runBlocking {
+    fun setHighlightGroveItemsForSelection_whenCalledWithCardsAndDice_updatesGroveInfo() = runBlocking {
         // Arrange
-        val possibleCards = listOf<GameCard>()
+        val possibleCards = listOf(fakeRoot)
+        val possibleDice = listOf(sampleDie.d6)
         val updatedGroveInfo = mockk<GroveInfo>()
-        every { gatherGroveInfo(possibleCards, fakePlayer1) } returns updatedGroveInfo
+        every { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) } returns updatedGroveInfo
 
         // Act
-        SUT.setHighlightGroveItemsForSelection(possibleCards, fakePlayer1)
+        SUT.setHighlightGroveItemsForSelection(possibleCards, possibleDice, fakePlayer1)
 
         // Assert
         val state = SUT.state.first()
         assertEquals(updatedGroveInfo, state.groveInfo)
-        verify { gatherGroveInfo(possibleCards, fakePlayer1) }
+        verify { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) }
+    }
+
+    @Test
+    fun setHighlightGroveItemsForSelection_whenCalledWithOnlyCards_updatesGroveInfo() = runBlocking {
+        // Arrange
+        val possibleCards = listOf(fakeRoot)
+        val possibleDice = emptyList<Die>()
+        val updatedGroveInfo = mockk<GroveInfo>()
+        every { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) } returns updatedGroveInfo
+
+        // Act
+        SUT.setHighlightGroveItemsForSelection(possibleCards, possibleDice, fakePlayer1)
+
+        // Assert
+        val state = SUT.state.first()
+        assertEquals(updatedGroveInfo, state.groveInfo)
+        verify { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) }
+    }
+
+    @Test
+    fun setHighlightGroveItemsForSelection_whenCalledWithOnlyDice_updatesGroveInfo() = runBlocking {
+        // Arrange
+        val possibleCards = emptyList<GameCard>()
+        val possibleDice = listOf(sampleDie.d6)
+        val updatedGroveInfo = mockk<GroveInfo>()
+        every { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) } returns updatedGroveInfo
+
+        // Act
+        SUT.setHighlightGroveItemsForSelection(possibleCards, possibleDice, fakePlayer1)
+
+        // Assert
+        val state = SUT.state.first()
+        assertEquals(updatedGroveInfo, state.groveInfo)
+        verify { gatherGroveInfo(possibleCards, possibleDice, fakePlayer1) }
     }
 
     @Test
