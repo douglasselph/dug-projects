@@ -1,6 +1,7 @@
 package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
@@ -10,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
@@ -27,7 +30,13 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 import kotlinx.coroutines.selects.select
 
 @Composable
-fun StackInfoDisplay(stack: StackInfo, onSelected: (card: CardInfo) -> Unit = {}) {
+fun StackInfoDisplay(
+    stack: StackInfo,
+    onSelected: (card: CardInfo) -> Unit = {}
+) {
+    val emptyStackWidth: Dp = 160.dp
+    val emptyStackHeight: Dp = 100.dp
+
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -52,7 +61,18 @@ fun StackInfoDisplay(stack: StackInfo, onSelected: (card: CardInfo) -> Unit = {}
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Top card if it exists
-                if (stack.topCard != null) {
+                if (stack.topCard == null || stack.numCards == 0) {
+                    // Grey box representing empty stack
+                    Box(
+                        modifier = Modifier
+                            .width(emptyStackWidth)
+                            .height(emptyStackHeight)
+                            .background(
+                                color = Color.LightGray,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    )
+                } else {
                     Box {
                         CardDisplay(stack.topCard) {
                             onSelected(stack.topCard)
@@ -94,7 +114,7 @@ fun main() = application {
         title = "Stack Info Display Preview",
         state = WindowState(
             width = 800.dp,
-            height = 400.dp
+            height = 600.dp
         )
     ) {
         Column(
@@ -105,7 +125,7 @@ fun main() = application {
             val stackWithCard = StackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
-                    incoming = GameCard(
+                    card = GameCard(
                         id = 1,
                         name = "Long Root",
                         type = FlourishType.ROOT,
@@ -125,11 +145,11 @@ fun main() = application {
             )
             StackInfoDisplay(stackWithCard)
 
-            // First example - Stack with card
+            // Second example - Stack with card
             val stackWithCard2 = StackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
-                    incoming = GameCard(
+                    card = GameCard(
                         id = 1,
                         name = "Long Root 2",
                         type = FlourishType.ROOT,
@@ -146,9 +166,34 @@ fun main() = application {
                     ),
                     highlight = HighlightInfo.SELECTABLE
                 ),
-                numCards = 42
+                numCards = 12
             )
             StackInfoDisplay(stackWithCard2)
+
+            // First example - Stack with card
+            val stackEmpty = StackInfo(
+                stack = MarketStackID.ROOT_1,
+                topCard = gatherCardInfo(
+                    card = GameCard(
+                        id = 1,
+                        name = "Long Root",
+                        type = FlourishType.ROOT,
+                        resilience = 2,
+                        cost = Cost(emptyList()),
+                        primaryEffect = CardEffect.DRAW_CARD,
+                        primaryValue = 1,
+                        matchWith = MatchWith.None,
+                        matchEffect = null,
+                        matchValue = 0,
+                        trashEffect = null,
+                        trashValue = 0,
+                        thorn = 0
+                    )
+                ),
+                numCards = 0
+            )
+            StackInfoDisplay(stackEmpty)
+
         }
     }
 }

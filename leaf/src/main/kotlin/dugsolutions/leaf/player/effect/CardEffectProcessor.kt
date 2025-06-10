@@ -7,9 +7,12 @@ import dugsolutions.leaf.components.CardOrDie
 import dugsolutions.leaf.components.FlourishType
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.DieSides
+import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
+import dugsolutions.leaf.player.domain.ExtendedHandItem
 
 /**
  * Main processor for all effects in the game.
@@ -18,6 +21,7 @@ import dugsolutions.leaf.player.domain.AppliedEffect
 class CardEffectProcessor(
     private val canProcessMatchEffect: CanProcessMatchEffect,
     private val shouldProcessMatchEffect: ShouldProcessMatchEffect,
+    private val gameTime: GameTime,
     private val chronicle: GameChronicle
 ) {
 
@@ -50,19 +54,23 @@ class CardEffectProcessor(
         // See if we should trash this card right now.
         // This is only taking into consideration non-battle affecting trash effects.
         card.trashEffect?.let {
-            when (val result = player.decisionDirector.shouldProcessTrashEffect(card)) {
-                DecisionShouldProcessTrashEffect.Result.TRASH -> {
-                    processEffect(card, card.trashEffect, card.trashValue)
-                    player.removeCardFromHand(card.id)
-                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
-                }
+            if (card.type == FlourishType.FLOWER && gameTime.phase == GamePhase.CULTIVATION) {
+                // Do not trash.
+            } else {
+                when (val result = player.decisionDirector.shouldProcessTrashEffect(card)) {
+                    DecisionShouldProcessTrashEffect.Result.TRASH -> {
+                        processEffect(card, card.trashEffect, card.trashValue)
+                        player.removeCardFromHand(card.id)
+                        chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
+                    }
 
-                DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED -> {
-                    player.effectsList.add(AppliedEffect.TrashIfNeeded(card))
-                    chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
-                }
+                    DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED -> {
+                        player.effectsList.add(AppliedEffect.TrashIfNeeded(card))
+                        chronicle(Moment.TRASH_FOR_EFFECT(player, card, result))
+                    }
 
-                else -> {}
+                    else -> {}
+                }
             }
         }
         return effects

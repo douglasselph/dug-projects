@@ -19,7 +19,7 @@ class ScenarioBasicConfig(
         val flowers = getGameCards(FlourishType.FLOWER)
 
         val numCards = numPlayers * 3
-        val numWild = numPlayers
+        val numWild = numPlayers - 1
         val numFlowers = numPlayers + 2
 
         require(roots.size > 3) { "Not enough root cards defined. Found only ${roots.size}" }
@@ -45,7 +45,8 @@ class ScenarioBasicConfig(
                 getMarketStackConfig(MarketStackID.FLOWER_1, listOf(flowers[0]), numFlowers),
                 getMarketStackConfig(MarketStackID.FLOWER_2, listOf(flowers[1]), numFlowers),
                 getMarketStackConfig(MarketStackID.FLOWER_3, listOf(flowers[2]), numFlowers),
-                getMarketStackConfig(MarketStackID.JOINT_RCV, joints, numWild)
+                getMarketStackConfig(MarketStackID.WILD_1, joints, numWild),
+                getMarketStackConfig(MarketStackID.WILD_2, joints, numWild)
             ),
             dice = listOf(
                 MarketDiceConfig(DieSides.D4, diceCount),

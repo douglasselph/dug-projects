@@ -2,7 +2,6 @@ package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -94,7 +93,6 @@ private fun GroveTitle(grove: GroveInfo) {
                 }
             }
         }
-        
         // Right side: instruction (unchanged)
         grove.instruction?.let { text ->
             Surface(
@@ -110,54 +108,6 @@ private fun GroveTitle(grove: GroveInfo) {
             }
         }
     }
-}
-
-@Composable
-private fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
-    // Stacks in rows of 3
-    reorder(grove.stacks).chunked(3).forEach { rowStacks ->
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            rowStacks.forEach { stack ->
-                Box {
-                    StackInfoDisplay(stack) { card ->
-                        onSelected(ItemInfo.Card(card))
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun reorder(stacks: List<StackInfo>): List<StackInfo> {
-    // First, separate stacks into their types
-    val rootStacks = stacks.filter { it.stack == MarketStackID.ROOT_1 || it.stack == MarketStackID.ROOT_2 }
-    val vineStacks = stacks.filter { it.stack == MarketStackID.VINE_1 || it.stack == MarketStackID.VINE_2 }
-    val canopyStacks = stacks.filter { it.stack == MarketStackID.CANOPY_1 || it.stack == MarketStackID.CANOPY_2 }
-    val otherStacks = stacks.filter {
-        it.stack != MarketStackID.ROOT_1 &&
-                it.stack != MarketStackID.ROOT_2 &&
-                it.stack != MarketStackID.VINE_1 &&
-                it.stack != MarketStackID.VINE_2 &&
-                it.stack != MarketStackID.CANOPY_1 &&
-                it.stack != MarketStackID.CANOPY_2
-    }
-
-    // Create triplets of ROOT, VINE, CANOPY
-    val reorderedStacks = mutableListOf<StackInfo>()
-    val tripletCount = minOf(rootStacks.size, vineStacks.size, canopyStacks.size)
-
-    for (i in 0 until tripletCount) {
-        reorderedStacks.add(rootStacks[i])
-        reorderedStacks.add(vineStacks[i])
-        reorderedStacks.add(canopyStacks[i])
-    }
-
-    // Add remaining stacks in their original order
-    reorderedStacks.addAll(otherStacks)
-
-    return reorderedStacks
 }
 
 // region Preview
@@ -196,7 +146,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.ROOT_1,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -217,7 +167,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.ROOT_2,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -238,7 +188,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_1,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -259,7 +209,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.CANOPY_2,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -280,7 +230,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_1,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -301,7 +251,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.VINE_2,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 1,
                             name = "Long Vine",
                             type = FlourishType.VINE,
@@ -322,7 +272,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.FLOWER_1,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -344,7 +294,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -366,7 +316,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 4,
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
@@ -385,9 +335,9 @@ fun main() = application {
                     numCards = 20
                 ),
                 StackInfo(
-                    stack = MarketStackID.JOINT_RCV,
+                    stack = MarketStackID.WILD_1,
                     topCard = gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 5,
                             name = "Wild Growth",
                             type = FlourishType.ROOT,

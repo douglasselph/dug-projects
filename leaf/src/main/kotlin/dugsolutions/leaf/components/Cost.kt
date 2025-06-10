@@ -48,7 +48,7 @@ sealed class CostElement {
      * Match "R","C","V","B"
      */
     data class FlourishTypePresent(val flourishType: FlourishType) : CostElement() {
-        override fun toString(): String = "Has $flourishType"
+        override fun toString(): String = "$flourishType"
     }
 }
 

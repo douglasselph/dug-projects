@@ -229,7 +229,7 @@ private fun PreviewCard(
     val gatherCardInfo = GatherCardInfo()
     CardDisplay(
         gatherCardInfo(
-            incoming = gameCard,
+            card = gameCard,
             highlight = highlight
         )
     )

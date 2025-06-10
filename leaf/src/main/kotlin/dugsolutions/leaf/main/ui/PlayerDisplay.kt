@@ -136,7 +136,7 @@ fun main() = application {
             infoLine = infoLine,
             handCards = listOf(
                 gatherCardInfo(
-                    incoming = GameCard(
+                    card = GameCard(
                         id = 1,
                         name = "Sprouting Seed",
                         type = FlourishType.SEEDLING,
@@ -153,7 +153,7 @@ fun main() = application {
                     )
                 ),
                 gatherCardInfo(
-                    incoming = GameCard(
+                    card = GameCard(
                         id = 2,
                         name = "Nourishing Root",
                         type = FlourishType.ROOT,
@@ -174,7 +174,7 @@ fun main() = application {
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
             floralArray = listOf(
                 gatherCardInfo(
-                    incoming = GameCard(
+                    card = GameCard(
                         id = 3,
                         name = "Sheltering Canopy",
                         type = FlourishType.CANOPY,

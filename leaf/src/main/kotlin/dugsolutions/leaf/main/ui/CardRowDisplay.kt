@@ -2,14 +2,19 @@ package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
@@ -29,17 +34,47 @@ fun CardRowDisplay(
     cards: List<CardInfo>,
     onSelected: (card: CardInfo) -> Unit = {}
 ) {
+    val overlapOffset: Dp = 80.dp // How much cards overlap when names match
+    val normalSpacing: Dp = 8.dp // Normal spacing between different cards
+    val cardWidth: Dp = 200.dp // Width of each card (from CardDisplay)
+
+    // Calculate the total width needed
+    val totalWidth = if (cards.isEmpty()) {
+        cardWidth
+    } else {
+        var width = cardWidth // First card
+        cards.drop(1).forEachIndexed { index, cardInfo ->
+            val previousCard = cards[index] // Note: index is offset by drop(1)
+            val shouldOverlap = cardInfo.name == previousCard.name
+            width += if (shouldOverlap) overlapOffset else (cardWidth + normalSpacing)
+        }
+        width
+    }
+
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.padding(8.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier.padding(8.dp)
+                .width(totalWidth)
         ) {
-            cards.forEach { cardInfo ->
-                CardDisplay(cardInfo) { onSelected(cardInfo) }
+            var currentOffset = 0.dp
+
+            cards.forEachIndexed { index, cardInfo ->
+                // Check if this card should overlap with the previous one
+                val shouldOverlap = index > 0 && cardInfo.name == cards[index - 1].name
+
+                // Calculate the offset for this card
+                if (index > 0) {
+                    currentOffset += if (shouldOverlap) overlapOffset else (cardWidth + normalSpacing)
+                }
+                Box(
+                    modifier = Modifier.offset(x = currentOffset)
+                ) {
+                    CardDisplay(cardInfo) { onSelected(cardInfo) }
+                }
             }
         }
     }
@@ -53,7 +88,7 @@ fun main() = application {
         title = "Card Row Display Preview",
         state = WindowState(
             width = 800.dp,
-            height = 500.dp
+            height = 800.dp
         )
     ) {
         Column(
@@ -64,7 +99,7 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 1,
                             name = "Sprouting Seed",
                             type = FlourishType.SEEDLING,
@@ -81,7 +116,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 2,
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
@@ -98,7 +133,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 3,
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
@@ -121,7 +156,7 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 4,
                             name = "Thorny Vine",
                             type = FlourishType.VINE,
@@ -138,7 +173,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
@@ -155,7 +190,7 @@ fun main() = application {
                         )
                     ),
                     gatherCardInfo(
-                        incoming = GameCard(
+                        card = GameCard(
                             id = 6,
                             name = "Spring Bloom",
                             type = FlourishType.BLOOM,
@@ -168,6 +203,63 @@ fun main() = application {
                             matchValue = 1,
                             trashEffect = CardEffect.DEFLECT,
                             trashValue = 2,
+                            thorn = 0
+                        )
+                    )
+                )
+            )
+
+            // Third row of cards
+            CardRowDisplay(
+                listOf(
+                    gatherCardInfo(
+                        card = GameCard(
+                            id = 5,
+                            name = "Spring Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 1,
+                            cost = Cost(emptyList()),
+                            primaryEffect = CardEffect.ADORN,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashValue = 5,
+                            thorn = 0
+                        )
+                    ),
+                    gatherCardInfo(
+                        card = GameCard(
+                            id = 5,
+                            name = "Spring Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 1,
+                            cost = Cost(emptyList()),
+                            primaryEffect = CardEffect.ADORN,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashValue = 5,
+                            thorn = 0
+                        )
+                    ),
+                    gatherCardInfo(
+                        card = GameCard(
+                            id = 5,
+                            name = "Spring Flower",
+                            type = FlourishType.FLOWER,
+                            resilience = 1,
+                            cost = Cost(emptyList()),
+                            primaryEffect = CardEffect.ADORN,
+                            primaryValue = 1,
+                            matchWith = MatchWith.None,
+                            matchEffect = null,
+                            matchValue = 0,
+                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashValue = 5,
                             thorn = 0
                         )
                     )

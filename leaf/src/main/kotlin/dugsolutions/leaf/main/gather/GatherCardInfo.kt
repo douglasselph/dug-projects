@@ -18,15 +18,15 @@ class GatherCardInfo {
 
     operator fun invoke(
         index: Int = 0,
-        incoming: GameCard,
+        card: GameCard,
         highlight: HighlightInfo = HighlightInfo.NONE
-    ): CardInfo = with(incoming) {
+    ): CardInfo = with(card) {
         return CardInfo(
             index = index,
             name = name,
             type = floralType(type) ?: "?",
             resilience = resilience,
-            cost = incoming.cost.elements.map { it.toString() },
+            cost = card.cost.elements.map { it.toString() },
             thorn = thorn,
             primary = effectLine(primaryEffect, primaryValue),
             match = effectLine(matchEffect, matchValue, matchString(matchWith)),

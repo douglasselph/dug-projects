@@ -19,7 +19,7 @@ class MainApplication : KoinComponent {
                 onCloseRequest = ::exitApplication,
                 title = "Leaf Game Setup",
                 state = WindowState(
-                    width = 1400.dp,
+                    width = 1800.dp,
                     height = 1800.dp
                 )
             ) {

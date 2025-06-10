@@ -2,6 +2,8 @@ package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.select.SelectAllDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
@@ -15,14 +17,18 @@ import dugsolutions.leaf.player.Player
 class GatherGroveInfo(
     private val grove: Grove,
     private val gatherCardInfo: GatherCardInfo,
-    private val selectAllDice: SelectAllDice
+    private val selectAllDice: SelectAllDice,
+    private val gameTime: GameTime
 ) {
 
     operator fun invoke(
         highlightCard: List<GameCard> = emptyList(),
         highlightDie: List<Die> = emptyList(),
         selectForPlayer: Player? = null
-    ): GroveInfo {
+    ): GroveInfo? {
+        if (gameTime.phase == GamePhase.BATTLE) {
+            return null // TODO: Unit test
+        }
         return GroveInfo(
             stacks = MarketStackID.entries.mapIndexed { index, stack -> get(index, stack, highlightCard) },
             dice = get(highlightDie),
@@ -36,7 +42,7 @@ class GatherGroveInfo(
         val highlightCard = if (highlight.any { it.id == card?.id }) HighlightInfo.SELECTABLE else HighlightInfo.NONE
         return StackInfo(
             stack = stack,
-            topCard = card?.let { gatherCardInfo(index = index, incoming = it, highlight = highlightCard) },
+            topCard = card?.let { gatherCardInfo(index = index, card = it, highlight = highlightCard) },
             numCards = grove.getCardsFor(stack)?.size ?: 0
         )
     }

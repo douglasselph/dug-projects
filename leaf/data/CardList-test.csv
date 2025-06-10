@@ -10,18 +10,18 @@ Root Reroll;Root;8;8;RerollAccept2nd;1;d1;RerollTakeBetter;1;-;-;0
 Root Retain;Root;12;10;RetainCard;1;d1;RetainDieReroll;1;-;-;0
 Root Add;Root;10;15;AddToDie;2;d1;AdjustBy;3;-;-;0
 Canopy Deflect;Canopy;11;R 9;Deflect;2;Root;Deflect;4;-;-;1
-Canopy Draw Card;Canopy;20;R 12;DrawCard;1;Root;RetainCard;1;-;-;1
-Canopy Reduce Vine;Canopy;21;R 12;ReduceCostVine;3;Root;ReplayVine;1;-;-;1
-Canopy Reroll;Canopy;15;R 14;RerollTakeBetter;1;Root;RetainDieReroll;1;-;-;1
-Canopy Retain;Canopy;22;R 14;RetainCard;1;Root;RetainDie;2;;;1
-Canopy Thorn;Canopy;25;R 12;-;-;-;-;-;-;-;4
-Vine AddToTotal;Vine;6;C 14;AddToTotal;3;Canopy;AddToTotal;4;-;-;3
-Vine Deflect;Vine;6;C 15;Deflect;1;d1;Deflect;2;-;-;4
+Canopy Draw Card;Canopy;20;14;DrawCard;1;Root;RetainCard;1;-;-;1
+Canopy Reduce Vine;Canopy;21;R 10;ReduceCostVine;3;Root;ReplayVine;1;-;-;1
+Canopy Reroll;Canopy;15;15;RerollTakeBetter;1;Root;RetainDieReroll;1;-;-;1
+Canopy Retain;Canopy;22;R 10;RetainCard;1;Root;RetainDie;2;;;1
+Canopy Thorn;Canopy;25;16;-;-;-;-;-;-;-;4
+Vine AddToTotal;Vine;6;C 9;AddToTotal;3;Canopy;AddToTotal;4;-;-;3
+Vine Deflect;Vine;6;15;Deflect;1;d1;Deflect;2;-;-;4
 Vine Discard;Vine;8;C 10;DiscardCard;1;d1;DiscardDie;1;-;-;2
-Vine Draw;Vine;7;C 12;DrawThenDiscard;2;Canopy;DrawDie;1;-;-;2
-Vine Reroll ;Vine;5;C 13;RerollAllMax;1;Canopy;RerollTakeBetter;1;-;-;2
-Vine UseOpponent;Vine;5;C 14;UseOpponentCard;1;d1;UseOpponentDie;1;-;-;3
-Vine AdjustBy;Vine;9;C 12;AdjustBy;2;d1;AdjustBy;3;;;
+Vine Draw;Vine;7;14;DrawThenDiscard;2;Canopy;DrawDie;1;-;-;2
+Vine Reroll ;Vine;5;C 10;RerollAllMax;1;Canopy;RerollTakeBetter;1;-;-;2
+Vine UseOpponent;Vine;5;15;UseOpponentCard;1;d1;UseOpponentDie;1;-;-;3
+Vine AdjustBy;Vine;9;C 9;AdjustBy;2;d1;AdjustBy;3;;;
 Flower AddToTotal;Flower;-;C 5;Adorn;1;-;-;-;ResilienceBoost;10;1
 Bloom AddToTotal;Bloom;1;-;AddToTotal;5;Flower AddToTotal;AddToTotal;1;-;-;2
 Flower AdjustBy;Flower;-;C 5;Adorn;1;-;-;-;ResilienceBoost;10;1

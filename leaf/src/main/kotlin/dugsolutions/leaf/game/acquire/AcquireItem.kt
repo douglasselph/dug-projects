@@ -37,11 +37,7 @@ class AcquireItem(
                 val card = bestChoice.item.card
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
-                    if (card.type == FlourishType.FLOWER) {
-                        player.addCardToFloralArray(card.id)
-                    } else {
-                        player.addCardToCompost(card.id)
-                    }
+                    player.addCardToCompost(card.id)
                     chronicle(Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
                     result = true
