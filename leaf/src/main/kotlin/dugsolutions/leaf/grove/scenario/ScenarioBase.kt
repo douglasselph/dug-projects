@@ -1,8 +1,8 @@
 package dugsolutions.leaf.grove.scenario
 
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.grove.domain.MarketCardConfig
 import dugsolutions.leaf.grove.domain.MarketStackConfig
 import dugsolutions.leaf.grove.domain.MarketStackID

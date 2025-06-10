@@ -21,8 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo

@@ -26,11 +26,6 @@ object CardInfoFaker {
         val type = faker.random.randomValue(listOf("FLOWER", "LEAF", "ROOT", "STEM"))
         val resilience = faker.random.nextInt(1, 5)
         val thorn = faker.random.nextInt(0, 3)
-        
-        // Generate random cost elements
-        val costElements = listOf("RED", "BLUE", "GREEN", "YELLOW", "PURPLE")
-        val costCount = faker.random.nextInt(1, 3)
-        val cost = (0 until costCount).map { costElements.random() }
 
         // Generate random effects with 50% chance of being null
         val primary = if (faker.random.nextBoolean()) faker.name.name() else null
@@ -42,7 +37,7 @@ object CardInfoFaker {
             name = faker.name.name(),
             type = type,
             resilience = resilience,
-            cost = cost,
+            cost = "ROOT 6+",
             primary = primary,
             match = match,
             trash = trash,
@@ -103,50 +98,5 @@ object CardInfoFaker {
         }
     }
 
-    /**
-     * Creates a fake CardInfo object with specific type.
-     * @param type The type of card to create
-     * @param index Optional index value
-     * @return A CardInfo object with the specified type
-     */
-    fun createWithType(
-        type: String,
-        index: Int = faker.random.nextInt(0, 9)
-    ): CardInfo {
-        return create(index = index).copy(type = type)
-    }
 
-    /**
-     * Creates a fake CardInfo object with specific resilience.
-     * @param resilience The resilience value to set
-     * @param index Optional index value
-     * @return A CardInfo object with the specified resilience
-     */
-    fun createWithResilience(
-        resilience: Int,
-        index: Int = faker.random.nextInt(0, 9)
-    ): CardInfo {
-        return create(index = index).copy(resilience = resilience)
-    }
-
-    /**
-     * Creates a fake CardInfo object with specific thorn value.
-     * @param thorn The thorn value to set
-     * @param index Optional index value
-     * @return A CardInfo object with the specified thorn value
-     */
-    fun createWithThorn(
-        thorn: Int,
-        index: Int = faker.random.nextInt(0, 9)
-    ): CardInfo {
-        return create(index = index).copy(thorn = thorn)
-    }
-
-    fun createWithCost(cost: Int) = create().copy(cost = listOf("6+"))
-
-    fun createWithPrimary(isPrimary: Boolean) = create().copy(primary = if (isPrimary) faker.name.name() else null)
-
-    fun createWithMatch(hasMatch: Boolean) = create().copy(match = if (hasMatch) faker.name.name() else null)
-
-    fun createWithTrash(hasTrash: Boolean) = create().copy(trash = if (hasTrash) faker.name.name() else null)
 } 

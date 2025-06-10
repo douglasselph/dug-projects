@@ -3,18 +3,17 @@ package dugsolutions.leaf.player.components
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.factory.DecisionDirectorFactory
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
-import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.Randomizer
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.player.decisions.DecisionDirector
+import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.random.RandomizerTD
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -26,12 +25,11 @@ import kotlin.test.assertTrue
 class DrawHandTest {
 
     private lateinit var deckManager: DeckManager
-    private lateinit var mockDeckManager: DeckManager
-    private lateinit var floralCount: FloralCount
+    private val mockDeckManager: DeckManager = mockk(relaxed = true)
+    private lateinit var floralBonusCount: FloralBonusCount
     private lateinit var floralArray: FloralArray
     private lateinit var cardManager: CardManager
-    private lateinit var mockRetainedComponents: StackManager
-    private lateinit var mockDecisionDirectorFactory: DecisionDirectorFactory
+    private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
     private lateinit var dieFactory: DieFactory
     private lateinit var randomizer: Randomizer
     private lateinit var D6: Die
@@ -39,7 +37,7 @@ class DrawHandTest {
     private lateinit var D8: Die
     private lateinit var startingDice: List<Die>
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
-    private lateinit var mockGameChronicle: GameChronicle
+    private val mockGameChronicle: GameChronicle = mockk(relaxed = true)
     private lateinit var costScore: CostScore
 
     private lateinit var samplePlayer: Player
@@ -60,12 +58,8 @@ class DrawHandTest {
             StackManager(cardManager, gameCardIDsFactory),
             dieFactory
         )
-        mockDeckManager = mockk(relaxed = true)
-        floralCount = FloralCount()
-        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
-        mockRetainedComponents = mockk(relaxed = true)
-        mockDecisionDirectorFactory = mockk(relaxed = true)
-        mockGameChronicle = mockk(relaxed = true)
+        floralBonusCount = FloralBonusCount()
+        floralArray = FloralArray(cardManager, gameCardIDsFactory)
         D4 = dieFactory(DieSides.D4)
         D6 = dieFactory(DieSides.D6)
         D8 = dieFactory(DieSides.D8)
@@ -74,20 +68,20 @@ class DrawHandTest {
         samplePlayer = Player(
             mockDeckManager,
             floralArray,
+            floralBonusCount,
             cardManager,
-            mockRetainedComponents,
             dieFactory,
             costScore,
-            mockDecisionDirectorFactory
+            mockDecisionDirector
         )
         samplePlayer2 = Player(
             deckManager,
             floralArray,
+            floralBonusCount,
             cardManager,
-            mockRetainedComponents,
             dieFactory,
             costScore,
-            mockDecisionDirectorFactory
+            mockDecisionDirector
         )
     }
 
@@ -225,8 +219,8 @@ class DrawHandTest {
         // Arrange
         every { mockDeckManager.handSize } returns 5
         every { mockDeckManager.getItemsInSupply() } returns listOf(
-            HandItem.Card(FakeCards.fakeRoot),
-            HandItem.Dice(D6)
+            HandItem.aCard(FakeCards.fakeRoot),
+            HandItem.aDie(D6)
         )
 
         // Act
@@ -236,5 +230,25 @@ class DrawHandTest {
         verify(exactly = 0) { mockDeckManager.drawCard() }
         verify(exactly = 0) { mockDeckManager.drawDie() }
         verify(exactly = 0) { mockGameChronicle(any()) }
+    }
+
+    @Test
+    fun invoke_whenSupplyLimitedAndPreferredCardCountLow_usesAllAvailableSupply() {
+        // Arrange
+        samplePlayer2.addCardToSupply(FakeCards.fakeRoot.id)
+        samplePlayer2.addCardToSupply(FakeCards.fakeRoot2.id)
+        samplePlayer2.addCardToSupply(FakeCards.fakeBloom.id)
+        samplePlayer2.addDieToSupply(D6)
+
+        // Act
+        samplePlayer2.drawHand(1) // Try to draw 1 card and rest dice, but supply has 3 cards and 1 die
+
+        // Assert
+        assertEquals(3, samplePlayer2.cardsInHand.size)
+        assertTrue(samplePlayer2.cardsInHand.contains(FakeCards.fakeRoot))
+        assertTrue(samplePlayer2.cardsInHand.contains(FakeCards.fakeRoot2))
+        assertTrue(samplePlayer2.cardsInHand.contains(FakeCards.fakeBloom))
+        assertEquals(1, samplePlayer2.diceInHand.size)
+        assertEquals(D6, samplePlayer2.diceInHand.dice[0])
     }
 } 

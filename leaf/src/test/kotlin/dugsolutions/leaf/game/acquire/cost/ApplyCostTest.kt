@@ -2,19 +2,18 @@ package dugsolutions.leaf.game.acquire.cost
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.components.die.DieValues
-import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryUniform
-import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.random.die.DieValues
+import dugsolutions.leaf.random.die.MissingDieException
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.game.acquire.domain.Adjusted
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.random.RandomizerTD
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -26,7 +25,6 @@ import kotlin.test.assertTrue
 
 class ApplyCostTest {
 
-    private lateinit var mockApplyEffects: ApplyEffects
     private lateinit var mockPlayer: Player
     private lateinit var fakePlayer: PlayerTD
     private lateinit var testDie1: DieValue
@@ -39,7 +37,6 @@ class ApplyCostTest {
 
     @BeforeEach
     fun setup() {
-        mockApplyEffects = mockk(relaxed = true)
         mockPlayer = mockk(relaxed = true)
         val randomizer = RandomizerTD()
         val costScore: CostScore = mockk(relaxed = true)
@@ -60,14 +57,13 @@ class ApplyCostTest {
         // Create a combination with the DieValues, addToTotal, and adjusted list
         combination = Combination(
             values = dieValues,
-            addToTotal = 0,
-            adjusted = emptyList()
+            addToTotal = 0
         )
         for (value in combination.values) {
             fakePlayer.addDieToHand(value.dieFrom(dieFactory))
         }
 
-        SUT = ApplyCost(mockApplyEffects)
+        SUT = ApplyCost()
 
         every { mockPlayer.discard(any<Die>()) } returns true
         every { mockPlayer.discard(any<DieValue>()) } returns true
@@ -80,7 +76,6 @@ class ApplyCostTest {
         SUT(mockPlayer, combination)
 
         // Assert
-        verify { mockApplyEffects(mockPlayer, combination) }
         verify { mockPlayer.discard(testDie1) }
         verify { mockPlayer.discard(testDie2) }
     }
@@ -98,9 +93,6 @@ class ApplyCostTest {
 
         // Verify the exception details
         assertEquals("Could not discard the die $testDie1", exception.message, "Exception should have the correct error message")
-
-        // Verify that effects were still applied before the exception
-        verify { mockApplyEffects(mockPlayer, combination) }
     }
 
     @Test
@@ -125,8 +117,6 @@ class ApplyCostTest {
 
         // Act
         SUT(fakePlayer, combination) { player ->
-            // Verify that effects were applied and dice were discarded before this lambda is called
-            verify { mockApplyEffects(fakePlayer, combination) }
             gotPlayer = player
         }
 
@@ -141,7 +131,6 @@ class ApplyCostTest {
         SUT(mockPlayer, combination)
 
         // Assert - verify core functionality still runs
-        verify { mockApplyEffects(mockPlayer, combination) }
         verify { mockPlayer.discard(testDie1) }
         verify { mockPlayer.discard(testDie2) }
     }
@@ -152,8 +141,7 @@ class ApplyCostTest {
         val emptyDieValues = DieValues(emptyList())
         val emptyCombination = Combination(
             values = emptyDieValues,
-            addToTotal = 0,
-            adjusted = emptyList()
+            addToTotal = 0
         )
         var acquireItemCalled = false
         val acquireItem: (Player) -> Unit = {
@@ -164,7 +152,6 @@ class ApplyCostTest {
         SUT(mockPlayer, emptyCombination, acquireItem)
 
         // Assert
-        verify { mockApplyEffects(mockPlayer, emptyCombination) }
         assertTrue(acquireItemCalled, "The acquireItem lambda should be called")
         // No dice to discard so verify no discard calls
         verify(exactly = 0) { mockPlayer.discard(any<Die>()) }
@@ -182,15 +169,13 @@ class ApplyCostTest {
         // Create combination with added total and adjustments
         val combinationWithAdjustments = Combination(
             values = adjustedDieValues,
-            addToTotal = 3,
-            adjusted = listOf(adjustment)
+            addToTotal = 3
         )
 
         // Act
         SUT(mockPlayer, combinationWithAdjustments)
 
         // Assert
-        verify { mockApplyEffects(mockPlayer, combinationWithAdjustments) }
         verify { mockPlayer.discard(testDie1) }
         verify { mockPlayer.discard(testDie2) }
         verify { mockPlayer.discard(adjustedDie) }
@@ -208,7 +193,6 @@ class ApplyCostTest {
 
         // Assert
         assertTrue(fakePlayer.diceInHand.isEmpty(), "All dice should be discarded")
-        verify { mockApplyEffects(fakePlayer, combination) }
     }
 
     @Test
@@ -228,7 +212,6 @@ class ApplyCostTest {
         // Assert
         assertTrue(fakePlayer.diceInHand.isEmpty(), "All dice should be discarded")
         assertTrue(acquireItemCalled, "Acquire item lambda should be called")
-        verify { mockApplyEffects(fakePlayer, combination) }
     }
 
     @Test
@@ -241,11 +224,9 @@ class ApplyCostTest {
         fakePlayer.addDieToHand(adjustedDie)
 
         val adjustedDieValues = DieValues(listOf(testDie1, testDie2, adjustedDie))
-        val adjustment = Adjusted.ByAmount(adjustedDie, 2)
         val combinationWithAdjustments = Combination(
             values = adjustedDieValues,
-            addToTotal = 3,
-            adjusted = listOf(adjustment)
+            addToTotal = 3
         )
 
         // Act
@@ -253,7 +234,6 @@ class ApplyCostTest {
 
         // Assert
         assertTrue(fakePlayer.diceInHand.isEmpty(), "All dice including adjusted die should be discarded")
-        verify { mockApplyEffects(fakePlayer, combinationWithAdjustments) }
     }
 
     @Test
@@ -267,6 +247,5 @@ class ApplyCostTest {
         }
 
         assertEquals("Could not discard the die $testDie1", exception.message, "Exception should have the correct error message")
-        verify { mockApplyEffects(fakePlayer, combination) }
     }
 } 

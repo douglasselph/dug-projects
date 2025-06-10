@@ -10,20 +10,19 @@ import dugsolutions.leaf.chronicle.report.WriteGameResults
 import dugsolutions.leaf.chronicle.report.ReportGameSummaries
 import dugsolutions.leaf.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.common.Commons
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.DieFactoryConfig
-import dugsolutions.leaf.di.factory.GameCardsFactory
-import dugsolutions.leaf.di.gameModule
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.di.appModule
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.scenario.ScenarioBasicConfig
-import dugsolutions.leaf.tool.CardRegistry
-import dugsolutions.leaf.tool.Randomizer
-import dugsolutions.leaf.tool.RandomizerDefault
+import dugsolutions.leaf.cards.CardRegistry
+import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.random.RandomizerDefault
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -76,7 +75,7 @@ class CoreSupport(
         // Start Koin with test modules
         startKoin {
             modules(
-                gameModule,  // Include the main game module
+                appModule,  // Include the main game module
             )
         }
 

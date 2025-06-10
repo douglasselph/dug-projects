@@ -1,6 +1,6 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.components.die.Dice
+import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
 

@@ -1,7 +1,7 @@
 package dugsolutions.leaf.grove.domain
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.DieSides
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.DieSides
 
 data class MarketConfig(
     val stacks: List<MarketStackConfig>,

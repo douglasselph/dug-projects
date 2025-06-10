@@ -1,17 +1,14 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 class GameCardsTest {
 

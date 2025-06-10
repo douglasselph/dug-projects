@@ -1,7 +1,6 @@
 package dugsolutions.leaf.main.domain
 
-import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 
 data class PlayerInfo(
     val name: String,
@@ -20,6 +19,12 @@ data class PlayerInfo(
         return copy(
             handCards = handCards.map { it.copy(highlight = HighlightInfo.SELECTABLE) },
             handDice = handDice.copyForItemSelect(),
+            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+        )
+    }
+
+    fun copyForFlowerSelect(): PlayerInfo {
+        return copy(
             floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
         )
     }

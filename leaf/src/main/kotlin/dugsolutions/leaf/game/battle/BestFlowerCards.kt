@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.battle
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
 
 class BestFlowerCards(
@@ -27,7 +27,7 @@ class BestFlowerCards(
         
         // For ties, use the decision director to break them
         val matchingBlooms = mostFrequentCards.mapNotNull { matchingBloomCard(it) }
-        val preferredBloom = player.decisionDirector.bestBloomCard(matchingBlooms)
+        val preferredBloom = player.decisionDirector.bestBloomCardAcquisition(matchingBlooms)
         
         // Find the flower card that matches the preferred bloom
         val preferredFlower = mostFrequentCards.find { flowerCard ->

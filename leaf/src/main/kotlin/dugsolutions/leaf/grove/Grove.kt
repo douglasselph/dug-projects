@@ -1,11 +1,11 @@
 package dugsolutions.leaf.grove
 
 import dugsolutions.leaf.common.Commons
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.grove.domain.GameCardsUseCase
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.grove.local.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
@@ -15,7 +15,6 @@ class Grove(
     private val gameCardsUseCase: GameCardsUseCase
 ) {
 
-    // TODO: Unit test
     fun setup(config: MarketConfig) {
         stacks.clearAll()
         for (stackConfig in config.stacks) {

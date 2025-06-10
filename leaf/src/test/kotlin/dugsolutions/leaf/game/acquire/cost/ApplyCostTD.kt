@@ -4,9 +4,7 @@ import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.Player
 import io.mockk.mockk
 
-class ApplyCostTD : ApplyCost(
-    applyEffects = mockk(relaxed = true)
-) {
+class ApplyCostTD : ApplyCost() {
     // Track what was passed into the function
     val gotPlayers = mutableListOf<Player>()
     val gotCombinations = mutableListOf<Combination>()

@@ -1,9 +1,9 @@
 package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.CardEffect
+import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.player.decisions.local.GroveNearingTransition
+import dugsolutions.leaf.grove.local.GroveNearingTransition
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking

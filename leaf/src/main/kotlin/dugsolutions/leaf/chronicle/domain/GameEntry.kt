@@ -1,13 +1,12 @@
 package dugsolutions.leaf.chronicle.domain
 
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.components.die.DieValues
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.player.domain.AppliedEffect
+import dugsolutions.leaf.random.die.Die
 
 /**
  * Base class for all chronicle entries.
@@ -75,7 +74,8 @@ data class AddToTotalEntry(
 data class AdornEntry(
     override val playerId: Int,
     override val turn: Int,
-    val cardId: CardID
+    val flowerCardId: CardID,
+    val drawCardId: CardID
 ) : ChronicleEntry(playerId, turn)
 
 data class DeliverDamageEntry(
@@ -150,7 +150,7 @@ data class EventBattleTransition(
 ) : ChronicleEntry(score.playerId, turn) {
     override fun toString(): String {
         val trashed = trashedSeedlings.joinToString(",")
-        val trashedReport = if (trashed.isEmpty()) ": No seedlings" else ": $trashed"
+        val trashedReport = if (trashed.isEmpty()) ": No seedlings" else ": Trashed $trashed"
         return "+++ Battle Begins Player $playerId $trashedReport +++"
     }
 }
@@ -220,11 +220,24 @@ data class RetainDieEntry(
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
+data class ReplayVineEntry(
+    override val playerId: Int,
+    override val turn: Int,
+    val vineId: CardID,
+    val vineName: String
+) : ChronicleEntry(playerId, turn)
+
 data class ReuseCardEntry(
     override val playerId: Int,
     override val turn: Int,
     val cardId: CardID,
     val cardName: String
+) : ChronicleEntry(playerId, turn)
+
+data class ReuseDieEntry(
+    override val playerId: Int,
+    override val turn: Int,
+    val die: DieValue,
 ) : ChronicleEntry(playerId, turn)
 
 data class TrashCardEntry(
@@ -254,4 +267,17 @@ data class UpgradeDieEntry(
     override val playerId: Int,
     override val turn: Int,
     val newSides: Int
+) : ChronicleEntry(playerId, turn)
+
+data class UseOpponentCardEntry(
+    override val playerId: Int,
+    override val turn: Int,
+    val cardId: CardID,
+    val cardName: String
+) : ChronicleEntry(playerId, turn)
+
+data class UseOpponentDieEntry(
+    override val playerId: Int,
+    override val turn: Int,
+    val die: DieValue
 ) : ChronicleEntry(playerId, turn)

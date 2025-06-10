@@ -1,11 +1,11 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.factory.GameCardsFactory
-import dugsolutions.leaf.tool.Randomizer
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.random.RandomizerTD
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

@@ -1,6 +1,6 @@
 package dugsolutions.leaf.player.decisions.ui
 
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 
 // TODO: Unit test

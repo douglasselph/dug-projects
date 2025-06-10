@@ -1,9 +1,9 @@
 package dugsolutions.leaf.game.turn.handle
 
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost

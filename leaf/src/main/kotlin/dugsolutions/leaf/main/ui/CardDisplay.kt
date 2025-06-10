@@ -1,7 +1,15 @@
 package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
@@ -12,12 +20,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import androidx.compose.foundation.clickable
-import dugsolutions.leaf.components.*
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.cost.CostElement
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.HighlightInfo
@@ -61,7 +74,9 @@ fun CardDisplay(
                     text = cardInfo.name,
                     style = MaterialTheme.typography.subtitle1,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    softWrap = true,
+                    overflow = TextOverflow.Visible
                 )
 
                 // Type indicator
@@ -163,7 +178,7 @@ private fun EffectBox(
 }
 
 @Composable
-private fun CostBox(cost: List<String>) {
+private fun CostBox(cost: String) {
     if (cost.isEmpty()) return
 
     Surface(
@@ -172,7 +187,7 @@ private fun CostBox(cost: List<String>) {
         modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Text(
-            text = cost.joinToString(","),
+            text = cost,
             style = MaterialTheme.typography.caption,
             color = Color.Black,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
@@ -264,7 +279,7 @@ private fun PreviewRootCard() {
             name = "Nourishing Root",
             type = FlourishType.ROOT,
             resilience = 3,
-            cost = Cost(listOf(CostElement.SingleDieMinimum(2))),
+            cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
             primaryEffect = CardEffect.DRAW_DIE,
             primaryValue = 1,
             matchWith = MatchWith.None,
@@ -286,7 +301,7 @@ private fun PreviewCanopyCard() {
             name = "Sheltering Canopy",
             type = FlourishType.CANOPY,
             resilience = 4,
-            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
+            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
             primaryEffect = CardEffect.DEFLECT,
             primaryValue = 2,
             matchWith = MatchWith.None,
@@ -307,7 +322,7 @@ private fun PreviewVineCard() {
             name = "Thorny Vine",
             type = FlourishType.VINE,
             resilience = 2,
-            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(14))),
+            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(14))),
             primaryEffect = CardEffect.DRAW_CARD,
             primaryValue = 1,
             matchWith = MatchWith.None,
@@ -327,14 +342,14 @@ private fun PreviewFlowerCard() {
             id = 5,
             name = "Spring Flower",
             type = FlourishType.FLOWER,
-            resilience = 1,
-            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(5))),
-            primaryEffect = CardEffect.ADORN,
-            primaryValue = 1,
+            resilience = 10,
+            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(5))),
+            primaryEffect = null,
+            primaryValue = 0,
             matchWith = MatchWith.None,
             matchEffect = null,
             matchValue = 0,
-            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashEffect = null,
             trashValue = 5,
             thorn = 0
         ), highlight = HighlightInfo.SELECTABLE

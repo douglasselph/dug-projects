@@ -24,19 +24,22 @@ import dugsolutions.leaf.chronicle.domain.InfoEntry
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayCardEntry
+import dugsolutions.leaf.chronicle.domain.ReplayVineEntry
 import dugsolutions.leaf.chronicle.domain.RerollEntry
 import dugsolutions.leaf.chronicle.domain.RetainCardEntry
 import dugsolutions.leaf.chronicle.domain.RetainDieEntry
 import dugsolutions.leaf.chronicle.domain.ReuseCardEntry
+import dugsolutions.leaf.chronicle.domain.ReuseDieEntry
 import dugsolutions.leaf.chronicle.domain.ScoreInfo
 import dugsolutions.leaf.chronicle.domain.TrashCardEntry
 import dugsolutions.leaf.chronicle.domain.TrashDieEntry
 import dugsolutions.leaf.chronicle.domain.TrashForEffect
 import dugsolutions.leaf.chronicle.domain.UpgradeDieEntry
+import dugsolutions.leaf.chronicle.domain.UseOpponentCardEntry
+import dugsolutions.leaf.chronicle.domain.UseOpponentDieEntry
 import dugsolutions.leaf.chronicle.report.ReportDamage
 import dugsolutions.leaf.chronicle.report.ReportGameBrief
 import dugsolutions.leaf.chronicle.report.ReportPlayer
-import dugsolutions.leaf.components.die.DieValues
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.player.domain.AppliedEffect
 
@@ -78,7 +81,7 @@ class TransformMomentToEntry(
                     turn = gameTime.turn,
                     diceTotal = moment.player.diceTotal,
                     pipModifier = moment.player.pipModifier,
-                    effects = moment.player.effectsList.toString()
+                    effects = moment.player.delayedEffectList.toString()
                 )
 
             is Moment.ADJUST_DIE ->
@@ -109,7 +112,8 @@ class TransformMomentToEntry(
                 AdornEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
-                    cardId = moment.cardId
+                    drawCardId = moment.drawCardId,
+                    flowerCardId = moment.flowerCardId
                 )
 
             is Moment.DELIVER_DAMAGE ->
@@ -239,12 +243,27 @@ class TransformMomentToEntry(
                     dieSides = moment.die.sides
                 )
 
+            is Moment.REPLAY_VINE ->
+                ReplayVineEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    vineId = moment.selectedVine.id,
+                    vineName = moment.selectedVine.name
+                )
+
             is Moment.REUSE_CARD ->
                 ReuseCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
                     cardId = moment.card.id,
                     cardName = moment.card.name
+                )
+
+            is Moment.REUSE_DIE ->
+                ReuseDieEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    die = moment.die.copy
                 )
 
             is Moment.SET_TO_MAX ->
@@ -287,6 +306,21 @@ class TransformMomentToEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
                     newSides = moment.die.sides
+                )
+
+            is Moment.USE_OPPONENT_CARD ->
+                UseOpponentCardEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    cardId = moment.card.id,
+                    cardName = moment.card.name
+                )
+
+            is Moment.USE_OPPONENT_DIE ->
+                UseOpponentDieEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    die = moment.die.copy
                 )
 
         }

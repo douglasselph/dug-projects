@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.turn.local
 
-import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.acquire.domain.totalValue
 import dugsolutions.leaf.player.Player

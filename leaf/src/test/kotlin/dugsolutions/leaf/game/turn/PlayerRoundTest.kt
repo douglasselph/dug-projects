@@ -1,91 +1,99 @@
 package dugsolutions.leaf.game.turn
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.game.turn.handle.HandleCardEffect
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.game.turn.handle.HandleAdorn
+import dugsolutions.leaf.game.turn.handle.HandleCard
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.effect.CardEffectsProcessor
-import dugsolutions.leaf.player.effect.CardsEffectsProcessor
-import dugsolutions.leaf.player.effect.EffectsList
-import io.mockk.Runs
+import dugsolutions.leaf.player.PlayerTD
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.verify
-import io.mockk.verifyOrder
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class PlayerRoundTest {
 
+    companion object {
+        private const val CARD_ID_1 = 1
+        private const val CARD_ID_2 = 2
+        private const val CARD_ID_3 = 3
+    }
 
-    private lateinit var mockPlayer: Player
-    private lateinit var mockOpponent: Player
-    private lateinit var mockCardsEffectsProcessor: CardsEffectsProcessor
-    private lateinit var mockHandleCardEffect: HandleCardEffect
-    private lateinit var mockEffectsList: EffectsList
-    private lateinit var mockCard1: GameCard
-    private lateinit var mockCard2: GameCard
+    private val fakePlayer = PlayerTD.create2(1)
+    private val mockOpponent: Player = mockk(relaxed = true)
+    private val mockHandleAdorn: HandleAdorn = mockk(relaxed = true)
+    private val mockHandleCard: HandleCard = mockk(relaxed = true)
+    private val mockCard1: GameCard = mockk(relaxed = true)
+    private val mockCard2: GameCard = mockk(relaxed = true)
+    private val mockCard3: GameCard = mockk(relaxed = true)
     private lateinit var sampleCards: List<GameCard>
 
-    private lateinit var SUT: PlayerRound
+    private val SUT: PlayerRound = PlayerRound(mockHandleCard, mockHandleAdorn)
 
     @BeforeEach
     fun setup() {
-        mockPlayer = mockk(relaxed = true)
-        mockOpponent = mockk(relaxed = true)
-        mockCardsEffectsProcessor = mockk(relaxed = true)
-        mockHandleCardEffect = mockk(relaxed = true)
-        mockEffectsList = mockk(relaxed = true)
-        mockCard1 = mockk(relaxed = true)
-        mockCard2 = mockk(relaxed = true)
         sampleCards = listOf(mockCard1, mockCard2)
 
-        SUT = PlayerRound(
-            cardsEffectsProcessor = mockCardsEffectsProcessor,
-            handleCardEffect = mockHandleCardEffect,
-        )
+        every { mockCard1.id } returns CARD_ID_1
+        every { mockCard2.id } returns CARD_ID_2
+        every { mockCard3.id } returns CARD_ID_3
 
-        every { mockPlayer.effectsList } returns mockEffectsList
-        every { mockEffectsList.clear() } just Runs
-        every { mockPlayer.cardsInHand } returns sampleCards
+        sampleCards.forEach { fakePlayer.addCardToHand(it) }
     }
 
     @Test
-    fun invoke_whenCalled_processesEffectsInCorrectOrder() = runBlocking {
+    fun invoke_whenCalled_clearsEffectsAndAddsCardsToPlay() = runBlocking {
+        // Arrange
+        fakePlayer.incomingDamage = 2
+
         // Act
-        SUT(mockPlayer, mockOpponent)
+        SUT(fakePlayer, mockOpponent)
 
         // Assert
-        verify { mockEffectsList.clear() }
-        coVerify { mockCardsEffectsProcessor(sampleCards, mockPlayer) }
-
-        verify { mockHandleCardEffect(mockPlayer, mockOpponent) }
+        assertEquals(0, fakePlayer.incomingDamage)
+        assertEquals(0, fakePlayer.cardsToPlay.size)
     }
 
     @Test
-    fun invoke_whenCalled_processesAllEffects() = runBlocking {
+    fun invoke_whenCardsInHand_processesEachCardInOrder() = runBlocking {
         // Arrange
         // Act
-        SUT(mockPlayer, mockOpponent)
-
-        // Assert
-        coVerify { mockCardsEffectsProcessor(any(), any()) }
-        verify(exactly = 1) { mockHandleCardEffect(any(), any()) }
-    }
-
-    @Test
-    fun invoke_whenCalled_clearsEffectsListFirst() = runBlocking{
-        // Act
-        SUT(mockPlayer, mockOpponent)
+        SUT(fakePlayer, mockOpponent)
 
         // Assert
         coVerifyOrder {
-            mockEffectsList.clear()
-            mockCardsEffectsProcessor(any(), any())
-            mockHandleCardEffect(any(), any())
+            mockHandleCard(fakePlayer, mockOpponent, mockCard1)
+            mockHandleCard(fakePlayer, mockOpponent, mockCard2)
         }
     }
-} 
+
+    @Test
+    fun invoke_callHandleAdornFirst() = runBlocking {
+        // Arrange
+        // Act
+        SUT(fakePlayer, mockOpponent)
+
+        // Assert
+        coVerifyOrder {
+            mockHandleAdorn(fakePlayer)
+            mockHandleCard(fakePlayer, mockOpponent, mockCard1)
+        }
+    }
+
+    @Test
+    fun invoke_whenNoCardsInHand_doesNothing() = runBlocking {
+        // Arrange
+        fakePlayer.removeCardFromHand(mockCard1)
+        fakePlayer.removeCardFromHand(mockCard2)
+
+        // Act
+        SUT(fakePlayer, mockOpponent)
+
+        // Assert
+        coVerify(exactly = 0) { mockHandleCard(any(), any(), any()) }
+    }
+
+}

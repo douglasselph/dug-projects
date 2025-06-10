@@ -1,8 +1,8 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.DieValues
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.DieValues
+import dugsolutions.leaf.random.die.SampleDie
 
 object FakeCombination {
 

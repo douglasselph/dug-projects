@@ -1,11 +1,10 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.getByType
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.random.Randomizer
 
 
 data class GameCards(

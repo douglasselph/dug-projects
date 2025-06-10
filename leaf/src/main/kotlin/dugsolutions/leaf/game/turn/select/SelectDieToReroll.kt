@@ -1,7 +1,6 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.random.die.Die
 
 class SelectDieToReroll {
 
@@ -17,19 +16,17 @@ class SelectDieToReroll {
      * @param dice The collection of dice to choose from
      * @return The selected die for rerolling, or null if no suitable die found
      */
-    operator fun invoke(dice: Dice): Die? {
-        val diceList = dice.dice
-        
-        if (diceList.isEmpty()) {
+    operator fun invoke(dice: List<Die>): Die? {
+        if (dice.isEmpty()) {
             return null
         }
         // First try to find dice less than 1/3 of their max value
-        val underThird = diceList.filter { it.value < it.sides / 3 }
+        val underThird = dice.filter { it.value < it.sides / 3 }
         if (underThird.isNotEmpty()) {
             return getLargestDistance(underThird)
         }
         // Then try to find dice less than 1/2 of their max value
-        val underHalf = diceList.filter { it.value < it.sides / 2 }
+        val underHalf = dice.filter { it.value < it.sides / 2 }
         if (underHalf.isNotEmpty()) {
             return getLargestDistance(underHalf)
         }

@@ -1,13 +1,10 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.PlayerInfo
-import dugsolutions.leaf.main.domain.SelectedItems
 
 class SelectItem {
 
@@ -31,7 +28,11 @@ class SelectItem {
             copy(
                 floralArray = floralArray.map { card ->
                     if (selectedCardInfo == card)
-                        card.copy(highlight = HighlightInfo.SELECTED)
+                        when (card.highlight) {
+                            HighlightInfo.SELECTABLE -> card.copy(highlight = HighlightInfo.SELECTED)
+                            HighlightInfo.SELECTED -> card.copy(highlight = HighlightInfo.SELECTABLE)
+                            else -> card
+                        }
                     else
                         card
                 },
@@ -46,9 +47,13 @@ class SelectItem {
         return playerInfo.copy(
             handDice = DiceInfo(
                 values = playerInfo.handDice.values.mapIndexed { index, die ->
-                    if (index == dieInfo.index)
-                        dieInfo.copy(highlight = HighlightInfo.SELECTED)
-                    else
+                    if (index == dieInfo.index) {
+                        when (die.highlight) {
+                            HighlightInfo.SELECTABLE -> dieInfo.copy(highlight = HighlightInfo.SELECTED)
+                            HighlightInfo.SELECTED -> dieInfo.copy(highlight = HighlightInfo.SELECTABLE)
+                            else -> die
+                        }
+                    } else
                         die
                 }
             )

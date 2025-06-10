@@ -55,20 +55,18 @@
             "rationale": "Improves maintainability and reduces the risk of typos in test strings"
         },
         "die_creation": {
-            "pattern": "Die\\(\\d+\\)",
-            "description": "Use predefined die constants (Die.D4, Die.D6, etc.) instead of Die(n) constructor",
+            "pattern": "private\\s+val\\s+sampleDie\\s*=\\s*SampleDie\\(\\)\\s*\\n\\s*private\\s+val\\s+d\\d+\\s*:\\s*Die\\s*=\\s*sampleDie\\.d\\d+",
+            "description": "Dice should be created using SampleDie",
             "examples": {
-                "violations": [
-                    "val d6 = Die(6)",
-                    "val d8 = Die(8)"
-                ],
                 "compliant": [
-                    "val d6 = Die.D6",
-                    "val d8 = Die.D8"
+                    "private val sampleDie = SampleDie()\nprivate val d6: Die = sampleDie.d6",
+                    "private val sampleDie = SampleDie()\nprivate val d6: Die = sampleDie.d6.adjustTo(3)"
+                ],
+                "violations": [
+                    "private val d6 = Die(6)",
+                    "private val d6 = mockk<Die>(relaxed = true)"
                 ]
-            },
-            "applies_to": ["**/*.kt"],
-            "rationale": "Ensures consistent die creation and prevents potential errors from manual die creation"
+            }
         },
         "mockk_just_runs": {
             "pattern": "just\\s+runs",
@@ -85,6 +83,55 @@
             },
             "applies_to": ["**/*Test.kt"],
             "rationale": "Ensures correct capitalization for MockK's just Runs operator"
+        },
+        "test_mock_conventions": {
+            "description": "Conventions for setting up mocks and test dependencies",
+            "rules": {
+                "mock_declaration": {
+                    "pattern": "private\\s+val\\s+mock[A-Z]\\w+\\s*=\\s*mockk<[^>]+>\\(relaxed\\s*=\\s*true\\)",
+                    "description": "Mocks should be declared and initialized in one line using mockk",
+                    "examples": {
+                        "compliant": [
+                            "private val mockPlayer = mockk<Player>(relaxed = true)",
+                            "private val mockChronicle = mockk<GameChronicle>(relaxed = true)"
+                        ],
+                        "violations": [
+                            "private lateinit var mockPlayer: Player",
+                            "private val player = mockk<Player>(relaxed = true)"
+                        ]
+                    }
+                },
+                "sut_initialization": {
+                    "pattern": "private\\s+val\\s+SUT\\s*:\\s*[A-Z]\\w+\\s*=\\s*[A-Z]\\w+\\([^)]+\\)",
+                    "description": "Subject Under Test (SUT) should be initialized during declaration",
+                    "examples": {
+                        "compliant": [
+                            "private val SUT: EffectDrawCard = EffectDrawCard(mockCardManager, mockChronicle)",
+                            "private val SUT: CombinationGenerator = CombinationGenerator()"
+                        ],
+                        "violations": [
+                            "private lateinit var SUT: EffectDrawCard",
+                            "private val sut = EffectDrawCard(mockCardManager, mockChronicle)"
+                        ]
+                    }
+                },
+                "mock_naming": {
+                    "pattern": "mock[A-Z]\\w+",
+                    "description": "Mock variables should be prefixed with 'mock'",
+                    "examples": {
+                        "compliant": [
+                            "private val mockPlayer = mockk<Player>(relaxed = true)",
+                            "private val mockChronicle = mockk<GameChronicle>(relaxed = true)"
+                        ],
+                        "violations": [
+                            "private val player = mockk<Player>(relaxed = true)",
+                            "private val chronicle = mockk<GameChronicle>(relaxed = true)"
+                        ]
+                    }
+                }
+            },
+            "applies_to": ["**/*Test.kt"],
+            "rationale": "Ensures consistent test setup and improves readability"
         }
     },
     "documentation": {

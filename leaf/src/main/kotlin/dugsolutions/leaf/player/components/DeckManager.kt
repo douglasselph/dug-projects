@@ -1,12 +1,12 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.random.di.DieFactory
 
 class DeckManager(
     private val supply: StackManager,
@@ -34,20 +34,11 @@ class DeckManager(
     }
 
     // Hand management
-    fun hasCardInHand(cardId: CardID): Boolean =
-        hand.hasCard(cardId)
-
-    fun hasDieInHand(die: Die): Boolean =
-        hand.hasDie(die)
-
-    fun getItemsInHand(): List<HandItem> =
-        hand.getItems()
-
-    fun getItemsInCompost(): List<HandItem> =
-        compost.getItems()
-
-    fun getItemsInSupply(): List<HandItem> =
-        supply.getItems()
+    fun hasCardInHand(cardId: CardID): Boolean = hand.hasCard(cardId)
+    fun hasDieInHand(die: Die): Boolean = hand.hasDie(die)
+    fun getItemsInHand(): List<HandItem> = hand.getItems()
+    fun getItemsInCompost(): List<HandItem> = compost.getItems()
+    fun getItemsInSupply(): List<HandItem> = supply.getItems()
 
     fun discard(cardId: CardID): Boolean {
         if (!hand.hasCard(cardId)) return false
@@ -76,49 +67,20 @@ class DeckManager(
         return false
     }
 
-    fun removeCardFromHand(cardId: CardID): Boolean {
-        return hand.removeCard(cardId)
-    }
 
-    fun removeDieFromHand(die: Die): Boolean {
-        return hand.removeDie(die)
-    }
-
-    fun addCardToSupply(cardId: CardID): Boolean {
-        return supply.addCard(cardId)
-    }
-
-    fun addDieToSupply(die: Die): Boolean {
-        return supply.addDie(die)
-    }
-
-    fun addDieToSupply(die: DieValue): Boolean {
-        return supply.addDie(die.dieFrom(dieFactory))
-    }
-
-    fun addCardToHand(cardId: CardID): Boolean {
-        return hand.addCard(cardId)
-    }
-
-    fun addDieToHand(die: Die): Boolean {
-        return hand.addDie(die)
-    }
-
-    fun addDieToHand(die: DieValue): Boolean {
-        return hand.addDie(die.dieFrom(dieFactory))
-    }
-
-    fun addCardToCompost(cardId: CardID): Boolean {
-        return compost.addCard(cardId)
-    }
-
-    fun addDieToCompost(die: Die): Boolean {
-        return compost.addDie(die)
-    }
-
-    fun addDieToCompost(die: DieValue): Boolean {
-        return compost.addDie(die.dieFrom(dieFactory))
-    }
+    fun addCardToSupply(cardId: CardID): Boolean = supply.addCard(cardId)
+    fun addDieToSupply(die: Die): Boolean = supply.addDie(die)
+    fun addDieToSupply(die: DieValue): Boolean = supply.addDie(die.dieFrom(dieFactory))
+    fun addCardToHand(cardId: CardID): Boolean = hand.addCard(cardId)
+    fun addDieToHand(die: Die): Boolean = hand.addDie(die)
+    fun addDieToHand(die: DieValue): Boolean = hand.addDie(die.dieFrom(dieFactory))
+    fun addCardToCompost(cardId: CardID): Boolean = compost.addCard(cardId)
+    fun addDieToCompost(die: Die): Boolean = compost.addDie(die)
+    fun addDieToCompost(die: DieValue): Boolean = compost.addDie(die.dieFrom(dieFactory))
+    fun removeCardFromHand(cardId: CardID): Boolean = hand.removeCard(cardId)
+    fun removeDieFromHand(die: Die): Boolean = hand.removeDie(die)
+    fun removeCardFromCompost(cardId: CardID): Boolean = compost.removeCard(cardId)
+    fun removeDieFromCompost(die: Die): Boolean = compost.removeDie(die)
 
     // Drawing operations
     fun drawCard(): CardID? {
@@ -161,14 +123,14 @@ class DeckManager(
     fun resupply() {
         supply.addAllCards(compost.getItems().mapNotNull {
             when (it) {
-                is HandItem.Card -> it.card.id
-                is HandItem.Dice -> null
+                is HandItem.aCard -> it.card.id
+                is HandItem.aDie -> null
             }
         })
         supply.addAllDice(compost.getItems().mapNotNull {
             when (it) {
-                is HandItem.Card -> null
-                is HandItem.Dice -> it.die
+                is HandItem.aCard -> null
+                is HandItem.aDie -> it.die
             }
         })
         compost.clear()
@@ -178,8 +140,8 @@ class DeckManager(
     fun discardHand() {
         hand.getItems().forEach { item ->
             when (item) {
-                is HandItem.Card -> compost.addCard(item.card.id)
-                is HandItem.Dice -> compost.addDie(item.die)
+                is HandItem.aCard -> compost.addCard(item.card.id)
+                is HandItem.aDie -> compost.addDie(item.die)
             }
         }
         hand.clear()

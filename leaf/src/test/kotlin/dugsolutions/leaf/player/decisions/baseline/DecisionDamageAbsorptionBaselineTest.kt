@@ -2,14 +2,14 @@ package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
-import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.player.di.CardEffectBattleScoreFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.random.RandomizerTD
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -385,7 +385,7 @@ class DecisionDamageAbsorptionBaselineTest {
         // Verify resilience values
         assertEquals(2, FakeCards.fakeSeedling.resilience, "Seedling resilience must be 2 for this test")
         assertEquals(4, FakeCards.fakeVine.resilience, "Vine resilience must be 4 for this test")
-        assertEquals(1, FakeCards.fakeFlower.resilience, "Flower resilience expected to be 1 for this test")
+        assertEquals(10, FakeCards.fakeFlower.resilience, "Flower resilience expected to be 10 for this test")
 
         player.incomingDamage = 6
         // Add regular cards to hand

@@ -37,20 +37,23 @@ class HandleDeliverDamage(
             val attackerPipTotal = attacker.pipTotal
             val defenderPipTotal = defender.pipTotal
             val damage = attackerPipTotal - defenderPipTotal
+            val deflectDamage = defender.deflectDamage
 
+            defender.deflectDamage = 0 // TODO: Unit test
+
+            chronicle(
+                Moment.DELIVER_DAMAGE(
+                    defender = defender, damageToDefender = damage,
+                    deflectDamage = deflectDamage,
+                    defenderPipTotal = defenderPipTotal, attackerPipTotal = attackerPipTotal
+                )
+            )
             // Skip if no damage to deliver (tie of lowest versus highest)
             if (damage > 0) {
-                defender.incomingDamage += max(0, damage - defender.deflectDamage)
+                defender.incomingDamage += max(0, damage - deflectDamage)
                 if (defender.incomingDamage > 0) {
-                    chronicle(
-                        Moment.DELIVER_DAMAGE(
-                            defender = defender, damageToDefender = damage,
-                            defenderPipTotal = defenderPipTotal, attackerPipTotal = attackerPipTotal
-                        )
-                    )
                     val thornDamage = handleAbsorbDamage(defender)
                     if (thornDamage > 0) {
-
                         attacker.incomingDamage += thornDamage
                         chronicle(
                             Moment.THORN_DAMAGE(player = attacker, thornDamage = thornDamage)
@@ -59,13 +62,14 @@ class HandleDeliverDamage(
                 }
             }
         }
-        val topPlayer = sortedPlayers[0]
-        val remainingDamage = max(0, topPlayer.incomingDamage - topPlayer.deflectDamage)
-        if (remainingDamage > 0) {
-            chronicle(
-                Moment.DELIVER_DAMAGE(defender = topPlayer, damageToDefender = remainingDamage)
-            )
-            handleAbsorbDamage(topPlayer)
+        // Now deal with any thorn damage effects
+        for (player in sortedPlayers) {
+            if (player.incomingDamage > 0) {
+                chronicle(
+                    Moment.DELIVER_DAMAGE(defender = player, damageToDefender = player.incomingDamage)
+                )
+                handleAbsorbDamage(player)
+            }
         }
     }
 } 

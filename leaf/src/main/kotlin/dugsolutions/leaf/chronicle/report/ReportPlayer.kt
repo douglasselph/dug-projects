@@ -1,6 +1,6 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.Player
 
 class ReportPlayer {

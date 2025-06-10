@@ -1,10 +1,10 @@
 package dugsolutions.leaf.game.turn.handle
 
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.die.MissingDieException
-import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.die.MissingDieException
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import io.mockk.every

@@ -1,7 +1,6 @@
 package dugsolutions.leaf.game.turn.handle
 
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.Randomizer
 
 /**
  * Targeting Rules

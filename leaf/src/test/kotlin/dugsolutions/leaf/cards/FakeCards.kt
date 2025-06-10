@@ -1,11 +1,11 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.CostElement
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.cost.CostElement
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 
 /**
  * Provides predefined test cards for use in tests.
@@ -119,7 +119,7 @@ class FakeCards {
             name = "Thorny Vine",
             type = FlourishType.VINE,
             resilience = 4,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.CANOPY),
                 CostElement.SingleDieMinimum(7),
                 CostElement.TotalDiceMinimum(9)
@@ -139,7 +139,7 @@ class FakeCards {
             name = "Test Vine",
             type = FlourishType.VINE,
             resilience = 4,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.CANOPY),
                 CostElement.SingleDieMinimum(8),
                 CostElement.TotalDiceMinimum(10)
@@ -159,7 +159,7 @@ class FakeCards {
             name = "Sheltering Canopy",
             type = FlourishType.CANOPY,
             resilience = 5,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.ROOT),
                 CostElement.SingleDieMinimum(6),
                 CostElement.TotalDiceMinimum(14)
@@ -179,7 +179,7 @@ class FakeCards {
             name = "Test Canopy",
             type = FlourishType.CANOPY,
             resilience = 3,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.ROOT),
                 CostElement.SingleDieMinimum(9),
                 CostElement.TotalDiceMinimum(20)
@@ -199,7 +199,7 @@ class FakeCards {
             name = "Nourishing Root",
             type = FlourishType.ROOT,
             resilience = 2,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.SingleDieMinimum(2),
                 CostElement.TotalDiceMinimum(6)
             )),
@@ -218,7 +218,7 @@ class FakeCards {
             name = "Test Root",
             type = FlourishType.ROOT,
             resilience = 2,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.SingleDieMinimum(3),
                 CostElement.TotalDiceMinimum(7)
             )),
@@ -236,8 +236,8 @@ class FakeCards {
             id = ++ID,
             name = "Spring Flower",
             type = FlourishType.FLOWER,
-            resilience = 1,
-            cost = Cost(
+            resilience = 10,
+            cost = Cost.from(
                 listOf(
                     CostElement.FlourishTypePresent(FlourishType.VINE),
                     CostElement.SingleDieMinimum(12),
@@ -245,11 +245,11 @@ class FakeCards {
                 )
             ),
             primaryEffect = CardEffect.ADORN,
-            primaryValue = 3,
+            primaryValue = 1,
             matchWith = MatchWith.None,
             matchEffect = null,
             matchValue = 0,
-            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashEffect = null,
             trashValue = 10,
             thorn = 0
         )
@@ -258,8 +258,8 @@ class FakeCards {
             id = ++ID,
             name = "Test Flower",
             type = FlourishType.FLOWER,
-            resilience = 1,
-            cost = Cost(listOf(
+            resilience = 10,
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.VINE),
                 CostElement.SingleDieMinimum(18),
                 CostElement.TotalDiceMinimum(22)
@@ -269,7 +269,7 @@ class FakeCards {
             matchWith = MatchWith.None,
             matchEffect = null,
             matchValue = 0,
-            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashEffect = null,
             trashValue = 10,
             thorn = 0
         )
@@ -278,8 +278,8 @@ class FakeCards {
             id = ++ID,
             name = "Dark Flower",
             type = FlourishType.FLOWER,
-            resilience = 1,
-            cost = Cost(listOf(
+            resilience = 10,
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.VINE),
                 CostElement.SingleDieMinimum(17),
                 CostElement.TotalDiceMinimum(21)
@@ -289,7 +289,7 @@ class FakeCards {
             matchWith = MatchWith.None,
             matchEffect = null,
             matchValue = 0,
-            trashEffect = CardEffect.RESILIENCE_BOOST,
+            trashEffect = null,
             trashValue = 10,
             thorn = 0
         )
@@ -299,7 +299,7 @@ class FakeCards {
             name = "Spring Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
-            cost = Cost(
+            cost = Cost.from(
                 listOf(
                     CostElement.FlourishTypePresent(FlourishType.VINE),
                     CostElement.SingleDieMinimum(12),
@@ -321,7 +321,7 @@ class FakeCards {
             name = "Test Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.VINE),
                 CostElement.SingleDieMinimum(18),
                 CostElement.TotalDiceMinimum(22)
@@ -341,7 +341,7 @@ class FakeCards {
             name = "Dark Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
-            cost = Cost(listOf(
+            cost = Cost.from(listOf(
                 CostElement.FlourishTypePresent(FlourishType.VINE),
                 CostElement.SingleDieMinimum(17),
                 CostElement.TotalDiceMinimum(21)

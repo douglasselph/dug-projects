@@ -1,13 +1,12 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -151,8 +150,8 @@ class DeckManagerTest {
     fun getItemsInHand_returnsHandItems() {
         // Arrange
         val items = listOf(
-            HandItem.Card(mockk { every { id } returns CARD_ID_1 }),
-            HandItem.Dice(d6)
+            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aDie(d6)
         )
         every { hand.getItems() } returns items
 
@@ -277,9 +276,9 @@ class DeckManagerTest {
     fun resupply_movesAllItemsFromCompostToSupply() {
         // Arrange
         val items = listOf(
-            HandItem.Card(mockk { every { id } returns CARD_ID_1 }),
-            HandItem.Dice(d6),
-            HandItem.Card(mockk { every { id } returns CARD_ID_2 })
+            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aDie(d6),
+            HandItem.aCard(mockk { every { id } returns CARD_ID_2 })
         )
         every { compost.getItems() } returns items
 
@@ -309,9 +308,9 @@ class DeckManagerTest {
     fun discardHand_movesAllItemsToCompost() {
         // Arrange
         val items = listOf(
-            HandItem.Card(mockk { every { id } returns CARD_ID_1 }),
-            HandItem.Dice(d6),
-            HandItem.Card(mockk { every { id } returns CARD_ID_2 })
+            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aDie(d6),
+            HandItem.aCard(mockk { every { id } returns CARD_ID_2 })
         )
         every { hand.getItems() } returns items
 

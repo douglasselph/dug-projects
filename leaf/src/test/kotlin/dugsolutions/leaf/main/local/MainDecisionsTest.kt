@@ -1,7 +1,8 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
@@ -43,8 +44,9 @@ class MainDecisionsTest {
     private val sampleDie = SampleDie()
     private val sampleD6 = sampleDie.d6
     private val mockDecisionAcquireSelect = mockk<DecisionAcquireSelect>(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
 
-    private val SUT = MainDecisions(mockMainDomainManager, mockCardOperations)
+    private val SUT = MainDecisions(mockMainDomainManager, mockCardOperations, mockChronicle)
 
     @BeforeEach
     fun setup() {
@@ -69,7 +71,7 @@ class MainDecisionsTest {
     @Test
     fun setup_whenCalled_setsUpDrawCountCallback() {
         // Arrange
-        val fakePlayer = PlayerTD(1)
+        val fakePlayer = PlayerTD.create2(1)
 
         // Act
         SUT.setup(fakePlayer)
@@ -155,6 +157,7 @@ class MainDecisionsTest {
         // Arrange
         SUT.setup(mockPlayer)
         SUT.decidingPlayer = mockPlayer
+        SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
         SUT.onPlayerSelectionComplete()
@@ -174,6 +177,7 @@ class MainDecisionsTest {
         every { mockSelectedItems.dice } returns mockDice
         SUT.setup(mockPlayer)
         SUT.decidingPlayer = mockPlayer
+        SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
         SUT.onPlayerSelectionComplete()
@@ -192,6 +196,7 @@ class MainDecisionsTest {
         every { mockSelectedItems.dice } returns emptyList()
         SUT.setup(mockPlayer)
         SUT.decidingPlayer = mockPlayer
+        SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
         SUT.onPlayerSelectionComplete()
@@ -204,7 +209,7 @@ class MainDecisionsTest {
     @Test
     fun drawCountCallback_whenTriggered_updatesUI() = runBlocking {
         // Arrange
-        val fakePlayer = PlayerTD(1)
+        val fakePlayer = PlayerTD.create2(1)
         SUT.setup(fakePlayer)
         val decision = fakePlayer.decisionDirector.drawCountDecision as DecisionDrawCountSuspend
 

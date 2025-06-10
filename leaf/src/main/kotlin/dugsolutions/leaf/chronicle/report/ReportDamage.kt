@@ -7,7 +7,13 @@ class ReportDamage {
     operator fun invoke(moment: Moment.DELIVER_DAMAGE): String {
         val lines = mutableListOf<String>()
         if (moment.damageToDefender > 0) {
-            lines.add("Player ${moment.defender.id} took ${moment.damageToDefender} (pips ${moment.attackerPipTotal} vs ${moment.defenderPipTotal})")
+            val sbuf = StringBuffer()
+            sbuf.append("Player ${moment.defender.id} took ${moment.damageToDefender}")
+            if (moment.deflectDamage > 0) {
+                sbuf.append(" but deflected ${moment.deflectDamage}. ")
+            }
+            sbuf.append(" (pips ${moment.attackerPipTotal} vs ${moment.defenderPipTotal})")
+            lines.add(sbuf.toString())
         }
         return lines.joinToString(",")
     }

@@ -18,14 +18,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.CostElement
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.cost.CostElement
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.GroveInfo
@@ -151,7 +151,7 @@ fun main() = application {
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.TotalDiceMinimum(2))),
+                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(2))),
                             primaryEffect = CardEffect.DRAW_DIE,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -172,7 +172,7 @@ fun main() = application {
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.TotalDiceMinimum(2))),
+                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(2))),
                             primaryEffect = CardEffect.DRAW_DIE,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -193,7 +193,7 @@ fun main() = application {
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
                             resilience = 4,
-                            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
+                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
                             primaryEffect = CardEffect.DEFLECT,
                             primaryValue = 2,
                             matchWith = MatchWith.None,
@@ -214,7 +214,7 @@ fun main() = application {
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
                             resilience = 4,
-                            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
+                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
                             primaryEffect = CardEffect.DEFLECT,
                             primaryValue = 2,
                             matchWith = MatchWith.None,
@@ -277,7 +277,7 @@ fun main() = application {
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.TotalDiceMinimum(1))),
+                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(1))),
                             primaryEffect = CardEffect.DRAW_CARD,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -299,7 +299,7 @@ fun main() = application {
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
                             primaryEffect = CardEffect.DRAW_CARD,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -321,7 +321,7 @@ fun main() = application {
                             name = "Blooming Flower",
                             type = FlourishType.FLOWER,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
                             primaryEffect = CardEffect.DRAW_CARD,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -342,7 +342,7 @@ fun main() = application {
                             name = "Wild Growth",
                             type = FlourishType.ROOT,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.SingleDieMinimum(3))),
+                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(3))),
                             primaryEffect = CardEffect.DRAW_CARD,
                             primaryValue = 2,
                             matchWith = MatchWith.None,

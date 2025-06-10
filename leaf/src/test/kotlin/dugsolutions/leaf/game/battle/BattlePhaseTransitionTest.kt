@@ -2,7 +2,6 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.GameCard
 import dugsolutions.leaf.player.Player
 import io.mockk.coVerify
 import io.mockk.every

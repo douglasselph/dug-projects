@@ -1,6 +1,6 @@
 package dugsolutions.leaf.common
 
-import dugsolutions.leaf.components.die.DieSides
+import dugsolutions.leaf.random.die.DieSides
 
 object Commons {
     const val ALL_CARD_LIST = "data/CardList-all.csv"

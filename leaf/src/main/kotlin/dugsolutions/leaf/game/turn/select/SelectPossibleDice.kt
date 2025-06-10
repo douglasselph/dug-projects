@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.di.factory.DieFactory
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.grove.Grove
 
 class SelectPossibleDice(

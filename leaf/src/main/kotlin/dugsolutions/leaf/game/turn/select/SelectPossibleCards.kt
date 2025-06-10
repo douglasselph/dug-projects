@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.game.acquire.ManageAcquiredFloralTypes
 import dugsolutions.leaf.grove.Grove
 

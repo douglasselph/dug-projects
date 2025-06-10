@@ -1,6 +1,6 @@
 package dugsolutions.leaf.main.domain
 
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.random.die.Die
 
 data class DiceInfo(
     val values: List<DieInfo> = emptyList()

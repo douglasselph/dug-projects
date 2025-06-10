@@ -24,10 +24,18 @@ class BattlePhaseTransition(
                 bestMatchingBloomCards[0]?.let { card ->
                     player.addCardToSupply(card.id)
                     player.addCardToSupply(card.id)
+                    chronicle(Moment.ACQUIRE_CARD(player, card))
+                    chronicle(Moment.ACQUIRE_CARD(player, card))
                 }
             } else {
-                bestMatchingBloomCards[0]?.let { card -> player.addCardToSupply(card.id) }
-                bestMatchingBloomCards[1]?.let { card -> player.addCardToSupply(card.id) }
+                bestMatchingBloomCards[0]?.let { card ->
+                    player.addCardToSupply(card.id)
+                    chronicle(Moment.ACQUIRE_CARD(player, card))
+                }
+                bestMatchingBloomCards[1]?.let { card ->
+                    player.addCardToSupply(card.id)
+                    chronicle(Moment.ACQUIRE_CARD(player, card))
+                }
             }
         }
         // Move all flower cards to supply

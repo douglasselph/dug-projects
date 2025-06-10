@@ -1,6 +1,6 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.game.Game
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
@@ -9,17 +9,26 @@ import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
+import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.decisions.ui.DecisionAcquireSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDamageAbsorptionSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
+import dugsolutions.leaf.player.decisions.ui.DecisionFlowerSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionShouldProcessTrashEffectSuspend
 
 class MainDecisions(
     private val mainDomainManager: MainDomainManager,
-    private val cardOperations: CardOperations
+    private val cardOperations: CardOperations,
+    private val chronicle: GameChronicle // TODO: Unit test
 ) {
+    enum class Selecting {
+        NONE,
+        ITEMS,
+        FLOWERS
+    }
 
+    var selecting = Selecting.NONE
     var decidingPlayer: Player? = null // Made public for the sake of unit tests.
 
     fun setup(player: Player) = with(player.decisionDirector) {
@@ -27,6 +36,7 @@ class MainDecisions(
         acquireSelectDecision = createDecisionAcquireSelectSuspend(player)
         damageAbsorptionDecision = createDecisionDamageAbsorptionSuspend(player)
         shouldProcessTrashEffect = createDecisionShouldProcessTrashEffectSuspend(player)
+        flowerSelectDecision = createDecisionFlowerSelectSuspend(player) // TODO: Unit test
     }
 
     // region DrawCount
@@ -54,8 +64,8 @@ class MainDecisions(
 
     private fun createDecisionAcquireSelectSuspend(player: Player): DecisionAcquireSelect {
         val value = DecisionAcquireSelectSuspend()
-        value.onBestPurchase = { possibleCards, possibleDice ->
-            mainDomainManager.updateData()
+        value.onGroveAcquisition = { possibleCards, possibleDice ->
+            mainDomainManager.updateData(player)
             mainDomainManager.setHighlightGroveItemsForSelection(possibleCards, possibleDice, player)
             decidingPlayer = player
         }
@@ -87,21 +97,33 @@ class MainDecisions(
 
     // endregion GroveCard
 
-    // region PlayerSelect
+
+    // TODO: Unit test
+    fun onPlayerSelectionComplete() {
+        when (selecting) {
+            Selecting.NONE -> {}
+            Selecting.ITEMS -> onPlayerItemSelectionComplete()
+            Selecting.FLOWERS -> onPlayerFlowerSelectionComplete()
+        }
+        selecting = Selecting.NONE
+    }
+
+    // region PlayerSelectItems
 
     private fun createDecisionDamageAbsorptionSuspend(player: Player): DecisionDamageAbsorption {
         val value = DecisionDamageAbsorptionSuspend()
         value.onDamageAbsorptionRequest = {
-            mainDomainManager.updateData()
-            mainDomainManager.setAllowPlayerItemSelect(player)
             val amount = player.incomingDamage
+            mainDomainManager.updateData(player)
+            mainDomainManager.setAllowPlayerItemSelect(player)
             mainDomainManager.setActionButton(ActionButton.DONE, "Select cards and/or dice to absorb $amount damage.")
             decidingPlayer = player
+            selecting = Selecting.ITEMS
         }
         return value
     }
 
-    fun onPlayerSelectionComplete() {
+    private fun onPlayerItemSelectionComplete() {
         val selected = mainDomainManager.gatherSelected()
         val player = decidingPlayer
         require(player != null)
@@ -119,7 +141,37 @@ class MainDecisions(
         mainDomainManager.setActionButton(ActionButton.NONE)
     }
 
-    // endregion PlayerSelect
+    // endregion PlayerSelectItems
+
+    // region PlayerSelectFlowers
+
+    // TODO: Unit test
+    private fun createDecisionFlowerSelectSuspend(player: Player): DecisionFlowerSelect {
+        val value = DecisionFlowerSelectSuspend()
+        value.onFlowerSelect = {
+            mainDomainManager.updateData(player)
+            mainDomainManager.setAllowPlayerFlowerSelect(player)
+            mainDomainManager.setActionButton(ActionButton.DONE, "Select flower cards to contribute toward played Bloom card.")
+            decidingPlayer = player
+            selecting = Selecting.FLOWERS
+        }
+        return value
+    }
+
+    // TODO: Unit test
+    private fun onPlayerFlowerSelectionComplete() {
+        val selected = mainDomainManager.gatherSelected()
+        val player = decidingPlayer
+        require(player != null)
+        val flowerSelectDecision = player.decisionDirector.flowerSelectDecision
+        if (flowerSelectDecision is DecisionFlowerSelectSuspend) {
+            flowerSelectDecision.provide(selected.cards)
+        }
+        mainDomainManager.clearPlayerSelect()
+        mainDomainManager.setActionButton(ActionButton.NONE)
+    }
+
+    // endregion PlayerSelectFlowers
 
     // region TrashEffect
 

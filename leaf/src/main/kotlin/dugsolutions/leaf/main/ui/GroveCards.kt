@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.ItemInfo
@@ -37,7 +37,7 @@ fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
             ) {
                 row.forEach { stack ->
                     Box {
-                        if (stack?.topCard != null) {
+                        if (stack != null) {
                             StackInfoDisplay(stack) { card ->
                                 onSelected(ItemInfo.Card(card))
                             }

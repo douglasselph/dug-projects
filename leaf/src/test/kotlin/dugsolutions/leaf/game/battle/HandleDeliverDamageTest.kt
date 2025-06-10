@@ -2,7 +2,7 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.components.die.DieValue
+import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.player.PlayerTD
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -152,7 +152,7 @@ class HandleDeliverDamageTest {
         // Assert
         assertEquals(0, player1.incomingDamage)
         assertEquals(0, player2.incomingDamage)
-        verify(exactly = 0) { mockGameChronicle(any()) }
+        verify(exactly = 1) { mockGameChronicle(any()) }
     }
 
     @Test
@@ -250,7 +250,7 @@ class HandleDeliverDamageTest {
         assertEquals(0, player1.incomingDamage)
         assertEquals(0, player2.incomingDamage)
         assertEquals(0, player3.incomingDamage)
-        verify(exactly = 0) { mockGameChronicle(any()) }
+        verify { mockGameChronicle(any()) }
     }
 
     @Test
@@ -260,7 +260,7 @@ class HandleDeliverDamageTest {
         player1.addDieToHand(DieValue(6, 6))  // 6 pips
         player1.pipModifier = 4  // Total: 10 pips (highest)
 
-        player2.addDieToHand(DieValue(6, 4))  // 4 pips 
+        player2.addDieToHand(DieValue(6, 4))  // 4 pips
         player2.pipModifier = 5  // Total: 9 pips (next highest)
 
         player3.addDieToHand(DieValue(6, 4))  // 4 pips (tied lowest)

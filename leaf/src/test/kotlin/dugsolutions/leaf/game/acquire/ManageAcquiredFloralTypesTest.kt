@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.acquire
 
-import dugsolutions.leaf.components.FlourishType
+import dugsolutions.leaf.cards.domain.FlourishType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

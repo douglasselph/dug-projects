@@ -1,8 +1,8 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
 
 class SelectCardToRetain(
     private val costScore: CostScore

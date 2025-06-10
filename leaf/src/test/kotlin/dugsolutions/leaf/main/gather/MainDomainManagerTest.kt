@@ -1,9 +1,9 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.ActionButton

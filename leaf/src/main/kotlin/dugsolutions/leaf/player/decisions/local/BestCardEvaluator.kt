@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.Player
 
 /**

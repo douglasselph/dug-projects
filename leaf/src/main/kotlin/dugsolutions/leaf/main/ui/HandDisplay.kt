@@ -17,14 +17,14 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.CostElement
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.cost.CostElement
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
@@ -36,7 +36,7 @@ fun HandDisplay(
 ) {
 
     Surface(
-        border = BorderStroke(1.dp, MaterialTheme.colors.primary),
+        border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(4.dp),
         modifier = Modifier.padding(4.dp)
     ) {
@@ -112,7 +112,7 @@ fun main() = application {
                         name = "Nourishing Root",
                         type = FlourishType.ROOT,
                         resilience = 3,
-                        cost = Cost(listOf(CostElement.SingleDieMinimum(2))),
+                        cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
                         primaryEffect = CardEffect.DRAW_DIE,
                         primaryValue = 1,
                         matchWith = MatchWith.None,
@@ -129,7 +129,7 @@ fun main() = application {
                         name = "Vibrant Bloom",
                         type = FlourishType.BLOOM,
                         resilience = 1,
-                        cost = Cost(listOf(CostElement.SingleDieMinimum(1))),
+                        cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
                         primaryEffect = CardEffect.GAIN_FREE_ROOT,
                         primaryValue = 2,
                         matchWith = MatchWith.None,

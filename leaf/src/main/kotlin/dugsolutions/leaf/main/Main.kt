@@ -5,7 +5,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.di.gameModule
+import dugsolutions.leaf.di.appModule
+import dugsolutions.leaf.di.appModules
+import dugsolutions.leaf.game.di.gameModule
 import org.koin.core.context.startKoin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -47,7 +49,7 @@ class MainApplication : KoinComponent {
 fun main() {
     // Start Koin
     startKoin {
-        modules(gameModule)
+        modules(appModules)
     }
 
     // Run the application

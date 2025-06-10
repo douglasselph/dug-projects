@@ -1,13 +1,15 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.select.SelectAllDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.grove.domain.MarketStackID
@@ -53,11 +55,12 @@ class GatherGroveInfoTest {
     private val mockGatherCardInfo = mockk<GatherCardInfo>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private val mockSelectAllDice = mockk<SelectAllDice>(relaxed = true)
+    private val gameTime = GameTime()
     private lateinit var mockCards: GameCardIDs
     private lateinit var mockPlayer: Player
     private val sampleDie = SampleDie()
 
-    private val SUT = GatherGroveInfo(mockGrove, mockGatherCardInfo, mockSelectAllDice)
+    private val SUT = GatherGroveInfo(mockGrove, mockGatherCardInfo, mockSelectAllDice, gameTime)
 
     @BeforeEach
     fun setup() {
@@ -75,6 +78,8 @@ class GatherGroveInfoTest {
         
         // Default mock for selectAllDice
         every { mockSelectAllDice() } returns Dice()
+
+        gameTime.phase = GamePhase.CULTIVATION
     }
 
     @Test
@@ -84,11 +89,12 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(MarketStackID.entries.size, result.stacks.size)
         result.stacks.forEachIndexed { index, stack ->
             assertEquals(NUM_CARDS, stack.numCards)
             assertEquals(mockCardInfo, stack.topCard)
-            verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.NONE) }
+            verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.NONE) }
         }
         assertNull(result.instruction)
         assertNotNull(result.dice)
@@ -104,6 +110,7 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(MarketStackID.entries.size, result.stacks.size)
         result.stacks.forEach { stack ->
             assertEquals(0, stack.numCards)
@@ -125,6 +132,7 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(MarketStackID.entries.size, result.stacks.size)
         
         // Check populated stacks
@@ -155,9 +163,10 @@ class GatherGroveInfoTest {
         val result = SUT(highlightCard = highlightCards)
 
         // Assert
+        require(result != null)
         result.stacks.forEachIndexed { index, stack ->
             if (stack.topCard != null) {
-                verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.SELECTABLE) }
+                verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.SELECTABLE) }
             }
         }
         assertNotNull(result.dice)
@@ -173,6 +182,7 @@ class GatherGroveInfoTest {
         val result = SUT(highlightDie = highlightDice)
 
         // Assert
+        require(result != null)
         assertNotNull(result.dice)
         assertEquals(2, result.dice.values.size)
         result.dice.values.forEachIndexed { index, dieInfo ->
@@ -190,6 +200,7 @@ class GatherGroveInfoTest {
         val result = SUT(selectForPlayer = mockPlayer)
 
         // Assert
+        require(result != null)
         assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
@@ -209,10 +220,10 @@ class GatherGroveInfoTest {
         )
 
         // Assert
-        // Check stacks
+        require(result != null)
         result.stacks.forEachIndexed { index, stack ->
             if (stack.topCard != null) {
-                verify { mockGatherCardInfo(index = index, incoming = testCard, highlight = HighlightInfo.SELECTABLE) }
+                verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.SELECTABLE) }
             }
         }
 
@@ -240,6 +251,7 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(emptyDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
     }
@@ -254,6 +266,7 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(singleDie.toString(), result.quantities)
         verify { mockSelectAllDice() }
     }
@@ -268,6 +281,7 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(multipleDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
     }
@@ -282,7 +296,22 @@ class GatherGroveInfoTest {
         val result = SUT()
 
         // Assert
+        require(result != null)
         assertEquals(mixedDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
+    }
+
+    @Test
+    fun invoke_phaseIsBattle_returnsNull() {
+        // Arrange
+        val mixedDice = Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d6))
+        every { mockSelectAllDice() } returns mixedDice
+        gameTime.phase = GamePhase.BATTLE
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        assertNull(result)
     }
 } 

@@ -1,6 +1,6 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.components.CardEffect
+import dugsolutions.leaf.cards.domain.CardEffect
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -69,15 +69,6 @@ class EffectBattleScoreTest {
 
         // Assert
         assertEquals(20, result)
-    }
-
-    @Test
-    fun invoke_whenAdorn_returnsTen() {
-        // Act
-        val result = SUT(CardEffect.ADORN, 5)
-
-        // Assert
-        assertEquals(10, result)
     }
 
     @Test

@@ -2,7 +2,7 @@ package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.common.Commons
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import io.mockk.every

@@ -1,10 +1,10 @@
 package dugsolutions.leaf.game.turn
 
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.random.RandomizerTD
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -21,13 +21,13 @@ class PlayerOrderTest {
 
     private val randomizer = RandomizerTD()
     private val sampleDie = SampleDie(randomizer)
-    private val tdPlayer1 = PlayerTD(1)
-    private val tdPlayer2 = PlayerTD(2)
-    private val tdPlayer3 = PlayerTD(3)
-    private val tdPlayer4 = PlayerTD(4)
-    private lateinit var mockGameChronicle: GameChronicle
+    private val tdPlayer1 = PlayerTD.create2(1)
+    private val tdPlayer2 = PlayerTD.create2(2)
+    private val tdPlayer3 = PlayerTD.create2(3)
+    private val tdPlayer4 = PlayerTD.create2(4)
+    private val mockGameChronicle: GameChronicle  = mockk(relaxed = true)
 
-    private lateinit var SUT: PlayerOrder
+    private val SUT: PlayerOrder = PlayerOrder(mockGameChronicle)
 
     private val d6: Die
         get() = sampleDie.d6
@@ -47,12 +47,6 @@ class PlayerOrderTest {
 
     @BeforeEach
     fun setup() {
-        // Initialize random components
-        mockGameChronicle = mockk(relaxed = true)
-        SUT = PlayerOrder(mockGameChronicle)
-        
-        // Mock the chronicle
-        every { mockGameChronicle(any()) } just Runs
     }
 
     @Test

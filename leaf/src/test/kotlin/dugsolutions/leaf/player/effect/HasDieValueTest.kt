@@ -1,12 +1,11 @@
 package dugsolutions.leaf.player.effect
 
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -14,8 +13,8 @@ import org.junit.jupiter.api.Test
 
 class HasDieValueTest {
 
-    private lateinit var sampleHandCard: HandItem.Card
-    private lateinit var sampleHandDice: HandItem.Dice
+    private lateinit var sampleHandCard: HandItem.aCard
+    private lateinit var sampleHandADie: HandItem.aDie
     private lateinit var sampleDie: Die
     private lateinit var mockGameCard: GameCard
     private lateinit var randomizer: Randomizer
@@ -31,9 +30,9 @@ class HasDieValueTest {
 
         SUT = HasDieValue()
 
-        sampleHandCard = HandItem.Card(mockGameCard)
+        sampleHandCard = HandItem.aCard(mockGameCard)
         sampleDie = dieFactory(DieSides.D8)
-        sampleHandDice = HandItem.Dice(sampleDie)
+        sampleHandADie = HandItem.aDie(sampleDie)
     }
 
     @Test
@@ -60,7 +59,7 @@ class HasDieValueTest {
         // Act
         sampleDie.adjustTo(6)
 
-        val result = SUT(listOf(sampleHandDice), 6)
+        val result = SUT(listOf(sampleHandADie), 6)
 
         // Assert
         assertEquals(sampleDie, result)
@@ -72,7 +71,7 @@ class HasDieValueTest {
         sampleDie.adjustTo(3)
 
         // Act
-        val result = SUT(listOf(sampleHandDice), 4)
+        val result = SUT(listOf(sampleHandADie), 4)
 
         // Assert
         assertEquals(null, result)
@@ -82,7 +81,7 @@ class HasDieValueTest {
     fun invoke_whenMixedItemsWithMatchingDice_returnsTrue() {
         // Act
         sampleDie.adjustTo(6)
-        val result = SUT(listOf(sampleHandCard, sampleHandDice), 6)
+        val result = SUT(listOf(sampleHandCard, sampleHandADie), 6)
 
         // Assert
         assertEquals(sampleDie, result)

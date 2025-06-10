@@ -1,19 +1,17 @@
 package dugsolutions.leaf.player.effect
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class CanProcessMatchEffectTest {
 
@@ -57,7 +55,7 @@ class CanProcessMatchEffectTest {
     fun invoke_whenMatchWithOnRollAndHasMatchingDie_returnsTrue() {
         // Arrange
         every { mockCard.matchWith } returns MatchWith.OnRoll(6)
-        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.Dice(mockD6))
+        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.aDie(mockD6))
         every { mockHasDieValue(any(), 6) } returns mockD6
         val expectedResult = CanProcessMatchEffect.Result(true, mockD6)
 
@@ -72,7 +70,7 @@ class CanProcessMatchEffectTest {
     fun invoke_whenMatchWithOnRollAndNoMatchingDie_returnsFalse() {
         // Arrange
         every { mockCard.matchWith } returns MatchWith.OnRoll(6)
-        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.Dice(mockD4))
+        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.aDie(mockD4))
         every { mockHasDieValue(any(), 6) } returns null
         val expectedResult = CanProcessMatchEffect.Result(false)
 
@@ -87,7 +85,7 @@ class CanProcessMatchEffectTest {
     fun invoke_whenMatchWithOnFlourishTypeAndHasMatchingCard_returnsTrue() {
         // Arrange
         every { mockCard.matchWith } returns MatchWith.OnFlourishType(FlourishType.ROOT)
-        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.Card(mockCard))
+        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.aCard(mockCard))
         every { mockHasFlourishType(any(), FlourishType.ROOT) } returns true
         val expectedResult = CanProcessMatchEffect.Result(true)
 
@@ -102,7 +100,7 @@ class CanProcessMatchEffectTest {
     fun invoke_whenMatchWithOnFlourishTypeAndNoMatchingCard_returnsFalse() {
         // Arrange
         every { mockCard.matchWith } returns MatchWith.OnFlourishType(FlourishType.ROOT)
-        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.Card(mockCard))
+        every { mockPlayer.getItemsInHand() } returns listOf(HandItem.aCard(mockCard))
         every { mockHasFlourishType(any(), FlourishType.ROOT) } returns false
         val expectedResult = CanProcessMatchEffect.Result(false)
 

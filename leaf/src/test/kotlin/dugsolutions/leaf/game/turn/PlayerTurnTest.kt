@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Test
 
 class PlayerTurnTest {
 
-
     private lateinit var mockPlayerRound: PlayerRound
     private lateinit var playerRoundTD: PlayerRoundTD
     private lateinit var mockPlayerOrder: PlayerOrder

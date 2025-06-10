@@ -1,14 +1,13 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -17,9 +16,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.components.die.DieValue
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.random.die.DieValue
 
 class StackManagerTest {
 
@@ -481,8 +480,8 @@ class StackManagerTest {
 
         // Assert
         assertEquals(2, result.size)
-        assertTrue(result.any { it is HandItem.Card && it.card.id == CARD_ID_1 })
-        assertTrue(result.any { it is HandItem.Dice && it.die == d4 })
+        assertTrue(result.any { it is HandItem.aCard && it.card.id == CARD_ID_1 })
+        assertTrue(result.any { it is HandItem.aDie && it.die == d4 })
     }
 
     @Test

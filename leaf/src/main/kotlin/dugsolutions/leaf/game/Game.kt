@@ -1,7 +1,6 @@
 package dugsolutions.leaf.game
 
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.PlayerFactory
+import dugsolutions.leaf.player.di.PlayerFactory
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.game.domain.GameTime

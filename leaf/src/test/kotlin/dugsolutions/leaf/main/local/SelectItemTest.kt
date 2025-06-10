@@ -7,6 +7,7 @@ import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.PlayerInfo
+import io.mockk.every
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.BeforeEach
@@ -20,8 +21,8 @@ class SelectItemTest {
     }
 
     private lateinit var mockPlayerInfo: PlayerInfo
-    private lateinit var mockCardInfo: CardInfo
-    private lateinit var mockDieInfo: DieInfo
+    private lateinit var fakeCardInfo: CardInfo
+    private lateinit var fakeDieInfo: DieInfo
 
     private val SUT = SelectItem()
 
@@ -39,12 +40,12 @@ class SelectItemTest {
             compostCardCount = 0,
             showDrawCount = false
         )
-        mockCardInfo = CardInfoFaker.create().copy(
+        fakeCardInfo = CardInfoFaker.create().copy(
             name = CARD_NAME,
             index = 0,
             highlight = HighlightInfo.NONE
         )
-        mockDieInfo = DieInfo(
+        fakeDieInfo = DieInfo(
             index = 0,
             value = "2D6",
             highlight = HighlightInfo.NONE
@@ -55,11 +56,11 @@ class SelectItemTest {
     fun handCard_whenCardExists_updatesHighlight() {
         // Arrange
         val playerInfo = mockPlayerInfo.copy(
-            handCards = listOf(mockCardInfo)
+            handCards = listOf(fakeCardInfo)
         )
 
         // Act
-        val result = SUT.handCard(playerInfo, mockCardInfo)
+        val result = SUT.handCard(playerInfo, fakeCardInfo)
 
         // Assert
         assertEquals(HighlightInfo.SELECTED, result.handCards[0].highlight)
@@ -73,24 +74,49 @@ class SelectItemTest {
         )
 
         // Act
-        val result = SUT.handCard(playerInfo, mockCardInfo)
+        val result = SUT.handCard(playerInfo, fakeCardInfo)
 
         // Assert
         assertSame(playerInfo, result)
     }
 
     @Test
-    fun floralCard_whenCardExists_updatesHighlight() {
+    fun floralCard_whenCardExists_selectable__updatesHighlight() {
         // Arrange
-        val playerInfo = mockPlayerInfo.copy(
-            floralArray = listOf(mockCardInfo)
-        )
+        fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.SELECTABLE)
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
 
         // Act
-        val result = SUT.floralCard(playerInfo, mockCardInfo)
+        val result = SUT.floralCard(playerInfo, fakeCardInfo)
 
         // Assert
         assertEquals(HighlightInfo.SELECTED, result.floralArray[0].highlight)
+    }
+
+    @Test
+    fun floralCard_whenCardExists_selected__updatesHighlight() {
+        // Arrange
+        fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.SELECTED)
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
+
+        // Act
+        val result = SUT.floralCard(playerInfo, fakeCardInfo)
+
+        // Assert
+        assertEquals(HighlightInfo.SELECTABLE, result.floralArray[0].highlight)
+    }
+
+    @Test
+    fun floralCard_whenCardExists_notSelectable__doesNothing() {
+        // Arrange
+        fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.NONE)
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
+
+        // Act
+        val result = SUT.floralCard(playerInfo, fakeCardInfo)
+
+        // Assert
+        assertEquals(HighlightInfo.NONE, result.floralArray[0].highlight)
     }
 
     @Test
@@ -101,24 +127,49 @@ class SelectItemTest {
         )
 
         // Act
-        val result = SUT.floralCard(playerInfo, mockCardInfo)
+        val result = SUT.floralCard(playerInfo, fakeCardInfo)
 
         // Assert
         assertSame(playerInfo, result)
     }
 
     @Test
-    fun die_whenDieExists_updatesHighlight() {
+    fun die_whenDieExists_selectable__updatesHighlight() {
         // Arrange
-        val playerInfo = mockPlayerInfo.copy(
-            handDice = DiceInfo(listOf(mockDieInfo))
-        )
+        fakeDieInfo = fakeDieInfo.copy(highlight = HighlightInfo.SELECTABLE)
+        val playerInfo = mockPlayerInfo.copy(handDice = DiceInfo(listOf(fakeDieInfo)))
 
         // Act
-        val result = SUT.die(playerInfo, mockDieInfo)
+        val result = SUT.die(playerInfo, fakeDieInfo)
 
         // Assert
         assertEquals(HighlightInfo.SELECTED, result.handDice.values[0].highlight)
+    }
+
+    @Test
+    fun die_whenDieExists_selected__updatesHighlight() {
+        // Arrange
+        fakeDieInfo = fakeDieInfo.copy(highlight = HighlightInfo.SELECTED)
+        val playerInfo = mockPlayerInfo.copy(handDice = DiceInfo(listOf(fakeDieInfo)))
+
+        // Act
+        val result = SUT.die(playerInfo, fakeDieInfo)
+
+        // Assert
+        assertEquals(HighlightInfo.SELECTABLE, result.handDice.values[0].highlight)
+    }
+
+    @Test
+    fun die_whenDieExists_notSelectable__doesNothing() {
+        // Arrange
+        fakeDieInfo = fakeDieInfo.copy(highlight = HighlightInfo.NONE)
+        val playerInfo = mockPlayerInfo.copy(handDice = DiceInfo(listOf(fakeDieInfo)))
+
+        // Act
+        val result = SUT.die(playerInfo, fakeDieInfo)
+
+        // Assert
+        assertEquals(HighlightInfo.NONE, result.handDice.values[0].highlight)
     }
 
     @Test
@@ -129,7 +180,7 @@ class SelectItemTest {
         )
 
         // Act
-        val result = SUT.die(playerInfo, mockDieInfo)
+        val result = SUT.die(playerInfo, fakeDieInfo)
 
         // Assert
         assertSame(playerInfo, result)
@@ -139,9 +190,9 @@ class SelectItemTest {
     fun die_whenIndexOutOfBounds_returnsOriginalPlayerInfo() {
         // Arrange
         val playerInfo = mockPlayerInfo.copy(
-            handDice = DiceInfo(listOf(mockDieInfo))
+            handDice = DiceInfo(listOf(fakeDieInfo))
         )
-        val invalidDieInfo = mockDieInfo.copy(index = 1)
+        val invalidDieInfo = fakeDieInfo.copy(index = 1)
 
         // Act
         val result = SUT.die(playerInfo, invalidDieInfo)

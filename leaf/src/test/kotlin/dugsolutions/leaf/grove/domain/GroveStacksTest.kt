@@ -2,16 +2,16 @@ package dugsolutions.leaf.grove.domain
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
-import dugsolutions.leaf.di.factory.GameCardsFactory
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.grove.local.DiceSupply
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

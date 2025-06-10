@@ -1,7 +1,8 @@
 package dugsolutions.leaf.game.acquire
 
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.turn.select.SelectPossibleCards
 import dugsolutions.leaf.player.Player
 import io.mockk.coEvery
@@ -57,9 +58,9 @@ class HandleGroveAcquisitionTest {
         // Set up to run loop 3 times
         every { mockPlayer.diceInHand.isNotEmpty() } returnsMany listOf(true, true, true, false)
 
-        val possibleCards1 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
-        val possibleCards2 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
-        val possibleCards3 = listOf(mockk<dugsolutions.leaf.components.GameCard>())
+        val possibleCards1 = listOf(mockk<GameCard>())
+        val possibleCards2 = listOf(mockk<GameCard>())
+        val possibleCards3 = listOf(mockk<GameCard>())
 
         every { mockSelectPossibleCards() } returnsMany listOf(possibleCards1, possibleCards2, possibleCards3)
 
@@ -81,8 +82,8 @@ class HandleGroveAcquisitionTest {
         // Set up to run loop 2 times
         every { mockPlayer.diceInHand.isNotEmpty() } returnsMany listOf(true, true, false)
 
-        val emptyCards = emptyList<dugsolutions.leaf.components.GameCard>()
-        val possibleCards = listOf(mockk<dugsolutions.leaf.components.GameCard>())
+        val emptyCards = emptyList<GameCard>()
+        val possibleCards = listOf(mockk<GameCard>())
 
         every { mockSelectPossibleCards() } returnsMany listOf(emptyCards, possibleCards)
 

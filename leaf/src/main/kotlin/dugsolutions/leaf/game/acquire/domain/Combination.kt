@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.components.die.DieValues
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.random.die.DieValues
 
 sealed class Adjusted {
     data class ByAmount(val die: DieValue, val amount: Int) : Adjusted()
@@ -9,27 +9,29 @@ sealed class Adjusted {
 }
 
 data class Combination(
-    val values: DieValues,
-    val addToTotal: Int,
-    val adjusted: List<Adjusted> = emptyList()
+    val values: DieValues = DieValues(emptyList()),
+    val addToTotal: Int = 0
 ) {
 
     override fun toString(): String {
         val buffer = StringBuffer()
-        buffer.append("Combination(")
+        buffer.append("Comb(")
         if (addToTotal > 0) {
             buffer.append("addToTotal=$addToTotal, ")
         }
-        if (adjusted.isNotEmpty()) {
-            buffer.append("adjusted:$adjusted, ")
-        }
-        buffer.append("values:$values)")
+        buffer.append("values:${values.values})")
         return buffer.toString()
     }
 
     val simplicityScore: Int
         get() {
-            return values.dice.size + adjusted.size
+            return values.dice.size
+        }
+
+    val totalValue: Int
+        get() {
+            val diceTotal = values.dice.sumOf { it.value }
+            return diceTotal + addToTotal
         }
 }
 
@@ -38,6 +40,10 @@ data class Combinations(
 ) : Iterable<Combination> {
     override fun iterator(): Iterator<Combination> {
         return list.iterator()
+    }
+
+    override fun toString(): String {
+        return "Combs(" + list.map { it.toString() }.joinToString(",") +")"
     }
 }
 

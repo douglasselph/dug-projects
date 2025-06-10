@@ -3,17 +3,17 @@ package dugsolutions.leaf.game.acquire
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
-import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
-import dugsolutions.leaf.game.acquire.evaluator.PossibleBestDice
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
@@ -31,7 +31,7 @@ class AcquireItemTest {
 
     private val mockCombinationGenerator = mockk<CombinationGenerator>(relaxed = true)
     private val mockPossibleCards = mockk<PossibleCards>(relaxed = true)
-    private val mockPossibleBestDice = mockk<PossibleBestDice>(relaxed = true)
+    private val mockPossibleDice = mockk<PossibleDice>(relaxed = true)
     private val mockManageAcquiredFloralTypes = mockk<ManageAcquiredFloralTypes>(relaxed = true)
     private val applyCostTD = ApplyCostTD()
     private val mockGrove = mockk<Grove>(relaxed = true)
@@ -42,7 +42,7 @@ class AcquireItemTest {
     private val SUT = AcquireItem(
         mockCombinationGenerator,
         mockPossibleCards,
-        mockPossibleBestDice,
+        mockPossibleDice,
         mockManageAcquiredFloralTypes,
         applyCostTD,
         mockGrove,
@@ -62,7 +62,7 @@ class AcquireItemTest {
         val possibleCards = listOf(ChoiceCard(FakeCards.fakeRoot, FakeCombination.combinationD6))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
-        every { mockPossibleBestDice(any()) } returns possibleDice
+        every { mockPossibleDice(any()) } returns possibleDice
         coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
                 DecisionAcquireSelect.BuyItem.Card(possibleCards[0])
 
@@ -87,7 +87,7 @@ class AcquireItemTest {
         val expectedDie = sampleDie.d6
         val possibleDice = listOf(ChoiceDie(expectedDie, FakeCombination.combinationD6))
         every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
-        every { mockPossibleBestDice(any()) } returns possibleDice
+        every { mockPossibleDice(any()) } returns possibleDice
         val decisionDirector = mockPlayer.decisionDirector
         coEvery { decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
                 DecisionAcquireSelect.BuyItem.Die(possibleDice[0])
@@ -112,7 +112,7 @@ class AcquireItemTest {
         val possibleCards = listOf(ChoiceCard(FakeCards.fakeRoot, FakeCombination.combinationD8))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
-        every { mockPossibleBestDice(any()) } returns possibleDice
+        every { mockPossibleDice(any()) } returns possibleDice
         coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
                 DecisionAcquireSelect.BuyItem.None
 
@@ -136,7 +136,7 @@ class AcquireItemTest {
         val possibleCards = listOf(ChoiceCard(FakeCards.fakeRoot, FakeCombination.combinationD6))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
-        every { mockPossibleBestDice(any()) } returns possibleDice
+        every { mockPossibleDice(any()) } returns possibleDice
         coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
                 DecisionAcquireSelect.BuyItem.Card(possibleCards[0])
 
@@ -167,7 +167,7 @@ class AcquireItemTest {
         val possibleCards = listOf(ChoiceCard(FakeCards.fakeFlower, FakeCombination.combinationD12))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
-        every { mockPossibleBestDice(any()) } returns possibleDice
+        every { mockPossibleDice(any()) } returns possibleDice
         coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
                 DecisionAcquireSelect.BuyItem.Card(possibleCards[0])
 

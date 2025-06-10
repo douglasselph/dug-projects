@@ -1,6 +1,6 @@
 package dugsolutions.leaf.player.decisions.core
 
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 
 /**
  * Returns if a card should be trashed in order to activate its trash effect.

@@ -1,36 +1,36 @@
 Card;Flourish Type;Resilience;Cost;Primary Effect;Primary Value;Match With;Match Effect;Match Value;Trash Effect;Trash Value;Thorn
-Seed Reduce;Seedling;-;-;ReduceCostRoot;3;d1;ReduceCostRoot;3;-;-;0
+Seed Reduce;Seedling;-;-;ReduceCostRoot;3;k1;ReduceCostRoot;2;-;-;0
 Seed Reroll;Seedling;-;-;RerollAccept2nd;1;-;-;-;RerollTakeBetter;2;0
-Seed Upgrade;Seedling;-;-;UpgradeD4;1;-;-;-;UpgradeAny;1;0
+Seed Upgrade;Seedling;-;-;UpgradeD6;1;-;-;-;UpgradeAnyRetain;1;0
 Seed Adjust;Seedling;-;-;AddToDie;2;k1;AddToTotal;2;-;-;0
-Root Reduce;Root;10;8;ReduceCostCanopy;2;d1;ReduceCostCanopy;2;-;-;0
-Root Upgrade;Root;8;10;UpgradeD4D6;1;d2;UpgradeAny;1;-;-;0
-Root Draw;Root;10;12;DrawCard;1;d2;DrawDie;1;- ;-;0
-Root Reroll;Root;8;8;RerollAccept2nd;1;d1;RerollTakeBetter;1;-;-;0
-Root Retain;Root;12;10;RetainCard;1;d1;RetainDieReroll;1;-;-;0
-Root Add;Root;10;15;AddToDie;2;d1;AdjustBy;3;-;-;0
-Canopy Deflect;Canopy;11;R 9;Deflect;2;Root;Deflect;4;-;-;1
-Canopy Draw Card;Canopy;20;14;DrawCard;1;Root;RetainCard;1;-;-;1
-Canopy Reduce Vine;Canopy;21;R 10;ReduceCostVine;3;Root;ReplayVine;1;-;-;1
-Canopy Reroll;Canopy;15;15;RerollTakeBetter;1;Root;RetainDieReroll;1;-;-;1
-Canopy Retain;Canopy;22;R 10;RetainCard;1;Root;RetainDie;2;;;1
-Canopy Thorn;Canopy;25;16;-;-;-;-;-;-;-;4
+Root Reduce;Root;10;8;ReduceCostCanopy;2;k1;ReduceCostCanopy;3;-;-;0
+Root Upgrade;Root;8;10;UpgradeD8;1;d2;UpgradeAny;1;-;-;0
+Root Draw;Root;10;10;DrawCard;1;d2;DrawDie;1;- ;-;0
+Root Reroll;Root;8;8;RerollAccept2nd;1;k1;RerollTakeBetter;1;-;-;0
+Root Retain;Root;12;10;RetainCard;1;k1;RetainDieReroll;1;-;-;0
+Root Add;Root;10;12;AddToDie;2;k1;AdjustBy;3;-;-;0
+Canopy Deflect;Canopy;14;R 10 | 14;Deflect;2;Root;Deflect;4;-;-;1
+Canopy Draw Card;Canopy;20;R 11 | 15;DrawCard;1;Root;RetainCard;1;-;-;1
+Canopy Reduce Vine;Canopy;20;R 9;ReduceCostVine;3;Root;ReplayVine;1;-;-;1
+Canopy Reroll;Canopy;15;R 12 | 16;RerollTakeBetter;1;Root;RetainDieReroll;1;-;-;1
+Canopy Retain;Canopy;20;R 11 | 15;RetainCard;1;Root;RetainDie;2;;;1
+Canopy Thorn;Canopy;25;R 12 | 16;-;-;-;-;-;-;-;4
 Vine AddToTotal;Vine;6;C 9;AddToTotal;3;Canopy;AddToTotal;4;-;-;3
-Vine Deflect;Vine;6;15;Deflect;1;d1;Deflect;2;-;-;4
-Vine Discard;Vine;8;C 10;DiscardCard;1;d1;DiscardDie;1;-;-;2
-Vine Draw;Vine;7;14;DrawThenDiscard;2;Canopy;DrawDie;1;-;-;2
+Vine Deflect;Vine;6;C 10 | 14;Deflect;1;k2;Deflect;2;-;-;4
+Vine Discard;Vine;8;C 10;DiscardCard;1;k1;DiscardDie;1;-;-;2
+Vine Draw;Vine;7;C 11 | 15;Draw;2;Canopy;Draw;1;-;-;2
 Vine Reroll ;Vine;5;C 10;RerollAllMax;1;Canopy;RerollTakeBetter;1;-;-;2
-Vine UseOpponent;Vine;5;15;UseOpponentCard;1;d1;UseOpponentDie;1;-;-;3
-Vine AdjustBy;Vine;9;C 9;AdjustBy;2;d1;AdjustBy;3;;;
-Flower AddToTotal;Flower;-;C 5;Adorn;1;-;-;-;ResilienceBoost;10;1
-Bloom AddToTotal;Bloom;1;-;AddToTotal;5;Flower AddToTotal;AddToTotal;1;-;-;2
-Flower AdjustBy;Flower;-;C 5;Adorn;1;-;-;-;ResilienceBoost;10;1
-Bloom AdjustBy;Bloom;1;-;AdjustBy;3;Flower AdjustBy;AdjustBy;1;-;-;2
-Flower DrawDie;Flower;-;C 6;Adorn;1;-;-;-;ResilienceBoost;10;1
-Bloom DrawDie;Bloom;1;-;DrawDie;1;Flower DrawDie;DrawDie;1;-;-;2
-Flower DrawCompost;Flower;-;C 6;Adorn;1;-;-;-;ResilienceBoost;10;1
+Vine UseOpponent;Vine;5;C 12 | 16;UseOpponentCard;1;d1;UseOpponentDie;1;-;-;3
+Vine AdjustBy;Vine;9;C 9;AdjustBy;2;k1;AdjustBy;3;;;
+Flower AddToTotal;Flower;10;C 7;Adorn;1;-;-;-;-;-;1
+Bloom AddToTotal;Bloom;1;-;AddToTotal;5;Flower AddToTotal;AddToTotal;3;-;-;2
+Flower AdjustBy;Flower;12;C 7;Adorn;1;-;-;-;-;-;1
+Bloom AdjustBy;Bloom;1;-;AdjustBy;3;Flower AdjustBy;AdjustBy;4;-;-;2
+Flower DrawDie;Flower;8;C 8;Adorn;1;-;-;-;-;-;1
+Bloom DrawDie;Bloom;1;-;DrawDie;2;Flower DrawDie;DrawDie;1;-;-;2
+Flower DrawCompost;Flower;10;C 8;Adorn;1;-;-;-;-;-;1
 Bloom DrawCompost;Bloom;1;-;DrawDieCompost;1;Flower DrawCompost;DrawDieCompost;1;-;-;2
-Flower DrawAny;Flower;-;C 6;Adorn;1;-;-;-;ResilienceBoost;10;1
+Flower DrawAny;Flower;8;C 8;Adorn;1;-;-;-;-;-;1
 Bloom DrawAny;Bloom;1;-;DrawDieAny;1;Flower DrawAny;DrawDieAny;1;-;-;2
-Flower Reuse;Flower;-;C 5;Adorn;1;-;-;-;ResilienceBoost;10;1
+Flower Reuse;Flower;10;C 7;Adorn;1;-;-;-;-;-;1
 Bloom Reuse;Bloom;1;-;ReuseAny;1;Flower Reuse;ReuseAny;1;-;-;2

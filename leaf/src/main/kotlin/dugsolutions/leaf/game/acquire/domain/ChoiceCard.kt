@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 
 data class ChoiceCard(
     val card: GameCard,

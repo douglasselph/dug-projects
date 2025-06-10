@@ -1,8 +1,8 @@
 package dugsolutions.leaf.main.local
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.MainDomain
 import dugsolutions.leaf.main.domain.SelectedItems

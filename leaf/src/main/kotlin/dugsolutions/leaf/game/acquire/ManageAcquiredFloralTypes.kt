@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.acquire
 
-import dugsolutions.leaf.components.FlourishType
+import dugsolutions.leaf.cards.domain.FlourishType
 
 class ManageAcquiredFloralTypes {
 

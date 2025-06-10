@@ -1,14 +1,14 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.getFlourishTypes
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.getFlourishTypes
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
+import dugsolutions.leaf.player.decisions.local.CanPurchaseCards
 
 class PossibleCards(
-    private val evaluateCardPurchases: EvaluateCardPurchases
+    private val canPurchaseCards: CanPurchaseCards
 ) {
 
     operator fun invoke(
@@ -20,7 +20,7 @@ class PossibleCards(
         val choices = mutableListOf<ChoiceCard>()
 
         for (combination in combinations) {
-            val possibleCards = evaluateCardPurchases(marketCards, flourishTypesHeld, combination, player.effectsList)
+            val possibleCards = canPurchaseCards(marketCards, flourishTypesHeld, combination, player.delayedEffectList)
             for (card in possibleCards) {
                 choices.add(ChoiceCard(card, combination))
             }

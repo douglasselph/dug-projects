@@ -1,11 +1,10 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.random.Randomizer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

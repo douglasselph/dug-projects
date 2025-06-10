@@ -1,10 +1,7 @@
 package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.player.di.CardEffectBattleScoreFactory
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption.*
@@ -184,9 +181,9 @@ class DecisionDamageAbsorptionBaseline(
             // Calculate the total resilience/sides of this combination
             val totalValue = combo.sumOf {
                 when (it) {
-                    is ExtendedHandItem.Card -> resilienceOf(it.card)
+                    is ExtendedHandItem.Card -> it.card.resilience
                     is ExtendedHandItem.Dice -> it.die.sides
-                    is ExtendedHandItem.FloralArray -> resilienceOf(it.card)
+                    is ExtendedHandItem.FloralArray -> it.card.resilience
                 }
             }
 
@@ -245,14 +242,6 @@ class DecisionDamageAbsorptionBaseline(
         score += cards.sumOf { cardEffectBattleScore(it.card) }
 
         return score
-    }
-
-    private fun resilienceOf(card: GameCard): Int {
-        var total = card.resilience
-        if (card.trashEffect == CardEffect.RESILIENCE_BOOST) {
-            total += card.trashValue
-        }
-        return total
     }
 
 } 

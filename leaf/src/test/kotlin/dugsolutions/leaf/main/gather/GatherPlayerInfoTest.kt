@@ -1,16 +1,13 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.components.die.SampleDie
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
@@ -104,7 +101,7 @@ class GatherPlayerInfoTest {
             type = FlourishType.FLOWER,
             resilience = 2,
             cost = Cost(emptyList()),
-            primaryEffect = CardEffect.DRAW_DIE,
+            primaryEffect = CardEffect.ADORN,
             primaryValue = 1,
             matchWith = MatchWith.None,
             matchEffect = null,
@@ -140,8 +137,8 @@ class GatherPlayerInfoTest {
         assertEquals(2, result.compostCardCount)
 
         // Verify gatherCardInfo calls
-        verify { mockGatherCardInfo(index = 0, incoming = handCard, highlight = any()) }
-        verify { mockGatherCardInfo(index = 0, incoming = floralCard, highlight = any()) }
+        verify { mockGatherCardInfo(index = 0, card = handCard, highlight = any()) }
+        verify { mockGatherCardInfo(index = 0, card = floralCard, highlight = any()) }
 
         // Verify gatherDiceInfo calls
         verify { mockGatherDiceInfo(handDice, true) }

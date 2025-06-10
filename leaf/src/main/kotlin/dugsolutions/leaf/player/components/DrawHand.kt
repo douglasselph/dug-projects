@@ -42,7 +42,6 @@ fun Player.drawNewHand(preferredCardCount: Int) {
         val diceLeft = max(0, HAND_SIZE - handSize)
         repeat(diceLeft) { drawDie() }
 
-        // TODO: Unit test
         // If we still have space, then fill the remaining space with more cards.
         val spaceLeftAfterCardsAndDice = HAND_SIZE - handSize
         repeat(spaceLeftAfterCardsAndDice) { drawCard() }

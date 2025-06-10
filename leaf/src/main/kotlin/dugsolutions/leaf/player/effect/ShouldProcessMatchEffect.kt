@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.effect
 
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.game.domain.GameTime
 

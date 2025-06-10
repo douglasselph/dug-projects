@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
 import dugsolutions.leaf.cards.FakeCards
 import io.mockk.every
 import io.mockk.mockk
@@ -17,7 +17,7 @@ class FloralArrayTest {
     private lateinit var cardManager: CardManager
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
     private lateinit var gameCardIDs: GameCardIDs
-    private lateinit var floralCount: FloralCount
+    private lateinit var floralBonusCount: FloralBonusCount
     private lateinit var floralArray: FloralArray
 
     @BeforeEach
@@ -25,9 +25,9 @@ class FloralArrayTest {
         cardManager = mockk(relaxed = true)
         gameCardIDsFactory = mockk(relaxed = true)
         gameCardIDs = mockk(relaxed = true)
-        floralCount = mockk(relaxed = true)
+        floralBonusCount = mockk(relaxed = true)
         every { gameCardIDsFactory(any()) } returns gameCardIDs
-        floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
+        floralArray = FloralArray(cardManager, gameCardIDsFactory)
     }
 
     @Test
@@ -72,22 +72,6 @@ class FloralArrayTest {
 
         // Assert
         verify { gameCardIDs.add(flower.id) }
-    }
-
-    @Test
-    fun floralCount_whenCalled_delegatesToFloralCount() {
-        // Arrange
-        val flower = FakeCards.fakeFlower
-        val cardIds = listOf(flower.id)
-        every { gameCardIDs.cardIds } returns cardIds
-        every { floralCount(cardIds, flower.id) } returns 1
-
-        // Act
-        val result = floralArray.floralCount(flower.id)
-
-        // Assert
-        assertEquals(1, result)
-        verify { floralCount(cardIds, flower.id) }
     }
 
     @Test

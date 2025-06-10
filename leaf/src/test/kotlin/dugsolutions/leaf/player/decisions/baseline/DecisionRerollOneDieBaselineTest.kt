@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.decisions.baseline
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk

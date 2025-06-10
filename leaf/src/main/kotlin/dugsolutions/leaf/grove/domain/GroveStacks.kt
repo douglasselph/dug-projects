@@ -1,13 +1,13 @@
 package dugsolutions.leaf.grove.domain
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.CardID
+import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.grove.local.DiceSupply
 
 class GroveStacks(
     private val cardManager: CardManager,

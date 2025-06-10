@@ -1,6 +1,6 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.random.die.Die
 
 data class ChoiceDie(
     val die: Die,

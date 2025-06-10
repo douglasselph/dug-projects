@@ -2,23 +2,23 @@ package dugsolutions.leaf.grove
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.die.DieSides
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
-import dugsolutions.leaf.di.factory.GameCardsFactory
-import dugsolutions.leaf.grove.domain.GameCardsUseCase
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.common.Commons
+import dugsolutions.leaf.grove.local.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketDiceConfig
 import dugsolutions.leaf.grove.domain.MarketStackConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -271,4 +271,76 @@ class GroveTest {
         assertNull(result)
         verify { mockGroveStacks[stackId] }
     }
+
+    @Test
+    fun setup_whenStackConfigWithCards_shufflesStack() {
+        // Arrange
+        val mockMarketCardConfig = mockk<MarketStackConfig> {
+            every { which } returns MarketStackID.ROOT_1
+            every { cards } returns listOf(mockk())
+        }
+        
+        val mockConfig = mockk<MarketConfig> {
+            every { stacks } returns listOf(mockMarketCardConfig)
+            every { dice } returns emptyList()
+        }
+        
+        // Act
+        SUT.setup(mockConfig)
+        
+        // Assert
+        verify { mockGroveStacks.shuffle(MarketStackID.ROOT_1) }
+    }
+
+    @Test
+    fun getDiceQuantity_delegatesToMarketStacks() {
+        // Arrange
+        val sides = 6
+        val expectedQuantity = 3
+        every { mockGroveStacks.getDiceQuantity(sides) } returns expectedQuantity
+
+        // Act
+        val result = SUT.getDiceQuantity(sides)
+
+        // Assert
+        assertEquals(expectedQuantity, result)
+        verify { mockGroveStacks.getDiceQuantity(sides) }
+    }
+
+    @Test
+    fun readyForBattlePhase_whenEnoughStacksExhausted_returnsTrue() {
+        // Arrange
+        MarketStackID.entries.take(Commons.EXHAUSTED_STACK_COUNT).forEach { stackId ->
+            every { mockGroveStacks[stackId] } returns mockk {
+                every { isEmpty() } returns true
+            }
+        }
+        MarketStackID.entries.drop(Commons.EXHAUSTED_STACK_COUNT).forEach { stackId ->
+            every { mockGroveStacks[stackId] } returns mockk {
+                every { isEmpty() } returns false
+            }
+        }
+
+        // Act & Assert
+        assertTrue(SUT.readyForBattlePhase)
+    }
+
+    @Test
+    fun readyForBattlePhase_whenNotEnoughStacksExhausted_returnsFalse() {
+        // Arrange
+        MarketStackID.entries.take(Commons.EXHAUSTED_STACK_COUNT - 1).forEach { stackId ->
+            every { mockGroveStacks[stackId] } returns mockk {
+                every { isEmpty() } returns true
+            }
+        }
+        MarketStackID.entries.drop(Commons.EXHAUSTED_STACK_COUNT - 1).forEach { stackId ->
+            every { mockGroveStacks[stackId] } returns mockk {
+                every { isEmpty() } returns false
+            }
+        }
+
+        // Act & Assert
+        assertFalse(SUT.readyForBattlePhase)
+    }
+
 } 

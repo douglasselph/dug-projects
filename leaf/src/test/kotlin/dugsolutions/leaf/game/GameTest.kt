@@ -3,10 +3,10 @@ package dugsolutions.leaf.game
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.PlayerFactory
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.player.di.PlayerFactory
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.game.domain.GameTime

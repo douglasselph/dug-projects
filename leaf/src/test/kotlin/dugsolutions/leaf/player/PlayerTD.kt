@@ -1,50 +1,48 @@
 package dugsolutions.leaf.player
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
-import dugsolutions.leaf.di.factory.DecisionDirectorFactory
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.cards.cost.CostScore
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.grove.local.GroveNearingTransition
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.FloralCount
+import dugsolutions.leaf.player.components.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
+import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
-import dugsolutions.leaf.player.decisions.local.GroveNearingTransition
-import dugsolutions.leaf.tool.RandomizerTD
+import dugsolutions.leaf.player.di.CardEffectBattleScoreFactory
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.RandomizerTD
+import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieValue
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.reflect.jvm.internal.impl.metadata.ProtoBuf.Effect
+import kotlin.reflect.jvm.internal.impl.name.CallableId
 
 class PlayerTD private constructor(
     deckManager: DeckManager,
     floralArray: FloralArray,
+    floralBonusCount: FloralBonusCount,
     cardManager: CardManager,
-    retainedComponents: StackManager,
     private val dieFactory: DieFactory,
     costScore: CostScore,
-    decisionDirectorFactory: DecisionDirectorFactory
+    decisionDirector: DecisionDirector
 ) : Player(
     deckManager,
     floralArray,
+    floralBonusCount,
     cardManager,
-    retainedComponents,
     dieFactory,
     costScore,
-    decisionDirectorFactory
+    decisionDirector
 ) {
 
     companion object {
@@ -59,32 +57,53 @@ class PlayerTD private constructor(
         operator fun invoke(name: String, id: Int): PlayerTD {
             val deckManager = mockk<DeckManager>(relaxed = true)
             val floralArray = mockk<FloralArray>(relaxed = true)
+            val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
-            val retainedComponents = mockk<StackManager>(relaxed = true)
             val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
             val cardEffectBattleScore = mockk<CardEffectBattleScore>(relaxed = true)
-            val acquireCardEvaluator = mockk<AcquireCardEvaluator>(relaxed = true)
-            val acquireDieEvaluator = mockk<AcquireDieEvaluator>(relaxed = true)
-            val groveNearingTransition = mockk<GroveNearingTransition>(relaxed = true)
             val dieFactory = DieFactory(randomizerTD)
             val costScore = CostScore()
-            val decisionDirectorFactory = DecisionDirectorFactory(
-                cardManager, cardEffectBattleScoreFactory, acquireCardEvaluator,
-                acquireDieEvaluator, groveNearingTransition
-            )
+            val decisionDirector = mockk<DecisionDirector>(relaxed = true)
+
             every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
             return PlayerTD(
                 deckManager,
                 floralArray,
+                floralBonusCount,
                 cardManager,
-                retainedComponents,
                 dieFactory,
                 costScore,
-                decisionDirectorFactory
+                decisionDirector
             ).apply {
                 this.id = id
+                initialize()
                 this.name = name
+            }
+        }
+
+        fun create(id: Int, decisionDirector: DecisionDirector): PlayerTD {
+            val deckManager = mockk<DeckManager>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
+            val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
+            val cardManager = mockk<CardManager>(relaxed = true)
+            val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
+            val cardEffectBattleScore = mockk<CardEffectBattleScore>(relaxed = true)
+            val dieFactory = DieFactory(randomizerTD)
+            val costScore = CostScore()
+            every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
+
+            return PlayerTD(
+                deckManager,
+                floralArray,
+                floralBonusCount,
+                cardManager,
+                dieFactory,
+                costScore,
+                decisionDirector
+            ).apply {
+                this.id = id
+                initialize()
             }
         }
 
@@ -113,35 +132,58 @@ class PlayerTD private constructor(
             val supplyStack = StackManager(cardManager, gameCardIDsFactory)
             val handStack = StackManager(cardManager, gameCardIDsFactory)
             val compostStack = StackManager(cardManager, gameCardIDsFactory)
-            val floralCount = FloralCount()
-            val floralArray = FloralArray(cardManager, floralCount, gameCardIDsFactory)
+            val floralBonusCount = FloralBonusCount()
+            val floralArray = FloralArray(cardManager, gameCardIDsFactory)
             val dieFactory = DieFactory(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, compostStack, dieFactory)
-            val retainedComponents = mockk<StackManager>(relaxed = true)
-            val groveNearingTransition = mockk<GroveNearingTransition>(relaxed = true)
-            val effectBattleScore = EffectBattleScore()
-            val cardEffectBattleScoreFactory = CardEffectBattleScoreFactory(effectBattleScore, floralCount)
             val costScore = CostScore()
-            val bestCardEvaluator = BestCardEvaluator()
-            val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
-            val acquireDieEvaluator = AcquireDieEvaluator()
-            val decisionDirectorFactory = DecisionDirectorFactory(
-                cardManager, cardEffectBattleScoreFactory, acquireCardEvaluator,
-                acquireDieEvaluator, groveNearingTransition
-            )
+            val decisionDirector = mockk<DecisionDirector>(relaxed = true)
 
             return PlayerTD(
                 deckManager,
                 floralArray,
+                floralBonusCount,
                 cardManager,
-                retainedComponents,
                 dieFactory,
                 costScore,
-                decisionDirectorFactory
+                decisionDirector
             ).apply {
                 this.id = id
+                initialize()
                 this.name = name
                 this.useDeckManager = true
+            }
+        }
+
+        fun create2(id: Int): PlayerTD {
+            val deckManager = mockk<DeckManager>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
+            val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
+            val cardManager = mockk<CardManager>(relaxed = true)
+            val dieFactory = DieFactory(randomizerTD)
+            val costScore = CostScore()
+            val floralCount = FloralBonusCount()
+            val groveNearingTransition = mockk<GroveNearingTransition>(relaxed = true)
+            val effectBattleScore = EffectBattleScore()
+            val cardEffectBattleScoreFactory = CardEffectBattleScoreFactory(effectBattleScore, floralCount)
+            val bestCardEvaluator = BestCardEvaluator()
+            val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
+            val acquireDieEvaluator = AcquireDieEvaluator()
+            val decisionDirector = DecisionDirector(
+                cardEffectBattleScoreFactory, cardManager, acquireCardEvaluator,
+                acquireDieEvaluator, groveNearingTransition
+            )
+            return PlayerTD(
+                deckManager,
+                floralArray,
+                floralBonusCount,
+                cardManager,
+                dieFactory,
+                costScore,
+                decisionDirector
+            ).apply {
+                this.id = id
+                initialize()
             }
         }
     }
@@ -172,29 +214,29 @@ class PlayerTD private constructor(
     override val diceInSupply: Dice
         get() = if (useDeckManager) super.diceInSupply else _diceInSupply
 
-    override fun addDieToSupply(die: Die) {
-        super.addDieToSupply(die)
+    override fun addDieToSupply(die: Die): Boolean {
         diceInSupply.add(die)
+        return super.addDieToSupply(die)
     }
 
-    override fun addDieToSupply(die: DieValue) {
-        super.addDieToSupply(die)
+    override fun addDieToSupply(die: DieValue): Boolean {
         diceInSupply.add(die.dieFrom(dieFactory))
+        return super.addDieToSupply(die)
     }
 
-    override fun addDieToHand(die: Die) {
-        super.addDieToHand(die)
+    override fun addDieToHand(die: Die): Boolean {
         diceInHand.add(die)
+        return super.addDieToHand(die)
     }
 
-    override fun addDieToHand(die: DieValue) {
-        super.addDieToHand(die)
+    override fun addDieToHand(die: DieValue): Boolean {
         diceInHand.add(die.dieFrom(dieFactory))
+        return super.addDieToHand(die)
     }
 
-    override fun addDieToCompost(die: Die) {
-        super.addDieToCompost(die)
+    override fun addDieToCompost(die: Die): Boolean {
         diceInCompost.add(die)
+        return super.addDieToCompost(die)
     }
 
     override val allDice: Dice
@@ -223,44 +265,63 @@ class PlayerTD private constructor(
     }
 
     fun removeCardFromHand(card: GameCard) {
-        super.removeCardFromHand(card.id)
         _cardsInHand.remove(card)
+        super.removeCardFromHand(card.id)
     }
 
     fun addCardToSupply(card: GameCard) {
-        super.addCardToSupply(card.id)
         _cardsInSupply.add(card)
+        super.addCardToSupply(card.id)
     }
 
     fun addCardsToSupply(list: List<GameCard>) {
         list.forEach { addCardToSupply(it) }
     }
 
+    override fun addCardToFloralArray(cardId: CardID) {
+        gotFloralArrayCards.add(cardId)
+        super.addCardToFloralArray(cardId)
+    }
+
     fun addCardToFloralArray(card: GameCard) {
-        super.addCardToFloralArray(card.id)
         _floralCards.add(card)
+        super.addCardToFloralArray(card.id)
     }
 
     fun addCardToCompost(card: GameCard) {
-        super.addCardToCompost(card.id)
         _cardsInCompost.add(card)
+        super.addCardToCompost(card.id)
     }
 
     override fun removeCardFromHand(cardId: CardID): Boolean {
+        gotCardIds.add(cardId)
         _cardsInHand.find { it.id == cardId }?.let { _cardsInHand.remove(it) }
         return super.removeCardFromHand(cardId)
     }
 
-
     override fun removeDieFromHand(die: Die): Boolean {
         _diceInHand.remove(die)
+        gotDice.add(die)
         return super.removeDieFromHand(die)
     }
 
-    var gotCardIds = mutableListOf<CardID>()
+    override fun removeCardFromFloralArray(cardId: CardID): Boolean {
+        gotFloralArrayCards.add(cardId)
+        _floralCards.removeIf { it.id == cardId }
+        return super.removeCardFromFloralArray(cardId)
+    }
+
+    override fun clearFloralCards() {
+        gotClearFloralCards = true
+        super.clearFloralCards()
+    }
+
+    var gotClearFloralCards = false
+    val gotCardIds = mutableListOf<CardID>()
+    val gotFloralArrayCards = mutableListOf<CardID>()
 
     override fun getItemsInHand(): List<HandItem> {
-        return _cardsInHand.map { HandItem.Card(it) } + _diceInHand.dice.map { HandItem.Dice(it) }
+        return _cardsInHand.map { HandItem.aCard(it) } + _diceInHand.dice.map { HandItem.aDie(it) }
     }
 
     override fun discard(cardId: CardID): Boolean {
@@ -269,7 +330,7 @@ class PlayerTD private constructor(
         return true
     }
 
-    var gotDice = mutableListOf<Die>()
+    val gotDice = mutableListOf<Die>()
 
     override fun discard(die: Die): Boolean {
         val flag = super.discard(die)
@@ -287,6 +348,15 @@ class PlayerTD private constructor(
         super.discardHand()
         _diceInHand.clear()
         _cardsInHand.clear()
+    }
+
+    override fun drawCard(): CardID? {
+        if (_cardsInSupply.isNotEmpty()) {
+            val card = _cardsInSupply.removeAt(0)
+            _cardsInHand.add(card)
+            return card.id
+        }
+        return super.drawCard()
     }
 
 } 

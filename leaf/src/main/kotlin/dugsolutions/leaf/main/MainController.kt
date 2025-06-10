@@ -2,9 +2,7 @@ package dugsolutions.leaf.main
 
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.di.factory.DieFactory
-import dugsolutions.leaf.di.factory.DieFactoryRandom
+import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
@@ -19,8 +17,8 @@ import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.MainDomainManager
 import dugsolutions.leaf.main.local.CardOperations
 import dugsolutions.leaf.main.local.MainDecisions
-import dugsolutions.leaf.tool.Randomizer
-import dugsolutions.leaf.tool.RandomizerDefault
+import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.random.RandomizerDefault
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

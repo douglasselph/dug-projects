@@ -3,12 +3,11 @@ package dugsolutions.leaf.main.local
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.common.Commons.TEST_CARD_LIST
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.di.factory.GameCardsFactory
-import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.main.domain.CardInfoFaker
-import dugsolutions.leaf.tool.CardRegistry
+import dugsolutions.leaf.cards.CardRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

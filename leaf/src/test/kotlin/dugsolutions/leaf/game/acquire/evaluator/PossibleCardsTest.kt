@@ -4,8 +4,8 @@ import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.local.EvaluateCardPurchases
-import dugsolutions.leaf.player.effect.EffectsList
+import dugsolutions.leaf.player.decisions.local.CanPurchaseCards
+import dugsolutions.leaf.player.domain.AppliedEffect
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -15,15 +15,15 @@ import kotlin.test.assertTrue
 
 class PossibleCardsTest {
 
-    private val evaluateCardPurchases = mockk<EvaluateCardPurchases>(relaxed = true)
+    private val canPurchaseCards = mockk<CanPurchaseCards>(relaxed = true)
     private val mockPlayer = mockk<Player>(relaxed = true)
-    private val mockEffectsList = mockk<EffectsList>(relaxed = true)
+    private val sampleEffectsList = mutableListOf<AppliedEffect>()
 
-    private val SUT = PossibleCards(evaluateCardPurchases)
+    private val SUT = PossibleCards(canPurchaseCards)
 
     @BeforeEach
     fun setup() {
-        every { mockPlayer.effectsList } returns mockEffectsList
+        every { mockPlayer.delayedEffectList } returns sampleEffectsList
     }
 
     @Test
@@ -58,8 +58,8 @@ class PossibleCardsTest {
         
         val marketCards = listOf(FakeCards.fakeRoot, FakeCards.fakeRoot2)
         
-        every { evaluateCardPurchases(marketCards, any(), FakeCombination.combinationD6, any()) } returns listOf(FakeCards.fakeRoot)
-        every { evaluateCardPurchases(marketCards, any(), FakeCombination.combinationD8, any()) } returns listOf(FakeCards.fakeRoot2)
+        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD6, any()) } returns listOf(FakeCards.fakeRoot)
+        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD8, any()) } returns listOf(FakeCards.fakeRoot2)
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -79,8 +79,8 @@ class PossibleCardsTest {
         
         val marketCards = listOf(FakeCards.fakeRoot)
         
-        every { evaluateCardPurchases(marketCards, any(), combination1, any()) } returns listOf(FakeCards.fakeRoot)
-        every { evaluateCardPurchases(marketCards, any(), combination2, any()) } returns listOf(FakeCards.fakeRoot)
+        every { canPurchaseCards(marketCards, any(), combination1, any()) } returns listOf(FakeCards.fakeRoot)
+        every { canPurchaseCards(marketCards, any(), combination2, any()) } returns listOf(FakeCards.fakeRoot)
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -98,7 +98,7 @@ class PossibleCardsTest {
         
         val marketCards = listOf(FakeCards.fakeRoot)
         
-        every { evaluateCardPurchases(marketCards, any(), combination, any()) } returns emptyList()
+        every { canPurchaseCards(marketCards, any(), combination, any()) } returns emptyList()
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)

@@ -1,11 +1,11 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralCount
+import dugsolutions.leaf.player.components.FloralBonusCount
 import kotlin.math.round
 
 /**
@@ -16,7 +16,7 @@ import kotlin.math.round
 class CardEffectBattleScore(
     private val player: Player,
     private val effectBattleScore: EffectBattleScore,
-    private val floralCount: FloralCount
+    private val floralBonusCount: FloralBonusCount
 ) {
 
     operator fun invoke(card: GameCard): Int {
@@ -33,7 +33,7 @@ class CardEffectBattleScore(
             is MatchWith.Flower -> {
                 val arrayCardIds = player.floralCards.map { it.id }
                 val deckCardIds = player.allCardsInDeck.filter { it.type == FlourishType.FLOWER }.map { it.id }
-                val rawValue = floralCount(arrayCardIds, with.flowerCardId) + floralCount(deckCardIds, with.flowerCardId)
+                val rawValue = floralBonusCount(arrayCardIds, with.flowerCardId) + floralBonusCount(deckCardIds, with.flowerCardId)
                 val score = effectValue * (rawValue * 1.5)
                 round(score).toInt()
             }

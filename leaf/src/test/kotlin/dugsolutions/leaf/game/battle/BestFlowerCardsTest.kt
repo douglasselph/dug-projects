@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.battle
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import io.mockk.every
@@ -92,7 +92,7 @@ class BestFlowerCardsTest {
         )
         every { mockMatchingBloomCard(mockFlowerCard1) } returns mockBloomCard1
         every { mockMatchingBloomCard(mockFlowerCard2) } returns mockBloomCard2
-        every { mockDecisionDirector.bestBloomCard(listOf(mockBloomCard1, mockBloomCard2)) } returns mockBloomCard1
+        every { mockDecisionDirector.bestBloomCardAcquisition(listOf(mockBloomCard1, mockBloomCard2)) } returns mockBloomCard1
         
         // Act
         val result = SUT(mockPlayer)

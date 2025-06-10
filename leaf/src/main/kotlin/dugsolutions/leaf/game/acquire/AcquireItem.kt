@@ -2,12 +2,11 @@ package dugsolutions.leaf.game.acquire
 
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
-import dugsolutions.leaf.game.acquire.credit.CombinationGenerator
+import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
 import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
-import dugsolutions.leaf.game.acquire.evaluator.PossibleBestDice
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
@@ -15,7 +14,7 @@ import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 class AcquireItem(
     private val combinationGenerator: CombinationGenerator,
     private val possibleCards: PossibleCards,
-    private val possibleBestDice: PossibleBestDice,
+    private val possibleDice: PossibleDice,
     private val manageAcquiredFloralTypes: ManageAcquiredFloralTypes,
     private val applyCost: ApplyCost,
     private val grove: Grove,
@@ -25,7 +24,7 @@ class AcquireItem(
     suspend operator fun invoke(player: Player, marketCards: List<GameCard>): Boolean {
         val combinations = combinationGenerator(player)
         val possibleCards = possibleCards(player, combinations, marketCards)
-        val possibleDice = possibleBestDice(combinations)
+        val possibleDice = possibleDice(combinations)
         val decisionDirector = player.decisionDirector
         if (possibleCards.isEmpty() && possibleDice.isEmpty()) {
             return false

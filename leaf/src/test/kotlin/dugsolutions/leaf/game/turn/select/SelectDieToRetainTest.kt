@@ -1,9 +1,9 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.SampleDie
-import dugsolutions.leaf.tool.Randomizer
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

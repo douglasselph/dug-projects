@@ -4,8 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -19,12 +17,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.Cost
-import dugsolutions.leaf.components.CostElement
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.cost.Cost
+import dugsolutions.leaf.cards.cost.CostElement
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
@@ -121,7 +119,7 @@ fun main() = application {
                             name = "Nourishing Root",
                             type = FlourishType.ROOT,
                             resilience = 3,
-                            cost = Cost(listOf(CostElement.SingleDieMinimum(2))),
+                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
                             primaryEffect = CardEffect.DRAW_DIE,
                             primaryValue = 1,
                             matchWith = MatchWith.None,
@@ -138,7 +136,7 @@ fun main() = application {
                             name = "Sheltering Canopy",
                             type = FlourishType.CANOPY,
                             resilience = 4,
-                            cost = Cost(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
+                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
                             primaryEffect = CardEffect.DEFLECT,
                             primaryValue = 2,
                             matchWith = MatchWith.None,
@@ -177,14 +175,14 @@ fun main() = application {
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
-                            resilience = 1,
+                            resilience = 5,
                             cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.ADORN,
-                            primaryValue = 1,
+                            primaryEffect = null,
+                            primaryValue = 0,
                             matchWith = MatchWith.None,
                             matchEffect = null,
                             matchValue = 0,
-                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashEffect = null,
                             trashValue = 5,
                             thorn = 0
                         )
@@ -217,14 +215,14 @@ fun main() = application {
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
-                            resilience = 1,
+                            resilience = 10,
                             cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.ADORN,
-                            primaryValue = 1,
+                            primaryEffect = null,
+                            primaryValue = 0,
                             matchWith = MatchWith.None,
                             matchEffect = null,
                             matchValue = 0,
-                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashEffect = null,
                             trashValue = 5,
                             thorn = 0
                         )
@@ -234,14 +232,14 @@ fun main() = application {
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
-                            resilience = 1,
+                            resilience = 10,
                             cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.ADORN,
-                            primaryValue = 1,
+                            primaryEffect = null,
+                            primaryValue = 0,
                             matchWith = MatchWith.None,
                             matchEffect = null,
                             matchValue = 0,
-                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashEffect = null,
                             trashValue = 5,
                             thorn = 0
                         )
@@ -251,14 +249,14 @@ fun main() = application {
                             id = 5,
                             name = "Spring Flower",
                             type = FlourishType.FLOWER,
-                            resilience = 1,
+                            resilience = 10,
                             cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.ADORN,
-                            primaryValue = 1,
+                            primaryEffect = null,
+                            primaryValue = 0,
                             matchWith = MatchWith.None,
                             matchEffect = null,
                             matchValue = 0,
-                            trashEffect = CardEffect.RESILIENCE_BOOST,
+                            trashEffect = null,
                             trashValue = 5,
                             thorn = 0
                         )

@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.components.die.DieValues
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.random.die.DieValues
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -112,15 +112,10 @@ class CombinationTest {
             DieValue(8, 5)   // d8 with value 5
         )
         val values = DieValues(dieValues)
-        val adjusted = listOf(
-            Adjusted.ByAmount(dieValues[0], 2),   // This adjustment should not affect totalValue
-            Adjusted.ToMax(dieValues[1])          // This adjustment should not affect totalValue
-        )
         val addToTotal = 4
         val combination = Combination(
             values = values,
-            addToTotal = addToTotal,
-            adjusted = adjusted
+            addToTotal = addToTotal
         )
 
         // Act

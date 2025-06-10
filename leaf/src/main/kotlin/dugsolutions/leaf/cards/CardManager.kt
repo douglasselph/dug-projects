@@ -1,10 +1,9 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.di.factory.GameCardsFactory
-import dugsolutions.leaf.tool.CardRegistry
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.di.GameCardsFactory
 
 class CardManager(
     private val gameCardsFactory: GameCardsFactory

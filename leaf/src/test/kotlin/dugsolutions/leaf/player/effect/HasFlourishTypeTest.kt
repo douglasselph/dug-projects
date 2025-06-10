@@ -1,10 +1,10 @@
 package dugsolutions.leaf.player.effect
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.HandItem
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.player.domain.HandItem
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -20,8 +20,8 @@ class HasFlourishTypeTest {
     }
 
     private lateinit var mockCardManager: CardManager
-    private lateinit var mockCard: HandItem.Card
-    private lateinit var mockDice: HandItem.Dice
+    private lateinit var mockCard: HandItem.aCard
+    private lateinit var mockADie: HandItem.aDie
     private lateinit var mockDie: Die
     private lateinit var mockGameCard: GameCard
 
@@ -31,12 +31,12 @@ class HasFlourishTypeTest {
     fun setup() {
         mockCardManager = mockk(relaxed = true)
         mockDie = mockk(relaxed = true)
-        mockDice = HandItem.Dice(mockDie)
+        mockADie = HandItem.aDie(mockDie)
         mockGameCard = mockk(relaxed = true) {
             every { id } returns CARD_ID_1
             every { type } returns FlourishType.ROOT
         }
-        mockCard = HandItem.Card(mockGameCard)
+        mockCard = HandItem.aCard(mockGameCard)
         SUT = HasFlourishType(mockCardManager)
 
         every { mockCardManager.getCard(CARD_ID_1) } returns mockGameCard
@@ -54,7 +54,7 @@ class HasFlourishTypeTest {
     @Test
     fun invoke_whenOnlyDice_returnsFalse() {
         // Act
-        val result = SUT(listOf(mockDice), FlourishType.ROOT)
+        val result = SUT(listOf(mockADie), FlourishType.ROOT)
 
         // Assert
         assertFalse(result)
@@ -81,7 +81,7 @@ class HasFlourishTypeTest {
     @Test
     fun invoke_whenMixedItemsWithMatchingCard_returnsTrue() {
         // Act
-        val result = SUT(listOf(mockCard, mockDice), FlourishType.ROOT)
+        val result = SUT(listOf(mockCard, mockADie), FlourishType.ROOT)
 
         // Assert
         assertTrue(result)
@@ -90,7 +90,7 @@ class HasFlourishTypeTest {
     @Test
     fun invoke_whenCardNotFound_returnsFalse() {
         // Arrange
-        val unknownCard = HandItem.Card(mockGameCard)
+        val unknownCard = HandItem.aCard(mockGameCard)
         every { mockCard.card.id } returns CARD_ID_2
         every { mockCardManager.getCard(CARD_ID_2) } returns null
 

@@ -1,41 +1,54 @@
 package dugsolutions.leaf.player.decisions
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.di.factory.CardEffectBattleScoreFactory
+import dugsolutions.leaf.grove.local.GroveNearingTransition
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.baseline.DecisionAcquireSelectBaseline
-import dugsolutions.leaf.player.decisions.baseline.DecisionBestBloomCardBaseline
+import dugsolutions.leaf.player.decisions.baseline.DecisionBestBloomAcquisitionCardBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDrawCountBaseline
+import dugsolutions.leaf.player.decisions.baseline.DecisionFlowerSelectBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionRerollOneDieBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionShouldProcessTrashEffectBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionShouldTargetPlayerBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.core.DecisionBestBloomCard
+import dugsolutions.leaf.player.decisions.core.DecisionBestBloomAcquisitionCard
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
+import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
 import dugsolutions.leaf.player.decisions.core.DecisionRerollOneDie
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.decisions.core.DecisionShouldTargetPlayer
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
-import dugsolutions.leaf.player.decisions.local.GroveNearingTransition
+import dugsolutions.leaf.player.di.CardEffectBattleScoreFactory
 
 class DecisionDirector(
-    player: Player,
-    cardEffectBattleScoreFactory: CardEffectBattleScoreFactory,
-    cardManager: CardManager,
-    acquireCardEvaluator: AcquireCardEvaluator,
-    acquireDieEvaluator: AcquireDieEvaluator,
-    groveNearingTransition: GroveNearingTransition
+    private val cardEffectBattleScoreFactory: CardEffectBattleScoreFactory,
+    private val cardManager: CardManager,
+    private val acquireCardEvaluator: AcquireCardEvaluator,
+    private val acquireDieEvaluator: AcquireDieEvaluator,
+    private val groveNearingTransition: GroveNearingTransition
 ) {
 
-    var drawCountDecision: DecisionDrawCount = DecisionDrawCountBaseline(player)
-    var acquireSelectDecision: DecisionAcquireSelect = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
-    var damageAbsorptionDecision: DecisionDamageAbsorption = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
-    var shouldProcessTrashEffect: DecisionShouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
-    var shouldTargetPlayer: DecisionShouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)
-    var rerollOneDie: DecisionRerollOneDie = DecisionRerollOneDieBaseline(player)
-    var bestBloomCard: DecisionBestBloomCard = DecisionBestBloomCardBaseline()
+    lateinit var drawCountDecision: DecisionDrawCount
+    lateinit var acquireSelectDecision: DecisionAcquireSelect
+    lateinit var damageAbsorptionDecision: DecisionDamageAbsorption
+    lateinit var shouldProcessTrashEffect: DecisionShouldProcessTrashEffect
+    lateinit var shouldTargetPlayer: DecisionShouldTargetPlayer
+    lateinit var rerollOneDie: DecisionRerollOneDie
+    lateinit var bestBloomCardAcquisition: DecisionBestBloomAcquisitionCard
+    lateinit var flowerSelectDecision: DecisionFlowerSelect
+
+    fun initialize(player: Player) {
+        drawCountDecision = DecisionDrawCountBaseline(player)
+        acquireSelectDecision = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
+        damageAbsorptionDecision = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
+        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
+        shouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)
+        rerollOneDie = DecisionRerollOneDieBaseline(player)
+        bestBloomCardAcquisition = DecisionBestBloomAcquisitionCardBaseline()
+        flowerSelectDecision = DecisionFlowerSelectBaseline(player)
+    }
 
 }

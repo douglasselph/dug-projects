@@ -1,16 +1,16 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.FlourishType.BLOOM
-import dugsolutions.leaf.components.FlourishType.CANOPY
-import dugsolutions.leaf.components.FlourishType.FLOWER
-import dugsolutions.leaf.components.FlourishType.NONE
-import dugsolutions.leaf.components.FlourishType.ROOT
-import dugsolutions.leaf.components.FlourishType.SEEDLING
-import dugsolutions.leaf.components.FlourishType.VINE
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.FlourishType.BLOOM
+import dugsolutions.leaf.cards.domain.FlourishType.CANOPY
+import dugsolutions.leaf.cards.domain.FlourishType.FLOWER
+import dugsolutions.leaf.cards.domain.FlourishType.NONE
+import dugsolutions.leaf.cards.domain.FlourishType.ROOT
+import dugsolutions.leaf.cards.domain.FlourishType.SEEDLING
+import dugsolutions.leaf.cards.domain.FlourishType.VINE
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 
@@ -26,7 +26,7 @@ class GatherCardInfo {
             name = name,
             type = floralType(type) ?: "?",
             resilience = resilience,
-            cost = card.cost.elements.map { it.toString() },
+            cost = card.cost.toString(),
             thorn = thorn,
             primary = effectLine(primaryEffect, primaryValue),
             match = effectLine(matchEffect, matchValue, matchString(matchWith)),

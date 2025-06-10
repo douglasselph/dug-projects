@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.decisions.ui
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
@@ -22,7 +22,7 @@ class DecisionAcquireSelectSuspend : DecisionAcquireSelect {
         possibleDiceStash = possibleDice
         val cards = possibleCards.map { it.card }
         val dice = possibleDice.map { it.die }
-        onBestPurchase(cards, dice)
+        onGroveAcquisition(cards, dice)
         return channel.waitForDecision()
     }
 
@@ -30,7 +30,7 @@ class DecisionAcquireSelectSuspend : DecisionAcquireSelect {
 
     // region public
 
-    var onBestPurchase: (possibleCards: List<GameCard>, possibleDice: List<Die>) -> Unit = { _, _ -> }
+    var onGroveAcquisition: (possibleCards: List<GameCard>, possibleDice: List<Die>) -> Unit = { _, _ -> }
 
     fun provide(card: GameCard) {
         val choice = possibleCardsStash.find { it.card == card }

@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.decisions.core
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 
 interface DecisionDamageAbsorption {
 

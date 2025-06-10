@@ -1,7 +1,7 @@
 package dugsolutions.leaf.main.domain
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 
 data class SelectedItems(
     val cards: List<GameCard> = emptyList(),

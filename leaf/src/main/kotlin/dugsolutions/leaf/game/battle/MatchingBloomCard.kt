@@ -1,9 +1,9 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 
 class MatchingBloomCard(
     private val cardManager: CardManager

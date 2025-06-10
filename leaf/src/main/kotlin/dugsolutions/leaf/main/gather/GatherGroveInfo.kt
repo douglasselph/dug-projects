@@ -1,7 +1,7 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.select.SelectAllDice
@@ -27,7 +27,7 @@ class GatherGroveInfo(
         selectForPlayer: Player? = null
     ): GroveInfo? {
         if (gameTime.phase == GamePhase.BATTLE) {
-            return null // TODO: Unit test
+            return null
         }
         return GroveInfo(
             stacks = MarketStackID.entries.mapIndexed { index, stack -> get(index, stack, highlightCard) },

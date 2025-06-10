@@ -1,12 +1,12 @@
 package dugsolutions.leaf.player.decisions.local
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.components.CardEffect
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.MatchWith
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralCount
+import dugsolutions.leaf.player.components.FloralBonusCount
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -17,15 +17,15 @@ class CardEffectBattleScoreTest {
 
     private lateinit var mockPlayer: Player
     private lateinit var mockEffectBattleScore: EffectBattleScore
-    private lateinit var mockFloralCount: FloralCount
+    private lateinit var mockFloralBonusCount: FloralBonusCount
     private lateinit var SUT: CardEffectBattleScore
 
     @BeforeEach
     fun setup() {
         mockPlayer = mockk(relaxed = true)
         mockEffectBattleScore = mockk(relaxed = true)
-        mockFloralCount = mockk(relaxed = true)
-        SUT = CardEffectBattleScore(mockPlayer, mockEffectBattleScore, mockFloralCount)
+        mockFloralBonusCount = mockk(relaxed = true)
+        SUT = CardEffectBattleScore(mockPlayer, mockEffectBattleScore, mockFloralBonusCount)
     }
 
     @Test
@@ -76,7 +76,7 @@ class CardEffectBattleScoreTest {
         every { mockPlayer.floralCards } returns listOf(flowerCard)
         every { mockPlayer.allCardsInDeck } returns listOf(flowerCard)
         every { mockEffectBattleScore(CardEffect.ADD_TO_DIE, 2) } returns 2
-        every { mockFloralCount(any(), flowerCard.id) } returns 1
+        every { mockFloralBonusCount(any(), flowerCard.id) } returns 1
 
         // Act
         val result = SUT(card)

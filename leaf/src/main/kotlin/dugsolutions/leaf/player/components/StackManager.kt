@@ -1,14 +1,14 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.components.CardID
-import dugsolutions.leaf.components.die.Die
-import dugsolutions.leaf.components.die.Dice
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCardIDs
-import dugsolutions.leaf.components.HandItem
-import dugsolutions.leaf.components.die.DieValue
-import dugsolutions.leaf.di.factory.GameCardIDsFactory
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.GameCardIDs
+import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.cards.di.GameCardIDsFactory
 
 class StackManager(
     private val cardManager: CardManager,
@@ -93,8 +93,8 @@ class StackManager(
 
     fun getItems(): List<HandItem> =
         cards.cardIds.mapNotNull { cardId ->
-            cardManager.getCard(cardId)?.let { card -> HandItem.Card(card) }
-        } + dice.dice.map { HandItem.Dice(it) }
+            cardManager.getCard(cardId)?.let { card -> HandItem.aCard(card) }
+        } + dice.dice.map { HandItem.aDie(it) }
 
     fun clear() {
         cards.clear()

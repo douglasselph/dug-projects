@@ -1,7 +1,7 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.components.die.Die
+import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.ActionButton
@@ -108,12 +108,12 @@ class MainDomainManager(
         }
     }
 
-    fun updateData() {
+    fun updateData(selectForPlayer: Player? = null) {
         _state.update { currentState ->
             currentState.copy(
                 turn = gameTime.turn,
                 players = game.players.map { gatherPlayerInfo(it) },
-                groveInfo = gatherGroveInfo()
+                groveInfo = gatherGroveInfo(selectForPlayer = selectForPlayer)
             )
         }
     }
@@ -128,6 +128,25 @@ class MainDomainManager(
                 players = currentState.players.map { playerInfo ->
                     if (playerInfo.name == player.name) {
                         playerInfo.copyForItemSelect()
+                    } else {
+                        playerInfo
+                    }
+                }
+            )
+        }
+    }
+
+    /**
+     * Allows the user to select flower cards from their hand.
+     */
+    // TODO: Unit test
+    fun setAllowPlayerFlowerSelect(player: Player) {
+        _state.update { currentState ->
+            currentState.copy(
+                turn = gameTime.turn,
+                players = currentState.players.map { playerInfo ->
+                    if (playerInfo.name == player.name) {
+                        playerInfo.copyForFlowerSelect()
                     } else {
                         playerInfo
                     }

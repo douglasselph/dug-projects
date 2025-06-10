@@ -1,9 +1,9 @@
 package dugsolutions.leaf.player.decisions.baseline
 
-import dugsolutions.leaf.components.FlourishType
-import dugsolutions.leaf.components.GameCard
+import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.player.decisions.local.GroveNearingTransition
+import dugsolutions.leaf.grove.local.GroveNearingTransition
 
 /**
  * Strategy for determining when to process a card's trash effect.

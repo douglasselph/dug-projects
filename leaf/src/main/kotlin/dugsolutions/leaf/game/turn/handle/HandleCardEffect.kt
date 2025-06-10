@@ -1,232 +1,279 @@
 package dugsolutions.leaf.game.turn.handle
 
-import dugsolutions.leaf.cards.CardManager
+import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.components.CostScore
-import dugsolutions.leaf.components.GameCard
-import dugsolutions.leaf.game.turn.select.SelectCardToRetain
-import dugsolutions.leaf.game.turn.select.SelectDieToAdjust
-import dugsolutions.leaf.game.turn.select.SelectDieToMax
-import dugsolutions.leaf.game.turn.select.SelectDieToReroll
-import dugsolutions.leaf.game.turn.select.SelectDieToRetain
+import dugsolutions.leaf.game.turn.effect.EffectCardToRetain
+import dugsolutions.leaf.game.turn.effect.EffectDieAdjust
+import dugsolutions.leaf.game.turn.effect.EffectDieReroll
+import dugsolutions.leaf.game.turn.effect.EffectDieToMax
+import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
+import dugsolutions.leaf.game.turn.effect.EffectDiscard
+import dugsolutions.leaf.game.turn.effect.EffectDraw
+import dugsolutions.leaf.game.turn.effect.EffectDrawCard
+import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectReplayVine
+import dugsolutions.leaf.game.turn.effect.EffectReuse
+import dugsolutions.leaf.game.turn.effect.EffectReuseCard
+import dugsolutions.leaf.game.turn.effect.EffectReuseDie
+import dugsolutions.leaf.game.turn.effect.EffectUpgradeDie
+import dugsolutions.leaf.game.turn.effect.EffectUseOpponentCard
+import dugsolutions.leaf.game.turn.effect.EffectUseOpponentDie
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.domain.AppliedEffect
+import dugsolutions.leaf.random.die.DieSides
 
 class HandleCardEffect(
-    private val selectDieToReroll: SelectDieToReroll,
-    private val selectCardToRetain: SelectCardToRetain,
-    private val selectDieToRetain: SelectDieToRetain,
-    private val selectDieToAdjust: SelectDieToAdjust,
-    private val selectDieToMax: SelectDieToMax,
-    private val costScore: CostScore,
-    private val handleDieUpgrade: HandleDieUpgrade,
-    private val handleLimitedDieUpgrade: HandleLimitedDieUpgrade,
-    private val cardManager: CardManager,
+    private val effectCardToRetain: EffectCardToRetain,
+    private val effectDieAdjust: EffectDieAdjust,
+    private val effectDieToMax: EffectDieToMax,
+    private val effectDiscard: EffectDiscard,
+    private val effectDrawCard: EffectDrawCard,
+    private val effectDrawDie: EffectDrawDie,
+    private val effectDraw: EffectDraw,
+    private val effectDieReroll: EffectDieReroll,
+    private val effectDieToRetain: EffectDieToRetain,
+    private val effectReuseCard: EffectReuseCard,
+    private val effectReuseDie: EffectReuseDie,
+    private val effectReuse: EffectReuse,
+    private val effectReplayVine: EffectReplayVine,
+    private val effectUpgradeDie: EffectUpgradeDie,
+    private val effectUseOpponentCard: EffectUseOpponentCard,
+    private val effectUseOpponentDie: EffectUseOpponentDie,
     private val chronicle: GameChronicle
 ) {
 
-    data class EffectResult(
-        val newCards: List<GameCard>,
-        val diceAdjusted: Boolean = false
+    operator fun invoke(
+        player: Player,
+        target: Player,
+        effect: CardEffect,
+        value: Int
     ) {
-        val hasMoreToProcess: Boolean
-            get() = newCards.isNotEmpty() || diceAdjusted
-    }
+        when (effect) {
 
-    private val newCards = mutableListOf<GameCard>()
-    private var diceAdjusted = false
+            CardEffect.ADD_TO_DIE -> effectDieAdjust(player, value)
 
-    operator fun invoke(player: Player, target: Player): EffectResult {
-        newCards.clear()
-        diceAdjusted = false
-        for (effect in player.effectsList.copy()) {
-            if (handleEffect(effect, player, target)) {
-                player.effectsList.remove(effect)
+            CardEffect.ADD_TO_TOTAL -> {
+                player.pipModifier += value
+                chronicle(Moment.ADD_TO_TOTAL(player, value))
+            }
+
+            CardEffect.ADJUST_BY -> {
+                effectDieAdjust(player, value, target)
+            }
+
+            CardEffect.ADJUST_TO_MAX -> {
+                repeat(value) { effectDieToMax(player) }
+            }
+
+            CardEffect.ADJUST_TO_MIN_OR_MAX -> {
+                repeat(value) {
+                    // TODO: Target player to MIN
+                    effectDieToMax(player)
+                }
+            }
+
+            CardEffect.ADORN -> {
+                throw Exception("ADORN effect should have already been handled")
+            }
+
+            CardEffect.DEFLECT -> {
+                player.deflectDamage += value
+                chronicle(Moment.DEFLECT_DAMAGE(player, value))
+            }
+
+            CardEffect.DISCARD -> {
+                repeat(value) { effectDiscard(EffectDiscard.DiscardWhich.BOTH, target) }
+            }
+
+            CardEffect.DISCARD_CARD -> {
+                repeat(value) { effectDiscard(EffectDiscard.DiscardWhich.CARDS, target) }
+            }
+
+            CardEffect.DISCARD_DIE -> {
+                repeat(value) { effectDiscard(EffectDiscard.DiscardWhich.DICE, target) }
+            }
+
+            CardEffect.DRAW_CARD -> {
+                repeat(value) { effectDrawCard(player) }
+            }
+
+            CardEffect.DRAW_CARD_COMPOST -> {
+                repeat(value) { effectDrawCard(player, fromCompost = true) }
+            }
+
+            CardEffect.DRAW_DIE -> {
+                repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams()) }
+            }
+
+            CardEffect.DRAW_DIE_ANY -> {
+                repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(drawHighest = true)) }
+            }
+
+            CardEffect.DRAW_DIE_COMPOST -> {
+                repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(fromCompost = true)) }
+            }
+
+            CardEffect.DRAW -> {
+                repeat(value) { effectDraw(player) }
+            }
+
+            CardEffect.FLOURISH_OVERRIDE -> {
+                player.delayedEffectList.add(AppliedEffect.FlourishOverride)
+            }
+
+            CardEffect.GAIN_FREE_ROOT -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.ROOT,
+                        costReduction = 0,
+                        isFree = true,
+                    )
+                )
+            }
+
+            CardEffect.GAIN_FREE_CANOPY -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.CANOPY,
+                        costReduction = 0,
+                        isFree = true,
+                    )
+                )
+            }
+
+            CardEffect.GAIN_FREE_VINE -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.VINE,
+                        costReduction = 0,
+                        isFree = true
+                    )
+                )
+            }
+
+            CardEffect.REDUCE_COST_ROOT -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.ROOT,
+                        costReduction = value
+                    )
+                )
+            }
+
+            CardEffect.REDUCE_COST_CANOPY -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.CANOPY,
+                        costReduction = value
+                    )
+                )
+            }
+
+            CardEffect.REDUCE_COST_VINE -> {
+                player.delayedEffectList.add(
+                    AppliedEffect.MarketBenefit(
+                        type = FlourishType.VINE,
+                        costReduction = value
+                    )
+                )
+            }
+
+            CardEffect.REROLL_ACCEPT_2ND -> {
+                repeat(value) {
+                    effectDieReroll(player, takeBetter = false)
+                }
+            }
+
+            CardEffect.REROLL_ALL_MAX -> {
+                TODO("Not implemented")
+            }
+
+            CardEffect.REROLL_TAKE_BETTER -> {
+                repeat(value) { effectDieReroll(player, takeBetter = true) }
+            }
+
+            CardEffect.RETAIN_CARD -> {
+                repeat(value) { effectCardToRetain(player) }
+            }
+
+            CardEffect.RETAIN_DIE -> {
+                repeat(value) { effectDieToRetain(player) }
+            }
+
+            CardEffect.RETAIN_DIE_REROLL -> {
+                repeat(value) { effectDieToRetain(player, withReroll = true) }
+            }
+
+            CardEffect.REUSE_CARD -> {
+                repeat(value) { effectReuseCard(player) }
+            }
+
+            CardEffect.REUSE_DIE -> {
+                repeat(value) { effectReuseDie(player, rerollOkay = false) }
+            }
+
+            CardEffect.REUSE_DIE_REROLL -> {
+                repeat(value) { effectReuseDie(player, rerollOkay = true) }
+            }
+
+            CardEffect.REUSE_ANY -> {
+                repeat(value) { effectReuse(player) }
+            }
+
+            CardEffect.REPLAY_VINE -> {
+                repeat(value) { effectReplayVine(player) }
+            }
+
+            CardEffect.UPGRADE_ANY_RETAIN -> {
+                repeat(value) { effectUpgradeDie(player) }
+            }
+
+            CardEffect.UPGRADE_ANY -> {
+                repeat(value) { effectUpgradeDie(player, discardAfterUse = true) }
+            }
+
+            CardEffect.UPGRADE_D4 -> {
+                repeat(value) { effectUpgradeDie(player, only = listOf(DieSides.D4)) }
+            }
+
+            CardEffect.UPGRADE_D6 -> {
+                repeat(value) {
+                    effectUpgradeDie(
+                        player,
+                        only = listOf(DieSides.D4, DieSides.D6),
+                        discardAfterUse = true
+                    )
+                }
+            }
+
+            CardEffect.UPGRADE_D8 -> {
+                repeat(value) {
+                    effectUpgradeDie(
+                        player,
+                        only = listOf(DieSides.D4, DieSides.D6, DieSides.D8),
+                        discardAfterUse = true
+                    )
+                }
+            }
+
+            CardEffect.UPGRADE_D10 -> repeat(value) {
+                effectUpgradeDie(
+                    player,
+                    only = listOf(DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10),
+                    discardAfterUse = true
+                )
+            }
+
+            CardEffect.USE_OPPONENT_CARD -> {
+                repeat(value) { effectUseOpponentCard(player, target) }
+            }
+
+            CardEffect.USE_OPPONENT_DIE -> {
+                repeat(value) { effectUseOpponentDie(player, target) }
             }
         }
-        return EffectResult(newCards, diceAdjusted)
     }
 
-    private fun handleEffect(effect: AppliedEffect, player: Player, target: Player): Boolean {
-        return when (effect) {
-
-            is AppliedEffect.AddToTotal -> {
-                player.pipModifier += effect.amount
-                chronicle(Moment.ADD_TO_TOTAL(player, effect.amount))
-                true
-            }
-
-            is AppliedEffect.Adorn -> {
-                player.addCardToFloralArray(effect.flowerCard)
-                player.removeCardFromHand(effect.flowerCard)
-                chronicle(Moment.ADORN(player, effect.flowerCard))
-                true
-            }
-
-            is AppliedEffect.AdjustDieRoll -> {
-                if (effect.canTargetPlayer && player.decisionDirector.shouldTargetPlayer(target, effect.adjustment)) {
-                    selectDieToAdjust(target.diceInHand, -effect.adjustment)?.let { die ->
-                        target.diceInHand.adjust(die, -effect.adjustment)
-                        chronicle(Moment.ADJUST_DIE(target, die, -effect.adjustment))
-                    }
-                } else {
-                    selectDieToAdjust(player.diceInHand, effect.adjustment)?.let { selectedDie ->
-                        if (player.diceInHand.adjust(selectedDie, effect.adjustment)) {
-                            chronicle(
-                                Moment.ADJUST_DIE(player, selectedDie, effect.adjustment)
-                            )
-                        }
-                    }
-                }
-                true
-            }
-
-            is AppliedEffect.AdjustDieToMax -> {
-                // Choose die with with the greatest difference against MAX.
-                selectDieToMax(player.diceInHand)?.let { die ->
-                    val amount = die.adjustToMax()
-                    chronicle(Moment.ADJUST_DIE(player, die, amount))
-                }
-                true
-            }
-
-            is AppliedEffect.DeflectDamage -> {
-                player.deflectDamage += effect.amount
-                chronicle(Moment.DEFLECT_DAMAGE(player, effect.amount))
-                true
-            }
-
-            is AppliedEffect.DrawCards -> {
-                repeat(effect.count) {
-                    val cardId = if (effect.fromCompost) {
-                        player.drawCardFromCompost()
-                    } else {
-                        player.drawCard()
-                    }
-                    cardId?.let {
-                        chronicle(Moment.DRAW_CARD(player, cardId))
-                        cardManager.getCard(cardId)?.let { newCards.add(it) }
-                    }
-                }
-                true
-            }
-
-            is AppliedEffect.DrawDice -> {
-                repeat(effect.count) {
-                    val die = if (effect.fromCompost) {
-                        if (effect.drawHighest) {
-                            player.drawBestDieFromCompost()
-                        } else {
-                            player.drawDieFromCompost()
-                        }
-                    } else {
-                        if (effect.drawHighest) {
-                            player.drawBestDie()
-                        } else {
-                            player.drawDie()
-                        }
-                    }
-                    die?.let {
-                        diceAdjusted = true
-                        chronicle(Moment.DRAW_DIE(player, die))
-                    }
-                }
-                true
-            }
-
-            is AppliedEffect.DrawThenDiscard -> {
-                // TODO: Draw then discard
-                true
-            }
-
-            is AppliedEffect.Discard -> {
-                if (effect.cardsOnly) {
-                    // Choose card with the lowest cost.
-                    val cardToDiscard = target.cardsInHand.minByOrNull { costScore(it.cost) }
-                    if (cardToDiscard != null) {
-                        target.discard(cardToDiscard.id)
-                        chronicle(Moment.DISCARD_CARD(target, cardToDiscard))
-                    }
-                } else if (effect.diceOnly) {
-                    // Choose the die with the lowest rolled value
-                    val dieToDiscard = target.diceInHand.dice.minByOrNull { it.value }
-                    if (dieToDiscard != null) {
-                        target.discard(dieToDiscard)
-                        chronicle(Moment.DISCARD_DIE(target, dieToDiscard))
-                    }
-                } else {
-                    // If any die rolled a 1 or 2, choose one of them (the lowest).
-                    // Otherwise just choose the card with the lowest cost.
-                    val lowDice = target.diceInHand.dice.filter { it.value <= 2 }
-                    if (lowDice.isNotEmpty()) {
-                        val dieToDiscard = lowDice.minByOrNull { it.value }
-                        if (dieToDiscard != null) {
-                            target.discard(dieToDiscard)
-                            chronicle(Moment.DISCARD_DIE(target, dieToDiscard))
-                        }
-                    } else {
-                        val cardToDiscard = target.cardsInHand.minByOrNull { costScore(it.cost) }
-                        if (cardToDiscard != null) {
-                            target.discard(cardToDiscard.id)
-                            chronicle(Moment.DISCARD_CARD(target, cardToDiscard))
-                        }
-                    }
-                }
-                true
-            }
-
-            is AppliedEffect.RerollDie -> {
-                selectDieToReroll(player.diceInHand)?.let { die ->
-                    val beforeValue = die.value
-                    die.roll()
-                    diceAdjusted = true
-                    chronicle(Moment.REROLL(player, die, beforeValue))
-                }
-                true
-            }
-
-            is AppliedEffect.RetainCard -> {
-                selectCardToRetain(player.cardsInHand, null)?.let { card ->
-                    player.retainCard(card.id)
-                    chronicle(Moment.RETAIN_CARD(player, card))
-                }
-                // Choose BLOOM card, then VINE, then CANOPY, then ROOT
-                // Choose card with the largest COST.
-                true
-            }
-
-            is AppliedEffect.RetainDie -> {
-                selectDieToRetain(player.diceInHand)?.let { die ->
-                    player.retainDie(die)
-                    chronicle(Moment.RETAIN_DIE(player, die))
-                }
-                true
-            }
-
-            is AppliedEffect.Reuse -> {
-                selectCardToRetain(player.cardsInHand, effect.flourishType)?.let { card ->
-                    player.cardsReused.add(card)
-                    chronicle(Moment.REUSE_CARD(player, card))
-                }
-                true
-            }
-
-            is AppliedEffect.UpgradeDie -> {
-                val die = if (effect.only.isNotEmpty()) {
-                    handleLimitedDieUpgrade(player, effect.only, effect.discardAfterUse)
-                } else {
-                    handleDieUpgrade(player, effect.discardAfterUse)
-                }
-                die?.let {
-                    chronicle(Moment.UPGRADE_DIE(player, die))
-                }
-                true
-            }
-
-
-            else -> false
-        }
-    }
-
-} 
+}
