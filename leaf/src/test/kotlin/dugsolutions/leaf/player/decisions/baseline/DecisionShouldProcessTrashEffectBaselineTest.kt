@@ -2,8 +2,10 @@ package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.grove.local.GroveNearingTransition
+import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -20,9 +22,11 @@ class DecisionShouldProcessTrashEffectBaselineTest {
         private val fakeNoEffect = FakeCards.fakeRoot
     }
 
+    private val mockPlayer: Player = mockk(relaxed = true)
     private val groveNearingTransition = mockk<GroveNearingTransition>(relaxed = true)
+    private val gameTime = GameTime()
 
-    private val SUT: DecisionShouldProcessTrashEffectBaseline = DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
+    private val SUT: DecisionShouldProcessTrashEffectBaseline = DecisionShouldProcessTrashEffectBaseline(mockPlayer, groveNearingTransition, gameTime)
 
     @BeforeEach
     fun setup() {

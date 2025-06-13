@@ -39,7 +39,7 @@ val playerModule: Module = module {
 
     factory { FloralArray(get(), get()) }
     factory { StackManager(get(), get()) }
-    factory { DecisionDirector(get(), get(), get(), get(), get()) }
+    factory { DecisionDirector(get(), get(), get(), get(), get(), get()) }
 
 
     factory {

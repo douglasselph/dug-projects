@@ -13,6 +13,7 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
@@ -34,6 +35,7 @@ class HandleCardEffect(
     private val effectDraw: EffectDraw,
     private val effectDieReroll: EffectDieReroll,
     private val effectDieToRetain: EffectDieToRetain,
+    private val effectGainD20: EffectGainD20,
     private val effectReuseCard: EffectReuseCard,
     private val effectReuseDie: EffectReuseDie,
     private val effectReuse: EffectReuse,
@@ -121,6 +123,10 @@ class HandleCardEffect(
 
             CardEffect.FLOURISH_OVERRIDE -> {
                 player.delayedEffectList.add(AppliedEffect.FlourishOverride)
+            }
+
+            CardEffect.GAIN_D20 -> {
+                repeat(value) { effectGainD20(player) }
             }
 
             CardEffect.GAIN_FREE_ROOT -> {

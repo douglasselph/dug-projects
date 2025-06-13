@@ -13,6 +13,7 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
@@ -42,6 +43,7 @@ class HandleCardEffectTest {
     private val effectDraw: EffectDraw = mockk(relaxed = true)
     private val effectDieReroll: EffectDieReroll = mockk(relaxed = true)
     private val effectDieToRetain: EffectDieToRetain = mockk(relaxed = true)
+    private val effectGainD20: EffectGainD20 = mockk(relaxed = true)
     private val effectReuseCard: EffectReuseCard = mockk(relaxed = true)
     private val effectReuseDie: EffectReuseDie = mockk(relaxed = true)
     private val effectReuse: EffectReuse = mockk(relaxed = true)
@@ -61,6 +63,7 @@ class HandleCardEffectTest {
         effectDraw,
         effectDieReroll,
         effectDieToRetain,
+        effectGainD20,
         effectReuseCard,
         effectReuseDie,
         effectReuse,
@@ -147,6 +150,12 @@ class HandleCardEffectTest {
     fun invoke_DRAW_callsEffectDraw() {
         SUT(player, target, CardEffect.DRAW, 3)
         verify(exactly = 3) { effectDraw(player) }
+    }
+
+    @Test
+    fun invoke_GAIN_D20_callsEffect() {
+        SUT(player, target, CardEffect.GAIN_D20, 2)
+        verify(exactly = 2) { effectGainD20(player) }
     }
 
     @Test

@@ -29,6 +29,7 @@ class EffectBattleScore {
             CardEffect.DRAW_DIE_COMPOST -> 16 * value
             CardEffect.DRAW -> 5 * value
             CardEffect.FLOURISH_OVERRIDE -> 0
+            CardEffect.GAIN_D20 -> 20 * value
             CardEffect.GAIN_FREE_ROOT -> 6 * value
             CardEffect.GAIN_FREE_CANOPY -> 12 * value
             CardEffect.GAIN_FREE_VINE -> 20 * value

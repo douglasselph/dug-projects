@@ -28,6 +28,7 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
@@ -88,6 +89,7 @@ val gameModule: Module = module {
     single { EffectDrawCard(get(), get()) }
     single { EffectDrawDie(get()) }
     single { EffectDraw(get()) }
+    single { EffectGainD20(get(), get(), get()) }
     single { EffectReuseCard(get(), get()) }
     single { EffectReuseDie(get()) }
     single { EffectReuse(get(), get()) }
@@ -110,7 +112,7 @@ val gameModule: Module = module {
         HandleCardEffect(
             get(), get(), get(), get(), get(), get(), get(),
             get(), get(), get(), get(), get(), get(), get(),
-            get(), get(), get()
+            get(), get(), get(), get()
         )
     }
     single { HandleCard(get(), get(), get(), get(), get()) }

@@ -23,14 +23,14 @@ Vine Reroll ;Vine;5;C 10;RerollAllMax;1;Canopy;RerollTakeBetter;1;-;-;2
 Vine UseOpponent;Vine;5;C 12 | 16;UseOpponentCard;1;d1;UseOpponentDie;1;-;-;3
 Vine AdjustBy;Vine;9;C 9;AdjustBy;2;k1;AdjustBy;3;;;
 Flower AddToTotal;Flower;10;C 7;Adorn;1;-;-;-;-;-;1
-Bloom AddToTotal;Bloom;1;-;AddToTotal;5;Flower AddToTotal;AddToTotal;3;-;-;2
+Bloom AddToTotal;Bloom;1;-;AddToTotal;5;Flower AddToTotal;AddToTotal;3;GainD20;1;4
 Flower AdjustBy;Flower;12;C 7;Adorn;1;-;-;-;-;-;1
-Bloom AdjustBy;Bloom;1;-;AdjustBy;3;Flower AdjustBy;AdjustBy;4;-;-;2
+Bloom AdjustBy;Bloom;1;-;AdjustBy;3;Flower AdjustBy;AdjustBy;4;GainD20;1;4
 Flower DrawDie;Flower;8;C 8;Adorn;1;-;-;-;-;-;1
-Bloom DrawDie;Bloom;1;-;DrawDie;2;Flower DrawDie;DrawDie;1;-;-;2
+Bloom DrawDie;Bloom;1;-;DrawDie;2;Flower DrawDie;DrawDie;1;GainD20;1;4
 Flower DrawCompost;Flower;10;C 8;Adorn;1;-;-;-;-;-;1
-Bloom DrawCompost;Bloom;1;-;DrawDieCompost;1;Flower DrawCompost;DrawDieCompost;1;-;-;2
+Bloom DrawCompost;Bloom;1;-;DrawDieCompost;1;Flower DrawCompost;DrawDieCompost;1;GainD20;1;4
 Flower DrawAny;Flower;8;C 8;Adorn;1;-;-;-;-;-;1
-Bloom DrawAny;Bloom;1;-;DrawDieAny;1;Flower DrawAny;DrawDieAny;1;-;-;2
+Bloom DrawAny;Bloom;1;-;DrawDieAny;1;Flower DrawAny;DrawDieAny;1;GainD20;1;4
 Flower Reuse;Flower;10;C 7;Adorn;1;-;-;-;-;-;1
-Bloom Reuse;Bloom;1;-;ReuseAny;1;Flower Reuse;ReuseAny;1;-;-;2
+Bloom Reuse;Bloom;1;-;ReuseAny;1;Flower Reuse;ReuseAny;1;GainD20;1;4

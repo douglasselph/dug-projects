@@ -12,52 +12,7 @@ class CardRegistry(
     private val parseCost: ParseCost
 ) {
     companion object {
-        val EFFECT_MAP = mapOf(
-            "AddToDie" to CardEffect.ADD_TO_DIE,
-            "AddToTotal" to CardEffect.ADD_TO_TOTAL,
-            "AdjustBy" to CardEffect.ADJUST_BY,
-            "AdjustToMax" to CardEffect.ADJUST_TO_MAX,
-            "AdjustToMinOrMax" to CardEffect.ADJUST_TO_MIN_OR_MAX,
-            "Adorn" to CardEffect.ADORN,
-            "Deflect" to CardEffect.DEFLECT,
-            "Discard" to CardEffect.DISCARD,
-            "DiscardCard" to CardEffect.DISCARD_CARD,
-            "DiscardDie" to CardEffect.DISCARD_DIE,
-            "DrawCard" to CardEffect.DRAW_CARD,
-            "DrawCardCompost" to CardEffect.DRAW_CARD_COMPOST,
-            "DrawDie" to CardEffect.DRAW_DIE,
-            "DrawDieAny" to CardEffect.DRAW_DIE_ANY,
-            "DrawDieCompost" to CardEffect.DRAW_DIE_COMPOST,
-            "Draw" to CardEffect.DRAW,
-            "FlourishOverride" to CardEffect.FLOURISH_OVERRIDE,
-            "GainFreeRoot" to CardEffect.GAIN_FREE_ROOT,
-            "GainFreeCanopy" to CardEffect.GAIN_FREE_CANOPY,
-            "GainFreeVine" to CardEffect.GAIN_FREE_VINE,
-            "ReduceCostRoot" to CardEffect.REDUCE_COST_ROOT,
-            "ReduceCostCanopy" to CardEffect.REDUCE_COST_CANOPY,
-            "ReduceCostVine" to CardEffect.REDUCE_COST_VINE,
-            "RerollAccept2nd" to CardEffect.REROLL_ACCEPT_2ND,
-            "RerollAllMax" to CardEffect.REROLL_ALL_MAX,
-            "RerollTakeBetter" to CardEffect.REROLL_TAKE_BETTER,
-            "ReplayVine" to CardEffect.REPLAY_VINE,
-            "RetainCard" to CardEffect.RETAIN_CARD,
-            "RetainDie" to CardEffect.RETAIN_DIE,
-            "RetainDieReroll" to CardEffect.RETAIN_DIE_REROLL,
-            "ReuseCard" to CardEffect.REUSE_CARD,
-            "ReuseDie" to CardEffect.REUSE_DIE,
-            "ReuseDieReroll" to CardEffect.REUSE_DIE_REROLL,
-            "ReuseAny" to CardEffect.REUSE_ANY,
-            "UpgradeAnyRetain" to CardEffect.UPGRADE_ANY_RETAIN,
-            "UpgradeAny" to CardEffect.UPGRADE_ANY,
-            "UpgradeD4" to CardEffect.UPGRADE_D4,
-            "UpgradeD6" to CardEffect.UPGRADE_D6,
-            "UpgradeD8" to CardEffect.UPGRADE_D8,
-            "UpgradeD10" to CardEffect.UPGRADE_D10,
-            "UseOpponentCard" to CardEffect.USE_OPPONENT_CARD,
-            "UseOpponentDie" to CardEffect.USE_OPPONENT_DIE
-        )
         private const val DELIMITER = ";"
-
     }
 
     private val cards: MutableMap<String, GameCard> = mutableMapOf()
@@ -138,9 +93,7 @@ class CardRegistry(
         if (effect.isEmpty() || effect == "-" || effect.startsWith(":")) {
             return null
         }
-
-        // Map CSV effect names directly to CardEffect values
-        return EFFECT_MAP[effect]
+        return CardEffect.from(effect)
             ?: throw IllegalArgumentException("No matching CardEffect found for: $effect")
     }
 

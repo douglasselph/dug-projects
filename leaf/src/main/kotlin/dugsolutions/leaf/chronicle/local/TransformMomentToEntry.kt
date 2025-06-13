@@ -20,6 +20,7 @@ import dugsolutions.leaf.chronicle.domain.DrawnHandEntry
 import dugsolutions.leaf.chronicle.domain.EventBattleTransition
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.Finished
+import dugsolutions.leaf.chronicle.domain.GainD20Entry
 import dugsolutions.leaf.chronicle.domain.InfoEntry
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
@@ -192,6 +193,12 @@ class TransformMomentToEntry(
                     scores = moment.result.players.map { data ->
                         ScoreInfo(data.score)
                     }
+                )
+
+            is Moment.GAIN_D20 ->
+                GainD20Entry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
                 )
 
             is Moment.INFO ->

@@ -5,6 +5,7 @@ import dugsolutions.leaf.cards.cost.CostScore
 import dugsolutions.leaf.cards.di.GameCardIDsFactory
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.grove.local.GroveNearingTransition
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
@@ -168,9 +169,10 @@ class PlayerTD private constructor(
             val bestCardEvaluator = BestCardEvaluator()
             val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
             val acquireDieEvaluator = AcquireDieEvaluator()
+            val gameTime = GameTime()
             val decisionDirector = DecisionDirector(
                 cardEffectBattleScoreFactory, cardManager, acquireCardEvaluator,
-                acquireDieEvaluator, groveNearingTransition
+                acquireDieEvaluator, groveNearingTransition, gameTime
             )
             return PlayerTD(
                 deckManager,
