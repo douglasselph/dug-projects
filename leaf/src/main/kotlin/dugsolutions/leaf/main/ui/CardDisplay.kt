@@ -89,9 +89,14 @@ fun CardDisplay(
                     Indicator(cardInfo.resilience.toString(), Color.Red)
                 }
 
+                // Nutrient value
+                if (cardInfo.nutrient > 0) {
+                    Indicator(cardInfo.nutrient.toString(), Color.Blue)
+                }
+
                 // Thorn value
                 if (cardInfo.thorn > 0) {
-                    Indicator(cardInfo.thorn.toString(), Color.Blue)
+                    Indicator(cardInfo.thorn.toString(), Color.Black)
                 }
             }
 
@@ -257,7 +262,8 @@ private fun PreviewSeedlingCard() {
             id = 1,
             name = "Sprouting Seed",
             type = FlourishType.SEEDLING,
-            resilience = 2,
+            resilience = 0,
+            nutrient = 0,
             cost = Cost(emptyList()),
             primaryEffect = CardEffect.DRAW_CARD,
             primaryValue = 1,
@@ -278,7 +284,8 @@ private fun PreviewRootCard() {
             id = 2,
             name = "Nourishing Root",
             type = FlourishType.ROOT,
-            resilience = 3,
+            resilience = 9,
+            nutrient = 1,
             cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
             primaryEffect = CardEffect.DRAW_DIE,
             primaryValue = 1,
@@ -300,7 +307,8 @@ private fun PreviewCanopyCard() {
             id = 3,
             name = "Sheltering Canopy",
             type = FlourishType.CANOPY,
-            resilience = 4,
+            resilience = 14,
+            nutrient = 3,
             cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
             primaryEffect = CardEffect.DEFLECT,
             primaryValue = 2,
@@ -321,7 +329,8 @@ private fun PreviewVineCard() {
             id = 4,
             name = "Thorny Vine",
             type = FlourishType.VINE,
-            resilience = 2,
+            resilience = 8,
+            nutrient = 1,
             cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(14))),
             primaryEffect = CardEffect.DRAW_CARD,
             primaryValue = 1,
@@ -343,6 +352,7 @@ private fun PreviewFlowerCard() {
             name = "Spring Flower",
             type = FlourishType.FLOWER,
             resilience = 10,
+            nutrient = 1,
             cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.CANOPY), CostElement.TotalDiceMinimum(5))),
             primaryEffect = null,
             primaryValue = 0,
@@ -364,6 +374,7 @@ private fun PreviewBloomCard() {
             name = "Spring Bloom",
             type = FlourishType.BLOOM,
             resilience = 1,
+            nutrient = 10,
             cost = Cost(emptyList()),
             primaryEffect = CardEffect.ADD_TO_TOTAL,
             primaryValue = 3,
@@ -385,7 +396,8 @@ private fun PreviewCardWithAllEffects() {
             id = 7,
             name = "Powerful Card",
             type = FlourishType.VINE,
-            resilience = 3,
+            resilience = 8,
+            nutrient = 1,
             cost = Cost(emptyList()),
             primaryEffect = CardEffect.DRAW_CARD,
             primaryValue = 2,
@@ -406,7 +418,8 @@ private fun PreviewCardWithNoEffects() {
             id = 8,
             name = "Basic Card",
             type = FlourishType.ROOT,
-            resilience = 2,
+            resilience = 8,
+            nutrient = 1,
             cost = Cost(emptyList()),
             primaryEffect = null,
             primaryValue = 0,
@@ -427,7 +440,8 @@ private fun PreviewCardWithOnlyPrimary() {
             id = 9,
             name = "Primary Only",
             type = FlourishType.CANOPY,
-            resilience = 2,
+            resilience = 18,
+            nutrient = 3,
             cost = Cost(emptyList()),
             primaryEffect = CardEffect.DRAW_CARD,
             primaryValue = 1,

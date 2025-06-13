@@ -6,7 +6,6 @@ import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.domain.GamePhase
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.random.die.Die
 
 /**
  * Base class for all chronicle entries.
@@ -76,6 +75,13 @@ data class AdornEntry(
     override val turn: Int,
     val flowerCardId: CardID,
     val drawCardId: CardID
+) : ChronicleEntry(playerId, turn)
+
+data class NutrientReward(
+    override val playerId: Int,
+    override val turn: Int,
+    val hadNutrients: Int,
+    val sidesGained: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class DeliverDamageEntry(
@@ -165,6 +171,11 @@ data class Finished(
     }
 }
 
+data class GainD20Entry(
+    override val playerId: Int = 0,
+    override val turn: Int,
+) : ChronicleEntry(playerId, turn)
+
 data class InfoEntry(
     override val turn: Int,
     val message: String
@@ -246,7 +257,7 @@ data class TrashCardEntry(
     val card: GameCard
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
-        return "TrashCardEntry(card=${card.id}, playerId=$playerId, turn=$turn)"
+        return "TrashCardEntry(card=${card.name}, playerId=$playerId, turn=$turn)"
     }
 }
 
@@ -267,6 +278,12 @@ data class UpgradeDieEntry(
     override val playerId: Int,
     override val turn: Int,
     val newSides: Int
+) : ChronicleEntry(playerId, turn)
+
+data class UseFlowers(
+    override val playerId: Int,
+    override val turn: Int,
+    val flowers: String
 ) : ChronicleEntry(playerId, turn)
 
 data class UseOpponentCardEntry(

@@ -26,7 +26,7 @@ class EffectDrawDieTest {
     fun invoke_fromCompost_drawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromCompost = true, drawHighest = true)
-        every { mockPlayer.drawBestDieFromCompost() } returns d6
+        every { mockPlayer.drawBestDieFromBed() } returns d6
 
         // Act
         SUT(mockPlayer, params)
@@ -39,7 +39,7 @@ class EffectDrawDieTest {
     fun invoke_fromCompost_notDrawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromCompost = true, drawHighest = false)
-        every { mockPlayer.drawDieFromCompost() } returns d6
+        every { mockPlayer.drawDieFromBed() } returns d6
 
         // Act
         SUT(mockPlayer, params)
@@ -80,8 +80,8 @@ class EffectDrawDieTest {
         val params = EffectDrawDie.DrawDieParams()
         every { mockPlayer.drawDie() } returns null
         every { mockPlayer.drawBestDie() } returns null
-        every { mockPlayer.drawDieFromCompost() } returns null
-        every { mockPlayer.drawBestDieFromCompost() } returns null
+        every { mockPlayer.drawDieFromBed() } returns null
+        every { mockPlayer.drawBestDieFromBed() } returns null
 
         // Act
         SUT(mockPlayer, params)

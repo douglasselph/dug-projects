@@ -50,10 +50,10 @@ class ScenarioBasicConfig(
             dice = listOf(
                 MarketDiceConfig(DieSides.D4, numPlayers * 2),
                 MarketDiceConfig(DieSides.D6, numPlayers * 4),
-                MarketDiceConfig(DieSides.D8, numPlayers * 4),
-                MarketDiceConfig(DieSides.D10, numPlayers * 3),
-                MarketDiceConfig(DieSides.D12, numPlayers * 3),
-                MarketDiceConfig(DieSides.D20, numPlayers * 2),
+                MarketDiceConfig(DieSides.D8, numPlayers * 5),
+                MarketDiceConfig(DieSides.D10, numPlayers * 4),
+                MarketDiceConfig(DieSides.D12, numPlayers * 4),
+                MarketDiceConfig(DieSides.D20, numPlayers * 4),
             )
         )
     }

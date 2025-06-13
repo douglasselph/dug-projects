@@ -13,11 +13,11 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
 import dugsolutions.leaf.game.turn.effect.EffectReuseDie
-import dugsolutions.leaf.game.turn.effect.EffectUpgradeDie
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentCard
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentDie
 import dugsolutions.leaf.player.Player
@@ -34,11 +34,12 @@ class HandleCardEffect(
     private val effectDraw: EffectDraw,
     private val effectDieReroll: EffectDieReroll,
     private val effectDieToRetain: EffectDieToRetain,
+    private val effectGainD20: EffectGainD20,
     private val effectReuseCard: EffectReuseCard,
     private val effectReuseDie: EffectReuseDie,
     private val effectReuse: EffectReuse,
     private val effectReplayVine: EffectReplayVine,
-    private val effectUpgradeDie: EffectUpgradeDie,
+    private val handleDieUpgrade: HandleDieUpgrade,
     private val effectUseOpponentCard: EffectUseOpponentCard,
     private val effectUseOpponentDie: EffectUseOpponentDie,
     private val chronicle: GameChronicle
@@ -99,7 +100,7 @@ class HandleCardEffect(
                 repeat(value) { effectDrawCard(player) }
             }
 
-            CardEffect.DRAW_CARD_COMPOST -> {
+            CardEffect.DRAW_CARD_BED -> {
                 repeat(value) { effectDrawCard(player, fromCompost = true) }
             }
 
@@ -111,7 +112,7 @@ class HandleCardEffect(
                 repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(drawHighest = true)) }
             }
 
-            CardEffect.DRAW_DIE_COMPOST -> {
+            CardEffect.DRAW_DIE_BED -> {
                 repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(fromCompost = true)) }
             }
 
@@ -121,6 +122,10 @@ class HandleCardEffect(
 
             CardEffect.FLOURISH_OVERRIDE -> {
                 player.delayedEffectList.add(AppliedEffect.FlourishOverride)
+            }
+
+            CardEffect.GAIN_D20 -> {
+                repeat(value) { effectGainD20(player) }
             }
 
             CardEffect.GAIN_FREE_ROOT -> {
@@ -227,20 +232,20 @@ class HandleCardEffect(
             }
 
             CardEffect.UPGRADE_ANY_RETAIN -> {
-                repeat(value) { effectUpgradeDie(player) }
+                repeat(value) { handleDieUpgrade(player) }
             }
 
             CardEffect.UPGRADE_ANY -> {
-                repeat(value) { effectUpgradeDie(player, discardAfterUse = true) }
+                repeat(value) { handleDieUpgrade(player, discardAfterUse = true) }
             }
 
             CardEffect.UPGRADE_D4 -> {
-                repeat(value) { effectUpgradeDie(player, only = listOf(DieSides.D4)) }
+                repeat(value) { handleDieUpgrade(player, only = listOf(DieSides.D4)) }
             }
 
             CardEffect.UPGRADE_D6 -> {
                 repeat(value) {
-                    effectUpgradeDie(
+                    handleDieUpgrade(
                         player,
                         only = listOf(DieSides.D4, DieSides.D6),
                         discardAfterUse = true
@@ -250,7 +255,7 @@ class HandleCardEffect(
 
             CardEffect.UPGRADE_D8 -> {
                 repeat(value) {
-                    effectUpgradeDie(
+                    handleDieUpgrade(
                         player,
                         only = listOf(DieSides.D4, DieSides.D6, DieSides.D8),
                         discardAfterUse = true
@@ -259,7 +264,7 @@ class HandleCardEffect(
             }
 
             CardEffect.UPGRADE_D10 -> repeat(value) {
-                effectUpgradeDie(
+                handleDieUpgrade(
                     player,
                     only = listOf(DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10),
                     discardAfterUse = true

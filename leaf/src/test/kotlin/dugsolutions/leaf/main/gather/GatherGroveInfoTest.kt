@@ -1,5 +1,6 @@
 package dugsolutions.leaf.main.gather
 
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.cards.cost.Cost
 import dugsolutions.leaf.cards.domain.FlourishType
@@ -35,22 +36,7 @@ class GatherGroveInfoTest {
         private const val PIP_TOTAL = 10
     }
 
-    private val testCard = GameCard(
-        id = 1,
-        name = TEST_CARD_NAME,
-        type = FlourishType.ROOT,
-        resilience = 3,
-        cost = Cost(emptyList()),
-        primaryEffect = CardEffect.DRAW_CARD,
-        primaryValue = 1,
-        matchWith = MatchWith.None,
-        matchEffect = null,
-        matchValue = 0,
-        trashEffect = null,
-        trashValue = 0,
-        thorn = 0
-    )
-
+    private val testCard = FakeCards.fakeRoot
     private val mockGrove = mockk<Grove>(relaxed = true)
     private val mockGatherCardInfo = mockk<GatherCardInfo>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)

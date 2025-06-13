@@ -1,5 +1,10 @@
 package dugsolutions.leaf.player.decisions.core
 
 interface DecisionDrawCount {
-    suspend operator fun invoke(): Int
+
+    data class Result(
+        val count: Int
+    )
+
+    suspend operator fun invoke(): Result
 }

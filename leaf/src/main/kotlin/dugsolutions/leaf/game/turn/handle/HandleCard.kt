@@ -3,6 +3,7 @@ package dugsolutions.leaf.game.turn.handle
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
@@ -15,6 +16,7 @@ class HandleCard(
     private val handleCardEffect: HandleCardEffect,
     private val canProcessMatchEffect: CanProcessMatchEffect,
     private val shouldProcessMatchEffect: ShouldProcessMatchEffect,
+    private val shouldAskTrashEffect: ShouldAskTrashEffect,
     private val flowerCardMatchValue: FlowerCardMatchValue,
     private val chronicle: GameChronicle
 ) {
@@ -37,7 +39,7 @@ class HandleCard(
         }
         // See if we should trash this card right now.
         card.trashEffect?.let {
-            when (val result = player.decisionDirector.shouldProcessTrashEffect(card)) {
+            when (val result = shouldAskTrashEffect(player, card)) {
                 DecisionShouldProcessTrashEffect.Result.TRASH -> {
                     handleCardEffect(player, target, card.trashEffect, card.trashValue)
                     player.removeCardFromHand(card.id)

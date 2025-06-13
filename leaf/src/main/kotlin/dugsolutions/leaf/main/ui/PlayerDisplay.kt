@@ -10,7 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.material.Button
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -35,7 +37,8 @@ data class PlayerDisplayClickListeners(
     val onDrawCountChosen: (value: Int) -> Unit = {},
     val onHandCardSelected: (value: CardInfo) -> Unit = {},
     val onFloralCardSelected: (value: CardInfo) -> Unit = {},
-    val onDieSelected: (value: DieInfo) -> Unit = {}
+    val onDieSelected: (value: DieInfo) -> Unit = {},
+    val onNutrientsClicked: () -> Unit = {}
 )
 
 @Composable
@@ -43,72 +46,86 @@ fun PlayerDisplay(
     player: PlayerInfo,
     listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
 ) {
-    Surface(
-        border = BorderStroke(2.dp, MaterialTheme.colors.primary),
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box {
+        Surface(
+            border = BorderStroke(2.dp, MaterialTheme.colors.primary),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.padding(8.dp)
         ) {
-            // Player name and score
-            Row(
-                modifier = Modifier.padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = player.name,
-                    style = MaterialTheme.typography.h5
-                )
-                Text(
-                    text = player.infoLine,
-                    style = MaterialTheme.typography.subtitle1,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-            }
-
-            if (player.showDrawCount) {
-                DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
-            } else {
-                HandDisplay(player, listeners)
-            }
-
-            // Floral array (only if not empty)
-            if (player.floralArray.isNotEmpty()) {
-                Column {
+                // Player name and score
+                Row(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = "Floral Array",
-                        style = MaterialTheme.typography.h6,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        text = player.name,
+                        style = MaterialTheme.typography.h5
                     )
-                    CardRowDisplay(player.floralArray) { cardInfo ->
-                        listeners.onFloralCardSelected(cardInfo)
+                    Text(
+                        text = player.infoLine,
+                        style = MaterialTheme.typography.subtitle1,
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
+                }
+
+                if (player.showDrawCount) {
+                    DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
+                } else {
+                    HandDisplay(player, listeners)
+                }
+
+                // Floral array (only if not empty)
+                if (player.buddingStack.isNotEmpty()) {
+                    Column {
+                        Text(
+                            text = "Budding Stack",
+                            style = MaterialTheme.typography.h6,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        CardRowDisplay(player.buddingStack) { cardInfo ->
+                            listeners.onFloralCardSelected(cardInfo)
+                        }
+                    }
+                }
+
+                // Supply and Bed sections
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Supply section
+                    Box {
+                        SectionDisplay(
+                            title = "Supply",
+                            cardCount = player.supplyCardCount,
+                            dice = player.supplyDice
+                        )
+                    }
+
+                    // Compost section
+                    Box {
+                        SectionDisplay(
+                            title = "Dormant Bed",
+                            cardCount = player.bedCardCount,
+                            dice = player.bedDice
+                        )
                     }
                 }
             }
-
-            // Supply and Compost sections
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+        }
+        
+        // Nutrients button positioned in the upper right corner
+        if (player.nutrients > 0) {
+            Button(
+                onClick = { listeners.onNutrientsClicked() },
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.TopEnd)
             ) {
-                // Supply section
-                Box {
-                    SectionDisplay(
-                        title = "Supply",
-                        cardCount = player.supplyCardCount,
-                        dice = player.supplyDice
-                    )
-                }
-
-                // Compost section
-                Box {
-                    SectionDisplay(
-                        title = "Compost",
-                        cardCount = player.compostCardCount,
-                        dice = player.compostDice
-                    )
-                }
+                Text(player.nutrients.toString())
             }
         }
     }
@@ -134,13 +151,15 @@ fun main() = application {
         val samplePlayer = PlayerInfo(
             name = "Player 1",
             infoLine = infoLine,
+            nutrients = 5,
             handCards = listOf(
                 gatherCardInfo(
                     card = GameCard(
                         id = 1,
                         name = "Sprouting Seed",
                         type = FlourishType.SEEDLING,
-                        resilience = 2,
+                        resilience = 0,
+                        nutrient = 0,
                         cost = Cost(emptyList()),
                         primaryEffect = CardEffect.DRAW_CARD,
                         primaryValue = 1,
@@ -157,7 +176,8 @@ fun main() = application {
                         id = 2,
                         name = "Nourishing Root",
                         type = FlourishType.ROOT,
-                        resilience = 3,
+                        resilience = 8,
+                        nutrient = 1,
                         cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
                         primaryEffect = CardEffect.DRAW_DIE,
                         primaryValue = 1,
@@ -172,13 +192,14 @@ fun main() = application {
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10)), true),
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
-            floralArray = listOf(
+            buddingStack = listOf(
                 gatherCardInfo(
                     card = GameCard(
                         id = 3,
                         name = "Sheltering Canopy",
                         type = FlourishType.CANOPY,
-                        resilience = 4,
+                        resilience = 20,
+                        nutrient = 3,
                         cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
                         primaryEffect = CardEffect.DEFLECT,
                         primaryValue = 2,
@@ -192,8 +213,8 @@ fun main() = application {
                 )
             ),
             supplyCardCount = 42,
-            compostCardCount = 7,
-            compostDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
+            bedCardCount = 7,
+            bedDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
         PlayerDisplay(samplePlayer)
     }

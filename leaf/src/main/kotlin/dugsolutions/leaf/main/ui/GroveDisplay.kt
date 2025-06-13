@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.cards.cost.Cost
 import dugsolutions.leaf.cards.cost.CostElement
@@ -145,148 +146,38 @@ fun main() = application {
             stacks = listOf(
                 StackInfo(
                     stack = MarketStackID.ROOT_1,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 2,
-                            name = "Nourishing Root",
-                            type = FlourishType.ROOT,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(2))),
-                            primaryEffect = CardEffect.DRAW_DIE,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeRoot),
                     numCards = 28
                 ),
                 StackInfo(
                     stack = MarketStackID.ROOT_2,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 2,
-                            name = "Nourishing Root",
-                            type = FlourishType.ROOT,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(2))),
-                            primaryEffect = CardEffect.DRAW_DIE,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
                     numCards = 28
                 ),
                 StackInfo(
                     stack = MarketStackID.CANOPY_1,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 3,
-                            name = "Sheltering Canopy",
-                            type = FlourishType.CANOPY,
-                            resilience = 4,
-                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
-                            primaryEffect = CardEffect.DEFLECT,
-                            primaryValue = 2,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeCanopy),
                     numCards = 15
                 ),
                 StackInfo(
                     stack = MarketStackID.CANOPY_2,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 3,
-                            name = "Sheltering Canopy",
-                            type = FlourishType.CANOPY,
-                            resilience = 4,
-                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
-                            primaryEffect = CardEffect.DEFLECT,
-                            primaryValue = 2,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeCanopy2),
                     numCards = 15
                 ),
                 StackInfo(
                     stack = MarketStackID.VINE_1,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 1,
-                            name = "Long Vine",
-                            type = FlourishType.VINE,
-                            resilience = 2,
-                            cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeVine),
                     numCards = 42
                 ),
                 StackInfo(
                     stack = MarketStackID.VINE_2,
-                    topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 1,
-                            name = "Long Vine",
-                            type = FlourishType.VINE,
-                            resilience = 2,
-                            cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    ),
+                    topCard = gatherCardInfo(card = FakeCards.fakeVine2),
                     numCards = 42
                 ),
                 StackInfo(
                     stack = MarketStackID.FLOWER_1,
                     topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 4,
-                            name = "Blooming Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.TotalDiceMinimum(1))),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        ),
+                        card = FakeCards.fakeFlower,
                         highlight = HighlightInfo.SELECTABLE
                     ),
                     numCards = 20
@@ -294,21 +185,7 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 4,
-                            name = "Blooming Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        ),
+                        card = FakeCards.fakeFlower2,
                         highlight = HighlightInfo.SELECTED
                     ),
                     numCards = 20
@@ -316,42 +193,14 @@ fun main() = application {
                 StackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 4,
-                            name = "Blooming Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
+                        card = FakeCards.fakeFlower3
                     ),
                     numCards = 20
                 ),
                 StackInfo(
                     stack = MarketStackID.WILD_1,
                     topCard = gatherCardInfo(
-                        card = GameCard(
-                            id = 5,
-                            name = "Wild Growth",
-                            type = FlourishType.ROOT,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(3))),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 2,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
+                        card = FakeCards.fakeRoot
                     ),
                     numCards = 10
                 )

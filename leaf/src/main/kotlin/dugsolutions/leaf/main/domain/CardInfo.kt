@@ -5,6 +5,7 @@ data class CardInfo(
     val name: String,
     val type: String,
     val resilience: Int,
+    val nutrient: Int,
     val cost: String,
     val primary: String?,
     val match: String?,

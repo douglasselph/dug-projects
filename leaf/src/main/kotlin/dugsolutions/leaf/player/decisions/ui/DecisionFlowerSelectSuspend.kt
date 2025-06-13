@@ -1,17 +1,21 @@
 package dugsolutions.leaf.player.decisions.ui
 
-import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
 
-class DecisionFlowerSelectSuspend : DecisionFlowerSelect {
+class DecisionFlowerSelectSuspend(
+    monitor: DecisionMonitor
+) : DecisionFlowerSelect {
 
-    private val channel = DecisionSuspensionChannel<List<GameCard>>()
+    private val channel = DecisionSuspensionChannel<DecisionFlowerSelect.Result>(monitor)
 
     // region DecisionFlowerSelect
 
-    override suspend fun invoke(): List<GameCard> {
+    override suspend fun invoke(): DecisionFlowerSelect.Result {
         onFlowerSelect()
-        return channel.waitForDecision()
+        return channel.waitForDecision(DecisionID.FLOWER_SELECT)
     }
 
     // endregion DecisionFlowerSelect
@@ -20,7 +24,7 @@ class DecisionFlowerSelectSuspend : DecisionFlowerSelect {
 
     var onFlowerSelect: () -> Unit = {}
 
-    fun provide(result: List<GameCard>) {
+    fun provide(result: DecisionFlowerSelect.Result) {
         channel.provideDecision(result)
     }
 

@@ -5,9 +5,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.di.appModule
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.di.appModules
-import dugsolutions.leaf.game.di.gameModule
 import org.koin.core.context.startKoin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -28,7 +27,8 @@ class MainApplication : KoinComponent {
                 MaterialTheme {
                     MainScreen(
                         MainScreenArgs(
-                            state = mainController.state,
+                            gameState = mainController.gameState,
+                            outputState = mainController.outputState,
                             onDrawCountChosen = { player, value -> mainController.onDrawCountChosen(player, value) },
                             onActionButtonPressed = { action -> mainController.onActionPressed(action) },
                             onBooleanInstructionChosen = { choice -> mainController.onBooleanInstructionResponse(choice) },
@@ -37,7 +37,8 @@ class MainApplication : KoinComponent {
                             onGroveItemSelected = { item -> mainController.onGroveItemSelected(item) },
                             onHandCardSelected = { player, card -> mainController.onHandCardSelected(player, card) },
                             onFloralCardSelected = { player, card -> mainController.onFloralCardSelected(player, card) },
-                            onDieSelected = { player, card -> mainController.onDieSelected(player, card) }
+                            onDieSelected = { player, card -> mainController.onDieSelected(player, card) },
+                            onNutrientsClicked = { player -> mainController.onNutrientsClicked(player) }
                         )
                     )
                 }

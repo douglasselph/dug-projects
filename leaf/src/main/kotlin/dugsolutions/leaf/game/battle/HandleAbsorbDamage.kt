@@ -16,7 +16,7 @@ class HandleAbsorbDamage(
     suspend operator fun invoke(player: Player): Int {
         // Only handle damage if the player has incoming damage
         if (player.incomingDamage <= 0) return 0
-        if (player.getExtendedItems().isEmpty()) return 0
+        if (player.getExtendedHandItems().isEmpty()) return 0
 
         // Decide how to absorb damage
         var result = player.decisionDirector.damageAbsorptionDecision()
@@ -32,12 +32,14 @@ class HandleAbsorbDamage(
         result.cards.forEach { card ->
             player.removeCardFromHand(card.id)
             player.incomingDamage -= card.resilience
+            player.nutrients += card.nutrient
             thornDamage += card.thorn
             chronicle(Moment.TRASH_CARD(player, card))
         }
         result.floralCards.forEach { card ->
-            player.removeCardFromFloralArray(card.id)
+            player.removeCardFromBuddingStack(card.id)
             player.incomingDamage -= card.resilience
+            player.nutrients += card.nutrient
             thornDamage += card.thorn
             chronicle(Moment.TRASH_CARD(player, card, floralArray = true))
         }
@@ -49,7 +51,7 @@ class HandleAbsorbDamage(
         if (player.incomingDamage < 0) {
             player.incomingDamage = 0
         } else if (player.incomingDamage > 0) {
-            if (player.getExtendedItems().isNotEmpty()) {
+            if (player.getExtendedHandItems().isNotEmpty()) {
                 thornDamage += invoke(player)
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.cards.cost.Cost
 import dugsolutions.leaf.cards.cost.CostElement
@@ -96,171 +97,27 @@ fun main() = application {
             // First row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 1,
-                            name = "Sprouting Seed",
-                            type = FlourishType.SEEDLING,
-                            resilience = 2,
-                            cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = CardEffect.REDUCE_COST_ROOT,
-                            matchValue = 2,
-                            trashEffect = CardEffect.GAIN_FREE_ROOT,
-                            trashValue = 1,
-                            thorn = 0
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 2,
-                            name = "Nourishing Root",
-                            type = FlourishType.ROOT,
-                            resilience = 3,
-                            cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
-                            primaryEffect = CardEffect.DRAW_DIE,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = CardEffect.RETAIN_DIE,
-                            trashValue = 1,
-                            thorn = 0
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 3,
-                            name = "Sheltering Canopy",
-                            type = FlourishType.CANOPY,
-                            resilience = 4,
-                            cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
-                            primaryEffect = CardEffect.DEFLECT,
-                            primaryValue = 2,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 0,
-                            thorn = 0
-                        )
-                    )
+                    gatherCardInfo(card = FakeCards.fakeSeedling),
+                    gatherCardInfo(card = FakeCards.fakeRoot),
+                    gatherCardInfo(card = FakeCards.fakeCanopy)
                 )
             )
 
             // Second row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 4,
-                            name = "Thorny Vine",
-                            type = FlourishType.VINE,
-                            resilience = 2,
-                            cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.DRAW_CARD,
-                            primaryValue = 1,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = CardEffect.REUSE_DIE,
-                            trashValue = 1,
-                            thorn = 2
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 5,
-                            name = "Spring Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 5,
-                            cost = Cost(emptyList()),
-                            primaryEffect = null,
-                            primaryValue = 0,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 5,
-                            thorn = 0
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 6,
-                            name = "Spring Bloom",
-                            type = FlourishType.BLOOM,
-                            resilience = 1,
-                            cost = Cost(emptyList()),
-                            primaryEffect = CardEffect.ADD_TO_TOTAL,
-                            primaryValue = 3,
-                            matchWith = MatchWith.Flower(5),
-                            matchEffect = CardEffect.ADD_TO_TOTAL,
-                            matchValue = 1,
-                            trashEffect = CardEffect.DEFLECT,
-                            trashValue = 2,
-                            thorn = 0
-                        )
-                    )
+                    gatherCardInfo(card = FakeCards.fakeVine),
+                    gatherCardInfo(card = FakeCards.fakeFlower),
+                    gatherCardInfo(card = FakeCards.fakeBloom)
                 )
             )
 
             // Third row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 5,
-                            name = "Spring Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 10,
-                            cost = Cost(emptyList()),
-                            primaryEffect = null,
-                            primaryValue = 0,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 5,
-                            thorn = 0
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 5,
-                            name = "Spring Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 10,
-                            cost = Cost(emptyList()),
-                            primaryEffect = null,
-                            primaryValue = 0,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 5,
-                            thorn = 0
-                        )
-                    ),
-                    gatherCardInfo(
-                        card = GameCard(
-                            id = 5,
-                            name = "Spring Flower",
-                            type = FlourishType.FLOWER,
-                            resilience = 10,
-                            cost = Cost(emptyList()),
-                            primaryEffect = null,
-                            primaryValue = 0,
-                            matchWith = MatchWith.None,
-                            matchEffect = null,
-                            matchValue = 0,
-                            trashEffect = null,
-                            trashValue = 5,
-                            thorn = 0
-                        )
-                    )
+                    gatherCardInfo(card = FakeCards.fakeFlower2),
+                    gatherCardInfo(card = FakeCards.fakeFlower3),
+                    gatherCardInfo(card = FakeCards.fakeFlower)
                 )
             )
         }

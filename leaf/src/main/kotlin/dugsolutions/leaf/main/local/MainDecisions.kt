@@ -1,26 +1,28 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
-import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.gather.MainGameManager
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
 import dugsolutions.leaf.player.decisions.ui.DecisionAcquireSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDamageAbsorptionSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionFlowerSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionShouldProcessTrashEffectSuspend
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
 
 class MainDecisions(
-    private val mainDomainManager: MainDomainManager,
+    private val mainGameManager: MainGameManager,
     private val cardOperations: CardOperations,
-    private val chronicle: GameChronicle // TODO: Unit test
+    private val decisionMonitor: DecisionMonitor,
+    private val shouldAskTrashEffect: ShouldAskTrashEffect
 ) {
     enum class Selecting {
         NONE,
@@ -32,45 +34,77 @@ class MainDecisions(
     var decidingPlayer: Player? = null // Made public for the sake of unit tests.
 
     fun setup(player: Player) = with(player.decisionDirector) {
-        drawCountDecision = createDecisionDrawCountSuspend(player)
-        acquireSelectDecision = createDecisionAcquireSelectSuspend(player)
-        damageAbsorptionDecision = createDecisionDamageAbsorptionSuspend(player)
-        shouldProcessTrashEffect = createDecisionShouldProcessTrashEffectSuspend(player)
-        flowerSelectDecision = createDecisionFlowerSelectSuspend(player) // TODO: Unit test
+        decisionMonitor.observe { id -> applyDecisionId(player, id) }
+        drawCountDecision = DecisionDrawCountSuspend(decisionMonitor)
+        acquireSelectDecision = DecisionAcquireSelectSuspend(decisionMonitor)
+        damageAbsorptionDecision = DecisionDamageAbsorptionSuspend(decisionMonitor)
+        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectSuspend(decisionMonitor)
+        flowerSelectDecision = DecisionFlowerSelectSuspend(decisionMonitor)
+        shouldAskTrashEffect.askTrashOkay = false
+    }
+
+    private fun applyDecisionId(player: Player, id: DecisionID?) {
+        when (id) {
+            is DecisionID.ACQUIRE_SELECT -> {
+                val possibleCards = id.possibleCards
+                val possibleDice = id.possibleDice
+                mainGameManager.resetData(player)
+                mainGameManager.setHighlightGroveItemsForSelection(possibleCards, possibleDice, player)
+                decidingPlayer = player
+            }
+
+            DecisionID.DAMAGE_ABSORPTION -> {
+                val amount = player.incomingDamage
+                mainGameManager.resetData(player)
+                mainGameManager.setAllowPlayerItemSelect(player)
+                mainGameManager.setActionButton(ActionButton.DONE, "Select cards and/or dice to absorb $amount damage.")
+                decidingPlayer = player
+                selecting = Selecting.ITEMS
+            }
+
+            DecisionID.DRAW_COUNT -> {
+                mainGameManager.setShowDrawCount(player)
+            }
+
+            DecisionID.FLOWER_SELECT -> {
+                mainGameManager.resetData(player)
+                mainGameManager.setAllowPlayerFlowerSelect(player)
+                mainGameManager.setActionButton(ActionButton.DONE, "Select flower cards to contribute toward played Bloom card.")
+                decidingPlayer = player
+                selecting = Selecting.FLOWERS
+            }
+
+            is DecisionID.SHOULD_PROCESS_TRASH_EFFECT -> {
+                val card = id.card
+                mainGameManager.setHighlightPlayerCard(player, card)
+                mainGameManager.setShowBooleanInstruction("Trash card for effect?")
+                decidingPlayer = player
+            }
+
+            else -> {
+            }
+        }
+    }
+
+    fun reapplyDecisionId() {
+        decidingPlayer?.let {
+            applyDecisionId(it, decisionMonitor.currentlyWaitingFor)
+        }
     }
 
     // region DrawCount
 
-    private fun createDecisionDrawCountSuspend(player: Player): DecisionDrawCount {
-        val value = DecisionDrawCountSuspend()
-        value.onDrawCountRequest = {
-            mainDomainManager.updateData()
-            mainDomainManager.setShowDrawCount(player, true)
-        }
-        return value
-    }
-
     fun onDrawCountChosen(player: Player, value: Int) {
         val drawCountDecision = player.decisionDirector.drawCountDecision
         if (drawCountDecision is DecisionDrawCountSuspend) {
-            drawCountDecision.provide(value)
+            drawCountDecision.provide(DecisionDrawCount.Result(value))
         }
-        mainDomainManager.clearShowDrawCount()
+        mainGameManager.clearShowDrawCount()
     }
 
     // endregion DrawCount
 
     // region GroveCard
-
-    private fun createDecisionAcquireSelectSuspend(player: Player): DecisionAcquireSelect {
-        val value = DecisionAcquireSelectSuspend()
-        value.onGroveAcquisition = { possibleCards, possibleDice ->
-            mainDomainManager.updateData(player)
-            mainDomainManager.setHighlightGroveItemsForSelection(possibleCards, possibleDice, player)
-            decidingPlayer = player
-        }
-        return value
-    }
 
     fun onGroveCardSelected(cardInfo: CardInfo) {
         cardOperations.getCard(cardInfo)?.let { card ->
@@ -80,7 +114,7 @@ class MainDecisions(
             if (acquireSelectDecision is DecisionAcquireSelectSuspend) {
                 acquireSelectDecision.provide(card)
             }
-            mainDomainManager.clearGroveCardHighlights()
+            mainGameManager.clearGroveCardHighlights()
         }
     }
 
@@ -92,11 +126,10 @@ class MainDecisions(
         if (acquireSelectDecision is DecisionAcquireSelectSuspend) {
             acquireSelectDecision.provide(dieInfo.backingDie)
         }
-        mainDomainManager.clearGroveCardHighlights()
+        mainGameManager.clearGroveCardHighlights()
     }
 
     // endregion GroveCard
-
 
     // TODO: Unit test
     fun onPlayerSelectionComplete() {
@@ -110,21 +143,8 @@ class MainDecisions(
 
     // region PlayerSelectItems
 
-    private fun createDecisionDamageAbsorptionSuspend(player: Player): DecisionDamageAbsorption {
-        val value = DecisionDamageAbsorptionSuspend()
-        value.onDamageAbsorptionRequest = {
-            val amount = player.incomingDamage
-            mainDomainManager.updateData(player)
-            mainDomainManager.setAllowPlayerItemSelect(player)
-            mainDomainManager.setActionButton(ActionButton.DONE, "Select cards and/or dice to absorb $amount damage.")
-            decidingPlayer = player
-            selecting = Selecting.ITEMS
-        }
-        return value
-    }
-
     private fun onPlayerItemSelectionComplete() {
-        val selected = mainDomainManager.gatherSelected()
+        val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
         require(player != null)
         val damageAbsorptionDecision = player.decisionDirector.damageAbsorptionDecision
@@ -137,8 +157,8 @@ class MainDecisions(
                 )
             )
         }
-        mainDomainManager.clearPlayerSelect()
-        mainDomainManager.setActionButton(ActionButton.NONE)
+        mainGameManager.clearPlayerSelect()
+        mainGameManager.setActionButton(ActionButton.NONE)
     }
 
     // endregion PlayerSelectItems
@@ -146,59 +166,39 @@ class MainDecisions(
     // region PlayerSelectFlowers
 
     // TODO: Unit test
-    private fun createDecisionFlowerSelectSuspend(player: Player): DecisionFlowerSelect {
-        val value = DecisionFlowerSelectSuspend()
-        value.onFlowerSelect = {
-            mainDomainManager.updateData(player)
-            mainDomainManager.setAllowPlayerFlowerSelect(player)
-            mainDomainManager.setActionButton(ActionButton.DONE, "Select flower cards to contribute toward played Bloom card.")
-            decidingPlayer = player
-            selecting = Selecting.FLOWERS
-        }
-        return value
-    }
-
-    // TODO: Unit test
     private fun onPlayerFlowerSelectionComplete() {
-        val selected = mainDomainManager.gatherSelected()
+        val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
         require(player != null)
         val flowerSelectDecision = player.decisionDirector.flowerSelectDecision
         if (flowerSelectDecision is DecisionFlowerSelectSuspend) {
-            flowerSelectDecision.provide(selected.cards)
+            flowerSelectDecision.provide(DecisionFlowerSelect.Result(selected.floralCards))
         }
-        mainDomainManager.clearPlayerSelect()
-        mainDomainManager.setActionButton(ActionButton.NONE)
+        mainGameManager.clearPlayerSelect()
+        mainGameManager.setActionButton(ActionButton.NONE)
     }
 
     // endregion PlayerSelectFlowers
 
     // region TrashEffect
 
-    private fun createDecisionShouldProcessTrashEffectSuspend(player: Player): DecisionShouldProcessTrashEffect {
-        val value = DecisionShouldProcessTrashEffectSuspend()
-        value.onShouldProcessTrashEffect = { card ->
-            mainDomainManager.setHighlightPlayerCard(player, card)
-            mainDomainManager.setShowBooleanInstruction("Trash card for effect?")
-            decidingPlayer = player
-        }
-        value.askTrashOkay = false
-        return value
-    }
-
     fun onCardSelectedForEffect(value: Boolean) {
         val player = decidingPlayer
         require(player != null)
         val shouldTrashDecision = player.decisionDirector.shouldProcessTrashEffect
         if (shouldTrashDecision is DecisionShouldProcessTrashEffectSuspend) {
-            shouldTrashDecision.provide(value)
+            shouldTrashDecision.provide(
+                if (value) DecisionShouldProcessTrashEffect.Result.TRASH
+                else DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
+            )
         }
-        mainDomainManager.clearBooleanInstruction()
-        mainDomainManager.clearPlayerSelect()
+        mainGameManager.clearBooleanInstruction()
+        mainGameManager.clearPlayerSelect()
     }
 
     fun setAskTrash(value: Boolean) {
-        mainDomainManager.setAskTrash(value)
+        mainGameManager.setAskTrash(value)
+        shouldAskTrashEffect.askTrashOkay = value
     }
 
     // endregion TrashEffect

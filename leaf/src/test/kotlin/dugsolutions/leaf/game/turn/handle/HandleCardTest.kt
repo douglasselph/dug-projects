@@ -7,6 +7,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
 import dugsolutions.leaf.player.domain.AppliedEffect
 import dugsolutions.leaf.player.effect.CanProcessMatchEffect
 import dugsolutions.leaf.player.effect.FlowerCardMatchValue
@@ -37,12 +38,14 @@ class HandleCardTest {
     // Subject under test
 
     // Dependencies
-    private val handleCardEffect: HandleCardEffect = mockk(relaxed = true)
-    private val canProcessMatchEffect: CanProcessMatchEffect = mockk(relaxed = true)
-    private val shouldProcessMatchEffect: ShouldProcessMatchEffect = mockk(relaxed = true)
-    private val flowerCardMatchValue: FlowerCardMatchValue = mockk(relaxed = true)
+    private val mockHandleCardEffect: HandleCardEffect = mockk(relaxed = true)
+    private val mockCanProcessMatchEffect: CanProcessMatchEffect = mockk(relaxed = true)
+    private val mockShouldProcessMatchEffect: ShouldProcessMatchEffect = mockk(relaxed = true)
+    private val mockFlowerCardMatchValue: FlowerCardMatchValue = mockk(relaxed = true)
     private val mockChronicle: GameChronicle = mockk(relaxed = true)
-    private val decisionDirector = mockk<DecisionDirector>(relaxed = true)
+    private val mockDecisionDirector = mockk<DecisionDirector>(relaxed = true)
+    private val mockShouldAskTrashEffect = mockk<ShouldAskTrashEffect>(relaxed = true)
+
     private val delayedEffectList = mutableListOf<AppliedEffect>()
     private val sampleDie = SampleDie()
     private val mockDie = sampleDie.d6
@@ -52,10 +55,11 @@ class HandleCardTest {
     private val mockCard: GameCard = mockk(relaxed = true)
 
     private val SUT: HandleCard = HandleCard(
-        handleCardEffect,
-        canProcessMatchEffect,
-        shouldProcessMatchEffect,
-        flowerCardMatchValue,
+        mockHandleCardEffect,
+        mockCanProcessMatchEffect,
+        mockShouldProcessMatchEffect,
+        mockShouldAskTrashEffect,
+        mockFlowerCardMatchValue,
         mockChronicle
     )
 
@@ -76,7 +80,7 @@ class HandleCardTest {
         SUT(mockPlayer, mockTarget, mockCard)
 
         // Assert
-        verify { handleCardEffect(mockPlayer, mockTarget, primaryEffect, PRIMARY_VALUE) }
+        verify { mockHandleCardEffect(mockPlayer, mockTarget, primaryEffect, PRIMARY_VALUE) }
     }
 
     @Test
@@ -86,9 +90,9 @@ class HandleCardTest {
         every { mockCard.matchEffect } returns matchEffect
         every { mockCard.matchValue } returns MATCH_VALUE
         every { mockCard.trashEffect } returns null
-        every { canProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = true, dieCost = mockDie)
-        every { shouldProcessMatchEffect(mockCard) } returns true
-        coEvery { flowerCardMatchValue(mockPlayer, mockCard) } returns FLOWER_MATCH_VALUE
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = true, dieCost = mockDie)
+        every { mockShouldProcessMatchEffect(mockCard) } returns true
+        coEvery { mockFlowerCardMatchValue(mockPlayer, mockCard) } returns FLOWER_MATCH_VALUE
         every { mockPlayer.discard(mockDie) } returns true
 
         // Act
@@ -97,7 +101,7 @@ class HandleCardTest {
         // Assert
         verify { mockChronicle(Moment.DISCARD_DIE(mockPlayer, mockDie)) }
         verify { mockPlayer.discard(mockDie) }
-        verify { handleCardEffect(mockPlayer, mockTarget, matchEffect, MATCH_VALUE + FLOWER_MATCH_VALUE) }
+        verify { mockHandleCardEffect(mockPlayer, mockTarget, matchEffect, MATCH_VALUE + FLOWER_MATCH_VALUE) }
     }
 
     @Test
@@ -107,16 +111,16 @@ class HandleCardTest {
         every { mockCard.matchEffect } returns matchEffect
         every { mockCard.matchValue } returns MATCH_VALUE
         every { mockCard.trashEffect } returns null
-        every { canProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = true, dieCost = null)
-        every { shouldProcessMatchEffect(mockCard) } returns true
-        coEvery { flowerCardMatchValue(mockPlayer, mockCard) } returns FLOWER_MATCH_VALUE
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = true, dieCost = null)
+        every { mockShouldProcessMatchEffect(mockCard) } returns true
+        coEvery { mockFlowerCardMatchValue(mockPlayer, mockCard) } returns FLOWER_MATCH_VALUE
 
         // Act
         SUT(mockPlayer, mockTarget, mockCard)
 
         // Assert
         verify(exactly = 0) { mockPlayer.discard(any<Die>()) }
-        verify { handleCardEffect(mockPlayer, mockTarget, matchEffect, MATCH_VALUE + FLOWER_MATCH_VALUE) }
+        verify { mockHandleCardEffect(mockPlayer, mockTarget, matchEffect, MATCH_VALUE + FLOWER_MATCH_VALUE) }
     }
 
     @Test
@@ -124,14 +128,14 @@ class HandleCardTest {
         // Arrange
         every { mockCard.primaryEffect } returns null
         every { mockCard.matchEffect } returns matchEffect
-        every { canProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = false)
+        every { mockCanProcessMatchEffect(mockCard, mockPlayer) } returns CanProcessMatchEffect.Result(possible = false)
         every { mockCard.trashEffect } returns null
 
         // Act
         SUT(mockPlayer, mockTarget, mockCard)
 
         // Assert
-        verify(exactly = 0) { handleCardEffect(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockHandleCardEffect(any(), any(), any(), any()) }
     }
 
     @Test
@@ -141,15 +145,15 @@ class HandleCardTest {
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns trashEffect
         every { mockCard.trashValue } returns TRASH_VALUE
-        every { mockPlayer.decisionDirector } returns decisionDirector
-        coEvery { decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
+        every { mockPlayer.decisionDirector } returns mockDecisionDirector
+        coEvery { mockShouldAskTrashEffect(mockPlayer, mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH
         every { mockPlayer.removeCardFromHand(mockCard.id) } returns true
 
         // Act
         SUT(mockPlayer, mockTarget, mockCard)
 
         // Assert
-        verify { handleCardEffect(mockPlayer, mockTarget, trashEffect, TRASH_VALUE) }
+        verify { mockHandleCardEffect(mockPlayer, mockTarget, trashEffect, TRASH_VALUE) }
         verify { mockPlayer.removeCardFromHand(CARD_ID) }
         verify { mockChronicle(Moment.TRASH_FOR_EFFECT(mockPlayer, mockCard, DecisionShouldProcessTrashEffect.Result.TRASH)) }
     }
@@ -160,8 +164,8 @@ class HandleCardTest {
         every { mockCard.primaryEffect } returns null
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns trashEffect
-        every { mockPlayer.decisionDirector } returns decisionDirector
-        coEvery { decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED
+        every { mockPlayer.decisionDirector } returns mockDecisionDirector
+        coEvery { mockShouldAskTrashEffect(mockPlayer, mockCard) } returns DecisionShouldProcessTrashEffect.Result.TRASH_IF_NEEDED
         every { mockPlayer.delayedEffectList } returns delayedEffectList
 
         // Act
@@ -178,14 +182,14 @@ class HandleCardTest {
         every { mockCard.primaryEffect } returns null
         every { mockCard.matchEffect } returns null
         every { mockCard.trashEffect } returns trashEffect
-        every { mockPlayer.decisionDirector } returns decisionDirector
-        coEvery { decisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
+        every { mockPlayer.decisionDirector } returns mockDecisionDirector
+        coEvery { mockDecisionDirector.shouldProcessTrashEffect(mockCard) } returns DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
 
         // Act
         SUT(mockPlayer, mockTarget, mockCard)
 
         // Assert
-        verify(exactly = 0) { handleCardEffect(any(), any(), any(), any()) }
+        verify(exactly = 0) { mockHandleCardEffect(any(), any(), any(), any()) }
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
         verify(exactly = 0) { mockPlayer.delayedEffectList.add(any()) }
     }

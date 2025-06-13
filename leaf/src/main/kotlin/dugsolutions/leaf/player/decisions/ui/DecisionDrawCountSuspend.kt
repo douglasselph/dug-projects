@@ -1,27 +1,20 @@
 package dugsolutions.leaf.player.decisions.ui
 
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
 
-class DecisionDrawCountSuspend : DecisionDrawCount {
+class DecisionDrawCountSuspend(
+    monitor: DecisionMonitor
+) : DecisionDrawCount {
+    private val channel = DecisionSuspensionChannel<DecisionDrawCount.Result>(monitor)
 
-    private val channel = DecisionSuspensionChannel<Int>()
-
-    // region DecisionDrawCount
-
-    override suspend operator fun invoke(): Int {
-        onDrawCountRequest()
-        return channel.waitForDecision()
+    override suspend fun invoke(): DecisionDrawCount.Result {
+        return channel.waitForDecision(DecisionID.DRAW_COUNT)
     }
 
-    // endregion DecisionDrawCount
-
-    // region public
-
-    var onDrawCountRequest: () -> Unit = {}
-
-    fun provide(count: Int) {
-        channel.provideDecision(count)
+    fun provide(result: DecisionDrawCount.Result) {
+        channel.provideDecision(result)
     }
-
-    // endregion public
 }

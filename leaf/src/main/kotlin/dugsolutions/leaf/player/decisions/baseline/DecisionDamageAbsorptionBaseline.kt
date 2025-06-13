@@ -63,11 +63,11 @@ class DecisionDamageAbsorptionBaseline(
             return Result()
         }
         val amount = player.incomingDamage
-        val handItems = player.getExtendedItems()
+        val handItems = player.getExtendedHandItems()
 
         // Check if cards/dice exist only in hand (none in compost/supply)
-        val onlyCardsInHand = player.cardsInCompost.isEmpty() && player.cardsInSupply.isEmpty()
-        val onlyDiceInHand = player.diceInCompost.isEmpty() && player.diceInSupply.isEmpty()
+        val onlyCardsInHand = player.cardsInBed.isEmpty() && player.cardsInSupply.isEmpty()
+        val onlyDiceInHand = player.diceInBed.isEmpty() && player.diceInSupply.isEmpty()
 
         // Generate all valid combinations that can absorb damage
         val allCombinations = generateCombinations(handItems, amount)

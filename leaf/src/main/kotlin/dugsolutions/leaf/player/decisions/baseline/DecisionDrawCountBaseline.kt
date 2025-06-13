@@ -13,7 +13,7 @@ class DecisionDrawCountBaseline(
     private val player: Player
 ) : DecisionDrawCount {
 
-    override suspend operator fun invoke(): Int {
+    override suspend operator fun invoke(): DecisionDrawCount.Result {
         val handSize = Commons.HAND_SIZE
         val cardSupplyCount = player.cardsInSupplyCount
         val diceSupplyCount = player.diceInSupplyCount
@@ -22,8 +22,8 @@ class DecisionDrawCountBaseline(
         // If supply is low, include compost pile in calculations
         val (effectiveCardCount, effectiveDiceCount) = if (totalAvailable < handSize) {
             Pair(
-                cardSupplyCount + player.cardsInCompostCount,
-                diceSupplyCount + player.diceInCompostCount
+                cardSupplyCount + player.cardsInBedCount,
+                diceSupplyCount + player.diceInBedCount
             )
         } else {
             Pair(cardSupplyCount, diceSupplyCount)
@@ -41,9 +41,11 @@ class DecisionDrawCountBaseline(
             // More dice than cards
             else -> 1
         }
-        return max(
-            0,
-            preferredCardCount - player.cardsInHand.size
+        return DecisionDrawCount.Result(
+            max(
+                0,
+                preferredCardCount - player.cardsInHand.size
+            )
         )
     }
 } 

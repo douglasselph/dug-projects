@@ -24,7 +24,8 @@ object CardInfoFaker {
         highlight: HighlightInfo = HighlightInfo.NONE
     ): CardInfo {
         val type = faker.random.randomValue(listOf("FLOWER", "LEAF", "ROOT", "STEM"))
-        val resilience = faker.random.nextInt(1, 5)
+        val resilience = faker.random.nextInt(1, 20)
+        val nutrient = 1
         val thorn = faker.random.nextInt(0, 3)
 
         // Generate random effects with 50% chance of being null
@@ -37,6 +38,7 @@ object CardInfoFaker {
             name = faker.name.name(),
             type = type,
             resilience = resilience,
+            nutrient = nutrient,
             cost = "ROOT 6+",
             primary = primary,
             match = match,

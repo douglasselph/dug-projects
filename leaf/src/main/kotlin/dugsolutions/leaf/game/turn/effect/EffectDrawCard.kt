@@ -12,7 +12,7 @@ class EffectDrawCard(
 
     operator fun invoke(player: Player, fromCompost: Boolean = false) {
         val cardId = if (fromCompost) {
-            player.drawCardFromCompost()
+            player.drawCardFromBed()
         } else {
             player.drawCard()
         }

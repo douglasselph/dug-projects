@@ -7,8 +7,8 @@ import dugsolutions.leaf.game.acquire.HandleGroveAcquisition
 import dugsolutions.leaf.game.acquire.ManageAcquiredFloralTypes
 import dugsolutions.leaf.game.acquire.cost.ApplyCost
 import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
-import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.game.battle.BattlePhaseTransition
 import dugsolutions.leaf.game.battle.BestFlowerCards
 import dugsolutions.leaf.game.battle.HandleAbsorbDamage
@@ -18,7 +18,6 @@ import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerRound
 import dugsolutions.leaf.game.turn.PlayerTurn
-import dugsolutions.leaf.game.turn.handle.HandleAdorn
 import dugsolutions.leaf.game.turn.effect.EffectCardToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDieAdjust
 import dugsolutions.leaf.game.turn.effect.EffectDieReroll
@@ -28,19 +27,20 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
 import dugsolutions.leaf.game.turn.effect.EffectReuseDie
-import dugsolutions.leaf.game.turn.effect.EffectUpgradeDie
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentCard
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentDie
+import dugsolutions.leaf.game.turn.handle.HandleAdorn
 import dugsolutions.leaf.game.turn.handle.HandleCard
 import dugsolutions.leaf.game.turn.handle.HandleCardEffect
 import dugsolutions.leaf.game.turn.handle.HandleCleanup
+import dugsolutions.leaf.game.turn.handle.HandleCompostRecovery
 import dugsolutions.leaf.game.turn.handle.HandleDieUpgrade
 import dugsolutions.leaf.game.turn.handle.HandleGetTarget
-import dugsolutions.leaf.game.turn.handle.HandleLimitedDieUpgrade
 import dugsolutions.leaf.game.turn.handle.HandleRetained
 import dugsolutions.leaf.game.turn.handle.HandleReused
 import dugsolutions.leaf.game.turn.local.CardIsFree
@@ -88,32 +88,32 @@ val gameModule: Module = module {
     single { EffectDrawCard(get(), get()) }
     single { EffectDrawDie(get()) }
     single { EffectDraw(get()) }
+    single { EffectGainD20(get(), get(), get()) }
     single { EffectReuseCard(get(), get()) }
     single { EffectReuseDie(get()) }
     single { EffectReuse(get(), get()) }
     single { EffectReplayVine(get()) }
-    single { EffectUpgradeDie(get(), get(), get()) }
     single { EffectUseOpponentDie(get()) }
     single { EffectUseOpponentCard(get(), get()) }
 
     single { HandleAdorn(get(), get()) }
+    single { HandleCompostRecovery(get()) }
+    single { HandleCleanup(get(), get(), get(), get()) }
     single { HandleDeliverDamage(get(), get()) }
-    single { HandleCleanup(get(), get()) }
     single { HandleAbsorbDamage(get()) }
     single { HandleGroveAcquisition(get(), get(), get(), get()) }
     single { HandleGetTarget() }
-    single { HandleDieUpgrade(get(), get(), get(), get()) }
-    single { HandleLimitedDieUpgrade(get(), get()) }
+    single { HandleDieUpgrade(get(), get(), get(), get(), get()) }
     single { HandleRetained() }
     single { HandleReused() }
     single {
         HandleCardEffect(
             get(), get(), get(), get(), get(), get(), get(),
             get(), get(), get(), get(), get(), get(), get(),
-            get(), get(), get()
+            get(), get(), get(), get()
         )
     }
-    single { HandleCard(get(), get(), get(), get(), get()) }
+    single { HandleCard(get(), get(), get(), get(), get(), get()) }
     single { PlayerRound(get(), get()) }
 
     single {

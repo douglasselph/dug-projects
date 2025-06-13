@@ -14,14 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dugsolutions.leaf.main.MainScreenArgs
-import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.ui.GroveDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplayClickListeners
 
 @Composable
 fun MainPlayerSection(
-    state: MainDomain,
+    state: MainGameDomain,
     args: MainScreenArgs,
     modifier: Modifier
 ) {
@@ -48,7 +48,8 @@ fun MainPlayerSection(
                             onDrawCountChosen = { args.onDrawCountChosen(player, it) },
                             onHandCardSelected = { args.onHandCardSelected(player, it) },
                             onFloralCardSelected = { args.onFloralCardSelected(player, it) },
-                            onDieSelected = { args.onDieSelected(player, it) }
+                            onDieSelected = { args.onDieSelected(player, it) },
+                            onNutrientsClicked = { args.onNutrientsClicked(player) }
                         )
                     )
                 }

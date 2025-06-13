@@ -10,8 +10,8 @@ class ReportPlayer {
         val diceInSupply = player.diceInSupply.toString()
         val cardsInHand = cardsOf(player.cardsInHand)
         val diceInHand = player.diceInHand.values()
-        val cardsInCompost = cardsOf(player.cardsInCompost)
-        val diceInCompost = player.diceInCompost.toString()
+        val cardsInCompost = cardsOf(player.cardsInBed)
+        val diceInCompost = player.diceInBed.toString()
         val floralArray = cardsOf(player.floralCards)
         
         // Combine strings, but only include non-empty ones

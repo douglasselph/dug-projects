@@ -41,10 +41,11 @@ object PlayerInfoFaker {
             handCards = CardInfoFaker.createList(handCardCount),
             handDice = DiceInfo(DieInfoFaker.createList(handDieCount)),
             supplyDice = DiceInfo(DieInfoFaker.createList(supplyDieCount)),
-            floralArray = CardInfoFaker.createList(floralCardCount),
+            buddingStack = CardInfoFaker.createList(floralCardCount),
+            nutrients = 0,
             supplyCardCount = supplyCardCount,
-            compostCardCount = compostCardCount,
-            compostDice = DiceInfo(DieInfoFaker.createList(compostDieCount)),
+            bedCardCount = compostCardCount,
+            bedDice = DiceInfo(DieInfoFaker.createList(compostDieCount)),
             showDrawCount = showDrawCount
         )
     }
@@ -115,7 +116,7 @@ object PlayerInfoFaker {
         ).copy(
             handCards = handCards,
             handDice = DiceInfo(handDice),
-            floralArray = floralCards
+            buddingStack = floralCards
         )
     }
 } 

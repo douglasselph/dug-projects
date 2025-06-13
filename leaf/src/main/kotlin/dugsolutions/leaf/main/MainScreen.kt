@@ -21,18 +21,19 @@ import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.ItemInfo
-import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.MainGameDomain
+import dugsolutions.leaf.main.domain.MainOutputDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
+import dugsolutions.leaf.main.top.DraggableDivider
 import dugsolutions.leaf.main.top.MainOutput
 import dugsolutions.leaf.main.top.MainPlayerSection
 import dugsolutions.leaf.main.top.MainTitle
-import dugsolutions.leaf.main.top.DraggableDivider
 import dugsolutions.leaf.main.top.MainTitleListeners
-import dugsolutions.leaf.player.Player
 import kotlinx.coroutines.flow.StateFlow
 
 data class MainScreenArgs(
-    val state: StateFlow<MainDomain>,
+    val gameState: StateFlow<MainGameDomain>,
+    val outputState: StateFlow<MainOutputDomain>,
     val onDrawCountChosen: (playerInfo: PlayerInfo, value: Int) -> Unit = { _, _ -> },
     val onActionButtonPressed: (action: ActionButton) -> Unit = {},
     val onBooleanInstructionChosen: (value: Boolean) -> Unit = {},
@@ -41,12 +42,14 @@ data class MainScreenArgs(
     val onGroveItemSelected: (card: ItemInfo) -> Unit = { },
     val onHandCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
     val onFloralCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
-    val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> }
+    val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> },
+    val onNutrientsClicked: (player: PlayerInfo) -> Unit = {}
 )
 
 @Composable
 fun MainScreen(args: MainScreenArgs) {
-    val state by args.state.collectAsState()
+    val gameState by args.gameState.collectAsState()
+    val outputState by args.outputState.collectAsState()
     val initialValue = 300.dp
     var outputHeight by remember { mutableStateOf(initialValue) }
     var adjustBy by remember { mutableIntStateOf(0) }
@@ -58,19 +61,19 @@ fun MainScreen(args: MainScreenArgs) {
     ) {
         // Title bar (fixed at top)
         MainTitle(
-            state = state,
+            state = gameState,
             listeners = MainTitleListeners(
                 onStepEnabledToggled = args.onStepEnabledToggled,
                 onAskTrashToggled = args.onAskTrashToggled,
                 onActionButtonPressed = args.onActionButtonPressed,
-                onBooleanInstructionChosen = args.onBooleanInstructionChosen
+                onBooleanInstructionChosen = args.onBooleanInstructionChosen,
             ),
             modifier = Modifier.fillMaxWidth()
         )
 
         // Player section (expands to fill available space)
         MainPlayerSection(
-            state = state,
+            state = gameState,
             args = args,
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,7 +97,7 @@ fun MainScreen(args: MainScreenArgs) {
 
         // Output section (fixed height controlled by divider)
         MainOutput(
-            state = state,
+            state = outputState,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(outputHeight)

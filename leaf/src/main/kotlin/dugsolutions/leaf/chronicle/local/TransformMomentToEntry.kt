@@ -10,6 +10,7 @@ import dugsolutions.leaf.chronicle.domain.AdjustDieEntry
 import dugsolutions.leaf.chronicle.domain.AdjustDieToMax
 import dugsolutions.leaf.chronicle.domain.AdornEntry
 import dugsolutions.leaf.chronicle.domain.ChronicleEntry
+import dugsolutions.leaf.chronicle.domain.NutrientReward
 import dugsolutions.leaf.chronicle.domain.DeflectDamageEntry
 import dugsolutions.leaf.chronicle.domain.DeliverDamageEntry
 import dugsolutions.leaf.chronicle.domain.DiscardCardEntry
@@ -20,6 +21,7 @@ import dugsolutions.leaf.chronicle.domain.DrawnHandEntry
 import dugsolutions.leaf.chronicle.domain.EventBattleTransition
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.Finished
+import dugsolutions.leaf.chronicle.domain.GainD20Entry
 import dugsolutions.leaf.chronicle.domain.InfoEntry
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
@@ -35,6 +37,7 @@ import dugsolutions.leaf.chronicle.domain.TrashCardEntry
 import dugsolutions.leaf.chronicle.domain.TrashDieEntry
 import dugsolutions.leaf.chronicle.domain.TrashForEffect
 import dugsolutions.leaf.chronicle.domain.UpgradeDieEntry
+import dugsolutions.leaf.chronicle.domain.UseFlowers
 import dugsolutions.leaf.chronicle.domain.UseOpponentCardEntry
 import dugsolutions.leaf.chronicle.domain.UseOpponentDieEntry
 import dugsolutions.leaf.chronicle.report.ReportDamage
@@ -116,6 +119,14 @@ class TransformMomentToEntry(
                     flowerCardId = moment.flowerCardId
                 )
 
+            is Moment.NUTRIENT_REWARD ->
+                NutrientReward(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    hadNutrients = moment.nutrients,
+                    sidesGained = moment.gained.value
+                )
+
             is Moment.DELIVER_DAMAGE ->
                 DeliverDamageEntry(
                     playerId = moment.defender.id,
@@ -192,6 +203,12 @@ class TransformMomentToEntry(
                     scores = moment.result.players.map { data ->
                         ScoreInfo(data.score)
                     }
+                )
+
+            is Moment.GAIN_D20 ->
+                GainD20Entry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
                 )
 
             is Moment.INFO ->
@@ -306,6 +323,13 @@ class TransformMomentToEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
                     newSides = moment.die.sides
+                )
+
+            is Moment.USE_FLOWERS ->
+                UseFlowers(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    flowers = moment.flowers.joinToString(",") { it.name }
                 )
 
             is Moment.USE_OPPONENT_CARD ->

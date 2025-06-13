@@ -7,14 +7,14 @@ import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.chronicle.domain.PlayerScore
+import dugsolutions.leaf.player.components.BuddingStack
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.FloralBonusCount
-import dugsolutions.leaf.player.components.drawNewHand
+import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.AppliedEffect
 import dugsolutions.leaf.player.domain.ExtendedHandItem
 import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.Die
@@ -22,11 +22,12 @@ import dugsolutions.leaf.random.die.DieValue
 
 open class Player(
     private val deckManager: DeckManager,
-    private val floralArray: FloralArray,
+    private val buddingStack: BuddingStack,
     private val floralBonusCount: FloralBonusCount,
     private val cardManager: CardManager,
     private val dieFactory: DieFactory,
     private val costScore: CostScore,
+    private val drawNewHand: DrawNewHand,
     val decisionDirector: DecisionDirector
 ) {
     companion object {
@@ -49,6 +50,7 @@ open class Player(
     var incomingDamage: Int = 0
     var deflectDamage: Int = 0
     var pipModifier: Int = 0
+    var nutrients: Int = 0
 
     val reused: MutableList<HandItem> = mutableListOf()
     val retained: MutableList<HandItem> = mutableListOf()
@@ -67,8 +69,8 @@ open class Player(
     open val diceInHand: Dice
         get() = getDiceFrom(deckManager.getItemsInHand())
 
-    open val diceInCompost: Dice
-        get() = getDiceFrom(deckManager.getItemsInCompost())
+    open val diceInBed: Dice
+        get() = getDiceFrom(deckManager.getItemsInBed())
 
     open val diceInSupply: Dice
         get() = getDiceFrom(deckManager.getItemsInSupply())
@@ -101,8 +103,8 @@ open class Player(
             }
         }
 
-    open val cardsInCompost: List<GameCard>
-        get() = deckManager.getItemsInCompost().mapNotNull {
+    open val cardsInBed: List<GameCard>
+        get() = deckManager.getItemsInBed().mapNotNull {
             when (it) {
                 is HandItem.aCard -> cardManager.getCard(it.card.id)
                 is HandItem.aDie -> null
@@ -118,17 +120,17 @@ open class Player(
 
     val cardsInSupplyCount: Int
         get() = cardsInSupply.size
-    val cardsInCompostCount: Int
-        get() = cardsInCompost.size
+    val cardsInBedCount: Int
+        get() = cardsInBed.size
     val diceInSupplyCount: Int
         get() = diceInSupply.size
-    val diceInCompostCount: Int
-        get() = diceInCompost.size
+    val diceInBedCount: Int
+        get() = diceInBed.size
 
     val totalDiceCount: Int
-        get() = diceInSupplyCount + diceInCompost.size + diceInHand.size
+        get() = diceInSupplyCount + diceInBed.size + diceInHand.size
     val totalCardCount: Int
-        get() = cardsInSupplyCount + cardsInCompostCount + cardsInHand.size
+        get() = cardsInSupplyCount + cardsInBedCount + cardsInHand.size
 
     fun flowerCount(flowerCards: List<CardID>, bloomCard: GameCard): Int {
         if (bloomCard.matchWith is MatchWith.Flower) {
@@ -138,10 +140,10 @@ open class Player(
     }
 
     val allCardsInDeck: List<GameCard>
-        get() = cardsInSupply + cardsInHand + cardsInCompost
+        get() = cardsInSupply + cardsInHand + cardsInBed
 
     open val floralCards: List<GameCard>
-        get() = floralArray.cards
+        get() = buddingStack.cards
 
     // Hand management methods
     fun hasCardInHand(cardId: CardID): Boolean = deckManager.hasCardInHand(cardId)
@@ -149,7 +151,7 @@ open class Player(
     open fun getItemsInHand(): List<HandItem> = deckManager.getItemsInHand()
 
     /** Normal Hand Items as well as the Floral Array **/
-    fun getExtendedItems(): List<ExtendedHandItem> {
+    fun getExtendedHandItems(): List<ExtendedHandItem> {
         val handItems = getItemsInHand()
         val floralItems = floralCards
 
@@ -167,9 +169,9 @@ open class Player(
     open fun discard(die: Die): Boolean = deckManager.discard(die)
     open fun discard(die: DieValue): Boolean = deckManager.discard(die)
     open fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
-    fun removeCardFromCompost(cardId: CardID): Boolean = deckManager.removeCardFromCompost(cardId)
+    fun removeCardFromBed(cardId: CardID): Boolean = deckManager.removeCardFromBed(cardId)
     open fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
-    open fun removeCardFromFloralArray(cardId: CardID): Boolean = floralArray.remove(cardId)
+    open fun removeCardFromBuddingStack(cardId: CardID): Boolean = buddingStack.remove(cardId)
 
     fun retainCard(card: GameCard): Boolean =
         hasCardInHand(card.id) && removeCardFromHand(card.id) && retained.add(HandItem.aCard(card))
@@ -183,10 +185,10 @@ open class Player(
     open fun addCardToHand(cardId: CardID) = deckManager.addCardToHand(cardId)
     open fun addDieToHand(die: Die) = deckManager.addDieToHand(die)
     open fun addDieToHand(die: DieValue) = deckManager.addDieToHand(die)
-    open fun addCardToCompost(cardID: CardID) = deckManager.addCardToCompost(cardID)
-    open fun addDieToCompost(die: Die) = deckManager.addDieToCompost(die)
-    fun removeDieFromCompost(die: Die) = deckManager.removeDieFromCompost(die)
-    open fun addCardToFloralArray(cardId: CardID) = floralArray.add(cardId)
+    open fun addCardToBed(cardID: CardID) = deckManager.addCardToBed(cardID)
+    open fun addDieToBed(die: Die) = deckManager.addDieToBed(die)
+    fun removeDieFromBed(die: Die) = deckManager.removeDieFromBed(die)
+    open fun addCardToBuddingStack(cardId: CardID) = buddingStack.add(cardId)
 
     fun addCardsToHand(cards: List<CardID>) = cards.forEach { addCardToHand(it) }
     fun addDiceToHand(dice: List<Die>) = dice.forEach { addDieToHand(it) }
@@ -197,11 +199,19 @@ open class Player(
     }
 
     fun drawHand(preferredCardCount: Int) {
-        drawNewHand(preferredCardCount)
+        drawNewHand(this, preferredCardCount)
     }
 
     suspend fun drawHand() {
-        drawHand(decisionDirector.drawCountDecision())
+        drawHand(decisionDirector.drawCountDecision().count)
+    }
+
+    open fun drawCardWithoutResupply(): CardID? {
+        return deckManager.drawCard()
+    }
+
+    open fun drawDieWithoutResupply(): Die? {
+        return deckManager.drawDie()?.roll()
     }
 
     open fun drawCard(): CardID? {
@@ -211,7 +221,7 @@ open class Player(
         return deckManager.drawCard()
     }
 
-    fun drawDie(): Die? {
+    open fun drawDie(): Die? {
         if (deckManager.isSupplyEmpty) {
             resupply()
         }
@@ -225,9 +235,9 @@ open class Player(
         return deckManager.drawBestDie()?.roll()
     }
 
-    fun drawCardFromCompost(): CardID? = deckManager.drawCardFromCompost()
-    fun drawDieFromCompost(): Die? = deckManager.drawDieFromCompost()
-    fun drawBestDieFromCompost(): Die? = deckManager.drawBestDieFromCompost()
+    fun drawCardFromBed(): CardID? = deckManager.drawCardFromBed()
+    fun drawDieFromBed(): Die? = deckManager.drawDieFromBed()
+    fun drawBestDieFromBed(): Die? = deckManager.drawBestDieFromBed()
 
     open fun discardHand() {
         deckManager.discardHand()
@@ -258,6 +268,6 @@ open class Player(
     }
 
     open fun clearFloralCards() {
-        floralArray.clear()
+        buddingStack.clear()
     }
 }

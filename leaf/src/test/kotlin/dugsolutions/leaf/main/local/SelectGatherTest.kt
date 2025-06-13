@@ -3,16 +3,11 @@ package dugsolutions.leaf.main.local
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.CardInfoFaker
 import dugsolutions.leaf.main.domain.DiceInfo
-import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.DieInfoFaker
-import dugsolutions.leaf.main.domain.HighlightInfo
-import dugsolutions.leaf.main.domain.MainDomain
-import dugsolutions.leaf.main.domain.PlayerInfo
+import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.domain.PlayerInfoFaker
-import dugsolutions.leaf.main.domain.SelectedItems
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -28,7 +23,7 @@ class SelectGatherTest {
     }
 
     private val mockCardManager = mockk<CardManager>(relaxed = true)
-    private val mockMainDomain = mockk<MainDomain>(relaxed = true)
+    private val mockMainGameDomain = mockk<MainGameDomain>(relaxed = true)
     private val mockGameCard = mockk<GameCard>(relaxed = true)
     private val mockDie = mockk<Die>(relaxed = true)
 
@@ -36,7 +31,7 @@ class SelectGatherTest {
 
     @BeforeEach
     fun setup() {
-        every { mockMainDomain.players } returns listOf(PlayerInfoFaker.create(name = PLAYER_NAME))
+        every { mockMainGameDomain.players } returns listOf(PlayerInfoFaker.create(name = PLAYER_NAME))
         every { mockCardManager.getCard(any<String>()) } returns mockGameCard
     }
 
@@ -44,10 +39,10 @@ class SelectGatherTest {
     fun invoke_whenNoSelectedItems_returnsEmptySelectedItems() {
         // Arrange
         val playerInfo = PlayerInfoFaker.createEmpty(name = PLAYER_NAME)
-        every { mockMainDomain.players } returns listOf(playerInfo)
+        every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
-        val result = SUT(mockMainDomain)
+        val result = SUT(mockMainGameDomain)
 
         // Assert
         assertTrue(result.cards.isEmpty())
@@ -63,10 +58,10 @@ class SelectGatherTest {
             name = PLAYER_NAME,
             handCardCount = 1
         ).copy(handCards = listOf(cardInfo))
-        every { mockMainDomain.players } returns listOf(playerInfo)
+        every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
-        val result = SUT(mockMainDomain)
+        val result = SUT(mockMainGameDomain)
 
         // Assert
         assertEquals(listOf(mockGameCard), result.cards)
@@ -82,11 +77,11 @@ class SelectGatherTest {
         val playerInfo = PlayerInfoFaker.create(
             name = PLAYER_NAME,
             floralCardCount = 1
-        ).copy(floralArray = listOf(cardInfo))
-        every { mockMainDomain.players } returns listOf(playerInfo)
+        ).copy(buddingStack = listOf(cardInfo))
+        every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
-        val result = SUT(mockMainDomain)
+        val result = SUT(mockMainGameDomain)
 
         // Assert
         assertTrue(result.cards.isEmpty())
@@ -103,10 +98,10 @@ class SelectGatherTest {
             name = PLAYER_NAME,
             handDieCount = 1
         ).copy(handDice = DiceInfo(listOf(dieInfo.copy(backingDie = mockDie))))
-        every { mockMainDomain.players } returns listOf(playerInfo)
+        every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
-        val result = SUT(mockMainDomain)
+        val result = SUT(mockMainGameDomain)
 
         // Assert
         assertTrue(result.cards.isEmpty())
@@ -127,13 +122,13 @@ class SelectGatherTest {
             floralCardCount = 1
         ).copy(
             handCards = listOf(handCard),
-            floralArray = listOf(floralCard),
+            buddingStack = listOf(floralCard),
             handDice = DiceInfo(listOf(dieInfo.copy(backingDie = mockDie)))
         )
-        every { mockMainDomain.players } returns listOf(playerInfo)
+        every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
-        val result = SUT(mockMainDomain)
+        val result = SUT(mockMainGameDomain)
 
         // Assert
         assertEquals(listOf(mockGameCard), result.cards)

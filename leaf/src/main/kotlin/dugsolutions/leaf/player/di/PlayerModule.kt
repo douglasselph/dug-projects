@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.di
 
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.FloralBonusCount
+import dugsolutions.leaf.player.components.BuddingStack
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
@@ -16,6 +16,10 @@ import dugsolutions.leaf.player.effect.FlowerCardMatchValue
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
 import dugsolutions.leaf.game.turn.handle.HandleAdorn
+import dugsolutions.leaf.player.components.DrawNewHand
+import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.effect.NutrientReward
 import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -34,19 +38,23 @@ val playerModule: Module = module {
     single { HasDieValue() }
     single { HasFlourishType(get()) }
     single { FloralBonusCount() }
-    single { FlowerCardMatchValue(get()) }
+    single { FlowerCardMatchValue(get(), get()) }
     single { HandleAdorn(get(), get()) }
+    single { NutrientReward(get(), get()) }
+    single { DrawNewHand() }
+    single { DecisionMonitor(get()) }
+    single { ShouldAskTrashEffect() }
 
-    factory { FloralArray(get(), get()) }
+    factory { BuddingStack(get(), get()) }
     factory { StackManager(get(), get()) }
-    factory { DecisionDirector(get(), get(), get(), get(), get()) }
+    factory { DecisionDirector(get(), get(), get(), get(), get(), get()) }
 
 
     factory {
         DeckManager(
             supply = get(),
             hand = get(),
-            compost = get(),
+            dormant = get(),
             dieFactory = get()
         )
     }
@@ -55,11 +63,12 @@ val playerModule: Module = module {
         PlayerFactory(
             cardManager = get(),
             deckManager = { get() },
-            floralArray = { get() },
+            buddingStack = { get() },
             floralBonusCount = get(),
             decisionDirector = { get() },
             costScore = get(),
-            dieFactory = get()
+            dieFactory = get(),
+            drawNewHand = get()
         )
     }
 

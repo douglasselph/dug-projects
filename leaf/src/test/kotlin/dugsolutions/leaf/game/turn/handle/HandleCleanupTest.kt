@@ -1,5 +1,6 @@
 package dugsolutions.leaf.game.turn.handle
 
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.player.Player
 import io.mockk.coEvery
 import io.mockk.every
@@ -14,8 +15,15 @@ class HandleCleanupTest {
     private val mockPlayer: Player = mockk(relaxed = true)
     private val mockHandleReused: HandleReused = mockk(relaxed = true)
     private val mockHandleRetained: HandleRetained = mockk(relaxed = true)
+    private val mockCompostRecovery: HandleCompostRecovery = mockk(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
 
-    private val SUT: HandleCleanup = HandleCleanup(mockHandleReused, mockHandleRetained)
+    private val SUT: HandleCleanup = HandleCleanup(
+        mockHandleReused,
+        mockHandleRetained,
+        mockCompostRecovery,
+        mockChronicle
+    )
 
     @BeforeEach
     fun setup() {

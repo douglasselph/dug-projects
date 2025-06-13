@@ -4,19 +4,19 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.main.domain.HighlightInfo
-import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.domain.SelectedItems
 
 class SelectGather(
     private val cardManager: CardManager
 ) {
 
-    operator fun invoke(mainDomain: MainDomain): SelectedItems = with(mainDomain) {
+    operator fun invoke(mainGameDomain: MainGameDomain): SelectedItems = with(mainGameDomain) {
         val selectedHandCards = mutableListOf<GameCard>()
         val selectedFloralCards = mutableListOf<GameCard>()
         val selectedDice = mutableListOf<Die>()
 
-        mainDomain.players.forEach { player ->
+        mainGameDomain.players.forEach { player ->
             player.handCards.forEach { card ->
                 if (card.highlight == HighlightInfo.SELECTED) {
                     cardManager.getCard(card.name)?.let {
@@ -24,7 +24,7 @@ class SelectGather(
                     }
                 }
             }
-            player.floralArray.forEach { card ->
+            player.buddingStack.forEach { card ->
                 if (card.highlight == HighlightInfo.SELECTED) {
                     cardManager.getCard(card.name)?.let {
                         selectedFloralCards.add(it)

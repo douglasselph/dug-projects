@@ -1,7 +1,6 @@
 package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.cards.domain.GameCard
@@ -257,17 +256,11 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_calculatesThornDamageCorrectly() = runBlocking {
         // Arrange
-        val thornCard1 = mockk<GameCard> {
-            every { id } returns 10
-            every { resilience } returns 1
-            every { thorn } returns 2
-        }
-        val thornCard2 = mockk<GameCard> {
-            every { id } returns 11
-            every { resilience } returns 1
-            every { thorn } returns 3
-        }
-        fakePlayer.incomingDamage = 2
+        val thornCard1 = FakeCards.fakeFlower
+        val thornCard2 = FakeCards.fakeFlower2
+        assertTrue(thornCard1.thorn > 0)
+        assertTrue(thornCard2.thorn > 0)
+        fakePlayer.incomingDamage = thornCard1.thorn + thornCard2.thorn + 2
         coEvery {mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(thornCard1, thornCard2)
         )
@@ -276,20 +269,16 @@ class HandleAbsorbDamageTest {
         val result = SUT(fakePlayer)
 
         // Assert
-        assertEquals(5, result) // 2 + 3 thorn damage
-        assertTrue(fakePlayer.gotCardIds.contains(10))
-        assertTrue(fakePlayer.gotCardIds.contains(11))
+        assertEquals(thornCard2.thorn + thornCard1.thorn, result) // 2 + 3 thorn damage
+        assertTrue(fakePlayer.gotCardIds.contains(thornCard1.id))
+        assertTrue(fakePlayer.gotCardIds.contains(thornCard2.id))
     }
 
     @Test
     fun invoke_whenDamageBecomesNegative_setsToZero() = runBlocking {
         // Arrange
-        val highResilienceCard = mockk<GameCard> {
-            every { id } returns 10
-            every { resilience } returns 5
-            every { thorn } returns 0
-        }
-        fakePlayer.incomingDamage = 3
+        val highResilienceCard = FakeCards.fakeCanopy
+        fakePlayer.incomingDamage = highResilienceCard.resilience + 3
         coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(highResilienceCard)
         )
@@ -304,30 +293,26 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenRemainingDamageAndItems_recursivelyAbsorbs() = runBlocking {
         // Arrange
-        val card1 = mockk<GameCard> {
-            every { id } returns 10
-            every { resilience } returns 2
-            every { thorn } returns 1
-        }
-        val card2 = mockk<GameCard> {
-            every { id } returns 11
-            every { resilience } returns 2
-            every { thorn } returns 1
-        }
-        fakePlayer.incomingDamage = 5
+        val handCard = FakeCards.fakeRoot
+        val flowerCard1 = FakeCards.fakeFlower
+        val flowerCard2 = FakeCards.fakeFlower2
+        val totalThorn = handCard.thorn + flowerCard1.thorn + flowerCard2.thorn
+        fakePlayer.incomingDamage = handCard.resilience + flowerCard1.resilience + flowerCard2.resilience
+        fakePlayer.addCardToHand(handCard)
         coEvery { mockDecisionDamageAbsorption() }
             .returnsMany(
-                DecisionDamageAbsorption.Result(cards = listOf(card1)),
-                DecisionDamageAbsorption.Result(cards = listOf(card2))
+                DecisionDamageAbsorption.Result(cards = listOf(handCard, flowerCard1)),
+                DecisionDamageAbsorption.Result(cards = listOf(flowerCard2))
             )
 
         // Act
         val result = SUT(fakePlayer)
 
         // Assert
-        assertEquals(2, result) // Combined thorn damage from both cards
+        assertEquals(totalThorn, result) // Combined thorn damage from both cards
         coVerify(exactly = 2) { mockDecisionDamageAbsorption() }
-        assertTrue(fakePlayer.gotCardIds.contains(10))
-        assertTrue(fakePlayer.gotCardIds.contains(11))
+        assertTrue(fakePlayer.gotCardIds.contains(handCard.id))
+        assertTrue(fakePlayer.gotCardIds.contains(flowerCard1.id))
+        assertTrue(fakePlayer.gotCardIds.contains(flowerCard2.id))
     }
 } 

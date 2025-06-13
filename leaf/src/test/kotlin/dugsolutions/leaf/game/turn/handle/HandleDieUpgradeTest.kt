@@ -1,5 +1,7 @@
 package dugsolutions.leaf.game.turn.handle
 
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.DieSides
 import dugsolutions.leaf.random.die.SampleDie
@@ -24,7 +26,7 @@ class HandleDieUpgradeTest {
 
     private val mockPlayer: Player = mockk(relaxed = true)
     private val mockEvaluateSimpleCost: EvaluateSimpleCost = mockk(relaxed = true)
-    private lateinit var applyCost: ApplyCostTD
+    private val applyCost: ApplyCostTD = ApplyCostTD()
     private val sampleDie = SampleDie()
     private val d4: Die = sampleDie.d4
     private val d6: Die = sampleDie.d6
@@ -35,22 +37,18 @@ class HandleDieUpgradeTest {
     private val mockDieFactory: DieFactory = mockk(relaxed = true)
     private val mockCombination: Combination = mockk(relaxed = true)
     private val mockGrove = mockk<Grove>(relaxed = true)
+    private val chronicle: GameChronicle = mockk(relaxed = true)
 
-    private lateinit var SUT: HandleDieUpgrade
+    private val SUT: HandleDieUpgrade = HandleDieUpgrade(
+        mockEvaluateSimpleCost,
+        applyCost,
+        mockDieFactory,
+        mockGrove,
+        chronicle
+    )
 
     @BeforeEach
     fun setup() {
-        applyCost = ApplyCostTD()
-
-        // Create the test subject with the correct constructor parameters
-        SUT = HandleDieUpgrade(
-            mockEvaluateSimpleCost,
-            applyCost,
-            mockDieFactory,
-            mockGrove
-        )
-
-        // Create test dice
         every { mockDieFactory(DieSides.D4) } returns d4
         every { mockDieFactory(DieSides.D6) } returns d6
         every { mockDieFactory(DieSides.D8) } returns d8
@@ -276,5 +274,120 @@ class HandleDieUpgradeTest {
         
         assertNotNull(result)
         assertEquals(10, result?.sides)
+    }
+
+    @Test
+    fun invoke_whenMultipleDiceWithSameSides_selectsLowestValue() {
+        // Arrange
+        val d6High = sampleDie.d6.adjustTo(6)
+        val d6Low = sampleDie.d6.adjustTo(1)
+        every { mockPlayer.diceInHand.dice } returns listOf(d4, d6High, d6Low)
+        every { mockPlayer.removeDieFromHand(d6Low) } returns true
+
+        // Act
+        val result = SUT(mockPlayer, false)
+
+        // Assert
+        verify { mockPlayer.removeDieFromHand(d6Low) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockGrove.addDie(d6Low) }
+        verify { mockGrove.removeDie(d8) }
+        assertNotNull(result)
+        assertEquals(8, result?.sides)
+    }
+
+    @Test
+    fun invoke_whenOnlyParameterSpecified_filtersEligibleDice() {
+        // Arrange
+        every { mockPlayer.diceInHand.dice } returns listOf(d4, d6, d8)
+        every { mockPlayer.removeDieFromHand(d6) } returns true
+
+        // Act
+        val result = SUT(mockPlayer, false, only = listOf(DieSides.D4, DieSides.D6))
+
+        // Assert
+        verify { mockPlayer.removeDieFromHand(d6) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockGrove.addDie(d6) }
+        verify { mockGrove.removeDie(d8) }
+        assertNotNull(result)
+        assertEquals(8, result?.sides)
+    }
+
+    @Test
+    fun invoke_whenOnlyParameterExcludesAllDice_returnsNull() {
+        // Arrange
+        every { mockPlayer.diceInHand.dice } returns listOf(d4, d6, d8)
+
+        // Act
+        val result = SUT(mockPlayer, false, only = listOf(DieSides.D20))
+
+        // Assert
+        verify(exactly = 0) { mockPlayer.removeDieFromHand(any()) }
+        verify(exactly = 0) { mockPlayer.addDieToHand(any<Die>()) }
+        verify(exactly = 0) { mockGrove.addDie(any()) }
+        verify(exactly = 0) { mockGrove.removeDie(any()) }
+        assertNull(result)
+    }
+
+    @Test
+    fun invoke_whenOnlyParameterAndMultipleEligible_selectsLowestValue() {
+        // Arrange
+        val d4High = sampleDie.d4.adjustTo(4)
+        val d4Low = sampleDie.d4.adjustTo(1)
+        every { mockPlayer.diceInHand.dice } returns listOf(d4High, d4Low, d6)
+        every { mockPlayer.removeDieFromHand(d4Low) } returns true
+
+        // Act
+        val result = SUT(mockPlayer, false, only = listOf(DieSides.D4))
+
+        // Assert
+        verify { mockPlayer.removeDieFromHand(d4Low) }
+        verify { mockPlayer.addDieToHand(d6) }
+        verify { mockGrove.addDie(d4Low) }
+        verify { mockGrove.removeDie(d6) }
+        assertNotNull(result)
+        assertEquals(6, result?.sides)
+    }
+
+    @Test
+    fun invoke_whenOnlyParameterIncludesD12AndEnoughPips_upgradesToD20() {
+        // Arrange
+        every { mockPlayer.diceInHand.dice } returns listOf(d6, d12)
+        every { mockPlayer.pipTotal } returns 20
+        every { mockPlayer.removeDieFromHand(d12) } returns true
+
+        // Act
+        val result = SUT(mockPlayer, false, only = listOf(DieSides.D6, DieSides.D12))
+
+        // Assert
+        verify { mockEvaluateSimpleCost(mockPlayer, 20) }
+        verify { mockPlayer.removeDieFromHand(d12) }
+        verify { mockPlayer.addDieToHand(d20) }
+        verify { mockGrove.addDie(d12) }
+        verify { mockGrove.removeDie(d20) }
+        assertNotNull(result)
+        assertEquals(20, result?.sides)
+    }
+
+    @Test
+    fun invoke_whenUpgradeSuccessful_recordsInChronicle() {
+        // Arrange
+        every { mockPlayer.diceInHand.dice } returns listOf(d6)
+        every { mockPlayer.removeDieFromHand(d6) } returns true
+
+        // Act
+        val result = SUT(mockPlayer, false)
+
+        // Assert
+        verify { mockPlayer.removeDieFromHand(d6) }
+        verify { mockPlayer.addDieToHand(d8) }
+        verify { mockGrove.addDie(d6) }
+        verify { mockGrove.removeDie(d8) }
+
+
+        verify { chronicle(Moment.UPGRADE_DIE(mockPlayer, d8)) }
+        assertNotNull(result)
+        assertEquals(8, result?.sides)
     }
 } 

@@ -18,10 +18,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
-import dugsolutions.leaf.main.MainScreenArgs
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.Colors
-import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.MainGameDomain
 
 data class MainTitleListeners(
     val onStepEnabledToggled: (value: Boolean) -> Unit = {},
@@ -32,7 +31,7 @@ data class MainTitleListeners(
 
 @Composable
 fun MainTitle(
-    state: MainDomain,
+    state: MainGameDomain,
     listeners: MainTitleListeners,
     modifier: Modifier
 ) {
@@ -165,7 +164,7 @@ fun main() = application {
 
 @Composable
 private fun PreviewBasicState() {
-    val state = MainDomain(
+    val state = MainGameDomain(
         turn = 5,
         stepModeEnabled = false,
         actionInstruction = null,
@@ -182,7 +181,7 @@ private fun PreviewBasicState() {
 
 @Composable
 private fun PreviewWithActionInstruction() {
-    val state = MainDomain(
+    val state = MainGameDomain(
         turn = 12,
         stepModeEnabled = true,
         actionInstruction = "Select cards and/or dice to absorb 5 damage.",
@@ -199,7 +198,7 @@ private fun PreviewWithActionInstruction() {
 
 @Composable
 private fun PreviewWithBooleanInstruction() {
-    val state = MainDomain(
+    val state = MainGameDomain(
         turn = 8,
         stepModeEnabled = false,
         actionInstruction = null,
@@ -216,7 +215,7 @@ private fun PreviewWithBooleanInstruction() {
 
 @Composable
 private fun PreviewWithBothInstructions() {
-    val state = MainDomain(
+    val state = MainGameDomain(
         turn = 15,
         stepModeEnabled = true,
         actionInstruction = "Choose cards to purchase from grove",

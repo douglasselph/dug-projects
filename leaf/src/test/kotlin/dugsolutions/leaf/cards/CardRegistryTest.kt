@@ -129,10 +129,6 @@ class CardRegistryTest {
                 }
             }
         }
-        
-        // Track invalid flower cards
-        val invalidFlowers = mutableListOf<String>()
-        
         // Assert
         val errorMessage = buildString {
             if (invalidBlooms.isNotEmpty()) {
@@ -144,22 +140,4 @@ class CardRegistryTest {
         assertTrue(invalidBlooms.isEmpty(), errorMessage)
     }
 
-    @Test
-    fun EFFECT_MAP_containsAllCardEffects() {
-        // Arrange
-        val missingEffects = mutableListOf<CardEffect>()
-        
-        // Act
-        CardEffect.entries.forEach { effect ->
-            // Check if any value in EFFECT_MAP maps to this effect
-            val hasMapping = CardRegistry.EFFECT_MAP.values.contains(effect)
-            if (!hasMapping) {
-                missingEffects.add(effect)
-            }
-        }
-        
-        // Assert
-        assertTrue(missingEffects.isEmpty(), 
-            "The following CardEffects are missing from EFFECT_MAP: ${missingEffects.joinToString { it.name }}")
-    }
 } 

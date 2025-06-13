@@ -2,7 +2,6 @@ package dugsolutions.leaf.game.turn.effect
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
@@ -36,7 +35,7 @@ class EffectDrawCardTest {
     @Test
     fun invoke_fromCompostTrue_drawsFromCompost_andCallsChronicle() {
         // Arrange
-        every { mockPlayer.drawCardFromCompost() } returns CARD_ID
+        every { mockPlayer.drawCardFromBed() } returns CARD_ID
         every { mockCardManager.getCard(CARD_ID) } returns fakeCard
 
         // Act
@@ -65,7 +64,7 @@ class EffectDrawCardTest {
     fun invoke_whenNoCardDrawn_doesNothing() {
         // Arrange
         every { mockPlayer.drawCard() } returns null
-        every { mockPlayer.drawCardFromCompost() } returns null
+        every { mockPlayer.drawCardFromBed() } returns null
 
         // Act
         SUT(mockPlayer, fromCompost = false)

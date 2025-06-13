@@ -1,23 +1,25 @@
 package dugsolutions.leaf.player.decisions.ui
 
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
 
-class DecisionDamageAbsorptionSuspend : DecisionDamageAbsorption {
+class DecisionDamageAbsorptionSuspend(
+    monitor: DecisionMonitor
+) : DecisionDamageAbsorption {
 
-    private val channel = DecisionSuspensionChannel<DecisionDamageAbsorption.Result>()
+    private val channel = DecisionSuspensionChannel<DecisionDamageAbsorption.Result>(monitor)
 
     // region DecisionDamageAbsorption
 
     override suspend fun invoke(): DecisionDamageAbsorption.Result {
-        onDamageAbsorptionRequest()
-        return channel.waitForDecision()
+        return channel.waitForDecision(DecisionID.DAMAGE_ABSORPTION)
     }
 
     // endregion DecisionDamageAbsorption
 
     // region public
-
-    var onDamageAbsorptionRequest: () -> Unit = {}
 
     fun provide(result: DecisionDamageAbsorption.Result) {
         channel.provideDecision(result)

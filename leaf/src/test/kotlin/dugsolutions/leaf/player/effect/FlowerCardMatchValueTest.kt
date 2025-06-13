@@ -3,9 +3,10 @@ package dugsolutions.leaf.player.effect
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralBonusCount
 import dugsolutions.leaf.player.decisions.DecisionDirector
+import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,10 +27,11 @@ class FlowerCardMatchValueTest {
     private val mockFloralBonusCount: FloralBonusCount = mockk(relaxed = true)
     private val mockPlayer: Player = mockk(relaxed = true)
     private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
     private lateinit var mockBloomCard: GameCard
     private lateinit var mockFlowerCard: GameCard
 
-    private val SUT: FlowerCardMatchValue = FlowerCardMatchValue(mockFloralBonusCount)
+    private val SUT: FlowerCardMatchValue = FlowerCardMatchValue(mockFloralBonusCount, mockChronicle)
 
     @BeforeEach
     fun setup() {
@@ -89,7 +91,7 @@ class FlowerCardMatchValueTest {
     fun invoke_whenNoFlowerCardsInHand_returnsZeroBonus() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInHand } returns emptyList()
-        coEvery { mockDecisionDirector.flowerSelectDecision() } returns emptyList()
+        coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(emptyList())
         every { mockFloralBonusCount(any(), any()) } returns 0
 
         // Act
@@ -98,7 +100,7 @@ class FlowerCardMatchValueTest {
         // Assert
         assertEquals(0, result)
         verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
-        verify(exactly = 0) { mockPlayer.addCardToFloralArray(any()) }
+        verify(exactly = 0) { mockPlayer.addCardToBuddingStack(any()) }
     }
 
 } 

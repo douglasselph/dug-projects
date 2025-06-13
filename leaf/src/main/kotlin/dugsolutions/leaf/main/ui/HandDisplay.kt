@@ -16,13 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.cost.CostElement
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.PlayerInfo
@@ -89,64 +84,17 @@ fun main() = application {
             name = "Player 1",
             infoLine = infoLine,
             handCards = listOf(
-                gatherCardInfo(
-                    card = GameCard(
-                        id = 1,
-                        name = "Sprouting Seed",
-                        type = FlourishType.SEEDLING,
-                        resilience = 2,
-                        cost = Cost(emptyList()),
-                        primaryEffect = CardEffect.DRAW_CARD,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
-                ),
-                gatherCardInfo(
-                    card = GameCard(
-                        id = 2,
-                        name = "Nourishing Root",
-                        type = FlourishType.ROOT,
-                        resilience = 3,
-                        cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
-                        primaryEffect = CardEffect.DRAW_DIE,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
-                ),
-                gatherCardInfo(
-                    card = GameCard(
-                        id = 3,
-                        name = "Vibrant Bloom",
-                        type = FlourishType.BLOOM,
-                        resilience = 1,
-                        cost = Cost.from(listOf(CostElement.SingleDieMinimum(1))),
-                        primaryEffect = CardEffect.GAIN_FREE_ROOT,
-                        primaryValue = 2,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
-                )
+                gatherCardInfo(card = FakeCards.fakeSeedling),
+                gatherCardInfo(card = FakeCards.fakeRoot),
+                gatherCardInfo(card = FakeCards.fakeBloom)
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10, sampleDie.d12)), true),
             supplyDice = gatherDiceInfo(Dice(emptyList()), false),
-            floralArray = emptyList(),
+            buddingStack = emptyList(),
+            nutrients = 2,
             supplyCardCount = 0,
-            compostCardCount = 0,
-            compostDice = gatherDiceInfo(Dice(emptyList()), false)
+            bedCardCount = 0,
+            bedDice = gatherDiceInfo(Dice(emptyList()), false)
         )
         HandDisplay(samplePlayer)
     }

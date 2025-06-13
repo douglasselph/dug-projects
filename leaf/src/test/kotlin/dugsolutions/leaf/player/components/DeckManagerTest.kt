@@ -455,7 +455,7 @@ class DeckManagerTest {
         every { compost.addDie(die) } returns true
 
         // Act
-        val result = SUT.addDieToCompost(dieValue)
+        val result = SUT.addDieToBed(dieValue)
 
         // Assert
         assertTrue(result)
@@ -470,7 +470,7 @@ class DeckManagerTest {
         every { compost.addDie(die) } returns false
 
         // Act
-        val result = SUT.addDieToCompost(dieValue)
+        val result = SUT.addDieToBed(dieValue)
 
         // Assert
         assertFalse(result)

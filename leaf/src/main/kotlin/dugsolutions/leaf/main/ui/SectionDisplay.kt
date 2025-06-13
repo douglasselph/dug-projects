@@ -102,7 +102,7 @@ fun main() = application {
 
             // Second example - Compost section
             SectionDisplay(
-                title = "Compost",
+                title = "Dormant Bed",
                 cardCount = 7,
                 dice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4, sampleDie.d10)), values = false)
             )

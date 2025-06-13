@@ -26,6 +26,7 @@ class GatherCardInfo {
             name = name,
             type = floralType(type) ?: "?",
             resilience = resilience,
+            nutrient = nutrient,
             cost = card.cost.toString(),
             thorn = thorn,
             primary = effectLine(primaryEffect, primaryValue),

@@ -2,24 +2,21 @@ package dugsolutions.leaf.player.decisions.ui
 
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
 
 // TODO: Unit test
-class DecisionShouldProcessTrashEffectSuspend : DecisionShouldProcessTrashEffect {
+class DecisionShouldProcessTrashEffectSuspend(
+    monitor: DecisionMonitor
+) : DecisionShouldProcessTrashEffect {
 
-    private val channel = DecisionSuspensionChannel<Boolean>()
-    var askTrashOkay: Boolean = true
+    private val channel = DecisionSuspensionChannel<DecisionShouldProcessTrashEffect.Result>(monitor)
 
     // region DecisionDrawCount
 
     override suspend fun invoke(card: GameCard): DecisionShouldProcessTrashEffect.Result {
-        if (!askTrashOkay) {
-            return DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
-        }
-        onShouldProcessTrashEffect(card)
-        if (channel.waitForDecision()) {
-            return DecisionShouldProcessTrashEffect.Result.TRASH
-        }
-        return DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
+        return channel.waitForDecision(DecisionID.SHOULD_PROCESS_TRASH_EFFECT(card))
     }
 
     override fun reset() {
@@ -29,10 +26,8 @@ class DecisionShouldProcessTrashEffectSuspend : DecisionShouldProcessTrashEffect
 
     // region public
 
-    var onShouldProcessTrashEffect: (card: GameCard) -> Unit = {}
-
-    fun provide(decision: Boolean) {
-        channel.provideDecision(decision)
+    fun provide(result: DecisionShouldProcessTrashEffect.Result) {
+        channel.provideDecision(result)
     }
 
     // endregion public

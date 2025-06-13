@@ -2,7 +2,6 @@ package dugsolutions.leaf.game.turn.handle
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
@@ -22,7 +21,7 @@ class HandleAdorn(
         while (flowerCards.isNotEmpty()) {
             val flowerCard = flowerCards.removeAt(0)
             player.removeCardFromHand(flowerCard.id)
-            player.addCardToFloralArray(flowerCard.id)
+            player.addCardToBuddingStack(flowerCard.id)
             val cardId = player.drawCard() ?: 0
             chronicle(Moment.ADORN(player, flowerCardId = flowerCard.id, drawCardId = cardId))
             if (cardId > 0) {

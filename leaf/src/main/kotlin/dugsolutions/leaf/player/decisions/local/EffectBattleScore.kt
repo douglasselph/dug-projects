@@ -23,12 +23,13 @@ class EffectBattleScore {
             CardEffect.DISCARD_CARD -> 6 * value
             CardEffect.DISCARD_DIE -> 9 * value
             CardEffect.DRAW_CARD -> 8 * value
-            CardEffect.DRAW_CARD_COMPOST -> 8 * value
+            CardEffect.DRAW_CARD_BED -> 8 * value
             CardEffect.DRAW_DIE -> 10 * value
             CardEffect.DRAW_DIE_ANY -> 15 * value
-            CardEffect.DRAW_DIE_COMPOST -> 16 * value
+            CardEffect.DRAW_DIE_BED -> 16 * value
             CardEffect.DRAW -> 5 * value
             CardEffect.FLOURISH_OVERRIDE -> 0
+            CardEffect.GAIN_D20 -> 20 * value
             CardEffect.GAIN_FREE_ROOT -> 6 * value
             CardEffect.GAIN_FREE_CANOPY -> 12 * value
             CardEffect.GAIN_FREE_VINE -> 20 * value

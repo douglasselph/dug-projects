@@ -8,10 +8,11 @@ data class PlayerInfo(
     val handCards: List<CardInfo>,
     val handDice: DiceInfo,
     val supplyDice: DiceInfo,
-    val floralArray: List<CardInfo>,
+    val buddingStack: List<CardInfo>,
+    val nutrients: Int,
     val supplyCardCount: Int,
-    val compostCardCount: Int,
-    val compostDice: DiceInfo,
+    val bedCardCount: Int,
+    val bedDice: DiceInfo,
     val showDrawCount: Boolean = false
 ) {
 
@@ -19,13 +20,13 @@ data class PlayerInfo(
         return copy(
             handCards = handCards.map { it.copy(highlight = HighlightInfo.SELECTABLE) },
             handDice = handDice.copyForItemSelect(),
-            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+            buddingStack = buddingStack.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
         )
     }
 
     fun copyForFlowerSelect(): PlayerInfo {
         return copy(
-            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+            buddingStack = buddingStack.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
         )
     }
 
@@ -36,7 +37,7 @@ data class PlayerInfo(
                     it.copy(highlight = HighlightInfo.SELECTABLE)
                 } else it
             },
-            floralArray = floralArray.map {
+            buddingStack = buddingStack.map {
                 if (it.name == card.name) {
                     it.copy(highlight = HighlightInfo.SELECTABLE)
                 } else it
@@ -54,10 +55,10 @@ data class PlayerInfo(
         if (handCards != other.handCards) return false
         if (handDice != other.handDice) return false
         if (supplyDice != other.supplyDice) return false
-        if (floralArray != other.floralArray) return false
+        if (buddingStack != other.buddingStack) return false
         if (supplyCardCount != other.supplyCardCount) return false
-        if (compostCardCount != other.compostCardCount) return false
-        if (compostDice != other.compostDice) return false
+        if (bedCardCount != other.bedCardCount) return false
+        if (bedDice != other.bedDice) return false
         if (showDrawCount != other.showDrawCount) return false
 
         return true
@@ -68,10 +69,10 @@ data class PlayerInfo(
         result = 31 * result + handCards.hashCode()
         result = 31 * result + handDice.hashCode()
         result = 31 * result + supplyDice.hashCode()
-        result = 31 * result + floralArray.hashCode()
+        result = 31 * result + buddingStack.hashCode()
         result = 31 * result + supplyCardCount
-        result = 31 * result + compostCardCount
-        result = 31 * result + compostDice.hashCode()
+        result = 31 * result + bedCardCount
+        result = 31 * result + bedDice.hashCode()
         result = 31 * result + showDrawCount.hashCode()
         return result
     }

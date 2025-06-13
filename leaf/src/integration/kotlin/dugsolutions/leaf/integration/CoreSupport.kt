@@ -48,7 +48,6 @@ class CoreSupport(
     private lateinit var chronicle: GameChronicle
     private lateinit var runGame: RunGame
     private lateinit var writeGameResults: WriteGameResults
-    private lateinit var writeChronicleResults: WriteChronicleResults
     private lateinit var reportGameSummaries: ReportGameSummaries
     private lateinit var generateGameSummary: GenerateGameSummary
     private lateinit var writeGameSummaries: WriteGameSummaries
@@ -92,7 +91,6 @@ class CoreSupport(
         chronicle = get()
         gameCardsFactory = get()
         runGame = get()
-        writeChronicleResults = get()
         writeGameResults = get()
         writeGameSummaries = get()
         generateGameSummary = get()

@@ -3,6 +3,7 @@ package dugsolutions.leaf.main
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.chronicle.report.WriteGameResults
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
@@ -12,11 +13,14 @@ import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.GameEvent
 import dugsolutions.leaf.main.domain.ItemInfo
-import dugsolutions.leaf.main.domain.MainDomain
+import dugsolutions.leaf.main.domain.MainGameDomain
+import dugsolutions.leaf.main.domain.MainOutputDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
-import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.gather.MainGameManager
+import dugsolutions.leaf.main.gather.MainOutputManager
 import dugsolutions.leaf.main.local.CardOperations
 import dugsolutions.leaf.main.local.MainDecisions
+import dugsolutions.leaf.player.effect.NutrientReward
 import dugsolutions.leaf.random.Randomizer
 import dugsolutions.leaf.random.RandomizerDefault
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,11 +36,19 @@ class MainController(
     private val cardOperations: CardOperations,
     private val randomizer: Randomizer,
     private val runGame: RunGame,
-    private val mainDomainManager: MainDomainManager,
+    private val mainGameManager: MainGameManager,
+    private val mainOutputManager: MainOutputManager,
     private val mainDecisions: MainDecisions,
+    private val writeGameResults: WriteGameResults,
+    private val nutrientReward: NutrientReward,
     private val chronicle: GameChronicle,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    companion object {
+        private const val SAVE_DIR = "live"
+        private const val SAVE_NAME = "run"
+    }
+
     private val scope = CoroutineScope(dispatcher)
 
     init {
@@ -48,7 +60,8 @@ class MainController(
 
     // region public
 
-    val state: StateFlow<MainDomain> = mainDomainManager.state
+    val gameState: StateFlow<MainGameDomain> = mainGameManager.state
+    val outputState: StateFlow<MainOutputDomain> = mainOutputManager.state
 
     // region actions
 
@@ -62,27 +75,29 @@ class MainController(
     }
 
     private fun onRunPressed() {
-        mainDomainManager.setActionButton(ActionButton.NONE)
+        mainGameManager.setActionButton(ActionButton.NONE)
         scope.launch {
             runGame().collect { gameEvent ->
-                mainDomainManager.updateData()
+                mainGameManager.resetData()
                 when (gameEvent) {
-                    is GameEvent.Started -> mainDomainManager.addSimulationOutput("Game started")
-                    is GameEvent.TurnComplete -> mainDomainManager.addSimulationOutput("${gameEvent.phase} Turn ${gameEvent.playersScoreData.turn} Complete")
-                    is GameEvent.Completed -> mainDomainManager.addSimulationOutput("Game completed")
+                    is GameEvent.Started -> mainOutputManager.addSimulationOutput("Game started")
+                    is GameEvent.TurnComplete -> mainOutputManager.addSimulationOutput("${gameEvent.phase} Turn ${gameEvent.playersScoreData.turn} Complete")
+                    is GameEvent.Completed -> mainOutputManager.addSimulationOutput("Game completed")
                     GameEvent.WaitForStep -> {
-                        mainDomainManager.setActionButton(ActionButton.NEXT)
+                        mainGameManager.setActionButton(ActionButton.NEXT)
                     }
                 }
-                mainDomainManager.clearGroveCardHighlights()
+                mainGameManager.clearGroveCardHighlights()
+                writeGameResults.update(SAVE_DIR, SAVE_NAME)
             }
+            writeGameResults.finish(SAVE_DIR, SAVE_NAME)
         }
     }
 
     private fun onNextButtonPressed() {
         scope.launch {
             runGame.continueToNextStep()
-            mainDomainManager.setActionButton(ActionButton.NONE)
+            mainGameManager.setActionButton(ActionButton.NONE)
         }
     }
 
@@ -94,7 +109,7 @@ class MainController(
 
     fun onStepEnabledToggled(value: Boolean) {
         runGame.stepMode = value
-        mainDomainManager.setStepMode(value)
+        mainGameManager.setStepMode(value)
     }
 
     fun onAskTrashToggled(value: Boolean) {
@@ -132,15 +147,23 @@ class MainController(
     // region PlayerSelect
 
     fun onHandCardSelected(player: PlayerInfo, card: CardInfo) {
-        mainDomainManager.setHandCardSelected(player, card)
+        mainGameManager.setHandCardSelected(player, card)
     }
 
     fun onFloralCardSelected(player: PlayerInfo, card: CardInfo) {
-        mainDomainManager.setFloralCardSelected(player, card)
+        mainGameManager.setFloralCardSelected(player, card)
     }
 
     fun onDieSelected(player: PlayerInfo, die: DieInfo) {
-        mainDomainManager.setDieSelected(player, die)
+        mainGameManager.setDieSelected(player, die)
+    }
+
+    // TODO: Unit test
+    fun onNutrientsClicked(playerInfo: PlayerInfo) {
+        val player = game.players.find { it.name == playerInfo.name } ?: return
+        nutrientReward(player)
+        mainGameManager.resetData()
+        mainDecisions.reapplyDecisionId()
     }
 
     // endregion PlayerSelect
@@ -172,8 +195,8 @@ class MainController(
                 },
             )
         )
-        mainDomainManager.initialize()
-        mainDomainManager.setActionButton(ActionButton.RUN)
+        mainGameManager.initialize()
+        mainGameManager.setActionButton(ActionButton.RUN)
     }
 
     private fun seedlings(): GameCards {
@@ -182,7 +205,7 @@ class MainController(
 
     private fun reportNewEntries() {
         chronicle.getNewEntries().forEach { entry ->
-            mainDomainManager.addSimulationOutput(entry.toString())
+            mainOutputManager.addSimulationOutput(entry.toString())
         }
     }
 

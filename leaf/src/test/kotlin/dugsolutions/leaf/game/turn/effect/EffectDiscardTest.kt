@@ -6,7 +6,6 @@ import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.PlayerTD
 import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.random.die.SampleDie
 import io.mockk.every
 import io.mockk.mockk

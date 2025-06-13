@@ -13,11 +13,11 @@ import dugsolutions.leaf.game.turn.effect.EffectDiscard
 import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.game.turn.effect.EffectGainD20
 import dugsolutions.leaf.game.turn.effect.EffectReplayVine
 import dugsolutions.leaf.game.turn.effect.EffectReuse
 import dugsolutions.leaf.game.turn.effect.EffectReuseCard
 import dugsolutions.leaf.game.turn.effect.EffectReuseDie
-import dugsolutions.leaf.game.turn.effect.EffectUpgradeDie
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentCard
 import dugsolutions.leaf.game.turn.effect.EffectUseOpponentDie
 import dugsolutions.leaf.player.PlayerTD
@@ -42,11 +42,12 @@ class HandleCardEffectTest {
     private val effectDraw: EffectDraw = mockk(relaxed = true)
     private val effectDieReroll: EffectDieReroll = mockk(relaxed = true)
     private val effectDieToRetain: EffectDieToRetain = mockk(relaxed = true)
+    private val effectGainD20: EffectGainD20 = mockk(relaxed = true)
     private val effectReuseCard: EffectReuseCard = mockk(relaxed = true)
     private val effectReuseDie: EffectReuseDie = mockk(relaxed = true)
     private val effectReuse: EffectReuse = mockk(relaxed = true)
     private val effectReplayVine: EffectReplayVine = mockk(relaxed = true)
-    private val effectUpgradeDie: EffectUpgradeDie = mockk(relaxed = true)
+    private val handleDieUpgrade: HandleDieUpgrade = mockk(relaxed = true)
     private val effectUseOpponentCard: EffectUseOpponentCard = mockk(relaxed = true)
     private val effectUseOpponentDie: EffectUseOpponentDie = mockk(relaxed = true)
     private val chronicle: GameChronicle = mockk(relaxed = true)
@@ -61,11 +62,12 @@ class HandleCardEffectTest {
         effectDraw,
         effectDieReroll,
         effectDieToRetain,
+        effectGainD20,
         effectReuseCard,
         effectReuseDie,
         effectReuse,
         effectReplayVine,
-        effectUpgradeDie,
+        handleDieUpgrade,
         effectUseOpponentCard,
         effectUseOpponentDie,
         chronicle
@@ -133,7 +135,7 @@ class HandleCardEffectTest {
 
     @Test
     fun invoke_DRAW_CARD_COMPOST_callsEffectDrawCardWithCompost() {
-        SUT(player, target, CardEffect.DRAW_CARD_COMPOST, 1)
+        SUT(player, target, CardEffect.DRAW_CARD_BED, 1)
         verify { effectDrawCard(player, fromCompost = true) }
     }
 
@@ -147,6 +149,12 @@ class HandleCardEffectTest {
     fun invoke_DRAW_callsEffectDraw() {
         SUT(player, target, CardEffect.DRAW, 3)
         verify(exactly = 3) { effectDraw(player) }
+    }
+
+    @Test
+    fun invoke_GAIN_D20_callsEffect() {
+        SUT(player, target, CardEffect.GAIN_D20, 2)
+        verify(exactly = 2) { effectGainD20(player) }
     }
 
     @Test
@@ -194,13 +202,13 @@ class HandleCardEffectTest {
     @Test
     fun invoke_UPGRADE_ANY_RETAIN_callsEffectUpgradeDie() {
         SUT(player, target, CardEffect.UPGRADE_ANY_RETAIN, 2)
-        verify(exactly = 2) { effectUpgradeDie(player) }
+        verify(exactly = 2) { handleDieUpgrade(player) }
     }
 
     @Test
     fun invoke_UPGRADE_D6_callsEffectUpgradeDieWithOnlyAndDiscard() {
         SUT(player, target, CardEffect.UPGRADE_D6, 1)
-        verify { effectUpgradeDie(player, only = listOf(DieSides.D4, DieSides.D6), discardAfterUse = true) }
+        verify { handleDieUpgrade(player, only = listOf(DieSides.D4, DieSides.D6), discardAfterUse = true) }
     }
 
     @Test

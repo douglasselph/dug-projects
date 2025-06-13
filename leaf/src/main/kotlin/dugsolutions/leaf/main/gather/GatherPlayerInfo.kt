@@ -18,24 +18,25 @@ class GatherPlayerInfo(
         val supplyDice = gatherDiceInfo(player.diceInSupply, values = false)
 
         // Format dice in compost as "4D4 3D6" style
-        val compostDice = gatherDiceInfo(player.diceInCompost, values = false)
+        val dormantBed = gatherDiceInfo(player.diceInBed, values = false)
 
-        val floralArray = player.floralCards.mapIndexed { index, item -> gatherCardInfo(index, item) }
+        val buddingStack = player.floralCards.mapIndexed { index, item -> gatherCardInfo(index, item) }
 
         // Get counts for supply and compost cards
         val supplyCardCount = player.cardsInSupplyCount
-        val compostCardCount = player.cardsInCompostCount
+        val bedCardCount = player.cardsInBedCount
 
         return PlayerInfo(
             name = player.name,
             infoLine = infoLineFrom(player),
+            nutrients = player.nutrients,
             handCards = handCards,
             handDice = handDice,
             supplyDice = supplyDice,
-            floralArray = floralArray,
+            buddingStack = buddingStack,
             supplyCardCount = supplyCardCount,
-            compostDice = compostDice,
-            compostCardCount = compostCardCount
+            bedDice = dormantBed,
+            bedCardCount = bedCardCount
         )
     }
 

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.cards.cost.Cost
 import dugsolutions.leaf.cards.domain.FlourishType
@@ -123,23 +124,7 @@ fun main() = application {
             // First example - Stack with card
             val stackWithCard = StackInfo(
                 stack = MarketStackID.ROOT_1,
-                topCard = gatherCardInfo(
-                    card = GameCard(
-                        id = 1,
-                        name = "Long Root",
-                        type = FlourishType.ROOT,
-                        resilience = 2,
-                        cost = Cost(emptyList()),
-                        primaryEffect = CardEffect.DRAW_CARD,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
-                ),
+                topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
                 numCards = 42
             )
             StackInfoDisplay(stackWithCard)
@@ -148,21 +133,7 @@ fun main() = application {
             val stackWithCard2 = StackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
-                    card = GameCard(
-                        id = 1,
-                        name = "Long Root 2",
-                        type = FlourishType.ROOT,
-                        resilience = 2,
-                        cost = Cost(emptyList()),
-                        primaryEffect = CardEffect.DRAW_CARD,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    ),
+                    card = FakeCards.fakeRoot,
                     highlight = HighlightInfo.SELECTABLE
                 ),
                 numCards = 12
@@ -172,23 +143,7 @@ fun main() = application {
             // First example - Stack with card
             val stackEmpty = StackInfo(
                 stack = MarketStackID.ROOT_1,
-                topCard = gatherCardInfo(
-                    card = GameCard(
-                        id = 1,
-                        name = "Long Root",
-                        type = FlourishType.ROOT,
-                        resilience = 2,
-                        cost = Cost(emptyList()),
-                        primaryEffect = CardEffect.DRAW_CARD,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
-                ),
+                topCard = gatherCardInfo(card = FakeCards.fakeRoot),
                 numCards = 0
             )
             StackInfoDisplay(stackEmpty)

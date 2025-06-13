@@ -10,59 +10,84 @@ class GameCardIDs(
     private val randomizer: Randomizer
 ) {
     private val _cards = initialCardIds.toMutableList()
-    val cardIds: List<CardID> get() = _cards.toList()
+    private val lock = Any()
+
+    val cardIds: List<CardID> 
+        get() = synchronized(lock) {
+            _cards.toList()
+        }
 
     // Utility functions to make GameCardIDs more list-like
-    fun isEmpty(): Boolean = _cards.isEmpty()
+    fun isEmpty(): Boolean = synchronized(lock) {
+        _cards.isEmpty()
+    }
 
     val size: Int
-        get() = _cards.size
+        get() = synchronized(lock) {
+            _cards.size
+        }
 
-    operator fun get(index: Int): CardID = _cards[index]
+    operator fun get(index: Int): CardID = synchronized(lock) {
+        _cards[index]
+    }
 
-    fun getCard(index: Int): GameCard? {
+    fun getCard(index: Int): GameCard? = synchronized(lock) {
         if (index < 0 || index >= _cards.size) {
             return null
         }
         return cardManager.getCard(get(index))
     }
 
-    operator fun plus(other: GameCardIDs): GameCardIDs = GameCardIDs(
-        cardManager,
-        _cards + other.cardIds,
-        randomizer
-    )
+    operator fun plus(other: GameCardIDs): GameCardIDs = synchronized(lock) {
+        GameCardIDs(
+            cardManager,
+            _cards + other.cardIds,
+            randomizer
+        )
+    }
 
     // Draw and shuffle
     fun shuffle() {
-        val newCards = randomizer.shuffled(_cards)
-        _cards.clear()
-        _cards.addAll(newCards)
+        synchronized(lock) {
+            val newCards = randomizer.shuffled(_cards)
+            _cards.clear()
+            _cards.addAll(newCards)
+        }
     }
 
     fun draw(): CardID? {
-        if (_cards.isEmpty()) return null
-        return _cards.removeAt(0)
+        synchronized(lock) {
+            if (_cards.isEmpty()) return null
+            return _cards.removeAt(0)
+        }
     }
 
     fun removeTop(): CardID? = draw()
 
     // Mutation
     fun reset(newCardIds: List<CardID>) {
-        _cards.clear()
-        _cards.addAll(newCardIds)
+        synchronized(lock) {
+            _cards.clear()
+            _cards.addAll(newCardIds)
+        }
     }
 
     fun clear() {
-        _cards.clear()
+        synchronized(lock) {
+            _cards.clear()
+        }
     }
 
     fun add(cardId: CardID) {
-        _cards.add(cardId)
+        synchronized(lock) {
+            _cards.add(cardId)
+        }
     }
 
     fun addAll(cardIds: List<CardID>) {
-        _cards.addAll(cardIds)
+        synchronized(lock) {
+            _cards.addAll(cardIds)
+        }
     }
 
     fun add(cards: GameCardIDs) {
@@ -70,26 +95,36 @@ class GameCardIDs(
     }
 
     fun transfer(from: GameCardIDs) {
-        addAll(from.cardIds)
-        from._cards.clear()
-    }
-
-    fun remove(cardId: CardID): Boolean {
-        val index = _cards.indexOfFirst { it == cardId }
-        return if (index >= 0) {
-            _cards.removeAt(index)
-            true
-        } else {
-            false
+        synchronized(lock) {
+            synchronized(from.lock) {
+                addAll(from.cardIds)
+                from._cards.clear()
+            }
         }
     }
 
-    fun take(n: Int): GameCardIDs = GameCardIDs(
-        cardManager,
-        _cards.take(n),
-        randomizer
-    )
+    fun remove(cardId: CardID): Boolean {
+        synchronized(lock) {
+            val index = _cards.indexOfFirst { it == cardId }
+            return if (index >= 0) {
+                _cards.removeAt(index)
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    fun take(n: Int): GameCardIDs = synchronized(lock) {
+        GameCardIDs(
+            cardManager,
+            _cards.take(n),
+            randomizer
+        )
+    }
 
     fun <R> map(transform: (GameCard) -> R): List<R> =
-        _cards.mapNotNull { cardManager.getCard(it) }.map(transform)
+        synchronized(lock) {
+            _cards.mapNotNull { cardManager.getCard(it) }.map(transform)
+        }
 }

@@ -3,27 +3,26 @@ package dugsolutions.leaf.main.local
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.game.Game
-import dugsolutions.leaf.game.acquire.domain.ChoiceCard
-import dugsolutions.leaf.game.acquire.domain.ChoiceDie
-import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.SelectedItems
-import dugsolutions.leaf.main.gather.MainDomainManager
+import dugsolutions.leaf.main.gather.MainGameManager
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.PlayerTD
+import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
+import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
+import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
+import dugsolutions.leaf.player.decisions.ui.DecisionAcquireSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -34,26 +33,37 @@ class MainDecisionsTest {
         private const val DAMAGE_AMOUNT = 5
     }
 
-    private val mockMainDomainManager = mockk<MainDomainManager>(relaxed = true)
+    private val mockMainGameManager = mockk<MainGameManager>(relaxed = true)
     private val mockCardOperations = mockk<CardOperations>(relaxed = true)
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val mockGameCard = mockk<GameCard>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private val mockDieInfo = mockk<DieInfo>(relaxed = true)
     private val mockSelectedItems = mockk<SelectedItems>(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
+    private val mockDecisionMonitor: DecisionMonitor = mockk(relaxed = true)
+    private val mockShouldAskTrashEffect: ShouldAskTrashEffect = mockk(relaxed = true)
+    private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
+    private val mockDrawCountDecision = mockk<DecisionDrawCountSuspend>(relaxed = true)
+    private val mockDecisionAcquireSelect = mockk<DecisionAcquireSelectSuspend>(relaxed = true)
+
     private val sampleDie = SampleDie()
     private val sampleD6 = sampleDie.d6
-    private val mockDecisionAcquireSelect = mockk<DecisionAcquireSelect>(relaxed = true)
-    private val mockChronicle: GameChronicle = mockk(relaxed = true)
 
-    private val SUT = MainDecisions(mockMainDomainManager, mockCardOperations, mockChronicle)
+    private val SUT = MainDecisions(
+        mockMainGameManager, mockCardOperations, mockDecisionMonitor,
+        mockShouldAskTrashEffect
+    )
 
     @BeforeEach
     fun setup() {
         every { mockPlayer.incomingDamage } returns DAMAGE_AMOUNT
         every { mockCardOperations.getCard(mockCardInfo) } returns mockGameCard
-        every { mockMainDomainManager.gatherSelected() } returns mockSelectedItems
+        every { mockMainGameManager.gatherSelected() } returns mockSelectedItems
         every { mockDieInfo.backingDie } returns sampleD6
+        every { mockPlayer.decisionDirector } returns mockDecisionDirector
+        every { mockDecisionDirector.drawCountDecision } returns mockDrawCountDecision
+        every { mockDecisionDirector.acquireSelectDecision } returns mockDecisionAcquireSelect
     }
 
     @Test
@@ -63,36 +73,34 @@ class MainDecisionsTest {
         SUT.setup(mockPlayer)
 
         // Assert
-        verify { mockPlayer.decisionDirector.drawCountDecision = any<DecisionDrawCount>() }
-        verify { mockPlayer.decisionDirector.acquireSelectDecision = any<DecisionAcquireSelect>() }
-        verify { mockPlayer.decisionDirector.damageAbsorptionDecision = any<DecisionDamageAbsorption>() }
+        verify { mockDecisionDirector.drawCountDecision = any<DecisionDrawCount>() }
+        verify { mockDecisionDirector.acquireSelectDecision = any<DecisionAcquireSelect>() }
+        verify { mockDecisionDirector.damageAbsorptionDecision = any<DecisionDamageAbsorption>() }
+        verify { mockDecisionDirector.shouldProcessTrashEffect = any<DecisionShouldProcessTrashEffect>() }
+        verify { mockDecisionDirector.flowerSelectDecision = any<DecisionFlowerSelect>() }
     }
 
     @Test
-    fun setup_whenCalled_setsUpDrawCountCallback() {
+    fun setup_whenCalled_resetTrashDecision() {
         // Arrange
-        val fakePlayer = PlayerTD.create2(1)
-
         // Act
-        SUT.setup(fakePlayer)
+        SUT.setup(mockPlayer)
 
         // Assert
-        val decision = fakePlayer.decisionDirector.drawCountDecision
-        assertTrue(decision is DecisionDrawCountSuspend)
-
-        // Verify callback is set (this tests the lambda assignment)
-        val suspendDecision = decision as DecisionDrawCountSuspend
-        assertNotNull(suspendDecision.onDrawCountRequest)
+        verify { mockShouldAskTrashEffect.askTrashOkay = false }
     }
 
     @Test
     fun onDrawCountChosen_whenValueProvided_updatesState() {
         // Arrange
+        SUT.setup(mockPlayer)
+
         // Act
         SUT.onDrawCountChosen(mockPlayer, DRAW_COUNT)
 
         // Assert
-        verify { mockMainDomainManager.clearShowDrawCount() }
+        verify { mockDrawCountDecision.provide(DecisionDrawCount.Result(DRAW_COUNT))}
+        verify { mockMainGameManager.clearShowDrawCount() }
     }
 
     @Test
@@ -105,7 +113,7 @@ class MainDecisionsTest {
         SUT.onDrawCountChosen(mockPlayer, DRAW_COUNT)
 
         // Assert
-        verify { mockMainDomainManager.clearShowDrawCount() }
+        verify { mockMainGameManager.clearShowDrawCount() }
         // Should not crash or try to call provide() on wrong type
     }
 
@@ -113,7 +121,6 @@ class MainDecisionsTest {
     fun onGroveCardSelected_whenCardExists_updatesState() {
         // Arrange
         SUT.setup(mockPlayer)
-        mockPlayer.decisionDirector.acquireSelectDecision = mockDecisionAcquireSelect
         SUT.decidingPlayer = mockPlayer
 
         // Act
@@ -121,7 +128,8 @@ class MainDecisionsTest {
 
         // Assert
         verify { mockCardOperations.getCard(mockCardInfo) }
-        verify { mockMainDomainManager.clearGroveCardHighlights() }
+        verify { mockMainGameManager.clearGroveCardHighlights() }
+        verify { mockDecisionAcquireSelect.provide(mockGameCard) }
     }
 
     @Test
@@ -133,23 +141,21 @@ class MainDecisionsTest {
         SUT.onGroveCardSelected(mockCardInfo)
 
         // Assert
-        verify(exactly = 0) { mockMainDomainManager.clearGroveCardHighlights() }
+        verify(exactly = 0) { mockMainGameManager.clearGroveCardHighlights() }
     }
 
     @Test
     fun onGroveDieSelected_whenDieExists_updatesState() = runBlocking {
         // Arrange
         SUT.setup(mockPlayer)
-        val cards = emptyList<ChoiceCard>()
-        val dice = listOf(ChoiceDie(sampleD6, FakeCombination.combinationD10))
-        mockPlayer.decisionDirector.acquireSelectDecision(cards, dice)
         SUT.decidingPlayer = mockPlayer
 
         // Act
         SUT.onGroveDieSelected(mockDieInfo)
 
         // Assert
-        verify { mockMainDomainManager.clearGroveCardHighlights() }
+        verify { mockMainGameManager.clearGroveCardHighlights() }
+        verify { mockDecisionAcquireSelect.provide(sampleD6) }
     }
 
     @Test
@@ -163,9 +169,9 @@ class MainDecisionsTest {
         SUT.onPlayerSelectionComplete()
 
         // Assert
-        verify { mockMainDomainManager.gatherSelected() }
-        verify { mockMainDomainManager.clearPlayerSelect() }
-        verify { mockMainDomainManager.setActionButton(ActionButton.NONE) }
+        verify { mockMainGameManager.gatherSelected() }
+        verify { mockMainGameManager.clearPlayerSelect() }
+        verify { mockMainGameManager.setActionButton(ActionButton.NONE) }
     }
 
     @Test
@@ -183,8 +189,8 @@ class MainDecisionsTest {
         SUT.onPlayerSelectionComplete()
 
         // Assert
-        verify { mockMainDomainManager.clearPlayerSelect() }
-        verify { mockMainDomainManager.setActionButton(ActionButton.NONE) }
+        verify { mockMainGameManager.clearPlayerSelect() }
+        verify { mockMainGameManager.setActionButton(ActionButton.NONE) }
     }
 
     @Test
@@ -202,23 +208,8 @@ class MainDecisionsTest {
         SUT.onPlayerSelectionComplete()
 
         // Assert
-        verify { mockMainDomainManager.gatherSelected() }
+        verify { mockMainGameManager.gatherSelected() }
         // The floralCards should be included in the result passed to the decision
-    }
-
-    @Test
-    fun drawCountCallback_whenTriggered_updatesUI() = runBlocking {
-        // Arrange
-        val fakePlayer = PlayerTD.create2(1)
-        SUT.setup(fakePlayer)
-        val decision = fakePlayer.decisionDirector.drawCountDecision as DecisionDrawCountSuspend
-
-        // Act
-        decision.onDrawCountRequest()
-
-        // Assert
-        verify { mockMainDomainManager.updateData() }
-        verify { mockMainDomainManager.setShowDrawCount(fakePlayer, true) }
     }
 
     @Test
@@ -228,7 +219,8 @@ class MainDecisionsTest {
         SUT.setAskTrash(true)
 
         // Assert
-        verify { mockMainDomainManager.setAskTrash(true) }
+        verify { mockMainGameManager.setAskTrash(true) }
+        verify { mockShouldAskTrashEffect.askTrashOkay = true }
     }
 
     @Test
@@ -238,6 +230,7 @@ class MainDecisionsTest {
         SUT.setAskTrash(false)
 
         // Assert
-        verify { mockMainDomainManager.setAskTrash(false) }
+        verify { mockMainGameManager.setAskTrash(false) }
+        verify { mockShouldAskTrashEffect.askTrashOkay = false }
     }
 } 

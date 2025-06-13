@@ -4,6 +4,10 @@ import dugsolutions.leaf.cards.domain.GameCard
 
 interface DecisionFlowerSelect {
 
-    suspend operator fun invoke(): List<GameCard>
+    data class Result(
+        val value: List<GameCard>
+    )
+
+    suspend operator fun invoke(): Result
 
 }

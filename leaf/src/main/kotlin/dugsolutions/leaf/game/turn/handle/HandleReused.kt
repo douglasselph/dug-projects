@@ -10,11 +10,11 @@ class HandleReused {
             when(item) {
                 is HandItem.aCard -> {
                     player.addCardToHand(item.card.id)
-                    player.removeCardFromCompost(item.card.id)
+                    player.removeCardFromBed(item.card.id)
                 }
                 is HandItem.aDie -> {
                     player.addDieToHand(item.die)
-                    player.removeDieFromCompost(item.die)
+                    player.removeDieFromBed(item.die)
                 }
             }
         }

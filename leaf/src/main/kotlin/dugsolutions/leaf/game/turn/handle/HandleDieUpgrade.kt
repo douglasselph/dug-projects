@@ -1,5 +1,7 @@
 package dugsolutions.leaf.game.turn.handle
 
+import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.DieSides
@@ -12,19 +14,20 @@ class HandleDieUpgrade(
     private val evaluateSimpleCost: EvaluateSimpleCost,
     private val applyCost: ApplyCost,
     private val dieFactory: DieFactory,
-    private val grove: Grove
+    private val grove: Grove,
+    private val chronicle: GameChronicle
 ) {
 
     companion object {
         private const val UPGRADE_TO_D20_COST = 20
     }
 
-    operator fun invoke(player: Player, discardAfterUse: Boolean): Die? {
+    operator fun invoke(player: Player, discardAfterUse: Boolean = false, only: List<DieSides> = emptyList()): Die? {
         // If has pips and a D12 in play, then choose that.
         // Otherwise choose lowest DIE sides.
         // Note: when spending pips, a die must be discarded. The entire die must be chosen to be
         //  discarded even though only part of was used.
-        var dieToUpgrade = findDieToUpgrade(player) ?: return null
+        var dieToUpgrade = findDieToUpgrade(player, only) ?: return null
         // Determine the new die to create
         var newDie = findNewDie(dieToUpgrade) ?: return null
 
@@ -33,7 +36,7 @@ class HandleDieUpgrade(
             evaluateSimpleCost(player, UPGRADE_TO_D20_COST)?.let { combination ->
                 applyCost(player, combination)
             } ?: run {
-                dieToUpgrade = findSimpleDieToUpgrade(player) ?: return null
+                dieToUpgrade = findSimpleDieToUpgrade(player, only) ?: return null
                 newDie = findNewDie(dieToUpgrade) ?: return null
             }
         }
@@ -48,21 +51,39 @@ class HandleDieUpgrade(
         if (discardAfterUse) {
             player.discard(newDie)
         }
+        chronicle(Moment.UPGRADE_DIE(player, newDie))
         return newDie
     }
 
-    private fun findDieToUpgrade(player: Player): Die? {
+    private fun findDieToUpgrade(player: Player, only: List<DieSides>): Die? {
         val dice = player.diceInHand
         val pips = player.pipTotal
 
+        // Filter dice based on 'only' parameter if it's not empty
+        val eligibleDice = if (only.isEmpty()) {
+            dice.dice
+        } else {
+            dice.dice.filter { die -> only.any { allowed -> allowed.value == die.sides } }
+        }
+
         // Find the die to upgrade
         return when {
-            // If has 8+ pips and a D12, upgrade that
-            pips >= 8 && dice.dice.any { it.sides == 12 } ->
-                dice.dice.first { it.sides == 12 }
+            // If has 8+ pips and a D12, upgrade that (only if D12 is in allowed sides)
+            pips >= 8 && eligibleDice.any { it.sides == 12 } -> {
+                // Among D12s, select the one with lowest value
+                eligibleDice.filter { it.sides == 12 }
+                    .minByOrNull { it.value }
+            }
             // Otherwise find the highest sided die that's not a D20
-            else -> dice.dice.filter { it.sides < 20 }
-                .maxByOrNull { it.sides }
+            else -> {
+                // First find the highest sided dice
+                val highestSidedDice = eligibleDice.filter { it.sides < 20 }
+                    .groupBy { it.sides }
+                    .maxByOrNull { it.key }?.value ?: return null
+                
+                // Among the highest sided dice, select the one with lowest value
+                highestSidedDice.minByOrNull { it.value }
+            }
         }
     }
 
@@ -77,10 +98,14 @@ class HandleDieUpgrade(
         }
     }
 
-    private fun findSimpleDieToUpgrade(player: Player): Die? {
+    private fun findSimpleDieToUpgrade(player: Player, only: List<DieSides>): Die? {
         val dice = player.diceInHand
-        return dice.dice.filter { it.sides < 12 }.maxByOrNull { it.sides }
-
+        val eligibleDice = if (only.isEmpty()) {
+            dice.dice
+        } else {
+            dice.dice.filter { die -> only.any { allowed -> allowed.value == die.sides } }
+        }
+        return eligibleDice.filter { it.sides < 12 }.maxByOrNull { it.sides }
     }
 
 }

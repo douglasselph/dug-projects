@@ -5,10 +5,15 @@ import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
+import dugsolutions.leaf.player.decisions.ui.support.DecisionID
+import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
 
-class DecisionAcquireSelectSuspend : DecisionAcquireSelect {
+class DecisionAcquireSelectSuspend(
+    monitor: DecisionMonitor
+) : DecisionAcquireSelect {
 
-    private val channel = DecisionSuspensionChannel<DecisionAcquireSelect.BuyItem>()
+    private val channel = DecisionSuspensionChannel<DecisionAcquireSelect.BuyItem>(monitor)
     private var possibleCardsStash: List<ChoiceCard> = emptyList()
     private var possibleDiceStash: List<ChoiceDie> = emptyList()
 
@@ -22,26 +27,29 @@ class DecisionAcquireSelectSuspend : DecisionAcquireSelect {
         possibleDiceStash = possibleDice
         val cards = possibleCards.map { it.card }
         val dice = possibleDice.map { it.die }
-        onGroveAcquisition(cards, dice)
-        return channel.waitForDecision()
+        return channel.waitForDecision(DecisionID.ACQUIRE_SELECT(cards, dice))
     }
 
     // endregion DecisionBestCardPurchase
 
     // region public
 
-    var onGroveAcquisition: (possibleCards: List<GameCard>, possibleDice: List<Die>) -> Unit = { _, _ -> }
-
     fun provide(card: GameCard) {
         val choice = possibleCardsStash.find { it.card == card }
-        require(choice != null)
-        channel.provideDecision(DecisionAcquireSelect.BuyItem.Card(choice))
+        if (choice == null) {
+            throw Exception("Called provide() before invoke() function.")
+        } else {
+            channel.provideDecision(DecisionAcquireSelect.BuyItem.Card(choice))
+        }
     }
 
     fun provide(die: Die) {
         val choice = possibleDiceStash.find { it.die == die }
-        require(choice != null)
-        channel.provideDecision(DecisionAcquireSelect.BuyItem.Die(choice))
+        if (choice == null) {
+            throw Exception("Called provide() before invoke() function.")
+        } else {
+            channel.provideDecision(DecisionAcquireSelect.BuyItem.Die(choice))
+        }
     }
 
     // endregion public
