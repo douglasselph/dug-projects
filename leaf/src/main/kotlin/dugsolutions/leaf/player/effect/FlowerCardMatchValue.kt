@@ -4,7 +4,6 @@ import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralBonusCount
 
 class FlowerCardMatchValue(
     private val floralBonusCount: FloralBonusCount

@@ -3,6 +3,7 @@ package dugsolutions.leaf.main
 import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.chronicle.report.WriteGameResults
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.RunGame
 import dugsolutions.leaf.grove.Grove
@@ -24,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.awt.FileDialog.SAVE
 
 class MainController(
     private val game: Game,
@@ -34,9 +36,15 @@ class MainController(
     private val runGame: RunGame,
     private val mainDomainManager: MainDomainManager,
     private val mainDecisions: MainDecisions,
+    private val writeGameResults: WriteGameResults,
     private val chronicle: GameChronicle,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    companion object {
+        private const val SAVE_DIR = "live"
+        private const val SAVE_NAME = "run"
+    }
+
     private val scope = CoroutineScope(dispatcher)
 
     init {
@@ -75,7 +83,9 @@ class MainController(
                     }
                 }
                 mainDomainManager.clearGroveCardHighlights()
+                writeGameResults.update(SAVE_DIR, SAVE_NAME)
             }
+            writeGameResults.finish(SAVE_DIR, SAVE_NAME)
         }
     }
 

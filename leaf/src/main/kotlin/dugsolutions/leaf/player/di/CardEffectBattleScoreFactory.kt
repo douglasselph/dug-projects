@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.di
 
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralBonusCount
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 

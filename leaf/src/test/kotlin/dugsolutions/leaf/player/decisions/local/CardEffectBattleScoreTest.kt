@@ -6,7 +6,7 @@ import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.components.FloralBonusCount
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

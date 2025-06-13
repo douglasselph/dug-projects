@@ -2,7 +2,7 @@ package dugsolutions.leaf.player.di
 
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.FloralBonusCount
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
