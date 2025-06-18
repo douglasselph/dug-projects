@@ -12,6 +12,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.Button
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
+import dugsolutions.leaf.main.domain.MainActionDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
@@ -44,8 +46,12 @@ data class PlayerDisplayClickListeners(
 @Composable
 fun PlayerDisplay(
     player: PlayerInfo,
+    actionDomain: MainActionDomain,
     listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
 ) {
+    val showDrawCount = remember(actionDomain) {
+        player.name == actionDomain.drawCountForPlayerName
+    }
     Box {
         Surface(
             border = BorderStroke(2.dp, MaterialTheme.colors.primary),
@@ -68,11 +74,12 @@ fun PlayerDisplay(
                     Text(
                         text = player.infoLine,
                         style = MaterialTheme.typography.subtitle1,
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp),
+                        maxLines = 2
                     )
                 }
 
-                if (player.showDrawCount) {
+                if (showDrawCount) {
                     DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
                 } else {
                     HandDisplay(player, listeners)
@@ -216,7 +223,8 @@ fun main() = application {
             bedCardCount = 7,
             bedDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
-        PlayerDisplay(samplePlayer)
+        val actionDomain = MainActionDomain()
+        PlayerDisplay(samplePlayer, actionDomain)
     }
 }
 

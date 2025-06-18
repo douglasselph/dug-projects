@@ -65,10 +65,11 @@ class HandleAbsorbDamageTest {
     fun invoke_whenNoAbsorptionDecision_removesAllElements() = runBlocking {
         // Arrange
         val result = DecisionDamageAbsorption.Result()
+        val damage = 2
         fakePlayer.addDieToHand(sampleDie.d6)
         fakePlayer.addCardToFloralArray(fakeCard2)
         fakePlayer.useDeckManager = false
-        fakePlayer.incomingDamage = 2
+        fakePlayer.incomingDamage = damage
         coEvery { mockDecisionDamageAbsorption() } returns result
 
         // Act
@@ -84,7 +85,8 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenAbsorptionResultWithCards_removesCards() = runBlocking {
         // Arrange
-        fakePlayer.incomingDamage = 7
+        val damage = 7
+        fakePlayer.incomingDamage = damage
         fakePlayer.addCardToHand(fakeCard2)
         coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1, fakeCard2),
@@ -205,7 +207,7 @@ class HandleAbsorbDamageTest {
         // Arrange
         val remainingCard = mockk<GameCard>(relaxed = true)
         fakePlayer.incomingDamage = 6
-        coEvery {mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
+        coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(fakeCard1),
             dice = emptyList(),
             floralCards = emptyList()
@@ -216,7 +218,7 @@ class HandleAbsorbDamageTest {
         SUT(fakePlayer)
 
         // Assert
-        coVerify { mockDecisionDamageAbsorption()}
+        coVerify { mockDecisionDamageAbsorption() }
         assertTrue(fakePlayer.gotCardIds.contains(fakeCard1.id))
         assertFalse(fakePlayer.gotClearFloralCards)
     }
@@ -261,7 +263,7 @@ class HandleAbsorbDamageTest {
         assertTrue(thornCard1.thorn > 0)
         assertTrue(thornCard2.thorn > 0)
         fakePlayer.incomingDamage = thornCard1.thorn + thornCard2.thorn + 2
-        coEvery {mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
+        coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(thornCard1, thornCard2)
         )
 
@@ -296,7 +298,7 @@ class HandleAbsorbDamageTest {
         val handCard = FakeCards.fakeRoot
         val flowerCard1 = FakeCards.fakeFlower
         val flowerCard2 = FakeCards.fakeFlower2
-        val totalThorn = handCard.thorn + flowerCard1.thorn + flowerCard2.thorn
+        val expectedThorn = handCard.thorn + flowerCard1.thorn + flowerCard2.thorn
         fakePlayer.incomingDamage = handCard.resilience + flowerCard1.resilience + flowerCard2.resilience
         fakePlayer.addCardToHand(handCard)
         coEvery { mockDecisionDamageAbsorption() }
@@ -309,7 +311,7 @@ class HandleAbsorbDamageTest {
         val result = SUT(fakePlayer)
 
         // Assert
-        assertEquals(totalThorn, result) // Combined thorn damage from both cards
+        assertEquals(expectedThorn, result) // Combined thorn damage from both cards
         coVerify(exactly = 2) { mockDecisionDamageAbsorption() }
         assertTrue(fakePlayer.gotCardIds.contains(handCard.id))
         assertTrue(fakePlayer.gotCardIds.contains(flowerCard1.id))

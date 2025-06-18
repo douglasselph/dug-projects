@@ -44,6 +44,7 @@ sealed class Moment {
     data class RETAIN_CARD(val player: Player, val card: GameCard) : Moment()
     data class RETAIN_DIE(val player: Player, val die: Die, val oldValue: Int? = null) : Moment()
     data class REPLAY_VINE(val player: Player, val selectedVine: GameCard) : Moment()
+    data class REPORT(val line: String): Moment()
     data class REUSE_CARD(val player: Player, val card: GameCard) : Moment()
     data class REUSE_DIE(val player: Player, val die: Die) : Moment()
     data class SET_TO_MAX(val player: Player) : Moment()

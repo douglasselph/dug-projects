@@ -32,8 +32,7 @@ object PlayerInfoFaker {
         floralCardCount: Int = faker.random.nextInt(0, 3),
         supplyCardCount: Int = faker.random.nextInt(0, 10),
         compostCardCount: Int = faker.random.nextInt(0, 5),
-        compostDieCount: Int = faker.random.nextInt(0, 3),
-        showDrawCount: Boolean = faker.random.nextBoolean()
+        compostDieCount: Int = faker.random.nextInt(0, 3)
     ): PlayerInfo {
         return PlayerInfo(
             name = name,
@@ -46,7 +45,6 @@ object PlayerInfoFaker {
             supplyCardCount = supplyCardCount,
             bedCardCount = compostCardCount,
             bedDice = DiceInfo(DieInfoFaker.createList(compostDieCount)),
-            showDrawCount = showDrawCount
         )
     }
 

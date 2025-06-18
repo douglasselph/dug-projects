@@ -1,5 +1,7 @@
-package dugsolutions.leaf.player.decisions.ui.support
+package dugsolutions.leaf.player.decisions.local.monitor
 
+import dugsolutions.leaf.player.Player
+import io.mockk.mockk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -9,20 +11,20 @@ import org.junit.jupiter.api.Assertions.assertNull
 
 class DecisionSuspensionChannelTest {
 
-    private lateinit var monitor: DecisionMonitor
-    private lateinit var channel: DecisionSuspensionChannel<Int>
+    private val mockPlayer: Player = mockk(relaxed = true)
+    private val monitor: DecisionMonitor = DecisionMonitor()
+    private val report: DecisionMonitorReport = mockk(relaxed = true)
+    private val channel: DecisionSuspensionChannel<Int> = DecisionSuspensionChannel(monitor, report)
 
     @BeforeEach
     fun setup() {
-        monitor = DecisionMonitor()
-        channel = DecisionSuspensionChannel(monitor)
     }
 
     @Test
     fun waitForDecision_whenWaitingForValue_updatesMonitorAndReturnsValue() = runBlocking {
         // Arrange
         val expectedValue = 42
-        val decisionId = DecisionID.DRAW_COUNT
+        val decisionId = DecisionID.DRAW_COUNT(mockPlayer)
         var actualResult: Int? = null
 
         // Act - Start waiting in a separate coroutine
@@ -51,7 +53,7 @@ class DecisionSuspensionChannelTest {
     fun waitForDecision_whenValueProvidedFirst_returnsValueImmediately() = runBlocking {
         // Arrange
         val expectedValue = 42
-        val decisionId = DecisionID.DRAW_COUNT
+        val decisionId = DecisionID.DRAW_COUNT(mockPlayer)
 
         // Act - Provide value before waiting
         channel.provideDecision(expectedValue)
@@ -68,7 +70,7 @@ class DecisionSuspensionChannelTest {
     fun waitForDecision_whenCalledMultipleTimes_returnsCorrectValuesInSequence() = runBlocking {
         // Arrange
         val values = listOf(1, 2, 3)
-        val decisionId = DecisionID.DRAW_COUNT
+        val decisionId = DecisionID.DRAW_COUNT(mockPlayer)
 
         // Act & Assert
         for (expectedValue in values) {

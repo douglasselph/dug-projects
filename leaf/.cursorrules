@@ -89,7 +89,7 @@
             "rules": {
                 "mock_declaration": {
                     "pattern": "private\\s+val\\s+mock[A-Z]\\w+\\s*=\\s*mockk<[^>]+>\\(relaxed\\s*=\\s*true\\)",
-                    "description": "Mocks should be declared and initialized in one line using mockk",
+                    "description": "Mocks should be declared and initialized in a single line using mockk",
                     "examples": {
                         "compliant": [
                             "private val mockPlayer = mockk<Player>(relaxed = true)",

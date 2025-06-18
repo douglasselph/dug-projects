@@ -15,11 +15,13 @@ data class Combination(
 
     override fun toString(): String {
         val buffer = StringBuffer()
-        buffer.append("Comb(")
+        buffer.append("{")
+
+        buffer.append(values.values)
         if (addToTotal > 0) {
-            buffer.append("addToTotal=$addToTotal, ")
+            buffer.append("+$addToTotal")
         }
-        buffer.append("values:${values.values})")
+        buffer.append("}")
         return buffer.toString()
     }
 

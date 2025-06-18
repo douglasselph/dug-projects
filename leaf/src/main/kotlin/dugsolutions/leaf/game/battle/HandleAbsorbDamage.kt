@@ -20,11 +20,13 @@ class HandleAbsorbDamage(
 
         // Decide how to absorb damage
         var result = player.decisionDirector.damageAbsorptionDecision()
+        val damageToAbsorb = player.incomingDamage
         if (result.allEmpty) {
             result = DecisionDamageAbsorption.Result(
                 cards = player.cardsInHand.toList(),
                 dice = player.diceInHand.dice.toList(),
-                floralCards = player.floralCards.toList()
+                floralCards = player.floralCards.toList(),
+                damageToAbsorb = damageToAbsorb
             )
         }
         var thornDamage = 0

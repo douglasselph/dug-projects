@@ -53,6 +53,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation("io.mockk:mockk:1.13.8")  // Add MockK for mocking
     testImplementation("io.github.serpro69:kotlin-faker:1.15.0")  // Add kfaker for test data generation
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     
     // Configure test task to use JUnit Platform
     tasks.test {

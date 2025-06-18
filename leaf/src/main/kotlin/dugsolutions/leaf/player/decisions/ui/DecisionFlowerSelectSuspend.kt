@@ -1,15 +1,17 @@
 package dugsolutions.leaf.player.decisions.ui
 
 import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
-import dugsolutions.leaf.player.decisions.ui.support.DecisionID
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
-import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionSuspensionChannel
 
 class DecisionFlowerSelectSuspend(
-    monitor: DecisionMonitor
+    monitor: DecisionMonitor,
+    report: DecisionMonitorReport
 ) : DecisionFlowerSelect {
 
-    private val channel = DecisionSuspensionChannel<DecisionFlowerSelect.Result>(monitor)
+    private val channel = DecisionSuspensionChannel<DecisionFlowerSelect.Result>(monitor, report)
 
     // region DecisionFlowerSelect
 

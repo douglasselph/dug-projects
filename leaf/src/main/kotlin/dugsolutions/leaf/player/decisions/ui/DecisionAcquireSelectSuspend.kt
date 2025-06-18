@@ -5,15 +5,17 @@ import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.ui.support.DecisionID
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
-import dugsolutions.leaf.player.decisions.ui.support.DecisionSuspensionChannel
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionSuspensionChannel
 
 class DecisionAcquireSelectSuspend(
-    monitor: DecisionMonitor
+    monitor: DecisionMonitor,
+    report: DecisionMonitorReport
 ) : DecisionAcquireSelect {
 
-    private val channel = DecisionSuspensionChannel<DecisionAcquireSelect.BuyItem>(monitor)
+    private val channel = DecisionSuspensionChannel<DecisionAcquireSelect.BuyItem>(monitor, report)
     private var possibleCardsStash: List<ChoiceCard> = emptyList()
     private var possibleDiceStash: List<ChoiceDie> = emptyList()
 

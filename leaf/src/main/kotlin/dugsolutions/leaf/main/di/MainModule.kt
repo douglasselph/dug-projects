@@ -5,8 +5,10 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
 import dugsolutions.leaf.main.gather.GatherGroveInfo
 import dugsolutions.leaf.main.gather.GatherPlayerInfo
+import dugsolutions.leaf.main.gather.MainActionManager
 import dugsolutions.leaf.main.gather.MainGameManager
 import dugsolutions.leaf.main.gather.MainOutputManager
+import dugsolutions.leaf.main.local.MainActionHandler
 import dugsolutions.leaf.main.local.MainDecisions
 import dugsolutions.leaf.main.local.SelectGather
 import dugsolutions.leaf.main.local.SelectItem
@@ -23,12 +25,15 @@ val mainModule: Module = module {
     single { SelectGather(get()) }
     single { MainGameManager(get(), get(), get(), get(), get(), get(), get()) }
     single { MainOutputManager() }
-    single { MainDecisions(get(), get(), get(), get()) }
+    single { MainDecisions(get(), get(), get(), get(), get()) }
+    single { MainActionManager(get()) }
+    single { MainActionHandler(get()) }
 
     single {
         MainController(
             get(), get(), get(), get(), get(), get(),
-            get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(),
+            get(), get()
         )
     }
 

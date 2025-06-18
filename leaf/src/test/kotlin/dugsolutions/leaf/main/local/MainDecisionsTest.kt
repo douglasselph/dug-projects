@@ -3,7 +3,6 @@ package dugsolutions.leaf.main.local
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.SelectedItems
@@ -18,7 +17,9 @@ import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
 import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
 import dugsolutions.leaf.player.decisions.ui.DecisionAcquireSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.ui.DecisionFlowerSelectSuspend
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -46,12 +47,14 @@ class MainDecisionsTest {
     private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
     private val mockDrawCountDecision = mockk<DecisionDrawCountSuspend>(relaxed = true)
     private val mockDecisionAcquireSelect = mockk<DecisionAcquireSelectSuspend>(relaxed = true)
+    private val mockDecisionFlowerSelect = mockk<DecisionFlowerSelectSuspend>(relaxed = true)
+    private val mockDecisionMonitorReport = mockk<DecisionMonitorReport>(relaxed = true)
 
     private val sampleDie = SampleDie()
     private val sampleD6 = sampleDie.d6
 
     private val SUT = MainDecisions(
-        mockMainGameManager, mockCardOperations, mockDecisionMonitor,
+        mockMainGameManager, mockCardOperations, mockDecisionMonitor, mockDecisionMonitorReport,
         mockShouldAskTrashEffect
     )
 
@@ -64,6 +67,7 @@ class MainDecisionsTest {
         every { mockPlayer.decisionDirector } returns mockDecisionDirector
         every { mockDecisionDirector.drawCountDecision } returns mockDrawCountDecision
         every { mockDecisionDirector.acquireSelectDecision } returns mockDecisionAcquireSelect
+        every { mockDecisionDirector.flowerSelectDecision } returns mockDecisionFlowerSelect
     }
 
     @Test
@@ -100,7 +104,6 @@ class MainDecisionsTest {
 
         // Assert
         verify { mockDrawCountDecision.provide(DecisionDrawCount.Result(DRAW_COUNT))}
-        verify { mockMainGameManager.clearShowDrawCount() }
     }
 
     @Test
@@ -113,7 +116,6 @@ class MainDecisionsTest {
         SUT.onDrawCountChosen(mockPlayer, DRAW_COUNT)
 
         // Assert
-        verify { mockMainGameManager.clearShowDrawCount() }
         // Should not crash or try to call provide() on wrong type
     }
 
@@ -171,7 +173,6 @@ class MainDecisionsTest {
         // Assert
         verify { mockMainGameManager.gatherSelected() }
         verify { mockMainGameManager.clearPlayerSelect() }
-        verify { mockMainGameManager.setActionButton(ActionButton.NONE) }
     }
 
     @Test
@@ -190,7 +191,6 @@ class MainDecisionsTest {
 
         // Assert
         verify { mockMainGameManager.clearPlayerSelect() }
-        verify { mockMainGameManager.setActionButton(ActionButton.NONE) }
     }
 
     @Test
@@ -210,6 +210,23 @@ class MainDecisionsTest {
         // Assert
         verify { mockMainGameManager.gatherSelected() }
         // The floralCards should be included in the result passed to the decision
+    }
+
+    @Test
+    fun onPlayerSelectionComplete_whenSelectingFlowers_providesSelectedFloralCards() {
+        // Arrange
+        val mockFloralCards = listOf(mockGameCard)
+        every { mockSelectedItems.floralCards } returns mockFloralCards
+        SUT.setup(mockPlayer)
+        SUT.decidingPlayer = mockPlayer
+        SUT.selecting = MainDecisions.Selecting.FLOWERS
+
+        // Act
+        SUT.onPlayerSelectionComplete()
+
+        // Assert
+        verify { mockDecisionFlowerSelect.provide(DecisionFlowerSelect.Result(mockFloralCards)) }
+        verify { mockMainGameManager.clearPlayerSelect() }
     }
 
     @Test

@@ -12,8 +12,7 @@ data class PlayerInfo(
     val nutrients: Int,
     val supplyCardCount: Int,
     val bedCardCount: Int,
-    val bedDice: DiceInfo,
-    val showDrawCount: Boolean = false
+    val bedDice: DiceInfo
 ) {
 
     fun copyForItemSelect(): PlayerInfo {
@@ -59,7 +58,6 @@ data class PlayerInfo(
         if (supplyCardCount != other.supplyCardCount) return false
         if (bedCardCount != other.bedCardCount) return false
         if (bedDice != other.bedDice) return false
-        if (showDrawCount != other.showDrawCount) return false
 
         return true
     }
@@ -73,7 +71,6 @@ data class PlayerInfo(
         result = 31 * result + supplyCardCount
         result = 31 * result + bedCardCount
         result = 31 * result + bedDice.hashCode()
-        result = 31 * result + showDrawCount.hashCode()
         return result
     }
 

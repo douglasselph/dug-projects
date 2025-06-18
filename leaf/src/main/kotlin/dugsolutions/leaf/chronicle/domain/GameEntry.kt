@@ -2,6 +2,7 @@ package dugsolutions.leaf.chronicle.domain
 
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.game.domain.GamePhase
@@ -238,6 +239,15 @@ data class ReplayVineEntry(
     val vineName: String
 ) : ChronicleEntry(playerId, turn)
 
+data class ReportEntry(
+    override val turn: Int,
+    val line: String
+) : ChronicleEntry(0, turn) {
+    override fun toString(): String {
+        return line
+    }
+}
+
 data class ReuseCardEntry(
     override val playerId: Int,
     override val turn: Int,
@@ -272,7 +282,11 @@ data class TrashForEffect(
     override val turn: Int,
     val card: String,
     val status: DecisionShouldProcessTrashEffect.Result
-) : ChronicleEntry(playerId, turn)
+) : ChronicleEntry(playerId, turn) {
+    override fun toString(): String {
+        return "${Commons.DECISION_KEYWORD} TrashForEffect(card='$card', playerId=$playerId, turn=$turn, status=$status)"
+    }
+}
 
 data class UpgradeDieEntry(
     override val playerId: Int,

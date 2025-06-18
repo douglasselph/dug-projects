@@ -27,6 +27,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayCardEntry
 import dugsolutions.leaf.chronicle.domain.ReplayVineEntry
+import dugsolutions.leaf.chronicle.domain.ReportEntry
 import dugsolutions.leaf.chronicle.domain.RerollEntry
 import dugsolutions.leaf.chronicle.domain.RetainCardEntry
 import dugsolutions.leaf.chronicle.domain.RetainDieEntry
@@ -266,6 +267,12 @@ class TransformMomentToEntry(
                     turn = gameTime.turn,
                     vineId = moment.selectedVine.id,
                     vineName = moment.selectedVine.name
+                )
+
+            is Moment.REPORT ->
+                ReportEntry(
+                    turn = gameTime.turn,
+                    line = moment.line
                 )
 
             is Moment.REUSE_CARD ->

@@ -1,11 +1,6 @@
-package dugsolutions.leaf.player.decisions.ui.support
+package dugsolutions.leaf.player.decisions.local.monitor
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-
-class DecisionMonitor(
-    private val chronicle: GameChronicle
-) {
+class DecisionMonitor {
 
     private var _currentlyWaitingFor: DecisionID? = null
     val currentlyWaitingFor: DecisionID? get() = _currentlyWaitingFor
@@ -14,7 +9,6 @@ class DecisionMonitor(
 
     fun setWaitingFor(id: DecisionID?) {
         _currentlyWaitingFor = id
-        chronicle(Moment.INFO("DEBUG: setWaitingFor($id)"))
         observers.forEach { it(id) }
     }
 

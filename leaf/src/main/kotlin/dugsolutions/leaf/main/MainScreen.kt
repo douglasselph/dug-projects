@@ -21,6 +21,7 @@ import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.domain.ItemInfo
+import dugsolutions.leaf.main.domain.MainActionDomain
 import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.domain.MainOutputDomain
 import dugsolutions.leaf.main.domain.PlayerInfo
@@ -31,9 +32,7 @@ import dugsolutions.leaf.main.top.MainTitle
 import dugsolutions.leaf.main.top.MainTitleListeners
 import kotlinx.coroutines.flow.StateFlow
 
-data class MainScreenArgs(
-    val gameState: StateFlow<MainGameDomain>,
-    val outputState: StateFlow<MainOutputDomain>,
+data class MainListeners(
     val onDrawCountChosen: (playerInfo: PlayerInfo, value: Int) -> Unit = { _, _ -> },
     val onActionButtonPressed: (action: ActionButton) -> Unit = {},
     val onBooleanInstructionChosen: (value: Boolean) -> Unit = {},
@@ -45,11 +44,19 @@ data class MainScreenArgs(
     val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> },
     val onNutrientsClicked: (player: PlayerInfo) -> Unit = {}
 )
+data class MainScreenArgs(
+    val gameState: StateFlow<MainGameDomain>,
+    val outputState: StateFlow<MainOutputDomain>,
+    val actionState: StateFlow<MainActionDomain>,
+    val listeners: MainListeners
+)
 
 @Composable
 fun MainScreen(args: MainScreenArgs) {
     val gameState by args.gameState.collectAsState()
     val outputState by args.outputState.collectAsState()
+    val actionState by args.actionState.collectAsState()
+    val listeners = args.listeners
     val initialValue = 300.dp
     var outputHeight by remember { mutableStateOf(initialValue) }
     var adjustBy by remember { mutableIntStateOf(0) }
@@ -61,20 +68,22 @@ fun MainScreen(args: MainScreenArgs) {
     ) {
         // Title bar (fixed at top)
         MainTitle(
-            state = gameState,
+            gameState = gameState,
+            actionState = actionState,
             listeners = MainTitleListeners(
-                onStepEnabledToggled = args.onStepEnabledToggled,
-                onAskTrashToggled = args.onAskTrashToggled,
-                onActionButtonPressed = args.onActionButtonPressed,
-                onBooleanInstructionChosen = args.onBooleanInstructionChosen,
+                onStepEnabledToggled = listeners.onStepEnabledToggled,
+                onAskTrashToggled = listeners.onAskTrashToggled,
+                onActionButtonPressed = listeners.onActionButtonPressed,
+                onBooleanInstructionChosen = listeners.onBooleanInstructionChosen,
             ),
             modifier = Modifier.fillMaxWidth()
         )
 
         // Player section (expands to fill available space)
         MainPlayerSection(
-            state = gameState,
-            args = args,
+            gameState = gameState,
+            actionState = actionState,
+            listeners= listeners,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)

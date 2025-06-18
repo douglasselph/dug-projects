@@ -37,8 +37,7 @@ class SelectItemTest {
             buddingStack = emptyList(),
             nutrients = 0,
             supplyCardCount = 0,
-            bedCardCount = 0,
-            showDrawCount = false
+            bedCardCount = 0
         )
         fakeCardInfo = CardInfoFaker.create().copy(
             name = CARD_NAME,

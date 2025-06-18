@@ -9,11 +9,9 @@ import kotlin.math.max
  * Return number of cards to draw, the remaining hand size will draw dice.
  * When supply is low (less than 4 total items), considers compost pile as available resources.
  */
-class DecisionDrawCountBaseline(
-    private val player: Player
-) : DecisionDrawCount {
+class DecisionDrawCountBaseline : DecisionDrawCount {
 
-    override suspend operator fun invoke(): DecisionDrawCount.Result {
+    override suspend operator fun invoke(player: Player): DecisionDrawCount.Result {
         val handSize = Commons.HAND_SIZE
         val cardSupplyCount = player.cardsInSupplyCount
         val diceSupplyCount = player.diceInSupplyCount

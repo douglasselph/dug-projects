@@ -43,43 +43,6 @@ class MainGameManager(
         )
     }
 
-    fun setShowDrawCount(player: Player) {
-        chronicle(Moment.INFO("DEBUG: setShowDrawCount(${player.name}) - START"))
-        _state.update { currentState ->
-            currentState.copy(
-                turn = gameTime.turn,
-                players = game.players.map { p ->
-                    if (p.name == player.name) {
-                        gatherPlayerInfo(p).copy(showDrawCount = true)
-                    } else {
-                        gatherPlayerInfo(p)
-                    }
-                },
-                groveInfo = gatherGroveInfo()
-            )
-        }
-        chronicle(Moment.INFO("DEBUG: setShowDrawCount(${player.name}) - END"))
-    }
-
-    fun clearShowDrawCount() {
-        _state.update { currentState ->
-            currentState.copy(
-                turn = gameTime.turn,
-                players = game.players.map { p -> gatherPlayerInfo(p) }
-            )
-        }
-    }
-
-    fun setActionButton(value: ActionButton, instruction: String? = null) {
-        _state.update { currentState ->
-            currentState.copy(
-                turn = gameTime.turn,
-                actionButton = value,
-                actionInstruction = instruction
-            )
-        }
-    }
-
     fun setStepMode(value: Boolean) {
         _state.update { currentState ->
             currentState.copy(
@@ -159,14 +122,12 @@ class MainGameManager(
     }
 
     fun clearPlayerSelect() {
-        chronicle(Moment.INFO("DEBUG: clearPlayerSelect() - START"))
         _state.update { currentState ->
             currentState.copy(
                 turn = gameTime.turn,
                 players = game.players.map { gatherPlayerInfo(it) }
             )
         }
-        chronicle(Moment.INFO("DEBUG: clearPlayerSelect() - END"))
     }
 
     fun setHandCardSelected(player: PlayerInfo, cardInfo: CardInfo) {
@@ -229,24 +190,6 @@ class MainGameManager(
                         playerInfo
                     }
                 }
-            )
-        }
-    }
-
-    fun setShowBooleanInstruction(text: String) {
-        _state.update { currentState ->
-            currentState.copy(
-                turn = gameTime.turn,
-                booleanInstruction = text
-            )
-        }
-    }
-
-    fun clearBooleanInstruction() {
-        _state.update { currentState ->
-            currentState.copy(
-                turn = gameTime.turn,
-                booleanInstruction = null
             )
         }
     }

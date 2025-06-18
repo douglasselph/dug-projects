@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.decisions.baseline
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import io.mockk.every
@@ -29,7 +29,7 @@ class DecisionIDDrawCountBaselineTest {
         // Create mock dependencies
         mockPlayer = mockk(relaxed = true)
 
-        SUT = DecisionDrawCountBaseline(mockPlayer)
+        SUT = DecisionDrawCountBaseline()
 
         sampleCard1 = FakeCards.fakeCanopy
         sampleCard2 = FakeCards.fakeVine
@@ -43,7 +43,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE, result.count) // Commons.HAND_SIZE
@@ -57,7 +57,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1, sampleCard2)
 
         // Act
-        val cardCount = SUT().count
+        val cardCount = SUT(mockPlayer).count
 
         // Assert
         assertEquals(Commons.HAND_SIZE - 2, cardCount)
@@ -71,7 +71,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(0, result.count)
@@ -85,7 +85,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(2, result.count) // Commons.HAND_SIZE / 2
@@ -99,7 +99,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns listOf(mockk { every { id } returns CARD_ID_1 })
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(1, result.count) // (Commons.HAND_SIZE / 2) - 1
@@ -113,7 +113,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE - 1, result.count)
@@ -127,7 +127,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1)
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE - 2, result.count)
@@ -141,7 +141,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(1, result.count)
@@ -155,7 +155,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns List(5) { sampleCard1 }
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(0, result.count)
@@ -171,7 +171,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(1, result.count)
@@ -187,7 +187,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE - 1, result.count) // More cards (4) than dice (3) after including compost
@@ -203,7 +203,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE / 2, result.count) // Equal cards (3) and dice (3) after including compost
@@ -219,7 +219,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(1, result.count) // More dice (4) than cards (2) after including compost
@@ -235,7 +235,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(0, result.count) // No cards available even with compost
@@ -251,7 +251,7 @@ class DecisionIDDrawCountBaselineTest {
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1, sampleCard2)
 
         // Act
-        val result = SUT()
+        val result = SUT(mockPlayer)
 
         // Assert
         assertEquals(Commons.HAND_SIZE - 3, result.count) // More cards than dice, but with 2 cards in hand

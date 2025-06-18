@@ -1,8 +1,11 @@
 package dugsolutions.leaf.player.decisions.ui
 
+import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
-import dugsolutions.leaf.player.decisions.ui.support.DecisionID
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
+import io.mockk.mockk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -11,8 +14,10 @@ import org.junit.jupiter.api.Test
 
 class DecisionDrawCountSuspendTest {
 
+    private val mockPlayer: Player = mockk(relaxed = true)
     private val monitor: DecisionMonitor = DecisionMonitor()
-    private val SUT: DecisionDrawCountSuspend = DecisionDrawCountSuspend(monitor)
+    private val mockDecisionMonitorReport = mockk<DecisionMonitorReport>(relaxed = true)
+    private val SUT: DecisionDrawCountSuspend = DecisionDrawCountSuspend(monitor, mockDecisionMonitorReport)
 
     @BeforeEach
     fun setup() {
@@ -26,14 +31,14 @@ class DecisionDrawCountSuspendTest {
 
         // Act - Start waiting in a separate coroutine
         val waitingJob = launch {
-            actualResult = SUT()
+            actualResult = SUT(mockPlayer)
         }
 
         // Wait for the coroutine to reach the suspension point
         kotlinx.coroutines.delay(100)
 
         // Verify monitor state was updated
-        assertEquals(DecisionID.DRAW_COUNT, monitor.currentlyWaitingFor)
+        assertEquals(DecisionID.DRAW_COUNT(mockPlayer), monitor.currentlyWaitingFor)
 
         // Provide the value
         SUT.provide(expectedResult)
@@ -58,14 +63,14 @@ class DecisionDrawCountSuspendTest {
         for (expectedResult in expectedResults) {
             var actualResult: DecisionDrawCount.Result? = null
             val waitingJob = launch {
-                actualResult = SUT()
+                actualResult = SUT(mockPlayer)
             }
 
             // Wait for the coroutine to reach the suspension point
             kotlinx.coroutines.delay(100)
 
             // Verify monitor state was updated
-            assertEquals(DecisionID.DRAW_COUNT, monitor.currentlyWaitingFor)
+            assertEquals(DecisionID.DRAW_COUNT(mockPlayer), monitor.currentlyWaitingFor)
 
             // Now it's safe to provide the value since invoke() has been called
             SUT.provide(expectedResult)

@@ -5,9 +5,11 @@ import dugsolutions.leaf.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.game.acquire.domain.Combination
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.ui.support.DecisionID
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
 import dugsolutions.leaf.random.die.SampleDie
+import io.mockk.mockk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,7 +22,8 @@ class DecisionAcquireSelectSuspendTest {
     private lateinit var possibleDice: List<ChoiceDie>
     private val sampleDie = SampleDie()
     private val monitor = DecisionMonitor()
-    private val SUT = DecisionAcquireSelectSuspend(monitor)
+    private val mockDecisionMonitorReport = mockk<DecisionMonitorReport>(relaxed = true)
+    private val SUT = DecisionAcquireSelectSuspend(monitor, mockDecisionMonitorReport)
 
     @BeforeEach
     fun setup() {
@@ -43,7 +46,8 @@ class DecisionAcquireSelectSuspendTest {
         kotlinx.coroutines.delay(100)
 
         // Verify monitor state was updated
-        assertEquals(DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }), 
+        assertEquals(
+            DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }),
                     monitor.currentlyWaitingFor)
 
         // Provide the value
@@ -71,7 +75,8 @@ class DecisionAcquireSelectSuspendTest {
         kotlinx.coroutines.delay(100)
 
         // Verify monitor state was updated
-        assertEquals(DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }), 
+        assertEquals(
+            DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }),
                     monitor.currentlyWaitingFor)
 
         // Provide the value
@@ -116,7 +121,8 @@ class DecisionAcquireSelectSuspendTest {
             kotlinx.coroutines.delay(100)
 
             // Verify monitor state was updated
-            assertEquals(DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }), 
+            assertEquals(
+                DecisionID.ACQUIRE_SELECT(possibleCards.map { it.card }, possibleDice.map { it.die }),
                         monitor.currentlyWaitingFor)
             
             // Now it's safe to provide the value since invoke() has been called

@@ -44,7 +44,7 @@ class DecisionDirector(
     lateinit var flowerSelectDecision: DecisionFlowerSelect
 
     fun initialize(player: Player) {
-        drawCountDecision = DecisionDrawCountBaseline(player)
+        drawCountDecision = DecisionDrawCountBaseline()
         acquireSelectDecision = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
         damageAbsorptionDecision = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
         shouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline(player, groveNearingTransition, gameTime)

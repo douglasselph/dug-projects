@@ -13,7 +13,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import dugsolutions.leaf.main.MainScreenArgs
+import dugsolutions.leaf.main.MainListeners
+import dugsolutions.leaf.main.domain.MainActionDomain
 import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.ui.GroveDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplay
@@ -21,8 +22,9 @@ import dugsolutions.leaf.main.ui.PlayerDisplayClickListeners
 
 @Composable
 fun MainPlayerSection(
-    state: MainGameDomain,
-    args: MainScreenArgs,
+    gameState: MainGameDomain,
+    actionState: MainActionDomain,
+    listeners: MainListeners,
     modifier: Modifier
 ) {
     Box(
@@ -41,24 +43,25 @@ fun MainPlayerSection(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                state.players.forEach { player ->
+                gameState.players.forEach { player ->
                     PlayerDisplay(
                         player = player,
+                        actionDomain = actionState,
                         listeners = PlayerDisplayClickListeners(
-                            onDrawCountChosen = { args.onDrawCountChosen(player, it) },
-                            onHandCardSelected = { args.onHandCardSelected(player, it) },
-                            onFloralCardSelected = { args.onFloralCardSelected(player, it) },
-                            onDieSelected = { args.onDieSelected(player, it) },
-                            onNutrientsClicked = { args.onNutrientsClicked(player) }
+                            onDrawCountChosen = { listeners.onDrawCountChosen(player, it) },
+                            onHandCardSelected = { listeners.onHandCardSelected(player, it) },
+                            onFloralCardSelected = { listeners.onFloralCardSelected(player, it) },
+                            onDieSelected = { listeners.onDieSelected(player, it) },
+                            onNutrientsClicked = { listeners.onNutrientsClicked(player) }
                         )
                     )
                 }
             }
 
             // Grove display (if available)
-            state.groveInfo?.let { groveInfo ->
+            gameState.groveInfo?.let { groveInfo ->
                 GroveDisplay(grove = groveInfo) { item ->
-                    args.onGroveItemSelected(item)
+                    listeners.onGroveItemSelected(item)
                 }
             }
         }

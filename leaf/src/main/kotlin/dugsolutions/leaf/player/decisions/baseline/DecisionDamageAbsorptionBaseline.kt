@@ -6,6 +6,7 @@ import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption.*
 import dugsolutions.leaf.player.domain.ExtendedHandItem
+import dugsolutions.leaf.random.die.DieSides
 
 /**
  * Strategy for determining which cards and dice to sacrifice to absorb incoming damage.
@@ -46,6 +47,10 @@ class DecisionDamageAbsorptionBaseline(
     val cardManager: CardManager
 ) : DecisionDamageAbsorption {
 
+    companion object {
+        private const val BALANCE_TRIGGER = 3
+    }
+
     private data class ItemCombination(
         val items: List<ExtendedHandItem> = emptyList(),
         val total: Int = 0,
@@ -54,15 +59,24 @@ class DecisionDamageAbsorptionBaseline(
         val hasOnlyFlowerCards: Boolean
             get() = items.any { it is ExtendedHandItem.FloralArray } &&
                     items.none { it is ExtendedHandItem.Card }
+
+        val hasOnlyDice: Boolean
+            get() = items.all { it is ExtendedHandItem.Dice }
+
+        val hasD20: Boolean
+            get() = items.any { it is ExtendedHandItem.Dice && it.die.sides == DieSides.D20.value }
+
+        val hasOnlyCards: Boolean
+            get() = items.all { it is ExtendedHandItem.Card || it is ExtendedHandItem.FloralArray }
     }
 
     private val cardEffectBattleScore = cardEffectBattleScoreFactory(player)
 
     override suspend operator fun invoke(): Result {
-        if (player.incomingDamage <= 0) {
+        val amount = player.incomingDamage
+        if (amount <= 0) {
             return Result()
         }
-        val amount = player.incomingDamage
         val handItems = player.getExtendedHandItems()
 
         // Check if cards/dice exist only in hand (none in compost/supply)
@@ -153,8 +167,7 @@ class DecisionDamageAbsorptionBaseline(
                 )
             }
         }
-        // Select the best combination based on scoring
-        val bestCombination = validCombinations.minByOrNull { it.overallScore } ?: return Result()
+        val bestCombination = selectBestCombination(player, validCombinations) ?: return Result()
 
         // Convert the best combination back to cards and dice
         val selectedCards = bestCombination.items.filterIsInstance<ExtendedHandItem.Card>()
@@ -242,6 +255,62 @@ class DecisionDamageAbsorptionBaseline(
         score += cards.sumOf { cardEffectBattleScore(it.card) }
 
         return score
+    }
+
+    private fun selectBestCombination(player: Player, combinations: List<ItemCombination>): ItemCombination? {
+        val balanceDice = player.allDice.size - player.allCardsInDeck.size
+
+        // If we have many more dice than cards, then select the best combination with dice
+        if (balanceDice > BALANCE_TRIGGER) {
+            // Select best dice combination
+            combinations
+                .filter { it.hasOnlyDice }
+                .filter { !it.hasD20 }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        } else if (balanceDice < -BALANCE_TRIGGER) {
+            // Select best card combination
+            combinations
+                .filter { it.hasOnlyCards }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        }
+        if (player.allDice.size <= 2) {
+            // If we have almost no dice left, then choose cards.
+            // Select best card combination
+            combinations
+                .filter { it.hasOnlyCards }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        } else if (player.allCardsInDeck.size <= 2) {
+            // If we have almost no cards left, then choose dice.
+            combinations
+                .filter { it.hasOnlyDice }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        } else if (player.allDice.size <= 1) {
+            // If we have one dice left, then choose cards.
+            // Select best card combination
+            combinations
+                .filter { it.hasOnlyCards }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        } else if (player.allCardsInDeck.size <= 1) {
+            // If we have one card left, then choose dice.
+            combinations
+                .filter { it.hasOnlyDice }
+                .minByOrNull { it.overallScore }?.let {
+                    return it
+                }
+        }
+        // Select the best combination based on scoring
+        return combinations.minByOrNull { it.overallScore }
+
     }
 
 } 

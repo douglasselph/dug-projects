@@ -66,6 +66,7 @@ class DecisionIDDamageAbsorptionBaselineTest {
         }
 
     }
+
     private lateinit var cardManager: CardManager
     private lateinit var player: PlayerTD
     private lateinit var sampleDie: SampleDie
@@ -103,7 +104,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     fun invoke_whenNoIncomingDamage_returnsNull() = runBlocking {
         // Arrange
         val expectedResult = DecisionDamageAbsorption.Result()
-        player.incomingDamage = 0
+        val damage = 0
+        player.incomingDamage = damage
 
         // Act
         val result = SUT()
@@ -116,7 +118,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     fun invoke_whenIncomingDamageAndNoCardsOrDice_returnsNull() = runBlocking {
         // Arrange
         val expectedResult = DecisionDamageAbsorption.Result()
-        player.incomingDamage = 5
+        val damage = 5
+        player.incomingDamage = damage
 
         // Act
         val result = SUT()
@@ -131,7 +134,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
         val mockVine: GameCard = mockk(relaxed = true) {
             every { resilience } returns 4
         }
-        player.incomingDamage = 4
+        val damage = 4
+        player.incomingDamage = damage
         player.addCardToHand(mockVine)
         player.addCardToHand(FakeCards.fakeCanopy)
 
@@ -159,7 +163,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
         // Verify expected die sides (resilience value)
         assertEquals(6, die.sides, "Die sides must be 6 for this test")
 
-        player.incomingDamage = die.sides
+        val damage = die.sides
+        player.incomingDamage = damage
         player.addDieToHand(die)
 
         // Verify additional die sides
@@ -193,7 +198,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
         assertEquals(4, sampleDie.d4.sides, "D4 sides must be 4 for this test")
         assertEquals(6, sampleDie.d6.sides, "D6 sides must be 6 for this test")
 
-        player.incomingDamage = 7
+        val damage = 7
+        player.incomingDamage = damage
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockRoot)
         player.addDieToHand(sampleDie.d4)
@@ -231,7 +237,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
         assertEquals(4, sampleDie.d4.sides, "D4 sides must be 4 for this test")
         assertEquals(6, sampleDie.d6.sides, "D6 sides must be 6 for this test")
 
-        player.incomingDamage = 10
+        val damage = 10
+        player.incomingDamage = damage
         // Add 3 cards to hand
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockVine)
@@ -261,7 +268,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenOnlyDiceInHandAndPreservationNeeded_preservesOneDie() = runBlocking {
         // Arrange
-        player.incomingDamage = 7
+        val damage = 7
+        player.incomingDamage = damage
         // Add dice to hand
         val d8 = sampleDie.d8
         player.addDieToHand(d8)
@@ -288,7 +296,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenCriticalDamageWithNoPreservation_losesEverything() = runBlocking {
         // Arrange
-        player.incomingDamage = 20
+        val damage = 20
+        player.incomingDamage = damage
         // Add cards to hand
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockVine)
@@ -316,7 +325,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenForcedToLoseLastCard_losesLastCardWhenNoChoice() = runBlocking {
         // Arrange
-        player.incomingDamage = 5
+        val damage = 5
+        player.incomingDamage = damage
         player.addCardToHand(mockCanopy)
 
         // Mock card effect battle score
@@ -335,7 +345,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenBloomCardsShouldBePreserved_usesOtherCardsFirst() = runBlocking {
         // Arrange
-        player.incomingDamage = 9
+        val damage = 9
+        player.incomingDamage = damage
         player.addCardToHand(mockBloom)
         player.addCardToHand(mockVine)
         player.addCardToHand(mockSeedling)
@@ -363,10 +374,15 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenMultipleCombinationsPossible_choosesLeastWasteful() = runBlocking {
         // Arrange
-        player.incomingDamage = 6
+        val damage = 6
+        player.incomingDamage = damage
         player.addCardToHand(mockVine)
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockSeedling2)
+        player.addCardToSupply(mockRoot)
+        player.addCardToSupply(mockCanopy)
+        player.addDieToSupply(sampleDie.d20)
+        player.addDieToSupply(sampleDie.d20)
         player.addDieToHand(sampleDie.d6)
         player.addDieToHand(sampleDie.d4)
 
@@ -392,7 +408,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenFloralArrayCardsPresent_canOnlyBeUsedWithRegularCards() = runBlocking {
         // Arrange
-        player.incomingDamage = 6
+        val damage = 6
+        player.incomingDamage = damage
         // Add regular cards to hand
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockVine)
@@ -421,7 +438,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenFloralArrayCardsEnhanceResilience_usesEnhancedValue() = runBlocking {
         // Arrange
-        player.incomingDamage = 5
+        val damage = 5
+        player.incomingDamage = damage
         // Add regular card to hand
         player.addCardToHand(mockSeedling)
         // Add flower card to floral array
@@ -446,8 +464,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     fun invoke_whenOnlyFloralArrayCardsPresent_ignoresCombination() = runBlocking {
         // Arrange
         val expectedResult = DecisionDamageAbsorption.Result()
-
-        player.incomingDamage = 3
+        val damage = 3
+        player.incomingDamage = damage
         // Add only flower cards to floral array
         player.addCardToBuddingStack(mockFlowerId)
         player.addCardToBuddingStack(mockFlowerId2)
@@ -466,7 +484,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
     @Test
     fun invoke_whenFloralArrayCardsEnhanceMultipleCards_usesBestCombination() = runBlocking {
         // Arrange
-        player.incomingDamage = 7
+        val damage = 7
+        player.incomingDamage = damage
         // Add regular cards to hand
         player.addCardToHand(mockSeedling)
         player.addCardToHand(mockVine)

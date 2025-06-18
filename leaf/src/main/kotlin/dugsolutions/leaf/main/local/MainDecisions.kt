@@ -1,6 +1,5 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DieInfo
 import dugsolutions.leaf.main.gather.MainGameManager
@@ -15,13 +14,15 @@ import dugsolutions.leaf.player.decisions.ui.DecisionDamageAbsorptionSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionDrawCountSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionFlowerSelectSuspend
 import dugsolutions.leaf.player.decisions.ui.DecisionShouldProcessTrashEffectSuspend
-import dugsolutions.leaf.player.decisions.ui.support.DecisionID
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
 
 class MainDecisions(
     private val mainGameManager: MainGameManager,
     private val cardOperations: CardOperations,
     private val decisionMonitor: DecisionMonitor,
+    private val decisionMonitorReport: DecisionMonitorReport,
     private val shouldAskTrashEffect: ShouldAskTrashEffect
 ) {
     enum class Selecting {
@@ -35,11 +36,11 @@ class MainDecisions(
 
     fun setup(player: Player) = with(player.decisionDirector) {
         decisionMonitor.observe { id -> applyDecisionId(player, id) }
-        drawCountDecision = DecisionDrawCountSuspend(decisionMonitor)
-        acquireSelectDecision = DecisionAcquireSelectSuspend(decisionMonitor)
-        damageAbsorptionDecision = DecisionDamageAbsorptionSuspend(decisionMonitor)
-        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectSuspend(decisionMonitor)
-        flowerSelectDecision = DecisionFlowerSelectSuspend(decisionMonitor)
+        drawCountDecision = DecisionDrawCountSuspend(decisionMonitor, decisionMonitorReport)
+        acquireSelectDecision = DecisionAcquireSelectSuspend(decisionMonitor, decisionMonitorReport)
+        damageAbsorptionDecision = DecisionDamageAbsorptionSuspend(player, decisionMonitor, decisionMonitorReport)
+        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectSuspend(decisionMonitor, decisionMonitorReport)
+        flowerSelectDecision = DecisionFlowerSelectSuspend(decisionMonitor, decisionMonitorReport)
         shouldAskTrashEffect.askTrashOkay = false
     }
 
@@ -53,23 +54,20 @@ class MainDecisions(
                 decidingPlayer = player
             }
 
-            DecisionID.DAMAGE_ABSORPTION -> {
-                val amount = player.incomingDamage
+            is DecisionID.DAMAGE_ABSORPTION -> {
                 mainGameManager.resetData(player)
                 mainGameManager.setAllowPlayerItemSelect(player)
-                mainGameManager.setActionButton(ActionButton.DONE, "Select cards and/or dice to absorb $amount damage.")
                 decidingPlayer = player
                 selecting = Selecting.ITEMS
             }
 
-            DecisionID.DRAW_COUNT -> {
-                mainGameManager.setShowDrawCount(player)
+            is DecisionID.DRAW_COUNT -> {
+                mainGameManager.resetData()
             }
 
             DecisionID.FLOWER_SELECT -> {
                 mainGameManager.resetData(player)
                 mainGameManager.setAllowPlayerFlowerSelect(player)
-                mainGameManager.setActionButton(ActionButton.DONE, "Select flower cards to contribute toward played Bloom card.")
                 decidingPlayer = player
                 selecting = Selecting.FLOWERS
             }
@@ -77,7 +75,6 @@ class MainDecisions(
             is DecisionID.SHOULD_PROCESS_TRASH_EFFECT -> {
                 val card = id.card
                 mainGameManager.setHighlightPlayerCard(player, card)
-                mainGameManager.setShowBooleanInstruction("Trash card for effect?")
                 decidingPlayer = player
             }
 
@@ -99,7 +96,6 @@ class MainDecisions(
         if (drawCountDecision is DecisionDrawCountSuspend) {
             drawCountDecision.provide(DecisionDrawCount.Result(value))
         }
-        mainGameManager.clearShowDrawCount()
     }
 
     // endregion DrawCount
@@ -131,7 +127,6 @@ class MainDecisions(
 
     // endregion GroveCard
 
-    // TODO: Unit test
     fun onPlayerSelectionComplete() {
         when (selecting) {
             Selecting.NONE -> {}
@@ -147,25 +142,25 @@ class MainDecisions(
         val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
         require(player != null)
+        val damageToAbsorb = player.incomingDamage
         val damageAbsorptionDecision = player.decisionDirector.damageAbsorptionDecision
         if (damageAbsorptionDecision is DecisionDamageAbsorptionSuspend) {
             damageAbsorptionDecision.provide(
                 DecisionDamageAbsorption.Result(
                     cards = selected.cards,
                     floralCards = selected.floralCards,
-                    dice = selected.dice
+                    dice = selected.dice,
+                    damageToAbsorb = damageToAbsorb
                 )
             )
         }
         mainGameManager.clearPlayerSelect()
-        mainGameManager.setActionButton(ActionButton.NONE)
     }
 
     // endregion PlayerSelectItems
 
     // region PlayerSelectFlowers
 
-    // TODO: Unit test
     private fun onPlayerFlowerSelectionComplete() {
         val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
@@ -175,7 +170,6 @@ class MainDecisions(
             flowerSelectDecision.provide(DecisionFlowerSelect.Result(selected.floralCards))
         }
         mainGameManager.clearPlayerSelect()
-        mainGameManager.setActionButton(ActionButton.NONE)
     }
 
     // endregion PlayerSelectFlowers
@@ -192,7 +186,6 @@ class MainDecisions(
                 else DecisionShouldProcessTrashEffect.Result.DO_NOT_TRASH
             )
         }
-        mainGameManager.clearBooleanInstruction()
         mainGameManager.clearPlayerSelect()
     }
 

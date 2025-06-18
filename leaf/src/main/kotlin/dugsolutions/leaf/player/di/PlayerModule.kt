@@ -18,7 +18,8 @@ import dugsolutions.leaf.player.effect.HasFlourishType
 import dugsolutions.leaf.game.turn.handle.HandleAdorn
 import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.decisions.local.ShouldAskTrashEffect
-import dugsolutions.leaf.player.decisions.ui.support.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
 import dugsolutions.leaf.player.effect.NutrientReward
 import dugsolutions.leaf.player.effect.ShouldProcessMatchEffect
 import org.koin.core.module.Module
@@ -42,8 +43,9 @@ val playerModule: Module = module {
     single { HandleAdorn(get(), get()) }
     single { NutrientReward(get(), get()) }
     single { DrawNewHand() }
-    single { DecisionMonitor(get()) }
     single { ShouldAskTrashEffect() }
+    single { DecisionMonitor() }
+    single { DecisionMonitorReport(get()) }
 
     factory { BuddingStack(get(), get()) }
     factory { StackManager(get(), get()) }

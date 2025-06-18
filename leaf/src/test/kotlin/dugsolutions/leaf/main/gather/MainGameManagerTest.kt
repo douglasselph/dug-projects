@@ -30,7 +30,6 @@ class MainGameManagerTest {
 
     companion object {
         private const val TURN = 5
-        private const val ACTION_INSTRUCTION = "Test Instruction"
     }
 
     private val mockGame = mockk<Game>(relaxed = true)
@@ -51,7 +50,7 @@ class MainGameManagerTest {
 
     private val SUT = MainGameManager(
         mockGame, gameTime, gatherPlayerInfo, gatherGroveInfo,
-        mockSelectItem, mockSelectGather
+        mockSelectItem, mockSelectGather, mockChronicle
     )
 
     @BeforeEach
@@ -77,46 +76,6 @@ class MainGameManagerTest {
         assertEquals(fakePlayer1.name, state.players[0].name)
         assertEquals(fakePlayer2.name, state.players[1].name)
         assertEquals(mockGroveInfo, state.groveInfo)
-    }
-
-    @Test
-    fun setShowDrawCount_whenEnabled_updatesDrawCountState() = runBlocking {
-        // Arrange
-        SUT.clearShowDrawCount()
-
-        // Act
-        SUT.setShowDrawCount(fakePlayer1)
-
-        // Assert
-        val state = SUT.state.first()
-        assertTrue(state.players.find { it.name == fakePlayer1.name }?.showDrawCount ?: false)
-    }
-
-    @Test
-    fun clearShowDrawCount_whenEnabled_clearsDrawCountState() = runBlocking {
-        // Arrange
-        SUT.setShowDrawCount(fakePlayer1)
-
-        // Act
-        SUT.clearShowDrawCount()
-
-        // Assert
-        val state = SUT.state.first()
-        assertFalse(state.players.find { it.name == fakePlayer1.name }?.showDrawCount ?: true)
-    }
-
-    @Test
-    fun setActionButton_whenSet_updatesActionButtonAndInstruction() = runBlocking {
-        // Arrange
-        val actionButton = ActionButton.RUN
-
-        // Act
-        SUT.setActionButton(actionButton, ACTION_INSTRUCTION)
-
-        // Assert
-        val state = SUT.state.first()
-        assertEquals(actionButton, state.actionButton)
-        assertEquals(ACTION_INSTRUCTION, state.actionInstruction)
     }
 
     @Test

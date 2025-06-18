@@ -22,7 +22,7 @@ class ReportPlayer {
 
         val score = player.score
 
-        return "${player.name}: Supply=[$supplyItems], Hand=[$handItems], Compost=[$compostItems], Floral=[$floralItems], Score=[$score]"
+        return "${player.name}: Score=[$score], Hand=[$handItems], Floral=[$floralItems]\n  Supply=[$supplyItems]\n  Dormant Bed=[$compostItems]"
     }
     
     // Helper function to combine strings only if they're non-empty

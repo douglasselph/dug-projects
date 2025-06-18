@@ -203,7 +203,7 @@ open class Player(
     }
 
     suspend fun drawHand() {
-        drawHand(decisionDirector.drawCountDecision().count)
+        drawHand(decisionDirector.drawCountDecision(this).count)
     }
 
     open fun drawCardWithoutResupply(): CardID? {

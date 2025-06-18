@@ -1,6 +1,8 @@
-package dugsolutions.leaf.player.decisions.ui.support
+package dugsolutions.leaf.player.decisions.local.monitor
 
 import dugsolutions.leaf.cards.FakeCards
+import dugsolutions.leaf.player.Player
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -8,13 +10,12 @@ import org.junit.jupiter.api.Test
 
 class DecisionMonitorTest {
 
-    private lateinit var monitor: DecisionMonitor
-    private lateinit var capturedStates: MutableList<DecisionID?>
+    private val mockPlayer: Player = mockk(relaxed = true)
+    private val monitor: DecisionMonitor = DecisionMonitor()
+    private val capturedStates: MutableList<DecisionID?> = mutableListOf()
 
     @BeforeEach
     fun setup() {
-        monitor = DecisionMonitor()
-        capturedStates = mutableListOf()
     }
 
     @Test
@@ -26,7 +27,7 @@ class DecisionMonitorTest {
     @Test
     fun setWaitingFor_whenCalled_updatesCurrentlyWaitingFor() {
         // Arrange
-        val decisionId = DecisionID.DRAW_COUNT
+        val decisionId = DecisionID.DRAW_COUNT(mockPlayer)
 
         // Act
         monitor.setWaitingFor(decisionId)
@@ -38,7 +39,7 @@ class DecisionMonitorTest {
     @Test
     fun setWaitingFor_whenCalledWithNull_clearsCurrentlyWaitingFor() {
         // Arrange
-        monitor.setWaitingFor(DecisionID.DRAW_COUNT)
+        monitor.setWaitingFor(DecisionID.DRAW_COUNT(mockPlayer))
 
         // Act
         monitor.setWaitingFor(null)
@@ -53,13 +54,13 @@ class DecisionMonitorTest {
         monitor.observe { state -> capturedStates.add(state) }
 
         // Act
-        monitor.setWaitingFor(DecisionID.DRAW_COUNT)
+        monitor.setWaitingFor(DecisionID.DRAW_COUNT(mockPlayer))
         monitor.setWaitingFor(DecisionID.FLOWER_SELECT)
         monitor.setWaitingFor(null)
 
         // Assert
         assertEquals(3, capturedStates.size)
-        assertEquals(DecisionID.DRAW_COUNT, capturedStates[0])
+        assertEquals(DecisionID.DRAW_COUNT(mockPlayer), capturedStates[0])
         assertEquals(DecisionID.FLOWER_SELECT, capturedStates[1])
         assertNull(capturedStates[2])
     }
@@ -74,14 +75,14 @@ class DecisionMonitorTest {
         monitor.observe { state -> states2.add(state) }
 
         // Act
-        monitor.setWaitingFor(DecisionID.DRAW_COUNT)
+        monitor.setWaitingFor(DecisionID.DRAW_COUNT(mockPlayer))
         monitor.setWaitingFor(null)
 
         // Assert
         assertEquals(2, states1.size)
         assertEquals(2, states2.size)
-        assertEquals(DecisionID.DRAW_COUNT, states1[0])
-        assertEquals(DecisionID.DRAW_COUNT, states2[0])
+        assertEquals(DecisionID.DRAW_COUNT(mockPlayer), states1[0])
+        assertEquals(DecisionID.DRAW_COUNT(mockPlayer), states2[0])
         assertNull(states1[1])
         assertNull(states2[1])
     }

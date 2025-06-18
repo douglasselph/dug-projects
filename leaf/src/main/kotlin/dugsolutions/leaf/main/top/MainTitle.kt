@@ -20,6 +20,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.Colors
+import dugsolutions.leaf.main.domain.MainActionDomain
 import dugsolutions.leaf.main.domain.MainGameDomain
 
 data class MainTitleListeners(
@@ -31,7 +32,8 @@ data class MainTitleListeners(
 
 @Composable
 fun MainTitle(
-    state: MainGameDomain,
+    gameState: MainGameDomain,
+    actionState: MainActionDomain,
     listeners: MainTitleListeners,
     modifier: Modifier
 ) {
@@ -44,7 +46,7 @@ fun MainTitle(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Turn ${state.turn}",
+                text = "Turn ${gameState.turn}",
                 style = MaterialTheme.typography.h4
             )
             Row(
@@ -56,7 +58,7 @@ fun MainTitle(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Checkbox(
-                        checked = state.askTrashEnabled,
+                        checked = gameState.askTrashEnabled,
                         onCheckedChange = { listeners.onAskTrashToggled(it) }
                     )
                     Text("Ask Trash")
@@ -66,12 +68,12 @@ fun MainTitle(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Checkbox(
-                        checked = state.stepModeEnabled,
+                        checked = gameState.stepModeEnabled,
                         onCheckedChange = { listeners.onStepEnabledToggled(it) }
                     )
                     Text("Step Mode")
                 }
-                state.actionInstruction?.let { instruction ->
+                actionState.actionInstruction?.let { instruction ->
                     Surface(
                         color = Colors.SelectableColor,
                         shape = RoundedCornerShape(4.dp),
@@ -84,18 +86,18 @@ fun MainTitle(
                         )
                     }
                 }
-                state.actionButton.text?.let { actionText ->
+                actionState.actionButton.text?.let { actionText ->
                     Button(
-                        onClick = { listeners.onActionButtonPressed(state.actionButton) }
+                        onClick = { listeners.onActionButtonPressed(actionState.actionButton) }
                     ) {
                         Text(actionText)
                     }
                 }
             }
         }
-        
+
         // Boolean instruction section
-        state.booleanInstruction?.let { instruction ->
+        actionState.booleanInstruction?.let { instruction ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,13 +151,13 @@ fun main() = application {
         ) {
             Text("Basic State", style = MaterialTheme.typography.h6)
             PreviewBasicState()
-            
+
             Text("With Action Instruction", style = MaterialTheme.typography.h6)
             PreviewWithActionInstruction()
-            
+
             Text("With Boolean Instruction", style = MaterialTheme.typography.h6)
             PreviewWithBooleanInstruction()
-            
+
             Text("With Both Instructions", style = MaterialTheme.typography.h6)
             PreviewWithBothInstructions()
         }
@@ -166,7 +168,9 @@ fun main() = application {
 private fun PreviewBasicState() {
     val state = MainGameDomain(
         turn = 5,
-        stepModeEnabled = false,
+        stepModeEnabled = false
+    )
+    val infoState = MainActionDomain(
         actionInstruction = null,
         actionButton = ActionButton.NONE,
         booleanInstruction = null
@@ -176,14 +180,16 @@ private fun PreviewBasicState() {
         onActionButtonPressed = { println("Action button pressed: $it") },
         onBooleanInstructionChosen = { println("Boolean choice: $it") }
     )
-    MainTitle(state, listeners, Modifier.fillMaxWidth())
+    MainTitle(state, infoState, listeners, Modifier.fillMaxWidth())
 }
 
 @Composable
 private fun PreviewWithActionInstruction() {
-    val state = MainGameDomain(
+    val gameState = MainGameDomain(
         turn = 12,
         stepModeEnabled = true,
+    )
+    val infoState = MainActionDomain(
         actionInstruction = "Select cards and/or dice to absorb 5 damage.",
         actionButton = ActionButton.DONE,
         booleanInstruction = null
@@ -193,7 +199,7 @@ private fun PreviewWithActionInstruction() {
         onActionButtonPressed = { println("Action button pressed: $it") },
         onBooleanInstructionChosen = { println("Boolean choice: $it") }
     )
-    MainTitle(state, listeners, Modifier.fillMaxWidth())
+    MainTitle(gameState, infoState, listeners, Modifier.fillMaxWidth())
 }
 
 @Composable
@@ -201,6 +207,8 @@ private fun PreviewWithBooleanInstruction() {
     val state = MainGameDomain(
         turn = 8,
         stepModeEnabled = false,
+    )
+    val infoState = MainActionDomain(
         actionInstruction = null,
         actionButton = ActionButton.NONE,
         booleanInstruction = "Trash card for effect?"
@@ -210,7 +218,7 @@ private fun PreviewWithBooleanInstruction() {
         onActionButtonPressed = { println("Action button pressed: $it") },
         onBooleanInstructionChosen = { println("Boolean choice: $it") }
     )
-    MainTitle(state, listeners, Modifier.fillMaxWidth())
+    MainTitle(state, infoState, listeners, Modifier.fillMaxWidth())
 }
 
 @Composable
@@ -218,6 +226,9 @@ private fun PreviewWithBothInstructions() {
     val state = MainGameDomain(
         turn = 15,
         stepModeEnabled = true,
+
+        )
+    val infoState = MainActionDomain(
         actionInstruction = "Choose cards to purchase from grove",
         actionButton = ActionButton.NEXT,
         booleanInstruction = "Process additional effect?"
@@ -227,7 +238,7 @@ private fun PreviewWithBothInstructions() {
         onActionButtonPressed = { println("Action button pressed: $it") },
         onBooleanInstructionChosen = { println("Boolean choice: $it") }
     )
-    MainTitle(state, listeners, Modifier.fillMaxWidth())
+    MainTitle(state, infoState, listeners, Modifier.fillMaxWidth())
 }
 
 // endregion Preview
