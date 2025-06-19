@@ -2,7 +2,13 @@ package dugsolutions.leaf.main.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -18,20 +24,15 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
-import dugsolutions.leaf.main.domain.StackInfo
+import dugsolutions.leaf.main.domain.CardStackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
 @Composable
-fun StackInfoDisplay(
-    stack: StackInfo,
+fun CardStackDisplay(
+    stack: CardStackInfo,
     onSelected: (card: CardInfo) -> Unit = {}
 ) {
     val emptyStackWidth: Dp = 160.dp
@@ -122,15 +123,15 @@ fun main() = application {
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             // First example - Stack with card
-            val stackWithCard = StackInfo(
+            val stackWithCard = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
                 numCards = 42
             )
-            StackInfoDisplay(stackWithCard)
+            CardStackDisplay(stackWithCard)
 
             // Second example - Stack with card
-            val stackWithCard2 = StackInfo(
+            val stackWithCard2 = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
                     card = FakeCards.fakeRoot,
@@ -138,15 +139,15 @@ fun main() = application {
                 ),
                 numCards = 12
             )
-            StackInfoDisplay(stackWithCard2)
+            CardStackDisplay(stackWithCard2)
 
             // First example - Stack with card
-            val stackEmpty = StackInfo(
+            val stackEmpty = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(card = FakeCards.fakeRoot),
                 numCards = 0
             )
-            StackInfoDisplay(stackEmpty)
+            CardStackDisplay(stackEmpty)
 
         }
     }

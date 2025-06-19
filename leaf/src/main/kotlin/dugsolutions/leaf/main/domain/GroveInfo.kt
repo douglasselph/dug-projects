@@ -3,13 +3,14 @@ package dugsolutions.leaf.main.domain
 import dugsolutions.leaf.grove.domain.MarketStackID
 
 data class GroveInfo(
-    val stacks: List<StackInfo> = emptyList(),
+    val stacks: List<CardStackInfo> = emptyList(),
+    val blooms: List<CardInfo> = emptyList(),
     val dice: DiceInfo = DiceInfo(),
     val instruction: String? = null,
     val quantities: String? = null
 )
 
-data class StackInfo(
+data class CardStackInfo(
     val stack: MarketStackID,
     val topCard: CardInfo?,
     val numCards: Int

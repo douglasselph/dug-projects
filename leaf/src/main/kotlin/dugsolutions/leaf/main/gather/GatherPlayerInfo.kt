@@ -44,7 +44,7 @@ class GatherPlayerInfo(
         val score = player.score.toString()
         val countDice = player.allDice.size
         val countCards = player.allCardsInDeck.size
-        return "Score: $score\nCards/Dice: $countCards/$countDice"
+        return "Cards/Dice: $countCards/$countDice\nScore: $score"
     }
 
 }

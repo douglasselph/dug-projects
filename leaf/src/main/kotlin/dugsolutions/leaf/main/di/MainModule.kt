@@ -19,7 +19,7 @@ val mainModule: Module = module {
 
     single { GatherCardInfo() }
     single { GatherDiceInfo() }
-    single { GatherGroveInfo(get(), get(), get(), get()) }
+    single { GatherGroveInfo(get(), get(), get(), get(), get()) }
     single { GatherPlayerInfo(get(), get()) }
     single { SelectItem() }
     single { SelectGather(get()) }

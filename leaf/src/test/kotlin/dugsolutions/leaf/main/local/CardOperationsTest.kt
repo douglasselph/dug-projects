@@ -2,7 +2,7 @@ package dugsolutions.leaf.main.local
 
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.common.Commons.TEST_CARD_LIST
+import dugsolutions.leaf.common.Commons.CARD_LIST
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.di.GameCardsFactory
@@ -44,7 +44,7 @@ class CardOperationsTest {
         SUT.setup()
 
         // Assert
-        verify { mockCardRegistry.loadFromCsv(TEST_CARD_LIST) }
+        verify { mockCardRegistry.loadFromCsv(CARD_LIST) }
         verify { mockCardManager.loadCards(mockCardRegistry) }
     }
 

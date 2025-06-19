@@ -13,15 +13,10 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.grove.domain.MarketStackID
+import dugsolutions.leaf.main.domain.CardStackInfo
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.ItemInfo
-import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
 @Composable
@@ -33,13 +28,12 @@ fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
     ) {
         gridData.forEach { row ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 row.forEach { stack ->
                     Box {
                         if (stack != null) {
-                            StackInfoDisplay(stack) { card ->
+                            CardStackDisplay(stack) { card ->
                                 onSelected(ItemInfo.Card(card))
                             }
                         }
@@ -55,13 +49,13 @@ fun GroveCards(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
  * Order format: 10s digit = column (1-3), 1s digit = row (1-4)
  * Returns a list of rows, where each row contains nullable StackInfo for each column
  */
-private fun createGridFromStacks(stacks: List<StackInfo>): List<List<StackInfo?>> {
+private fun createGridFromStacks(stacks: List<CardStackInfo>): List<List<CardStackInfo?>> {
     // Find max row and column from order values
     val maxRow = stacks.maxOfOrNull { it.order % 10 } ?: 0
     val maxCol = stacks.maxOfOrNull { it.order / 10 } ?: 0
 
     // Create empty grid
-    val grid = Array(maxRow) { Array<StackInfo?>(maxCol) { null } }
+    val grid = Array(maxRow) { Array<CardStackInfo?>(maxCol) { null } }
 
     // Fill grid based on order values
     stacks.forEach { stack ->
@@ -110,17 +104,17 @@ private fun createSampleGroveInfo(): GroveInfo {
 
     // Create stack infos with proper order values matching the grid layout
     val stacks = listOf(
-        StackInfo(MarketStackID.ROOT_1, gatherCardInfo(card = rootCard), 5),
-        StackInfo(MarketStackID.ROOT_2, gatherCardInfo(card = rootCard), 3),
-        StackInfo(MarketStackID.VINE_1, gatherCardInfo(card = vineCard), 4),
-        StackInfo(MarketStackID.VINE_2, gatherCardInfo(card = vineCard), 2),
-        StackInfo(MarketStackID.CANOPY_1, gatherCardInfo(card = canopyCard), 6),
-        StackInfo(MarketStackID.CANOPY_2, gatherCardInfo(card = canopyCard), 1),
-        StackInfo(MarketStackID.WILD_1, gatherCardInfo(card = wildCard), 3),
-        StackInfo(MarketStackID.WILD_2, gatherCardInfo(card = wildCard), 2),
-        StackInfo(MarketStackID.FLOWER_1, gatherCardInfo(card = flowerCard), 0),
-        StackInfo(MarketStackID.FLOWER_2, gatherCardInfo(card = flowerCard), 3),
-        StackInfo(MarketStackID.FLOWER_3, gatherCardInfo(card = flowerCard), 2)
+        CardStackInfo(MarketStackID.ROOT_1, gatherCardInfo(card = rootCard), 5),
+        CardStackInfo(MarketStackID.ROOT_2, gatherCardInfo(card = rootCard), 3),
+        CardStackInfo(MarketStackID.VINE_1, gatherCardInfo(card = vineCard), 4),
+        CardStackInfo(MarketStackID.VINE_2, gatherCardInfo(card = vineCard), 2),
+        CardStackInfo(MarketStackID.CANOPY_1, gatherCardInfo(card = canopyCard), 6),
+        CardStackInfo(MarketStackID.CANOPY_2, gatherCardInfo(card = canopyCard), 1),
+        CardStackInfo(MarketStackID.WILD_1, gatherCardInfo(card = wildCard), 3),
+        CardStackInfo(MarketStackID.WILD_2, gatherCardInfo(card = wildCard), 2),
+        CardStackInfo(MarketStackID.FLOWER_1, gatherCardInfo(card = flowerCard), 0),
+        CardStackInfo(MarketStackID.FLOWER_2, gatherCardInfo(card = flowerCard), 3),
+        CardStackInfo(MarketStackID.FLOWER_3, gatherCardInfo(card = flowerCard), 2)
     )
 
     return GroveInfo(

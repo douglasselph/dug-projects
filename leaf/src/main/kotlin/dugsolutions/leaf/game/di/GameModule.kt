@@ -21,6 +21,7 @@ import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.effect.EffectCardToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDieAdjust
 import dugsolutions.leaf.game.turn.effect.EffectDieReroll
+import dugsolutions.leaf.game.turn.effect.EffectDieRerollAny
 import dugsolutions.leaf.game.turn.effect.EffectDieToMax
 import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDiscard
@@ -48,6 +49,7 @@ import dugsolutions.leaf.game.turn.local.EvaluateSimpleCost
 import dugsolutions.leaf.game.turn.select.SelectAllDice
 import dugsolutions.leaf.game.turn.select.SelectCardToRetain
 import dugsolutions.leaf.game.turn.select.SelectDiceNotActivatingMatches
+import dugsolutions.leaf.game.turn.select.SelectDieAnyToReroll
 import dugsolutions.leaf.game.turn.select.SelectDieToAdjust
 import dugsolutions.leaf.game.turn.select.SelectDieToMax
 import dugsolutions.leaf.game.turn.select.SelectDieToReroll
@@ -71,6 +73,7 @@ val gameModule: Module = module {
 
     single { SelectCardToRetain(get()) }
     single { SelectDieToReroll() }
+    single { SelectDieAnyToReroll(get()) }
     single { SelectDieToRetain(get()) }
     single { SelectDieToMax() }
     single { SelectDieToAdjust() }
@@ -83,6 +86,7 @@ val gameModule: Module = module {
     single { EffectDieAdjust(get(), get()) }
     single { EffectDieToMax(get(), get()) }
     single { EffectDieReroll(get(), get(), get()) }
+    single { EffectDieRerollAny(get(), get()) }
     single { EffectDieToRetain(get(), get()) }
     single { EffectDiscard(get(), get()) }
     single { EffectDrawCard(get(), get()) }
@@ -110,7 +114,7 @@ val gameModule: Module = module {
         HandleCardEffect(
             get(), get(), get(), get(), get(), get(), get(),
             get(), get(), get(), get(), get(), get(), get(),
-            get(), get(), get(), get()
+            get(), get(), get(), get(), get()
         )
     }
     single { HandleCard(get(), get(), get(), get(), get(), get()) }

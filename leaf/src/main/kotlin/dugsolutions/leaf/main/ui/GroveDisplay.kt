@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
@@ -19,22 +17,15 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.cost.CostElement
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.grove.domain.MarketStackID
-import dugsolutions.leaf.main.domain.Colors
+import dugsolutions.leaf.main.domain.CardStackInfo
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.ItemInfo
-import dugsolutions.leaf.main.domain.StackInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import dugsolutions.leaf.main.gather.GatherDiceInfo
+import dugsolutions.leaf.random.die.Dice
+import dugsolutions.leaf.random.die.SampleDie
 
 
 @Composable
@@ -57,55 +48,14 @@ fun GroveDisplay(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
                     elementsPerRow = grove.dice.values.size
                 ) { die -> onSelected(ItemInfo.Die(die)) }
             }
-            GroveCards(grove, onSelected)
-        }
-    }
-}
-
-@Composable
-private fun GroveTitle(grove: GroveInfo) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left side: Grove title and quantities grouped together
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Grove",
-                style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            grove.quantities?.let {
-                Surface(
-                    color = MaterialTheme.colors.primary.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colors.primary.copy(alpha = 0.3f)),
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Text(
-                        text = grove.quantities,
-                        style = MaterialTheme.typography.caption,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-        }
-        // Right side: instruction (unchanged)
-        grove.instruction?.let { text ->
-            Surface(
-                color = Colors.SelectableColor,
-                shape = RoundedCornerShape(4.dp),
-                modifier = Modifier.padding(start = 8.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.subtitle1,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
+                GroveCards(grove, onSelected)
+                if (grove.blooms.isNotEmpty()) {
+                    CardsColumnDisplay(grove.blooms)
+                }
             }
         }
     }
@@ -143,38 +93,43 @@ fun main() = application {
                     )
                 ), values = false
             ),
+            blooms = listOf(
+                gatherCardInfo(card = FakeCards.fakeBloom),
+                gatherCardInfo(card = FakeCards.fakeBloom2),
+                gatherCardInfo(card = FakeCards.fakeBloom3)
+            ),
             stacks = listOf(
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.ROOT_1,
                     topCard = gatherCardInfo(card = FakeCards.fakeRoot),
                     numCards = 28
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.ROOT_2,
                     topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
                     numCards = 28
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.CANOPY_1,
                     topCard = gatherCardInfo(card = FakeCards.fakeCanopy),
                     numCards = 15
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.CANOPY_2,
                     topCard = gatherCardInfo(card = FakeCards.fakeCanopy2),
                     numCards = 15
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.VINE_1,
                     topCard = gatherCardInfo(card = FakeCards.fakeVine),
                     numCards = 42
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.VINE_2,
                     topCard = gatherCardInfo(card = FakeCards.fakeVine2),
                     numCards = 42
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.FLOWER_1,
                     topCard = gatherCardInfo(
                         card = FakeCards.fakeFlower,
@@ -182,7 +137,7 @@ fun main() = application {
                     ),
                     numCards = 20
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
                         card = FakeCards.fakeFlower2,
@@ -190,14 +145,14 @@ fun main() = application {
                     ),
                     numCards = 20
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
                         card = FakeCards.fakeFlower3
                     ),
                     numCards = 20
                 ),
-                StackInfo(
+                CardStackInfo(
                     stack = MarketStackID.WILD_1,
                     topCard = gatherCardInfo(
                         card = FakeCards.fakeRoot

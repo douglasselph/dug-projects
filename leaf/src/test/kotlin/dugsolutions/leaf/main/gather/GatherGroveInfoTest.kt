@@ -1,12 +1,8 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.GameCardIDs
-import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.domain.GamePhase
@@ -30,7 +26,6 @@ import org.junit.jupiter.api.Test
 class GatherGroveInfoTest {
 
     companion object {
-        private const val TEST_CARD_NAME = "Test Card"
         private const val PLAYER_NAME = "Test Player"
         private const val NUM_CARDS = 5
         private const val PIP_TOTAL = 10
@@ -41,28 +36,24 @@ class GatherGroveInfoTest {
     private val mockGatherCardInfo = mockk<GatherCardInfo>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private val mockSelectAllDice = mockk<SelectAllDice>(relaxed = true)
+    private val mockMatchingBloomCard = mockk<MatchingBloomCard>(relaxed = true)
+    private val mockCards: GameCardIDs = mockk<GameCardIDs>(relaxed = true)
+    private val mockPlayer: Player = mockk<Player>(relaxed = true)
     private val gameTime = GameTime()
-    private lateinit var mockCards: GameCardIDs
-    private lateinit var mockPlayer: Player
     private val sampleDie = SampleDie()
 
-    private val SUT = GatherGroveInfo(mockGrove, mockGatherCardInfo, mockSelectAllDice, gameTime)
+    private val SUT = GatherGroveInfo(mockGrove, mockGatherCardInfo, mockSelectAllDice, mockMatchingBloomCard, gameTime)
 
     @BeforeEach
     fun setup() {
-        mockCards = mockk<GameCardIDs>()
+        mockPlayer
         every { mockCards.getCard(0) } returns testCard
         every { mockCards.size } returns NUM_CARDS
-
-        mockPlayer = mockk<Player>()
         every { mockPlayer.name } returns PLAYER_NAME
         every { mockPlayer.pipTotal } returns PIP_TOTAL
-
         every { mockGrove.getCardsFor(any()) } returns mockCards
         every { mockGatherCardInfo(any(), any(), any()) } returns mockCardInfo
         every { mockCardInfo.name } returns testCard.name
-        
-        // Default mock for selectAllDice
         every { mockSelectAllDice() } returns Dice()
 
         gameTime.phase = GamePhase.CULTIVATION

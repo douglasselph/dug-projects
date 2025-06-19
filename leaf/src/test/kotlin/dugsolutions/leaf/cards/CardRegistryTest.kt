@@ -2,7 +2,6 @@ package dugsolutions.leaf.cards
 
 import dugsolutions.leaf.cards.cost.ParseCost
 import dugsolutions.leaf.common.Commons
-import dugsolutions.leaf.cards.domain.CardEffect
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.cards.cost.ParseCostElement
@@ -41,7 +40,7 @@ class CardRegistryTest {
         // Arrange
 
         // Act
-        cardRegistry.loadFromCsv(Commons.TEST_CARD_LIST)
+        cardRegistry.loadFromCsv(Commons.CARD_LIST)
 
         // Assert
         // Gave up trying to verify anything.
@@ -73,7 +72,7 @@ class CardRegistryTest {
     fun loadFromCsv_allCardsAreUnique() {
         // Arrange
         // Act
-        cardRegistry.loadFromCsv(Commons.TEST_CARD_LIST)
+        cardRegistry.loadFromCsv(Commons.CARD_LIST)
         val cards = cardRegistry.getAllCards()
 
         // Assert
@@ -105,7 +104,7 @@ class CardRegistryTest {
     @Test
     fun loadFromCsv_verifyBloomAndFlowerRequirements() {
         // Arrange
-        cardRegistry.loadFromCsv(Commons.TEST_CARD_LIST)
+        cardRegistry.loadFromCsv(Commons.CARD_LIST)
         val cards = cardRegistry.getAllCards()
         
         // Get all flower cards for reference

@@ -5,7 +5,6 @@ import dugsolutions.leaf.cards.GameCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.GameSummary
 import dugsolutions.leaf.chronicle.report.GenerateGameSummary
-import dugsolutions.leaf.chronicle.report.WriteChronicleResults
 import dugsolutions.leaf.chronicle.report.WriteGameResults
 import dugsolutions.leaf.chronicle.report.ReportGameSummaries
 import dugsolutions.leaf.chronicle.report.WriteGameSummaries
@@ -37,7 +36,7 @@ class CoreSupport(
     private val testDir: String
 ) : KoinTest {
     companion object {
-        private const val TEST_CARD_LIST = Commons.TEST_CARD_LIST
+        private const val TEST_CARD_LIST = Commons.CARD_LIST
     }
 
     private lateinit var cardManager: CardManager

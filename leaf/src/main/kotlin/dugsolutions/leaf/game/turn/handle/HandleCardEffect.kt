@@ -7,6 +7,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.turn.effect.EffectCardToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDieAdjust
 import dugsolutions.leaf.game.turn.effect.EffectDieReroll
+import dugsolutions.leaf.game.turn.effect.EffectDieRerollAny
 import dugsolutions.leaf.game.turn.effect.EffectDieToMax
 import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDiscard
@@ -33,6 +34,7 @@ class HandleCardEffect(
     private val effectDrawDie: EffectDrawDie,
     private val effectDraw: EffectDraw,
     private val effectDieReroll: EffectDieReroll,
+    private val effectDieRerollAny: EffectDieRerollAny,
     private val effectDieToRetain: EffectDieToRetain,
     private val effectGainD20: EffectGainD20,
     private val effectReuseCard: EffectReuseCard,
@@ -116,7 +118,7 @@ class HandleCardEffect(
                 repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(fromCompost = true)) }
             }
 
-            CardEffect.DRAW -> {
+            CardEffect.DRAW_ANY -> {
                 repeat(value) { effectDraw(player) }
             }
 
@@ -186,13 +188,15 @@ class HandleCardEffect(
             }
 
             CardEffect.REROLL_ACCEPT_2ND -> {
-                repeat(value) {
-                    effectDieReroll(player, takeBetter = false)
-                }
+                repeat(value) { effectDieReroll(player, takeBetter = false) }
             }
 
             CardEffect.REROLL_ALL_MAX -> {
                 TODO("Not implemented")
+            }
+
+            CardEffect.REROLL_ANY -> {
+                repeat(value) { effectDieRerollAny(player, target) }
             }
 
             CardEffect.REROLL_TAKE_BETTER -> {

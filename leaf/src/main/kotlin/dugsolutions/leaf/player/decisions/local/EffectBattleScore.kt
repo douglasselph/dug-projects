@@ -27,7 +27,7 @@ class EffectBattleScore {
             CardEffect.DRAW_DIE -> 10 * value
             CardEffect.DRAW_DIE_ANY -> 15 * value
             CardEffect.DRAW_DIE_BED -> 16 * value
-            CardEffect.DRAW -> 5 * value
+            CardEffect.DRAW_ANY -> 5 * value
             CardEffect.FLOURISH_OVERRIDE -> 0
             CardEffect.GAIN_D20 -> 20 * value
             CardEffect.GAIN_FREE_ROOT -> 6 * value
@@ -38,6 +38,7 @@ class EffectBattleScore {
             CardEffect.REDUCE_COST_VINE -> 0
             CardEffect.REROLL_ACCEPT_2ND -> 5 * value
             CardEffect.REROLL_ALL_MAX -> 3 * value
+            CardEffect.REROLL_ANY -> 7 * value
             CardEffect.REROLL_TAKE_BETTER -> 9 * value
             CardEffect.REPLAY_VINE -> 4 * value
             CardEffect.RETAIN_CARD -> 2 * value

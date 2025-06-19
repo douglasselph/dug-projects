@@ -18,12 +18,6 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.cost.CostElement
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 

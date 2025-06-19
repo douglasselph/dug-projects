@@ -7,6 +7,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.turn.effect.EffectCardToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDieAdjust
 import dugsolutions.leaf.game.turn.effect.EffectDieReroll
+import dugsolutions.leaf.game.turn.effect.EffectDieRerollAny
 import dugsolutions.leaf.game.turn.effect.EffectDieToMax
 import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDiscard
@@ -41,6 +42,7 @@ class HandleCardEffectTest {
     private val effectDrawDie: EffectDrawDie = mockk(relaxed = true)
     private val effectDraw: EffectDraw = mockk(relaxed = true)
     private val effectDieReroll: EffectDieReroll = mockk(relaxed = true)
+    private val effectDieRerollAny: EffectDieRerollAny = mockk(relaxed = true)
     private val effectDieToRetain: EffectDieToRetain = mockk(relaxed = true)
     private val effectGainD20: EffectGainD20 = mockk(relaxed = true)
     private val effectReuseCard: EffectReuseCard = mockk(relaxed = true)
@@ -61,6 +63,7 @@ class HandleCardEffectTest {
         effectDrawDie,
         effectDraw,
         effectDieReroll,
+        effectDieRerollAny,
         effectDieToRetain,
         effectGainD20,
         effectReuseCard,
@@ -147,7 +150,7 @@ class HandleCardEffectTest {
 
     @Test
     fun invoke_DRAW_callsEffectDraw() {
-        SUT(player, target, CardEffect.DRAW, 3)
+        SUT(player, target, CardEffect.DRAW_ANY, 3)
         verify(exactly = 3) { effectDraw(player) }
     }
 
