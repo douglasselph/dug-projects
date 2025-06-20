@@ -6,7 +6,9 @@ import dugsolutions.leaf.cards.cost.CostElement
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.main.domain.HighlightInfo
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -19,7 +21,8 @@ class GatherCardInfoTest {
         private const val TYPE_MATCH_CARD_NAME = "Type Match Card"
     }
 
-    private val SUT = GatherCardInfo()
+    private val mockMatchingBloomCard: MatchingBloomCard = mockk(relaxed = true)
+    private val SUT = GatherCardInfo(mockMatchingBloomCard)
 
     @Test
     fun invoke_whenCardHasAllEffects_returnsCompleteCardInfo() {

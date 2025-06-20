@@ -31,6 +31,7 @@ import dugsolutions.leaf.cards.cost.CostElement
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.HighlightInfo
@@ -126,6 +127,15 @@ fun CardDisplay(
                     label = "T",
                     text = cardInfo.trash,
                     color = Color.Red
+                )
+            }
+
+            // Matching Bloom
+            if (cardInfo.bloom != null) {
+                EffectBox(
+                    label = "B",
+                    text = cardInfo.bloom,
+                    color = Color.Yellow
                 )
             }
 
@@ -246,7 +256,7 @@ private fun PreviewCard(
     gameCard: GameCard,
     highlight: HighlightInfo = HighlightInfo.NONE
 ) {
-    val gatherCardInfo = GatherCardInfo()
+    val gatherCardInfo = GatherCardInfo.previewVariation()
     CardDisplay(
         gatherCardInfo(
             card = gameCard,

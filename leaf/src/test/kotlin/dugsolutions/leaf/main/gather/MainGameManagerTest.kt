@@ -6,6 +6,7 @@ import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.Game
+import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
@@ -33,7 +34,8 @@ class MainGameManagerTest {
 
     private val mockGame = mockk<Game>(relaxed = true)
     private val gameTime = GameTime()
-    private val gatherCardInfo = GatherCardInfo()
+    private val mockMatchingBloomCard: MatchingBloomCard = mockk(relaxed = true)
+    private val gatherCardInfo = GatherCardInfo(mockMatchingBloomCard)
     private val gatherDiceInfo = GatherDiceInfo()
     private val gatherPlayerInfo = GatherPlayerInfo(gatherCardInfo, gatherDiceInfo)
     private val gatherGroveInfo = mockk<GatherGroveInfo>(relaxed = true)

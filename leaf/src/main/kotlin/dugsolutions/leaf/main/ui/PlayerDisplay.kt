@@ -152,7 +152,7 @@ fun main() = application {
             height = 1000.dp
         )
     ) {
-        val gatherCardInfo = GatherCardInfo()
+        val gatherCardInfo = GatherCardInfo.previewVariation()
         val infoLine = PlayerScore(1, scoreDice = 10, scoreCards = 15).toString()
         // Sample player data
         val samplePlayer = PlayerInfo(

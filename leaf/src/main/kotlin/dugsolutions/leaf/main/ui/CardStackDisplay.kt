@@ -109,7 +109,7 @@ fun CardStackDisplay(
 
 // Preview window for testing stack info display
 fun main() = application {
-    val gatherCardInfo = GatherCardInfo()
+    val gatherCardInfo = GatherCardInfo.previewVariation()
     Window(
         onCloseRequest = ::exitApplication,
         title = "Stack Info Display Preview",

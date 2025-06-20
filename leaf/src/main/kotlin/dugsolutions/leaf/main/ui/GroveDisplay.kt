@@ -65,7 +65,7 @@ fun GroveDisplay(grove: GroveInfo, onSelected: (item: ItemInfo) -> Unit = {}) {
 
 // Preview window for testing grove display
 fun main() = application {
-    val gatherCardInfo = GatherCardInfo()
+    val gatherCardInfo = GatherCardInfo.previewVariation()
     val gatherDiceInfo = GatherDiceInfo()
     val sampleDie = SampleDie()
 

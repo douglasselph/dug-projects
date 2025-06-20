@@ -10,6 +10,7 @@ data class CardInfo(
     val primary: String?,
     val match: String?,
     val trash: String?,
+    val bloom: String?,
     val thorn: Int,
     val highlight: HighlightInfo
 )

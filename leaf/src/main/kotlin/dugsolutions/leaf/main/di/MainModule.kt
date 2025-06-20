@@ -17,7 +17,7 @@ import org.koin.dsl.module
 
 val mainModule: Module = module {
 
-    single { GatherCardInfo() }
+    single { GatherCardInfo(get()) }
     single { GatherDiceInfo() }
     single { GatherGroveInfo(get(), get(), get(), get(), get()) }
     single { GatherPlayerInfo(get(), get()) }

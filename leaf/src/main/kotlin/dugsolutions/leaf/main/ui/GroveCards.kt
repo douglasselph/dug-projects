@@ -92,7 +92,7 @@ fun main() = application {
 
 @Composable
 private fun createSampleGroveInfo(): GroveInfo {
-    val gatherCardInfo = GatherCardInfo()
+    val gatherCardInfo = GatherCardInfo.previewVariation()
 
     // Create sample cards for different types
     val rootCard = FakeCards.rootCard

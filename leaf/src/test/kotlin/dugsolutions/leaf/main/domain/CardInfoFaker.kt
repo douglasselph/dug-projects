@@ -44,6 +44,7 @@ object CardInfoFaker {
             match = match,
             trash = trash,
             thorn = thorn,
+            bloom = "Bloom Card",
             highlight = highlight
         )
     }

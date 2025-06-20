@@ -24,7 +24,7 @@ fun CardsColumnDisplay(
 
 // Preview window for testing card rows
 fun main() = application {
-    val gatherCardInfo = GatherCardInfo()
+    val gatherCardInfo = GatherCardInfo.previewVariation()
     Window(
         onCloseRequest = ::exitApplication,
         title = "CardsColumnDisplay Preview",
