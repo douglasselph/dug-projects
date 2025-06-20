@@ -23,13 +23,13 @@ Twist of Fate;Vine;5;1;C 10;RerollAny;1;Canopy;RerollTakeBetter;1;-;-;-
 Thief on a Leaf;Vine;5;1;C 12 ;UseOpponentCard;1;Canopy;UseOpponentDie;1;-;-;-
 Rolling Creeper;Vine;9;1;C 9;AdjustBy;2;Canopy;AdjustBy;3;;;
 Barb and Weave;Vine;10;1;C 10;DrawDie;1;Canopy;DrawDie;1;;-;3
-Power Petal;Flower;10;2;C 7;Adorn;1;-;-;-;-;-;1
+Power Petal;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1
 Petal to the Nettles;Bloom;1;10;-;AddToTotal;4;Power Petal;AddToTotal;2;;-;-
-Morning Glimmer;Flower;12;2;C 7;Adorn;1;-;-;-;-;-;1
+Morning Glimmer;Flower;12;2;C 9;Adorn;1;-;-;-;-;-;1
 Oh Glory Be;Bloom;1;10;-;AdjustBy;3;Morning Glimmer;AdjustBy;2;-;-;-
-Pick-a-Lily;Flower;8;2;C 8;Adorn;1;-;-;-;-;-;1
+Pick-a-Lily;Flower;8;2;C 11 ;Adorn;1;-;-;-;-;-;1
 Bloom of Doom;Bloom;1;10;-;DrawDie;2;Pick-a-Lily;DrawDie;1;-;-;-
-Snapbackdragon;Flower;10;2;C 8;Adorn;1;-;-;-;-;-;1
+Snapbackdragon;Flower;10;2;C 11 ;Adorn;1;-;-;-;-;-;1
 Perennial Payback;Bloom;1;10;-;DrawDie;1;Snapbackdragon;DrawDie;1;-;-;-
-Forget-Me-Not;Flower;10;2;C 7;Adorn;1;-;-;-;-;-;1
+Forget-Me-Not;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1
 Rebloominate;Bloom;1;10;-;ReuseAny;1;Forget-Me-Not;ReuseAny;1;-;-;-

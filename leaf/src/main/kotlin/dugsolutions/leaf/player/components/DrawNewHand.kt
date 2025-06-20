@@ -56,5 +56,20 @@ class DrawNewHand {
                 player.drawDie()
             }
         }
+        /**
+         * Hand all full, we are done.
+         */
+        if (player.handSize >= HAND_SIZE) {
+            return
+        }
+        /**
+         * If at this point there is still room, then just fill up with cards.
+         */
+        spaceLeft = HAND_SIZE - player.handSize
+        repeat(spaceLeft) {
+            if (player.handSize < HAND_SIZE) {
+                player.drawCard()
+            }
+        }
     }
 }

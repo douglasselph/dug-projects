@@ -9,6 +9,7 @@ import dugsolutions.leaf.grove.local.GameCardsUseCase
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
+import dugsolutions.leaf.grove.domain.MarketStackType
 
 class Grove(
     private val stacks: GroveStacks,
@@ -37,6 +38,16 @@ class Grove(
 
     fun removeCard(cardId: CardID) {
         stacks.removeTopShowingCardOf(cardId)
+    }
+
+    fun repairWild() {
+        val wild1 = stacks[MarketStackID.WILD_1] ?: return
+        val wild2 = stacks[MarketStackID.WILD_2] ?: return
+        if (wild1.isEmpty() && wild2.size > 1) {
+            wild2.removeTop()?.let { cardId -> wild1.add(cardId) }
+        } else if (wild2.isEmpty() && wild1.size > 1) {
+            wild1.removeTop()?.let { cardId -> wild2.add(cardId) }
+        }
     }
 
     fun addDie(die: Die) {

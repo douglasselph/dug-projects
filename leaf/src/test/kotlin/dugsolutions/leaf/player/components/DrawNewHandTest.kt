@@ -34,7 +34,7 @@ class DrawNewHandTest {
     }
 
     @Test
-    fun invoke_whenPreferredCardCount0_drawsOnlyDice() {
+    fun invoke_whenPreferredCardCount0_drawsOneCardAndTheRestDice() {
         // Arrange
         player.addCardToSupply(FakeCards.rootCard)
         player.addDieToSupply(D4)
@@ -45,7 +45,7 @@ class DrawNewHandTest {
         SUT(player, 0)
 
         // Assert
-        assertEquals(0, player.cardsInHand.size)
+        assertEquals(1, player.cardsInHand.size)
         assertEquals(3, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))
@@ -194,6 +194,26 @@ class DrawNewHandTest {
 
         // Act
         SUT(player, 2)
+
+        // Assert
+        assertEquals(2, player.cardsInHand.size)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard2.id, player.cardsInHand[1].id)
+        assertEquals(2, player.diceInHand.size)
+        assertTrue(player.diceInHand.dice.contains(D4))
+        assertTrue(player.diceInHand.dice.contains(D6))
+    }
+
+    @Test
+    fun invoke_whenLimitedSupplyWithPreferredCount1_drawsAllAvailableCardsAndDice() {
+        // Arrange
+        player.addCardToSupply(FakeCards.rootCard.id)
+        player.addCardToSupply(FakeCards.rootCard2.id)
+        player.addDieToSupply(D4)
+        player.addDieToSupply(D6)
+
+        // Act
+        SUT(player, 1)
 
         // Assert
         assertEquals(2, player.cardsInHand.size)

@@ -74,6 +74,7 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(FakeCards.rootCard.id)
+            mockGrove.repairWild()
             mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.rootCard, FakeCombination.combinationD6))
             mockManageAcquiredFloralTypes.add(FakeCards.rootCard.type)
         }
@@ -103,6 +104,8 @@ class AcquireItemTest {
             mockChronicle(Moment.ACQUIRE_DIE(mockPlayer, expectedDie, FakeCombination.combinationD6))
             mockGrove.removeDie(expectedDie)
         }
+        // Note: repairWild() is not called for dice acquisition
+        coVerify(exactly = 0) { mockGrove.repairWild() }
     }
 
     @Test
@@ -124,6 +127,7 @@ class AcquireItemTest {
         assertFalse(applyCostTD.callbackWasInvoked)
         coVerify(exactly = 0) {
             mockGrove.removeCard(any())
+            mockGrove.repairWild()
             mockChronicle(any())
             mockManageAcquiredFloralTypes.add(any())
         }
@@ -155,6 +159,7 @@ class AcquireItemTest {
         assertTrue(gotException != null)
         coVerify(exactly = 0) {
             mockGrove.removeCard(any())
+            mockGrove.repairWild()
             mockChronicle(any())
             mockManageAcquiredFloralTypes.add(any())
         }
@@ -179,8 +184,66 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(FakeCards.flowerCard.id)
+            mockGrove.repairWild()
             mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.flowerCard, FakeCombination.combinationD12))
             mockManageAcquiredFloralTypes.add(FlourishType.FLOWER)
+        }
+    }
+
+    @Test
+    fun invoke_whenWildCardSelected_callsRepairWild() = runBlocking {
+        // Arrange
+        // Create a wild card (using rootCard as a wild card for testing purposes)
+        val wildCard = FakeCards.rootCard
+        val marketCards = listOf(wildCard)
+        val possibleCards = listOf(ChoiceCard(wildCard, FakeCombination.combinationD6))
+        val possibleDice = emptyList<ChoiceDie>()
+        every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
+        every { mockPossibleDice(any()) } returns possibleDice
+        coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
+                DecisionAcquireSelect.BuyItem.Card(possibleCards[0])
+
+        // Act
+        val result = SUT(mockPlayer, marketCards)
+
+        // Assert
+        assertTrue(result)
+        assertTrue(applyCostTD.callbackWasInvoked)
+        coVerify {
+            mockGrove.removeCard(wildCard.id)
+            mockGrove.repairWild()
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, wildCard, FakeCombination.combinationD6))
+            mockManageAcquiredFloralTypes.add(wildCard.type)
+        }
+    }
+
+    @Test
+    fun invoke_whenMultipleCardsSelected_callsRepairWildForEachCard() = runBlocking {
+        // Arrange
+        val card1 = FakeCards.rootCard
+        val card2 = FakeCards.vineCard
+        val marketCards = listOf(card1, card2)
+        val possibleCards = listOf(
+            ChoiceCard(card1, FakeCombination.combinationD6),
+            ChoiceCard(card2, FakeCombination.combinationD8)
+        )
+        val possibleDice = emptyList<ChoiceDie>()
+        every { mockPossibleCards(mockPlayer, any(), marketCards) } returns possibleCards
+        every { mockPossibleDice(any()) } returns possibleDice
+        coEvery { mockPlayer.decisionDirector.acquireSelectDecision(possibleCards, possibleDice) } returns
+                DecisionAcquireSelect.BuyItem.Card(possibleCards[0])
+
+        // Act
+        val result = SUT(mockPlayer, marketCards)
+
+        // Assert
+        assertTrue(result)
+        assertTrue(applyCostTD.callbackWasInvoked)
+        coVerify {
+            mockGrove.removeCard(card1.id)
+            mockGrove.repairWild()
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, card1, FakeCombination.combinationD6))
+            mockManageAcquiredFloralTypes.add(card1.type)
         }
     }
 } 
