@@ -91,27 +91,27 @@ fun main() = application {
             // First row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(card = FakeCards.fakeSeedling),
-                    gatherCardInfo(card = FakeCards.fakeRoot),
-                    gatherCardInfo(card = FakeCards.fakeCanopy)
+                    gatherCardInfo(card = FakeCards.seedlingCard),
+                    gatherCardInfo(card = FakeCards.rootCard),
+                    gatherCardInfo(card = FakeCards.canopyCard)
                 )
             )
 
             // Second row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(card = FakeCards.fakeVine),
-                    gatherCardInfo(card = FakeCards.fakeFlower),
-                    gatherCardInfo(card = FakeCards.fakeBloom)
+                    gatherCardInfo(card = FakeCards.vineCard),
+                    gatherCardInfo(card = FakeCards.flowerCard),
+                    gatherCardInfo(card = FakeCards.bloomCard)
                 )
             )
 
             // Third row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(card = FakeCards.fakeFlower2),
-                    gatherCardInfo(card = FakeCards.fakeFlower3),
-                    gatherCardInfo(card = FakeCards.fakeFlower)
+                    gatherCardInfo(card = FakeCards.flowerCard2),
+                    gatherCardInfo(card = FakeCards.flowerCard3),
+                    gatherCardInfo(card = FakeCards.flowerCard)
                 )
             )
         }

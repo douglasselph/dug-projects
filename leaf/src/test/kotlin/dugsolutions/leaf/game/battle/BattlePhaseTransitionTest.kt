@@ -50,8 +50,8 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenSingleTypeFlowers_addsTwoBloomsOfThatType() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val bloom = FakeCards.fakeBloom
+        val flower1 = FakeCards.flowerCard
+        val bloom = FakeCards.bloomCard
 
         every { mockBestFlowerCards(mockPlayer) } returns listOf(flower1)
         every { mockMatchingBloomCard(flower1) } returns bloom
@@ -73,10 +73,10 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenTwoFlowerTypes_addsTwoBlooms() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
 
         every { mockBestFlowerCards(mockPlayer) } returns listOf(flower1, flower2)
         every { mockMatchingBloomCard(flower1) } returns bloom1
@@ -100,12 +100,12 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenManyFlowerTypes_gathersBloomOfMostFlowers() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
-        val flower3 = FakeCards.fakeFlower3
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
-        val bloom3 = FakeCards.fakeBloom3
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
+        val flower3 = FakeCards.flowerCard3
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
+        val bloom3 = FakeCards.bloomCard3
 
         assertEquals(flower1.id, bloom1.flowerCardId)
         assertEquals(flower2.id, bloom2.flowerCardId)
@@ -134,12 +134,12 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenManyFlowerTypes2_gathersBloomOfMostFlowers() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
-        val flower3 = FakeCards.fakeFlower3
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
-        val bloom3 = FakeCards.fakeBloom3
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
+        val flower3 = FakeCards.flowerCard3
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
+        val bloom3 = FakeCards.bloomCard3
 
         assertEquals(flower1.id, bloom1.flowerCardId)
         assertEquals(flower2.id, bloom2.flowerCardId)
@@ -168,10 +168,10 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenSinglePlayerWithTwoFlowerCards_addsCardsToSupplyAndClearsFloralArray() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
 
         every { mockBestFlowerCards(mockPlayer) } returns listOf(flower1, flower2)
         every { mockMatchingBloomCard(flower1) } returns bloom1
@@ -195,8 +195,8 @@ class BattlePhaseTransitionTest {
     @Test
     fun invoke_whenSinglePlayerWithOneFlowerCard_addsCardTwiceToSupply() = runBlocking {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val bloom1 = FakeCards.fakeBloom
+        val flower1 = FakeCards.flowerCard
+        val bloom1 = FakeCards.bloomCard
 
         every { mockBestFlowerCards(mockPlayer) } returns listOf(flower1)
         every { mockMatchingBloomCard(flower1) } returns bloom1
@@ -218,10 +218,10 @@ class BattlePhaseTransitionTest {
     fun invoke_whenMultiplePlayers_processesEachPlayer() = runBlocking {
         // Arrange
         val mockPlayer2 = mockk<Player>(relaxed = true)
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
 
         every { mockBestFlowerCards(mockPlayer) } returns listOf(flower1, flower2)
         every { mockBestFlowerCards(mockPlayer2) } returns listOf(flower1)

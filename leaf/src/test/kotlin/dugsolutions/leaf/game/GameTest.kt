@@ -57,10 +57,10 @@ class GameTest {
 
     private lateinit var SUT: Game
 
-    private val fakeSeedlingCard1: GameCard = FakeCards.fakeSeedling
-    private val fakeSeedlingCard2: GameCard = FakeCards.fakeSeedling2
-    private val fakeSeedlingCard3: GameCard = FakeCards.fakeSeedling3
-    private val fakeSeedlingCard4: GameCard = FakeCards.fakeSeedling4
+    private val fakeSeedlingCard1: GameCard = FakeCards.seedlingCard
+    private val fakeSeedlingCard2: GameCard = FakeCards.seedlingCard2
+    private val fakeSeedlingCard3: GameCard = FakeCards.seedlingCard3
+    private val fakeSeedlingCard4: GameCard = FakeCards.seedlingCard4
 
     @BeforeEach
     fun setup() {

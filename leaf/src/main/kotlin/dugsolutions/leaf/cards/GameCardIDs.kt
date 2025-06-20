@@ -127,4 +127,10 @@ class GameCardIDs(
         synchronized(lock) {
             _cards.mapNotNull { cardManager.getCard(it) }.map(transform)
         }
+
+    fun sort() {
+        synchronized(lock) {
+            _cards.sort()
+        }
+    }
 }

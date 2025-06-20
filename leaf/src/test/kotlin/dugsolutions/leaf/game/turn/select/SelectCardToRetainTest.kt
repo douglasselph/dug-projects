@@ -10,20 +10,20 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class SelectACardToRetainTest {
+class SelectCardToRetainTest {
 
     private lateinit var costScore: CostScore
 
     private lateinit var SUT: SelectCardToRetain
 
     // Using FakeCards instead of mocks
-    private val fakeSeedling = FakeCards.fakeSeedling       // SEEDLING type
-    private val fakeRoot = FakeCards.fakeRoot               // ROOT type
-    private val fakeRoot2 = FakeCards.fakeRoot2             // ROOT type with different cost
-    private val fakeBloom = FakeCards.fakeBloom             // BLOOM type
-    private val fakeBloom2 = FakeCards.fakeBloom2           // BLOOM type with different cost
-    private val fakeVine = FakeCards.fakeVine               // VINE type
-    private val fakeCanopy = FakeCards.fakeCanopy           // CANOPY type
+    private val fakeSeedling = FakeCards.seedlingCard       // SEEDLING type
+    private val fakeRoot = FakeCards.rootCard               // ROOT type
+    private val fakeRoot2 = FakeCards.rootCard2             // ROOT type with different cost
+    private val fakeBloom = FakeCards.bloomCard             // BLOOM type
+    private val fakeBloom2 = FakeCards.bloomCard2           // BLOOM type with different cost
+    private val fakeVine = FakeCards.vineCard               // VINE type
+    private val fakeCanopy = FakeCards.canopyCard           // CANOPY type
 
     @BeforeEach
     fun setup() {

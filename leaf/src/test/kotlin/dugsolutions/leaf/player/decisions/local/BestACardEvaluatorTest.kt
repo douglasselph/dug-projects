@@ -35,14 +35,14 @@ class BestACardEvaluatorTest {
         SUT = BestCardEvaluator()
 
         // Create test cards with different flourish types
-        rootCard1 = FakeCards.fakeRoot.copy(id = 1)
-        rootCard2 = FakeCards.fakeRoot.copy(id = 2)
-        canopyCard1 = FakeCards.fakeCanopy.copy(id = 3)
-        canopyCard2 = FakeCards.fakeCanopy.copy(id = 4)
-        vineCard1 = FakeCards.fakeVine.copy(id = 5)
-        vineCard2 = FakeCards.fakeVine.copy(id = 6)
-        flowerCard1 = FakeCards.fakeFlower.copy(id = 7)
-        flowerCard2 = FakeCards.fakeFlower2.copy(id = 8)
+        rootCard1 = FakeCards.rootCard.copy(id = 1)
+        rootCard2 = FakeCards.rootCard.copy(id = 2)
+        canopyCard1 = FakeCards.canopyCard.copy(id = 3)
+        canopyCard2 = FakeCards.canopyCard.copy(id = 4)
+        vineCard1 = FakeCards.vineCard.copy(id = 5)
+        vineCard2 = FakeCards.vineCard.copy(id = 6)
+        flowerCard1 = FakeCards.flowerCard.copy(id = 7)
+        flowerCard2 = FakeCards.flowerCard2.copy(id = 8)
     }
 
     @Test

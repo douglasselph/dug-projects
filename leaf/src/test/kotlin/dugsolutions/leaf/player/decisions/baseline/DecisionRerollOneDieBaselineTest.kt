@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class DecisionIDRerollOneDieBaselineTest {
+class DecisionRerollOneDieBaselineTest {
 
     private lateinit var player: Player
     private lateinit var SUT: DecisionRerollOneDieBaseline

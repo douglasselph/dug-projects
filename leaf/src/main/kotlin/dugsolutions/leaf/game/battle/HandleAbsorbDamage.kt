@@ -39,7 +39,7 @@ class HandleAbsorbDamage(
             chronicle(Moment.TRASH_CARD(player, card))
         }
         result.floralCards.forEach { card ->
-            player.removeCardFromBuddingStack(card.id)
+            player.removeCardFromFloralArray(card.id)
             player.incomingDamage -= card.resilience
             player.nutrients += card.nutrient
             thornDamage += card.thorn

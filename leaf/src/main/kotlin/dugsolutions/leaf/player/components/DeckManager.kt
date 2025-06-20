@@ -18,8 +18,8 @@ class DeckManager(
     val handSize: Int
         get() = hand.cardCount + hand.diceCount
 
-    val isSupplyEmpty: Boolean
-        get() = supply.isEmpty
+    val isResupplyNeeded: Boolean
+        get() = supply.cardCount == 0
 
     val pipTotal: Int
         get() = hand.pipTotal

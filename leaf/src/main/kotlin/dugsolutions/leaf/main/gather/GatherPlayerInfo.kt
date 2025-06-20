@@ -20,7 +20,7 @@ class GatherPlayerInfo(
         // Format dice in compost as "4D4 3D6" style
         val dormantBed = gatherDiceInfo(player.diceInBed, values = false)
 
-        val buddingStack = player.floralCards.mapIndexed { index, item -> gatherCardInfo(index, item) }
+        val floralArray = player.floralCards.sortedBy { it.name }.mapIndexed { index, item -> gatherCardInfo(index, item) }
 
         // Get counts for supply and compost cards
         val supplyCardCount = player.cardsInSupplyCount
@@ -33,7 +33,7 @@ class GatherPlayerInfo(
             handCards = handCards,
             handDice = handDice,
             supplyDice = supplyDice,
-            buddingStack = buddingStack,
+            floralArray = floralArray,
             supplyCardCount = supplyCardCount,
             bedDice = dormantBed,
             bedCardCount = bedCardCount

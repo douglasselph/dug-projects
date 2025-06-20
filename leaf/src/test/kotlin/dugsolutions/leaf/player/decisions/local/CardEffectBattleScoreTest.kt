@@ -65,7 +65,7 @@ class CardEffectBattleScoreTest {
     @Test
     fun invoke_whenHasMatchEffectWithFlower_returnsCombinedScore() {
         // Arrange
-        val flowerCard = FakeCards.fakeFlower
+        val flowerCard = FakeCards.flowerCard
         val card = mockk<GameCard>(relaxed = true) {
             every { primaryEffect } returns null
             every { matchWith } returns MatchWith.Flower(flowerCard.id)

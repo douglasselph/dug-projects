@@ -8,7 +8,6 @@ import dugsolutions.leaf.game.turn.select.SelectDieToReroll
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.random.die.Die
 
-// TODO: Unit test
 /**
  * REROLL_ANY - Reroll one of your own or an opponents die. You must accept the 2nd roll.
  */

@@ -1,10 +1,7 @@
 package dugsolutions.leaf.main.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
@@ -39,9 +36,9 @@ fun main() = application {
 
         CardsColumnDisplay(
             listOf(
-                gatherCardInfo(card = FakeCards.fakeBloom),
-                gatherCardInfo(card = FakeCards.fakeBloom2),
-                gatherCardInfo(card = FakeCards.fakeBloom3)
+                gatherCardInfo(card = FakeCards.bloomCard),
+                gatherCardInfo(card = FakeCards.bloomCard2),
+                gatherCardInfo(card = FakeCards.bloomCard3)
             )
         )
 

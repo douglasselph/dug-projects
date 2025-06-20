@@ -58,7 +58,7 @@ fun DrawCountDecisionDisplay(onDrawCountChosen: (value: Int) -> Unit = {}) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                for (count in 0..4) {
+                for (count in 1..4) {
                     Box(
                         modifier = Modifier
                             .size(40.dp)

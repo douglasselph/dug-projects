@@ -27,7 +27,7 @@ class DecisionAcquireSelectSuspendTest {
 
     @BeforeEach
     fun setup() {
-        possibleCards = listOf(ChoiceCard(card = FakeCards.fakeCanopy, Combination()))
+        possibleCards = listOf(ChoiceCard(card = FakeCards.canopyCard, Combination()))
         possibleDice = listOf(ChoiceDie(die = sampleDie.d6, Combination()))
     }
 

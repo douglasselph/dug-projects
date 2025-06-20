@@ -1,10 +1,10 @@
 package dugsolutions.leaf.game.turn.handle
 
-import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.player.Player
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -16,13 +16,11 @@ class HandleCleanupTest {
     private val mockHandleReused: HandleReused = mockk(relaxed = true)
     private val mockHandleRetained: HandleRetained = mockk(relaxed = true)
     private val mockCompostRecovery: HandleCompostRecovery = mockk(relaxed = true)
-    private val mockChronicle: GameChronicle = mockk(relaxed = true)
 
     private val SUT: HandleCleanup = HandleCleanup(
         mockHandleReused,
         mockHandleRetained,
-        mockCompostRecovery,
-        mockChronicle
+        mockCompostRecovery
     )
 
     @BeforeEach
@@ -37,13 +35,26 @@ class HandleCleanupTest {
         coEvery { mockPlayer.drawHand() } answers { sequence.add("drawHand") }
         every { mockHandleReused(mockPlayer) } answers { sequence.add("handleReused") }
         every { mockHandleRetained(mockPlayer) } answers { sequence.add("handleRetained") }
+        every { mockCompostRecovery(mockPlayer) } answers { sequence.add("handleCompostRecovery") }
 
         // Act
         SUT(mockPlayer)
 
         // Assert
-        val expectedSequence = listOf("discardHand", "drawHand", "handleReused", "handleRetained")
+        val expectedSequence = listOf("discardHand", "drawHand", "handleReused", "handleRetained", "handleCompostRecovery")
         assertEquals(expectedSequence, sequence) { "Expected sequence $expectedSequence but got $sequence" }
+    }
+
+    @Test
+    fun invoke_whenCompostRecoveryCalled_processesCompostRecovery() = runBlocking {
+        // Arrange
+        // No special setup needed - just verify the call
+
+        // Act
+        SUT(mockPlayer)
+
+        // Assert
+        verify { mockCompostRecovery(mockPlayer) }
     }
 
 } 

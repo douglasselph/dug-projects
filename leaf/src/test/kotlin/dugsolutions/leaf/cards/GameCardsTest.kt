@@ -45,8 +45,8 @@ class GameCardsTest {
 
         // Assert
         assertEquals(expectedSize, result.size)
-        assertEquals(FakeCards.fakeRoot, result[0])
-        assertEquals(FakeCards.fakeRoot2, result[1])
+        assertEquals(FakeCards.rootCard, result[0])
+        assertEquals(FakeCards.rootCard2, result[1])
     }
 
     @Test

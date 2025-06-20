@@ -13,13 +13,13 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class BuddingStackTest {
+class FloralArrayTest {
 
     private lateinit var cardManager: CardManager
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
     private lateinit var gameCardIDs: GameCardIDs
     private lateinit var floralBonusCount: FloralBonusCount
-    private lateinit var buddingStack: BuddingStack
+    private lateinit var floralArray: FloralArray
 
     @BeforeEach
     fun setup() {
@@ -28,7 +28,7 @@ class BuddingStackTest {
         gameCardIDs = mockk(relaxed = true)
         floralBonusCount = mockk(relaxed = true)
         every { gameCardIDsFactory(any()) } returns gameCardIDs
-        buddingStack = BuddingStack(cardManager, gameCardIDsFactory)
+        floralArray = FloralArray(cardManager, gameCardIDsFactory)
     }
 
     @Test
@@ -37,7 +37,7 @@ class BuddingStackTest {
         every { gameCardIDs.cardIds } returns emptyList()
 
         // Act
-        val result = buddingStack.cards
+        val result = floralArray.cards
 
         // Assert
         assertTrue(result.isEmpty())
@@ -46,8 +46,8 @@ class BuddingStackTest {
     @Test
     fun cards_whenHasCards_returnsAllCards() {
         // Arrange
-        val flower1 = FakeCards.fakeFlower
-        val flower2 = FakeCards.fakeFlower2
+        val flower1 = FakeCards.flowerCard
+        val flower2 = FakeCards.flowerCard2
         val cardIds = listOf(flower1.id, flower2.id)
 
         every { gameCardIDs.cardIds } returns cardIds
@@ -55,7 +55,7 @@ class BuddingStackTest {
         every { cardManager.getCard(flower2.id) } returns flower2
 
         // Act
-        val result = buddingStack.cards
+        val result = floralArray.cards
 
         // Assert
         assertEquals(2, result.size)
@@ -66,10 +66,10 @@ class BuddingStackTest {
     @Test
     fun add_whenCalled_addsCardToStack() {
         // Arrange
-        val flower = FakeCards.fakeFlower
+        val flower = FakeCards.flowerCard
 
         // Act
-        buddingStack.add(flower.id)
+        floralArray.add(flower.id)
 
         // Assert
         verify { gameCardIDs.add(flower.id) }
@@ -80,7 +80,7 @@ class BuddingStackTest {
         // Arrange
 
         // Act
-        buddingStack.clear()
+        floralArray.clear()
 
         // Assert
         verify { gameCardIDs.clear() }

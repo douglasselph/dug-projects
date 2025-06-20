@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class DecisionIDDamageAbsorptionBaselineTest {
+class DecisionDamageAbsorptionBaselineTest {
 
     companion object {
         val mockSeedlingId = 4
@@ -87,7 +87,7 @@ class DecisionIDDamageAbsorptionBaselineTest {
         cardEffectBattleScore = mockk(relaxed = true)
         player = PlayerTD(1, cardManager)
         sampleDie = SampleDie(RandomizerTD())
-        player.addCardToBed(FakeCards.fakeBloom.id)
+        player.addCardToBed(FakeCards.bloomCard.id)
         player.addDieToBed(sampleDie.d10)
         player.useDeckManager = false
         every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
@@ -137,7 +137,7 @@ class DecisionIDDamageAbsorptionBaselineTest {
         val damage = 4
         player.incomingDamage = damage
         player.addCardToHand(mockVine)
-        player.addCardToHand(FakeCards.fakeCanopy)
+        player.addCardToHand(FakeCards.canopyCard)
 
         // Verify die resilience value
         assertEquals(4, sampleDie.d4.sides, "Die sides must be 4 for this test")
@@ -145,7 +145,7 @@ class DecisionIDDamageAbsorptionBaselineTest {
 
         // Mock card effect battle score to prefer the vine card
         every { cardEffectBattleScore(mockVine) } returns 1
-        every { cardEffectBattleScore(FakeCards.fakeCanopy) } returns 2
+        every { cardEffectBattleScore(FakeCards.canopyCard) } returns 2
 
         // Act
         val result = SUT()
@@ -467,8 +467,8 @@ class DecisionIDDamageAbsorptionBaselineTest {
         val damage = 3
         player.incomingDamage = damage
         // Add only flower cards to floral array
-        player.addCardToBuddingStack(mockFlowerId)
-        player.addCardToBuddingStack(mockFlowerId2)
+        player.addCardToFloralArray(mockFlowerId)
+        player.addCardToFloralArray(mockFlowerId2)
 
         // Mock card effect battle score
         every { cardEffectBattleScore(mockFlower) } returns 1

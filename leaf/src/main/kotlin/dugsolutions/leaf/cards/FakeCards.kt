@@ -19,7 +19,7 @@ class FakeCards {
 
         // Basic test cards
 
-        val fakeSeedling = GameCard(
+        val seedlingCard = GameCard(
             id = ++ID,
             name = "Sprouting Seed",
             type = FlourishType.SEEDLING,
@@ -36,7 +36,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeSeedling2 = GameCard(
+        val seedlingCard2 = GameCard(
             id = ++ID,
             name = "Tiny Sprout",
             type = FlourishType.SEEDLING,
@@ -53,7 +53,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeSeedling3 = GameCard(
+        val seedlingCard3 = GameCard(
             id = ++ID,
             name = "Young Plant",
             type = FlourishType.SEEDLING,
@@ -70,7 +70,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeSeedling4 = GameCard(
+        val seedlingCard4 = GameCard(
             id = ++ID,
             name = "Growing Seedling",
             type = FlourishType.SEEDLING,
@@ -87,7 +87,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeSeedling5 = GameCard(
+        val seedlingCard5 = GameCard(
             id = ++ID,
             name = "Test Seedling",
             type = FlourishType.SEEDLING,
@@ -104,7 +104,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeVine = GameCard(
+        val vineCard = GameCard(
             id = ++ID,
             name = "Thorny Vine",
             type = FlourishType.VINE,
@@ -125,7 +125,7 @@ class FakeCards {
             thorn = 2
         )
 
-        val fakeVine2 = GameCard(
+        val vineCard2 = GameCard(
             id = ++ID,
             name = "Test Vine",
             type = FlourishType.VINE,
@@ -146,7 +146,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeCanopy = GameCard(
+        val canopyCard = GameCard(
             id = ++ID,
             name = "Sheltering Canopy",
             type = FlourishType.CANOPY,
@@ -167,7 +167,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeCanopy2 = GameCard(
+        val canopyCard2 = GameCard(
             id = ++ID,
             name = "Test Canopy",
             type = FlourishType.CANOPY,
@@ -188,7 +188,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeRoot = GameCard(
+        val rootCard = GameCard(
             id = ++ID,
             name = "Nourishing Root",
             type = FlourishType.ROOT,
@@ -208,7 +208,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeRoot2 = GameCard(
+        val rootCard2 = GameCard(
             id = ++ID,
             name = "Test Root",
             type = FlourishType.ROOT,
@@ -228,9 +228,9 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeFlower = GameCard(
+        val flowerCard = GameCard(
             id = ++ID,
-            name = "Spring Flower",
+            name = "Spring Flower A",
             type = FlourishType.FLOWER,
             resilience = 10,
             nutrient = 2,
@@ -251,9 +251,9 @@ class FakeCards {
             thorn = 1
         )
 
-        val fakeFlower2 = GameCard(
+        val flowerCard2 = GameCard(
             id = ++ID,
-            name = "Test Flower",
+            name = "Summer Flower B",
             type = FlourishType.FLOWER,
             resilience = 10,
             nutrient = 2,
@@ -272,9 +272,9 @@ class FakeCards {
             thorn = 1
         )
 
-        val fakeFlower3 = GameCard(
+        val flowerCard3 = GameCard(
             id = ++ID,
-            name = "Dark Flower",
+            name = "Fall Flower C",
             type = FlourishType.FLOWER,
             resilience = 10,
             nutrient = 2,
@@ -293,7 +293,7 @@ class FakeCards {
             thorn = 1
         )
 
-        val fakeBloom = GameCard(
+        val bloomCard = GameCard(
             id = ++ID,
             name = "Spring Bloom",
             type = FlourishType.BLOOM,
@@ -308,7 +308,7 @@ class FakeCards {
             ),
             primaryEffect = CardEffect.ADD_TO_TOTAL,
             primaryValue = 3,
-            matchWith = MatchWith.Flower(fakeFlower.id),
+            matchWith = MatchWith.Flower(flowerCard.id),
             matchEffect = CardEffect.ADD_TO_TOTAL,
             matchValue = 1,
             trashEffect = CardEffect.DEFLECT,
@@ -316,7 +316,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeBloom2 = GameCard(
+        val bloomCard2 = GameCard(
             id = ++ID,
             name = "Test Bloom",
             type = FlourishType.BLOOM,
@@ -329,7 +329,7 @@ class FakeCards {
             )),
             primaryEffect = CardEffect.DRAW_DIE,
             primaryValue = 1,
-            matchWith = MatchWith.Flower(fakeFlower2.id),
+            matchWith = MatchWith.Flower(flowerCard2.id),
             matchEffect = CardEffect.DRAW_DIE,
             matchValue = 1,
             trashEffect = null,
@@ -337,7 +337,7 @@ class FakeCards {
             thorn = 0
         )
 
-        val fakeBloom3 = GameCard(
+        val bloomCard3 = GameCard(
             id = ++ID,
             name = "Dark Bloom",
             type = FlourishType.BLOOM,
@@ -350,7 +350,7 @@ class FakeCards {
             )),
             primaryEffect = CardEffect.ADJUST_BY,
             primaryValue = 1,
-            matchWith = MatchWith.Flower(fakeFlower3.id),
+            matchWith = MatchWith.Flower(flowerCard3.id),
             matchEffect = CardEffect.ADJUST_BY,
             matchValue = 1,
             trashEffect = null,
@@ -360,38 +360,38 @@ class FakeCards {
 
         // Collections of card
         val ALL_SEEDLINGS = listOf(
-            fakeSeedling,
-            fakeSeedling2,
-            fakeSeedling3,
-            fakeSeedling4,
-            fakeSeedling5
+            seedlingCard,
+            seedlingCard2,
+            seedlingCard3,
+            seedlingCard4,
+            seedlingCard5
         )
 
         val ALL_ROOT = listOf(
-            fakeRoot,
-            fakeRoot2
+            rootCard,
+            rootCard2
         )
 
         val ALL_CANOPY = listOf(
-            fakeCanopy,
-            fakeCanopy2
+            canopyCard,
+            canopyCard2
         )
 
         val ALL_VINE = listOf(
-            fakeVine,
-            fakeVine2
+            vineCard,
+            vineCard2
         )
 
         val ALL_BLOOM = listOf(
-            fakeBloom,
-            fakeBloom2,
-            fakeBloom3
+            bloomCard,
+            bloomCard2,
+            bloomCard3
         )
 
         val ALL_FLOWER = listOf(
-            fakeFlower,
-            fakeFlower2,
-            fakeFlower3
+            flowerCard,
+            flowerCard2,
+            flowerCard3
         )
 
         val ALL_CARDS = ALL_SEEDLINGS + ALL_ROOT + ALL_CANOPY + ALL_VINE + ALL_BLOOM + ALL_FLOWER

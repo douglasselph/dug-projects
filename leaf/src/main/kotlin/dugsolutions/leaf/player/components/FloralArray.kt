@@ -6,7 +6,7 @@ import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.GameCardIDs
 import dugsolutions.leaf.cards.di.GameCardIDsFactory
 
-class BuddingStack(
+class FloralArray(
     private val cardManager: CardManager,
     gameCardIDsFactory: GameCardIDsFactory
 ) {
@@ -23,7 +23,6 @@ class BuddingStack(
 
     fun add(cardId: CardID) {
         stack.add(cardId)
-        // TODO: Need to add sort() here.
     }
 
     fun remove(cardId: CardID): Boolean {

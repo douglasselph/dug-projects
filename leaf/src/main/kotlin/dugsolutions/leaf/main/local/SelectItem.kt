@@ -28,9 +28,9 @@ class SelectItem {
     }
 
     fun floralCard(playerInfo: PlayerInfo, cardInfo: CardInfo): PlayerInfo = with(playerInfo) {
-        return hasCard(buddingStack, cardInfo)?.let { selectedCardInfo ->
+        return hasCard(floralArray, cardInfo)?.let { selectedCardInfo ->
             copy(
-                buddingStack = buddingStack.map { card ->
+                floralArray = floralArray.map { card ->
                     if (selectedCardInfo == card)
                         when (card.highlight) {
                             HighlightInfo.SELECTABLE -> card.copy(highlight = HighlightInfo.SELECTED)

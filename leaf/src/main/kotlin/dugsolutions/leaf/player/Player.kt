@@ -7,7 +7,7 @@ import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.player.components.BuddingStack
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.decisions.DecisionDirector
@@ -22,7 +22,7 @@ import dugsolutions.leaf.random.die.DieValue
 
 open class Player(
     private val deckManager: DeckManager,
-    private val buddingStack: BuddingStack,
+    private val floralArray: FloralArray,
     private val floralBonusCount: FloralBonusCount,
     private val cardManager: CardManager,
     private val dieFactory: DieFactory,
@@ -56,6 +56,9 @@ open class Player(
     val retained: MutableList<HandItem> = mutableListOf()
     val delayedEffectList: MutableList<AppliedEffect> = mutableListOf()
     val cardsToPlay: MutableList<GameCard> = mutableListOf()
+
+    val isResupplyNeeded: Boolean
+        get() = deckManager.isResupplyNeeded
 
     val handSize: Int
         get() = deckManager.handSize
@@ -143,7 +146,7 @@ open class Player(
         get() = cardsInSupply + cardsInHand + cardsInBed
 
     open val floralCards: List<GameCard>
-        get() = buddingStack.cards
+        get() = floralArray.cards
 
     // Hand management methods
     fun hasCardInHand(cardId: CardID): Boolean = deckManager.hasCardInHand(cardId)
@@ -171,7 +174,7 @@ open class Player(
     open fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
     fun removeCardFromBed(cardId: CardID): Boolean = deckManager.removeCardFromBed(cardId)
     open fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
-    open fun removeCardFromBuddingStack(cardId: CardID): Boolean = buddingStack.remove(cardId)
+    open fun removeCardFromFloralArray(cardId: CardID): Boolean = floralArray.remove(cardId)
 
     fun retainCard(card: GameCard): Boolean =
         hasCardInHand(card.id) && removeCardFromHand(card.id) && retained.add(HandItem.aCard(card))
@@ -188,7 +191,7 @@ open class Player(
     open fun addCardToBed(cardID: CardID) = deckManager.addCardToBed(cardID)
     open fun addDieToBed(die: Die) = deckManager.addDieToBed(die)
     fun removeDieFromBed(die: Die) = deckManager.removeDieFromBed(die)
-    open fun addCardToBuddingStack(cardId: CardID) = buddingStack.add(cardId)
+    open fun addCardToFloralArray(cardId: CardID) = floralArray.add(cardId)
 
     fun addCardsToHand(cards: List<CardID>) = cards.forEach { addCardToHand(it) }
     fun addDiceToHand(dice: List<Die>) = dice.forEach { addDieToHand(it) }
@@ -215,21 +218,21 @@ open class Player(
     }
 
     open fun drawCard(): CardID? {
-        if (deckManager.isSupplyEmpty) {
+        if (deckManager.isResupplyNeeded) {
             resupply()
         }
         return deckManager.drawCard()
     }
 
     open fun drawDie(): Die? {
-        if (deckManager.isSupplyEmpty) {
+        if (deckManager.isResupplyNeeded) {
             resupply()
         }
         return deckManager.drawDie()?.roll()
     }
 
     fun drawBestDie(): Die? {
-        if (deckManager.isSupplyEmpty) {
+        if (deckManager.isResupplyNeeded) {
             resupply()
         }
         return deckManager.drawBestDie()?.roll()
@@ -268,6 +271,6 @@ open class Player(
     }
 
     open fun clearFloralCards() {
-        buddingStack.clear()
+        floralArray.clear()
     }
 }

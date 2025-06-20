@@ -39,7 +39,7 @@ class HandleDeliverDamage(
             val damage = attackerPipTotal - defenderPipTotal
             val deflectDamage = defender.deflectDamage
 
-            defender.deflectDamage = 0 // TODO: Unit test
+            defender.deflectDamage = 0
 
             chronicle(
                 Moment.DELIVER_DAMAGE(

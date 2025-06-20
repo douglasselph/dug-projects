@@ -7,8 +7,6 @@ import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD
 import dugsolutions.leaf.random.RandomizerTD
 import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.SampleDie
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,7 +36,7 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPreferredCardCount0_drawsOnlyDice() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot)
+        player.addCardToSupply(FakeCards.rootCard)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
         player.addDieToSupply(D8)
@@ -57,7 +55,7 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPreferredCardCount1_withPlentyOfSupply_drawsOneCardAndThreeDice() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot.id)
+        player.addCardToSupply(FakeCards.rootCard.id)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
         player.addDieToSupply(D8)
@@ -67,7 +65,7 @@ class DrawNewHandTest {
 
         // Assert
         assertEquals(1, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
         assertEquals(3, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))
@@ -77,8 +75,8 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPreferredCardCount2_withPlentyOfSupply_drawsTwoCardsAndTwoDice() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot.id)
-        player.addCardToSupply(FakeCards.fakeRoot2.id)
+        player.addCardToSupply(FakeCards.rootCard.id)
+        player.addCardToSupply(FakeCards.rootCard2.id)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
 
@@ -87,8 +85,8 @@ class DrawNewHandTest {
 
         // Assert
         assertEquals(2, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
-        assertEquals(FakeCards.fakeRoot2.id, player.cardsInHand[1].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard2.id, player.cardsInHand[1].id)
         assertEquals(2, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))
@@ -97,8 +95,8 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPreferredCardCount3_withLimitedCards_drawsAllCardsAndRemainingDice() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot.id)
-        player.addCardToSupply(FakeCards.fakeRoot2.id)
+        player.addCardToSupply(FakeCards.rootCard.id)
+        player.addCardToSupply(FakeCards.rootCard2.id)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
         player.addDieToSupply(D8)
@@ -108,8 +106,8 @@ class DrawNewHandTest {
 
         // Assert
         assertEquals(2, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
-        assertEquals(FakeCards.fakeRoot2.id, player.cardsInHand[1].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard2.id, player.cardsInHand[1].id)
         assertEquals(2, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))
@@ -136,23 +134,23 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPreferredCardCount2_withNoDice_drawsTwoCards() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot.id)
-        player.addCardToSupply(FakeCards.fakeRoot2.id)
+        player.addCardToSupply(FakeCards.rootCard.id)
+        player.addCardToSupply(FakeCards.rootCard2.id)
 
         // Act
         SUT(player, 2)
 
         // Assert
         assertEquals(2, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
-        assertEquals(FakeCards.fakeRoot2.id, player.cardsInHand[1].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard2.id, player.cardsInHand[1].id)
         assertEquals(0, player.diceInHand.size)
     }
 
     @Test
     fun invoke_whenPreferredCardCount2_withOneCardAndThreeDice_drawsOneCardAndThreeDice() {
         // Arrange
-        player.addCardToSupply(FakeCards.fakeRoot.id)
+        player.addCardToSupply(FakeCards.rootCard.id)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
         player.addDieToSupply(D8)
@@ -162,7 +160,7 @@ class DrawNewHandTest {
 
         // Assert
         assertEquals(1, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
         assertEquals(3, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))
@@ -172,9 +170,9 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenHandFull_doesNotDraw() {
         // Arrange
-        player.addCardToHand(FakeCards.fakeRoot.id)
-        player.addCardToHand(FakeCards.fakeRoot2.id)
-        player.addCardToHand(FakeCards.fakeBloom.id)
+        player.addCardToHand(FakeCards.rootCard.id)
+        player.addCardToHand(FakeCards.rootCard2.id)
+        player.addCardToHand(FakeCards.bloomCard.id)
         player.addDieToHand(D4)
         player.addDieToHand(D6)
 
@@ -189,8 +187,8 @@ class DrawNewHandTest {
     @Test
     fun invoke_whenPartialHand_considersExistingHand() {
         // Arrange
-        player.addCardToHand(FakeCards.fakeRoot.id)
-        player.addCardToSupply(FakeCards.fakeRoot2.id)
+        player.addCardToHand(FakeCards.rootCard.id)
+        player.addCardToSupply(FakeCards.rootCard2.id)
         player.addDieToSupply(D4)
         player.addDieToSupply(D6)
 
@@ -199,8 +197,8 @@ class DrawNewHandTest {
 
         // Assert
         assertEquals(2, player.cardsInHand.size)
-        assertEquals(FakeCards.fakeRoot.id, player.cardsInHand[0].id)
-        assertEquals(FakeCards.fakeRoot2.id, player.cardsInHand[1].id)
+        assertEquals(FakeCards.rootCard.id, player.cardsInHand[0].id)
+        assertEquals(FakeCards.rootCard2.id, player.cardsInHand[1].id)
         assertEquals(2, player.diceInHand.size)
         assertTrue(player.diceInHand.dice.contains(D4))
         assertTrue(player.diceInHand.dice.contains(D6))

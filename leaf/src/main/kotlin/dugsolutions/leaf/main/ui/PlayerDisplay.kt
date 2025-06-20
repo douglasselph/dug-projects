@@ -86,14 +86,14 @@ fun PlayerDisplay(
                 }
 
                 // Floral array (only if not empty)
-                if (player.buddingStack.isNotEmpty()) {
+                if (player.floralArray.isNotEmpty()) {
                     Column {
                         Text(
                             text = "Budding Stack",
                             style = MaterialTheme.typography.h6,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        CardRowDisplay(player.buddingStack) { cardInfo ->
+                        CardRowDisplay(player.floralArray) { cardInfo ->
                             listeners.onFloralCardSelected(cardInfo)
                         }
                     }
@@ -199,7 +199,7 @@ fun main() = application {
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10)), true),
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
-            buddingStack = listOf(
+            floralArray = listOf(
                 gatherCardInfo(
                     card = GameCard(
                         id = 3,

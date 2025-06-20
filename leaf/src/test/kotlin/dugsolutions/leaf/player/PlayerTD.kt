@@ -8,7 +8,7 @@ import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.grove.local.GroveNearingTransition
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.BuddingStack
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
@@ -30,7 +30,7 @@ import io.mockk.mockk
 
 class PlayerTD private constructor(
     deckManager: DeckManager,
-    buddingStack: BuddingStack,
+    floralArray: FloralArray,
     floralBonusCount: FloralBonusCount,
     cardManager: CardManager,
     private val dieFactory: DieFactory,
@@ -39,7 +39,7 @@ class PlayerTD private constructor(
     decisionDirector: DecisionDirector
 ) : Player(
     deckManager,
-    buddingStack,
+    floralArray,
     floralBonusCount,
     cardManager,
     dieFactory,
@@ -59,7 +59,7 @@ class PlayerTD private constructor(
 
         operator fun invoke(name: String, id: Int): PlayerTD {
             val deckManager = mockk<DeckManager>(relaxed = true)
-            val buddingStack = mockk<BuddingStack>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
             val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
@@ -73,7 +73,7 @@ class PlayerTD private constructor(
 
             return PlayerTD(
                 deckManager,
-                buddingStack,
+                floralArray,
                 floralBonusCount,
                 cardManager,
                 dieFactory,
@@ -89,7 +89,7 @@ class PlayerTD private constructor(
 
         fun create(id: Int, decisionDirector: DecisionDirector): PlayerTD {
             val deckManager = mockk<DeckManager>(relaxed = true)
-            val buddingStack = mockk<BuddingStack>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
             val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val cardEffectBattleScoreFactory = mockk<CardEffectBattleScoreFactory>(relaxed = true)
@@ -101,7 +101,7 @@ class PlayerTD private constructor(
 
             return PlayerTD(
                 deckManager,
-                buddingStack,
+                floralArray,
                 floralBonusCount,
                 cardManager,
                 dieFactory,
@@ -140,7 +140,7 @@ class PlayerTD private constructor(
             val handStack = StackManager(cardManager, gameCardIDsFactory)
             val compostStack = StackManager(cardManager, gameCardIDsFactory)
             val floralBonusCount = FloralBonusCount()
-            val buddingStack = BuddingStack(cardManager, gameCardIDsFactory)
+            val floralArray = FloralArray(cardManager, gameCardIDsFactory)
             val dieFactory = DieFactory(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, compostStack, dieFactory)
             val costScore = CostScore()
@@ -149,7 +149,7 @@ class PlayerTD private constructor(
 
             return PlayerTD(
                 deckManager,
-                buddingStack,
+                floralArray,
                 floralBonusCount,
                 cardManager,
                 dieFactory,
@@ -166,7 +166,7 @@ class PlayerTD private constructor(
 
         fun create2(id: Int): PlayerTD {
             val deckManager = mockk<DeckManager>(relaxed = true)
-            val buddingStack = mockk<BuddingStack>(relaxed = true)
+            val floralArray = mockk<FloralArray>(relaxed = true)
             val floralBonusCount = mockk<FloralBonusCount>(relaxed = true)
             val cardManager = mockk<CardManager>(relaxed = true)
             val dieFactory = DieFactory(randomizerTD)
@@ -178,15 +178,14 @@ class PlayerTD private constructor(
             val bestCardEvaluator = BestCardEvaluator()
             val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
             val acquireDieEvaluator = AcquireDieEvaluator()
-            val gameTime = GameTime()
             val drawNewHand = DrawNewHand()
             val decisionDirector = DecisionDirector(
                 cardEffectBattleScoreFactory, cardManager, acquireCardEvaluator,
-                acquireDieEvaluator, groveNearingTransition, gameTime
+                acquireDieEvaluator, groveNearingTransition
             )
             return PlayerTD(
                 deckManager,
-                buddingStack,
+                floralArray,
                 floralBonusCount,
                 cardManager,
                 dieFactory,
@@ -290,14 +289,14 @@ class PlayerTD private constructor(
         list.forEach { addCardToSupply(it) }
     }
 
-    override fun addCardToBuddingStack(cardId: CardID) {
+    override fun addCardToFloralArray(cardId: CardID) {
         gotFloralArrayCards.add(cardId)
-        super.addCardToBuddingStack(cardId)
+        super.addCardToFloralArray(cardId)
     }
 
     fun addCardToFloralArray(card: GameCard) {
         _floralCards.add(card)
-        super.addCardToBuddingStack(card.id)
+        super.addCardToFloralArray(card.id)
     }
 
     fun addCardToCompost(card: GameCard) {
@@ -317,14 +316,15 @@ class PlayerTD private constructor(
         return super.removeDieFromHand(die)
     }
 
-    override fun removeCardFromBuddingStack(cardId: CardID): Boolean {
+    override fun removeCardFromFloralArray(cardId: CardID): Boolean {
         gotFloralArrayCards.add(cardId)
         _floralCards.removeIf { it.id == cardId }
-        return super.removeCardFromBuddingStack(cardId)
+        return super.removeCardFromFloralArray(cardId)
     }
 
     override fun clearFloralCards() {
         gotClearFloralCards = true
+        _floralCards.clear()
         super.clearFloralCards()
     }
 

@@ -53,9 +53,9 @@ class PlayerTurnTest {
         player2 = PlayerTD(2)
         player3 = PlayerTD(3)
 
-        val card1 = FakeCards.fakeBloom
-        val card2 = FakeCards.fakeSeedling
-        val card3 = FakeCards.fakeRoot
+        val card1 = FakeCards.bloomCard
+        val card2 = FakeCards.seedlingCard
+        val card3 = FakeCards.rootCard
 
         player1.addCardToHand(card1)
         player2.addCardToHand(card2)
@@ -109,9 +109,9 @@ class PlayerTurnTest {
     @Test
     fun invoke_whenBattlePhase_handlesDamageDelivery() = runBlocking {
         // Arrange
-        val card1 = FakeCards.fakeBloom
-        val card2 = FakeCards.fakeSeedling
-        val card3 = FakeCards.fakeRoot
+        val card1 = FakeCards.bloomCard
+        val card2 = FakeCards.seedlingCard
+        val card3 = FakeCards.rootCard
 
         player1.addCardToHand(card1)
         player2.addCardToHand(card2)

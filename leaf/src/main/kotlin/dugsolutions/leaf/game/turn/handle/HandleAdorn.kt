@@ -21,7 +21,7 @@ class HandleAdorn(
         while (flowerCards.isNotEmpty()) {
             val flowerCard = flowerCards.removeAt(0)
             player.removeCardFromHand(flowerCard.id)
-            player.addCardToBuddingStack(flowerCard.id)
+            player.addCardToFloralArray(flowerCard.id)
             val cardId = player.drawCard() ?: 0
             chronicle(Moment.ADORN(player, flowerCardId = flowerCard.id, drawCardId = cardId))
             if (cardId > 0) {

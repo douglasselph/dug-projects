@@ -7,7 +7,6 @@ import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.Game
 import dugsolutions.leaf.game.domain.GameTime
-import dugsolutions.leaf.main.domain.ActionButton
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.SelectedItems
@@ -40,8 +39,8 @@ class MainGameManagerTest {
     private val gatherGroveInfo = mockk<GatherGroveInfo>(relaxed = true)
     private val fakePlayer1 = PlayerTD(1)
     private val fakePlayer2 = PlayerTD(2)
-    private val fakeFlower = FakeCards.fakeFlower
-    private val fakeRoot = FakeCards.fakeRoot
+    private val fakeFlower = FakeCards.flowerCard
+    private val fakeRoot = FakeCards.rootCard
     private val mockGroveInfo = mockk<GroveInfo>(relaxed = true)
     private val mockSelectItem = mockk<SelectItem>(relaxed = true)
     private val mockSelectGather = mockk<SelectGather>(relaxed = true)
@@ -209,10 +208,10 @@ class MainGameManagerTest {
     fun setFloralCardSelected_whenCalled_updatesPlayerInfo() = runBlocking {
         // Arrange
         val playerInfo1 = gatherPlayerInfo(fakePlayer1)
-        val cardInfo = playerInfo1.buddingStack.find { it.name == fakeFlower.name }
+        val cardInfo = playerInfo1.floralArray.find { it.name == fakeFlower.name }
         assertNotNull(cardInfo)
         val updatedPlayerInfo = playerInfo1.copy(
-            buddingStack = playerInfo1.buddingStack.map {
+            floralArray = playerInfo1.floralArray.map {
                 if (it.index == cardInfo.index) it.copy(highlight = HighlightInfo.SELECTED) else it
             }
         )
@@ -225,7 +224,7 @@ class MainGameManagerTest {
         val state = SUT.state.first()
         val updatedPlayer = state.players.find { it.name == fakePlayer1.name }
         assertNotNull(updatedPlayer)
-        assertTrue(updatedPlayer.buddingStack.any { it.index == cardInfo.index && it.highlight == HighlightInfo.SELECTED })
+        assertTrue(updatedPlayer.floralArray.any { it.index == cardInfo.index && it.highlight == HighlightInfo.SELECTED })
     }
 
     @Test
@@ -315,5 +314,88 @@ class MainGameManagerTest {
         SUT.setAskTrash(true)
         state = SUT.state.first()
         assertTrue(state.askTrashEnabled)
+    }
+
+    @Test
+    fun setAllowPlayerFlowerSelect_whenCalled_updatesTargetPlayerFloralCardsToSelectable() = runBlocking {
+        // Arrange
+        val playerInfo1 = gatherPlayerInfo(fakePlayer1)
+        val playerInfo2 = gatherPlayerInfo(fakePlayer2)
+        
+        // Verify initial state - floral cards should not be selectable
+        assertTrue(playerInfo1.floralArray.all { it.highlight != HighlightInfo.SELECTABLE })
+        assertTrue(playerInfo2.floralArray.all { it.highlight != HighlightInfo.SELECTABLE })
+
+        // Act
+        SUT.setAllowPlayerFlowerSelect(fakePlayer1)
+
+        // Assert
+        val state = SUT.state.first()
+        
+        // Target player should have selectable floral cards
+        val updatedPlayer1 = state.players.find { it.name == fakePlayer1.name }
+        assertNotNull(updatedPlayer1)
+        assertTrue(updatedPlayer1.floralArray.isNotEmpty())
+        assertTrue(updatedPlayer1.floralArray.all { it.highlight == HighlightInfo.SELECTABLE })
+        
+        // Other player should remain unchanged
+        val updatedPlayer2 = state.players.find { it.name == fakePlayer2.name }
+        assertNotNull(updatedPlayer2)
+        assertTrue(updatedPlayer2.floralArray.all { it.highlight != HighlightInfo.SELECTABLE })
+        
+        // Verify turn is updated
+        assertEquals(TURN, state.turn)
+    }
+
+    @Test
+    fun setAllowPlayerFlowerSelect_whenCalledForDifferentPlayer_updatesCorrectPlayer() = runBlocking {
+        // Arrange
+        val playerInfo1 = gatherPlayerInfo(fakePlayer1)
+        val playerInfo2 = gatherPlayerInfo(fakePlayer2)
+        
+        // First set flower select for player 1
+        SUT.setAllowPlayerFlowerSelect(fakePlayer1)
+        
+        // Act - Now set flower select for player 2
+        SUT.setAllowPlayerFlowerSelect(fakePlayer2)
+
+        // Assert
+        val state = SUT.state.first()
+        
+        // Player 1 should no longer have selectable floral cards (reset to normal)
+        val updatedPlayer1 = state.players.find { it.name == fakePlayer1.name }
+        assertNotNull(updatedPlayer1)
+        assertTrue(updatedPlayer1.floralArray.all { it.highlight != HighlightInfo.SELECTABLE })
+        
+        // Player 2 should now have selectable floral cards
+        val updatedPlayer2 = state.players.find { it.name == fakePlayer2.name }
+        assertNotNull(updatedPlayer2)
+        assertTrue(updatedPlayer2.floralArray.all { it.highlight == HighlightInfo.SELECTABLE })
+    }
+
+    @Test
+    fun setAllowPlayerFlowerSelect_whenPlayerHasNoFloralCards_handlesEmptyArray() = runBlocking {
+        // Arrange
+        // Remove floral cards from player 1
+        fakePlayer1.useDeckManager = true
+        fakePlayer1.clearFloralCards()
+        val playerInfo1 = gatherPlayerInfo(fakePlayer1)
+        
+        // Verify player has no floral cards
+        assertTrue(playerInfo1.floralArray.isEmpty())
+
+        // Act
+        SUT.setAllowPlayerFlowerSelect(fakePlayer1)
+
+        // Assert
+        val state = SUT.state.first()
+        val updatedPlayer1 = state.players.find { it.name == fakePlayer1.name }
+        assertNotNull(updatedPlayer1)
+        assertTrue(updatedPlayer1.floralArray.isEmpty())
+        
+        // Other player should remain unchanged
+        val updatedPlayer2 = state.players.find { it.name == fakePlayer2.name }
+        assertNotNull(updatedPlayer2)
+        assertTrue(updatedPlayer2.floralArray.all { it.highlight != HighlightInfo.SELECTABLE })
     }
 } 

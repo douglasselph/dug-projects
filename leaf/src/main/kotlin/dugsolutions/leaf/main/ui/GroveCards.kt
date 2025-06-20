@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -96,11 +95,11 @@ private fun createSampleGroveInfo(): GroveInfo {
     val gatherCardInfo = GatherCardInfo()
 
     // Create sample cards for different types
-    val rootCard = FakeCards.fakeRoot
-    val vineCard = FakeCards.fakeVine
-    val canopyCard = FakeCards.fakeCanopy
-    val flowerCard = FakeCards.fakeFlower
-    val wildCard = FakeCards.fakeRoot2
+    val rootCard = FakeCards.rootCard
+    val vineCard = FakeCards.vineCard
+    val canopyCard = FakeCards.canopyCard
+    val flowerCard = FakeCards.flowerCard
+    val wildCard = FakeCards.rootCard2
 
     // Create stack infos with proper order values matching the grid layout
     val stacks = listOf(

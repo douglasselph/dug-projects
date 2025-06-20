@@ -30,7 +30,7 @@ class PossibleCardsTest {
     fun invoke_whenNoCombinations_returnsEmptyList() {
         // Arrange
         val combinations = Combinations(emptyList())
-        val marketCards = listOf(FakeCards.fakeRoot)
+        val marketCards = listOf(FakeCards.rootCard)
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
@@ -56,18 +56,18 @@ class PossibleCardsTest {
         // Arrange
         val combinations = Combinations(listOf(FakeCombination.combinationD6, FakeCombination.combinationD8))
         
-        val marketCards = listOf(FakeCards.fakeRoot, FakeCards.fakeRoot2)
+        val marketCards = listOf(FakeCards.rootCard, FakeCards.rootCard2)
         
-        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD6, any()) } returns listOf(FakeCards.fakeRoot)
-        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD8, any()) } returns listOf(FakeCards.fakeRoot2)
+        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD6, any()) } returns listOf(FakeCards.rootCard)
+        every { canPurchaseCards(marketCards, any(), FakeCombination.combinationD8, any()) } returns listOf(FakeCards.rootCard2)
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
 
         // Assert
         assertEquals(2, result.size)
-        assertTrue(result.any { it.card == FakeCards.fakeRoot })
-        assertTrue(result.any { it.card == FakeCards.fakeRoot2 })
+        assertTrue(result.any { it.card == FakeCards.rootCard })
+        assertTrue(result.any { it.card == FakeCards.rootCard2 })
     }
 
     @Test
@@ -77,17 +77,17 @@ class PossibleCardsTest {
         val combination2 = FakeCombination.combinationD8
         val combinations = Combinations(listOf(combination1, combination2))
         
-        val marketCards = listOf(FakeCards.fakeRoot)
+        val marketCards = listOf(FakeCards.rootCard)
         
-        every { canPurchaseCards(marketCards, any(), combination1, any()) } returns listOf(FakeCards.fakeRoot)
-        every { canPurchaseCards(marketCards, any(), combination2, any()) } returns listOf(FakeCards.fakeRoot)
+        every { canPurchaseCards(marketCards, any(), combination1, any()) } returns listOf(FakeCards.rootCard)
+        every { canPurchaseCards(marketCards, any(), combination2, any()) } returns listOf(FakeCards.rootCard)
 
         // Act
         val result = SUT(mockPlayer, combinations, marketCards)
 
         // Assert
         assertEquals(1, result.size)
-        assertEquals(FakeCards.fakeRoot, result[0].card)
+        assertEquals(FakeCards.rootCard, result[0].card)
     }
 
     @Test
@@ -96,7 +96,7 @@ class PossibleCardsTest {
         val combination = FakeCombination.combinationD10
         val combinations = Combinations(listOf(combination))
         
-        val marketCards = listOf(FakeCards.fakeRoot)
+        val marketCards = listOf(FakeCards.rootCard)
         
         every { canPurchaseCards(marketCards, any(), combination, any()) } returns emptyList()
 

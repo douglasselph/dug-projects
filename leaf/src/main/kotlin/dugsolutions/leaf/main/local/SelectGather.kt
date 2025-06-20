@@ -24,7 +24,7 @@ class SelectGather(
                     }
                 }
             }
-            player.buddingStack.forEach { card ->
+            player.floralArray.forEach { card ->
                 if (card.highlight == HighlightInfo.SELECTED) {
                     cardManager.getCard(card.name)?.let {
                         selectedFloralCards.add(it)

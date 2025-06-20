@@ -90,7 +90,7 @@ class DecisionMonitorTest {
     @Test
     fun observe_whenDataClassDecisionProvided_notifiesWithCorrectState() {
         // Arrange
-        val card = FakeCards.fakeCanopy
+        val card = FakeCards.canopyCard
         val decisionId = DecisionID.ACQUIRE_SELECT(listOf(card), emptyList())
         monitor.observe { state -> capturedStates.add(state) }
 

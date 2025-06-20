@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class FloralBonusCountTest {
 
     companion object {
-        private val bloomFlowerCard = FakeCards.fakeFlower
+        private val bloomFlowerCard = FakeCards.flowerCard
     }
     private val SUT = FloralBonusCount()
 
@@ -50,8 +50,8 @@ class FloralBonusCountTest {
     @Test
     fun invoke_whenTwoMatchingAnd4NonMatching_returnsFour() {
         // Arrange
-        val otherFlower = FakeCards.fakeFlower2
-        val otherFlower2 = FakeCards.fakeFlower3
+        val otherFlower = FakeCards.flowerCard2
+        val otherFlower2 = FakeCards.flowerCard3
         val cardIds = listOf(
             bloomFlowerCard.id,
             bloomFlowerCard.id,
@@ -71,7 +71,7 @@ class FloralBonusCountTest {
     @Test
     fun invoke_whenOneMatchingAnd3NonMatching_returnsThree() {
         // Arrange
-        val otherFlower = FakeCards.fakeFlower2
+        val otherFlower = FakeCards.flowerCard2
         val cardIds = listOf(bloomFlowerCard.id, otherFlower.id, otherFlower.id, otherFlower.id)
 
         // Act
@@ -84,8 +84,8 @@ class FloralBonusCountTest {
     @Test
     fun invoke_whenOneMatchingAndTwoDifferentNonMatchingTypes_returnsTwo() {
         // Arrange
-        val otherFlower1 = FakeCards.fakeFlower2
-        val otherFlower2 = FakeCards.fakeFlower3
+        val otherFlower1 = FakeCards.flowerCard2
+        val otherFlower2 = FakeCards.flowerCard3
         val cardIds = listOf(bloomFlowerCard.id, otherFlower1.id, otherFlower2.id)
 
         // Act
@@ -98,7 +98,7 @@ class FloralBonusCountTest {
     @Test
     fun invoke_whenOneMatchingAndOneNonMatchingTypes_returnsTwo() {
         // Arrange
-        val otherFlower1 = FakeCards.fakeFlower2
+        val otherFlower1 = FakeCards.flowerCard2
         val cardIds = listOf(bloomFlowerCard.id, otherFlower1.id)
 
         // Act

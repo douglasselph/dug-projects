@@ -10,7 +10,7 @@ import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.BuddingStack
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
@@ -40,9 +40,9 @@ class PlayerTest {
 
     private val mockDeckManager: DeckManager = mockk(relaxed = true)
     private lateinit var deckManager: DeckManager
-    private val mockBuddingStack: BuddingStack = mockk(relaxed = true)
+    private val mockFloralArray: FloralArray = mockk(relaxed = true)
     private val mockFloralBonusCount: FloralBonusCount = mockk(relaxed = true)
-    private lateinit var buddingStack: BuddingStack
+    private lateinit var floralArray: FloralArray
     private lateinit var floralBonusCount: FloralBonusCount
     private lateinit var cardManager: CardManager
     private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
@@ -66,7 +66,7 @@ class PlayerTest {
     fun setup() {
         randomizer = Randomizer.create()
         dieFactory = DieFactory(randomizer)
-        every { mockBuddingStack.cards } returns emptyList()
+        every { mockFloralArray.cards } returns emptyList()
         every { mockFloralBonusCount(any(), any()) } returns 0
 
         val gameCardsFactory = GameCardsFactory(randomizer, costScore)
@@ -80,10 +80,10 @@ class PlayerTest {
             dieFactory
         )
         floralBonusCount = FloralBonusCount()
-        buddingStack = BuddingStack(cardManager, gameCardIDsFactory)
+        floralArray = FloralArray(cardManager, gameCardIDsFactory)
         mockDieFactory = mockk(relaxed = true)
-        sampleCard1 = FakeCards.fakeRoot
-        sampleCard2 = FakeCards.fakeCanopy
+        sampleCard1 = FakeCards.rootCard
+        sampleCard2 = FakeCards.canopyCard
         D4 = dieFactory(DieSides.D4)
         D6 = dieFactory(DieSides.D6)
         D8 = dieFactory(DieSides.D8)
@@ -98,7 +98,7 @@ class PlayerTest {
 
         SUT = Player(
             mockDeckManager,
-            mockBuddingStack,
+            mockFloralArray,
             mockFloralBonusCount,
             cardManager,
             mockDieFactory,
@@ -108,7 +108,7 @@ class PlayerTest {
         )
         SUT2 = Player(
             deckManager,
-            buddingStack,
+            floralArray,
             floralBonusCount,
             cardManager,
             mockDieFactory,
@@ -166,6 +166,32 @@ class PlayerTest {
 
         // Assert
         assertEquals(2, total)
+    }
+
+    @Test
+    fun isResupplyNeeded_whenDeckManagerNeedsResupply_returnsTrue() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns true
+
+        // Act
+        val result = SUT.isResupplyNeeded
+
+        // Assert
+        assertTrue(result)
+        verify { mockDeckManager.isResupplyNeeded }
+    }
+
+    @Test
+    fun isResupplyNeeded_whenDeckManagerDoesNotNeedResupply_returnsFalse() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+
+        // Act
+        val result = SUT.isResupplyNeeded
+
+        // Assert
+        assertFalse(result)
+        verify { mockDeckManager.isResupplyNeeded }
     }
 
     // endregion Properties and State Tests
@@ -514,9 +540,9 @@ class PlayerTest {
     @Test
     fun flowerCount_whenNoMatchingFlowers_returnsZero() {
         // Arrange
-        val bloomCard = FakeCards.fakeBloom
-        val floralCards = listOf(FakeCards.fakeFlower2.id)
-        val handFlowers = listOf(HandItem.aCard(FakeCards.fakeFlower3))
+        val bloomCard = FakeCards.bloomCard
+        val floralCards = listOf(FakeCards.flowerCard2.id)
+        val handFlowers = listOf(HandItem.aCard(FakeCards.flowerCard3))
         every { mockDeckManager.getItemsInHand() } returns handFlowers
         every { mockFloralBonusCount(any(), any()) } returns 0
 
@@ -533,9 +559,9 @@ class PlayerTest {
     @Test
     fun flowerCount_whenMatchingFlowersExist_returnsCorrectCount() {
         // Arrange
-        val bloomCard = FakeCards.fakeBloom
-        val floralCards = listOf(FakeCards.fakeFlower.id)
-        val handFlowers = listOf(HandItem.aCard(FakeCards.fakeFlower))
+        val bloomCard = FakeCards.bloomCard
+        val floralCards = listOf(FakeCards.flowerCard.id)
+        val handFlowers = listOf(HandItem.aCard(FakeCards.flowerCard))
         every { mockDeckManager.getItemsInHand() } returns handFlowers
         every { mockFloralBonusCount(any(), any()) } returns 2
 
@@ -551,9 +577,9 @@ class PlayerTest {
     @Test
     fun flowerCount_whenCardIsNotBloom_returnsZero() {
         // Arrange
-        val nonBloomCard = FakeCards.fakeRoot // A card without MatchWith.Flower
-        val floralCards = listOf(FakeCards.fakeFlower.id)
-        val handFlowers = listOf(HandItem.aCard(FakeCards.fakeFlower))
+        val nonBloomCard = FakeCards.rootCard // A card without MatchWith.Flower
+        val floralCards = listOf(FakeCards.flowerCard.id)
+        val handFlowers = listOf(HandItem.aCard(FakeCards.flowerCard))
         every { mockDeckManager.getItemsInHand() } returns handFlowers
 
         // Act
@@ -567,8 +593,8 @@ class PlayerTest {
     @Test
     fun floralCards_returnsFloralArrayCards() {
         // Arrange
-        val expectedCards = listOf(FakeCards.fakeFlower)
-        every { mockBuddingStack.cards } returns expectedCards
+        val expectedCards = listOf(FakeCards.flowerCard)
+        every { mockFloralArray.cards } returns expectedCards
 
         // Act
         val result = SUT.floralCards
@@ -583,10 +609,10 @@ class PlayerTest {
         val cardId = CARD_ID_1
 
         // Act
-        SUT.addCardToBuddingStack(cardId)
+        SUT.addCardToFloralArray(cardId)
 
         // Assert
-        verify { mockBuddingStack.add(cardId) }
+        verify { mockFloralArray.add(cardId) }
     }
 
     @Test
@@ -595,35 +621,35 @@ class PlayerTest {
         SUT.clearFloralCards()
 
         // Assert
-        verify { mockBuddingStack.clear() }
+        verify { mockFloralArray.clear() }
     }
 
     @Test
     fun removeCardFromFloralArray_delegatesToBuddingStack() {
         // Arrange
         val cardId = CARD_ID_1
-        every { mockBuddingStack.remove(cardId) } returns true
+        every { mockFloralArray.remove(cardId) } returns true
 
         // Act
-        val result = SUT.removeCardFromBuddingStack(cardId)
+        val result = SUT.removeCardFromFloralArray(cardId)
 
         // Assert
         assertTrue(result)
-        verify { mockBuddingStack.remove(cardId) }
+        verify { mockFloralArray.remove(cardId) }
     }
 
     @Test
     fun removeCardFromFloralArray_whenCardNotPresent_returnsFalse() {
         // Arrange
         val cardId = CARD_ID_1
-        every { mockBuddingStack.remove(cardId) } returns false
+        every { mockFloralArray.remove(cardId) } returns false
 
         // Act
-        val result = SUT.removeCardFromBuddingStack(cardId)
+        val result = SUT.removeCardFromFloralArray(cardId)
 
         // Assert
         assertFalse(result)
-        verify { mockBuddingStack.remove(cardId) }
+        verify { mockFloralArray.remove(cardId) }
     }
 
     // endregion Floral Array Tests
@@ -638,7 +664,7 @@ class PlayerTest {
         val floralCards = listOf(sampleCard2)
 
         every { mockDeckManager.getItemsInHand() } returns handItems
-        every { mockBuddingStack.cards } returns floralCards
+        every { mockFloralArray.cards } returns floralCards
 
         // Act
         val result = SUT.getExtendedHandItems()

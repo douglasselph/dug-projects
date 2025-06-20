@@ -38,7 +38,7 @@ class GatherPlayerInfoTest {
         sampleDie = SampleDie()
         SUT = GatherPlayerInfo(mockGatherCardInfo, mockGatherDiceInfo)
 
-        every { mockCardInfo.name } returns FakeCards.fakeRoot.name
+        every { mockCardInfo.name } returns FakeCards.rootCard.name
         every { mockDiceInfo.values } returns listOf(D6_VALUE)
     }
 
@@ -48,7 +48,7 @@ class GatherPlayerInfoTest {
         val mockPlayer = mockk<Player>(relaxed = true)
 
         // Setup hand cards
-        val handCard = FakeCards.fakeRoot
+        val handCard = FakeCards.rootCard
         val handName = handCard.name
         every { mockPlayer.cardsInHand } returns listOf(handCard)
         every { mockGatherCardInfo(any(), handCard, any()) } returns mockCardInfo
@@ -76,7 +76,7 @@ class GatherPlayerInfoTest {
         every { mockGatherDiceInfo(compostDice, false) } returns DiceInfo(listOf(D8_COUNT))
 
         // Setup floral cards
-        val floralCard = FakeCards.fakeFlower
+        val floralCard = FakeCards.flowerCard
         val floralName = floralCard.name
         val mockFlowerCardInfo = mockk<CardInfo>(relaxed = true)
         every { mockFlowerCardInfo.name } returns floralName
@@ -99,8 +99,8 @@ class GatherPlayerInfoTest {
         assertEquals(listOf(D6_VALUE), result.handDice.values)
         assertEquals(listOf(D4_COUNT, D6_COUNT), result.supplyDice.values)
         assertEquals(listOf(D8_COUNT), result.bedDice.values)
-        assertEquals(1, result.buddingStack.size)
-        assertEquals(floralName, result.buddingStack[0].name)
+        assertEquals(1, result.floralArray.size)
+        assertEquals(floralName, result.floralArray[0].name)
         assertEquals(3, result.supplyCardCount)
         assertEquals(2, result.bedCardCount)
 
@@ -139,12 +139,70 @@ class GatherPlayerInfoTest {
         assertTrue(result.handDice.values.isEmpty())
         assertTrue(result.supplyDice.values.isEmpty())
         assertTrue(result.bedDice.values.isEmpty())
-        assertTrue(result.buddingStack.isEmpty())
+        assertTrue(result.floralArray.isEmpty())
         assertEquals(0, result.supplyCardCount)
         assertEquals(0, result.bedCardCount)
 
         // Verify gatherDiceInfo calls
         verify { mockGatherDiceInfo(Dice(emptyList()), true) }
         verify { mockGatherDiceInfo(Dice(emptyList()), false) }
+    }
+
+    @Test
+    fun invoke_whenPlayerHasMultipleFloralCards_returnsSortedFloralArray() {
+        // Arrange
+        val mockPlayer = mockk<Player>(relaxed = true)
+        val flowerNameA = "AFlower"
+        val flowerNameB = "BFlower"
+        val flowerNameC = "CFlower"
+        
+        // Create floral cards in unsorted order
+        val floralCardA = FakeCards.flowerCard.copy(name = flowerNameA)
+        val floralCardB = FakeCards.flowerCard2.copy(name = flowerNameB)
+        val floralCardC = FakeCards.flowerCard3.copy(name = flowerNameC)
+        
+        // Set up cards in unsorted order
+        every { mockPlayer.floralCards } returns listOf(floralCardB, floralCardA, floralCardC)
+        
+        // Create mock card info objects
+        val mockFlowerCardAInfo = mockk<CardInfo>(relaxed = true)
+        val mockFlowerCardBInfo = mockk<CardInfo>(relaxed = true)
+        val mockFlowerCardCInfo = mockk<CardInfo>(relaxed = true)
+        
+        every { mockFlowerCardAInfo.name } returns floralCardA.name
+        every { mockFlowerCardBInfo.name } returns floralCardB.name
+        every { mockFlowerCardCInfo.name } returns floralCardC.name
+        
+        // Set up gatherCardInfo to return different mocks for each card
+        every { mockGatherCardInfo(0, floralCardA, any()) } returns mockFlowerCardAInfo
+        every { mockGatherCardInfo(1, floralCardB, any()) } returns mockFlowerCardBInfo
+        every { mockGatherCardInfo(2, floralCardC, any()) } returns mockFlowerCardCInfo
+        
+        // Set up other player properties
+        every { mockPlayer.cardsInHand } returns emptyList()
+        every { mockPlayer.diceInHand } returns Dice(emptyList())
+        every { mockPlayer.diceInSupply } returns Dice(emptyList())
+        every { mockPlayer.diceInBed } returns Dice(emptyList())
+        every { mockPlayer.cardsInSupplyCount } returns 0
+        every { mockPlayer.cardsInBedCount } returns 0
+        every { mockPlayer.name } returns PLAYER_NAME
+        every { mockPlayer.score } returns PlayerScore(1, 0, 0)
+        every { mockGatherDiceInfo(any(), any()) } returns DiceInfo(emptyList())
+
+        // Act
+        val result = SUT(mockPlayer)
+
+        // Assert
+        assertEquals(3, result.floralArray.size)
+        
+        // Verify cards are sorted by name (alphabetical order)
+        assertEquals(floralCardA.name, result.floralArray[0].name) // flowerCardA should be first
+        assertEquals(floralCardB.name, result.floralArray[1].name) // flowerCardB should be second
+        assertEquals(floralCardC.name, result.floralArray[2].name) // flowerCardC should be third
+        
+        // Verify gatherCardInfo was called with correct indices for sorted order
+        verify { mockGatherCardInfo(index = 0, card = floralCardA, highlight = any()) }
+        verify { mockGatherCardInfo(index = 1, card = floralCardB, highlight = any()) }
+        verify { mockGatherCardInfo(index = 2, card = floralCardC, highlight = any()) }
     }
 } 

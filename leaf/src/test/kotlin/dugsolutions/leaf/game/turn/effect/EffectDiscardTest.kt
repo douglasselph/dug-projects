@@ -23,8 +23,8 @@ class EffectDiscardTest {
     private val sampleDie = SampleDie()
     private val dieLow: Die = sampleDie.d6.adjustTo(1)
     private val dieHigh: Die = sampleDie.d6.adjustTo(5)
-    private val cardLow = FakeCards.fakeSeedling
-    private val cardHigh = FakeCards.fakeVine
+    private val cardLow = FakeCards.seedlingCard
+    private val cardHigh = FakeCards.vineCard
 
     @BeforeEach
     fun setup() {

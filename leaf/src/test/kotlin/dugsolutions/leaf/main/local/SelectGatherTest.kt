@@ -77,7 +77,7 @@ class SelectGatherTest {
         val playerInfo = PlayerInfoFaker.create(
             name = PLAYER_NAME,
             floralCardCount = 1
-        ).copy(buddingStack = listOf(cardInfo))
+        ).copy(floralArray = listOf(cardInfo))
         every { mockMainGameDomain.players } returns listOf(playerInfo)
 
         // Act
@@ -122,7 +122,7 @@ class SelectGatherTest {
             floralCardCount = 1
         ).copy(
             handCards = listOf(handCard),
-            buddingStack = listOf(floralCard),
+            floralArray = listOf(floralCard),
             handDice = DiceInfo(listOf(dieInfo.copy(backingDie = mockDie)))
         )
         every { mockMainGameDomain.players } returns listOf(playerInfo)

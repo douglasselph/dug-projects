@@ -102,7 +102,7 @@ val gameModule: Module = module {
 
     single { HandleAdorn(get(), get()) }
     single { HandleCompostRecovery(get()) }
-    single { HandleCleanup(get(), get(), get(), get()) }
+    single { HandleCleanup(get(), get(), get()) }
     single { HandleDeliverDamage(get(), get()) }
     single { HandleAbsorbDamage(get()) }
     single { HandleGroveAcquisition(get(), get(), get(), get()) }

@@ -31,9 +31,9 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_whenNoCardsPurchasedAndEnoughPips_returnsAllEligibleCards() {
         // Arrange
-        val rootCard = FakeCards.fakeRoot
-        val flowerCard = FakeCards.fakeFlower
-        val vineCard = FakeCards.fakeVine
+        val rootCard = FakeCards.rootCard
+        val flowerCard = FakeCards.flowerCard
+        val vineCard = FakeCards.vineCard
         val topCards = listOf(rootCard, flowerCard, vineCard)
         
         every { grove.getTopShowingCards() } returns topCards
@@ -52,9 +52,9 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_whenTypeAlreadyPurchased_excludesThatType() {
         // Arrange
-        val rootCard = FakeCards.fakeRoot
-        val flowerCard = FakeCards.fakeFlower
-        val vineCard = FakeCards.fakeVine
+        val rootCard = FakeCards.rootCard
+        val flowerCard = FakeCards.flowerCard
+        val vineCard = FakeCards.vineCard
         val topCards = listOf(rootCard, flowerCard, vineCard)
         
         every { grove.getTopShowingCards() } returns topCards
@@ -74,9 +74,9 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_whenMaxBloomsReached_excludesBloomCards() {
         // Arrange
-        val rootCard = FakeCards.fakeRoot
-        val bloomCard = FakeCards.fakeBloom
-        val vineCard = FakeCards.fakeVine
+        val rootCard = FakeCards.rootCard
+        val bloomCard = FakeCards.bloomCard
+        val vineCard = FakeCards.vineCard
         val topCards = listOf(rootCard, bloomCard, vineCard)
         
         every { grove.getTopShowingCards() } returns topCards
@@ -94,10 +94,10 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_withSeedlingsAndBlooms_ignores() {
         // Arrange
-        val rootCard = FakeCards.fakeRoot
-        val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
-        val canopyCard = FakeCards.fakeCanopy
+        val rootCard = FakeCards.rootCard
+        val bloomCard = FakeCards.bloomCard
+        val seedlingCard = FakeCards.seedlingCard
+        val canopyCard = FakeCards.canopyCard
         val topCards = listOf(rootCard, bloomCard, seedlingCard, canopyCard)
 
         every { grove.getTopShowingCards() } returns topCards
@@ -115,12 +115,12 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_whenMultipleRestrictions_appliesAllFilters() {
         // Arrange
-        val rootCard = FakeCards.fakeRoot
-        val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
-        val canopyCard = FakeCards.fakeCanopy
-        val vineCard = FakeCards.fakeVine
-        val flowerCard = FakeCards.fakeFlower2
+        val rootCard = FakeCards.rootCard
+        val bloomCard = FakeCards.bloomCard
+        val seedlingCard = FakeCards.seedlingCard
+        val canopyCard = FakeCards.canopyCard
+        val vineCard = FakeCards.vineCard
+        val flowerCard = FakeCards.flowerCard2
         val topCards = listOf(rootCard, bloomCard, seedlingCard, canopyCard, flowerCard, vineCard)
         
         every { grove.getTopShowingCards() } returns topCards
@@ -140,8 +140,8 @@ class SelectPossibleCardsTest {
     @Test
     fun invoke_whenNoEligibleCards_returnsEmptyList() {
         // Arrange
-        val bloomCard = FakeCards.fakeBloom
-        val seedlingCard = FakeCards.fakeSeedling
+        val bloomCard = FakeCards.bloomCard
+        val seedlingCard = FakeCards.seedlingCard
         val topCards = listOf(bloomCard, seedlingCard)
         
         every { grove.getTopShowingCards() } returns topCards

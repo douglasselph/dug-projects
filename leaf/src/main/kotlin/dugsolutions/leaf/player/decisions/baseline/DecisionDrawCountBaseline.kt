@@ -26,12 +26,11 @@ class DecisionDrawCountBaseline : DecisionDrawCount {
         } else {
             Pair(cardSupplyCount, diceSupplyCount)
         }
-
         val preferredCardCount = when {
             // No dice
             effectiveDiceCount == 0 -> handSize
             // No cards
-            effectiveCardCount == 0 -> 0
+            effectiveCardCount <= 1 -> 1
             // Even distribution
             effectiveCardCount == effectiveDiceCount -> handSize / 2
             // More cards than dice
@@ -41,7 +40,7 @@ class DecisionDrawCountBaseline : DecisionDrawCount {
         }
         return DecisionDrawCount.Result(
             max(
-                0,
+                1,
                 preferredCardCount - player.cardsInHand.size
             )
         )

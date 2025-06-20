@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 class EffectDrawCardTest {
 
     companion object {
-        private val fakeCard = FakeCards.fakeFlower
+        private val fakeCard = FakeCards.flowerCard
         private val CARD_ID = fakeCard.id
     }
 

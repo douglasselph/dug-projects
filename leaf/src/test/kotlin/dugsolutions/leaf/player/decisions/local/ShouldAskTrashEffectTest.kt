@@ -16,7 +16,7 @@ class ShouldAskTrashEffectTest {
     private val monitor = DecisionMonitor()
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val SUT = ShouldAskTrashEffect()
-    private val testCard = FakeCards.fakeCanopy
+    private val testCard = FakeCards.canopyCard
 
     @BeforeEach
     fun setup() {

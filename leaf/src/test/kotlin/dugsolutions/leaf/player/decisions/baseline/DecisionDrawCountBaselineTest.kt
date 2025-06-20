@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class DecisionIDDrawCountBaselineTest {
+class DecisionDrawCountBaselineTest {
 
     companion object {
         private const val CARD_ID_1 = 1
@@ -31,8 +31,8 @@ class DecisionIDDrawCountBaselineTest {
 
         SUT = DecisionDrawCountBaseline()
 
-        sampleCard1 = FakeCards.fakeCanopy
-        sampleCard2 = FakeCards.fakeVine
+        sampleCard1 = FakeCards.canopyCard
+        sampleCard2 = FakeCards.vineCard
     }
 
     @Test
@@ -64,7 +64,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenNoCardsAndEmptyHand_returnsZero() = runBlocking {
+    fun invoke_whenNoCardsAndEmptyHand_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 0
         every { mockPlayer.diceInSupplyCount } returns 10
@@ -74,7 +74,7 @@ class DecisionIDDrawCountBaselineTest {
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(0, result.count)
+        assertEquals(1, result.count)
     }
 
     @Test
@@ -148,7 +148,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenMoreDiceThanCardsAndFullHand_returnsZero() = runBlocking {
+    fun invoke_whenMoreDiceThanCardsAndFullHand_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 3
         every { mockPlayer.diceInSupplyCount } returns 10
@@ -158,11 +158,11 @@ class DecisionIDDrawCountBaselineTest {
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(0, result.count)
+        assertEquals(1, result.count)
     }
 
     @Test
-    fun invoke_whenLowSupplyAndNoCompost_returnsOne() = runBlocking {
+    fun invoke_whenLowSupplyAndNoBed_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 2
@@ -178,7 +178,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyWithCompost_considersCompostForDecision() = runBlocking {
+    fun invoke_whenLowSupplyWithBed_considersBedForDecision() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 2
@@ -194,7 +194,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyWithEqualCompost_returnsHalfHandSize() = runBlocking {
+    fun invoke_whenLowSupplyWithEqualBed_returnsHalfHandSize() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1
@@ -210,7 +210,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyWithMoreDiceInCompost_returnsOne() = runBlocking {
+    fun invoke_whenLowSupplyWithMoreDiceInBed_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1
@@ -226,7 +226,7 @@ class DecisionIDDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyWithNoCardsInCompost_returnsZero() = runBlocking {
+    fun invoke_whenLowSupplyWithNoCardsInBed_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 0
         every { mockPlayer.diceInSupplyCount } returns 2
@@ -238,11 +238,11 @@ class DecisionIDDrawCountBaselineTest {
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(0, result.count) // No cards available even with compost
+        assertEquals(1, result.count) // No cards available even with compost
     }
 
     @Test
-    fun invoke_whenLowSupplyWithPartialHand_considersCompostAndHandSize() = runBlocking {
+    fun invoke_whenLowSupplyWithPartialHand_considersBedAndHandSize() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1

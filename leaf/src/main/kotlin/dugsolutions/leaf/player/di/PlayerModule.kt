@@ -1,7 +1,7 @@
 package dugsolutions.leaf.player.di
 
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.BuddingStack
+import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
@@ -47,9 +47,9 @@ val playerModule: Module = module {
     single { DecisionMonitor() }
     single { DecisionMonitorReport(get()) }
 
-    factory { BuddingStack(get(), get()) }
+    factory { FloralArray(get(), get()) }
     factory { StackManager(get(), get()) }
-    factory { DecisionDirector(get(), get(), get(), get(), get(), get()) }
+    factory { DecisionDirector(get(), get(), get(), get(), get()) }
 
 
     factory {
@@ -65,7 +65,7 @@ val playerModule: Module = module {
         PlayerFactory(
             cardManager = get(),
             deckManager = { get() },
-            buddingStack = { get() },
+            floralArray = { get() },
             floralBonusCount = get(),
             decisionDirector = { get() },
             costScore = get(),

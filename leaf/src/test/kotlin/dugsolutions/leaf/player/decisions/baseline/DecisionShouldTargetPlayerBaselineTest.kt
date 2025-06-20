@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class DecisionIDShouldTargetPlayerBaselineTest {
+class DecisionShouldTargetPlayerBaselineTest {
 
     private lateinit var player: Player
     private lateinit var sampleDie: SampleDie

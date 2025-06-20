@@ -69,27 +69,40 @@ class DeckManagerTest {
     }
 
     @Test
-    fun isSupplyEmpty_whenSupplyIsEmpty_returnsTrue() {
+    fun isResupplyNeeded_whenSupplyHasNoCards_returnsTrue() {
         // Arrange
-        every { supply.isEmpty } returns true
+        every { supply.cardCount } returns 0
 
         // Act
-        val result = SUT.isSupplyEmpty
+        val result = SUT.isResupplyNeeded
 
         // Assert
         assertTrue(result)
     }
 
     @Test
-    fun isSupplyEmpty_whenSupplyHasItems_returnsFalse() {
+    fun isResupplyNeeded_whenSupplyHasCards_returnsFalse() {
         // Arrange
-        every { supply.isEmpty } returns false
+        every { supply.cardCount } returns 3
 
         // Act
-        val result = SUT.isSupplyEmpty
+        val result = SUT.isResupplyNeeded
 
         // Assert
         assertFalse(result)
+    }
+
+    @Test
+    fun isResupplyNeeded_whenSupplyHasDiceButNoCards_returnsTrue() {
+        // Arrange
+        every { supply.cardCount } returns 0
+        every { supply.diceCount } returns 5
+
+        // Act
+        val result = SUT.isResupplyNeeded
+
+        // Assert
+        assertTrue(result)
     }
 
     @Test

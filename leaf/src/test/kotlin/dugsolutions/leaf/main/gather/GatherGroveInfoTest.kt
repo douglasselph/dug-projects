@@ -31,13 +31,19 @@ class GatherGroveInfoTest {
         private const val PIP_TOTAL = 10
     }
 
-    private val testCard = FakeCards.fakeRoot
+    private val testRootCard = FakeCards.rootCard
+    private val testFlowerCard = FakeCards.flowerCard
+    private val testBloomCard = FakeCards.bloomCard
     private val mockGrove = mockk<Grove>(relaxed = true)
     private val mockGatherCardInfo = mockk<GatherCardInfo>(relaxed = true)
-    private val mockCardInfo = mockk<CardInfo>(relaxed = true)
+    private val mockRootCardInfo = mockk<CardInfo>(relaxed = true)
+    private val mockFlowerCardInfo = mockk<CardInfo>(relaxed = true)
+    private val mockBloomCardInfo = mockk<CardInfo>(relaxed = true)
     private val mockSelectAllDice = mockk<SelectAllDice>(relaxed = true)
     private val mockMatchingBloomCard = mockk<MatchingBloomCard>(relaxed = true)
-    private val mockCards: GameCardIDs = mockk<GameCardIDs>(relaxed = true)
+    private val mockRootCards: GameCardIDs = mockk<GameCardIDs>(relaxed = true)
+    private val mockFlowerCards: GameCardIDs = mockk<GameCardIDs>(relaxed = true)
+    private val mockEmptyCards: GameCardIDs = mockk<GameCardIDs>(relaxed = true)
     private val mockPlayer: Player = mockk<Player>(relaxed = true)
     private val gameTime = GameTime()
     private val sampleDie = SampleDie()
@@ -46,15 +52,28 @@ class GatherGroveInfoTest {
 
     @BeforeEach
     fun setup() {
-        mockPlayer
-        every { mockCards.getCard(0) } returns testCard
-        every { mockCards.size } returns NUM_CARDS
+        every { mockRootCards.getCard(any()) } returns testRootCard
+        every { mockRootCards.size } returns NUM_CARDS
+        every { mockEmptyCards.getCard(any()) } returns null
+        every { mockEmptyCards.size } returns 0
+        every { mockGrove.getCardsFor(any()) } returns mockEmptyCards
+        every { mockGrove.getCardsFor(MarketStackID.ROOT_1) } returns mockRootCards
+        every { mockGrove.getCardsFor(MarketStackID.ROOT_2) } returns mockRootCards
+        every { mockFlowerCards.getCard(any()) } returns testFlowerCard
+        every { mockFlowerCards.size } returns NUM_CARDS
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_1) } returns mockFlowerCards
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_2) } returns mockFlowerCards
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_3) } returns mockFlowerCards
         every { mockPlayer.name } returns PLAYER_NAME
         every { mockPlayer.pipTotal } returns PIP_TOTAL
-        every { mockGrove.getCardsFor(any()) } returns mockCards
-        every { mockGatherCardInfo(any(), any(), any()) } returns mockCardInfo
-        every { mockCardInfo.name } returns testCard.name
+        every { mockGatherCardInfo(any(), testRootCard, any()) } returns mockRootCardInfo
+        every { mockGatherCardInfo(any(), testBloomCard, any()) } returns mockBloomCardInfo
+        every { mockGatherCardInfo(any(), testFlowerCard, any()) } returns mockFlowerCardInfo
+        every { mockRootCardInfo.name } returns testRootCard.name
+        every { mockFlowerCardInfo.name } returns testFlowerCard.name
+        every { mockBloomCardInfo.name } returns testBloomCard.name
         every { mockSelectAllDice() } returns Dice()
+        every { mockMatchingBloomCard(any()) } returns testBloomCard
 
         gameTime.phase = GamePhase.CULTIVATION
     }
@@ -69,13 +88,21 @@ class GatherGroveInfoTest {
         require(result != null)
         assertEquals(MarketStackID.entries.size, result.stacks.size)
         result.stacks.forEachIndexed { index, stack ->
-            assertEquals(NUM_CARDS, stack.numCards)
-            assertEquals(mockCardInfo, stack.topCard)
-            verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.NONE) }
+            if (stack.stack == MarketStackID.ROOT_1 || stack.stack == MarketStackID.ROOT_2) {
+                assertEquals(NUM_CARDS, stack.numCards)
+                assertEquals(mockRootCardInfo, stack.topCard)
+                verify { mockGatherCardInfo(index = index, card = testRootCard, highlight = HighlightInfo.NONE) }
+            } else if (stack.stack == MarketStackID.FLOWER_1 || stack.stack == MarketStackID.FLOWER_2 || stack.stack == MarketStackID.FLOWER_3) {
+                assertEquals(NUM_CARDS, stack.numCards)
+                assertEquals(mockFlowerCardInfo, stack.topCard)
+                verify { mockGatherCardInfo(index = index, card = testFlowerCard, highlight = HighlightInfo.NONE) }
+            }
         }
         assertNull(result.instruction)
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isNotEmpty()) // No flower stacks by default
     }
 
     @Test
@@ -96,32 +123,33 @@ class GatherGroveInfoTest {
         assertNull(result.instruction)
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isEmpty())
     }
 
     @Test
     fun invoke_whenGroveHasMixedStacks_returnsCorrectStackInfo() {
         // Arrange
-        every { mockGrove.getCardsFor(any()) } returns null
-        every { mockGrove.getCardsFor(MarketStackID.ROOT_1) } returns mockCards
-        every { mockGrove.getCardsFor(MarketStackID.ROOT_2) } returns mockCards
-
         // Act
         val result = SUT()
 
         // Assert
         require(result != null)
         assertEquals(MarketStackID.entries.size, result.stacks.size)
-        
+
         // Check populated stacks
         result.stacks.filter { it.stack == MarketStackID.ROOT_1 || it.stack == MarketStackID.ROOT_2 }
             .forEach { stack ->
                 assertEquals(NUM_CARDS, stack.numCards)
                 assertNotNull(stack.topCard)
-                assertEquals(testCard.name, stack.topCard?.name)
+                assertEquals(testRootCard.name, stack.topCard?.name)
             }
 
         // Check empty stacks
-        result.stacks.filter { it.stack != MarketStackID.ROOT_1 && it.stack != MarketStackID.ROOT_2 }
+        result.stacks.filter {
+            it.stack != MarketStackID.ROOT_1 && it.stack != MarketStackID.ROOT_2 &&
+                    it.stack != MarketStackID.FLOWER_1 && it.stack != MarketStackID.FLOWER_2 && it.stack != MarketStackID.FLOWER_3
+        }
             .forEach { stack ->
                 assertEquals(0, stack.numCards)
                 assertNull(stack.topCard)
@@ -129,12 +157,14 @@ class GatherGroveInfoTest {
         assertNull(result.instruction)
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isNotEmpty())
     }
 
     @Test
     fun invoke_whenHighlightCardProvided_returnsHighlightedCards() {
         // Arrange
-        val highlightCards = listOf(testCard)
+        val highlightCards = listOf(testRootCard)
 
         // Act
         val result = SUT(highlightCard = highlightCards)
@@ -143,11 +173,16 @@ class GatherGroveInfoTest {
         require(result != null)
         result.stacks.forEachIndexed { index, stack ->
             if (stack.topCard != null) {
-                verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.SELECTABLE) }
+                if (stack.stack == MarketStackID.ROOT_1 || stack.stack == MarketStackID.ROOT_2) {
+                    verify { mockGatherCardInfo(index = index, card = testRootCard, highlight = HighlightInfo.SELECTABLE) }
+                } else {
+                    verify { mockGatherCardInfo(index = index, card = any(), highlight = HighlightInfo.NONE) }
+                }
             }
         }
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -168,6 +203,7 @@ class GatherGroveInfoTest {
             assertEquals(HighlightInfo.SELECTABLE, dieInfo.highlight)
             assertEquals(highlightDice[index], dieInfo.backingDie)
         }
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -181,12 +217,13 @@ class GatherGroveInfoTest {
         assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
         assertNotNull(result.dice)
         assertTrue(result.dice.values.isEmpty())
+        assertNotNull(result.blooms)
     }
 
     @Test
     fun invoke_whenAllParametersProvided_returnsCompleteInfo() {
         // Arrange
-        val highlightCards = listOf(testCard)
+        val highlightCards = listOf(testRootCard)
         val highlightDice = listOf(sampleDie.d6, sampleDie.d8)
 
         // Act
@@ -200,7 +237,9 @@ class GatherGroveInfoTest {
         require(result != null)
         result.stacks.forEachIndexed { index, stack ->
             if (stack.topCard != null) {
-                verify { mockGatherCardInfo(index = index, card = testCard, highlight = HighlightInfo.SELECTABLE) }
+                if (stack.stack == MarketStackID.ROOT_1 || stack.stack == MarketStackID.ROOT_2) {
+                    verify { mockGatherCardInfo(index = index, card = testRootCard, highlight = HighlightInfo.SELECTABLE) }
+                }
             }
         }
 
@@ -216,6 +255,7 @@ class GatherGroveInfoTest {
 
         // Check instruction
         assertEquals("$PLAYER_NAME PIPS $PIP_TOTAL", result.instruction)
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -231,6 +271,7 @@ class GatherGroveInfoTest {
         require(result != null)
         assertEquals(emptyDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -246,6 +287,7 @@ class GatherGroveInfoTest {
         require(result != null)
         assertEquals(singleDie.toString(), result.quantities)
         verify { mockSelectAllDice() }
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -261,6 +303,7 @@ class GatherGroveInfoTest {
         require(result != null)
         assertEquals(multipleDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -276,6 +319,7 @@ class GatherGroveInfoTest {
         require(result != null)
         assertEquals(mixedDice.toString(), result.quantities)
         verify { mockSelectAllDice() }
+        assertNotNull(result.blooms)
     }
 
     @Test
@@ -290,5 +334,103 @@ class GatherGroveInfoTest {
 
         // Assert
         assertNull(result)
+    }
+
+    @Test
+    fun invoke_whenFlowerStackHasMatchingBloom_returnsBloomInfo() {
+        // Arrange
+        // Set up a flower stack with a matching bloom
+        every { mockGrove.getCardsFor(any()) } returns null
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_1) } returns mockFlowerCards
+        every { mockMatchingBloomCard(testFlowerCard) } returns testBloomCard
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        require(result != null)
+        assertNotNull(result.blooms)
+        assertEquals(1, result.blooms.size)
+
+        val bloomInfo = result.blooms.first()
+        assertEquals(mockBloomCardInfo, bloomInfo)
+        verify { mockGatherCardInfo(index = 0, card = testBloomCard) }
+        verify { mockMatchingBloomCard(testFlowerCard) }
+    }
+
+    @Test
+    fun invoke_whenFlowerStackHasNoMatchingBloom_returnsEmptyBlooms() {
+        // Arrange
+        // Set up a flower stack with no matching bloom
+        every { mockGrove.getCardsFor(any()) } returns null
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_1) } returns mockFlowerCards
+        every { mockMatchingBloomCard(testFlowerCard) } returns null
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        require(result != null)
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isEmpty())
+        verify { mockMatchingBloomCard(testFlowerCard) }
+    }
+
+    @Test
+    fun invoke_whenMultipleFlowerStacksHaveBlooms_returnsAllBloomInfo() {
+        // Arrange
+        // Set up multiple flower stacks with matching blooms
+        every { mockGrove.getCardsFor(any()) } returns null
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_1) } returns mockFlowerCards
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_2) } returns mockFlowerCards
+        every { mockMatchingBloomCard(testFlowerCard) } returns testBloomCard
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        require(result != null)
+        assertNotNull(result.blooms)
+        assertEquals(2, result.blooms.size)
+
+        result.blooms.forEach { bloomInfo ->
+            assertEquals(mockBloomCardInfo, bloomInfo)
+        }
+        verify(exactly = 2) { mockMatchingBloomCard(testFlowerCard) }
+        verify(exactly = 2) { mockGatherCardInfo(any(), testBloomCard) }
+    }
+
+    @Test
+    fun invoke_whenFlowerStackIsEmpty_returnsEmptyBlooms() {
+        // Arrange
+        // Set up an empty flower stack
+        every { mockGrove.getCardsFor(any()) } returns null
+        every { mockGrove.getCardsFor(MarketStackID.FLOWER_1) } returns null
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        require(result != null)
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isEmpty())
+        verify(exactly = 0) { mockMatchingBloomCard(any()) }
+    }
+
+    @Test
+    fun invoke_whenNonFlowerStackHasCards_doesNotIncludeInBlooms() {
+        // Arrange
+        // Set up a non-flower stack (should not be included in blooms)
+        every { mockGrove.getCardsFor(any()) } returns null
+        every { mockGrove.getCardsFor(MarketStackID.ROOT_1) } returns mockRootCards
+
+        // Act
+        val result = SUT()
+
+        // Assert
+        require(result != null)
+        assertNotNull(result.blooms)
+        assertTrue(result.blooms.isEmpty())
+        verify(exactly = 0) { mockMatchingBloomCard(any()) }
     }
 } 

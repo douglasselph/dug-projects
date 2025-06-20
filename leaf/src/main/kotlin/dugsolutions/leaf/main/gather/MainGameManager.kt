@@ -105,7 +105,6 @@ class MainGameManager(
     /**
      * Allows the user to select flower cards from their hand.
      */
-    // TODO: Unit test
     fun setAllowPlayerFlowerSelect(player: Player) {
         _state.update { currentState ->
             currentState.copy(

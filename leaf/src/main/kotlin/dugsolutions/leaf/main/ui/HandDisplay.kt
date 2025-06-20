@@ -84,13 +84,13 @@ fun main() = application {
             name = "Player 1",
             infoLine = infoLine,
             handCards = listOf(
-                gatherCardInfo(card = FakeCards.fakeSeedling),
-                gatherCardInfo(card = FakeCards.fakeRoot),
-                gatherCardInfo(card = FakeCards.fakeBloom)
+                gatherCardInfo(card = FakeCards.seedlingCard),
+                gatherCardInfo(card = FakeCards.rootCard),
+                gatherCardInfo(card = FakeCards.bloomCard)
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10, sampleDie.d12)), true),
             supplyDice = gatherDiceInfo(Dice(emptyList()), false),
-            buddingStack = emptyList(),
+            floralArray = emptyList(),
             nutrients = 2,
             supplyCardCount = 0,
             bedCardCount = 0,

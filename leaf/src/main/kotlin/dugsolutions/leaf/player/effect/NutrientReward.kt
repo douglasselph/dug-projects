@@ -6,7 +6,6 @@ import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.DieSides
 
-// TODO: Unit test
 class NutrientReward(
     private val dieFactory: DieFactory,
     private val chronicle: GameChronicle

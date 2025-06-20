@@ -8,7 +8,7 @@ data class PlayerInfo(
     val handCards: List<CardInfo>,
     val handDice: DiceInfo,
     val supplyDice: DiceInfo,
-    val buddingStack: List<CardInfo>,
+    val floralArray: List<CardInfo>,
     val nutrients: Int,
     val supplyCardCount: Int,
     val bedCardCount: Int,
@@ -19,13 +19,13 @@ data class PlayerInfo(
         return copy(
             handCards = handCards.map { it.copy(highlight = HighlightInfo.SELECTABLE) },
             handDice = handDice.copyForItemSelect(),
-            buddingStack = buddingStack.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
         )
     }
 
     fun copyForFlowerSelect(): PlayerInfo {
         return copy(
-            buddingStack = buddingStack.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
+            floralArray = floralArray.map { it.copy(highlight = HighlightInfo.SELECTABLE) }
         )
     }
 
@@ -36,7 +36,7 @@ data class PlayerInfo(
                     it.copy(highlight = HighlightInfo.SELECTABLE)
                 } else it
             },
-            buddingStack = buddingStack.map {
+            floralArray = floralArray.map {
                 if (it.name == card.name) {
                     it.copy(highlight = HighlightInfo.SELECTABLE)
                 } else it
@@ -54,7 +54,7 @@ data class PlayerInfo(
         if (handCards != other.handCards) return false
         if (handDice != other.handDice) return false
         if (supplyDice != other.supplyDice) return false
-        if (buddingStack != other.buddingStack) return false
+        if (floralArray != other.floralArray) return false
         if (supplyCardCount != other.supplyCardCount) return false
         if (bedCardCount != other.bedCardCount) return false
         if (bedDice != other.bedDice) return false
@@ -67,7 +67,7 @@ data class PlayerInfo(
         result = 31 * result + handCards.hashCode()
         result = 31 * result + handDice.hashCode()
         result = 31 * result + supplyDice.hashCode()
-        result = 31 * result + buddingStack.hashCode()
+        result = 31 * result + floralArray.hashCode()
         result = 31 * result + supplyCardCount
         result = 31 * result + bedCardCount
         result = 31 * result + bedDice.hashCode()

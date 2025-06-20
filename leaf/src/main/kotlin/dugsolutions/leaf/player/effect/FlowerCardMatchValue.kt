@@ -22,9 +22,8 @@ class FlowerCardMatchValue(
         val flowerCardId = bloomCard.flowerCardId ?: return 0
         val cards = player.decisionDirector.flowerSelectDecision().value
         val cardIds = cards.map { it.id }
-        // TODO: Unit test
         cards.forEach { card ->
-            player.removeCardFromBuddingStack(card.id)
+            player.removeCardFromFloralArray(card.id)
             player.addCardToHand(card.id)
         }
         if (cards.isNotEmpty()) {

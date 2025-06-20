@@ -16,6 +16,13 @@ class DrawNewHand {
             }
         }
         /**
+         * If we could not draw at least one card -- then we must draw at least one card before continuing
+         * because the rule is that you must already have at least one card.
+         */
+        if (player.cardsInHand.isEmpty()) {
+            player.drawCard()
+        }
+        /**
          * Now draw dice with the remaining space in the player's hand, without resupply
          */
         var spaceLeft = HAND_SIZE - player.handSize
@@ -31,7 +38,8 @@ class DrawNewHand {
             return
         }
         /**
-         * Otherwise we need to resupply. So try again computing the remaining cards that are still desired.
+         * At this point we can try again trying to reach the preferred amount of cards the player wants, yet
+         * with resupply if needed.
          */
         val cardsLeftToDraw = max(0, preferredCardCount - player.cardsInHand.size)
         repeat(cardsLeftToDraw) {

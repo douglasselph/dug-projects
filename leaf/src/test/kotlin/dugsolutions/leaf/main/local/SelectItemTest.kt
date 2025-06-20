@@ -34,7 +34,7 @@ class SelectItemTest {
             handDice = DiceInfo(emptyList()),
             supplyDice = DiceInfo(emptyList()),
             bedDice = DiceInfo(emptyList()),
-            buddingStack = emptyList(),
+            floralArray = emptyList(),
             nutrients = 0,
             supplyCardCount = 0,
             bedCardCount = 0
@@ -97,46 +97,46 @@ class SelectItemTest {
     fun floralCard_whenCardExists_selectable__updatesHighlight() {
         // Arrange
         fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.SELECTABLE)
-        val playerInfo = mockPlayerInfo.copy(buddingStack = listOf(fakeCardInfo))
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
 
         // Act
         val result = SUT.floralCard(playerInfo, fakeCardInfo)
 
         // Assert
-        assertEquals(HighlightInfo.SELECTED, result.buddingStack[0].highlight)
+        assertEquals(HighlightInfo.SELECTED, result.floralArray[0].highlight)
     }
 
     @Test
     fun floralCard_whenCardExists_selected__updatesHighlight() {
         // Arrange
         fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.SELECTED)
-        val playerInfo = mockPlayerInfo.copy(buddingStack = listOf(fakeCardInfo))
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
 
         // Act
         val result = SUT.floralCard(playerInfo, fakeCardInfo)
 
         // Assert
-        assertEquals(HighlightInfo.SELECTABLE, result.buddingStack[0].highlight)
+        assertEquals(HighlightInfo.SELECTABLE, result.floralArray[0].highlight)
     }
 
     @Test
     fun floralCard_whenCardExists_notSelectable__doesNothing() {
         // Arrange
         fakeCardInfo = fakeCardInfo.copy(highlight = HighlightInfo.NONE)
-        val playerInfo = mockPlayerInfo.copy(buddingStack = listOf(fakeCardInfo))
+        val playerInfo = mockPlayerInfo.copy(floralArray = listOf(fakeCardInfo))
 
         // Act
         val result = SUT.floralCard(playerInfo, fakeCardInfo)
 
         // Assert
-        assertEquals(HighlightInfo.NONE, result.buddingStack[0].highlight)
+        assertEquals(HighlightInfo.NONE, result.floralArray[0].highlight)
     }
 
     @Test
     fun floralCard_whenCardDoesNotExist_returnsOriginalPlayerInfo() {
         // Arrange
         val playerInfo = mockPlayerInfo.copy(
-            buddingStack = emptyList()
+            floralArray = emptyList()
         )
 
         // Act

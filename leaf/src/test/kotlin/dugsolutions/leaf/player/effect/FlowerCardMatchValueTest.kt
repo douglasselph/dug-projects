@@ -1,9 +1,11 @@
 package dugsolutions.leaf.player.effect
 
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.core.DecisionFlowerSelect
@@ -88,9 +90,8 @@ class FlowerCardMatchValueTest {
     }
 
     @Test
-    fun invoke_whenNoFlowerCardsInHand_returnsZeroBonus() = runBlocking {
+    fun invoke_whenNoFlowerCardsSelected_returnsZeroBonus() = runBlocking {
         // Arrange
-        every { mockPlayer.cardsInHand } returns emptyList()
         coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(emptyList())
         every { mockFloralBonusCount(any(), any()) } returns 0
 
@@ -99,8 +100,83 @@ class FlowerCardMatchValueTest {
 
         // Assert
         assertEquals(0, result)
-        verify(exactly = 0) { mockPlayer.removeCardFromHand(any()) }
-        verify(exactly = 0) { mockPlayer.addCardToBuddingStack(any()) }
+        verify(exactly = 0) { mockPlayer.removeCardFromFloralArray(any()) }
+        verify(exactly = 0) { mockPlayer.addCardToHand(any()) }
+        verify(exactly = 0) { mockChronicle(any()) }
+    }
+
+    @Test
+    fun invoke_whenFlowerCardsSelected_processesCardsAndReturnsBonus() = runBlocking {
+        // Arrange
+        val selectedFlowers = listOf(FakeCards.flowerCard, FakeCards.flowerCard2)
+        coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(selectedFlowers)
+        every { mockFloralBonusCount(any(), FLOWER_CARD_ID) } returns 5
+
+        // Act
+        val result = SUT(mockPlayer, mockBloomCard)
+
+        // Assert
+        assertEquals(5, result)
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard.id) }
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard2.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard2.id) }
+        verify { mockChronicle(Moment.USE_FLOWERS(mockPlayer, selectedFlowers)) }
+    }
+
+    @Test
+    fun invoke_whenSingleFlowerCardSelected_processesCardAndReturnsBonus() = runBlocking {
+        // Arrange
+        val selectedFlowers = listOf(FakeCards.flowerCard)
+        coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(selectedFlowers)
+        every { mockFloralBonusCount(any(), FLOWER_CARD_ID) } returns 3
+
+        // Act
+        val result = SUT(mockPlayer, mockBloomCard)
+
+        // Assert
+        assertEquals(3, result)
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard.id) }
+        verify { mockChronicle(Moment.USE_FLOWERS(mockPlayer, selectedFlowers)) }
+    }
+
+    @Test
+    fun invoke_whenMultipleFlowerCardsSelected_processesAllCardsAndReturnsBonus() = runBlocking {
+        // Arrange
+        val selectedFlowers = listOf(FakeCards.flowerCard, FakeCards.flowerCard2, FakeCards.flowerCard3)
+        coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(selectedFlowers)
+        every { mockFloralBonusCount(any(), FLOWER_CARD_ID) } returns 8
+
+        // Act
+        val result = SUT(mockPlayer, mockBloomCard)
+
+        // Assert
+        assertEquals(8, result)
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard.id) }
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard2.id) }
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard3.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard2.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard3.id) }
+        verify { mockChronicle(Moment.USE_FLOWERS(mockPlayer, selectedFlowers)) }
+    }
+
+    @Test
+    fun invoke_whenFlowerCardsSelectedButNoBonus_returnsZero() = runBlocking {
+        // Arrange
+        val selectedFlowers = listOf(FakeCards.flowerCard)
+        coEvery { mockDecisionDirector.flowerSelectDecision() } returns DecisionFlowerSelect.Result(selectedFlowers)
+        every { mockFloralBonusCount(any(), FLOWER_CARD_ID) } returns 0
+
+        // Act
+        val result = SUT(mockPlayer, mockBloomCard)
+
+        // Assert
+        assertEquals(0, result)
+        verify { mockPlayer.removeCardFromFloralArray(FakeCards.flowerCard.id) }
+        verify { mockPlayer.addCardToHand(FakeCards.flowerCard.id) }
+        verify { mockChronicle(Moment.USE_FLOWERS(mockPlayer, selectedFlowers)) }
     }
 
 } 

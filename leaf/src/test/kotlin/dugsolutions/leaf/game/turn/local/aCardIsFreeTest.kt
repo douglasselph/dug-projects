@@ -38,7 +38,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenNoEffects_returnsFalse() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
 
         // Act
         val result = SUT(card, player)
@@ -50,7 +50,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenEffectMakesCardFree_returnsTrue() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
         val effect = AppliedEffect.MarketBenefit(
             type = FlourishType.ROOT,
             isFree = true,
@@ -68,7 +68,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenEffectReducesCostOnly_returnsFalse() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
         val effect = AppliedEffect.MarketBenefit(
             type = FlourishType.ROOT,
             isFree = false,
@@ -86,7 +86,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenEffectForDifferentType_returnsFalse() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
         val effect = AppliedEffect.MarketBenefit(
             type = FlourishType.BLOOM, // Different type
             isFree = true,
@@ -104,7 +104,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenMultipleEffects_findsFreeEffect() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
         val effect1 = AppliedEffect.MarketBenefit(
             type = FlourishType.BLOOM, // Different type
             isFree = true,
@@ -132,7 +132,7 @@ class aCardIsFreeTest {
     @Test
     fun invoke_whenNonMarketBenefitEffect_returnsFalse() {
         // Arrange
-        val card = FakeCards.fakeRoot
+        val card = FakeCards.rootCard
         val effect = AppliedEffect.FlourishOverride
         effectsList.add(effect)
 

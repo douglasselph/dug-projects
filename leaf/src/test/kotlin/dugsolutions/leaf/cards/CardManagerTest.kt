@@ -40,10 +40,10 @@ class CardManagerTest {
         // Arrange - Card exists in registry
         
         // Act
-        val result = SUT.getCard(FakeCards.fakeBloom.id)
+        val result = SUT.getCard(FakeCards.bloomCard.id)
         
         // Assert
-        assertEquals(FakeCards.fakeBloom, result)
+        assertEquals(FakeCards.bloomCard, result)
     }
 
     @Test
@@ -62,10 +62,10 @@ class CardManagerTest {
         // Arrange - Card exists in registry
         
         // Act
-        val result = SUT.getCard(FakeCards.fakeBloom.name)
+        val result = SUT.getCard(FakeCards.bloomCard.name)
         
         // Assert
-        assertEquals(FakeCards.fakeBloom, result)
+        assertEquals(FakeCards.bloomCard, result)
     }
 
     @Test
@@ -82,29 +82,29 @@ class CardManagerTest {
     @Test
     fun getCardsByIds_whenAllCardsExist_returnsAllCards() {
         // Arrange
-        val cardIds = listOf(FakeCards.fakeBloom.id, FakeCards.fakeSeedling.id)
+        val cardIds = listOf(FakeCards.bloomCard.id, FakeCards.seedlingCard.id)
         
         // Act
         val result = SUT.getCardsByIds(cardIds)
         
         // Assert
         assertEquals(2, result.size)
-        assertEquals(FakeCards.fakeBloom, result[0])
-        assertEquals(FakeCards.fakeSeedling, result[1])
+        assertEquals(FakeCards.bloomCard, result[0])
+        assertEquals(FakeCards.seedlingCard, result[1])
     }
 
     @Test
     fun getCardsByIds_whenSomeCardsDontExist_returnsOnlyExistingCards() {
         // Arrange
-        val cardIds = listOf(FakeCards.fakeBloom.id, NONEXISTENT_CARD_ID, FakeCards.fakeRoot.id)
+        val cardIds = listOf(FakeCards.bloomCard.id, NONEXISTENT_CARD_ID, FakeCards.rootCard.id)
         
         // Act
         val result = SUT.getCardsByIds(cardIds)
         
         // Assert
         assertEquals(2, result.size)
-        assertEquals(FakeCards.fakeBloom, result[0])
-        assertEquals(FakeCards.fakeRoot, result[1])
+        assertEquals(FakeCards.bloomCard, result[0])
+        assertEquals(FakeCards.rootCard, result[1])
     }
 
     @Test

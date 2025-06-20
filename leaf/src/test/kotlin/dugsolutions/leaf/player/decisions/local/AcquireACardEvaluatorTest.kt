@@ -13,11 +13,11 @@ import kotlin.test.assertNull
 class AcquireACardEvaluatorTest {
 
     companion object {
-        private val fakeCard1 = FakeCards.fakeRoot
-        private val fakeCard2 = FakeCards.fakeCanopy
-        private val fakeCard3 = FakeCards.fakeFlower
-        private val fakeCard4 = FakeCards.fakeVine
-        private val fakeCard5 = FakeCards.fakeSeedling
+        private val fakeCard1 = FakeCards.rootCard
+        private val fakeCard2 = FakeCards.canopyCard
+        private val fakeCard3 = FakeCards.flowerCard
+        private val fakeCard4 = FakeCards.vineCard
+        private val fakeCard5 = FakeCards.seedlingCard
     }
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val bestCardEvaluator = mockk<BestCardEvaluator>(relaxed = true)

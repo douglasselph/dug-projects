@@ -125,7 +125,7 @@ fun main() = application {
             // First example - Stack with card
             val stackWithCard = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
-                topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
+                topCard = gatherCardInfo(card = FakeCards.rootCard2),
                 numCards = 42
             )
             CardStackDisplay(stackWithCard)
@@ -134,7 +134,7 @@ fun main() = application {
             val stackWithCard2 = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
                 topCard = gatherCardInfo(
-                    card = FakeCards.fakeRoot,
+                    card = FakeCards.rootCard,
                     highlight = HighlightInfo.SELECTABLE
                 ),
                 numCards = 12
@@ -144,7 +144,7 @@ fun main() = application {
             // First example - Stack with card
             val stackEmpty = CardStackInfo(
                 stack = MarketStackID.ROOT_1,
-                topCard = gatherCardInfo(card = FakeCards.fakeRoot),
+                topCard = gatherCardInfo(card = FakeCards.rootCard),
                 numCards = 0
             )
             CardStackDisplay(stackEmpty)

@@ -40,9 +40,9 @@ class IsEliminatedNoADieOrCardsTest {
         // Add cards if needed
         if (cardCount > 0) {
             val cards = when {
-                cardCount >= 3 -> listOf(FakeCards.fakeSeedling, FakeCards.fakeBloom, FakeCards.fakeVine)
-                cardCount == 2 -> listOf(FakeCards.fakeSeedling, FakeCards.fakeBloom)
-                else -> listOf(FakeCards.fakeSeedling)
+                cardCount >= 3 -> listOf(FakeCards.seedlingCard, FakeCards.bloomCard, FakeCards.vineCard)
+                cardCount == 2 -> listOf(FakeCards.seedlingCard, FakeCards.bloomCard)
+                else -> listOf(FakeCards.seedlingCard)
             }
             player.addCardsToSupply(cards.take(cardCount))
         }

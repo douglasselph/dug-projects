@@ -34,8 +34,8 @@ class HandleAbsorbDamageTest {
 
     @BeforeEach
     fun setup() {
-        fakeCard1 = FakeCards.fakeRoot
-        fakeCard2 = FakeCards.fakeCanopy
+        fakeCard1 = FakeCards.rootCard
+        fakeCard2 = FakeCards.canopyCard
         sampleDie = SampleDie()
 
         fakePlayer.useDeckManager = false
@@ -158,8 +158,8 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenAbsorptionResultWithFloralCards_removesFloralCards() = runBlocking {
         // Arrange
-        val floralCard1 = FakeCards.fakeFlower
-        val floralCard2 = FakeCards.fakeFlower2
+        val floralCard1 = FakeCards.flowerCard
+        val floralCard2 = FakeCards.flowerCard2
         fakePlayer.incomingDamage = 1
         coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = emptyList(),
@@ -181,8 +181,8 @@ class HandleAbsorbDamageTest {
     fun invoke_whenHandEmptyYetHasFlowers_usesFloralArray() = runBlocking {
         // Arrange
         fakePlayer.discardHand()
-        val floralCard1 = FakeCards.fakeFlower
-        val floralCard2 = FakeCards.fakeFlower2
+        val floralCard1 = FakeCards.flowerCard
+        val floralCard2 = FakeCards.flowerCard2
         fakePlayer.addCardToFloralArray(floralCard1)
         fakePlayer.addCardToFloralArray(floralCard2)
         fakePlayer.incomingDamage = 8
@@ -243,7 +243,7 @@ class HandleAbsorbDamageTest {
         fakePlayer.incomingDamage = 5
         fakePlayer.addCardToHand(fakeCard1)
         fakePlayer.addDieToHand(sampleDie.d6)
-        fakePlayer.addCardToFloralArray(FakeCards.fakeFlower)
+        fakePlayer.addCardToFloralArray(FakeCards.flowerCard)
         coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result()
 
         // Act
@@ -258,8 +258,8 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_calculatesThornDamageCorrectly() = runBlocking {
         // Arrange
-        val thornCard1 = FakeCards.fakeFlower
-        val thornCard2 = FakeCards.fakeFlower2
+        val thornCard1 = FakeCards.flowerCard
+        val thornCard2 = FakeCards.flowerCard2
         assertTrue(thornCard1.thorn > 0)
         assertTrue(thornCard2.thorn > 0)
         fakePlayer.incomingDamage = thornCard1.thorn + thornCard2.thorn + 2
@@ -279,7 +279,7 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenDamageBecomesNegative_setsToZero() = runBlocking {
         // Arrange
-        val highResilienceCard = FakeCards.fakeCanopy
+        val highResilienceCard = FakeCards.canopyCard
         fakePlayer.incomingDamage = highResilienceCard.resilience + 3
         coEvery { mockDecisionDamageAbsorption() } returns DecisionDamageAbsorption.Result(
             cards = listOf(highResilienceCard)
@@ -295,9 +295,9 @@ class HandleAbsorbDamageTest {
     @Test
     fun invoke_whenRemainingDamageAndItems_recursivelyAbsorbs() = runBlocking {
         // Arrange
-        val handCard = FakeCards.fakeRoot
-        val flowerCard1 = FakeCards.fakeFlower
-        val flowerCard2 = FakeCards.fakeFlower2
+        val handCard = FakeCards.rootCard
+        val flowerCard1 = FakeCards.flowerCard
+        val flowerCard2 = FakeCards.flowerCard2
         val expectedThorn = handCard.thorn + flowerCard1.thorn + flowerCard2.thorn
         fakePlayer.incomingDamage = handCard.resilience + flowerCard1.resilience + flowerCard2.resilience
         fakePlayer.addCardToHand(handCard)

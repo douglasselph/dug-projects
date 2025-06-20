@@ -17,6 +17,9 @@ abstract class Die(
             return DieValue(sides, value)
         }
 
+    val average: Float
+        get() = sides / 2f
+
     abstract fun roll(): Die
 
     fun adjustBy(amount: Int): Die {

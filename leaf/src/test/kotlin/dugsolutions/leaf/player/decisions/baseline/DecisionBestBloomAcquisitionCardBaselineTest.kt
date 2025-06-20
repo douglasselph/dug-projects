@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class DecisionIDBestBloomAcquisitionCardBaselineTest {
+class DecisionBestBloomAcquisitionCardBaselineTest {
 
     private lateinit var SUT: DecisionBestBloomAcquisitionCardBaseline
 
@@ -30,7 +30,7 @@ class DecisionIDBestBloomAcquisitionCardBaselineTest {
     @Test
     fun invoke_whenSingleCard_returnsThatCard() {
         // Arrange
-        val bloom = FakeCards.fakeBloom
+        val bloom = FakeCards.bloomCard
         val cards = listOf(bloom)
 
         // Act
@@ -43,8 +43,8 @@ class DecisionIDBestBloomAcquisitionCardBaselineTest {
     @Test
     fun invoke_whenMultipleCards_returnsFirstCard() {
         // Arrange
-        val bloom1 = FakeCards.fakeBloom
-        val bloom2 = FakeCards.fakeBloom2
+        val bloom1 = FakeCards.bloomCard
+        val bloom2 = FakeCards.bloomCard2
         val cards = listOf(bloom1, bloom2)
 
         // Act

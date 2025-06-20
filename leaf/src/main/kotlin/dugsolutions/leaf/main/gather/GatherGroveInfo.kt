@@ -18,7 +18,6 @@ import dugsolutions.leaf.main.domain.CardStackInfo
 import dugsolutions.leaf.player.Player
 import kotlinx.coroutines.flow.flow
 
-// TODO: Unit test
 class GatherGroveInfo(
     private val grove: Grove,
     private val gatherCardInfo: GatherCardInfo,

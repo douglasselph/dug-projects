@@ -94,45 +94,45 @@ fun main() = application {
                 ), values = false
             ),
             blooms = listOf(
-                gatherCardInfo(card = FakeCards.fakeBloom),
-                gatherCardInfo(card = FakeCards.fakeBloom2),
-                gatherCardInfo(card = FakeCards.fakeBloom3)
+                gatherCardInfo(card = FakeCards.bloomCard),
+                gatherCardInfo(card = FakeCards.bloomCard2),
+                gatherCardInfo(card = FakeCards.bloomCard3)
             ),
             stacks = listOf(
                 CardStackInfo(
                     stack = MarketStackID.ROOT_1,
-                    topCard = gatherCardInfo(card = FakeCards.fakeRoot),
+                    topCard = gatherCardInfo(card = FakeCards.rootCard),
                     numCards = 28
                 ),
                 CardStackInfo(
                     stack = MarketStackID.ROOT_2,
-                    topCard = gatherCardInfo(card = FakeCards.fakeRoot2),
+                    topCard = gatherCardInfo(card = FakeCards.rootCard2),
                     numCards = 28
                 ),
                 CardStackInfo(
                     stack = MarketStackID.CANOPY_1,
-                    topCard = gatherCardInfo(card = FakeCards.fakeCanopy),
+                    topCard = gatherCardInfo(card = FakeCards.canopyCard),
                     numCards = 15
                 ),
                 CardStackInfo(
                     stack = MarketStackID.CANOPY_2,
-                    topCard = gatherCardInfo(card = FakeCards.fakeCanopy2),
+                    topCard = gatherCardInfo(card = FakeCards.canopyCard2),
                     numCards = 15
                 ),
                 CardStackInfo(
                     stack = MarketStackID.VINE_1,
-                    topCard = gatherCardInfo(card = FakeCards.fakeVine),
+                    topCard = gatherCardInfo(card = FakeCards.vineCard),
                     numCards = 42
                 ),
                 CardStackInfo(
                     stack = MarketStackID.VINE_2,
-                    topCard = gatherCardInfo(card = FakeCards.fakeVine2),
+                    topCard = gatherCardInfo(card = FakeCards.vineCard2),
                     numCards = 42
                 ),
                 CardStackInfo(
                     stack = MarketStackID.FLOWER_1,
                     topCard = gatherCardInfo(
-                        card = FakeCards.fakeFlower,
+                        card = FakeCards.flowerCard,
                         highlight = HighlightInfo.SELECTABLE
                     ),
                     numCards = 20
@@ -140,7 +140,7 @@ fun main() = application {
                 CardStackInfo(
                     stack = MarketStackID.FLOWER_2,
                     topCard = gatherCardInfo(
-                        card = FakeCards.fakeFlower2,
+                        card = FakeCards.flowerCard2,
                         highlight = HighlightInfo.SELECTED
                     ),
                     numCards = 20
@@ -148,14 +148,14 @@ fun main() = application {
                 CardStackInfo(
                     stack = MarketStackID.FLOWER_3,
                     topCard = gatherCardInfo(
-                        card = FakeCards.fakeFlower3
+                        card = FakeCards.flowerCard3
                     ),
                     numCards = 20
                 ),
                 CardStackInfo(
                     stack = MarketStackID.WILD_1,
                     topCard = gatherCardInfo(
-                        card = FakeCards.fakeRoot
+                        card = FakeCards.rootCard
                     ),
                     numCards = 10
                 )

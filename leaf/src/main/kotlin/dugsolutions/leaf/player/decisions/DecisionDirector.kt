@@ -30,8 +30,7 @@ class DecisionDirector(
     private val cardManager: CardManager,
     private val acquireCardEvaluator: AcquireCardEvaluator,
     private val acquireDieEvaluator: AcquireDieEvaluator,
-    private val groveNearingTransition: GroveNearingTransition,
-    private val gameTime: GameTime
+    private val groveNearingTransition: GroveNearingTransition
 ) {
 
     lateinit var drawCountDecision: DecisionDrawCount
@@ -47,7 +46,7 @@ class DecisionDirector(
         drawCountDecision = DecisionDrawCountBaseline()
         acquireSelectDecision = DecisionAcquireSelectBaseline(player, acquireCardEvaluator, acquireDieEvaluator)
         damageAbsorptionDecision = DecisionDamageAbsorptionBaseline(player, cardEffectBattleScoreFactory, cardManager)
-        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline(player, groveNearingTransition, gameTime)
+        shouldProcessTrashEffect = DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
         shouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)
         rerollOneDie = DecisionRerollOneDieBaseline(player)
         bestBloomCardAcquisition = DecisionBestBloomAcquisitionCardBaseline()

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class DecisionIDAcquireSelectBaselineTest {
+class DecisionAcquireSelectBaselineTest {
 
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val acquireCardEvaluator = mockk<AcquireCardEvaluator>(relaxed = true)
