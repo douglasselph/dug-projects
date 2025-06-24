@@ -24,7 +24,7 @@ class NutrientReward(
         }
         val sides = awardAmount * 2
         val dieSides = DieSides.from(sides)
-        player.addDieToBed(dieFactory(dieSides))
+        player.addDieToDiscard(dieFactory(dieSides))
         player.nutrients -= awardAmount
         chronicle(Moment.NUTRIENT_REWARD(player, nutrients, dieSides))
     }

@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
 class NutrientRewardTest {
 
@@ -52,7 +51,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify(exactly = 0) { mockPlayer.addDieToBed(any()) }
+        verify(exactly = 0) { mockPlayer.addDieToDiscard(any()) }
         verify(exactly = 0) { mockPlayer.nutrients = any() }
         verify(exactly = 0) { mockChronicle(any()) }
     }
@@ -66,7 +65,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D4) }
+        verify { mockPlayer.addDieToDiscard(D4) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 2, DieSides.D4)) }
     }
@@ -80,7 +79,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D6) }
+        verify { mockPlayer.addDieToDiscard(D6) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 3, DieSides.D6)) }
     }
@@ -94,7 +93,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D8) }
+        verify { mockPlayer.addDieToDiscard(D8) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 4, DieSides.D8)) }
     }
@@ -108,7 +107,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D10) }
+        verify { mockPlayer.addDieToDiscard(D10) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 5, DieSides.D10)) }
     }
@@ -122,7 +121,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D12) }
+        verify { mockPlayer.addDieToDiscard(D12) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 6, DieSides.D12)) }
     }
@@ -136,7 +135,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D20) }
+        verify { mockPlayer.addDieToDiscard(D20) }
         verify { mockPlayer.nutrients = 0 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 10, DieSides.D20)) }
     }
@@ -150,7 +149,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D20) }
+        verify { mockPlayer.addDieToDiscard(D20) }
         verify { mockPlayer.nutrients = 5 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 15, DieSides.D20)) }
     }
@@ -164,7 +163,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D12) }
+        verify { mockPlayer.addDieToDiscard(D12) }
         verify { mockPlayer.nutrients = 1 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 7, DieSides.D12)) }
     }
@@ -178,7 +177,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D12) }
+        verify { mockPlayer.addDieToDiscard(D12) }
         verify { mockPlayer.nutrients = 2 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 8, DieSides.D12)) }
     }
@@ -192,7 +191,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D12) }
+        verify { mockPlayer.addDieToDiscard(D12) }
         verify { mockPlayer.nutrients = 3 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 9, DieSides.D12)) }
     }
@@ -206,7 +205,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D20) }
+        verify { mockPlayer.addDieToDiscard(D20) }
         verify { mockPlayer.nutrients = 1 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 11, DieSides.D20)) }
     }
@@ -220,7 +219,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(D20) }
+        verify { mockPlayer.addDieToDiscard(D20) }
         verify { mockPlayer.nutrients = 10 }
         verify { mockChronicle(Moment.NUTRIENT_REWARD(mockPlayer, 20, DieSides.D20)) }
     }
@@ -234,7 +233,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify(exactly = 0) { mockPlayer.addDieToBed(any()) }
+        verify(exactly = 0) { mockPlayer.addDieToDiscard(any()) }
         verify(exactly = 0) { mockPlayer.nutrients = any() }
         verify(exactly = 0) { mockChronicle(any()) }
     }
@@ -248,7 +247,7 @@ class NutrientRewardTest {
         SUT(mockPlayer)
 
         // Assert
-        verify(exactly = 0) { mockPlayer.addDieToBed(any()) }
+        verify(exactly = 0) { mockPlayer.addDieToDiscard(any()) }
         verify(exactly = 0) { mockPlayer.nutrients = any() }
         verify(exactly = 0) { mockChronicle(any()) }
     }

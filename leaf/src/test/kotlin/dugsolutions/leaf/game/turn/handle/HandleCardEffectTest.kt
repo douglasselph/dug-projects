@@ -137,9 +137,9 @@ class HandleCardEffectTest {
     }
 
     @Test
-    fun invoke_DRAW_CARD_COMPOST_callsEffectDrawCardWithCompost() {
-        SUT(player, target, CardEffect.DRAW_CARD_BED, 1)
-        verify { effectDrawCard(player, fromCompost = true) }
+    fun invoke_DRAW_CARD_DISCARD_callsEffectDrawCardWithDiscard() {
+        SUT(player, target, CardEffect.DRAW_CARD_DISCARD, 1)
+        verify { effectDrawCard(player, fromDiscard = true) }
     }
 
     @Test

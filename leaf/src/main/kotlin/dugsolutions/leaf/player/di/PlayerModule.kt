@@ -56,7 +56,7 @@ val playerModule: Module = module {
         DeckManager(
             supply = get(),
             hand = get(),
-            dormant = get(),
+            discardPatch = get(),
             dieFactory = get()
         )
     }

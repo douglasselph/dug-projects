@@ -36,7 +36,7 @@ class AcquireItem(
                 val card = bestChoice.item.card
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
-                    player.addCardToBed(card.id)
+                    player.addCardToDiscard(card.id)
                     chronicle(Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
                     grove.repairWild()
@@ -48,7 +48,7 @@ class AcquireItem(
                 val die = bestChoice.item.die
                 val combination = bestChoice.item.combination
                 applyCost(player, combination) {
-                    player.addDieToBed(die)
+                    player.addDieToDiscard(die)
                     chronicle(Moment.ACQUIRE_DIE(player, die, combination))
                     grove.removeDie(die)
                     result = true

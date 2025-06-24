@@ -93,8 +93,8 @@ fun main() = application {
             floralArray = emptyList(),
             nutrients = 2,
             supplyCardCount = 0,
-            bedCardCount = 0,
-            bedDice = gatherDiceInfo(Dice(emptyList()), false)
+            discardCardCount = 0,
+            discardDice = gatherDiceInfo(Dice(emptyList()), false)
         )
         HandDisplay(samplePlayer)
     }

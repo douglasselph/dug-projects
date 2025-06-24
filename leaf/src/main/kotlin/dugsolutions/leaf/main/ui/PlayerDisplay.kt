@@ -115,9 +115,9 @@ fun PlayerDisplay(
                     // Compost section
                     Box {
                         SectionDisplay(
-                            title = "Dormant Bed",
-                            cardCount = player.bedCardCount,
-                            dice = player.bedDice
+                            title = "Discard Patch",
+                            cardCount = player.discardCardCount,
+                            dice = player.discardDice
                         )
                     }
                 }
@@ -220,8 +220,8 @@ fun main() = application {
                 )
             ),
             supplyCardCount = 42,
-            bedCardCount = 7,
-            bedDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
+            discardCardCount = 7,
+            discardDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
         )
         val actionDomain = MainActionDomain()
         PlayerDisplay(samplePlayer, actionDomain)

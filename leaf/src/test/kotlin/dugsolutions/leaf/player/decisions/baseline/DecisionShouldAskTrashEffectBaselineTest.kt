@@ -61,7 +61,7 @@ class DecisionShouldAskTrashEffectBaselineTest {
         val testCard = FakeCards.canopyCard.copy(
             primaryEffect = CardEffect.DRAW_CARD,
             matchEffect = CardEffect.RETAIN_CARD,
-            trashEffect = CardEffect.DRAW_CARD_BED
+            trashEffect = CardEffect.DRAW_CARD_DISCARD
         )
 
         // Act

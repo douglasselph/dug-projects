@@ -33,13 +33,13 @@ class EffectDrawCardTest {
     }
 
     @Test
-    fun invoke_fromCompostTrue_drawsFromCompost_andCallsChronicle() {
+    fun invoke_fromDiscardTrue_drawsFromDiscard_andCallsChronicle() {
         // Arrange
-        every { mockPlayer.drawCardFromBed() } returns CARD_ID
+        every { mockPlayer.drawCardFromDiscard() } returns CARD_ID
         every { mockCardManager.getCard(CARD_ID) } returns fakeCard
 
         // Act
-        SUT(mockPlayer, fromCompost = true)
+        SUT(mockPlayer, fromDiscard = true)
 
         // Assert
         verify { mockChronicle(Moment.DRAW_CARD(mockPlayer, CARD_ID)) }
@@ -47,13 +47,13 @@ class EffectDrawCardTest {
     }
 
     @Test
-    fun invoke_fromCompostFalse_drawsFromDeck_andCallsChronicle() {
+    fun invoke_fromDiscardFalse_drawsFromDeck_andCallsChronicle() {
         // Arrange
         every { mockPlayer.drawCard() } returns CARD_ID
         every { mockCardManager.getCard(CARD_ID) } returns fakeCard
 
         // Act
-        SUT(mockPlayer, fromCompost = false)
+        SUT(mockPlayer, fromDiscard = false)
 
         // Assert
         verify { mockChronicle(Moment.DRAW_CARD(mockPlayer, CARD_ID)) }
@@ -64,11 +64,11 @@ class EffectDrawCardTest {
     fun invoke_whenNoCardDrawn_doesNothing() {
         // Arrange
         every { mockPlayer.drawCard() } returns null
-        every { mockPlayer.drawCardFromBed() } returns null
+        every { mockPlayer.drawCardFromDiscard() } returns null
 
         // Act
-        SUT(mockPlayer, fromCompost = false)
-        SUT(mockPlayer, fromCompost = true)
+        SUT(mockPlayer, fromDiscard = false)
+        SUT(mockPlayer, fromDiscard = true)
 
         // Assert
         verify(exactly = 0) { mockChronicle(any()) }

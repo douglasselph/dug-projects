@@ -5,7 +5,6 @@ import dugsolutions.leaf.cards.cost.CostScore
 import dugsolutions.leaf.cards.di.GameCardIDsFactory
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.grove.local.GroveNearingTransition
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
@@ -138,11 +137,11 @@ class PlayerTD private constructor(
             val gameCardIDsFactory = GameCardIDsFactory(cardManager, randomizerTD)
             val supplyStack = StackManager(cardManager, gameCardIDsFactory)
             val handStack = StackManager(cardManager, gameCardIDsFactory)
-            val compostStack = StackManager(cardManager, gameCardIDsFactory)
+            val discardStack = StackManager(cardManager, gameCardIDsFactory)
             val floralBonusCount = FloralBonusCount()
             val floralArray = FloralArray(cardManager, gameCardIDsFactory)
             val dieFactory = DieFactory(randomizerTD)
-            val deckManager = DeckManager(supplyStack, handStack, compostStack, dieFactory)
+            val deckManager = DeckManager(supplyStack, handStack, discardStack, dieFactory)
             val costScore = CostScore()
             val drawNewHand = DrawNewHand()
             val decisionDirector = mockk<DecisionDirector>(relaxed = true)
@@ -219,8 +218,8 @@ class PlayerTD private constructor(
     override val diceInHand: Dice
         get() = if (useDeckManager) super.diceInHand else _diceInHand
 
-    override val diceInBed: Dice
-        get() = if (useDeckManager) super.diceInBed else _diceInBed
+    override val diceInDiscard: Dice
+        get() = if (useDeckManager) super.diceInDiscard else _diceInBed
 
     override val diceInSupply: Dice
         get() = if (useDeckManager) super.diceInSupply else _diceInSupply
@@ -245,17 +244,17 @@ class PlayerTD private constructor(
         return super.addDieToHand(die)
     }
 
-    override fun addDieToBed(die: Die): Boolean {
-        diceInBed.add(die)
-        return super.addDieToBed(die)
+    override fun addDieToDiscard(die: Die): Boolean {
+        diceInDiscard.add(die)
+        return super.addDieToDiscard(die)
     }
 
     override val allDice: Dice
-        get() = Dice(diceInSupply.dice + diceInHand.dice + diceInBed.dice)
+        get() = Dice(diceInSupply.dice + diceInHand.dice + diceInDiscard.dice)
 
     private val _cardsInHand = mutableListOf<GameCard>()
     private val _cardsInSupply = mutableListOf<GameCard>()
-    private val _cardsInCompost = mutableListOf<GameCard>()
+    private val _cardsInDiscard = mutableListOf<GameCard>()
     private val _floralCards = mutableListOf<GameCard>()
 
     override val cardsInHand: List<GameCard>
@@ -264,8 +263,8 @@ class PlayerTD private constructor(
     override val cardsInSupply: List<GameCard>
         get() = if (useDeckManager) super.cardsInSupply else _cardsInSupply
 
-    override val cardsInBed: List<GameCard>
-        get() = if (useDeckManager) super.cardsInBed else _cardsInCompost
+    override val cardsInDiscard: List<GameCard>
+        get() = if (useDeckManager) super.cardsInDiscard else _cardsInDiscard
 
     override val floralCards: List<GameCard>
         get() = if (useDeckManager) super.floralCards else _floralCards
@@ -299,9 +298,9 @@ class PlayerTD private constructor(
         super.addCardToFloralArray(card.id)
     }
 
-    fun addCardToCompost(card: GameCard) {
-        _cardsInCompost.add(card)
-        super.addCardToBed(card.id)
+    fun addCardToDiscard(card: GameCard) {
+        _cardsInDiscard.add(card)
+        super.addCardToDiscard(card.id)
     }
 
     override fun removeCardFromHand(cardId: CardID): Boolean {

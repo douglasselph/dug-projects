@@ -15,7 +15,7 @@ class EffectGainD20(
 
     operator fun invoke(player: Player) {
         if (grove.getDiceQuantity(20) > 0) {
-            player.addDieToBed(dieFactory(DieSides.D20))
+            player.addDieToDiscard(dieFactory(DieSides.D20))
             chronicle(Moment.GAIN_D20(player))
         }
     }

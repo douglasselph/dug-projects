@@ -10,9 +10,9 @@ class EffectDrawCard(
     private val chronicle: GameChronicle
 ) {
 
-    operator fun invoke(player: Player, fromCompost: Boolean = false) {
-        val cardId = if (fromCompost) {
-            player.drawCardFromBed()
+    operator fun invoke(player: Player, fromDiscard: Boolean = false) {
+        val cardId = if (fromDiscard) {
+            player.drawCardFromDiscard()
         } else {
             player.drawCard()
         }

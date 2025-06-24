@@ -19,8 +19,8 @@ object PlayerInfoFaker {
      * @param supplyDieCount Number of dice in supply
      * @param floralCardCount Number of cards in floral array
      * @param supplyCardCount Number of cards in supply
-     * @param compostCardCount Number of cards in compost
-     * @param compostDieCount Number of dice in compost
+     * @param discardCardCount Number of cards in Discard Patch
+     * @param discardDieCount Number of dice in Discard Patch
      * @param showDrawCount Whether to show draw count
      * @return A PlayerInfo object with fake data
      */
@@ -31,8 +31,8 @@ object PlayerInfoFaker {
         supplyDieCount: Int = faker.random.nextInt(0, 3),
         floralCardCount: Int = faker.random.nextInt(0, 3),
         supplyCardCount: Int = faker.random.nextInt(0, 10),
-        compostCardCount: Int = faker.random.nextInt(0, 5),
-        compostDieCount: Int = faker.random.nextInt(0, 3)
+        discardCardCount: Int = faker.random.nextInt(0, 5),
+        discardDieCount: Int = faker.random.nextInt(0, 3)
     ): PlayerInfo {
         return PlayerInfo(
             name = name,
@@ -43,8 +43,8 @@ object PlayerInfoFaker {
             floralArray = CardInfoFaker.createList(floralCardCount),
             nutrients = 0,
             supplyCardCount = supplyCardCount,
-            bedCardCount = compostCardCount,
-            bedDice = DiceInfo(DieInfoFaker.createList(compostDieCount)),
+            discardCardCount = discardCardCount,
+            discardDice = DiceInfo(DieInfoFaker.createList(discardDieCount)),
         )
     }
 
@@ -61,8 +61,8 @@ object PlayerInfoFaker {
             supplyDieCount = 0,
             floralCardCount = 0,
             supplyCardCount = 0,
-            compostCardCount = 0,
-            compostDieCount = 0
+            discardCardCount = 0,
+            discardDieCount = 0
         )
     }
 
@@ -79,8 +79,8 @@ object PlayerInfoFaker {
             supplyDieCount = 3,
             floralCardCount = 3,
             supplyCardCount = 10,
-            compostCardCount = 5,
-            compostDieCount = 3
+            discardCardCount = 5,
+            discardDieCount = 3
         )
     }
 
@@ -109,8 +109,8 @@ object PlayerInfoFaker {
             supplyDieCount = 3,
             floralCardCount = 3,
             supplyCardCount = 10,
-            compostCardCount = 5,
-            compostDieCount = 3
+            discardCardCount = 5,
+            discardDieCount = 3
         ).copy(
             handCards = handCards,
             handDice = DiceInfo(handDice),

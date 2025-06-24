@@ -11,7 +11,7 @@ import dugsolutions.leaf.random.di.DieFactory
 class DeckManager(
     private val supply: StackManager,
     private val hand: StackManager,
-    private val dormant: StackManager,
+    private val discardPatch: StackManager,
     private val dieFactory: DieFactory
 ) {
 
@@ -25,7 +25,7 @@ class DeckManager(
         get() = hand.pipTotal
 
     val allDice: Dice
-        get() = Dice(supply.dice.dice + hand.dice.dice + dormant.dice.dice)
+        get() = Dice(supply.dice.dice + hand.dice.dice + discardPatch.dice.dice)
 
     // Setup
     fun setup(seedlings: GameCards, startingDice: List<Die>) {
@@ -37,13 +37,13 @@ class DeckManager(
     fun hasCardInHand(cardId: CardID): Boolean = hand.hasCard(cardId)
     fun hasDieInHand(die: Die): Boolean = hand.hasDie(die)
     fun getItemsInHand(): List<HandItem> = hand.getItems()
-    fun getItemsInBed(): List<HandItem> = dormant.getItems()
+    fun getItemsInDiscardPatch(): List<HandItem> = discardPatch.getItems()
     fun getItemsInSupply(): List<HandItem> = supply.getItems()
 
     fun discard(cardId: CardID): Boolean {
         if (!hand.hasCard(cardId)) return false
         if (hand.removeCard(cardId)) {
-            dormant.addCard(cardId)
+            discardPatch.addCard(cardId)
             return true
         }
         return false
@@ -52,7 +52,7 @@ class DeckManager(
     fun discard(die: Die): Boolean {
         if (!hand.hasDie(die)) return false
         if (hand.removeDie(die)) {
-            dormant.addDie(die)
+            discardPatch.addDie(die)
             return true
         }
         return false
@@ -61,7 +61,7 @@ class DeckManager(
     fun discard(die: DieValue): Boolean {
         if (!hand.hasDie(die)) return false
         if (hand.removeDie(die)) {
-            dormant.addDie(die.dieFrom(dieFactory))
+            discardPatch.addDie(die.dieFrom(dieFactory))
             return true
         }
         return false
@@ -74,13 +74,13 @@ class DeckManager(
     fun addCardToHand(cardId: CardID): Boolean = hand.addCard(cardId)
     fun addDieToHand(die: Die): Boolean = hand.addDie(die)
     fun addDieToHand(die: DieValue): Boolean = hand.addDie(die.dieFrom(dieFactory))
-    fun addCardToBed(cardId: CardID): Boolean = dormant.addCard(cardId)
-    fun addDieToBed(die: Die): Boolean = dormant.addDie(die)
-    fun addDieToBed(die: DieValue): Boolean = dormant.addDie(die.dieFrom(dieFactory))
+    fun addCardToDiscardPatch(cardId: CardID): Boolean = discardPatch.addCard(cardId)
+    fun addDieToDiscardPatch(die: Die): Boolean = discardPatch.addDie(die)
+    fun addDieToDiscard(die: DieValue): Boolean = discardPatch.addDie(die.dieFrom(dieFactory))
     fun removeCardFromHand(cardId: CardID): Boolean = hand.removeCard(cardId)
     fun removeDieFromHand(die: Die): Boolean = hand.removeDie(die)
-    fun removeCardFromBed(cardId: CardID): Boolean = dormant.removeCard(cardId)
-    fun removeDieFromBed(die: Die): Boolean = dormant.removeDie(die)
+    fun removeCardFromDiscardPatch(cardId: CardID): Boolean = discardPatch.removeCard(cardId)
+    fun removeDieFromDiscard(die: Die): Boolean = discardPatch.removeDie(die)
 
     // Drawing operations
     fun drawCard(): CardID? {
@@ -101,47 +101,47 @@ class DeckManager(
         }
     }
 
-    fun drawCardFromBed(): CardID? {
-        return dormant.drawCard()?.let { cardId ->
+    fun drawCardFromDiscard(): CardID? {
+        return discardPatch.drawCard()?.let { cardId ->
             if (hand.addCard(cardId)) cardId else null
         }
     }
 
-    fun drawDieFromBed(): Die? {
-        return dormant.drawLowestDie()?.let { die ->
+    fun drawDieFromDiscard(): Die? {
+        return discardPatch.drawLowestDie()?.let { die ->
             if (hand.addDie(die)) die else null
         }
     }
 
-    fun drawBestDieFromBed(): Die? {
-        return dormant.drawHighestDie()?.let { die ->
+    fun drawBestDieFromDiscard(): Die? {
+        return discardPatch.drawHighestDie()?.let { die ->
             if (hand.addDie(die)) die else null
         }
     }
 
     // Resource cycling
     fun resupply() {
-        supply.addAllCards(dormant.getItems().mapNotNull {
+        supply.addAllCards(discardPatch.getItems().mapNotNull {
             when (it) {
                 is HandItem.aCard -> it.card.id
                 is HandItem.aDie -> null
             }
         })
-        supply.addAllDice(dormant.getItems().mapNotNull {
+        supply.addAllDice(discardPatch.getItems().mapNotNull {
             when (it) {
                 is HandItem.aCard -> null
                 is HandItem.aDie -> it.die
             }
         })
-        dormant.clear()
+        discardPatch.clear()
         supply.shuffle()
     }
 
     fun discardHand() {
         hand.getItems().forEach { item ->
             when (item) {
-                is HandItem.aCard -> dormant.addCard(item.card.id)
-                is HandItem.aDie -> dormant.addDie(item.die)
+                is HandItem.aCard -> discardPatch.addCard(item.card.id)
+                is HandItem.aDie -> discardPatch.addDie(item.die)
             }
         }
         hand.clear()
@@ -150,14 +150,14 @@ class DeckManager(
     fun clear() {
         supply.clear()
         hand.clear()
-        dormant.clear()
+        discardPatch.clear()
     }
 
     fun trashSeedlingCards(): List<CardID> {
         val trashed = mutableListOf<CardID>()
         trashed.addAll(supply.trashSeedlingCards())
         trashed.addAll(hand.trashSeedlingCards())
-        trashed.addAll(dormant.trashSeedlingCards())
+        trashed.addAll(discardPatch.trashSeedlingCards())
         return trashed
     }
 } 

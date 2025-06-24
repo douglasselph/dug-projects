@@ -20,8 +20,8 @@ class DecisionDrawCountBaseline : DecisionDrawCount {
         // If supply is low, include compost pile in calculations
         val (effectiveCardCount, effectiveDiceCount) = if (totalAvailable < handSize) {
             Pair(
-                cardSupplyCount + player.cardsInBedCount,
-                diceSupplyCount + player.diceInBedCount
+                cardSupplyCount + player.cardsInDiscardCount,
+                diceSupplyCount + player.diceInDiscardCount
             )
         } else {
             Pair(cardSupplyCount, diceSupplyCount)

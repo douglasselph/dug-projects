@@ -35,7 +35,7 @@ class EffectGainD20Test {
     }
 
     @Test
-    fun invoke_whenD20Available_addsDieToCompostAndRecordsMoment() {
+    fun invoke_whenD20Available_addsDieToDiscardAndRecordsMoment() {
         // Arrange
         every { mockGrove.getDiceQuantity(20) } returns 1
 
@@ -43,7 +43,7 @@ class EffectGainD20Test {
         SUT(mockPlayer)
 
         // Assert
-        verify { mockPlayer.addDieToBed(d20) }
+        verify { mockPlayer.addDieToDiscard(d20) }
         verify { mockChronicle(Moment.GAIN_D20(mockPlayer)) }
     }
 
@@ -56,7 +56,7 @@ class EffectGainD20Test {
         SUT(mockPlayer)
 
         // Assert
-        verify(exactly = 0) { mockPlayer.addDieToBed(any()) }
+        verify(exactly = 0) { mockPlayer.addDieToDiscard(any()) }
         verify(exactly = 0) { mockChronicle(any()) }
     }
 } 

@@ -70,10 +70,10 @@ class GatherPlayerInfoTest {
         every { mockPlayer.diceInSupply } returns supplyDice
         every { mockGatherDiceInfo(supplyDice, false) } returns DiceInfo(listOf(D4_COUNT, D6_COUNT))
 
-        // Setup compost dice
-        val compostDice = Dice(listOf(sampleDie.d8.adjustTo(5)))
-        every { mockPlayer.diceInBed } returns compostDice
-        every { mockGatherDiceInfo(compostDice, false) } returns DiceInfo(listOf(D8_COUNT))
+        // Setup Discard dice
+        val discardDice = Dice(listOf(sampleDie.d8.adjustTo(5)))
+        every { mockPlayer.diceInDiscard } returns discardDice
+        every { mockGatherDiceInfo(discardDice, false) } returns DiceInfo(listOf(D8_COUNT))
 
         // Setup floral cards
         val floralCard = FakeCards.flowerCard
@@ -86,7 +86,7 @@ class GatherPlayerInfoTest {
 
         // Setup card counts
         every { mockPlayer.cardsInSupplyCount } returns 3
-        every { mockPlayer.cardsInBedCount } returns 2
+        every { mockPlayer.cardsInDiscardCount } returns 2
         every { mockPlayer.name } returns PLAYER_NAME
 
         // Act
@@ -98,11 +98,11 @@ class GatherPlayerInfoTest {
         assertEquals(handName, result.handCards[0].name)
         assertEquals(listOf(D6_VALUE), result.handDice.values)
         assertEquals(listOf(D4_COUNT, D6_COUNT), result.supplyDice.values)
-        assertEquals(listOf(D8_COUNT), result.bedDice.values)
+        assertEquals(listOf(D8_COUNT), result.discardDice.values)
         assertEquals(1, result.floralArray.size)
         assertEquals(floralName, result.floralArray[0].name)
         assertEquals(3, result.supplyCardCount)
-        assertEquals(2, result.bedCardCount)
+        assertEquals(2, result.discardCardCount)
 
         // Verify gatherCardInfo calls
         verify { mockGatherCardInfo(index = 0, card = handCard, highlight = any()) }
@@ -111,7 +111,7 @@ class GatherPlayerInfoTest {
         // Verify gatherDiceInfo calls
         verify { mockGatherDiceInfo(handDice, true) }
         verify { mockGatherDiceInfo(supplyDice, false) }
-        verify { mockGatherDiceInfo(compostDice, false) }
+        verify { mockGatherDiceInfo(discardDice, false) }
     }
 
     @Test
@@ -121,10 +121,10 @@ class GatherPlayerInfoTest {
         every { mockPlayer.cardsInHand } returns emptyList()
         every { mockPlayer.diceInHand } returns Dice(emptyList())
         every { mockPlayer.diceInSupply } returns Dice(emptyList())
-        every { mockPlayer.diceInBed } returns Dice(emptyList())
+        every { mockPlayer.diceInDiscard } returns Dice(emptyList())
         every { mockPlayer.floralCards } returns emptyList()
         every { mockPlayer.cardsInSupplyCount } returns 0
-        every { mockPlayer.cardsInBedCount } returns 0
+        every { mockPlayer.cardsInDiscardCount } returns 0
         every { mockPlayer.name } returns EMPTY_PLAYER_NAME
         every { mockPlayer.score } returns PlayerScore(1, 0, 0)
 
@@ -138,10 +138,10 @@ class GatherPlayerInfoTest {
         assertTrue(result.handCards.isEmpty())
         assertTrue(result.handDice.values.isEmpty())
         assertTrue(result.supplyDice.values.isEmpty())
-        assertTrue(result.bedDice.values.isEmpty())
+        assertTrue(result.discardDice.values.isEmpty())
         assertTrue(result.floralArray.isEmpty())
         assertEquals(0, result.supplyCardCount)
-        assertEquals(0, result.bedCardCount)
+        assertEquals(0, result.discardCardCount)
 
         // Verify gatherDiceInfo calls
         verify { mockGatherDiceInfo(Dice(emptyList()), true) }
@@ -182,9 +182,9 @@ class GatherPlayerInfoTest {
         every { mockPlayer.cardsInHand } returns emptyList()
         every { mockPlayer.diceInHand } returns Dice(emptyList())
         every { mockPlayer.diceInSupply } returns Dice(emptyList())
-        every { mockPlayer.diceInBed } returns Dice(emptyList())
+        every { mockPlayer.diceInDiscard } returns Dice(emptyList())
         every { mockPlayer.cardsInSupplyCount } returns 0
-        every { mockPlayer.cardsInBedCount } returns 0
+        every { mockPlayer.cardsInDiscardCount } returns 0
         every { mockPlayer.name } returns PLAYER_NAME
         every { mockPlayer.score } returns PlayerScore(1, 0, 0)
         every { mockGatherDiceInfo(any(), any()) } returns DiceInfo(emptyList())

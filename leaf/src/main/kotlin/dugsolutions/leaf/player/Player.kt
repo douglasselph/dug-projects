@@ -72,8 +72,8 @@ open class Player(
     open val diceInHand: Dice
         get() = getDiceFrom(deckManager.getItemsInHand())
 
-    open val diceInBed: Dice
-        get() = getDiceFrom(deckManager.getItemsInBed())
+    open val diceInDiscard: Dice
+        get() = getDiceFrom(deckManager.getItemsInDiscardPatch())
 
     open val diceInSupply: Dice
         get() = getDiceFrom(deckManager.getItemsInSupply())
@@ -106,8 +106,8 @@ open class Player(
             }
         }
 
-    open val cardsInBed: List<GameCard>
-        get() = deckManager.getItemsInBed().mapNotNull {
+    open val cardsInDiscard: List<GameCard>
+        get() = deckManager.getItemsInDiscardPatch().mapNotNull {
             when (it) {
                 is HandItem.aCard -> cardManager.getCard(it.card.id)
                 is HandItem.aDie -> null
@@ -123,17 +123,17 @@ open class Player(
 
     val cardsInSupplyCount: Int
         get() = cardsInSupply.size
-    val cardsInBedCount: Int
-        get() = cardsInBed.size
+    val cardsInDiscardCount: Int
+        get() = cardsInDiscard.size
     val diceInSupplyCount: Int
         get() = diceInSupply.size
-    val diceInBedCount: Int
-        get() = diceInBed.size
+    val diceInDiscardCount: Int
+        get() = diceInDiscard.size
 
     val totalDiceCount: Int
-        get() = diceInSupplyCount + diceInBed.size + diceInHand.size
+        get() = diceInSupplyCount + diceInDiscard.size + diceInHand.size
     val totalCardCount: Int
-        get() = cardsInSupplyCount + cardsInBedCount + cardsInHand.size
+        get() = cardsInSupplyCount + cardsInDiscardCount + cardsInHand.size
 
     fun flowerCount(flowerCards: List<CardID>, bloomCard: GameCard): Int {
         if (bloomCard.matchWith is MatchWith.Flower) {
@@ -143,7 +143,7 @@ open class Player(
     }
 
     val allCardsInDeck: List<GameCard>
-        get() = cardsInSupply + cardsInHand + cardsInBed
+        get() = cardsInSupply + cardsInHand + cardsInDiscard
 
     open val floralCards: List<GameCard>
         get() = floralArray.cards
@@ -172,7 +172,7 @@ open class Player(
     open fun discard(die: Die): Boolean = deckManager.discard(die)
     open fun discard(die: DieValue): Boolean = deckManager.discard(die)
     open fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
-    fun removeCardFromBed(cardId: CardID): Boolean = deckManager.removeCardFromBed(cardId)
+    fun removeCardFromDiscardPatch(cardId: CardID): Boolean = deckManager.removeCardFromDiscardPatch(cardId)
     open fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
     open fun removeCardFromFloralArray(cardId: CardID): Boolean = floralArray.remove(cardId)
 
@@ -188,9 +188,9 @@ open class Player(
     open fun addCardToHand(cardId: CardID) = deckManager.addCardToHand(cardId)
     open fun addDieToHand(die: Die) = deckManager.addDieToHand(die)
     open fun addDieToHand(die: DieValue) = deckManager.addDieToHand(die)
-    open fun addCardToBed(cardID: CardID) = deckManager.addCardToBed(cardID)
-    open fun addDieToBed(die: Die) = deckManager.addDieToBed(die)
-    fun removeDieFromBed(die: Die) = deckManager.removeDieFromBed(die)
+    open fun addCardToDiscard(cardID: CardID) = deckManager.addCardToDiscardPatch(cardID)
+    open fun addDieToDiscard(die: Die) = deckManager.addDieToDiscardPatch(die)
+    fun removeDieFromDiscard(die: Die) = deckManager.removeDieFromDiscard(die)
     open fun addCardToFloralArray(cardId: CardID) = floralArray.add(cardId)
 
     fun addCardsToHand(cards: List<CardID>) = cards.forEach { addCardToHand(it) }
@@ -238,9 +238,9 @@ open class Player(
         return deckManager.drawBestDie()?.roll()
     }
 
-    fun drawCardFromBed(): CardID? = deckManager.drawCardFromBed()
-    fun drawDieFromBed(): Die? = deckManager.drawDieFromBed()
-    fun drawBestDieFromBed(): Die? = deckManager.drawBestDieFromBed()
+    fun drawCardFromDiscard(): CardID? = deckManager.drawCardFromDiscard()
+    fun drawDieFromDiscard(): Die? = deckManager.drawDieFromDiscard()
+    fun drawBestDieFromDiscard(): Die? = deckManager.drawBestDieFromDiscard()
 
     open fun discardHand() {
         deckManager.discardHand()

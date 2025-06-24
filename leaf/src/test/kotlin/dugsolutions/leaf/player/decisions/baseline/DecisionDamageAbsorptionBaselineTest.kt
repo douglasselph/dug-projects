@@ -87,8 +87,8 @@ class DecisionDamageAbsorptionBaselineTest {
         cardEffectBattleScore = mockk(relaxed = true)
         player = PlayerTD(1, cardManager)
         sampleDie = SampleDie(RandomizerTD())
-        player.addCardToBed(FakeCards.bloomCard.id)
-        player.addDieToBed(sampleDie.d10)
+        player.addCardToDiscard(FakeCards.bloomCard.id)
+        player.addDieToDiscard(sampleDie.d10)
         player.useDeckManager = false
         every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
@@ -245,7 +245,7 @@ class DecisionDamageAbsorptionBaselineTest {
         player.addCardToHand(mockCanopy)
         // Add dice to all places
         player.addDieToHand(d4)
-        player.addDieToBed(d6)
+        player.addDieToDiscard(d6)
 
         // Mock card effect battle score to prefer preserving Canopy
         every { cardEffectBattleScore(mockSeedling) } returns 1
@@ -305,8 +305,8 @@ class DecisionDamageAbsorptionBaselineTest {
         player.addDieToHand(sampleDie.d4)
         player.addDieToHand(sampleDie.d6)
         // Cards and dice in other places
-        player.addCardToCompost(mockCanopy)
-        player.addDieToBed(sampleDie.d8)
+        player.addCardToDiscard(mockCanopy)
+        player.addDieToDiscard(sampleDie.d8)
 
         // Mock card effect battle score to prefer using all available resources
         every { cardEffectBattleScore(mockSeedling) } returns 1

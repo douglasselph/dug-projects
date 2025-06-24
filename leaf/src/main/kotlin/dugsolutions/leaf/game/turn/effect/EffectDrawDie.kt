@@ -9,17 +9,17 @@ class EffectDrawDie(
 ) {
 
     data class DrawDieParams(
-        val fromCompost: Boolean = false,
+        val fromDiscard: Boolean = false,
         val drawHighest: Boolean = false,
         val thenDiscard: Boolean = false
     )
 
     operator fun invoke(player: Player, params: DrawDieParams) = with(params) {
-        val die = if (fromCompost) {
+        val die = if (fromDiscard) {
             if (drawHighest) {
-                player.drawBestDieFromBed()
+                player.drawBestDieFromDiscard()
             } else {
-                player.drawDieFromBed()
+                player.drawDieFromDiscard()
             }
         } else {
             if (drawHighest) {

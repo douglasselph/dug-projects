@@ -24,7 +24,7 @@ class DeckManagerTest {
     }
     private lateinit var supply: StackManager
     private lateinit var hand: StackManager
-    private lateinit var compost: StackManager
+    private lateinit var discardPatch: StackManager
     private lateinit var randomizer: Randomizer
     private lateinit var dieFactory: DieFactory
 
@@ -38,7 +38,7 @@ class DeckManagerTest {
     fun setup() {
         supply = mockk(relaxed = true)
         hand = mockk(relaxed = true)
-        compost = mockk(relaxed = true)
+        discardPatch = mockk(relaxed = true)
         randomizer = Randomizer.create()
         dieFactory = DieFactory(randomizer)
 
@@ -46,13 +46,13 @@ class DeckManagerTest {
         d6 = dieFactory(DieSides.D6)
         d8 = dieFactory(DieSides.D8)
 
-        SUT = DeckManager(supply, hand, compost, dieFactory)
+        SUT = DeckManager(supply, hand, discardPatch, dieFactory)
 
-        every { compost.addCard(any()) } returns true
-        every { compost.addDie(any()) } returns true
+        every { discardPatch.addCard(any()) } returns true
+        every { discardPatch.addDie(any()) } returns true
         every { hand.addCard(any()) } returns true
         every { supply.addCard(any()) } returns true
-        every { compost.addCard(any()) } returns true
+        every { discardPatch.addCard(any()) } returns true
     }
 
     @Test
@@ -176,11 +176,11 @@ class DeckManagerTest {
     }
 
     @Test
-    fun discard_whenCardExists_movesToCompost() {
+    fun discard_whenCardExists_movesToDiscard() {
         // Arrange
         every { hand.hasCard(CARD_ID_1) } returns true
         every { hand.removeCard(CARD_ID_1) } returns true
-        every { compost.addCard(CARD_ID_1) } returns true
+        every { discardPatch.addCard(CARD_ID_1) } returns true
 
         // Act
         val result = SUT.discard(CARD_ID_1)
@@ -188,15 +188,15 @@ class DeckManagerTest {
         // Assert
         assertTrue(result)
         verify { hand.removeCard(CARD_ID_1) }
-        verify { compost.addCard(CARD_ID_1) }
+        verify { discardPatch.addCard(CARD_ID_1) }
     }
 
     @Test
-    fun discard_whenDieExists_movesToCompost() {
+    fun discard_whenDieExists_movesToDiscard() {
         // Arrange
         every { hand.hasDie(d6) } returns true
         every { hand.removeDie(d6) } returns true
-        every { compost.addDie(d6) } returns true
+        every { discardPatch.addDie(d6) } returns true
 
         // Act
         val result = SUT.discard(d6)
@@ -204,17 +204,17 @@ class DeckManagerTest {
         // Assert
         assertTrue(result)
         verify { hand.removeDie(d6) }
-        verify { compost.addDie(d6) }
+        verify { discardPatch.addDie(d6) }
     }
 
     @Test
-    fun discard_whenDieValueExists_movesToCompost() {
+    fun discard_whenDieValueExists_movesToDiscard() {
         // Arrange
         val dieValue = DieValue(6, 4)
         val die = dieFactory(DieSides.D6).adjustTo(4)
         every { hand.hasDie(dieValue) } returns true
         every { hand.removeDie(dieValue) } returns true
-        every { compost.addDie(die) } returns true
+        every { discardPatch.addDie(die) } returns true
 
         // Act
         val result = SUT.discard(dieValue)
@@ -222,7 +222,7 @@ class DeckManagerTest {
         // Assert
         assertTrue(result)
         verify { hand.removeDie(dieValue) }
-        verify { compost.addDie(die) }
+        verify { discardPatch.addDie(die) }
     }
 
     @Test
@@ -237,7 +237,7 @@ class DeckManagerTest {
         // Assert
         assertFalse(result)
         verify(exactly = 0) { hand.removeDie(any<DieValue>()) }
-        verify(exactly = 0) { compost.addDie(any()) }
+        verify(exactly = 0) { discardPatch.addDie(any()) }
     }
 
     @Test
@@ -286,14 +286,14 @@ class DeckManagerTest {
     }
 
     @Test
-    fun resupply_movesAllItemsFromCompostToSupply() {
+    fun resupply_movesAllItemsFromDiscardToSupply() {
         // Arrange
         val items = listOf(
             HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
             HandItem.aDie(d6),
             HandItem.aCard(mockk { every { id } returns CARD_ID_2 })
         )
-        every { compost.getItems() } returns items
+        every { discardPatch.getItems() } returns items
 
         // Act
         SUT.resupply()
@@ -301,14 +301,14 @@ class DeckManagerTest {
         // Assert
         verify { supply.addAllCards(listOf(CARD_ID_1, CARD_ID_2)) }
         verify { supply.addAllDice(listOf(d6)) }
-        verify { compost.clear() }
+        verify { discardPatch.clear() }
         verify { supply.shuffle() }
     }
 
     @Test
-    fun resupply_whenCompostEmpty_stillShufflesSupply() {
+    fun resupply_whenDiscardEmpty_stillShufflesSupply() {
         // Arrange
-        every { compost.getItems() } returns emptyList()
+        every { discardPatch.getItems() } returns emptyList()
 
         // Act
         SUT.resupply()
@@ -318,7 +318,7 @@ class DeckManagerTest {
     }
 
     @Test
-    fun discardHand_movesAllItemsToCompost() {
+    fun discardHand_movesAllItemsToDiscard() {
         // Arrange
         val items = listOf(
             HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
@@ -331,9 +331,9 @@ class DeckManagerTest {
         SUT.discardHand()
 
         // Assert
-        verify { compost.addCard(CARD_ID_1) }
-        verify { compost.addDie(d6) }
-        verify { compost.addCard(CARD_ID_2) }
+        verify { discardPatch.addCard(CARD_ID_1) }
+        verify { discardPatch.addDie(d6) }
+        verify { discardPatch.addCard(CARD_ID_2) }
         verify { hand.clear() }
     }
 
@@ -345,7 +345,7 @@ class DeckManagerTest {
         // Assert
         verify { supply.clear() }
         verify { hand.clear() }
-        verify { compost.clear() }
+        verify { discardPatch.clear() }
     }
 
     @Test
@@ -461,33 +461,33 @@ class DeckManagerTest {
     }
 
     @Test
-    fun addDieToCompost_whenDieValueSuccessful_returnsTrue() {
+    fun addDieToDiscard_whenDieValueSuccessful_returnsTrue() {
         // Arrange
         val dieValue = DieValue(6, 4)
         val die = dieFactory(DieSides.D6).adjustTo(4)
-        every { compost.addDie(die) } returns true
+        every { discardPatch.addDie(die) } returns true
 
         // Act
-        val result = SUT.addDieToBed(dieValue)
+        val result = SUT.addDieToDiscard(dieValue)
 
         // Assert
         assertTrue(result)
-        verify { compost.addDie(die) }
+        verify { discardPatch.addDie(die) }
     }
 
     @Test
-    fun addDieToCompost_whenDieValueUnsuccessful_returnsFalse() {
+    fun addDieToDiscard_whenDieValueUnsuccessful_returnsFalse() {
         // Arrange
         val dieValue = DieValue(6, 4)
         val die = dieFactory(DieSides.D6).adjustTo(4)
-        every { compost.addDie(die) } returns false
+        every { discardPatch.addDie(die) } returns false
 
         // Act
-        val result = SUT.addDieToBed(dieValue)
+        val result = SUT.addDieToDiscard(dieValue)
 
         // Assert
         assertFalse(result)
-        verify { compost.addDie(die) }
+        verify { discardPatch.addDie(die) }
     }
 
     @Test
@@ -498,6 +498,6 @@ class DeckManagerTest {
         // Assert
         verify { supply.trashSeedlingCards() }
         verify { hand.trashSeedlingCards() }
-        verify { compost.trashSeedlingCards() }
+        verify { discardPatch.trashSeedlingCards() }
     }
 } 

@@ -102,8 +102,8 @@ class HandleCardEffect(
                 repeat(value) { effectDrawCard(player) }
             }
 
-            CardEffect.DRAW_CARD_BED -> {
-                repeat(value) { effectDrawCard(player, fromCompost = true) }
+            CardEffect.DRAW_CARD_DISCARD -> {
+                repeat(value) { effectDrawCard(player, fromDiscard = true) }
             }
 
             CardEffect.DRAW_DIE -> {
@@ -114,8 +114,8 @@ class HandleCardEffect(
                 repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(drawHighest = true)) }
             }
 
-            CardEffect.DRAW_DIE_BED -> {
-                repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(fromCompost = true)) }
+            CardEffect.DRAW_DIE_DISCARD -> {
+                repeat(value) { effectDrawDie(player, EffectDrawDie.DrawDieParams(fromDiscard = true)) }
             }
 
             CardEffect.DRAW_ANY -> {

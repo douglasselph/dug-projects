@@ -162,12 +162,12 @@ class DecisionDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyAndNoBed_returnsOne() = runBlocking {
+    fun invoke_whenLowSupplyAndNoDiscard_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 2
-        every { mockPlayer.cardsInBedCount } returns 0
-        every { mockPlayer.diceInBedCount } returns 0
+        every { mockPlayer.cardsInDiscardCount } returns 0
+        every { mockPlayer.diceInDiscardCount } returns 0
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
@@ -178,67 +178,67 @@ class DecisionDrawCountBaselineTest {
     }
 
     @Test
-    fun invoke_whenLowSupplyWithBed_considersBedForDecision() = runBlocking {
+    fun invoke_whenLowSupplyWithDiscard_considersDiscardForDecision() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 2
-        every { mockPlayer.cardsInBedCount } returns 3
-        every { mockPlayer.diceInBedCount } returns 1
+        every { mockPlayer.cardsInDiscardCount } returns 3
+        every { mockPlayer.diceInDiscardCount } returns 1
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(Commons.HAND_SIZE - 1, result.count) // More cards (4) than dice (3) after including compost
+        assertEquals(Commons.HAND_SIZE - 1, result.count) // More cards (4) than dice (3) after including discard
     }
 
     @Test
-    fun invoke_whenLowSupplyWithEqualBed_returnsHalfHandSize() = runBlocking {
+    fun invoke_whenLowSupplyWithEqualDiscard_returnsHalfHandSize() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.cardsInBedCount } returns 2
-        every { mockPlayer.diceInBedCount } returns 2
+        every { mockPlayer.cardsInDiscardCount } returns 2
+        every { mockPlayer.diceInDiscardCount } returns 2
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(Commons.HAND_SIZE / 2, result.count) // Equal cards (3) and dice (3) after including compost
+        assertEquals(Commons.HAND_SIZE / 2, result.count) // Equal cards (3) and dice (3) after including discard
     }
 
     @Test
-    fun invoke_whenLowSupplyWithMoreDiceInBed_returnsOne() = runBlocking {
+    fun invoke_whenLowSupplyWithMoreDiceInDiscard_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.cardsInBedCount } returns 1
-        every { mockPlayer.diceInBedCount } returns 3
+        every { mockPlayer.cardsInDiscardCount } returns 1
+        every { mockPlayer.diceInDiscardCount } returns 3
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(1, result.count) // More dice (4) than cards (2) after including compost
+        assertEquals(1, result.count) // More dice (4) than cards (2) after including discard
     }
 
     @Test
-    fun invoke_whenLowSupplyWithNoCardsInBed_returnsOne() = runBlocking {
+    fun invoke_whenLowSupplyWithNoCardsInDiscard_returnsOne() = runBlocking {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 0
         every { mockPlayer.diceInSupplyCount } returns 2
-        every { mockPlayer.cardsInBedCount } returns 0
-        every { mockPlayer.diceInBedCount } returns 3
+        every { mockPlayer.cardsInDiscardCount } returns 0
+        every { mockPlayer.diceInDiscardCount } returns 3
         every { mockPlayer.cardsInHand } returns emptyList()
 
         // Act
         val result = SUT(mockPlayer)
 
         // Assert
-        assertEquals(1, result.count) // No cards available even with compost
+        assertEquals(1, result.count) // No cards available even with Discard
     }
 
     @Test
@@ -246,8 +246,8 @@ class DecisionDrawCountBaselineTest {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 1
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.cardsInBedCount } returns 3
-        every { mockPlayer.diceInBedCount } returns 1
+        every { mockPlayer.cardsInDiscardCount } returns 3
+        every { mockPlayer.diceInDiscardCount } returns 1
         every { mockPlayer.cardsInHand } returns listOf(sampleCard1, sampleCard2)
 
         // Act

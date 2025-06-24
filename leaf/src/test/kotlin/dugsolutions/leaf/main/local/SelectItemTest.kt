@@ -33,11 +33,11 @@ class SelectItemTest {
             handCards = emptyList(),
             handDice = DiceInfo(emptyList()),
             supplyDice = DiceInfo(emptyList()),
-            bedDice = DiceInfo(emptyList()),
+            discardDice = DiceInfo(emptyList()),
             floralArray = emptyList(),
             nutrients = 0,
             supplyCardCount = 0,
-            bedCardCount = 0
+            discardCardCount = 0
         )
         fakeCardInfo = CardInfoFaker.create().copy(
             name = CARD_NAME,
