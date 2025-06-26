@@ -3,33 +3,33 @@ Cheap Sprout;Seedling;-;-;-;ReduceCostRoot;2;k1;ReduceCostRoot;2;-;-;-;seedling_
 Unsettled Growth;Seedling;-;-;-;RerollAccept2nd;1;-;-;-;RerollTakeBetter;2;-;seedling_unsettled_growth.png
 Unearthed;Seedling;-;-;-;UpgradeD6;1;-;-;-;UpgradeAnyRetain;2;-;seedling_unearthed.png
 Wiggle Room;Seedling;-;-;-;AddToDie;2;k2;AddToTotal;2;-;-;-;seedling_wiggle_room.png
-Root Favor;Root;10;1;8;ReduceCostCanopy;2;k2;ReduceCostCanopy;3;-;-;-;
-Root Awakening;Root;9;1;10;UpgradeD8;1;k2;UpgradeAny;1;-;-;-;
-Root Loot;Root;10;1;10;DrawCard;1;d1;DrawDie;1;- ;-;-;
-Root Cause;Root;9;1;8;RerollAccept2nd;1;k1;RerollTakeBetter;1;-;-;-;
-Root Reserve;Root;12;1;10;RetainCard;1;k1;RetainDieReroll;1;-;-;-;
-Root Reinforced;Root;10;1;12;AddToDie;2;k1;AddToDie;3;-;-;-;
-Leaf Me Alone;Canopy;14;3;R 10;Deflect;2;Root;Deflect;3;-;-;-;
-Branch Out;Canopy;20;3;R 11 ;AddToTotal;2;Root;DrawDie;1;-;-;-;
-Lend a Limb;Canopy;20;3;R 9;ReduceCostVine;3;Root;ReplayVine;1;-;-;-;
-Defiant Shrub;Canopy;15;3;R 12 ;RerollAccept2nd;1;Root;RerollTakeBetter;1;-;-;-;
-Hang on;Canopy;20;3;R 11 ;RetainCard;1;Root;RetainDie;2;;;-;
-Bark and Bite;Canopy;25;4;R 12 ;DrawCardDiscard;1;Root;DrawDieDiscard;1;-;-;-;
-Twist and Sprout;Vine;6;1;C 10;AddToTotal;2;Canopy;AddToTotal;3;-;-;-;
-Creeping Cover;Vine;6;1;C 10 ;Deflect;2;Canopy;Deflect;2;-;-;-;
-Vine and Punishment;Vine;8;1;C 10;DiscardCard;1;Canopy;DiscardDie;1;-;-;-;
-Reap What You Grow;Vine;7;1;C 11 ;DrawCard;2;Canopy;DrawDie;1;-;-;-;
-Twist of Fate;Vine;5;1;C 10;RerollAny;1;Canopy;RerollTakeBetter;1;-;-;-;
-Thief on a Leaf;Vine;5;1;C 12 ;UseOpponentCard;1;Canopy;UseOpponentDie;1;-;-;-;
-Rolling Creeper;Vine;9;1;C 9;AdjustBy;2;Canopy;AdjustBy;3;;;;
-Barb and Weave;Vine;10;1;C 10;DrawDie;1;Canopy;DrawDie;1;;-;3;
-Power Petal;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1;
-Petal to the Nettles;Bloom;1;8;-;AddToTotal;2;Power Petal;AddToTotal;2;;-;-;
-Morning Glimmer;Flower;12;2;C 9;Adorn;1;-;-;-;-;-;1;
-Oh Glory Be;Bloom;1;8;-;AdjustBy;2;Morning Glimmer;AdjustBy;2;-;-;-;
-Pick-a-Lily;Flower;8;2;C 11 ;Adorn;1;-;-;-;-;-;1;
-Bloom of Doom;Bloom;1;8;-;DrawDie;1;Pick-a-Lily;DrawDie;1;-;-;-;
-Snapbackdragon;Flower;10;2;C 11 ;Adorn;1;-;-;-;-;-;1;
-Perennial Payback;Bloom;1;8;-;RerollTakeBetter;1;Snapbackdragon;RerollTakeBetter;1;-;-;-;
-Forget-Me-Not;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1;
-Rebloominate;Bloom;1;8;-;ReuseAny;1;Forget-Me-Not;ReuseAny;1;-;-;-;
+Root Favor;Root;10;1;8;ReduceCostCanopy;2;k2;ReduceCostCanopy;3;-;-;-;root_favor.png
+Root Awakening;Root;9;1;10;UpgradeD8;1;k2;UpgradeAny;1;-;-;-;root_awakening.png
+Root Loot;Root;10;1;10;DrawCard;1;d1;DrawDie;1;- ;-;-;root_loot.png
+Root Cause;Root;9;1;8;RerollAccept2nd;1;k1;RerollTakeBetter;1;-;-;-;root_cause.png
+Root Reserve;Root;12;1;10;RetainCard;1;k1;RetainDieReroll;1;-;-;-;root_reserve.png
+Root Reinforced;Root;10;1;12;AddToDie;2;k1;AddToDie;3;-;-;-;root_reinforced.png
+Leaf Me Alone;Canopy;14;3;R 10;Deflect;2;Root;Deflect;3;-;-;-;canopy_leaf_me_alone.png
+Branch Out;Canopy;20;3;R 11 ;AddToTotal;2;Root;DrawDie;1;-;-;-;canopy_branch_out.png
+Lend a Limb;Canopy;20;3;R 9;ReduceCostVine;3;Root;ReplayVine;1;-;-;-;canopy_lend_a_limb.png
+Defiant Shrub;Canopy;15;3;R 12 ;RerollAccept2nd;1;Root;RerollTakeBetter;1;-;-;-;canopy_defiant.png
+Hang on;Canopy;20;3;R 11 ;RetainCard;1;Root;RetainDie;2;;;-;canopy_hang_on.png
+Bark and Bite;Canopy;25;4;R 12 ;DrawCardDiscard;1;Root;DrawDieDiscard;1;-;-;-;canopy_bark.png
+Twist and Sprout;Vine;6;1;C 10;AddToTotal;2;Canopy;AddToTotal;3;-;-;-;vine_twist_and_shout.png
+Creeping Cover;Vine;6;1;C 10 ;Deflect;2;Canopy;Deflect;2;-;-;-;vine_creeping_cover.png
+Vine and Punishment;Vine;8;1;C 10;DiscardCard;1;Canopy;DiscardDie;1;-;-;-;vine_and_punishment.png
+Reap What You Grow;Vine;7;1;C 11 ;DrawCard;2;Canopy;DrawDie;1;-;-;-;vine_reap.png
+Twist of Fate;Vine;5;1;C 10;RerollAny;1;Canopy;RerollTakeBetter;1;-;-;-;vine_twist_of_fate.png
+Thief on a Leaf;Vine;5;1;C 12 ;UseOpponentCard;1;Canopy;UseOpponentDie;1;-;-;-;vine_thief.png
+Rolling Creeper;Vine;9;1;C 9;AdjustBy;2;Canopy;AdjustBy;3;;;;vine_rolling.png
+Barb and Weave;Vine;10;1;C 10;DrawDie;1;Canopy;DrawDie;1;;-;3;vine_barb_and_weave.png
+Power Petal;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1;flower_power_petal.png
+Petal to the Nettles;Bloom;1;8;-;AddToTotal;2;Power Petal;AddToTotal;2;;-;-;bloom_petal.png
+Morning Glimmer;Flower;12;2;C 9;Adorn;1;-;-;-;-;-;1;flower_morning_glimmer.png
+Oh Glory Be;Bloom;1;8;-;AdjustBy;2;Morning Glimmer;AdjustBy;2;-;-;-;bloom_oh_glory.png
+Pick-a-Lily;Flower;8;2;C 11 ;Adorn;1;-;-;-;-;-;1;flower_pick_a_lily.png
+Bloom of Doom;Bloom;1;8;-;DrawDie;1;Pick-a-Lily;DrawDie;1;-;-;-;bloom_of_doom.png
+Snapbackdragon;Flower;10;2;C 11 ;Adorn;1;-;-;-;-;-;1;flower_snapbackdragon.png
+Perennial Payback;Bloom;1;8;-;RerollTakeBetter;1;Snapbackdragon;RerollTakeBetter;1;-;-;-;bloom_perennial.png
+Forget-Me-Not;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1;flower_forget_me_not.png
+Rebloominate;Bloom;1;8;-;ReuseAny;1;Forget-Me-Not;ReuseAny;1;-;-;-;bloom_rebloominate.png

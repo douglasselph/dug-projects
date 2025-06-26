@@ -210,6 +210,17 @@ data class PlayCardEntry(
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
 
+
+data class ReportHand(
+    override val playerId: Int,
+    override val turn: Int,
+    val cards: List<String>,
+    val dice: String
+) : ChronicleEntry(playerId, turn) {
+    override fun toString(): String {
+        return "Hand(playerId=$playerId, turn=$turn, cards=$cards, dice=$dice)"
+    }
+}
 data class RerollEntry(
     override val playerId: Int,
     override val turn: Int,

@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -32,6 +33,7 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 @Composable
 fun CardRowDisplay(
     cards: List<CardInfo>,
+    showBorder: Boolean = true,
     okayToShowImages: Boolean = false,
     onSelected: (card: CardInfo) -> Unit = {}
 ) {
@@ -47,9 +49,9 @@ fun CardRowDisplay(
         cards, textCardWidth, imageCardWidth, normalSpacing, overlapOffset, okayToShowImages
     )
     Surface(
-        border = BorderStroke(2.dp, MaterialTheme.colors.primary),
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(8.dp)
+        border = if (showBorder) BorderStroke(2.dp, MaterialTheme.colors.primary) else null,
+        shape = if (showBorder) RoundedCornerShape(8.dp) else RectangleShape,
+        modifier = Modifier.padding(4.dp)
     ) {
         Box(
             modifier = Modifier.padding(8.dp)

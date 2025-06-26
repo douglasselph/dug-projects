@@ -28,6 +28,7 @@ import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayCardEntry
 import dugsolutions.leaf.chronicle.domain.ReplayVineEntry
 import dugsolutions.leaf.chronicle.domain.ReportEntry
+import dugsolutions.leaf.chronicle.domain.ReportHand
 import dugsolutions.leaf.chronicle.domain.RerollEntry
 import dugsolutions.leaf.chronicle.domain.RetainCardEntry
 import dugsolutions.leaf.chronicle.domain.RetainDieEntry
@@ -273,6 +274,14 @@ class TransformMomentToEntry(
                 ReportEntry(
                     turn = gameTime.turn,
                     line = moment.line
+                )
+
+            is Moment.REPORT_HAND ->
+                ReportHand(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    cards = moment.player.cardsInHand.mapNotNull { cardManager.getCard(it.id)?.name },
+                    dice = moment.player.diceInHand.values()
                 )
 
             is Moment.REUSE_CARD ->

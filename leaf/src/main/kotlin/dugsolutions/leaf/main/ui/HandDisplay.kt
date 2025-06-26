@@ -61,6 +61,7 @@ fun HandDisplay(
                 Box {
                     CardRowDisplay(
                         player.handCards,
+                        showBorder = false,
                         okayToShowImages = okayToShowImages
                     ) { cardInfo ->
                         listeners.onHandCardSelected(cardInfo)

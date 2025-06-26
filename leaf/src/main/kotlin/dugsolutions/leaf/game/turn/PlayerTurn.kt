@@ -26,6 +26,7 @@ class PlayerTurn(
             val target = handleGetTarget(player, orderedPlayers)
             playerRound(player, target)
         }
+        reportHand(players)
         orderedPlayers = playerOrder(players)
         if (phase == GamePhase.BATTLE) {
             handleDeliverDamage(orderedPlayers)
@@ -36,7 +37,7 @@ class PlayerTurn(
     }
 
     private fun reportHand(players: List<Player>) {
-        players.forEach { chronicle(Moment.DRAWN_HAND(it)) }
+        players.forEach { chronicle(Moment.REPORT_HAND(it)) }
     }
 
 }
