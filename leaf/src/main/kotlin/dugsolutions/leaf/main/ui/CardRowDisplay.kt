@@ -38,7 +38,6 @@ fun CardRowDisplay(
     val normalSpacing: Dp = 8.dp // Normal spacing between different cards
     val cardWidth: Dp = 200.dp // Width of each card (from CardDisplay)
 
-    var showCardTextDisplay by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
     // Calculate the total width needed
@@ -66,6 +65,8 @@ fun CardRowDisplay(
             var currentOffset = 0.dp
 
             cards.forEachIndexed { index, cardInfo ->
+                val cardKey = cardInfo.name + (cardInfo.image ?: "")
+                var showImage by remember(cardKey) { mutableStateOf(true) }
                 // Check if this card should overlap with the previous one
                 val shouldOverlap = index > 0 && cardInfo.name == cards[index - 1].name
 
@@ -76,18 +77,17 @@ fun CardRowDisplay(
                 Box(
                     modifier = Modifier.offset(x = currentOffset)
                 ) {
-                    if (okayToShowImages && cardInfo.image != null) {
-                        showCardTextDisplay = false
+                    if (okayToShowImages && cardInfo.image != null && showImage) {
                         CardImageDisplay(
                             imageName = cardInfo.image,
                             onError = { error ->
                                 errorMessage = error
-                                showCardTextDisplay = true
+                                showImage = false
                             },
                             onSelected = { onSelected(cardInfo) }
                         )
                     }
-                    if (showCardTextDisplay) {
+                    if (!okayToShowImages || cardInfo.image == null || !showImage) {
                         CardDisplay(cardInfo) { onSelected(cardInfo) }
                     }
                 }
@@ -118,7 +118,7 @@ fun main() = application {
         title = "Card Row Display Preview",
         state = WindowState(
             width = 800.dp,
-            height = 800.dp
+            height = 1000.dp
         )
     ) {
         Column(
@@ -129,9 +129,10 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(card = FakeCards.seedlingCard),
-                    gatherCardInfo(card = FakeCards.rootCard),
-                    gatherCardInfo(card = FakeCards.canopyCard)
-                )
+                    gatherCardInfo(card = FakeCards.seedlingCard3),
+                    gatherCardInfo(card = FakeCards.bloomCard)
+                ),
+                okayToShowImages = true
             )
 
             // Second row of cards
