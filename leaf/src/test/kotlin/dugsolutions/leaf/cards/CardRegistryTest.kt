@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import dugsolutions.leaf.cards.domain.CardImagePath
+import java.io.File
 
 class CardRegistryTest {
 
@@ -137,6 +139,32 @@ class CardRegistryTest {
         }
         
         assertTrue(invalidBlooms.isEmpty(), errorMessage)
+    }
+
+    @Test
+    fun allCardImagesExist_onDisk() {
+        // Arrange
+        cardRegistry.loadFromCsv(Commons.CARD_LIST)
+        val cards = cardRegistry.getAllCards()
+
+        // Act & Assert
+        val missingImages = cards
+            .filter { it.image != null }
+            .map { card ->
+                val imagePath = CardImagePath(card.image!!)
+                val file = File(imagePath)
+                if (!file.exists()) {
+                    "Card '${card.name}' expects image '${card.image}' at path: $imagePath"
+                } else null
+            }
+            .filterNotNull()
+
+        if (missingImages.isNotEmpty()) {
+            println("Missing card images:")
+            missingImages.forEach { println(it) }
+        }
+
+        assertTrue(missingImages.isEmpty(), "Some card images are missing. See output for details.")
     }
 
 } 

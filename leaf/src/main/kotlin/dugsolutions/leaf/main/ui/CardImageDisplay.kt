@@ -29,13 +29,12 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.common.Commons
+import dugsolutions.leaf.cards.domain.CardImagePath
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 import org.jetbrains.skia.Image
 import java.io.File
-import java.nio.file.Paths
 
 
 @Composable
@@ -51,10 +50,7 @@ fun CardImageDisplay(
         HighlightInfo.SELECTED -> Colors.SelectedColor
         else -> androidx.compose.ui.graphics.Color.Transparent
     }
-    val imagePath = remember(imageName) {
-        val currentDir = System.getProperty("user.dir")
-        Paths.get(currentDir, Commons.IMAGES_DIR, imageName).toString()
-    }
+    val imagePath = remember(imageName) { CardImagePath(imageName) }
     val imageFile = remember(imagePath) { File(imagePath) }
     val bitmap = remember(imagePath) { loadImageBitmapFromFile(imageFile) }
     val aspectRatio = bitmap?.width?.toFloat()?.div(bitmap.height) ?: (258f / 356f)
