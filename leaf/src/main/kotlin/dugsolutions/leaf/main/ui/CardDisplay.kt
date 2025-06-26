@@ -31,7 +31,6 @@ import dugsolutions.leaf.cards.cost.CostElement
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.HighlightInfo
@@ -135,7 +134,7 @@ fun CardDisplay(
                 EffectBox(
                     label = "B",
                     text = cardInfo.bloom,
-                    color = Color.Yellow
+                    color = Color.Magenta
                 )
             }
 

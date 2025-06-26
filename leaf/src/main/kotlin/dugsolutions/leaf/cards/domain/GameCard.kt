@@ -16,7 +16,8 @@ data class GameCard(
     val matchEffect: CardEffect?,
     val matchValue: Int,
     val trashEffect: CardEffect?,
-    val trashValue: Int
+    val trashValue: Int,
+    val image: String? = null
 ) {
     override fun toString(): String {
         return "GameCard(id=$id, name='$name', type=$type, " +
@@ -24,7 +25,8 @@ data class GameCard(
                "thorn=$thorn, cost=[$cost], " +
                "primaryEffect=$primaryEffect, primaryValue=$primaryValue, " +
                "matchWith=$matchWith, matchEffect=$matchEffect, matchValue=$matchValue, " +
-               "trashEffect=$trashEffect, trashValue=$trashValue)"
+               "trashEffect=$trashEffect, trashValue=$trashValue, " +
+               "image=$image)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -47,6 +49,7 @@ data class GameCard(
         if (matchValue != other.matchValue) return false
         if (trashEffect != other.trashEffect) return false
         if (trashValue != other.trashValue) return false
+        if (image != other.image) return false
 
         return true
     }

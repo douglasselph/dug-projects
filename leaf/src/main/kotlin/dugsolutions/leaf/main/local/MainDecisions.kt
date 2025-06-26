@@ -23,7 +23,8 @@ class MainDecisions(
     private val cardOperations: CardOperations,
     private val decisionMonitor: DecisionMonitor,
     private val decisionMonitorReport: DecisionMonitorReport,
-    private val shouldAskTrashEffect: ShouldAskTrashEffect
+    private val shouldAskTrashEffect: ShouldAskTrashEffect,
+    private val decidingPlayerManager: DecidingPlayer
 ) {
     enum class Selecting {
         NONE,
@@ -32,7 +33,10 @@ class MainDecisions(
     }
 
     var selecting = Selecting.NONE
-    var decidingPlayer: Player? = null // Made public for the sake of unit tests.
+
+    private var decidingPlayer: Player?
+        get() = decidingPlayerManager.player
+        set(value) { decidingPlayerManager.player = value }
 
     fun setup(player: Player) = with(player.decisionDirector) {
         decisionMonitor.observe { id -> applyDecisionId(player, id) }

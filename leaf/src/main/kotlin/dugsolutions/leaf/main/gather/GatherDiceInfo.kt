@@ -14,7 +14,7 @@ class GatherDiceInfo {
                 incoming.dice.mapIndexed { index, die ->
                     DieInfo(
                         index = index,
-                        value = "D${die.sides}=${die.value}",
+                        value = die.toValue(),
                         backingDie = die
                     )
                 }

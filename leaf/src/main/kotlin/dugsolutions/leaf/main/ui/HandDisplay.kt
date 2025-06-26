@@ -46,16 +46,19 @@ fun HandDisplay(
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Cards in hand
-                Box {
-                    CardRowDisplay(player.handCards) { cardInfo ->
-                        listeners.onHandCardSelected(cardInfo)
-                    }
-                }
                 // Dice in hand
                 Box {
                     DiceDisplay(player.handDice) { dieValue ->
                         listeners.onDieSelected(dieValue)
+                    }
+                }
+                // Cards in hand
+                Box {
+                    CardRowDisplay(
+                        player.handCards,
+                        okayToShowImages = player.showCardImages
+                    ) { cardInfo ->
+                        listeners.onHandCardSelected(cardInfo)
                     }
                 }
             }

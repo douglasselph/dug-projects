@@ -6,5 +6,6 @@ object Commons {
     const val HAND_SIZE = 4
     const val EXHAUSTED_STACK_COUNT = 3
     const val DECISION_KEYWORD = "DECISION"
+    const val IMAGES_DIR = "data/images"
 
 }

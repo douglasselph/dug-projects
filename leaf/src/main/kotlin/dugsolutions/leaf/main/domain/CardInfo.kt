@@ -12,5 +12,6 @@ data class CardInfo(
     val trash: String?,
     val bloom: String?,
     val thorn: Int,
-    val highlight: HighlightInfo
+    val highlight: HighlightInfo,
+    val image: String? = null
 )

@@ -60,6 +60,7 @@ class CardRegistry(
         val trashEffect = parseEffect(parts[++column])
         val trashValue = parseValue(parts[++column])
         val thornValue = parseValue(parts[++column])
+        val imageValue = parts.getOrNull(++column)
 
         return GameCard(
             id = id,
@@ -75,7 +76,8 @@ class CardRegistry(
             matchValue = matchValue,
             trashEffect = trashEffect,
             trashValue = trashValue,
-            thorn = thornValue
+            thorn = thornValue,
+            image = imageValue
         )
     }
 

@@ -33,7 +33,8 @@ class FakeCards {
             matchValue = 2,
             trashEffect = CardEffect.GAIN_FREE_ROOT,
             trashValue = 1,
-            thorn = 0
+            thorn = 0,
+            image = "seedling_cheap_sprout.png"
         )
 
         val seedlingCard2 = GameCard(

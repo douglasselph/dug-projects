@@ -99,28 +99,6 @@ fun PlayerDisplay(
                     }
                 }
 
-                // Supply and Bed sections
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    // Supply section
-                    Box {
-                        SectionDisplay(
-                            title = "Supply",
-                            cardCount = player.supplyCardCount,
-                            dice = player.supplyDice
-                        )
-                    }
-
-                    // Compost section
-                    Box {
-                        SectionDisplay(
-                            title = "Discard Patch",
-                            cardCount = player.discardCardCount,
-                            dice = player.discardDice
-                        )
-                    }
-                }
             }
         }
         

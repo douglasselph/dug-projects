@@ -8,6 +8,7 @@ import dugsolutions.leaf.main.gather.GatherPlayerInfo
 import dugsolutions.leaf.main.gather.MainActionManager
 import dugsolutions.leaf.main.gather.MainGameManager
 import dugsolutions.leaf.main.gather.MainOutputManager
+import dugsolutions.leaf.main.local.DecidingPlayer
 import dugsolutions.leaf.main.local.MainActionHandler
 import dugsolutions.leaf.main.local.MainDecisions
 import dugsolutions.leaf.main.local.SelectGather
@@ -17,15 +18,16 @@ import org.koin.dsl.module
 
 val mainModule: Module = module {
 
+    single { DecidingPlayer() }
     single { GatherCardInfo(get()) }
     single { GatherDiceInfo() }
     single { GatherGroveInfo(get(), get(), get(), get(), get()) }
-    single { GatherPlayerInfo(get(), get()) }
+    single { GatherPlayerInfo(get(), get(), get()) }
     single { SelectItem() }
     single { SelectGather(get()) }
     single { MainGameManager(get(), get(), get(), get(), get(), get(), get()) }
     single { MainOutputManager() }
-    single { MainDecisions(get(), get(), get(), get(), get()) }
+    single { MainDecisions(get(), get(), get(), get(), get(), get()) }
     single { MainActionManager(get()) }
     single { MainActionHandler(get()) }
 

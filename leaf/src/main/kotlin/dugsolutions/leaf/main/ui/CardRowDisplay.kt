@@ -8,9 +8,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -21,15 +28,18 @@ import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
-
 @Composable
 fun CardRowDisplay(
     cards: List<CardInfo>,
+    okayToShowImages: Boolean = false,
     onSelected: (card: CardInfo) -> Unit = {}
 ) {
     val overlapOffset: Dp = 80.dp // How much cards overlap when names match
     val normalSpacing: Dp = 8.dp // Normal spacing between different cards
     val cardWidth: Dp = 200.dp // Width of each card (from CardDisplay)
+
+    var showCardTextDisplay by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf("") }
 
     // Calculate the total width needed
     val totalWidth = if (cards.isEmpty()) {
@@ -66,12 +76,39 @@ fun CardRowDisplay(
                 Box(
                     modifier = Modifier.offset(x = currentOffset)
                 ) {
-                    CardDisplay(cardInfo) { onSelected(cardInfo) }
+                    if (okayToShowImages && cardInfo.image != null) {
+                        showCardTextDisplay = false
+                        CardImageDisplay(
+                            imageName = cardInfo.image,
+                            onError = { error ->
+                                errorMessage = error
+                                showCardTextDisplay = true
+                            },
+                            onSelected = { onSelected(cardInfo) }
+                        )
+                    }
+                    if (showCardTextDisplay) {
+                        CardDisplay(cardInfo) { onSelected(cardInfo) }
+                    }
                 }
             }
         }
     }
+    if (errorMessage.isNotEmpty()) {
+        AlertDialog(
+            onDismissRequest = { errorMessage = "" },
+            title = { Text("Image Loading Error") },
+            text = { Text(errorMessage) },
+            confirmButton = {
+                Button(onClick = { errorMessage = "" }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
 }
+
 
 // Preview window for testing card rows
 fun main() = application {

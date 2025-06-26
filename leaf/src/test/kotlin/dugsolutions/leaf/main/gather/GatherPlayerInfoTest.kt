@@ -7,6 +7,7 @@ import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.DiceInfo
 import dugsolutions.leaf.main.domain.DieInfo
+import dugsolutions.leaf.main.local.DecidingPlayer
 import dugsolutions.leaf.player.Player
 import io.mockk.every
 import io.mockk.mockk
@@ -30,13 +31,14 @@ class GatherPlayerInfoTest {
     private val mockGatherDiceInfo = mockk<GatherDiceInfo>(relaxed = true)
     private val mockCardInfo = mockk<CardInfo>(relaxed = true)
     private val mockDiceInfo = mockk<DiceInfo>(relaxed = true)
+    private val decidingPlayer = DecidingPlayer()
     private lateinit var sampleDie: SampleDie
     private lateinit var SUT: GatherPlayerInfo
 
     @BeforeEach
     fun setup() {
         sampleDie = SampleDie()
-        SUT = GatherPlayerInfo(mockGatherCardInfo, mockGatherDiceInfo)
+        SUT = GatherPlayerInfo(mockGatherCardInfo, mockGatherDiceInfo, decidingPlayer)
 
         every { mockCardInfo.name } returns FakeCards.rootCard.name
         every { mockDiceInfo.values } returns listOf(D6_VALUE)

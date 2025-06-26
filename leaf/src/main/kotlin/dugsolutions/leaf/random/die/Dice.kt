@@ -31,10 +31,11 @@ class Dice(dice: List<Die> = emptyList()) {
     fun isNotEmpty(): Boolean = synchronized(lock) { !isEmpty() }
 
     // Sort dice by number of sides
-    fun sort() {
+    fun sort(): List<Die> {
         synchronized(lock) {
             _dice.sortBy { it.sides }
         }
+        return _dice
     }
 
     // Draw a die from the collection (lowest sides first)
@@ -187,9 +188,7 @@ class Dice(dice: List<Die> = emptyList()) {
             // Format each group as "countDsides" (e.g., "2D4")
             return diceBySides.entries
                 .sortedBy { it.key } // Sort by number of sides
-                .filter { it.value.isNotEmpty() } // Ensure we don't include empty groups
-                .map { (sides, diceList) -> "${diceList.size}D$sides" }
-                .joinToString(",")
+                .filter { it.value.isNotEmpty() }.joinToString(",") { (sides, diceList) -> "${diceList.size}D$sides" }
         }
     }
 
@@ -201,9 +200,7 @@ class Dice(dice: List<Die> = emptyList()) {
             val sortedDice = dice.sortedBy { it.sides }
 
             // Format each die as "Dn(value)"
-            return sortedDice
-                .map { die -> "D${die.sides}(${die.value})" }
-                .joinToString(",")
+            return sortedDice.joinToString(",") { die -> "D${die.sides}(${die.value})" }
         }
     }
 

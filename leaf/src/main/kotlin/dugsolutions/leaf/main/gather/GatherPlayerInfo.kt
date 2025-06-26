@@ -1,11 +1,13 @@
 package dugsolutions.leaf.main.gather
 
 import dugsolutions.leaf.main.domain.PlayerInfo
+import dugsolutions.leaf.main.local.DecidingPlayer
 import dugsolutions.leaf.player.Player
 
 class GatherPlayerInfo(
     private val gatherCardInfo: GatherCardInfo,
-    private val gatherDiceInfo: GatherDiceInfo
+    private val gatherDiceInfo: GatherDiceInfo,
+    private val decidingPlayer: DecidingPlayer
 ) {
 
     operator fun invoke(player: Player): PlayerInfo {
@@ -36,15 +38,40 @@ class GatherPlayerInfo(
             floralArray = floralArray,
             supplyCardCount = supplyCardCount,
             discardDice = discardPatch,
-            discardCardCount = bedCardCount
+            discardCardCount = bedCardCount,
+            showCardImages = (player.name == decidingPlayer.player?.name)
         )
     }
 
     private fun infoLineFrom(player: Player): String {
-        val score = player.score.toString()
+        return totalFrom(player) + "\n" +
+                handDiceFrom(player)  + "\n" +
+                supplyLine(player) + "\n" +
+                discardLine(player)
+    }
+
+    private fun totalFrom(player: Player): String {
         val countDice = player.allDice.size
         val countCards = player.allCardsInDeck.size
-        return "Cards/Dice: $countCards/$countDice\nScore: $score"
+        return "Total Cards/Dice: $countCards/$countDice"
+    }
+
+    private fun handDiceFrom(player: Player): String {
+        val diceValues = player.diceInHand.sort().map { it.toValue() }
+        val countCards = player.cardsInHand.size
+        return "Hand Cards: $countCards, Dice: $diceValues"
+    }
+
+    private fun supplyLine(player: Player): String {
+        val diceLine = player.diceInSupply.toString()
+        val countCards = player.cardsInSupplyCount
+        return "Supply Cards: $countCards, Dice: $diceLine"
+    }
+
+    private fun discardLine(player: Player): String {
+        val diceLine = player.diceInDiscard.toString()
+        val countCards = player.cardsInDiscard.size
+        return "Discard Cards: $countCards, Dice: $diceLine"
     }
 
 }

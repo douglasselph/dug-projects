@@ -15,7 +15,6 @@ import dugsolutions.leaf.cards.domain.FlourishType.SEEDLING
 import dugsolutions.leaf.cards.domain.FlourishType.VINE
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.game.battle.MatchingBloomCard
 import dugsolutions.leaf.main.domain.CardInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
@@ -53,7 +52,8 @@ class GatherCardInfo(
             match = effectLine(matchEffect, matchValue, matchString(matchWith)),
             trash = effectLine(trashEffect, trashValue),
             bloom = bloomLine(card),
-            highlight = highlight
+            highlight = highlight,
+            image = image
         )
     }
 

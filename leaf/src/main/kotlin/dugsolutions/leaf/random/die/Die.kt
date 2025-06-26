@@ -46,6 +46,10 @@ abstract class Die(
         return "Die(sides=$sides, value=$value)"
     }
 
+    fun toValue(): String {
+        return "D$sides=$value"
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other is Die) {

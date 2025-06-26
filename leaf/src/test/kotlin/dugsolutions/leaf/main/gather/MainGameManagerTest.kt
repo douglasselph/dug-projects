@@ -11,6 +11,7 @@ import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.main.domain.GroveInfo
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.domain.SelectedItems
+import dugsolutions.leaf.main.local.DecidingPlayer
 import dugsolutions.leaf.main.local.SelectGather
 import dugsolutions.leaf.main.local.SelectItem
 import dugsolutions.leaf.player.PlayerTD
@@ -37,7 +38,8 @@ class MainGameManagerTest {
     private val mockMatchingBloomCard: MatchingBloomCard = mockk(relaxed = true)
     private val gatherCardInfo = GatherCardInfo(mockMatchingBloomCard)
     private val gatherDiceInfo = GatherDiceInfo()
-    private val gatherPlayerInfo = GatherPlayerInfo(gatherCardInfo, gatherDiceInfo)
+    private val decidingPlayer = DecidingPlayer()
+    private val gatherPlayerInfo = GatherPlayerInfo(gatherCardInfo, gatherDiceInfo, decidingPlayer)
     private val gatherGroveInfo = mockk<GatherGroveInfo>(relaxed = true)
     private val fakePlayer1 = PlayerTD(1)
     private val fakePlayer2 = PlayerTD(2)

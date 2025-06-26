@@ -12,7 +12,8 @@ data class PlayerInfo(
     val nutrients: Int,
     val supplyCardCount: Int,
     val discardCardCount: Int,
-    val discardDice: DiceInfo
+    val discardDice: DiceInfo,
+    val showCardImages: Boolean = false
 ) {
 
     fun copyForItemSelect(): PlayerInfo {

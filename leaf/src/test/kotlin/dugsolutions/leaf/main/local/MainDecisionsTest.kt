@@ -42,6 +42,7 @@ class MainDecisionsTest {
     private val mockDieInfo = mockk<DieInfo>(relaxed = true)
     private val mockSelectedItems = mockk<SelectedItems>(relaxed = true)
     private val mockChronicle: GameChronicle = mockk(relaxed = true)
+    private val decidingPlayer = DecidingPlayer()
     private val mockDecisionMonitor: DecisionMonitor = mockk(relaxed = true)
     private val mockShouldAskTrashEffect: ShouldAskTrashEffect = mockk(relaxed = true)
     private val mockDecisionDirector: DecisionDirector = mockk(relaxed = true)
@@ -55,7 +56,7 @@ class MainDecisionsTest {
 
     private val SUT = MainDecisions(
         mockMainGameManager, mockCardOperations, mockDecisionMonitor, mockDecisionMonitorReport,
-        mockShouldAskTrashEffect
+        mockShouldAskTrashEffect, decidingPlayer
     )
 
     @BeforeEach
@@ -123,7 +124,7 @@ class MainDecisionsTest {
     fun onGroveCardSelected_whenCardExists_updatesState() {
         // Arrange
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
 
         // Act
         SUT.onGroveCardSelected(mockCardInfo)
@@ -150,7 +151,7 @@ class MainDecisionsTest {
     fun onGroveDieSelected_whenDieExists_updatesState() = runBlocking {
         // Arrange
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
 
         // Act
         SUT.onGroveDieSelected(mockDieInfo)
@@ -164,7 +165,7 @@ class MainDecisionsTest {
     fun onPlayerSelectionComplete_whenCalled_updatesState() {
         // Arrange
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
         SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
@@ -183,7 +184,7 @@ class MainDecisionsTest {
         every { mockSelectedItems.cards } returns mockCards
         every { mockSelectedItems.dice } returns mockDice
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
         SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
@@ -201,7 +202,7 @@ class MainDecisionsTest {
         every { mockSelectedItems.cards } returns emptyList()
         every { mockSelectedItems.dice } returns emptyList()
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
         SUT.selecting = MainDecisions.Selecting.ITEMS
 
         // Act
@@ -218,7 +219,7 @@ class MainDecisionsTest {
         val mockFloralCards = listOf(mockGameCard)
         every { mockSelectedItems.floralCards } returns mockFloralCards
         SUT.setup(mockPlayer)
-        SUT.decidingPlayer = mockPlayer
+        decidingPlayer.player = mockPlayer
         SUT.selecting = MainDecisions.Selecting.FLOWERS
 
         // Act
