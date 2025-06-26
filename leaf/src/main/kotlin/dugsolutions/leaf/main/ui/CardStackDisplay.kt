@@ -75,7 +75,7 @@ fun CardStackDisplay(
                     )
                 } else {
                     Box {
-                        CardDisplay(stack.topCard) {
+                        CardTextDisplay(stack.topCard) {
                             onSelected(stack.topCard)
                         }
                     }

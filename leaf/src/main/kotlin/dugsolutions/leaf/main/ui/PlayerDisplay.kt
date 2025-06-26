@@ -19,13 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.cost.CostElement
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.common.AppStrings
 import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.main.domain.CardInfo
@@ -47,6 +43,7 @@ data class PlayerDisplayClickListeners(
 fun PlayerDisplay(
     player: PlayerInfo,
     actionDomain: MainActionDomain,
+    showExtended: Boolean = false,
     listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
 ) {
     val showDrawCount = remember(actionDomain) {
@@ -75,21 +72,23 @@ fun PlayerDisplay(
                         text = player.infoLine,
                         style = MaterialTheme.typography.subtitle1,
                         modifier = Modifier.padding(start = 16.dp),
-                        maxLines = 2
+                        maxLines = 5
                     )
                 }
-
                 if (showDrawCount) {
                     DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
-                } else {
-                    HandDisplay(player, listeners)
+                } else if (showExtended) {
+                    HandDisplay(
+                        player,
+                        okayToShowImages = true,
+                        listeners
+                    )
                 }
-
                 // Floral array (only if not empty)
-                if (player.floralArray.isNotEmpty()) {
+                if (showExtended && player.floralArray.isNotEmpty()) {
                     Column {
                         Text(
-                            text = "Budding Stack",
+                            text = AppStrings.FLORAL_ARRAY,
                             style = MaterialTheme.typography.h6,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
@@ -98,10 +97,9 @@ fun PlayerDisplay(
                         }
                     }
                 }
-
             }
         }
-        
+
         // Nutrients button positioned in the upper right corner
         if (player.nutrients > 0) {
             Button(
@@ -127,7 +125,7 @@ fun main() = application {
         title = "Player Display Preview",
         state = WindowState(
             width = 800.dp,
-            height = 1000.dp
+            height = 1100.dp
         )
     ) {
         val gatherCardInfo = GatherCardInfo.previewVariation()
@@ -139,70 +137,33 @@ fun main() = application {
             nutrients = 5,
             handCards = listOf(
                 gatherCardInfo(
-                    card = GameCard(
-                        id = 1,
-                        name = "Sprouting Seed",
-                        type = FlourishType.SEEDLING,
-                        resilience = 0,
-                        nutrient = 0,
-                        cost = Cost(emptyList()),
-                        primaryEffect = CardEffect.DRAW_CARD,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
+                    card = FakeCards.seedlingCard
                 ),
                 gatherCardInfo(
-                    card = GameCard(
-                        id = 2,
-                        name = "Nourishing Root",
-                        type = FlourishType.ROOT,
-                        resilience = 8,
-                        nutrient = 1,
-                        cost = Cost.from(listOf(CostElement.SingleDieMinimum(2))),
-                        primaryEffect = CardEffect.DRAW_DIE,
-                        primaryValue = 1,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
+                    card = FakeCards.seedlingCard3
+                ),
+                gatherCardInfo(
+                    card = FakeCards.rootCard
                 )
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10)), true),
             supplyDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d6, sampleDie.d12)), false),
             floralArray = listOf(
                 gatherCardInfo(
-                    card = GameCard(
-                        id = 3,
-                        name = "Sheltering Canopy",
-                        type = FlourishType.CANOPY,
-                        resilience = 20,
-                        nutrient = 3,
-                        cost = Cost.from(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT))),
-                        primaryEffect = CardEffect.DEFLECT,
-                        primaryValue = 2,
-                        matchWith = MatchWith.None,
-                        matchEffect = null,
-                        matchValue = 0,
-                        trashEffect = null,
-                        trashValue = 0,
-                        thorn = 0
-                    )
+                    card = FakeCards.flowerCard
                 )
             ),
             supplyCardCount = 42,
             discardCardCount = 7,
-            discardDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false)
+            discardDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false),
+            decidingPlayer = true
         )
         val actionDomain = MainActionDomain()
-        PlayerDisplay(samplePlayer, actionDomain)
+        PlayerDisplay(
+            samplePlayer,
+            actionDomain,
+            showExtended = true
+        )
     }
 }
 

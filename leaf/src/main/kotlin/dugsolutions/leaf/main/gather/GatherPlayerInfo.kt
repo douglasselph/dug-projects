@@ -39,15 +39,12 @@ class GatherPlayerInfo(
             supplyCardCount = supplyCardCount,
             discardDice = discardPatch,
             discardCardCount = bedCardCount,
-            showCardImages = (player.name == decidingPlayer.player?.name)
+            decidingPlayer = (player.name == decidingPlayer.player?.name)
         )
     }
 
     private fun infoLineFrom(player: Player): String {
-        return totalFrom(player) + "\n" +
-                handDiceFrom(player)  + "\n" +
-                supplyLine(player) + "\n" +
-                discardLine(player)
+        return totalFrom(player) + handDiceFrom(player) + supplyLine(player) + discardLine(player) + floralLine(player)
     }
 
     private fun totalFrom(player: Player): String {
@@ -59,19 +56,25 @@ class GatherPlayerInfo(
     private fun handDiceFrom(player: Player): String {
         val diceValues = player.diceInHand.sort().map { it.toValue() }
         val countCards = player.cardsInHand.size
-        return "Hand Cards: $countCards, Dice: $diceValues"
+        return "\nHand Cards: $countCards, Dice: $diceValues"
     }
 
     private fun supplyLine(player: Player): String {
         val diceLine = player.diceInSupply.toString()
         val countCards = player.cardsInSupplyCount
-        return "Supply Cards: $countCards, Dice: $diceLine"
+        return "\nSupply Cards: $countCards, Dice: $diceLine"
     }
 
     private fun discardLine(player: Player): String {
         val diceLine = player.diceInDiscard.toString()
         val countCards = player.cardsInDiscard.size
-        return "Discard Cards: $countCards, Dice: $diceLine"
+        return "\nDiscard Cards: $countCards, Dice: $diceLine"
+    }
+
+    private fun floralLine(player: Player): String {
+        return if (player.floralCards.isNotEmpty()) {
+            "\nFloral Cards: " + player.floralCards.joinToString(",") { it.name }
+        } else ""
     }
 
 }

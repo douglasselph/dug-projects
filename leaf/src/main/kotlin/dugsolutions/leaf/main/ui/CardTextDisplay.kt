@@ -37,7 +37,7 @@ import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
 @Composable
-fun CardDisplay(
+fun CardTextDisplay(
     cardInfo: CardInfo,
     onSelected: () -> Unit = {}
 ) {
@@ -256,7 +256,7 @@ private fun PreviewCard(
     highlight: HighlightInfo = HighlightInfo.NONE
 ) {
     val gatherCardInfo = GatherCardInfo.previewVariation()
-    CardDisplay(
+    CardTextDisplay(
         gatherCardInfo(
             card = gameCard,
             highlight = highlight

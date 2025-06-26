@@ -13,7 +13,7 @@ data class PlayerInfo(
     val supplyCardCount: Int,
     val discardCardCount: Int,
     val discardDice: DiceInfo,
-    val showCardImages: Boolean = false
+    val decidingPlayer: Boolean = false
 ) {
 
     fun copyForItemSelect(): PlayerInfo {

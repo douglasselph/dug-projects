@@ -86,7 +86,8 @@ class FakeCards {
             matchValue = 0,
             trashEffect = null,
             trashValue = 0,
-            thorn = 0
+            thorn = 0,
+            image = "seedling_unsettled_growth.png"
         )
 
         val seedlingCard5 = GameCard(

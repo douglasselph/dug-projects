@@ -1,8 +1,8 @@
 Card;Flourish Type;Resilience;Nutrient;Cost;Primary Effect;Primary Value;Match With;Match Effect;Match Value;Trash Effect;Trash Value;Thorn;Image
 Cheap Sprout;Seedling;-;-;-;ReduceCostRoot;2;k1;ReduceCostRoot;2;-;-;-;seedling_cheap_sprout.png
-Unsettled Growth;Seedling;-;-;-;RerollAccept2nd;1;-;-;-;RerollTakeBetter;2;-;
-Unearthed;Seedling;-;-;-;UpgradeD6;1;-;-;-;UpgradeAnyRetain;2;-;
-Wiggle Room;Seedling;-;-;-;AddToDie;2;k2;AddToTotal;2;-;-;-;
+Unsettled Growth;Seedling;-;-;-;RerollAccept2nd;1;-;-;-;RerollTakeBetter;2;-;seedling_unsettled_growth.png
+Unearthed;Seedling;-;-;-;UpgradeD6;1;-;-;-;UpgradeAnyRetain;2;-;seedling_unearthed.png
+Wiggle Room;Seedling;-;-;-;AddToDie;2;k2;AddToTotal;2;-;-;-;seedling_wiggle_room.png
 Root Favor;Root;10;1;8;ReduceCostCanopy;2;k2;ReduceCostCanopy;3;-;-;-;
 Root Awakening;Root;9;1;10;UpgradeD8;1;k2;UpgradeAny;1;-;-;-;
 Root Loot;Root;10;1;10;DrawCard;1;d1;DrawDie;1;- ;-;-;
@@ -33,5 +33,3 @@ Snapbackdragon;Flower;10;2;C 11 ;Adorn;1;-;-;-;-;-;1;
 Perennial Payback;Bloom;1;8;-;RerollTakeBetter;1;Snapbackdragon;RerollTakeBetter;1;-;-;-;
 Forget-Me-Not;Flower;10;2;C 9;Adorn;1;-;-;-;-;-;1;
 Rebloominate;Bloom;1;8;-;ReuseAny;1;Forget-Me-Not;ReuseAny;1;-;-;-;
-;;;;;;;;;;;;;
-;;; ;;;;;;;;;;

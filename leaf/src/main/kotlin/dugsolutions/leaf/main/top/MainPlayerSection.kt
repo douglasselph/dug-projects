@@ -43,10 +43,12 @@ fun MainPlayerSection(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                gameState.players.forEach { player ->
+                gameState.players.forEachIndexed { index, player ->
+                    val showExtended = (index == 0 || player.decidingPlayer)
                     PlayerDisplay(
                         player = player,
                         actionDomain = actionState,
+                        showExtended = showExtended,
                         listeners = PlayerDisplayClickListeners(
                             onDrawCountChosen = { listeners.onDrawCountChosen(player, it) },
                             onHandCardSelected = { listeners.onHandCardSelected(player, it) },

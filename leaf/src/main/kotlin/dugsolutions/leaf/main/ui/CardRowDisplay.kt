@@ -26,6 +26,7 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.main.domain.CardInfo
+import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
 
 @Composable
@@ -52,7 +53,6 @@ fun CardRowDisplay(
         }
         width
     }
-
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -80,6 +80,7 @@ fun CardRowDisplay(
                     if (okayToShowImages && cardInfo.image != null && showImage) {
                         CardImageDisplay(
                             imageName = cardInfo.image,
+                            highlight = cardInfo.highlight,
                             onError = { error ->
                                 errorMessage = error
                                 showImage = false
@@ -88,7 +89,7 @@ fun CardRowDisplay(
                         )
                     }
                     if (!okayToShowImages || cardInfo.image == null || !showImage) {
-                        CardDisplay(cardInfo) { onSelected(cardInfo) }
+                        CardTextDisplay(cardInfo) { onSelected(cardInfo) }
                     }
                 }
             }
@@ -129,7 +130,7 @@ fun main() = application {
             CardRowDisplay(
                 listOf(
                     gatherCardInfo(card = FakeCards.seedlingCard),
-                    gatherCardInfo(card = FakeCards.seedlingCard3),
+                    gatherCardInfo(card = FakeCards.seedlingCard3).copy(highlight = HighlightInfo.SELECTABLE),
                     gatherCardInfo(card = FakeCards.bloomCard)
                 ),
                 okayToShowImages = true
@@ -138,7 +139,7 @@ fun main() = application {
             // Second row of cards
             CardRowDisplay(
                 listOf(
-                    gatherCardInfo(card = FakeCards.vineCard),
+                    gatherCardInfo(card = FakeCards.vineCard).copy(highlight = HighlightInfo.SELECTABLE),
                     gatherCardInfo(card = FakeCards.flowerCard),
                     gatherCardInfo(card = FakeCards.bloomCard)
                 )

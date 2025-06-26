@@ -27,8 +27,10 @@ import dugsolutions.leaf.main.gather.GatherDiceInfo
 @Composable
 fun HandDisplay(
     player: PlayerInfo,
+    okayToShowImages: Boolean = false,
     listeners: PlayerDisplayClickListeners = PlayerDisplayClickListeners()
 ) {
+    val elementsPerRow = if (player.decidingPlayer) 5 else 3
 
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
@@ -48,7 +50,10 @@ fun HandDisplay(
             ) {
                 // Dice in hand
                 Box {
-                    DiceDisplay(player.handDice) { dieValue ->
+                    DiceDisplay(
+                        player.handDice,
+                        elementsPerRow = elementsPerRow
+                    ) { dieValue ->
                         listeners.onDieSelected(dieValue)
                     }
                 }
@@ -56,7 +61,7 @@ fun HandDisplay(
                 Box {
                     CardRowDisplay(
                         player.handCards,
-                        okayToShowImages = player.showCardImages
+                        okayToShowImages = okayToShowImages
                     ) { cardInfo ->
                         listeners.onHandCardSelected(cardInfo)
                     }
@@ -77,7 +82,7 @@ fun main() = application {
         title = "Hand Display Preview",
         state = WindowState(
             width = 700.dp,
-            height = 600.dp
+            height = 800.dp
         )
     ) {
         val gatherCardInfo = GatherCardInfo.previewVariation()
@@ -99,7 +104,10 @@ fun main() = application {
             discardCardCount = 0,
             discardDice = gatherDiceInfo(Dice(emptyList()), false)
         )
-        HandDisplay(samplePlayer)
+        HandDisplay(
+            samplePlayer,
+            okayToShowImages = true
+        )
     }
 }
 

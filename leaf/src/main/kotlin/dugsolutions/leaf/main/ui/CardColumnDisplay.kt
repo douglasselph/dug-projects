@@ -16,7 +16,7 @@ fun CardsColumnDisplay(
 ) {
     Column {
         cards.forEach { cardInfo ->
-            CardDisplay(cardInfo)
+            CardTextDisplay(cardInfo)
         }
     }
 }
