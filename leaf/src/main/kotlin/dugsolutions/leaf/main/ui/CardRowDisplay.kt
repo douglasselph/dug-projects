@@ -37,22 +37,15 @@ fun CardRowDisplay(
 ) {
     val overlapOffset: Dp = 80.dp // How much cards overlap when names match
     val normalSpacing: Dp = 8.dp // Normal spacing between different cards
-    val cardWidth: Dp = 200.dp // Width of each card (from CardDisplay)
+    val textCardWidth: Dp = 200.dp // Width of each text card
+    val imageCardWidth: Dp = 350.dp // Width of each image card
 
     var errorMessage by remember { mutableStateOf("") }
 
     // Calculate the total width needed
-    val totalWidth = if (cards.isEmpty()) {
-        cardWidth
-    } else {
-        var width = cardWidth // First card
-        cards.drop(1).forEachIndexed { index, cardInfo ->
-            val previousCard = cards[index] // Note: index is offset by drop(1)
-            val shouldOverlap = cardInfo.name == previousCard.name
-            width += if (shouldOverlap) overlapOffset else (cardWidth + normalSpacing)
-        }
-        width
-    }
+    val totalWidth = computeTotalWidth(
+        cards, textCardWidth, imageCardWidth, normalSpacing, overlapOffset, okayToShowImages
+    )
     Surface(
         border = BorderStroke(2.dp, MaterialTheme.colors.primary),
         shape = RoundedCornerShape(8.dp),
@@ -71,8 +64,8 @@ fun CardRowDisplay(
                 val shouldOverlap = index > 0 && cardInfo.name == cards[index - 1].name
 
                 // Calculate the offset for this card
-                if (index > 0) {
-                    currentOffset += if (shouldOverlap) overlapOffset else (cardWidth + normalSpacing)
+                if (index > 0 && shouldOverlap) {
+                    currentOffset -= overlapOffset
                 }
                 Box(
                     modifier = Modifier.offset(x = currentOffset)
@@ -80,6 +73,7 @@ fun CardRowDisplay(
                     if (okayToShowImages && cardInfo.image != null && showImage) {
                         CardImageDisplay(
                             imageName = cardInfo.image,
+                            displayWidth = imageCardWidth,
                             highlight = cardInfo.highlight,
                             onError = { error ->
                                 errorMessage = error
@@ -89,7 +83,15 @@ fun CardRowDisplay(
                         )
                     }
                     if (!okayToShowImages || cardInfo.image == null || !showImage) {
-                        CardTextDisplay(cardInfo) { onSelected(cardInfo) }
+                        CardTextDisplay(
+                            cardInfo,
+                            displayWidth = textCardWidth
+                        ) {
+                            onSelected(cardInfo)
+                        }
+                        currentOffset += textCardWidth + normalSpacing
+                    } else {
+                        currentOffset += imageCardWidth + normalSpacing - overlapOffset
                     }
                 }
             }
@@ -110,6 +112,28 @@ fun CardRowDisplay(
 
 }
 
+private fun computeTotalWidth(
+    cards: List<CardInfo>,
+    textCardWidth: Dp,
+    imageCardWidth: Dp,
+    normalSpacing: Dp,
+    overlapOffset: Dp,
+    okayToShowImages: Boolean
+): Dp {
+    val estimatedImagePadding = 0.dp
+    val useImageWidth = imageCardWidth + estimatedImagePadding
+    if (cards.isEmpty()) return textCardWidth
+    var width = if (okayToShowImages && cards[0].image != null) useImageWidth else textCardWidth
+    for (i in 1 until cards.size) {
+        val prev = cards[i - 1]
+        val curr = cards[i]
+        val currWidth = if (okayToShowImages && curr.image != null) useImageWidth else textCardWidth
+        val shouldOverlap = curr.name == prev.name
+        width += if (shouldOverlap) overlapOffset else (currWidth + normalSpacing)
+    }
+    return width
+}
+
 
 // Preview window for testing card rows
 fun main() = application {
@@ -118,7 +142,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Card Row Display Preview",
         state = WindowState(
-            width = 800.dp,
+            width = 1000.dp,
             height = 1000.dp
         )
     ) {

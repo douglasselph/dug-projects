@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -19,7 +20,6 @@ import dugsolutions.leaf.main.domain.MainGameDomain
 import dugsolutions.leaf.main.ui.GroveDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplay
 import dugsolutions.leaf.main.ui.PlayerDisplayClickListeners
-
 @Composable
 fun MainPlayerSection(
     gameState: MainGameDomain,
@@ -36,19 +36,23 @@ fun MainPlayerSection(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Partition players
+            val (extendedPlayers, compactPlayers) = gameState.players.withIndex()
+                .partition { (index, player) -> index == 0 || player.decidingPlayer }
+
             // Players row
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+                    .horizontalScroll(rememberScrollState())
+                    .wrapContentWidth(), // Let row be as wide as needed
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                gameState.players.forEachIndexed { index, player ->
-                    val showExtended = (index == 0 || player.decidingPlayer)
+                // Extended players
+                extendedPlayers.forEach { (index, player) ->
                     PlayerDisplay(
                         player = player,
                         actionDomain = actionState,
-                        showExtended = showExtended,
+                        showExtended = true,
                         listeners = PlayerDisplayClickListeners(
                             onDrawCountChosen = { listeners.onDrawCountChosen(player, it) },
                             onHandCardSelected = { listeners.onHandCardSelected(player, it) },
@@ -57,6 +61,27 @@ fun MainPlayerSection(
                             onNutrientsClicked = { listeners.onNutrientsClicked(player) }
                         )
                     )
+                }
+                // Compact players in a column at the end
+                if (compactPlayers.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        compactPlayers.forEach { (_, player) ->
+                            PlayerDisplay(
+                                player = player,
+                                actionDomain = actionState,
+                                showExtended = false,
+                                listeners = PlayerDisplayClickListeners(
+                                    onDrawCountChosen = { listeners.onDrawCountChosen(player, it) },
+                                    onHandCardSelected = { listeners.onHandCardSelected(player, it) },
+                                    onFloralCardSelected = { listeners.onFloralCardSelected(player, it) },
+                                    onDieSelected = { listeners.onDieSelected(player, it) },
+                                    onNutrientsClicked = { listeners.onNutrientsClicked(player) }
+                                )
+                            )
+                        }
+                    }
                 }
             }
 

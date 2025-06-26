@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
@@ -39,11 +40,12 @@ import dugsolutions.leaf.main.gather.GatherCardInfo
 @Composable
 fun CardTextDisplay(
     cardInfo: CardInfo,
+    displayWidth: Dp = 200.dp,
     onSelected: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
-            .width(200.dp)
+            .width(displayWidth)
             .padding(4.dp)
             .then(
                 if (cardInfo.highlight != HighlightInfo.NONE) {

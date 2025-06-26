@@ -124,7 +124,7 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Player Display Preview",
         state = WindowState(
-            width = 800.dp,
+            width = 1100.dp,
             height = 1100.dp
         )
     ) {
@@ -141,9 +141,6 @@ fun main() = application {
                 ),
                 gatherCardInfo(
                     card = FakeCards.seedlingCard3
-                ),
-                gatherCardInfo(
-                    card = FakeCards.rootCard
                 )
             ),
             handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10)), true),
@@ -159,11 +156,17 @@ fun main() = application {
             decidingPlayer = true
         )
         val actionDomain = MainActionDomain()
-        PlayerDisplay(
-            samplePlayer,
-            actionDomain,
-            showExtended = true
-        )
+        Row {
+            PlayerDisplay(
+                samplePlayer,
+                actionDomain,
+                showExtended = true
+            )
+            PlayerDisplay(
+                samplePlayer,
+                actionDomain
+            )
+        }
     }
 }
 

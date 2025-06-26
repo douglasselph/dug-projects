@@ -81,33 +81,56 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Hand Display Preview",
         state = WindowState(
-            width = 700.dp,
-            height = 800.dp
+            width = 800.dp,
+            height = 1600.dp
         )
     ) {
         val gatherCardInfo = GatherCardInfo.previewVariation()
         val infoLine = PlayerScore(1, scoreDice = 10, scoreCards = 15).toString()
-        // Sample player data focused on hand content
-        val samplePlayer = PlayerInfo(
-            name = "Player 1",
-            infoLine = infoLine,
-            handCards = listOf(
-                gatherCardInfo(card = FakeCards.seedlingCard),
-                gatherCardInfo(card = FakeCards.rootCard),
-                gatherCardInfo(card = FakeCards.bloomCard)
-            ),
-            handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10, sampleDie.d12)), true),
-            supplyDice = gatherDiceInfo(Dice(emptyList()), false),
-            floralArray = emptyList(),
-            nutrients = 2,
-            supplyCardCount = 0,
-            discardCardCount = 0,
-            discardDice = gatherDiceInfo(Dice(emptyList()), false)
-        )
-        HandDisplay(
-            samplePlayer,
-            okayToShowImages = true
-        )
+
+        Column {
+            // Sample player data focused on hand content
+            val samplePlayer = PlayerInfo(
+                name = "Player 1",
+                infoLine = infoLine,
+                handCards = listOf(
+                    gatherCardInfo(card = FakeCards.seedlingCard),
+                    gatherCardInfo(card = FakeCards.rootCard),
+                    gatherCardInfo(card = FakeCards.bloomCard)
+                ),
+                handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10, sampleDie.d12)), true),
+                supplyDice = gatherDiceInfo(Dice(emptyList()), false),
+                floralArray = emptyList(),
+                nutrients = 2,
+                supplyCardCount = 0,
+                discardCardCount = 0,
+                discardDice = gatherDiceInfo(Dice(emptyList()), false)
+            )
+            HandDisplay(
+                samplePlayer,
+                okayToShowImages = true
+            )
+            // Sample player data focused on hand content
+            val samplePlayer2 = PlayerInfo(
+                name = "Player 1",
+                infoLine = infoLine,
+                handCards = listOf(
+                    gatherCardInfo(card = FakeCards.seedlingCard),
+                    gatherCardInfo(card = FakeCards.seedlingCard3)
+                ),
+                handDice = gatherDiceInfo(Dice(listOf(sampleDie.d6, sampleDie.d8, sampleDie.d10, sampleDie.d12)), true),
+                supplyDice = gatherDiceInfo(Dice(emptyList()), false),
+                floralArray = emptyList(),
+                nutrients = 2,
+                supplyCardCount = 0,
+                discardCardCount = 0,
+                discardDice = gatherDiceInfo(Dice(emptyList()), false)
+            )
+            HandDisplay(
+                samplePlayer2,
+                okayToShowImages = true
+            )
+        }
     }
 }
 
