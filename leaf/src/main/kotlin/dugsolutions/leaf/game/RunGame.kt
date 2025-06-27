@@ -27,7 +27,12 @@ class RunGame(
 
         while (gameTime.phase == GamePhase.CULTIVATION) {
             gameTime.turn++
-            chronicle(Moment.EVENT_TURN(game.players))
+            chronicle(
+                Moment.EVENT_TURN(
+                    game.players,
+                    totalTimeTakenSeconds = chronicle.timeTaken
+                )
+            )
             game.runOneCultivationTurn()
             emit(
                 GameEvent.TurnComplete(
@@ -46,7 +51,13 @@ class RunGame(
 
         while (!game.isGameFinished) {
             gameTime.turn++
-            chronicle(Moment.EVENT_TURN(game.players))
+            chronicle(
+                Moment.EVENT_TURN(
+                    game.players,
+                    totalTimeTakenSeconds = chronicle.timeTaken
+                )
+            )
+
             game.runOneBattleTurn()
             emit(
                 GameEvent.TurnComplete(
@@ -60,7 +71,7 @@ class RunGame(
             }
         }
         val data = game.score
-        chronicle(Moment.FINISHED(data))
+        chronicle(Moment.FINISHED(data, totalTimeTaken = chronicle.timeTaken))
         emit(GameEvent.Completed(data))
     }
 

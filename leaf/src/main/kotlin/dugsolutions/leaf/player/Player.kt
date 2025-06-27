@@ -12,6 +12,8 @@ import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.AppliedEffect
+import dugsolutions.leaf.player.domain.DrawCardResult
+import dugsolutions.leaf.player.domain.DrawDieResult
 import dugsolutions.leaf.player.domain.ExtendedHandItem
 import dugsolutions.leaf.player.domain.HandItem
 import dugsolutions.leaf.player.effect.FloralBonusCount
@@ -201,14 +203,6 @@ open class Player(
         deckManager.setup(seedlings, dieFactory.startingDice)
     }
 
-    fun drawHand(preferredCardCount: Int) {
-        drawNewHand(this, preferredCardCount)
-    }
-
-    suspend fun drawHand() {
-        drawHand(decisionDirector.drawCountDecision(this).count)
-    }
-
     open fun drawCardWithoutResupply(): CardID? {
         return deckManager.drawCard()
     }
@@ -217,37 +211,51 @@ open class Player(
         return deckManager.drawDie()?.roll()
     }
 
-    open fun drawCard(): CardID? {
-        if (deckManager.isResupplyNeeded) {
+    private fun reshuffleIfNeeded(): Boolean {
+        return if (deckManager.isResupplyNeeded) {
             resupply()
-        }
-        return deckManager.drawCard()
+        } else false
     }
 
-    open fun drawDie(): Die? {
-        if (deckManager.isResupplyNeeded) {
-            resupply()
-        }
-        return deckManager.drawDie()?.roll()
+    // TODO: Unit test
+    open fun drawCard(): DrawCardResult {
+        val reshuffleDone = reshuffleIfNeeded()
+        return DrawCardResult(
+            cardId = deckManager.drawCard(),
+            reshuffleDone = reshuffleDone
+        )
     }
 
-    fun drawBestDie(): Die? {
-        if (deckManager.isResupplyNeeded) {
-            resupply()
-        }
-        return deckManager.drawBestDie()?.roll()
+    // TODO: Unit test
+    open fun drawDie(): DrawDieResult {
+        val reshuffleDone = reshuffleIfNeeded()
+        return DrawDieResult(
+            die = deckManager.drawDie()?.roll(),
+            reshuffleDone = reshuffleDone
+        )
     }
 
-    fun drawCardFromDiscard(): CardID? = deckManager.drawCardFromDiscard()
-    fun drawDieFromDiscard(): Die? = deckManager.drawDieFromDiscard()
-    fun drawBestDieFromDiscard(): Die? = deckManager.drawBestDieFromDiscard()
+    // TODO: Unit test
+    fun drawBestDie(): DrawDieResult {
+        val reshuffleDone = reshuffleIfNeeded()
+        return DrawDieResult(
+            die = deckManager.drawBestDie()?.roll(),
+            reshuffleDone = reshuffleDone
+        )
+    }
+
+    // TODO: Unit test
+    fun drawCardFromDiscard(): DrawCardResult = DrawCardResult(deckManager.drawCardFromDiscard())
+    fun drawDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawDieFromDiscard())
+    fun drawBestDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawBestDieFromDiscard())
 
     open fun discardHand() {
         deckManager.discardHand()
     }
 
-    fun resupply() {
-        deckManager.resupply()
+    // TODO: Unit test
+    fun resupply(): Boolean {
+        return deckManager.resupply()
     }
 
     fun reset() {

@@ -15,7 +15,7 @@ class EffectDrawDie(
     )
 
     operator fun invoke(player: Player, params: DrawDieParams) = with(params) {
-        val die = if (fromDiscard) {
+        val result = if (fromDiscard) {
             if (drawHighest) {
                 player.drawBestDieFromDiscard()
             } else {
@@ -28,8 +28,8 @@ class EffectDrawDie(
                 player.drawDie()
             }
         }
-        die?.let {
-            chronicle(Moment.DRAW_DIE(player, die))
+        result.die?.let { die ->
+            chronicle(Moment.DRAW_DIE(player, die, result.reshuffleDone))
         }
     }
 

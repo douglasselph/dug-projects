@@ -3,6 +3,7 @@ package dugsolutions.leaf.game.turn.effect
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.player.domain.DrawDieResult
 import dugsolutions.leaf.random.die.SampleDie
 import io.mockk.every
 import io.mockk.mockk
@@ -26,7 +27,7 @@ class EffectDrawDieTest {
     fun invoke_fromDiscard_drawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromDiscard = true, drawHighest = true)
-        every { mockPlayer.drawBestDieFromDiscard() } returns d6
+        every { mockPlayer.drawBestDieFromDiscard() } returns DrawDieResult(d6)
 
         // Act
         SUT(mockPlayer, params)
@@ -39,7 +40,7 @@ class EffectDrawDieTest {
     fun invoke_fromDiscard_notDrawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromDiscard = true, drawHighest = false)
-        every { mockPlayer.drawDieFromDiscard() } returns d6
+        every { mockPlayer.drawDieFromDiscard() } returns DrawDieResult(d6)
 
         // Act
         SUT(mockPlayer, params)
@@ -52,7 +53,7 @@ class EffectDrawDieTest {
     fun invoke_notFromDiscard_drawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromDiscard = false, drawHighest = true)
-        every { mockPlayer.drawBestDie() } returns d6
+        every { mockPlayer.drawBestDie() } returns DrawDieResult(d6)
 
         // Act
         SUT(mockPlayer, params)
@@ -65,7 +66,7 @@ class EffectDrawDieTest {
     fun invoke_notFromDiscard_notDrawHighest() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams(fromDiscard = false, drawHighest = false)
-        every { mockPlayer.drawDie() } returns d6
+        every { mockPlayer.drawDie() } returns DrawDieResult(d6)
 
         // Act
         SUT(mockPlayer, params)
@@ -78,10 +79,10 @@ class EffectDrawDieTest {
     fun invoke_whenNoDieDrawn_doesNotCallChronicle() {
         // Arrange
         val params = EffectDrawDie.DrawDieParams()
-        every { mockPlayer.drawDie() } returns null
-        every { mockPlayer.drawBestDie() } returns null
-        every { mockPlayer.drawDieFromDiscard() } returns null
-        every { mockPlayer.drawBestDieFromDiscard() } returns null
+        every { mockPlayer.drawDie() } returns DrawDieResult()
+        every { mockPlayer.drawBestDie() } returns DrawDieResult()
+        every { mockPlayer.drawDieFromDiscard() } returns DrawDieResult()
+        every { mockPlayer.drawBestDieFromDiscard() } returns DrawDieResult()
 
         // Act
         SUT(mockPlayer, params)

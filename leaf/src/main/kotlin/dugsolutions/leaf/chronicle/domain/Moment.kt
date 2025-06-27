@@ -18,24 +18,25 @@ sealed class Moment {
 
     data class ADD_TO_TOTAL(val player: Player, val amount: Int) : Moment()
     data class ADORN(val player: Player, val flowerCardId: CardID, val drawCardId: CardID) : Moment()
-    data class NUTRIENT_REWARD(val player: Player, val nutrients: Int, val gained: DieSides) : Moment()
+    data class CLEANUP(val player: Player, val numReused: Int, val numRetained: Int): Moment()
     data class DELIVER_DAMAGE(
         val defender: Player, val damageToDefender: Int, val deflectDamage: Int = 0,
         val defenderPipTotal: Int = 0, val attackerPipTotal: Int = 0
     ) : Moment()
 
-    data class DRAW_CARD(val player: Player, val cardId: CardID) : Moment()
-    data class DRAW_DIE(val player: Player, val die: Die) : Moment()
+    data class DRAW_CARD(val player: Player, val cardId: CardID, val hadReshuffle: Boolean = false) : Moment()
+    data class DRAW_DIE(val player: Player, val die: Die, val hadReshuffle: Boolean = false) : Moment()
     data class DRAWN_HAND(val player: Player) : Moment()
 
     data class DEFLECT_DAMAGE(val player: Player, val amount: Int) : Moment()
     data class DISCARD_CARD(val player: Player, val cardId: GameCard) : Moment()
     data class DISCARD_DIE(val player: Player, val die: Die) : Moment()
-    data class EVENT_TURN(val players: List<Player>) : Moment()
+    data class EVENT_TURN(val players: List<Player>, val totalTimeTakenSeconds: Int = 0) : Moment()
     data class EVENT_BATTLE_TRANSITION(val player: Player, val trashedSeedlings: List<CardID>) : Moment()
-    data class FINISHED(val result: PlayersScoreData) : Moment()
+    data class FINISHED(val result: PlayersScoreData, val totalTimeTaken: Int = 0) : Moment()
     data class GAIN_D20(val player: Player) : Moment()
     data class INFO(val message: String) : Moment()
+    data class NUTRIENT_REWARD(val player: Player, val nutrients: Int, val gained: DieSides) : Moment()
 
     data class ORDERING(val players: List<Player>, val numberOfRerolls: Int) : Moment()
     data class PLAY_CARD(val player: Player, val card: GameCard) : Moment()

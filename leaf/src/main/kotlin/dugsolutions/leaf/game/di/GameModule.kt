@@ -25,7 +25,6 @@ import dugsolutions.leaf.game.turn.effect.EffectDieRerollAny
 import dugsolutions.leaf.game.turn.effect.EffectDieToMax
 import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDiscard
-import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
 import dugsolutions.leaf.game.turn.effect.EffectGainD20
@@ -41,6 +40,7 @@ import dugsolutions.leaf.game.turn.handle.HandleCardEffect
 import dugsolutions.leaf.game.turn.handle.HandleCleanup
 import dugsolutions.leaf.game.turn.handle.HandleCompostRecovery
 import dugsolutions.leaf.game.turn.handle.HandleDieUpgrade
+import dugsolutions.leaf.game.turn.handle.HandleDrawHand
 import dugsolutions.leaf.game.turn.handle.HandleGetTarget
 import dugsolutions.leaf.game.turn.handle.HandleRetained
 import dugsolutions.leaf.game.turn.handle.HandleReused
@@ -91,7 +91,6 @@ val gameModule: Module = module {
     single { EffectDiscard(get(), get()) }
     single { EffectDrawCard(get(), get()) }
     single { EffectDrawDie(get()) }
-    single { EffectDraw(get()) }
     single { EffectGainD20(get(), get(), get()) }
     single { EffectReuseCard(get(), get()) }
     single { EffectReuseDie(get()) }
@@ -102,8 +101,9 @@ val gameModule: Module = module {
 
     single { HandleAdorn(get(), get()) }
     single { HandleCompostRecovery(get()) }
-    single { HandleCleanup(get(), get(), get()) }
+    single { HandleCleanup(get(), get(), get(), get(), get()) }
     single { HandleDeliverDamage(get(), get()) }
+    single { HandleDrawHand(get(), get()) }
     single { HandleAbsorbDamage(get()) }
     single { HandleGroveAcquisition(get(), get(), get(), get()) }
     single { HandleGetTarget() }
@@ -127,12 +127,12 @@ val gameModule: Module = module {
         )
     }
 
-    single { Game(get(), get(), get(), get(), get(), get()) }
+    single { Game(get(), get(), get(), get(), get(), get(), get()) }
     single { RunGame(get(), get(), get()) }
 
     single { ManageAcquiredFloralTypes() }
     single { MatchingBloomCard(get()) }
     single { BestFlowerCards(get()) }
-    single { BattlePhaseTransition(get(), get(), get()) }
+    single { BattlePhaseTransition(get(), get(), get(), get()) }
 
 } 

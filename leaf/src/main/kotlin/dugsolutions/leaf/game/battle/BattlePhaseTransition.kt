@@ -2,11 +2,13 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.game.turn.handle.HandleDrawHand
 import dugsolutions.leaf.player.Player
 
 class BattlePhaseTransition(
     private val bestFlowerCards: BestFlowerCards,
     private val matchingBloomCard: MatchingBloomCard,
+    private val handleDrawHand: HandleDrawHand,
     private val chronicle: GameChronicle
 ) {
 
@@ -45,8 +47,7 @@ class BattlePhaseTransition(
         val trashed = player.trashSeedlingCards()
         player.clearFloralCards()
         player.reset()
-        player.drawHand()
-
+        handleDrawHand(player)
         chronicle(Moment.EVENT_BATTLE_TRANSITION(player, trashed))
     }
 }

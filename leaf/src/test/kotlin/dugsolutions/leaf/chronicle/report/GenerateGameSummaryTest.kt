@@ -8,6 +8,7 @@ import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
 import dugsolutions.leaf.chronicle.domain.ScoreInfo
+import dugsolutions.leaf.chronicle.domain.TimeTaken
 import dugsolutions.leaf.game.domain.GamePhase
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +38,8 @@ class GenerateGameSummaryTest {
                 gamePhase = GamePhase.CULTIVATION,
                 turn = turn,
                 reports = emptyList(), // Empty reports for test simplicity
-                scores = scores
+                scores = scores,
+                totalTimeTakenSeconds = 0
             )
         }
 
@@ -55,6 +57,7 @@ class GenerateGameSummaryTest {
             return OrderingEntry(
                 turn = turn,
                 playerOrder = playerIdOrder,
+                timeTaken = 0,
                 reports = emptyList()
             )
         }

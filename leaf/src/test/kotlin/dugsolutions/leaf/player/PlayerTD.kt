@@ -18,6 +18,7 @@ import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.decisions.local.CardEffectBattleScore
 import dugsolutions.leaf.player.decisions.local.EffectBattleScore
 import dugsolutions.leaf.player.di.CardEffectBattleScoreFactory
+import dugsolutions.leaf.player.domain.DrawCardResult
 import dugsolutions.leaf.player.domain.HandItem
 import dugsolutions.leaf.random.RandomizerTD
 import dugsolutions.leaf.random.di.DieFactory
@@ -361,11 +362,11 @@ class PlayerTD private constructor(
         _cardsInHand.clear()
     }
 
-    override fun drawCard(): CardID? {
+    override fun drawCard(): DrawCardResult {
         if (_cardsInSupply.isNotEmpty()) {
             val card = _cardsInSupply.removeAt(0)
             _cardsInHand.add(card)
-            return card.id
+            return DrawCardResult(card.id)
         }
         return super.drawCard()
     }

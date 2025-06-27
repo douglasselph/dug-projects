@@ -2,6 +2,7 @@ package dugsolutions.leaf.game.battle
 
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
+import dugsolutions.leaf.game.turn.handle.HandleDrawHand
 import dugsolutions.leaf.player.Player
 import io.mockk.coVerify
 import io.mockk.every
@@ -14,21 +15,21 @@ import org.junit.jupiter.api.Test
 
 class BattlePhaseTransitionTest {
 
-    private lateinit var mockPlayer: Player
+    private val mockPlayer: Player = mockk(relaxed = true)
     private lateinit var mockBestFlowerCards: BestFlowerCards
     private lateinit var mockMatchingBloomCard: MatchingBloomCard
     private lateinit var mockChronicle: GameChronicle
+    private val mockHandleDrawHand: HandleDrawHand = mockk(relaxed = true)
 
     private lateinit var SUT: BattlePhaseTransition
 
     @BeforeEach
     fun setup() {
-        mockPlayer = mockk(relaxed = true)
         mockBestFlowerCards = mockk(relaxed = true)
         mockMatchingBloomCard = mockk(relaxed = true)
         mockChronicle = mockk(relaxed = true)
 
-        SUT = BattlePhaseTransition(mockBestFlowerCards, mockMatchingBloomCard, mockChronicle)
+        SUT = BattlePhaseTransition(mockBestFlowerCards, mockMatchingBloomCard, mockHandleDrawHand, mockChronicle)
     }
 
     @Test
@@ -44,7 +45,7 @@ class BattlePhaseTransitionTest {
         verify(exactly = 0) { mockPlayer.addCardToSupply(any()) }
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -67,7 +68,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.reset() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockChronicle(any()) }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -94,7 +95,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -128,7 +129,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -162,7 +163,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -189,7 +190,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -211,7 +212,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer.clearFloralCards() }
         verify { mockPlayer.trashSeedlingCards() }
         verify { mockPlayer.reset() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
     @Test
@@ -246,7 +247,7 @@ class BattlePhaseTransitionTest {
         verify { mockPlayer2.clearFloralCards() }
         verify { mockPlayer2.reset() }
         verify { mockPlayer.trashSeedlingCards() }
-        coVerify { mockPlayer.drawHand() }
+        coVerify { mockHandleDrawHand(mockPlayer) }
     }
 
 } 

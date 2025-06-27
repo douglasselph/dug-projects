@@ -54,4 +54,12 @@ class GameChronicle(
         entries.clear()
         lastNewEntriesIndex = 0
     }
+
+    /**
+     * Compute total time taken thus far
+     */
+    val timeTaken: Int
+        get() {
+            return entries.sumOf { it.timeTaken }
+        }
 }

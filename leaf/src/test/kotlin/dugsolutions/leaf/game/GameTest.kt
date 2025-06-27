@@ -13,6 +13,7 @@ import dugsolutions.leaf.game.domain.GameTime
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminatedNoDiceNorCards
+import dugsolutions.leaf.game.turn.handle.HandleDrawHand
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import io.mockk.coVerify
@@ -39,13 +40,14 @@ class GameTest {
         private const val GAME_TURN = 2
     }
 
-    private lateinit var mockPlayerTurn: PlayerTurn
+    private val mockPlayerTurn: PlayerTurn = mockk(relaxed = true)
     private lateinit var mockPlayerFactory: PlayerFactory
     private lateinit var mockPlayerOrder: PlayerOrder
     private lateinit var mockIsEliminated: IsEliminatedNoDiceNorCards
     private lateinit var mockDieFactory: DieFactory
     private lateinit var mockGrove: Grove
     private lateinit var mockBattlePhaseTransition: BattlePhaseTransition
+    private val mockHandleDrawHand: HandleDrawHand = mockk(relaxed = true)
 
     private lateinit var mockPlayer1: Player
     private lateinit var mockPlayer2: Player
@@ -65,7 +67,6 @@ class GameTest {
     @BeforeEach
     fun setup() {
         // Create mock dependencies
-        mockPlayerTurn = mockk(relaxed = true)
         mockPlayerFactory = mockk(relaxed = true)
         mockPlayerOrder = mockk(relaxed = true)
         mockIsEliminated = mockk(relaxed = true)
@@ -115,6 +116,7 @@ class GameTest {
             mockPlayerTurn,
             mockPlayerFactory,
             mockPlayerOrder,
+            mockHandleDrawHand,
             mockGrove,
             gameTime,
             mockBattlePhaseTransition,
@@ -204,8 +206,8 @@ class GameTest {
         SUT.setup(customConfig)
 
         // Assert
-        verify { mockPlayer1.drawHand(2) }
-        verify { mockPlayer2.drawHand(2) }
+        verify { mockHandleDrawHand(mockPlayer1, 2) }
+        verify { mockHandleDrawHand(mockPlayer2, 2) }
     }
 
     @Test

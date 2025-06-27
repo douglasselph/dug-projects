@@ -120,7 +120,8 @@ class DeckManager(
     }
 
     // Resource cycling
-    fun resupply() {
+    // TODO: Unit test
+    fun resupply(): Boolean {
         supply.addAllCards(discardPatch.getItems().mapNotNull {
             when (it) {
                 is HandItem.aCard -> it.card.id
@@ -135,6 +136,7 @@ class DeckManager(
         })
         discardPatch.clear()
         supply.shuffle()
+        return true
     }
 
     fun discardHand() {

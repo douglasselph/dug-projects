@@ -8,6 +8,7 @@ import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.PlayerTurn
 import dugsolutions.leaf.game.turn.config.IsEliminated
 import dugsolutions.leaf.game.turn.config.IsEliminatedNoDiceNorCards
+import dugsolutions.leaf.game.turn.handle.HandleDrawHand
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.domain.PlayerScoreData
@@ -17,6 +18,7 @@ class Game(
     private val playerTurn: PlayerTurn,
     private val playerFactory: PlayerFactory,
     private val playerOrder: PlayerOrder,
+    private val handleDrawHand: HandleDrawHand,
     private val grove: Grove,
     private val gameTime: GameTime,
     private val battlePhaseTransition: BattlePhaseTransition
@@ -62,7 +64,7 @@ class Game(
             val player = playerFactory()
             playersList.add(player)
             config.setup(i, player)
-            player.drawHand(2)
+            handleDrawHand(player, 2)
         }
         players = playerOrder(playersList)
     }

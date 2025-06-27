@@ -5,7 +5,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.turn.select.SelectDieToRetain
 import dugsolutions.leaf.player.Player
 
-class EffectDieToRetain(
+class  EffectDieToRetain(
     private val selectDieToRetain: SelectDieToRetain,
     private val chronicle: GameChronicle
 ) {

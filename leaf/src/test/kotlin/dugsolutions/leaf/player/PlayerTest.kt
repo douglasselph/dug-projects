@@ -437,30 +437,10 @@ class PlayerTest {
         val sampleSeedlings = GameCards(FakeCards.ALL_SEEDLINGS, randomizer, costScore)
 
         // Act
-        SUT2.setupInitialDeck(sampleSeedlings)
-        SUT2.drawHand(2)
+        SUT.setupInitialDeck(sampleSeedlings)
 
         // Assert
-        val cards = SUT2.cardsInHand
-        val dice = SUT2.diceInHand
-        assertEquals(2, cards.size)
-        assertEquals(2, dice.size)
-    }
-
-    @Test
-    fun drawHand_delegatesToDrawHandComponent() {
-        // Arrange
-        val preferredCardCount = 3
-        every { mockDeckManager.handSize } returns 0
-        every { mockDeckManager.drawCard() } returns CARD_ID_1
-        every { mockDeckManager.drawDie() } returns D6
-
-        // Act
-        SUT.drawHand(preferredCardCount)
-
-        // Assert
-        verify { mockDeckManager.drawCard() }
-        verify { mockDeckManager.drawDie() }
+        verify { mockDeckManager.setup(sampleSeedlings, startingDice) }
     }
 
     @Test

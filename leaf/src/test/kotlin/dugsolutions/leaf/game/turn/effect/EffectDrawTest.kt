@@ -3,7 +3,9 @@ package dugsolutions.leaf.game.turn.effect
 import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
+import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.player.domain.DrawCardResult
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -22,8 +24,9 @@ class EffectDrawTest {
     private val mockPlayer: Player = mockk(relaxed = true)
     private val mockCardManager: CardManager = mockk(relaxed = true)
     private val mockCard: GameCard = mockk(relaxed = true)
+    private val mockChronicle: GameChronicle = mockk(relaxed = true)
 
-    private val SUT: EffectDraw = EffectDraw(mockCardManager)
+    private val SUT: EffectDraw = EffectDraw(mockCardManager, mockChronicle)
 
     @BeforeEach
     fun setup() {
@@ -35,7 +38,7 @@ class EffectDrawTest {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 2
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.drawCard() } returns CARD_ID
+        every { mockPlayer.drawCard() } returns DrawCardResult(CARD_ID)
         every { mockCardManager.getCard(CARD_ID) } returns mockCard
 
         // Act
@@ -53,7 +56,7 @@ class EffectDrawTest {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 2
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.drawCard() } returns null
+        every { mockPlayer.drawCard() } returns DrawCardResult()
 
         // Act
         SUT(mockPlayer)
@@ -69,7 +72,7 @@ class EffectDrawTest {
         // Arrange
         every { mockPlayer.cardsInSupplyCount } returns 2
         every { mockPlayer.diceInSupplyCount } returns 1
-        every { mockPlayer.drawCard() } returns CARD_ID
+        every { mockPlayer.drawCard() } returns DrawCardResult(CARD_ID)
         every { mockCardManager.getCard(CARD_ID) } returns null
 
         // Act

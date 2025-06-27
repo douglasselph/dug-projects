@@ -5,7 +5,8 @@ import dugsolutions.leaf.player.domain.HandItem
 
 class HandleReused {
 
-    operator fun invoke(player: Player) {
+    operator fun invoke(player: Player): Int {
+        val count = player.reused.size
         player.reused.forEach { item ->
             when(item) {
                 is HandItem.aCard -> {
@@ -19,5 +20,6 @@ class HandleReused {
             }
         }
         player.reused.clear()
+        return count
     }
 }

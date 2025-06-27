@@ -43,8 +43,8 @@ class GameChronicleTest {
     @Test
     fun getEntries_whenHasEntries_returnsAllEntries() {
         // Arrange
-        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1, hadReshuffle = false)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2, hadReshuffle = false)
         SUT(moment1)
         SUT(moment2)
 
@@ -60,8 +60,8 @@ class GameChronicleTest {
     @Test
     fun getNewEntries_whenFirstCall_returnsAllEntries() {
         // Arrange
-        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1)
-        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2)
+        val moment1 = Moment.DRAW_CARD(mockPlayer, CARD_ID_1, hadReshuffle = false)
+        val moment2 = Moment.DRAW_CARD(mockPlayer, CARD_ID_2, hadReshuffle = false)
         SUT(moment1)
         SUT(moment2)
 

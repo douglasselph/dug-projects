@@ -10,7 +10,7 @@ import dugsolutions.leaf.chronicle.domain.AdjustDieEntry
 import dugsolutions.leaf.chronicle.domain.AdjustDieToMax
 import dugsolutions.leaf.chronicle.domain.AdornEntry
 import dugsolutions.leaf.chronicle.domain.ChronicleEntry
-import dugsolutions.leaf.chronicle.domain.NutrientReward
+import dugsolutions.leaf.chronicle.domain.CleanupEntry
 import dugsolutions.leaf.chronicle.domain.DeflectDamageEntry
 import dugsolutions.leaf.chronicle.domain.DeliverDamageEntry
 import dugsolutions.leaf.chronicle.domain.DiscardCardEntry
@@ -24,6 +24,7 @@ import dugsolutions.leaf.chronicle.domain.Finished
 import dugsolutions.leaf.chronicle.domain.GainD20Entry
 import dugsolutions.leaf.chronicle.domain.InfoEntry
 import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.chronicle.domain.NutrientReward
 import dugsolutions.leaf.chronicle.domain.OrderingEntry
 import dugsolutions.leaf.chronicle.domain.PlayCardEntry
 import dugsolutions.leaf.chronicle.domain.ReplayVineEntry
@@ -35,6 +36,7 @@ import dugsolutions.leaf.chronicle.domain.RetainDieEntry
 import dugsolutions.leaf.chronicle.domain.ReuseCardEntry
 import dugsolutions.leaf.chronicle.domain.ReuseDieEntry
 import dugsolutions.leaf.chronicle.domain.ScoreInfo
+import dugsolutions.leaf.chronicle.domain.TimeTaken
 import dugsolutions.leaf.chronicle.domain.TrashCardEntry
 import dugsolutions.leaf.chronicle.domain.TrashDieEntry
 import dugsolutions.leaf.chronicle.domain.TrashForEffect
@@ -93,6 +95,7 @@ class TransformMomentToEntry(
                 AdjustDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.ADJUST_DIE,
                     die = moment.die.copy,
                     adjustment = moment.amount,
                     dice = moment.player.diceInHand.values()
@@ -109,6 +112,7 @@ class TransformMomentToEntry(
                 AddToTotalEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.ADD_TO_TOTAL,
                     amount = moment.amount,
                     pips = moment.player.pipTotal
                 )
@@ -117,23 +121,51 @@ class TransformMomentToEntry(
                 AdornEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.ADORN,
                     drawCardId = moment.drawCardId,
                     flowerCardId = moment.flowerCardId
                 )
 
-            is Moment.NUTRIENT_REWARD ->
-                NutrientReward(
+            is Moment.CLEANUP ->
+                CleanupEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
-                    hadNutrients = moment.nutrients,
-                    sidesGained = moment.gained.value
+                    timeTaken = TimeTaken.CLEANUP_BASE + (moment.numReused + moment.numRetained) * TimeTaken.CLEANUP_PER_ITEM,
+                    numReused = moment.numReused,
+                    numRetained = moment.numRetained
+                )
+
+            is Moment.DEFLECT_DAMAGE ->
+                DeflectDamageEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    timeTaken = TimeTaken.DEFLECT_DAMAGE,
+                    amount = moment.amount
                 )
 
             is Moment.DELIVER_DAMAGE ->
                 DeliverDamageEntry(
                     playerId = moment.defender.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.DELIVER_DAMAGE,
                     report = reportDamage(moment)
+                )
+
+            is Moment.DISCARD_CARD ->
+                DiscardCardEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    timeTaken = TimeTaken.DISCARD_CARD,
+                    cardId = moment.cardId.id,
+                    cardName = moment.cardId.name
+                )
+
+            is Moment.DISCARD_DIE ->
+                DiscardDieEntry(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    timeTaken = TimeTaken.DISCARD_DIE,
+                    die = moment.die.copy
                 )
 
             is Moment.DRAW_CARD -> {
@@ -141,6 +173,7 @@ class TransformMomentToEntry(
                 DrawCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.DRAW_CARD + if (moment.hadReshuffle) TimeTaken.RESHUFFLE else 0,
                     cardId = moment.cardId,
                     cardName = card?.name ?: "unknown"
                 )
@@ -150,6 +183,7 @@ class TransformMomentToEntry(
                 DrawDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken =  TimeTaken.DRAW_DIE + if (moment.hadReshuffle) TimeTaken.RESHUFFLE else 0,
                     dieSides = moment.die.sides
                 )
 
@@ -161,34 +195,13 @@ class TransformMomentToEntry(
                     dice = moment.player.diceInHand.values()
                 )
 
-            is Moment.DEFLECT_DAMAGE ->
-                DeflectDamageEntry(
-                    playerId = moment.player.id,
-                    turn = gameTime.turn,
-                    amount = moment.amount
-                )
-
-            is Moment.DISCARD_CARD ->
-                DiscardCardEntry(
-                    playerId = moment.player.id,
-                    turn = gameTime.turn,
-                    cardId = moment.cardId.id,
-                    cardName = moment.cardId.name
-                )
-
-            is Moment.DISCARD_DIE ->
-                DiscardDieEntry(
-                    playerId = moment.player.id,
-                    turn = gameTime.turn,
-                    die = moment.die.copy
-                )
-
             is Moment.EVENT_TURN ->
                 EventTurn(
                     gamePhase = gameTime.phase,
                     turn = gameTime.turn,
                     reports = moment.players.sortedBy { it.name }.map { reportPlayer(it) },
-                    scores = moment.players.map { player -> ScoreInfo(player.score) }
+                    scores = moment.players.map { player -> ScoreInfo(player.score) },
+                    totalTimeTakenSeconds = moment.totalTimeTakenSeconds
                 )
 
             is Moment.EVENT_BATTLE_TRANSITION ->
@@ -219,10 +232,20 @@ class TransformMomentToEntry(
                     message = moment.message
                 )
 
+            is Moment.NUTRIENT_REWARD ->
+                NutrientReward(
+                    playerId = moment.player.id,
+                    turn = gameTime.turn,
+                    timeTaken = TimeTaken.NUTRIENT_REWARD,
+                    hadNutrients = moment.nutrients,
+                    sidesGained = moment.gained.value
+                )
+
             is Moment.ORDERING -> with(moment) {
                 OrderingEntry(
                     playerId = players.firstOrNull()?.id ?: 0,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.ORDERING_REROLL * numberOfRerolls,
                     playerOrder = players.map { it.id },
                     reports = if (numberOfRerolls > 0) players.sortedBy { it.name }.map { reportPlayer(it) } else emptyList(),
                     numberRerolls = numberOfRerolls
@@ -241,6 +264,7 @@ class TransformMomentToEntry(
                 RerollEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.REROLL,
                     dieSides = moment.die.sides,
                     before = moment.beforeValue,
                     newValue = moment.die.value,
@@ -251,6 +275,7 @@ class TransformMomentToEntry(
                 RetainCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.RETAIN_CARD,
                     cardId = moment.card.id,
                     cardName = moment.card.name
                 )
@@ -259,6 +284,7 @@ class TransformMomentToEntry(
                 RetainDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.RETAIN_DIE,
                     dieSides = moment.die.sides
                 )
 
@@ -266,6 +292,7 @@ class TransformMomentToEntry(
                 ReplayVineEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.REPLAY_VINE,
                     vineId = moment.selectedVine.id,
                     vineName = moment.selectedVine.name
                 )
@@ -288,6 +315,7 @@ class TransformMomentToEntry(
                 ReuseCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.REUSE_CARD,
                     cardId = moment.card.id,
                     cardName = moment.card.name
                 )
@@ -296,6 +324,7 @@ class TransformMomentToEntry(
                 ReuseDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.REUSE_DIE,
                     die = moment.die.copy
                 )
 
@@ -309,6 +338,7 @@ class TransformMomentToEntry(
                 DeliverDamageEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.THORN_DAMAGE,
                     report = reportDamage(moment)
                 )
 
@@ -316,6 +346,7 @@ class TransformMomentToEntry(
                 TrashCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.TRASH_CARD,
                     card = moment.card
                 )
 
@@ -323,6 +354,7 @@ class TransformMomentToEntry(
                 TrashDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.TRASH_DIE,
                     dieSides = moment.die.sides
                 )
 
@@ -330,6 +362,7 @@ class TransformMomentToEntry(
                 TrashForEffect(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.TRASH_FOR_EFFECT,
                     card = moment.card.name,
                     status = moment.status
                 )
@@ -338,6 +371,7 @@ class TransformMomentToEntry(
                 UpgradeDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.UPGRADE_DIE,
                     newSides = moment.die.sides
                 )
 
@@ -352,6 +386,7 @@ class TransformMomentToEntry(
                 UseOpponentCardEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.USE_OPPONENT_CARD,
                     cardId = moment.card.id,
                     cardName = moment.card.name
                 )
@@ -360,6 +395,7 @@ class TransformMomentToEntry(
                 UseOpponentDieEntry(
                     playerId = moment.player.id,
                     turn = gameTime.turn,
+                    timeTaken = TimeTaken.USE_OPPONENT_DIE,
                     die = moment.die.copy
                 )
 

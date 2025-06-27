@@ -10,15 +10,16 @@ class EffectDrawCard(
     private val chronicle: GameChronicle
 ) {
 
+    // TODO: Unit test
     operator fun invoke(player: Player, fromDiscard: Boolean = false) {
-        val cardId = if (fromDiscard) {
+        val result = if (fromDiscard) {
             player.drawCardFromDiscard()
         } else {
             player.drawCard()
         }
-        val card = cardId?.let { id -> cardManager.getCard(id) }
+        val card = result.cardId?.let { id -> cardManager.getCard(id) }
         card?.let {
-            chronicle(Moment.DRAW_CARD(player, card.id))
+            chronicle(Moment.DRAW_CARD(player, card.id, result.reshuffleDone))
             player.cardsToPlay.add(card)
         }
     }

@@ -22,10 +22,11 @@ class HandleAdorn(
             val flowerCard = flowerCards.removeAt(0)
             player.removeCardFromHand(flowerCard.id)
             player.addCardToFloralArray(flowerCard.id)
-            val cardId = player.drawCard() ?: 0
+            val result = player.drawCard()
+            val cardId = result.cardId ?: 0
             chronicle(Moment.ADORN(player, flowerCardId = flowerCard.id, drawCardId = cardId))
             if (cardId > 0) {
-                chronicle(Moment.DRAW_CARD(player, cardId))
+                chronicle(Moment.DRAW_CARD(player, cardId, result.reshuffleDone)) // TODO: Unit test
                 cardManager.getCard(cardId)?.let { card ->
                     if (card.type == FlourishType.FLOWER) {
                         flowerCards.add(card)

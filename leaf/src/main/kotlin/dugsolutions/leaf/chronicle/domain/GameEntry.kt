@@ -14,7 +14,8 @@ import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
  */
 abstract class ChronicleEntry(
     open val playerId: Int,
-    open val turn: Int
+    open val turn: Int,
+    open val timeTaken: Int = 0
 )
 
 /**
@@ -48,6 +49,7 @@ data class AcquireNone(
 data class AdjustDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val die: DieValue,
     val adjustment: Int,
     val dice: String
@@ -67,6 +69,7 @@ data class AddToThornEntry(
 data class AddToTotalEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val amount: Int,
     val pips: Int
 ) : ChronicleEntry(playerId, turn)
@@ -74,26 +77,30 @@ data class AddToTotalEntry(
 data class AdornEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val flowerCardId: CardID,
     val drawCardId: CardID
 ) : ChronicleEntry(playerId, turn)
 
-data class NutrientReward(
+data class CleanupEntry(
     override val playerId: Int,
     override val turn: Int,
-    val hadNutrients: Int,
-    val sidesGained: Int
+    override val timeTaken: Int,
+    val numReused: Int,
+    val numRetained: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class DeliverDamageEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val report: String
 ) : ChronicleEntry(playerId, turn)
 
 data class DrawCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val cardId: CardID,
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
@@ -101,6 +108,7 @@ data class DrawCardEntry(
 data class DrawDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
@@ -118,12 +126,14 @@ data class DrawnHandEntry(
 data class DeflectDamageEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val amount: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class DiscardCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val cardId: CardID,
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
@@ -131,6 +141,7 @@ data class DiscardCardEntry(
 data class DiscardDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val die: DieValue
 ) : ChronicleEntry(playerId, turn)
 
@@ -142,11 +153,13 @@ data class EventTurn(
     override val turn: Int,
     val gamePhase: GamePhase,
     val reports: List<String>,
-    val scores: List<ScoreInfo>
+    val scores: List<ScoreInfo>,
+    val totalTimeTakenSeconds: Int
 ) : ChronicleEntry(0, turn) {
     override fun toString(): String {
         val phase = if (gamePhase == GamePhase.CULTIVATION) "Cultivation" else "Battle"
-        return "=== $phase Turn $turn ===\n" + reports.joinToString("\n")
+        val minutes = TimeConverters.secondsToMinutes(totalTimeTakenSeconds)
+        return "=== $phase Turn $turn === Time Taken So Far: $minutes\n" + reports.joinToString("\n")
     }
 }
 
@@ -182,9 +195,18 @@ data class InfoEntry(
     val message: String
 ) : ChronicleEntry(0, turn)
 
+data class NutrientReward(
+    override val playerId: Int,
+    override val turn: Int,
+    override val timeTaken: Int,
+    val hadNutrients: Int,
+    val sidesGained: Int
+) : ChronicleEntry(playerId, turn)
+
 data class OrderingEntry(
     override val playerId: Int = 0,
     override val turn: Int,
+    override val timeTaken: Int,
     val playerOrder: List<Int>,
     val reports: List<String>,
     val numberRerolls: Int = 0
@@ -196,8 +218,14 @@ data class OrderingEntry(
             for (report in reports) {
                 buffer.append("\n    $report")
             }
+            if (numberRerolls > 0) {
+                buffer.append("\n   Rerolls=$numberRerolls")
+            }
         } else {
             buffer.append("Order on turn $turn: $playerOrder")
+            if (numberRerolls > 0) {
+                buffer.append(" (Rerolls=$numberRerolls)")
+            }
         }
         return buffer.toString()
     }
@@ -224,6 +252,7 @@ data class ReportHand(
 data class RerollEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val dieSides: Int,
     val before: Int,
     val newValue: Int,
@@ -233,6 +262,7 @@ data class RerollEntry(
 data class RetainCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val cardId: CardID,
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
@@ -240,12 +270,14 @@ data class RetainCardEntry(
 data class RetainDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class ReplayVineEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val vineId: CardID,
     val vineName: String
 ) : ChronicleEntry(playerId, turn)
@@ -262,6 +294,7 @@ data class ReportEntry(
 data class ReuseCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val cardId: CardID,
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
@@ -269,12 +302,14 @@ data class ReuseCardEntry(
 data class ReuseDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val die: DieValue,
 ) : ChronicleEntry(playerId, turn)
 
 data class TrashCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val card: GameCard
 ) : ChronicleEntry(playerId, turn) {
     override fun toString(): String {
@@ -285,12 +320,14 @@ data class TrashCardEntry(
 data class TrashDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val dieSides: Int
 ) : ChronicleEntry(playerId, turn)
 
 data class TrashForEffect(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val card: String,
     val status: DecisionShouldProcessTrashEffect.Result
 ) : ChronicleEntry(playerId, turn) {
@@ -302,6 +339,7 @@ data class TrashForEffect(
 data class UpgradeDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val newSides: Int
 ) : ChronicleEntry(playerId, turn)
 
@@ -314,6 +352,7 @@ data class UseFlowers(
 data class UseOpponentCardEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val cardId: CardID,
     val cardName: String
 ) : ChronicleEntry(playerId, turn)
@@ -321,5 +360,6 @@ data class UseOpponentCardEntry(
 data class UseOpponentDieEntry(
     override val playerId: Int,
     override val turn: Int,
+    override val timeTaken: Int,
     val die: DieValue
 ) : ChronicleEntry(playerId, turn)
