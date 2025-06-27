@@ -48,6 +48,14 @@ class MainDecisions(
         shouldAskTrashEffect.askTrashOkay = false
     }
 
+    fun onDecisionToggle(player: Player) {
+        if (player.decisionDirector.usingBaselineDrawCount) {
+            setup(player)
+        } else {
+            player.initialize()
+        }
+    }
+
     private fun applyDecisionId(player: Player, id: DecisionID?) {
         when (id) {
             is DecisionID.ACQUIRE_SELECT -> {

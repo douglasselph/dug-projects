@@ -58,7 +58,8 @@ fun MainPlayerSection(
                             onHandCardSelected = { listeners.onHandCardSelected(player, it) },
                             onFloralCardSelected = { listeners.onFloralCardSelected(player, it) },
                             onDieSelected = { listeners.onDieSelected(player, it) },
-                            onNutrientsClicked = { listeners.onNutrientsClicked(player) }
+                            onNutrientsClicked = { listeners.onNutrientsClicked(player) },
+                            onDecidingToggled = { listeners.onDecidingPlayerToggled(player) }
                         )
                     )
                 }
@@ -77,7 +78,8 @@ fun MainPlayerSection(
                                     onHandCardSelected = { listeners.onHandCardSelected(player, it) },
                                     onFloralCardSelected = { listeners.onFloralCardSelected(player, it) },
                                     onDieSelected = { listeners.onDieSelected(player, it) },
-                                    onNutrientsClicked = { listeners.onNutrientsClicked(player) }
+                                    onNutrientsClicked = { listeners.onNutrientsClicked(player) },
+                                    onDecidingToggled = { listeners.onDecidingPlayerToggled(player) }
                                 )
                             )
                         }

@@ -69,8 +69,7 @@ val playerModule: Module = module {
             floralBonusCount = get(),
             decisionDirector = { get() },
             costScore = get(),
-            dieFactory = get(),
-            drawNewHand = get()
+            dieFactory = get()
         )
     }
 

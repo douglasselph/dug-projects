@@ -25,7 +25,7 @@ val mainModule: Module = module {
     single { GatherPlayerInfo(get(), get(), get()) }
     single { SelectItem() }
     single { SelectGather(get()) }
-    single { MainGameManager(get(), get(), get(), get(), get(), get(), get()) }
+    single { MainGameManager(get(), get(), get(), get(), get(), get()) }
     single { MainOutputManager() }
     single { MainDecisions(get(), get(), get(), get(), get(), get()) }
     single { MainActionManager(get()) }

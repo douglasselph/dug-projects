@@ -25,6 +25,7 @@ import dugsolutions.leaf.game.turn.effect.EffectDieRerollAny
 import dugsolutions.leaf.game.turn.effect.EffectDieToMax
 import dugsolutions.leaf.game.turn.effect.EffectDieToRetain
 import dugsolutions.leaf.game.turn.effect.EffectDiscard
+import dugsolutions.leaf.game.turn.effect.EffectDraw
 import dugsolutions.leaf.game.turn.effect.EffectDrawCard
 import dugsolutions.leaf.game.turn.effect.EffectDrawDie
 import dugsolutions.leaf.game.turn.effect.EffectGainD20
@@ -91,6 +92,7 @@ val gameModule: Module = module {
     single { EffectDiscard(get(), get()) }
     single { EffectDrawCard(get(), get()) }
     single { EffectDrawDie(get()) }
+    single { EffectDraw(get(), get()) }
     single { EffectGainD20(get(), get(), get()) }
     single { EffectReuseCard(get(), get()) }
     single { EffectReuseDie(get()) }

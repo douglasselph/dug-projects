@@ -26,8 +26,7 @@ class MainGameManager(
     private val gatherPlayerInfo: GatherPlayerInfo,
     private val gatherGroveInfo: GatherGroveInfo,
     private val selectItem: SelectItem,
-    private val selectGather: SelectGather,
-    private val chronicle: GameChronicle
+    private val selectGather: SelectGather
 ) {
     private val _state = MutableStateFlow(MainGameDomain())
 

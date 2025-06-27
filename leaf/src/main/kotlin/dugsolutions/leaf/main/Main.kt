@@ -39,7 +39,8 @@ class MainApplication : KoinComponent {
                                 onHandCardSelected = { player, card -> mainController.onHandCardSelected(player, card) },
                                 onFloralCardSelected = { player, card -> mainController.onFloralCardSelected(player, card) },
                                 onDieSelected = { player, card -> mainController.onDieSelected(player, card) },
-                                onNutrientsClicked = { player -> mainController.onNutrientsClicked(player) }
+                                onNutrientsClicked = { player -> mainController.onNutrientsClicked(player) },
+                                onDecidingPlayerToggled = { player -> mainController.onDecidingToggled(player) }
                             )
                         )
                     )

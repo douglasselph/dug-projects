@@ -48,12 +48,11 @@ class MainGameManagerTest {
     private val mockGroveInfo = mockk<GroveInfo>(relaxed = true)
     private val mockSelectItem = mockk<SelectItem>(relaxed = true)
     private val mockSelectGather = mockk<SelectGather>(relaxed = true)
-    private val mockChronicle = mockk<GameChronicle>(relaxed = true)
     private val sampleDie = SampleDie()
 
     private val SUT = MainGameManager(
         mockGame, gameTime, gatherPlayerInfo, gatherGroveInfo,
-        mockSelectItem, mockSelectGather, mockChronicle
+        mockSelectItem, mockSelectGather
     )
 
     @BeforeEach

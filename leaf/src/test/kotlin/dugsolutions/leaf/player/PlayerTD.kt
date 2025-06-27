@@ -35,7 +35,6 @@ class PlayerTD private constructor(
     cardManager: CardManager,
     private val dieFactory: DieFactory,
     costScore: CostScore,
-    drawNewHand: DrawNewHand,
     decisionDirector: DecisionDirector
 ) : Player(
     deckManager,
@@ -44,7 +43,6 @@ class PlayerTD private constructor(
     cardManager,
     dieFactory,
     costScore,
-    drawNewHand,
     decisionDirector,
 ) {
 
@@ -78,7 +76,6 @@ class PlayerTD private constructor(
                 cardManager,
                 dieFactory,
                 costScore,
-                drawNewHand,
                 decisionDirector
             ).apply {
                 this.id = id
@@ -96,7 +93,6 @@ class PlayerTD private constructor(
             val cardEffectBattleScore = mockk<CardEffectBattleScore>(relaxed = true)
             val dieFactory = DieFactory(randomizerTD)
             val costScore = CostScore()
-            val drawNewHand: DrawNewHand = mockk(relaxed = true)
             every { cardEffectBattleScoreFactory(any()) } returns cardEffectBattleScore
 
             return PlayerTD(
@@ -106,7 +102,6 @@ class PlayerTD private constructor(
                 cardManager,
                 dieFactory,
                 costScore,
-                drawNewHand,
                 decisionDirector
             ).apply {
                 this.id = id
@@ -144,7 +139,6 @@ class PlayerTD private constructor(
             val dieFactory = DieFactory(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, discardStack, dieFactory)
             val costScore = CostScore()
-            val drawNewHand = DrawNewHand()
             val decisionDirector = mockk<DecisionDirector>(relaxed = true)
 
             return PlayerTD(
@@ -154,7 +148,6 @@ class PlayerTD private constructor(
                 cardManager,
                 dieFactory,
                 costScore,
-                drawNewHand,
                 decisionDirector
             ).apply {
                 this.id = id
@@ -178,7 +171,6 @@ class PlayerTD private constructor(
             val bestCardEvaluator = BestCardEvaluator()
             val acquireCardEvaluator = AcquireCardEvaluator(bestCardEvaluator)
             val acquireDieEvaluator = AcquireDieEvaluator()
-            val drawNewHand = DrawNewHand()
             val decisionDirector = DecisionDirector(
                 cardEffectBattleScoreFactory, cardManager, acquireCardEvaluator,
                 acquireDieEvaluator, groveNearingTransition
@@ -190,7 +182,6 @@ class PlayerTD private constructor(
                 cardManager,
                 dieFactory,
                 costScore,
-                drawNewHand,
                 decisionDirector
             ).apply {
                 this.id = id

@@ -29,7 +29,6 @@ open class Player(
     private val cardManager: CardManager,
     private val dieFactory: DieFactory,
     private val costScore: CostScore,
-    private val drawNewHand: DrawNewHand,
     val decisionDirector: DecisionDirector
 ) {
     companion object {

@@ -42,8 +42,10 @@ data class MainListeners(
     val onHandCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
     val onFloralCardSelected: (player: PlayerInfo, card: CardInfo) -> Unit = { _, _ -> },
     val onDieSelected: (player: PlayerInfo, die: DieInfo) -> Unit = { _, _ -> },
-    val onNutrientsClicked: (player: PlayerInfo) -> Unit = {}
+    val onNutrientsClicked: (player: PlayerInfo) -> Unit = {},
+    val onDecidingPlayerToggled: (player: PlayerInfo) -> Unit = {}
 )
+
 data class MainScreenArgs(
     val gameState: StateFlow<MainGameDomain>,
     val outputState: StateFlow<MainOutputDomain>,

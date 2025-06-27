@@ -7,5 +7,6 @@ object Commons {
     const val EXHAUSTED_STACK_COUNT = 3
     const val DECISION_KEYWORD = "DECISION"
     const val IMAGES_DIR = "data/images"
+    const val ICON_DIR = "data/icon"
 
 }

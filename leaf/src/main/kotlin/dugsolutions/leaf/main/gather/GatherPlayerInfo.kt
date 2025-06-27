@@ -39,7 +39,8 @@ class GatherPlayerInfo(
             supplyCardCount = supplyCardCount,
             discardDice = discardPatch,
             discardCardCount = bedCardCount,
-            decidingPlayer = (player.name == decidingPlayer.player?.name)
+            decidingPlayer = (player.name == decidingPlayer.player?.name),
+            humanControlled = !player.decisionDirector.usingBaselineDrawCount
         )
     }
 

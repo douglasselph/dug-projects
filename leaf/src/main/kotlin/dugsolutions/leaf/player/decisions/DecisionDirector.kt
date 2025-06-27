@@ -53,4 +53,7 @@ class DecisionDirector(
         flowerSelectDecision = DecisionFlowerSelectBaseline(player)
     }
 
+    val usingBaselineDrawCount: Boolean
+        get() = drawCountDecision is DecisionDrawCountBaseline
+
 }

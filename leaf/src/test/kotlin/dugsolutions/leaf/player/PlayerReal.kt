@@ -7,7 +7,6 @@ import dugsolutions.leaf.cards.di.GameCardIDsFactory
 import dugsolutions.leaf.cards.di.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD.Companion.randomizerTD
 import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.DrawNewHand
 import dugsolutions.leaf.player.components.FloralArray
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
@@ -23,7 +22,6 @@ class PlayerReal private constructor(
     cardManager: CardManager,
     dieFactory: DieFactory,
     costScore: CostScore,
-    drawNewHand: DrawNewHand,
     decisionDirector: DecisionDirector
 ) : Player(
     deckManager,
@@ -32,7 +30,6 @@ class PlayerReal private constructor(
     cardManager,
     dieFactory,
     costScore,
-    drawNewHand,
     decisionDirector,
 ) {
 
@@ -52,7 +49,6 @@ class PlayerReal private constructor(
             val floralArray = FloralArray(cardManager, gameCardIDsFactory)
             val dieFactory = DieFactory(randomizerTD)
             val deckManager = DeckManager(supplyStack, handStack, discardStack, dieFactory)
-            val drawNewHand = DrawNewHand()
             val decisionDirector = mockk<DecisionDirector>(relaxed = true)
 
             return PlayerReal(
@@ -62,7 +58,6 @@ class PlayerReal private constructor(
                 cardManager,
                 dieFactory,
                 costScore,
-                drawNewHand,
                 decisionDirector
             ).apply {
                 initialize()

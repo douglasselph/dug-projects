@@ -11,13 +11,12 @@ import dugsolutions.leaf.cards.domain.MatchWith
 import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.DrawNewHand
-import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.AppliedEffect
 import dugsolutions.leaf.player.domain.ExtendedHandItem
 import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.player.effect.FloralBonusCount
 import dugsolutions.leaf.random.Randomizer
 import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.Die
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import dugsolutions.leaf.player.domain.DrawCardResult
-import dugsolutions.leaf.player.domain.DrawDieResult
 
 class PlayerTest {
 
@@ -58,7 +55,6 @@ class PlayerTest {
     private lateinit var startingDice: List<Die>
     private lateinit var mockDieFactory: DieFactory
     private lateinit var gameCardIDsFactory: GameCardIDsFactory
-    private val drawNewHand = DrawNewHand()
     private val costScore: CostScore = CostScore()
 
     private lateinit var SUT: Player
@@ -105,7 +101,6 @@ class PlayerTest {
             cardManager,
             mockDieFactory,
             costScore,
-            drawNewHand,
             mockDecisionDirector
         )
         SUT2 = Player(
@@ -115,7 +110,6 @@ class PlayerTest {
             cardManager,
             mockDieFactory,
             costScore,
-            drawNewHand,
             mockDecisionDirector
         )
     }

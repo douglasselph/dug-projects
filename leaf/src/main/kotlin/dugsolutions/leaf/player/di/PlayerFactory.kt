@@ -17,8 +17,7 @@ class PlayerFactory(
     private val floralBonusCount: FloralBonusCount,
     private val costScore: CostScore,
     private val decisionDirector: () -> DecisionDirector,
-    private val dieFactory: DieFactory,
-    private val drawNewHand: DrawNewHand
+    private val dieFactory: DieFactory
 ) {
 
     operator fun invoke(): Player {
@@ -29,8 +28,7 @@ class PlayerFactory(
             cardManager = cardManager,
             decisionDirector = decisionDirector(),
             dieFactory = dieFactory,
-            costScore = costScore,
-            drawNewHand = drawNewHand
+            costScore = costScore
         ).initialize()
     }
 

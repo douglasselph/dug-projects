@@ -161,6 +161,12 @@ class MainController(
         mainDecisions.reapplyDecisionId()
     }
 
+    fun onDecidingToggled(playerInfo: PlayerInfo) {
+        val player = game.players.find { it.name == playerInfo.name } ?: return
+        mainDecisions.onDecisionToggle(player)
+        mainGameManager.resetData()
+    }
+
     // endregion PlayerSelect
 
     // region BooleanInstruction
@@ -223,5 +229,6 @@ class MainController(
             writeGameResults.finish(SAVE_DIR, SAVE_NAME)
         }
     }
+
 
 }

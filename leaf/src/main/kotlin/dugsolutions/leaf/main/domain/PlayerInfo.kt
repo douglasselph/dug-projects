@@ -13,7 +13,8 @@ data class PlayerInfo(
     val supplyCardCount: Int,
     val discardCardCount: Int,
     val discardDice: DiceInfo,
-    val decidingPlayer: Boolean = false
+    val decidingPlayer: Boolean = false,
+    val humanControlled: Boolean = false
 ) {
 
     fun copyForItemSelect(): PlayerInfo {
@@ -59,6 +60,7 @@ data class PlayerInfo(
         if (supplyCardCount != other.supplyCardCount) return false
         if (discardCardCount != other.discardCardCount) return false
         if (discardDice != other.discardDice) return false
+        if (decidingPlayer != other.decidingPlayer) return false
 
         return true
     }
@@ -72,6 +74,7 @@ data class PlayerInfo(
         result = 31 * result + supplyCardCount
         result = 31 * result + discardCardCount
         result = 31 * result + discardDice.hashCode()
+        result = 31 * result + decidingPlayer.hashCode()
         return result
     }
 

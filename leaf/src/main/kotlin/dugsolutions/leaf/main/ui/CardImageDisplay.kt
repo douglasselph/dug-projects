@@ -1,15 +1,9 @@
 package dugsolutions.leaf.main.ui
 
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -20,21 +14,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardImagePath
+import dugsolutions.leaf.cards.domain.ImagePath
 import dugsolutions.leaf.main.domain.Colors
 import dugsolutions.leaf.main.domain.HighlightInfo
 import dugsolutions.leaf.main.gather.GatherCardInfo
-import org.jetbrains.skia.Image
-import java.io.File
 
 
 @Composable
@@ -48,42 +38,16 @@ fun CardImageDisplay(
     val bgColor = when (highlight) {
         HighlightInfo.SELECTABLE -> Colors.SelectableColor
         HighlightInfo.SELECTED -> Colors.SelectedColor
-        else -> androidx.compose.ui.graphics.Color.Transparent
+        else -> Color.Transparent
     }
-    val imagePath = remember(imageName) { CardImagePath(imageName) }
-    val imageFile = remember(imagePath) { File(imagePath) }
-    val bitmap = remember(imagePath) { loadImageBitmapFromFile(imageFile) }
-    val aspectRatio = bitmap?.width?.toFloat()?.div(bitmap.height) ?: (258f / 356f)
-    val displayHeight = displayWidth / aspectRatio
-
-    if (bitmap == null) {
-        onError("Image file not found or failed to decode: $imagePath")
-        return
-    }
-
-    Box(
-        modifier = Modifier
-            .size(width = displayWidth, height = displayHeight)
-            .background(bgColor)
-            .clickable { onSelected() }
-    ) {
-        Image(
-            bitmap = bitmap,
-            contentDescription = "Card image: $imageName",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.FillBounds
-        )
-    }
-}
-
-private fun loadImageBitmapFromFile(imageFile: File): ImageBitmap? {
-    return try {
-        val bytes = imageFile.readBytes()
-        val skiaImage = Image.makeFromEncoded(bytes)
-        skiaImage.toComposeImageBitmap()
-    } catch (e: Exception) {
-        null
-    }
+    val imagePath = remember(imageName) { ImagePath.card(imageName) }
+    ImageDisplay(
+        imagePath = imagePath,
+        displayWidth = displayWidth,
+        bgColor = bgColor,
+        onError = onError,
+        onSelected = onSelected
+    )
 }
 
 // Preview window for testing card image display
