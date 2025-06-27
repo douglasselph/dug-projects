@@ -7,7 +7,6 @@ import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionSuspensionChannel
 
-// TODO: Unit test
 class DecisionShouldProcessTrashEffectSuspend(
     monitor: DecisionMonitor,
     report: DecisionMonitorReport

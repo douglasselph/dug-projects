@@ -1,6 +1,8 @@
 package dugsolutions.leaf.player.components
 
 import dugsolutions.leaf.cards.GameCards
+import dugsolutions.leaf.cards.domain.CardID
+import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.DieSides
 import dugsolutions.leaf.player.domain.HandItem
@@ -162,8 +164,9 @@ class DeckManagerTest {
     @Test
     fun getItemsInHand_returnsHandItems() {
         // Arrange
+        val mockCard = mockk<GameCard> { every { id } returns CARD_ID_1 }
         val items = listOf(
-            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aCard(mockCard),
             HandItem.aDie(d6)
         )
         every { hand.getItems() } returns items
@@ -288,17 +291,20 @@ class DeckManagerTest {
     @Test
     fun resupply_movesAllItemsFromDiscardToSupply() {
         // Arrange
+        val mockCard1 = mockk<GameCard> { every { id } returns CARD_ID_1 }
+        val mockCard2 = mockk<GameCard> { every { id } returns CARD_ID_2 }
         val items = listOf(
-            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aCard(mockCard1),
             HandItem.aDie(d6),
-            HandItem.aCard(mockk { every { id } returns CARD_ID_2 })
+            HandItem.aCard(mockCard2)
         )
         every { discardPatch.getItems() } returns items
 
         // Act
-        SUT.resupply()
+        val result = SUT.resupply()
 
         // Assert
+        assertTrue(result)
         verify { supply.addAllCards(listOf(CARD_ID_1, CARD_ID_2)) }
         verify { supply.addAllDice(listOf(d6)) }
         verify { discardPatch.clear() }
@@ -311,19 +317,65 @@ class DeckManagerTest {
         every { discardPatch.getItems() } returns emptyList()
 
         // Act
-        SUT.resupply()
+        val result = SUT.resupply()
 
         // Assert
+        assertTrue(result)
+        verify { supply.shuffle() }
+    }
+
+    @Test
+    fun resupply_whenDiscardHasOnlyCards_movesOnlyCardsToSupply() {
+        // Arrange
+        val mockCard1 = mockk<GameCard> { every { id } returns CARD_ID_1 }
+        val mockCard2 = mockk<GameCard> { every { id } returns CARD_ID_2 }
+        val items = listOf(
+            HandItem.aCard(mockCard1),
+            HandItem.aCard(mockCard2)
+        )
+        every { discardPatch.getItems() } returns items
+
+        // Act
+        val result = SUT.resupply()
+
+        // Assert
+        assertTrue(result)
+        verify { supply.addAllCards(listOf(CARD_ID_1, CARD_ID_2)) }
+        verify { supply.addAllDice(emptyList<Die>()) }
+        verify { discardPatch.clear() }
+        verify { supply.shuffle() }
+    }
+
+    @Test
+    fun resupply_whenDiscardHasOnlyDice_movesOnlyDiceToSupply() {
+        // Arrange
+        val items = listOf(
+            HandItem.aDie(d4),
+            HandItem.aDie(d6),
+            HandItem.aDie(d8)
+        )
+        every { discardPatch.getItems() } returns items
+
+        // Act
+        val result = SUT.resupply()
+
+        // Assert
+        assertTrue(result)
+        verify { supply.addAllCards(emptyList<CardID>()) }
+        verify { supply.addAllDice(listOf(d4, d6, d8)) }
+        verify { discardPatch.clear() }
         verify { supply.shuffle() }
     }
 
     @Test
     fun discardHand_movesAllItemsToDiscard() {
         // Arrange
+        val mockCard1 = mockk<GameCard> { every { id } returns CARD_ID_1 }
+        val mockCard2 = mockk<GameCard> { every { id } returns CARD_ID_2 }
         val items = listOf(
-            HandItem.aCard(mockk { every { id } returns CARD_ID_1 }),
+            HandItem.aCard(mockCard1),
             HandItem.aDie(d6),
-            HandItem.aCard(mockk { every { id } returns CARD_ID_2 })
+            HandItem.aCard(mockCard2)
         )
         every { hand.getItems() } returns items
 

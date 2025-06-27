@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import dugsolutions.leaf.player.domain.DrawCardResult
+import dugsolutions.leaf.player.domain.DrawDieResult
 
 class PlayerTest {
 
@@ -633,6 +635,258 @@ class PlayerTest {
     }
 
     // endregion Floral Array Tests
+
+    // region Draw Methods Tests
+
+    @Test
+    fun drawCard_whenNoResupplyNeeded_returnsCardWithoutReshuffle() {
+        // Arrange
+        val expectedCardId = CARD_ID_1
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawCard() } returns expectedCardId
+
+        // Act
+        val result = SUT.drawCard()
+
+        // Assert
+        assertEquals(expectedCardId, result.cardId)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawCard() }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawCard_whenResupplyNeeded_performsResupplyAndReturnsCard() {
+        // Arrange
+        val expectedCardId = CARD_ID_1
+        every { mockDeckManager.isResupplyNeeded } returns true
+        every { mockDeckManager.resupply() } returns true
+        every { mockDeckManager.drawCard() } returns expectedCardId
+
+        // Act
+        val result = SUT.drawCard()
+
+        // Assert
+        assertEquals(expectedCardId, result.cardId)
+        assertTrue(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.resupply() }
+        verify { mockDeckManager.drawCard() }
+    }
+
+    @Test
+    fun drawCard_whenNoCardAvailable_returnsNullWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawCard() } returns null
+
+        // Act
+        val result = SUT.drawCard()
+
+        // Assert
+        assertEquals(null, result.cardId)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawCard() }
+    }
+
+    @Test
+    fun drawDie_whenNoResupplyNeeded_returnsDieWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawDie() } returns D6
+
+        // Act
+        val result = SUT.drawDie()
+
+        // Assert
+        assertEquals(D6, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawDie() }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawDie_whenResupplyNeeded_performsResupplyAndReturnsDie() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns true
+        every { mockDeckManager.resupply() } returns true
+        every { mockDeckManager.drawDie() } returns D6
+
+        // Act
+        val result = SUT.drawDie()
+
+        // Assert
+        assertEquals(D6, result.die)
+        assertTrue(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.resupply() }
+        verify { mockDeckManager.drawDie() }
+    }
+
+    @Test
+    fun drawDie_whenNoDieAvailable_returnsNullWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawDie() } returns null
+
+        // Act
+        val result = SUT.drawDie()
+
+        // Assert
+        assertEquals(null, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawDie() }
+    }
+
+    @Test
+    fun drawBestDie_whenNoResupplyNeeded_returnsBestDieWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawBestDie() } returns D8
+
+        // Act
+        val result = SUT.drawBestDie()
+
+        // Assert
+        assertEquals(D8, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawBestDie() }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawBestDie_whenResupplyNeeded_performsResupplyAndReturnsBestDie() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns true
+        every { mockDeckManager.resupply() } returns true
+        every { mockDeckManager.drawBestDie() } returns D8
+
+        // Act
+        val result = SUT.drawBestDie()
+
+        // Assert
+        assertEquals(D8, result.die)
+        assertTrue(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.resupply() }
+        verify { mockDeckManager.drawBestDie() }
+    }
+
+    @Test
+    fun drawBestDie_whenNoDieAvailable_returnsNullWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.isResupplyNeeded } returns false
+        every { mockDeckManager.drawBestDie() } returns null
+
+        // Act
+        val result = SUT.drawBestDie()
+
+        // Assert
+        assertEquals(null, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.isResupplyNeeded }
+        verify { mockDeckManager.drawBestDie() }
+    }
+
+    @Test
+    fun drawCardFromDiscard_returnsCardWithoutReshuffle() {
+        // Arrange
+        val expectedCardId = CARD_ID_1
+        every { mockDeckManager.drawCardFromDiscard() } returns expectedCardId
+
+        // Act
+        val result = SUT.drawCardFromDiscard()
+
+        // Assert
+        assertEquals(expectedCardId, result.cardId)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.drawCardFromDiscard() }
+        verify(exactly = 0) { mockDeckManager.isResupplyNeeded }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawDieFromDiscard_returnsDieWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.drawDieFromDiscard() } returns D6
+
+        // Act
+        val result = SUT.drawDieFromDiscard()
+
+        // Assert
+        assertEquals(D6, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.drawDieFromDiscard() }
+        verify(exactly = 0) { mockDeckManager.isResupplyNeeded }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawBestDieFromDiscard_returnsBestDieWithoutReshuffle() {
+        // Arrange
+        every { mockDeckManager.drawBestDieFromDiscard() } returns D8
+
+        // Act
+        val result = SUT.drawBestDieFromDiscard()
+
+        // Assert
+        assertEquals(D8, result.die)
+        assertFalse(result.reshuffleDone)
+        verify { mockDeckManager.drawBestDieFromDiscard() }
+        verify(exactly = 0) { mockDeckManager.isResupplyNeeded }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawCardWithoutResupply_returnsCardDirectly() {
+        // Arrange
+        val expectedCardId = CARD_ID_1
+        every { mockDeckManager.drawCard() } returns expectedCardId
+
+        // Act
+        val result = SUT.drawCardWithoutResupply()
+
+        // Assert
+        assertEquals(expectedCardId, result)
+        verify { mockDeckManager.drawCard() }
+        verify(exactly = 0) { mockDeckManager.isResupplyNeeded }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawDieWithoutResupply_returnsRolledDie() {
+        // Arrange
+        every { mockDeckManager.drawDie() } returns D6
+
+        // Act
+        val result = SUT.drawDieWithoutResupply()
+
+        // Assert
+        assertEquals(D6, result)
+        verify { mockDeckManager.drawDie() }
+        verify(exactly = 0) { mockDeckManager.isResupplyNeeded }
+        verify(exactly = 0) { mockDeckManager.resupply() }
+    }
+
+    @Test
+    fun drawDieWithoutResupply_whenNoDieAvailable_returnsNull() {
+        // Arrange
+        every { mockDeckManager.drawDie() } returns null
+
+        // Act
+        val result = SUT.drawDieWithoutResupply()
+
+        // Assert
+        assertEquals(null, result)
+        verify { mockDeckManager.drawDie() }
+    }
+
+    // endregion Draw Methods Tests
 
     @Test
     fun getExtendedItems_returnsCombinedHandAndFloralHandItems() {

@@ -120,7 +120,6 @@ class DeckManager(
     }
 
     // Resource cycling
-    // TODO: Unit test
     fun resupply(): Boolean {
         supply.addAllCards(discardPatch.getItems().mapNotNull {
             when (it) {

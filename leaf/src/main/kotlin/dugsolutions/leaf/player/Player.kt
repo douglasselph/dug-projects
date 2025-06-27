@@ -217,7 +217,6 @@ open class Player(
         } else false
     }
 
-    // TODO: Unit test
     open fun drawCard(): DrawCardResult {
         val reshuffleDone = reshuffleIfNeeded()
         return DrawCardResult(
@@ -226,7 +225,6 @@ open class Player(
         )
     }
 
-    // TODO: Unit test
     open fun drawDie(): DrawDieResult {
         val reshuffleDone = reshuffleIfNeeded()
         return DrawDieResult(
@@ -235,7 +233,6 @@ open class Player(
         )
     }
 
-    // TODO: Unit test
     fun drawBestDie(): DrawDieResult {
         val reshuffleDone = reshuffleIfNeeded()
         return DrawDieResult(
@@ -244,7 +241,6 @@ open class Player(
         )
     }
 
-    // TODO: Unit test
     fun drawCardFromDiscard(): DrawCardResult = DrawCardResult(deckManager.drawCardFromDiscard())
     fun drawDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawDieFromDiscard())
     fun drawBestDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawBestDieFromDiscard())
@@ -253,7 +249,6 @@ open class Player(
         deckManager.discardHand()
     }
 
-    // TODO: Unit test
     fun resupply(): Boolean {
         return deckManager.resupply()
     }
