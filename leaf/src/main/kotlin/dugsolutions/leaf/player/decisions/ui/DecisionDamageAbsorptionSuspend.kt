@@ -5,7 +5,7 @@ import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionSuspensionChannel
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionTaskQueue
 
 class DecisionDamageAbsorptionSuspend(
     private val player: Player,
@@ -13,12 +13,12 @@ class DecisionDamageAbsorptionSuspend(
     report: DecisionMonitorReport
 ) : DecisionDamageAbsorption {
 
-    private val channel = DecisionSuspensionChannel<DecisionDamageAbsorption.Result>(monitor, report)
+    private val taskQueue = DecisionTaskQueue<DecisionDamageAbsorption.Result>(monitor, report)
 
     // region DecisionDamageAbsorption
 
     override suspend fun invoke(): DecisionDamageAbsorption.Result {
-        return channel.waitForDecision(DecisionID.DAMAGE_ABSORPTION(player.incomingDamage))
+        return taskQueue.waitForDecision(DecisionID.DAMAGE_ABSORPTION(player.incomingDamage))
     }
 
     // endregion DecisionDamageAbsorption
@@ -26,7 +26,7 @@ class DecisionDamageAbsorptionSuspend(
     // region public
 
     fun provide(result: DecisionDamageAbsorption.Result) {
-        channel.provideDecision(result)
+        taskQueue.provideDecision(result)
     }
 
     // endregion public

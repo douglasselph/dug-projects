@@ -39,7 +39,8 @@ class MainDecisions(
         set(value) { decidingPlayerManager.player = value }
 
     fun setup(player: Player) = with(player.decisionDirector) {
-        decisionMonitor.observe { id -> applyDecisionId(player, id) }
+        // Subscribe to notifications when decisions are waiting
+        decisionMonitor.subscribe { id -> applyDecisionId(player, id) }
         drawCountDecision = DecisionDrawCountSuspend(decisionMonitor, decisionMonitorReport)
         acquireSelectDecision = DecisionAcquireSelectSuspend(decisionMonitor, decisionMonitorReport)
         damageAbsorptionDecision = DecisionDamageAbsorptionSuspend(player, decisionMonitor, decisionMonitorReport)
@@ -117,6 +118,7 @@ class MainDecisions(
     fun onGroveCardSelected(cardInfo: CardInfo) {
         cardOperations.getCard(cardInfo)?.let { card ->
             val player = decidingPlayer
+            decidingPlayer = null
             require(player != null)
             val acquireSelectDecision = player.decisionDirector.acquireSelectDecision
             if (acquireSelectDecision is DecisionAcquireSelectSuspend) {
@@ -129,6 +131,7 @@ class MainDecisions(
     fun onGroveDieSelected(dieInfo: DieInfo) {
         require(dieInfo.backingDie != null)
         val player = decidingPlayer
+        decidingPlayer = null
         require(player != null)
         val acquireSelectDecision = player.decisionDirector.acquireSelectDecision
         if (acquireSelectDecision is DecisionAcquireSelectSuspend) {
@@ -153,6 +156,7 @@ class MainDecisions(
     private fun onPlayerItemSelectionComplete() {
         val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
+        decidingPlayer = null
         require(player != null)
         val damageToAbsorb = player.incomingDamage
         val damageAbsorptionDecision = player.decisionDirector.damageAbsorptionDecision
@@ -176,6 +180,7 @@ class MainDecisions(
     private fun onPlayerFlowerSelectionComplete() {
         val selected = mainGameManager.gatherSelected()
         val player = decidingPlayer
+        decidingPlayer = null
         require(player != null)
         val flowerSelectDecision = player.decisionDirector.flowerSelectDecision
         if (flowerSelectDecision is DecisionFlowerSelectSuspend) {
@@ -190,6 +195,7 @@ class MainDecisions(
 
     fun onCardSelectedForEffect(value: Boolean) {
         val player = decidingPlayer
+        decidingPlayer = null
         require(player != null)
         val shouldTrashDecision = player.decisionDirector.shouldProcessTrashEffect
         if (shouldTrashDecision is DecisionShouldProcessTrashEffectSuspend) {

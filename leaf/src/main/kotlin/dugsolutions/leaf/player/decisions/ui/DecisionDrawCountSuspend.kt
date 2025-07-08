@@ -5,19 +5,20 @@ import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
 import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionSuspensionChannel
+import dugsolutions.leaf.player.decisions.local.monitor.DecisionTaskQueue
 
 class DecisionDrawCountSuspend(
     monitor: DecisionMonitor,
     report: DecisionMonitorReport
 ) : DecisionDrawCount {
-    private val channel = DecisionSuspensionChannel<DecisionDrawCount.Result>(monitor, report)
+
+    private val taskQueue = DecisionTaskQueue<DecisionDrawCount.Result>(monitor, report)
 
     override suspend fun invoke(player: Player): DecisionDrawCount.Result {
-        return channel.waitForDecision(DecisionID.DRAW_COUNT(player))
+        return taskQueue.waitForDecision(DecisionID.DRAW_COUNT(player))
     }
 
     fun provide(result: DecisionDrawCount.Result) {
-        channel.provideDecision(result)
+        taskQueue.provideDecision(result)
     }
 }

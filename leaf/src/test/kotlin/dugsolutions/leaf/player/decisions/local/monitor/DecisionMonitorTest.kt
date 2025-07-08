@@ -12,10 +12,11 @@ class DecisionMonitorTest {
 
     private val mockPlayer: Player = mockk(relaxed = true)
     private val monitor: DecisionMonitor = DecisionMonitor()
-    private val capturedStates: MutableList<DecisionID?> = mutableListOf()
+    private val capturedStates: MutableList<DecisionID> = mutableListOf()
 
     @BeforeEach
     fun setup() {
+        capturedStates.clear()
     }
 
     @Test
@@ -49,9 +50,9 @@ class DecisionMonitorTest {
     }
 
     @Test
-    fun observe_whenStateChanges_notifiesObservers() {
+    fun subscribe_whenStateChanges_notifiesSubscribers() {
         // Arrange
-        monitor.observe { state -> capturedStates.add(state) }
+        monitor.subscribe { state -> capturedStates.add(state) }
 
         // Act
         monitor.setWaitingFor(DecisionID.DRAW_COUNT(mockPlayer))
@@ -59,40 +60,37 @@ class DecisionMonitorTest {
         monitor.setWaitingFor(null)
 
         // Assert
-        assertEquals(3, capturedStates.size)
+        assertEquals(2, capturedStates.size)
         assertEquals(DecisionID.DRAW_COUNT(mockPlayer), capturedStates[0])
         assertEquals(DecisionID.FLOWER_SELECT, capturedStates[1])
-        assertNull(capturedStates[2])
     }
 
     @Test
-    fun observe_whenMultipleObserversRegistered_notifiesAllObservers() {
+    fun subscribe_whenMultipleSubscribersRegistered_notifiesAllSubscribers() {
         // Arrange
-        val states1 = mutableListOf<DecisionID?>()
-        val states2 = mutableListOf<DecisionID?>()
+        val states1 = mutableListOf<DecisionID>()
+        val states2 = mutableListOf<DecisionID>()
 
-        monitor.observe { state -> states1.add(state) }
-        monitor.observe { state -> states2.add(state) }
+        monitor.subscribe { state -> states1.add(state) }
+        monitor.subscribe { state -> states2.add(state) }
 
         // Act
         monitor.setWaitingFor(DecisionID.DRAW_COUNT(mockPlayer))
         monitor.setWaitingFor(null)
 
         // Assert
-        assertEquals(2, states1.size)
-        assertEquals(2, states2.size)
+        assertEquals(1, states1.size)
+        assertEquals(1, states2.size)
         assertEquals(DecisionID.DRAW_COUNT(mockPlayer), states1[0])
         assertEquals(DecisionID.DRAW_COUNT(mockPlayer), states2[0])
-        assertNull(states1[1])
-        assertNull(states2[1])
     }
 
     @Test
-    fun observe_whenDataClassDecisionProvided_notifiesWithCorrectState() {
+    fun subscribe_whenDataClassDecisionProvided_notifiesWithCorrectState() {
         // Arrange
         val card = FakeCards.canopyCard
         val decisionId = DecisionID.ACQUIRE_SELECT(listOf(card), emptyList())
-        monitor.observe { state -> capturedStates.add(state) }
+        monitor.subscribe { state -> capturedStates.add(state) }
 
         // Act
         monitor.setWaitingFor(decisionId)
@@ -103,9 +101,9 @@ class DecisionMonitorTest {
     }
 
     @Test
-    fun observe_whenNoneDecisionProvided_notifiesWithNoneState() {
+    fun subscribe_whenNoneDecisionProvided_notifiesWithNoneState() {
         // Arrange
-        monitor.observe { state -> capturedStates.add(state) }
+        monitor.subscribe { state -> capturedStates.add(state) }
 
         // Act
         monitor.setWaitingFor(DecisionID.NONE)

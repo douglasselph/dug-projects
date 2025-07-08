@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -68,22 +70,8 @@ fun PlayerDisplay(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Player name and info
-                Row(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = player.name,
-                        style = MaterialTheme.typography.h5
-                    )
-                    Text(
-                        text = player.infoLine,
-                        style = MaterialTheme.typography.subtitle1,
-                        modifier = Modifier.padding(start = 16.dp),
-                        maxLines = 5
-                    )
-                }
+                PlayerTitle(player, listeners)
+
                 if (showDrawCount) {
                     DrawCountDecisionDisplay { value -> listeners.onDrawCountChosen(value) }
                 } else if (showExtended) {
@@ -108,50 +96,77 @@ fun PlayerDisplay(
                 }
             }
         }
+    }
+}
 
-        // Control buttons positioned in the upper right corner
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopEnd),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Human/Robot toggle control
-            val iconName = if (player.decidingPlayer) {
-                "ic_human.png"
-            } else {
-                "ic_robot.png"
-            }
-            val imagePath = remember(iconName) { ImagePath.icon(iconName) }
-            val imageSize = 48.dp
-            val iconSize = 55.dp
-            IconButton(
-                onClick = { listeners.onDecidingToggled() },
-                modifier = Modifier.size(iconSize)
+@Composable
+private fun PlayerTitle(
+    player: PlayerInfo,
+    listeners: PlayerDisplayClickListeners
+) {
+    // Player name, info, and controls all in one row
+    Row(
+        modifier = Modifier.padding(bottom = 18.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = player.name,
+                style = MaterialTheme.typography.h5
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            PlayerDecidingIcon(player, listeners)
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = player.infoLine,
+            style = MaterialTheme.typography.subtitle1,
+            modifier = Modifier.padding(start = 16.dp),
+            maxLines = 5
+        )
+        Spacer(modifier = Modifier.width(20.dp)) // Custom spacing
+        // Nutrients button (only if nutrients > 0)
+        if (player.nutrients > 0) {
+            Button(
+                onClick = { listeners.onNutrientsClicked() }
             ) {
-                Surface(
-                    color = MaterialTheme.colors.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.12f)),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.padding(2.dp)
-                ) {
-                    ImageDisplay(
-                        imagePath = imagePath,
-                        displayWidth = imageSize,
-                        displayHeight = imageSize,
-                        onError = { error -> listeners.onError(error) }
-                    )
-                }
+                Text(player.nutrients.toString())
             }
+        }
+    }
+}
 
-            // Nutrients button (only if nutrients > 0)
-            if (player.nutrients > 0) {
-                Button(
-                    onClick = { listeners.onNutrientsClicked() }
-                ) {
-                    Text(player.nutrients.toString())
-                }
-            }
+@Composable
+private fun PlayerDecidingIcon(
+    player: PlayerInfo,
+    listeners: PlayerDisplayClickListeners
+) {
+    // Human/Robot toggle control
+    val iconName = if (player.humanControlled) {
+        "ic_human.png"
+    } else {
+        "ic_robot.png"
+    }
+    val imagePath = remember(iconName) { ImagePath.icon(iconName) }
+    val imageSize = 48.dp
+    val iconSize = 55.dp
+    IconButton(
+        onClick = { listeners.onDecidingToggled() },
+        modifier = Modifier.size(iconSize)
+    ) {
+        Surface(
+            color = MaterialTheme.colors.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colors.onSurface.copy(alpha = 0.12f)),
+            shape = RoundedCornerShape(4.dp),
+            modifier = Modifier.padding(2.dp)
+        ) {
+            ImageDisplay(
+                imagePath = imagePath,
+                displayWidth = imageSize,
+                displayHeight = imageSize,
+                onError = { error -> listeners.onError(error) }
+            )
         }
     }
 }
@@ -199,14 +214,14 @@ fun main() = application {
                     supplyCardCount = 42,
                     discardCardCount = 7,
                     discardDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false),
-                    decidingPlayer = true
+                    humanControlled = true
                 )
             )
         }
         val actionDomain = MainActionDomain()
         val listeners = PlayerDisplayClickListeners(
             onError = { error -> errorMessage = error },
-            onDecidingToggled = { samplePlayer = samplePlayer.copy(decidingPlayer = !samplePlayer.decidingPlayer) }
+            onDecidingToggled = { samplePlayer = samplePlayer.copy(humanControlled = !samplePlayer.humanControlled) }
         )
 
         var samplePlayer2 by remember {
@@ -233,15 +248,14 @@ fun main() = application {
                     supplyCardCount = 42,
                     discardCardCount = 7,
                     discardDice = gatherDiceInfo(Dice(listOf(sampleDie.d4, sampleDie.d4)), false),
-                    decidingPlayer = true
+                    humanControlled = false
                 )
             )
         }
         val listeners2 = PlayerDisplayClickListeners(
             onError = { error -> errorMessage = error },
-            onDecidingToggled = { samplePlayer2 = samplePlayer2.copy(decidingPlayer = !samplePlayer2.decidingPlayer) }
+            onDecidingToggled = { samplePlayer2 = samplePlayer2.copy(humanControlled = !samplePlayer2.humanControlled) }
         )
-
         Row {
             PlayerDisplay(
                 samplePlayer,

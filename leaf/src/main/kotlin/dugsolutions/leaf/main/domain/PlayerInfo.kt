@@ -61,6 +61,7 @@ data class PlayerInfo(
         if (discardCardCount != other.discardCardCount) return false
         if (discardDice != other.discardDice) return false
         if (decidingPlayer != other.decidingPlayer) return false
+        if (humanControlled != other.humanControlled) return false
 
         return true
     }
@@ -75,6 +76,7 @@ data class PlayerInfo(
         result = 31 * result + discardCardCount
         result = 31 * result + discardDice.hashCode()
         result = 31 * result + decidingPlayer.hashCode()
+        result = 31 * result + humanControlled.hashCode()
         return result
     }
 

@@ -20,7 +20,7 @@ class MainActionManager(
     val state: StateFlow<MainActionDomain> = _state.asStateFlow()
 
     fun initialize() {
-        decisionMonitor.observe { id -> updateId(id) }
+        decisionMonitor.subscribe { id -> updateId(id) }
         updateId(null)
     }
 
