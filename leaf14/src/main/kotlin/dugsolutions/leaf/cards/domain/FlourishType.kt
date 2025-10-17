@@ -1,7 +1,7 @@
 package dugsolutions.leaf.cards.domain
 
 enum class FlourishType(private val match: String) {
-    NONE(""),
+    NONE("-"),
     CANOPY("Canopy"),
     RESOURCE("Resource"),
     ROOT("Root"),
@@ -13,6 +13,9 @@ enum class FlourishType(private val match: String) {
 
     companion object {
         fun from(incoming: String): FlourishType {
+            if (incoming.isEmpty()) {
+                return NONE
+            }
             for (entry in entries) {
                 if (incoming.startsWith(entry.match, ignoreCase = true)) {
                     return entry
