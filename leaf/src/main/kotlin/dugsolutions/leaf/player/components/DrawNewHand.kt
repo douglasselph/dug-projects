@@ -6,7 +6,6 @@ import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.domain.DrawCardResult
 import dugsolutions.leaf.player.domain.DrawDieResult
 import dugsolutions.leaf.random.die.Die
-import kotlin.math.max
 
 class DrawNewHand {
 
