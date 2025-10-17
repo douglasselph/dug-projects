@@ -1,0 +1,5 @@
+Name,Flourish Type,Resilience,Cost,Primary Effect,Primary Value,Phase,Match With,Match Effect,Match Value,Image,Count,Notes,Icon Idea
+Sunlight,Resource,,,AddToDie,2,,,,,,4,,
+Water,Resource,,,RerollAccept2nd,1,,,,,,4,,
+Compost,Resource,,,Upgrade,1,,,,,,4,Only if die exists,
+Mulch,Resource,,,GraftDie,1,,,,,,4,,
