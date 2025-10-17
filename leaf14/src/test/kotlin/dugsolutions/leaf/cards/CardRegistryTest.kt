@@ -118,7 +118,6 @@ class CardRegistryTest {
             assertTrue(card.id > 0, "Card ${card.name} has invalid ID: ${card.id}")
             assertTrue(card.name.isNotEmpty(), "Card has empty name")
             assertTrue(card.resilience >= 0, "Card ${card.name} has negative resilience: ${card.resilience}")
-            assertTrue(card.nutrient >= 0, "Card ${card.name} has negative nutrient: ${card.nutrient}")
             assertTrue(card.count > 0, "Card ${card.name} has invalid count: ${card.count}")
         }
     }

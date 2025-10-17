@@ -42,7 +42,6 @@ class GameCardTest {
             name = name,
             type = type,
             resilience = resilience,
-            nutrient = nutrient,
             cost = cost,
             phase = phase,
             primaryEffect = primaryEffect,
@@ -60,7 +59,6 @@ class GameCardTest {
         assertEquals(name, gameCard.name)
         assertEquals(type, gameCard.type)
         assertEquals(resilience, gameCard.resilience)
-        assertEquals(nutrient, gameCard.nutrient)
         assertEquals(cost, gameCard.cost)
         assertEquals(phase, gameCard.phase)
         assertEquals(primaryEffect, gameCard.primaryEffect)
@@ -94,7 +92,6 @@ class GameCardTest {
             name = name,
             type = type,
             resilience = resilience,
-            nutrient = nutrient,
             cost = cost,
             phase = phase,
             primaryEffect = null,
@@ -110,7 +107,6 @@ class GameCardTest {
         assertEquals(name, gameCard.name)
         assertEquals(type, gameCard.type)
         assertEquals(resilience, gameCard.resilience)
-        assertEquals(nutrient, gameCard.nutrient)
         assertEquals(cost, gameCard.cost)
         assertEquals(phase, gameCard.phase)
         assertNull(gameCard.primaryEffect)
@@ -226,7 +222,6 @@ class GameCardTest {
         assertTrue(result.contains("name='$CARD_NAME'"))
         assertTrue(result.contains("type=${FlourishType.CANOPY}"))
         assertTrue(result.contains("resilience=$RESILIENCE"))
-        assertTrue(result.contains("nutrient=$NUTRIENT"))
         assertTrue(result.contains("cost=${Cost.Value(2)}"))
         assertTrue(result.contains("phase=${Phase.Cultivation}"))
         assertTrue(result.contains("primaryEffect=${CardEffect.NONE}"))
@@ -281,7 +276,6 @@ class GameCardTest {
             name = name,
             type = type,
             resilience = resilience,
-            nutrient = nutrient,
             cost = cost,
             phase = phase,
             primaryEffect = primaryEffect,

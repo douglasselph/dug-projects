@@ -5,7 +5,6 @@ data class GameCard(
     val name: String,
     val type: FlourishType,
     val resilience: Int,
-    val nutrient: Int,
     val cost: Cost,
     val phase: Phase,
     val primaryEffect: CardEffect?,
@@ -28,7 +27,6 @@ data class GameCard(
         if (name != other.name) return false
         if (type != other.type) return false
         if (resilience != other.resilience) return false
-        if (nutrient != other.nutrient) return false
         if (cost != other.cost) return false
         if (phase != other.phase) return false
         if (primaryEffect != other.primaryEffect) return false
@@ -48,7 +46,6 @@ data class GameCard(
         result = 31 * result + name.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + resilience
-        result = 31 * result + nutrient
         result = 31 * result + cost.hashCode()
         result = 31 * result + phase.hashCode()
         result = 31 * result + (primaryEffect?.hashCode() ?: 0)
@@ -63,7 +60,7 @@ data class GameCard(
     }
 
     override fun toString(): String {
-        return "GameCard(cost=$cost, id=$id, name='$name', type=$type, resilience=$resilience, nutrient=$nutrient, phase=$phase, primaryEffect=$primaryEffect, primaryValue=$primaryValue, matchWith=$matchWith, matchEffect=$matchEffect, matchValue=$matchValue, image=$image, count=$count, notes=$notes)"
+        return "GameCard(cost=$cost, id=$id, name='$name', type=$type, resilience=$resilience, phase=$phase, primaryEffect=$primaryEffect, primaryValue=$primaryValue, matchWith=$matchWith, matchEffect=$matchEffect, matchValue=$matchValue, image=$image, count=$count, notes=$notes)"
     }
 
 

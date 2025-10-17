@@ -11,7 +11,7 @@ import java.io.File
 
 class CardRegistry {
     companion object {
-        private const val DELIMITER = ";"
+        private const val DELIMITER = ","
     }
 
     private val cards: MutableMap<String, GameCard> = mutableMapOf()
@@ -41,15 +41,14 @@ class CardRegistry {
         val parts = line.split(DELIMITER).map { it.trim() }
 
         // Skip empty lines or header rows
-        if (parts.isEmpty() || parts[0].isEmpty() || parts.size < 11) {
-            throw IllegalArgumentException("Invalid card line: $line")
+        if (parts.isEmpty() || parts[0].isEmpty() || parts.size < 14) {
+            throw IllegalArgumentException("Invalid card line: $line (#fields=${parts.size})")
         }
         var column = 0
         val name = parts[column]
         val id = GenCardID.generateId(name)
-        val flourishType = parseFlourishType(parts[++column]) ?: throw IllegalArgumentException("Unknown flourish type: ${parts[column]}")
-        val resilience = parts[++column].toIntOrNull() ?: 0
-        val nutrient = parts[++column].toIntOrNull() ?: 0
+        val flourishType = parseFlourishType(parts[++column])
+        val resilience = parseValue(parts[++column])
         val cost = parseCost(parts[++column])
         val primaryEffect = parseEffect(parts[++column])
         val primaryValue = parseValue(parts[++column])
@@ -66,7 +65,6 @@ class CardRegistry {
             name = name,
             type = flourishType,
             resilience = resilience,
-            nutrient = nutrient,
             cost = cost,
             primaryEffect = primaryEffect,
             primaryValue = primaryValue,
@@ -80,7 +78,7 @@ class CardRegistry {
         )
     }
 
-    private fun parseFlourishType(incoming: String): FlourishType? {
+    private fun parseFlourishType(incoming: String): FlourishType {
         return FlourishType.from(incoming)
     }
 
@@ -104,7 +102,6 @@ class CardRegistry {
         return when {
             value.isEmpty() || value == "-" -> 0
             value.toIntOrNull() != null -> value.toInt()
-            value == "All" -> 100
             else -> throw IllegalArgumentException("Invalid value: $value")
         }
     }
