@@ -1,7 +1,7 @@
 package dugsolutions.leaf.cards.domain
 
 enum class MatchWith(val match: String) {
-    None(""),
+    None("-"),
     PulledGraft("PulledGraft"),
     WormOrSap("Worm|Sap"),
     Sap("Sap"),
@@ -10,6 +10,9 @@ enum class MatchWith(val match: String) {
 
     companion object {
         fun from(incoming: String): MatchWith {
+            if (incoming.isEmpty()) {
+                return None
+            }
             for (entry in entries) {
                 if (incoming.startsWith(entry.match, ignoreCase = true)) {
                     return entry
