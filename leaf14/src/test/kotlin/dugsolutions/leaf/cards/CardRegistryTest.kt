@@ -2,6 +2,7 @@ package dugsolutions.leaf.cards
 
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.common.Commons
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -33,7 +34,7 @@ class CardRegistryTest {
     @Test
     fun loadFromCsv_withTestFile_loadsAsExpected() {
         // Arrange
-        val testCsvPath = "data/Cards-v14.csv"
+        val testCsvPath = Commons.CARD_LIST
 
         // Act
         cardRegistry.loadFromCsv(testCsvPath)
@@ -69,7 +70,7 @@ class CardRegistryTest {
     @Test
     fun loadFromCsv_allCardsAreUnique() {
         // Arrange
-        val testCsvPath = "data/Cards-v14.csv"
+        val testCsvPath = Commons.CARD_LIST
         
         // Act
         cardRegistry.loadFromCsv(testCsvPath)
