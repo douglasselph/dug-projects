@@ -21,7 +21,7 @@ import org.koin.dsl.module
 
 val chronicleModule: Module = module {
 
-    single { PlayerUnderTest(get()) }
+    single<PlayerUnderTest> { DefaultPlayerUnderTest() }
 
     single { GenerateGameSummary(get(), get()) }
     single { GenerateGameSummaries() }

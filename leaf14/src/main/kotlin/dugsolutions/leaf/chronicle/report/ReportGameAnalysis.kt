@@ -6,8 +6,8 @@ import dugsolutions.leaf.chronicle.domain.DominancePeriod
 import dugsolutions.leaf.chronicle.domain.EventTurn
 import dugsolutions.leaf.chronicle.domain.Finished
 import dugsolutions.leaf.chronicle.domain.EventBattleTransition
-import dugsolutions.leaf.chronicle.domain.PlayerScore
 import dugsolutions.leaf.chronicle.domain.TurnData
+import dugsolutions.leaf.player.domain.PlayerScore
 
 class ReportGameAnalysis(
     private val chronicle: GameChronicle
@@ -113,7 +113,7 @@ class ReportGameAnalysis(
     }
     
     private fun processScores(
-        turn: Int, 
+        turn: Int,
         playerScores: List<PlayerScore>,
         isBattleBegin: Boolean = false
     ): TurnData {

@@ -220,7 +220,7 @@ class PlayerTest {
     fun diceInSupplyCount_returnsCorrectCount() {
         // Arrange
         val supplyItems = listOf(
-            HandItem.aCard(mockCardgit ),
+            HandItem.aCard(mockCard ),
             HandItem.aDie(sampleD6),
             HandItem.aDie(sampleD4)
         )
