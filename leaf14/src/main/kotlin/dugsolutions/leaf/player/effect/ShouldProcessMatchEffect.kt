@@ -1,8 +1,8 @@
 package dugsolutions.leaf.player.effect
 
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.common.domain.GamePhase
-import dugsolutions.leaf.common.domain.GameTime
+import dugsolutions.leaf.common.domain.game.GamePhase
+import dugsolutions.leaf.common.domain.game.GameTime
 
 
 class ShouldProcessMatchEffect(

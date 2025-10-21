@@ -1,11 +1,11 @@
 package dugsolutions.leaf.common.domain
 
 enum class Butterfly(
-    val effect: Effect,
+    val effect: GameEffect,
     val value: Int
 ) {
 
-    YELLOW(Effect.REROLL_TAKE_BETTER, 1),
-    GREEN(Effect.ADD_TO_DIE, 1)
+    YELLOW(GameEffect.REROLL_TAKE_BETTER, 1),
+    GREEN(GameEffect.ADD_TO_DIE, 1)
 
 }

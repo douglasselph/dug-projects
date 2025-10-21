@@ -2,7 +2,7 @@ package dugsolutions.leaf.cards
 
 import dugsolutions.leaf.cards.domain.GenCardID
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 import dugsolutions.leaf.cards.domain.Cost
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.MatchWith
@@ -82,12 +82,12 @@ class CardRegistry {
         return FlourishType.from(incoming)
     }
 
-    private fun parseEffect(effect: String): Effect? {
+    private fun parseEffect(effect: String): GameEffect? {
         // Handle empty or no effect cases
         if (effect.isEmpty() || effect == "-" || effect.startsWith(":")) {
             return null
         }
-        return Effect.from(effect)
+        return GameEffect.from(effect)
             ?: throw IllegalArgumentException("No matching CardEffect found for: $effect")
     }
 

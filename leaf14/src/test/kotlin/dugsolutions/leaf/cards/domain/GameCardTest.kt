@@ -1,6 +1,6 @@
 package dugsolutions.leaf.cards.domain
 
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -28,10 +28,10 @@ class GameCardTest {
         val nutrient = NUTRIENT
         val cost = Cost.Value(2)
         val phase = Phase.Cultivation
-        val primaryEffect = Effect.NONE
+        val primaryEffect = GameEffect.NONE
         val primaryValue = PRIMARY_VALUE
         val matchWith = MatchWith.Sap
-        val matchEffect = Effect.NONE
+        val matchEffect = GameEffect.NONE
         val matchValue = MATCH_VALUE
         val image = CARD_IMAGE
         val count = CARD_COUNT
@@ -225,10 +225,10 @@ class GameCardTest {
         assertTrue(result.contains("resilience=$RESILIENCE"))
         assertTrue(result.contains("cost=${Cost.Value(2)}"))
         assertTrue(result.contains("phase=${Phase.Cultivation}"))
-        assertTrue(result.contains("primaryEffect=${Effect.NONE}"))
+        assertTrue(result.contains("primaryEffect=${GameEffect.NONE}"))
         assertTrue(result.contains("primaryValue=$PRIMARY_VALUE"))
         assertTrue(result.contains("matchWith=${MatchWith.Sap}"))
-        assertTrue(result.contains("matchEffect=${Effect.NONE}"))
+        assertTrue(result.contains("matchEffect=${GameEffect.NONE}"))
         assertTrue(result.contains("matchValue=$MATCH_VALUE"))
         assertTrue(result.contains("image=$CARD_IMAGE"))
         assertTrue(result.contains("count=$CARD_COUNT"))
@@ -263,10 +263,10 @@ class GameCardTest {
         nutrient: Int = NUTRIENT,
         cost: Cost = Cost.Value(2),
         phase: Phase = Phase.Cultivation,
-        primaryEffect: Effect? = Effect.NONE,
+        primaryEffect: GameEffect? = GameEffect.NONE,
         primaryValue: Int = PRIMARY_VALUE,
         matchWith: MatchWith = MatchWith.Sap,
-        matchEffect: Effect? = Effect.NONE,
+        matchEffect: GameEffect? = GameEffect.NONE,
         matchValue: Int = MATCH_VALUE,
         image: String? = CARD_IMAGE,
         count: Int = CARD_COUNT,

@@ -1,6 +1,6 @@
 package dugsolutions.leaf.cards.domain
 
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 
 data class GameCard(
     val id: CardID,
@@ -9,10 +9,10 @@ data class GameCard(
     val resilience: Int,
     val cost: Cost,
     val phase: Phase,
-    val primaryEffect: Effect?,
+    val primaryEffect: GameEffect?,
     val primaryValue: Int,
     val matchWith: MatchWith,
-    val matchEffect: Effect?,
+    val matchEffect: GameEffect?,
     val matchValue: Int,
     val image: String? = null,
     val count: Int,

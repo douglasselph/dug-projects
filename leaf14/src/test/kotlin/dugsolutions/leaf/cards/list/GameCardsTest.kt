@@ -1,7 +1,7 @@
 package dugsolutions.leaf.cards.list
 
 import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 import dugsolutions.leaf.cards.domain.Cost
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
@@ -308,27 +308,27 @@ class GameCardsTest {
         assertEquals(4, resourceCards.size)
         
         val sunlightCard = resourceCards.find { it.name == "Sunlight" }
-        assertEquals(Effect.ADD_TO_DIE, sunlightCard?.primaryEffect)
+        assertEquals(GameEffect.ADD_TO_DIE, sunlightCard?.primaryEffect)
         assertEquals(2, sunlightCard?.primaryValue)
         
         val waterCard = resourceCards.find { it.name == "Water" }
-        assertEquals(Effect.REROLL_ACCEPT_2ND, waterCard?.primaryEffect)
+        assertEquals(GameEffect.REROLL_ACCEPT_2ND, waterCard?.primaryEffect)
         assertEquals(1, waterCard?.primaryValue)
         
         val compostCard = resourceCards.find { it.name == "Compost" }
-        assertEquals(Effect.UPGRADE, compostCard?.primaryEffect)
+        assertEquals(GameEffect.UPGRADE, compostCard?.primaryEffect)
         assertEquals(1, compostCard?.primaryValue)
         assertEquals("Only if die exists", compostCard?.notes)
         
         val mulchCard = resourceCards.find { it.name == "Mulch" }
-        assertEquals(Effect.GRAFT_DIE, mulchCard?.primaryEffect)
+        assertEquals(GameEffect.GRAFT_DIE, mulchCard?.primaryEffect)
         assertEquals(1, mulchCard?.primaryValue)
     }
 
     @Test
     fun filter_whenFilteringByEffect_returnsCorrectCards() {
         // Arrange
-        val addToDiePredicate: (GameCard) -> Boolean = { it.primaryEffect == Effect.ADD_TO_DIE }
+        val addToDiePredicate: (GameCard) -> Boolean = { it.primaryEffect == GameEffect.ADD_TO_DIE }
         
         // Act
         val result = gameCards.filter(addToDiePredicate)
@@ -336,13 +336,13 @@ class GameCardsTest {
         // Assert
         assertEquals(1, result.size)
         assertEquals("Sunlight", result[0].name)
-        assertEquals(Effect.ADD_TO_DIE, result[0].primaryEffect)
+        assertEquals(GameEffect.ADD_TO_DIE, result[0].primaryEffect)
     }
 
     @Test
     fun filter_whenFilteringByUpgradeEffect_returnsCorrectCards() {
         // Arrange
-        val upgradePredicate: (GameCard) -> Boolean = { it.primaryEffect == Effect.UPGRADE }
+        val upgradePredicate: (GameCard) -> Boolean = { it.primaryEffect == GameEffect.UPGRADE }
         
         // Act
         val result = gameCards.filter(upgradePredicate)
@@ -350,7 +350,7 @@ class GameCardsTest {
         // Assert
         assertEquals(1, result.size)
         assertEquals("Compost", result[0].name)
-        assertEquals(Effect.UPGRADE, result[0].primaryEffect)
+        assertEquals(GameEffect.UPGRADE, result[0].primaryEffect)
         assertEquals("Only if die exists", result[0].notes)
     }
 

@@ -1,6 +1,6 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 import dugsolutions.leaf.cards.domain.Cost
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
@@ -25,7 +25,7 @@ class FakeCards {
             resilience = 0,
             cost = Cost.None,
             phase = Phase.Cultivation,
-            primaryEffect = Effect.ADD_TO_DIE,
+            primaryEffect = GameEffect.ADD_TO_DIE,
             primaryValue = 2,
             matchWith = MatchWith.None,
             matchEffect = null,
@@ -42,7 +42,7 @@ class FakeCards {
             resilience = 0,
             cost = Cost.None,
             phase = Phase.Cultivation,
-            primaryEffect = Effect.REROLL_ACCEPT_2ND,
+            primaryEffect = GameEffect.REROLL_ACCEPT_2ND,
             primaryValue = 1,
             matchWith = MatchWith.None,
             matchEffect = null,
@@ -59,7 +59,7 @@ class FakeCards {
             resilience = 0,
             cost = Cost.None,
             phase = Phase.Cultivation,
-            primaryEffect = Effect.UPGRADE,
+            primaryEffect = GameEffect.UPGRADE,
             primaryValue = 1,
             matchWith = MatchWith.None,
             matchEffect = null,
@@ -76,7 +76,7 @@ class FakeCards {
             resilience = 0,
             cost = Cost.None,
             phase = Phase.Cultivation,
-            primaryEffect = Effect.GRAFT_DIE,
+            primaryEffect = GameEffect.GRAFT_DIE,
             primaryValue = 1,
             matchWith = MatchWith.None,
             matchEffect = null,

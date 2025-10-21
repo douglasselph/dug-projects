@@ -1,4 +1,4 @@
-package dugsolutions.leaf.common.domain
+package dugsolutions.leaf.common.domain.game
 
 
 enum class GamePhase {

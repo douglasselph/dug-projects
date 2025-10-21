@@ -12,10 +12,7 @@ import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.InsectManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
-import dugsolutions.leaf.player.domain.DrawCardResult
-import dugsolutions.leaf.player.domain.DrawDieResult
 import dugsolutions.leaf.player.domain.HandItem
-import dugsolutions.leaf.player.domain.PlayerScore
 import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.DieValue
@@ -30,7 +27,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PlayerTest {

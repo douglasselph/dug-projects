@@ -3,7 +3,7 @@ package dugsolutions.leaf.cards
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.di.GameCardsFactory
-import dugsolutions.leaf.common.domain.Effect
+import dugsolutions.leaf.common.domain.GameEffect
 import dugsolutions.leaf.random.Randomizer
 import dugsolutions.leaf.random.RandomizerTD
 import org.junit.jupiter.api.BeforeEach
@@ -162,7 +162,7 @@ class CardManagerTest {
         
         // Assert
         assertEquals(sunlightCard, result)
-        assertEquals(Effect.ADD_TO_DIE, result?.primaryEffect)
+        assertEquals(GameEffect.ADD_TO_DIE, result?.primaryEffect)
         assertEquals(2, result?.primaryValue)
     }
 
@@ -176,7 +176,7 @@ class CardManagerTest {
         
         // Assert
         assertEquals(waterCard, result)
-        assertEquals(Effect.REROLL_ACCEPT_2ND, result?.primaryEffect)
+        assertEquals(GameEffect.REROLL_ACCEPT_2ND, result?.primaryEffect)
         assertEquals(1, result?.primaryValue)
     }
 
@@ -190,7 +190,7 @@ class CardManagerTest {
         
         // Assert
         assertEquals(compostCard, result)
-        assertEquals(Effect.UPGRADE, result?.primaryEffect)
+        assertEquals(GameEffect.UPGRADE, result?.primaryEffect)
         assertEquals(1, result?.primaryValue)
         assertEquals("Only if die exists", result?.notes)
     }
@@ -205,7 +205,7 @@ class CardManagerTest {
         
         // Assert
         assertEquals(mulchCard, result)
-        assertEquals(Effect.GRAFT_DIE, result?.primaryEffect)
+        assertEquals(GameEffect.GRAFT_DIE, result?.primaryEffect)
         assertEquals(1, result?.primaryValue)
     }
 
@@ -222,20 +222,20 @@ class CardManagerTest {
         
         // Verify each card has the correct effect
         val sunlightCard = result.find { it.name == "Sunlight" }
-        assertEquals(Effect.ADD_TO_DIE, sunlightCard?.primaryEffect)
+        assertEquals(GameEffect.ADD_TO_DIE, sunlightCard?.primaryEffect)
         assertEquals(2, sunlightCard?.primaryValue)
         
         val waterCard = result.find { it.name == "Water" }
-        assertEquals(Effect.REROLL_ACCEPT_2ND, waterCard?.primaryEffect)
+        assertEquals(GameEffect.REROLL_ACCEPT_2ND, waterCard?.primaryEffect)
         assertEquals(1, waterCard?.primaryValue)
         
         val compostCard = result.find { it.name == "Compost" }
-        assertEquals(Effect.UPGRADE, compostCard?.primaryEffect)
+        assertEquals(GameEffect.UPGRADE, compostCard?.primaryEffect)
         assertEquals(1, compostCard?.primaryValue)
         assertEquals("Only if die exists", compostCard?.notes)
         
         val mulchCard = result.find { it.name == "Mulch" }
-        assertEquals(Effect.GRAFT_DIE, mulchCard?.primaryEffect)
+        assertEquals(GameEffect.GRAFT_DIE, mulchCard?.primaryEffect)
         assertEquals(1, mulchCard?.primaryValue)
     }
 }
