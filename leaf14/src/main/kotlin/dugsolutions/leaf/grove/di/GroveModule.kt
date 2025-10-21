@@ -1,6 +1,8 @@
 package dugsolutions.leaf.grove.di
 
 import dugsolutions.leaf.grove.Grove
+import dugsolutions.leaf.grove.SelectPossibleCards
+import dugsolutions.leaf.grove.SelectPossibleDice
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.local.GameCardsUseCase
 import dugsolutions.leaf.grove.local.GroveNearingTransition
@@ -23,5 +25,8 @@ val groveModule: Module = module {
     single { GameCardsUseCase(get()) }
 
     single { Grove(get(), get()) }
+
+    single { SelectPossibleDice(get(), get()) }
+    single { SelectPossibleCards(get()) }
 
 }

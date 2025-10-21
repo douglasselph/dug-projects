@@ -4,7 +4,6 @@ import dugsolutions.leaf.cards.cost.CostElement
 import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.game.acquire.domain.Combination
-import dugsolutions.leaf.game.acquire.domain.totalValue
 import dugsolutions.leaf.player.domain.AppliedEffect
 import kotlin.math.max
 

@@ -9,7 +9,7 @@ class CanPurchaseCards(
     private val canPurchaseCard: CanPurchaseCard
 ) {
 
-    operator fun invoke(
+    operator fun  invoke(
         marketCards: List<GameCard>,
         playerHasFlourishTypes: List<FlourishType>,
         combination: Combination,
