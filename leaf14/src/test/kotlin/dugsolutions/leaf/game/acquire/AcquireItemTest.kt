@@ -3,7 +3,6 @@ package dugsolutions.leaf.game.acquire
 import dugsolutions.leaf.cards.FakeCards
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceDie
@@ -11,7 +10,7 @@ import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
 import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
 import dugsolutions.leaf.game.acquire.domain.Combinations
-import dugsolutions.leaf.game.acquire.domain.FakeCombination
+import dugsolutions.leaf.game.acquire.domain.FakeUsingDice
 import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
 import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
 import dugsolutions.leaf.grove.Grove
@@ -49,7 +48,7 @@ class AcquireItemTest {
 
     @BeforeEach
     fun setup() {
-        val combinations = Combinations(listOf(FakeCombination.combinationD4D6))
+        val combinations = Combinations(listOf(FakeUsingDice.combinationD4D6))
         every { mockCombinationGenerator(mockPlayer) } returns combinations
     }
 
@@ -57,7 +56,7 @@ class AcquireItemTest {
     fun invoke_whenCardSelected_acquiresCard() = runBlocking {
         // Arrange
         val marketCards = listOf(FakeCards.rootCard)
-        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeCombination.combinationD6))
+        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeUsingDice.combinationD6))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
@@ -72,8 +71,7 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(FakeCards.rootCard.id)
-            mockGrove.repairWild()
-            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.rootCard, FakeCombination.combinationD6))
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.rootCard, FakeUsingDice.combinationD6))
         }
     }
 
@@ -83,7 +81,7 @@ class AcquireItemTest {
         val marketCards = emptyList<GameCard>()
         val possibleCards = emptyList<ChoiceCard>()
         val expectedDie = sampleDie.d6
-        val possibleDice = listOf(ChoiceDie(expectedDie, FakeCombination.combinationD6))
+        val possibleDice = listOf(ChoiceDie(expectedDie, FakeUsingDice.combinationD6))
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
         val decisionDirector = mockPlayer.decisionDirector
@@ -98,18 +96,16 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
 
         coVerify {
-            mockChronicle(Moment.ACQUIRE_DIE(mockPlayer, expectedDie, FakeCombination.combinationD6))
+            mockChronicle(Moment.ACQUIRE_DIE(mockPlayer, expectedDie, FakeUsingDice.combinationD6))
             mockGrove.removeDie(expectedDie)
         }
-        // Note: repairWild() is not called for dice acquisition
-        coVerify(exactly = 0) { mockGrove.repairWild() }
     }
 
     @Test
     fun invoke_whenNoSelection_returnsFalse() = runBlocking {
         // Arrange
         val marketCards = listOf(FakeCards.rootCard)
-        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeCombination.combinationD8))
+        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeUsingDice.combinationD8))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
@@ -124,7 +120,6 @@ class AcquireItemTest {
         assertFalse(applyCostTD.callbackWasInvoked)
         coVerify(exactly = 0) {
             mockGrove.removeCard(any())
-            mockGrove.repairWild()
             mockChronicle(any())
         }
     }
@@ -133,7 +128,7 @@ class AcquireItemTest {
     fun invoke_whenCostApplicationFails_returnsFalse() = runBlocking {
         // Arrange
         val marketCards = listOf(FakeCards.rootCard)
-        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeCombination.combinationD6))
+        val possibleCards = listOf(ChoiceCard(FakeCards.rootCard, FakeUsingDice.combinationD6))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
@@ -155,7 +150,6 @@ class AcquireItemTest {
         assertTrue(gotException != null)
         coVerify(exactly = 0) {
             mockGrove.removeCard(any())
-            mockGrove.repairWild()
             mockChronicle(any())
         }
     }
@@ -164,7 +158,7 @@ class AcquireItemTest {
     fun invoke_whenFlowerCardSelected_addsToFloralArray() = runBlocking {
         // Arrange
         val marketCards = listOf(FakeCards.flowerCard)
-        val possibleCards = listOf(ChoiceCard(FakeCards.flowerCard, FakeCombination.combinationD12))
+        val possibleCards = listOf(ChoiceCard(FakeCards.flowerCard, FakeUsingDice.combinationD12))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
@@ -179,8 +173,7 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(FakeCards.flowerCard.id)
-            mockGrove.repairWild()
-            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.flowerCard, FakeCombination.combinationD12))
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, FakeCards.flowerCard, FakeUsingDice.combinationD12))
         }
     }
 
@@ -190,7 +183,7 @@ class AcquireItemTest {
         // Create a wild card (using rootCard as a wild card for testing purposes)
         val wildCard = FakeCards.rootCard
         val marketCards = listOf(wildCard)
-        val possibleCards = listOf(ChoiceCard(wildCard, FakeCombination.combinationD6))
+        val possibleCards = listOf(ChoiceCard(wildCard, FakeUsingDice.combinationD6))
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
         every { mockPossibleDice(any()) } returns possibleDice
@@ -205,8 +198,7 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(wildCard.id)
-            mockGrove.repairWild()
-            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, wildCard, FakeCombination.combinationD6))
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, wildCard, FakeUsingDice.combinationD6))
         }
     }
 
@@ -217,8 +209,8 @@ class AcquireItemTest {
         val card2 = FakeCards.vineCard
         val marketCards = listOf(card1, card2)
         val possibleCards = listOf(
-            ChoiceCard(card1, FakeCombination.combinationD6),
-            ChoiceCard(card2, FakeCombination.combinationD8)
+            ChoiceCard(card1, FakeUsingDice.combinationD6),
+            ChoiceCard(card2, FakeUsingDice.combinationD8)
         )
         val possibleDice = emptyList<ChoiceDie>()
         every { mockPossibleCards(any(), marketCards) } returns possibleCards
@@ -234,8 +226,7 @@ class AcquireItemTest {
         assertTrue(applyCostTD.callbackWasInvoked)
         coVerify {
             mockGrove.removeCard(card1.id)
-            mockGrove.repairWild()
-            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, card1, FakeCombination.combinationD6))
+            mockChronicle(Moment.ACQUIRE_CARD(mockPlayer, card1, FakeUsingDice.combinationD6))
         }
     }
 } 

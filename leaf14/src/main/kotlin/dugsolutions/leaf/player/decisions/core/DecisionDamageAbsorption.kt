@@ -8,6 +8,7 @@ interface DecisionDamageAbsorption {
     data class Result(
         val handCards: List<GameCard> = emptyList(),
         val creatureCards: List<GameCard> = emptyList(),
+        val thorn: Int = 0,
         val damageAbsorbed: Int = 0,
         val damageStillLeftToAbsorb: Int = 0
     )

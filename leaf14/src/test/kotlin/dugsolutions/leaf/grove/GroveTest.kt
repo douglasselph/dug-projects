@@ -16,7 +16,11 @@ import dugsolutions.leaf.grove.domain.MarketDiceConfig
 import dugsolutions.leaf.grove.domain.MarketStackConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
 import dugsolutions.leaf.grove.domain.GroveStacks
+import dugsolutions.leaf.player.components.ButterflyManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.common.domain.Butterfly
 import dugsolutions.leaf.random.Randomizer
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -40,12 +44,14 @@ class GroveTest {
     private val mockGameCardIDsFactory: GameCardIDsFactory = mockk(relaxed = true)
     private val mockGameCardsFactory: GameCardsFactory = mockk(relaxed = true)
     private val mockGameCardsUseCase: GameCardsUseCase = mockk(relaxed = true)
+    private val mockButterflyManager: ButterflyManager = mockk(relaxed = true)
+    private val mockVPManager: VPManager = mockk(relaxed = true)
     private lateinit var mockGameCard1: GameCard
     private lateinit var mockGameCard2: GameCard
     private val randomizer: Randomizer = Randomizer.create()
     private val dieFactory: DieFactory = DieFactory(randomizer)
 
-    private val SUT: Grove = Grove(mockGroveStacks, mockGameCardsUseCase)
+    private val SUT: Grove = Grove(mockGroveStacks, mockButterflyManager, mockVPManager, mockGameCardsUseCase)
 
     @BeforeEach
     fun setup() {
@@ -318,224 +324,84 @@ class GroveTest {
 //        assertFalse(SUT.readyForBattlePhase)
     }
 
-    @Test
-    fun repairWild_whenWild1EmptyAndWild2HasMultipleCards_movesCardFromWild2ToWild1() {
-        // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-        val cardId = CARD_ID_1
 
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns true
-        every { mockWild2.isEmpty() } returns false
-        every { mockWild2.size } returns 3
-        every { mockWild2.removeTop() } returns cardId
+    @Test
+    fun addButterfly_delegatesToButterflyManager() {
+        // Arrange
+        val mockButterfly = mockk<Butterfly>(relaxed = true)
 
         // Act
-        SUT.repairWild()
+        SUT.addButterfly(mockButterfly)
 
         // Assert
-        verify { mockWild2.removeTop() }
-        verify { mockWild1.add(cardId) }
+        verify { mockButterflyManager.add(mockButterfly) }
     }
 
     @Test
-    fun repairWild_whenWild2EmptyAndWild1HasMultipleCards_movesCardFromWild1ToWild2() {
+    fun removeButterfly_delegatesToButterflyManager() {
         // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-        val cardId = CARD_ID_2
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns false
-        every { mockWild2.isEmpty() } returns true
-        every { mockWild1.size } returns 4
-        every { mockWild1.removeTop() } returns cardId
+        val mockButterfly = mockk<Butterfly>(relaxed = true)
 
         // Act
-        SUT.repairWild()
+        val result = SUT.removeButterfly(mockButterfly)
 
         // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify { mockWild1.size }
-        verify { mockWild1.removeTop() }
-        verify { mockWild2.add(cardId) }
+        verify { mockButterflyManager.remove(mockButterfly) }
     }
 
     @Test
-    fun repairWild_whenWild1EmptyAndWild2HasOnlyOneCard_doesNotMoveCard() {
+    fun hasButterfly_delegatesToButterflyManager() {
         // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns true
-        every { mockWild2.isEmpty() } returns false
-        every { mockWild2.size } returns 1
+        val mockButterfly = mockk<Butterfly>(relaxed = true)
+        every { mockButterflyManager.has(mockButterfly) } returns true
 
         // Act
-        SUT.repairWild()
+        val result = SUT.has(mockButterfly)
 
         // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify { mockWild2.size }
-        verify(exactly = 0) { mockWild2.removeTop() }
-        verify(exactly = 0) { mockWild1.add(any<CardID>()) }
+        assertTrue(result)
+        verify { mockButterflyManager.has(mockButterfly) }
     }
 
     @Test
-    fun repairWild_whenWild2EmptyAndWild1HasOnlyOneCard_doesNotMoveCard() {
+    fun setVP_delegatesToVPManager() {
         // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns false
-        every { mockWild2.isEmpty() } returns true
-        every { mockWild1.size } returns 1
+        val vpCount = 5
+        every { mockVPManager.count = vpCount } returns Unit
 
         // Act
-        SUT.repairWild()
+        SUT.setVP(vpCount)
 
         // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify { mockWild1.size }
-        verify(exactly = 0) { mockWild1.removeTop() }
-        verify(exactly = 0) { mockWild2.add(any<CardID>()) }
+        verify { mockVPManager.count = vpCount }
     }
 
     @Test
-    fun repairWild_whenBothWildStacksEmpty_doesNothing() {
+    fun getVP_whenVPManagerHasCount_returnsOneAndDecrements() {
         // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns true
-        every { mockWild2.isEmpty() } returns true
+        every { mockVPManager.count } returns 3
 
         // Act
-        SUT.repairWild()
+        val result = SUT.getVP()
 
         // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify(exactly = 0) { mockWild1.removeTop() }
-        verify(exactly = 0) { mockWild2.removeTop() }
-        verify(exactly = 0) { mockWild1.add(any<CardID>()) }
-        verify(exactly = 0) { mockWild2.add(any<CardID>()) }
+        assertEquals(1, result)
+        verify { mockVPManager.count } // Verify the getter was called
+        verify { mockVPManager.count = 2 } // Verify the setter was called with the decremented
     }
 
     @Test
-    fun repairWild_whenBothWildStacksHaveCards_doesNothing() {
+    fun getVP_whenVPManagerHasZeroCount_returnsZero() {
         // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns false
-        every { mockWild2.isEmpty() } returns false
+        every { mockVPManager.count } returns 0
 
         // Act
-        SUT.repairWild()
+        val result = SUT.getVP()
 
         // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify(exactly = 0) { mockWild1.size }
-        verify(exactly = 0) { mockWild2.size }
-        verify(exactly = 0) { mockWild1.removeTop() }
-        verify(exactly = 0) { mockWild2.removeTop() }
-        verify(exactly = 0) { mockWild1.add(any<CardID>()) }
-        verify(exactly = 0) { mockWild2.add(any<CardID>()) }
-    }
-
-    @Test
-    fun repairWild_whenWild1IsNull_returnsEarly() {
-        // Arrange
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns null
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-
-        // Act
-        SUT.repairWild()
-
-        // Assert
-        verify { mockGroveStacks[MarketStackID.WILD_1] }
-        verify(exactly = 0) { mockGroveStacks[MarketStackID.WILD_2] }
-        verify(exactly = 0) { mockWild2.isEmpty() }
-    }
-
-    @Test
-    fun repairWild_whenWild2IsNull_returnsEarly() {
-        // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns null
-
-        // Act
-        SUT.repairWild()
-
-        // Assert
-        verify { mockGroveStacks[MarketStackID.WILD_1] }
-        verify { mockGroveStacks[MarketStackID.WILD_2] }
-        verify(exactly = 0) { mockWild1.isEmpty() }
-    }
-
-    @Test
-    fun repairWild_whenWild2RemoveTopReturnsNull_doesNotAddToWild1() {
-        // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns true
-        every { mockWild2.isEmpty() } returns false
-        every { mockWild2.size } returns 3
-        every { mockWild2.removeTop() } returns null
-
-        // Act
-        SUT.repairWild()
-
-        // Assert
-        verify { mockWild2.removeTop() }
-        verify(exactly = 0) { mockWild1.add(any<CardID>()) }
-    }
-
-    @Test
-    fun repairWild_whenWild1RemoveTopReturnsNull_doesNotAddToWild2() {
-        // Arrange
-        val mockWild1 = mockk<GameCardIDs>(relaxed = true)
-        val mockWild2 = mockk<GameCardIDs>(relaxed = true)
-
-        every { mockGroveStacks[MarketStackID.WILD_1] } returns mockWild1
-        every { mockGroveStacks[MarketStackID.WILD_2] } returns mockWild2
-        every { mockWild1.isEmpty() } returns false
-        every { mockWild2.isEmpty() } returns true
-        every { mockWild1.size } returns 4
-        every { mockWild1.removeTop() } returns null
-
-        // Act
-        SUT.repairWild()
-
-        // Assert
-        verify { mockWild1.isEmpty() }
-        verify { mockWild2.isEmpty() }
-        verify { mockWild1.size }
-        verify { mockWild1.removeTop() }
-        verify(exactly = 0) { mockWild2.add(any<CardID>()) }
+        assertEquals(0, result)
+        verify { mockVPManager.count } // Verify the getter was called
+        verify(exactly = 0) { mockVPManager.count = any() } 
     }
 
 } 

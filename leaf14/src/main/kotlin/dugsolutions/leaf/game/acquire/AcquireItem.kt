@@ -38,7 +38,6 @@ class AcquireItem(
                     player.addCardToDiscard(card.id)
                     chronicle(Moment.ACQUIRE_CARD(player, card, combination))
                     grove.removeCard(card.id)
-                    grove.repairWild()
                     result = true
                 }
             }

@@ -24,7 +24,7 @@ val groveModule: Module = module {
     single { GroveNearingTransition(get()) }
     single { GameCardsUseCase(get()) }
 
-    single { Grove(get(), get()) }
+    single { Grove(get(), get(), get(), get()) }
 
     single { SelectPossibleDice(get(), get()) }
     single { SelectPossibleCards(get()) }

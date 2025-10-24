@@ -2,22 +2,18 @@ package dugsolutions.leaf.grove.domain
 
 enum class MarketStackType {
     ROOT,
-    CANOPY,
     VINE,
-    MIXED,
-    FLOWER
+    FLOWER,
+    WISP
 }
 
 enum class MarketStackID(val type: MarketStackType) {
     ROOT_1(MarketStackType.ROOT),
     ROOT_2(MarketStackType.ROOT),
-    CANOPY_1(MarketStackType.CANOPY),
-    CANOPY_2(MarketStackType.CANOPY),
-    VINE_1(MarketStackType.VINE),
-    VINE_2(MarketStackType.VINE),
-    WILD_1(MarketStackType.MIXED),
-    WILD_2(MarketStackType.MIXED),
+    ROOT_3(MarketStackType.ROOT),
     FLOWER_1(MarketStackType.FLOWER),
     FLOWER_2(MarketStackType.FLOWER),
     FLOWER_3(MarketStackType.FLOWER),
+    WILD(MarketStackType.VINE),
+    WISP(MarketStackType.WISP)
 }

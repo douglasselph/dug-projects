@@ -11,6 +11,8 @@ import dugsolutions.leaf.player.components.ButterflyManager
 import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.InsectManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.player.components.WispManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.HandItem
 import dugsolutions.leaf.random.di.DieFactory
@@ -36,6 +38,8 @@ class PlayerTest {
     private lateinit var mockCreatureManager: CreatureManager
     private lateinit var mockInsectManager: InsectManager
     private lateinit var mockButterflyManager: ButterflyManager
+    private lateinit var mockWispManager: WispManager
+    private lateinit var mockVPManager: VPManager
     private lateinit var mockDieFactory: DieFactory
     private lateinit var mockCostScore: CostScore
     private lateinit var mockDecisionDirector: DecisionDirector
@@ -74,6 +78,8 @@ class PlayerTest {
         mockCreatureManager = mockk(relaxed = true)
         mockInsectManager = mockk(relaxed = true)
         mockButterflyManager = mockk(relaxed = true)
+        mockWispManager = mockk(relaxed = true)
+        mockVPManager = mockk(relaxed = true)
         mockDieFactory = mockk(relaxed = true)
         mockCostScore = mockk(relaxed = true)
         mockDecisionDirector = mockk(relaxed = true)
@@ -85,6 +91,8 @@ class PlayerTest {
             mockCreatureManager,
             mockInsectManager,
             mockButterflyManager,
+            mockWispManager,
+            mockVPManager,
             mockDieFactory,
             mockCostScore,
             mockDecisionDirector
@@ -111,8 +119,8 @@ class PlayerTest {
         // Arrange
         val player2 = Player(
             mockDeckManager, mockCardManager, mockCreatureManager,
-            mockInsectManager, mockButterflyManager, mockDieFactory,
-            mockCostScore, mockDecisionDirector
+            mockInsectManager, mockButterflyManager, mockWispManager,
+            mockVPManager, mockDieFactory, mockCostScore, mockDecisionDirector
         )
         val expectedId = SUT.id + 1
 
@@ -734,5 +742,218 @@ class PlayerTest {
         // Assert
         verify { SUT.addDieToHand(sampleD4) }
         verify { SUT.addDieToHand(sampleD6) }
+    }
+
+    @Test
+    fun addWisp_delegatesToWispManager() {
+        // Arrange
+        val mockWisp = mockk<GameCard>(relaxed = true)
+        every { mockWispManager.add(mockWisp) } returns Unit
+
+        // Act
+        SUT.addWisp(mockWisp)
+
+        // Assert
+        verify { mockWispManager.add(mockWisp) }
+    }
+
+    @Test
+    fun removeWisp_delegatesToWispManager() {
+        // Arrange
+        val mockWisp = mockk<GameCard>(relaxed = true)
+        every { mockWispManager.remove(mockWisp) } returns true
+
+        // Act
+        val result = SUT.removeWisp(mockWisp)
+
+        // Assert
+        assertTrue(result)
+        verify { mockWispManager.remove(mockWisp) }
+    }
+
+    @Test
+    fun removeCardFromDiscardPatch_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.removeCardFromDiscardPatch(CARD_ID_1) } returns true
+
+        // Act
+        val result = SUT.removeCardFromDiscardPatch(CARD_ID_1)
+
+        // Assert
+        assertTrue(result)
+        verify { mockDeckManager.removeCardFromDiscardPatch(CARD_ID_1) }
+    }
+
+    @Test
+    fun removeDieFromDiscard_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.removeDieFromDiscard(sampleD6) } returns true
+
+        // Act
+        SUT.removeDieFromDiscard(sampleD6)
+
+        // Assert
+        verify { mockDeckManager.removeDieFromDiscard(sampleD6) }
+    }
+
+    @Test
+    fun addCardToSupply_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addCardToSupply(CARD_ID_1) } returns true
+
+        // Act
+        SUT.addCardToSupply(CARD_ID_1)
+
+        // Assert
+        verify { mockDeckManager.addCardToSupply(CARD_ID_1) }
+    }
+
+    @Test
+    fun addDieToSupply_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addDieToSupply(sampleD6) } returns true
+
+        // Act
+        SUT.addDieToSupply(sampleD6)
+
+        // Assert
+        verify { mockDeckManager.addDieToSupply(sampleD6) }
+    }
+
+    @Test
+    fun addDieToSupply_withDieValue_delegatesToDeckManager() {
+        // Arrange
+        val dieValue = DieValue(4, 4)
+        every { mockDeckManager.addDieToSupply(dieValue) } returns true
+
+        // Act
+        SUT.addDieToSupply(dieValue)
+
+        // Assert
+        verify { mockDeckManager.addDieToSupply(dieValue) }
+    }
+
+    @Test
+    fun addCardToHand_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addCardToHand(CARD_ID_1) } returns true
+
+        // Act
+        SUT.addCardToHand(CARD_ID_1)
+
+        // Assert
+        verify { mockDeckManager.addCardToHand(CARD_ID_1) }
+    }
+
+    @Test
+    fun addDieToHand_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addDieToHand(sampleD6) } returns true
+
+        // Act
+        SUT.addDieToHand(sampleD6)
+
+        // Assert
+        verify { mockDeckManager.addDieToHand(sampleD6) }
+    }
+
+    @Test
+    fun addDieToHand_withDieValue_delegatesToDeckManager() {
+        // Arrange
+        val dieValue = DieValue(4, 4)
+        every { mockDeckManager.addDieToHand(dieValue) } returns true
+
+        // Act
+        SUT.addDieToHand(dieValue)
+
+        // Assert
+        verify { mockDeckManager.addDieToHand(dieValue) }
+    }
+
+    @Test
+    fun addCardToDiscard_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addCardToDiscard(CARD_ID_1) } returns true
+
+        // Act
+        SUT.addCardToDiscard(CARD_ID_1)
+
+        // Assert
+        verify { mockDeckManager.addCardToDiscard(CARD_ID_1) }
+    }
+
+    @Test
+    fun addDieToDiscard_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.addDieToDiscard(sampleD6) } returns true
+
+        // Act
+        SUT.addDieToDiscard(sampleD6)
+
+        // Assert
+        verify { mockDeckManager.addDieToDiscard(sampleD6) }
+    }
+
+    @Test
+    fun removeCardFromHand_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.removeCardFromHand(CARD_ID_1) } returns true
+
+        // Act
+        val result = SUT.removeCardFromHand(CARD_ID_1)
+
+        // Assert
+        assertTrue(result)
+        verify { mockDeckManager.removeCardFromHand(CARD_ID_1) }
+    }
+
+    @Test
+    fun removeDieFromHand_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.removeDieFromHand(sampleD6) } returns true
+
+        // Act
+        val result = SUT.removeDieFromHand(sampleD6)
+
+        // Assert
+        assertTrue(result)
+        verify { mockDeckManager.removeDieFromHand(sampleD6) }
+    }
+
+    @Test
+    fun drawCardWithoutResupply_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.drawCard() } returns CARD_ID_1
+
+        // Act
+        val result = SUT.drawCardWithoutResupply()
+
+        // Assert
+        assertEquals(CARD_ID_1, result)
+        verify { mockDeckManager.drawCard() }
+    }
+
+    @Test
+    fun drawDieWithoutResupply_delegatesToDeckManager() {
+        // Arrange
+        every { mockDeckManager.drawDie() } returns sampleD6
+
+        // Act
+        val result = SUT.drawDieWithoutResupply()
+
+        // Assert
+        assertEquals(sampleD6, result)
+        verify { mockDeckManager.drawDie() }
+    }
+
+    @Test
+    fun addVP_delegatesToVPManager() {
+        // Arrange
+
+        // Act
+        SUT.addVP()
+
+        // Assert
+        verify { mockVPManager.count++ }
     }
 }

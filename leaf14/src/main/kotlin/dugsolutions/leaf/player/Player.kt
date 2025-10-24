@@ -11,6 +11,8 @@ import dugsolutions.leaf.player.components.ButterflyManager
 import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.InsectManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.player.components.WispManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.domain.DrawCardResult
 import dugsolutions.leaf.player.domain.DrawDieResult
@@ -27,6 +29,8 @@ open class Player(
     private val creatureManager: CreatureManager,
     private val insectManager: InsectManager,
     private val butterflyManager: ButterflyManager,
+    private val wispManager: WispManager,
+    private val vpManager: VPManager,
     private val dieFactory: DieFactory,
     private val costScore: CostScore,
     val decisionDirector: DecisionDirector
@@ -177,6 +181,7 @@ open class Player(
 
     fun addCardToCreature(cardId: CardID) = creatureManager.addCard(cardId)
     fun addDieToCreature(die: Die) = creatureManager.addDie(die)
+    fun removeCardFromCreature(cardID: CardID) = creatureManager.removeCard(cardID)
     val creatureLeafCards: List<GameCard>
         get() = creatureManager.leafCards
 
@@ -187,6 +192,11 @@ open class Player(
     fun addButterfly(butterfly: Butterfly) = butterflyManager.add(butterfly)
     fun removeButterfly(butterfly: Butterfly) = butterflyManager.remove(butterfly)
     fun has(butterfly: Butterfly) = butterflyManager.has(butterfly)
+
+    fun addWisp(wisp: GameCard) = wispManager.add(wisp)
+    fun removeWisp(wisp: GameCard) = wispManager.remove(wisp)
+
+    fun addVP() { vpManager.count++ }
 
     // Game flow methods
     fun setupInitialDeck(seedlings: GameCards) {

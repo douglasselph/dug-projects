@@ -5,6 +5,8 @@ import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.InsectManager
 import dugsolutions.leaf.player.components.StackManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.player.components.WispManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
@@ -29,6 +31,8 @@ val playerModule: Module = module {
     factory { ButterflyManager() }
     factory { CreatureManager(get()) }
     factory { InsectManager() }
+    factory { WispManager() }
+    factory { VPManager() }
 
     factory {
         DeckManager(
@@ -46,6 +50,8 @@ val playerModule: Module = module {
             creatureManager = { get() },
             insectManager = { get() },
             butterflyManager = { get() },
+            wispManager = { get() },
+            vpManager = { get() },
             decisionDirector = { get() },
             costScore = get(),
             dieFactory = get()

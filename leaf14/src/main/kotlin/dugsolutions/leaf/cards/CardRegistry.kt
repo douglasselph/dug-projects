@@ -121,11 +121,4 @@ class CardRegistry {
         return MatchWith.from(match)
     }
 
-    private fun flowerOf(name: String): GameCard? {
-        if (cards.contains(name)) {
-            return cards[name]
-        }
-        return null
-    }
-
 }

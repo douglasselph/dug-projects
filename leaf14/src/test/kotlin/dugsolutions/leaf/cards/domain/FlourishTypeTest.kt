@@ -12,6 +12,7 @@ class FlourishTypeTest {
         private const val EXPECTED_ROOT = "ROOT"
         private const val EXPECTED_VINE = "VINE"
         private const val EXPECTED_FLOWER = "FLOWER"
+        private const val EXPECTED_WISP = "WISP"
 
         private const val MATCH_NONE = ""
         private const val MATCH_CANOPY = "Canopy"
@@ -19,6 +20,7 @@ class FlourishTypeTest {
         private const val MATCH_ROOT = "Root"
         private const val MATCH_VINE = "Vine"
         private const val MATCH_FLOWER = "Flower"
+        private const val MATCH_WISP = "Wisp"
     }
 
     @Test
@@ -30,7 +32,8 @@ class FlourishTypeTest {
             FlourishType.RESOURCE,
             FlourishType.ROOT,
             FlourishType.VINE,
-            FlourishType.FLOWER
+            FlourishType.FLOWER,
+            FlourishType.WISP
         )
 
         // Act
@@ -49,6 +52,7 @@ class FlourishTypeTest {
         assertEquals(EXPECTED_ROOT, FlourishType.ROOT.name)
         assertEquals(EXPECTED_VINE, FlourishType.VINE.name)
         assertEquals(EXPECTED_FLOWER, FlourishType.FLOWER.name)
+        assertEquals(EXPECTED_WISP, FlourishType.WISP.name)
     }
 
     @Test
@@ -60,6 +64,7 @@ class FlourishTypeTest {
         assertEquals(FlourishType.ROOT, FlourishType.valueOf(EXPECTED_ROOT))
         assertEquals(FlourishType.VINE, FlourishType.valueOf(EXPECTED_VINE))
         assertEquals(FlourishType.FLOWER, FlourishType.valueOf(EXPECTED_FLOWER))
+        assertEquals(FlourishType.WISP, FlourishType.valueOf(EXPECTED_WISP))
     }
 
     @Test
@@ -71,6 +76,7 @@ class FlourishTypeTest {
         assertEquals(FlourishType.ROOT, FlourishType.from(MATCH_ROOT))
         assertEquals(FlourishType.VINE, FlourishType.from(MATCH_VINE))
         assertEquals(FlourishType.FLOWER, FlourishType.from(MATCH_FLOWER))
+        assertEquals(FlourishType.WISP, FlourishType.from(MATCH_WISP))
     }
 
     @Test
@@ -83,6 +89,8 @@ class FlourishTypeTest {
         assertEquals(FlourishType.RESOURCE, FlourishType.from("RESOURCE"))
         assertEquals(FlourishType.ROOT, FlourishType.from("root"))
         assertEquals(FlourishType.ROOT, FlourishType.from("ROOT"))
+        assertEquals(FlourishType.WISP, FlourishType.from("wisp"))
+        assertEquals(FlourishType.WISP, FlourishType.from("WISP"))
     }
 
     @Test
@@ -92,6 +100,7 @@ class FlourishTypeTest {
         assertEquals(FlourishType.RESOURCE, FlourishType.from("Resource Card"))
         assertEquals(FlourishType.ROOT, FlourishType.from("Root System"))
         assertEquals(FlourishType.FLOWER, FlourishType.from("Flower Garden"))
+        assertEquals(FlourishType.WISP, FlourishType.from("Wisp Spirit"))
     }
 
     @Test

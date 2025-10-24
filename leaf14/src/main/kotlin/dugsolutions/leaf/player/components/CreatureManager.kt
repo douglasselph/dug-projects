@@ -110,6 +110,18 @@ class CreatureManager(
         }
     }
 
+    fun removeCard(cardId: CardID): Boolean {
+        // Find the position of the card in the grid
+        val positionToRemove = creatureGrid.entries.find { (_, gridCardId) -> gridCardId == cardId }?.key
+        
+        return if (positionToRemove != null) {
+            creatureGrid.remove(positionToRemove)
+            true
+        } else {
+            false
+        }
+    }
+
     val leafCards: List<GameCard>
         get() {
             val leafCardIds = mutableListOf<CardID>()

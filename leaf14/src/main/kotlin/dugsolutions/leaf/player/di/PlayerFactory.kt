@@ -7,6 +7,8 @@ import dugsolutions.leaf.player.components.ButterflyManager
 import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
 import dugsolutions.leaf.player.components.InsectManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.player.components.WispManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
 import dugsolutions.leaf.random.di.DieFactory
 
@@ -16,6 +18,8 @@ class PlayerFactory(
     private val creatureManager: () -> CreatureManager,
     private val insectManager: () -> InsectManager,
     private val butterflyManager: () -> ButterflyManager,
+    private val wispManager: () -> WispManager,
+    private val vpManager: () -> VPManager,
     private val costScore: CostScore,
     private val decisionDirector: () -> DecisionDirector,
     private val dieFactory: DieFactory
@@ -29,6 +33,8 @@ class PlayerFactory(
             creatureManager = creatureManager(),
             butterflyManager = butterflyManager(),
             insectManager = insectManager(),
+            wispManager = wispManager(),
+            vpManager = vpManager(),
             dieFactory = dieFactory,
             costScore = costScore
         ).initialize()

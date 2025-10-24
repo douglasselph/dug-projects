@@ -1,17 +1,22 @@
 package dugsolutions.leaf.grove
 
-import dugsolutions.leaf.common.Commons
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.list.GameCardIDs
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.grove.local.GameCardsUseCase
+import dugsolutions.leaf.common.domain.Butterfly
 import dugsolutions.leaf.grove.domain.GroveStacks
 import dugsolutions.leaf.grove.domain.MarketConfig
 import dugsolutions.leaf.grove.domain.MarketStackID
+import dugsolutions.leaf.grove.domain.MarketStackType
+import dugsolutions.leaf.grove.local.GameCardsUseCase
+import dugsolutions.leaf.player.components.ButterflyManager
+import dugsolutions.leaf.player.components.VPManager
+import dugsolutions.leaf.random.die.Die
 
 class Grove(
     private val stacks: GroveStacks,
+    private val butterflyManager: ButterflyManager,
+    private val vpManager: VPManager,
     private val gameCardsUseCase: GameCardsUseCase
 ) {
 
@@ -39,16 +44,6 @@ class Grove(
         stacks.removeTopShowingCardOf(cardId)
     }
 
-    fun repairWild() {
-        val wild1 = stacks[MarketStackID.WILD_1] ?: return
-        val wild2 = stacks[MarketStackID.WILD_2] ?: return
-        if (wild1.isEmpty() && wild2.size > 1) {
-            wild2.removeTop()?.let { cardId -> wild1.add(cardId) }
-        } else if (wild2.isEmpty() && wild1.size > 1) {
-            wild1.removeTop()?.let { cardId -> wild2.add(cardId) }
-        }
-    }
-
     fun addDie(die: Die) {
         stacks.addDie(die.sides)
     }
@@ -58,16 +53,31 @@ class Grove(
     }
 
     fun hasDie(sides: Int): Boolean {
-       return stacks.hasDie(sides)
+        return stacks.hasDie(sides)
     }
 
     fun getCardsFor(type: MarketStackID): GameCardIDs? {
         return stacks[type]
     }
 
+    fun addButterfly(butterfly: Butterfly) = butterflyManager.add(butterfly)
+    fun removeButterfly(butterfly: Butterfly) = butterflyManager.remove(butterfly)
+    fun has(butterfly: Butterfly) = butterflyManager.has(butterfly)
+
+    fun setVP(count: Int) {
+        vpManager.count = count
+    }
+
+    fun getVP(): Int {
+        if (vpManager.count > 0) {
+            vpManager.count--
+            return 1
+        }
+        return 0
+    }
+
     val readyForBattlePhase: Boolean
         get() {
-            // TODO: When WISP cards exhausted.
-            return false
+            return stacks.getStacksByType(MarketStackType.WISP).size == 0
         }
 }

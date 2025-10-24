@@ -6,7 +6,8 @@ enum class FlourishType(private val match: String) {
     RESOURCE("Resource"),
     ROOT("Root"),
     VINE("Vine"),
-    FLOWER("Flower");
+    FLOWER("Flower"),
+    WISP("Wisp");
 
     companion object {
         fun from(incoming: String): FlourishType {
