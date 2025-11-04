@@ -401,7 +401,7 @@ class GroveTest {
         // Assert
         assertEquals(0, result)
         verify { mockVPManager.count } // Verify the getter was called
-        verify(exactly = 0) { mockVPManager.count = any() } 
+        verify(exactly = 0) { mockVPManager.count = any() }
     }
 
 } 

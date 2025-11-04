@@ -19,7 +19,8 @@ class HandleAbsorbDamage(
 
         // Decide how to absorb damage
         var result = player.decisionDirector.damageAbsorptionDecision()
-        var thornDamage = result.thorn
+        // Apply decision
+        val thornDamage = result.thorn
         result.handCards.forEach { card ->
             player.removeCardFromHand(card.id)
             player.incomingDamage -= card.resilience
@@ -30,10 +31,16 @@ class HandleAbsorbDamage(
             player.incomingDamage -= card.resilience
             chronicle(Moment.TRASH_CARD(player, card))
         }
+        result.handDice.forEach { die ->
+            player.removeDieFromHand(die)
+            player.incomingDamage -= die.sides
+            chronicle(Moment.TRASH_DIE(player, die))
+        }
         if (player.incomingDamage < 0) {
             player.incomingDamage = 0
         } else if (player.incomingDamage > 0) {
-
+            // Game is lost
+            TODO("chronicle event: player has lost")
         }
         return thornDamage
     }

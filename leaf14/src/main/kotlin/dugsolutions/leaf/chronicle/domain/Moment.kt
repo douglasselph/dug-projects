@@ -24,7 +24,6 @@ sealed class Moment {
     data class DRAW_CARD(val player: Player, val cardId: CardID, val hadReshuffle: Boolean = false) : Moment()
     data class DRAW_DIE(val player: Player, val die: Die, val hadReshuffle: Boolean = false) : Moment()
     data class DRAWN_HAND(val player: Player) : Moment()
-
     data class DEFLECT_DAMAGE(val player: Player, val amount: Int) : Moment()
     data class DISCARD_CARD(val player: Player, val cardId: GameCard) : Moment()
     data class DISCARD_DIE(val player: Player, val die: Die) : Moment()

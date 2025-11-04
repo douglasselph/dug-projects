@@ -4,9 +4,9 @@ import dugsolutions.leaf.cards.CardManager
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.CostScore
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.common.domain.Insect
 import dugsolutions.leaf.cards.list.GameCards
 import dugsolutions.leaf.common.domain.Butterfly
+import dugsolutions.leaf.common.domain.Token
 import dugsolutions.leaf.player.components.ButterflyManager
 import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
@@ -23,7 +23,7 @@ import dugsolutions.leaf.random.die.Dice
 import dugsolutions.leaf.random.die.Die
 import dugsolutions.leaf.random.die.DieValue
 
-open class Player(
+class Player(
     private val deckManager: DeckManager,
     private val cardManager: CardManager,
     private val creatureManager: CreatureManager,
@@ -43,7 +43,7 @@ open class Player(
         }
     }
 
-    open val id = NextID++
+    val id = NextID++
 
     fun initialize(): Player {
         name = "Player $id"
@@ -54,7 +54,6 @@ open class Player(
     var name: String = "Player Unset"
     var incomingDamage: Int = 0
     var deflectDamage: Int = 0
-    var pipModifier: Int = 0
 
     val reused: MutableList<HandItem> = mutableListOf()
     val retained: MutableList<HandItem> = mutableListOf()
@@ -66,19 +65,19 @@ open class Player(
     val handSize: Int
         get() = deckManager.handSize
 
-    open val pipTotal: Int
-        get() = deckManager.pipTotal + pipModifier
+    val pipTotal: Int
+        get() = deckManager.pipTotal
 
     val diceTotal: Int
         get() = deckManager.pipTotal
 
-    open val diceInHand: Dice
+    val diceInHand: Dice
         get() = getDiceFrom(deckManager.getItemsInHand())
 
-    open val diceInDiscard: Dice
+    val diceInDiscard: Dice
         get() = getDiceFrom(deckManager.getItemsInDiscardPile())
 
-    open val diceInSupply: Dice
+    val diceInSupply: Dice
         get() = getDiceFrom(deckManager.getItemsInSupply())
 
     private fun getDiceFrom(items: List<HandItem>): Dice {
@@ -90,7 +89,7 @@ open class Player(
         })
     }
 
-    open val allDice: Dice
+    val allDice: Dice
         get() = deckManager.allDice
 
     val cardsInHand: List<CardID>
@@ -152,12 +151,12 @@ open class Player(
     fun hasCardInHand(cardId: CardID): Boolean = deckManager.hasCardInHand(cardId)
     fun hasDieInHand(die: Die): Boolean = deckManager.hasDieInHand(die)
 
-    open fun discard(cardId: CardID): Boolean = deckManager.discard(cardId)
-    open fun discard(die: Die): Boolean = deckManager.discard(die)
-    open fun discard(die: DieValue): Boolean = deckManager.discard(die)
-    open fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
+    fun discard(cardId: CardID): Boolean = deckManager.discard(cardId)
+    fun discard(die: Die): Boolean = deckManager.discard(die)
+    fun discard(die: DieValue): Boolean = deckManager.discard(die)
+    fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
     fun removeCardFromDiscardPatch(cardId: CardID): Boolean = deckManager.removeCardFromDiscardPatch(cardId)
-    open fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
+    fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
 
     fun retainCard(card: GameCard): Boolean =
         hasCardInHand(card.id) && removeCardFromHand(card.id) && retained.add(HandItem.aCard(card))
@@ -165,18 +164,18 @@ open class Player(
     fun retainDie(die: Die): Boolean =
         hasDieInHand(die) && removeDieFromHand(die) && retained.add(HandItem.aDie(die))
 
-    open fun addCardToSupply(cardId: CardID) = deckManager.addCardToSupply(cardId)
-    open fun addDieToSupply(die: Die) = deckManager.addDieToSupply(die)
-    open fun addDieToSupply(die: DieValue) = deckManager.addDieToSupply(die)
+    fun addCardToSupply(cardId: CardID) = deckManager.addCardToSupply(cardId)
+    fun addDieToSupply(die: Die) = deckManager.addDieToSupply(die)
+    fun addDieToSupply(die: DieValue) = deckManager.addDieToSupply(die)
 
-    open fun addCardToHand(cardId: CardID) = deckManager.addCardToHand(cardId)
-    open fun addDieToHand(die: Die) = deckManager.addDieToHand(die)
-    open fun addDieToHand(die: DieValue) = deckManager.addDieToHand(die)
+    fun addCardToHand(cardId: CardID) = deckManager.addCardToHand(cardId)
+    fun addDieToHand(die: Die) = deckManager.addDieToHand(die)
+    fun addDieToHand(die: DieValue) = deckManager.addDieToHand(die)
     fun addCardsToHand(cards: List<CardID>) = cards.forEach { addCardToHand(it) }
     fun addDiceToHand(dice: List<Die>) = dice.forEach { addDieToHand(it) }
 
-    open fun addCardToDiscard(cardID: CardID) = deckManager.addCardToDiscard(cardID)
-    open fun addDieToDiscard(die: Die) = deckManager.addDieToDiscard(die)
+    fun addCardToDiscard(cardID: CardID) = deckManager.addCardToDiscard(cardID)
+    fun addDieToDiscard(die: Die) = deckManager.addDieToDiscard(die)
     fun removeDieFromDiscard(die: Die) = deckManager.removeDieFromDiscard(die)
 
     fun addCardToCreature(cardId: CardID) = creatureManager.addCard(cardId)
@@ -185,9 +184,10 @@ open class Player(
     val creatureLeafCards: List<GameCard>
         get() = creatureManager.leafCards
 
-    fun addInsect(insect: Insect) = insectManager.add(insect)
-    fun removeInsect(insect: Insect) = insectManager.remove(insect)
-    fun count(insect: Insect) = insectManager.countOf(insect)
+    fun addInsect(insect: Token) = insectManager.add(insect)
+    fun removeInsect(insect: Token) = insectManager.remove(insect)
+    fun count(insect: Token) = insectManager.countOf(insect)
+    fun hasInsect(insect: Token) = insectManager.countOf(insect) > 0
 
     fun addButterfly(butterfly: Butterfly) = butterflyManager.add(butterfly)
     fun removeButterfly(butterfly: Butterfly) = butterflyManager.remove(butterfly)
@@ -196,18 +196,26 @@ open class Player(
     fun addWisp(wisp: GameCard) = wispManager.add(wisp)
     fun removeWisp(wisp: GameCard) = wispManager.remove(wisp)
 
-    fun addVP() { vpManager.count++ }
+    fun addVP() {
+        vpManager.count++
+    }
+
+    val hasSap: Boolean
+        get() = creatureManager.hasSap
+
+    val hasGraftedDice: Boolean
+        get() = creatureManager.hasGraftedDice
 
     // Game flow methods
     fun setupInitialDeck(seedlings: GameCards) {
         deckManager.setup(seedlings, dieFactory.startingDice)
     }
 
-    open fun drawCardWithoutResupply(): CardID? {
+    fun drawCardWithoutResupply(): CardID? {
         return deckManager.drawCard()
     }
 
-    open fun drawDieWithoutResupply(): Die? {
+    fun drawDieWithoutResupply(): Die? {
         return deckManager.drawDie()?.roll()
     }
 
@@ -217,7 +225,7 @@ open class Player(
         } else false
     }
 
-    open fun drawCard(): DrawCardResult {
+    fun drawCard(): DrawCardResult {
         val reshuffleDone = reshuffleIfNeeded()
         return DrawCardResult(
             cardId = deckManager.drawCard(),
@@ -225,7 +233,7 @@ open class Player(
         )
     }
 
-    open fun drawDie(): DrawDieResult {
+    fun drawDie(): DrawDieResult {
         val reshuffleDone = reshuffleIfNeeded()
         return DrawDieResult(
             die = deckManager.drawDie()?.roll(),
@@ -245,7 +253,7 @@ open class Player(
     fun drawDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawDieFromDiscard())
     fun drawBestDieFromDiscard(): DrawDieResult = DrawDieResult(deckManager.drawBestDieFromDiscard())
 
-    open fun discardHand() {
+    fun discardHand() {
         deckManager.discardHand()
     }
 
@@ -262,7 +270,6 @@ open class Player(
     fun clearEffects() {
         incomingDamage = 0
         deflectDamage = 0
-        pipModifier = 0
         retained.clear()
         reused.clear()
         cardsToPlay.clear()

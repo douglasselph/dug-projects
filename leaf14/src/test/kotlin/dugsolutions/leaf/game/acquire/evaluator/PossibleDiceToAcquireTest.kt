@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class PossibleDiceTest {
+class PossibleDiceToAcquireTest {
 
     companion object {
         val d4 = sampleDie.d4
@@ -27,7 +27,7 @@ class PossibleDiceTest {
     private val selectPossibleDice = mockk<SelectPossibleDice>(relaxed = true)
     private val dieCost = mockk<DieCost>(relaxed = true)
 
-    private val SUT = PossibleDice(selectPossibleDice, dieCost)
+    private val SUT = PossibleDiceToAcquire(selectPossibleDice, dieCost)
 
     @BeforeEach
     fun setup() {

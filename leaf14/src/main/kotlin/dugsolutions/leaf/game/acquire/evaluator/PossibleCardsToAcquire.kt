@@ -4,7 +4,7 @@ import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.Combinations
 
-class PossibleCards(
+class PossibleCardsToAcquire(
     private val canPurchaseCards: CanPurchaseCards
 ) {
 
@@ -14,8 +14,8 @@ class PossibleCards(
     ): List<ChoiceCard> {
         val choices = mutableListOf<ChoiceCard>()
 
-        for (usingDice in combinations.choices) {
-            val possibleCards = canPurchaseCards(marketCards, usingDice)
+        for (combination in combinations.choices) {
+            val possibleCards = canPurchaseCards(marketCards, combination)
             for (card in possibleCards) {
                 choices.add(ChoiceCard(card, usingDice))
             }

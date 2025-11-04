@@ -1,5 +1,6 @@
 package dugsolutions.leaf.player.decisions.core
 
+import dugsolutions.leaf.common.domain.Token
 import dugsolutions.leaf.common.domain.acquire.ChoiceCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceDie
 
@@ -15,7 +16,8 @@ interface DecisionAcquireSelect {
 
     suspend operator fun invoke(
         possibleCards: List<ChoiceCard>,
-        possibleDice: List<ChoiceDie>
+        possibleDice: List<ChoiceDie>,
+        possibleBugs: List<Token>
     ): BuyItem
 
 }

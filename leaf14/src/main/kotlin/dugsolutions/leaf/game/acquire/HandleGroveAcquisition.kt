@@ -7,7 +7,7 @@ import dugsolutions.leaf.player.Player
 
 class HandleGroveAcquisition(
     private val selectPossibleCards: SelectPossibleCards,
-    private val acquireItem: AcquireItem,
+    private val acquireItem: AcquireItems,
     private val chronicle: GameChronicle
 ) {
 

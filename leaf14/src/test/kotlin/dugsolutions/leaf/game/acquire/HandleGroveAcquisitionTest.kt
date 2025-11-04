@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 class HandleGroveAcquisitionTest {
 
     private val mockSelectPossibleCards: SelectPossibleCards = mockk(relaxed = true)
-    private val mockAcquireItem: AcquireItem = mockk(relaxed = true)
+    private val mockAcquireItem: AcquireItems = mockk(relaxed = true)
     private val mockChronicle: GameChronicle = mockk(relaxed = true)
     private val mockPlayer: Player = mockk(relaxed = true)
     private lateinit var sampleDie: SampleDie

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class CombinationGeneratorTest {
+class GenerateCombinationsTest {
 
     private val mockPlayer: Player = mockk(relaxed = true)
     private lateinit var sampleDie1: Die
@@ -25,7 +25,7 @@ class CombinationGeneratorTest {
     private lateinit var randomizer: RandomizerTD
     private lateinit var sampleDie: SampleDie
 
-    private lateinit var SUT: CombinationGenerator
+    private lateinit var SUT: GenerateCombinations
 
     @BeforeEach
     fun setup() {
@@ -40,7 +40,7 @@ class CombinationGeneratorTest {
         testDieValue2 = sampleDie2.copy
         testDieValue3 = sampleDie3.copy
 
-        SUT = CombinationGenerator()
+        SUT = GenerateCombinations()
     }
 
     @Test

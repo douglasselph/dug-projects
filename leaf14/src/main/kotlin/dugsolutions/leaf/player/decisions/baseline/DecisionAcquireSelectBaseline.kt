@@ -1,10 +1,13 @@
 package dugsolutions.leaf.player.decisions.baseline
 
 
+import dugsolutions.leaf.common.domain.Token
 import dugsolutions.leaf.common.domain.acquire.ChoiceCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceDie
+import dugsolutions.leaf.common.domain.game.GamePhase
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
+import dugsolutions.leaf.player.decisions.local.AcquireBugEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
 import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 
@@ -51,7 +54,8 @@ import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
 class DecisionAcquireSelectBaseline(
     private val player: Player,
     private val acquireCardEvaluator: AcquireCardEvaluator,
-    private val acquireDieEvaluator: AcquireDieEvaluator
+    private val acquireDieEvaluator: AcquireDieEvaluator,
+    private val acquireBugEvaluator: AcquireBugEvaluator
 ) : DecisionAcquireSelect {
 
     var preferenceCard = 0
@@ -59,21 +63,14 @@ class DecisionAcquireSelectBaseline(
 
     override suspend fun invoke(
         possibleCards: List<ChoiceCard>,
-        possibleDice: List<ChoiceDie>
+        possibleDice: List<ChoiceDie>,
+        possibleBugs: List<Token>
     ): DecisionAcquireSelect.BuyItem {
-        val scoreCards = player.totalCardCount + preferenceCard
-        val scoreDice = player.totalDiceCount + preferenceDie
-
+        val diceInHand = player.diceInHand
+        val numOnes = diceInHand.dice.filter { it.value == 1 }.size
         val bestCard = acquireCardEvaluator(player, possibleCards)
         val bestDie = acquireDieEvaluator(possibleDice)
-
-        return if (scoreCards < scoreDice && bestCard != null) {
-            DecisionAcquireSelect.BuyItem.Card(bestCard)
-        } else if (bestDie != null) {
-            DecisionAcquireSelect.BuyItem.Die(bestDie)
-        } else {
-            DecisionAcquireSelect.BuyItem.None
-        }
+        val bestBugs = acquireBugEvaluator(possibleBugs, numOnes, GamePhase.CULTIVATION)
     }
 
 } 

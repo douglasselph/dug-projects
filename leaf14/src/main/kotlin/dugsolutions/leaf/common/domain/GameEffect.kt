@@ -32,7 +32,7 @@ enum class GameEffect(
     REUSE_DIE("ReuseDie", "Reuse VALUE dice, do not reroll"),
     REUSE_DIE_REROLL("ReuseDieReroll", "Reuse VALUE dice, rerolling"),
     REUSE_ANY("ReuseAny", "Reuse VALUE cards or dice"),
-    UPGRADE_ETAIN("UpgradeAnyRetain", "Upgrade VALUE dice then use. (D12 -> D20 costs 8)"),
+    UPGRADE_RETAIN("UpgradeAnyRetain", "Upgrade VALUE dice then use. (D12 -> D20 costs 8)"),
     UPGRADE("Upgrade", "Upgrade VALUE dice then discard."),
     USE_OPPONENT_CARD("UseOpponentCard", "Use opponent's canopy or root cards"),
     USE_OPPONENT_DIE("UseOpponentDie", "Use VALUE of opponent's dice");

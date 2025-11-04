@@ -1,8 +1,7 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.common.domain.acquire.UsingDice
+import dugsolutions.leaf.game.acquire.domain.Combination
 
 class CanPurchaseCards(
     private val canPurchaseCard: CanPurchaseCard
@@ -10,9 +9,9 @@ class CanPurchaseCards(
 
     operator fun invoke(
         marketCards: List<GameCard>,
-        usingDice: UsingDice
+        combination: Combination
     ): List<GameCard> {
-        return marketCards.filter { card -> canPurchaseCard(card,  usingDice) }
+        return marketCards.filter { card -> canPurchaseCard(card, combination) }
     }
 
 }

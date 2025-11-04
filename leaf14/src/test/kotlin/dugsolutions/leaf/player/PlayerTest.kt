@@ -6,7 +6,7 @@ import dugsolutions.leaf.cards.domain.CostScore
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.cards.list.GameCards
 import dugsolutions.leaf.common.domain.Butterfly
-import dugsolutions.leaf.common.domain.Insect
+import dugsolutions.leaf.common.domain.Token
 import dugsolutions.leaf.player.components.ButterflyManager
 import dugsolutions.leaf.player.components.CreatureManager
 import dugsolutions.leaf.player.components.DeckManager
@@ -445,7 +445,7 @@ class PlayerTest {
     @Test
     fun addInsect_delegatesToInsectManager() {
         // Arrange
-        val mockInsect = mockk<Insect>(relaxed = true)
+        val mockInsect = mockk<Token>(relaxed = true)
         every { mockInsectManager.add(mockInsect) } returns true
 
         // Act
@@ -459,7 +459,7 @@ class PlayerTest {
     @Test
     fun removeInsect_delegatesToInsectManager() {
         // Arrange
-        val mockInsect = mockk<Insect>(relaxed = true)
+        val mockInsect = mockk<Token>(relaxed = true)
         every { mockInsectManager.remove(mockInsect) } returns true
 
         // Act
@@ -473,7 +473,7 @@ class PlayerTest {
     @Test
     fun countInsect_delegatesToInsectManager() {
         // Arrange
-        val mockInsect = mockk<Insect>(relaxed = true)
+        val mockInsect = mockk<Token>(relaxed = true)
         every { mockInsectManager.countOf(mockInsect) } returns 3
 
         // Act

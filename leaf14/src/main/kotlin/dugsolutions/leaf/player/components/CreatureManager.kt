@@ -10,7 +10,7 @@ import dugsolutions.leaf.random.die.DieSides
 class CreatureManager(
     private val cardManager: CardManager
 ) {
-    
+
     companion object {
         // Hardcoded position patterns for vine/flower cards (above canopy)
         // Pattern: left, right, top, then fan out further
@@ -19,14 +19,14 @@ class CreatureManager(
             Pair(-1, 0),  // left
             Pair(1, 0),   // right
             Pair(0, 1),   // top
-            
+
             // Second ring: further out
             Pair(-2, 0),  // left
             Pair(-1, 1),  // left-up
             Pair(0, 2),   // top
             Pair(1, 1),   // right-up
             Pair(2, 0),   // right
-            
+
             // Third ring: even further out
             Pair(-3, 0),  // left
             Pair(-2, 1),  // left-up
@@ -35,7 +35,7 @@ class CreatureManager(
             Pair(1, 2),   // right-up-up
             Pair(2, 1),   // right-up
             Pair(3, 0),   // right
-            
+
             // Fourth ring: maximum spread
             Pair(-4, 0),  // left
             Pair(-3, 1),  // left-up
@@ -47,25 +47,25 @@ class CreatureManager(
             Pair(3, 1),   // right-up
             Pair(4, 0)    // right
         )
-        
+
         // Hardcoded position patterns for root cards (below canopy)
         // Pattern: below, then fan out left and right
         private val ROOT_POSITIONS = listOf(
             // First ring: directly below
             Pair(0, -1),  // below
-            
+
             // Second ring: left and right of first root
             Pair(-1, -1), // left
             Pair(1, -1),  // right
             Pair(0, -2),  // below
-            
+
             // Third ring: fan out further
             Pair(-2, -1), // left
             Pair(-1, -2), // left-down
             Pair(0, -3),  // below
             Pair(1, -2), // right-down
             Pair(2, -1),  // right
-            
+
             // Fourth ring: even further out
             Pair(-3, -1), // left
             Pair(-2, -2), // left-down
@@ -74,7 +74,7 @@ class CreatureManager(
             Pair(1, -3),  // right-down-down
             Pair(2, -2),  // right-down
             Pair(3, -1),  // right
-            
+
             // Fifth ring: maximum spread
             Pair(-4, -1), // left
             Pair(-3, -2), // left-down
@@ -87,7 +87,7 @@ class CreatureManager(
             Pair(4, -1)   // right
         )
     }
-    
+
     // Grid to represent the creature layout
     // Key: Pair(x, y) where (0,0) is the center canopy
     // Value: CardID of the card at that position
@@ -96,7 +96,10 @@ class CreatureManager(
     private fun cardOf(cardId: CardID): GameCard? = cardManager.getCard(cardId)
 
     // Dice on creature is equal to 1 + #Roots
-    private val diceOnCreature = mutableListOf<Die>()
+    private val graftedDice = mutableListOf<Die>()
+
+    private var sapTotal: Int = 1
+    private var sapLeft: Int = 1
 
     // region public
 
@@ -113,7 +116,7 @@ class CreatureManager(
     fun removeCard(cardId: CardID): Boolean {
         // Find the position of the card in the grid
         val positionToRemove = creatureGrid.entries.find { (_, gridCardId) -> gridCardId == cardId }?.key
-        
+
         return if (positionToRemove != null) {
             creatureGrid.remove(positionToRemove)
             true
@@ -135,33 +138,57 @@ class CreatureManager(
         }
 
 
+    // region Graft
+
     fun addDie(die: Die): Boolean {
-        // Can only hold 1 + number of roots
-        val rootCount = creatureGrid.values.count { cardId ->
-            val card = cardOf(cardId)
-            card?.type == FlourishType.ROOT
-        }
-        val maxDice = 1 + rootCount
-        
-        if (diceOnCreature.size >= maxDice) {
+        if (!hasRoomForGraftedDie) {
             return false
         }
-        diceOnCreature.add(die)
+        graftedDice.add(die)
         return true
     }
 
-    val graftedDice: List<Die>
-        get() = diceOnCreature
-
+    // Pull die with at least the number of sides indicated.
     fun pullDie(sides: DieSides): Die? {
-        val dieIndex = diceOnCreature.indexOfFirst { it.sides == sides.value }
-        if (dieIndex == -1) {
+        // Find all dice that have at least the required number of sides
+        val eligibleDice = graftedDice.filter { it.sides >= sides.value }
+        
+        if (eligibleDice.isEmpty()) {
             return null
         }
-        val die = diceOnCreature.removeAt(dieIndex)
+        
+        // Find the die with the closest number of sides to the target
+        val targetSides = sides.value
+        val closestDie = eligibleDice.minByOrNull { die ->
+            kotlin.math.abs(die.sides - targetSides)
+        }
+        
+        if (closestDie == null) {
+            return null
+        }
+        
+        // Remove the selected die from the list
+        val dieIndex = graftedDice.indexOf(closestDie)
+        val die = graftedDice.removeAt(dieIndex)
         die.roll()
         return die
     }
+
+    val hasRoomForGraftedDie: Boolean
+        get() = graftedDice.size < (1+rootCount)
+
+    private val rootCount: Int
+        get() {
+            return creatureGrid.values.count { cardId ->
+                val card = cardOf(cardId)
+                card?.type == FlourishType.ROOT
+            }
+        }
+
+    val hasGraftedDice: Boolean
+        get() = graftedDice.size > 0
+
+    // endregion Graft
 
     // Helper method to get all cards in the creature
     val allCards: List<GameCard>
@@ -178,6 +205,30 @@ class CreatureManager(
         return creatureGrid.containsKey(Pair(x, y))
     }
 
+    // region Sap
+
+    fun useSap(): Boolean {
+        if (sapLeft > 0) {
+            sapLeft--
+            return true
+        } else {
+            return false
+        }
+    }
+
+    fun resetSap() {
+        sapLeft = sapTotal
+    }
+
+    fun addSap() {
+        sapTotal++
+        resetSap()
+    }
+
+    val hasSap: Boolean = sapLeft > 0
+
+    // endregion Sap
+
     // endregion public
 
     private fun addRootCard(cardId: CardID): Boolean {
@@ -190,7 +241,7 @@ class CreatureManager(
         }
         return false // No more room
     }
-    
+
     private fun addVineOrFlowerCard(cardId: CardID): Boolean {
         // Find the first available position in the hardcoded vine/flower pattern
         for (position in VINE_FLOWER_POSITIONS) {
@@ -201,23 +252,23 @@ class CreatureManager(
         }
         return false // No more room
     }
-    
+
     /**
      * Validates if a position is valid for vine/flower placement.
      * For positions beyond the first ring, there must be a vine path back to the canopy.
      */
     private fun isValidVineFlowerPosition(position: Pair<Int, Int>): Boolean {
         val (x, y) = position
-        
+
         // First ring positions (left, right, top) are always valid if empty
         if (position in listOf(Pair(-1, 0), Pair(1, 0), Pair(0, 1))) {
             return true
         }
-        
+
         // For other positions, check if there's a vine path back to canopy
         return hasVinePathToCanopy(position)
     }
-    
+
     /**
      * Checks if there's a continuous vine path from the given position back to the canopy (0,0).
      * Uses BFS to find a path through vine cards only.
@@ -226,15 +277,15 @@ class CreatureManager(
         val visited = mutableSetOf<Pair<Int, Int>>()
         val queue = mutableListOf(startPosition)
         visited.add(startPosition)
-        
+
         while (queue.isNotEmpty()) {
             val current = queue.removeAt(0)
-            
+
             // If we've reached the canopy, we found a path
             if (current == Pair(0, 0)) {
                 return true
             }
-            
+
             // Check all adjacent positions
             val adjacentPositions = listOf(
                 Pair(current.first - 1, current.second),  // left
@@ -242,24 +293,25 @@ class CreatureManager(
                 Pair(current.first, current.second - 1),  // down
                 Pair(current.first, current.second + 1)   // up
             )
-            
+
             for (adjacent in adjacentPositions) {
                 if (adjacent == Pair(0, 0)) {
                     // If we've reached the canopy, we found a path
                     return true
                 }
-                if (adjacent !in visited && 
-                    creatureGrid.containsKey(adjacent) && 
-                    isVineCard(adjacent)) {
+                if (adjacent !in visited &&
+                    creatureGrid.containsKey(adjacent) &&
+                    isVineCard(adjacent)
+                ) {
                     visited.add(adjacent)
                     queue.add(adjacent)
                 }
             }
         }
-        
+
         return false
     }
-    
+
     /**
      * Checks if a card at the given position is a vine card.
      */
@@ -271,17 +323,17 @@ class CreatureManager(
 
     private fun isLeafCard(position: Pair<Int, Int>, cardId: CardID): Boolean {
         val card = cardOf(cardId) ?: return false
-        
+
         // Flower cards are always leaf cards (endpoints)
         if (card.type == FlourishType.FLOWER) {
             return true
         }
-        
+
         // For vine and root cards, check if removing this card would leave any cards "hanging"
         // A card is a leaf if removing it doesn't break the connection to the canopy
         return isLeafCardByRemoval(position)
     }
-    
+
     /**
      * Determines if a card is a leaf by checking if removing it would leave any cards
      * without a path back to the canopy (0,0).
@@ -294,14 +346,14 @@ class CreatureManager(
         val hasDisconnectedCards = creatureGrid.keys.any { remainingPosition ->
             !hasPathToCanopy(remainingPosition)
         }
-        
+
         // Restore the card
         creatureGrid[position] = removedCardId
-        
+
         // If no cards were disconnected, this is a leaf card
         return !hasDisconnectedCards
     }
-    
+
     /**
      * Checks if a position has a path back to the canopy (0,0).
      * Uses BFS to find any path through any type of card.
@@ -310,15 +362,15 @@ class CreatureManager(
         val visited = mutableSetOf<Pair<Int, Int>>()
         val queue = mutableListOf(startPosition)
         visited.add(startPosition)
-        
+
         while (queue.isNotEmpty()) {
             val current = queue.removeAt(0)
-            
+
             // If we've reached the canopy, we found a path
             if (current == Pair(0, 0)) {
                 return true
             }
-            
+
             // Check all adjacent positions
             val adjacentPositions = listOf(
                 Pair(current.first - 1, current.second),  // left
@@ -326,7 +378,7 @@ class CreatureManager(
                 Pair(current.first, current.second - 1),  // down
                 Pair(current.first, current.second + 1)   // up
             )
-            
+
             for (adjacent in adjacentPositions) {
                 if (adjacent !in visited && creatureGrid.containsKey(adjacent)) {
                     visited.add(adjacent)

@@ -8,11 +8,11 @@ import dugsolutions.leaf.common.domain.acquire.ChoiceCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceDie
 import dugsolutions.leaf.random.die.SampleDie
 import dugsolutions.leaf.game.acquire.cost.ApplyCostTD
-import dugsolutions.leaf.game.acquire.evaluator.CombinationGenerator
+import dugsolutions.leaf.game.acquire.evaluator.GenerateCombinations
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.game.acquire.domain.FakeUsingDice
-import dugsolutions.leaf.game.acquire.evaluator.PossibleCards
-import dugsolutions.leaf.game.acquire.evaluator.PossibleDice
+import dugsolutions.leaf.game.acquire.evaluator.PossibleCardsToAcquire
+import dugsolutions.leaf.game.acquire.evaluator.PossibleDiceToAcquire
 import dugsolutions.leaf.grove.Grove
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
@@ -26,18 +26,18 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class AcquireItemTest {
+class AcquireItemsTest {
 
-    private val mockCombinationGenerator = mockk<CombinationGenerator>(relaxed = true)
-    private val mockPossibleCards = mockk<PossibleCards>(relaxed = true)
-    private val mockPossibleDice = mockk<PossibleDice>(relaxed = true)
+    private val mockCombinationGenerator = mockk<GenerateCombinations>(relaxed = true)
+    private val mockPossibleCards = mockk<PossibleCardsToAcquire>(relaxed = true)
+    private val mockPossibleDice = mockk<PossibleDiceToAcquire>(relaxed = true)
     private val applyCostTD = ApplyCostTD()
     private val mockGrove = mockk<Grove>(relaxed = true)
     private val mockChronicle = mockk<GameChronicle>(relaxed = true)
     private val mockPlayer = mockk<Player>(relaxed = true)
     private val sampleDie = SampleDie()
 
-    private val SUT = AcquireItem(
+    private val SUT = AcquireItems(
         mockCombinationGenerator,
         mockPossibleCards,
         mockPossibleDice,

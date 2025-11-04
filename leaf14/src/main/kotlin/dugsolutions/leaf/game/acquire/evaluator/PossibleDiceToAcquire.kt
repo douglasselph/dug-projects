@@ -5,7 +5,7 @@ import dugsolutions.leaf.random.die.DieCost
 import dugsolutions.leaf.game.acquire.domain.Combinations
 import dugsolutions.leaf.grove.SelectPossibleDice
 
-class PossibleDice(
+class PossibleDiceToAcquire(
     private val selectPossibleDice: SelectPossibleDice,
     private val dieCost: DieCost
 ) {
