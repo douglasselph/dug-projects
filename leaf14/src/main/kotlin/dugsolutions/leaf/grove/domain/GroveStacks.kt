@@ -123,7 +123,7 @@ class GroveStacks(
     fun isDieAvailable(sides: Int): Boolean =
         diceSupply.getQuantity(sides) > 0
 
-    fun getAffordableDice(availablePips: Int): List<Int> =
+    fun getAffordableDice(availablePips: Int): List<DieSides> =
         diceSupply.getAffordableSides(availablePips)
 
     fun push(

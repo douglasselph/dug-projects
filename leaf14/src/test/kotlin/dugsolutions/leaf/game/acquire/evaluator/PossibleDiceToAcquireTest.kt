@@ -1,8 +1,9 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.grove.SelectPossibleDice
+import dugsolutions.leaf.common.evaluator.PossibleDiceToAcquire
 import dugsolutions.leaf.random.die.DieCost
 import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
 import dugsolutions.leaf.random.die.DieValues
 import dugsolutions.leaf.random.die.SampleDie
 import io.mockk.every
@@ -20,12 +21,15 @@ class PossibleDiceToAcquireTest {
         private val d6 = sampleDie.d6
         private val d8 = sampleDie.d8
         private val d10 = sampleDie.d10
+
+        private val MARKET_DICE = listOf(
+            DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10, DieSides.D12, DieSides.D20
+        )
     }
 
-    private val selectPossibleDice = mockk<SelectPossibleDice>(relaxed = true)
     private val dieCost = mockk<DieCost>(relaxed = true)
 
-    private val SUT = PossibleDiceToAcquire(selectPossibleDice, dieCost)
+    private val SUT = PossibleDiceToAcquire(dieCost)
 
     @BeforeEach
     fun setup() {
@@ -36,9 +40,10 @@ class PossibleDiceToAcquireTest {
     fun invoke_whenEmptyList_returnsEmptyList() {
         // Arrange
         val combinations: List<DieValues> = emptyList()
+        val marketDice = MARKET_DICE
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertTrue(result.isEmpty())
@@ -49,10 +54,10 @@ class PossibleDiceToAcquireTest {
         // Arrange
         val combination = DieValues.from(listOf(d6.adjustTo(4)))
         val combinations = listOf(combination)
-        every { selectPossibleDice() } returns emptyList()
+        val marketDice = emptyList<DieSides>()
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertTrue(result.isEmpty())
@@ -65,16 +70,15 @@ class PossibleDiceToAcquireTest {
         val combination2 = DieValues.from(listOf(d4.adjustTo(3), d6.adjustTo(5)))
         val combinations = listOf(combination1, combination2)
 
-        val marketDice = listOf(d4, d6, d8, d10)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = MARKET_DICE.filter { it.value in listOf(4, 6, 8, 10) }
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertEquals(2, result.size)
-        assertEquals(4, result[0].die.sides) // d4 for combination1 (total=4)
-        assertEquals(8, result[1].die.sides) // d8 for combination2 (total=8)
+        assertEquals(4, result[0].dieSides.value) // d4 for combination1 (total=4)
+        assertEquals(8, result[1].dieSides.value) // d8 for combination2 (total=8)
     }
 
     @Test
@@ -83,11 +87,10 @@ class PossibleDiceToAcquireTest {
         val combination = DieValues.from(listOf(d6.adjustTo(4)))
         val combinations = listOf(combination)
 
-        val marketDice = listOf(d8, d10)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D8, DieSides.D10)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertTrue(result.isEmpty())
@@ -99,20 +102,19 @@ class PossibleDiceToAcquireTest {
         val combination = DieValues.from(listOf(d4.adjustTo(2), d6.adjustTo(6)))
         val combinations = listOf(combination)
 
-        val marketDice = listOf(d4, d6, d8, d10)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertEquals(1, result.size)
-        assertEquals(d10, result[0].die) // Total = 8, can afford d10 (cost=10), but wait...
+        assertEquals(d10.value, result[0].dieSides.value) // Total = 8, can afford d10 (cost=10), but wait...
         // Actually, total = 2 + 6 = 8, so can afford d8 (cost=8) or d10 (cost=10)
         // maxByOrNull will pick d10, but wait - it filters by dieCost(die) <= combination.total
         // So only d8 can be afforded (cost=8 <= 8), d10 (cost=10 > 8) cannot
         // So it should return d8
-        assertEquals(d8, result[0].die)
+        assertEquals(d8.value, result[0].dieSides.value)
     }
 
     @Test
@@ -121,19 +123,17 @@ class PossibleDiceToAcquireTest {
         val combination1 = DieValues.from(listOf(d4.adjustTo(2), d6.adjustTo(6))) // total = 8
         val combination2 = DieValues.from(listOf(d8.adjustTo(8))) // total = 8
         val combinations = listOf(combination1, combination2)
-
-        val marketDice = listOf(d4, d6, d8, d10)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         // Both combinations can afford d8 (cost=8 <= 8)
         // addIfBetter will keep the one with lower total (or same total, but first one)
         // Since both have total=8, the first one should be kept
         assertEquals(1, result.size)
-        assertEquals(d8, result[0].die)
+        assertEquals(8, result[0].dieSides.value)
         assertEquals(combination1, result[0].usingDice) // First combination is kept
     }
 
@@ -143,18 +143,16 @@ class PossibleDiceToAcquireTest {
         val combination1 = DieValues.from(listOf(d4.adjustTo(4))) // total = 4, can afford d4
         val combination2 = DieValues.from(listOf(d6.adjustTo(6))) // total = 6, can afford d6
         val combinations: List<DieValues> = listOf(combination1, combination2)
-
-        val marketDice = listOf(d4, d6, d8, d10)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D4, DieSides.D6, DieSides.D8, DieSides.D10)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertEquals(2, result.size)
         // Results are sorted by die.sides, then by usingDice.total
-        assertEquals(4, result[0].die.sides)
-        assertEquals(6, result[1].die.sides)
+        assertEquals(4, result[0].dieSides.value)
+        assertEquals(6, result[1].dieSides.value)
     }
 
     @Test
@@ -164,17 +162,16 @@ class PossibleDiceToAcquireTest {
         val combination2 = DieValues.from(listOf(d4.adjustTo(2))) // total = 2
         val combinations: List<DieValues> = listOf(combination1, combination2)
 
-        val marketDice = listOf(d4)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D4)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         // Both can afford d4 (cost=4)
         // addIfBetter keeps the one with lower total (better efficiency)
         assertEquals(1, result.size)
-        assertEquals(d4, result[0].die)
+        assertEquals(4, result[0].dieSides.value)
         assertEquals(combination2, result[0].usingDice) // Lower total is better
     }
 
@@ -184,18 +181,16 @@ class PossibleDiceToAcquireTest {
         val combination1 = DieValues.from(listOf(d6.adjustTo(6))) // total = 6
         val combination2 = DieValues.from(listOf(d4.adjustTo(4))) // total = 4
         val combinations = listOf(combination1, combination2)
-
-        val marketDice = listOf(d4, d6, d8)
-        every { selectPossibleDice() } returns marketDice
+        val marketDice = listOf(DieSides.D4, DieSides.D6, DieSides.D8)
 
         // Act
-        val result = SUT(combinations)
+        val result = SUT(combinations, marketDice)
 
         // Assert
         assertEquals(2, result.size)
         // Sorted by die.sides first, then by usingDice.total
-        assertEquals(4, result[0].die.sides)
-        assertEquals(6, result[1].die.sides)
+        assertEquals(4, result[0].dieSides.value)
+        assertEquals(6, result[1].dieSides.value)
         assertEquals(4, result[0].usingDice.total)
         assertEquals(6, result[1].usingDice.total)
     }

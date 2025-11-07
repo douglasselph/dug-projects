@@ -1,4 +1,4 @@
-package dugsolutions.leaf.game.acquire.evaluator
+package dugsolutions.leaf.common.evaluator
 
 import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.random.die.DieValues

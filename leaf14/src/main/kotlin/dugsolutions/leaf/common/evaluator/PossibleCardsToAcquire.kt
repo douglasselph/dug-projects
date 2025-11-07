@@ -1,7 +1,8 @@
-package dugsolutions.leaf.game.acquire.evaluator
+package dugsolutions.leaf.common.evaluator
 
 import dugsolutions.leaf.cards.domain.GameCard
 import dugsolutions.leaf.common.domain.acquire.ChoiceCard
+import dugsolutions.leaf.common.evaluator.CanPurchaseCards
 import dugsolutions.leaf.random.die.DieValues
 
 class PossibleCardsToAcquire(
