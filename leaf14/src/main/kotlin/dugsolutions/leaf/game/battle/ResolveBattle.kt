@@ -1,12 +1,14 @@
 package dugsolutions.leaf.game.battle
 
-import dugsolutions.leaf.game.battle.domain.DieBoosted
+import dugsolutions.leaf.game.battle.domain.BattleLine
+import dugsolutions.leaf.game.battle.domain.PlayerValue
 import dugsolutions.leaf.game.battle.domain.PlayerValues
 import dugsolutions.leaf.game.battle.domain.fill
 import dugsolutions.leaf.game.battle.domain.sort
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.random.di.DieFactory
 import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.random.die.DieSides
 
 class ResolveBattle(
     private val dieFactory: DieFactory
@@ -24,122 +26,139 @@ class ResolveBattle(
         val maxLength = grid.maxOfOrNull { it.values.size } ?: 0
         val normalizedGrid = grid.map { it.sort().fill(maxLength) }
 
+        // Remove all committed dice from players' hands before battle resolution
+        removeDiceFromHand(normalizedGrid)
+
         // Process each index (battle round)
         for (index in 0 until maxLength) {
             resolveBattleAtIndex(normalizedGrid, index)
         }
     }
 
-    private data class PlayerValue(
-        val player: Player,
-        val dieValue: DieBoosted
-    )
+    /**
+     * Removes all dice committed to battle from players' hands.
+     * This is done upfront before any battle resolution occurs.
+     */
+    private fun removeDiceFromHand(grid: List<PlayerValues>) {
+        for (playerValues in grid) {
+            for (dieBoosted in playerValues.values) {
+                val dieValue = dieBoosted.dieValue
+                // Only remove valid dice (not empty placeholders)
+                if (dieValue.sides > 0 && dieValue.value > 0) {
+                    val die = findMatchingDie(playerValues.player, dieValue)
+                    if (die != null) {
+                        playerValues.player.removeDieFromHand(die)
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * Resolves battle at a specific index across all players.
      * Assumes all players have been normalized (sorted and filled to same length).
      */
     private fun resolveBattleAtIndex(grid: List<PlayerValues>, index: Int) {
-        // Get DieBoosted for each player at this index (all players have same length now)
-        val battleParticipants = grid.map { playerValues ->
-            Pair(playerValues, playerValues.values[index])
+        // Extract PlayerValue for each player at this index
+        val playerValues = grid.map { playerValues ->
+            PlayerValue(playerValues.player, playerValues.values[index])
         }
 
         // Filter out empty participants (zero sides or zero value)
-        val validParticipants = battleParticipants.filter { (_, dieBoosted) ->
-            dieBoosted.dieValue.sides > 0 && dieBoosted.dieValue.value > 0
+        val validPlayerValues = playerValues.filter { playerValue ->
+            playerValue.dieValue.dieValue.sides > 0 && playerValue.dieValue.dieValue.value > 0
         }
 
         // If no valid participants, nothing to resolve
-        if (validParticipants.isEmpty()) return
+        if (validPlayerValues.isEmpty()) return
 
-        // Sort by attack value (lowest to highest)
-        val sortedParticipants = validParticipants.sortedBy { (_, dieBoosted) -> dieBoosted.attack }
+        // Build BattleLine and sort it
+        val battleLine = BattleLine(validPlayerValues.toMutableList())
+        battleLine.sort()
 
-        // Find the lowest attack value
-        val lowestAttack = sortedParticipants.first().second.attack
+        // Get the first losers (lowest attack)
+        var losers = battleLine.next() ?: return
 
-        // Find all participants with the lowest attack (losers)
-        val losers = sortedParticipants.filter { (_, dieBoosted) -> dieBoosted.attack == lowestAttack }
+        // If there are no more players (all tied at lowest), nothing happens
+        var winners = battleLine.next() ?: return
 
-        // Find all participants with higher attack (winners)
-        val winners = sortedParticipants.filter { (_, dieBoosted) -> dieBoosted.attack > lowestAttack }
-
-        // If there are no winners (all tied at lowest), nothing happens
-        if (winners.isEmpty()) return
-
-        // Resolve each loser against the winners
-        for ((loserPlayerValues, loserDieBoosted) in losers) {
-            // Find the highest attack value among winners (or any winner if tied)
-            val winnerAttack = winners.maxOf { (_, dieBoosted) -> dieBoosted.attack }
-            val winnerParticipants = winners.filter { (_, dieBoosted) -> dieBoosted.attack == winnerAttack }
-
-            // Resolve against each winner (in case of ties)
-            for ((winnerPlayerValues, winnerDieBoosted) in winnerParticipants) {
-                resolvePairing(
-                    winnerPlayerValues,
-                    winnerDieBoosted,
-                    loserPlayerValues,
-                    loserDieBoosted
-                )
+        // Resolve pairings: losers vs winners, then winners become losers for next round
+        while (losers.isNotEmpty() && winners.isNotEmpty()) {
+            // Resolve each loser against each winner
+            for (loser in losers) {
+                for (winner in winners) {
+                    resolvePairing(winner, loser)
+                }
             }
+
+            // Winners become losers for the next round
+            losers = winners
+            winners = battleLine.next() ?: break
+        }
+
+        // If there are remaining losers with no more winners, they just discard their dice
+        for (remaining in losers) {
+            resolvePairing(remaining)
         }
     }
 
     /**
      * Resolves a single pairing between a winner and a loser.
      */
-    private fun resolvePairing(
-        winnerPlayerValues: PlayerValues,
-        winnerDieBoosted: DieBoosted,
-        loserPlayerValues: PlayerValues,
-        loserDieBoosted: DieBoosted
-    ) {
-        val winnerPlayer = winnerPlayerValues.player
-        val loserPlayer = loserPlayerValues.player
-        val winnerAttack = winnerDieBoosted.attack
-        val loserDieValue = loserDieBoosted.dieValue
+    private fun resolvePairing(winner: PlayerValue, loser: PlayerValue) {
+        val winnerPlayer = winner.player
+        val loserPlayer = loser.player
+        val winnerAttack = winner.attack
+        val loserDieValue = loser.dieValue.dieValue
+        val winnerDieValue = winner.dieValue.dieValue
 
         // Check if loser had a valid die (not empty placeholder)
         val loserHadValidDie = loserDieValue.sides > 0 && loserDieValue.value > 0
 
         if (loserHadValidDie) {
-            // Find the actual Die in both players' hands that match the DieValues
-            val winnerDie = findMatchingDie(winnerPlayer, winnerDieBoosted.dieValue)
-            val loserDie = findMatchingDie(loserPlayer, loserDieValue)
-            
-            if (winnerDie != null && loserDie != null) {
-                // Both players remove the die from their hand
-                winnerPlayer.removeDieFromHand(winnerDie)
-                loserPlayer.removeDieFromHand(loserDie)
+            // Create winner's die from DieSides and add to discard
+            val winnerDieSides = DieSides.from(winnerDieValue.sides)
+            val winnerDie = dieFactory(winnerDieSides).adjustTo(winnerDieValue.value)
+            winnerPlayer.addDieToDiscard(winnerDie)
 
-                // Winner adds their die to discard
-                winnerPlayer.addDieToDiscard(winnerDie)
-
-                // Loser's die is either trashed or downgraded
-                if (winnerAttack >= loserDie.sides) {
-                    // Die is trashed - nothing added to discard
-                } else if (winnerAttack > loserDieValue.value) {
-                    // Die is downgraded (attack > value but < sides)
-                    val downgradedDie = downgrade(loserDie)
-                    if (downgradedDie != null) {
-                        loserPlayer.addDieToDiscard(downgradedDie)
-                    }
+            // Loser's die is either trashed or downgraded
+            if (winnerAttack >= loserDieValue.sides) {
+                // Die is trashed - nothing added to discard
+            } else if (winnerAttack > loserDieValue.value) {
+                // Die is downgraded (attack > value but < sides)
+                val loserDieSides = DieSides.from(loserDieValue.sides)
+                val downgradedDieSides = loserDieSides.downgrade
+                if (downgradedDieSides != null) {
+                    val downgradedDie = dieFactory(downgradedDieSides).adjustTo(loserDieValue.value)
+                    loserPlayer.addDieToDiscard(downgradedDie)
                 }
-                // If winnerAttack <= loserDieValue.value, nothing happens to the loser's die
             }
+            // If winnerAttack <= loserDieValue.value, nothing happens to the loser's die
         } else {
             // Loser had no die (empty placeholder) - they take full damage
-            // Find the winner's Die and discard it
-            val winnerDie = findMatchingDie(winnerPlayer, winnerDieBoosted.dieValue)
-            if (winnerDie != null) {
-                winnerPlayer.discard(winnerDie)
-                // Winner adds their die to discard
-                winnerPlayer.addDieToDiscard(winnerDie)
-            }
+            // Create winner's die from DieSides and add to discard
+            val winnerDieSides = DieSides.from(winnerDieValue.sides)
+            val winnerDie = dieFactory(winnerDieSides).adjustTo(winnerDieValue.value)
+            winnerPlayer.addDieToDiscard(winnerDie)
             
             // Loser takes damage
             loserPlayer.incomingDamage += winnerAttack
+        }
+    }
+
+    /**
+     * Resolves a single player value (when there are no more opponents).
+     * Simply adds the die to discard (already removed from hand).
+     */
+    private fun resolvePairing(playerValue: PlayerValue) {
+        val player = playerValue.player
+        val dieValue = playerValue.dieValue.dieValue
+
+        // Check if it's a valid die (not empty placeholder)
+        if (dieValue.sides > 0 && dieValue.value > 0) {
+            val dieSides = DieSides.from(dieValue.sides)
+            val die = dieFactory(dieSides).adjustTo(dieValue.value)
+            player.addDieToDiscard(die)
         }
     }
 
@@ -152,8 +171,5 @@ class ResolveBattle(
         }
     }
 
-    private fun downgrade(die: Die): Die? {
-        return die.dieSides.downgrade?.let { dieFactory(it) }
-    }
 
 }

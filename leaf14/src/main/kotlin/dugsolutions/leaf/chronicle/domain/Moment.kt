@@ -18,7 +18,7 @@ sealed class Moment {
     data class ADD_TO_THORN(val player: Player, val amount: Int) : Moment()
 
     data class ADD_TO_TOTAL(val player: Player, val amount: Int) : Moment()
-    data class CLEANUP(val player: Player, val numReused: Int, val numRetained: Int): Moment()
+    data class CLEANUP(val player: Player): Moment()
     data class DELIVER_DAMAGE(
         val defender: Player, val damageToDefender: Int, val deflectDamage: Int = 0,
         val defenderPipTotal: Int = 0, val attackerPipTotal: Int = 0

@@ -5,11 +5,13 @@ import dugsolutions.leaf.common.evaluator.GenerateCombinations
 import dugsolutions.leaf.common.evaluator.PossibleCardsToAcquire
 import dugsolutions.leaf.common.evaluator.PossibleDiceToAcquire
 import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.player.decisions.baseline.DecisionBattleInsectBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionCultivationActionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDrawCountBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionRerollOneDieBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionShouldTargetPlayerBaseline
+import dugsolutions.leaf.player.decisions.core.DecisionBattleInsect
 import dugsolutions.leaf.player.decisions.core.DecisionCultivationAction
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
@@ -38,6 +40,7 @@ class DecisionDirector(
     lateinit var damageAbsorptionDecision: DecisionDamageAbsorption
     lateinit var shouldTargetPlayer: DecisionShouldTargetPlayer
     lateinit var rerollOneDie: DecisionRerollOneDie
+    lateinit var battleInsect: DecisionBattleInsect
 
     fun initialize(player: Player) {
         drawCountDecision = DecisionDrawCountBaseline()
@@ -55,6 +58,7 @@ class DecisionDirector(
         damageAbsorptionDecision = DecisionDamageAbsorptionBaseline(player, cardManager)
         shouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)
         rerollOneDie = DecisionRerollOneDieBaseline(player)
+        battleInsect = DecisionBattleInsectBaseline(player)
     }
 
 }

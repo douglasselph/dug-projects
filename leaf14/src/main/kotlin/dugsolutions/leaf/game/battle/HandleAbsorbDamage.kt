@@ -18,7 +18,7 @@ class HandleAbsorbDamage(
         if (player.incomingDamage <= 0) return 0
 
         // Decide how to absorb damage
-        var result = player.decisionDirector.damageAbsorptionDecision()
+        val result = player.decisionDirector.damageAbsorptionDecision()
         // Apply decision
         val thornDamage = result.thorn
         result.handCards.forEach { card ->
@@ -39,8 +39,7 @@ class HandleAbsorbDamage(
         if (player.incomingDamage < 0) {
             player.incomingDamage = 0
         } else if (player.incomingDamage > 0) {
-            // Game is lost
-            TODO("chronicle event: player has lost")
+            chronicle(Moment.INFO("Player ${player.id} has lost because still has ${player.incomingDamage} damage left to absorb"))
         }
         return thornDamage
     }

@@ -3,6 +3,7 @@ package dugsolutions.leaf.game
 import dugsolutions.leaf.chronicle.GameChronicle
 import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.actions.ExecuteActions
+import dugsolutions.leaf.game.battle.HandleAbsorbDamage
 import dugsolutions.leaf.game.battle.HandleInsects
 import dugsolutions.leaf.game.battle.ResolveBattle
 import dugsolutions.leaf.game.battle.domain.DieBoosted
@@ -16,6 +17,7 @@ class GameBattleTurn(
     private val executeActions: ExecuteActions,
     private val handleInsects: HandleInsects,
     private val resolveBattle: ResolveBattle,
+    private val handleAbsorbDamage: HandleAbsorbDamage,
     private val handleCleanup: HandleCleanup,
     private val chronicle: GameChronicle
 ) {
@@ -26,6 +28,7 @@ class GameBattleTurn(
         orderedPlayers.forEach { player -> executeActions(player) }
         val battleGrid = handleInsects(initialDieValues(orderedPlayers))
         resolveBattle(battleGrid)
+        orderedPlayers.forEach { player -> handleAbsorbDamage(player) }
         orderedPlayers.forEach { player -> handleCleanup(player) }
     }
 
