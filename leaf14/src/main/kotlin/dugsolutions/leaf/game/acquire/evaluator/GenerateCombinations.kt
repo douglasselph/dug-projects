@@ -1,21 +1,12 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.game.acquire.domain.Combination
-import dugsolutions.leaf.game.acquire.domain.Combinations
-import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.random.die.DieValue
 import dugsolutions.leaf.random.die.DieValues
 
 class GenerateCombinations {
 
-    operator fun invoke(dieValues: DieValues): Combinations {
-        return Combinations(generateCombinations(dieValues))
-    }
-
-    private fun generateCombinations(
-        dieValues: DieValues
-    ): List<Combination> {
-        val result = mutableListOf<Combination>()
+    operator fun invoke(dieValues: DieValues): List<DieValues> {
+        val result = mutableListOf<DieValues>()
         val dice = dieValues.dice
 
         // Generate all possible combinations using binary counting
@@ -34,7 +25,7 @@ class GenerateCombinations {
             }
 
             // Create a new combination with the selected dice
-            result.add(Combination(values = DieValues(selectedDice)))
+            result.add(DieValues(selectedDice))
         }
         return result
     }

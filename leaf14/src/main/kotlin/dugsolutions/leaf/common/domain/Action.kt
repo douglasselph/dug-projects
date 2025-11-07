@@ -8,11 +8,13 @@ import dugsolutions.leaf.random.die.DieValue
 
 sealed class Action {
 
+    data object None: Action()
     data class AcquireBug(val bug: Token, val using: DieValue): Action()
     data class AcquireCard(val card: GameCard, val using: List<DieValue>): Action()
     data class AcquireDie(val sides: DieSides, val using: List<DieValue>): Action()
-    data class ExecuteOnDie(val targetDie: Die, val using: GameCard): Action()
-    data class ExecuteOnPlayerDie(val targetPlayer: Player, val targetDie: Die, val using: GameCard): Action()
-    data class Execute(val using: GameCard): Action()
+    data class ExecuteOnDie(val targetDie: Die, val using: ActivateCard): Action()
+    data class ExecuteOnPlayerDie(val targetPlayer: Player, val targetDie: Die, val using: ActivateCard): Action()
+    data class ExecuteCard(val using: ActivateCard): Action()
+    data class PullDie(val using: Die): Action()
 
 }

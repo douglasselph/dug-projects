@@ -29,6 +29,9 @@ class DieValues(val dice: List<DieValue>) : Iterable<DieValue> {
         return "$base=$totalPips"
     }
 
+    val total: Int
+        get() = dice.sumOf { it.value }
+
     val values: String
         get() {
             if (dice.isEmpty()) return ""

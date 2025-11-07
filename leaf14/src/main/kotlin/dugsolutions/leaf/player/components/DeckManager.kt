@@ -70,6 +70,15 @@ class DeckManager(
         return false
     }
 
+    fun discard(values: List<DieValue>): Boolean {
+        for (value in values) {
+            if (!discard(value)) {
+                return false
+            }
+        }
+        return true
+    }
+
     fun addCardToSupply(cardId: CardID): Boolean = supply.addCard(cardId)
     fun addDieToSupply(die: Die): Boolean = supply.addDie(die)
     fun addDieToSupply(die: DieValue): Boolean = supply.addDie(die.dieFrom(dieFactory))

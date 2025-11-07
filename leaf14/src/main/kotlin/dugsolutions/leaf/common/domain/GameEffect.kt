@@ -7,7 +7,6 @@ enum class GameEffect(
 
     NONE("-", "No effect"),
     ADD_TO_DIE("AddToDie", "Add VALUE to one die, without exceeding MAX"),
-    ADD_TO_TOTAL("AddToTotal", "Add VALUE to final total"),
     ADJUST_BY("AdjustBy", "Adjust any die by +/- VALUE, without exceeding 1 or MAX"),
     ADJUST_TO_MAX("AdjustToMax", "Adjust VALUE dice to MAX"),
     ADJUST_TO_MIN_OR_MAX("AdjustToMinOrMax", "Adjust VALUE dice to either MIN or MAX"),

@@ -25,7 +25,7 @@ class DiceSupply(initialSupply: Map<Int, Int> = emptyMap()) {
 
     fun getQuantity(sides: Int): Int = _supply[sides] ?: 0
 
-    fun getAvailableSides(): List<Int> = _supply.filterValues { it > 0 }.keys.sorted()
+    fun getAvailableSides(): List<DieSides> = _supply.filterValues { it > 0 }.keys.sorted().map { DieSides.from(it) }
 
     fun removeDie(sides: Int): Boolean {
         if (!VALID_DICE_SIDES.contains(sides)) return false
@@ -51,8 +51,8 @@ class DiceSupply(initialSupply: Map<Int, Int> = emptyMap()) {
 
     fun total(): Int = _supply.values.sum()
 
-    fun getAffordableSides(availablePips: Int): List<Int> =
-        getAvailableSides().filter { it <= availablePips }.sorted()
+    fun getAffordableSides(availablePips: Int): List<DieSides> =
+        getAvailableSides().filter { it.value <= availablePips }.sorted()
 
     fun clear() {
         _supply.clear()

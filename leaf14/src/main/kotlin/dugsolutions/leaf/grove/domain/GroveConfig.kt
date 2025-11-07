@@ -5,7 +5,8 @@ import dugsolutions.leaf.random.die.DieSides
 
 data class MarketConfig(
     val stacks: List<MarketStackConfig>,
-    val dice: List<MarketDiceConfig>
+    val dice: List<MarketDiceConfig>,
+    val numBugs: Int
 )
 
 data class MarketStackConfig(

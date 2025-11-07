@@ -8,8 +8,8 @@ import dugsolutions.leaf.player.components.StackManager
 import dugsolutions.leaf.player.components.VPManager
 import dugsolutions.leaf.player.components.WispManager
 import dugsolutions.leaf.player.decisions.DecisionDirector
-import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
-import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
+import dugsolutions.leaf.player.decisions.local.EvaluateAcquireCard
+import dugsolutions.leaf.player.decisions.local.EvaluateAcquireDie
 import dugsolutions.leaf.player.decisions.local.BestCardEvaluator
 import dugsolutions.leaf.player.effect.HasDieValue
 import dugsolutions.leaf.player.effect.HasFlourishType
@@ -19,15 +19,15 @@ import org.koin.dsl.module
 
 val playerModule: Module = module {
 
-    single { AcquireDieEvaluator() }
-    single { AcquireCardEvaluator(get()) }
+    single { EvaluateAcquireDie() }
+    single { EvaluateAcquireCard(get()) }
     single { BestCardEvaluator() }
     single { ShouldProcessMatchEffect(get()) }
     single { HasDieValue() }
     single { HasFlourishType(get()) }
 
     factory { StackManager(get(), get()) }
-    factory { DecisionDirector(get(), get(), get()) }
+    factory { DecisionDirector(get()) }
     factory { ButterflyManager() }
     factory { CreatureManager(get()) }
     factory { InsectManager() }

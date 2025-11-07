@@ -96,10 +96,10 @@ class CreatureManager(
     private fun cardOf(cardId: CardID): GameCard? = cardManager.getCard(cardId)
 
     // Dice on creature is equal to 1 + #Roots
-    private val graftedDice = mutableListOf<Die>()
+    private val graftedDiceHeld = mutableListOf<Die>()
 
     private var sapTotal: Int = 1
-    private var sapLeft: Int = 1
+    private var sapLeftCount: Int = 1
 
     // region public
 
@@ -144,14 +144,14 @@ class CreatureManager(
         if (!hasRoomForGraftedDie) {
             return false
         }
-        graftedDice.add(die)
+        graftedDiceHeld.add(die)
         return true
     }
 
     // Pull die with at least the number of sides indicated.
     fun pullDie(sides: DieSides): Die? {
         // Find all dice that have at least the required number of sides
-        val eligibleDice = graftedDice.filter { it.sides >= sides.value }
+        val eligibleDice = graftedDiceHeld.filter { it.sides >= sides.value }
         
         if (eligibleDice.isEmpty()) {
             return null
@@ -168,14 +168,14 @@ class CreatureManager(
         }
         
         // Remove the selected die from the list
-        val dieIndex = graftedDice.indexOf(closestDie)
-        val die = graftedDice.removeAt(dieIndex)
+        val dieIndex = graftedDiceHeld.indexOf(closestDie)
+        val die = graftedDiceHeld.removeAt(dieIndex)
         die.roll()
         return die
     }
 
     val hasRoomForGraftedDie: Boolean
-        get() = graftedDice.size < (1+rootCount)
+        get() = graftedDiceHeld.size < (1+rootCount)
 
     private val rootCount: Int
         get() {
@@ -186,7 +186,10 @@ class CreatureManager(
         }
 
     val hasGraftedDice: Boolean
-        get() = graftedDice.size > 0
+        get() = graftedDiceHeld.size > 0
+
+    val graftedDice: List<Die>
+        get() = graftedDiceHeld
 
     // endregion Graft
 
@@ -208,8 +211,8 @@ class CreatureManager(
     // region Sap
 
     fun useSap(): Boolean {
-        if (sapLeft > 0) {
-            sapLeft--
+        if (sapLeftCount > 0) {
+            sapLeftCount--
             return true
         } else {
             return false
@@ -217,7 +220,7 @@ class CreatureManager(
     }
 
     fun resetSap() {
-        sapLeft = sapTotal
+        sapLeftCount = sapTotal
     }
 
     fun addSap() {
@@ -225,9 +228,26 @@ class CreatureManager(
         resetSap()
     }
 
-    val hasSap: Boolean = sapLeft > 0
+    val sapLeft: Int = sapLeftCount
+    val hasSap: Boolean
+        get() = sapLeft > 0
 
     // endregion Sap
+
+    // Cards executed
+
+    private val storedCardsExecuted = mutableListOf<GameCard>()
+
+    fun cardExecuted(card: GameCard) {
+        storedCardsExecuted.add(card)
+    }
+
+    fun resetCardsExecuted() {
+        storedCardsExecuted.clear()
+    }
+
+    val cardsExecuted: List<GameCard>
+        get() = storedCardsExecuted
 
     // endregion public
 

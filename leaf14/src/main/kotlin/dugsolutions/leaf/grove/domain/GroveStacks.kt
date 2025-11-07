@@ -81,7 +81,7 @@ class GroveStacks(
     }
 
     // Dice-related methods
-    fun getAvailableDiceSides(): List<Int> = diceSupply.getAvailableSides()
+    fun getAvailableDiceSides(): List<DieSides> = diceSupply.getAvailableSides()
 
     fun getDiceQuantity(sides: Int): Int = diceSupply.getQuantity(sides)
 

@@ -154,6 +154,7 @@ class Player(
     fun discard(cardId: CardID): Boolean = deckManager.discard(cardId)
     fun discard(die: Die): Boolean = deckManager.discard(die)
     fun discard(die: DieValue): Boolean = deckManager.discard(die)
+    fun discard(values: List<DieValue>): Boolean = deckManager.discard(values)
     fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
     fun removeCardFromDiscardPatch(cardId: CardID): Boolean = deckManager.removeCardFromDiscardPatch(cardId)
     fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
@@ -184,10 +185,11 @@ class Player(
     val creatureLeafCards: List<GameCard>
         get() = creatureManager.leafCards
 
-    fun addInsect(insect: Token) = insectManager.add(insect)
-    fun removeInsect(insect: Token) = insectManager.remove(insect)
+    fun addBug(insect: Token) = insectManager.add(insect)
+    fun removeBug(insect: Token) = insectManager.remove(insect)
     fun count(insect: Token) = insectManager.countOf(insect)
-    fun hasInsect(insect: Token) = insectManager.countOf(insect) > 0
+    fun hasBug(insect: Token) = insectManager.countOf(insect) > 0
+    fun insects(): List<Token> = insectManager.all
 
     fun addButterfly(butterfly: Butterfly) = butterflyManager.add(butterfly)
     fun removeButterfly(butterfly: Butterfly) = butterflyManager.remove(butterfly)
@@ -200,11 +202,29 @@ class Player(
         vpManager.count++
     }
 
+    val sapLeft: Int
+        get() = creatureManager.sapLeft
+
     val hasSap: Boolean
         get() = creatureManager.hasSap
 
+    fun useSap() = creatureManager.useSap()
+
     val hasGraftedDice: Boolean
         get() = creatureManager.hasGraftedDice
+
+    val graftedDice: List<Die>
+        get() = creatureManager.graftedDice
+
+    val cardsOnCreature: List<GameCard>
+        get() = creatureManager.allCards
+
+    val cardsExecuted: List<GameCard>
+        get() = creatureManager.cardsExecuted
+
+    fun cardExecuted(card: GameCard) {
+        creatureManager.cardExecuted(card)
+    }
 
     // Game flow methods
     fun setupInitialDeck(seedlings: GameCards) {
@@ -265,6 +285,8 @@ class Player(
         discardHand()
         resupply()
         clearEffects()
+        creatureManager.resetCardsExecuted()
+        creatureManager.resetSap()
     }
 
     fun clearEffects() {

@@ -443,13 +443,13 @@ class PlayerTest {
     }
 
     @Test
-    fun addInsect_delegatesToInsectManager() {
+    fun addInsect_delegatesToBugManager() {
         // Arrange
         val mockInsect = mockk<Token>(relaxed = true)
         every { mockInsectManager.add(mockInsect) } returns true
 
         // Act
-        val result = SUT.addInsect(mockInsect)
+        val result = SUT.addBug(mockInsect)
 
         // Assert
         assertTrue(result)
@@ -457,13 +457,13 @@ class PlayerTest {
     }
 
     @Test
-    fun removeInsect_delegatesToInsectManager() {
+    fun removeInsect_delegatesToBugManager() {
         // Arrange
         val mockInsect = mockk<Token>(relaxed = true)
         every { mockInsectManager.remove(mockInsect) } returns true
 
         // Act
-        val result = SUT.removeInsect(mockInsect)
+        val result = SUT.removeBug(mockInsect)
 
         // Assert
         assertTrue(result)

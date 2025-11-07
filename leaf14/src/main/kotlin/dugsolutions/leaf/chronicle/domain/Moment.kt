@@ -2,14 +2,17 @@ package dugsolutions.leaf.chronicle.domain
 
 import dugsolutions.leaf.cards.domain.CardID
 import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.common.domain.acquire.UsingDice
-import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.common.domain.Action
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.domain.PlayersScoreData
+import dugsolutions.leaf.random.die.Die
 
 sealed class Moment {
-    data class ACQUIRE_CARD(val player: Player, val card: GameCard, val paid: UsingDice) : Moment()
-    data class ACQUIRE_DIE(val player: Player, val die: Die, val paid: UsingDice) : Moment()
+    data class ACQUIRE_ERROR(val player: Player, val action: Action, val doing: String): Moment()
+    data class ACQUIRE_BUG(val player: Player, val action: Action.AcquireBug): Moment()
+    data class ACQUIRE_CARD(val player: Player, val action: Action.AcquireCard) : Moment()
+    data class ACQUIRE_DIE(val player: Player, val action: Action.AcquireDie) : Moment()
+
     data class ACQUIRE_NONE(val player: Player) : Moment()
     data class ADJUST_DIE(val player: Player, val die: Die, val amount: Int) : Moment()
     data class ADD_TO_THORN(val player: Player, val amount: Int) : Moment()
