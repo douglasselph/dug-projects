@@ -40,6 +40,7 @@ class DeckManager(
     fun getItemsInHand(): List<HandItem> = hand.getItems()
     val cardsInHand: List<CardID>
         get() = hand.getCards()
+
     fun getItemsInDiscardPile(): List<HandItem> = discardPile.getItems()
     fun getItemsInSupply(): List<HandItem> = supply.getItems()
 

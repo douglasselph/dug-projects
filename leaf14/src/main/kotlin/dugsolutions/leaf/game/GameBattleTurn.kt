@@ -5,6 +5,7 @@ import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.game.actions.ExecuteActions
 import dugsolutions.leaf.game.battle.HandleInsects
 import dugsolutions.leaf.game.battle.ResolveBattle
+import dugsolutions.leaf.game.battle.domain.DieBoosted
 import dugsolutions.leaf.game.battle.domain.PlayerValues
 import dugsolutions.leaf.game.turn.PlayerOrder
 import dugsolutions.leaf.game.turn.handle.HandleCleanup
@@ -23,8 +24,7 @@ class GameBattleTurn(
         reportHand(players)
         val orderedPlayers = playerOrder(players)
         orderedPlayers.forEach { player -> executeActions(player) }
-        val battleGrid = mutableListOf<PlayerValues>()
-        orderedPlayers.forEach { player -> battleGrid.add(handleInsects(player)) }
+        val battleGrid = handleInsects(initialDieValues(orderedPlayers))
         resolveBattle(battleGrid)
         orderedPlayers.forEach { player -> handleCleanup(player) }
     }
@@ -32,4 +32,10 @@ class GameBattleTurn(
     private fun reportHand(players: List<Player>) {
         players.forEach { chronicle(Moment.REPORT_HAND(it)) }
     }
+
+    private fun initialDieValues(players: List<Player>): List<PlayerValues> {
+        return players.map { player -> PlayerValues(player, DieBoosted.from(player)) }
+    }
+
+
 }

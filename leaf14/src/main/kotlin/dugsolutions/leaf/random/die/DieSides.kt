@@ -20,10 +20,36 @@ enum class DieSides(val value: Int) {
                 else -> throw Exception("Unknown number of sides: $sides")
             }
         }
+
     }
 
     override fun toString(): String {
         return "D$value"
     }
+
+    val downgrade: DieSides?
+        get() {
+            return when(value) {
+                4 -> null
+                6 -> D4
+                8 -> D6
+                10 -> D8
+                12 -> D10
+                20 -> D12
+                else -> null
+            }
+        }
+
+    val upgrade: DieSides?
+        get() {
+            return when(value) {
+                4 -> D6
+                6 -> D8
+                8 -> D10
+                10 -> D12
+                12 -> D20
+                else -> null
+            }
+        }
 
 }

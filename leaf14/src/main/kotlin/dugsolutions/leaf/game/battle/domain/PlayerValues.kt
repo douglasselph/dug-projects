@@ -4,5 +4,5 @@ import dugsolutions.leaf.player.Player
 
 data class PlayerValues(
     val player: Player,
-    val values: List<DieInsects> = emptyList()
+    val values: List<DieBoosted> = emptyList()
 )
