@@ -9,12 +9,14 @@ import dugsolutions.leaf.player.decisions.baseline.DecisionBattleInsectBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionCultivationActionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDamageAbsorptionBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionDrawCountBaseline
+import dugsolutions.leaf.player.decisions.baseline.DecisionGraftCardBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionRerollOneDieBaseline
 import dugsolutions.leaf.player.decisions.baseline.DecisionShouldTargetPlayerBaseline
 import dugsolutions.leaf.player.decisions.core.DecisionBattleInsect
 import dugsolutions.leaf.player.decisions.core.DecisionCultivationAction
 import dugsolutions.leaf.player.decisions.core.DecisionDamageAbsorption
 import dugsolutions.leaf.player.decisions.core.DecisionDrawCount
+import dugsolutions.leaf.player.decisions.core.DecisionGraftCard
 import dugsolutions.leaf.player.decisions.core.DecisionRerollOneDie
 import dugsolutions.leaf.player.decisions.core.DecisionShouldTargetPlayer
 import dugsolutions.leaf.player.decisions.local.EvaluateAcquireBug
@@ -41,9 +43,10 @@ class DecisionDirector(
     lateinit var shouldTargetPlayer: DecisionShouldTargetPlayer
     lateinit var rerollOneDie: DecisionRerollOneDie
     lateinit var battleInsect: DecisionBattleInsect
+    lateinit var graftCard: DecisionGraftCard
 
     fun initialize(player: Player) {
-        drawCountDecision = DecisionDrawCountBaseline()
+        drawCountDecision = DecisionDrawCountBaseline(player)
         cultivationAction = DecisionCultivationActionBaseline(
             player,
             evaluateAcquireBug,
@@ -59,6 +62,7 @@ class DecisionDirector(
         shouldTargetPlayer = DecisionShouldTargetPlayerBaseline(player)
         rerollOneDie = DecisionRerollOneDieBaseline(player)
         battleInsect = DecisionBattleInsectBaseline(player)
+        graftCard = DecisionGraftCardBaseline(player)
     }
 
 }

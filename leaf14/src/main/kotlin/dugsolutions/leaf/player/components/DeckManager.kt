@@ -19,8 +19,11 @@ class DeckManager(
     val handSize: Int
         get() = hand.cardCount + hand.diceCount
 
-    val isResupplyNeeded: Boolean
-        get() = supply.cardCount == 0
+    val cardCount: Int
+        get() = supply.cardCount
+
+    val diceCount: Int
+        get() = hand.diceCount
 
     val pipTotal: Int
         get() = hand.pipTotal
@@ -133,7 +136,6 @@ class DeckManager(
         }
     }
 
-    // Resource cycling
     fun resupply(): Boolean {
         supply.addAllCards(discardPile.getItems().mapNotNull {
             when (it) {

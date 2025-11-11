@@ -59,9 +59,6 @@ class Player(
     val retained: MutableList<HandItem> = mutableListOf()
     val cardsToPlay: MutableList<GameCard> = mutableListOf()
 
-    val isResupplyNeeded: Boolean
-        get() = deckManager.isResupplyNeeded
-
     val handSize: Int
         get() = deckManager.handSize
 
@@ -156,7 +153,7 @@ class Player(
     fun discard(die: DieValue): Boolean = deckManager.discard(die)
     fun discard(values: List<DieValue>): Boolean = deckManager.discard(values)
     fun removeCardFromHand(cardId: CardID): Boolean = deckManager.removeCardFromHand(cardId)
-    fun removeCardFromDiscardPatch(cardId: CardID): Boolean = deckManager.removeCardFromDiscardPatch(cardId)
+    fun removeCardFromDiscard(cardId: CardID): Boolean = deckManager.removeCardFromDiscardPatch(cardId)
     fun removeDieFromHand(die: Die): Boolean = deckManager.removeDieFromHand(die)
 
     fun retainCard(card: GameCard): Boolean =
@@ -231,42 +228,26 @@ class Player(
         deckManager.setup(seedlings, dieFactory.startingDice)
     }
 
-    fun drawCardWithoutResupply(): CardID? {
-        return deckManager.drawCard()
-    }
-
-    fun drawDieWithoutResupply(): Die? {
-        return deckManager.drawDie()?.roll()
-    }
-
-    private fun reshuffleIfNeeded(): Boolean {
-        return if (deckManager.isResupplyNeeded) {
-            resupply()
-        } else false
-    }
-
     fun drawCard(): DrawCardResult {
-        val reshuffleDone = reshuffleIfNeeded()
-        return DrawCardResult(
-            cardId = deckManager.drawCard(),
-            reshuffleDone = reshuffleDone
-        )
+        if (deckManager.cardCount == 0) {
+            return if (deckManager.diceCount == 0) {
+                DrawCardResult(reshuffleNeeded = true)
+            } else {
+                DrawCardResult()
+            }
+        }
+        return DrawCardResult(cardId = deckManager.drawCard())
     }
 
     fun drawDie(): DrawDieResult {
-        val reshuffleDone = reshuffleIfNeeded()
-        return DrawDieResult(
-            die = deckManager.drawDie()?.roll(),
-            reshuffleDone = reshuffleDone
-        )
-    }
-
-    fun drawBestDie(): DrawDieResult {
-        val reshuffleDone = reshuffleIfNeeded()
-        return DrawDieResult(
-            die = deckManager.drawBestDie()?.roll(),
-            reshuffleDone = reshuffleDone
-        )
+        if (deckManager.diceCount == 0) {
+            return if (deckManager.cardCount == 0) {
+                DrawDieResult(reshuffleNeeded = true)
+            } else {
+                DrawDieResult()
+            }
+        }
+        return DrawDieResult(die = deckManager.drawDie()?.roll())
     }
 
     fun drawCardFromDiscard(): DrawCardResult = DrawCardResult(deckManager.drawCardFromDiscard())
@@ -284,17 +265,17 @@ class Player(
     fun reset() {
         discardHand()
         resupply()
-        clearEffects()
-        creatureManager.resetCardsExecuted()
-        creatureManager.resetSap()
+        prepareNextTurn()
     }
 
-    fun clearEffects() {
+    fun prepareNextTurn() {
         incomingDamage = 0
         deflectDamage = 0
         retained.clear()
         reused.clear()
         cardsToPlay.clear()
+        creatureManager.resetCardsExecuted()
+        creatureManager.resetSap()
     }
 
 }

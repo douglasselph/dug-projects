@@ -8,5 +8,5 @@ interface DecisionDrawCount {
         val count: Int
     )
 
-    suspend operator fun invoke(player: Player): Result
+    suspend operator fun invoke(): Result
 }

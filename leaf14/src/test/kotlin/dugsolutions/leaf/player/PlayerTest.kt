@@ -694,7 +694,7 @@ class PlayerTest {
     }
 
     @Test
-    fun clearEffects_resetsAllEffectValues() {
+    fun prepareNextTurn_resetsAllEffectValues() {
         // Arrange
         SUT.incomingDamage = DAMAGE_AMOUNT
         SUT.deflectDamage = 3
@@ -704,7 +704,7 @@ class PlayerTest {
         SUT.cardsToPlay.add(mockk<GameCard>(relaxed = true))
 
         // Act
-        SUT.clearEffects()
+        SUT.prepareNextTurn()
 
         // Assert
         assertEquals(0, SUT.incomingDamage)
@@ -772,12 +772,12 @@ class PlayerTest {
     }
 
     @Test
-    fun removeCardFromDiscardPatch_delegatesToDeckManager() {
+    fun removeCardFromDiscard_delegatesToDeckManager() {
         // Arrange
         every { mockDeckManager.removeCardFromDiscardPatch(CARD_ID_1) } returns true
 
         // Act
-        val result = SUT.removeCardFromDiscardPatch(CARD_ID_1)
+        val result = SUT.removeCardFromDiscard(CARD_ID_1)
 
         // Assert
         assertTrue(result)

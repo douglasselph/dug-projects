@@ -1,7 +1,7 @@
 package dugsolutions.leaf.game.turn.handle
 
+import dugsolutions.leaf.cards.domain.FlourishType
 import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
 import dugsolutions.leaf.player.Player
 import dugsolutions.leaf.player.components.DrawNewHand
 
@@ -12,17 +12,18 @@ class HandleDrawHand(
 ) {
 
     suspend operator fun invoke(player: Player) {
-        val preferredCardCount = player.decisionDirector.drawCountDecision(player).count
+        val preferredCardCount = player.decisionDirector.drawCountDecision().count
         val result = drawNewHand(player, preferredCardCount)
-        for (item in result) {
-            when(item) {
-                is DrawNewHand.ResultInstance.WasCard -> item.result.cardId?.let {
-                    chronicle(Moment.DRAW_CARD(player, item.result.cardId, item.result.reshuffleDone))
-                }
-                is DrawNewHand.ResultInstance.WasDie -> item.result.die?.let {
-                    chronicle(Moment.DRAW_DIE(player, item.result.die, item.result.reshuffleDone))
-                }
+        if (result.reshuffleNeeded) {
+            val cultivationCards = player.cardsInDiscard().filter { it.type != FlourishType.RESOURCE }
+            val cardToGraft = player.decisionDirector.graftCard(cultivationCards)
+            cardToGraft?.let {
+                player.removeCardFromDiscard(it.id)
+                player.addCardToCreature(it.id)
             }
+            player.resupply()
+            drawNewHand(player, preferredCardCount - player.cardsInHand.size)
+            // TODO: Add chronicle
         }
     }
 
