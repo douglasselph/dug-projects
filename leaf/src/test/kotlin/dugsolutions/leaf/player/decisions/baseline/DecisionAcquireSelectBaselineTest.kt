@@ -1,11 +1,12 @@
 package dugsolutions.leaf.player.decisions.baseline
 
-import dugsolutions.leaf.game.acquire.domain.ChoiceCard
-import dugsolutions.leaf.game.acquire.domain.ChoiceDie
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.local.AcquireCardEvaluator
-import dugsolutions.leaf.player.decisions.local.AcquireDieEvaluator
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceCard
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceDie
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.core.DecisionAcquireSelect
+import dugsolutions.leaf.v14.player.decisions.baseline.DecisionAcquireSelectBaseline
+import dugsolutions.leaf.v14.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.v14.player.decisions.local.AcquireDieEvaluator
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking

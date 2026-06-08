@@ -1,8 +1,9 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.main.domain.DieInfo
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.main.domain.DieInfo
+import dugsolutions.leaf.v14.main.gather.GatherDiceInfo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

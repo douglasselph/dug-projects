@@ -1,11 +1,12 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.random.RandomizerTD
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.DieValue
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.random.RandomizerTD
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.game.acquire.evaluator.CombinationGenerator
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.DieValue
+import dugsolutions.leaf.v14.random.die.SampleDie
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

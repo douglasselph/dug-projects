@@ -1,11 +1,11 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.game.turn.select.SelectCardToRetain
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.effect.EffectCardToRetain
+import dugsolutions.leaf.v14.game.turn.select.SelectCardToRetain
+import dugsolutions.leaf.v14.player.Player
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

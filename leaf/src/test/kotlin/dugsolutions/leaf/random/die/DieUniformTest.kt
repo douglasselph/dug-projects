@@ -1,8 +1,8 @@
 package dugsolutions.leaf.random.die
 
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.die.DieUniform
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.die.DieUniform
+import dugsolutions.leaf.v14.random.Randomizer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

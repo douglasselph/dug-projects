@@ -1,6 +1,8 @@
 package dugsolutions.leaf.main.domain
 
-import dugsolutions.leaf.chronicle.domain.PlayerScore
+import dugsolutions.leaf.v14.chronicle.domain.PlayerScore
+import dugsolutions.leaf.v14.main.domain.DiceInfo
+import dugsolutions.leaf.v14.main.domain.PlayerInfo
 import io.github.serpro69.kfaker.Faker
 import io.github.serpro69.kfaker.fakerConfig
 

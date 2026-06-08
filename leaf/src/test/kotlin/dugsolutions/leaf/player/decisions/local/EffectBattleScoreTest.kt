@@ -1,6 +1,7 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.cards.domain.CardEffect
+import dugsolutions.leaf.v14.cards.domain.CardEffect
+import dugsolutions.leaf.v14.player.decisions.local.EffectBattleScore
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

@@ -1,14 +1,17 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.main.domain.CardInfo
-import dugsolutions.leaf.main.domain.DiceInfo
-import dugsolutions.leaf.main.domain.DieInfo
-import dugsolutions.leaf.main.local.DecidingPlayer
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.chronicle.domain.PlayerScore
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.main.domain.CardInfo
+import dugsolutions.leaf.v14.main.domain.DiceInfo
+import dugsolutions.leaf.v14.main.domain.DieInfo
+import dugsolutions.leaf.v14.main.gather.GatherCardInfo
+import dugsolutions.leaf.v14.main.gather.GatherDiceInfo
+import dugsolutions.leaf.v14.main.local.DecidingPlayer
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.main.gather.GatherPlayerInfo
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

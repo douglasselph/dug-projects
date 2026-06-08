@@ -1,6 +1,10 @@
 package dugsolutions.leaf.cards.cost
 
-import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.cost.Cost
+import dugsolutions.leaf.v14.cards.cost.CostAlternative
+import dugsolutions.leaf.v14.cards.cost.CostElement
+import dugsolutions.leaf.v14.cards.cost.CostScore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -23,9 +27,11 @@ class CostScoreTest {
     @Test
     fun invoke_whenSingleDieMinimum_returnsCorrectScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(CostElement.SingleDieMinimum(6)))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(listOf(CostElement.SingleDieMinimum(6)))
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -37,9 +43,11 @@ class CostScoreTest {
     @Test
     fun invoke_whenSingleDieExact_returnsCorrectScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(CostElement.SingleDieExact(4)))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(listOf(CostElement.SingleDieExact(4)))
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -51,9 +59,11 @@ class CostScoreTest {
     @Test
     fun invoke_whenTotalDiceMinimum_returnsCorrectScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(CostElement.TotalDiceMinimum(10)))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(listOf(CostElement.TotalDiceMinimum(10)))
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -65,9 +75,11 @@ class CostScoreTest {
     @Test
     fun invoke_whenTotalDiceExact_returnsCorrectScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(CostElement.TotalDiceExact(8)))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(listOf(CostElement.TotalDiceExact(8)))
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -79,9 +91,11 @@ class CostScoreTest {
     @Test
     fun invoke_whenFlourishType_returnsCorrectScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT)))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(listOf(CostElement.FlourishTypePresent(FlourishType.ROOT)))
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -93,13 +107,17 @@ class CostScoreTest {
     @Test
     fun invoke_whenMultipleElements_returnsSumOfScores() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(
-                CostElement.SingleDieMinimum(6),
-                CostElement.TotalDiceMinimum(10),
-                CostElement.FlourishTypePresent(FlourishType.ROOT)
-            ))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(
+                    listOf(
+                        CostElement.SingleDieMinimum(6),
+                        CostElement.TotalDiceMinimum(10),
+                        CostElement.FlourishTypePresent(FlourishType.ROOT)
+                    )
+                )
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -111,15 +129,21 @@ class CostScoreTest {
     @Test
     fun invoke_whenSimpleOrCost_returnsMinimumScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.TotalDiceMinimum(8)
-            )),
-            CostAlternative(listOf(
-                CostElement.TotalDiceMinimum(15)
-            ))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(
+                    listOf(
+                        CostElement.FlourishTypePresent(FlourishType.ROOT),
+                        CostElement.TotalDiceMinimum(8)
+                    )
+                ),
+                CostAlternative(
+                    listOf(
+                        CostElement.TotalDiceMinimum(15)
+                    )
+                )
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -131,17 +155,23 @@ class CostScoreTest {
     @Test
     fun invoke_whenComplexOrCost_returnsMinimumScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.SingleDieMinimum(6),
-                CostElement.TotalDiceMinimum(8)
-            )),
-            CostAlternative(listOf(
-                CostElement.FlourishTypePresent(FlourishType.CANOPY),
-                CostElement.TotalDiceExact(15)
-            ))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(
+                    listOf(
+                        CostElement.FlourishTypePresent(FlourishType.ROOT),
+                        CostElement.SingleDieMinimum(6),
+                        CostElement.TotalDiceMinimum(8)
+                    )
+                ),
+                CostAlternative(
+                    listOf(
+                        CostElement.FlourishTypePresent(FlourishType.CANOPY),
+                        CostElement.TotalDiceExact(15)
+                    )
+                )
+            )
+        )
 
         // Act
         val result = SUT(cost)
@@ -153,18 +183,26 @@ class CostScoreTest {
     @Test
     fun invoke_whenMultipleAlternatives_returnsLowestScore() {
         // Arrange
-        val cost = Cost(listOf(
-            CostAlternative(listOf(
-                CostElement.TotalDiceMinimum(20)
-            )),
-            CostAlternative(listOf(
-                CostElement.SingleDieMinimum(8),
-                CostElement.FlourishTypePresent(FlourishType.ROOT)
-            )),
-            CostAlternative(listOf(
-                CostElement.TotalDiceExact(10)
-            ))
-        ))
+        val cost = Cost(
+            listOf(
+                CostAlternative(
+                    listOf(
+                        CostElement.TotalDiceMinimum(20)
+                    )
+                ),
+                CostAlternative(
+                    listOf(
+                        CostElement.SingleDieMinimum(8),
+                        CostElement.FlourishTypePresent(FlourishType.ROOT)
+                    )
+                ),
+                CostAlternative(
+                    listOf(
+                        CostElement.TotalDiceExact(10)
+                    )
+                )
+            )
+        )
 
         // Act
         val result = SUT(cost)

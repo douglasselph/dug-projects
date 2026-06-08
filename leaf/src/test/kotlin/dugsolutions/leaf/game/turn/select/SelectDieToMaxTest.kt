@@ -1,11 +1,12 @@
 package dugsolutions.leaf.game.turn.select
 
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.di.DieFactory
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.di.DieFactory
+import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v14.game.turn.select.SelectDieToMax
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

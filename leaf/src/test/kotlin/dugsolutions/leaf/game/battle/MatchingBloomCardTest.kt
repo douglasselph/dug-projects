@@ -1,9 +1,10 @@
 package dugsolutions.leaf.game.battle
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.cards.domain.MatchWith
+import dugsolutions.leaf.v14.game.battle.MatchingBloomCard
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

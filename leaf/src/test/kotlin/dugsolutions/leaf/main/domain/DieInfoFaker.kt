@@ -1,5 +1,7 @@
 package dugsolutions.leaf.main.domain
 
+import dugsolutions.leaf.v14.main.domain.DieInfo
+import dugsolutions.leaf.v14.main.domain.HighlightInfo
 import io.github.serpro69.kfaker.Faker
 import io.github.serpro69.kfaker.fakerConfig
 

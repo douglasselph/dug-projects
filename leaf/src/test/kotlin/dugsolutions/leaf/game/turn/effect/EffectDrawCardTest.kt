@@ -1,12 +1,13 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.domain.DrawCardResult
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.effect.EffectDrawCard
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.domain.DrawCardResult
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

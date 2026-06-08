@@ -1,10 +1,11 @@
 package dugsolutions.leaf.chronicle
 
-import dugsolutions.leaf.chronicle.domain.ChronicleEntry
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.chronicle.local.TransformMomentToEntry
-import dugsolutions.leaf.game.domain.GameTime
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.ChronicleEntry
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.chronicle.local.TransformMomentToEntry
+import dugsolutions.leaf.v14.game.domain.GameTime
+import dugsolutions.leaf.v14.player.Player
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals

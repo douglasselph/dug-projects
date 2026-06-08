@@ -1,8 +1,9 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.game.acquire.domain.ChoiceDie
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceDie
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
+import dugsolutions.leaf.v14.player.decisions.local.AcquireDieEvaluator
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

@@ -1,7 +1,12 @@
 package dugsolutions.leaf.random.die
 
-import dugsolutions.leaf.random.di.DieFactory
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.random.di.DieFactory
+import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.DieBase
+import dugsolutions.leaf.v14.random.die.DieRandom
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.die.DieValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk

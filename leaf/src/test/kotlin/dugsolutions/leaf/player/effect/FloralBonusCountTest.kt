@@ -1,6 +1,7 @@
 package dugsolutions.leaf.player.effect
 
-import dugsolutions.leaf.cards.FakeCards
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.player.effect.FloralBonusCount
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

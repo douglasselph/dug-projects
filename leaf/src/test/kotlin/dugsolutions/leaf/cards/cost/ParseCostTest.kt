@@ -1,6 +1,11 @@
 package dugsolutions.leaf.cards.cost
 
-import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.cost.Cost
+import dugsolutions.leaf.v14.cards.cost.CostAlternative
+import dugsolutions.leaf.v14.cards.cost.CostElement
+import dugsolutions.leaf.v14.cards.cost.ParseCost
+import dugsolutions.leaf.v14.cards.cost.ParseCostElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -89,12 +94,16 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.TotalDiceMinimum(9)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.TotalDiceMinimum(9)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -118,13 +127,17 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.TotalDiceMinimum(8),
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.SingleDieMinimum(6)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.TotalDiceMinimum(8),
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.SingleDieMinimum(6)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -160,13 +173,17 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.SingleDieMinimum(6),
-                CostElement.TotalDiceMinimum(10),
-                CostElement.FlourishTypePresent(FlourishType.ROOT)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.SingleDieMinimum(6),
+                            CostElement.TotalDiceMinimum(10),
+                            CostElement.FlourishTypePresent(FlourishType.ROOT)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -178,13 +195,17 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.SingleDieMinimum(6),
-                CostElement.TotalDiceMinimum(10),
-                CostElement.FlourishTypePresent(FlourishType.ROOT)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.SingleDieMinimum(6),
+                            CostElement.TotalDiceMinimum(10),
+                            CostElement.FlourishTypePresent(FlourishType.ROOT)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -212,13 +233,17 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.FlourishTypePresent(FlourishType.CANOPY),
-                CostElement.FlourishTypePresent(FlourishType.VINE)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.FlourishTypePresent(FlourishType.CANOPY),
+                            CostElement.FlourishTypePresent(FlourishType.VINE)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -230,14 +255,18 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                CostElement.SingleDieMinimum(6),
-                CostElement.TotalDiceExact(12),
-                CostElement.FlourishTypePresent(FlourishType.ROOT),
-                CostElement.FlourishTypePresent(FlourishType.CANOPY)
-            ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.SingleDieMinimum(6),
+                            CostElement.TotalDiceExact(12),
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.FlourishTypePresent(FlourishType.CANOPY)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -249,15 +278,21 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                    CostElement.FlourishTypePresent(FlourishType.ROOT),
-                    CostElement.TotalDiceMinimum(8)
-                )),
-                CostAlternative(listOf(
-                    CostElement.TotalDiceMinimum(15)
-                ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.TotalDiceMinimum(8)
+                        )
+                    ),
+                    CostAlternative(
+                        listOf(
+                            CostElement.TotalDiceMinimum(15)
+                        )
+                    )
+                )
+            ),
             result
         )
     }
@@ -269,17 +304,23 @@ class ParseCostTest {
 
         // Assert
         assertCostEquals(
-            Cost(listOf(
-                CostAlternative(listOf(
-                    CostElement.FlourishTypePresent(FlourishType.ROOT),
-                    CostElement.SingleDieMinimum(6),
-                    CostElement.TotalDiceMinimum(8)
-                )),
-                CostAlternative(listOf(
-                    CostElement.FlourishTypePresent(FlourishType.CANOPY),
-                    CostElement.TotalDiceExact(15)
-                ))
-            )),
+            Cost(
+                listOf(
+                    CostAlternative(
+                        listOf(
+                            CostElement.FlourishTypePresent(FlourishType.ROOT),
+                            CostElement.SingleDieMinimum(6),
+                            CostElement.TotalDiceMinimum(8)
+                        )
+                    ),
+                    CostAlternative(
+                        listOf(
+                            CostElement.FlourishTypePresent(FlourishType.CANOPY),
+                            CostElement.TotalDiceExact(15)
+                        )
+                    )
+                )
+            ),
             result
         )
     }

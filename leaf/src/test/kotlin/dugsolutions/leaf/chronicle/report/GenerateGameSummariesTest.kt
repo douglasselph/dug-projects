@@ -1,10 +1,7 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.chronicle.domain.GameSummaries
-import dugsolutions.leaf.chronicle.domain.GameSummary
-import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
-import io.mockk.every
-import io.mockk.mockk
+import dugsolutions.leaf.v14.chronicle.domain.GameSummary
+import dugsolutions.leaf.v14.chronicle.report.GenerateGameSummaries
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

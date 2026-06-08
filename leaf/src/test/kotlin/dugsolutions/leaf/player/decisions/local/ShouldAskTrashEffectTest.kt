@@ -1,9 +1,10 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.v14.player.decisions.local.ShouldAskTrashEffect
+import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionMonitor
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking

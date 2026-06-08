@@ -1,8 +1,8 @@
 package dugsolutions.leaf.game.acquire.cost
 
-import dugsolutions.leaf.game.acquire.domain.Combination
-import dugsolutions.leaf.player.Player
-import io.mockk.mockk
+import dugsolutions.leaf.v14.game.acquire.cost.ApplyCost
+import dugsolutions.leaf.v14.game.acquire.domain.Combination
+import dugsolutions.leaf.v14.player.Player
 
 class ApplyCostTD : ApplyCost() {
     // Track what was passed into the function

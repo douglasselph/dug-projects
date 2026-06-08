@@ -1,13 +1,14 @@
 package dugsolutions.leaf.game.acquire.evaluator
 
-import dugsolutions.leaf.random.die.DieCost
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.DieValues
-import dugsolutions.leaf.game.acquire.domain.Combination
-import dugsolutions.leaf.game.acquire.domain.Combinations
+import dugsolutions.leaf.v14.random.die.DieCost
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.DieValues
+import dugsolutions.leaf.v14.game.acquire.domain.Combination
+import dugsolutions.leaf.v14.game.acquire.domain.Combinations
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
 import dugsolutions.leaf.game.acquire.domain.FakeCombination.sampleDie
-import dugsolutions.leaf.game.turn.select.SelectPossibleDice
+import dugsolutions.leaf.v14.game.turn.select.SelectPossibleDice
+import dugsolutions.leaf.v14.game.acquire.evaluator.PossibleDice
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

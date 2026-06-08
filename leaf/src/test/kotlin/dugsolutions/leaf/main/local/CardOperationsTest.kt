@@ -1,13 +1,14 @@
 package dugsolutions.leaf.main.local
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.cards.GameCards
-import dugsolutions.leaf.common.Commons.CARD_LIST
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.cards.GameCards
+import dugsolutions.leaf.v14.common.Commons.CARD_LIST
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.cards.di.GameCardsFactory
 import dugsolutions.leaf.main.domain.CardInfoFaker
-import dugsolutions.leaf.cards.CardRegistry
+import dugsolutions.leaf.v14.cards.CardRegistry
+import dugsolutions.leaf.v14.main.local.CardOperations
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

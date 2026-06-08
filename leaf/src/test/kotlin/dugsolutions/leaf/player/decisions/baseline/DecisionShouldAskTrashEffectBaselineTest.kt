@@ -1,9 +1,10 @@
 package dugsolutions.leaf.player.decisions.baseline
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.player.decisions.core.DecisionShouldProcessTrashEffect
-import dugsolutions.leaf.grove.local.GroveNearingTransition
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.domain.CardEffect
+import dugsolutions.leaf.v14.player.decisions.core.DecisionShouldProcessTrashEffect
+import dugsolutions.leaf.v14.grove.local.GroveNearingTransition
+import dugsolutions.leaf.v14.player.decisions.baseline.DecisionShouldProcessTrashEffectBaseline
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -21,7 +22,8 @@ class DecisionShouldAskTrashEffectBaselineTest {
     }
 
     private val groveNearingTransition = mockk<GroveNearingTransition>(relaxed = true)
-    private val SUT: DecisionShouldProcessTrashEffectBaseline = DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
+    private val SUT: DecisionShouldProcessTrashEffectBaseline =
+        DecisionShouldProcessTrashEffectBaseline(groveNearingTransition)
 
     @BeforeEach
     fun setup() {

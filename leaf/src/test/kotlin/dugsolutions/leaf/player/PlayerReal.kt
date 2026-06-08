@@ -1,18 +1,19 @@
 package dugsolutions.leaf.player
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.cost.CostScore
-import dugsolutions.leaf.cards.di.GameCardIDsFactory
-import dugsolutions.leaf.cards.di.GameCardsFactory
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.cost.CostScore
+import dugsolutions.leaf.v14.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.v14.cards.di.GameCardsFactory
 import dugsolutions.leaf.player.PlayerTD.Companion.randomizerTD
-import dugsolutions.leaf.player.components.DeckManager
-import dugsolutions.leaf.player.components.FloralArray
-import dugsolutions.leaf.player.components.StackManager
-import dugsolutions.leaf.player.decisions.DecisionDirector
-import dugsolutions.leaf.player.effect.FloralBonusCount
-import dugsolutions.leaf.random.RandomizerTD
-import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.v14.player.components.DeckManager
+import dugsolutions.leaf.v14.player.components.FloralArray
+import dugsolutions.leaf.v14.player.components.StackManager
+import dugsolutions.leaf.v14.player.decisions.DecisionDirector
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.effect.FloralBonusCount
+import dugsolutions.leaf.v14.random.RandomizerTD
+import dugsolutions.leaf.v14.random.di.DieFactory
 import io.mockk.mockk
 
 class PlayerReal private constructor(

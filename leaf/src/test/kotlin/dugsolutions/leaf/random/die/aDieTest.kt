@@ -1,10 +1,10 @@
 package dugsolutions.leaf.random.die
 
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.DieValue
-import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.DieValue
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.random.Randomizer
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

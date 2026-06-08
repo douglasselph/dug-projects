@@ -1,8 +1,9 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.local.BestCardEvaluator
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking

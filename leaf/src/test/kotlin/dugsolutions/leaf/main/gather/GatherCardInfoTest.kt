@@ -1,13 +1,14 @@
 package dugsolutions.leaf.main.gather
 
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.cost.Cost
-import dugsolutions.leaf.cards.cost.CostElement
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.game.battle.MatchingBloomCard
-import dugsolutions.leaf.main.domain.HighlightInfo
+import dugsolutions.leaf.v14.cards.domain.CardEffect
+import dugsolutions.leaf.v14.cards.cost.Cost
+import dugsolutions.leaf.v14.cards.cost.CostElement
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.cards.domain.MatchWith
+import dugsolutions.leaf.v14.game.battle.MatchingBloomCard
+import dugsolutions.leaf.v14.main.domain.HighlightInfo
+import dugsolutions.leaf.v14.main.gather.GatherCardInfo
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*

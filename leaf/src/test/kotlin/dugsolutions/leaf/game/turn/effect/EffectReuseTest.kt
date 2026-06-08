@@ -1,15 +1,15 @@
 package dugsolutions.leaf.game.turn.effect
 
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.DieValue
-import dugsolutions.leaf.random.die.SampleDie
-import io.mockk.every
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.game.turn.effect.EffectReuse
+import dugsolutions.leaf.v14.game.turn.effect.EffectReuseCard
+import dugsolutions.leaf.v14.game.turn.effect.EffectReuseDie
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
 
 class EffectReuseTest {
 

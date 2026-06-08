@@ -1,7 +1,8 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.chronicle.report.ReportDamage
 import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.every
 import io.mockk.mockk

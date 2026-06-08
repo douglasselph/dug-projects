@@ -1,12 +1,13 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.game.turn.select.SelectDieToAdjust
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.select.SelectDieToAdjust
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.player.decisions.core.DecisionShouldTargetPlayer
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.player.decisions.core.DecisionShouldTargetPlayer
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.game.turn.effect.EffectDieAdjust
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

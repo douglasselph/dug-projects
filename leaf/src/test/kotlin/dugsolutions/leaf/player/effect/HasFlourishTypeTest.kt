@@ -1,10 +1,11 @@
 package dugsolutions.leaf.player.effect
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.player.domain.HandItem
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.player.domain.HandItem
+import dugsolutions.leaf.v14.player.effect.HasFlourishType
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

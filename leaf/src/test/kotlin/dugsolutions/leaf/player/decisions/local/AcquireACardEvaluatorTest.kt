@@ -1,9 +1,11 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.game.acquire.domain.ChoiceCard
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceCard
 import dugsolutions.leaf.game.acquire.domain.FakeCombination
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.local.AcquireCardEvaluator
+import dugsolutions.leaf.v14.player.decisions.local.BestCardEvaluator
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test

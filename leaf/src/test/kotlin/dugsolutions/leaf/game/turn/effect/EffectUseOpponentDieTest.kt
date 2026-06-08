@@ -1,9 +1,10 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.game.turn.effect.EffectUseOpponentDie
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach

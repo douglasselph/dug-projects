@@ -1,15 +1,16 @@
 package dugsolutions.leaf.chronicle.report
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.EventBattleTransition
-import dugsolutions.leaf.chronicle.domain.EventTurn
-import dugsolutions.leaf.chronicle.domain.GameSummary
-import dugsolutions.leaf.chronicle.domain.OrderingEntry
-import dugsolutions.leaf.chronicle.domain.PlayerScore
-import dugsolutions.leaf.chronicle.domain.PlayerUnderTest
-import dugsolutions.leaf.chronicle.domain.ScoreInfo
-import dugsolutions.leaf.chronicle.domain.TimeTaken
-import dugsolutions.leaf.game.domain.GamePhase
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.EventBattleTransition
+import dugsolutions.leaf.v14.chronicle.domain.EventTurn
+import dugsolutions.leaf.v14.chronicle.domain.GameSummary
+import dugsolutions.leaf.v14.chronicle.domain.OrderingEntry
+import dugsolutions.leaf.v14.chronicle.domain.PlayerScore
+import dugsolutions.leaf.v14.chronicle.domain.PlayerUnderTest
+import dugsolutions.leaf.v14.chronicle.domain.ScoreInfo
+import dugsolutions.leaf.v14.chronicle.report.GenerateGameSummaries
+import dugsolutions.leaf.v14.chronicle.report.GenerateGameSummary
+import dugsolutions.leaf.v14.game.domain.GamePhase
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

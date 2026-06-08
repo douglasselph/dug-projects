@@ -1,6 +1,7 @@
 package dugsolutions.leaf.game.acquire
 
-import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.game.acquire.ManageAcquiredFloralTypes
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

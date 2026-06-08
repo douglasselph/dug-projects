@@ -1,9 +1,11 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.cards.domain.CardID
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.GenCardID
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.cards.domain.CardID
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.cards.domain.GenCardID
+import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.cards.GameCardIDs
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -61,11 +63,13 @@ class GameCardIDsTest {
     @Test
     fun size_whenContainsCards_returnsCorrectCount() {
         // Arrange
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2),
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2),
+                createTestCardId(3)
+            ), randomizer
+        )
         
         // Act
         val result = cards.size
@@ -78,11 +82,13 @@ class GameCardIDsTest {
     fun get_whenIndexInRange_returnsCorrectCard() {
         // Arrange
         val cardId = createTestCardId(42)
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            cardId,
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                cardId,
+                createTestCardId(3)
+            ), randomizer
+        )
         
         // Act
         val result = cards[1]
@@ -282,11 +288,13 @@ class GameCardIDsTest {
     @Test
     fun clear_removesAllCards() {
         // Arrange
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2),
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2),
+                createTestCardId(3)
+            ), randomizer
+        )
         
         // Act
         cards.clear()
@@ -407,11 +415,13 @@ class GameCardIDsTest {
         // Arrange
         val cardId = createTestCardId(42)
         val mockCard = mockk<GameCard>()
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            cardId,
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                cardId,
+                createTestCardId(3)
+            ), randomizer
+        )
         every { cardManager.getCard(cardId) } returns mockCard
 
         // Act
@@ -425,11 +435,13 @@ class GameCardIDsTest {
     @Test
     fun getCard_whenIndexNegative_returnsNull() {
         // Arrange
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2),
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2),
+                createTestCardId(3)
+            ), randomizer
+        )
 
         // Act
         val result = cards.getCard(-1)
@@ -441,11 +453,13 @@ class GameCardIDsTest {
     @Test
     fun getCard_whenIndexBeyondSize_returnsNull() {
         // Arrange
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2),
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2),
+                createTestCardId(3)
+            ), randomizer
+        )
 
         // Act
         val result = cards.getCard(3)
@@ -458,11 +472,13 @@ class GameCardIDsTest {
     fun getCard_whenCardManagerReturnsNull_returnsNull() {
         // Arrange
         val cardId = createTestCardId(42)
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            cardId,
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                cardId,
+                createTestCardId(3)
+            ), randomizer
+        )
         every { cardManager.getCard(cardId) } returns null
 
         // Act
@@ -506,11 +522,13 @@ class GameCardIDsTest {
         // Arrange
         val lastCardId = createTestCardId(99)
         val mockCard = mockk<GameCard>()
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2),
-            lastCardId
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2),
+                lastCardId
+            ), randomizer
+        )
         every { cardManager.getCard(lastCardId) } returns mockCard
 
         // Act
@@ -524,10 +542,12 @@ class GameCardIDsTest {
     @Test
     fun getCard_whenIndexEqualsSize_returnsNull() {
         // Arrange
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            createTestCardId(2)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                createTestCardId(2)
+            ), randomizer
+        )
 
         // Act
         val result = cards.getCard(2) // Index equals size
@@ -541,11 +561,13 @@ class GameCardIDsTest {
         // Arrange
         val targetCardId = createTestCardId(123)
         val mockCard = mockk<GameCard>()
-        val cards = GameCardIDs(cardManager, listOf(
-            createTestCardId(1),
-            targetCardId,
-            createTestCardId(3)
-        ), randomizer)
+        val cards = GameCardIDs(
+            cardManager, listOf(
+                createTestCardId(1),
+                targetCardId,
+                createTestCardId(3)
+            ), randomizer
+        )
         every { cardManager.getCard(targetCardId) } returns mockCard
 
         // Act

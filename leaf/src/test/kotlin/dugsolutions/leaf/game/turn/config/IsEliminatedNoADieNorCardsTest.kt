@@ -1,10 +1,11 @@
 package dugsolutions.leaf.game.turn.config
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.di.DieFactory
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.di.DieFactory
 import dugsolutions.leaf.player.PlayerTD
-import dugsolutions.leaf.random.RandomizerTD
+import dugsolutions.leaf.v14.game.turn.config.IsEliminatedNoDiceNorCards
+import dugsolutions.leaf.v14.random.RandomizerTD
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach

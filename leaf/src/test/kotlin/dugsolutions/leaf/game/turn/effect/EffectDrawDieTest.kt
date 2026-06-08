@@ -1,10 +1,11 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.domain.DrawDieResult
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.effect.EffectDrawDie
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.domain.DrawDieResult
+import dugsolutions.leaf.v14.random.die.SampleDie
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

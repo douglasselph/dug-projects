@@ -1,12 +1,14 @@
 package dugsolutions.leaf.player.decisions.local
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.CardEffect
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.effect.FloralBonusCount
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.domain.CardEffect
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.cards.domain.MatchWith
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.local.CardEffectBattleScore
+import dugsolutions.leaf.v14.player.decisions.local.EffectBattleScore
+import dugsolutions.leaf.v14.player.effect.FloralBonusCount
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

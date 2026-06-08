@@ -1,13 +1,13 @@
 package dugsolutions.leaf.player.components
 
-import dugsolutions.leaf.cards.CardManager
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.player.domain.HandItem
-import dugsolutions.leaf.random.di.DieFactory
-import dugsolutions.leaf.cards.di.GameCardIDsFactory
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.cards.CardManager
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.player.domain.HandItem
+import dugsolutions.leaf.v14.random.di.DieFactory
+import dugsolutions.leaf.v14.cards.di.GameCardIDsFactory
+import dugsolutions.leaf.v14.random.Randomizer
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -16,9 +16,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.die.SampleDie
-import dugsolutions.leaf.random.die.DieValue
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.player.components.StackManager
+import dugsolutions.leaf.v14.random.die.DieValue
 
 class StackManagerTest {
 

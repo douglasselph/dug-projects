@@ -1,7 +1,8 @@
 package dugsolutions.leaf.game.acquire.domain
 
-import dugsolutions.leaf.random.die.DieValue
-import dugsolutions.leaf.random.die.DieValues
+import dugsolutions.leaf.v14.game.acquire.domain.Combination
+import dugsolutions.leaf.v14.random.die.DieValue
+import dugsolutions.leaf.v14.random.die.DieValues
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

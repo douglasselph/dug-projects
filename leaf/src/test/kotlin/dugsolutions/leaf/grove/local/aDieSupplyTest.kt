@@ -1,6 +1,7 @@
 package dugsolutions.leaf.grove.local
 
-import dugsolutions.leaf.random.die.DieSides
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.grove.local.DiceSupply
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

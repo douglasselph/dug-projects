@@ -1,11 +1,12 @@
 package dugsolutions.leaf.player.effect
 
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.player.domain.HandItem
-import dugsolutions.leaf.random.die.DieSides
-import dugsolutions.leaf.random.di.DieFactory
-import dugsolutions.leaf.random.Randomizer
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.player.domain.HandItem
+import dugsolutions.leaf.v14.random.die.DieSides
+import dugsolutions.leaf.v14.random.di.DieFactory
+import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v14.player.effect.HasDieValue
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach

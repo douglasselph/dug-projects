@@ -1,8 +1,9 @@
 package dugsolutions.leaf.player.decisions.baseline
 
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.player.Player
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.decisions.baseline.DecisionRerollOneDieBaseline
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

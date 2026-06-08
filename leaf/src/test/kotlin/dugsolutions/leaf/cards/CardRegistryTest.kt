@@ -1,17 +1,18 @@
 package dugsolutions.leaf.cards
 
-import dugsolutions.leaf.cards.cost.ParseCost
-import dugsolutions.leaf.common.Commons
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.cards.domain.MatchWith
-import dugsolutions.leaf.cards.cost.ParseCostElement
+import dugsolutions.leaf.v14.cards.cost.ParseCost
+import dugsolutions.leaf.v14.common.Commons
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.MatchWith
+import dugsolutions.leaf.v14.cards.cost.ParseCostElement
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import dugsolutions.leaf.cards.domain.ImagePath
+import dugsolutions.leaf.v14.cards.domain.ImagePath
+import dugsolutions.leaf.v14.cards.CardRegistry
 import java.io.File
 
 class CardRegistryTest {

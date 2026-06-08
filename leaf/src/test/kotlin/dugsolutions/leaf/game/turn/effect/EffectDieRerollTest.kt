@@ -1,14 +1,15 @@
 package dugsolutions.leaf.game.turn.effect
 
-import dugsolutions.leaf.chronicle.GameChronicle
-import dugsolutions.leaf.chronicle.domain.Moment
-import dugsolutions.leaf.game.turn.select.SelectDiceNotActivatingMatches
-import dugsolutions.leaf.game.turn.select.SelectDieToReroll
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.random.RandomizerTD
-import dugsolutions.leaf.random.die.Dice
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.select.SelectDiceNotActivatingMatches
+import dugsolutions.leaf.v14.game.turn.select.SelectDieToReroll
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.random.RandomizerTD
+import dugsolutions.leaf.v14.random.die.Dice
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.SampleDie
+import dugsolutions.leaf.v14.game.turn.effect.EffectDieReroll
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -33,7 +34,8 @@ class EffectDieRerollTest {
     private val d8: Die = sampleDie.d8
     private val sampleDice = Dice(listOf(d6, d8))
 
-    private val SUT: EffectDieReroll = EffectDieReroll(mockSelectDieToReroll, mockSelectDiceNotActivatingMatches, mockChronicle)
+    private val SUT: EffectDieReroll =
+        EffectDieReroll(mockSelectDieToReroll, mockSelectDiceNotActivatingMatches, mockChronicle)
 
     @BeforeEach
     fun setup() {

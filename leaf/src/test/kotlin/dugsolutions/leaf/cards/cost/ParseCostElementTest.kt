@@ -1,6 +1,8 @@
 package dugsolutions.leaf.cards.cost
 
-import dugsolutions.leaf.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.cards.cost.CostElement
+import dugsolutions.leaf.v14.cards.cost.ParseCostElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test

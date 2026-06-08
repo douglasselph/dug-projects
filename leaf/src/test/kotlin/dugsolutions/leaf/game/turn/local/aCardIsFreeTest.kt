@@ -1,9 +1,10 @@
 package dugsolutions.leaf.game.turn.local
 
-import dugsolutions.leaf.cards.FakeCards
-import dugsolutions.leaf.cards.domain.FlourishType
-import dugsolutions.leaf.player.Player
-import dugsolutions.leaf.player.domain.AppliedEffect
+import dugsolutions.leaf.v14.cards.FakeCards
+import dugsolutions.leaf.v14.cards.domain.FlourishType
+import dugsolutions.leaf.v14.player.Player
+import dugsolutions.leaf.v14.player.domain.AppliedEffect
+import dugsolutions.leaf.v14.game.turn.local.CardIsFree
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach

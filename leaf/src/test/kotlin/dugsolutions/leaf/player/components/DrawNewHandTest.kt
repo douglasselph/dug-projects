@@ -1,9 +1,10 @@
 package dugsolutions.leaf.player.components
 
-import dugsolutions.leaf.cards.FakeCards
+import dugsolutions.leaf.v14.cards.FakeCards
 import dugsolutions.leaf.player.PlayerReal
-import dugsolutions.leaf.random.die.Die
-import dugsolutions.leaf.random.die.SampleDie
+import dugsolutions.leaf.v14.player.components.DrawNewHand
+import dugsolutions.leaf.v14.random.die.Die
+import dugsolutions.leaf.v14.random.die.SampleDie
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
