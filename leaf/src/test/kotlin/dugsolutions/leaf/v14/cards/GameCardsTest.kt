@@ -4,8 +4,6 @@ import dugsolutions.leaf.v14.cards.cost.CostScore
 import dugsolutions.leaf.v14.cards.domain.FlourishType
 import dugsolutions.leaf.v14.cards.domain.GameCard
 import dugsolutions.leaf.v14.random.Randomizer
-import dugsolutions.leaf.v14.cards.FakeCards
-import dugsolutions.leaf.v14.cards.GameCards
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +25,6 @@ class GameCardsTest {
         // Create GameCards instance with FakeCards
         gameCards = GameCards(FakeCards.ALL_CARDS, randomizer, costScore)
     }
-
     @Test
     fun size_returnsCorrectNumberOfCards() {
         // Arrange
