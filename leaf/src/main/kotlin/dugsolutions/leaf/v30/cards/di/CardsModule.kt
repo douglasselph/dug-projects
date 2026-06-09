@@ -10,5 +10,6 @@ val cardsModule: Module = module {
     single { GameCardRegistry() }
     single { GameCardManager(get()) }
     single { GameCardsFactory() }
+    single { GameCardIDsFactory(get(), get()) }
 
 } 
