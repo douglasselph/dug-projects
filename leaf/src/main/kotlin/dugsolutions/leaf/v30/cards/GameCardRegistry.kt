@@ -2,7 +2,7 @@ package dugsolutions.leaf.v30.cards
 
 import androidx.compose.ui.graphics.Color
 import dugsolutions.leaf.v30.cards.domain.CardType
-import dugsolutions.leaf.v30.cards.domain.GenCardID
+import dugsolutions.leaf.v30.cards.domain.GenGameCardID
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import java.io.File
 
@@ -62,7 +62,7 @@ class GameCardRegistry {
         val cost = parseInt(parts[Column.COST], "cost", parts)
 
         return GameCard(
-            id = GenCardID.generateId(name),
+            id = GenGameCardID.generateId(name),
             quantity = quantity,
             name = name,
             type = type,

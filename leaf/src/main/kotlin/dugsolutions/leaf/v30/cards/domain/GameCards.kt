@@ -4,8 +4,10 @@ import dugsolutions.leaf.v30.random.Randomizer
 
 
 data class GameCards(
-    val cards: List<GameCard>
+    private val incoming: List<GameCard>
 ) : Iterable<GameCard> {
+
+    val cards: List<GameCard> = incoming.toList()
 
     override fun iterator(): Iterator<GameCard> = cards.iterator()
 

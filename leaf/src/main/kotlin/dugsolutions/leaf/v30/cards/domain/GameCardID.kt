@@ -4,7 +4,7 @@ import java.util.Collections
 
 typealias GameCardID = Int
 
-object GenCardID {
+object GenGameCardID {
     
     // Keep track of already assigned IDs to prevent collisions
     private var ID = 0

@@ -30,6 +30,19 @@ class GameCardsTest {
     }
 
     @Test
+    fun constructor_whenIncomingListChanges_keepsOriginalCards() {
+        // Arrange
+        val mutableCards = sourceCards.take(2).toMutableList()
+        val result = GameCards(mutableCards)
+
+        // Act
+        mutableCards.clear()
+
+        // Assert
+        assertEquals(sourceCards.take(2), result.cards)
+    }
+
+    @Test
     fun iterator_returnsCardsInOrder() {
         // Act
         val result = gameCards.toList()
