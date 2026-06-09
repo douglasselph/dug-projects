@@ -1,11 +1,15 @@
 package dugsolutions.leaf.v30.player
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.common.Butterflies
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
 import dugsolutions.leaf.v30.player.components.Creature
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.wisp.domain.WispCard
+import dugsolutions.leaf.v30.wisp.domain.WispCards
 
 class Player(
     val creature: Creature = Creature()
@@ -14,6 +18,8 @@ class Player(
     private val _diceHand = Dice()
     private val _diceDiscard = Dice()
     private val _critters = Critters()
+    private val _butterflies = Butterflies()
+    private val _wispCards = mutableListOf<WispCard>()
 
     val diceSupply: Dice
         get() = Dice(_diceSupply.dice)
@@ -26,6 +32,12 @@ class Player(
 
     val critters: List<Critter>
         get() = _critters.all
+
+    val butterflies: List<Butterfly>
+        get() = _butterflies.all
+
+    val wispCards: WispCards
+        get() = WispCards(_wispCards)
 
     fun addCardLeft(card: GameCard) {
         creature.addLeft(card)
@@ -66,6 +78,22 @@ class Player(
 
     fun removeCritter(critter: Critter): Boolean {
         return _critters.remove(critter)
+    }
+
+    fun addButterfly(butterfly: Butterfly) {
+        _butterflies.add(butterfly)
+    }
+
+    fun removeButterfly(butterfly: Butterfly): Boolean {
+        return _butterflies.remove(butterfly)
+    }
+
+    fun addWispCard(card: WispCard) {
+        _wispCards.add(card)
+    }
+
+    fun removeWispCard(card: WispCard): Boolean {
+        return _wispCards.remove(card)
     }
 
 }

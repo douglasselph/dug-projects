@@ -2,12 +2,15 @@ package dugsolutions.leaf.v30.player
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.components.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.SampleDie
+import dugsolutions.leaf.v30.wisp.WispCardRegistry
+import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -17,6 +20,7 @@ import kotlin.test.assertTrue
 class PlayerTest {
 
     private lateinit var cards: List<GameCard>
+    private lateinit var wisps: List<WispCard>
     private lateinit var dice: SampleDie
     private lateinit var player: Player
 
@@ -25,6 +29,9 @@ class PlayerTest {
         val registry = GameCardRegistry()
         registry.loadFromCsv(Commons.CARD_LIST)
         cards = registry.getAllCards()
+        val wispRegistry = WispCardRegistry()
+        wispRegistry.loadFromCsv(Commons.WISP_LIST)
+        wisps = wispRegistry.getAllCards()
         dice = SampleDie(Randomizer.create(seed = 12345L))
         player = Player()
     }
@@ -217,6 +224,151 @@ class PlayerTest {
 
         // Assert
         assertEquals(listOf(Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun butterflies_whenNew_isEmpty() {
+        assertEquals(emptyList(), player.butterflies)
+    }
+
+    @Test
+    fun addButterfly_addsButterflyToPlayer() {
+        // Act
+        player.addButterfly(Butterfly.GREEN)
+
+        // Assert
+        assertEquals(listOf(Butterfly.GREEN), player.butterflies)
+    }
+
+    @Test
+    fun addButterfly_withMultipleButterflies_preservesOrder() {
+        // Act
+        player.addButterfly(Butterfly.GREEN)
+        player.addButterfly(Butterfly.YELLOW)
+        player.addButterfly(Butterfly.RED)
+        player.addButterfly(Butterfly.PURPLE)
+
+        // Assert
+        assertEquals(
+            listOf(Butterfly.GREEN, Butterfly.YELLOW, Butterfly.RED, Butterfly.PURPLE),
+            player.butterflies
+        )
+    }
+
+    @Test
+    fun removeButterfly_whenButterflyExists_removesFirstMatch() {
+        // Arrange
+        player.addButterfly(Butterfly.GREEN)
+        player.addButterfly(Butterfly.PURPLE)
+        player.addButterfly(Butterfly.GREEN)
+
+        // Act
+        val result = player.removeButterfly(Butterfly.GREEN)
+
+        // Assert
+        assertTrue(result)
+        assertEquals(listOf(Butterfly.PURPLE, Butterfly.GREEN), player.butterflies)
+    }
+
+    @Test
+    fun removeButterfly_whenButterflyDoesNotExist_returnsFalse() {
+        // Arrange
+        player.addButterfly(Butterfly.YELLOW)
+
+        // Act
+        val result = player.removeButterfly(Butterfly.RED)
+
+        // Assert
+        assertEquals(false, result)
+        assertEquals(listOf(Butterfly.YELLOW), player.butterflies)
+    }
+
+    @Test
+    fun butterflies_whenSnapshotIsChanged_doesNotChangePlayerButterflies() {
+        // Arrange
+        player.addButterfly(Butterfly.GREEN)
+        val snapshot = player.butterflies.toMutableList()
+
+        // Act
+        snapshot.clear()
+
+        // Assert
+        assertEquals(listOf(Butterfly.GREEN), player.butterflies)
+    }
+
+    @Test
+    fun wispCards_whenNew_isEmpty() {
+        assertEquals(emptyList(), player.wispCards.cards)
+    }
+
+    @Test
+    fun addWispCard_addsWispCardToPlayer() {
+        // Arrange
+        val wisp = wisps[0]
+
+        // Act
+        player.addWispCard(wisp)
+
+        // Assert
+        assertEquals(listOf(wisp), player.wispCards.cards)
+    }
+
+    @Test
+    fun addWispCard_withMultipleWisps_preservesOrder() {
+        // Arrange
+        val first = wisps[0]
+        val second = wisps[1]
+
+        // Act
+        player.addWispCard(first)
+        player.addWispCard(second)
+
+        // Assert
+        assertEquals(listOf(first, second), player.wispCards.cards)
+    }
+
+    @Test
+    fun removeWispCard_whenCardExists_removesFirstMatch() {
+        // Arrange
+        val first = wisps[0]
+        val second = wisps[1]
+        player.addWispCard(first)
+        player.addWispCard(second)
+        player.addWispCard(first)
+
+        // Act
+        val result = player.removeWispCard(first)
+
+        // Assert
+        assertTrue(result)
+        assertEquals(listOf(second, first), player.wispCards.cards)
+    }
+
+    @Test
+    fun removeWispCard_whenCardDoesNotExist_returnsFalse() {
+        // Arrange
+        player.addWispCard(wisps[0])
+
+        // Act
+        val result = player.removeWispCard(wisps[1])
+
+        // Assert
+        assertEquals(false, result)
+        assertEquals(listOf(wisps[0]), player.wispCards.cards)
+    }
+
+    @Test
+    fun wispCards_whenSnapshotIsChanged_doesNotChangePlayerWisps() {
+        // Arrange
+        val wisp = wisps[0]
+        player.addWispCard(wisp)
+        val snapshot = player.wispCards.cards.toMutableList()
+
+        // Act
+        snapshot.clear()
+
+        // Assert
+        assertEquals(listOf(wisp), player.wispCards.cards)
     }
 
 }
