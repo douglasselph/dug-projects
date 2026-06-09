@@ -1,0 +1,16 @@
+package dugsolutions.leaf.v30.di
+
+import dugsolutions.leaf.v30.cards.di.cardsModule
+import kotlinx.coroutines.Dispatchers
+import org.koin.core.module.Module
+import org.koin.dsl.module
+
+val appModule: Module = module {
+
+    single { Dispatchers.Main }
+    single { Dispatchers.IO }
+}
+
+val appModules = listOf(
+    cardsModule,
+)

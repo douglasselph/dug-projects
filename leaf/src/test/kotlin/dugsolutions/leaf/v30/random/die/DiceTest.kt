@@ -1,6 +1,6 @@
-package dugsolutions.leaf.v14.random.die
+package dugsolutions.leaf.v30.random.die
 
-import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v30.random.Randomizer
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class aDieTest {
+class DiceTest {
 
     private lateinit var SUT: Dice
     private lateinit var sampleDie: SampleDie

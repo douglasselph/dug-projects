@@ -1,7 +1,7 @@
-package dugsolutions.leaf.v14.random.die
+package dugsolutions.leaf.v30.random.die
 
-import dugsolutions.leaf.v14.random.di.DieFactory
-import dugsolutions.leaf.v14.random.Randomizer
+import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
