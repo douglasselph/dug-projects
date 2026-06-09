@@ -12,7 +12,6 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import dugsolutions.leaf.v14.cards.domain.ImagePath
-import dugsolutions.leaf.v14.cards.CardRegistry
 import java.io.File
 
 class CardRegistryTest {
