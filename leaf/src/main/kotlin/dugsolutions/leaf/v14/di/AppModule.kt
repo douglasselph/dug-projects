@@ -8,6 +8,7 @@ import dugsolutions.leaf.v14.main.di.mainModule
 import dugsolutions.leaf.v14.player.di.playerModule
 import dugsolutions.leaf.v14.random.di.randomModule
 import kotlinx.coroutines.Dispatchers
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val appModule: Module = module {

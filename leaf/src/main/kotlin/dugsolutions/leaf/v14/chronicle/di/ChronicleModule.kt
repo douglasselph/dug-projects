@@ -16,6 +16,7 @@ import dugsolutions.leaf.v14.chronicle.report.WriteChronicleResults
 import dugsolutions.leaf.v14.chronicle.report.WriteGameResults
 import dugsolutions.leaf.v14.chronicle.report.WriteGameSummaries
 import dugsolutions.leaf.v14.chronicle.report.WriteToFile
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val chronicleModule: Module = module {

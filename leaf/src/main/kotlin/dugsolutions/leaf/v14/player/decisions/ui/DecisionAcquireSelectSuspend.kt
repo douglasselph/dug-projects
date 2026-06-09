@@ -1,14 +1,14 @@
-package dugsolutions.leaf.player.decisions.ui
+package dugsolutions.leaf.v14.player.decisions.ui
 
-import dugsolutions.leaf.cards.domain.GameCard
-import dugsolutions.leaf.game.acquire.domain.ChoiceCard
-import dugsolutions.leaf.game.acquire.domain.ChoiceDie
-import dugsolutions.leaf.player.decisions.core.DecisionAcquireSelect
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionID
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitor
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionMonitorReport
-import dugsolutions.leaf.player.decisions.local.monitor.DecisionTaskQueue
-import dugsolutions.leaf.random.die.Die
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceCard
+import dugsolutions.leaf.v14.game.acquire.domain.ChoiceDie
+import dugsolutions.leaf.v14.player.decisions.core.DecisionAcquireSelect
+import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionID
+import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionMonitor
+import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionMonitorReport
+import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionTaskQueue
+import dugsolutions.leaf.v14.random.die.Die
 
 class DecisionAcquireSelectSuspend(
     monitor: DecisionMonitor,

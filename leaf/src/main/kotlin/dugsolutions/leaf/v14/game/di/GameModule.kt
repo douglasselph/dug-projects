@@ -57,6 +57,7 @@ import dugsolutions.leaf.v14.game.turn.select.SelectDieToReroll
 import dugsolutions.leaf.v14.game.turn.select.SelectDieToRetain
 import dugsolutions.leaf.v14.game.turn.select.SelectPossibleCards
 import dugsolutions.leaf.v14.game.turn.select.SelectPossibleDice
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val gameModule: Module = module {

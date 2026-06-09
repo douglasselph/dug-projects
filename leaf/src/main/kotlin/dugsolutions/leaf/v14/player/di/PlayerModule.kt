@@ -22,6 +22,7 @@ import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionMonitor
 import dugsolutions.leaf.v14.player.decisions.local.monitor.DecisionMonitorReport
 import dugsolutions.leaf.v14.player.effect.NutrientReward
 import dugsolutions.leaf.v14.player.effect.ShouldProcessMatchEffect
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val playerModule: Module = module {

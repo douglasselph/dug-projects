@@ -13,6 +13,7 @@ import dugsolutions.leaf.v14.main.local.MainActionHandler
 import dugsolutions.leaf.v14.main.local.MainDecisions
 import dugsolutions.leaf.v14.main.local.SelectGather
 import dugsolutions.leaf.v14.main.local.SelectItem
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val mainModule: Module = module {

@@ -6,6 +6,7 @@ import dugsolutions.leaf.v14.cards.cost.CostScore
 import dugsolutions.leaf.v14.cards.cost.ParseCost
 import dugsolutions.leaf.v14.cards.cost.ParseCostElement
 import dugsolutions.leaf.v14.main.local.CardOperations
+import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val cardModule: Module = module {

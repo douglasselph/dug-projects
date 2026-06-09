@@ -1,0 +1,88 @@
+quantity,name,title,type,cost,icon,line_icon,type_icon,fg_color,text_color,full_image,bg_image2,bg_card_image2,effect
+8,Root_05_01,Root Bulwark,Root,5,B,images/battle_only.png,images/icon_root.png,8f754f,fcf5d9,images/root_bulwark_full.png,images/back_root2.png,images/cf_root_bulwark.png,"Place a Bulwark token. 
+Cannot win or lose. 
+If this leaves no winners, 
+the Strike is a stalemate."
+8,Root_05_02,Root Flourish,Root,5,,,images/icon_root.png,8f754f,fcf5d9,images/root_flourish_full.png,images/back_root2.png,images/cf_root_flourish.png,"Gain a worm 🪱.
+Each of your worms
+is worth 2 more."
+8,Root_05_03,Root Renewal,Root,5,,images/mulch.png,images/icon_root.png,8f754f,fcf5d9,images/root_renewal_full.png,images/back_root2.png,images/cf_root_renewal.png,"Mulch any die
+from discard"
+8,Root_05_04,Root Reservoir,Root,5,,,images/icon_root.png,8f754f,fcf5d9,images/root_reservoir_full.png,images/back_root2.png,images/cf_root_reservoir.png,"Reroll a die until that die
+rolls 3 or higher"
+8,Root_07_01,Root Nourish,Root,7,,images/water.png,images/icon_root.png,8f754f,fcf5d9,images/root_nourish_full.png,images/back_root2.png,images/cf_root_nourish.png,"🎲 Raise any die +2.
+Gain a Water token."
+8,Root_07_02,Root Reflection,Root,7,,,images/icon_root.png,8f754f,fcf5d9,images/root_reflection_full.png,images/back_root2.png,images/cf_root_reflection.png,"🎲 May Raise any die +1. 
+then if 2 dice match: 
+🎲 Raise ×2 (double) both."
+8,Root_07_03,Root Reinforced,Root,7,,,images/icon_root.png,8f754f,fcf5d9,images/root_reinforced_full.png,images/back_root2.png,images/cf_root_reinforced.png,🎲 Raise ×2 (double) one die
+8,Root_07_04,Root Resonance,Root,7,,,images/icon_root.png,8f754f,fcf5d9,images/root_resonance_full.png,images/back_root2.png,images/cf_root_resonance.png,"🎲 Raise ×2 (double)
+all dice showing 1–4"
+8,Root_09_01,Root Awakening,Root,9,,,images/icon_root.png,8f754f,fcf5d9,images/root_awakening_full.png,images/back_root2.png,images/cf_root_awakening.png,"Upgrade a die; 
+use the upgraded die now."
+8,Root_09_02,Root Cause,Root,9,,,images/icon_root.png,8f754f,fcf5d9,images/root_cause_full.png,images/back_root2.png,images/cf_root_cause.png,"Flip one of your die
+to its opposite face"
+8,Root_09_03,Root Loot,Root,9,,,images/icon_root.png,8f754f,fcf5d9,images/root_loot_full.png,images/back_root2.png,images/cf_root_loot.png,"Set a die to match
+the value of another"
+8,Root_09_04,Root Reach,Root,9,,,images/icon_root.png,8f754f,fcf5d9,images/root_reach_full.png,images/back_root2.png,images/cf_root_reach.png,"For each 🪱 worm you have,  
+🎲 Raise any die +2.
+then DIscard 1 Worm 🪱
+ If you have 3 or more."
+8,Flower_11_01,Acutely Floral,Flower,11,,,images/icon_flower.png,f2ce42,261f03,images/acutely_floral_full.png,images/back_flower.png,images/cf_acutely_floral.png,"Gain or Steal a Bee 🐝.
+Each of your Bees
+is worth 2 more this round."
+8,Flower_11_02,Parting Thorn,Flower,11,B,images/battle_only.png,images/icon_flower.png,f2ce42,261f03,images/parting_thorn_full.png,images/back_flower.png,images/cf_parting_thorn.png,"The winner of one chosen
+strike row takes a wound"
+8,Flower_11_03,Petal To Die 4,Flower,11,,,images/icon_flower.png,f2ce42,261f03,images/petal_to_die4_full.png,images/back_flower.png,images/cf_petal_to_die4.png,"Choose one:
+Gain D4 (set to 4),
+or Trash D4 then
+Gain D8 (set to 8)."
+8,Flower_11_04,Transplant Tulip,Flower,11,B,images/battle_only.png,images/icon_flower.png,f2ce42,261f03,images/transplant_tulip_full.png,images/back_flower.png,images/cf_transplant_tulip.png,Swap two of your dice
+8,Flower_14_01,Bloom Backbone,Flower,14,,,images/icon_flower.png,f2ce42,261f03,images/bloom_backbone_full.png,images/back_flower.png,images/cf_bloom_backbone.png,"For each grafted
+Root or Vine, 
+🎲 Raise any die +1"
+8,Flower_14_02,Bursting Blossom,Flower,14,M,images/max.png,images/icon_flower.png,f2ce42,261f03,images/bursting_blossom_full.png,images/back_flower.png,images/cf_bursting_blossom.png,"For each die on MAX: 
+Roll 1 extra time; 
+add the new result."
+8,Flower_14_03,Gust of Petals,Flower,14,B,images/battle_only.png,images/icon_flower.png,f2ce42,261f03,images/gust_of_petals_full.png,images/back_flower.png,images/cf_gust_of_petals.png,"Higher opposing dice
+reroll on one strike row"
+8,Flower_14_04,Siphon Snapdragon,Flower,14,B,images/battle_only.png,images/icon_flower.png,f2ce42,261f03,images/siphon_snapdragon_full.png,images/back_flower.png,images/cf_siphon_snapdragon.png,"On one strike row, 
+drain all higher die by 2, 
+🎲 raising one of your die
+by 2 each"
+8,Flower_17_01,Bee-trieval,Flower,17,,,images/icon_flower.png,f2ce42,261f03,images/bee_trieval_full.png,images/back_flower.png,images/cf_bee_trieval.png,"Draw any 1 die
+from your discard pile"
+8,Flower_17_02,Bloom Backflip,Flower,17,B,images/battle_only.png,images/icon_flower.png,f2ce42,261f03,images/bloom_backflip_full.png,images/back_flower.png,images/cf_bloom_backflip.png,"Higher opposing dice flip
+on one strike row"
+8,Flower_17_03,Edelweiss²,Flower,17,,,images/icon_flower.png,f2ce42,261f03,images/elderweiss_full.png,images/back_flower.png,images/cf_edelweiss.png,"You may play
+up to 2 other cards"
+8,Flower_17_04,Queen’s Blossom,Flower,17,,,images/icon_flower.png,f2ce42,261f03,images/queens_blossom_full.png,images/back_flower.png,images/cf_queens_blossom.png,Draw 2 dice
+8,Vine_07_01,Berry Important,Vine,7,,images/plus_white_victory_victory.png,images/icon_vine.png,5e8c61,f5f0c4,images/berry_important_full.png,images/back_vine.png,images/cf_berry_important.png,"🎲 Raise any die +1. 
+⭐ End Game: +2 VP."
+8,Vine_07_02,De-Vine Exchange,Vine,7,,images/victory_per_flower2.png,images/icon_vine.png,5e8c61,f5f0c4,images/devine_exchange_full.png,images/back_vine.png,images/cf_devine_exchange.png,"🎲 Raise any die +1. 
+⭐ End Game: +1 VP
+per Flower."
+8,Vine_07_03,Twist and Swarm,Vine,7,,,images/icon_vine.png,5e8c61,f5f0c4,images/twist_and_swarm_full.png,images/back_vine.png,images/cf_twist_and_swarm.png,"🎲 Raise +1
+to any 3 dice"
+8,Vine_07_04,Vine Lash,Vine,7,,,images/icon_vine.png,5e8c61,f5f0c4,images/vine_lash_full.png,images/back_vine.png,images/cf_vine_lash.png,🎲 Raise a die +3
+8,Vine_09_01,Vine Again,Vine,9,,,images/icon_vine.png,5e8c61,f5f0c4,images/vine_again_full.png,images/back_vine.png,images/cf_vine_again.png,"Repeat the effect
+of another of your face down
+Vines or Roots"
+8,Vine_09_02,No Time To Vine,Vine,9,B,images/battle_only.png,images/icon_vine.png,5e8c61,f5f0c4,images/no_time_to_vine.png,images/back_vine.png,images/cf_no_time_to_vine.png,"Resolve a Strike
+immediately"
+8,Vine_09_03,Reaping Tendrils,Vine,9,,images/mulch.png,images/icon_vine.png,5e8c61,f5f0c4,images/reaping_tendrils_full.png,images/back_vine.png,images/cf_reaping_tendrils.png,"Gain 1 Mulch token.
+
+Cleanup: Mulch 1 die
+instead of discarding."
+8,Vine_09_04,Withering Grasp,Vine,9,,,images/icon_vine.png,5e8c61,f5f0c4,images/withering_grasp_full.png,images/back_vine.png,images/cf_withering_grasp.png,"Trash a worm or bee 
+(🪱/🐝)
+to raise any die by 5"
+8,Vine_11_01,Saplink Trellis,Vine,11,,,images/icon_vine.png,5e8c61,f5f0c4,images/saplink_trellis_full.png,images/back_vine.png,images/cf_saplink_trellis.png,"For each Vine,
+🎲 Raise any die +2"
+8,Vine_11_02,Snip Happens,Vine,11,B,images/battle_only.png,images/icon_vine.png,5e8c61,f5f0c4,images/snip_happens_full.png,images/back_vine.png,images/cf_snip_happens.png,"Choose an opponent
+to flip 1 of their 
+face up Vines face down"
+8,Vine_11_03,Vine and Dine,Vine,11,,,images/icon_vine.png,5e8c61,f5f0c4,images/vine_and_dine_full.png,images/back_vine.png,images/cf_vine_and_dine.png,"Set a die up to a D12 
+to it's maximum value"
+8,Vine_11_04,Vine and Punishment,Vine,11,,images/battle_only.png,images/icon_vine.png,5e8c61,f5f0c4,images/vine_and_punishment_full.png,images/back_vine.png,images/cf_vine_and_punishment.png,"Reduce all opposing dice 
+on one strike row by 3"

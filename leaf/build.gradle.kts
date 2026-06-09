@@ -123,9 +123,6 @@ tasks.register<Test>("integrationTest") {
 }
 
 kotlin {
-    // Common compiler options
-    jvmToolchain(11)
-    
     // Specific compiler options for integration tests
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
         if (name.contains("compileIntegrationKotlin")) {
