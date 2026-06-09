@@ -3,6 +3,7 @@ package dugsolutions.leaf.v30.player
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.components.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -151,6 +152,71 @@ class PlayerTest {
         assertTrue(player.diceSupply.isEmpty())
         assertTrue(player.diceHand.isEmpty())
         assertTrue(player.diceDiscard.isEmpty())
+    }
+
+    @Test
+    fun critters_whenNew_isEmpty() {
+        assertEquals(emptyList(), player.critters)
+    }
+
+    @Test
+    fun addCritter_addsCritterToPlayer() {
+        // Act
+        player.addCritter(Critter.BEE)
+
+        // Assert
+        assertEquals(listOf(Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun addCritter_withMultipleCritters_preservesOrder() {
+        // Act
+        player.addCritter(Critter.BEE)
+        player.addCritter(Critter.WORM)
+
+        // Assert
+        assertEquals(listOf(Critter.BEE, Critter.WORM), player.critters)
+    }
+
+    @Test
+    fun removeCritter_whenCritterExists_removesFirstMatch() {
+        // Arrange
+        player.addCritter(Critter.BEE)
+        player.addCritter(Critter.WORM)
+        player.addCritter(Critter.BEE)
+
+        // Act
+        val result = player.removeCritter(Critter.BEE)
+
+        // Assert
+        assertTrue(result)
+        assertEquals(listOf(Critter.WORM, Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun removeCritter_whenCritterDoesNotExist_returnsFalse() {
+        // Arrange
+        player.addCritter(Critter.BEE)
+
+        // Act
+        val result = player.removeCritter(Critter.WORM)
+
+        // Assert
+        assertEquals(false, result)
+        assertEquals(listOf(Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun critters_whenSnapshotIsChanged_doesNotChangePlayerCritters() {
+        // Arrange
+        player.addCritter(Critter.BEE)
+        val snapshot = player.critters.toMutableList()
+
+        // Act
+        snapshot.clear()
+
+        // Assert
+        assertEquals(listOf(Critter.BEE), player.critters)
     }
 
 }

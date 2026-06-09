@@ -1,0 +1,22 @@
+quantity,name,title,count,effect,line_icons,line_icons_height,main_backdrop
+3,Wisp_Award_VP,Wisp of Honor,3,Keep: 2 VP (END),{{ images.victory_victory.url }},80,{{ images.cloud_honor.url }}
+3,Wisp_Gain_Critters,Whispering Wings,3,"Gain any 2 critters
+(🪱/🐝)",{{ images.victory.url }},80,{{ images.cloud_whispering_wings.url }}
+4,Wisp_Gain_Green,Pollinating Wisp,4,"Gain Green
+Butterfly",{{ images.victory_butterfly_green.url }},160,{{ images.cloud_pollinating.url }}
+2,Wisp_Gain_Purple,Pollinating Wisp,2,"Gain Purple
+Butterfly",{{ images.victory_butterfly_purple.url }},160,{{ images.cloud_pollinating.url }}
+4,Wisp_Gain_Red,Pollinating Wisp,4,"Gain Red
+Butterfly",{{ images.victory_butterfly_red.url }},160,{{ images.cloud_pollinating.url }}
+3,Wisp_Gain_Yellow,Pollinating Wisp,3,"Gain Yellow
+Butterfly",{{ images.victory_butterfly_yellow.url }},160,{{ images.cloud_pollinating.url }}
+4,Wisp_Mulch_Die,Pocketed Spark,4,"Gain Mulch;
+Store 1 die from your discard on it.",{{ images.victory_mulch.url }},80,{{ images.cloud_spark.url }}
+3,Wisp_Swap_Die,Pollen Theft,3,"Swap one of your dice
+with an opponent’s 
+same-size die
+(no re-rolls)",{{ images.victory.url }},80,{{ images.cloud_theft.url }}
+4,Wisp_Upgrade_Die,Overgrowth,4,"Upgrade a die 
+two steps — 
+skip missing sizes; 
+use gained die now",{{ images.victory.url }},80,{{ images.cloud_overgrowth.url }}
