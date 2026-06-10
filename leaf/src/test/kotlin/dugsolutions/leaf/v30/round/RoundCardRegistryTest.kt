@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.round
 
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.round.domain.RoundCardType
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -52,6 +53,7 @@ class RoundCardRegistryTest {
         assertEquals("images/turn_surge_worm.png", card.effect2Image)
         assertEquals("images/ic_token_worm.png", card.effect2Icon)
         assertEquals("images/battle_transition_back.png", card.backImage)
+        assertEquals(RoundCardType.BATTLE, card.cardType)
     }
 
     @Test
@@ -64,6 +66,19 @@ class RoundCardRegistryTest {
         assertNotNull(card)
         assertTrue(card.effect2Text.lines().size > 1)
         assertTrue(card.effect2Text.contains("Store a die"))
+        assertEquals(RoundCardType.CULTIVATION, card.cardType)
+    }
+
+    @Test
+    fun cardType_whenNamePrefixIsUnknown_throwsException() {
+        val registry = RoundCardRegistry()
+        registry.loadFromCsv(Commons.ROUND_CARD_LIST)
+        val card = requireNotNull(registry.getCard("Battle_Bloom_Burrow"))
+            .copy(name = "Unknown_Bloom_Burrow")
+
+        assertThrows<IllegalArgumentException> {
+            card.cardType
+        }
     }
 
     @Test

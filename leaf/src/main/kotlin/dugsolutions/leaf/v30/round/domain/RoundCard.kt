@@ -18,4 +18,11 @@ data class RoundCard(
     val effect2Image: String?,
     val effect2Icon: String?,
     val backImage: String?
-)
+) {
+    val cardType: RoundCardType
+        get() = when {
+            name.startsWith("Battle") -> RoundCardType.BATTLE
+            name.startsWith("Resource") -> RoundCardType.CULTIVATION
+            else -> throw IllegalArgumentException("Unknown round card type for name: $name")
+        }
+}

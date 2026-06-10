@@ -6,14 +6,15 @@ import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
 import dugsolutions.leaf.v30.player.components.Creature
+import dugsolutions.leaf.v30.player.components.CreatureCard
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import dugsolutions.leaf.v30.wisp.domain.WispCards
 
 class Player(
-    val creature: Creature = Creature()
 ) {
+    private val _creature: Creature = Creature()
     private val _diceSupply = Dice()
     private val _diceHand = Dice()
     private val _diceDiscard = Dice()
@@ -43,12 +44,32 @@ class Player(
     val vp: Int
         get() = _vp
 
+    val creatureLeftCards: List<CreatureCard>
+        get() = _creature.leftCards
+
+    val creatureRightCards: List<CreatureCard>
+        get() = _creature.rightCards
+
+    val isCreatureLeftEmpty: Boolean
+        get() = _creature.isLeftEmpty
+
+    val isCreatureRightEmpty: Boolean
+        get() = _creature.isRightEmpty
+
+    fun getCreatureLeftCard(index: Int): CreatureCard? {
+        return _creature.getLeft(index)
+    }
+
+    fun getCreatureRightCard(index: Int): CreatureCard? {
+        return _creature.getRight(index)
+    }
+
     fun addCardLeft(card: GameCard) {
-        creature.addLeft(card)
+        _creature.addLeft(card)
     }
 
     fun addCardRight(card: GameCard) {
-        creature.addRight(card)
+        _creature.addRight(card)
     }
 
     fun addDieToSupply(die: Die) {

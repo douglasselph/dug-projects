@@ -4,6 +4,10 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.round.RoundCardManager
+import dugsolutions.leaf.v30.round.RoundCardRegistry
+import dugsolutions.leaf.v30.round.RoundDeck
+import dugsolutions.leaf.v30.round.di.RoundCardsFactory
 import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
@@ -17,17 +21,14 @@ import kotlin.test.assertTrue
 class TableTest {
 
     private lateinit var grove: Grove
+    private lateinit var roundDeck: RoundDeck
     private lateinit var SUT: Table
 
     @BeforeEach
     fun setup() {
         grove = Grove(createWispDeck())
-        SUT = Table(grove)
-    }
-
-    @Test
-    fun constructor_holdsInjectedGrove() {
-        assertSame(grove, SUT.grove)
+        roundDeck = createRoundDeck()
+        SUT = Table(grove, roundDeck)
     }
 
     @Test
@@ -73,6 +74,14 @@ class TableTest {
         val manager = WispCardManager(WispCardsFactory())
         manager.loadCards(registry)
         return WispDeck(manager, IdentityRandomizer())
+    }
+
+    private fun createRoundDeck(): RoundDeck {
+        val registry = RoundCardRegistry()
+        registry.loadFromCsv(Commons.ROUND_CARD_LIST)
+        val manager = RoundCardManager(RoundCardsFactory())
+        manager.loadCards(registry)
+        return RoundDeck(manager, IdentityRandomizer())
     }
 
     private class IdentityRandomizer : Randomizer {

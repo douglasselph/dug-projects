@@ -23,12 +23,12 @@ class CreatureTest {
 
     @Test
     fun left_whenNew_isEmpty() {
-        assertTrue(creature.left.isEmpty)
+        assertTrue(creature.isLeftEmpty)
     }
 
     @Test
     fun right_whenNew_isEmpty() {
-        assertTrue(creature.right.isEmpty)
+        assertTrue(creature.isRightEmpty)
     }
 
     @Test
@@ -41,10 +41,10 @@ class CreatureTest {
         val result = creature.addLeft(card)
 
         // Assert
-        assertEquals(creature.left, result)
-        assertEquals(listOf(expected), creature.left.all)
-        assertTrue(creature.left[0]!!.isFaceDown)
-        assertTrue(creature.right.isEmpty)
+        assertEquals(listOf(expected), result.all)
+        assertEquals(listOf(expected), creature.leftCards)
+        assertTrue(creature.getLeft(0)!!.isFaceDown)
+        assertTrue(creature.isRightEmpty)
     }
 
     @Test
@@ -57,10 +57,10 @@ class CreatureTest {
         val result = creature.addRight(card)
 
         // Assert
-        assertEquals(creature.right, result)
-        assertEquals(listOf(expected), creature.right.all)
-        assertTrue(creature.right[0]!!.isFaceDown)
-        assertTrue(creature.left.isEmpty)
+        assertEquals(listOf(expected), result.all)
+        assertEquals(listOf(expected), creature.rightCards)
+        assertTrue(creature.getRight(0)!!.isFaceDown)
+        assertTrue(creature.isLeftEmpty)
     }
 
     @Test
@@ -74,7 +74,7 @@ class CreatureTest {
         creature.addLeft(second)
 
         // Assert
-        assertEquals(listOf(CreatureCard(first), CreatureCard(second)), creature.left.all)
+        assertEquals(listOf(CreatureCard(first), CreatureCard(second)), creature.leftCards)
     }
 
     @Test
@@ -88,7 +88,7 @@ class CreatureTest {
         creature.addRight(second)
 
         // Assert
-        assertEquals(listOf(CreatureCard(first), CreatureCard(second)), creature.right.all)
+        assertEquals(listOf(CreatureCard(first), CreatureCard(second)), creature.rightCards)
     }
 
     @Test
@@ -100,8 +100,8 @@ class CreatureTest {
         creature.addLeft(card)
 
         // Assert
-        assertEquals(listOf(card), creature.left.all)
-        assertTrue(creature.left[0]!!.isFaceUp)
+        assertEquals(listOf(card), creature.leftCards)
+        assertTrue(creature.getLeft(0)!!.isFaceUp)
     }
 
 }

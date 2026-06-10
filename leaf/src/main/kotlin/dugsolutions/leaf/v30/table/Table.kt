@@ -2,9 +2,11 @@ package dugsolutions.leaf.v30.table
 
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.round.RoundDeck
 
 class Table(
-    val grove: Grove
+    private val grove: Grove,
+    private val roundDeck: RoundDeck
 ) {
     private val _players = mutableListOf<Player>()
 

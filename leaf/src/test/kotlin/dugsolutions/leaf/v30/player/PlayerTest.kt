@@ -39,8 +39,8 @@ class PlayerTest {
 
     @Test
     fun creature_whenNew_hasEmptyStacks() {
-        assertTrue(player.creature.left.isEmpty)
-        assertTrue(player.creature.right.isEmpty)
+        assertTrue(player.isCreatureLeftEmpty)
+        assertTrue(player.isCreatureRightEmpty)
     }
 
     @Test
@@ -52,9 +52,9 @@ class PlayerTest {
         player.addCardLeft(card)
 
         // Assert
-        assertEquals(listOf(CreatureCard(card)), player.creature.left.all)
-        assertTrue(player.creature.left[0]!!.isFaceDown)
-        assertTrue(player.creature.right.isEmpty)
+        assertEquals(listOf(CreatureCard(card)), player.creatureLeftCards)
+        assertTrue(player.getCreatureLeftCard(0)!!.isFaceDown)
+        assertTrue(player.isCreatureRightEmpty)
     }
 
     @Test
@@ -66,9 +66,9 @@ class PlayerTest {
         player.addCardRight(card)
 
         // Assert
-        assertEquals(listOf(CreatureCard(card)), player.creature.right.all)
-        assertTrue(player.creature.right[0]!!.isFaceDown)
-        assertTrue(player.creature.left.isEmpty)
+        assertEquals(listOf(CreatureCard(card)), player.creatureRightCards)
+        assertTrue(player.getCreatureRightCard(0)!!.isFaceDown)
+        assertTrue(player.isCreatureLeftEmpty)
     }
 
     @Test
