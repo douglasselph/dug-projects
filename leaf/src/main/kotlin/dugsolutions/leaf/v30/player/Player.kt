@@ -5,6 +5,8 @@ import dugsolutions.leaf.v30.common.Butterflies
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
+import dugsolutions.leaf.v30.player.decision.baseline.DecisionDirectorBaseline
+import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.domain.Creature
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
@@ -14,6 +16,7 @@ import dugsolutions.leaf.v30.wisp.domain.WispCard
 import dugsolutions.leaf.v30.wisp.domain.WispCards
 
 class Player(
+    val decisionDirector: DecisionDirector = DecisionDirectorBaseline()
 ) {
     private val _creature: Creature = Creature()
     private val _diceSupply = Dice()

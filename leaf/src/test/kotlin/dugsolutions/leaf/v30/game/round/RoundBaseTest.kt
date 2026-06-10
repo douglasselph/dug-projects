@@ -4,6 +4,8 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.Decision
+import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -104,6 +106,20 @@ class RoundBaseTest {
     }
 
     @Test
+    fun resolveRewards_withOneRolled_usesPlayersDecisionDirector() {
+        val player = Player(AlwaysWormDecisionDirector())
+        player.addDieToSupply(FixedDie(6, 1))
+        player.drawDie()
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.resolveRewards()
+
+        assertEquals(listOf(Critter.WORM), player.critters)
+        assertEquals(8, table.grove.count(Critter.WORM))
+    }
+
+    @Test
     fun resolveRewards_withTwoRolled_givesPlayerNextWispCard() {
         val player = Player()
         player.addDieToSupply(FixedDie(6, 2))
@@ -173,5 +189,11 @@ class RoundBaseTest {
         }
 
         override fun roll(): Die = this
+    }
+
+    private class AlwaysWormDecisionDirector : DecisionDirector {
+        override fun chooseCritter(input: Decision.ChooseCritter): Critter {
+            return Critter.WORM
+        }
     }
 }

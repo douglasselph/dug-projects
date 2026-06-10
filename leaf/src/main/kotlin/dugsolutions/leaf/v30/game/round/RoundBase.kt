@@ -2,6 +2,7 @@ package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.table.Table
 
@@ -46,18 +47,19 @@ abstract class RoundBase(
     }
 
     private fun gainCritter(player: Player) {
-        val critter = chooseCritter(player)
+        val critter = player.decisionDirector.chooseCritter(
+            Decision.ChooseCritter(
+                player = player,
+                availableCritters = availableCritters()
+            )
+        )
         if (table.grove.remove(critter)) {
             player.addCritter(critter)
         }
     }
 
-    private fun chooseCritter(player: Player): Critter {
-        val bees = player.critters.count { it == Critter.BEE }
-        val worms = player.critters.count { it == Critter.WORM }
-
-        // Decision point: replace this automatic choice once player decisions are modeled.
-        return if (bees <= worms) Critter.BEE else Critter.WORM
+    private fun availableCritters(): List<Critter> {
+        return Critter.entries.filter { table.grove.has(it) }
     }
 
 }
