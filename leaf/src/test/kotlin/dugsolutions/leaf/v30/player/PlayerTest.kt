@@ -13,6 +13,7 @@ import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -369,6 +370,38 @@ class PlayerTest {
 
         // Assert
         assertEquals(listOf(wisp), player.wispCards.cards)
+    }
+
+    @Test
+    fun vp_whenNew_isZero() {
+        assertEquals(0, player.vp)
+    }
+
+    @Test
+    fun addVp_increasesPlayerVp() {
+        player.addVp(1)
+        player.addVp(3)
+
+        assertEquals(4, player.vp)
+    }
+
+    @Test
+    fun addVp_withNonPositiveAmount_throwsException() {
+        assertThrows<IllegalArgumentException> {
+            player.addVp(0)
+        }
+        assertThrows<IllegalArgumentException> {
+            player.addVp(-1)
+        }
+    }
+
+    @Test
+    fun resetVp_setsPlayerVpBackToZero() {
+        player.addVp(5)
+
+        player.resetVp()
+
+        assertEquals(0, player.vp)
     }
 
 }

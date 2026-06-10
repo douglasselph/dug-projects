@@ -20,6 +20,7 @@ class Player(
     private val _critters = Critters()
     private val _butterflies = Butterflies()
     private val _wispCards = mutableListOf<WispCard>()
+    private var _vp = 0
 
     val diceSupply: Dice
         get() = Dice(_diceSupply.dice)
@@ -38,6 +39,9 @@ class Player(
 
     val wispCards: WispCards
         get() = WispCards(_wispCards)
+
+    val vp: Int
+        get() = _vp
 
     fun addCardLeft(card: GameCard) {
         creature.addLeft(card)
@@ -94,6 +98,15 @@ class Player(
 
     fun removeWispCard(card: WispCard): Boolean {
         return _wispCards.remove(card)
+    }
+
+    fun addVp(amount: Int) {
+        require(amount > 0) { "VP amount must be positive: $amount" }
+        _vp += amount
+    }
+
+    fun resetVp() {
+        _vp = 0
     }
 
 }
