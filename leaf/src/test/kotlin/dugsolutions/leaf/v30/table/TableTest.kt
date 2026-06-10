@@ -1,7 +1,13 @@
 package dugsolutions.leaf.v30.table
 
+import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.wisp.WispCardManager
+import dugsolutions.leaf.v30.wisp.WispCardRegistry
+import dugsolutions.leaf.v30.wisp.WispDeck
+import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -15,7 +21,7 @@ class TableTest {
 
     @BeforeEach
     fun setup() {
-        grove = Grove()
+        grove = Grove(createWispDeck())
         SUT = Table(grove)
     }
 
@@ -59,5 +65,21 @@ class TableTest {
         snapshot.clear()
 
         assertEquals(listOf(player), SUT.players)
+    }
+
+    private fun createWispDeck(): WispDeck {
+        val registry = WispCardRegistry()
+        registry.loadFromCsv(Commons.WISP_LIST)
+        val manager = WispCardManager(WispCardsFactory())
+        manager.loadCards(registry)
+        return WispDeck(manager, IdentityRandomizer())
+    }
+
+    private class IdentityRandomizer : Randomizer {
+        override fun nextBoolean(): Boolean = throw UnsupportedOperationException()
+        override fun nextInt(from: Int, until: Int): Int = throw UnsupportedOperationException()
+        override fun nextInt(until: Int): Int = throw UnsupportedOperationException()
+        override fun <T> randomOrNull(list: List<T>): T? = throw UnsupportedOperationException()
+        override fun <T> shuffled(list: List<T>): List<T> = list
     }
 }

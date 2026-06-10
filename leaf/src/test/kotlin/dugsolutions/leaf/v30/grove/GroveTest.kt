@@ -7,7 +7,12 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
+import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.wisp.WispCardManager
+import dugsolutions.leaf.v30.wisp.WispCardRegistry
+import dugsolutions.leaf.v30.wisp.WispDeck
+import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -29,7 +34,7 @@ class GroveTest {
         registry.loadFromCsv(Commons.CARD_LIST)
         rootFiveOne = requireNotNull(registry.getCard("Root_05_01"))
         rootFiveTwo = requireNotNull(registry.getCard("Root_05_02"))
-        SUT = Grove()
+        SUT = Grove(createWispDeck())
     }
 
     @Test
@@ -179,6 +184,43 @@ class GroveTest {
     fun removeButterfly_whenMissing_returnsFalse() {
         assertTrue(SUT.remove(Butterfly.PURPLE))
         assertFalse(SUT.remove(Butterfly.PURPLE))
+    }
+
+    @Test
+    fun resetWispDeck_restoresWispDeck() {
+        val startingCount = SUT.wispDeck.remaining
+        SUT.drawWispCard()
+        SUT.drawWispCard()
+
+        SUT.resetWispDeck()
+
+        assertEquals(startingCount, SUT.wispDeck.remaining)
+    }
+
+    @Test
+    fun drawWispCard_drawsFromWispDeck() {
+        val startingCount = SUT.wispDeck.remaining
+
+        val result = SUT.drawWispCard()
+
+        assertTrue(result != null)
+        assertEquals(startingCount - 1, SUT.wispDeck.remaining)
+    }
+
+    private fun createWispDeck(): WispDeck {
+        val registry = WispCardRegistry()
+        registry.loadFromCsv(Commons.WISP_LIST)
+        val manager = WispCardManager(WispCardsFactory())
+        manager.loadCards(registry)
+        return WispDeck(manager, IdentityRandomizer())
+    }
+
+    private class IdentityRandomizer : Randomizer {
+        override fun nextBoolean(): Boolean = throw UnsupportedOperationException()
+        override fun nextInt(from: Int, until: Int): Int = throw UnsupportedOperationException()
+        override fun nextInt(until: Int): Int = throw UnsupportedOperationException()
+        override fun <T> randomOrNull(list: List<T>): T? = throw UnsupportedOperationException()
+        override fun <T> shuffled(list: List<T>): List<T> = list
     }
 
 }

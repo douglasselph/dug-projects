@@ -10,8 +10,12 @@ import dugsolutions.leaf.v30.common.Tokens
 import dugsolutions.leaf.v30.grove.domain.DiceStacks
 import dugsolutions.leaf.v30.grove.domain.GroveCardStacks
 import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.wisp.WispDeck
+import dugsolutions.leaf.v30.wisp.domain.WispCard
 
-class Grove {
+class Grove(
+    val wispDeck: WispDeck
+) {
 
     private companion object {
         const val CARDS_PER_STACK = 8
@@ -68,6 +72,16 @@ class Grove {
         Butterfly.entries.forEach { butterfly ->
             butterflies.add(butterfly)
         }
+
+        wispDeck.reset()
+    }
+
+    fun resetWispDeck() {
+        wispDeck.reset()
+    }
+
+    fun drawWispCard(): WispCard? {
+        return wispDeck.draw()
     }
 
     fun count(critter: Critter): Int {

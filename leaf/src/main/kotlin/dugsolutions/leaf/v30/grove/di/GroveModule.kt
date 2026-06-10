@@ -6,5 +6,5 @@ import org.koin.dsl.module
 
 val groveModule: Module = module {
 
-    single { Grove() }
+    single { Grove(get()) }
 }
