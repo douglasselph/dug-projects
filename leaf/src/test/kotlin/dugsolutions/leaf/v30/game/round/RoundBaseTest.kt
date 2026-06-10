@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
+import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -194,6 +195,10 @@ class RoundBaseTest {
     private class AlwaysWormDecisionDirector : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter {
             return Critter.WORM
+        }
+
+        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
+            return MainAction.PullDie
         }
     }
 }

@@ -3,6 +3,8 @@ package dugsolutions.leaf.v30.player.decision.baseline
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
+import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.round.domain.RoundCard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
@@ -62,4 +64,37 @@ class DecisionDirectorBaselineTest {
             )
         }
     }
+
+    @Test
+    fun chooseMainAction_returnsPullDie() {
+        val result = SUT.chooseMainAction(
+            Decision.ChooseMainAction(
+                player = Player(),
+                roundCard = sampleRoundCard(),
+                actionsRemaining = 2
+            )
+        )
+
+        assertEquals(MainAction.PullDie, result)
+    }
+
+    private fun sampleRoundCard() = RoundCard(
+        id = 1,
+        quantity = 1,
+        name = "Resource_Test",
+        title = "Cultivation",
+        effect1Title = "One",
+        effect1Text = "One",
+        effect1Bg = "000000",
+        effect1TextFg = "ffffff",
+        effect1Image = null,
+        effect1Icon = null,
+        effect2Title = "Two",
+        effect2Text = "Two",
+        effect2Bg = "000000",
+        effect2TextFg = "ffffff",
+        effect2Image = null,
+        effect2Icon = null,
+        backImage = null
+    )
 }
