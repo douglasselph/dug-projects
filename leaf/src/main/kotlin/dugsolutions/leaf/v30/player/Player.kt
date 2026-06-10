@@ -14,10 +14,20 @@ import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import dugsolutions.leaf.v30.wisp.domain.WispCards
+import java.util.concurrent.atomic.AtomicInteger
 
 class Player(
-    val decisionDirector: DecisionDirector = DecisionDirectorBaseline()
+    val decisionDirector: DecisionDirector = DecisionDirectorBaseline(),
+    val id: Int = nextId()
 ) {
+    companion object {
+        private val nextPlayerId = AtomicInteger(1)
+
+        private fun nextId(): Int {
+            return nextPlayerId.getAndIncrement()
+        }
+    }
+
     private val _creature: Creature = Creature()
     private val _diceSupply = Dice()
     private val _diceHand = Dice()
