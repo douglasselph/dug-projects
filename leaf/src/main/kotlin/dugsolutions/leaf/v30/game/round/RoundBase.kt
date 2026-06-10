@@ -8,7 +8,8 @@ import dugsolutions.leaf.v30.table.Table
 
 abstract class RoundBase(
     protected val table: Table,
-    val card: RoundCard
+    val card: RoundCard,
+    private val checkRefresh: CheckRefresh = CheckRefresh()
 ) {
 
     private companion object {
@@ -42,6 +43,31 @@ abstract class RoundBase(
                     ROLL_GAIN_CRITTER -> gainCritter(player)
                     ROLL_GAIN_WISP -> table.grove.drawWispCard()?.let { player.addWispCard(it) }
                 }
+            }
+        }
+    }
+
+    fun cleanup() {
+        checkRefresh()
+    }
+
+    fun checkRefresh() {
+        table.players.forEach { player ->
+            checkRefresh(player)
+        }
+    }
+
+    fun checkWormRefresh() {
+        table.players.forEach { player ->
+            val cardsToRefresh = player.decisionDirector.chooseCardsToRefreshWithWorms(
+                Decision.ChooseCardsToRefreshWithWorms(player)
+            )
+            cardsToRefresh.cards.forEach cards@{ card ->
+                if (!player.removeCritter(Critter.WORM)) {
+                    println("Warning: Player tried to refresh ${card.name} with a worm but has no worm.")
+                    return@cards
+                }
+                player.flipCreatureCardFaceUp(card)
             }
         }
     }

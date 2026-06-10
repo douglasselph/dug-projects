@@ -2,12 +2,17 @@ package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.cards.GameCardRegistry
+import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -136,6 +141,64 @@ class RoundBaseTest {
         assertEquals(startingWispCount - 1, table.grove.wispDeck.remaining)
     }
 
+    @Test
+    fun cleanup_whenAllCreatureCardsAreFaceDown_flipsThemFaceUp() {
+        val card1 = loadGameCard("Root_05_01")
+        val card2 = loadGameCard("Root_07_01")
+        val player = Player()
+        player.addCardToCreature(card1)
+        player.addCardToCreature(card2)
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.cleanup()
+
+        assertTrue(player.creatureCards.all { it.isFaceUp })
+    }
+
+    @Test
+    fun cleanup_whenAnyCreatureCardIsFaceUp_doesNotRefresh() {
+        val card1 = loadGameCard("Root_05_01")
+        val card2 = loadGameCard("Root_07_01")
+        val player = Player()
+        player.addCardToCreature(CreatureCard(card1, CreatureCard.Facing.FACE_UP))
+        player.addCardToCreature(card2)
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.cleanup()
+
+        assertEquals(listOf(true, false), player.creatureCards.map { it.isFaceUp })
+    }
+
+    @Test
+    fun checkWormRefresh_withWorm_flipsSelectedCardFaceUpAndRemovesWorm() {
+        val card = loadGameCard("Root_05_01")
+        val player = Player(RefreshCardsDecisionDirector(GameCards(listOf(card))))
+        player.addCritter(Critter.WORM)
+        player.addCardToCreature(card)
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.checkWormRefresh()
+
+        assertTrue(player.getCreatureLeftCard(0)!!.isFaceUp)
+        assertEquals(emptyList(), player.critters)
+    }
+
+    @Test
+    fun checkWormRefresh_withoutWorm_doesNotFlipSelectedCardFaceUp() {
+        val card = loadGameCard("Root_05_01")
+        val player = Player(RefreshCardsDecisionDirector(GameCards(listOf(card))))
+        player.addCardToCreature(card)
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.checkWormRefresh()
+
+        assertTrue(player.getCreatureLeftCard(0)!!.isFaceDown)
+    }
+
     private fun createTable(): Table {
         return Table(
             grove = Grove(createWispDeck()),
@@ -148,6 +211,12 @@ class RoundBaseTest {
             .apply { loadFromCsv(Commons.ROUND_CARD_LIST) }
             .getCard("Resource_Compost_Mulch")
             ?: error("Missing test round card")
+
+    private fun loadGameCard(name: String): GameCard =
+        GameCardRegistry()
+            .apply { loadFromCsv(Commons.CARD_LIST) }
+            .getCard(name)
+            ?: error("Missing test game card: $name")
 
     private fun createRoundDeck(): RoundDeck {
         val registry = RoundCardRegistry()
@@ -204,6 +273,21 @@ class RoundBaseTest {
 
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
             return ItemsToBuy()
+        }
+
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
+            return CardsToRefresh()
+        }
+    }
+
+    private class RefreshCardsDecisionDirector(
+        private val cards: GameCards
+    ) : DecisionDirector {
+        override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
+        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = MainAction.PullDie
+        override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
+            return CardsToRefresh(cards)
         }
     }
 }

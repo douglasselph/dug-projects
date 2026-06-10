@@ -22,4 +22,8 @@ sealed interface Decision {
         val player: Player,
         val grove: Grove
     ) : Decision
+
+    data class ChooseCardsToRefreshWithWorms(
+        val player: Player
+    ) : Decision
 }

@@ -38,6 +38,12 @@ class CreatureCardsStack(
         return true
     }
 
+    fun replaceAll(replacement: (CreatureCard) -> CreatureCard) {
+        cards.indices.forEach { index ->
+            cards[index] = replacement(cards[index])
+        }
+    }
+
     fun clear() {
         cards.clear()
     }

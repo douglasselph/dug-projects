@@ -19,6 +19,9 @@ class Creature {
     val isRightEmpty: Boolean
         get() = right.isEmpty
 
+    val cards: List<CreatureCard>
+        get() = leftCards + rightCards
+
     fun getLeft(index: Int): CreatureCard? {
         return left[index]
     }
@@ -46,6 +49,16 @@ class Creature {
     fun faceDown(card: GameCard): Boolean {
         return left.replaceFirst({ it.card == card }) { it.faceDown() } ||
             right.replaceFirst({ it.card == card }) { it.faceDown() }
+    }
+
+    fun faceUp(card: GameCard): Boolean {
+        return left.replaceFirst({ it.card == card }) { it.faceUp() } ||
+            right.replaceFirst({ it.card == card }) { it.faceUp() }
+    }
+
+    fun faceUpAll() {
+        left.replaceAll { it.faceUp() }
+        right.replaceAll { it.faceUp() }
     }
 
 }

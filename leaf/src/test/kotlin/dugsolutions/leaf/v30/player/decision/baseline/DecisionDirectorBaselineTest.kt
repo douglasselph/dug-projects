@@ -104,6 +104,15 @@ class DecisionDirectorBaselineTest {
         assertEquals(emptyList(), result.crittersUsed.all)
     }
 
+    @Test
+    fun chooseCardsToRefreshWithWorms_returnsEmptyCardsToRefresh() {
+        val result = SUT.chooseCardsToRefreshWithWorms(
+            Decision.ChooseCardsToRefreshWithWorms(Player())
+        )
+
+        assertEquals(emptyList(), result.cards.cards)
+    }
+
     private fun sampleRoundCard() = RoundCard(
         id = 1,
         quantity = 1,

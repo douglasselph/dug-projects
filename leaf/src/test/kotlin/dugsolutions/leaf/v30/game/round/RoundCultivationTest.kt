@@ -11,6 +11,7 @@ import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
@@ -163,6 +164,7 @@ class RoundCultivationTest {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
         override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = action
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
     }
 
     private class BuyingDecisionDirector(
@@ -171,6 +173,7 @@ class RoundCultivationTest {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
         override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = MainAction.PullDie
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = itemsToBuy
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
     }
 
     private class TrackingRoundActionExecutor : RoundActionExecutor() {

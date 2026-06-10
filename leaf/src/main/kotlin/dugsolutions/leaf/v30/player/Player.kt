@@ -54,6 +54,9 @@ class Player(
     val creatureRightCards: List<CreatureCard>
         get() = _creature.rightCards
 
+    val creatureCards: List<CreatureCard>
+        get() = _creature.cards
+
     val isCreatureLeftEmpty: Boolean
         get() = _creature.isLeftEmpty
 
@@ -86,6 +89,14 @@ class Player(
 
     fun flipCreatureCardFaceDown(card: GameCard): Boolean {
         return _creature.faceDown(card)
+    }
+
+    fun flipCreatureCardFaceUp(card: GameCard): Boolean {
+        return _creature.faceUp(card)
+    }
+
+    fun flipAllCreatureCardsFaceUp() {
+        _creature.faceUpAll()
     }
 
     fun addDieToSupply(die: Die) {

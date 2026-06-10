@@ -9,4 +9,6 @@ interface DecisionDirector {
     fun chooseMainAction(input: Decision.ChooseMainAction): MainAction
 
     fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy
+
+    fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh
 }

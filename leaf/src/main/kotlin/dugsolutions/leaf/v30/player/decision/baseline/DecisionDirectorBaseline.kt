@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.player.decision.baseline
 
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
@@ -29,5 +30,9 @@ class DecisionDirectorBaseline : DecisionDirector {
 
     override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
         return ItemsToBuy()
+    }
+
+    override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
+        return CardsToRefresh()
     }
 }
