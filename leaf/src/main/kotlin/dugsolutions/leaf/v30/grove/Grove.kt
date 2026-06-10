@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.grove
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.common.Butterflies
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
@@ -54,6 +55,12 @@ class Grove(
 
     fun setCard(card: GameCard) {
         cardStacks.reset(card, CARDS_PER_STACK)
+    }
+
+    fun setCards(cards: GameCards) {
+        cards.forEach { card ->
+            setCard(card)
+        }
     }
 
     fun reset() {

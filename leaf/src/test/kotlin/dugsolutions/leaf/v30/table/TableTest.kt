@@ -1,13 +1,18 @@
 package dugsolutions.leaf.v30.table
 
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.cards.GameCardRegistry
+import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.grove.Grove
+import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
 import dugsolutions.leaf.v30.round.di.RoundCardsFactory
+import dugsolutions.leaf.v30.table.domain.TableConfig
 import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
@@ -22,10 +27,14 @@ class TableTest {
 
     private lateinit var grove: Grove
     private lateinit var roundDeck: RoundDeck
+    private lateinit var cards: List<GameCard>
     private lateinit var SUT: Table
 
     @BeforeEach
     fun setup() {
+        val cardRegistry = GameCardRegistry()
+        cardRegistry.loadFromCsv(Commons.CARD_LIST)
+        cards = cardRegistry.getAllCards()
         grove = Grove(createWispDeck())
         roundDeck = createRoundDeck()
         SUT = Table(grove, roundDeck)
@@ -66,6 +75,26 @@ class TableTest {
         snapshot.clear()
 
         assertEquals(listOf(player), SUT.players)
+    }
+
+    @Test
+    fun setup_withConfig_setsUpGroveAndRoundDeck() {
+        val card = requireNotNull(cards.firstOrNull { it.name == "Root_05_01" })
+        val config = TableConfig(
+            cards = GameCards(listOf(card)),
+            numPlayers = 2,
+            numBattle = 1,
+            numCultivation = 2
+        )
+
+        SUT.setup(config)
+
+        assertEquals(0, grove.diceStacks.getCount(dugsolutions.leaf.v30.random.die.DieSides.D4))
+        assertEquals(7, grove.diceStacks.getCount(dugsolutions.leaf.v30.random.die.DieSides.D6))
+        assertEquals(card, grove.cardStacks.getCard(GroveCardStackID.ROOT_5))
+        assertEquals(8, grove.cardStacks.getCount(GroveCardStackID.ROOT_5))
+        assertEquals(30, grove.wispDeck.remaining)
+        assertEquals(3, roundDeck.remaining)
     }
 
     private fun createWispDeck(): WispDeck {

@@ -171,4 +171,13 @@ class GameCardManagerTest {
         assertEquals(emptyList(), result)
     }
 
+    @Test
+    fun getAllCards_returnsGameCards() {
+        // Act
+        val result = SUT.getAllCards()
+
+        // Assert
+        assertEquals(sourceCards, result.cards)
+    }
+
 }

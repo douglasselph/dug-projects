@@ -39,4 +39,8 @@ class GameCardManager(
         return cards.values.filter { it.type == type }
     }
 
+    fun getAllCards(): GameCards {
+        return gameCardsFactory(cards.values.toList())
+    }
+
 } 

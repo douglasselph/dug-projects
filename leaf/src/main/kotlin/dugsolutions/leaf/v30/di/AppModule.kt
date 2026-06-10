@@ -5,6 +5,7 @@ import dugsolutions.leaf.v30.grove.di.groveModule
 import dugsolutions.leaf.v30.player.di.playerModule
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.round.di.roundModule
+import dugsolutions.leaf.v30.table.di.tableModule
 import dugsolutions.leaf.v30.wisp.di.wispModule
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
@@ -23,5 +24,6 @@ val appModules = listOf(
     wispModule,
     groveModule,
     roundModule,
+    tableModule,
     playerModule
 )

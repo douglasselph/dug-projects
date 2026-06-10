@@ -2,6 +2,7 @@ package dugsolutions.leaf.v30.grove
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
@@ -122,6 +123,14 @@ class GroveTest {
         SUT.cardStacks.remove(rootFiveOne, amount = 3)
 
         SUT.setCard(rootFiveTwo)
+
+        assertSame(rootFiveTwo, SUT.cardStacks.getCard(GroveCardStackID.ROOT_5))
+        assertEquals(8, SUT.cardStacks.getCount(GroveCardStackID.ROOT_5))
+    }
+
+    @Test
+    fun setCards_setsEachMatchingCardStackToEightCards() {
+        SUT.setCards(GameCards(listOf(rootFiveOne, rootFiveTwo)))
 
         assertSame(rootFiveTwo, SUT.cardStacks.getCard(GroveCardStackID.ROOT_5))
         assertEquals(8, SUT.cardStacks.getCount(GroveCardStackID.ROOT_5))
