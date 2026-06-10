@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
+import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
@@ -199,6 +200,10 @@ class RoundBaseTest {
 
         override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
             return MainAction.PullDie
+        }
+
+        override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
+            return ItemsToBuy()
         }
     }
 }

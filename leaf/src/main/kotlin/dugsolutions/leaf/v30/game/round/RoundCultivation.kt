@@ -4,7 +4,11 @@ import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
+import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.table.Table
 
@@ -12,7 +16,9 @@ class RoundCultivation(
     table: Table,
     card: RoundCard,
     private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
-    private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor()
+    private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
+    private val playerOrder: PlayerOrder = PlayerOrder(),
+    private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) : RoundBase(table, card) {
 
     fun performMainActions() {
@@ -54,7 +60,47 @@ class RoundCultivation(
                     player = player,
                     card = action.card
                 )
+                player.flipCreatureCardFaceDown(action.card)
             }
+        }
+    }
+
+    fun performBuy() {
+        playerOrder(table.players).forEach { player ->
+            val itemsToBuy = player.decisionDirector.chooseItemsToBuy(
+                Decision.ChooseItemsToBuy(
+                    player = player,
+                    grove = table.grove
+                )
+            )
+            buyItems(player, itemsToBuy)
+            player.discardHandDice()
+        }
+    }
+
+    private fun buyItems(
+        player: Player,
+        itemsToBuy: ItemsToBuy
+    ) {
+        itemsToBuy.dice.forEach { sides ->
+            buyDie(player, sides)
+        }
+        itemsToBuy.cards.forEach { card ->
+            if (table.grove.remove(card)) {
+                player.addCardToCreature(card)
+            }
+        }
+        itemsToBuy.crittersUsed.forEach { critter ->
+            player.removeCritter(critter)
+        }
+    }
+
+    private fun buyDie(
+        player: Player,
+        sides: DieSides
+    ) {
+        if (table.grove.remove(sides)) {
+            player.addDieToDiscard(dieFactory(sides))
         }
     }
 

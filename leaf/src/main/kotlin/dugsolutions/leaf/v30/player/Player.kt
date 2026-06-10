@@ -76,8 +76,24 @@ class Player(
         _creature.addRight(card)
     }
 
+    fun addCardToCreature(card: GameCard) {
+        addCardLeft(card)
+    }
+
+    fun addCardToCreature(card: CreatureCard) {
+        _creature.addLeft(card)
+    }
+
+    fun flipCreatureCardFaceDown(card: GameCard): Boolean {
+        return _creature.faceDown(card)
+    }
+
     fun addDieToSupply(die: Die) {
         _diceSupply.add(die)
+    }
+
+    fun addDieToDiscard(die: Die) {
+        _diceDiscard.add(die)
     }
 
     fun addDiceToSupply(dice: List<Die>) {

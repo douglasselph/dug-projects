@@ -107,6 +107,14 @@ class Grove(
         return critters.remove(critter)
     }
 
+    fun remove(sides: DieSides): Boolean {
+        return diceStacks.remove(sides)
+    }
+
+    fun remove(card: GameCard): Boolean {
+        return cardStacks.remove(card)
+    }
+
     fun count(token: Token): Int {
         return tokens.count(token)
     }

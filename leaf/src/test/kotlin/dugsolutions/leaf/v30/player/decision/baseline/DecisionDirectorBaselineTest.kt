@@ -4,7 +4,19 @@ import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.grove.Grove
+import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.round.RoundCardManager
+import dugsolutions.leaf.v30.round.RoundCardRegistry
+import dugsolutions.leaf.v30.round.RoundDeck
+import dugsolutions.leaf.v30.round.di.RoundCardsFactory
 import dugsolutions.leaf.v30.round.domain.RoundCard
+import dugsolutions.leaf.v30.table.Table
+import dugsolutions.leaf.v30.wisp.WispCardManager
+import dugsolutions.leaf.v30.wisp.WispCardRegistry
+import dugsolutions.leaf.v30.wisp.WispDeck
+import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
+import dugsolutions.leaf.v30.common.Commons
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
@@ -78,6 +90,20 @@ class DecisionDirectorBaselineTest {
         assertEquals(MainAction.PullDie, result)
     }
 
+    @Test
+    fun chooseItemsToBuy_returnsEmptyItemsToBuy() {
+        val result = SUT.chooseItemsToBuy(
+            Decision.ChooseItemsToBuy(
+                player = Player(),
+                grove = createGrove()
+            )
+        )
+
+        assertEquals(emptyList(), result.dice)
+        assertEquals(emptyList(), result.cards.cards)
+        assertEquals(emptyList(), result.crittersUsed.all)
+    }
+
     private fun sampleRoundCard() = RoundCard(
         id = 1,
         quantity = 1,
@@ -97,4 +123,24 @@ class DecisionDirectorBaselineTest {
         effect2Icon = null,
         backImage = null
     )
+
+    private fun createGrove(): Grove {
+        return Grove(createWispDeck())
+    }
+
+    private fun createWispDeck(): WispDeck {
+        val registry = WispCardRegistry()
+        registry.loadFromCsv(Commons.WISP_LIST)
+        val manager = WispCardManager(WispCardsFactory())
+        manager.loadCards(registry)
+        return WispDeck(manager, IdentityRandomizer())
+    }
+
+    private class IdentityRandomizer : Randomizer {
+        override fun nextBoolean(): Boolean = throw UnsupportedOperationException()
+        override fun nextInt(from: Int, until: Int): Int = from
+        override fun nextInt(until: Int): Int = throw UnsupportedOperationException()
+        override fun <T> randomOrNull(list: List<T>): T? = throw UnsupportedOperationException()
+        override fun <T> shuffled(list: List<T>): List<T> = list
+    }
 }

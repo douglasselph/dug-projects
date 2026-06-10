@@ -43,4 +43,9 @@ class Creature {
         return right.add(card)
     }
 
+    fun faceDown(card: GameCard): Boolean {
+        return left.replaceFirst({ it.card == card }) { it.faceDown() } ||
+            right.replaceFirst({ it.card == card }) { it.faceDown() }
+    }
+
 }

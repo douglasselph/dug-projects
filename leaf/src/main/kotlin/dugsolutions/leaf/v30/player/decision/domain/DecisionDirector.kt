@@ -7,4 +7,6 @@ interface DecisionDirector {
     fun chooseCritter(input: Decision.ChooseCritter): Critter
 
     fun chooseMainAction(input: Decision.ChooseMainAction): MainAction
+
+    fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy
 }
