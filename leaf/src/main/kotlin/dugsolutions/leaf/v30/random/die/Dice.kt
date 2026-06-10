@@ -86,10 +86,14 @@ class Dice(dice: List<Die> = emptyList()) {
         }
     }
 
-    fun reroll() {
+    fun roll() {
         synchronized(lock) {
             _dice.forEach { die -> die.roll() }
         }
+    }
+
+    fun reroll() {
+        roll()
     }
 
     fun hasDie(die: Die): Boolean {

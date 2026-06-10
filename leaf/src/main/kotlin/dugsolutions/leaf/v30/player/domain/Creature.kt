@@ -1,4 +1,4 @@
-package dugsolutions.leaf.v30.player.components
+package dugsolutions.leaf.v30.player.domain
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
 

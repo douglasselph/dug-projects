@@ -1,4 +1,4 @@
-package dugsolutions.leaf.v30.player.components
+package dugsolutions.leaf.v30.player.domain
 
 class CreatureCardsStack(
     cards: List<CreatureCard> = emptyList()

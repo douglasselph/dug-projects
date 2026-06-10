@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v30.game
 
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.cards.GameCardRegistry
+import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.game.round.RoundBattle
 import dugsolutions.leaf.v30.game.round.RoundCultivation
 import dugsolutions.leaf.v30.grove.Grove
@@ -11,6 +13,7 @@ import dugsolutions.leaf.v30.round.RoundDeck
 import dugsolutions.leaf.v30.round.di.RoundCardsFactory
 import dugsolutions.leaf.v30.round.domain.RoundCardType
 import dugsolutions.leaf.v30.table.Table
+import dugsolutions.leaf.v30.table.domain.TableConfig
 import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
@@ -21,6 +24,23 @@ import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 class GameTest {
+
+    @Test
+    fun setup_delegatesToTableSetup() {
+        val roundDeck = createRoundDeck()
+        val table = createTable(roundDeck)
+        val game = Game(table)
+        val config = TableConfig(
+            cards = GameCards(listOf(loadGameCard("Root_05_01"))),
+            numPlayers = 2,
+            numBattle = 1,
+            numCultivation = 2
+        )
+
+        game.setup(config)
+
+        assertEquals(3, roundDeck.remaining)
+    }
 
     @Test
     fun run_whenRoundDeckIsEmpty_returnsNull() {
@@ -79,6 +99,12 @@ class GameTest {
         manager.loadCards(registry)
         return WispDeck(manager, IdentityRandomizer())
     }
+
+    private fun loadGameCard(name: String) =
+        GameCardRegistry()
+            .apply { loadFromCsv(Commons.CARD_LIST) }
+            .getCard(name)
+            ?: error("Missing test card: $name")
 
     private class IdentityRandomizer : Randomizer {
         override fun nextBoolean(): Boolean = throw UnsupportedOperationException()

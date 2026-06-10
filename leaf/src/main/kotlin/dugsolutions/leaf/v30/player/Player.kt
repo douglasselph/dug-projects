@@ -5,8 +5,9 @@ import dugsolutions.leaf.v30.common.Butterflies
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
-import dugsolutions.leaf.v30.player.components.Creature
-import dugsolutions.leaf.v30.player.components.CreatureCard
+import dugsolutions.leaf.v30.player.domain.Creature
+import dugsolutions.leaf.v30.player.domain.CreatureCard
+import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -84,6 +85,19 @@ class Player(
         val die = _diceSupply.drawLowest() ?: return null
         _diceHand.add(die)
         return die
+    }
+
+    fun drawDiceWithRefresh(): Die {
+        drawDie()?.let { return it }
+
+        _diceSupply.addAll(_diceDiscard.dice)
+        _diceDiscard.clear()
+
+        return drawDie() ?: throw OutOfDiceException()
+    }
+
+    fun rollDice() {
+        _diceHand.roll()
     }
 
     fun discardHandDice() {

@@ -156,6 +156,30 @@ class DiceTest {
     }
 
     @Test
+    fun roll_rollsAllDice() {
+        val die1 = TrackingDie(6)
+        val die2 = TrackingDie(8)
+        SUT.addAll(listOf(die1, die2))
+
+        SUT.roll()
+
+        assertEquals(1, die1.rollCount)
+        assertEquals(1, die2.rollCount)
+    }
+
+    @Test
+    fun reroll_rollsAllDice() {
+        val die1 = TrackingDie(6)
+        val die2 = TrackingDie(8)
+        SUT.addAll(listOf(die1, die2))
+
+        SUT.reroll()
+
+        assertEquals(1, die1.rollCount)
+        assertEquals(1, die2.rollCount)
+    }
+
+    @Test
     fun plus_combinesTwoDiceCollections() {
         val dice1 = Dice(listOf(d4, d6))
         val dice2 = Dice(listOf(d8, d12))
@@ -508,5 +532,14 @@ class DiceTest {
     fun get_whenEmpty_returnsNull() {
         // Act & Assert
         assertNull(SUT[0])
+    }
+
+    private class TrackingDie(sides: Int) : Die(sides) {
+        var rollCount = 0
+
+        override fun roll(): Die {
+            rollCount++
+            return this
+        }
     }
 } 

@@ -5,7 +5,8 @@ import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
-import dugsolutions.leaf.v30.player.components.CreatureCard
+import dugsolutions.leaf.v30.player.domain.CreatureCard
+import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.SampleDie
@@ -127,6 +128,65 @@ class PlayerTest {
         assertEquals(d4, result)
         assertEquals(listOf(d4), player.diceHand.dice)
         assertEquals(listOf(d8, d12).sortedBy { it.sides }, player.diceSupply.dice.sortedBy { it.sides })
+    }
+
+    @Test
+    fun drawDiceWithRefresh_whenSupplyHasDie_drawsFromSupply() {
+        // Arrange
+        val die = dice.d6
+        player.addDieToSupply(die)
+
+        // Act
+        val result = player.drawDiceWithRefresh()
+
+        // Assert
+        assertEquals(die, result)
+        assertEquals(listOf(die), player.diceHand.dice)
+        assertTrue(player.diceSupply.isEmpty())
+    }
+
+    @Test
+    fun drawDiceWithRefresh_whenSupplyEmpty_refreshesFromDiscardThenDraws() {
+        // Arrange
+        val d4 = dice.d4
+        val d6 = dice.d6
+        player.addDiceToSupply(listOf(d4, d6))
+        player.drawDie()
+        player.drawDie()
+        player.discardHandDice()
+
+        // Act
+        val result = player.drawDiceWithRefresh()
+
+        // Assert
+        assertEquals(d4, result)
+        assertEquals(listOf(d4), player.diceHand.dice)
+        assertEquals(listOf(d6), player.diceSupply.dice)
+        assertTrue(player.diceDiscard.isEmpty())
+    }
+
+    @Test
+    fun drawDiceWithRefresh_whenSupplyAndDiscardEmpty_throwsException() {
+        assertThrows<OutOfDiceException> {
+            player.drawDiceWithRefresh()
+        }
+    }
+
+    @Test
+    fun rollDice_rollsDiceInHandOnly() {
+        // Arrange
+        val handDie = TrackingDie(6)
+        val supplyDie = TrackingDie(8)
+        player.addDieToSupply(handDie)
+        player.drawDie()
+        player.addDieToSupply(supplyDie)
+
+        // Act
+        player.rollDice()
+
+        // Assert
+        assertEquals(1, handDie.rollCount)
+        assertEquals(0, supplyDie.rollCount)
     }
 
     @Test
@@ -402,6 +462,15 @@ class PlayerTest {
         player.resetVp()
 
         assertEquals(0, player.vp)
+    }
+
+    private class TrackingDie(sides: Int) : Die(sides) {
+        var rollCount = 0
+
+        override fun roll(): Die {
+            rollCount++
+            return this
+        }
     }
 
 }
