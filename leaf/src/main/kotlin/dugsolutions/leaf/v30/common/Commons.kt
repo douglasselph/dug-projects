@@ -4,5 +4,6 @@ object Commons {
 
     const val CARD_LIST = "data/Cards-v30.csv"
     const val WISP_LIST = "data/Wisps-v30.csv"
+    const val ROUND_CARD_LIST = "data/RoundCards-v30.csv"
 
 }
