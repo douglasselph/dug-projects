@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v30.di
 
 import dugsolutions.leaf.v30.cards.di.cardsModule
+import dugsolutions.leaf.v30.chronicle.di.chronicleModule
+import dugsolutions.leaf.v30.game.di.gameModule
 import dugsolutions.leaf.v30.grove.di.groveModule
 import dugsolutions.leaf.v30.player.di.playerModule
 import dugsolutions.leaf.v30.random.Randomizer
@@ -25,5 +27,7 @@ val appModules = listOf(
     groveModule,
     roundModule,
     tableModule,
-    playerModule
+    playerModule,
+    chronicleModule,
+    gameModule
 )

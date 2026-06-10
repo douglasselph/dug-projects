@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v30.game.round
 
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntry
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.cards.GameCardRegistry
@@ -192,11 +195,18 @@ class RoundBaseTest {
         val player = Player(RefreshCardsDecisionDirector(GameCards(listOf(card))))
         player.addCardToCreature(card)
         val table = createTable().add(player)
-        val round = RoundCultivation(table, loadCultivationCard())
+        val chronicle = GameChronicle(currentRound = { 4 })
+        val round = RoundCultivation(table, loadCultivationCard(), chronicle)
 
         round.checkWormRefresh()
 
         assertTrue(player.getCreatureLeftCard(0)!!.isFaceDown)
+        val entry = chronicle.getEntries().single() as GameEntry.Warning
+        assertEquals(WarningType.MISSING_WORM, entry.type)
+        assertEquals(4, entry.time.round)
+        assertEquals(player.id, entry.playerId)
+        assertEquals(card.id, entry.cardId)
+        assertEquals(card.name, entry.cardName)
     }
 
     private fun createTable(): Table {

@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v30.game.round
 
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.player.Player
@@ -15,11 +17,12 @@ import dugsolutions.leaf.v30.table.Table
 class RoundCultivation(
     table: Table,
     card: RoundCard,
+    chronicle: Chronicle = GameChronicle(),
     private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
     private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
     private val playerOrder: PlayerOrder = PlayerOrder(),
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
-) : RoundBase(table, card) {
+) : RoundBase(table, card, chronicle) {
 
     fun performMainActions() {
         table.players.forEach { player ->

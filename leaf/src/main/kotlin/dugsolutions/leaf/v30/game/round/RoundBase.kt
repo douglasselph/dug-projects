@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v30.game.round
 
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
@@ -9,6 +13,7 @@ import dugsolutions.leaf.v30.table.Table
 abstract class RoundBase(
     protected val table: Table,
     val card: RoundCard,
+    private val chronicle: Chronicle = GameChronicle(),
     private val checkRefresh: CheckRefresh = CheckRefresh()
 ) {
 
@@ -64,7 +69,13 @@ abstract class RoundBase(
             )
             cardsToRefresh.cards.forEach cards@{ card ->
                 if (!player.removeCritter(Critter.WORM)) {
-                    println("Warning: Player tried to refresh ${card.name} with a worm but has no worm.")
+                    chronicle(
+                        Moment.Warning(
+                            player = player,
+                            type = WarningType.MISSING_WORM,
+                            card = card
+                        )
+                    )
                     return@cards
                 }
                 player.flipCreatureCardFaceUp(card)
