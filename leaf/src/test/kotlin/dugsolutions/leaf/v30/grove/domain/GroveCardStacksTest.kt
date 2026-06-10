@@ -12,12 +12,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class GroveStacksTest {
+class GroveCardStacksTest {
 
     private lateinit var rootFiveOne: GameCard
     private lateinit var rootFiveTwo: GameCard
     private lateinit var flowerFourteenOne: GameCard
-    private lateinit var SUT: GroveStacks
+    private lateinit var SUT: GroveCardStacks
 
     @BeforeEach
     fun setup() {
@@ -26,7 +26,7 @@ class GroveStacksTest {
         rootFiveOne = requireNotNull(registry.getCard("Root_05_01"))
         rootFiveTwo = requireNotNull(registry.getCard("Root_05_02"))
         flowerFourteenOne = requireNotNull(registry.getCard("Flower_14_01"))
-        SUT = GroveStacks()
+        SUT = GroveCardStacks()
     }
 
     @Test
@@ -35,8 +35,8 @@ class GroveStacksTest {
 
         assertSame(rootFiveOne, stack.card)
         assertEquals(1, stack.count)
-        assertSame(rootFiveOne, SUT.getCard(GroveStackID.ROOT_5))
-        assertEquals(1, SUT.getCount(GroveStackID.ROOT_5))
+        assertSame(rootFiveOne, SUT.getCard(GroveCardStackID.ROOT_5))
+        assertEquals(1, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
@@ -44,7 +44,7 @@ class GroveStacksTest {
         SUT.add(rootFiveOne)
         SUT.add(rootFiveOne, amount = 3)
 
-        assertEquals(4, SUT.getCount(GroveStackID.ROOT_5))
+        assertEquals(4, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
@@ -55,8 +55,8 @@ class GroveStacksTest {
             SUT.add(rootFiveTwo)
         }
 
-        assertSame(rootFiveOne, SUT.getCard(GroveStackID.ROOT_5))
-        assertEquals(2, SUT.getCount(GroveStackID.ROOT_5))
+        assertSame(rootFiveOne, SUT.getCard(GroveCardStackID.ROOT_5))
+        assertEquals(2, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
@@ -64,10 +64,29 @@ class GroveStacksTest {
         SUT.add(rootFiveOne)
         SUT.add(flowerFourteenOne, amount = 2)
 
-        assertSame(rootFiveOne, SUT.getCard(GroveStackID.ROOT_5))
-        assertSame(flowerFourteenOne, SUT.getCard(GroveStackID.FLOWER_14))
-        assertEquals(1, SUT.getCount(GroveStackID.ROOT_5))
-        assertEquals(2, SUT.getCount(GroveStackID.FLOWER_14))
+        assertSame(rootFiveOne, SUT.getCard(GroveCardStackID.ROOT_5))
+        assertSame(flowerFourteenOne, SUT.getCard(GroveCardStackID.FLOWER_14))
+        assertEquals(1, SUT.getCount(GroveCardStackID.ROOT_5))
+        assertEquals(2, SUT.getCount(GroveCardStackID.FLOWER_14))
+    }
+
+
+    @Test
+    fun reset_replacesStackCardAndCount() {
+        SUT.add(rootFiveOne, amount = 2)
+
+        val stack = SUT.reset(rootFiveTwo, amount = 8)
+
+        assertSame(rootFiveTwo, stack.card)
+        assertSame(rootFiveTwo, SUT.getCard(GroveCardStackID.ROOT_5))
+        assertEquals(8, SUT.getCount(GroveCardStackID.ROOT_5))
+    }
+
+    @Test
+    fun reset_withNegativeAmount_throwsException() {
+        assertThrows<IllegalArgumentException> {
+            SUT.reset(rootFiveOne, amount = -1)
+        }
     }
 
     @Test
@@ -77,26 +96,26 @@ class GroveStacksTest {
         val removed = SUT.remove(rootFiveOne, amount = 2)
 
         assertTrue(removed)
-        assertEquals(2, SUT.getCount(GroveStackID.ROOT_5))
+        assertEquals(2, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
     fun remove_withStackId_decrementsMatchingStack() {
         SUT.add(rootFiveOne, amount = 4)
 
-        val removed = SUT.remove(GroveStackID.ROOT_5, amount = 3)
+        val removed = SUT.remove(GroveCardStackID.ROOT_5, amount = 3)
 
         assertTrue(removed)
-        assertEquals(1, SUT.getCount(GroveStackID.ROOT_5))
+        assertEquals(1, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
     fun remove_whenStackIsEmpty_returnsFalse() {
-        val removed = SUT.remove(GroveStackID.ROOT_5)
+        val removed = SUT.remove(GroveCardStackID.ROOT_5)
 
         assertFalse(removed)
-        assertEquals(0, SUT.getCount(GroveStackID.ROOT_5))
-        assertNull(SUT.getCard(GroveStackID.ROOT_5))
+        assertEquals(0, SUT.getCount(GroveCardStackID.ROOT_5))
+        assertNull(SUT.getCard(GroveCardStackID.ROOT_5))
     }
 
     @Test
@@ -106,7 +125,7 @@ class GroveStacksTest {
         val removed = SUT.remove(rootFiveOne, amount = 3)
 
         assertFalse(removed)
-        assertEquals(2, SUT.getCount(GroveStackID.ROOT_5))
+        assertEquals(2, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
@@ -122,15 +141,15 @@ class GroveStacksTest {
     fun setCount_updatesExistingStackCount() {
         SUT.add(rootFiveOne)
 
-        SUT.setCount(GroveStackID.ROOT_5, 6)
+        SUT.setCount(GroveCardStackID.ROOT_5, 6)
 
-        assertEquals(6, SUT.getCount(GroveStackID.ROOT_5))
+        assertEquals(6, SUT.getCount(GroveCardStackID.ROOT_5))
     }
 
     @Test
     fun setCount_whenStackIsEmpty_throwsException() {
         assertThrows<IllegalArgumentException> {
-            SUT.setCount(GroveStackID.ROOT_5, 1)
+            SUT.setCount(GroveCardStackID.ROOT_5, 1)
         }
     }
 
@@ -140,8 +159,8 @@ class GroveStacksTest {
 
         assertThrows<IllegalArgumentException> { SUT.add(rootFiveOne, amount = -1) }
         assertThrows<IllegalArgumentException> { SUT.remove(rootFiveOne, amount = -1) }
-        assertThrows<IllegalArgumentException> { SUT.remove(GroveStackID.ROOT_5, amount = -1) }
-        assertThrows<IllegalArgumentException> { SUT.setCount(GroveStackID.ROOT_5, -1) }
+        assertThrows<IllegalArgumentException> { SUT.remove(GroveCardStackID.ROOT_5, amount = -1) }
+        assertThrows<IllegalArgumentException> { SUT.setCount(GroveCardStackID.ROOT_5, -1) }
     }
 
 }

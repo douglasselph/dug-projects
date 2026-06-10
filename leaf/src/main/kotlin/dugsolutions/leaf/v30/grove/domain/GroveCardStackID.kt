@@ -2,7 +2,7 @@ package dugsolutions.leaf.v30.grove.domain
 
 import dugsolutions.leaf.v30.cards.domain.CardType
 
-enum class GroveStackID(
+enum class GroveCardStackID(
     val type: CardType,
     val cost: Int
 ) {
@@ -17,7 +17,7 @@ enum class GroveStackID(
     FLOWER_17(CardType.FLOWER, 17);
 
     companion object {
-        fun from(type: CardType, cost: Int): GroveStackID {
+        fun from(type: CardType, cost: Int): GroveCardStackID {
             return entries.firstOrNull { it.type == type && it.cost == cost }
                 ?: throw IllegalArgumentException("No GroveStackID for type=$type cost=$cost")
         }

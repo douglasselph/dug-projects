@@ -5,19 +5,19 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class GroveStackIDTest {
+class GroveCardStackIDTest {
 
     @Test
     fun from_withMatchingTypeAndCost_returnsStackId() {
-        assertEquals(GroveStackID.ROOT_5, GroveStackID.from(CardType.ROOT, 5))
-        assertEquals(GroveStackID.FLOWER_14, GroveStackID.from(CardType.FLOWER, 14))
-        assertEquals(GroveStackID.VINE_11, GroveStackID.from(CardType.VINE, 11))
+        assertEquals(GroveCardStackID.ROOT_5, GroveCardStackID.from(CardType.ROOT, 5))
+        assertEquals(GroveCardStackID.FLOWER_14, GroveCardStackID.from(CardType.FLOWER, 14))
+        assertEquals(GroveCardStackID.VINE_11, GroveCardStackID.from(CardType.VINE, 11))
     }
 
     @Test
     fun from_whenNoMatchingTypeAndCost_throwsException() {
         assertThrows<IllegalArgumentException> {
-            GroveStackID.from(CardType.ROOT, 11)
+            GroveCardStackID.from(CardType.ROOT, 11)
         }
     }
 

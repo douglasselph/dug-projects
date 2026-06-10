@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class GroveStacksTest {
+class GroveCardStacksTest {
 
     companion object {
         private const val CARD_ID_1 = 1

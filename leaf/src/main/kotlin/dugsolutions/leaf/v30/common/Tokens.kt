@@ -36,6 +36,13 @@ class Tokens(
         }
     }
 
+    fun count(token: Token): Int {
+        return when (token) {
+            Token.WATER -> waterCount
+            is Token.MULCH -> getMulchCount(token.sides)
+        }
+    }
+
     fun pull(token: Token): Token? {
         if (!has(token)) return null
         when (token) {
@@ -49,6 +56,15 @@ class Tokens(
         when (token) {
             Token.WATER -> _waterCount++
             is Token.MULCH -> mulchCounts[token.sides] = getMulchCount(token.sides) + 1
+        }
+        return this
+    }
+
+    fun set(token: Token, amount: Int): Tokens {
+        require(amount >= 0) { "Token count cannot be negative: $amount" }
+        when (token) {
+            Token.WATER -> _waterCount = amount
+            is Token.MULCH -> mulchCounts[token.sides] = amount
         }
         return this
     }

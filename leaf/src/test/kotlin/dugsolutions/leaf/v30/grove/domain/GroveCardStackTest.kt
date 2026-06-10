@@ -11,7 +11,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class GroveStackTest {
+class GroveCardStackTest {
 
     private lateinit var rootFiveOne: GameCard
     private lateinit var rootFiveTwo: GameCard
@@ -26,7 +26,7 @@ class GroveStackTest {
 
     @Test
     fun constructor_holdsCardAndDefaultCountIsZero() {
-        val stack = GroveStack(rootFiveOne)
+        val stack = GroveCardStack(rootFiveOne)
 
         assertSame(rootFiveOne, stack.card)
         assertEquals(0, stack.count)
@@ -34,14 +34,14 @@ class GroveStackTest {
 
     @Test
     fun constructor_withInitialCount_setsCount() {
-        val stack = GroveStack(rootFiveOne, initialCount = 3)
+        val stack = GroveCardStack(rootFiveOne, initialCount = 3)
 
         assertEquals(3, stack.count)
     }
 
     @Test
     fun setCount_updatesCount() {
-        val stack = GroveStack(rootFiveOne)
+        val stack = GroveCardStack(rootFiveOne)
 
         stack.setCount(7)
 
@@ -50,7 +50,7 @@ class GroveStackTest {
 
     @Test
     fun add_increasesCount() {
-        val stack = GroveStack(rootFiveOne, initialCount = 2)
+        val stack = GroveCardStack(rootFiveOne, initialCount = 2)
 
         stack.add(3)
 
@@ -59,7 +59,7 @@ class GroveStackTest {
 
     @Test
     fun remove_whenEnoughCards_decreasesCountAndReturnsTrue() {
-        val stack = GroveStack(rootFiveOne, initialCount = 4)
+        val stack = GroveCardStack(rootFiveOne, initialCount = 4)
 
         val removed = stack.remove(3)
 
@@ -69,7 +69,7 @@ class GroveStackTest {
 
     @Test
     fun remove_whenNotEnoughCards_returnsFalseAndLeavesCount() {
-        val stack = GroveStack(rootFiveOne, initialCount = 2)
+        val stack = GroveCardStack(rootFiveOne, initialCount = 2)
 
         val removed = stack.remove(3)
 
@@ -79,7 +79,7 @@ class GroveStackTest {
 
     @Test
     fun requireSameCard_whenDifferentCardWithSameTypeAndCost_throwsException() {
-        val stack = GroveStack(rootFiveOne)
+        val stack = GroveCardStack(rootFiveOne)
 
         assertThrows<IllegalArgumentException> {
             stack.requireSameCard(rootFiveTwo)
@@ -88,9 +88,9 @@ class GroveStackTest {
 
     @Test
     fun negativeCountsOrAmounts_throwException() {
-        val stack = GroveStack(rootFiveOne)
+        val stack = GroveCardStack(rootFiveOne)
 
-        assertThrows<IllegalArgumentException> { GroveStack(rootFiveOne, initialCount = -1) }
+        assertThrows<IllegalArgumentException> { GroveCardStack(rootFiveOne, initialCount = -1) }
         assertThrows<IllegalArgumentException> { stack.setCount(-1) }
         assertThrows<IllegalArgumentException> { stack.add(-1) }
         assertThrows<IllegalArgumentException> { stack.remove(-1) }

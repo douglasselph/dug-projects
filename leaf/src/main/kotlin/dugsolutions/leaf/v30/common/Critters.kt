@@ -24,6 +24,19 @@ class Critters(
         return this
     }
 
+    fun count(critter: Critter): Int {
+        return critters.count { it == critter }
+    }
+
+    fun set(critter: Critter, amount: Int): Critters {
+        require(amount >= 0) { "Critter count cannot be negative: $amount" }
+        critters.removeAll { it == critter }
+        repeat(amount) {
+            critters.add(critter)
+        }
+        return this
+    }
+
     fun remove(critter: Critter): Boolean {
         return critters.remove(critter)
     }

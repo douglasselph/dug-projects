@@ -43,6 +43,43 @@ class CrittersTest {
         assertEquals(listOf(Critter.BEE), critters.all)
     }
 
+
+    @Test
+    fun count_returnsNumberOfMatchingCritters() {
+        // Arrange
+        val critters = Critters(listOf(Critter.BEE, Critter.WORM, Critter.BEE))
+
+        // Assert
+        assertEquals(2, critters.count(Critter.BEE))
+        assertEquals(1, critters.count(Critter.WORM))
+    }
+
+    @Test
+    fun set_replacesOnlyMatchingCritterCount() {
+        // Arrange
+        val critters = Critters(listOf(Critter.BEE, Critter.WORM, Critter.BEE))
+
+        // Act
+        val result = critters.set(Critter.BEE, 1)
+
+        // Assert
+        assertEquals(critters, result)
+        assertEquals(1, critters.count(Critter.BEE))
+        assertEquals(1, critters.count(Critter.WORM))
+        assertEquals(listOf(Critter.WORM, Critter.BEE), critters.all)
+    }
+
+    @Test
+    fun set_withNegativeAmount_throwsException() {
+        // Arrange
+        val critters = Critters()
+
+        // Act & Assert
+        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+            critters.set(Critter.BEE, -1)
+        }
+    }
+
     @Test
     fun remove_whenCritterExists_removesFirstMatch() {
         // Arrange

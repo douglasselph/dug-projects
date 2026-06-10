@@ -55,6 +55,44 @@ class TokensTest {
         assertFalse(tokens.has(Token.MULCH(DieSides.D8)))
     }
 
+
+    @Test
+    fun count_returnsCountForRequestedToken() {
+        val tokens = Tokens(
+            waterCount = 2,
+            mulchCounts = mapOf(DieSides.D4 to 3)
+        )
+
+        assertEquals(2, tokens.count(Token.WATER))
+        assertEquals(3, tokens.count(Token.MULCH(DieSides.D4)))
+        assertEquals(0, tokens.count(Token.MULCH(DieSides.D6)))
+    }
+
+    @Test
+    fun set_updatesOnlyRequestedTokenCountAndReturnsSameTokens() {
+        val tokens = Tokens(
+            waterCount = 2,
+            mulchCounts = mapOf(DieSides.D4 to 3, DieSides.D6 to 1)
+        )
+
+        val result = tokens.set(Token.WATER, 5)
+            .set(Token.MULCH(DieSides.D4), 7)
+
+        assertSame(tokens, result)
+        assertEquals(5, tokens.waterCount)
+        assertEquals(7, tokens.getMulchCount(DieSides.D4))
+        assertEquals(1, tokens.getMulchCount(DieSides.D6))
+    }
+
+    @Test
+    fun set_withNegativeAmount_throwsException() {
+        val tokens = Tokens()
+
+        assertThrows<IllegalArgumentException> {
+            tokens.set(Token.WATER, -1)
+        }
+    }
+
     @Test
     fun pull_withAvailableWater_decrementsAndReturnsWaterToken() {
         val tokens = Tokens(waterCount = 2)

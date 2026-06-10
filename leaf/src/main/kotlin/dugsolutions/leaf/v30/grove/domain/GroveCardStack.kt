@@ -2,7 +2,7 @@ package dugsolutions.leaf.v30.grove.domain
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
 
-class GroveStack(
+class GroveCardStack(
     val card: GameCard,
     initialCount: Int = 0
 ) {
