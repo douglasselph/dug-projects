@@ -80,6 +80,29 @@ class Battle(
         return true
     }
 
+    fun rerollDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: Die
+    ): Boolean {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die == die }
+            ?: return false
+        dieItem.die.roll()
+        return true
+    }
+
+    fun hasDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: Die
+    ): Boolean {
+        return grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .any { it.die == die }
+    }
+
     fun replaceCritter(
         player: Player,
         from: Critter,

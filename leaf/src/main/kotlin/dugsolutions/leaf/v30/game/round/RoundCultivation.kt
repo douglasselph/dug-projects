@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
@@ -93,8 +94,49 @@ class RoundCultivation(
                 )
                 return false
             }
+            is MainAction.PlayMulchToken -> {
+                handleMulchToken(player, action.token)
+                return false
+            }
+            is MainAction.PlayWaterToken -> {
+                handleWaterToken(player, action)
+                return false
+            }
         }
         return true
+    }
+
+    private fun handleMulchToken(
+        player: Player,
+        token: Token.MULCH
+    ) {
+        val sides = token.sides ?: throw MainActionException("Cultivation mulch token requires die sides")
+        if (!player.remove(token)) return
+        val die = dieFactory(sides).roll()
+        player.addDieToHand(die)
+        resolveReward(player, die)
+    }
+
+    private fun handleWaterToken(
+        player: Player,
+        action: MainAction.PlayWaterToken
+    ) {
+        if (action.row != null) {
+            throw MainActionException("Cultivation water token cannot specify a battle row")
+        }
+        val die = action.onDie
+        if (die == null) {
+            if (!player.remove(Token.WATER)) return
+            player.flipAllCreatureCardsFaceUp()
+            return
+        }
+        if (!player.diceHand.hasDie(die)) {
+            throw MainActionException("Water token die was not found in player hand")
+        }
+        if (!player.remove(Token.WATER)) return
+        if (!player.rerollDie(die)) {
+            throw MainActionException("Water token die was not found in player hand")
+        }
     }
 
     fun performBuy() {

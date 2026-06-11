@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.table.Table
 
@@ -44,11 +45,18 @@ abstract class RoundBase(
     fun resolveRewards() {
         table.players.forEach { player ->
             player.diceHand.dice.forEach { die ->
-                when (die.value) {
-                    ROLL_GAIN_CRITTER -> gainCritter(player)
-                    ROLL_GAIN_WISP -> table.grove.drawWispCard()?.let { player.addWispCard(it) }
-                }
+                resolveReward(player, die)
             }
+        }
+    }
+
+    protected fun resolveReward(
+        player: Player,
+        die: Die
+    ) {
+        when (die.value) {
+            ROLL_GAIN_CRITTER -> gainCritter(player)
+            ROLL_GAIN_WISP -> table.grove.drawWispCard()?.let { player.addWispCard(it) }
         }
     }
 

@@ -192,6 +192,37 @@ class PlayerTest {
     }
 
     @Test
+    fun addDieToHand_addsDieDirectlyToHand() {
+        val die = dice.d8
+
+        player.addDieToHand(die)
+
+        assertEquals(listOf(die), player.diceHand.dice)
+        assertTrue(player.diceSupply.isEmpty())
+        assertTrue(player.diceDiscard.isEmpty())
+    }
+
+    @Test
+    fun rerollDie_whenMatchingDieIsInHand_rollsStoredDieAndReturnsTrue() {
+        val die = TrackingDie(6)
+        player.addDieToHand(die)
+
+        val result = player.rerollDie(FixedDie(6, 1))
+
+        assertTrue(result)
+        assertEquals(1, die.rollCount)
+    }
+
+    @Test
+    fun rerollDie_whenMatchingDieIsNotInHand_returnsFalse() {
+        player.addDieToHand(TrackingDie(6))
+
+        val result = player.rerollDie(FixedDie(8, 1))
+
+        assertEquals(false, result)
+    }
+
+    @Test
     fun discardHandDice_movesAllHandDiceToDiscard() {
         // Arrange
         val drawn = mutableListOf<Die>()
@@ -516,6 +547,17 @@ class PlayerTest {
             rollCount++
             return this
         }
+    }
+
+    private class FixedDie(
+        sides: Int,
+        value: Int
+    ) : Die(sides) {
+        init {
+            adjustTo(value)
+        }
+
+        override fun roll(): Die = this
     }
 
 }

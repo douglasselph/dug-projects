@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
@@ -38,6 +39,7 @@ import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class RoundCultivationTest {
 
@@ -119,6 +121,88 @@ class RoundCultivationTest {
 
         assertEquals(listOf(wispCard), wispCardEffectExecutor.cards)
         assertEquals(2, player.diceHand.size)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsPlayMulchToken_addsRolledDieToHandAndDoesNotSpendMainAction() {
+        val dice = SampleDie(Randomizer.create(seed = 4L))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    MainAction.PlayMulchToken(Token.MULCH(DieSides.D8)),
+                    MainAction.PullDie,
+                    MainAction.PullDie
+                )
+            )
+        )
+        player.add(Token.MULCH(DieSides.D8))
+        player.addDiceToSupply(listOf(dice.d4, dice.d6))
+        val table = createTable().add(player)
+        val round = RoundCultivation(
+            table = table,
+            card = loadCultivationCard(),
+            dieFactory = DieFactory(IdentityRandomizer())
+        )
+
+        round.performMainActions()
+
+        assertEquals(emptyList(), player.mulchTokens)
+        assertEquals(3, player.diceHand.size)
+        assertTrue(player.diceHand.dice.any { it.sides == 8 })
+        assertEquals(listOf(Critter.BEE), player.critters)
+        assertEquals(8, table.grove.count(Critter.BEE))
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsPlayWaterTokenWithoutDie_refreshesCreatureAndDoesNotSpendMainAction() {
+        val card = loadGameCard("Root_05_01")
+        val dice = SampleDie(Randomizer.create(seed = 5L))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    MainAction.PlayWaterToken(),
+                    MainAction.PullDie,
+                    MainAction.PullDie
+                )
+            )
+        )
+        player.add(Token.WATER)
+        player.addCardToCreature(card)
+        player.addDiceToSupply(listOf(dice.d4, dice.d6))
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.performMainActions()
+
+        assertEquals(0, player.waterTokenCount)
+        assertTrue(player.creatureCards.all { it.isFaceUp })
+        assertEquals(2, player.diceHand.size)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsPlayWaterTokenWithDie_rerollsHandDieAndDoesNotSpendMainAction() {
+        val handDie = TrackingDie(6)
+        val dice = SampleDie(Randomizer.create(seed = 6L))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    MainAction.PlayWaterToken(onDie = FixedDie(6, 1)),
+                    MainAction.PullDie,
+                    MainAction.PullDie
+                )
+            )
+        )
+        player.add(Token.WATER)
+        player.addDieToHand(handDie)
+        player.addDiceToSupply(listOf(dice.d4, dice.d8))
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.performMainActions()
+
+        assertEquals(0, player.waterTokenCount)
+        assertEquals(1, handDie.rollCount)
+        assertEquals(3, player.diceHand.size)
     }
 
     @Test
@@ -308,5 +392,14 @@ class RoundCultivationTest {
         }
 
         override fun roll() = this
+    }
+
+    private class TrackingDie(sides: Int) : dugsolutions.leaf.v30.random.die.Die(sides) {
+        var rollCount = 0
+
+        override fun roll(): dugsolutions.leaf.v30.random.die.Die {
+            rollCount++
+            return this
+        }
     }
 }

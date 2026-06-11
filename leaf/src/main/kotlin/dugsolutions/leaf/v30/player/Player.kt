@@ -126,6 +126,10 @@ class Player(
         _diceDiscard.add(die)
     }
 
+    fun addDieToHand(die: Die) {
+        _diceHand.add(die)
+    }
+
     fun addDiceToSupply(dice: List<Die>) {
         _diceSupply.addAll(dice)
     }
@@ -147,6 +151,12 @@ class Player(
 
     fun rollDice() {
         _diceHand.roll()
+    }
+
+    fun rerollDie(die: Die): Boolean {
+        val target = _diceHand.dice.firstOrNull { it == die } ?: return false
+        target.roll()
+        return true
     }
 
     fun discardHandDice() {
