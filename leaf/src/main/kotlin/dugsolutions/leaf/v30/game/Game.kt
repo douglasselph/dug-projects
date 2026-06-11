@@ -54,6 +54,7 @@ class Game(
             round.prepare()
             round.performMainActions()
             round.performSupportActions()
+            round.resolve()
         }
         round.cleanup()
         return round

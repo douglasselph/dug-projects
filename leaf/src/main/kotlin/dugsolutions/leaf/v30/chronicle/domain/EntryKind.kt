@@ -7,5 +7,7 @@ enum class EntryKind {
     DICE_ROLLED,
     REWARD,
     MAIN_ACTION,
-    GAME_CARD_EFFECT
+    GAME_CARD_EFFECT,
+    VP_AWARD,
+    WOUND_CARD
 }

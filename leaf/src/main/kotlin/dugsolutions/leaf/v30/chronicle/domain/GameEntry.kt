@@ -2,8 +2,10 @@ package dugsolutions.leaf.v30.chronicle.domain
 
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.cards.domain.GameCardID
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.die.DieValue
 import dugsolutions.leaf.v30.round.domain.RoundCardID
 import dugsolutions.leaf.v30.round.domain.RoundCardType
@@ -120,6 +122,35 @@ sealed class GameEntry(
         sequence = sequence,
         time = time,
         kind = EntryKind.GAME_CARD_EFFECT,
+        playerId = playerId
+    )
+
+    data class VpAward(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val row: BattleStrikeRow,
+        val amount: Int
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.VP_AWARD,
+        playerId = playerId
+    )
+
+    data class WoundCard(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val cardId: GameCardID,
+        val cardName: String,
+        val facingBefore: CreatureCard.Facing,
+        val wasFlipped: Boolean,
+        val wasLost: Boolean
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.WOUND_CARD,
         playerId = playerId
     )
 }

@@ -114,6 +114,23 @@ class GameChronicle(
                 token = moment.token,
                 critter = moment.critter
             )
+            is Moment.VpAward -> GameEntry.VpAward(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                row = moment.row,
+                amount = moment.amount
+            )
+            is Moment.WoundCard -> GameEntry.WoundCard(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                cardId = moment.card.card.id,
+                cardName = moment.card.card.name,
+                facingBefore = moment.card.facing,
+                wasFlipped = moment.wasFlipped,
+                wasLost = moment.wasLost
+            )
         }
     }
 }

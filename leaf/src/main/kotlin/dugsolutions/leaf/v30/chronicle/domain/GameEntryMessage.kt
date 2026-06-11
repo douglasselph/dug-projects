@@ -10,6 +10,8 @@ class GameEntryMessage {
             is GameEntry.Reward -> reward(entry)
             is GameEntry.MainAction -> mainAction(entry)
             is GameEntry.GameCardEffect -> gameCardEffect(entry)
+            is GameEntry.VpAward -> vpAward(entry)
+            is GameEntry.WoundCard -> woundCard(entry)
         }
     }
 
@@ -57,5 +59,14 @@ class GameEntryMessage {
             entry.token?.let { " token=$it" }.orEmpty() +
             entry.critter?.let { " critter=$it" }.orEmpty() +
             "."
+    }
+
+    private fun vpAward(entry: GameEntry.VpAward): String {
+        return "Round ${entry.time.round}: player ${entry.playerId} gained ${entry.amount} VP on ${entry.row}."
+    }
+
+    private fun woundCard(entry: GameEntry.WoundCard): String {
+        val action = if (entry.wasFlipped) "flipped" else "lost"
+        return "Round ${entry.time.round}: player ${entry.playerId} was wounded on card ${entry.cardName}: the card was $action."
     }
 }

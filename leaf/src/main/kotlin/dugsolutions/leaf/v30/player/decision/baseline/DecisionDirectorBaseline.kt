@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 
 class DecisionDirectorBaseline : DecisionDirector {
 
@@ -38,5 +39,11 @@ class DecisionDirectorBaseline : DecisionDirector {
 
     override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
         return CardsToRefresh()
+    }
+
+    override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard {
+        return input.creatureCards.firstOrNull { it.isFaceUp }
+            ?: input.creatureCards.firstOrNull()
+            ?: throw IllegalArgumentException("No creature cards available to flip or snip")
     }
 }

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.chronicle
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.chronicle.domain.EntryKind
 import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.chronicle.domain.GameEntryMessage
@@ -10,6 +11,7 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import org.junit.jupiter.api.Test
@@ -132,6 +134,36 @@ class GameChronicleTest {
         assertEquals(EntryKind.MAIN_ACTION, entry.kind)
         assertEquals(MainActionType.PULL_DIE, entry.action)
         assertTrue(GameEntryMessage()(entry).contains("PULL_DIE"))
+    }
+
+    @Test
+    fun invoke_whenVpAward_formatsAwardMessage() {
+        val player = Player(id = 8)
+        val chronicle = GameChronicle(currentRound = { 5 })
+
+        val entry = assertIs<GameEntry.VpAward>(
+            chronicle(Moment.VpAward(player, BattleStrikeRow.STRIKE_2, amount = 3))
+        )
+
+        assertEquals(EntryKind.VP_AWARD, entry.kind)
+        assertEquals(3, entry.amount)
+        assertTrue(GameEntryMessage()(entry).contains("player 8 gained 3 VP"))
+    }
+
+    @Test
+    fun invoke_whenWoundCard_formatsWoundMessage() {
+        val card = loadCard()
+        val player = Player(id = 9)
+        val creatureCard = CreatureCard(card, CreatureCard.Facing.FACE_UP)
+        val chronicle = GameChronicle(currentRound = { 5 })
+
+        val entry = assertIs<GameEntry.WoundCard>(
+            chronicle(Moment.WoundCard(player, creatureCard, wasFlipped = true, wasLost = false))
+        )
+
+        assertEquals(EntryKind.WOUND_CARD, entry.kind)
+        assertEquals(card.name, entry.cardName)
+        assertTrue(GameEntryMessage()(entry).contains("card was flipped"))
     }
 
     private fun loadCard() = GameCardRegistry().apply {

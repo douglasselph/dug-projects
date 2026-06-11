@@ -2,6 +2,8 @@ package dugsolutions.leaf.v30.player
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
@@ -72,6 +74,40 @@ class PlayerTest {
         assertEquals(listOf(CreatureCard(card)), player.creatureRightCards)
         assertTrue(player.getCreatureRightCard(0)!!.isFaceDown)
         assertTrue(player.isCreatureLeftEmpty)
+    }
+
+    @Test
+    fun flipItOrSnipIt_whenChosenCardIsFaceUp_flipsCardFaceDownAndRecordsChronicle() {
+        val chronicle = GameChronicle()
+        val target = Player(chronicle = chronicle, id = 10)
+        val card = cards[0]
+        target.addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
+
+        target.flipItOrSnipIt()
+
+        assertEquals(true, target.creatureCards.single().isFaceDown)
+        val entry = chronicle.getEntries().single() as GameEntry.WoundCard
+        assertEquals(10, entry.playerId)
+        assertEquals(card.name, entry.cardName)
+        assertEquals(true, entry.wasFlipped)
+        assertEquals(false, entry.wasLost)
+    }
+
+    @Test
+    fun flipItOrSnipIt_whenChosenCardIsFaceDown_removesCardAndRecordsChronicle() {
+        val chronicle = GameChronicle()
+        val target = Player(chronicle = chronicle, id = 11)
+        val card = cards[0]
+        target.addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_DOWN))
+
+        target.flipItOrSnipIt()
+
+        assertEquals(emptyList(), target.creatureCards)
+        val entry = chronicle.getEntries().single() as GameEntry.WoundCard
+        assertEquals(11, entry.playerId)
+        assertEquals(card.name, entry.cardName)
+        assertEquals(false, entry.wasFlipped)
+        assertEquals(true, entry.wasLost)
     }
 
     @Test

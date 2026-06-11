@@ -16,6 +16,7 @@ import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.player.decision.domain.RoundAction
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
@@ -294,6 +295,7 @@ class RoundBattleTest {
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class SequenceBattleDecisionDirector(
@@ -311,6 +313,7 @@ class RoundBattleTest {
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class TrackingWispCardEffectExecutor : WispCardEffectExecutor() {

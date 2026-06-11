@@ -6,6 +6,7 @@ import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 
 class DecisionDirectorCounting(
     private val delegate: DecisionDirector,
@@ -36,5 +37,10 @@ class DecisionDirectorCounting(
     override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
         decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseCardsToRefreshWithWorms(input)
+    }
+
+    override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard {
+        decisionCountLog(decisionCostEvaluator(input))
+        return delegate.chooseFlipOrSnipCard(input)
     }
 }

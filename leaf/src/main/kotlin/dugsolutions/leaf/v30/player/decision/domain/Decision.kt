@@ -4,6 +4,7 @@ import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.table.Table
 
@@ -36,5 +37,10 @@ sealed interface Decision {
 
     data class ChooseCardsToRefreshWithWorms(
         val player: Player
+    ) : Decision
+
+    data class ChooseFlipOrSnipCard(
+        val player: Player,
+        val creatureCards: List<CreatureCard>
     ) : Decision
 }

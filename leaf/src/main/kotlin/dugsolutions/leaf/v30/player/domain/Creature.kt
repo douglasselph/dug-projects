@@ -51,6 +51,11 @@ class Creature {
             right.replaceFirst({ it.card == card }) { it.faceDown() }
     }
 
+    fun faceDown(card: CreatureCard): Boolean {
+        return left.replaceFirst({ it == card }) { it.faceDown() } ||
+            right.replaceFirst({ it == card }) { it.faceDown() }
+    }
+
     fun faceUp(card: GameCard): Boolean {
         return left.replaceFirst({ it.card == card }) { it.faceUp() } ||
             right.replaceFirst({ it.card == card }) { it.faceUp() }
@@ -59,6 +64,11 @@ class Creature {
     fun faceUpAll() {
         left.replaceAll { it.faceUp() }
         right.replaceAll { it.faceUp() }
+    }
+
+    fun remove(card: CreatureCard): Boolean {
+        return left.removeFirst { it == card } != null ||
+            right.removeFirst { it == card } != null
     }
 
 }

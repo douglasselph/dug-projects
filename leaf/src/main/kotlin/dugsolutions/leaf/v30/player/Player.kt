@@ -1,6 +1,9 @@
 package dugsolutions.leaf.v30.player
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.common.Butterflies
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
@@ -8,6 +11,7 @@ import dugsolutions.leaf.v30.common.Critters
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.common.Tokens
 import dugsolutions.leaf.v30.player.decision.baseline.DecisionDirectorBaseline
+import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.domain.Creature
 import dugsolutions.leaf.v30.player.domain.CreatureCard
@@ -20,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class Player(
     val decisionDirector: DecisionDirector = DecisionDirectorBaseline(),
+    private val chronicle: Chronicle = GameChronicle(),
     val id: Int = nextId()
 ) {
     companion object {
@@ -116,6 +121,30 @@ class Player(
 
     fun flipAllCreatureCardsFaceUp() {
         _creature.faceUpAll()
+    }
+
+    fun flipItOrSnipIt() {
+        val selected = decisionDirector.chooseFlipOrSnipCard(
+            Decision.ChooseFlipOrSnipCard(
+                player = this,
+                creatureCards = creatureCards
+            )
+        )
+        val wasFaceUp = selected.isFaceUp
+        val changed = if (wasFaceUp) {
+            _creature.faceDown(selected)
+        } else {
+            _creature.remove(selected)
+        }
+        if (!changed) return
+        chronicle(
+            Moment.WoundCard(
+                player = this,
+                card = selected,
+                wasFlipped = wasFaceUp,
+                wasLost = !wasFaceUp
+            )
+        )
     }
 
     fun addDieToSupply(die: Die) {

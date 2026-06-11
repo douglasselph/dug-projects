@@ -304,6 +304,7 @@ class RoundCultivationTest {
         override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = action
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class SequenceMainActionDirector(
@@ -325,6 +326,7 @@ class RoundCultivationTest {
         )
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class BuyingDecisionDirector(
@@ -335,6 +337,7 @@ class RoundCultivationTest {
         override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = MainAction.PullDie
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = itemsToBuy
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class TrackingRoundActionExecutor : RoundActionExecutor() {

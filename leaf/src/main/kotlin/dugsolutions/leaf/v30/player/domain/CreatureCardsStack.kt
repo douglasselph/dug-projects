@@ -38,6 +38,12 @@ class CreatureCardsStack(
         return true
     }
 
+    fun removeFirst(predicate: (CreatureCard) -> Boolean): CreatureCard? {
+        val index = cards.indexOfFirst(predicate)
+        if (index < 0) return null
+        return cards.removeAt(index)
+    }
+
     fun replaceAll(replacement: (CreatureCard) -> CreatureCard) {
         cards.indices.forEach { index ->
             cards[index] = replacement(cards[index])

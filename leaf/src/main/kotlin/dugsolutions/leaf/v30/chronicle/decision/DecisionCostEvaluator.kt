@@ -9,6 +9,7 @@ interface DecisionCostEvaluator {
     operator fun invoke(input: Decision.ChooseMainActionBattle): DecisionCount
     operator fun invoke(input: Decision.ChooseItemsToBuy): DecisionCount
     operator fun invoke(input: Decision.ChooseCardsToRefreshWithWorms): DecisionCount
+    operator fun invoke(input: Decision.ChooseFlipOrSnipCard): DecisionCount
 }
 
 class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
@@ -50,6 +51,14 @@ class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
             playerId = input.player.id,
             type = DecisionCountType.CHOOSE_CARDS_TO_REFRESH_WITH_WORMS,
             count = input.player.creatureCards.count { it.isFaceDown }
+        )
+    }
+
+    override fun invoke(input: Decision.ChooseFlipOrSnipCard): DecisionCount {
+        return DecisionCount(
+            playerId = input.player.id,
+            type = DecisionCountType.CHOOSE_FLIP_OR_SNIP_CARD,
+            count = input.creatureCards.size
         )
     }
 }

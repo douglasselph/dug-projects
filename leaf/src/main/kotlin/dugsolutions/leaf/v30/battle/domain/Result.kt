@@ -10,6 +10,8 @@ data class Result(
 
 data class StrikeRowResult(
     val row: BattleStrikeRow,
+    // Player ids for the players who won this strike row.
     val winners: List<Int>,
+    // Player ids for the players who were wounded on this strike row.
     val wounded: List<Int>
 )

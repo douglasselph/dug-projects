@@ -2,9 +2,11 @@ package dugsolutions.leaf.v30.chronicle.domain
 
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -57,6 +59,19 @@ sealed class Moment {
         val die: Die? = null,
         val token: Token? = null,
         val critter: Critter? = null
+    ) : Moment()
+
+    data class VpAward(
+        val player: Player,
+        val row: BattleStrikeRow,
+        val amount: Int
+    ) : Moment()
+
+    data class WoundCard(
+        val player: Player,
+        val card: CreatureCard,
+        val wasFlipped: Boolean,
+        val wasLost: Boolean
     ) : Moment()
 }
 

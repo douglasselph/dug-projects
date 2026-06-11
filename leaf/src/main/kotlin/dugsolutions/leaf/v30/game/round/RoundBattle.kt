@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.battle.Battle
+import dugsolutions.leaf.v30.battle.BattleAwardWinners
 import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.chronicle.Chronicle
@@ -24,6 +25,7 @@ class RoundBattle(
     card: RoundCard,
     chronicle: Chronicle = GameChronicle(),
     private val battle: Battle = table.battle,
+    private val battleAwardWinners: BattleAwardWinners = BattleAwardWinners(chronicle),
     private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
     private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor(),
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
@@ -143,6 +145,11 @@ class RoundBattle(
             }
         }
         return true
+    }
+
+    fun resolve() {
+        val result = battle.computeWinners()
+        battleAwardWinners(table.players, result)
     }
 
     private fun handleMulchToken(

@@ -342,6 +342,10 @@ class RoundBaseTest {
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
             return CardsToRefresh()
         }
+
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard {
+            return input.creatureCards.first()
+        }
     }
 
     private class RefreshCardsDecisionDirector(
@@ -353,6 +357,10 @@ class RoundBaseTest {
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
             return CardsToRefresh(cards)
+        }
+
+        override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard {
+            return input.creatureCards.first()
         }
     }
 }
