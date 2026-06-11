@@ -10,4 +10,10 @@ sealed class Moment {
         val card: GameCard? = null,
         val actualCount: Int? = null
     ) : Moment()
+
+    data class LoadingWarning(
+        val name: String,
+        val title: String,
+        val reason: String
+    ) : Moment()
 }

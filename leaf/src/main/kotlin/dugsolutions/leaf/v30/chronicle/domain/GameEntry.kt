@@ -22,4 +22,17 @@ sealed class GameEntry(
         kind = EntryKind.WARNING,
         playerId = playerId
     )
+
+    data class LoadingWarning(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        val name: String,
+        val title: String,
+        val reason: String
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.LOADING_WARNING,
+        playerId = 0
+    )
 }

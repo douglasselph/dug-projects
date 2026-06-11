@@ -6,6 +6,7 @@ data class GameCard(
     val id: GameCardID,
     val quantity: Int,
     val name: String,
+    val title: String,
     val type: CardType,
     val cost: Int,
     val lineIcon: String?,
@@ -14,7 +15,7 @@ data class GameCard(
     val fullImage: String?,
     val bgImage2: String?,
     val bgCardImage2: String?,
-    val effect: String
+    val effect: CardEffect
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -26,6 +27,7 @@ data class GameCard(
         if (quantity != other.quantity) return false
         if (cost != other.cost) return false
         if (name != other.name) return false
+        if (title != other.title) return false
         if (type != other.type) return false
         if (lineIcon != other.lineIcon) return false
         if (fgColor != other.fgColor) return false
@@ -43,6 +45,7 @@ data class GameCard(
         result = 31 * result + quantity
         result = 31 * result + cost
         result = 31 * result + name.hashCode()
+        result = 31 * result + title.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + (lineIcon?.hashCode() ?: 0)
         result = 31 * result + fgColor.hashCode()
@@ -55,7 +58,7 @@ data class GameCard(
     }
 
     override fun toString(): String {
-        return "GameCard(id=$id, quantity=$quantity, name='$name', type=$type, cost=$cost, lineIcon=$lineIcon, fgColor=$fgColor, textColor=$textColor, fullImage=$fullImage, bgImage2=$bgImage2, bgCardImage2=$bgCardImage2, effect='$effect')"
+        return "GameCard(id=$id, quantity=$quantity, name='$name', title='$title', type=$type, cost=$cost, lineIcon=$lineIcon, fgColor=$fgColor, textColor=$textColor, fullImage=$fullImage, bgImage2=$bgImage2, bgCardImage2=$bgCardImage2, effect=$effect)"
     }
 
 }

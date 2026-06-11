@@ -4,6 +4,8 @@ import dugsolutions.leaf.v30.cards.di.GameCardsFactory
 import dugsolutions.leaf.v30.cards.domain.CardType
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.cards.domain.GameCardID
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntryMessages
 import dugsolutions.leaf.v30.common.Commons
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,16 +19,21 @@ class GameCardManagerTest {
     }
 
     private lateinit var cardRegistry: GameCardRegistry
+    private lateinit var chronicle: GameChronicle
     private lateinit var sourceCards: List<GameCard>
     private lateinit var SUT: GameCardManager
 
     @BeforeEach
     fun setup() {
-        cardRegistry = GameCardRegistry()
+        chronicle = GameChronicle()
+        cardRegistry = GameCardRegistry(chronicle)
         cardRegistry.loadFromCsv(Commons.CARD_LIST)
         sourceCards = cardRegistry.getAllCards()
 
-        SUT = GameCardManager(GameCardsFactory())
+        SUT = GameCardManager(
+            gameCardsFactory = GameCardsFactory(),
+            checkGameCardNames = CheckGameCardNames(CheckGameCardName(chronicle))
+        )
         SUT.loadCards(sourceCards)
     }
 
@@ -178,6 +185,18 @@ class GameCardManagerTest {
 
         // Assert
         assertEquals(sourceCards, result.cards)
+    }
+
+    @Test
+    fun loadCards_printsLoadingWarnings() {
+        // Arrange
+        val messages = GameEntryMessages()(chronicle.getEntries())
+
+        // Act
+        messages.forEach { println(it) }
+
+        // Assert
+        assertEquals(emptyList(), messages)
     }
 
 }

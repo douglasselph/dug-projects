@@ -7,12 +7,14 @@ import dugsolutions.leaf.v30.cards.domain.GameCardID
 import dugsolutions.leaf.v30.cards.domain.GameCards
 
 class GameCardManager(
-    private val gameCardsFactory: GameCardsFactory
+    private val gameCardsFactory: GameCardsFactory,
+    private val checkGameCardNames: CheckGameCardNames = CheckGameCardNames()
 ) {
     private var cards: Map<GameCardID, GameCard> = emptyMap()
 
     fun loadCards(cardRegistry: GameCardRegistry) {
         cards = cardRegistry.getAllCards().associateBy { it.id }
+        checkGameCardNames(getAllCards())
     }
 
     fun loadCards(incoming: List<GameCard>) {
@@ -21,6 +23,7 @@ class GameCardManager(
             reset[card.id] = card
         }
         cards = reset
+        checkGameCardNames(getAllCards())
     }
 
     fun getCard(id: GameCardID): GameCard? = cards[id]

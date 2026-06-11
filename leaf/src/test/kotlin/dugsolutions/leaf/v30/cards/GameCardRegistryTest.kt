@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.cards
 
 import dugsolutions.leaf.v30.cards.domain.CardType
+import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.common.Commons
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -49,25 +50,25 @@ class GameCardRegistryTest {
         assertNotNull(card)
         assertEquals(8, card.quantity)
         assertEquals("Root_05_01", card.name)
+        assertEquals("Root Bulwark", card.title)
         assertEquals(CardType.ROOT, card.type)
         assertEquals(5, card.cost)
         assertEquals("images/battle_only.png", card.lineIcon)
         assertEquals("images/root_bulwark_full.png", card.fullImage)
         assertEquals("images/back_root2.png", card.bgImage2)
         assertEquals("images/cf_root_bulwark.png", card.bgCardImage2)
-        assertTrue(card.effect.contains("Place a Bulwark token."))
-        assertTrue(card.effect.contains("the Strike is a stalemate."))
+        assertEquals(CardEffect.PLACE_BULWARK_TOKEN, card.effect)
     }
 
     @Test
-    fun loadFromCsv_withCardList_preservesMultilineEffects() {
+    fun loadFromCsv_withCardList_convertsKnownEffects() {
         // Act
         cardRegistry.loadFromCsv(Commons.CARD_LIST)
-        val card = cardRegistry.getCard("Root_05_01")
+        val card = cardRegistry.getCard("Flower_17_04")
 
         // Assert
         assertNotNull(card)
-        assertTrue(card.effect.lines().size > 1)
+        assertEquals(CardEffect.DRAW_TWO_DICE, card.effect)
     }
 
     @Test

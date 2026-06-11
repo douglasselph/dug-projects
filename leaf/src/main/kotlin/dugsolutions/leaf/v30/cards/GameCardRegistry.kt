@@ -4,9 +4,13 @@ import androidx.compose.ui.graphics.Color
 import dugsolutions.leaf.v30.cards.domain.CardType
 import dugsolutions.leaf.v30.cards.domain.GenGameCardID
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
 import java.io.File
 
-class GameCardRegistry {
+class GameCardRegistry(
+    chronicle: Chronicle = GameChronicle()
+) {
 
     companion object {
         private const val EXPECTED_COLUMN_COUNT = 14
@@ -15,6 +19,7 @@ class GameCardRegistry {
     private object Column {
         const val QUANTITY = 0
         const val NAME = 1
+        const val TITLE = 2
         const val TYPE = 3
         const val COST = 4
         const val LINE_ICON = 6
@@ -26,6 +31,7 @@ class GameCardRegistry {
         const val EFFECT = 13
     }
 
+    private val cardEffectConverter = CardEffectConverter(chronicle)
     private val cards: MutableMap<String, GameCard> = mutableMapOf()
 
     // region public
@@ -57,6 +63,7 @@ class GameCardRegistry {
 
         val quantity = parseInt(parts[Column.QUANTITY], "quantity", parts)
         val name = parts[Column.NAME].trim()
+        val title = parts[Column.TITLE].trim()
         val type = CardType.from(parts[Column.TYPE].trim())
             ?: throw IllegalArgumentException("Unknown card type: ${parts[Column.TYPE]}")
         val cost = parseInt(parts[Column.COST], "cost", parts)
@@ -65,6 +72,7 @@ class GameCardRegistry {
             id = GenGameCardID.generateId(name),
             quantity = quantity,
             name = name,
+            title = title,
             type = type,
             cost = cost,
             lineIcon = parseOptional(parts[Column.LINE_ICON]),
@@ -73,7 +81,7 @@ class GameCardRegistry {
             fullImage = parseOptional(parts[Column.FULL_IMAGE]),
             bgImage2 = parseOptional(parts[Column.BG_IMAGE2]),
             bgCardImage2 = parseOptional(parts[Column.BG_CARD_IMAGE2]),
-            effect = parts[Column.EFFECT].trim()
+            effect = cardEffectConverter(name, title)
         )
     }
 
