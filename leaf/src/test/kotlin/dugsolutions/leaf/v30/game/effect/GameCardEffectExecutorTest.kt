@@ -1,7 +1,14 @@
 package dugsolutions.leaf.v30.game.effect
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
+import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.battle.domain.BattleItem
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntry
+import dugsolutions.leaf.v30.chronicle.domain.GameEntryMessage
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
@@ -22,6 +29,8 @@ import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class GameCardEffectExecutorTest {
 
@@ -67,6 +76,69 @@ class GameCardEffectExecutorTest {
         }
     }
 
+    @Test
+    fun cultivationInvoke_whenCardEffectIsUnknown_recordsChronicleWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.UNKNOWN)
+
+        executor(table, player, MainAction.ExecuteCard(card))
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.UNKNOWN_EFFECT, entry.type)
+        assertEquals(player.id, entry.playerId)
+        assertEquals(card.id, entry.cardId)
+        assertEquals(card.name, entry.cardName)
+
+        val message = GameEntryMessage()(entry)
+        assertTrue(message.contains("WARNING"))
+        assertTrue(message.contains("player=${player.id}"))
+        assertTrue(message.contains("type=${WarningType.UNKNOWN_EFFECT}"))
+        assertTrue(message.contains("card=${card.name}"))
+    }
+
+    @Test
+    fun cultivationInvoke_whenCardEffectIsPlaceBulwarkToken_ignoresEffect() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.PLACE_BULWARK_TOKEN)
+
+        executor(table, player, MainAction.ExecuteCard(card))
+
+        assertEquals(emptyList(), chronicle.getEntries())
+    }
+
+    @Test
+    fun battleInvoke_whenCardEffectIsPlaceBulwarkToken_addsTokenToTargetDieRow() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val targetDie = FixedDie(8, 6)
+        val target = playerWithDice(1, targetDie, FixedDie(6, 3), FixedDie(10, 1))
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.PLACE_BULWARK_TOKEN),
+            target = ExecuteTarget.PlayerDie(target, targetDie)
+        )
+
+        executor(table, Player(id = 9), action)
+
+        assertEquals(
+            BattleItem.BulwarkToken,
+            table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all[1]
+        )
+    }
+
     private fun createTable(
         numBattle: Int,
         numCultivation: Int
@@ -98,6 +170,16 @@ class GameCardEffectExecutorTest {
             .apply { loadFromCsv(Commons.CARD_LIST) }
             .getAllCards()
             .first()
+    }
+
+    private fun playerWithDice(
+        id: Int,
+        vararg dice: Die
+    ): Player {
+        return Player(id = id).apply {
+            dice.forEach { addDieToSupply(it) }
+            repeat(dice.size) { drawDie() }
+        }
     }
 
     private class TrackingCultivationExecutor : GameCardEffectExecutorCultivation() {

@@ -14,7 +14,7 @@ val gameModule: Module = module {
     single { RoundActionExecutor() }
     single { WispCardEffectExecutor() }
     single { GameCardEffectExecutorCultivation(get()) }
-    single { GameCardEffectExecutorBattle() }
+    single { GameCardEffectExecutorBattle(get()) }
     single { GameCardEffectExecutor(get(), get()) }
     single { Game(get(), get(), get(), get(), get()) }
 

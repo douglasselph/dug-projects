@@ -65,6 +65,38 @@ class BattleSquareTest {
     }
 
     @Test
+    fun add_whenFullWithDiceAndCritters_allowsBulwarkToken() {
+        val square = BattleSquare(
+            listOf(
+                BattleItem.CritterItem(Critter.BEE),
+                BattleItem.CritterItem(Critter.WORM),
+                BattleItem.CritterItem(Critter.BEE)
+            )
+        )
+
+        square.add(BattleItem.BulwarkToken)
+
+        assertTrue(square.isFull)
+        assertEquals(4, square.size)
+        assertEquals(BattleItem.BulwarkToken, square.all[3])
+    }
+
+    @Test
+    fun constructor_whenMoreThanThreeItemsButOnlyThreeDiceOrCritters_doesNotThrow() {
+        val square = BattleSquare(
+            listOf(
+                BattleItem.BulwarkToken,
+                BattleItem.CritterItem(Critter.BEE),
+                BattleItem.CritterItem(Critter.WORM),
+                BattleItem.CritterItem(Critter.BEE)
+            )
+        )
+
+        assertEquals(4, square.size)
+        assertTrue(square.isFull)
+    }
+
+    @Test
     fun remove_whenItemExists_removesIt() {
         val item = BattleItem.CritterItem(Critter.BEE)
         val square = BattleSquare(listOf(item, BattleItem.CritterItem(Critter.WORM)))
@@ -106,6 +138,16 @@ class BattleSquareTest {
         val item = assertIs<BattleItemSnapshot.DieItem>(snapshot.items.single())
         assertEquals(8, item.die.sides)
         assertEquals(3, item.die.value)
+    }
+
+    @Test
+    fun snapshot_whenBulwarkTokenPresent_setsHasBulwarkToken() {
+        val square = BattleSquare(listOf(BattleItem.BulwarkToken))
+
+        val snapshot = square.snapshot()
+
+        assertTrue(snapshot.hasBulwarkToken)
+        assertEquals(listOf(BattleItemSnapshot.BulwarkToken), snapshot.items)
     }
 
     @Test

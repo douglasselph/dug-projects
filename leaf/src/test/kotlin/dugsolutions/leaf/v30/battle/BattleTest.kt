@@ -100,6 +100,20 @@ class BattleTest {
     }
 
     @Test
+    fun addBulwarkToken_placesBulwarkTokenInPlayersSelectedSquare() {
+        val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.addBulwarkToken(target, BattleStrikeRow.STRIKE_2)
+
+        assertEquals(true, result)
+        assertEquals(
+            BattleItem.BulwarkToken,
+            battle.grid.getSquare(1, BattleStrikeRow.STRIKE_2).all[1]
+        )
+    }
+
+    @Test
     fun add_whenSelectedSquareAlreadyHasThreeItems_returnsFalseAndDoesNotAdd() {
         val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
         val battle = setupBattle(target)
@@ -110,6 +124,20 @@ class BattleTest {
 
         assertEquals(false, result)
         assertEquals(3, battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).size)
+    }
+
+    @Test
+    fun addBulwarkToken_whenSelectedSquareAlreadyHasThreeDiceOrCritters_returnsTrueAndAdds() {
+        val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+        battle.add(target, BattleStrikeRow.STRIKE_1, Critter.BEE)
+        battle.add(target, BattleStrikeRow.STRIKE_1, Critter.WORM)
+
+        val result = battle.addBulwarkToken(target, BattleStrikeRow.STRIKE_1)
+
+        assertEquals(true, result)
+        assertEquals(4, battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).size)
+        assertEquals(BattleItem.BulwarkToken, battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).all[3])
     }
 
     @Test

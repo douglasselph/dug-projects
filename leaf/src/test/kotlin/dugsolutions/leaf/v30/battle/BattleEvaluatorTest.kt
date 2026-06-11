@@ -80,6 +80,35 @@ class BattleEvaluatorTest {
     }
 
     @Test
+    fun invoke_whenSquareHasBulwarkToken_ignoresSquare() {
+        val grid = BattleGrid(listOf(1, 2, 3, 4))
+        grid.add(1, BattleStrikeRow.STRIKE_1, BattleItem.BulwarkToken)
+        grid.add(1, BattleStrikeRow.STRIKE_1, dieItem(20, 20))
+        grid.add(2, BattleStrikeRow.STRIKE_1, dieItem(6, 4))
+        grid.add(3, BattleStrikeRow.STRIKE_1, dieItem(6, 3))
+        grid.add(4, BattleStrikeRow.STRIKE_1, dieItem(6, 1))
+
+        val result = SUT(grid.snapshot())
+
+        assertEquals(listOf(2), result[BattleStrikeRow.STRIKE_1].winners)
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].wounded)
+    }
+
+    @Test
+    fun invoke_whenAllRemainingScoresTieAfterBulwarkFilter_returnsNoWinners() {
+        val grid = BattleGrid(listOf(1, 2, 3, 4))
+        grid.add(1, BattleStrikeRow.STRIKE_1, BattleItem.BulwarkToken)
+        grid.add(2, BattleStrikeRow.STRIKE_1, dieItem(6, 3))
+        grid.add(3, BattleStrikeRow.STRIKE_1, dieItem(8, 3))
+        grid.add(4, BattleStrikeRow.STRIKE_1, dieItem(10, 3))
+
+        val result = SUT(grid.snapshot())
+
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].winners)
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].wounded)
+    }
+
+    @Test
     fun invoke_returnsResultForAllStrikeRows() {
         val grid = BattleGrid(listOf(1, 2, 3, 4))
 

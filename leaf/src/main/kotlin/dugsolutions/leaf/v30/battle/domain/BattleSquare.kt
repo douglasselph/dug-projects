@@ -11,7 +11,7 @@ class BattleSquare(
     private val items = items.toMutableList()
 
     init {
-        require(items.size <= MAX_ITEMS) { "Battle square can hold at most $MAX_ITEMS items: ${items.size}" }
+        require(countLimitedItems() <= MAX_ITEMS) { "Battle square can hold at most $MAX_ITEMS dice/critter items: ${countLimitedItems()}" }
     }
 
     val all: List<BattleItem>
@@ -21,7 +21,7 @@ class BattleSquare(
         get() = items.size
 
     val isFull: Boolean
-        get() = size >= MAX_ITEMS
+        get() = countLimitedItems() >= MAX_ITEMS
 
     val isEmpty: Boolean
         get() = items.isEmpty()
@@ -29,8 +29,12 @@ class BattleSquare(
     val total: Int
         get() = items.sumOf { it.total }
 
+    fun canAdd(item: BattleItem): Boolean {
+        return !item.countsTowardSquareLimit || !isFull
+    }
+
     fun add(item: BattleItem): BattleSquare {
-        require(!isFull) { "Battle square can hold at most $MAX_ITEMS items" }
+        require(canAdd(item)) { "Battle square can hold at most $MAX_ITEMS dice/critter items" }
         items.add(item)
         return this
     }
@@ -47,11 +51,18 @@ class BattleSquare(
         return BattleSquareSnapshot(items.map { it.snapshot() })
     }
 
+    private fun countLimitedItems(): Int {
+        return items.count { it.countsTowardSquareLimit }
+    }
+
 }
 
 data class BattleSquareSnapshot(
     val items: List<BattleItemSnapshot>
 ) {
+    val hasBulwarkToken: Boolean
+        get() = items.any { it is BattleItemSnapshot.BulwarkToken }
+
     val total: Int
         get() = items.sumOf { it.total }
 }

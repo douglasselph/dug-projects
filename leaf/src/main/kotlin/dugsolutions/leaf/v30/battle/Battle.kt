@@ -56,6 +56,13 @@ class Battle(
         return add(player, row, BattleItem.CritterItem(critter))
     }
 
+    fun addBulwarkToken(
+        player: Player,
+        row: BattleStrikeRow
+    ): Boolean {
+        return add(player, row, BattleItem.BulwarkToken)
+    }
+
     fun setDieValue(
         player: Player,
         row: BattleStrikeRow,
@@ -103,7 +110,7 @@ class Battle(
         item: BattleItem
     ): Boolean {
         val square = grid.getSquare(player.id, row)
-        if (square.isFull) return false
+        if (!square.canAdd(item)) return false
         square.add(item)
         return true
     }

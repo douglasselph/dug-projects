@@ -3,6 +3,8 @@ package dugsolutions.leaf.v30.game.effect
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.table.Table
@@ -19,7 +21,7 @@ open class GameCardEffectExecutorCultivation(
     ) {
         when (action.card.effect) {
             CardEffect.UNKNOWN -> unknown(table, player, action)
-            CardEffect.PLACE_BULWARK_TOKEN -> placeBulwarkToken(table, player, action)
+            CardEffect.PLACE_BULWARK_TOKEN -> ignoreBattleEffect(table, player, action)
             CardEffect.GAIN_WORM_AND_BOOST_WORMS -> gainWormAndBoostWorms(table, player, action)
             CardEffect.MULCH_DIE_FROM_DISCARD -> mulchDieFromDiscard(table, player, action)
             CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER -> rerollDieUntilThreeOrHigher(table, player, action)
@@ -92,8 +94,16 @@ open class GameCardEffectExecutorCultivation(
         }
     }
 
-    private fun unknown(table: Table, player: Player, action: MainAction.ExecuteCard) {}
-    private fun placeBulwarkToken(table: Table, player: Player, action: MainAction.ExecuteCard) {}
+    private fun unknown(table: Table, player: Player, action: MainAction.ExecuteCard) {
+        chronicle(
+            Moment.Warning(
+                player = player,
+                type = WarningType.UNKNOWN_EFFECT,
+                card = action.card
+            )
+        )
+    }
+    private fun ignoreBattleEffect(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun gainWormAndBoostWorms(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun mulchDieFromDiscard(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainAction.ExecuteCard) {}
