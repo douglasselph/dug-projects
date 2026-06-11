@@ -5,8 +5,11 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
@@ -104,7 +107,43 @@ open class GameCardEffectExecutorCultivation(
         )
     }
     private fun ignoreBattleEffect(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
-    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.REROLL_TARGET_MISSING,
+                    card = action.card
+                )
+            )
+            return
+        }
+        if (!player.diceHand.hasDie(target.die)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.REROLL_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        val rerolled = rerollUntilThreeOrHigher(
+            initial = target.die,
+            reroll = { die -> player.rerollDie(die) }
+        )
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Rerolled a hand die until it was $MIN_REROLL_VALUE or higher",
+                die = rerolled
+            )
+        )
+    }
+
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun doubleOneDie(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}

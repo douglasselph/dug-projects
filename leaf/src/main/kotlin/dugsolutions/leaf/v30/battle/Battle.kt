@@ -84,13 +84,13 @@ class Battle(
         player: Player,
         row: BattleStrikeRow,
         die: Die
-    ): Boolean {
+    ): Die? {
         val dieItem = grid.getSquare(player.id, row).all
             .filterIsInstance<BattleItem.DieItem>()
             .firstOrNull { it.die == die }
-            ?: return false
+            ?: return null
         dieItem.die.roll()
-        return true
+        return dieItem.die
     }
 
     fun hasDie(

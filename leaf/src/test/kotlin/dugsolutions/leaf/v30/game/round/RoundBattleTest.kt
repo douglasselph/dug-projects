@@ -75,6 +75,46 @@ class RoundBattleTest {
     }
 
     @Test
+    fun performMainActions_whenDecisionIsPullDie_addsPulledDieToSelectedBattleRow() {
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val target = player(
+            4,
+            FixedDie(4, 2),
+            FixedDie(6, 2),
+            FixedDie(8, 2),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(
+                    MainActionBattle.PullDie(BattleStrikeRow.STRIKE_2),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                )
+            )
+        ).apply {
+            addDieToSupply(FixedDie(12, 5))
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(table, loadBattleCard(), battle = battle)
+        round.prepare()
+
+        round.performMainActions()
+
+        val items = battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_2).all
+        assertEquals(2, items.size)
+        val addedDie = items.last() as BattleItem.DieItem
+        assertEquals(12, addedDie.die.sides)
+        assertEquals(5, addedDie.die.value)
+        assertEquals(listOf(4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
+    @Test
     fun performMainActions_whenDecisionIsWispCard_doesNotSpendMainAction() {
         val wispCard = loadWispCard()
         val callOrder = mutableListOf<Int>()

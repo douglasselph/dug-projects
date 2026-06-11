@@ -12,6 +12,7 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -30,6 +31,7 @@ import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -97,6 +99,131 @@ class GameCardEffectExecutorTest {
             BattleItem.BulwarkToken,
             table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all[1]
         )
+    }
+
+    @Test
+    fun cultivationInvoke_whenRerollDieUntilThreeOrHigher_rerollsHandDieUntilValueIsAtLeastThree() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = SequenceDie(6, initial = 1, rolls = listOf(1, 2, 3))
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(3, die.rollCount)
+        assertEquals(3, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(3, entry.die?.value)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRerollDieUntilThreeOrHigherHasNoTarget_recordsWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
+
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.REROLL_TARGET_MISSING, entry.type)
+        assertEquals(card.id, entry.cardId)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRerollDieUntilThreeOrHigherDieIsNotInHand_recordsWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7).apply {
+            addDieToHand(FixedDie(6, 1))
+        }
+        val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, FixedDie(8, 1))
+        )
+
+        executor(table, player, action)
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.REROLL_DIE_NOT_FOUND, entry.type)
+        assertEquals(card.id, entry.cardId)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRerollDieUntilThreeOrHigherNeverReachesThree_throwsException() {
+        val executor = GameCardEffectExecutorCultivation()
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = SequenceDie(6, initial = 1, rolls = List(11) { 1 })
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val action = MainActionCultivation.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER),
+            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+        )
+
+        assertThrows<MainActionException> {
+            executor(table, player, action)
+        }
+        assertEquals(10, die.rollCount)
+    }
+
+    @Test
+    fun battleInvoke_whenRerollDieUntilThreeOrHigher_rerollsBattleGridDieUntilValueIsAtLeastThree() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val targetDie = SequenceDie(8, initial = 6, rolls = listOf(1, 2, 4))
+        val target = playerWithDice(1, targetDie, FixedDie(6, 3), FixedDie(10, 1))
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
+        val action = MainActionBattle.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(target, FixedDie(8, 6)),
+            row = BattleStrikeRow.STRIKE_1
+        )
+
+        executor(table, Player(id = 9), action)
+
+        assertEquals(3, targetDie.rollCount)
+        assertEquals(4, targetDie.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(4, entry.die?.value)
+    }
+
+    @Test
+    fun battleInvoke_whenRerollDieUntilThreeOrHigherHasNoRow_throwsException() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7)
+        val action = MainActionBattle.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER),
+            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+        )
+
+        assertThrows<MainActionException> {
+            executor(table, player, action)
+        }
     }
 
     @Test
@@ -259,6 +386,25 @@ class GameCardEffectExecutorTest {
         }
 
         override fun roll(): Die = this
+    }
+
+    private class SequenceDie(
+        sides: Int,
+        initial: Int,
+        private val rolls: List<Int>
+    ) : Die(sides) {
+        var rollCount = 0
+
+        init {
+            adjustTo(initial)
+        }
+
+        override fun roll(): Die {
+            val value = rolls.getOrElse(rollCount) { rolls.last() }
+            rollCount++
+            adjustTo(value)
+            return this
+        }
     }
 
     private class IdentityRandomizer : Randomizer {

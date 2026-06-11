@@ -89,11 +89,12 @@ class RoundBattle(
                     Moment.MainAction(
                         player = player,
                         action = MainActionType.PULL_DIE,
-                        detail = "Pulled and rolled a die into hand",
+                        detail = "Pulled and rolled a die and added it to strike row ${action.row}",
                         die = die
                     )
                 )
                 resolveReward(player, die)
+                battle.add(player, action.row, die)
             }
             is MainActionBattle.DoRoundAction -> {
                 chronicle(
@@ -129,7 +130,7 @@ class RoundBattle(
                     Moment.MainAction(
                         player = player,
                         action = MainActionType.PLAY_WISP_CARD,
-                        detail = "Played a wisp card",
+                        detail = "Played a wisp card during battle",
                         wispCard = action.card
                     )
                 )
@@ -204,7 +205,9 @@ class RoundBattle(
             throw MainActionException("Water token die was not found in battle grid")
         }
         if (!player.remove(Token.WATER)) return
-        if (!battle.rerollDie(player, targetRow, targetDie)) {
+        val rerolled = battle.rerollDie(player, targetRow, targetDie)
+            ?: throw MainActionException("Water token die was not found in battle grid")
+        if (rerolled != targetDie && !battle.hasDie(player, targetRow, rerolled)) {
             throw MainActionException("Water token die was not found in battle grid")
         }
         chronicle(
@@ -212,7 +215,7 @@ class RoundBattle(
                 player = player,
                 action = MainActionType.PLAY_WATER_TOKEN,
                 detail = "Played a water token to reroll a battle die in row $targetRow",
-                die = targetDie,
+                die = rerolled,
                 token = Token.WATER
             )
         )

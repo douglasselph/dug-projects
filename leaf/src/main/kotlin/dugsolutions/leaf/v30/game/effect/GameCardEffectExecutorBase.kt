@@ -6,15 +6,22 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.table.Table
 
 abstract class GameCardEffectExecutorBase(
     protected val chronicle: Chronicle = GameChronicle()
 ) {
+
+    companion object {
+        const val MIN_REROLL_VALUE = 3
+        const val MAX_REROLL_ATTEMPTS = 10
+    }
 
     protected open fun gainWormAndBoostWorms(
         table: Table,
@@ -93,4 +100,20 @@ abstract class GameCardEffectExecutorBase(
             )
         )
     }
+
+    protected fun rerollUntilThreeOrHigher(
+        initial: Die,
+        reroll: (Die) -> Die?
+    ): Die {
+        var current = initial
+        repeat(MAX_REROLL_ATTEMPTS) {
+            current = reroll(current)
+                ?: throw MainActionException("Reroll target die was not found")
+            if (current.value >= MIN_REROLL_VALUE) {
+                return current
+            }
+        }
+        throw MainActionException("Reroll did not reach $MIN_REROLL_VALUE after $MAX_REROLL_ATTEMPTS attempts")
+    }
+
 }

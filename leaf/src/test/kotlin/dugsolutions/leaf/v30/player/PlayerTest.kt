@@ -239,23 +239,23 @@ class PlayerTest {
     }
 
     @Test
-    fun rerollDie_whenMatchingDieIsInHand_rollsStoredDieAndReturnsTrue() {
+    fun rerollDie_whenMatchingDieIsInHand_rollsStoredDieAndReturnsDie() {
         val die = TrackingDie(6)
         player.addDieToHand(die)
 
         val result = player.rerollDie(FixedDie(6, 1))
 
-        assertTrue(result)
+        assertEquals(die, result)
         assertEquals(1, die.rollCount)
     }
 
     @Test
-    fun rerollDie_whenMatchingDieIsNotInHand_returnsFalse() {
+    fun rerollDie_whenMatchingDieIsNotInHand_returnsNull() {
         player.addDieToHand(TrackingDie(6))
 
         val result = player.rerollDie(FixedDie(8, 1))
 
-        assertEquals(false, result)
+        assertNull(result)
     }
 
     @Test

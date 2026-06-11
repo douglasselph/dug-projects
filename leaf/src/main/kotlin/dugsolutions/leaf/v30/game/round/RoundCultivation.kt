@@ -184,7 +184,8 @@ class RoundCultivation(
             throw MainActionException("Water token die was not found in player hand")
         }
         if (!player.remove(Token.WATER)) return
-        if (!player.rerollDie(die)) {
+        val rerolled = player.rerollDie(die) ?: throw MainActionException("Water token die was not found in player hand")
+        if (rerolled != die && !player.diceHand.hasDie(rerolled)) {
             throw MainActionException("Water token die was not found in player hand")
         }
         chronicle(
@@ -192,7 +193,7 @@ class RoundCultivation(
                 player = player,
                 action = MainActionType.PLAY_WATER_TOKEN,
                 detail = "Played a water token to reroll a hand die",
-                die = die,
+                die = rerolled,
                 token = Token.WATER
             )
         )

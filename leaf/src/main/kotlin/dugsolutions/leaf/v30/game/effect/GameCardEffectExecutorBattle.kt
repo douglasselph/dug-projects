@@ -8,15 +8,18 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorBattle(
     chronicle: Chronicle = GameChronicle()
 ) : GameCardEffectExecutorBase(chronicle) {
+
 
     open operator fun invoke(
         table: Table,
@@ -138,7 +141,44 @@ open class GameCardEffectExecutorBattle(
         super.gainWormAndBoostWorms(table, player, action)
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
-    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.REROLL_TARGET_MISSING,
+                    card = action.card
+                )
+            )
+            return
+        }
+        if (!table.battle.hasDie(target.player, row, target.die)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.REROLL_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        val rerolled = rerollUntilThreeOrHigher(
+            initial = target.die,
+            reroll = { die -> table.battle.rerollDie(target.player, row, die) }
+        )
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Rerolled player ${target.player.id}'s battle die on $row until it was $MIN_REROLL_VALUE or higher",
+                die = rerolled
+            )
+        )
+    }
+
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun doubleOneDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}

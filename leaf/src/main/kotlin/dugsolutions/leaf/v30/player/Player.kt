@@ -182,10 +182,10 @@ class Player(
         _diceHand.roll()
     }
 
-    fun rerollDie(die: Die): Boolean {
-        val target = _diceHand.dice.firstOrNull { it == die } ?: return false
+    fun rerollDie(die: Die): Die? {
+        val target = _diceHand.dice.firstOrNull { it == die } ?: return null
         target.roll()
-        return true
+        return target
     }
 
     fun discardHandDice() {
