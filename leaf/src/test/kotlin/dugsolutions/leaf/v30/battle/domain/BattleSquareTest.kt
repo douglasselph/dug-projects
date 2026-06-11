@@ -108,6 +108,20 @@ class BattleSquareTest {
         assertEquals(3, item.die.value)
     }
 
+    @Test
+    fun total_addsDiceValuesAndCritterValues() {
+        val square = BattleSquare(
+            listOf(
+                BattleItem.DieItem(FixedDie(sides = 8, value = 3)),
+                BattleItem.CritterItem(Critter.BEE),
+                BattleItem.CritterItem(Critter.WORM)
+            )
+        )
+
+        assertEquals(6, square.total)
+        assertEquals(6, square.snapshot().total)
+    }
+
     private class FixedDie(
         sides: Int,
         value: Int

@@ -3,6 +3,11 @@ package dugsolutions.leaf.v30.battle.domain
 class BattleSquare(
     items: List<BattleItem> = emptyList()
 ) {
+
+    companion object {
+        const val MAX_ITEMS = 3
+    }
+
     private val items = items.toMutableList()
 
     init {
@@ -20,6 +25,9 @@ class BattleSquare(
 
     val isEmpty: Boolean
         get() = items.isEmpty()
+
+    val total: Int
+        get() = items.sumOf { it.total }
 
     fun add(item: BattleItem): BattleSquare {
         require(!isFull) { "Battle square can hold at most $MAX_ITEMS items" }
@@ -39,11 +47,11 @@ class BattleSquare(
         return BattleSquareSnapshot(items.map { it.snapshot() })
     }
 
-    companion object {
-        const val MAX_ITEMS = 3
-    }
 }
 
 data class BattleSquareSnapshot(
     val items: List<BattleItemSnapshot>
-)
+) {
+    val total: Int
+        get() = items.sumOf { it.total }
+}

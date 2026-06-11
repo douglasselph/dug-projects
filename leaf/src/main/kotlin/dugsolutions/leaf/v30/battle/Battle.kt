@@ -4,16 +4,19 @@ import dugsolutions.leaf.v30.battle.domain.BattleGrid
 import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
+import dugsolutions.leaf.v30.battle.domain.Result
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.die.Die
 
 class Battle(
     private val chronicle: Chronicle = GameChronicle(),
-    private val playerGridOrder: PlayerGridOrder = PlayerGridOrder()
+    private val playerGridOrder: PlayerGridOrder = PlayerGridOrder(),
+    private val battleEvaluator: BattleEvaluator = BattleEvaluator()
 ) {
     private var _grid: BattleGrid? = null
 
@@ -31,6 +34,40 @@ class Battle(
 
     fun snapshot(): BattleGridSnapshot {
         return grid.snapshot()
+    }
+
+    fun computeWinners(): Result {
+        return battleEvaluator(snapshot())
+    }
+
+    fun add(
+        player: Player,
+        row: BattleStrikeRow,
+        die: Die
+    ): Boolean {
+        return add(player, row, BattleItem.DieItem(die))
+    }
+
+    fun add(
+        player: Player,
+        row: BattleStrikeRow,
+        critter: Critter
+    ): Boolean {
+        return add(player, row, BattleItem.CritterItem(critter))
+    }
+
+    fun setDieValue(
+        player: Player,
+        row: BattleStrikeRow,
+        die: Die,
+        value: Int
+    ): Boolean {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die == die }
+            ?: return false
+        dieItem.die.adjustTo(value)
+        return true
     }
 
     private fun setupPlayerColumn(player: Player) {
@@ -58,5 +95,16 @@ class Battle(
             compareByDescending<Die> { it.value }
                 .thenBy { it.sides }
         )
+    }
+
+    private fun add(
+        player: Player,
+        row: BattleStrikeRow,
+        item: BattleItem
+    ): Boolean {
+        val square = grid.getSquare(player.id, row)
+        if (square.isFull) return false
+        square.add(item)
+        return true
     }
 }

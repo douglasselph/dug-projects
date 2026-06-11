@@ -3,6 +3,12 @@ package dugsolutions.leaf.v30.battle.domain
 class BattleGrid(
     playerIds: List<Int>
 ) {
+
+    companion object {
+        const val NUM_COLUMNS = 4
+        const val NUM_STRIKE_ROWS = 3
+    }
+
     private val columns = playerIds.map { BattleColumn(it) }
 
     init {
@@ -50,10 +56,6 @@ class BattleGrid(
         return BattleGridSnapshot(columns.map { it.snapshot() })
     }
 
-    companion object {
-        const val NUM_COLUMNS = 4
-        const val NUM_STRIKE_ROWS = 3
-    }
 }
 
 data class BattleGridSnapshot(

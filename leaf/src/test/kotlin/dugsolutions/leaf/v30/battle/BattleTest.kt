@@ -5,6 +5,7 @@ import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -68,6 +69,117 @@ class BattleTest {
         assertEquals(1, warning.playerId)
         assertEquals(7, warning.time.round)
         assertEquals(2, warning.actualCount)
+    }
+
+    @Test
+    fun add_withDie_placesDieInPlayersSelectedSquare() {
+        val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
+        val die = FixedDie(12, 5)
+        val battle = setupBattle(target)
+
+        val result = battle.add(target, BattleStrikeRow.STRIKE_1, die)
+
+        assertEquals(true, result)
+        val items = battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).all
+        assertDie(sides = 6, value = 3, item = items[0])
+        assertDie(sides = 12, value = 5, item = items[1])
+    }
+
+    @Test
+    fun add_withCritter_placesCritterInPlayersSelectedSquare() {
+        val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.add(target, BattleStrikeRow.STRIKE_2, Critter.BEE)
+
+        assertEquals(true, result)
+        assertEquals(
+            BattleItem.CritterItem(Critter.BEE),
+            battle.grid.getSquare(1, BattleStrikeRow.STRIKE_2).all[1]
+        )
+    }
+
+    @Test
+    fun add_whenSelectedSquareAlreadyHasThreeItems_returnsFalseAndDoesNotAdd() {
+        val target = player(1, FixedDie(6, 3), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+        battle.add(target, BattleStrikeRow.STRIKE_1, Critter.BEE)
+        battle.add(target, BattleStrikeRow.STRIKE_1, Critter.WORM)
+
+        val result = battle.add(target, BattleStrikeRow.STRIKE_1, FixedDie(12, 5))
+
+        assertEquals(false, result)
+        assertEquals(3, battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).size)
+    }
+
+    @Test
+    fun setDieValue_whenDieExistsInSelectedSquare_updatesDieValue() {
+        val die = FixedDie(6, 3)
+        val target = player(1, die, FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.setDieValue(target, BattleStrikeRow.STRIKE_1, die, 5)
+
+        assertEquals(true, result)
+        assertEquals(5, die.value)
+        assertDie(sides = 6, value = 5, item = battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).all.single())
+    }
+
+    @Test
+    fun setDieValue_whenDieIsNotInSelectedSquare_returnsFalse() {
+        val die = FixedDie(6, 3)
+        val target = player(1, die, FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.setDieValue(target, BattleStrikeRow.STRIKE_2, die, 5)
+
+        assertEquals(false, result)
+        assertEquals(3, die.value)
+    }
+
+    @Test
+    fun setDieValue_whenDieBelongsToDifferentPlayer_returnsFalse() {
+        val die = FixedDie(6, 3)
+        val target = player(1, die, FixedDie(8, 2), FixedDie(10, 1))
+        val other = player(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer())).apply {
+            setup(
+                listOf(
+                    target,
+                    other,
+                    player(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                    player(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+                )
+            )
+        }
+
+        val result = battle.setDieValue(other, BattleStrikeRow.STRIKE_1, die, 5)
+
+        assertEquals(false, result)
+        assertEquals(3, die.value)
+    }
+
+    @Test
+    fun computeWinners_returnsBattleEvaluatorResultForCurrentGrid() {
+        val target = player(1, FixedDie(6, 6), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.computeWinners()
+
+        assertEquals(listOf(1), result[BattleStrikeRow.STRIKE_1].winners)
+    }
+
+    private fun setupBattle(target: Player): Battle {
+        return Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer())).apply {
+            setup(
+                listOf(
+                    target,
+                    player(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                    player(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                    player(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+                )
+            )
+        }
     }
 
     private fun player(
