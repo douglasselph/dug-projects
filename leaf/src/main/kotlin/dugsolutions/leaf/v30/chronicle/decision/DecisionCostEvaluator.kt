@@ -4,15 +4,15 @@ import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 
 interface DecisionCostEvaluator {
-    fun evaluate(input: Decision.ChooseCritter): DecisionCount
-    fun evaluate(input: Decision.ChooseMainAction): DecisionCount
-    fun evaluate(input: Decision.ChooseItemsToBuy): DecisionCount
-    fun evaluate(input: Decision.ChooseCardsToRefreshWithWorms): DecisionCount
+    operator fun invoke(input: Decision.ChooseCritter): DecisionCount
+    operator fun invoke(input: Decision.ChooseMainAction): DecisionCount
+    operator fun invoke(input: Decision.ChooseItemsToBuy): DecisionCount
+    operator fun invoke(input: Decision.ChooseCardsToRefreshWithWorms): DecisionCount
 }
 
 class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
 
-    override fun evaluate(input: Decision.ChooseCritter): DecisionCount {
+    override fun invoke(input: Decision.ChooseCritter): DecisionCount {
         return DecisionCount(
             playerId = input.player.id,
             type = DecisionCountType.CHOOSE_CRITTER,
@@ -20,7 +20,7 @@ class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
         )
     }
 
-    override fun evaluate(input: Decision.ChooseMainAction): DecisionCount {
+    override fun invoke(input: Decision.ChooseMainAction): DecisionCount {
         return DecisionCount(
             playerId = input.player.id,
             type = DecisionCountType.CHOOSE_MAIN_ACTION,
@@ -28,7 +28,7 @@ class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
         )
     }
 
-    override fun evaluate(input: Decision.ChooseItemsToBuy): DecisionCount {
+    override fun invoke(input: Decision.ChooseItemsToBuy): DecisionCount {
         return DecisionCount(
             playerId = input.player.id,
             type = DecisionCountType.CHOOSE_ITEMS_TO_BUY,
@@ -36,7 +36,7 @@ class DecisionCostEvaluatorBaseline : DecisionCostEvaluator {
         )
     }
 
-    override fun evaluate(input: Decision.ChooseCardsToRefreshWithWorms): DecisionCount {
+    override fun invoke(input: Decision.ChooseCardsToRefreshWithWorms): DecisionCount {
         return DecisionCount(
             playerId = input.player.id,
             type = DecisionCountType.CHOOSE_CARDS_TO_REFRESH_WITH_WORMS,

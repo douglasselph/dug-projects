@@ -53,8 +53,9 @@ class GameChronicle(
                 time = time,
                 playerId = moment.player.id,
                 type = moment.type,
-                cardId = moment.card.id,
-                cardName = moment.card.name
+                cardId = moment.card?.id,
+                cardName = moment.card?.name,
+                actualCount = moment.actualCount
             )
         }
     }

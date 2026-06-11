@@ -13,8 +13,9 @@ sealed class GameEntry(
         override val time: GameTimeSnapshot,
         override val playerId: Int,
         val type: WarningType,
-        val cardId: GameCardID,
-        val cardName: String
+        val cardId: GameCardID?,
+        val cardName: String?,
+        val actualCount: Int? = null
     ) : GameEntry(
         sequence = sequence,
         time = time,

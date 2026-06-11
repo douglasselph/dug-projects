@@ -5,5 +5,5 @@ import org.koin.dsl.module
 
 val playerModule: Module = module {
 
-    single { PlayerFactory() }
+    single { PlayerFactory(get()) }
 }

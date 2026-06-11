@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.chronicle.decision.DecisionCostEvaluatorBaseline
 import dugsolutions.leaf.v30.chronicle.decision.DecisionCountChronicle
 import dugsolutions.leaf.v30.chronicle.decision.DecisionCountLog
 import dugsolutions.leaf.v30.chronicle.decision.DecisionDirectorCounting
+import dugsolutions.leaf.v30.player.decision.baseline.DecisionDirectorBaseline
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -19,6 +20,14 @@ val chronicleModule: Module = module {
     single { DecisionCountChronicle() }
     single<DecisionCountLog> { get<DecisionCountChronicle>() }
     single<DecisionCostEvaluator> { DecisionCostEvaluatorBaseline() }
+    single { DecisionDirectorBaseline() }
+    single<DecisionDirector> {
+        DecisionDirectorCounting(
+            delegate = get<DecisionDirectorBaseline>(),
+            decisionCountLog = get(),
+            decisionCostEvaluator = get()
+        )
+    }
 
     factory { (delegate: DecisionDirector) ->
         DecisionDirectorCounting(

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.di
 
 import dugsolutions.leaf.v30.cards.di.cardsModule
+import dugsolutions.leaf.v30.battle.di.battleModule
 import dugsolutions.leaf.v30.chronicle.di.chronicleModule
 import dugsolutions.leaf.v30.game.di.gameModule
 import dugsolutions.leaf.v30.grove.di.groveModule
@@ -22,12 +23,13 @@ val appModule: Module = module {
 
 val appModules = listOf(
     appModule,
+    battleModule,
     cardsModule,
     wispModule,
     groveModule,
     roundModule,
     tableModule,
-    playerModule,
     chronicleModule,
+    playerModule,
     gameModule
 )

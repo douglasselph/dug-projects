@@ -14,22 +14,22 @@ class DecisionDirectorCounting(
 ) : DecisionDirector {
 
     override fun chooseCritter(input: Decision.ChooseCritter): Critter {
-        decisionCountLog(decisionCostEvaluator.evaluate(input))
+        decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseCritter(input)
     }
 
     override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
-        decisionCountLog(decisionCostEvaluator.evaluate(input))
+        decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseMainAction(input)
     }
 
     override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
-        decisionCountLog(decisionCostEvaluator.evaluate(input))
+        decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseItemsToBuy(input)
     }
 
     override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
-        decisionCountLog(decisionCostEvaluator.evaluate(input))
+        decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseCardsToRefreshWithWorms(input)
     }
 }
