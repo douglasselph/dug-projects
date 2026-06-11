@@ -119,7 +119,8 @@ class GameTest {
                     FixedDie(6, 4),
                     FixedDie(8, 3),
                     FixedDie(10, 2),
-                    FixedDie(12, 1)
+                    FixedDie(12, 1),
+                    FixedDie(20, 1)
                 )
             )
         }

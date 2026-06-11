@@ -4,6 +4,7 @@ import dugsolutions.leaf.v30.battle.Battle
 import dugsolutions.leaf.v30.battle.PlayerGridOrder
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
@@ -24,6 +25,7 @@ import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
+import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -62,7 +64,43 @@ class RoundBattleTest {
 
         round.performMainActions()
 
-        assertEquals(listOf(4, 1, 3, 2), callOrder)
+        assertEquals(listOf(4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsWispCard_doesNotSpendMainAction() {
+        val wispCard = loadWispCard()
+        val callOrder = mutableListOf<Int>()
+        val wispExecutor = TrackingWispCardEffectExecutor()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(
+                4,
+                FixedDie(4, 2),
+                FixedDie(6, 2),
+                FixedDie(8, 2),
+                decisionDirector = SequenceBattleDecisionDirector(
+                    playerId = 4,
+                    callOrder = callOrder,
+                    actions = listOf(
+                        MainAction.DoWispCard(wispCard),
+                        MainAction.DoRoundAction(RoundAction.ACTION_1),
+                        MainAction.DoRoundAction(RoundAction.ACTION_1)
+                    )
+                )
+            )
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(table, loadBattleCard(), battle = battle, wispCardEffectExecutor = wispExecutor)
+        round.prepare()
+
+        round.performMainActions()
+
+        assertEquals(listOf(wispCard), wispExecutor.cards)
+        assertEquals(listOf(4, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
 
     private fun player(
@@ -88,6 +126,12 @@ class RoundBattleTest {
         val registry = RoundCardRegistry()
         registry.loadFromCsv(Commons.ROUND_CARD_LIST)
         return registry.getAllCards().first { it.cardType.name == "BATTLE" }
+    }
+
+    private fun loadWispCard(): WispCard {
+        val registry = WispCardRegistry()
+        registry.loadFromCsv(Commons.WISP_LIST)
+        return registry.getAllCards().first()
     }
 
     private fun createRoundDeck(): RoundDeck {
@@ -117,6 +161,35 @@ class RoundBattleTest {
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+    }
+
+    private class SequenceBattleDecisionDirector(
+        private val playerId: Int,
+        private val callOrder: MutableList<Int>,
+        private val actions: List<MainAction>
+    ) : DecisionDirector {
+        private var index = 0
+
+        override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
+            callOrder.add(playerId)
+            return actions.getOrElse(index++) { actions.last() }
+        }
+        override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+    }
+
+    private class TrackingWispCardEffectExecutor : WispCardEffectExecutor() {
+        val cards = mutableListOf<WispCard>()
+
+        override fun invoke(
+            table: Table,
+            player: Player,
+            card: WispCard
+        ) {
+            cards.add(card)
+        }
     }
 
     private class FixedDie(

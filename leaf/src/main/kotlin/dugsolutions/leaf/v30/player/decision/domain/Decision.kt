@@ -25,7 +25,8 @@ sealed interface Decision {
         val player: Player,
         val roundCard: RoundCard,
         val table: Table,
-        val battleGridSnapshot: BattleGridSnapshot
+        val battleGridSnapshot: BattleGridSnapshot,
+        val actionsRemaining: Int
     ) : Decision
 
     data class ChooseItemsToBuy(

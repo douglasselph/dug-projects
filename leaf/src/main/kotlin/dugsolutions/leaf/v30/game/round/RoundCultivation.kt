@@ -2,8 +2,10 @@ package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
@@ -20,6 +22,7 @@ class RoundCultivation(
     chronicle: Chronicle = GameChronicle(),
     private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
     private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
+    private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor(),
     private val playerOrder: PlayerOrder = PlayerOrder(),
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) : RoundBase(table, card, chronicle) {
@@ -27,15 +30,27 @@ class RoundCultivation(
 
     private companion object {
         const val ACTIONS_PER_PLAYER = 2
+        const val MAX_MAIN_ACTION_ATTEMPTS = 10
     }
 
     override fun performMainActions() {
         table.players.forEach { player ->
-            repeat(ACTIONS_PER_PLAYER) { actionIndex ->
-                performMainAction(
+            var actionsRemaining = ACTIONS_PER_PLAYER
+            var attempts = 0
+            while (actionsRemaining > 0) {
+                attempts++
+                if (attempts > MAX_MAIN_ACTION_ATTEMPTS) {
+                    throw MainActionException(
+                        "Exceeded $MAX_MAIN_ACTION_ATTEMPTS main action attempts for player ${player.id}"
+                    )
+                }
+                val actionSpent = performMainAction(
                     player = player,
-                    actionsRemaining = ACTIONS_PER_PLAYER - actionIndex
+                    actionsRemaining = actionsRemaining
                 )
+                if (actionSpent) {
+                    actionsRemaining--
+                }
             }
         }
     }
@@ -43,7 +58,7 @@ class RoundCultivation(
     private fun performMainAction(
         player: Player,
         actionsRemaining: Int
-    ) {
+    ): Boolean {
         when (
             val action = player.decisionDirector.chooseMainActionCultivation(
                 Decision.ChooseMainActionCultivation(
@@ -71,7 +86,16 @@ class RoundCultivation(
                 )
                 player.flipCreatureCardFaceDown(action.card)
             }
+            is MainAction.DoWispCard -> {
+                wispCardEffectExecutor(
+                    table = table,
+                    player = player,
+                    card = action.card
+                )
+                return false
+            }
         }
+        return true
     }
 
     fun performBuy() {

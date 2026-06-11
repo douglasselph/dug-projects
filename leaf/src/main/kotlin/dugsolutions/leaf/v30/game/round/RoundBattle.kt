@@ -4,6 +4,8 @@ import dugsolutions.leaf.v30.battle.Battle
 import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
@@ -14,8 +16,14 @@ class RoundBattle(
     table: Table,
     card: RoundCard,
     chronicle: Chronicle = GameChronicle(),
-    private val battle: Battle = table.battle
+    private val battle: Battle = table.battle,
+    private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor()
 ) : RoundBase(table, card, chronicle) {
+
+    private companion object {
+        const val ACTIONS_PER_PLAYER = 2
+        const val MAX_MAIN_ACTION_ATTEMPTS = 10
+    }
 
     fun prepare() {
         battle.setup(table.players)
@@ -26,22 +34,41 @@ class RoundBattle(
         val playersById = table.players.associateBy { it.id }
         snapshot.playerIdsInGridOrder.asReversed().forEach { playerId ->
             playersById[playerId]?.let { player ->
-                performMainAction(player, snapshot)
+                var actionsRemaining = ACTIONS_PER_PLAYER
+                var attempts = 0
+                while (actionsRemaining > 0) {
+                    attempts++
+                    if (attempts > MAX_MAIN_ACTION_ATTEMPTS) {
+                        throw MainActionException(
+                            "Exceeded $MAX_MAIN_ACTION_ATTEMPTS main action attempts for player ${player.id}"
+                        )
+                    }
+                    val actionSpent = performMainAction(
+                        player = player,
+                        snapshot = battle.snapshot(),
+                        actionsRemaining = actionsRemaining
+                    )
+                    if (actionSpent) {
+                        actionsRemaining--
+                    }
+                }
             }
         }
     }
 
     private fun performMainAction(
         player: Player,
-        snapshot: BattleGridSnapshot
-    ) {
+        snapshot: BattleGridSnapshot,
+        actionsRemaining: Int
+    ): Boolean {
         when (
-            player.decisionDirector.chooseMainActionBattle(
+            val action = player.decisionDirector.chooseMainActionBattle(
                 Decision.ChooseMainActionBattle(
                     player = player,
                     roundCard = card,
                     table = table,
-                    battleGridSnapshot = snapshot
+                    battleGridSnapshot = snapshot,
+                    actionsRemaining = actionsRemaining
                 )
             )
         ) {
@@ -50,7 +77,16 @@ class RoundBattle(
             }
             is MainAction.ExecuteCard -> {
             }
+            is MainAction.DoWispCard -> {
+                wispCardEffectExecutor(
+                    table = table,
+                    player = player,
+                    card = action.card
+                )
+                return false
+            }
         }
+        return true
     }
 
     fun performSupportActions() {

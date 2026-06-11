@@ -6,8 +6,10 @@ import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
 import dugsolutions.leaf.v30.player.Player
@@ -32,7 +34,9 @@ import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
+import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
 class RoundCultivationTest {
@@ -90,6 +94,50 @@ class RoundCultivationTest {
     }
 
     @Test
+    fun performMainActions_whenDecisionIsWispCard_doesNotSpendMainAction() {
+        val wispCard = loadWispCard()
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    MainAction.DoWispCard(wispCard),
+                    MainAction.PullDie,
+                    MainAction.PullDie
+                )
+            )
+        )
+        val dice = SampleDie(Randomizer.create(seed = 3L))
+        player.addDiceToSupply(listOf(dice.d4, dice.d6))
+        val table = createTable().add(player)
+        val wispCardEffectExecutor = TrackingWispCardEffectExecutor()
+        val round = RoundCultivation(
+            table = table,
+            card = loadCultivationCard(),
+            wispCardEffectExecutor = wispCardEffectExecutor
+        )
+
+        round.performMainActions()
+
+        assertEquals(listOf(wispCard), wispCardEffectExecutor.cards)
+        assertEquals(2, player.diceHand.size)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionAlwaysReturnsWispCard_throwsAfterSafeguardLimit() {
+        val wispCard = loadWispCard()
+        val player = Player(StaticMainActionDirector(MainAction.DoWispCard(wispCard)))
+        val table = createTable().add(player)
+        val round = RoundCultivation(
+            table = table,
+            card = loadCultivationCard(),
+            wispCardEffectExecutor = TrackingWispCardEffectExecutor()
+        )
+
+        assertThrows<MainActionException> {
+            round.performMainActions()
+        }
+    }
+
+    @Test
     fun performBuy_buysDiceCardsRemovesCrittersAndDiscardsHandDiceInPlayerOrder() {
         val card = loadGameCard("Root_05_01")
         val player = Player(
@@ -143,6 +191,12 @@ class RoundCultivationTest {
             .getCard(name)
             ?: error("Missing test game card: $name")
 
+    private fun loadWispCard(): WispCard =
+        WispCardRegistry()
+            .apply { loadFromCsv(Commons.WISP_LIST) }
+            .getAllCards()
+            .first()
+
     private fun createRoundDeck(): RoundDeck {
         val registry = RoundCardRegistry()
         registry.loadFromCsv(Commons.ROUND_CARD_LIST)
@@ -165,6 +219,27 @@ class RoundCultivationTest {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
         override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = action
         override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = action
+        override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
+        override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
+    }
+
+    private class SequenceMainActionDirector(
+        private val actions: List<MainAction>
+    ) : DecisionDirector {
+        private var index = 0
+
+        override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
+            return actions.getOrElse(index++) { actions.last() }
+        }
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = chooseMainActionCultivation(
+            Decision.ChooseMainActionCultivation(
+                player = input.player,
+                roundCard = input.roundCard,
+                table = input.table,
+                actionsRemaining = input.actionsRemaining
+            )
+        )
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
     }
@@ -199,6 +274,18 @@ class RoundCultivationTest {
             table: Table,
             player: Player,
             card: GameCard
+        ) {
+            cards.add(card)
+        }
+    }
+
+    private class TrackingWispCardEffectExecutor : WispCardEffectExecutor() {
+        val cards = mutableListOf<WispCard>()
+
+        override fun invoke(
+            table: Table,
+            player: Player,
+            card: WispCard
         ) {
             cards.add(card)
         }
