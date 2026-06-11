@@ -6,6 +6,6 @@ import org.koin.dsl.module
 
 val tableModule: Module = module {
 
-    single { Table(get(), get()) }
+    single { Table(get(), get(), get()) }
     single { TableConfigFactory(get(), get(), get()) }
 }

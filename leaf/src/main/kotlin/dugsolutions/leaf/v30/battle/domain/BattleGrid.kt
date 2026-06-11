@@ -16,7 +16,8 @@ class BattleGrid(
         require(playerIds.distinct().size == playerIds.size) { "Battle grid player ids must be unique: $playerIds" }
     }
 
-    val playerIds: List<Int>
+    // Player ids are returned left-to-right by battle grid column order.
+    val playerIdsInGridOrder: List<Int>
         get() = columns.map { it.playerId }
 
     fun getColumn(playerId: Int): BattleColumn {
@@ -60,4 +61,8 @@ class BattleGrid(
 
 data class BattleGridSnapshot(
     val columns: List<BattleColumnSnapshot>
-)
+) {
+    // Player ids are returned left-to-right by battle grid column order.
+    val playerIdsInGridOrder: List<Int>
+        get() = columns.map { it.playerId }
+}

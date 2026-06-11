@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v30.table
 
+import dugsolutions.leaf.v30.battle.Battle
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.round.RoundDeck
@@ -7,7 +8,8 @@ import dugsolutions.leaf.v30.table.domain.TableConfig
 
 class Table(
     val grove: Grove,
-    val roundDeck: RoundDeck
+    val roundDeck: RoundDeck,
+    val battle: Battle = Battle()
 ) {
     private val _players = mutableListOf<Player>()
 

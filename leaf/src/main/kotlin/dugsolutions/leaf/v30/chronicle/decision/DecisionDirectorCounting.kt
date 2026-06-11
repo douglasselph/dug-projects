@@ -18,9 +18,14 @@ class DecisionDirectorCounting(
         return delegate.chooseCritter(input)
     }
 
-    override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
+    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
         decisionCountLog(decisionCostEvaluator(input))
-        return delegate.chooseMainAction(input)
+        return delegate.chooseMainActionCultivation(input)
+    }
+
+    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
+        decisionCountLog(decisionCostEvaluator(input))
+        return delegate.chooseMainActionBattle(input)
     }
 
     override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {

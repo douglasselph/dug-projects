@@ -277,7 +277,11 @@ class RoundBaseTest {
             return Critter.WORM
         }
 
-        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
+            return MainAction.PullDie
+        }
+
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
             return MainAction.PullDie
         }
 
@@ -294,7 +298,8 @@ class RoundBaseTest {
         private val cards: GameCards
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = MainAction.PullDie
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = MainAction.PullDie
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
             return CardsToRefresh(cards)

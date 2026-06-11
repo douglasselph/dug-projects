@@ -23,13 +23,13 @@ val appModule: Module = module {
 
 val appModules = listOf(
     appModule,
-    battleModule,
     cardsModule,
     wispModule,
     groveModule,
     roundModule,
-    tableModule,
     chronicleModule,
+    battleModule,
+    tableModule,
     playerModule,
     gameModule
 )

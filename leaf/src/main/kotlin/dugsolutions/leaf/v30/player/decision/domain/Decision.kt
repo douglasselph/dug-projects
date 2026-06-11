@@ -1,9 +1,11 @@
 package dugsolutions.leaf.v30.player.decision.domain
 
+import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.round.domain.RoundCard
+import dugsolutions.leaf.v30.table.Table
 
 sealed interface Decision {
 
@@ -12,10 +14,18 @@ sealed interface Decision {
         val availableCritters: List<Critter>
     ) : Decision
 
-    data class ChooseMainAction(
+    data class ChooseMainActionCultivation(
         val player: Player,
         val roundCard: RoundCard,
+        val table: Table,
         val actionsRemaining: Int
+    ) : Decision
+
+    data class ChooseMainActionBattle(
+        val player: Player,
+        val roundCard: RoundCard,
+        val table: Table,
+        val battleGridSnapshot: BattleGridSnapshot
     ) : Decision
 
     data class ChooseItemsToBuy(

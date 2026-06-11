@@ -162,7 +162,8 @@ class RoundCultivationTest {
         private val action: MainAction
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = action
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = action
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = action
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
     }
@@ -171,7 +172,8 @@ class RoundCultivationTest {
         private val itemsToBuy: ItemsToBuy
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction = MainAction.PullDie
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = MainAction.PullDie
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = itemsToBuy
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
     }

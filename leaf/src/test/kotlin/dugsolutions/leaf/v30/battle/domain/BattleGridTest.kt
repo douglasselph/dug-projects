@@ -17,7 +17,7 @@ class BattleGridTest {
     fun constructor_withFourUniquePlayers_createsColumns() {
         val grid = BattleGrid(listOf(1, 2, 3, 4))
 
-        assertEquals(listOf(1, 2, 3, 4), grid.playerIds)
+        assertEquals(listOf(1, 2, 3, 4), grid.playerIdsInGridOrder)
         assertTrue(grid.getSquare(2, BattleStrikeRow.STRIKE_1).isEmpty)
     }
 

@@ -40,10 +40,11 @@ class RoundCultivation(
         actionsRemaining: Int
     ) {
         when (
-            val action = player.decisionDirector.chooseMainAction(
-                Decision.ChooseMainAction(
+            val action = player.decisionDirector.chooseMainActionCultivation(
+                Decision.ChooseMainActionCultivation(
                     player = player,
                     roundCard = card,
+                    table = table,
                     actionsRemaining = actionsRemaining
                 )
             )

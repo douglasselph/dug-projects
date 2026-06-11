@@ -79,10 +79,11 @@ class DecisionDirectorBaselineTest {
 
     @Test
     fun chooseMainAction_returnsPullDie() {
-        val result = SUT.chooseMainAction(
-            Decision.ChooseMainAction(
+        val result = SUT.chooseMainActionCultivation(
+            Decision.ChooseMainActionCultivation(
                 player = Player(),
                 roundCard = sampleRoundCard(),
+                table = createTable(),
                 actionsRemaining = 2
             )
         )
@@ -135,6 +136,18 @@ class DecisionDirectorBaselineTest {
 
     private fun createGrove(): Grove {
         return Grove(createWispDeck())
+    }
+
+    private fun createTable(): Table {
+        return Table(createGrove(), createRoundDeck())
+    }
+
+    private fun createRoundDeck(): RoundDeck {
+        val registry = RoundCardRegistry()
+        registry.loadFromCsv(Commons.ROUND_CARD_LIST)
+        val manager = RoundCardManager(RoundCardsFactory())
+        manager.loadCards(registry)
+        return RoundDeck(manager, IdentityRandomizer())
     }
 
     private fun createWispDeck(): WispDeck {

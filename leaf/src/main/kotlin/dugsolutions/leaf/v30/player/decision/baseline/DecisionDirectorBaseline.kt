@@ -24,7 +24,11 @@ class DecisionDirectorBaseline : DecisionDirector {
         }
     }
 
-    override fun chooseMainAction(input: Decision.ChooseMainAction): MainAction {
+    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
+        return MainAction.PullDie
+    }
+
+    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
         return MainAction.PullDie
     }
 

@@ -27,7 +27,7 @@ class BattleTest {
 
         battle.setup(players)
 
-        assertEquals(listOf(2, 3, 1, 4), battle.grid.playerIds)
+        assertEquals(listOf(2, 3, 1, 4), battle.grid.playerIdsInGridOrder)
     }
 
     @Test
