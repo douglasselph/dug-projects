@@ -23,7 +23,7 @@ abstract class RoundBase(
         const val ROLL_GAIN_WISP = 2
     }
 
-    open fun run() {
+    open fun performMainActions() {
     }
 
     fun drawDice() {

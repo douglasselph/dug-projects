@@ -6,7 +6,9 @@ import dugsolutions.leaf.v30.cards.domain.GameCards
 import dugsolutions.leaf.v30.game.round.RoundBattle
 import dugsolutions.leaf.v30.game.round.RoundCultivation
 import dugsolutions.leaf.v30.grove.Grove
+import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
@@ -69,7 +71,11 @@ class GameTest {
     fun run_whenNextRoundCardIsBattle_runsBattleRound() {
         val roundDeck = createRoundDeck()
         roundDeck.setup(numBattle = 1, numCultivation = 0)
-        val game = Game(createTable(roundDeck))
+        val table = createTable(roundDeck)
+        repeat(4) { index ->
+            table.add(playerWithBattleDice(index + 1))
+        }
+        val game = Game(table)
 
         val result = game.run()
 
@@ -105,6 +111,30 @@ class GameTest {
             .apply { loadFromCsv(Commons.CARD_LIST) }
             .getCard(name)
             ?: error("Missing test card: $name")
+
+    private fun playerWithBattleDice(id: Int): Player {
+        return Player(id = id).apply {
+            addDiceToSupply(
+                listOf(
+                    FixedDie(6, 4),
+                    FixedDie(8, 3),
+                    FixedDie(10, 2),
+                    FixedDie(12, 1)
+                )
+            )
+        }
+    }
+
+    private class FixedDie(
+        sides: Int,
+        value: Int
+    ) : Die(sides) {
+        init {
+            adjustTo(value)
+        }
+
+        override fun roll(): Die = this
+    }
 
     private class IdentityRandomizer : Randomizer {
         override fun nextBoolean(): Boolean = throw UnsupportedOperationException()

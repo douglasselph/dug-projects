@@ -4,6 +4,7 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.cards.domain.GameCards
+import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
 import dugsolutions.leaf.v30.player.Player
@@ -19,6 +20,7 @@ import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -95,6 +97,21 @@ class TableTest {
         assertEquals(8, grove.cardStacks.getCount(GroveCardStackID.ROOT_5))
         assertEquals(30, grove.wispDeck.remaining)
         assertEquals(3, roundDeck.remaining)
+    }
+
+    @Test
+    fun currentRoundType_whenNoTopRoundCard_throwsException() {
+        assertThrows<CurrentRoundNotSetException> {
+            SUT.currentRoundType
+        }
+    }
+
+    @Test
+    fun currentRoundType_whenRoundDeckHasTopCard_returnsTopCardType() {
+        roundDeck.setup(numBattle = 0, numCultivation = 1)
+        val card = roundDeck.next()
+
+        assertEquals(card!!.cardType, SUT.currentRoundType)
     }
 
     private fun createWispDeck(): WispDeck {

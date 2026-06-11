@@ -21,7 +21,7 @@ class RoundBattle(
         battle.setup(table.players)
     }
 
-    fun performMainActions() {
+    override fun performMainActions() {
         val snapshot = battle.snapshot()
         val playersById = table.players.associateBy { it.id }
         snapshot.playerIdsInGridOrder.asReversed().forEach { playerId ->
@@ -51,5 +51,9 @@ class RoundBattle(
             is MainAction.ExecuteCard -> {
             }
         }
+    }
+
+    fun performSupportActions() {
+
     }
 }

@@ -24,7 +24,12 @@ class RoundCultivation(
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) : RoundBase(table, card, chronicle) {
 
-    fun performMainActions() {
+
+    private companion object {
+        const val ACTIONS_PER_PLAYER = 2
+    }
+
+    override fun performMainActions() {
         table.players.forEach { player ->
             repeat(ACTIONS_PER_PLAYER) { actionIndex ->
                 performMainAction(
@@ -51,7 +56,7 @@ class RoundCultivation(
         ) {
             MainAction.PullDie -> player.drawDiceWithRefresh()
             is MainAction.DoRoundAction -> {
-                roundActionExecutor.execute(
+                roundActionExecutor(
                     table = table,
                     player = player,
                     card = card,
@@ -59,7 +64,7 @@ class RoundCultivation(
                 )
             }
             is MainAction.ExecuteCard -> {
-                gameCardEffectExecutor.execute(
+                gameCardEffectExecutor(
                     table = table,
                     player = player,
                     card = action.card
@@ -108,7 +113,4 @@ class RoundCultivation(
         }
     }
 
-    private companion object {
-        const val ACTIONS_PER_PLAYER = 2
-    }
 }

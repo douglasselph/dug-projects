@@ -7,7 +7,7 @@ import dugsolutions.leaf.v30.table.Table
 
 open class RoundActionExecutor {
 
-    open fun execute(
+    open operator fun invoke(
         table: Table,
         player: Player,
         card: RoundCard,

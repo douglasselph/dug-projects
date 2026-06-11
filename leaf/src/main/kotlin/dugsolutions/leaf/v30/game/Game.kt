@@ -18,12 +18,23 @@ class Game(
     }
 
     fun run(): RoundBase? {
-        val card = table.roundDeck.pull() ?: return null
+        val card = table.roundDeck.next() ?: return null
         val round = when (card.cardType) {
             RoundCardType.BATTLE -> RoundBattle(table, card, chronicle)
             RoundCardType.CULTIVATION -> RoundCultivation(table, card, chronicle)
         }
-        round.run()
+        round.drawDice()
+        round.rollDice()
+
+        if (round is RoundCultivation) {
+            round.performMainActions()
+            round.performBuy()
+        } else if (round is RoundBattle) {
+            round.prepare()
+            round.performMainActions()
+            round.performSupportActions()
+        }
+        round.cleanup()
         return round
     }
 }

@@ -57,15 +57,15 @@ class RoundDeckTest {
     }
 
     @Test
-    fun pull_returnsCultivationCardsFirstThenBattleCards() {
+    fun next_returnsCultivationCardsFirstThenBattleCards() {
         val deck = RoundDeck(manager, IdentityRandomizer())
         deck.setup(numBattle = 2, numCultivation = 2)
 
         val pulledTypes = listOfNotNull(
-            deck.pull()?.cardType,
-            deck.pull()?.cardType,
-            deck.pull()?.cardType,
-            deck.pull()?.cardType
+            deck.next()?.cardType,
+            deck.next()?.cardType,
+            deck.next()?.cardType,
+            deck.next()?.cardType
         )
 
         assertEquals(
@@ -77,17 +77,31 @@ class RoundDeckTest {
             ),
             pulledTypes
         )
+        assertEquals(RoundCardType.BATTLE, deck.top?.cardType)
+        assertNull(deck.next())
         assertTrue(deck.isEmpty)
     }
 
     @Test
-    fun pull_whenDeckEmpty_returnsNull() {
+    fun next_whenDeckEmpty_returnsNull() {
         val deck = RoundDeck(manager, IdentityRandomizer())
         deck.setup(numBattle = 0, numCultivation = 0)
 
-        assertNull(deck.pull())
+        assertNull(deck.next())
         assertEquals(0, deck.remaining)
         assertTrue(deck.isEmpty)
+    }
+
+    @Test
+    fun top_beforeNext_returnsNullThenAfterNextReturnsCurrentShowingCard() {
+        val deck = RoundDeck(manager, IdentityRandomizer())
+        deck.setup(numBattle = 1, numCultivation = 1)
+
+        assertNull(deck.top)
+        val first = deck.next()
+
+        assertEquals(first, deck.top)
+        assertEquals(first, deck.top)
     }
 
     @Test

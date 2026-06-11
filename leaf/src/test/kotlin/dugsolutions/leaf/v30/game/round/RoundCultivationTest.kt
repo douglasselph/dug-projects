@@ -75,6 +75,7 @@ class RoundCultivationTest {
         val player = Player(StaticMainActionDirector(MainAction.ExecuteCard(card)))
         player.addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
         val table = createTable().add(player)
+        table.roundDeck.next()
         val gameCardEffectExecutor = TrackingGameCardEffectExecutor()
         val round = RoundCultivation(
             table = table,
@@ -181,7 +182,7 @@ class RoundCultivationTest {
     private class TrackingRoundActionExecutor : RoundActionExecutor() {
         val actions = mutableListOf<RoundAction>()
 
-        override fun execute(
+        override fun invoke(
             table: Table,
             player: Player,
             card: RoundCard,
@@ -194,7 +195,7 @@ class RoundCultivationTest {
     private class TrackingGameCardEffectExecutor : GameCardEffectExecutor() {
         val cards = mutableListOf<GameCard>()
 
-        override fun execute(
+        override fun invoke(
             table: Table,
             player: Player,
             card: GameCard

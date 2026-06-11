@@ -10,9 +10,13 @@ class RoundDeck(
     private val randomizer: Randomizer
 ) {
     private var drawPile = RoundCards(emptyList())
+    private var topCard: RoundCard? = null
 
     val cards: RoundCards
         get() = drawPile
+
+    val top: RoundCard?
+        get() = topCard
 
     val remaining: Int
         get() = drawPile.size
@@ -39,11 +43,14 @@ class RoundDeck(
         drawPile = RoundCards(
             cultivationCards.take(numCultivation) + battleCards.take(numBattle)
         )
+        topCard = null
     }
 
-    fun pull(): RoundCard? {
-        val card = drawPile.getOrNull(0) ?: return null
-        drawPile = RoundCards(drawPile.cards.drop(1))
-        return card
+    fun next(): RoundCard? {
+        if (topCard != null) {
+            drawPile = RoundCards(drawPile.cards.drop(1))
+        }
+        topCard = drawPile.getOrNull(0)
+        return topCard
     }
 }

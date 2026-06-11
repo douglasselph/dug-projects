@@ -1,9 +1,11 @@
 package dugsolutions.leaf.v30.table
 
 import dugsolutions.leaf.v30.battle.Battle
+import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.round.RoundDeck
+import dugsolutions.leaf.v30.round.domain.RoundCardType
 import dugsolutions.leaf.v30.table.domain.TableConfig
 
 class Table(
@@ -15,6 +17,9 @@ class Table(
 
     val players: List<Player>
         get() = _players.toList()
+
+    val currentRoundType: RoundCardType
+        get() = roundDeck.top?.cardType ?: throw CurrentRoundNotSetException()
 
     fun add(player: Player): Table {
         _players.add(player)
