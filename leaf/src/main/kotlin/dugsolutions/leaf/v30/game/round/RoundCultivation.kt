@@ -27,7 +27,6 @@ class RoundCultivation(
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) : RoundBase(table, card, chronicle) {
 
-
     private companion object {
         const val ACTIONS_PER_PLAYER = 2
         const val MAX_MAIN_ACTION_ATTEMPTS = 10

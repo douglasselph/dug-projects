@@ -64,18 +64,20 @@ class GameCardRegistryTest {
     fun loadFromCsv_withCardList_convertsKnownEffects() {
         // Act
         cardRegistry.loadFromCsv(Commons.CARD_LIST)
-        val card = cardRegistry.getCard("Flower_17_04")
 
         // Assert
-        assertNotNull(card)
-        assertEquals(CardEffect.DRAW_TWO_DICE, card.effect)
+        assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER, cardRegistry.getCard("Root_07_01")?.effect)
+        assertEquals(CardEffect.GAIN_D4_OR_RETURN_D4_RAISE_DIE_PLUS_4, cardRegistry.getCard("Flower_11_03")?.effect)
+        assertEquals(CardEffect.DRAW_TWO_DICE, cardRegistry.getCard("Flower_17_04")?.effect)
+        assertEquals(CardEffect.RAISE_DIE_PLUS_4, cardRegistry.getCard("Vine_07_04")?.effect)
+        assertEquals(CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT, cardRegistry.getCard("Vine_09_01")?.effect)
     }
 
     @Test
     fun loadFromCsv_withCardList_parsesEmptyImageFieldsAsNull() {
         // Act
         cardRegistry.loadFromCsv(Commons.CARD_LIST)
-        val card = cardRegistry.getCard("Root_05_02")
+        val card = cardRegistry.getCard("Root_05_04")
 
         // Assert
         assertNotNull(card)

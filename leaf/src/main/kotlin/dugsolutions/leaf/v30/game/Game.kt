@@ -2,6 +2,9 @@ package dugsolutions.leaf.v30.game
 
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
+import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.game.round.RoundBase
 import dugsolutions.leaf.v30.game.round.RoundBattle
 import dugsolutions.leaf.v30.game.round.RoundCultivation
@@ -11,7 +14,10 @@ import dugsolutions.leaf.v30.table.domain.TableConfig
 
 class Game(
     private val table: Table,
-    private val chronicle: Chronicle = GameChronicle()
+    private val chronicle: Chronicle = GameChronicle(),
+    private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
+    private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
+    private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor()
 ) {
     fun setup(config: TableConfig) {
         table.setup(config)
@@ -20,8 +26,20 @@ class Game(
     fun run(): RoundBase? {
         val card = table.roundDeck.next() ?: return null
         val round = when (card.cardType) {
-            RoundCardType.BATTLE -> RoundBattle(table, card, chronicle)
-            RoundCardType.CULTIVATION -> RoundCultivation(table, card, chronicle)
+            RoundCardType.BATTLE -> RoundBattle(
+                table = table,
+                card = card,
+                chronicle = chronicle,
+                wispCardEffectExecutor = wispCardEffectExecutor
+            )
+            RoundCardType.CULTIVATION -> RoundCultivation(
+                table = table,
+                card = card,
+                chronicle = chronicle,
+                roundActionExecutor = roundActionExecutor,
+                gameCardEffectExecutor = gameCardEffectExecutor,
+                wispCardEffectExecutor = wispCardEffectExecutor
+            )
         }
         round.drawDice()
         round.rollDice()

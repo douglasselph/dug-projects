@@ -1,10 +1,21 @@
 package dugsolutions.leaf.v30.game.di
 
 import dugsolutions.leaf.v30.game.Game
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorCultivation
+import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
+import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 val gameModule: Module = module {
 
-    single { Game(get(), get()) }
+    single { RoundActionExecutor() }
+    single { WispCardEffectExecutor() }
+    single { GameCardEffectExecutorCultivation(get()) }
+    single { GameCardEffectExecutorBattle() }
+    single { GameCardEffectExecutor(get(), get()) }
+    single { Game(get(), get(), get(), get(), get()) }
+
 }
