@@ -64,6 +64,56 @@ class GameChronicle(
                 title = moment.title,
                 reason = moment.reason
             )
+            is Moment.RoundRevealed -> GameEntry.RoundRevealed(
+                sequence = sequence,
+                time = time,
+                roundCardId = moment.card.id,
+                roundCardName = moment.card.name,
+                roundCardTitle = moment.card.title,
+                roundCardType = moment.card.cardType
+            )
+            is Moment.DiceRolled -> GameEntry.DiceRolled(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                dice = moment.player.diceHand.copy
+            )
+            is Moment.Reward -> GameEntry.Reward(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                die = moment.die.copy,
+                critter = moment.critter,
+                wispCardId = moment.wispCard?.id,
+                wispCardName = moment.wispCard?.name,
+                wispCardTitle = moment.wispCard?.title,
+                token = moment.token
+            )
+            is Moment.MainAction -> GameEntry.MainAction(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                action = moment.action,
+                detail = moment.detail,
+                die = moment.die?.copy,
+                token = moment.token,
+                cardId = moment.card?.id,
+                cardName = moment.card?.name,
+                wispCardId = moment.wispCard?.id,
+                wispCardName = moment.wispCard?.name
+            )
+            is Moment.GameCardEffect -> GameEntry.GameCardEffect(
+                sequence = sequence,
+                time = time,
+                playerId = moment.player.id,
+                cardId = moment.card.id,
+                cardName = moment.card.name,
+                effect = moment.effect,
+                detail = moment.detail,
+                die = moment.die?.copy,
+                token = moment.token,
+                critter = moment.critter
+            )
         }
     }
 }

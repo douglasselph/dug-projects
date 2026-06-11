@@ -14,7 +14,7 @@ import dugsolutions.leaf.v30.table.Table
 abstract class RoundBase(
     protected val table: Table,
     val card: RoundCard,
-    private val chronicle: Chronicle = GameChronicle(),
+    protected val chronicle: Chronicle = GameChronicle(),
     private val checkRefresh: CheckRefresh = CheckRefresh()
 ) {
 
@@ -39,6 +39,7 @@ abstract class RoundBase(
     fun rollDice() {
         table.players.forEach { player ->
             player.rollDice()
+            chronicle(Moment.DiceRolled(player))
         }
     }
 
@@ -55,8 +56,13 @@ abstract class RoundBase(
         die: Die
     ) {
         when (die.value) {
-            ROLL_GAIN_CRITTER -> gainCritter(player)
-            ROLL_GAIN_WISP -> table.grove.drawWispCard()?.let { player.addWispCard(it) }
+            ROLL_GAIN_CRITTER -> gainCritter(player)?.let { critter ->
+                chronicle(Moment.Reward(player = player, die = die, critter = critter))
+            }
+            ROLL_GAIN_WISP -> table.grove.drawWispCard()?.let { wispCard ->
+                player.addWispCard(wispCard)
+                chronicle(Moment.Reward(player = player, die = die, wispCard = wispCard))
+            }
         }
     }
 
@@ -94,7 +100,7 @@ abstract class RoundBase(
         }
     }
 
-    private fun gainCritter(player: Player) {
+    private fun gainCritter(player: Player): Critter? {
         val critter = player.decisionDirector.chooseCritter(
             Decision.ChooseCritter(
                 player = player,
@@ -103,7 +109,9 @@ abstract class RoundBase(
         )
         if (table.grove.remove(critter)) {
             player.addCritter(critter)
+            return critter
         }
+        return null
     }
 
     private fun availableCritters(): List<Critter> {

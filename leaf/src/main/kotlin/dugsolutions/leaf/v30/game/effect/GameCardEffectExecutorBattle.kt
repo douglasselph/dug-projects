@@ -112,6 +112,15 @@ open class GameCardEffectExecutorBattle(
         val target = action.target as? ExecuteTarget.PlayerDie ?: return
         val row = findTargetRow(table, target) ?: return
         table.battle.addBulwarkToken(target.player, row)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Placed a Bulwark token on player ${target.player.id}'s $row square",
+                die = target.die
+            )
+        )
     }
 
     private fun findTargetRow(

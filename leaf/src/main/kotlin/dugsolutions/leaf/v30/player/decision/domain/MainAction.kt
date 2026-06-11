@@ -14,7 +14,7 @@ sealed interface MainAction {
         val card: GameCard,
         val target: ExecuteTarget? = null
     ) : MainAction
-    data class DoWispCard(val card: WispCard): MainAction
+    data class PlayWispCard(val card: WispCard): MainAction
     data class PlayMulchToken(val token: Token.MULCH, val row: BattleStrikeRow? = null): MainAction
     data class PlayWaterToken(val onDie: Die? = null, val row: BattleStrikeRow? = null): MainAction
 }

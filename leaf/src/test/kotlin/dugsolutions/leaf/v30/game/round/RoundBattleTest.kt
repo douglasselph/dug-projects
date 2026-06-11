@@ -91,7 +91,7 @@ class RoundBattleTest {
                     playerId = 4,
                     callOrder = callOrder,
                     actions = listOf(
-                        MainAction.DoWispCard(wispCard),
+                        MainAction.PlayWispCard(wispCard),
                         MainAction.DoRoundAction(RoundAction.ACTION_1),
                         MainAction.DoRoundAction(RoundAction.ACTION_1)
                     )

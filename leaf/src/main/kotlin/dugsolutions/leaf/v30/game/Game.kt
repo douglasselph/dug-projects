@@ -2,6 +2,7 @@ package dugsolutions.leaf.v30.game
 
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
@@ -25,11 +26,13 @@ class Game(
 
     fun run(): RoundBase? {
         val card = table.roundDeck.next() ?: return null
+        chronicle(Moment.RoundRevealed(card))
         val round = when (card.cardType) {
             RoundCardType.BATTLE -> RoundBattle(
                 table = table,
                 card = card,
                 chronicle = chronicle,
+                gameCardEffectExecutor = gameCardEffectExecutor,
                 wispCardEffectExecutor = wispCardEffectExecutor
             )
             RoundCardType.CULTIVATION -> RoundCultivation(

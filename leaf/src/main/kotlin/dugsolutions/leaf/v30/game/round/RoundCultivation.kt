@@ -2,6 +2,8 @@ package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.MainActionType
+import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
@@ -69,13 +71,31 @@ class RoundCultivation(
                 )
             )
         ) {
-            MainAction.PullDie -> player.drawDiceWithRefresh()
+            MainAction.PullDie -> {
+                val die = player.drawDiceWithRefresh().roll()
+                chronicle(
+                    Moment.MainAction(
+                        player = player,
+                        action = MainActionType.PULL_DIE,
+                        detail = "Pulled and rolled a die into hand",
+                        die = die
+                    )
+                )
+                resolveReward(player, die)
+            }
             is MainAction.DoRoundAction -> {
                 roundActionExecutor(
                     table = table,
                     player = player,
                     card = card,
                     action = action.roundAction
+                )
+                chronicle(
+                    Moment.MainAction(
+                        player = player,
+                        action = MainActionType.DO_ROUND_ACTION,
+                        detail = "Used cultivation round action ${action.roundAction}"
+                    )
                 )
             }
             is MainAction.ExecuteCard -> {
@@ -85,12 +105,28 @@ class RoundCultivation(
                     action = action
                 )
                 player.flipCreatureCardFaceDown(action.card)
+                chronicle(
+                    Moment.MainAction(
+                        player = player,
+                        action = MainActionType.EXECUTE_CARD,
+                        detail = "Executed a creature card and flipped it face down",
+                        card = action.card
+                    )
+                )
             }
-            is MainAction.DoWispCard -> {
+            is MainAction.PlayWispCard -> {
                 wispCardEffectExecutor(
                     table = table,
                     player = player,
                     card = action.card
+                )
+                chronicle(
+                    Moment.MainAction(
+                        player = player,
+                        action = MainActionType.PLAY_WISP_CARD,
+                        detail = "Played a wisp card",
+                        wispCard = action.card
+                    )
                 )
                 return false
             }
@@ -115,6 +151,15 @@ class RoundCultivation(
         val die = dieFactory(sides).roll()
         player.addDieToHand(die)
         resolveReward(player, die)
+        chronicle(
+            Moment.MainAction(
+                player = player,
+                action = MainActionType.PLAY_MULCH_TOKEN,
+                detail = "Played a mulch token to add a rolled die to hand",
+                die = die,
+                token = token
+            )
+        )
     }
 
     private fun handleWaterToken(
@@ -128,6 +173,14 @@ class RoundCultivation(
         if (die == null) {
             if (!player.remove(Token.WATER)) return
             player.flipAllCreatureCardsFaceUp()
+            chronicle(
+                Moment.MainAction(
+                    player = player,
+                    action = MainActionType.PLAY_WATER_TOKEN,
+                    detail = "Played a water token to refresh all creature cards",
+                    token = Token.WATER
+                )
+            )
             return
         }
         if (!player.diceHand.hasDie(die)) {
@@ -137,6 +190,15 @@ class RoundCultivation(
         if (!player.rerollDie(die)) {
             throw MainActionException("Water token die was not found in player hand")
         }
+        chronicle(
+            Moment.MainAction(
+                player = player,
+                action = MainActionType.PLAY_WATER_TOKEN,
+                detail = "Played a water token to reroll a hand die",
+                die = die,
+                token = Token.WATER
+            )
+        )
     }
 
     fun performBuy() {

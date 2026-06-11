@@ -1,6 +1,13 @@
 package dugsolutions.leaf.v30.chronicle.domain
 
+import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.cards.domain.GameCardID
+import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.random.die.DieValue
+import dugsolutions.leaf.v30.round.domain.RoundCardID
+import dugsolutions.leaf.v30.round.domain.RoundCardType
+import dugsolutions.leaf.v30.wisp.domain.WispCardID
 
 sealed class GameEntry(
     open val sequence: Long,
@@ -34,5 +41,85 @@ sealed class GameEntry(
         time = time,
         kind = EntryKind.LOADING_WARNING,
         playerId = 0
+    )
+
+    data class RoundRevealed(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        val roundCardId: RoundCardID,
+        val roundCardName: String,
+        val roundCardTitle: String,
+        val roundCardType: RoundCardType
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.ROUND_REVEALED,
+        playerId = 0
+    )
+
+    data class DiceRolled(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val dice: List<DieValue>
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.DICE_ROLLED,
+        playerId = playerId
+    )
+
+    data class Reward(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val die: DieValue,
+        val critter: Critter? = null,
+        val wispCardId: WispCardID? = null,
+        val wispCardName: String? = null,
+        val wispCardTitle: String? = null,
+        val token: Token? = null
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.REWARD,
+        playerId = playerId
+    )
+
+    data class MainAction(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val action: MainActionType,
+        val detail: String,
+        val die: DieValue? = null,
+        val token: Token? = null,
+        val cardId: GameCardID? = null,
+        val cardName: String? = null,
+        val wispCardId: WispCardID? = null,
+        val wispCardName: String? = null
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.MAIN_ACTION,
+        playerId = playerId
+    )
+
+    data class GameCardEffect(
+        override val sequence: Long,
+        override val time: GameTimeSnapshot,
+        override val playerId: Int,
+        val cardId: GameCardID,
+        val cardName: String,
+        val effect: CardEffect,
+        val detail: String,
+        val die: DieValue? = null,
+        val token: Token? = null,
+        val critter: Critter? = null
+    ) : GameEntry(
+        sequence = sequence,
+        time = time,
+        kind = EntryKind.GAME_CARD_EFFECT,
+        playerId = playerId
     )
 }

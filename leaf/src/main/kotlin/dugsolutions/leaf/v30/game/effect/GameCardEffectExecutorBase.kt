@@ -2,6 +2,7 @@ package dugsolutions.leaf.v30.game.effect
 
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
@@ -23,6 +24,15 @@ abstract class GameCardEffectExecutorBase(
             player.addCritter(Critter.WORM)
         }
         player.replaceCritter(Critter.WORM, Critter.BOOSTED_WORM)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Gained a worm from the Grove and boosted this player's worms for the round",
+                critter = Critter.BOOSTED_WORM
+            )
+        )
     }
 
     protected open fun mulchDieFromDiscard(
@@ -36,6 +46,17 @@ abstract class GameCardEffectExecutorBase(
             table.grove.add(groveToken)
             return
         }
-        player.add(Token.MULCH(DieSides.from(die.sides)))
+        val token = Token.MULCH(DieSides.from(die.sides))
+        player.add(token)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Mulched the highest-sided die from discard and gained a matching mulch token",
+                die = die,
+                token = token
+            )
+        )
     }
 }
