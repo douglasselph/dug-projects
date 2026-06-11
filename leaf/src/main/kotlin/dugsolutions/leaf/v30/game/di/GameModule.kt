@@ -1,7 +1,6 @@
 package dugsolutions.leaf.v30.game.di
 
 import dugsolutions.leaf.v30.game.Game
-import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorCultivation
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
@@ -15,7 +14,6 @@ val gameModule: Module = module {
     single { WispCardEffectExecutor() }
     single { GameCardEffectExecutorCultivation(get()) }
     single { GameCardEffectExecutorBattle(get()) }
-    single { GameCardEffectExecutor(get(), get()) }
-    single { Game(get(), get(), get(), get(), get()) }
+    single { Game(get(), get(), get(), get(), get(), get()) }
 
 }

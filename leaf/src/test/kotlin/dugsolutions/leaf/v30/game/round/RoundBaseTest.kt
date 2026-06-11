@@ -16,7 +16,8 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
@@ -327,12 +328,12 @@ class RoundBaseTest {
             return Critter.WORM
         }
 
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
-            return MainAction.PullDie
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation {
+            return MainActionCultivation.PullDie
         }
 
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
-            return MainAction.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
+            return MainActionBattle.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
         }
 
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
@@ -352,8 +353,10 @@ class RoundBaseTest {
         private val cards: GameCards
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction = MainAction.PullDie
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
+            return MainActionBattle.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
+        }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh {
             return CardsToRefresh(cards)

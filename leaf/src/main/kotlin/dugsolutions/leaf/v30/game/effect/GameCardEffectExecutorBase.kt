@@ -1,12 +1,14 @@
 package dugsolutions.leaf.v30.game.effect
 
+import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.table.Table
 
@@ -17,7 +19,23 @@ abstract class GameCardEffectExecutorBase(
     protected open fun gainWormAndBoostWorms(
         table: Table,
         player: Player,
-        action: MainAction.ExecuteCard
+        action: MainActionCultivation.ExecuteCard
+    ) {
+        gainWormAndBoostWorms(table, player, action.card)
+    }
+
+    protected open fun gainWormAndBoostWorms(
+        table: Table,
+        player: Player,
+        action: MainActionBattle.ExecuteCard
+    ) {
+        gainWormAndBoostWorms(table, player, action.card)
+    }
+
+    private fun gainWormAndBoostWorms(
+        table: Table,
+        player: Player,
+        card: GameCard
     ) {
         if (table.grove.has(Critter.WORM)) {
             table.grove.remove(Critter.WORM)
@@ -27,8 +45,8 @@ abstract class GameCardEffectExecutorBase(
         chronicle(
             Moment.GameCardEffect(
                 player = player,
-                card = action.card,
-                effect = action.card.effect,
+                card = card,
+                effect = card.effect,
                 detail = "Gained a worm from the Grove and boosted this player's worms for the round",
                 critter = Critter.BOOSTED_WORM
             )
@@ -38,7 +56,23 @@ abstract class GameCardEffectExecutorBase(
     protected open fun mulchDieFromDiscard(
         table: Table,
         player: Player,
-        action: MainAction.ExecuteCard
+        action: MainActionCultivation.ExecuteCard
+    ) {
+        mulchDieFromDiscard(table, player, action.card)
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        action: MainActionBattle.ExecuteCard
+    ) {
+        mulchDieFromDiscard(table, player, action.card)
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        card: GameCard
     ) {
         val groveToken = table.grove.remove(Token.MULCH()) ?: return
         val die = player.drawHighestDieFromDiscard()
@@ -51,8 +85,8 @@ abstract class GameCardEffectExecutorBase(
         chronicle(
             Moment.GameCardEffect(
                 player = player,
-                card = action.card,
-                effect = action.card.effect,
+                card = card,
+                effect = card.effect,
                 detail = "Mulched the highest-sided die from discard and gained a matching mulch token",
                 die = die,
                 token = token

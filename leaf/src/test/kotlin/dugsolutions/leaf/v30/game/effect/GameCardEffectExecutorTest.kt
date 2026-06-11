@@ -12,11 +12,11 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
-import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
@@ -30,54 +30,11 @@ import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class GameCardEffectExecutorTest {
-
-    @Test
-    fun invoke_whenCurrentRoundIsCultivation_dispatchesCultivationExecutor() {
-        val table = createTable(numBattle = 0, numCultivation = 1).apply { roundDeck.next() }
-        val player = Player()
-        val card = loadGameCard()
-        val action = MainAction.ExecuteCard(card, ExecuteTarget.PlayerDie(player, FixedDie(6, 3)))
-        val cultivation = TrackingCultivationExecutor()
-        val battle = TrackingBattleExecutor()
-        val executor = GameCardEffectExecutor(cultivation, battle)
-
-        executor(table, player, action)
-
-        assertEquals(listOf(action), cultivation.actions)
-        assertEquals(emptyList(), battle.actions)
-    }
-
-    @Test
-    fun invoke_whenCurrentRoundIsBattle_dispatchesBattleExecutor() {
-        val table = createTable(numBattle = 1, numCultivation = 0).apply { roundDeck.next() }
-        val player = Player()
-        val card = loadGameCard()
-        val action = MainAction.ExecuteCard(card, ExecuteTarget.PlayerDie(player, FixedDie(6, 3)))
-        val cultivation = TrackingCultivationExecutor()
-        val battle = TrackingBattleExecutor()
-        val executor = GameCardEffectExecutor(cultivation, battle)
-
-        executor(table, player, action)
-
-        assertEquals(emptyList(), cultivation.actions)
-        assertEquals(listOf(action), battle.actions)
-    }
-
-    @Test
-    fun invoke_whenCurrentRoundIsNotSet_throwsException() {
-        val table = createTable(numBattle = 1, numCultivation = 0)
-        val executor = GameCardEffectExecutor()
-
-        assertThrows<CurrentRoundNotSetException> {
-            executor(table, Player(), MainAction.ExecuteCard(loadGameCard()))
-        }
-    }
 
     @Test
     fun cultivationInvoke_whenCardEffectIsUnknown_recordsChronicleWarning() {
@@ -87,7 +44,7 @@ class GameCardEffectExecutorTest {
         val player = Player(id = 7)
         val card = loadGameCard().copy(effect = CardEffect.UNKNOWN)
 
-        executor(table, player, MainAction.ExecuteCard(card))
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
 
         val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
         assertEquals(WarningType.UNKNOWN_EFFECT, entry.type)
@@ -110,7 +67,7 @@ class GameCardEffectExecutorTest {
         val player = Player(id = 7)
         val card = loadGameCard().copy(effect = CardEffect.PLACE_BULWARK_TOKEN)
 
-        executor(table, player, MainAction.ExecuteCard(card))
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
 
         assertEquals(emptyList(), chronicle.getEntries())
     }
@@ -129,7 +86,7 @@ class GameCardEffectExecutorTest {
                 playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
             )
         )
-        val action = MainAction.ExecuteCard(
+        val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.PLACE_BULWARK_TOKEN),
             target = ExecuteTarget.PlayerDie(target, targetDie)
         )
@@ -149,7 +106,7 @@ class GameCardEffectExecutorTest {
         val player = Player(id = 7).apply {
             addCritter(Critter.WORM)
         }
-        val action = MainAction.ExecuteCard(
+        val action = MainActionCultivation.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.GAIN_WORM_AND_BOOST_WORMS)
         )
 
@@ -177,7 +134,7 @@ class GameCardEffectExecutorTest {
             )
         )
         table.battle.add(target, BattleStrikeRow.STRIKE_1, Critter.WORM)
-        val action = MainAction.ExecuteCard(
+        val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.GAIN_WORM_AND_BOOST_WORMS)
         )
 
@@ -201,7 +158,7 @@ class GameCardEffectExecutorTest {
             repeat(3) { drawDie() }
             discardHandDice()
         }
-        val action = MainAction.ExecuteCard(
+        val action = MainActionCultivation.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
         )
 
@@ -218,7 +175,7 @@ class GameCardEffectExecutorTest {
         val executor = GameCardEffectExecutorCultivation()
         val table = createTable(numBattle = 0, numCultivation = 1)
         val player = Player(id = 7)
-        val action = MainAction.ExecuteCard(
+        val action = MainActionCultivation.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
         )
 
@@ -239,7 +196,7 @@ class GameCardEffectExecutorTest {
             repeat(2) { drawDie() }
             discardHandDice()
         }
-        val action = MainAction.ExecuteCard(
+        val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
         )
 
@@ -290,30 +247,6 @@ class GameCardEffectExecutorTest {
         return Player(id = id).apply {
             dice.forEach { addDieToSupply(it) }
             repeat(dice.size) { drawDie() }
-        }
-    }
-
-    private class TrackingCultivationExecutor : GameCardEffectExecutorCultivation() {
-        val actions = mutableListOf<MainAction.ExecuteCard>()
-
-        override fun invoke(
-            table: Table,
-            player: Player,
-            action: MainAction.ExecuteCard
-        ) {
-            actions.add(action)
-        }
-    }
-
-    private class TrackingBattleExecutor : GameCardEffectExecutorBattle() {
-        val actions = mutableListOf<MainAction.ExecuteCard>()
-
-        override fun invoke(
-            table: Table,
-            player: Player,
-            action: MainAction.ExecuteCard
-        ) {
-            actions.add(action)
         }
     }
 

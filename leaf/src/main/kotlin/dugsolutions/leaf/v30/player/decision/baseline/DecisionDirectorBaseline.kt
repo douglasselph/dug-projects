@@ -1,11 +1,13 @@
 package dugsolutions.leaf.v30.player.decision.baseline
 
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 
 class DecisionDirectorBaseline : DecisionDirector {
@@ -25,12 +27,12 @@ class DecisionDirectorBaseline : DecisionDirector {
         }
     }
 
-    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
-        return MainAction.PullDie
+    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation {
+        return MainActionCultivation.PullDie
     }
 
-    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
-        return MainAction.PullDie
+    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
+        return MainActionBattle.PullDie(BattleStrikeRow.STRIKE_1)
     }
 
     override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {

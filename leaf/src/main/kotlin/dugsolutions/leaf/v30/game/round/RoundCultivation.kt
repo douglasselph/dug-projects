@@ -5,14 +5,14 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.MainActionType
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.game.domain.MainActionException
-import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorCultivation
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.random.die.di.DieFactory
@@ -24,7 +24,7 @@ class RoundCultivation(
     card: RoundCard,
     chronicle: Chronicle = GameChronicle(),
     private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
-    private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
+    private val gameCardEffectExecutor: GameCardEffectExecutorCultivation = GameCardEffectExecutorCultivation(),
     private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor(),
     private val playerOrder: PlayerOrder = PlayerOrder(),
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
@@ -71,7 +71,7 @@ class RoundCultivation(
                 )
             )
         ) {
-            MainAction.PullDie -> {
+            MainActionCultivation.PullDie -> {
                 val die = player.drawDiceWithRefresh().roll()
                 chronicle(
                     Moment.MainAction(
@@ -83,7 +83,7 @@ class RoundCultivation(
                 )
                 resolveReward(player, die)
             }
-            is MainAction.DoRoundAction -> {
+            is MainActionCultivation.DoRoundAction -> {
                 roundActionExecutor(
                     table = table,
                     player = player,
@@ -98,7 +98,7 @@ class RoundCultivation(
                     )
                 )
             }
-            is MainAction.ExecuteCard -> {
+            is MainActionCultivation.ExecuteCard -> {
                 gameCardEffectExecutor(
                     table = table,
                     player = player,
@@ -114,7 +114,7 @@ class RoundCultivation(
                     )
                 )
             }
-            is MainAction.PlayWispCard -> {
+            is MainActionCultivation.PlayWispCard -> {
                 wispCardEffectExecutor(
                     table = table,
                     player = player,
@@ -130,11 +130,11 @@ class RoundCultivation(
                 )
                 return false
             }
-            is MainAction.PlayMulchToken -> {
+            is MainActionCultivation.PlayMulchToken -> {
                 handleMulchToken(player, action.token)
                 return false
             }
-            is MainAction.PlayWaterToken -> {
+            is MainActionCultivation.PlayWaterToken -> {
                 handleWaterToken(player, action)
                 return false
             }
@@ -164,11 +164,8 @@ class RoundCultivation(
 
     private fun handleWaterToken(
         player: Player,
-        action: MainAction.PlayWaterToken
+        action: MainActionCultivation.PlayWaterToken
     ) {
-        if (action.row != null) {
-            throw MainActionException("Cultivation water token cannot specify a battle row")
-        }
         val die = action.onDie
         if (die == null) {
             if (!player.remove(Token.WATER)) return

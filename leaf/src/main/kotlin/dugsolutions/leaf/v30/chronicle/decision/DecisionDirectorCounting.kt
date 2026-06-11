@@ -5,7 +5,8 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 
 class DecisionDirectorCounting(
@@ -19,12 +20,12 @@ class DecisionDirectorCounting(
         return delegate.chooseCritter(input)
     }
 
-    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction {
+    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation {
         decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseMainActionCultivation(input)
     }
 
-    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
+    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
         decisionCountLog(decisionCostEvaluator(input))
         return delegate.chooseMainActionBattle(input)
     }

@@ -3,7 +3,7 @@ package dugsolutions.leaf.v30.player.decision.baseline
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.round.RoundCardManager
@@ -88,7 +88,7 @@ class DecisionDirectorBaselineTest {
             )
         )
 
-        assertEquals(MainAction.PullDie, result)
+        assertEquals(MainActionCultivation.PullDie, result)
     }
 
     @Test

@@ -3,7 +3,8 @@ package dugsolutions.leaf.v30.game
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
-import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutor
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorCultivation
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.game.round.RoundBase
@@ -17,7 +18,8 @@ class Game(
     private val table: Table,
     private val chronicle: Chronicle = GameChronicle(),
     private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
-    private val gameCardEffectExecutor: GameCardEffectExecutor = GameCardEffectExecutor(),
+    private val gameCardEffectExecutorCultivation: GameCardEffectExecutorCultivation = GameCardEffectExecutorCultivation(),
+    private val gameCardEffectExecutorBattle: GameCardEffectExecutorBattle = GameCardEffectExecutorBattle(),
     private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor()
 ) {
     fun setup(config: TableConfig) {
@@ -32,7 +34,7 @@ class Game(
                 table = table,
                 card = card,
                 chronicle = chronicle,
-                gameCardEffectExecutor = gameCardEffectExecutor,
+                gameCardEffectExecutor = gameCardEffectExecutorBattle,
                 wispCardEffectExecutor = wispCardEffectExecutor
             )
             RoundCardType.CULTIVATION -> RoundCultivation(
@@ -40,7 +42,7 @@ class Game(
                 card = card,
                 chronicle = chronicle,
                 roundActionExecutor = roundActionExecutor,
-                gameCardEffectExecutor = gameCardEffectExecutor,
+                gameCardEffectExecutor = gameCardEffectExecutorCultivation,
                 wispCardEffectExecutor = wispCardEffectExecutor
             )
         }

@@ -14,7 +14,8 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.player.decision.domain.RoundAction
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
@@ -92,9 +93,9 @@ class RoundBattleTest {
                     playerId = 4,
                     callOrder = callOrder,
                     actions = listOf(
-                        MainAction.PlayWispCard(wispCard),
-                        MainAction.DoRoundAction(RoundAction.ACTION_1),
-                        MainAction.DoRoundAction(RoundAction.ACTION_1)
+                        MainActionBattle.PlayWispCard(wispCard),
+                        MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
+                        MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
                     )
                 )
             )
@@ -122,9 +123,9 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainAction.PlayMulchToken(Token.MULCH(DieSides.D8), BattleStrikeRow.STRIKE_1),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1)
+                    MainActionBattle.PlayMulchToken(Token.MULCH(DieSides.D8), BattleStrikeRow.STRIKE_1),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
                 )
             )
         )
@@ -168,9 +169,9 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainAction.PlayWaterToken(),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1)
+                    MainActionBattle.PlayWaterToken(row = null),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
                 )
             )
         )
@@ -207,9 +208,9 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainAction.PlayWaterToken(onDie = FixedDie(8, 6), row = BattleStrikeRow.STRIKE_1),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1),
-                    MainAction.DoRoundAction(RoundAction.ACTION_1)
+                    MainActionBattle.PlayWaterToken(onDie = FixedDie(8, 6), row = BattleStrikeRow.STRIKE_1),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
                 )
             )
         )
@@ -288,10 +289,10 @@ class RoundBattleTest {
         private val callOrder: MutableList<Int>
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
             callOrder.add(input.player.id)
-            return MainAction.DoRoundAction(RoundAction.ACTION_1)
+            return MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
@@ -301,13 +302,13 @@ class RoundBattleTest {
     private class SequenceBattleDecisionDirector(
         private val playerId: Int,
         private val callOrder: MutableList<Int>,
-        private val actions: List<MainAction>
+        private val actions: List<MainActionBattle>
     ) : DecisionDirector {
         private var index = 0
 
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainAction = MainAction.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainAction {
+        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
+        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
             callOrder.add(playerId)
             return actions.getOrElse(index++) { actions.last() }
         }
