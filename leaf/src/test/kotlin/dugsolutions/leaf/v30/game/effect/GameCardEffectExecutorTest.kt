@@ -11,6 +11,7 @@ import dugsolutions.leaf.v30.chronicle.domain.GameEntryMessage
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
@@ -18,6 +19,7 @@ import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
@@ -186,6 +188,66 @@ class GameCardEffectExecutorTest {
             BattleItem.CritterItem(Critter.BOOSTED_WORM),
             table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all[1]
         )
+    }
+
+    @Test
+    fun cultivationInvoke_whenMulchDieFromDiscard_movesHighestDiscardDieIntoPlayerMulchToken() {
+        val executor = GameCardEffectExecutorCultivation()
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7).apply {
+            addDieToSupply(FixedDie(6, 1))
+            addDieToSupply(FixedDie(12, 1))
+            addDieToSupply(FixedDie(8, 1))
+            repeat(3) { drawDie() }
+            discardHandDice()
+        }
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(Token.MULCH(DieSides.D12)), player.mulchTokens)
+        assertEquals(listOf(6, 8), player.diceDiscard.dice.map { it.sides }.sorted())
+        assertEquals(7, table.grove.count(Token.MULCH()))
+        assertTrue(table.grove.tokens.mulchTokens.all { it.sides == null })
+    }
+
+    @Test
+    fun cultivationInvoke_whenMulchDieFromDiscardHasNoDiscardDie_returnsGroveToken() {
+        val executor = GameCardEffectExecutorCultivation()
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(emptyList(), player.mulchTokens)
+        assertEquals(8, table.grove.count(Token.MULCH()))
+        assertTrue(table.grove.tokens.mulchTokens.all { it.sides == null })
+    }
+
+    @Test
+    fun battleInvoke_whenMulchDieFromDiscard_usesSameImplementation() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7).apply {
+            addDieToSupply(FixedDie(4, 1))
+            addDieToSupply(FixedDie(20, 1))
+            repeat(2) { drawDie() }
+            discardHandDice()
+        }
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.MULCH_DIE_FROM_DISCARD)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(Token.MULCH(DieSides.D20)), player.mulchTokens)
+        assertEquals(listOf(4), player.diceDiscard.dice.map { it.sides })
+        assertEquals(7, table.grove.count(Token.MULCH()))
     }
 
     private fun createTable(

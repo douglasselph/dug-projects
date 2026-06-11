@@ -1,23 +1,24 @@
 package dugsolutions.leaf.v30.common
 
-import dugsolutions.leaf.v30.random.die.DieSides
-
 class Tokens(
     waterCount: Int = 0,
-    mulchCounts: Map<DieSides, Int> = emptyMap()
+    mulchTokens: List<Token.MULCH> = emptyList()
 ) {
     private var _waterCount = 0
-    private val mulchCounts = DieSides.entries.associateWith { 0 }.toMutableMap()
+    private val _mulchTokens = mutableListOf<Token.MULCH>()
 
     init {
-        reset(waterCount, mulchCounts)
+        reset(waterCount, mulchTokens)
     }
 
     val waterCount: Int
         get() = _waterCount
 
     val mulchCount: Int
-        get() = mulchCounts.values.sum()
+        get() = _mulchTokens.size
+
+    val mulchTokens: List<Token.MULCH>
+        get() = _mulchTokens.toList()
 
     val hasWater: Boolean
         get() = waterCount > 0
@@ -25,62 +26,73 @@ class Tokens(
     val hasMulch: Boolean
         get() = mulchCount > 0
 
-    fun getMulchCount(sides: DieSides): Int {
-        return mulchCounts[sides] ?: 0
-    }
-
     fun has(token: Token): Boolean {
         return when (token) {
             Token.WATER -> hasWater
-            is Token.MULCH -> getMulchCount(token.sides) > 0
+            is Token.MULCH -> hasMulch
         }
     }
 
     fun count(token: Token): Int {
         return when (token) {
             Token.WATER -> waterCount
-            is Token.MULCH -> getMulchCount(token.sides)
+            is Token.MULCH -> mulchCount
         }
     }
 
     fun pull(token: Token): Token? {
-        if (!has(token)) return null
-        when (token) {
-            Token.WATER -> _waterCount--
-            is Token.MULCH -> mulchCounts[token.sides] = getMulchCount(token.sides) - 1
+        return when (token) {
+            Token.WATER -> pullWater()
+            is Token.MULCH -> pullMulch(token)
         }
-        return token
+    }
+
+    fun add(token: Token): Tokens {
+        when (token) {
+            Token.WATER -> _waterCount++
+            is Token.MULCH -> _mulchTokens.add(token)
+        }
+        return this
     }
 
     fun returnToken(token: Token): Tokens {
-        when (token) {
-            Token.WATER -> _waterCount++
-            is Token.MULCH -> mulchCounts[token.sides] = getMulchCount(token.sides) + 1
-        }
-        return this
+        return add(token)
     }
 
     fun set(token: Token, amount: Int): Tokens {
         require(amount >= 0) { "Token count cannot be negative: $amount" }
         when (token) {
             Token.WATER -> _waterCount = amount
-            is Token.MULCH -> mulchCounts[token.sides] = amount
+            is Token.MULCH -> {
+                _mulchTokens.clear()
+                repeat(amount) {
+                    _mulchTokens.add(token)
+                }
+            }
         }
         return this
     }
 
     fun reset(
         waterCount: Int = 0,
-        mulchCounts: Map<DieSides, Int> = emptyMap()
+        mulchTokens: List<Token.MULCH> = emptyList()
     ) {
         require(waterCount >= 0) { "Water token count cannot be negative: $waterCount" }
-        mulchCounts.forEach { (sides, count) ->
-            require(count >= 0) { "Mulch token count cannot be negative for $sides: $count" }
-        }
 
         _waterCount = waterCount
-        this.mulchCounts.keys.forEach { sides ->
-            this.mulchCounts[sides] = mulchCounts[sides] ?: 0
-        }
+        _mulchTokens.clear()
+        _mulchTokens.addAll(mulchTokens)
+    }
+
+    private fun pullWater(): Token? {
+        if (!hasWater) return null
+        _waterCount--
+        return Token.WATER
+    }
+
+    private fun pullMulch(token: Token.MULCH): Token? {
+        val index = _mulchTokens.indexOfFirst { it == token }
+        if (index < 0) return null
+        return _mulchTokens.removeAt(index)
     }
 }

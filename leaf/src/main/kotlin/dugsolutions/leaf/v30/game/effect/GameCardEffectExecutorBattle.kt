@@ -129,7 +129,6 @@ open class GameCardEffectExecutorBattle(
         super.gainWormAndBoostWorms(table, player, action)
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
-    private fun mulchDieFromDiscard(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainAction.ExecuteCard) {}

@@ -5,6 +5,8 @@ import dugsolutions.leaf.v30.common.Butterflies
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
+import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.common.Tokens
 import dugsolutions.leaf.v30.player.decision.baseline.DecisionDirectorBaseline
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.domain.Creature
@@ -33,6 +35,7 @@ class Player(
     private val _diceHand = Dice()
     private val _diceDiscard = Dice()
     private val _critters = Critters()
+    private val _tokens = Tokens()
     private val _butterflies = Butterflies()
     private val _wispCards = mutableListOf<WispCard>()
     private var _vp = 0
@@ -48,6 +51,12 @@ class Player(
 
     val critters: List<Critter>
         get() = _critters.all
+
+    val waterTokenCount: Int
+        get() = _tokens.waterCount
+
+    val mulchTokens: List<Token>
+        get() = _tokens.mulchTokens
 
     val butterflies: List<Butterfly>
         get() = _butterflies.all
@@ -145,6 +154,10 @@ class Player(
         _diceHand.clear()
     }
 
+    fun drawHighestDieFromDiscard(): Die? {
+        return _diceDiscard.drawHighest()
+    }
+
     fun clearDice() {
         _diceSupply.clear()
         _diceHand.clear()
@@ -164,6 +177,14 @@ class Player(
         to: Critter
     ): Int {
         return _critters.replace(from, to)
+    }
+
+    fun add(token: Token) {
+        _tokens.add(token)
+    }
+
+    fun remove(token: Token): Boolean {
+        return _tokens.pull(token) != null
     }
 
     fun addButterfly(butterfly: Butterfly) {

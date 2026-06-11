@@ -3,8 +3,10 @@ package dugsolutions.leaf.v30.game.effect
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
+import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.table.Table
 
 abstract class GameCardEffectExecutorBase(
@@ -21,5 +23,19 @@ abstract class GameCardEffectExecutorBase(
             player.addCritter(Critter.WORM)
         }
         player.replaceCritter(Critter.WORM, Critter.BOOSTED_WORM)
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        action: MainAction.ExecuteCard
+    ) {
+        val groveToken = table.grove.remove(Token.MULCH()) ?: return
+        val die = player.drawHighestDieFromDiscard()
+        if (die == null) {
+            table.grove.add(groveToken)
+            return
+        }
+        player.add(Token.MULCH(DieSides.from(die.sides)))
     }
 }

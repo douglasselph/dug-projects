@@ -5,10 +5,12 @@ import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.random.die.SampleDie
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -225,6 +227,49 @@ class PlayerTest {
     @Test
     fun critters_whenNew_isEmpty() {
         assertEquals(emptyList(), player.critters)
+    }
+
+    @Test
+    fun tokens_whenNew_areEmpty() {
+        assertEquals(0, player.waterTokenCount)
+        assertEquals(emptyList(), player.mulchTokens)
+    }
+
+    @Test
+    fun add_withWaterToken_incrementsWaterTokenCount() {
+        player.add(Token.WATER)
+
+        assertEquals(1, player.waterTokenCount)
+    }
+
+    @Test
+    fun add_withMulchToken_addsExactMulchToken() {
+        val token = Token.MULCH(DieSides.D8)
+
+        player.add(token)
+
+        assertEquals(listOf(token), player.mulchTokens)
+    }
+
+    @Test
+    fun remove_withExactToken_removesTokenAndReturnsTrue() {
+        val token = Token.MULCH(DieSides.D8)
+        player.add(token)
+
+        val result = player.remove(token)
+
+        assertTrue(result)
+        assertEquals(emptyList(), player.mulchTokens)
+    }
+
+    @Test
+    fun remove_withNonMatchingMulchToken_returnsFalse() {
+        player.add(Token.MULCH())
+
+        val result = player.remove(Token.MULCH(DieSides.D8))
+
+        assertEquals(false, result)
+        assertEquals(listOf(Token.MULCH()), player.mulchTokens)
     }
 
     @Test

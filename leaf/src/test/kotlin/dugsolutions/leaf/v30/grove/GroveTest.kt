@@ -49,9 +49,8 @@ class GroveTest {
         assertFalse(SUT.has(Critter.BOOSTED_BEE))
         assertFalse(SUT.has(Critter.BOOSTED_WORM))
         assertEquals(8, SUT.count(Token.WATER))
-        DieSides.entries.forEach { sides ->
-            assertEquals(8, SUT.count(Token.MULCH(sides)))
-        }
+        assertEquals(8, SUT.count(Token.MULCH()))
+        assertTrue(SUT.tokens.mulchTokens.all { it.sides == null })
         Butterfly.entries.forEach { butterfly ->
             assertTrue(SUT.has(butterfly))
         }
@@ -62,7 +61,7 @@ class GroveTest {
     fun reset_restoresCrittersTokensButterfliesAndVp() {
         SUT.remove(Critter.BEE)
         SUT.remove(Token.WATER)
-        SUT.remove(Token.MULCH(DieSides.D6))
+        SUT.remove(Token.MULCH())
         SUT.remove(Butterfly.RED)
 
         SUT.reset()
@@ -72,7 +71,8 @@ class GroveTest {
         assertEquals(0, SUT.count(Critter.BOOSTED_BEE))
         assertEquals(0, SUT.count(Critter.BOOSTED_WORM))
         assertEquals(8, SUT.count(Token.WATER))
-        assertEquals(8, SUT.count(Token.MULCH(DieSides.D6)))
+        assertEquals(8, SUT.count(Token.MULCH()))
+        assertTrue(SUT.tokens.mulchTokens.all { it.sides == null })
         Butterfly.entries.forEach { butterfly ->
             assertTrue(SUT.has(butterfly))
         }
@@ -164,13 +164,24 @@ class GroveTest {
 
     @Test
     fun addAndRemoveToken_updatesTokenSupply() {
-        val token = Token.MULCH(DieSides.D8)
+        val token = Token.MULCH()
 
         assertEquals(token, SUT.remove(token))
         assertEquals(7, SUT.count(token))
         SUT.add(token)
 
         assertEquals(8, SUT.count(token))
+    }
+
+    @Test
+    fun removeSideSpecificMulch_whenGroveOnlyHasGenericMulch_returnsNull() {
+        val token = Token.MULCH(DieSides.D8)
+
+        val result = SUT.remove(token)
+
+        assertNull(result)
+        assertEquals(8, SUT.count(Token.MULCH()))
+        assertTrue(SUT.tokens.mulchTokens.all { it.sides == null })
     }
 
     @Test

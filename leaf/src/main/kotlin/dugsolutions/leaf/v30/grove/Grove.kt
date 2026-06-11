@@ -71,10 +71,7 @@ class Grove(
 
         tokens.reset()
         tokens.set(Token.WATER, TOKENS_PER_TYPE)
-        DieSides.entries.forEach { sides ->
-            tokens.set(Token.MULCH(sides), TOKENS_PER_TYPE)
-        }
-
+        tokens.set(Token.MULCH(), TOKENS_PER_TYPE)
         butterflies.clear()
         Butterfly.entries.forEach { butterfly ->
             butterflies.add(butterfly)
