@@ -188,6 +188,31 @@ class BattleTest {
     }
 
     @Test
+    fun raiseDie_whenDieExistsInSelectedSquare_raisesDieValueAndReturnsDie() {
+        val die = FixedDie(6, 5)
+        val target = player(1, die, FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.raiseDie(target, BattleStrikeRow.STRIKE_1, FixedDie(6, 5), 3)
+
+        assertEquals(die, result)
+        assertEquals(6, die.value)
+        assertDie(sides = 6, value = 6, item = battle.grid.getSquare(1, BattleStrikeRow.STRIKE_1).all.single())
+    }
+
+    @Test
+    fun raiseDie_whenDieIsNotInSelectedSquare_returnsNull() {
+        val die = FixedDie(6, 3)
+        val target = player(1, die, FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        val result = battle.raiseDie(target, BattleStrikeRow.STRIKE_2, FixedDie(6, 3), 1)
+
+        assertEquals(null, result)
+        assertEquals(3, die.value)
+    }
+
+    @Test
     fun computeWinners_returnsBattleEvaluatorResultForCurrentGrid() {
         val target = player(1, FixedDie(6, 6), FixedDie(8, 2), FixedDie(10, 1))
         val battle = setupBattle(target)

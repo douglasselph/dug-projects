@@ -93,6 +93,20 @@ class Battle(
         return dieItem.die
     }
 
+    fun raiseDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: Die,
+        amount: Int
+    ): Die? {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die == die }
+            ?: return null
+        dieItem.die.adjustBy(amount)
+        return dieItem.die
+    }
+
     fun hasDie(
         player: Player,
         row: BattleStrikeRow,

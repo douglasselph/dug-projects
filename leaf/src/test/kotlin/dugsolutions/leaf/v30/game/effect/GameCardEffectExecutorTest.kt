@@ -227,6 +227,118 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenRaiseDiePlus1AndGainWater_raisesHandDieAndGainsWater() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(6, 5)
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 5))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(6, die.value)
+        assertEquals(1, player.waterTokenCount)
+        assertEquals(7, table.grove.count(Token.WATER))
+        val entries = chronicle.getEntries().filterIsInstance<GameEntry.GameCardEffect>()
+        assertEquals(2, entries.size)
+        assertEquals(6, entries[0].die?.value)
+        assertEquals(Token.WATER, entries[1].token)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRaiseDiePlus1AndGainWaterHasNoTarget_recordsWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
+
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.RAISE_TARGET_MISSING, entry.type)
+        assertEquals(card.id, entry.cardId)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRaiseDiePlus1AndGainWaterDieIsNotInHand_recordsWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7).apply {
+            addDieToHand(FixedDie(6, 5))
+        }
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, FixedDie(8, 5))
+        )
+
+        executor(table, player, action)
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.RAISE_DIE_NOT_FOUND, entry.type)
+        assertEquals(0, player.waterTokenCount)
+        assertEquals(8, table.grove.count(Token.WATER))
+    }
+
+    @Test
+    fun battleInvoke_whenRaiseDiePlus1AndGainWater_raisesBattleGridDieAndGainsWater() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val targetDie = FixedDie(8, 6)
+        val target = playerWithDice(1, targetDie, FixedDie(6, 3), FixedDie(10, 1))
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
+        val action = MainActionBattle.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(target, FixedDie(8, 6)),
+            row = BattleStrikeRow.STRIKE_1
+        )
+        val player = Player(id = 9)
+
+        executor(table, player, action)
+
+        assertEquals(7, targetDie.value)
+        assertEquals(1, player.waterTokenCount)
+        assertEquals(7, table.grove.count(Token.WATER))
+        val entries = chronicle.getEntries().filterIsInstance<GameEntry.GameCardEffect>()
+        assertEquals(2, entries.size)
+        assertEquals(7, entries[0].die?.value)
+        assertEquals(Token.WATER, entries[1].token)
+    }
+
+    @Test
+    fun battleInvoke_whenRaiseDiePlus1AndGainWaterHasNoRow_throwsException() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7)
+        val action = MainActionBattle.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER),
+            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+        )
+
+        assertThrows<MainActionException> {
+            executor(table, player, action)
+        }
+    }
+
+    @Test
     fun cultivationInvoke_whenGainWormAndBoostWorms_gainsWormAndBoostsPlayerWorms() {
         val executor = GameCardEffectExecutorCultivation()
         val table = createTable(numBattle = 0, numCultivation = 1)

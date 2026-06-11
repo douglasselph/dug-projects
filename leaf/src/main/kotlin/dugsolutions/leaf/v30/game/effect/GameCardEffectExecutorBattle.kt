@@ -179,7 +179,37 @@ open class GameCardEffectExecutorBattle(
         )
     }
 
-    private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise requires a battle row")
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.RAISE_TARGET_MISSING,
+                    card = action.card
+                )
+            )
+            return
+        }
+        if (!table.battle.hasDie(target.player, row, target.die)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.RAISE_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        raiseDiePlus1AndGainWater(
+            table = table,
+            player = player,
+            card = action.card,
+            die = target.die,
+            raiseDie = { die, amount -> table.battle.raiseDie(target.player, row, die, amount) }
+        )
+    }
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun doubleOneDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}

@@ -259,6 +259,26 @@ class PlayerTest {
     }
 
     @Test
+    fun raiseDie_whenMatchingDieIsInHand_raisesStoredDieAndReturnsDie() {
+        val die = FixedDie(6, 5)
+        player.addDieToHand(die)
+
+        val result = player.raiseDie(FixedDie(6, 5), 3)
+
+        assertEquals(die, result)
+        assertEquals(6, die.value)
+    }
+
+    @Test
+    fun raiseDie_whenMatchingDieIsNotInHand_returnsNull() {
+        player.addDieToHand(FixedDie(6, 5))
+
+        val result = player.raiseDie(FixedDie(8, 5), 1)
+
+        assertNull(result)
+    }
+
+    @Test
     fun discardHandDice_movesAllHandDiceToDiscard() {
         // Arrange
         val drawn = mutableListOf<Die>()

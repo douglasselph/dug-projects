@@ -188,6 +188,15 @@ class Player(
         return target
     }
 
+    fun raiseDie(
+        die: Die,
+        amount: Int
+    ): Die? {
+        val target = _diceHand.dice.firstOrNull { it == die } ?: return null
+        target.adjustBy(amount)
+        return target
+    }
+
     fun discardHandDice() {
         _diceDiscard.addAll(_diceHand.dice)
         _diceHand.clear()

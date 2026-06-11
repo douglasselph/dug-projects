@@ -21,6 +21,7 @@ abstract class GameCardEffectExecutorBase(
     companion object {
         const val MIN_REROLL_VALUE = 3
         const val MAX_REROLL_ATTEMPTS = 10
+        const val RAISE_PLUS_ONE = 1
     }
 
     protected open fun gainWormAndBoostWorms(
@@ -114,6 +115,37 @@ abstract class GameCardEffectExecutorBase(
             }
         }
         throw MainActionException("Reroll did not reach $MIN_REROLL_VALUE after $MAX_REROLL_ATTEMPTS attempts")
+    }
+
+    protected fun raiseDiePlus1AndGainWater(
+        table: Table,
+        player: Player,
+        card: GameCard,
+        die: Die,
+        raiseDie: (Die, Int) -> Die?
+    ) {
+        val raisedDie = raiseDie(die, RAISE_PLUS_ONE) ?: return
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Raised a die by $RAISE_PLUS_ONE",
+                die = raisedDie
+            )
+        )
+
+        val token = table.grove.remove(Token.WATER) ?: return
+        player.add(token)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Gained a water token from the Grove",
+                token = token
+            )
+        )
     }
 
 }
