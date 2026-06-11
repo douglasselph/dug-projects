@@ -82,7 +82,7 @@ class RoundCultivation(
                 gameCardEffectExecutor(
                     table = table,
                     player = player,
-                    card = action.card
+                    action = action
                 )
                 player.flipCreatureCardFaceDown(action.card)
             }

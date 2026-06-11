@@ -6,7 +6,10 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
+import dugsolutions.leaf.v30.player.decision.domain.MainAction
 import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
@@ -27,14 +30,15 @@ class GameCardEffectExecutorTest {
         val table = createTable(numBattle = 0, numCultivation = 1).apply { roundDeck.next() }
         val player = Player()
         val card = loadGameCard()
+        val action = MainAction.ExecuteCard(card, ExecuteTarget.PlayerDie(player, FixedDie(6, 3)))
         val cultivation = TrackingCultivationExecutor()
         val battle = TrackingBattleExecutor()
         val executor = GameCardEffectExecutor(cultivation, battle)
 
-        executor(table, player, card)
+        executor(table, player, action)
 
-        assertEquals(listOf(card), cultivation.cards)
-        assertEquals(emptyList(), battle.cards)
+        assertEquals(listOf(action), cultivation.actions)
+        assertEquals(emptyList(), battle.actions)
     }
 
     @Test
@@ -42,14 +46,15 @@ class GameCardEffectExecutorTest {
         val table = createTable(numBattle = 1, numCultivation = 0).apply { roundDeck.next() }
         val player = Player()
         val card = loadGameCard()
+        val action = MainAction.ExecuteCard(card, ExecuteTarget.PlayerDie(player, FixedDie(6, 3)))
         val cultivation = TrackingCultivationExecutor()
         val battle = TrackingBattleExecutor()
         val executor = GameCardEffectExecutor(cultivation, battle)
 
-        executor(table, player, card)
+        executor(table, player, action)
 
-        assertEquals(emptyList(), cultivation.cards)
-        assertEquals(listOf(card), battle.cards)
+        assertEquals(emptyList(), cultivation.actions)
+        assertEquals(listOf(action), battle.actions)
     }
 
     @Test
@@ -58,7 +63,7 @@ class GameCardEffectExecutorTest {
         val executor = GameCardEffectExecutor()
 
         assertThrows<CurrentRoundNotSetException> {
-            executor(table, Player(), loadGameCard())
+            executor(table, Player(), MainAction.ExecuteCard(loadGameCard()))
         }
     }
 
@@ -96,27 +101,38 @@ class GameCardEffectExecutorTest {
     }
 
     private class TrackingCultivationExecutor : GameCardEffectExecutorCultivation() {
-        val cards = mutableListOf<GameCard>()
+        val actions = mutableListOf<MainAction.ExecuteCard>()
 
         override fun invoke(
             table: Table,
             player: Player,
-            card: GameCard
+            action: MainAction.ExecuteCard
         ) {
-            cards.add(card)
+            actions.add(action)
         }
     }
 
     private class TrackingBattleExecutor : GameCardEffectExecutorBattle() {
-        val cards = mutableListOf<GameCard>()
+        val actions = mutableListOf<MainAction.ExecuteCard>()
 
         override fun invoke(
             table: Table,
             player: Player,
-            card: GameCard
+            action: MainAction.ExecuteCard
         ) {
-            cards.add(card)
+            actions.add(action)
         }
+    }
+
+    private class FixedDie(
+        sides: Int,
+        value: Int
+    ) : Die(sides) {
+        init {
+            adjustTo(value)
+        }
+
+        override fun roll(): Die = this
     }
 
     private class IdentityRandomizer : Randomizer {

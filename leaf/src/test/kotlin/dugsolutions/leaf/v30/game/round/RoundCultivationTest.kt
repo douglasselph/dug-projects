@@ -89,7 +89,7 @@ class RoundCultivationTest {
 
         round.performMainActions()
 
-        assertEquals(listOf(card, card), gameCardEffectExecutor.cards)
+        assertEquals(listOf(card, card), gameCardEffectExecutor.actions.map { it.card })
         assertEquals(true, player.getCreatureLeftCard(0)!!.isFaceDown)
     }
 
@@ -268,14 +268,14 @@ class RoundCultivationTest {
     }
 
     private class TrackingGameCardEffectExecutor : GameCardEffectExecutor() {
-        val cards = mutableListOf<GameCard>()
+        val actions = mutableListOf<MainAction.ExecuteCard>()
 
         override fun invoke(
             table: Table,
             player: Player,
-            card: GameCard
+            action: MainAction.ExecuteCard
         ) {
-            cards.add(card)
+            actions.add(action)
         }
     }
 
