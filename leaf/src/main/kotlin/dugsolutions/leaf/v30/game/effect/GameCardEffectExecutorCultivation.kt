@@ -11,8 +11,8 @@ import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorCultivation(
-    protected val chronicle: Chronicle = GameChronicle()
-) {
+    chronicle: Chronicle = GameChronicle()
+) : GameCardEffectExecutorBase(chronicle) {
 
     open operator fun invoke(
         table: Table,
@@ -104,7 +104,6 @@ open class GameCardEffectExecutorCultivation(
         )
     }
     private fun ignoreBattleEffect(table: Table, player: Player, action: MainAction.ExecuteCard) {}
-    private fun gainWormAndBoostWorms(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun mulchDieFromDiscard(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainAction.ExecuteCard) {}

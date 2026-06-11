@@ -123,7 +123,9 @@ class RoundCultivation(
             }
         }
         itemsToBuy.crittersUsed.forEach { critter ->
-            player.removeCritter(critter)
+            if (player.removeCritter(critter)) {
+                table.grove.add(critter)
+            }
         }
     }
 

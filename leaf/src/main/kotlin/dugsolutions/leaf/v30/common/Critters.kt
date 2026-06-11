@@ -41,6 +41,20 @@ class Critters(
         return critters.remove(critter)
     }
 
+    fun replace(
+        from: Critter,
+        to: Critter
+    ): Int {
+        var replaced = 0
+        critters.indices.forEach { index ->
+            if (critters[index] == from) {
+                critters[index] = to
+                replaced++
+            }
+        }
+        return replaced
+    }
+
     fun clear() {
         critters.clear()
     }

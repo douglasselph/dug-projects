@@ -53,6 +53,8 @@ abstract class RoundBase(
     }
 
     fun cleanup() {
+        returnBattleCrittersToGrove()
+        normalizePlayerCritters()
         checkRefresh()
     }
 
@@ -78,6 +80,7 @@ abstract class RoundBase(
                     )
                     return@cards
                 }
+                table.grove.add(Critter.WORM)
                 player.flipCreatureCardFaceUp(card)
             }
         }
@@ -97,6 +100,19 @@ abstract class RoundBase(
 
     private fun availableCritters(): List<Critter> {
         return Critter.entries.filter { table.grove.has(it) }
+    }
+
+    private fun normalizePlayerCritters() {
+        table.players.forEach { player ->
+            player.replaceCritter(Critter.BOOSTED_WORM, Critter.WORM)
+            player.replaceCritter(Critter.BOOSTED_BEE, Critter.BEE)
+        }
+    }
+
+    private fun returnBattleCrittersToGrove() {
+        table.battle.drainCritters().forEach { critter ->
+            table.grove.add(critter)
+        }
     }
 
 }

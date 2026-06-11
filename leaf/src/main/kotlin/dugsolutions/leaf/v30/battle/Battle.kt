@@ -23,6 +23,9 @@ class Battle(
     val grid: BattleGrid
         get() = _grid ?: throw IllegalStateException("Battle grid has not been setup")
 
+    val isSetup: Boolean
+        get() = _grid != null
+
     fun setup(players: List<Player>): Battle {
         val orderedPlayers = playerGridOrder(players)
         _grid = BattleGrid(orderedPlayers.map { it.id })
@@ -75,6 +78,18 @@ class Battle(
             ?: return false
         dieItem.die.adjustTo(value)
         return true
+    }
+
+    fun replaceCritter(
+        player: Player,
+        from: Critter,
+        to: Critter
+    ): Int {
+        return _grid?.replaceCritter(player.id, from, to) ?: 0
+    }
+
+    fun drainCritters(): List<Critter> {
+        return _grid?.drainCritters().orEmpty()
     }
 
     private fun setupPlayerColumn(player: Player) {

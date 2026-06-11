@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v30.battle.domain
 
+import dugsolutions.leaf.v30.common.Critter
+
 class BattleSquare(
     items: List<BattleItem> = emptyList()
 ) {
@@ -41,6 +43,27 @@ class BattleSquare(
 
     fun remove(item: BattleItem): Boolean {
         return items.remove(item)
+    }
+
+    fun replaceCritter(
+        from: Critter,
+        to: Critter
+    ): Int {
+        var replaced = 0
+        items.indices.forEach { index ->
+            val item = items[index]
+            if (item is BattleItem.CritterItem && item.critter == from) {
+                items[index] = BattleItem.CritterItem(to)
+                replaced++
+            }
+        }
+        return replaced
+    }
+
+    fun drainCritters(): List<Critter> {
+        val critters = items.filterIsInstance<BattleItem.CritterItem>().map { it.critter }
+        items.removeAll { it is BattleItem.CritterItem }
+        return critters
     }
 
     fun clear() {

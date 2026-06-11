@@ -3,6 +3,8 @@ package dugsolutions.leaf.v30.game.round
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.battle.domain.BattleItem
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.cards.GameCardRegistry
@@ -175,18 +177,56 @@ class RoundBaseTest {
     }
 
     @Test
+    fun cleanup_replacesBoostedPlayerCrittersWithNormalCritters() {
+        val player = Player().apply {
+            addCritter(Critter.BOOSTED_WORM)
+            addCritter(Critter.BOOSTED_BEE)
+        }
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.cleanup()
+
+        assertEquals(listOf(Critter.WORM, Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun cleanup_returnsBattleGridCrittersToGroveAsNormalCritters() {
+        val target = playerWithDice(1, FixedDie(8, 6), FixedDie(6, 3), FixedDie(10, 1))
+        val table = createTable().add(target)
+        table.add(playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)))
+        table.add(playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)))
+        table.add(playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)))
+        table.battle.setup(table.players)
+        table.grove.remove(Critter.WORM)
+        table.battle.add(target, BattleStrikeRow.STRIKE_1, Critter.BOOSTED_WORM)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.cleanup()
+
+        assertEquals(9, table.grove.count(Critter.WORM))
+        assertEquals(0, table.grove.count(Critter.BOOSTED_WORM))
+        assertTrue(
+            table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all
+                .none { it == BattleItem.CritterItem(Critter.BOOSTED_WORM) }
+        )
+    }
+
+    @Test
     fun checkWormRefresh_withWorm_flipsSelectedCardFaceUpAndRemovesWorm() {
         val card = loadGameCard("Root_05_01")
         val player = Player(RefreshCardsDecisionDirector(GameCards(listOf(card))))
         player.addCritter(Critter.WORM)
         player.addCardToCreature(card)
         val table = createTable().add(player)
+        table.grove.remove(Critter.WORM)
         val round = RoundCultivation(table, loadCultivationCard())
 
         round.checkWormRefresh()
 
         assertTrue(player.getCreatureLeftCard(0)!!.isFaceUp)
         assertEquals(emptyList(), player.critters)
+        assertEquals(9, table.grove.count(Critter.WORM))
     }
 
     @Test
@@ -270,6 +310,16 @@ class RoundBaseTest {
         }
 
         override fun roll(): Die = this
+    }
+
+    private fun playerWithDice(
+        id: Int,
+        vararg dice: Die
+    ): Player {
+        return Player(id = id).apply {
+            dice.forEach { addDieToSupply(it) }
+            repeat(dice.size) { drawDie() }
+        }
     }
 
     private class AlwaysWormDecisionDirector : DecisionDirector {

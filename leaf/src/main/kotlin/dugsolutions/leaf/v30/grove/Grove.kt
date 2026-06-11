@@ -65,7 +65,7 @@ class Grove(
 
     fun reset() {
         critters.clear()
-        Critter.entries.forEach { critter ->
+        listOf(Critter.BEE, Critter.WORM).forEach { critter ->
             critters.set(critter, CRITTERS_PER_TYPE)
         }
 
@@ -92,6 +92,7 @@ class Grove(
     }
 
     fun count(critter: Critter): Int {
+        if (critter != critter.normal) return 0
         return critters.count(critter)
     }
 
@@ -100,10 +101,11 @@ class Grove(
     }
 
     fun add(critter: Critter) {
-        critters.add(critter)
+        critters.add(critter.normal)
     }
 
     fun remove(critter: Critter): Boolean {
+        if (critter != critter.normal) return false
         return critters.remove(critter)
     }
 

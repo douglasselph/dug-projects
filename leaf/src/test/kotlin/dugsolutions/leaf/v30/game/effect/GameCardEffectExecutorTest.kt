@@ -10,6 +10,7 @@ import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.chronicle.domain.GameEntryMessage
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.CurrentRoundNotSetException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
@@ -135,6 +136,54 @@ class GameCardEffectExecutorTest {
 
         assertEquals(
             BattleItem.BulwarkToken,
+            table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all[1]
+        )
+    }
+
+    @Test
+    fun cultivationInvoke_whenGainWormAndBoostWorms_gainsWormAndBoostsPlayerWorms() {
+        val executor = GameCardEffectExecutorCultivation()
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7).apply {
+            addCritter(Critter.WORM)
+        }
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.GAIN_WORM_AND_BOOST_WORMS)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(Critter.BOOSTED_WORM, Critter.BOOSTED_WORM), player.critters)
+        assertEquals(8, table.grove.count(Critter.WORM))
+        assertEquals(0, table.grove.count(Critter.BOOSTED_WORM))
+    }
+
+    @Test
+    fun battleInvoke_whenGainWormAndBoostWorms_boostsPlayerAndBattleGridWorms() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val targetDie = FixedDie(8, 6)
+        val target = playerWithDice(1, targetDie, FixedDie(6, 3), FixedDie(10, 1)).apply {
+            addCritter(Critter.WORM)
+        }
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        table.battle.add(target, BattleStrikeRow.STRIKE_1, Critter.WORM)
+        val action = MainAction.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.GAIN_WORM_AND_BOOST_WORMS)
+        )
+
+        executor(table, target, action)
+
+        assertEquals(listOf(Critter.BOOSTED_WORM, Critter.BOOSTED_WORM), target.critters)
+        assertEquals(
+            BattleItem.CritterItem(Critter.BOOSTED_WORM),
             table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all[1]
         )
     }

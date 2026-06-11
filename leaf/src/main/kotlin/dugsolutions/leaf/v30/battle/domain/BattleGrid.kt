@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v30.battle.domain
 
+import dugsolutions.leaf.v30.common.Critter
+
 class BattleGrid(
     playerIds: List<Int>
 ) {
@@ -51,6 +53,18 @@ class BattleGrid(
 
     fun clear() {
         columns.forEach { it.clear() }
+    }
+
+    fun replaceCritter(
+        playerId: Int,
+        from: Critter,
+        to: Critter
+    ): Int {
+        return getColumn(playerId).replaceCritter(from, to)
+    }
+
+    fun drainCritters(): List<Critter> {
+        return columns.flatMap { it.drainCritters() }
     }
 
     fun snapshot(): BattleGridSnapshot {

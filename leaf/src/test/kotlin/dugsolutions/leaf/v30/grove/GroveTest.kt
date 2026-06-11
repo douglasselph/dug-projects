@@ -40,10 +40,14 @@ class GroveTest {
 
     @Test
     fun constructor_resetsCommonSupplies() {
-        Critter.entries.forEach { critter ->
+        listOf(Critter.BEE, Critter.WORM).forEach { critter ->
             assertEquals(9, SUT.count(critter))
             assertTrue(SUT.has(critter))
         }
+        assertEquals(0, SUT.count(Critter.BOOSTED_BEE))
+        assertEquals(0, SUT.count(Critter.BOOSTED_WORM))
+        assertFalse(SUT.has(Critter.BOOSTED_BEE))
+        assertFalse(SUT.has(Critter.BOOSTED_WORM))
         assertEquals(8, SUT.count(Token.WATER))
         DieSides.entries.forEach { sides ->
             assertEquals(8, SUT.count(Token.MULCH(sides)))
@@ -65,6 +69,8 @@ class GroveTest {
 
         assertEquals(9, SUT.count(Critter.BEE))
         assertEquals(9, SUT.count(Critter.WORM))
+        assertEquals(0, SUT.count(Critter.BOOSTED_BEE))
+        assertEquals(0, SUT.count(Critter.BOOSTED_WORM))
         assertEquals(8, SUT.count(Token.WATER))
         assertEquals(8, SUT.count(Token.MULCH(DieSides.D6)))
         Butterfly.entries.forEach { butterfly ->

@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainAction
@@ -14,8 +15,8 @@ import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorBattle(
-    protected val chronicle: Chronicle = GameChronicle()
-) {
+    chronicle: Chronicle = GameChronicle()
+) : GameCardEffectExecutorBase(chronicle) {
 
     open operator fun invoke(
         table: Table,
@@ -124,7 +125,10 @@ open class GameCardEffectExecutorBattle(
         }
     }
 
-    private fun gainWormAndBoostWorms(table: Table, player: Player, action: MainAction.ExecuteCard) {}
+    override fun gainWormAndBoostWorms(table: Table, player: Player, action: MainAction.ExecuteCard) {
+        super.gainWormAndBoostWorms(table, player, action)
+        table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
+    }
     private fun mulchDieFromDiscard(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainAction.ExecuteCard) {}
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainAction.ExecuteCard) {}

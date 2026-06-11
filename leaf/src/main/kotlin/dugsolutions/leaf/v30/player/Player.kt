@@ -159,6 +159,13 @@ class Player(
         return _critters.remove(critter)
     }
 
+    fun replaceCritter(
+        from: Critter,
+        to: Critter
+    ): Int {
+        return _critters.replace(from, to)
+    }
+
     fun addButterfly(butterfly: Butterfly) {
         _butterflies.add(butterfly)
     }

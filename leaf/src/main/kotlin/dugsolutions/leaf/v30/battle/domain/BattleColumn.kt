@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v30.battle.domain
 
+import dugsolutions.leaf.v30.common.Critter
+
 class BattleColumn(
     val playerId: Int
 ) {
@@ -26,6 +28,17 @@ class BattleColumn(
 
     fun clear() {
         squares.values.forEach { it.clear() }
+    }
+
+    fun replaceCritter(
+        from: Critter,
+        to: Critter
+    ): Int {
+        return squares.values.sumOf { it.replaceCritter(from, to) }
+    }
+
+    fun drainCritters(): List<Critter> {
+        return squares.values.flatMap { it.drainCritters() }
     }
 
     fun snapshot(): BattleColumnSnapshot {
