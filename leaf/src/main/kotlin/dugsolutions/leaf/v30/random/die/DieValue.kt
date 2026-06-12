@@ -26,6 +26,11 @@ class DieValue(
         return this
     }
 
+    fun boost(value: Int): DieValue {
+        this.value = value
+        return this
+    }
+
     fun adjustToMax(): Int {
         value = sides
         return value

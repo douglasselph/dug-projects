@@ -44,6 +44,16 @@ class DieValueTest {
         // Assert
         assertEquals(TEST_SIDES, dieValue.value, "DieValue should be constrained to sides")
     }
+
+    @Test
+    fun boost_whenValueExceedsSides_setsValueWithoutConstrainingAndReturnsSameInstance() {
+        val value = TEST_SIDES + 2
+
+        val result = SUT.boost(value)
+
+        assertSame(SUT, result)
+        assertEquals(value, SUT.value)
+    }
     
     @Test
     fun whenValueBelowOne_isConstrainedToOne() {

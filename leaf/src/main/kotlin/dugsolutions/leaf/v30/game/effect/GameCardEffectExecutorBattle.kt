@@ -19,6 +19,7 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
+import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.details.SwapTwoOwnDiceBattle
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
@@ -365,7 +366,19 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
-    private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        RollExtraForEachMaxDie(chronicle)(
+            scopes = BattleStrikeRow.entries.map { row ->
+                BattleDieEffectScope(
+                    battle = table.battle,
+                    actingPlayer = player,
+                    targetPlayer = player,
+                    row = row
+                )
+            },
+            card = action.card
+        )
+    }
     private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

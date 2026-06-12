@@ -14,7 +14,7 @@ abstract class Die(
 
     val copy: DieValue
         get() {
-            return DieValue(sides, value)
+            return DieValue(sides, value).boost(value)
         }
 
     val average: Float
@@ -33,6 +33,12 @@ abstract class Die(
         val newValue = value
         val constrainedValue = newValue.coerceIn(1, sides)
         _value = constrainedValue
+        return this
+    }
+
+    // Supports the MAX token by allowing temporary values above the die's normal side limit.
+    fun boost(value: Int): Die {
+        _value = value
         return this
     }
 

@@ -237,6 +237,16 @@ class DieTest {
     }
 
     @Test
+    fun boost_whenValueExceedsMax_setsValueWithoutConstrainingAndReturnsSelf() {
+        val die = dieFactory(DieSides.D6)
+
+        val result = die.boost(TEST_SIDES + 4)
+
+        assertSame(die, result)
+        assertEquals(TEST_SIDES + 4, die.value)
+    }
+
+    @Test
     fun adjustBy_whenValidAmount_modifiesValueCorrectly() {
         // Arrange
         val die = dieFactory(DieSides.D6).adjustTo(TEST_VALUE)
