@@ -22,6 +22,7 @@ import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
@@ -424,6 +425,69 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenUpgradeDieAndUseNow_upgradesTargetHandDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle, DieFactory(ValueRandomizer(3)))
+        val table = createTable(numBattle = 0, numCultivation = 1).apply {
+            grove.resetDice(2)
+        }
+        val oldDie = FixedDie(4, 2)
+        val player = Player(id = 7).apply {
+            addDieToHand(oldDie)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.UPGRADE_DIE_AND_USE_NOW)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(4, 2)))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(6 to 3), player.diceHand.dice.map { it.sides to it.value })
+        assertEquals(6, table.grove.count(DieSides.D6))
+        assertEquals(1, table.grove.count(DieSides.D4))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(listOf(6 to 3), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenUpgradeDieAndUseNow_replacesTargetBattleGridDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle, DieFactory(ValueRandomizer(3)))
+        val table = createTable(numBattle = 1, numCultivation = 0).apply {
+            grove.resetDice(2)
+        }
+        val oldDie = FixedDie(4, 4)
+        val target = playerWithDice(1, oldDie, FixedDie(6, 3), FixedDie(8, 2))
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.UPGRADE_DIE_AND_USE_NOW)
+        val action = MainActionBattle.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(4, 4))),
+            row = BattleStrikeRow.STRIKE_1
+        )
+
+        executor(table, target, action)
+
+        val strikeOneDice = table.battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_1).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .map { it.die.sides to it.die.value }
+        assertEquals(listOf(6 to 3), strikeOneDice)
+        assertEquals(listOf(6, 6, 8), target.diceHand.dice.map { it.sides })
+        val entries = chronicle.getEntries().filterIsInstance<GameEntry.GameCardEffect>()
+        assertEquals(2, entries.size)
+        assertEquals(listOf(6 to 3), entries.last().dice.map { it.sides to it.value })
+    }
+
+    @Test
     fun cultivationInvoke_whenDoubleAllDiceShowingOneToFour_doublesMatchingHandDice() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorCultivation(chronicle)
@@ -676,6 +740,16 @@ class GameCardEffectExecutorTest {
         override fun nextInt(from: Int, until: Int): Int = throw UnsupportedOperationException()
         override fun nextInt(until: Int): Int = throw UnsupportedOperationException()
         override fun <T> randomOrNull(list: List<T>): T? = throw UnsupportedOperationException()
+        override fun <T> shuffled(list: List<T>): List<T> = list
+    }
+
+    private class ValueRandomizer(
+        private val value: Int
+    ) : Randomizer {
+        override fun nextBoolean(): Boolean = true
+        override fun nextInt(from: Int, until: Int): Int = value.coerceIn(from, until - 1)
+        override fun nextInt(until: Int): Int = nextInt(0, until)
+        override fun <T> randomOrNull(list: List<T>): T? = list.firstOrNull()
         override fun <T> shuffled(list: List<T>): List<T> = list
     }
 }

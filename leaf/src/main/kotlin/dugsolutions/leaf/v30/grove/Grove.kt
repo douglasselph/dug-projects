@@ -110,6 +110,19 @@ class Grove(
         return diceStacks.remove(sides)
     }
 
+    fun add(sides: DieSides): Boolean {
+        diceStacks.add(sides)
+        return true
+    }
+
+    fun count(sides: DieSides): Int {
+        return diceStacks.getCount(sides)
+    }
+
+    fun has(sides: DieSides): Boolean {
+        return count(sides) > 0
+    }
+
     fun remove(card: GameCard): Boolean {
         return cardStacks.remove(card)
     }

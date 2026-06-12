@@ -162,6 +162,10 @@ class Player(
         _diceHand.add(die)
     }
 
+    fun removeDieFromHand(die: Die): Boolean {
+        return _diceHand.remove(die)
+    }
+
     fun addDiceToSupply(dice: List<Die>) {
         _diceSupply.addAll(dice)
     }

@@ -4,19 +4,25 @@ import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.details.UpgradeDie
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.table.Table
 
 abstract class GameCardEffectExecutorBase(
-    protected val chronicle: Chronicle = GameChronicle()
+    protected val chronicle: Chronicle = GameChronicle(),
+    private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) {
 
     companion object {
@@ -147,6 +153,61 @@ abstract class GameCardEffectExecutorBase(
                 token = token
             )
         )
+    }
+
+    protected open fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        action: MainActionCultivation.ExecuteCard
+    ): Die? {
+        return upgradeDieAndUseNow(table, player, action.card, action.target)
+    }
+
+    protected open fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        action: MainActionBattle.ExecuteCard
+    ): Die? {
+        return upgradeDieAndUseNow(table, player, action.card, action.target)
+    }
+
+    private fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ): Die? {
+        val targetDie = (target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        if (targetDie == null) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_TARGET_MISSING, card = card))
+            return null
+        }
+        if (!player.diceHand.hasDie(targetDie)) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_NOT_FOUND, card = card))
+            return null
+        }
+
+        val upgraded = UpgradeDie(table.grove, dieFactory)(targetDie)
+        if (upgraded == null) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_UNAVAILABLE, card = card))
+            return null
+        }
+        if (!player.removeDieFromHand(targetDie)) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_NOT_FOUND, card = card))
+            return null
+        }
+        upgraded.roll()
+        player.addDieToHand(upgraded)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Upgraded a die and used it now",
+                dice = Dice(listOf(upgraded))
+            )
+        )
+        return upgraded
     }
 
 }

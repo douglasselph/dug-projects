@@ -14,14 +14,17 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingD
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorBattle(
-    chronicle: Chronicle = GameChronicle()
-) : GameCardEffectExecutorBase(chronicle) {
+    chronicle: Chronicle = GameChronicle(),
+    dieFactory: DieFactory = DieFactory(Randomizer.create())
+) : GameCardEffectExecutorBase(chronicle, dieFactory) {
 
 
     open operator fun invoke(
@@ -299,7 +302,32 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
-    private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    override fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionBattle.ExecuteCard): Die? {
+        val row = action.row ?: throw MainActionException("Battle upgrade requires a battle row")
+        val oldDie = (action.target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        val upgraded = super.upgradeDieAndUseNow(table, player, action) ?: return null
+        if (oldDie == null || !table.battle.remove(player, row, oldDie)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.UPGRADE_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return upgraded
+        }
+        table.battle.add(player, row, upgraded)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Replaced the upgraded die on the battle grid at $row",
+                dice = Dice(listOf(upgraded))
+            )
+        )
+        return upgraded
+    }
     private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun setDieToMatchAnother(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}

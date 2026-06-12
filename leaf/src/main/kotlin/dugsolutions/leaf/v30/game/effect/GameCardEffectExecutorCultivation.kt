@@ -10,14 +10,17 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingD
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.table.Table
 
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorCultivation(
-    chronicle: Chronicle = GameChronicle()
-) : GameCardEffectExecutorBase(chronicle) {
+    chronicle: Chronicle = GameChronicle(),
+    dieFactory: DieFactory = DieFactory(Randomizer.create())
+) : GameCardEffectExecutorBase(chronicle, dieFactory) {
 
     open operator fun invoke(
         table: Table,
@@ -249,7 +252,9 @@ open class GameCardEffectExecutorCultivation(
             )
         )
     }
-    private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+    override fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionCultivation.ExecuteCard): Die? {
+        return super.upgradeDieAndUseNow(table, player, action)
+    }
     private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun setDieToMatchAnother(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}

@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.game.di.gameModule
 import dugsolutions.leaf.v30.grove.di.groveModule
 import dugsolutions.leaf.v30.player.di.playerModule
 import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.round.di.roundModule
 import dugsolutions.leaf.v30.table.di.tableModule
 import dugsolutions.leaf.v30.wisp.di.wispModule
@@ -19,6 +20,7 @@ val appModule: Module = module {
     single { Dispatchers.Main }
     single { Dispatchers.IO }
     single<Randomizer> { Randomizer.create() }
+    single { DieFactory(get()) }
 }
 
 val appModules = listOf(
