@@ -61,7 +61,7 @@ class GainOrStealBeeAndBoostBeesTest {
     }
 
     @Test
-    fun cultivation_whenNoTargetPlayer_gainsBeeFromGroveAndBoostsIt() {
+    fun cultivation_whenNoTarget_gainsBeeFromGroveAndBoostsIt() {
         val chronicle = GameChronicle()
         val table = createTable()
         val card = loadCard()
@@ -79,6 +79,38 @@ class GainOrStealBeeAndBoostBeesTest {
         assertEquals(groveBeesBefore - 1, table.grove.count(Critter.BEE))
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
         assertEquals(Critter.BOOSTED_BEE, entry.critter)
+        assertEquals(
+            "Gained a bee from the Grove and boosted this player's bees for the round",
+            entry.detail
+        )
+    }
+
+    @Test
+    fun cultivation_whenTargetHasNullPlayer_gainsBeeFromGroveAndBoostsIt() {
+        val chronicle = GameChronicle()
+        val table = createTable()
+        val card = loadCard()
+        val player = Player(id = 1)
+        val groveBeesBefore = table.grove.count(Critter.BEE)
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+
+        executor(
+            table = table,
+            player = player,
+            action = ActionCultivation.ExecuteCard(
+                card = card,
+                target = ExecuteTarget()
+            )
+        )
+
+        assertEquals(1, player.critters.count { it == Critter.BOOSTED_BEE })
+        assertEquals(groveBeesBefore - 1, table.grove.count(Critter.BEE))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(Critter.BOOSTED_BEE, entry.critter)
+        assertEquals(
+            "Gained a bee from the Grove and boosted this player's bees for the round",
+            entry.detail
+        )
     }
 
     @Test

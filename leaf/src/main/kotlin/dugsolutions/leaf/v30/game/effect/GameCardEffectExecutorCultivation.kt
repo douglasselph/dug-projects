@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
+import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Cultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
@@ -197,7 +198,14 @@ open class GameCardEffectExecutorCultivation(
         super.gainOrStealBeeAndBoostBees(table, player, action)
     }
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        GainD4OrReturnD4RaiseDiePlus4Cultivation(chronicle, dieFactory)(
+            grove = table.grove,
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

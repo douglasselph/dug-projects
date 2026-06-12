@@ -3,6 +3,7 @@ package dugsolutions.leaf.v30.game.effect
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleItemSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
+import dugsolutions.leaf.v30.battle.BattleEvaluator
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
@@ -12,6 +13,7 @@ import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
+import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
@@ -309,8 +311,34 @@ open class GameCardEffectExecutorBattle(
         super.gainOrStealBeeAndBoostBees(table, player, action)
         table.battle.replaceCritter(player, Critter.BEE, Critter.BOOSTED_BEE)
     }
-    private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle wound winner requires a battle row")
+        val result = BattleEvaluator()(table.battle.snapshot())
+        val rowResult = result[row]
+        val playersById = table.players.associateBy { it.id }
+
+        rowResult.winners.forEach { playerId ->
+            playersById[playerId]?.flipItOrSnipIt()
+        }
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Wounded ${rowResult.winners.size} winner(s) on $row"
+            )
+        )
+    }
+    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        GainD4OrReturnD4RaiseDiePlus4Battle(chronicle, dieFactory)(
+            battle = table.battle,
+            grove = table.grove,
+            player = player,
+            card = action.card,
+            target = action.target,
+            row = action.row
+        )
+    }
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

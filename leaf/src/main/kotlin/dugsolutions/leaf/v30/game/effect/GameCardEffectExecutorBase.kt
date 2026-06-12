@@ -22,7 +22,7 @@ import dugsolutions.leaf.v30.table.Table
 
 abstract class GameCardEffectExecutorBase(
     protected val chronicle: Chronicle = GameChronicle(),
-    private val dieFactory: DieFactory = DieFactory(Randomizer.create())
+    protected val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) {
 
     companion object {

@@ -62,6 +62,19 @@ class Battle(
         return square.remove(dieItem)
     }
 
+    fun remove(
+        player: Player,
+        row: BattleStrikeRow,
+        die: DieValue
+    ): Boolean {
+        val square = grid.getSquare(player.id, row)
+        val dieItem = square.all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die.equals(die) }
+            ?: return false
+        return square.remove(dieItem)
+    }
+
     fun add(
         player: Player,
         row: BattleStrikeRow,
