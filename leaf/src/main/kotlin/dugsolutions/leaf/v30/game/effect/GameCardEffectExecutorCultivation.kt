@@ -9,6 +9,7 @@ import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
@@ -183,7 +184,15 @@ open class GameCardEffectExecutorCultivation(
             target = action.target
         )
     }
-    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        RaiseDiePlus2PerWormAndDiscardWorm(chronicle)(
+            scope = HandleDieEffectScope(player),
+            grove = table.grove,
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

@@ -14,6 +14,7 @@ import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
@@ -284,7 +285,22 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
-    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise per worm requires a battle row")
+        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        RaiseDiePlus2PerWormAndDiscardWorm(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            grove = table.grove,
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
