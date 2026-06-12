@@ -27,7 +27,7 @@ class RaiseDiePlus2PerWormAndDiscardWorm(
         card: GameCard,
         target: ExecuteTarget?
     ) {
-        val targetDie = (target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        val targetDie = target?.dice?.firstDie
         if (targetDie == null) {
             chronicle(Moment.Warning(player = scope.actingPlayer, type = WarningType.RAISE_TARGET_MISSING, card = card))
             return

@@ -37,7 +37,7 @@ class SimpleDieEffectsCultivationTest {
         RerollDieUntilThreeOrHigher(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(6, 1)))
         )
 
         assertEquals(3, die.rollCount)
@@ -59,7 +59,7 @@ class SimpleDieEffectsCultivationTest {
             table = table,
             player = player,
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 5)))
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(6, 5)))
         )
 
         assertEquals(6, die.value)
@@ -80,7 +80,7 @@ class SimpleDieEffectsCultivationTest {
         FlipDieToOppositeFace(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(8, 3)))
         )
 
         assertEquals(6, die.value)
@@ -102,7 +102,7 @@ class SimpleDieEffectsCultivationTest {
         SetDieToMatchAnother(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 6), FixedDie(6, 2)))
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(8, 6), FixedDie(6, 2)))
         )
 
         assertEquals(6, source.value)

@@ -16,7 +16,7 @@ class SetDieToMatchAnother(
         card: GameCard,
         target: ExecuteTarget?
     ) {
-        val targetDice = (target as? ExecuteTarget.PlayerDie)?.dice?.diceInOrder.orEmpty()
+        val targetDice = target?.dice?.diceInOrder.orEmpty()
         require(targetDice.size == TARGET_DICE_COUNT) {
             "Set die to match another requires exactly $TARGET_DICE_COUNT dice"
         }

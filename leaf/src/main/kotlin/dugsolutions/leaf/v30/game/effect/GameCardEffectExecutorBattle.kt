@@ -125,15 +125,16 @@ open class GameCardEffectExecutorBattle(
     }
 
     private fun placeBulwarkToken(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie ?: return
+        val target = action.target ?: return
+        val targetPlayer = target.player ?: return
         val row = findTargetRow(table, target) ?: return
-        table.battle.addBulwarkToken(target.player, row)
+        table.battle.addBulwarkToken(targetPlayer, row)
         chronicle(
             Moment.GameCardEffect(
                 player = player,
                 card = action.card,
                 effect = action.card.effect,
-                detail = "Placed a Bulwark token on player ${target.player.id}'s $row square",
+                detail = "Placed a Bulwark token on player ${targetPlayer.id}'s $row square",
                 dice = target.dice
             )
         )
@@ -141,10 +142,11 @@ open class GameCardEffectExecutorBattle(
 
     private fun findTargetRow(
         table: Table,
-        target: ExecuteTarget.PlayerDie
+        target: ExecuteTarget
     ): BattleStrikeRow? {
+        val targetPlayer = target.player ?: return null
         return BattleStrikeRow.entries.firstOrNull { row ->
-            table.battle.grid.getSquare(target.player.id, row).all
+            table.battle.grid.getSquare(targetPlayer.id, row).all
                 .filterIsInstance<BattleItem.DieItem>()
                 .any { target.dice.hasDie(it.die) }
         }
@@ -156,7 +158,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
-        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        val targetPlayer = (action.target)?.player ?: player
         RerollDieUntilThreeOrHigher(chronicle)(
             scope = BattleDieEffectScope(
                 battle = table.battle,
@@ -174,7 +176,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")
-        val target = action.target as? ExecuteTarget.PlayerDie
+        val target = action.target
         if (target == null) {
             chronicle(
                 Moment.Warning(
@@ -185,10 +187,12 @@ open class GameCardEffectExecutorBattle(
             )
             return
         }
+        val targetPlayer = target.player
+            ?: throw MainActionException("Battle raise and double requires player dice target")
         RaiseDiePlus1AndDoubleMatchingDiceBattle(chronicle)(
             battle = table.battle,
             player = player,
-            targetPlayer = target.player,
+            targetPlayer = targetPlayer,
             row = row,
             card = action.card,
             target = target.dice
@@ -196,7 +200,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun doubleOneDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle double die requires a battle row")
-        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        val targetPlayer = (action.target)?.player ?: player
         DoubleOneDie(chronicle)(
             scope = BattleDieEffectScope(
                 battle = table.battle,
@@ -232,7 +236,7 @@ open class GameCardEffectExecutorBattle(
     }
     override fun upgradeDieAndUseNow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard): Die? {
         val row = action.row ?: throw MainActionException("Battle upgrade requires a battle row")
-        val oldDie = (action.target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        val oldDie = (action.target)?.dice?.firstDie
         val upgraded = super.upgradeDieAndUseNow(table, player, action) ?: return null
         if (oldDie == null || !table.battle.remove(player, row, oldDie)) {
             chronicle(
@@ -258,7 +262,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle flip requires a battle row")
-        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        val targetPlayer = (action.target)?.player ?: player
         FlipDieToOppositeFace(chronicle)(
             scope = BattleDieEffectScope(
                 battle = table.battle,
@@ -272,7 +276,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle set die requires a battle row")
-        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player
+        val targetPlayer = (action.target)?.player
             ?: throw MainActionException("Battle set die requires player dice target")
         SetDieToMatchAnother(chronicle)(
             scope = BattleDieEffectScope(
@@ -287,7 +291,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise per worm requires a battle row")
-        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        val targetPlayer = (action.target)?.player ?: player
         RaiseDiePlus2PerWormAndDiscardWorm(chronicle)(
             scope = BattleDieEffectScope(
                 battle = table.battle,
@@ -301,7 +305,10 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
-    private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    override fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        super.gainOrStealBeeAndBoostBees(table, player, action)
+        table.battle.replaceCritter(player, Critter.BEE, Critter.BOOSTED_BEE)
+    }
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

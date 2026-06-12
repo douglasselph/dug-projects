@@ -47,7 +47,7 @@ class SimpleDieEffectsBattleTest {
                 row = BattleStrikeRow.STRIKE_1
             ),
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
+            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
         )
 
         assertEquals(3, targetDie.rollCount)
@@ -71,7 +71,7 @@ class SimpleDieEffectsBattleTest {
             table = table,
             player = actingPlayer,
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
+            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
             row = BattleStrikeRow.STRIKE_1
         )
 
@@ -101,7 +101,7 @@ class SimpleDieEffectsBattleTest {
                 row = BattleStrikeRow.STRIKE_1
             ),
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
+            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
         )
 
         assertEquals(3, targetDie.value)
@@ -129,7 +129,7 @@ class SimpleDieEffectsBattleTest {
                 row = BattleStrikeRow.STRIKE_1
             ),
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6), FixedDie(6, 2))),
+            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6), FixedDie(6, 2))),
         )
 
         assertEquals(6, source.value)

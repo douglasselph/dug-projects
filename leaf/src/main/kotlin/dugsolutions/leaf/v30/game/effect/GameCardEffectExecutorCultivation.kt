@@ -130,7 +130,7 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie
+        val target = action.target
         if (target == null) {
             chronicle(
                 Moment.Warning(
@@ -193,7 +193,9 @@ open class GameCardEffectExecutorCultivation(
             target = action.target
         )
     }
-    private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    override fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        super.gainOrStealBeeAndBoostBees(table, player, action)
+    }
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

@@ -33,7 +33,7 @@ class DoubleOneDieTest {
         DoubleOneDie(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(8, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(8, 3)))
         )
 
         assertEquals(6, die.value)
@@ -60,7 +60,7 @@ class DoubleOneDieTest {
                 row = BattleStrikeRow.STRIKE_1
             ),
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(TestDie(8, 4)))
+            target = ExecuteTarget(player = target, dice = diceOf(TestDie(8, 4)))
         )
 
         assertEquals(8, targetDie.value)
@@ -94,7 +94,7 @@ class DoubleOneDieTest {
         DoubleOneDie(chronicle)(
             scope = HandleDieEffectScope(player),
             card = loadCard(),
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(6, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(6, 3)))
         )
 
         val warning = assertIs<GameEntry.Warning>(chronicle.getEntries().single())

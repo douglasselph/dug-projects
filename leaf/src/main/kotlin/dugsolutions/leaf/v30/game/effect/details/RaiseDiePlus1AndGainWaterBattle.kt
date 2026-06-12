@@ -23,18 +23,20 @@ class RaiseDiePlus1AndGainWaterBattle(
         row: BattleStrikeRow?
     ) {
         val targetRow = row ?: throw MainActionException("Battle raise requires a battle row")
-        val targetPlayerDie = target as? ExecuteTarget.PlayerDie
+        val targetPlayerDie = target
         if (targetPlayerDie == null) {
             chronicle(Moment.Warning(player = player, type = WarningType.RAISE_TARGET_MISSING, card = card))
             return
         }
+        val targetPlayer = targetPlayerDie.player
+            ?: throw MainActionException("Battle raise requires player dice target")
         val targetDie = targetPlayerDie.dice.firstDie
-        if (!table.battle.hasDie(targetPlayerDie.player, targetRow, targetDie)) {
+        if (!table.battle.hasDie(targetPlayer, targetRow, targetDie)) {
             chronicle(Moment.Warning(player = player, type = WarningType.RAISE_DIE_NOT_FOUND, card = card))
             return
         }
         val raised = table.battle.raiseDie(
-            player = targetPlayerDie.player,
+            player = targetPlayer,
             row = targetRow,
             die = targetDie ?: throw MainActionException("Raise target die was not found"),
             amount = RAISE_AMOUNT

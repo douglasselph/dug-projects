@@ -47,6 +47,22 @@ abstract class GameCardEffectExecutorBase(
         gainWormAndBoostWorms(table, player, action.card)
     }
 
+    protected open fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        action: ActionCultivation.ExecuteCard
+    ) {
+        gainOrStealBeeAndBoostBees(table, player, action.card, action.target)
+    }
+
+    protected open fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
+        gainOrStealBeeAndBoostBees(table, player, action.card, action.target)
+    }
+
     private fun gainWormAndBoostWorms(
         table: Table,
         player: Player,
@@ -66,6 +82,47 @@ abstract class GameCardEffectExecutorBase(
                 critter = Critter.BOOSTED_WORM
             )
         )
+    }
+
+    private fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ) {
+        val sourcePlayer = target?.player
+        val gainedFrom = when {
+            sourcePlayer != null && stealBee(sourcePlayer, player) -> "player ${sourcePlayer.id}"
+            table.grove.has(Critter.BEE) -> {
+                table.grove.remove(Critter.BEE)
+                player.addCritter(Critter.BEE)
+                "the Grove"
+            }
+            else -> null
+        }
+        player.replaceCritter(Critter.BEE, Critter.BOOSTED_BEE)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Gained a bee from ${gainedFrom ?: "nowhere"} and boosted this player's bees for the round",
+                critter = Critter.BOOSTED_BEE
+            )
+        )
+    }
+
+    private fun stealBee(
+        sourcePlayer: Player,
+        targetPlayer: Player
+    ): Boolean {
+        val stolen = when {
+            sourcePlayer.removeCritter(Critter.BEE) -> Critter.BEE
+            sourcePlayer.removeCritter(Critter.BOOSTED_BEE) -> Critter.BOOSTED_BEE
+            else -> null
+        } ?: return false
+        targetPlayer.addCritter(stolen.normal)
+        return true
     }
 
     protected open fun mulchDieFromDiscard(
@@ -177,7 +234,7 @@ abstract class GameCardEffectExecutorBase(
         card: GameCard,
         target: ExecuteTarget?
     ): Die? {
-        val targetDie = (target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        val targetDie = target?.dice?.firstDie
         if (targetDie == null) {
             chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_TARGET_MISSING, card = card))
             return null

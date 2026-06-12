@@ -33,7 +33,7 @@ class FlipDieToOppositeFaceTest {
         FlipDieToOppositeFace(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(8, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(8, 3)))
         )
 
         assertEquals(6, die.value)
@@ -60,7 +60,7 @@ class FlipDieToOppositeFaceTest {
                 row = BattleStrikeRow.STRIKE_1
             ),
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(TestDie(8, 6)))
+            target = ExecuteTarget(player = target, dice = diceOf(TestDie(8, 6)))
         )
 
         assertEquals(3, targetDie.value)
@@ -80,7 +80,7 @@ class FlipDieToOppositeFaceTest {
         FlipDieToOppositeFace(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(4, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(4, 3)))
         )
 
         assertEquals(3, die.value)
@@ -112,7 +112,7 @@ class FlipDieToOppositeFaceTest {
         FlipDieToOppositeFace(chronicle)(
             scope = HandleDieEffectScope(player),
             card = loadCard(),
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(6, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(6, 3)))
         )
 
         val warning = assertIs<GameEntry.Warning>(chronicle.getEntries().single())

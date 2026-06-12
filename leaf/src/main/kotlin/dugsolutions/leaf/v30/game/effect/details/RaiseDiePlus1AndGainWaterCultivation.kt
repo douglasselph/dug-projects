@@ -19,7 +19,7 @@ class RaiseDiePlus1AndGainWaterCultivation(
         card: GameCard,
         target: ExecuteTarget?
     ) {
-        val targetDie = (target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
+        val targetDie = target?.dice?.firstDie
         if (targetDie == null) {
             chronicle(Moment.Warning(player = player, type = WarningType.RAISE_TARGET_MISSING, card = card))
             return

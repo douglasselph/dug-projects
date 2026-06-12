@@ -51,7 +51,7 @@ class RaiseDiePlus2PerWormAndDiscardWormTest {
             grove = table.grove,
             player = player,
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(12, 2)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(12, 2)))
         )
 
         assertEquals(6, die.value)
@@ -82,7 +82,7 @@ class RaiseDiePlus2PerWormAndDiscardWormTest {
             grove = table.grove,
             player = player,
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(12, 2)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(12, 2)))
         )
 
         assertEquals(8, die.value)
@@ -112,7 +112,7 @@ class RaiseDiePlus2PerWormAndDiscardWormTest {
             grove = table.grove,
             player = player,
             card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(20, 3)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(20, 3)))
         )
 
         assertEquals(9, die.value)
@@ -152,7 +152,7 @@ class RaiseDiePlus2PerWormAndDiscardWormTest {
             grove = table.grove,
             player = acting,
             card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(TestDie(12, 2)))
+            target = ExecuteTarget(player = target, dice = diceOf(TestDie(12, 2)))
         )
 
         assertEquals(6, targetDie.value)
@@ -192,7 +192,7 @@ class RaiseDiePlus2PerWormAndDiscardWormTest {
             grove = table.grove,
             player = player,
             card = loadCard(),
-            target = ExecuteTarget.PlayerDie(player, diceOf(TestDie(6, 2)))
+            target = ExecuteTarget(player = player, dice = diceOf(TestDie(6, 2)))
         )
 
         val warning = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
