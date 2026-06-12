@@ -131,6 +131,19 @@ class Battle(
         return dieItem.die
     }
 
+    fun rerollDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: DieValue
+    ): Die? {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die.equals(die) }
+            ?: return null
+        dieItem.die.roll()
+        return dieItem.die
+    }
+
     fun raiseDie(
         player: Player,
         row: BattleStrikeRow,

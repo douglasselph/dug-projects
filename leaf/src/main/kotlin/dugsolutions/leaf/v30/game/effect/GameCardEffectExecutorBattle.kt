@@ -12,6 +12,7 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
+import dugsolutions.leaf.v30.game.effect.details.DrainHigherDiceAndRaiseOwnDieBattle
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
@@ -19,6 +20,7 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
+import dugsolutions.leaf.v30.game.effect.details.RerollHigherOpposingDiceOnStrikeRowBattle
 import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.details.SwapTwoOwnDiceBattle
@@ -379,8 +381,24 @@ open class GameCardEffectExecutorBattle(
             card = action.card
         )
     }
-    private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        RerollHigherOpposingDiceOnStrikeRowBattle(chronicle)(
+            battle = table.battle,
+            player = player,
+            card = action.card,
+            target = action.target,
+            row = action.row
+        )
+    }
+    private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        DrainHigherDiceAndRaiseOwnDieBattle(chronicle)(
+            battle = table.battle,
+            player = player,
+            card = action.card,
+            target = action.target,
+            row = action.row
+        )
+    }
     private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
