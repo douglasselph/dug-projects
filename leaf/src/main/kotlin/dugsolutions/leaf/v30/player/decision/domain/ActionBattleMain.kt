@@ -12,7 +12,8 @@ sealed interface ActionBattleMain {
     data class ExecuteCard(
         val card: GameCard,
         val target: ExecuteTarget? = null,
-        val row: BattleStrikeRow? = null
+        val row: BattleStrikeRow? = null,
+        val row2: BattleStrikeRow? = null
     ) : ActionBattleMain
     data class PlayWispCard(val card: WispCard, val wispCardTarget: ExecuteTarget? = null) : ActionBattleMain
 }

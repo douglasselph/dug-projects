@@ -10,6 +10,7 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Cultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
@@ -207,7 +208,14 @@ open class GameCardEffectExecutorCultivation(
         )
     }
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        RaiseDiePlus1PerGraftedRootOrVine(chronicle)(
+            scope = HandleDieEffectScope(player),
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

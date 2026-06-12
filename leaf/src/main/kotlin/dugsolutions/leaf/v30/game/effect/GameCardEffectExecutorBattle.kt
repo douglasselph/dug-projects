@@ -16,9 +16,11 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
+import dugsolutions.leaf.v30.game.effect.details.SwapTwoOwnDiceBattle
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -339,8 +341,30 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
-    private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        SwapTwoOwnDiceBattle(chronicle)(
+            battle = table.battle,
+            player = player,
+            card = action.card,
+            target = action.target,
+            row = action.row,
+            row2 = action.row2
+        )
+    }
+    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise per grafted root or vine requires a battle row")
+        RaiseDiePlus1PerGraftedRootOrVine(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = player,
+                row = row
+            ),
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
