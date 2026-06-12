@@ -340,6 +340,90 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenDoubleOneDie_doublesHandDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(6, 3)
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.DOUBLE_ONE_DIE)
+        val action = MainActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 3)))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(6, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(6, entry.dice.single().value)
+    }
+
+    @Test
+    fun cultivationInvoke_whenDoubleOneDieHasNoTarget_recordsWarning() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.DOUBLE_ONE_DIE)
+
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
+
+        val entry = assertIs<GameEntry.Warning>(chronicle.getEntries().single())
+        assertEquals(WarningType.RAISE_TARGET_MISSING, entry.type)
+        assertEquals(card.id, entry.cardId)
+    }
+
+    @Test
+    fun battleInvoke_whenDoubleOneDie_doublesBattleGridDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val targetDie = FixedDie(8, 4)
+        val target = playerWithDice(1, targetDie, FixedDie(6, 3), FixedDie(10, 1))
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.DOUBLE_ONE_DIE)
+        val action = MainActionBattle.ExecuteCard(
+            card = card,
+            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 4))),
+            row = BattleStrikeRow.STRIKE_1
+        )
+        val player = Player(id = 9)
+
+        executor(table, player, action)
+
+        assertEquals(8, targetDie.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(8, entry.dice.single().value)
+    }
+
+    @Test
+    fun battleInvoke_whenDoubleOneDieHasNoRow_throwsException() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7)
+        val action = MainActionBattle.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.DOUBLE_ONE_DIE),
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
+        )
+
+        assertThrows<MainActionException> {
+            executor(table, player, action)
+        }
+    }
+
+    @Test
     fun cultivationInvoke_whenGainWormAndBoostWorms_gainsWormAndBoostsPlayerWorms() {
         val executor = GameCardEffectExecutorCultivation()
         val table = createTable(numBattle = 0, numCultivation = 1)

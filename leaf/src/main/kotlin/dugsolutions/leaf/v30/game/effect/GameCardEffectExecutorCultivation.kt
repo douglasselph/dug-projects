@@ -197,7 +197,43 @@ open class GameCardEffectExecutorCultivation(
             target = target.dice
         )
     }
-    private fun doubleOneDie(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+    private fun doubleOneDie(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.RAISE_TARGET_MISSING,
+                    card = action.card
+                )
+            )
+            return
+        }
+        val die = target.dice.firstDie
+        if (!player.diceHand.hasDie(die)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.RAISE_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        val raised = player.raiseDie(
+            die = die ?: throw MainActionException("Double target die was not found"),
+            amount = die.value
+        ) ?: return
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Doubled one hand die",
+                dice = Dice(listOf(raised))
+            )
+        )
+    }
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
