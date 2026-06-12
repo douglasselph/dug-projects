@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
@@ -148,6 +149,50 @@ class RoundBattleTest {
 
         assertEquals(listOf(wispCard), wispExecutor.cards)
         assertEquals(listOf(4, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsExecuteCard_flipsCreatureCardFaceDown() {
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val card = loadGameCard("Root_05_01")
+        val gameCardEffectExecutor = TrackingGameCardEffectExecutor()
+        val target = player(
+            4,
+            FixedDie(4, 2),
+            FixedDie(6, 2),
+            FixedDie(8, 2),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(
+                    MainActionBattle.ExecuteCard(card),
+                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                )
+            )
+        ).apply {
+            addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(
+            table = table,
+            card = loadBattleCard(),
+            battle = battle,
+            gameCardEffectExecutor = gameCardEffectExecutor
+        )
+        round.prepare()
+
+        round.performMainActions()
+
+        assertEquals(listOf(MainActionBattle.ExecuteCard(card)), gameCardEffectExecutor.actions)
+        assertEquals(true, target.creatureCards.single { it.card == card }.isFaceDown)
+        assertEquals(listOf(4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
 
     @Test
@@ -366,6 +411,18 @@ class RoundBattleTest {
             card: WispCard
         ) {
             cards.add(card)
+        }
+    }
+
+    private class TrackingGameCardEffectExecutor : GameCardEffectExecutorBattle() {
+        val actions = mutableListOf<MainActionBattle.ExecuteCard>()
+
+        override fun invoke(
+            table: Table,
+            player: Player,
+            action: MainActionBattle.ExecuteCard
+        ) {
+            actions.add(action)
         }
     }
 

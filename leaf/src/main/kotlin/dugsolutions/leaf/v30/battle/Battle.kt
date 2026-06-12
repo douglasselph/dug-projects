@@ -23,10 +23,7 @@ class Battle(
     val grid: BattleGrid
         get() = _grid ?: throw IllegalStateException("Battle grid has not been setup")
 
-    val isSetup: Boolean
-        get() = _grid != null
-
-    fun setup(players: List<Player>): Battle {
+      fun setup(players: List<Player>): Battle {
         val orderedPlayers = playerGridOrder(players)
         _grid = BattleGrid(orderedPlayers.map { it.id })
         orderedPlayers.forEach { player ->
@@ -110,8 +107,9 @@ class Battle(
     fun hasDie(
         player: Player,
         row: BattleStrikeRow,
-        die: Die
+        die: Die?
     ): Boolean {
+        if (die == null) return false
         return grid.getSquare(player.id, row).all
             .filterIsInstance<BattleItem.DieItem>()
             .any { it.die == die }

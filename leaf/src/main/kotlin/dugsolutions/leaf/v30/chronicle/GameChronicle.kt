@@ -110,7 +110,7 @@ class GameChronicle(
                 cardName = moment.card.name,
                 effect = moment.effect,
                 detail = moment.detail,
-                die = moment.die?.copy,
+                dice = moment.dice?.copy.orEmpty(),
                 token = moment.token,
                 critter = moment.critter
             )

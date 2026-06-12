@@ -17,6 +17,9 @@ class Dice(dice: List<Die> = emptyList()) {
     val copy: List<DieValue>
         get() = synchronized(lock) { dice.map { it.copy } }
 
+    val firstDie: Die?
+        get() = synchronized(lock) { _dice.firstOrNull() }
+
     val totalSides: Int
         get() = synchronized(lock) { _dice.sumOf { it.sides } }
 
@@ -96,11 +99,13 @@ class Dice(dice: List<Die> = emptyList()) {
         roll()
     }
 
-    fun hasDie(die: Die): Boolean {
+    fun hasDie(die: Die?): Boolean {
+        if (die == null) return false
         return synchronized(lock) { _dice.contains(die) }
     }
 
-    fun hasDie(die: DieValue): Boolean {
+    fun hasDie(die: DieValue?): Boolean {
+        if (die == null) return false
         return synchronized(lock) { _dice.any { it.equals(die) } }
     }
 

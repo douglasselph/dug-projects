@@ -9,9 +9,11 @@ import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.table.Table
 
@@ -121,7 +123,7 @@ open class GameCardEffectExecutorBattle(
                 card = action.card,
                 effect = action.card.effect,
                 detail = "Placed a Bulwark token on player ${target.player.id}'s $row square",
-                die = target.die
+                dice = target.dice
             )
         )
     }
@@ -133,7 +135,7 @@ open class GameCardEffectExecutorBattle(
         return BattleStrikeRow.entries.firstOrNull { row ->
             table.battle.grid.getSquare(target.player.id, row).all
                 .filterIsInstance<BattleItem.DieItem>()
-                .any { it.die == target.die }
+                .any { target.dice.hasDie(it.die) }
         }
     }
 
@@ -154,7 +156,8 @@ open class GameCardEffectExecutorBattle(
             )
             return
         }
-        if (!table.battle.hasDie(target.player, row, target.die)) {
+        val die = target.dice.firstDie
+        if (!table.battle.hasDie(target.player, row, die)) {
             chronicle(
                 Moment.Warning(
                     player = player,
@@ -165,8 +168,8 @@ open class GameCardEffectExecutorBattle(
             return
         }
         val rerolled = rerollUntilThreeOrHigher(
-            initial = target.die,
-            reroll = { die -> table.battle.rerollDie(target.player, row, die) }
+            initial = die ?: throw MainActionException("Reroll target die was not found"),
+            reroll = { targetDie -> table.battle.rerollDie(target.player, row, targetDie) }
         )
         chronicle(
             Moment.GameCardEffect(
@@ -174,7 +177,7 @@ open class GameCardEffectExecutorBattle(
                 card = action.card,
                 effect = action.card.effect,
                 detail = "Rerolled player ${target.player.id}'s battle die on $row until it was $MIN_REROLL_VALUE or higher",
-                die = rerolled
+                dice = Dice(listOf(rerolled))
             )
         )
     }
@@ -192,7 +195,8 @@ open class GameCardEffectExecutorBattle(
             )
             return
         }
-        if (!table.battle.hasDie(target.player, row, target.die)) {
+        val die = target.dice.firstDie
+        if (!table.battle.hasDie(target.player, row, die)) {
             chronicle(
                 Moment.Warning(
                     player = player,
@@ -206,11 +210,32 @@ open class GameCardEffectExecutorBattle(
             table = table,
             player = player,
             card = action.card,
-            die = target.die,
-            raiseDie = { die, amount -> table.battle.raiseDie(target.player, row, die, amount) }
+            die = die ?: throw MainActionException("Raise target die was not found"),
+            raiseDie = { targetDie, amount -> table.battle.raiseDie(target.player, row, targetDie, amount) }
         )
     }
-    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.DOUBLE_MATCHING_DICE_INVALID_TARGET,
+                    card = action.card
+                )
+            )
+            return
+        }
+        RaiseDiePlus1AndDoubleMatchingDiceBattle(chronicle)(
+            battle = table.battle,
+            player = player,
+            targetPlayer = target.player,
+            row = row,
+            card = action.card,
+            target = target.dice
+        )
+    }
     private fun doubleOneDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}

@@ -115,7 +115,7 @@ sealed class GameEntry(
         val cardName: String,
         val effect: CardEffect,
         val detail: String,
-        val die: DieValue? = null,
+        val dice: List<DieValue> = emptyList(),
         val token: Token? = null,
         val critter: Critter? = null
     ) : GameEntry(

@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.domain.CreatureCard
+import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -56,7 +57,7 @@ sealed class Moment {
         val card: GameCard,
         val effect: CardEffect,
         val detail: String,
-        val die: Die? = null,
+        val dice: Dice? = null,
         val token: Token? = null,
         val critter: Critter? = null
     ) : Moment()

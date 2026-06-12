@@ -10,6 +10,7 @@ import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.table.Table
@@ -96,7 +97,7 @@ abstract class GameCardEffectExecutorBase(
                 card = card,
                 effect = card.effect,
                 detail = "Mulched the highest-sided die from discard and gained a matching mulch token",
-                die = die,
+                dice = Dice(listOf(die)),
                 token = token
             )
         )
@@ -131,7 +132,7 @@ abstract class GameCardEffectExecutorBase(
                 card = card,
                 effect = card.effect,
                 detail = "Raised a die by $RAISE_PLUS_ONE",
-                die = raisedDie
+                dice = Dice(listOf(raisedDie))
             )
         )
 

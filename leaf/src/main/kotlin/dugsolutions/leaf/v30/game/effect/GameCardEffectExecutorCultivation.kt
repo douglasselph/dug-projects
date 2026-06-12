@@ -6,9 +6,11 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.table.Table
 
@@ -119,7 +121,8 @@ open class GameCardEffectExecutorCultivation(
             )
             return
         }
-        if (!player.diceHand.hasDie(target.die)) {
+        val die = target.dice.firstDie
+        if (!player.diceHand.hasDie(die)) {
             chronicle(
                 Moment.Warning(
                     player = player,
@@ -130,8 +133,8 @@ open class GameCardEffectExecutorCultivation(
             return
         }
         val rerolled = rerollUntilThreeOrHigher(
-            initial = target.die,
-            reroll = { die -> player.rerollDie(die) }
+            initial = die ?: throw MainActionException("Reroll target die was not found"),
+            reroll = { targetDie -> player.rerollDie(targetDie) }
         )
         chronicle(
             Moment.GameCardEffect(
@@ -139,7 +142,7 @@ open class GameCardEffectExecutorCultivation(
                 card = action.card,
                 effect = action.card.effect,
                 detail = "Rerolled a hand die until it was $MIN_REROLL_VALUE or higher",
-                die = rerolled
+                dice = Dice(listOf(rerolled))
             )
         )
     }
@@ -156,7 +159,8 @@ open class GameCardEffectExecutorCultivation(
             )
             return
         }
-        if (!player.diceHand.hasDie(target.die)) {
+        val die = target.dice.firstDie
+        if (!player.diceHand.hasDie(die)) {
             chronicle(
                 Moment.Warning(
                     player = player,
@@ -170,11 +174,29 @@ open class GameCardEffectExecutorCultivation(
             table = table,
             player = player,
             card = action.card,
-            die = target.die,
-            raiseDie = { die, amount -> player.raiseDie(die, amount) }
+            die = die ?: throw MainActionException("Raise target die was not found"),
+            raiseDie = { targetDie, amount -> player.raiseDie(targetDie, amount) }
         )
     }
-    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+
+    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {
+        val target = action.target as? ExecuteTarget.PlayerDie
+        if (target == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.DOUBLE_MATCHING_DICE_INVALID_TARGET,
+                    card = action.card
+                )
+            )
+            return
+        }
+        RaiseDiePlus1AndDoubleMatchingDiceCultivation(chronicle)(
+            player = player,
+            card = action.card,
+            target = target.dice
+        )
+    }
     private fun doubleOneDie(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}

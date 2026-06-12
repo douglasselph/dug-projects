@@ -111,6 +111,7 @@ class RoundBattle(
                     player = player,
                     action = action
                 )
+                player.flipCreatureCardFaceDown(action.card)
                 chronicle(
                     Moment.MainAction(
                         player = player,

@@ -55,7 +55,7 @@ class GameEntryMessage {
 
     private fun gameCardEffect(entry: GameEntry.GameCardEffect): String {
         return "Round ${entry.time.round}: player ${entry.playerId} resolved ${entry.effect} from ${entry.cardName}: ${entry.detail}" +
-            entry.die?.let { " die=D${it.sides}=${it.value}" }.orEmpty() +
+            (if (entry.dice.isNotEmpty()) " dice=${entry.dice.joinToString { "D${it.sides}=${it.value}" }}" else "") +
             entry.token?.let { " token=$it" }.orEmpty() +
             entry.critter?.let { " critter=$it" }.orEmpty() +
             "."

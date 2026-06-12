@@ -48,8 +48,11 @@ class Player(
     val diceSupply: Dice
         get() = Dice(_diceSupply.dice)
 
-    val diceHand: Dice
+    var diceHand: Dice
         get() = Dice(_diceHand.dice)
+        set(value) {
+            _diceHand.set(value.dice)
+        }
 
     val diceDiscard: Dice
         get() = Dice(_diceDiscard.dice)

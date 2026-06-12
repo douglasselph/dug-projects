@@ -19,6 +19,7 @@ import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
 import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.round.RoundCardManager
@@ -90,7 +91,7 @@ class GameCardEffectExecutorTest {
         )
         val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.PLACE_BULWARK_TOKEN),
-            target = ExecuteTarget.PlayerDie(target, targetDie)
+            target = ExecuteTarget.PlayerDie(target, diceOf(targetDie))
         )
 
         executor(table, Player(id = 9), action)
@@ -113,7 +114,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
         val action = MainActionCultivation.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
         )
 
         executor(table, player, action)
@@ -122,7 +123,7 @@ class GameCardEffectExecutorTest {
         assertEquals(3, die.value)
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
         assertEquals(card.effect, entry.effect)
-        assertEquals(3, entry.die?.value)
+        assertEquals(3, entry.dice.firstOrNull()?.value)
     }
 
     @Test
@@ -151,7 +152,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
         val action = MainActionCultivation.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(player, FixedDie(8, 1))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 1)))
         )
 
         executor(table, player, action)
@@ -171,7 +172,7 @@ class GameCardEffectExecutorTest {
         }
         val action = MainActionCultivation.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER),
-            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
         )
 
         assertThrows<MainActionException> {
@@ -198,7 +199,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER)
         val action = MainActionBattle.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(target, FixedDie(8, 6)),
+            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
             row = BattleStrikeRow.STRIKE_1
         )
 
@@ -208,7 +209,7 @@ class GameCardEffectExecutorTest {
         assertEquals(4, targetDie.value)
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
         assertEquals(card.effect, entry.effect)
-        assertEquals(4, entry.die?.value)
+        assertEquals(4, entry.dice.firstOrNull()?.value)
     }
 
     @Test
@@ -218,7 +219,7 @@ class GameCardEffectExecutorTest {
         val player = Player(id = 7)
         val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.REROLL_DIE_UNTIL_THREE_OR_HIGHER),
-            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
         )
 
         assertThrows<MainActionException> {
@@ -238,7 +239,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
         val action = MainActionCultivation.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 5))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 5)))
         )
 
         executor(table, player, action)
@@ -248,7 +249,7 @@ class GameCardEffectExecutorTest {
         assertEquals(7, table.grove.count(Token.WATER))
         val entries = chronicle.getEntries().filterIsInstance<GameEntry.GameCardEffect>()
         assertEquals(2, entries.size)
-        assertEquals(6, entries[0].die?.value)
+        assertEquals(6, entries[0].dice.firstOrNull()?.value)
         assertEquals(Token.WATER, entries[1].token)
     }
 
@@ -278,7 +279,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
         val action = MainActionCultivation.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(player, FixedDie(8, 5))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 5)))
         )
 
         executor(table, player, action)
@@ -307,7 +308,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER)
         val action = MainActionBattle.ExecuteCard(
             card = card,
-            target = ExecuteTarget.PlayerDie(target, FixedDie(8, 6)),
+            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
             row = BattleStrikeRow.STRIKE_1
         )
         val player = Player(id = 9)
@@ -319,7 +320,7 @@ class GameCardEffectExecutorTest {
         assertEquals(7, table.grove.count(Token.WATER))
         val entries = chronicle.getEntries().filterIsInstance<GameEntry.GameCardEffect>()
         assertEquals(2, entries.size)
-        assertEquals(7, entries[0].die?.value)
+        assertEquals(7, entries[0].dice.firstOrNull()?.value)
         assertEquals(Token.WATER, entries[1].token)
     }
 
@@ -330,7 +331,7 @@ class GameCardEffectExecutorTest {
         val player = Player(id = 7)
         val action = MainActionBattle.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_GAIN_WATER),
-            target = ExecuteTarget.PlayerDie(player, FixedDie(6, 1))
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
         )
 
         assertThrows<MainActionException> {
@@ -487,6 +488,10 @@ class GameCardEffectExecutorTest {
             dice.forEach { addDieToSupply(it) }
             repeat(dice.size) { drawDie() }
         }
+    }
+
+    private fun diceOf(vararg dice: Die): Dice {
+        return Dice(dice.toList())
     }
 
     private class FixedDie(
