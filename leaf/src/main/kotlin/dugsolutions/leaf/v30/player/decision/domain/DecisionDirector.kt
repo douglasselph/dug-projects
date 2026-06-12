@@ -7,9 +7,11 @@ interface DecisionDirector {
 
     fun chooseCritter(input: Decision.ChooseCritter): Critter
 
-    fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation
+    fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation
 
-    fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle
+    fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain
+
+    fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport
 
     fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy
 

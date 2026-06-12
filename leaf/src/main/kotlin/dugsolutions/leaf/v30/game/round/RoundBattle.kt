@@ -8,13 +8,16 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.MainActionType
 import dugsolutions.leaf.v30.chronicle.domain.Moment
+import dugsolutions.leaf.v30.chronicle.domain.Moment.*
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
+import dugsolutions.leaf.v30.player.decision.domain.Decision.*
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.round.domain.RoundCard
@@ -73,8 +76,8 @@ class RoundBattle(
         actionsRemaining: Int
     ): Boolean {
         when (
-            val action = player.decisionDirector.chooseMainActionBattle(
-                Decision.ChooseMainActionBattle(
+            val action = player.decisionDirector.chooseMainBattleAction(
+                ChooseMainActionBattle(
                     player = player,
                     roundCard = card,
                     table = table,
@@ -83,10 +86,10 @@ class RoundBattle(
                 )
             )
         ) {
-            is MainActionBattle.PullDie -> {
+            is ActionBattleMain.PullDie -> {
                 val die = player.drawDiceWithRefresh().roll()
                 chronicle(
-                    Moment.MainAction(
+                    MainAction(
                         player = player,
                         action = MainActionType.PULL_DIE,
                         detail = "Pulled and rolled a die and added it to strike row ${action.row}",
@@ -96,16 +99,16 @@ class RoundBattle(
                 resolveReward(player, die)
                 battle.add(player, action.row, die)
             }
-            is MainActionBattle.DoRoundAction -> {
+            is ActionBattleMain.DoRoundAction -> {
                 chronicle(
-                    Moment.MainAction(
+                    MainAction(
                         player = player,
                         action = MainActionType.DO_ROUND_ACTION,
-                        detail = "Used battle round action ${action.roundAction}"
+                        detail = "Used battle round action ${action.actionRound}"
                     )
                 )
             }
-            is MainActionBattle.ExecuteCard -> {
+            is ActionBattleMain.ExecuteCard -> {
                 gameCardEffectExecutor(
                     table = table,
                     player = player,
@@ -113,7 +116,7 @@ class RoundBattle(
                 )
                 player.flipCreatureCardFaceDown(action.card)
                 chronicle(
-                    Moment.MainAction(
+                    MainAction(
                         player = player,
                         action = MainActionType.EXECUTE_CARD,
                         detail = "Executed a battle card effect",
@@ -121,7 +124,43 @@ class RoundBattle(
                     )
                 )
             }
-            is MainActionBattle.PlayWispCard -> {
+            is ActionBattleMain.PlayWispCard -> {
+                wispCardEffectExecutor(
+                    table = table,
+                    player = player,
+                    card = action.card
+                )
+                chronicle(
+                    MainAction(
+                        player = player,
+                        action = MainActionType.PLAY_WISP_CARD,
+                        detail = "Played a wisp card during battle",
+                        wispCard = action.card
+                    )
+                )
+                return false
+            }
+        }
+        return true
+    }
+
+    private fun performSupportAction(
+        player: Player,
+        snapshot: BattleGridSnapshot,
+        actionsRemaining: Int
+    ): Boolean {
+        when (
+            val action = player.decisionDirector.chooseSupportBattleAction(
+                Decision.ChooseMainActionBattle(
+                    player = player,
+                    roundCard = card,
+                    table = table,
+                    battleGridSnapshot = snapshot,
+                    actionsRemaining = actionsRemaining
+                )
+            )
+        ) {
+            is ActionBattleSupport.PlayWispCard -> {
                 wispCardEffectExecutor(
                     table = table,
                     player = player,
@@ -135,16 +174,14 @@ class RoundBattle(
                         wispCard = action.card
                     )
                 )
-                return false
             }
-            is MainActionBattle.PlayMulchToken -> {
+            is ActionBattleSupport.PlayMulchToken -> {
                 handleMulchToken(player, action)
-                return false
             }
-            is MainActionBattle.PlayWaterToken -> {
+            is ActionBattleSupport.PlayWaterToken -> {
                 handleWaterToken(player, action)
-                return false
             }
+            ActionBattleSupport.None -> return false
         }
         return true
     }
@@ -156,7 +193,7 @@ class RoundBattle(
 
     private fun handleMulchToken(
         player: Player,
-        action: MainActionBattle.PlayMulchToken
+        action: ActionBattleSupport.PlayMulchToken
     ) {
         val sides = action.token.sides ?: throw MainActionException("Battle mulch token requires die sides")
         val row = action.row
@@ -180,14 +217,14 @@ class RoundBattle(
 
     private fun handleWaterToken(
         player: Player,
-        action: MainActionBattle.PlayWaterToken
+        action: ActionBattleSupport.PlayWaterToken
     ) {
         val die = action.onDie
         val row = action.row
         if ((die == null) != (row == null)) {
             throw MainActionException("Battle water token requires both die and row, or neither")
         }
-        if (die == null && row == null) {
+        if (die == null) {
             if (!player.remove(Token.WATER)) return
             player.flipAllCreatureCardsFaceUp()
             chronicle(
@@ -201,7 +238,7 @@ class RoundBattle(
             return
         }
         val targetRow = row ?: throw MainActionException("Battle water token missing row")
-        val targetDie = die ?: throw MainActionException("Battle water token missing die")
+        val targetDie = die
         if (!battle.hasDie(player, targetRow, targetDie)) {
             throw MainActionException("Water token die was not found in battle grid")
         }
@@ -223,6 +260,26 @@ class RoundBattle(
     }
 
     fun performSupportActions() {
-
+        val snapshot = battle.snapshot()
+        val playersById = table.players.associateBy { it.id }
+        snapshot.playerIdsInGridOrder.asReversed().forEach { playerId ->
+            playersById[playerId]?.let { player ->
+                var attempts = 0
+                while (true) {
+                    attempts++
+                    if (attempts > MAX_MAIN_ACTION_ATTEMPTS) {
+                        throw MainActionException(
+                            "Exceeded $MAX_MAIN_ACTION_ATTEMPTS support action attempts for player ${player.id}"
+                        )
+                    }
+                    val actionTaken = performSupportAction(
+                        player = player,
+                        snapshot = battle.snapshot(),
+                        actionsRemaining = ACTIONS_PER_PLAYER
+                    )
+                    if (!actionTaken) return@let
+                }
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@ import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorCultivation
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.random.die.di.DieFactory
@@ -62,7 +62,7 @@ class RoundCultivation(
         actionsRemaining: Int
     ): Boolean {
         when (
-            val action = player.decisionDirector.chooseMainActionCultivation(
+            val action = player.decisionDirector.chooseMainCultivationAction(
                 Decision.ChooseMainActionCultivation(
                     player = player,
                     roundCard = card,
@@ -71,7 +71,7 @@ class RoundCultivation(
                 )
             )
         ) {
-            MainActionCultivation.PullDie -> {
+            ActionCultivation.PullDie -> {
                 val die = player.drawDiceWithRefresh().roll()
                 chronicle(
                     Moment.MainAction(
@@ -83,22 +83,22 @@ class RoundCultivation(
                 )
                 resolveReward(player, die)
             }
-            is MainActionCultivation.DoRoundAction -> {
+            is ActionCultivation.DoRoundAction -> {
                 roundActionExecutor(
                     table = table,
                     player = player,
                     card = card,
-                    action = action.roundAction
+                    action = action.actionRound
                 )
                 chronicle(
                     Moment.MainAction(
                         player = player,
                         action = MainActionType.DO_ROUND_ACTION,
-                        detail = "Used cultivation round action ${action.roundAction}"
+                        detail = "Used cultivation round action ${action.actionRound}"
                     )
                 )
             }
-            is MainActionCultivation.ExecuteCard -> {
+            is ActionCultivation.ExecuteCard -> {
                 gameCardEffectExecutor(
                     table = table,
                     player = player,
@@ -114,7 +114,7 @@ class RoundCultivation(
                     )
                 )
             }
-            is MainActionCultivation.PlayWispCard -> {
+            is ActionCultivation.PlayWispCard -> {
                 wispCardEffectExecutor(
                     table = table,
                     player = player,
@@ -130,11 +130,11 @@ class RoundCultivation(
                 )
                 return false
             }
-            is MainActionCultivation.PlayMulchToken -> {
+            is ActionCultivation.PlayMulchToken -> {
                 handleMulchToken(player, action.token)
                 return false
             }
-            is MainActionCultivation.PlayWaterToken -> {
+            is ActionCultivation.PlayWaterToken -> {
                 handleWaterToken(player, action)
                 return false
             }
@@ -164,7 +164,7 @@ class RoundCultivation(
 
     private fun handleWaterToken(
         player: Player,
-        action: MainActionCultivation.PlayWaterToken
+        action: ActionCultivation.PlayWaterToken
     ) {
         val die = action.onDie
         if (die == null) {

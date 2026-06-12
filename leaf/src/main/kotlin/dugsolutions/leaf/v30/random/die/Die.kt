@@ -42,6 +42,13 @@ abstract class Die(
         return amount
     }
 
+    fun flip(): Die {
+        if (sides > 4) {
+            _value = (sides + 1) - value
+        }
+        return this
+    }
+
     override fun toString(): String {
         return "Die(sides=$sides, value=$value)"
     }

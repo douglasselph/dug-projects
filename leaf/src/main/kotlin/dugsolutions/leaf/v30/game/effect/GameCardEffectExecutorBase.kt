@@ -11,8 +11,8 @@ import dugsolutions.leaf.v30.game.effect.details.UpgradeDie
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
@@ -34,7 +34,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun gainWormAndBoostWorms(
         table: Table,
         player: Player,
-        action: MainActionCultivation.ExecuteCard
+        action: ActionCultivation.ExecuteCard
     ) {
         gainWormAndBoostWorms(table, player, action.card)
     }
@@ -42,7 +42,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun gainWormAndBoostWorms(
         table: Table,
         player: Player,
-        action: MainActionBattle.ExecuteCard
+        action: ActionBattleMain.ExecuteCard
     ) {
         gainWormAndBoostWorms(table, player, action.card)
     }
@@ -71,7 +71,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun mulchDieFromDiscard(
         table: Table,
         player: Player,
-        action: MainActionCultivation.ExecuteCard
+        action: ActionCultivation.ExecuteCard
     ) {
         mulchDieFromDiscard(table, player, action.card)
     }
@@ -79,7 +79,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun mulchDieFromDiscard(
         table: Table,
         player: Player,
-        action: MainActionBattle.ExecuteCard
+        action: ActionBattleMain.ExecuteCard
     ) {
         mulchDieFromDiscard(table, player, action.card)
     }
@@ -158,7 +158,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun upgradeDieAndUseNow(
         table: Table,
         player: Player,
-        action: MainActionCultivation.ExecuteCard
+        action: ActionCultivation.ExecuteCard
     ): Die? {
         return upgradeDieAndUseNow(table, player, action.card, action.target)
     }
@@ -166,7 +166,7 @@ abstract class GameCardEffectExecutorBase(
     protected open fun upgradeDieAndUseNow(
         table: Table,
         player: Player,
-        action: MainActionBattle.ExecuteCard
+        action: ActionBattleMain.ExecuteCard
     ): Die? {
         return upgradeDieAndUseNow(table, player, action.card, action.target)
     }

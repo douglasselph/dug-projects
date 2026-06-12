@@ -30,6 +30,13 @@ sealed interface Decision {
         val actionsRemaining: Int
     ) : Decision
 
+    data class ChooseSupportActionBattle(
+        val player: Player,
+        val roundCard: RoundCard,
+        val table: Table,
+        val battleGridSnapshot: BattleGridSnapshot
+    ) : Decision
+
     data class ChooseItemsToBuy(
         val player: Player,
         val grove: Grove

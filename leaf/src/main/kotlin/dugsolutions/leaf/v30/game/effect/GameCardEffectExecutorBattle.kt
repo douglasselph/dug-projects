@@ -13,7 +13,7 @@ import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
@@ -30,7 +30,7 @@ open class GameCardEffectExecutorBattle(
     open operator fun invoke(
         table: Table,
         player: Player,
-        action: MainActionBattle.ExecuteCard
+        action: ActionBattleMain.ExecuteCard
     ) {
         when (action.card.effect) {
             CardEffect.UNKNOWN -> unknown(table, player, action)
@@ -107,7 +107,7 @@ open class GameCardEffectExecutorBattle(
         }
     }
 
-    private fun unknown(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun unknown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         chronicle(
             Moment.Warning(
                 player = player,
@@ -117,7 +117,7 @@ open class GameCardEffectExecutorBattle(
         )
     }
 
-    private fun placeBulwarkToken(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun placeBulwarkToken(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val target = action.target as? ExecuteTarget.PlayerDie ?: return
         val row = findTargetRow(table, target) ?: return
         table.battle.addBulwarkToken(target.player, row)
@@ -143,11 +143,11 @@ open class GameCardEffectExecutorBattle(
         }
     }
 
-    override fun gainWormAndBoostWorms(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    override fun gainWormAndBoostWorms(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         super.gainWormAndBoostWorms(table, player, action)
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
-    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
         val target = action.target as? ExecuteTarget.PlayerDie
         if (target == null) {
@@ -186,7 +186,7 @@ open class GameCardEffectExecutorBattle(
         )
     }
 
-    private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise requires a battle row")
         val target = action.target as? ExecuteTarget.PlayerDie
         if (target == null) {
@@ -218,7 +218,7 @@ open class GameCardEffectExecutorBattle(
             raiseDie = { targetDie, amount -> table.battle.raiseDie(target.player, row, targetDie, amount) }
         )
     }
-    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")
         val target = action.target as? ExecuteTarget.PlayerDie
         if (target == null) {
@@ -240,7 +240,7 @@ open class GameCardEffectExecutorBattle(
             target = target.dice
         )
     }
-    private fun doubleOneDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun doubleOneDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle double die requires a battle row")
         val target = action.target as? ExecuteTarget.PlayerDie
         if (target == null) {
@@ -280,7 +280,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
-    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val playerColumn = table.battle.snapshot().columns.firstOrNull { it.playerId == player.id }
         val doubled = playerColumn
             ?.squares
@@ -302,7 +302,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
-    override fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionBattle.ExecuteCard): Die? {
+    override fun upgradeDieAndUseNow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard): Die? {
         val row = action.row ?: throw MainActionException("Battle upgrade requires a battle row")
         val oldDie = (action.target as? ExecuteTarget.PlayerDie)?.dice?.firstDie
         val upgraded = super.upgradeDieAndUseNow(table, player, action) ?: return null
@@ -328,33 +328,81 @@ open class GameCardEffectExecutorBattle(
         )
         return upgraded
     }
-    private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun setDieToMatchAnother(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun swapTwoOwnDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun rollExtraForEachMaxDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun drawDieFromDiscard(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun playUpToTwoOtherCards(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun drawTwoDice(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseThreeDicePlus1(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus4(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun resolveStrikeImmediately(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun setDieUpToD12ToMax(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
-    private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle flip requires a battle row")
+        val target = action.target as? ExecuteTarget.PlayerDie
+        val targetDie = target?.dice?.firstDie
+        if (targetDie == null) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.FLIP_TARGET_MISSING,
+                    card = action.card
+                )
+            )
+            return
+        }
+        if (!table.battle.hasDie(target.player, row, targetDie)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.FLIP_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        val flippedValue = if (targetDie.sides > 4) {
+            (targetDie.sides + 1) - targetDie.value
+        } else {
+            targetDie.value
+        }
+        if (!table.battle.setDieValue(target.player, row, targetDie, flippedValue)) {
+            chronicle(
+                Moment.Warning(
+                    player = player,
+                    type = WarningType.FLIP_DIE_NOT_FOUND,
+                    card = action.card
+                )
+            )
+            return
+        }
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Flipped player ${target.player.id}'s battle die on $row to its opposite face",
+                dice = Dice(listOf(targetDie.adjustTo(flippedValue)))
+            )
+        )
+    }
+    private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun drawTwoDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
 
     private companion object {
         val DOUBLE_ALL_DICE_RANGE = 1..4

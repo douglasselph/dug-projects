@@ -15,9 +15,10 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
-import dugsolutions.leaf.v30.player.decision.domain.RoundAction
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionRound
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
@@ -88,8 +89,8 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainActionBattle.PullDie(BattleStrikeRow.STRIKE_2),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                    ActionBattleMain.PullDie(BattleStrikeRow.STRIKE_2),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
                 )
             )
         ).apply {
@@ -134,9 +135,9 @@ class RoundBattleTest {
                     playerId = 4,
                     callOrder = callOrder,
                     actions = listOf(
-                        MainActionBattle.PlayWispCard(wispCard),
-                        MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
-                        MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                        ActionBattleMain.PlayWispCard(wispCard),
+                        ActionBattleMain.DoRoundAction(ActionRound.ACTION_1),
+                        ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
                     )
                 )
             )
@@ -166,8 +167,8 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainActionBattle.ExecuteCard(card),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                    ActionBattleMain.ExecuteCard(card),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
                 )
             )
         ).apply {
@@ -190,7 +191,7 @@ class RoundBattleTest {
 
         round.performMainActions()
 
-        assertEquals(listOf(MainActionBattle.ExecuteCard(card)), gameCardEffectExecutor.actions)
+        assertEquals(listOf(ActionBattleMain.ExecuteCard(card)), gameCardEffectExecutor.actions)
         assertEquals(true, target.creatureCards.single { it.card == card }.isFaceDown)
         assertEquals(listOf(4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
@@ -208,9 +209,12 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainActionBattle.PlayMulchToken(Token.MULCH(DieSides.D8), BattleStrikeRow.STRIKE_1),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                ),
+                supportActions = listOf(
+                    ActionBattleSupport.PlayMulchToken(Token.MULCH(DieSides.D8), BattleStrikeRow.STRIKE_1),
+                    ActionBattleSupport.None
                 )
             )
         )
@@ -230,6 +234,7 @@ class RoundBattleTest {
         )
         round.prepare()
 
+        round.performSupportActions()
         round.performMainActions()
 
         assertEquals(emptyList(), target.mulchTokens)
@@ -238,7 +243,7 @@ class RoundBattleTest {
         assertEquals(8, dieItem.die.sides)
         assertEquals(listOf(Critter.BEE), target.critters)
         assertEquals(8, table.grove.count(Critter.BEE))
-        assertEquals(listOf(4, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+        assertEquals(listOf(4, 4, 1, 3, 2, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
 
     @Test
@@ -254,9 +259,12 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainActionBattle.PlayWaterToken(row = null),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                ),
+                supportActions = listOf(
+                    ActionBattleSupport.PlayWaterToken(row = null),
+                    ActionBattleSupport.None
                 )
             )
         )
@@ -272,11 +280,12 @@ class RoundBattleTest {
         val round = RoundBattle(table, loadBattleCard(), battle = battle)
         round.prepare()
 
+        round.performSupportActions()
         round.performMainActions()
 
         assertEquals(0, target.waterTokenCount)
         assertEquals(true, target.creatureCards.all { it.isFaceUp })
-        assertEquals(listOf(4, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+        assertEquals(listOf(4, 4, 1, 3, 2, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
 
     @Test
@@ -293,9 +302,12 @@ class RoundBattleTest {
                 playerId = 4,
                 callOrder = callOrder,
                 actions = listOf(
-                    MainActionBattle.PlayWaterToken(onDie = FixedDie(8, 6), row = BattleStrikeRow.STRIKE_1),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1),
-                    MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                ),
+                supportActions = listOf(
+                    ActionBattleSupport.PlayWaterToken(onDie = FixedDie(8, 6), row = BattleStrikeRow.STRIKE_1),
+                    ActionBattleSupport.None
                 )
             )
         )
@@ -310,11 +322,12 @@ class RoundBattleTest {
         val round = RoundBattle(table, loadBattleCard(), battle = battle)
         round.prepare()
 
+        round.performSupportActions()
         round.performMainActions()
 
         assertEquals(0, target.waterTokenCount)
         assertEquals(1, targetDie.rollCount)
-        assertEquals(3, callOrder.count { it == 4 })
+        assertEquals(4, callOrder.count { it == 4 })
     }
 
     private fun player(
@@ -374,10 +387,14 @@ class RoundBattleTest {
         private val callOrder: MutableList<Int>
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
+        override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation = ActionCultivation.PullDie
+        override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
             callOrder.add(input.player.id)
-            return MainActionBattle.DoRoundAction(RoundAction.ACTION_1)
+            return ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+        }
+        override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport {
+            callOrder.add(input.player.id)
+            return ActionBattleSupport.None
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
@@ -387,15 +404,21 @@ class RoundBattleTest {
     private class SequenceBattleDecisionDirector(
         private val playerId: Int,
         private val callOrder: MutableList<Int>,
-        private val actions: List<MainActionBattle>
+        private val actions: List<ActionBattleMain>,
+        private val supportActions: List<ActionBattleSupport> = listOf(ActionBattleSupport.None)
     ) : DecisionDirector {
         private var index = 0
+        private var supportIndex = 0
 
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
+        override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation = ActionCultivation.PullDie
+        override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
             callOrder.add(playerId)
             return actions.getOrElse(index++) { actions.last() }
+        }
+        override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport {
+            callOrder.add(playerId)
+            return supportActions.getOrElse(supportIndex++) { supportActions.last() }
         }
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
@@ -415,12 +438,12 @@ class RoundBattleTest {
     }
 
     private class TrackingGameCardEffectExecutor : GameCardEffectExecutorBattle() {
-        val actions = mutableListOf<MainActionBattle.ExecuteCard>()
+        val actions = mutableListOf<ActionBattleMain.ExecuteCard>()
 
         override fun invoke(
             table: Table,
             player: Player,
-            action: MainActionBattle.ExecuteCard
+            action: ActionBattleMain.ExecuteCard
         ) {
             actions.add(action)
         }

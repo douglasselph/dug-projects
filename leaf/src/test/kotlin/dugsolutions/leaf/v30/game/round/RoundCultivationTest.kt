@@ -17,9 +17,10 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
-import dugsolutions.leaf.v30.player.decision.domain.RoundAction
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionRound
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.DieSides
@@ -46,8 +47,8 @@ class RoundCultivationTest {
     @Test
     fun performMainActions_whenDecisionIsPullDie_drawsTwoDiceForEachPlayer() {
         val dice = SampleDie(Randomizer.create(seed = 2L))
-        val player1 = Player(StaticMainActionDirector(MainActionCultivation.PullDie))
-        val player2 = Player(StaticMainActionDirector(MainActionCultivation.PullDie))
+        val player1 = Player(StaticMainActionDirector(ActionCultivation.PullDie))
+        val player2 = Player(StaticMainActionDirector(ActionCultivation.PullDie))
         player1.addDiceToSupply(listOf(dice.d4, dice.d6))
         player2.addDiceToSupply(listOf(dice.d8, dice.d10))
         val table = createTable().add(player1).add(player2)
@@ -61,7 +62,7 @@ class RoundCultivationTest {
 
     @Test
     fun performMainActions_whenDecisionIsRoundAction_dispatchesRoundActionExecutorTwice() {
-        val player = Player(StaticMainActionDirector(MainActionCultivation.DoRoundAction(RoundAction.ACTION_2)))
+        val player = Player(StaticMainActionDirector(ActionCultivation.DoRoundAction(ActionRound.ACTION_2)))
         val table = createTable().add(player)
         val roundActionExecutor = TrackingRoundActionExecutor()
         val round = RoundCultivation(
@@ -72,13 +73,13 @@ class RoundCultivationTest {
 
         round.performMainActions()
 
-        assertEquals(listOf(RoundAction.ACTION_2, RoundAction.ACTION_2), roundActionExecutor.actions)
+        assertEquals(listOf(ActionRound.ACTION_2, ActionRound.ACTION_2), roundActionExecutor.actions)
     }
 
     @Test
     fun performMainActions_whenDecisionIsExecuteCard_dispatchesGameCardEffectExecutorTwice() {
         val card = loadGameCard("Root_05_01")
-        val player = Player(StaticMainActionDirector(MainActionCultivation.ExecuteCard(card)))
+        val player = Player(StaticMainActionDirector(ActionCultivation.ExecuteCard(card)))
         player.addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
         val table = createTable().add(player)
         table.roundDeck.next()
@@ -101,9 +102,9 @@ class RoundCultivationTest {
         val player = Player(
             SequenceMainActionDirector(
                 listOf(
-                    MainActionCultivation.PlayWispCard(wispCard),
-                    MainActionCultivation.PullDie,
-                    MainActionCultivation.PullDie
+                    ActionCultivation.PlayWispCard(wispCard),
+                    ActionCultivation.PullDie,
+                    ActionCultivation.PullDie
                 )
             )
         )
@@ -129,9 +130,9 @@ class RoundCultivationTest {
         val player = Player(
             SequenceMainActionDirector(
                 listOf(
-                    MainActionCultivation.PlayMulchToken(Token.MULCH(DieSides.D8)),
-                    MainActionCultivation.PullDie,
-                    MainActionCultivation.PullDie
+                    ActionCultivation.PlayMulchToken(Token.MULCH(DieSides.D8)),
+                    ActionCultivation.PullDie,
+                    ActionCultivation.PullDie
                 )
             )
         )
@@ -160,9 +161,9 @@ class RoundCultivationTest {
         val player = Player(
             SequenceMainActionDirector(
                 listOf(
-                    MainActionCultivation.PlayWaterToken(),
-                    MainActionCultivation.PullDie,
-                    MainActionCultivation.PullDie
+                    ActionCultivation.PlayWaterToken(),
+                    ActionCultivation.PullDie,
+                    ActionCultivation.PullDie
                 )
             )
         )
@@ -186,9 +187,9 @@ class RoundCultivationTest {
         val player = Player(
             SequenceMainActionDirector(
                 listOf(
-                    MainActionCultivation.PlayWaterToken(onDie = FixedDie(6, 1)),
-                    MainActionCultivation.PullDie,
-                    MainActionCultivation.PullDie
+                    ActionCultivation.PlayWaterToken(onDie = FixedDie(6, 1)),
+                    ActionCultivation.PullDie,
+                    ActionCultivation.PullDie
                 )
             )
         )
@@ -208,7 +209,7 @@ class RoundCultivationTest {
     @Test
     fun performMainActions_whenDecisionAlwaysReturnsWispCard_throwsAfterSafeguardLimit() {
         val wispCard = loadWispCard()
-        val player = Player(StaticMainActionDirector(MainActionCultivation.PlayWispCard(wispCard)))
+        val player = Player(StaticMainActionDirector(ActionCultivation.PlayWispCard(wispCard)))
         val table = createTable().add(player)
         val round = RoundCultivation(
             table = table,
@@ -298,30 +299,32 @@ class RoundCultivationTest {
     }
 
     private class StaticMainActionDirector(
-        private val action: MainActionCultivation
+        private val action: ActionCultivation
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = action
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
-            return MainActionBattle.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
+        override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation = action
+        override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
+            return ActionBattleMain.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
         }
+        override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport = ActionBattleSupport.None
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
         override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class SequenceMainActionDirector(
-        private val actions: List<MainActionCultivation>
+        private val actions: List<ActionCultivation>
     ) : DecisionDirector {
         private var index = 0
 
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation {
+        override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation {
             return actions.getOrElse(index++) { actions.last() }
         }
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
-            return MainActionBattle.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
+        override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
+            return ActionBattleMain.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
         }
+        override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport = ActionBattleSupport.None
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = ItemsToBuy()
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
         override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
@@ -331,35 +334,36 @@ class RoundCultivationTest {
         private val itemsToBuy: ItemsToBuy
     ) : DecisionDirector {
         override fun chooseCritter(input: Decision.ChooseCritter): Critter = Critter.BEE
-        override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation = MainActionCultivation.PullDie
-        override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
-            return MainActionBattle.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
+        override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation = ActionCultivation.PullDie
+        override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
+            return ActionBattleMain.PullDie(dugsolutions.leaf.v30.battle.domain.BattleStrikeRow.STRIKE_1)
         }
+        override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport = ActionBattleSupport.None
         override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy = itemsToBuy
         override fun chooseCardsToRefreshWithWorms(input: Decision.ChooseCardsToRefreshWithWorms): CardsToRefresh = CardsToRefresh()
         override fun chooseFlipOrSnipCard(input: Decision.ChooseFlipOrSnipCard): CreatureCard = input.creatureCards.first()
     }
 
     private class TrackingRoundActionExecutor : RoundActionExecutor() {
-        val actions = mutableListOf<RoundAction>()
+        val actions = mutableListOf<ActionRound>()
 
         override fun invoke(
             table: Table,
             player: Player,
             card: RoundCard,
-            action: RoundAction
+            action: ActionRound
         ) {
             actions.add(action)
         }
     }
 
     private class TrackingGameCardEffectExecutor : GameCardEffectExecutorCultivation() {
-        val actions = mutableListOf<MainActionCultivation.ExecuteCard>()
+        val actions = mutableListOf<ActionCultivation.ExecuteCard>()
 
         override fun invoke(
             table: Table,
             player: Player,
-            action: MainActionCultivation.ExecuteCard
+            action: ActionCultivation.ExecuteCard
         ) {
             actions.add(action)
         }

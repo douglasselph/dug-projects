@@ -3,7 +3,7 @@ package dugsolutions.leaf.v30.player.decision.baseline
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.round.RoundCardManager
@@ -79,7 +79,7 @@ class DecisionDirectorBaselineTest {
 
     @Test
     fun chooseMainAction_returnsPullDie() {
-        val result = SUT.chooseMainActionCultivation(
+        val result = SUT.chooseMainCultivationAction(
             Decision.ChooseMainActionCultivation(
                 player = Player(),
                 roundCard = sampleRoundCard(),
@@ -88,7 +88,7 @@ class DecisionDirectorBaselineTest {
             )
         )
 
-        assertEquals(MainActionCultivation.PullDie, result)
+        assertEquals(ActionCultivation.PullDie, result)
     }
 
     @Test

@@ -101,6 +101,26 @@ class DieTest {
     }
 
     @Test
+    fun flip_whenDieHasSixOrMoreSides_setsOppositeFaceAndReturnsSelf() {
+        val die = dieFactory(DieSides.D8).adjustTo(3)
+
+        val result = die.flip()
+
+        assertSame(die, result)
+        assertEquals(6, die.value)
+    }
+
+    @Test
+    fun flip_whenDieIsD4_doesNotChangeValue() {
+        val die = dieFactory(DieSides.D4).adjustTo(3)
+
+        val result = die.flip()
+
+        assertSame(die, result)
+        assertEquals(3, die.value)
+    }
+
+    @Test
     fun equals_whenSameSidesAndValue_returnsTrue() {
         // Arrange
         SUT.adjustTo(3)

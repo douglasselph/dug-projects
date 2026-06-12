@@ -6,8 +6,9 @@ import dugsolutions.leaf.v30.player.decision.domain.CardsToRefresh
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.DecisionDirector
 import dugsolutions.leaf.v30.player.decision.domain.ItemsToBuy
-import dugsolutions.leaf.v30.player.decision.domain.MainActionBattle
-import dugsolutions.leaf.v30.player.decision.domain.MainActionCultivation
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.player.domain.CreatureCard
 
 class DecisionDirectorBaseline : DecisionDirector {
@@ -27,12 +28,16 @@ class DecisionDirectorBaseline : DecisionDirector {
         }
     }
 
-    override fun chooseMainActionCultivation(input: Decision.ChooseMainActionCultivation): MainActionCultivation {
-        return MainActionCultivation.PullDie
+    override fun chooseMainCultivationAction(input: Decision.ChooseMainActionCultivation): ActionCultivation {
+        return ActionCultivation.PullDie
     }
 
-    override fun chooseMainActionBattle(input: Decision.ChooseMainActionBattle): MainActionBattle {
-        return MainActionBattle.PullDie(BattleStrikeRow.STRIKE_1)
+    override fun chooseMainBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleMain {
+        return ActionBattleMain.PullDie(BattleStrikeRow.STRIKE_1)
+    }
+
+    override fun chooseSupportBattleAction(input: Decision.ChooseMainActionBattle): ActionBattleSupport {
+        return ActionBattleSupport.None
     }
 
     override fun chooseItemsToBuy(input: Decision.ChooseItemsToBuy): ItemsToBuy {
