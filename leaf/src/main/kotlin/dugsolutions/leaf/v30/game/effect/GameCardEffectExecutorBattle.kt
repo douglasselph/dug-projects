@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.game.effect
 
 import dugsolutions.leaf.v30.battle.domain.BattleItem
+import dugsolutions.leaf.v30.battle.domain.BattleItemSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.chronicle.Chronicle
@@ -276,7 +277,28 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
-    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {
+        val playerColumn = table.battle.snapshot().columns.firstOrNull { it.playerId == player.id }
+        val doubled = playerColumn
+            ?.squares
+            ?.flatMap { (row, square) ->
+                square.items
+                    .filterIsInstance<BattleItemSnapshot.DieItem>()
+                    .map { dieItem -> row to dieItem.die }
+            }
+            ?.filter { (_, die) -> die.value in DOUBLE_ALL_DICE_RANGE }
+            ?.mapNotNull { (row, die) -> table.battle.raiseDie(player, row, die, die.value) }
+            .orEmpty()
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Doubled all battle dice showing 1 through 4",
+                dice = Dice(doubled)
+            )
+        )
+    }
     private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun setDieToMatchAnother(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
@@ -305,4 +327,8 @@ open class GameCardEffectExecutorBattle(
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: MainActionBattle.ExecuteCard) {}
+
+    private companion object {
+        val DOUBLE_ALL_DICE_RANGE = 1..4
+    }
 }

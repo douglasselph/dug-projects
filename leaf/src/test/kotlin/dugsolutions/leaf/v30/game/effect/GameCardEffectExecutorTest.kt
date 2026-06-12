@@ -424,6 +424,69 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenDoubleAllDiceShowingOneToFour_doublesMatchingHandDice() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val d4 = FixedDie(4, 2)
+        val d6 = FixedDie(6, 1)
+        val d8 = FixedDie(8, 4)
+        val d10 = FixedDie(10, 5)
+        val player = Player(id = 7).apply {
+            addDieToHand(d4)
+            addDieToHand(d6)
+            addDieToHand(d8)
+            addDieToHand(d10)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.DOUBLE_ALL_DICE_SHOWING_ONE_TO_FOUR)
+
+        executor(table, player, MainActionCultivation.ExecuteCard(card))
+
+        assertEquals(4, d4.value)
+        assertEquals(2, d6.value)
+        assertEquals(8, d8.value)
+        assertEquals(5, d10.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(
+            listOf(4 to 4, 6 to 2, 8 to 8),
+            entry.dice.map { it.sides to it.value }
+        )
+    }
+
+    @Test
+    fun battleInvoke_whenDoubleAllDiceShowingOneToFour_doublesMatchingBattleGridDiceForPlayer() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val d10 = FixedDie(10, 5)
+        val d8 = FixedDie(8, 4)
+        val d6 = FixedDie(6, 3)
+        val target = playerWithDice(1, d10, d8, d6)
+        table.battle.setup(
+            listOf(
+                target,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.DOUBLE_ALL_DICE_SHOWING_ONE_TO_FOUR)
+
+        executor(table, target, MainActionBattle.ExecuteCard(card))
+
+        assertEquals(5, d10.value)
+        assertEquals(8, d8.value)
+        assertEquals(6, d6.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(
+            listOf(6 to 6, 8 to 8),
+            entry.dice.map { it.sides to it.value }
+        )
+    }
+
+    @Test
     fun cultivationInvoke_whenGainWormAndBoostWorms_gainsWormAndBoostsPlayerWorms() {
         val executor = GameCardEffectExecutorCultivation()
         val table = createTable(numBattle = 0, numCultivation = 1)

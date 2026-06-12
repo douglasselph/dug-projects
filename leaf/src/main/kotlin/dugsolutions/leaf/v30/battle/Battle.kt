@@ -12,6 +12,7 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieValue
 
 class Battle(
     private val chronicle: Chronicle = GameChronicle(),
@@ -84,7 +85,7 @@ class Battle(
     ): Die? {
         val dieItem = grid.getSquare(player.id, row).all
             .filterIsInstance<BattleItem.DieItem>()
-            .firstOrNull { it.die == die }
+            .firstOrNull { it.die.equals(die) }
             ?: return null
         dieItem.die.roll()
         return dieItem.die
@@ -98,7 +99,21 @@ class Battle(
     ): Die? {
         val dieItem = grid.getSquare(player.id, row).all
             .filterIsInstance<BattleItem.DieItem>()
-            .firstOrNull { it.die == die }
+            .firstOrNull { it.die.equals(die) }
+            ?: return null
+        dieItem.die.adjustBy(amount)
+        return dieItem.die
+    }
+
+    fun raiseDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: DieValue,
+        amount: Int
+    ): Die? {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die.equals(die) }
             ?: return null
         dieItem.die.adjustBy(amount)
         return dieItem.die

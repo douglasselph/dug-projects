@@ -197,6 +197,7 @@ open class GameCardEffectExecutorCultivation(
             target = target.dice
         )
     }
+
     private fun doubleOneDie(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {
         val target = action.target as? ExecuteTarget.PlayerDie
         if (target == null) {
@@ -234,7 +235,20 @@ open class GameCardEffectExecutorCultivation(
             )
         )
     }
-    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+    private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {
+        val doubled = player.diceHand.dice
+            .filter { die -> die.value in DOUBLE_ALL_DICE_RANGE }
+            .mapNotNull { die -> player.raiseDie(die, die.value) }
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Doubled all hand dice showing 1 through 4",
+                dice = Dice(doubled)
+            )
+        )
+    }
     private fun upgradeDieAndUseNow(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun flipDieToOppositeFace(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun setDieToMatchAnother(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
@@ -263,5 +277,9 @@ open class GameCardEffectExecutorCultivation(
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: MainActionCultivation.ExecuteCard) {}
+
+    private companion object {
+        val DOUBLE_ALL_DICE_RANGE = 1..4
+    }
 }
     
