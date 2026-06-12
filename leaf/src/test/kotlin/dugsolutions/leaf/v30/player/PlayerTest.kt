@@ -596,6 +596,17 @@ class PlayerTest {
         assertEquals(0, player.vp)
     }
 
+    @Test
+    fun removeDieFromDiscard_whenDieExists_removesIt() {
+        val die = FixedDie(8, 3)
+        player.addDieToDiscard(die)
+
+        val result = player.removeDieFromDiscard(die)
+
+        assertEquals(true, result)
+        assertEquals(emptyList(), player.diceDiscard.dice)
+    }
+
     private class TrackingDie(sides: Int) : Die(sides) {
         var rollCount = 0
 

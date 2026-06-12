@@ -144,6 +144,18 @@ class Battle(
         return dieItem.die
     }
 
+    fun flipDie(
+        player: Player,
+        row: BattleStrikeRow,
+        die: DieValue
+    ): Die? {
+        val dieItem = grid.getSquare(player.id, row).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .firstOrNull { it.die.equals(die) }
+            ?: return null
+        return dieItem.die.flip()
+    }
+
     fun raiseDie(
         player: Player,
         row: BattleStrikeRow,

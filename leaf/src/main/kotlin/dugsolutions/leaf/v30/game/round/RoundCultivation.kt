@@ -113,6 +113,7 @@ class RoundCultivation(
                         card = action.card
                     )
                 )
+                return action.usesAction
             }
             is ActionCultivation.PlayWispCard -> {
                 wispCardEffectExecutor(

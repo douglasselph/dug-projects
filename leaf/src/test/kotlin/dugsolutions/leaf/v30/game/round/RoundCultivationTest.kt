@@ -97,6 +97,36 @@ class RoundCultivationTest {
     }
 
     @Test
+    fun performMainActions_whenExecuteCardDoesNotUseAction_doesNotSpendMainAction() {
+        val card = loadGameCard("Root_05_01")
+        val dice = SampleDie(Randomizer.create(seed = 7L))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    ActionCultivation.ExecuteCard(card, usesAction = false),
+                    ActionCultivation.ExecuteCard(card, usesAction = true),
+                    ActionCultivation.PullDie
+                )
+            )
+        )
+        player.addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
+        player.addDiceToSupply(listOf(dice.d4))
+        val table = createTable().add(player)
+        table.roundDeck.next()
+        val gameCardEffectExecutor = TrackingGameCardEffectExecutor()
+        val round = RoundCultivation(
+            table = table,
+            card = loadCultivationCard(),
+            gameCardEffectExecutor = gameCardEffectExecutor
+        )
+
+        round.performMainActions()
+
+        assertEquals(listOf(false, true), gameCardEffectExecutor.actions.map { it.usesAction })
+        assertEquals(1, player.diceHand.size)
+    }
+
+    @Test
     fun performMainActions_whenDecisionIsWispCard_doesNotSpendMainAction() {
         val wispCard = loadWispCard()
         val player = Player(

@@ -197,6 +197,50 @@ class RoundBattleTest {
     }
 
     @Test
+    fun performMainActions_whenExecuteCardDoesNotUseAction_doesNotSpendMainAction() {
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val card = loadGameCard("Root_05_01")
+        val gameCardEffectExecutor = TrackingGameCardEffectExecutor()
+        val target = player(
+            4,
+            FixedDie(4, 2),
+            FixedDie(6, 2),
+            FixedDie(8, 2),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(
+                    ActionBattleMain.ExecuteCard(card, usesAction = false),
+                    ActionBattleMain.ExecuteCard(card, usesAction = true),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                )
+            )
+        ).apply {
+            addCardToCreature(CreatureCard(card, CreatureCard.Facing.FACE_UP))
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(
+            table = table,
+            card = loadBattleCard(),
+            battle = battle,
+            gameCardEffectExecutor = gameCardEffectExecutor
+        )
+        round.prepare()
+
+        round.performMainActions()
+
+        assertEquals(listOf(false, true), gameCardEffectExecutor.actions.map { it.usesAction })
+        assertEquals(listOf(4, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
+    @Test
     fun performMainActions_whenDecisionIsPlayMulchToken_addsDieToBattleGridAndDoesNotSpendMainAction() {
         val callOrder = mutableListOf<Int>()
         val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))

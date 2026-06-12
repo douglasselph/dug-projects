@@ -714,6 +714,143 @@ class GameCardEffectExecutorTest {
         assertEquals(7, table.grove.count(Token.MULCH()))
     }
 
+    @Test
+    fun cultivationInvoke_whenDrawTwoDice_drawsTwoDiceIntoHand() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7).apply {
+            addDieToSupply(FixedDie(12, 5))
+            addDieToSupply(FixedDie(6, 2))
+        }
+        val card = loadGameCard().copy(effect = CardEffect.DRAW_TWO_DICE)
+
+        executor(table, player, ActionCultivation.ExecuteCard(card))
+
+        assertEquals(listOf(6, 12), player.diceHand.dice.map { it.sides })
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.DRAW_TWO_DICE, entry.effect)
+        assertEquals(listOf(6 to 2, 12 to 5), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenDrawTwoDice_placesDiceOnIndicatedRows() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = playerWithDice(1, FixedDie(4, 1), FixedDie(6, 2), FixedDie(8, 3)).apply {
+            addDieToSupply(FixedDie(12, 5))
+            addDieToSupply(FixedDie(10, 4))
+        }
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.DRAW_TWO_DICE)
+        val action = ActionBattleMain.ExecuteCard(
+            card = card,
+            row = BattleStrikeRow.STRIKE_1,
+            row2 = BattleStrikeRow.STRIKE_3
+        )
+
+        executor(table, player, action)
+
+        assertEquals(emptyList(), player.diceSupply.dice)
+        assertEquals(listOf(4, 6, 8), player.diceHand.dice.map { it.sides })
+        val row1Dice = table.battle.grid.getSquare(player.id, BattleStrikeRow.STRIKE_1).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .map { it.die.sides to it.die.value }
+        val row3Dice = table.battle.grid.getSquare(player.id, BattleStrikeRow.STRIKE_3).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .map { it.die.sides to it.die.value }
+        assertEquals(listOf(8 to 3, 10 to 4), row1Dice)
+        assertEquals(listOf(4 to 1, 12 to 5), row3Dice)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(listOf(10 to 4, 12 to 5), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenDrawTwoDiceHasNoSecondRow_placesBothDiceOnFirstRow() {
+        val executor = GameCardEffectExecutorBattle()
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = playerWithDice(1, FixedDie(4, 1), FixedDie(6, 2), FixedDie(8, 3)).apply {
+            addDieToSupply(FixedDie(12, 5))
+            addDieToSupply(FixedDie(10, 4))
+        }
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val action = ActionBattleMain.ExecuteCard(
+            card = loadGameCard().copy(effect = CardEffect.DRAW_TWO_DICE),
+            row = BattleStrikeRow.STRIKE_2
+        )
+
+        executor(table, player, action)
+
+        val dice = table.battle.grid.getSquare(player.id, BattleStrikeRow.STRIKE_2).all
+            .filterIsInstance<BattleItem.DieItem>()
+            .map { it.die.sides to it.die.value }
+        assertEquals(listOf(6 to 2, 10 to 4, 12 to 5), dice)
+    }
+
+    @Test
+    fun cultivationInvoke_whenRaiseDiePlus1AndEndGamePlus1VpPerFlower_raisesTargetDieByOne() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(8, 3)
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_1_VP_PER_FLOWER)
+
+        executor(table, player, ActionCultivation.ExecuteCard(card, target = ExecuteTarget(dice = diceOf(FixedDie(8, 3)))))
+
+        assertEquals(4, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_1_VP_PER_FLOWER, entry.effect)
+        assertEquals(listOf(8 to 4), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenRaiseDiePlus1AndEndGamePlus1VpPerFlower_raisesTargetGridDieByOne() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val die = FixedDie(10, 4)
+        val player = playerWithDice(1, die, FixedDie(8, 3), FixedDie(6, 1))
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_1_VP_PER_FLOWER)
+        val action = ActionBattleMain.ExecuteCard(
+            card = card,
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(10, 4))),
+            row = BattleStrikeRow.STRIKE_1
+        )
+
+        executor(table, player, action)
+
+        assertEquals(5, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_1_VP_PER_FLOWER, entry.effect)
+        assertEquals(listOf(10 to 5), entry.dice.map { it.sides to it.value })
+    }
+
     private fun createTable(
         numBattle: Int,
         numCultivation: Int

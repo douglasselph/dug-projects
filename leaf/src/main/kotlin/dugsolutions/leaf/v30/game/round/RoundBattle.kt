@@ -123,6 +123,7 @@ class RoundBattle(
                         card = action.card
                     )
                 )
+                return action.usesAction
             }
             is ActionBattleMain.PlayWispCard -> {
                 wispCardEffectExecutor(

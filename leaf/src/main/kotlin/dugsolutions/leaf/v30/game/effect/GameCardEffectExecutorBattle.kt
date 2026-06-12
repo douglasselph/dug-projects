@@ -12,9 +12,13 @@ import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
+import dugsolutions.leaf.v30.game.effect.details.DrawDieFromDiscard
+import dugsolutions.leaf.v30.game.effect.details.DrawTwoDice
 import dugsolutions.leaf.v30.game.effect.details.DrainHigherDiceAndRaiseOwnDieBattle
+import dugsolutions.leaf.v30.game.effect.details.FlipHigherOpposingDiceOnStrikeRowBattle
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
@@ -399,12 +403,74 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
-    private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun drawTwoDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle draw die from discard requires a battle row")
+        DrawDieFromDiscard(chronicle)(
+            player = player,
+            card = action.card,
+            placeDie = { die -> table.battle.add(player, row, die) }
+        )
+    }
+    private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        FlipHigherOpposingDiceOnStrikeRowBattle(chronicle)(
+            battle = table.battle,
+            player = player,
+            card = action.card,
+            target = action.target,
+            row = action.row
+        )
+    }
+    private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        // This effect is resolved by subsequent ExecuteCard decisions:
+        // the enabling card and intermediate follow-up cards should use usesAction=false,
+        // while the final follow-up card should use usesAction=true.
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Enabled playing up to two additional creature cards; action use is controlled by ExecuteCard.usesAction"
+            )
+        )
+    }
+    private fun drawTwoDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle draw two dice requires a battle row")
+        val row2 = action.row2 ?: row
+        DrawTwoDice(chronicle)(
+            player = player,
+            card = action.card,
+            placeDie = { index, die ->
+                player.removeDieFromHand(die)
+                val targetRow = if (index == 0) row else row2
+                if (table.battle.add(player, targetRow, die)) {
+                    true
+                } else {
+                    player.addDieToHand(die)
+                    false
+                }
+            }
+        )
+    }
+    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        raiseDiePlus1(table, player, action)
+    }
+    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        raiseDiePlus1(table, player, action)
+    }
+    private fun raiseDiePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise die plus one requires a battle row")
+        val targetPlayer = action.target?.player ?: player
+        RaiseDiePlus1(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

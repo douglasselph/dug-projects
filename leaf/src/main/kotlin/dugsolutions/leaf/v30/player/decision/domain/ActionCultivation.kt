@@ -10,7 +10,8 @@ sealed interface ActionCultivation {
     data class DoRoundAction(val actionRound: ActionRound) : ActionCultivation
     data class ExecuteCard(
         val card: GameCard,
-        val target: ExecuteTarget? = null
+        val target: ExecuteTarget? = null,
+        val usesAction: Boolean = true
     ) : ActionCultivation
     data class PlayWispCard(val card: WispCard, val target: ExecuteTarget? = null): ActionCultivation
     data class PlayMulchToken(val token: Token.MULCH): ActionCultivation

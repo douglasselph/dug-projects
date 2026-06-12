@@ -6,8 +6,11 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
+import dugsolutions.leaf.v30.game.effect.details.DrawDieFromDiscard
+import dugsolutions.leaf.v30.game.effect.details.DrawTwoDice
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Cultivation
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
@@ -225,12 +228,50 @@ open class GameCardEffectExecutorCultivation(
     }
     private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun drawDieFromDiscard(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun drawDieFromDiscard(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        DrawDieFromDiscard(chronicle)(
+            player = player,
+            card = action.card,
+            placeDie = { die ->
+                player.addDieToHand(die)
+                true
+            }
+        )
+    }
     private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun drawTwoDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        // This effect is resolved by subsequent ExecuteCard decisions:
+        // the enabling card and intermediate follow-up cards should use usesAction=false,
+        // while the final follow-up card should use usesAction=true.
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Enabled playing up to two additional creature cards; action use is controlled by ExecuteCard.usesAction"
+            )
+        )
+    }
+    private fun drawTwoDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        DrawTwoDice(chronicle)(
+            player = player,
+            card = action.card,
+            placeDie = { _, _ -> true }
+        )
+    }
+    private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        raiseDiePlus1(player, action)
+    }
+    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        raiseDiePlus1(player, action)
+    }
+    private fun raiseDiePlus1(player: Player, action: ActionCultivation.ExecuteCard) {
+        RaiseDiePlus1(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
