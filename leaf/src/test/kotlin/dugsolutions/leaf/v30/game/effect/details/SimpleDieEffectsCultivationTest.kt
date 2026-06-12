@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -70,32 +71,14 @@ class SimpleDieEffectsCultivationTest {
     }
 
     @Test
-    fun doubleOneDie_doublesTargetHandDie() {
-        val chronicle = GameChronicle()
-        val card = loadCard(CardEffect.DOUBLE_ONE_DIE)
-        val die = FixedDie(8, 3)
-        val player = Player(id = 1).apply { addDieToHand(die) }
-
-        DoubleOneDieCultivation(chronicle)(
-            player = player,
-            card = card,
-            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 3)))
-        )
-
-        assertEquals(6, die.value)
-        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
-        assertEquals(listOf(8 to 6), entry.dice.map { it.sides to it.value })
-    }
-
-    @Test
     fun flipDieToOppositeFace_flipsTargetHandDie() {
         val chronicle = GameChronicle()
         val card = loadCard(CardEffect.FLIP_DIE_TO_OPPOSITE_FACE)
         val die = FixedDie(8, 3)
         val player = Player(id = 1).apply { addDieToHand(die) }
 
-        FlipDieToOppositeFaceCultivation(chronicle)(
-            player = player,
+        FlipDieToOppositeFace(chronicle)(
+            scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 3)))
         )

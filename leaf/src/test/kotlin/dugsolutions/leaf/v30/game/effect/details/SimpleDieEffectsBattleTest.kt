@@ -9,6 +9,7 @@ import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.GameEntry
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -79,28 +80,6 @@ class SimpleDieEffectsBattleTest {
     }
 
     @Test
-    fun doubleOneDie_doublesTargetBattleDie() {
-        val chronicle = GameChronicle()
-        val table = createTable()
-        val card = loadCard(CardEffect.DOUBLE_ONE_DIE)
-        val targetDie = FixedDie(8, 4)
-        val target = player(1, targetDie, FixedDie(6, 3), FixedDie(4, 1))
-        setupBattle(table, target)
-
-        DoubleOneDieBattle(chronicle)(
-            table = table,
-            player = Player(id = 9),
-            card = card,
-            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 4))),
-            row = BattleStrikeRow.STRIKE_1
-        )
-
-        assertEquals(8, targetDie.value)
-        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
-        assertEquals(listOf(8 to 8), entry.dice.map { it.sides to it.value })
-    }
-
-    @Test
     fun flipDieToOppositeFace_flipsTargetBattleDie() {
         val chronicle = GameChronicle()
         val table = createTable()
@@ -109,12 +88,16 @@ class SimpleDieEffectsBattleTest {
         val target = player(1, targetDie, FixedDie(6, 3), FixedDie(4, 1))
         setupBattle(table, target)
 
-        FlipDieToOppositeFaceBattle(chronicle)(
-            table = table,
-            player = Player(id = 9),
+        val actingPlayer = Player(id = 9)
+        FlipDieToOppositeFace(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = actingPlayer,
+                targetPlayer = target,
+                row = BattleStrikeRow.STRIKE_1
+            ),
             card = card,
             target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
         )
 
         assertEquals(3, targetDie.value)

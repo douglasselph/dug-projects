@@ -10,12 +10,13 @@ import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
-import dugsolutions.leaf.v30.game.effect.details.DoubleOneDieBattle
-import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceBattle
+import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
+import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherBattle
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherBattle
+import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
@@ -182,7 +183,18 @@ open class GameCardEffectExecutorBattle(
         )
     }
     private fun doubleOneDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        DoubleOneDieBattle(chronicle)(table, player, action.card, action.target, action.row)
+        val row = action.row ?: throw MainActionException("Battle double die requires a battle row")
+        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        DoubleOneDie(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val playerColumn = table.battle.snapshot().columns.firstOrNull { it.playerId == player.id }
@@ -233,7 +245,18 @@ open class GameCardEffectExecutorBattle(
         return upgraded
     }
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        FlipDieToOppositeFaceBattle(chronicle)(table, player, action.card, action.target, action.row)
+        val row = action.row ?: throw MainActionException("Battle flip requires a battle row")
+        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        FlipDieToOppositeFace(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         SetDieToMatchAnotherBattle(chronicle)(table, player, action.card, action.target, action.row)

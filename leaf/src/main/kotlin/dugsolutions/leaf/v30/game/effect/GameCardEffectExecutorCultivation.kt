@@ -5,12 +5,13 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
-import dugsolutions.leaf.v30.game.effect.details.DoubleOneDieCultivation
-import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceCultivation
+import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
+import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherCultivation
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherCultivation
+import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
@@ -143,7 +144,11 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun doubleOneDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        DoubleOneDieCultivation(chronicle)(player, action.card, action.target)
+        DoubleOneDie(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         val doubled = player.diceHand.dice
@@ -161,7 +166,11 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        FlipDieToOppositeFaceCultivation(chronicle)(player, action.card, action.target)
+        FlipDieToOppositeFace(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         SetDieToMatchAnotherCultivation(chronicle)(player, action.card, action.target)
