@@ -9,8 +9,8 @@ import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
-import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherCultivation
-import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherCultivation
+import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
+import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -117,7 +117,11 @@ open class GameCardEffectExecutorCultivation(
     }
     private fun ignoreBattleEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        RerollDieUntilThreeOrHigherCultivation(chronicle)(player, action.card, action.target)
+        RerollDieUntilThreeOrHigher(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
@@ -173,7 +177,11 @@ open class GameCardEffectExecutorCultivation(
         )
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        SetDieToMatchAnotherCultivation(chronicle)(player, action.card, action.target)
+        SetDieToMatchAnother(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

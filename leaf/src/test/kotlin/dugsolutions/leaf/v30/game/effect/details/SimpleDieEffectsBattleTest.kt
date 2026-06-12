@@ -38,12 +38,16 @@ class SimpleDieEffectsBattleTest {
         val target = player(1, targetDie, FixedDie(6, 3), FixedDie(4, 1))
         setupBattle(table, target)
 
-        RerollDieUntilThreeOrHigherBattle(chronicle)(
-            table = table,
-            player = Player(id = 9),
+        val actingPlayer = Player(id = 9)
+        RerollDieUntilThreeOrHigher(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = actingPlayer,
+                targetPlayer = target,
+                row = BattleStrikeRow.STRIKE_1
+            ),
             card = card,
             target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
         )
 
         assertEquals(3, targetDie.rollCount)
@@ -117,12 +121,15 @@ class SimpleDieEffectsBattleTest {
         table.battle.remove(target, BattleStrikeRow.STRIKE_2, targetDie)
         table.battle.add(target, BattleStrikeRow.STRIKE_1, targetDie)
 
-        SetDieToMatchAnotherBattle(chronicle)(
-            table = table,
-            player = Player(id = 9),
+        SetDieToMatchAnother(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = Player(id = 9),
+                targetPlayer = target,
+                row = BattleStrikeRow.STRIKE_1
+            ),
             card = card,
             target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6), FixedDie(6, 2))),
-            row = BattleStrikeRow.STRIKE_1
         )
 
         assertEquals(6, source.value)

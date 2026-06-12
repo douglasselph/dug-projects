@@ -34,8 +34,8 @@ class SimpleDieEffectsCultivationTest {
         val die = SequenceDie(6, initial = 1, rolls = listOf(1, 2, 3))
         val player = Player(id = 1).apply { addDieToHand(die) }
 
-        RerollDieUntilThreeOrHigherCultivation(chronicle)(
-            player = player,
+        RerollDieUntilThreeOrHigher(chronicle)(
+            scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(6, 1)))
         )
@@ -99,8 +99,8 @@ class SimpleDieEffectsCultivationTest {
             addDieToHand(target)
         }
 
-        SetDieToMatchAnotherCultivation(chronicle)(
-            player = player,
+        SetDieToMatchAnother(chronicle)(
+            scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 6), FixedDie(6, 2)))
         )

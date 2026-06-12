@@ -14,8 +14,8 @@ import dugsolutions.leaf.v30.game.effect.details.DoubleOneDie
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
-import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherBattle
-import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherBattle
+import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
+import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -154,7 +154,18 @@ open class GameCardEffectExecutorBattle(
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        RerollDieUntilThreeOrHigherBattle(chronicle)(table, player, action.card, action.target, action.row)
+        val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
+        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player ?: player
+        RerollDieUntilThreeOrHigher(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
@@ -259,7 +270,19 @@ open class GameCardEffectExecutorBattle(
         )
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        SetDieToMatchAnotherBattle(chronicle)(table, player, action.card, action.target, action.row)
+        val row = action.row ?: throw MainActionException("Battle set die requires a battle row")
+        val targetPlayer = (action.target as? ExecuteTarget.PlayerDie)?.player
+            ?: throw MainActionException("Battle set die requires player dice target")
+        SetDieToMatchAnother(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
