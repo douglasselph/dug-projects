@@ -5,14 +5,16 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
-import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.game.effect.details.DoubleOneDieCultivation
+import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
+import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherCultivation
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
-import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.table.Table
 
@@ -113,73 +115,11 @@ open class GameCardEffectExecutorCultivation(
     }
     private fun ignoreBattleEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.REROLL_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!player.diceHand.hasDie(die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.REROLL_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val rerolled = rerollUntilThreeOrHigher(
-            initial = die ?: throw MainActionException("Reroll target die was not found"),
-            reroll = { targetDie -> player.rerollDie(targetDie) }
-        )
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Rerolled a hand die until it was $MIN_REROLL_VALUE or higher",
-                dice = Dice(listOf(rerolled))
-            )
-        )
+        RerollDieUntilThreeOrHigherCultivation(chronicle)(player, action.card, action.target)
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!player.diceHand.hasDie(die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        raiseDiePlus1AndGainWater(
-            table = table,
-            player = player,
-            card = action.card,
-            die = die ?: throw MainActionException("Raise target die was not found"),
-            raiseDie = { targetDie, amount -> player.raiseDie(targetDie, amount) }
-        )
+        RaiseDiePlus1AndGainWaterCultivation(chronicle)(table, player, action.card, action.target)
     }
 
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
@@ -202,41 +142,7 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun doubleOneDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!player.diceHand.hasDie(die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val raised = player.raiseDie(
-            die = die ?: throw MainActionException("Double target die was not found"),
-            amount = die.value
-        ) ?: return
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Doubled one hand die",
-                dice = Dice(listOf(raised))
-            )
-        )
+        DoubleOneDieCultivation(chronicle)(player, action.card, action.target)
     }
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         val doubled = player.diceHand.dice
@@ -254,48 +160,7 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        val target = action.target as? ExecuteTarget.PlayerDie
-        val targetDie = target?.dice?.firstDie ?: run {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.FLIP_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val hand = player.diceHand
-        var flipped = false
-        var flippedDie: Die = targetDie
-        for (index in 0 until hand.size) {
-            val die = hand[index] ?: continue
-            if (die == targetDie) {
-                flippedDie = die.flip()
-                flipped = true
-                break
-            }
-        }
-        if (!flipped) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.FLIP_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        player.diceHand = hand
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Flipped a hand die to its opposite face",
-                dice = Dice(listOf(flippedDie))
-            )
-        )
+        FlipDieToOppositeFaceCultivation(chronicle)(player, action.card, action.target)
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

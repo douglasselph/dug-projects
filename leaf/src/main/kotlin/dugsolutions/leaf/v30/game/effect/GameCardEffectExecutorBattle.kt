@@ -10,7 +10,11 @@ import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.game.effect.details.DoubleOneDieBattle
+import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
+import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherBattle
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
@@ -148,75 +152,11 @@ open class GameCardEffectExecutorBattle(
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.REROLL_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!table.battle.hasDie(target.player, row, die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.REROLL_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val rerolled = rerollUntilThreeOrHigher(
-            initial = die ?: throw MainActionException("Reroll target die was not found"),
-            reroll = { targetDie -> table.battle.rerollDie(target.player, row, targetDie) }
-        )
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Rerolled player ${target.player.id}'s battle die on $row until it was $MIN_REROLL_VALUE or higher",
-                dice = Dice(listOf(rerolled))
-            )
-        )
+        RerollDieUntilThreeOrHigherBattle(chronicle)(table, player, action.card, action.target, action.row)
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val row = action.row ?: throw MainActionException("Battle raise requires a battle row")
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!table.battle.hasDie(target.player, row, die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        raiseDiePlus1AndGainWater(
-            table = table,
-            player = player,
-            card = action.card,
-            die = die ?: throw MainActionException("Raise target die was not found"),
-            raiseDie = { targetDie, amount -> table.battle.raiseDie(target.player, row, targetDie, amount) }
-        )
+        RaiseDiePlus1AndGainWaterBattle(chronicle)(table, player, action.card, action.target, action.row)
     }
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")
@@ -241,44 +181,7 @@ open class GameCardEffectExecutorBattle(
         )
     }
     private fun doubleOneDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val row = action.row ?: throw MainActionException("Battle double die requires a battle row")
-        val target = action.target as? ExecuteTarget.PlayerDie
-        if (target == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val die = target.dice.firstDie
-        if (!table.battle.hasDie(target.player, row, die)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.RAISE_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val raised = table.battle.raiseDie(
-            player = target.player,
-            row = row,
-            die = die ?: throw MainActionException("Double target die was not found"),
-            amount = die.value
-        ) ?: return
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Doubled one battle die on $row",
-                dice = Dice(listOf(raised))
-            )
-        )
+        DoubleOneDieBattle(chronicle)(table, player, action.card, action.target, action.row)
     }
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val playerColumn = table.battle.snapshot().columns.firstOrNull { it.playerId == player.id }
@@ -329,53 +232,7 @@ open class GameCardEffectExecutorBattle(
         return upgraded
     }
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val row = action.row ?: throw MainActionException("Battle flip requires a battle row")
-        val target = action.target as? ExecuteTarget.PlayerDie
-        val targetDie = target?.dice?.firstDie
-        if (targetDie == null) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.FLIP_TARGET_MISSING,
-                    card = action.card
-                )
-            )
-            return
-        }
-        if (!table.battle.hasDie(target.player, row, targetDie)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.FLIP_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        val flippedValue = if (targetDie.sides > 4) {
-            (targetDie.sides + 1) - targetDie.value
-        } else {
-            targetDie.value
-        }
-        if (!table.battle.setDieValue(target.player, row, targetDie, flippedValue)) {
-            chronicle(
-                Moment.Warning(
-                    player = player,
-                    type = WarningType.FLIP_DIE_NOT_FOUND,
-                    card = action.card
-                )
-            )
-            return
-        }
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = action.card,
-                effect = action.card.effect,
-                detail = "Flipped player ${target.player.id}'s battle die on $row to its opposite face",
-                dice = Dice(listOf(targetDie.adjustTo(flippedValue)))
-            )
-        )
+        FlipDieToOppositeFaceBattle(chronicle)(table, player, action.card, action.target, action.row)
     }
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
