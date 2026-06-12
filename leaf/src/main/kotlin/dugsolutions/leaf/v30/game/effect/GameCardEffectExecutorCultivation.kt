@@ -10,6 +10,7 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceCultivatio
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherCultivation
+import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherCultivation
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
@@ -162,7 +163,9 @@ open class GameCardEffectExecutorCultivation(
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         FlipDieToOppositeFaceCultivation(chronicle)(player, action.card, action.target)
     }
-    private fun setDieToMatchAnother(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun setDieToMatchAnother(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        SetDieToMatchAnotherCultivation(chronicle)(player, action.card, action.target)
+    }
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

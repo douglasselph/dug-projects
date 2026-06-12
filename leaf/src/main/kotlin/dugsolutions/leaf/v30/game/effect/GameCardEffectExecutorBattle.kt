@@ -15,6 +15,7 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFaceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigherBattle
+import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnotherBattle
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
@@ -234,7 +235,9 @@ open class GameCardEffectExecutorBattle(
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         FlipDieToOppositeFaceBattle(chronicle)(table, player, action.card, action.target, action.row)
     }
-    private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        SetDieToMatchAnotherBattle(chronicle)(table, player, action.card, action.target, action.row)
+    }
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

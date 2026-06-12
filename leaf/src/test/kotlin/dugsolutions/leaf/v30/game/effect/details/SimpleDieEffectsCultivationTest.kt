@@ -105,6 +105,30 @@ class SimpleDieEffectsCultivationTest {
         assertEquals(listOf(8 to 6), entry.dice.map { it.sides to it.value })
     }
 
+    @Test
+    fun setDieToMatchAnother_setsSecondTargetDieToFirstTargetDieValue() {
+        val chronicle = GameChronicle()
+        val card = loadCard(CardEffect.SET_DIE_TO_MATCH_ANOTHER)
+        val source = FixedDie(8, 6)
+        val target = FixedDie(6, 2)
+        val player = Player(id = 1).apply {
+            addDieToHand(source)
+            addDieToHand(target)
+        }
+
+        SetDieToMatchAnotherCultivation(chronicle)(
+            player = player,
+            card = card,
+            target = ExecuteTarget.PlayerDie(player, diceOf(FixedDie(8, 6), FixedDie(6, 2)))
+        )
+
+        assertEquals(6, source.value)
+        assertEquals(6, target.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(listOf(6 to 6, 8 to 6), entry.dice.map { it.sides to it.value })
+    }
+
     private fun createTable(): Table {
         val wispManager = WispCardManager(WispCardsFactory()).apply { loadCards(emptyList()) }
         val roundManager = RoundCardManager(RoundCardsFactory()).apply { loadCards(emptyList()) }

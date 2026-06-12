@@ -50,6 +50,14 @@ class DiceTest {
     }
 
     @Test
+    fun diceInOrder_preservesInsertionOrderWhileDiceRemainsSorted() {
+        val dice = Dice(listOf(d8, d4, d6))
+
+        assertEquals(listOf(d4, d6, d8), dice.dice)
+        assertEquals(listOf(d8, d4, d6), dice.diceInOrder)
+    }
+
+    @Test
     fun isEmpty_whenEmpty_returnsTrue() {
         assertTrue(SUT.isEmpty())
     }

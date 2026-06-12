@@ -3,6 +3,7 @@ package dugsolutions.leaf.v30.random.die
 class Dice(dice: List<Die> = emptyList()) {
 
     private val _dice = dice.toMutableList()
+    private val _diceInOrder = dice.toMutableList()
     private val lock = Any()
 
     init {
@@ -11,6 +12,8 @@ class Dice(dice: List<Die> = emptyList()) {
 
     val dice: List<Die>
         get() = synchronized(lock) { _dice.toList() }
+    val diceInOrder: List<Die>
+        get() = synchronized(lock) { _diceInOrder.toList() }
     val size: Int 
         get() = synchronized(lock) { _dice.size }
 
@@ -46,7 +49,7 @@ class Dice(dice: List<Die> = emptyList()) {
         synchronized(lock) {
             if (_dice.isEmpty()) return null
             val index = _dice.indexOf(_dice.minByOrNull { it.sides })
-            return _dice.removeAt(index)
+            return removeAt(index)
         }
     }
 
@@ -55,7 +58,7 @@ class Dice(dice: List<Die> = emptyList()) {
         synchronized(lock) {
             if (_dice.isEmpty()) return null
             val index = _dice.indexOf(_dice.maxByOrNull { it.sides })
-            return _dice.removeAt(index)
+            return removeAt(index)
         }
     }
 
@@ -64,7 +67,7 @@ class Dice(dice: List<Die> = emptyList()) {
         synchronized(lock) {
             if (_dice.isEmpty()) return null
             val index = _dice.indexOf(_dice.minByOrNull { it.sides })
-            return _dice.removeAt(index)
+            return removeAt(index)
         }
     }
 
@@ -72,6 +75,7 @@ class Dice(dice: List<Die> = emptyList()) {
     fun add(die: Die): Dice {
         synchronized(lock) {
             _dice.add(die)
+            _diceInOrder.add(die)
         }
         return this
     }
@@ -79,6 +83,7 @@ class Dice(dice: List<Die> = emptyList()) {
     fun addAll(dice: List<Die>): Dice {
         synchronized(lock) {
             _dice.addAll(dice)
+            _diceInOrder.addAll(dice)
         }
         return this
     }
@@ -86,6 +91,7 @@ class Dice(dice: List<Die> = emptyList()) {
     fun clear() {
         synchronized(lock) {
             _dice.clear()
+            _diceInOrder.clear()
         }
     }
 
@@ -127,7 +133,7 @@ class Dice(dice: List<Die> = emptyList()) {
         synchronized(lock) {
             val index = _dice.indexOfFirst { it == die }
             if (index >= 0) {
-                _dice.removeAt(index)
+                removeAt(index)
                 return true
             }
             return false
@@ -138,11 +144,17 @@ class Dice(dice: List<Die> = emptyList()) {
         synchronized(lock) {
             val index = _dice.indexOfFirst { it.equals(die) }
             if (index >= 0) {
-                _dice.removeAt(index)
+                removeAt(index)
                 return true
             }
             return false
         }
+    }
+
+    private fun removeAt(index: Int): Die {
+        val die = _dice.removeAt(index)
+        _diceInOrder.remove(die)
+        return die
     }
 
     /**

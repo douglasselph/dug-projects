@@ -122,6 +122,33 @@ class SimpleDieEffectsBattleTest {
         assertEquals(listOf(8 to 3), entry.dice.map { it.sides to it.value })
     }
 
+    @Test
+    fun setDieToMatchAnother_setsSecondTargetBattleDieToFirstTargetDieValue() {
+        val chronicle = GameChronicle()
+        val table = createTable()
+        val card = loadCard(CardEffect.SET_DIE_TO_MATCH_ANOTHER)
+        val source = FixedDie(8, 6)
+        val targetDie = FixedDie(6, 2)
+        val target = player(1, source, targetDie, FixedDie(4, 1))
+        setupBattle(table, target)
+        table.battle.remove(target, BattleStrikeRow.STRIKE_2, targetDie)
+        table.battle.add(target, BattleStrikeRow.STRIKE_1, targetDie)
+
+        SetDieToMatchAnotherBattle(chronicle)(
+            table = table,
+            player = Player(id = 9),
+            card = card,
+            target = ExecuteTarget.PlayerDie(target, diceOf(FixedDie(8, 6), FixedDie(6, 2))),
+            row = BattleStrikeRow.STRIKE_1
+        )
+
+        assertEquals(6, source.value)
+        assertEquals(6, targetDie.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(card.effect, entry.effect)
+        assertEquals(listOf(6 to 6, 8 to 6), entry.dice.map { it.sides to it.value })
+    }
+
     private fun createTable(): Table {
         val wispManager = WispCardManager(WispCardsFactory()).apply { loadCards(emptyList()) }
         val roundManager = RoundCardManager(RoundCardsFactory()).apply { loadCards(emptyList()) }
