@@ -1,4 +1,4 @@
-package dugsolutions.leaf.v30.battle
+package dugsolutions.leaf.v30.battle.eval
 
 import dugsolutions.leaf.v30.battle.domain.BattleGrid
 import dugsolutions.leaf.v30.battle.domain.BattleItem
@@ -115,6 +115,21 @@ class BattleEvaluatorTest {
         val result = SUT(grid.snapshot())
 
         assertEquals(BattleStrikeRow.entries.toSet(), result.rows.keys)
+    }
+
+    @Test
+    fun invoke_whenRowIsResolved_returnsNoWinnerOrWoundedForThatRow() {
+        val grid = BattleGrid(listOf(1, 2, 3, 4))
+        grid.add(1, BattleStrikeRow.STRIKE_1, dieItem(6, 6))
+        grid.add(2, BattleStrikeRow.STRIKE_1, dieItem(6, 1))
+
+        val result = SUT(
+            snapshot = grid.snapshot(),
+            resolved = setOf(BattleStrikeRow.STRIKE_1)
+        )
+
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].winners)
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].wounded)
     }
 
     private fun dieItem(sides: Int, value: Int): BattleItem.DieItem {

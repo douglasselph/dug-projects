@@ -1,6 +1,5 @@
 package dugsolutions.leaf.v30.battle
 
-import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.battle.domain.Result
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
@@ -21,7 +20,7 @@ class BattleAwardWinners(
         result: Result
     ) {
         val playersById = players.associateBy { it.id }
-        BattleStrikeRow.entries.forEach { row ->
+        result.rows.keys.forEach { row ->
             val rowResult = result[row]
             val vpAward = WINNER_VP + rowResult.wounded.size * WOUNDED_BONUS_VP
             rowResult.winners.forEach { playerId ->

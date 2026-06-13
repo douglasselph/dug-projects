@@ -5,6 +5,7 @@ import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.battle.domain.Result
+import dugsolutions.leaf.v30.battle.eval.BattleEvaluator
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
@@ -20,11 +21,16 @@ class Battle(
     private val battleEvaluator: BattleEvaluator = BattleEvaluator()
 ) {
     private var _grid: BattleGrid? = null
+    private val _resolved = mutableSetOf<BattleStrikeRow>()
 
     val grid: BattleGrid
         get() = _grid ?: throw IllegalStateException("Battle grid has not been setup")
 
-      fun setup(players: List<Player>): Battle {
+    val resolved: Set<BattleStrikeRow>
+        get() = _resolved.toSet()
+
+    fun setup(players: List<Player>): Battle {
+        _resolved.clear()
         val orderedPlayers = playerGridOrder(players)
         _grid = BattleGrid(orderedPlayers.map { it.id })
         orderedPlayers.forEach { player ->
@@ -38,7 +44,11 @@ class Battle(
     }
 
     fun computeWinners(): Result {
-        return battleEvaluator(snapshot())
+        return battleEvaluator(snapshot(), resolved)
+    }
+
+    fun resolved(row: BattleStrikeRow) {
+        _resolved.add(row)
     }
 
     fun add(

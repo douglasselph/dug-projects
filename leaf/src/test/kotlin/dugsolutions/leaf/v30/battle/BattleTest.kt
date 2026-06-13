@@ -222,6 +222,36 @@ class BattleTest {
         assertEquals(listOf(1), result[BattleStrikeRow.STRIKE_1].winners)
     }
 
+    @Test
+    fun computeWinners_whenRowIsResolved_ignoresResolvedRow() {
+        val target = player(1, FixedDie(6, 6), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+
+        battle.resolved(BattleStrikeRow.STRIKE_1)
+        val result = battle.computeWinners()
+
+        assertEquals(setOf(BattleStrikeRow.STRIKE_1), battle.resolved)
+        assertEquals(emptyList(), result[BattleStrikeRow.STRIKE_1].winners)
+    }
+
+    @Test
+    fun setup_clearsResolvedRows() {
+        val target = player(1, FixedDie(6, 6), FixedDie(8, 2), FixedDie(10, 1))
+        val battle = setupBattle(target)
+        battle.resolved(BattleStrikeRow.STRIKE_1)
+
+        battle.setup(
+            listOf(
+                target,
+                player(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                player(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                player(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+
+        assertEquals(emptySet(), battle.resolved)
+    }
+
     private fun setupBattle(target: Player): Battle {
         return Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer())).apply {
             setup(

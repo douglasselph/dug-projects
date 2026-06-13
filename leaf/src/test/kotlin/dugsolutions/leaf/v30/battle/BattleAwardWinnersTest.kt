@@ -70,6 +70,28 @@ class BattleAwardWinnersTest {
         assertEquals(2, chronicle.getEntries().filterIsInstance<GameEntry.VpAward>().size)
     }
 
+    @Test
+    fun invoke_whenResultOnlyContainsOneRow_awardsThatRowOnly() {
+        val chronicle = GameChronicle()
+        val winner = Player(chronicle = chronicle, id = 1)
+        val result = Result(
+            mapOf(
+                BattleStrikeRow.STRIKE_3 to StrikeRowResult(
+                    row = BattleStrikeRow.STRIKE_3,
+                    winners = listOf(1),
+                    wounded = emptyList()
+                )
+            )
+        )
+        val sut = BattleAwardWinners(chronicle)
+
+        sut(listOf(winner), result)
+
+        assertEquals(2, winner.vp)
+        val entry = assertIs<GameEntry.VpAward>(chronicle.getEntries().single())
+        assertEquals(BattleStrikeRow.STRIKE_3, entry.row)
+    }
+
     private fun result(
         activeRow: BattleStrikeRow,
         winners: List<Int>,

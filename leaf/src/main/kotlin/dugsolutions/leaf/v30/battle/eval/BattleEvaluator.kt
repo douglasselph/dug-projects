@@ -1,4 +1,4 @@
-package dugsolutions.leaf.v30.battle
+package dugsolutions.leaf.v30.battle.eval
 
 import dugsolutions.leaf.v30.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
@@ -11,10 +11,17 @@ class BattleEvaluator {
         const val WOUND_THRESHOLD = 5
     }
 
-    operator fun invoke(snapshot: BattleGridSnapshot): Result {
+    operator fun invoke(
+        snapshot: BattleGridSnapshot,
+        resolved: Set<BattleStrikeRow> = emptySet()
+    ): Result {
         return Result(
             rows = BattleStrikeRow.entries.associateWith { row ->
-                evaluateRow(snapshot, row)
+                if (row in resolved) {
+                    StrikeRowResult(row, winners = emptyList(), wounded = emptyList())
+                } else {
+                    evaluateRow(snapshot, row)
+                }
             }
         )
     }

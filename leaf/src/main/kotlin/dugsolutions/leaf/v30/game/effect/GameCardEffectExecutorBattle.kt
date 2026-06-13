@@ -3,7 +3,8 @@ package dugsolutions.leaf.v30.game.effect
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleItemSnapshot
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
-import dugsolutions.leaf.v30.battle.BattleEvaluator
+import dugsolutions.leaf.v30.battle.BattleAwardWinners
+import dugsolutions.leaf.v30.battle.domain.Result
 import dugsolutions.leaf.v30.cards.domain.CardEffect
 import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
@@ -41,7 +42,8 @@ import dugsolutions.leaf.v30.table.Table
 @Suppress("UNUSED_PARAMETER")
 open class GameCardEffectExecutorBattle(
     chronicle: Chronicle = GameChronicle(),
-    dieFactory: DieFactory = DieFactory(Randomizer.create())
+    dieFactory: DieFactory = DieFactory(Randomizer.create()),
+    private val battleAwardWinners: BattleAwardWinners = BattleAwardWinners(chronicle)
 ) : GameCardEffectExecutorBase(chronicle, dieFactory) {
 
 
@@ -336,7 +338,7 @@ open class GameCardEffectExecutorBattle(
     }
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle wound winner requires a battle row")
-        val result = BattleEvaluator()(table.battle.snapshot())
+        val result = table.battle.computeWinners()
         val rowResult = result[row]
         val playersById = table.players.associateBy { it.id }
 
@@ -516,7 +518,20 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
-    private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle resolve strike immediately requires a battle row")
+        val result = table.battle.computeWinners()
+        battleAwardWinners(table.players, Result(mapOf(row to result[row])))
+        table.battle.resolved(row)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Resolved $row immediately"
+            )
+        )
+    }
     private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

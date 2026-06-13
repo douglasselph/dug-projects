@@ -1004,6 +1004,40 @@ class GameCardEffectExecutorTest {
         assertEquals(emptyList(), entry.dice)
     }
 
+    @Test
+    fun battleInvoke_whenResolveStrikeImmediately_awardsSelectedRowAndMarksItResolved() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val winner = playerWithDice(1, FixedDie(8, 6), FixedDie(6, 2), FixedDie(4, 1))
+        val loser2 = playerWithDice(2, FixedDie(8, 2), FixedDie(6, 2), FixedDie(4, 1))
+        val loser3 = playerWithDice(3, FixedDie(8, 2), FixedDie(6, 2), FixedDie(4, 1))
+        val loser4 = playerWithDice(4, FixedDie(8, 2), FixedDie(6, 2), FixedDie(4, 1))
+        val players = listOf(winner, loser2, loser3, loser4)
+        players.forEach { table.add(it) }
+        table.battle.setup(players)
+        val card = loadGameCard().copy(effect = CardEffect.RESOLVE_STRIKE_IMMEDIATELY)
+
+        executor(
+            table,
+            loser2,
+            ActionBattleMain.ExecuteCard(
+                card = card,
+                rows = listOf(BattleStrikeRow.STRIKE_1)
+            )
+        )
+
+        assertEquals(2, winner.vp)
+        assertEquals(setOf(BattleStrikeRow.STRIKE_1), table.battle.resolved)
+        assertEquals(emptyList(), table.battle.computeWinners()[BattleStrikeRow.STRIKE_1].winners)
+        val vpEntry = assertIs<GameEntry.VpAward>(chronicle.getEntries().first())
+        assertEquals(winner.id, vpEntry.playerId)
+        assertEquals(BattleStrikeRow.STRIKE_1, vpEntry.row)
+        val effectEntry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().last())
+        assertEquals(CardEffect.RESOLVE_STRIKE_IMMEDIATELY, effectEntry.effect)
+        assertEquals("Resolved STRIKE_1 immediately", effectEntry.detail)
+    }
+
     private fun createTable(
         numBattle: Int,
         numCultivation: Int
