@@ -19,7 +19,7 @@ class RaiseDiePlus1AndGainWater(
         card: GameCard,
         target: ExecuteTarget?
     ) {
-        val raisedDice = RaiseDiePlus1(chronicle)(
+        val raisedDice = RaiseDiePlusN(chronicle)(
             scope = scope,
             card = card,
             target = target

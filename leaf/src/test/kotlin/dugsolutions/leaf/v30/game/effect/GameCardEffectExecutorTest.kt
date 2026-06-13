@@ -909,6 +909,101 @@ class GameCardEffectExecutorTest {
         assertEquals(listOf(6 to 3, 8 to 4, 10 to 5), entry.dice.map { it.sides to it.value })
     }
 
+    @Test
+    fun cultivationInvoke_whenRaiseDiePlus4_raisesTargetHandDieByFour() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(10, 3)
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_4)
+        val action = ActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget(dice = diceOf(FixedDie(10, 3)))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(7, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_DIE_PLUS_4, entry.effect)
+        assertEquals(listOf(10 to 7), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenRaiseDiePlus4_raisesTargetGridDieByFour() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val die = FixedDie(10, 3)
+        val player = playerWithDice(1, die, FixedDie(8, 2), FixedDie(6, 1))
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_DIE_PLUS_4)
+        val action = ActionBattleMain.ExecuteCard(
+            card = card,
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(10, 3))),
+            rows = listOf(BattleStrikeRow.STRIKE_1)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(7, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_DIE_PLUS_4, entry.effect)
+        assertEquals(listOf(10 to 7), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun cultivationInvoke_whenResolveGraftedRootOrVineEffect_chroniclesFollowUpInstruction() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT)
+
+        executor(table, player, ActionCultivation.ExecuteCard(card, usesAction = false))
+
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT, entry.effect)
+        assertEquals(card.id, entry.cardId)
+        assertEquals(player.id, entry.playerId)
+        assertEquals(
+            "Enabled resolving a grafted root or vine effect; follow-up ExecuteCard should perform the chosen effect",
+            entry.detail
+        )
+        assertEquals(emptyList(), entry.dice)
+    }
+
+    @Test
+    fun battleInvoke_whenResolveGraftedRootOrVineEffect_chroniclesFollowUpInstruction() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7)
+        val card = loadGameCard().copy(effect = CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT)
+
+        executor(table, player, ActionBattleMain.ExecuteCard(card, usesAction = false))
+
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT, entry.effect)
+        assertEquals(card.id, entry.cardId)
+        assertEquals(player.id, entry.playerId)
+        assertEquals(
+            "Enabled resolving a grafted root or vine effect; follow-up ExecuteCard should perform the chosen effect",
+            entry.detail
+        )
+        assertEquals(emptyList(), entry.dice)
+    }
+
     private fun createTable(
         numBattle: Int,
         numCultivation: Int

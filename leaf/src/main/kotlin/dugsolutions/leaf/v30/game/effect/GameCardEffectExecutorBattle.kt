@@ -18,7 +18,7 @@ import dugsolutions.leaf.v30.game.effect.details.DrainHigherDiceAndRaiseOwnDieBa
 import dugsolutions.leaf.v30.game.effect.details.FlipHigherOpposingDiceOnStrikeRowBattle
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
-import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlusN
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
@@ -474,7 +474,7 @@ open class GameCardEffectExecutorBattle(
     private fun raiseDiePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise die plus one requires a battle row")
         val targetPlayer = action.target?.player ?: player
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = BattleDieEffectScope(
                 battle = table.battle,
                 actingPlayer = player,
@@ -488,8 +488,34 @@ open class GameCardEffectExecutorBattle(
     private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         raiseDiePlus1(table, player, action)
     }
-    private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise die plus four requires a battle row")
+        val targetPlayer = action.target?.player ?: player
+        RaiseDiePlusN(
+            chronicle = chronicle,
+            amount = RAISE_PLUS_4
+        )(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                rows = action.rows.ifEmpty { listOf(row) }
+            ),
+            card = action.card,
+            target = action.target
+        )
+    }
+    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        // The enabling card should use usesAction=false; a follow-up ExecuteCard action resolves the chosen grafted card.
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Enabled resolving a grafted root or vine effect; follow-up ExecuteCard should perform the chosen effect"
+            )
+        )
+    }
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
@@ -499,6 +525,7 @@ open class GameCardEffectExecutorBattle(
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
 
     private companion object {
+        const val RAISE_PLUS_4 = 4
         val DOUBLE_ALL_DICE_RANGE = 1..4
     }
 }

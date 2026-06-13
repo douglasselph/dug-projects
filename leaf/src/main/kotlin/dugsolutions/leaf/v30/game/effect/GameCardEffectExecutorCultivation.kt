@@ -10,7 +10,7 @@ import dugsolutions.leaf.v30.game.effect.details.DrawDieFromDiscard
 import dugsolutions.leaf.v30.game.effect.details.DrawTwoDice
 import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Cultivation
-import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlusN
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
@@ -272,7 +272,7 @@ open class GameCardEffectExecutorCultivation(
         raiseDiePlus1(player, action)
     }
     private fun raiseDiePlus1(player: Player, action: ActionCultivation.ExecuteCard) {
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = HandleDieEffectScope(player),
             card = action.card,
             target = action.target
@@ -281,8 +281,27 @@ open class GameCardEffectExecutorCultivation(
     private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         raiseDiePlus1(player, action)
     }
-    private fun raiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun raiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        RaiseDiePlusN(
+            chronicle = chronicle,
+            amount = RAISE_PLUS_4
+        )(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
+    }
+    private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        // The enabling card should use usesAction=false; a follow-up ExecuteCard action resolves the chosen grafted card.
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = action.card,
+                effect = action.card.effect,
+                detail = "Enabled resolving a grafted root or vine effect; follow-up ExecuteCard should perform the chosen effect"
+            )
+        )
+    }
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
@@ -292,6 +311,7 @@ open class GameCardEffectExecutorCultivation(
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
 
     private companion object {
+        const val RAISE_PLUS_4 = 4
         val DOUBLE_ALL_DICE_RANGE = 1..4
     }
 }

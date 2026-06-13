@@ -9,12 +9,10 @@ import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
 
-class RaiseDiePlus1(
-    private val chronicle: Chronicle
+class RaiseDiePlusN(
+    private val chronicle: Chronicle,
+    private val amount: Int = 1
 ) {
-    private companion object {
-        const val RAISE_AMOUNT = 1
-    }
 
     operator fun invoke(
         scope: DieEffectScope,
@@ -32,7 +30,7 @@ class RaiseDiePlus1(
                 chronicle(Moment.Warning(player = scope.actingPlayer, type = WarningType.RAISE_DIE_NOT_FOUND, card = card))
                 null
             } else {
-                scope.raise(die, RAISE_AMOUNT, index)
+                scope.raise(die, amount, index)
             }
         }
         if (raisedDice.isEmpty()) return emptyList()
@@ -42,7 +40,7 @@ class RaiseDiePlus1(
                 player = scope.actingPlayer,
                 card = card,
                 effect = card.effect,
-                detail = "Raised ${raisedDice.size} dice in ${scope.locationDescription} by $RAISE_AMOUNT",
+                detail = "Raised ${raisedDice.size} dice in ${scope.locationDescription} by $amount",
                 dice = Dice(raisedDice)
             )
         )

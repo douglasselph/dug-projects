@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 
-class RaiseDiePlus1Test {
+class RaiseDiePlusNTest {
     private companion object {
         const val PLAYER_ID = 1
     }
@@ -33,7 +33,7 @@ class RaiseDiePlus1Test {
             addDieToHand(die)
         }
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget(dice = diceOf(TestDie(8, 3)))
@@ -44,6 +44,31 @@ class RaiseDiePlus1Test {
         assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_2_VP, entry.effect)
         assertEquals("Raised 1 dice in player 1's hand by 1", entry.detail)
         assertEquals(listOf(8 to 4), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun invoke_withHandScopeAndAmountFour_raisesTargetDieByFour() {
+        val chronicle = GameChronicle()
+        val card = loadCard().copy(effect = CardEffect.RAISE_DIE_PLUS_4)
+        val die = TestDie(10, 3)
+        val player = Player(id = PLAYER_ID).apply {
+            addDieToHand(die)
+        }
+
+        RaiseDiePlusN(
+            chronicle = chronicle,
+            amount = 4
+        )(
+            scope = HandleDieEffectScope(player),
+            card = card,
+            target = ExecuteTarget(dice = diceOf(TestDie(10, 3)))
+        )
+
+        assertEquals(7, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_DIE_PLUS_4, entry.effect)
+        assertEquals("Raised 1 dice in player 1's hand by 4", entry.detail)
+        assertEquals(listOf(10 to 7), entry.dice.map { it.sides to it.value })
     }
 
     @Test
@@ -59,7 +84,7 @@ class RaiseDiePlus1Test {
             addDieToHand(d8)
         }
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget(dice = diceOf(TestDie(4, 1), TestDie(6, 2), TestDie(8, 3)))
@@ -79,7 +104,7 @@ class RaiseDiePlus1Test {
         val player = playerWithDice(PLAYER_ID, die, TestDie(8, 3), TestDie(6, 1))
         val battle = setupBattle(player)
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = BattleDieEffectScope(
                 battle = battle,
                 actingPlayer = player,
@@ -106,7 +131,7 @@ class RaiseDiePlus1Test {
         val player = playerWithDice(PLAYER_ID, row1Die, row2Die, row3Die)
         val battle = setupBattle(player)
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = BattleDieEffectScope(
                 battle = battle,
                 actingPlayer = player,
@@ -128,7 +153,7 @@ class RaiseDiePlus1Test {
         val chronicle = GameChronicle()
         val player = Player(id = PLAYER_ID)
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = HandleDieEffectScope(player),
             card = loadCard(),
             target = null
@@ -146,7 +171,7 @@ class RaiseDiePlus1Test {
             addDieToHand(TestDie(8, 3))
         }
 
-        RaiseDiePlus1(chronicle)(
+        RaiseDiePlusN(chronicle)(
             scope = HandleDieEffectScope(player),
             card = loadCard(),
             target = ExecuteTarget(dice = diceOf(TestDie(6, 3)))
