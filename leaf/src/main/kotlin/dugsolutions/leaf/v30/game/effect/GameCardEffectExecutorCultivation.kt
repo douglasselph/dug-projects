@@ -12,7 +12,7 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Cultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
-import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterCultivation
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
@@ -132,7 +132,13 @@ open class GameCardEffectExecutorCultivation(
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
-        RaiseDiePlus1AndGainWaterCultivation(chronicle)(table, player, action.card, action.target)
+        RaiseDiePlus1AndGainWater(chronicle)(
+            table = table,
+            player = player,
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
     }
 
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {

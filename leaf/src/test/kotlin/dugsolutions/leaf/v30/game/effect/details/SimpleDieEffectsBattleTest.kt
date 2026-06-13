@@ -67,12 +67,17 @@ class SimpleDieEffectsBattleTest {
         val actingPlayer = Player(id = 9)
         setupBattle(table, target)
 
-        RaiseDiePlus1AndGainWaterBattle(chronicle)(
+        RaiseDiePlus1AndGainWater(chronicle)(
             table = table,
             player = actingPlayer,
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = actingPlayer,
+                targetPlayer = target,
+                row = BattleStrikeRow.STRIKE_1
+            ),
             card = card,
-            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
+            target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6)))
         )
 
         assertEquals(7, targetDie.value)

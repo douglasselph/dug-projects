@@ -20,7 +20,7 @@ import dugsolutions.leaf.v30.game.effect.details.FlipDieToOppositeFace
 import dugsolutions.leaf.v30.game.effect.details.GainD4OrReturnD4RaiseDiePlus4Battle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
-import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWaterBattle
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
@@ -183,7 +183,21 @@ open class GameCardEffectExecutorBattle(
     }
 
     private fun raiseDiePlus1AndGainWater(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        RaiseDiePlus1AndGainWaterBattle(chronicle)(table, player, action.card, action.target, action.row)
+        val row = action.row ?: throw MainActionException("Battle raise requires a battle row")
+        val targetPlayer = action.target?.player
+            ?: throw MainActionException("Battle raise requires player dice target")
+        RaiseDiePlus1AndGainWater(chronicle)(
+            table = table,
+            player = player,
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                rows = action.rows.ifEmpty { listOf(row) }
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")

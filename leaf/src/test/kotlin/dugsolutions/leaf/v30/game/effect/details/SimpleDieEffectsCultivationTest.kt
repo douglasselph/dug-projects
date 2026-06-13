@@ -55,9 +55,10 @@ class SimpleDieEffectsCultivationTest {
         val die = FixedDie(6, 5)
         val player = Player(id = 1).apply { addDieToHand(die) }
 
-        RaiseDiePlus1AndGainWaterCultivation(chronicle)(
+        RaiseDiePlus1AndGainWater(chronicle)(
             table = table,
             player = player,
+            scope = HandleDieEffectScope(player),
             card = card,
             target = ExecuteTarget(player = player, dice = diceOf(FixedDie(6, 5)))
         )
