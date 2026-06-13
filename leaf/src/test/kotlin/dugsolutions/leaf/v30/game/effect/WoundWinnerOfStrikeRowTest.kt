@@ -48,7 +48,7 @@ class WoundWinnerOfStrikeRowTest {
             player = loser2,
             action = ActionBattleMain.ExecuteCard(
                 card = card,
-                row = BattleStrikeRow.STRIKE_1
+                rows = listOf(BattleStrikeRow.STRIKE_1)
             )
         )
 
@@ -85,7 +85,7 @@ class WoundWinnerOfStrikeRowTest {
             player = loser3,
             action = ActionBattleMain.ExecuteCard(
                 card = card,
-                row = BattleStrikeRow.STRIKE_1
+                rows = listOf(BattleStrikeRow.STRIKE_1)
             )
         )
 

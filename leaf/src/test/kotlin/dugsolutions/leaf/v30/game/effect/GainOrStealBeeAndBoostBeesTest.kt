@@ -139,7 +139,7 @@ class GainOrStealBeeAndBoostBeesTest {
             action = ActionBattleMain.ExecuteCard(
                 card = card,
                 target = ExecuteTarget(player = source),
-                row = BattleStrikeRow.STRIKE_1
+                rows = listOf(BattleStrikeRow.STRIKE_1)
             )
         )
 

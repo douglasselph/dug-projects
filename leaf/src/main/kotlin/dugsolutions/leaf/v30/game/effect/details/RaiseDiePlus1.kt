@@ -20,23 +20,29 @@ class RaiseDiePlus1(
         card: GameCard,
         target: ExecuteTarget?
     ) {
-        val targetDie = target?.dice?.firstDie
-        if (targetDie == null) {
+        val targetDice = target?.dice?.diceInOrder.orEmpty()
+        if (targetDice.isEmpty()) {
             chronicle(Moment.Warning(player = scope.actingPlayer, type = WarningType.RAISE_TARGET_MISSING, card = card))
             return
         }
-        if (!scope.hasDie(targetDie)) {
-            chronicle(Moment.Warning(player = scope.actingPlayer, type = WarningType.RAISE_DIE_NOT_FOUND, card = card))
-            return
+
+        val raisedDice = targetDice.mapIndexedNotNull { index, die ->
+            if (!scope.hasDie(die, index)) {
+                chronicle(Moment.Warning(player = scope.actingPlayer, type = WarningType.RAISE_DIE_NOT_FOUND, card = card))
+                null
+            } else {
+                scope.raise(die, RAISE_AMOUNT, index)
+            }
         }
-        val raised = scope.raise(targetDie, RAISE_AMOUNT) ?: return
+        if (raisedDice.isEmpty()) return
+
         chronicle(
             Moment.GameCardEffect(
                 player = scope.actingPlayer,
                 card = card,
                 effect = card.effect,
-                detail = "Raised one die in ${scope.locationDescription} by $RAISE_AMOUNT",
-                dice = Dice(listOf(raised))
+                detail = "Raised ${raisedDice.size} dice in ${scope.locationDescription} by $RAISE_AMOUNT",
+                dice = Dice(raisedDice)
             )
         )
     }

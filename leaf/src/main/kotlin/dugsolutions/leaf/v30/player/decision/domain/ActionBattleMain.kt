@@ -12,10 +12,16 @@ sealed interface ActionBattleMain {
     data class ExecuteCard(
         val card: GameCard,
         val target: ExecuteTarget? = null,
-        val row: BattleStrikeRow? = null,
-        val row2: BattleStrikeRow? = null,
+        val rows: List<BattleStrikeRow> = emptyList(),
         val usesAction: Boolean = true
-    ) : ActionBattleMain
+    ) : ActionBattleMain {
+        val row: BattleStrikeRow?
+            get() = rows.getOrNull(0)
+        val row2: BattleStrikeRow?
+            get() = rows.getOrNull(1)
+        val row3: BattleStrikeRow?
+            get() = rows.getOrNull(2)
+    }
     data class PlayWispCard(val card: WispCard, val wispCardTarget: ExecuteTarget? = null) : ActionBattleMain
 }
 

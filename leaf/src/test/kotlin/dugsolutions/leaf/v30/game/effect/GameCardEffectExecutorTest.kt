@@ -201,7 +201,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
 
         executor(table, Player(id = 9), action)
@@ -310,7 +310,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
         val player = Player(id = 9)
 
@@ -397,7 +397,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 4))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
         val player = Player(id = 9)
 
@@ -472,7 +472,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = target, dice = diceOf(FixedDie(4, 4))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
 
         executor(table, target, action)
@@ -595,7 +595,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = target, dice = diceOf(FixedDie(8, 6))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
 
         executor(table, Player(id = 9), action)
@@ -753,8 +753,7 @@ class GameCardEffectExecutorTest {
         val card = loadGameCard().copy(effect = CardEffect.DRAW_TWO_DICE)
         val action = ActionBattleMain.ExecuteCard(
             card = card,
-            row = BattleStrikeRow.STRIKE_1,
-            row2 = BattleStrikeRow.STRIKE_3
+            rows = listOf(BattleStrikeRow.STRIKE_1, BattleStrikeRow.STRIKE_3)
         )
 
         executor(table, player, action)
@@ -791,7 +790,7 @@ class GameCardEffectExecutorTest {
         )
         val action = ActionBattleMain.ExecuteCard(
             card = loadGameCard().copy(effect = CardEffect.DRAW_TWO_DICE),
-            row = BattleStrikeRow.STRIKE_2
+            rows = listOf(BattleStrikeRow.STRIKE_2)
         )
 
         executor(table, player, action)
@@ -840,7 +839,7 @@ class GameCardEffectExecutorTest {
         val action = ActionBattleMain.ExecuteCard(
             card = card,
             target = ExecuteTarget(player = player, dice = diceOf(FixedDie(10, 4))),
-            row = BattleStrikeRow.STRIKE_1
+            rows = listOf(BattleStrikeRow.STRIKE_1)
         )
 
         executor(table, player, action)
@@ -849,6 +848,65 @@ class GameCardEffectExecutorTest {
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
         assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_1_VP_PER_FLOWER, entry.effect)
         assertEquals(listOf(10 to 5), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun cultivationInvoke_whenRaiseThreeDicePlus1_raisesEachTargetHandDieByOne() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val d4 = FixedDie(4, 1)
+        val d6 = FixedDie(6, 2)
+        val d8 = FixedDie(8, 3)
+        val player = Player(id = 7).apply {
+            addDieToHand(d4)
+            addDieToHand(d6)
+            addDieToHand(d8)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_THREE_DICE_PLUS_1)
+        val action = ActionCultivation.ExecuteCard(
+            card = card,
+            target = ExecuteTarget(dice = diceOf(FixedDie(4, 1), FixedDie(6, 2), FixedDie(8, 3)))
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(2, 3, 4), listOf(d4.value, d6.value, d8.value))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_THREE_DICE_PLUS_1, entry.effect)
+        assertEquals(listOf(4 to 2, 6 to 3, 8 to 4), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenRaiseThreeDicePlus1_raisesEachTargetGridDieByOne() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val d10 = FixedDie(10, 4)
+        val d8 = FixedDie(8, 3)
+        val d6 = FixedDie(6, 2)
+        val player = playerWithDice(1, d10, d8, d6)
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.RAISE_THREE_DICE_PLUS_1)
+        val action = ActionBattleMain.ExecuteCard(
+            card = card,
+            target = ExecuteTarget(player = player, dice = diceOf(FixedDie(10, 4), FixedDie(8, 3), FixedDie(6, 2))),
+            rows = listOf(BattleStrikeRow.STRIKE_1, BattleStrikeRow.STRIKE_2, BattleStrikeRow.STRIKE_3)
+        )
+
+        executor(table, player, action)
+
+        assertEquals(listOf(5, 4, 3), listOf(d10.value, d8.value, d6.value))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_THREE_DICE_PLUS_1, entry.effect)
+        assertEquals(listOf(6 to 3, 8 to 4, 10 to 5), entry.dice.map { it.sides to it.value })
     }
 
     private fun createTable(

@@ -15,9 +15,9 @@ interface DieEffectScope {
     val locationDescription: String
 
     fun allDice(): Dice
-    fun hasDie(die: Die?): Boolean
-    fun findDie(die: Die?): Die?
-    fun reroll(die: Die): Die?
-    fun raise(die: Die, amount: Int): Die?
-    fun setValue(die: Die, value: Int): Die?
+    fun hasDie(die: Die?, index: Int? = null): Boolean
+    fun findDie(die: Die?, index: Int? = null): Die?
+    fun reroll(die: Die, index: Int? = null): Die?
+    fun raise(die: Die, amount: Int, index: Int? = null): Die?
+    fun setValue(die: Die, value: Int, index: Int? = null): Die?
 }

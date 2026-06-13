@@ -465,13 +465,15 @@ open class GameCardEffectExecutorBattle(
                 battle = table.battle,
                 actingPlayer = player,
                 targetPlayer = targetPlayer,
-                row = row
+                rows = action.rows.ifEmpty { listOf(row) }
             ),
             card = action.card,
             target = action.target
         )
     }
-    private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        raiseDiePlus1(table, player, action)
+    }
     private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

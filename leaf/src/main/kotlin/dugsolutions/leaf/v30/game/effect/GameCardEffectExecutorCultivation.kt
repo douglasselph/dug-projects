@@ -272,7 +272,9 @@ open class GameCardEffectExecutorCultivation(
             target = action.target
         )
     }
-    private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        raiseDiePlus1(player, action)
+    }
     private fun raiseDiePlus4(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

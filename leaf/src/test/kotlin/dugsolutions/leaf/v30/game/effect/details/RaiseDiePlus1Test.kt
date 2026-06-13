@@ -42,8 +42,33 @@ class RaiseDiePlus1Test {
         assertEquals(4, die.value)
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
         assertEquals(CardEffect.RAISE_DIE_PLUS_1_AND_END_GAME_PLUS_2_VP, entry.effect)
-        assertEquals("Raised one die in player 1's hand by 1", entry.detail)
+        assertEquals("Raised 1 dice in player 1's hand by 1", entry.detail)
         assertEquals(listOf(8 to 4), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun invoke_withHandScope_raisesAllTargetDiceByOne() {
+        val chronicle = GameChronicle()
+        val card = loadCard().copy(effect = CardEffect.RAISE_THREE_DICE_PLUS_1)
+        val d4 = TestDie(4, 1)
+        val d6 = TestDie(6, 2)
+        val d8 = TestDie(8, 3)
+        val player = Player(id = PLAYER_ID).apply {
+            addDieToHand(d4)
+            addDieToHand(d6)
+            addDieToHand(d8)
+        }
+
+        RaiseDiePlus1(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = card,
+            target = ExecuteTarget(dice = diceOf(TestDie(4, 1), TestDie(6, 2), TestDie(8, 3)))
+        )
+
+        assertEquals(listOf(2, 3, 4), listOf(d4.value, d6.value, d8.value))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_THREE_DICE_PLUS_1, entry.effect)
+        assertEquals(listOf(4 to 2, 6 to 3, 8 to 4), entry.dice.map { it.sides to it.value })
     }
 
     @Test
@@ -67,8 +92,35 @@ class RaiseDiePlus1Test {
 
         assertEquals(5, die.value)
         val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
-        assertEquals("Raised one die in player 1's STRIKE_1 battle square by 1", entry.detail)
+        assertEquals("Raised 1 dice in player 1's STRIKE_1 battle square by 1", entry.detail)
         assertEquals(listOf(10 to 5), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun invoke_withBattleScope_raisesEachTargetDieOnCorrespondingRow() {
+        val chronicle = GameChronicle()
+        val card = loadCard().copy(effect = CardEffect.RAISE_THREE_DICE_PLUS_1)
+        val row1Die = TestDie(10, 4)
+        val row2Die = TestDie(8, 3)
+        val row3Die = TestDie(6, 2)
+        val player = playerWithDice(PLAYER_ID, row1Die, row2Die, row3Die)
+        val battle = setupBattle(player)
+
+        RaiseDiePlus1(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = battle,
+                actingPlayer = player,
+                targetPlayer = player,
+                rows = listOf(BattleStrikeRow.STRIKE_1, BattleStrikeRow.STRIKE_2, BattleStrikeRow.STRIKE_3)
+            ),
+            card = card,
+            target = ExecuteTarget(dice = diceOf(TestDie(10, 4), TestDie(8, 3), TestDie(6, 2)))
+        )
+
+        assertEquals(listOf(5, 4, 3), listOf(row1Die.value, row2Die.value, row3Die.value))
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.RAISE_THREE_DICE_PLUS_1, entry.effect)
+        assertEquals(listOf(6 to 3, 8 to 4, 10 to 5), entry.dice.map { it.sides to it.value })
     }
 
     @Test
