@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v30.player.decision.domain
 
+import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
@@ -9,5 +10,6 @@ data class ExecuteTarget(
     val player: Player? = null,
     val dice: Dice = Dice(),
     val critter: List<Critter> = emptyList(),
-    val card: GameCard? = null
+    val card: GameCard? = null,
+    val row: BattleStrikeRow? = null
 )

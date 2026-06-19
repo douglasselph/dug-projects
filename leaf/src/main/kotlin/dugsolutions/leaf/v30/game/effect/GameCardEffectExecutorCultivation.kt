@@ -20,6 +20,7 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardW
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
+import dugsolutions.leaf.v30.game.effect.details.SetDieUpToD12ToMax
 import dugsolutions.leaf.v30.game.effect.details.TrashCritterToRaiseDiePlus5
 import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
@@ -373,7 +374,13 @@ open class GameCardEffectExecutorCultivation(
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
         flipOpponentFaceUpVineFaceDown(player, action.card, action.target)
     }
-    private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        SetDieUpToD12ToMax(chronicle)(
+            scope = HandleDieEffectScope(player),
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
 
     private companion object {

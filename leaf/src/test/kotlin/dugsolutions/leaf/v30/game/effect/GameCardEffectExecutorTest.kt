@@ -1163,6 +1163,97 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenSetDieUpToD12ToMax_setsHandDieToMax() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(12, 4)
+        val player = Player(id = 7).apply {
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.SET_DIE_UP_TO_D12_TO_MAX)
+
+        executor(
+            table,
+            player,
+            ActionCultivation.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(dice = diceOf(FixedDie(12, 4)))
+            )
+        )
+
+        assertEquals(12, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.SET_DIE_UP_TO_D12_TO_MAX, entry.effect)
+        assertEquals(listOf(12 to 12), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenSetDieUpToD12ToMax_setsBattleDieToMax() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val die = FixedDie(10, 3)
+        val player = playerWithDice(1, die, FixedDie(8, 2), FixedDie(6, 1))
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.SET_DIE_UP_TO_D12_TO_MAX)
+
+        executor(
+            table,
+            player,
+            ActionBattleMain.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(player = player, dice = diceOf(FixedDie(10, 3))),
+                rows = listOf(BattleStrikeRow.STRIKE_1)
+            )
+        )
+
+        assertEquals(10, die.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.SET_DIE_UP_TO_D12_TO_MAX, entry.effect)
+        assertEquals(listOf(10 to 10), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenReduceOpposingDiceOnStrikeRowBy3_reducesOpponentDiceOnTargetRow() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val actingDie = FixedDie(12, 7)
+        val opponentDie1 = FixedDie(10, 8)
+        val opponentDie2 = FixedDie(8, 2)
+        val player = playerWithDice(1, actingDie, FixedDie(6, 2), FixedDie(4, 1))
+        val opponent1 = playerWithDice(2, opponentDie1, FixedDie(6, 6), FixedDie(4, 1))
+        val opponent2 = playerWithDice(3, opponentDie2, FixedDie(6, 1), FixedDie(4, 1))
+        val opponent3 = playerWithDice(4, FixedDie(8, 1), FixedDie(6, 1), FixedDie(4, 1))
+        table.battle.setup(listOf(player, opponent1, opponent2, opponent3))
+        val card = loadGameCard().copy(effect = CardEffect.REDUCE_OPPOSING_DICE_ON_STRIKE_ROW_BY_3)
+
+        executor(
+            table,
+            player,
+            ActionBattleMain.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(row = BattleStrikeRow.STRIKE_1)
+            )
+        )
+
+        assertEquals(7, actingDie.value)
+        assertEquals(5, opponentDie1.value)
+        assertEquals(1, opponentDie2.value)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.REDUCE_OPPOSING_DICE_ON_STRIKE_ROW_BY_3, entry.effect)
+        assertEquals(listOf(4 to 1, 8 to 1, 10 to 5), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
     fun cultivationInvoke_whenResolveGraftedRootOrVineEffect_chroniclesFollowUpInstruction() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorCultivation(chronicle)

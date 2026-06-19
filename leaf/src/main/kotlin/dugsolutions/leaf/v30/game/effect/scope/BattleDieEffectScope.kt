@@ -66,8 +66,9 @@ class BattleDieEffectScope(
     }
 
     override fun setValue(die: Die, value: Int, index: Int?): Die? {
-        if (!battle.setDieValue(targetPlayer, rowFor(index), die, value)) return null
-        return findDie(die, index)
+        val target = findDie(die, index) ?: return null
+        target.adjustTo(value)
+        return target
     }
 
     private fun rowFor(index: Int?): BattleStrikeRow {

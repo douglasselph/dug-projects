@@ -25,10 +25,12 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
+import dugsolutions.leaf.v30.game.effect.details.ReduceOpposingDiceOnStrikeRowBy3Battle
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.RerollHigherOpposingDiceOnStrikeRowBattle
 import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
+import dugsolutions.leaf.v30.game.effect.details.SetDieUpToD12ToMax
 import dugsolutions.leaf.v30.game.effect.details.SwapTwoOwnDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.TrashCritterToRaiseDiePlus5
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
@@ -48,6 +50,10 @@ open class GameCardEffectExecutorBattle(
     private val battleAwardWinners: BattleAwardWinners = BattleAwardWinners(chronicle)
 ) : GameCardEffectExecutorBase(chronicle, dieFactory) {
 
+    private companion object {
+        const val RAISE_PLUS_4 = 4
+        val DOUBLE_ALL_DICE_RANGE = 1..4
+    }
 
     open operator fun invoke(
         table: Table,
@@ -609,11 +615,27 @@ open class GameCardEffectExecutorBattle(
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         flipOpponentFaceUpVineFaceDown(player, action.card, action.target)
     }
-    private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-    private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
-
-    private companion object {
-        const val RAISE_PLUS_4 = 4
-        val DOUBLE_ALL_DICE_RANGE = 1..4
+    private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle set die up to D12 to max requires a battle row")
+        val targetPlayer = action.target?.player ?: player
+        SetDieUpToD12ToMax(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            card = action.card,
+            target = action.target
+        )
     }
+    private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        ReduceOpposingDiceOnStrikeRowBy3Battle(chronicle)(
+            battle = table.battle,
+            player = player,
+            card = action.card,
+            row = action.target?.row ?: action.row
+        )
+    }
+
 }
