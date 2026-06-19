@@ -215,11 +215,22 @@ abstract class GameCardEffectExecutorBase(
         return upgraded
     }
 
-    protected open fun gainMulchOnCleanup(
-        player: Player,
-        card: GameCard,
-        die: Die
-    ) {
+    /**
+     * Decision tree for cultivation:
+     *     val die = player.diceHand.dice
+     *             .minWithOrNull(
+     *                 compareBy<Die> { it.value }
+     *                     .thenByDescending { it.sides }
+     *             )
+     *             ?: return
+     * Decision tree for battle:
+     *    val die = player.diceHand.dice
+     *             .maxByOrNull { it.sides }
+     *             ?: return
+     */
+    protected open fun gainMulchOnCleanup(player: Player, card: GameCard, target: ExecuteTarget)
+    {
+        val die = target.dice.firstDie ?: return
         val token = Token.PENDING_MULCH(DieSides.from(die.sides))
         player.addMulchToken(DieSides.from(die.sides))
         player.removeDieFromHand(die)

@@ -715,7 +715,7 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
-    fun cultivationInvoke_whenGainMulchOnCleanup_selectsLowestValueDieWithHighestSidesOnTie() {
+    fun cultivationInvoke_whenGainMulchOnCleanup_usesTargetDie() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorCultivation(chronicle)
         val table = createTable(numBattle = 0, numCultivation = 1)
@@ -729,7 +729,14 @@ class GameCardEffectExecutorTest {
         }
         val card = loadGameCard().copy(effect = CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE)
 
-        executor(table, player, ActionCultivation.ExecuteCard(card))
+        executor(
+            table,
+            player,
+            ActionCultivation.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(dice = diceOf(FixedDie(8, 1)))
+            )
+        )
 
         assertEquals(listOf(6, 12), player.diceHand.dice.map { it.sides }.sorted())
         assertEquals(emptyList(), player.mulchTokens)
@@ -742,7 +749,7 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
-    fun battleInvoke_whenGainMulchOnCleanup_selectsHighestSidedDieFromHand() {
+    fun battleInvoke_whenGainMulchOnCleanup_usesTargetDie() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorBattle(chronicle)
         val table = createTable(numBattle = 1, numCultivation = 0)
@@ -756,7 +763,14 @@ class GameCardEffectExecutorTest {
         }
         val card = loadGameCard().copy(effect = CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE)
 
-        executor(table, player, ActionBattleMain.ExecuteCard(card))
+        executor(
+            table,
+            player,
+            ActionBattleMain.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(dice = diceOf(FixedDie(20, 1)))
+            )
+        )
 
         assertEquals(listOf(4, 10), player.diceHand.dice.map { it.sides }.sorted())
         assertEquals(emptyList(), player.mulchTokens)
@@ -766,6 +780,79 @@ class GameCardEffectExecutorTest {
         assertEquals(CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE, entry.effect)
         assertEquals(Token.PENDING_MULCH(DieSides.D20), entry.token)
         assertEquals(listOf(20 to 1), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun cultivationInvoke_whenTrashCritterToRaiseDiePlus5_removesCritterAndRaisesHandDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val die = FixedDie(12, 4)
+        val player = Player(id = 7).apply {
+            addCritter(Critter.WORM)
+            addDieToHand(die)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5)
+
+        executor(
+            table,
+            player,
+            ActionCultivation.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(
+                    dice = diceOf(FixedDie(12, 4)),
+                    critter = listOf(Critter.WORM)
+                )
+            )
+        )
+
+        assertEquals(9, die.value)
+        assertEquals(emptyList(), player.critters)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5, entry.effect)
+        assertEquals(Critter.WORM, entry.critter)
+        assertEquals(listOf(12 to 9), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenTrashCritterToRaiseDiePlus5_removesCritterAndRaisesGridDie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val die = FixedDie(10, 3)
+        val player = playerWithDice(1, die, FixedDie(8, 2), FixedDie(6, 1)).apply {
+            addCritter(Critter.BEE)
+        }
+        table.battle.setup(
+            listOf(
+                player,
+                playerWithDice(2, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(3, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1)),
+                playerWithDice(4, FixedDie(4, 1), FixedDie(6, 1), FixedDie(8, 1))
+            )
+        )
+        val card = loadGameCard().copy(effect = CardEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5)
+
+        executor(
+            table,
+            player,
+            ActionBattleMain.ExecuteCard(
+                card = card,
+                target = ExecuteTarget(
+                    player = player,
+                    dice = diceOf(FixedDie(10, 3)),
+                    critter = listOf(Critter.BEE)
+                ),
+                rows = listOf(BattleStrikeRow.STRIKE_1)
+            )
+        )
+
+        assertEquals(8, die.value)
+        assertEquals(emptyList(), player.critters)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5, entry.effect)
+        assertEquals(Critter.BEE, entry.critter)
+        assertEquals(listOf(10 to 8), entry.dice.map { it.sides to it.value })
     }
 
     @Test

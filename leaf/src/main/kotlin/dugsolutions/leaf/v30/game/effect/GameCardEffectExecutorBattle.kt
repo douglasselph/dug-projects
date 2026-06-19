@@ -29,6 +29,7 @@ import dugsolutions.leaf.v30.game.effect.details.RerollHigherOpposingDiceOnStrik
 import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.details.SwapTwoOwnDiceBattle
+import dugsolutions.leaf.v30.game.effect.details.TrashCritterToRaiseDiePlus5
 import dugsolutions.leaf.v30.game.effect.scope.BattleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
@@ -169,6 +170,7 @@ open class GameCardEffectExecutorBattle(
         super.gainWormAndBoostWorms(table, player, action)
         table.battle.replaceCritter(player, Critter.WORM, Critter.BOOSTED_WORM)
     }
+
     private fun rerollDieUntilThreeOrHigher(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle reroll requires a battle row")
         val targetPlayer = (action.target)?.player ?: player
@@ -201,6 +203,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun raiseDiePlus1AndDoubleMatchingDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise and double requires a battle row")
         val target = action.target
@@ -225,6 +228,7 @@ open class GameCardEffectExecutorBattle(
             target = target.dice
         )
     }
+
     private fun doubleOneDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle double die requires a battle row")
         val targetPlayer = (action.target)?.player ?: player
@@ -239,6 +243,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun doubleAllDiceShowingOneToFour(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val playerColumn = table.battle.snapshot().columns.firstOrNull { it.playerId == player.id }
         val doubled = playerColumn
@@ -261,6 +266,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
+
     override fun upgradeDieAndUseNow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard): Die? {
         val row = action.row ?: throw MainActionException("Battle upgrade requires a battle row")
         val oldDie = (action.target)?.dice?.firstDie
@@ -287,6 +293,7 @@ open class GameCardEffectExecutorBattle(
         )
         return upgraded
     }
+
     private fun flipDieToOppositeFace(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle flip requires a battle row")
         val targetPlayer = (action.target)?.player ?: player
@@ -301,6 +308,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun setDieToMatchAnother(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle set die requires a battle row")
         val targetPlayer = (action.target)?.player
@@ -316,6 +324,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun raiseDiePlus2PerWormAndDiscardWorm(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise per worm requires a battle row")
         val targetPlayer = (action.target)?.player ?: player
@@ -332,10 +341,12 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     override fun gainOrStealBeeAndBoostBees(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         super.gainOrStealBeeAndBoostBees(table, player, action)
         table.battle.replaceCritter(player, Critter.BEE, Critter.BOOSTED_BEE)
     }
+
     private fun woundWinnerOfStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle wound winner requires a battle row")
         val result = table.battle.computeWinners()
@@ -354,6 +365,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
+
     private fun gainD4OrReturnD4RaiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         GainD4OrReturnD4RaiseDiePlus4Battle(chronicle, dieFactory)(
             battle = table.battle,
@@ -364,6 +376,7 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
+
     private fun swapTwoOwnDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         SwapTwoOwnDiceBattle(chronicle)(
             battle = table.battle,
@@ -374,6 +387,7 @@ open class GameCardEffectExecutorBattle(
             row2 = action.row2
         )
     }
+
     private fun raiseDiePlus1PerGraftedRootOrVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise per grafted root or vine requires a battle row")
         RaiseDiePlus1PerGraftedRootOrVine(chronicle)(
@@ -388,6 +402,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun rollExtraForEachMaxDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         RollExtraForEachMaxDie(chronicle)(
             scopes = BattleStrikeRow.entries.map { row ->
@@ -401,7 +416,12 @@ open class GameCardEffectExecutorBattle(
             card = action.card
         )
     }
-    private fun rerollHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+
+    private fun rerollHigherOpposingDiceOnStrikeRow(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
         RerollHigherOpposingDiceOnStrikeRowBattle(chronicle)(
             battle = table.battle,
             player = player,
@@ -410,6 +430,7 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
+
     private fun drainHigherDiceAndRaiseOwnDie(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         DrainHigherDiceAndRaiseOwnDieBattle(chronicle)(
             battle = table.battle,
@@ -419,6 +440,7 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
+
     private fun drawDieFromDiscard(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle draw die from discard requires a battle row")
         DrawDieFromDiscard(chronicle)(
@@ -427,6 +449,7 @@ open class GameCardEffectExecutorBattle(
             placeDie = { die -> table.battle.add(player, row, die) }
         )
     }
+
     private fun flipHigherOpposingDiceOnStrikeRow(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         FlipHigherOpposingDiceOnStrikeRowBattle(chronicle)(
             battle = table.battle,
@@ -436,6 +459,7 @@ open class GameCardEffectExecutorBattle(
             row = action.row
         )
     }
+
     private fun playUpToTwoOtherCards(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         // This effect is resolved by subsequent ExecuteCard decisions:
         // the enabling card and intermediate follow-up cards should use usesAction=false,
@@ -449,6 +473,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
+
     private fun drawTwoDice(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle draw two dice requires a battle row")
         val row2 = action.row2 ?: row
@@ -467,12 +492,19 @@ open class GameCardEffectExecutorBattle(
             }
         )
     }
+
     private fun raiseDiePlus1AndEndGamePlus2Vp(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         raiseDiePlus1(table, player, action)
     }
-    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+
+    private fun raiseDiePlus1AndEndGamePlus1VpPerFlower(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
         raiseDiePlus1(table, player, action)
     }
+
     private fun raiseDiePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise die plus one requires a battle row")
         val targetPlayer = action.target?.player ?: player
@@ -487,9 +519,11 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun raiseThreeDicePlus1(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         raiseDiePlus1(table, player, action)
     }
+
     private fun raiseDiePlus4(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle raise die plus four requires a battle row")
         val targetPlayer = action.target?.player ?: player
@@ -507,6 +541,7 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
+
     private fun resolveGraftedRootOrVineEffect(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         // The enabling card should use usesAction=false; a follow-up ExecuteCard action resolves the chosen grafted card.
         chronicle(
@@ -518,6 +553,7 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
+
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
         val row = action.row ?: throw MainActionException("Battle resolve strike immediately requires a battle row")
         val result = table.battle.computeWinners()
@@ -532,13 +568,28 @@ open class GameCardEffectExecutorBattle(
             )
         )
     }
+
     private fun gainMulchOnCleanup(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
-        val die = player.diceHand.dice
-            .maxByOrNull { it.sides }
-            ?: return
-        super.gainMulchOnCleanup(player, action.card, die)
+        action.target?.let { super.gainMulchOnCleanup(player, action.card, action.target) } ?: run {
+            throw MainActionException("Missing target for gainMulchOnCleanup()")
+        }
     }
-    private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+
+    private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle trash critter to raise die requires a battle row")
+        val targetPlayer = action.target?.player ?: player
+        TrashCritterToRaiseDiePlus5(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                row = row
+            ),
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

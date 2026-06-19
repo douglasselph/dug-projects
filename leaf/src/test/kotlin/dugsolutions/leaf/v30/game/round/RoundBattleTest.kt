@@ -374,6 +374,51 @@ class RoundBattleTest {
         assertEquals(4, callOrder.count { it == 4 })
     }
 
+    @Test
+    fun performMainActions_whenDecisionIsPlayCritter_addsCritterToBattleGridAndDoesNotSpendMainAction() {
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val target = player(
+            4,
+            FixedDie(4, 2),
+            FixedDie(6, 2),
+            FixedDie(8, 2),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                ),
+                supportActions = listOf(
+                    ActionBattleSupport.PlayCritter(Critter.WORM, BattleStrikeRow.STRIKE_2),
+                    ActionBattleSupport.None
+                )
+            )
+        ).apply {
+            addCritter(Critter.WORM)
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(table, loadBattleCard(), battle = battle)
+        round.prepare()
+
+        round.performSupportActions()
+        round.performMainActions()
+
+        assertEquals(emptyList(), target.critters)
+        assertEquals(
+            BattleItem.CritterItem(Critter.WORM),
+            battle.grid.getSquare(target.id, BattleStrikeRow.STRIKE_2).all.last()
+        )
+        assertEquals(listOf(4, 4, 1, 3, 2, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
     private fun player(
         id: Int,
         vararg dice: Die,

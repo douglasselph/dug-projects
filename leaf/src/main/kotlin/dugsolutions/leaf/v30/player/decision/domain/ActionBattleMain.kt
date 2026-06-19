@@ -19,8 +19,6 @@ sealed interface ActionBattleMain {
             get() = rows.getOrNull(0)
         val row2: BattleStrikeRow?
             get() = rows.getOrNull(1)
-        val row3: BattleStrikeRow?
-            get() = rows.getOrNull(2)
     }
     data class PlayWispCard(val card: WispCard, val wispCardTarget: ExecuteTarget? = null) : ActionBattleMain
 }

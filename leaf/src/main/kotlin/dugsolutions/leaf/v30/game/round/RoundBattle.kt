@@ -152,7 +152,7 @@ class RoundBattle(
     ): Boolean {
         when (
             val action = player.decisionDirector.chooseSupportBattleAction(
-                Decision.ChooseMainActionBattle(
+                ChooseMainActionBattle(
                     player = player,
                     roundCard = card,
                     table = table,
@@ -182,6 +182,9 @@ class RoundBattle(
             is ActionBattleSupport.PlayWaterToken -> {
                 handleWaterToken(player, action)
             }
+            is ActionBattleSupport.PlayCritter -> {
+                handleCritter(player, action)
+            }
             ActionBattleSupport.None -> return false
         }
         return true
@@ -206,7 +209,7 @@ class RoundBattle(
         battle.add(player, row, die)
         resolveReward(player, die)
         chronicle(
-            Moment.MainAction(
+            MainAction(
                 player = player,
                 action = MainActionType.PLAY_MULCH_TOKEN,
                 detail = "Played a mulch token to add a rolled die to battle row $row",
@@ -250,12 +253,27 @@ class RoundBattle(
             throw MainActionException("Water token die was not found in battle grid")
         }
         chronicle(
-            Moment.MainAction(
+            MainAction(
                 player = player,
                 action = MainActionType.PLAY_WATER_TOKEN,
                 detail = "Played a water token to reroll a battle die in row $targetRow",
                 die = rerolled,
                 token = Token.WATER
+            )
+        )
+    }
+
+    private fun handleCritter(
+        player: Player,
+        action: ActionBattleSupport.PlayCritter
+    ) {
+        if (!player.removeCritter(action.critter)) return
+        battle.add(player, action.row, action.critter)
+        chronicle(
+            MainAction(
+                player = player,
+                action = MainActionType.PLAY_CRITTER,
+                detail = "Played a critter ${action.critter} in row $action.row"
             )
         )
     }
