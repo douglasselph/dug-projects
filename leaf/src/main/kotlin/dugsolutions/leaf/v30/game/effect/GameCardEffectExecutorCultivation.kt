@@ -370,7 +370,9 @@ open class GameCardEffectExecutorCultivation(
             target = action.target
         )
     }
-    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        flipOpponentFaceUpVineFaceDown(player, action.card, action.target)
+    }
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
 

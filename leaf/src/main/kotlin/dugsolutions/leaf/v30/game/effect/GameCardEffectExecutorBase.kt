@@ -246,4 +246,38 @@ abstract class GameCardEffectExecutorBase(
         )
     }
 
+    protected fun flipOpponentFaceUpVineFaceDown(
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ) {
+        val targetPlayer = target?.player
+        val targetCard = target?.card
+        if (targetPlayer == null || targetCard == null) {
+            chronicle(
+                Moment.GameCardEffect(
+                    player = player,
+                    card = card,
+                    effect = card.effect,
+                    detail = "Could not flip an opponent vine face down because the target player or card was missing"
+                )
+            )
+            return
+        }
+
+        val flipped = targetPlayer.flipCreatureCardFaceDown(targetCard)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = if (flipped) {
+                    "Flipped player ${targetPlayer.id}'s creature card ${targetCard.name} face down"
+                } else {
+                    "Could not flip player ${targetPlayer.id}'s creature card ${targetCard.name} face down"
+                }
+            )
+        )
+    }
+
 }

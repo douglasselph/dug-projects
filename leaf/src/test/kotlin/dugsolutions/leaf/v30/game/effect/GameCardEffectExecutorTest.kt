@@ -15,6 +15,7 @@ import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
 import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
@@ -1104,6 +1105,64 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun battleInvoke_whenFlipOpponentFaceUpVineFaceDown_flipsTargetCardFaceDown() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val player = Player(id = 7)
+        val target = Player(id = 8)
+        val targetCard = loadGameCard("Vine_07_01")
+        target.addCardToCreature(CreatureCard(targetCard, CreatureCard.Facing.FACE_UP))
+        val actionCard = loadGameCard().copy(effect = CardEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN)
+
+        executor(
+            table,
+            player,
+            ActionBattleMain.ExecuteCard(
+                card = actionCard,
+                target = ExecuteTarget(
+                    player = target,
+                    card = targetCard
+                )
+            )
+        )
+
+        assertEquals(true, target.creatureCards.single().isFaceDown)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN, entry.effect)
+        assertEquals("Flipped player ${target.id}'s creature card ${targetCard.name} face down", entry.detail)
+    }
+
+    @Test
+    fun cultivationInvoke_whenFlipOpponentFaceUpVineFaceDown_flipsTargetCardFaceDown() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val player = Player(id = 7)
+        val target = Player(id = 8)
+        val targetCard = loadGameCard("Vine_07_01")
+        target.addCardToCreature(CreatureCard(targetCard, CreatureCard.Facing.FACE_UP))
+        val actionCard = loadGameCard().copy(effect = CardEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN)
+
+        executor(
+            table,
+            player,
+            ActionCultivation.ExecuteCard(
+                card = actionCard,
+                target = ExecuteTarget(
+                    player = target,
+                    card = targetCard
+                )
+            )
+        )
+
+        assertEquals(true, target.creatureCards.single().isFaceDown)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN, entry.effect)
+        assertEquals("Flipped player ${target.id}'s creature card ${targetCard.name} face down", entry.detail)
+    }
+
+    @Test
     fun cultivationInvoke_whenResolveGraftedRootOrVineEffect_chroniclesFollowUpInstruction() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorCultivation(chronicle)
@@ -1210,6 +1269,13 @@ class GameCardEffectExecutorTest {
             .apply { loadFromCsv(Commons.CARD_LIST) }
             .getAllCards()
             .first()
+    }
+
+    private fun loadGameCard(name: String): GameCard {
+        return GameCardRegistry()
+            .apply { loadFromCsv(Commons.CARD_LIST) }
+            .getCard(name)
+            ?: error("Missing test game card: $name")
     }
 
     private fun playerWithDice(

@@ -606,7 +606,9 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
-    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        flipOpponentFaceUpVineFaceDown(player, action.card, action.target)
+    }
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
 
