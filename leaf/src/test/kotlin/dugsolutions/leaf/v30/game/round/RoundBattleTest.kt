@@ -4,9 +4,14 @@ import dugsolutions.leaf.v30.battle.Battle
 import dugsolutions.leaf.v30.battle.PlayerGridOrder
 import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntry
+import dugsolutions.leaf.v30.chronicle.domain.MainActionType
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
@@ -37,7 +42,11 @@ import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.di.WispCardsFactory
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class RoundBattleTest {
 
@@ -459,6 +468,85 @@ class RoundBattleTest {
         assertEquals(listOf(4, 4, 1, 3, 2, 4, 4, 1, 1, 3, 3, 2, 2), callOrder)
     }
 
+    @Test
+    fun performSupportActions_whenDecisionIsPlayButterfly_flipsButterflyFaceDownAndKeepsHigherBattleDieValue() {
+        val chronicle = GameChronicle()
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val targetDie = SequenceDie(8, initial = 6, rolls = listOf(2))
+        val target = player(
+            4,
+            targetDie,
+            FixedDie(6, 2),
+            FixedDie(4, 1),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)),
+                supportActions = listOf(
+                    ActionBattleSupport.PlayButterfly(Butterfly.RED, FixedDie(8, 6), BattleStrikeRow.STRIKE_1),
+                    ActionBattleSupport.None
+                )
+            )
+        ).apply {
+            addButterfly(Butterfly.RED)
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(table, loadBattleCard(), chronicle = chronicle, battle = battle)
+        round.prepare()
+
+        round.performSupportActions()
+
+        assertEquals(1, targetDie.rollCount)
+        assertEquals(6, targetDie.value)
+        assertFalse(target.isButterflyFaceUp(Butterfly.RED))
+        val entry = assertIs<GameEntry.MainAction>(
+            chronicle.getEntries().first { it is GameEntry.MainAction && it.action == MainActionType.PLAY_BUTTERFLY }
+        )
+        assertTrue(entry.detail.contains("RED"))
+    }
+
+    @Test
+    fun performSupportActions_whenDecisionIsPlayFaceDownButterfly_throwsException() {
+        val callOrder = mutableListOf<Int>()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val targetDie = SequenceDie(8, initial = 6, rolls = listOf(7))
+        val target = player(
+            4,
+            targetDie,
+            FixedDie(6, 2),
+            FixedDie(4, 1),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)),
+                supportActions = listOf(ActionBattleSupport.PlayButterfly(Butterfly.RED, FixedDie(8, 6), BattleStrikeRow.STRIKE_1))
+            )
+        ).apply {
+            addButterfly(Butterfly.RED)
+            faceDownButterfly(Butterfly.RED)
+        }
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(table, loadBattleCard(), battle = battle)
+        round.prepare()
+
+        assertThrows<MainActionException> {
+            round.performSupportActions()
+        }
+    }
+
     private fun player(
         id: Int,
         vararg dice: Die,
@@ -617,6 +705,24 @@ class RoundBattleTest {
         }
 
         override fun roll(): Die {
+            rollCount++
+            return this
+        }
+    }
+
+    private class SequenceDie(
+        sides: Int,
+        initial: Int,
+        private val rolls: List<Int>
+    ) : Die(sides) {
+        var rollCount = 0
+
+        init {
+            adjustTo(initial)
+        }
+
+        override fun roll(): Die {
+            adjustTo(rolls.getOrElse(rollCount) { rolls.last() })
             rollCount++
             return this
         }

@@ -4,6 +4,8 @@ import dugsolutions.leaf.v30.chronicle.Chronicle
 import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.chronicle.domain.Moment
 import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.chronicle.domain.MainActionType
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
@@ -64,6 +66,29 @@ abstract class RoundBase(
                 chronicle(Moment.Reward(player = player, die = die, wispCard = wispCard))
             }
         }
+    }
+
+    protected fun rerollDieKeepHigher(
+        player: Player,
+        butterfly: Butterfly,
+        die: Die,
+        location: String,
+        reroll: (Die) -> Die?
+    ): Die? {
+        val previousValue = die.value
+        val rerolled = reroll(die) ?: return null
+        if (rerolled.value < previousValue) {
+            rerolled.adjustTo(previousValue)
+        }
+        chronicle(
+            Moment.MainAction(
+                player = player,
+                action = MainActionType.PLAY_BUTTERFLY,
+                detail = "Played $butterfly butterfly to reroll a die in $location and kept the higher value",
+                die = rerolled
+            )
+        )
+        return rerolled
     }
 
     fun cleanup() {

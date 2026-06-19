@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.player.decision.domain
 
 import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -22,5 +23,6 @@ sealed interface ActionCultivation {
     ): ActionCultivation
     data class PlayMulchToken(val token: Token.MULCH): ActionCultivation
     data class PlayWaterToken(val onDie: Die? = null): ActionCultivation
+    data class PlayButterfly(val which: Butterfly, val onDie: Die): ActionCultivation
 }
 

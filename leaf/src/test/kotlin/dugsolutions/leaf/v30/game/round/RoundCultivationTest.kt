@@ -2,6 +2,10 @@ package dugsolutions.leaf.v30.game.round
 
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCards
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.GameEntry
+import dugsolutions.leaf.v30.chronicle.domain.MainActionType
+import dugsolutions.leaf.v30.common.Butterfly
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Critters
@@ -40,6 +44,8 @@ import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class RoundCultivationTest {
@@ -234,6 +240,54 @@ class RoundCultivationTest {
         assertEquals(0, player.waterTokenCount)
         assertEquals(1, handDie.rollCount)
         assertEquals(3, player.diceHand.size)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsPlayButterfly_flipsButterflyFaceDownAndKeepsHigherDieValue() {
+        val chronicle = GameChronicle()
+        val handDie = SequenceDie(8, initial = 5, rolls = listOf(3))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(
+                    ActionCultivation.PlayButterfly(Butterfly.GREEN, FixedDie(8, 5)),
+                    ActionCultivation.PullDie
+                )
+            )
+        )
+        player.addButterfly(Butterfly.GREEN)
+        player.addDieToHand(handDie)
+        player.addDiceToSupply(listOf(FixedDie(4, 1)))
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard(), chronicle = chronicle)
+
+        round.performMainActions()
+
+        assertEquals(1, handDie.rollCount)
+        assertEquals(5, handDie.value)
+        assertFalse(player.isButterflyFaceUp(Butterfly.GREEN))
+        val entry = assertIs<GameEntry.MainAction>(
+            chronicle.getEntries().first { it is GameEntry.MainAction && it.action == MainActionType.PLAY_BUTTERFLY }
+        )
+        assertTrue(entry.detail.contains("GREEN"))
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsPlayFaceDownButterfly_throwsException() {
+        val handDie = SequenceDie(8, initial = 5, rolls = listOf(7))
+        val player = Player(
+            SequenceMainActionDirector(
+                listOf(ActionCultivation.PlayButterfly(Butterfly.GREEN, FixedDie(8, 5)))
+            )
+        )
+        player.addButterfly(Butterfly.GREEN)
+        player.faceDownButterfly(Butterfly.GREEN)
+        player.addDieToHand(handDie)
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        assertThrows<MainActionException> {
+            round.performMainActions()
+        }
     }
 
     @Test
@@ -444,6 +498,24 @@ class RoundCultivationTest {
         var rollCount = 0
 
         override fun roll(): dugsolutions.leaf.v30.random.die.Die {
+            rollCount++
+            return this
+        }
+    }
+
+    private class SequenceDie(
+        sides: Int,
+        initial: Int,
+        private val rolls: List<Int>
+    ) : dugsolutions.leaf.v30.random.die.Die(sides) {
+        var rollCount = 0
+
+        init {
+            adjustTo(initial)
+        }
+
+        override fun roll(): dugsolutions.leaf.v30.random.die.Die {
+            adjustTo(rolls.getOrElse(rollCount) { rolls.last() })
             rollCount++
             return this
         }

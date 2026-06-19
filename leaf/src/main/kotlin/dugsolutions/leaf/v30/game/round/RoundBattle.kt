@@ -18,6 +18,7 @@ import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.player.decision.domain.Decision.*
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.di.DieFactory
@@ -193,6 +194,9 @@ class RoundBattle(
             is ActionBattleSupport.PlayCritter -> {
                 handleCritter(player, action)
             }
+            is ActionBattleSupport.PlayButterfly -> {
+                handleButterfly(player, action)
+            }
             ActionBattleSupport.None -> return false
         }
         return true
@@ -284,6 +288,27 @@ class RoundBattle(
                 detail = "Played a critter ${action.critter} in row $action.row"
             )
         )
+    }
+
+    private fun handleButterfly(
+        player: Player,
+        action: ActionBattleSupport.PlayButterfly
+    ) {
+        val row = action.row ?: throw MainActionException("Battle butterfly requires a row")
+        if (!battle.hasDie(player, row, action.onDie)) {
+            throw MainActionException("Butterfly die was not found in battle grid")
+        }
+        if (!player.isButterflyFaceUp(action.which)) {
+            throw MainActionException("Butterfly ${action.which} is not face up")
+        }
+        rerollDieKeepHigher(
+            player = player,
+            butterfly = action.which,
+            die = action.onDie,
+            location = "battle row $row"
+        ) { die ->
+            battle.rerollDie(player, row, die)
+        } ?: throw MainActionException("Butterfly die was not found in battle grid")
     }
 
     fun performSupportActions() {

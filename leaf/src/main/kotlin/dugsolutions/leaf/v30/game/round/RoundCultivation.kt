@@ -140,6 +140,9 @@ class RoundCultivation(
                 handleWaterToken(player, action)
                 return false
             }
+            is ActionCultivation.PlayButterfly-> {
+                handleButterfly(player, action)
+            }
         }
         return true
     }
@@ -199,6 +202,26 @@ class RoundCultivation(
                 token = Token.WATER
             )
         )
+    }
+
+    private fun handleButterfly(
+        player: Player,
+        action: ActionCultivation.PlayButterfly
+    ) {
+        if (!player.diceHand.hasDie(action.onDie)) {
+            throw MainActionException("Butterfly die was not found in player hand")
+        }
+        if (!player.isButterflyFaceUp(action.which)) {
+            throw MainActionException("Butterfly ${action.which} is not face up")
+        }
+        rerollDieKeepHigher(
+            player = player,
+            butterfly = action.which,
+            die = action.onDie,
+            location = "hand"
+        ) { die ->
+            player.rerollDie(die)
+        } ?: throw MainActionException("Butterfly die was not found in player hand")
     }
 
     fun performBuy() {

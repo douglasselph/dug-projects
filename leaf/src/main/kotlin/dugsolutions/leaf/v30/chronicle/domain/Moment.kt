@@ -84,5 +84,6 @@ enum class MainActionType {
     PLAY_WISP_CARD,
     PLAY_MULCH_TOKEN,
     PLAY_WATER_TOKEN,
-    PLAY_CRITTER
+    PLAY_CRITTER,
+    PLAY_BUTTERFLY
 }
