@@ -12,6 +12,7 @@ import dugsolutions.leaf.v30.chronicle.domain.Moment.*
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.domain.MainActionException
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
+import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.player.Player
 import dugsolutions.leaf.v30.player.decision.domain.Decision
@@ -31,6 +32,7 @@ class RoundBattle(
     private val battleAwardWinners: BattleAwardWinners = BattleAwardWinners(chronicle),
     private val gameCardEffectExecutor: GameCardEffectExecutorBattle = GameCardEffectExecutorBattle(),
     private val wispCardEffectExecutor: WispCardEffectExecutor = WispCardEffectExecutor(),
+    private val roundActionExecutor: RoundActionExecutor = RoundActionExecutor(),
     private val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) : RoundBase(table, card, chronicle) {
 
@@ -100,6 +102,12 @@ class RoundBattle(
                 battle.add(player, action.row, die)
             }
             is ActionBattleMain.DoRoundAction -> {
+                roundActionExecutor(
+                    table = table,
+                    player = player,
+                    card = card,
+                    action = action.actionRound
+                )
                 chronicle(
                     MainAction(
                         player = player,

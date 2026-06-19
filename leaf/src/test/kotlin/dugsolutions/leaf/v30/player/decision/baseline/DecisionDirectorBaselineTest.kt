@@ -11,6 +11,7 @@ import dugsolutions.leaf.v30.round.RoundCardRegistry
 import dugsolutions.leaf.v30.round.RoundDeck
 import dugsolutions.leaf.v30.round.di.RoundCardsFactory
 import dugsolutions.leaf.v30.round.domain.RoundCard
+import dugsolutions.leaf.v30.round.domain.RoundEffect
 import dugsolutions.leaf.v30.table.Table
 import dugsolutions.leaf.v30.wisp.WispCardManager
 import dugsolutions.leaf.v30.wisp.WispCardRegistry
@@ -125,12 +126,14 @@ class DecisionDirectorBaselineTest {
         effect1TextFg = "ffffff",
         effect1Image = null,
         effect1Icon = null,
+        effect1 = RoundEffect.UNKNOWN,
         effect2Title = "Two",
         effect2Text = "Two",
         effect2Bg = "000000",
         effect2TextFg = "ffffff",
         effect2Image = null,
         effect2Icon = null,
+        effect2 = RoundEffect.UNKNOWN,
         backImage = null
     )
 

@@ -28,7 +28,6 @@ class GameCardRegistry(
         const val FULL_IMAGE = 10
         const val BG_IMAGE2 = 11
         const val BG_CARD_IMAGE2 = 12
-        const val EFFECT = 13
     }
 
     private val cardEffectConverter = CardEffectConverter(chronicle)

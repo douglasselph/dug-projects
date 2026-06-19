@@ -2,6 +2,7 @@ package dugsolutions.leaf.v30.round
 
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.round.domain.RoundCardType
+import dugsolutions.leaf.v30.round.domain.RoundEffect
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -46,12 +47,14 @@ class RoundCardRegistryTest {
         assertEquals("f8f5f2", card.effect1TextFg)
         assertEquals("images/turn_bloom.png", card.effect1Image)
         assertEquals("images/victory.png", card.effect1Icon)
+        assertEquals(RoundEffect.GAIN_VP, card.effect1)
         assertEquals("Burrow", card.effect2Title)
         assertEquals("Gain Worm", card.effect2Text)
         assertEquals("7a0000", card.effect2Bg)
         assertEquals("f8f5f2", card.effect2TextFg)
         assertEquals("images/turn_surge_worm.png", card.effect2Image)
         assertEquals("images/ic_token_worm.png", card.effect2Icon)
+        assertEquals(RoundEffect.GAIN_WORMS, card.effect2)
         assertEquals("images/battle_transition_back.png", card.backImage)
         assertEquals(RoundCardType.BATTLE, card.cardType)
     }
@@ -91,6 +94,8 @@ class RoundCardRegistryTest {
         assertNotNull(card)
         assertNull(card.effect1Icon)
         assertNotNull(card.effect2Icon)
+        assertEquals(RoundEffect.UPGRADE_DIE, card.effect1)
+        assertEquals(RoundEffect.GAIN_MULCH, card.effect2)
     }
 
     @Test

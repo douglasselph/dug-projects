@@ -121,6 +121,20 @@ class GroveTest {
 
         assertSame(rootFiveOne, SUT.cardStacks.getCard(GroveCardStackID.ROOT_5))
         assertEquals(8, SUT.cardStacks.getCount(GroveCardStackID.ROOT_5))
+        assertTrue(SUT.has(rootFiveOne))
+        assertTrue(SUT.has(GroveCardStackID.ROOT_5))
+        assertSame(rootFiveOne, SUT.getCard(GroveCardStackID.ROOT_5))
+    }
+
+    @Test
+    fun remove_withStackId_decrementsMatchingCardStack() {
+        SUT.setCard(rootFiveOne)
+
+        assertTrue(SUT.remove(GroveCardStackID.ROOT_5))
+
+        assertEquals(7, SUT.cardStacks.getCount(GroveCardStackID.ROOT_5))
+        assertTrue(SUT.has(rootFiveOne))
+        assertTrue(SUT.has(GroveCardStackID.ROOT_5))
     }
 
     @Test

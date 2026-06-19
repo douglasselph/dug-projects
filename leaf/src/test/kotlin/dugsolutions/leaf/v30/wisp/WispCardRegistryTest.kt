@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v30.wisp
 
 import dugsolutions.leaf.v30.common.Commons
+import dugsolutions.leaf.v30.wisp.domain.WispEffect
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -48,10 +49,11 @@ class WispCardRegistryTest {
         assertEquals("Wisp_Award_VP", card.name)
         assertEquals("Wisp of Honor", card.title)
         assertEquals(3, card.count)
-        assertEquals("Keep: 2 VP (END)", card.effect)
+        assertEquals("Keep: 2 VP (END)", card.description)
         assertEquals("images/victory_victory.png", card.lineIcons)
         assertEquals(80, card.lineIconsHeight)
         assertEquals("images/cloud_honor.png", card.mainBackdrop)
+        assertEquals(WispEffect.KEEP_2_VP, card.effect)
     }
 
     @Test
@@ -65,8 +67,9 @@ class WispCardRegistryTest {
 
         // Assert
         assertNotNull(card)
-        assertTrue(card.effect.lines().size > 1)
-        assertTrue(card.effect.contains("Gain any 2 critters"))
+        assertTrue(card.description.lines().size > 1)
+        assertTrue(card.description.contains("Gain any 2 critters"))
+        assertEquals(WispEffect.GAIN_2_CRITTERS, card.effect)
     }
 
     @Test

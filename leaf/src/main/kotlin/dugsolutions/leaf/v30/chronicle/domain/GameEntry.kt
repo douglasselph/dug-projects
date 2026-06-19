@@ -24,7 +24,8 @@ sealed class GameEntry(
         val type: WarningType,
         val cardId: GameCardID?,
         val cardName: String?,
-        val actualCount: Int? = null
+        val actualCount: Int? = null,
+        val detail: String? = null
     ) : GameEntry(
         sequence = sequence,
         time = time,

@@ -55,7 +55,8 @@ class GameChronicle(
                 type = moment.type,
                 cardId = moment.card?.id,
                 cardName = moment.card?.name,
-                actualCount = moment.actualCount
+                actualCount = moment.actualCount,
+                detail = moment.detail
             )
             is Moment.LoadingWarning -> GameEntry.LoadingWarning(
                 sequence = sequence,

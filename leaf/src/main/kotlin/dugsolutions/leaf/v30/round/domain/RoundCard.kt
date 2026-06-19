@@ -11,12 +11,14 @@ data class RoundCard(
     val effect1TextFg: String,
     val effect1Image: String?,
     val effect1Icon: String?,
+    val effect1: RoundEffect,
     val effect2Title: String,
     val effect2Text: String,
     val effect2Bg: String,
     val effect2TextFg: String,
     val effect2Image: String?,
     val effect2Icon: String?,
+    val effect2: RoundEffect,
     val backImage: String?
 ) {
     val cardType: RoundCardType

@@ -8,7 +8,7 @@ import org.koin.dsl.module
 
 val roundModule: Module = module {
 
-    single { RoundCardRegistry() }
+    single { RoundCardRegistry(get()) }
     single { RoundCardManager(get()) }
     single { RoundDeck(get(), get()) }
     single { RoundCardsFactory() }

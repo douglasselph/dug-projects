@@ -110,6 +110,19 @@ class GroveCardStacksTest {
     }
 
     @Test
+    fun has_withCardAndStackId_requiresCardsRemaining() {
+        SUT.add(rootFiveOne)
+
+        assertTrue(SUT.has(rootFiveOne))
+        assertTrue(SUT.has(GroveCardStackID.ROOT_5))
+
+        assertTrue(SUT.remove(rootFiveOne))
+
+        assertFalse(SUT.has(rootFiveOne))
+        assertFalse(SUT.has(GroveCardStackID.ROOT_5))
+    }
+
+    @Test
     fun remove_whenStackIsEmpty_returnsFalse() {
         val removed = SUT.remove(GroveCardStackID.ROOT_5)
 

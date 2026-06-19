@@ -10,6 +10,7 @@ import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.common.Tokens
 import dugsolutions.leaf.v30.grove.domain.DiceStacks
 import dugsolutions.leaf.v30.grove.domain.GroveCardStacks
+import dugsolutions.leaf.v30.grove.domain.GroveCardStackID
 import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.wisp.WispDeck
 import dugsolutions.leaf.v30.wisp.domain.WispCard
@@ -125,6 +126,22 @@ class Grove(
 
     fun remove(card: GameCard): Boolean {
         return cardStacks.remove(card)
+    }
+
+    fun has(card: GameCard): Boolean {
+        return cardStacks.has(card)
+    }
+
+    fun remove(stackId: GroveCardStackID): Boolean {
+        return cardStacks.remove(stackId)
+    }
+
+    fun has(stackId: GroveCardStackID): Boolean {
+        return cardStacks.has(stackId)
+    }
+
+    fun getCard(stackId: GroveCardStackID): GameCard? {
+        return cardStacks.getCard(stackId)
     }
 
     fun count(token: Token): Int {

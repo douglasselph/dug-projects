@@ -6,8 +6,9 @@ data class WispCard(
     val name: String,
     val title: String,
     val count: Int,
-    val effect: String,
+    val description: String,
     val lineIcons: String?,
     val lineIconsHeight: Int,
-    val mainBackdrop: String?
+    val mainBackdrop: String?,
+    val effect: WispEffect,
 )

@@ -108,7 +108,13 @@ class Player(
     }
 
     fun addCardToCreature(card: GameCard) {
-        addCardLeft(card)
+        val leftCount = creatureLeftCards.count { it.card.type == card.type }
+        val rightCount = creatureRightCards.count { it.card.type == card.type }
+        if (leftCount <= rightCount) {
+            _creature.addLeft(CreatureCard(card, CreatureCard.Facing.FACE_DOWN))
+        } else {
+            _creature.addRight(CreatureCard(card, CreatureCard.Facing.FACE_DOWN))
+        }
     }
 
     fun addCardToCreature(card: CreatureCard) {
@@ -259,8 +265,24 @@ class Player(
         _butterflies.add(butterfly)
     }
 
+    fun add(butterfly: Butterfly) {
+        addButterfly(butterfly)
+    }
+
     fun removeButterfly(butterfly: Butterfly): Boolean {
         return _butterflies.remove(butterfly)
+    }
+
+    fun remove(butterfly: Butterfly): Boolean {
+        return removeButterfly(butterfly)
+    }
+
+    fun isButterflyFaceUp(butterfly: Butterfly): Boolean {
+        return _butterflies.isFaceUp(butterfly)
+    }
+
+    fun faceDownButterfly(butterfly: Butterfly): Boolean {
+        return _butterflies.faceDown(butterfly)
     }
 
     fun addWispCard(card: WispCard) {

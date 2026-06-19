@@ -1,10 +1,14 @@
 package dugsolutions.leaf.v30.round
 
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.round.domain.GenRoundCardID
 import dugsolutions.leaf.v30.round.domain.RoundCard
 import java.io.File
 
-class RoundCardRegistry {
+class RoundCardRegistry(
+    chronicle: Chronicle = GameChronicle()
+) {
     companion object {
         private const val EXPECTED_COLUMN_COUNT = 16
     }
@@ -29,6 +33,7 @@ class RoundCardRegistry {
     }
 
     private val cards: MutableMap<String, RoundCard> = mutableMapOf()
+    private val roundEffectConverter = RoundEffectConverter(chronicle)
 
     fun loadFromCsv(filePath: String) {
         val file = File(filePath)
@@ -53,23 +58,27 @@ class RoundCardRegistry {
             throw IllegalArgumentException("Invalid round card row: $parts")
         }
         val name = parts[Column.NAME].trim()
+        val effect1Title = parts[Column.EFFECT_1_TITLE].trim()
+        val effect2Title = parts[Column.EFFECT_2_TITLE].trim()
         return RoundCard(
             id = GenRoundCardID.generateId(name),
             quantity = parseInt(parts[Column.QUANTITY], "quantity", parts),
             name = name,
             title = parts[Column.TITLE].trim(),
-            effect1Title = parts[Column.EFFECT_1_TITLE].trim(),
+            effect1Title = effect1Title,
             effect1Text = parts[Column.EFFECT_1_TEXT].trim(),
             effect1Bg = parts[Column.EFFECT_1_BG].trim(),
             effect1TextFg = parts[Column.EFFECT_1_TEXT_FG].trim(),
             effect1Image = parseOptional(parts[Column.EFFECT_1_IMAGE]),
             effect1Icon = parseOptional(parts[Column.EFFECT_1_ICON]),
-            effect2Title = parts[Column.EFFECT_2_TITLE].trim(),
+            effect1 = roundEffectConverter(name, effect1Title),
+            effect2Title = effect2Title,
             effect2Text = parts[Column.EFFECT_2_TEXT].trim(),
             effect2Bg = parts[Column.EFFECT_2_BG].trim(),
             effect2TextFg = parts[Column.EFFECT_2_TEXT_FG].trim(),
             effect2Image = parseOptional(parts[Column.EFFECT_2_IMAGE]),
             effect2Icon = parseOptional(parts[Column.EFFECT_2_ICON]),
+            effect2 = roundEffectConverter(name, effect2Title),
             backImage = parseOptional(parts[Column.BACK_IMAGE])
         )
     }
@@ -88,11 +97,13 @@ class RoundCardRegistry {
                     value.append('"')
                     index++
                 }
+
                 char == '"' -> inQuotes = !inQuotes
                 char == ',' && !inQuotes -> {
                     row.add(value.toString())
                     value.clear()
                 }
+
                 (char == '\n' || char == '\r') && !inQuotes -> {
                     row.add(value.toString())
                     value.clear()
@@ -102,6 +113,7 @@ class RoundCardRegistry {
                         index++
                     }
                 }
+
                 else -> value.append(char)
             }
             index++

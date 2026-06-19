@@ -18,7 +18,8 @@ class GameEntryMessage {
     private fun warning(entry: GameEntry.Warning): String {
         return "WARNING round=${entry.time.round} player=${entry.playerId} type=${entry.type}" +
             entry.cardName?.let { " card=$it" }.orEmpty() +
-            entry.actualCount?.let { " actualCount=$it" }.orEmpty()
+            entry.actualCount?.let { " actualCount=$it" }.orEmpty() +
+            entry.detail?.let { " detail=$it" }.orEmpty()
     }
 
     private fun loadingWarning(entry: GameEntry.LoadingWarning): String {

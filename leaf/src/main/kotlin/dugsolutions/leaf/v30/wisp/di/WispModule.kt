@@ -8,7 +8,7 @@ import org.koin.dsl.module
 
 val wispModule: Module = module {
 
-    single { WispCardRegistry() }
+    single { WispCardRegistry(get()) }
     single { WispCardManager(get()) }
     single { WispDeck(get(), get()) }
     single { WispCardsFactory() }

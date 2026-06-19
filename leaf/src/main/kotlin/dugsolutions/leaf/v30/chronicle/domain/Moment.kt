@@ -17,7 +17,8 @@ sealed class Moment {
         val player: Player,
         val type: WarningType,
         val card: GameCard? = null,
-        val actualCount: Int? = null
+        val actualCount: Int? = null,
+        val detail: String? = null
     ) : Moment()
 
     data class LoadingWarning(

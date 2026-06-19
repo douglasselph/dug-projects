@@ -10,8 +10,8 @@ import org.koin.dsl.module
 
 val gameModule: Module = module {
 
-    single { RoundActionExecutor() }
-    single { WispCardEffectExecutor() }
+    single { RoundActionExecutor(get()) }
+    single { WispCardEffectExecutor(get()) }
     single { GameCardEffectExecutorCultivation(get(), get()) }
     single { GameCardEffectExecutorBattle(get(), get()) }
     single { Game(get(), get(), get(), get(), get(), get()) }

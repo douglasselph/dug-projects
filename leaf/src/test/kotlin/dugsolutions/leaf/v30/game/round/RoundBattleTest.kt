@@ -8,6 +8,7 @@ import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
 import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
+import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.grove.Grove
 import dugsolutions.leaf.v30.player.Player
@@ -114,6 +115,45 @@ class RoundBattleTest {
         assertEquals(12, addedDie.die.sides)
         assertEquals(5, addedDie.die.value)
         assertEquals(listOf(4, 4, 1, 1, 3, 3, 2, 2), callOrder)
+    }
+
+    @Test
+    fun performMainActions_whenDecisionIsRoundAction_dispatchesRoundActionExecutor() {
+        val callOrder = mutableListOf<Int>()
+        val roundActionExecutor = TrackingRoundActionExecutor()
+        val battle = Battle(playerGridOrder = PlayerGridOrder(SequentialRandomizer()))
+        val target = player(
+            4,
+            FixedDie(4, 2),
+            FixedDie(6, 2),
+            FixedDie(8, 2),
+            decisionDirector = SequenceBattleDecisionDirector(
+                playerId = 4,
+                callOrder = callOrder,
+                actions = listOf(
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_2),
+                    ActionBattleMain.DoRoundAction(ActionRound.ACTION_1)
+                )
+            )
+        )
+        val players = listOf(
+            player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(2, FixedDie(6, 6), FixedDie(4, 1), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            player(3, FixedDie(8, 5), FixedDie(6, 3), FixedDie(20, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),
+            target
+        )
+        val table = createTable(battle).apply { players.forEach { add(it) } }
+        val round = RoundBattle(
+            table = table,
+            card = loadBattleCard(),
+            battle = battle,
+            roundActionExecutor = roundActionExecutor
+        )
+        round.prepare()
+
+        round.performMainActions()
+
+        assertEquals(listOf(ActionRound.ACTION_2, ActionRound.ACTION_1), roundActionExecutor.actionsForPlayer(4))
     }
 
     @Test
@@ -523,6 +563,23 @@ class RoundBattleTest {
             card: WispCard
         ) {
             cards.add(card)
+        }
+    }
+
+    private class TrackingRoundActionExecutor : RoundActionExecutor() {
+        private val playerActions = mutableListOf<Pair<Int, ActionRound>>()
+
+        fun actionsForPlayer(playerId: Int): List<ActionRound> {
+            return playerActions.filter { it.first == playerId }.map { it.second }
+        }
+
+        override fun invoke(
+            table: Table,
+            player: Player,
+            card: RoundCard,
+            action: ActionRound
+        ) {
+            playerActions.add(player.id to action)
         }
     }
 

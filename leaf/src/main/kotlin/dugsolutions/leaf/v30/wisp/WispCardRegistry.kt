@@ -1,10 +1,14 @@
 package dugsolutions.leaf.v30.wisp
 
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
 import dugsolutions.leaf.v30.wisp.domain.GenWispCardID
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import java.io.File
 
-class WispCardRegistry {
+class WispCardRegistry(
+    chronicle: Chronicle = GameChronicle()
+) {
     companion object {
         private const val EXPECTED_COLUMN_COUNT = 8
     }
@@ -21,6 +25,7 @@ class WispCardRegistry {
     }
 
     private val cards: MutableMap<String, WispCard> = mutableMapOf()
+    private val wispEffectConverter = WispEffectConverter(chronicle)
 
     fun loadFromCsv(filePath: String) {
         val file = File(filePath)
@@ -45,16 +50,18 @@ class WispCardRegistry {
             throw IllegalArgumentException("Invalid wisp card row: $parts")
         }
         val name = parts[Column.NAME].trim()
+        val title = parts[Column.TITLE].trim()
         return WispCard(
             id = GenWispCardID.generateId(name),
             quantity = parseInt(parts[Column.QUANTITY], "quantity", parts),
             name = name,
-            title = parts[Column.TITLE].trim(),
+            title = title,
             count = parseInt(parts[Column.COUNT], "count", parts),
-            effect = parts[Column.EFFECT].trim(),
+            description = parts[Column.EFFECT].trim(),
             lineIcons = parseOptional(parts[Column.LINE_ICONS]),
             lineIconsHeight = parseInt(parts[Column.LINE_ICONS_HEIGHT], "line_icons_height", parts),
-            mainBackdrop = parseOptional(parts[Column.MAIN_BACKDROP])
+            mainBackdrop = parseOptional(parts[Column.MAIN_BACKDROP]),
+            effect = wispEffectConverter(name, title)
         )
     }
 

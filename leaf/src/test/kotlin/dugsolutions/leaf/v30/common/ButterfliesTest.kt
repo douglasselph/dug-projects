@@ -41,6 +41,27 @@ class ButterfliesTest {
         // Assert
         assertEquals(butterflies, result)
         assertEquals(listOf(Butterfly.RED), butterflies.all)
+        assertTrue(butterflies.isFaceUp(Butterfly.RED))
+    }
+
+    @Test
+    fun faceDownAndFaceUp_whenButterflyExists_updatesFacingState() {
+        val butterflies = Butterflies(listOf(Butterfly.GREEN))
+
+        assertTrue(butterflies.faceDown(Butterfly.GREEN))
+        assertTrue(butterflies.isFaceDown(Butterfly.GREEN))
+        assertFalse(butterflies.isFaceUp(Butterfly.GREEN))
+
+        assertTrue(butterflies.faceUp(Butterfly.GREEN))
+        assertTrue(butterflies.isFaceUp(Butterfly.GREEN))
+    }
+
+    @Test
+    fun faceDown_whenButterflyMissing_returnsFalse() {
+        val butterflies = Butterflies()
+
+        assertFalse(butterflies.faceDown(Butterfly.PURPLE))
+        assertFalse(butterflies.isFaceDown(Butterfly.PURPLE))
     }
 
     @Test

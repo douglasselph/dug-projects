@@ -88,7 +88,7 @@ class RoundCultivation(
                     table = table,
                     player = player,
                     card = card,
-                    action = action.actionRound
+                    action = action,
                 )
                 chronicle(
                     Moment.MainAction(
@@ -119,7 +119,8 @@ class RoundCultivation(
                 wispCardEffectExecutor(
                     table = table,
                     player = player,
-                    card = action.card
+                    card = action.card,
+                    target = action.target
                 )
                 chronicle(
                     Moment.MainAction(

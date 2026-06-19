@@ -35,8 +35,14 @@ class GroveCardStacks {
         return stacks[stackId]?.remove(amount) ?: false
     }
 
-    fun getStack(stackId: GroveCardStackID): GroveCardStack? {
-        return stacks[stackId]
+    fun has(card: GameCard): Boolean {
+        val stackId = GroveCardStackID.from(card.type, card.cost)
+        val stack = stacks[stackId] ?: return false
+        return stack.count > 0
+    }
+
+    fun has(stackId: GroveCardStackID): Boolean {
+        return getCount(stackId) > 0
     }
 
     fun getCard(stackId: GroveCardStackID): GameCard? {

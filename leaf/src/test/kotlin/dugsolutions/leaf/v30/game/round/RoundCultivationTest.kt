@@ -381,6 +381,15 @@ class RoundCultivationTest {
             table: Table,
             player: Player,
             card: RoundCard,
+            action: ActionCultivation.DoRoundAction
+        ) {
+            actions.add(action.actionRound)
+        }
+
+        override fun invoke(
+            table: Table,
+            player: Player,
+            card: RoundCard,
             action: ActionRound
         ) {
             actions.add(action)
@@ -405,7 +414,8 @@ class RoundCultivationTest {
         override fun invoke(
             table: Table,
             player: Player,
-            card: WispCard
+            card: WispCard,
+            target: dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget?
         ) {
             cards.add(card)
         }
