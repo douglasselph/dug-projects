@@ -15,10 +15,8 @@ import dugsolutions.leaf.v30.game.effect.GameCardEffectExecutorBattle
 import dugsolutions.leaf.v30.game.effect.RoundActionExecutor
 import dugsolutions.leaf.v30.game.effect.WispCardEffectExecutor
 import dugsolutions.leaf.v30.player.Player
-import dugsolutions.leaf.v30.player.decision.domain.Decision
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
 import dugsolutions.leaf.v30.player.decision.domain.ActionBattleSupport
-import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.player.decision.domain.Decision.*
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.di.DieFactory
@@ -301,6 +299,7 @@ class RoundBattle(
         if (!player.isButterflyFaceUp(action.which)) {
             throw MainActionException("Butterfly ${action.which} is not face up")
         }
+        if (!player.turnButterflyFaceDown(action.which)) return
         rerollDieKeepHigher(
             player = player,
             butterfly = action.which,

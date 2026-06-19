@@ -44,7 +44,6 @@ import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -264,7 +263,7 @@ class RoundCultivationTest {
 
         assertEquals(1, handDie.rollCount)
         assertEquals(5, handDie.value)
-        assertFalse(player.isButterflyFaceUp(Butterfly.GREEN))
+        assertTrue(player.isButterflyFaceDown(Butterfly.GREEN))
         val entry = assertIs<GameEntry.MainAction>(
             chronicle.getEntries().first { it is GameEntry.MainAction && it.action == MainActionType.PLAY_BUTTERFLY }
         )
@@ -280,7 +279,7 @@ class RoundCultivationTest {
             )
         )
         player.addButterfly(Butterfly.GREEN)
-        player.faceDownButterfly(Butterfly.GREEN)
+        player.turnButterflyFaceDown(Butterfly.GREEN)
         player.addDieToHand(handDie)
         val table = createTable().add(player)
         val round = RoundCultivation(table, loadCultivationCard())

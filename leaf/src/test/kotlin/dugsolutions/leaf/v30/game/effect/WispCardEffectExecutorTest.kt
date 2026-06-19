@@ -61,7 +61,7 @@ class WispCardEffectExecutorTest {
         val table = createTable()
         val owner = Player(id = 2).apply {
             addButterfly(Butterfly.RED)
-            faceDownButterfly(Butterfly.RED)
+            turnButterflyFaceDown(Butterfly.RED)
         }
         val player = Player(id = 1)
         table.grove.remove(Butterfly.RED)

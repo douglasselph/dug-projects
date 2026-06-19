@@ -214,6 +214,7 @@ class RoundCultivation(
         if (!player.isButterflyFaceUp(action.which)) {
             throw MainActionException("Butterfly ${action.which} is not face up")
         }
+        if (!player.turnButterflyFaceDown(action.which)) return
         rerollDieKeepHigher(
             player = player,
             butterfly = action.which,

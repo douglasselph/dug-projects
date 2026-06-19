@@ -44,7 +44,6 @@ import dugsolutions.leaf.v30.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -505,7 +504,7 @@ class RoundBattleTest {
 
         assertEquals(1, targetDie.rollCount)
         assertEquals(6, targetDie.value)
-        assertFalse(target.isButterflyFaceUp(Butterfly.RED))
+        assertTrue(target.isButterflyFaceDown(Butterfly.RED))
         val entry = assertIs<GameEntry.MainAction>(
             chronicle.getEntries().first { it is GameEntry.MainAction && it.action == MainActionType.PLAY_BUTTERFLY }
         )
@@ -530,7 +529,7 @@ class RoundBattleTest {
             )
         ).apply {
             addButterfly(Butterfly.RED)
-            faceDownButterfly(Butterfly.RED)
+            turnButterflyFaceDown(Butterfly.RED)
         }
         val players = listOf(
             player(1, FixedDie(20, 4), FixedDie(6, 2), FixedDie(8, 1), decisionDirector = RecordingBattleDecisionDirector(callOrder)),

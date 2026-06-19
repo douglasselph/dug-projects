@@ -281,7 +281,11 @@ class Player(
         return _butterflies.isFaceUp(butterfly)
     }
 
-    fun faceDownButterfly(butterfly: Butterfly): Boolean {
+    fun isButterflyFaceDown(butterfly: Butterfly): Boolean {
+        return _butterflies.isFaceDown(butterfly)
+    }
+
+    fun turnButterflyFaceDown(butterfly: Butterfly): Boolean {
         return _butterflies.faceDown(butterfly)
     }
 
