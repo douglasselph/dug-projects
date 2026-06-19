@@ -17,9 +17,11 @@ class TokensTest {
 
         assertEquals(0, tokens.waterCount)
         assertEquals(0, tokens.mulchCount)
+        assertEquals(0, tokens.pendingMulchCount)
         assertEquals(emptyList(), tokens.mulchTokens)
         assertFalse(tokens.hasWater)
         assertFalse(tokens.hasMulch)
+        assertFalse(tokens.hasPendingMulch)
     }
 
     @Test
@@ -163,6 +165,51 @@ class TokensTest {
     }
 
     @Test
+    fun add_withPendingMulch_keepsPendingSeparateFromMulchTokens() {
+        val tokens = Tokens()
+
+        val result = tokens.add(Token.PENDING_MULCH(DieSides.D8))
+
+        assertSame(tokens, result)
+        assertEquals(0, tokens.mulchCount)
+        assertEquals(1, tokens.pendingMulchCount)
+        assertEquals(emptyList(), tokens.mulchTokens)
+        assertTrue(tokens.has(Token.PENDING_MULCH()))
+        assertTrue(tokens.hasPendingMulch)
+    }
+
+    @Test
+    fun pull_withPendingMulch_requiresExactSidesMatch() {
+        val token = Token.PENDING_MULCH(DieSides.D10)
+        val tokens = Tokens()
+            .add(Token.PENDING_MULCH())
+            .add(token)
+
+        val result = tokens.pull(token)
+
+        assertEquals(token, result)
+        assertEquals(1, tokens.pendingMulchCount)
+        assertTrue(tokens.hasPendingMulch)
+    }
+
+    @Test
+    fun normalize_convertsPendingMulchToMulchAndClearsPendingMulch() {
+        val tokens = Tokens(mulchTokens = listOf(Token.MULCH()))
+            .add(Token.PENDING_MULCH(DieSides.D6))
+            .add(Token.PENDING_MULCH(DieSides.D12))
+
+        tokens.normalize()
+
+        assertEquals(
+            listOf(Token.MULCH(), Token.MULCH(DieSides.D6), Token.MULCH(DieSides.D12)),
+            tokens.mulchTokens
+        )
+        assertEquals(3, tokens.mulchCount)
+        assertEquals(0, tokens.pendingMulchCount)
+        assertFalse(tokens.hasPendingMulch)
+    }
+
+    @Test
     fun returnToken_delegatesToAdd() {
         val tokens = Tokens()
 
@@ -177,15 +224,17 @@ class TokensTest {
         val tokens = Tokens(
             waterCount = 2,
             mulchTokens = listOf(Token.MULCH(), Token.MULCH(DieSides.D6))
-        )
+        ).add(Token.PENDING_MULCH(DieSides.D8))
 
         tokens.reset()
 
         assertEquals(0, tokens.waterCount)
         assertEquals(0, tokens.mulchCount)
+        assertEquals(0, tokens.pendingMulchCount)
         assertEquals(emptyList(), tokens.mulchTokens)
         assertFalse(tokens.hasWater)
         assertFalse(tokens.hasMulch)
+        assertFalse(tokens.hasPendingMulch)
     }
 
     @Test

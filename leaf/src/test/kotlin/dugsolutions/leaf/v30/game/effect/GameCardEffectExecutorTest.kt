@@ -715,6 +715,60 @@ class GameCardEffectExecutorTest {
     }
 
     @Test
+    fun cultivationInvoke_whenGainMulchOnCleanup_selectsLowestValueDieWithHighestSidesOnTie() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorCultivation(chronicle)
+        val table = createTable(numBattle = 0, numCultivation = 1)
+        val d6 = FixedDie(6, 1)
+        val d8 = FixedDie(8, 1)
+        val d12 = FixedDie(12, 2)
+        val player = Player(id = 7).apply {
+            addDieToHand(d6)
+            addDieToHand(d8)
+            addDieToHand(d12)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE)
+
+        executor(table, player, ActionCultivation.ExecuteCard(card))
+
+        assertEquals(listOf(6, 12), player.diceHand.dice.map { it.sides }.sorted())
+        assertEquals(emptyList(), player.mulchTokens)
+        player.normalizePendingMulch()
+        assertEquals(listOf(Token.MULCH(DieSides.D8)), player.mulchTokens)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE, entry.effect)
+        assertEquals(Token.PENDING_MULCH(DieSides.D8), entry.token)
+        assertEquals(listOf(8 to 1), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
+    fun battleInvoke_whenGainMulchOnCleanup_selectsHighestSidedDieFromHand() {
+        val chronicle = GameChronicle()
+        val executor = GameCardEffectExecutorBattle(chronicle)
+        val table = createTable(numBattle = 1, numCultivation = 0)
+        val d4 = FixedDie(4, 4)
+        val d10 = FixedDie(10, 1)
+        val d20 = FixedDie(20, 1)
+        val player = Player(id = 7).apply {
+            addDieToHand(d4)
+            addDieToHand(d10)
+            addDieToHand(d20)
+        }
+        val card = loadGameCard().copy(effect = CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE)
+
+        executor(table, player, ActionBattleMain.ExecuteCard(card))
+
+        assertEquals(listOf(4, 10), player.diceHand.dice.map { it.sides }.sorted())
+        assertEquals(emptyList(), player.mulchTokens)
+        player.normalizePendingMulch()
+        assertEquals(listOf(Token.MULCH(DieSides.D20)), player.mulchTokens)
+        val entry = assertIs<GameEntry.GameCardEffect>(chronicle.getEntries().single())
+        assertEquals(CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE, entry.effect)
+        assertEquals(Token.PENDING_MULCH(DieSides.D20), entry.token)
+        assertEquals(listOf(20 to 1), entry.dice.map { it.sides to it.value })
+    }
+
+    @Test
     fun cultivationInvoke_whenDrawTwoDice_drawsTwoDiceIntoHand() {
         val chronicle = GameChronicle()
         val executor = GameCardEffectExecutorCultivation(chronicle)

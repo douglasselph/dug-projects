@@ -7,6 +7,7 @@ import dugsolutions.leaf.v30.battle.domain.BattleItem
 import dugsolutions.leaf.v30.battle.domain.BattleStrikeRow
 import dugsolutions.leaf.v30.common.Commons
 import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
 import dugsolutions.leaf.v30.cards.GameCardRegistry
 import dugsolutions.leaf.v30.cards.domain.GameCard
 import dugsolutions.leaf.v30.cards.domain.GameCards
@@ -23,6 +24,7 @@ import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.random.die.SampleDie
 import dugsolutions.leaf.v30.round.RoundCardManager
 import dugsolutions.leaf.v30.round.RoundCardRegistry
@@ -190,6 +192,20 @@ class RoundBaseTest {
         round.cleanup()
 
         assertEquals(listOf(Critter.WORM, Critter.BEE), player.critters)
+    }
+
+    @Test
+    fun cleanup_normalizesPendingMulchTokens() {
+        val player = Player().apply {
+            add(Token.MULCH(DieSides.D4))
+            addMulchToken(DieSides.D10)
+        }
+        val table = createTable().add(player)
+        val round = RoundCultivation(table, loadCultivationCard())
+
+        round.cleanup()
+
+        assertEquals(listOf(Token.MULCH(DieSides.D4), Token.MULCH(DieSides.D10)), player.mulchTokens)
     }
 
     @Test

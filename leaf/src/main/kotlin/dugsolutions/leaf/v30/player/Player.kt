@@ -18,6 +18,7 @@ import dugsolutions.leaf.v30.player.domain.CreatureCard
 import dugsolutions.leaf.v30.player.domain.OutOfDiceException
 import dugsolutions.leaf.v30.random.die.Dice
 import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieSides
 import dugsolutions.leaf.v30.wisp.domain.WispCard
 import dugsolutions.leaf.v30.wisp.domain.WispCards
 import java.util.concurrent.atomic.AtomicInteger
@@ -244,6 +245,14 @@ class Player(
 
     fun remove(token: Token): Boolean {
         return _tokens.pull(token) != null
+    }
+
+    fun addMulchToken(sides: DieSides) {
+        _tokens.add(Token.PENDING_MULCH(sides))
+    }
+
+    fun normalizePendingMulch() {
+        _tokens.normalize()
     }
 
     fun addButterfly(butterfly: Butterfly) {

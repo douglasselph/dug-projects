@@ -69,6 +69,7 @@ abstract class RoundBase(
     fun cleanup() {
         returnBattleCrittersToGrove()
         normalizePlayerCritters()
+        normalizeMulchTokens()
         checkRefresh()
     }
 
@@ -122,6 +123,12 @@ abstract class RoundBase(
         table.players.forEach { player ->
             player.replaceCritter(Critter.BOOSTED_WORM, Critter.WORM)
             player.replaceCritter(Critter.BOOSTED_BEE, Critter.BEE)
+        }
+    }
+
+    private fun normalizeMulchTokens() {
+        table.players.forEach { player ->
+            player.normalizePendingMulch()
         }
     }
 

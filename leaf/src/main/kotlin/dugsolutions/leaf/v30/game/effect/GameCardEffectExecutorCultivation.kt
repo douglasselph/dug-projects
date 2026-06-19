@@ -20,10 +20,10 @@ import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
 import dugsolutions.leaf.v30.game.effect.details.SetDieToMatchAnother
 import dugsolutions.leaf.v30.game.effect.scope.HandleDieEffectScope
 import dugsolutions.leaf.v30.player.Player
-import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
 import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
 import dugsolutions.leaf.v30.random.Randomizer
 import dugsolutions.leaf.v30.random.die.Dice
+import dugsolutions.leaf.v30.random.die.Die
 import dugsolutions.leaf.v30.random.die.di.DieFactory
 import dugsolutions.leaf.v30.table.Table
 
@@ -100,7 +100,7 @@ open class GameCardEffectExecutorCultivation(
             CardEffect.RAISE_DIE_PLUS_4 -> raiseDiePlus4(table, player, action)
             CardEffect.RESOLVE_GRAFTED_ROOT_OR_VINE_EFFECT -> resolveGraftedRootOrVineEffect(table, player, action)
             CardEffect.RESOLVE_STRIKE_IMMEDIATELY -> resolveStrikeImmediately(table, player, action)
-            CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE -> gainMulchAndCleanupMulchDie(table, player, action)
+            CardEffect.GAIN_MULCH_AND_CLEANUP_MULCH_DIE -> gainMulchOnCleanup(table, player, action)
             CardEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5 -> trashCritterToRaiseDiePlus5(table, player, action)
             CardEffect.RAISE_DIE_PLUS_2_PER_VINE -> raiseDiePlus2PerVine(table, player, action)
             CardEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN -> flipOpponentFaceUpVineFaceDown(table, player, action)
@@ -303,7 +303,15 @@ open class GameCardEffectExecutorCultivation(
         )
     }
     private fun resolveStrikeImmediately(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
-    private fun gainMulchAndCleanupMulchDie(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun gainMulchOnCleanup(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        val die = player.diceHand.dice
+            .minWithOrNull(
+                compareBy<Die> { it.value }
+                    .thenByDescending { it.sides }
+            )
+            ?: return
+        super.gainMulchOnCleanup(player, action.card, die)
+    }
     private fun trashCritterToRaiseDiePlus5(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}

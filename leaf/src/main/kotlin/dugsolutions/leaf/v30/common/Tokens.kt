@@ -6,6 +6,7 @@ class Tokens(
 ) {
     private var _waterCount = 0
     private val _mulchTokens = mutableListOf<Token.MULCH>()
+    private val _pendingMulchTokens = mutableListOf<Token.PENDING_MULCH>()
 
     init {
         reset(waterCount, mulchTokens)
@@ -17,6 +18,9 @@ class Tokens(
     val mulchCount: Int
         get() = _mulchTokens.size
 
+    val pendingMulchCount: Int
+        get() = _pendingMulchTokens.size
+
     val mulchTokens: List<Token.MULCH>
         get() = _mulchTokens.toList()
 
@@ -26,10 +30,14 @@ class Tokens(
     val hasMulch: Boolean
         get() = mulchCount > 0
 
+    val hasPendingMulch: Boolean
+        get() = pendingMulchCount > 0
+
     fun has(token: Token): Boolean {
         return when (token) {
             Token.WATER -> hasWater
             is Token.MULCH -> hasMulch
+            is Token.PENDING_MULCH -> hasPendingMulch
         }
     }
 
@@ -37,6 +45,7 @@ class Tokens(
         return when (token) {
             Token.WATER -> waterCount
             is Token.MULCH -> mulchCount
+            is Token.PENDING_MULCH -> pendingMulchCount
         }
     }
 
@@ -44,6 +53,7 @@ class Tokens(
         return when (token) {
             Token.WATER -> pullWater()
             is Token.MULCH -> pullMulch(token)
+            is Token.PENDING_MULCH -> pullPendingMulch(token)
         }
     }
 
@@ -51,6 +61,7 @@ class Tokens(
         when (token) {
             Token.WATER -> _waterCount++
             is Token.MULCH -> _mulchTokens.add(token)
+            is Token.PENDING_MULCH -> _pendingMulchTokens.add(token)
         }
         return this
     }
@@ -69,6 +80,7 @@ class Tokens(
                     _mulchTokens.add(token)
                 }
             }
+            else -> {}
         }
         return this
     }
@@ -82,6 +94,7 @@ class Tokens(
         _waterCount = waterCount
         _mulchTokens.clear()
         _mulchTokens.addAll(mulchTokens)
+        _pendingMulchTokens.clear()
     }
 
     private fun pullWater(): Token? {
@@ -95,4 +108,18 @@ class Tokens(
         if (index < 0) return null
         return _mulchTokens.removeAt(index)
     }
+
+    private fun pullPendingMulch(token: Token.PENDING_MULCH): Token? {
+        val index = _pendingMulchTokens.indexOfFirst { it == token }
+        if (index < 0) return null
+        return _pendingMulchTokens.removeAt(index)
+    }
+
+    fun normalize() {
+        for (token in _pendingMulchTokens) {
+            add(Token.MULCH(token.sides))
+        }
+        _pendingMulchTokens.clear()
+    }
+
 }

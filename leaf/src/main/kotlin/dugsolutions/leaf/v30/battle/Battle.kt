@@ -217,6 +217,13 @@ class Battle(
         return _grid?.drainCritters().orEmpty()
     }
 
+    /**
+     * Note: For battle the dice in hand are duplicated onto the grid with the dice in hand
+     * also remaining in the player's hand. That means the grid can safely be reset without
+     * worrying about losing dice. That also means that any doomed dice need to be really deleted
+     * from the player's hand in order to be real. Mulched dice should be removed from the player's
+     * hand.
+     */
     private fun setupPlayerColumn(player: Player) {
         val dice = sortDiceForStrikeRows(player.diceHand.dice)
         if (dice.size != BattleGrid.NUM_STRIKE_ROWS) {

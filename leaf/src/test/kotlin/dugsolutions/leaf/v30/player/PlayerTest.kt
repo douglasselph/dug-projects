@@ -360,6 +360,27 @@ class PlayerTest {
     }
 
     @Test
+    fun addMulchToken_addsPendingMulchThatIsHiddenUntilNormalize() {
+        player.addMulchToken(DieSides.D8)
+
+        assertEquals(emptyList(), player.mulchTokens)
+
+        player.normalizePendingMulch()
+
+        assertEquals(listOf(Token.MULCH(DieSides.D8)), player.mulchTokens)
+    }
+
+    @Test
+    fun normalizePendingMulch_preservesExistingMulchAndAddsPendingMulch() {
+        player.add(Token.MULCH(DieSides.D4))
+        player.addMulchToken(DieSides.D12)
+
+        player.normalizePendingMulch()
+
+        assertEquals(listOf(Token.MULCH(DieSides.D4), Token.MULCH(DieSides.D12)), player.mulchTokens)
+    }
+
+    @Test
     fun addCritter_addsCritterToPlayer() {
         // Act
         player.addCritter(Critter.BEE)

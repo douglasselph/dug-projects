@@ -25,12 +25,6 @@ abstract class GameCardEffectExecutorBase(
     protected val dieFactory: DieFactory = DieFactory(Randomizer.create())
 ) {
 
-    companion object {
-        const val MIN_REROLL_VALUE = 3
-        const val MAX_REROLL_ATTEMPTS = 10
-        const val RAISE_PLUS_ONE = 1
-    }
-
     protected open fun gainWormAndBoostWorms(
         table: Table,
         player: Player,
@@ -166,52 +160,6 @@ abstract class GameCardEffectExecutorBase(
         )
     }
 
-    protected fun rerollUntilThreeOrHigher(
-        initial: Die,
-        reroll: (Die) -> Die?
-    ): Die {
-        var current = initial
-        repeat(MAX_REROLL_ATTEMPTS) {
-            current = reroll(current)
-                ?: throw MainActionException("Reroll target die was not found")
-            if (current.value >= MIN_REROLL_VALUE) {
-                return current
-            }
-        }
-        throw MainActionException("Reroll did not reach $MIN_REROLL_VALUE after $MAX_REROLL_ATTEMPTS attempts")
-    }
-
-    protected fun raiseDiePlus1AndGainWater(
-        table: Table,
-        player: Player,
-        card: GameCard,
-        die: Die,
-        raiseDie: (Die, Int) -> Die?
-    ) {
-        val raisedDie = raiseDie(die, RAISE_PLUS_ONE) ?: return
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = card,
-                effect = card.effect,
-                detail = "Raised a die by $RAISE_PLUS_ONE",
-                dice = Dice(listOf(raisedDie))
-            )
-        )
-
-        val token = table.grove.remove(Token.WATER) ?: return
-        player.add(token)
-        chronicle(
-            Moment.GameCardEffect(
-                player = player,
-                card = card,
-                effect = card.effect,
-                detail = "Gained a water token from the Grove",
-                token = token
-            )
-        )
-    }
-
     protected open fun upgradeDieAndUseNow(
         table: Table,
         player: Player,
@@ -265,6 +213,26 @@ abstract class GameCardEffectExecutorBase(
             )
         )
         return upgraded
+    }
+
+    protected open fun gainMulchOnCleanup(
+        player: Player,
+        card: GameCard,
+        die: Die
+    ) {
+        val token = Token.PENDING_MULCH(DieSides.from(die.sides))
+        player.addMulchToken(DieSides.from(die.sides))
+        player.removeDieFromHand(die)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Set aside a die to become a mulch token during cleanup",
+                dice = Dice(listOf(die)),
+                token = token
+            )
+        )
     }
 
 }
