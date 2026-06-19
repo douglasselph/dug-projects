@@ -23,6 +23,7 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlusN
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceBattle
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.RerollHigherOpposingDiceOnStrikeRowBattle
@@ -590,7 +591,21 @@ open class GameCardEffectExecutorBattle(
             target = action.target
         )
     }
-    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
+    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {
+        val row = action.row ?: throw MainActionException("Battle raise die plus two per vine requires a battle row")
+        val targetPlayer = action.target?.player ?: player
+        RaiseDiePlus2PerVine(chronicle)(
+            scope = BattleDieEffectScope(
+                battle = table.battle,
+                actingPlayer = player,
+                targetPlayer = targetPlayer,
+                rows = action.rows.ifEmpty { listOf(row) }
+            ),
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionBattleMain.ExecuteCard) {}

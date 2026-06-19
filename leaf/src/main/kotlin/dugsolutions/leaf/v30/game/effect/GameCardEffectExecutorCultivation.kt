@@ -15,6 +15,7 @@ import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlusN
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndDoubleMatchingDiceCultivation
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1AndGainWater
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus1PerGraftedRootOrVine
+import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerVine
 import dugsolutions.leaf.v30.game.effect.details.RaiseDiePlus2PerWormAndDiscardWorm
 import dugsolutions.leaf.v30.game.effect.details.RerollDieUntilThreeOrHigher
 import dugsolutions.leaf.v30.game.effect.details.RollExtraForEachMaxDie
@@ -361,7 +362,14 @@ open class GameCardEffectExecutorCultivation(
             target = action.target
         )
     }
-    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
+    private fun raiseDiePlus2PerVine(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {
+        RaiseDiePlus2PerVine(chronicle)(
+            scope = HandleDieEffectScope(player),
+            player = player,
+            card = action.card,
+            target = action.target
+        )
+    }
     private fun flipOpponentFaceUpVineFaceDown(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun setDieUpToD12ToMax(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
     private fun reduceOpposingDiceOnStrikeRowBy3(table: Table, player: Player, action: ActionCultivation.ExecuteCard) {}
