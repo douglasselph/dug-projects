@@ -1,0 +1,56 @@
+quantity,name,title,type,cost,line_icon,vp_icon,type_icon,fg_color,text_color,full_image,bg_image,bg_card_image2,effect
+12,Flower_11_01,Sapping Snapdragon,Flower,11,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.siphon_snapdragon_full.url }},{{ images.back_flower.url }},{{ images.cc_sapping_snapdragon.url }},"🎲 Raise any die +2.
+
+<battle/> In it's Strike Row, 
+reduce all opposing dice by 2;
+Raise it more by the total reduced."
+12,Flower_11_02,Alluring Nectar,Flower,11,,{{ images.victory_per_butterfly.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.parting_thorn_full.url }},{{ images.back_flower.url }},{{ images.cc_alluring_nectar.url }},"Steal 1 Butterfly.
+Turn all your Butterflies face up."
+4,Flower_11_03,Petal To Die 4,Flower,11,{{ images.D4.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.petal_to_die4_full.url }},{{ images.back_flower.url }},{{ images.cc_petal_to_die4.url }},"Choose 1:
+Gain 1 D4 to Hand→ set it to 4, or,
+Trash 1 D4 → 🎲 Raise all your dice +4"
+4,Flower_11_04,Transplant Tulip,Flower,11,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.transplant_tulip_full.url }},{{ images.back_flower.url }},{{ images.cc_transplant_tulip.url }},"Discard 1 die; 
+draw 1 to replace it.
+<battle/> You may swap 
+two of your dice."
+12,Flower_14_01,Bee-loved Bloom,Flower,14,{{ images.bee.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.acutely_floral_full.url }},{{ images.back_flower.url }},{{ images.cc_beeloved_bloom.url }},"Gain or Steal a Bee <bee/>.
+Each of your bees is worth 4 this round."
+4,Flower_14_02,Bloom Backbone,Flower,14,,{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.bloom_backbone_full.url }},{{ images.back_flower.url }},{{ images.cc_bloom_backbone.url }},"For each grafted
+Vine or Flower, 
+🎲 Raise any die +1"
+12,Flower_14_03,Bloom Backflip,Flower,14,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.bloom_backflip_full.url }},{{ images.back_flower.url }},{{ images.cc_bloom_backflip.url }},"🎲 Raise a die +1.
+
+<battle/> Flip each opposing die higher than it in its Strike Row."
+8,Flower_14_04,Gust of Petals,Flower,14,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.gust_of_petals_full.url }},{{ images.back_flower.url }},{{ images.cc_gust_of_petals.url }},"Reroll one of your die.
+
+<battle/> In one strike row, 
+all opponent dice higher than one of your dice must reroll"
+8,Flower_17_01,Bursting Blossom,Flower,17,,{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.bursting_blossom_full.url }},{{ images.back_flower.url }},{{ images.cc_bursting_blossom.url }},"🎲 Raise any die +1
+then for each die showing its maximum value,
+draw 1 die"
+4,Flower_17_02,Forget-Me-Not,Flower,17,,{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.bee_trieval_full.url }},{{ images.back_flower.url }},{{ images.cc_forget_me_not.url }},"Choose any 1 die from your Discard. 
+Roll it into your Hand."
+4,Flower_17_03,O Edelweiss,Flower,17,,{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.elderweiss_full.url }},{{ images.back_flower.url }},{{ images.cc_o_edelweiss.url }},"Twice you may play another card 
+or flip another card"
+4,Flower_17_04,Queen’s Blossom,Flower,17,,{{ images.victory.url }},{{ images.icon_flower.url }},f2ce42,261f03,{{ images.queens_blossom_full.url }},{{ images.back_flower.url }},{{ images.cc_queens_blossom.url }},Draw 2 dice
+4,Vine_07_01,Berry Important,Vine,7,,{{ images.victory_victory_victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.berry_important_full.url }},{{ images.back_vine.url }},{{ images.cc_berry_important.url }},🎲 Raise any die +1.
+4,Vine_07_02,Snip Happens,Vine,7,,{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.snip_happens_full.url }},{{ images.back_vine.url }},{{ images.cc_snip_happens.url }},Flip 1 opponent's face up Vine face down
+4,Vine_07_03,Vine and Again,Vine,7,,{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.vine_again_full.url }},{{ images.back_vine.url }},{{ images.cc_vine_and_again.url }},Use the effect of another spent Root or Vine
+4,Vine_07_04,Vine Yield,Vine,7,,{{ images.victory_per_vine.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.devine_exchange_full.url }},{{ images.back_vine.url }},{{ images.cc_vine_yield.url }},🎲 Raise any die +1.
+4,Vine_09_01,Low & Behold,Vine,9,,{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.no_time_to_vine.url }},{{ images.back_vine.url }},{{ images.cc_low_and_behold.url }},"Set a die showing your lowest value
+to its maximum"
+12,Vine_09_02,Parting Thorn,Vine,9,{{ images.cultivation_battle.url }},{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.twist_and_swarm_full.url }},{{ images.back_vine.url }},{{ images.cc_parting_thorn.url }},"<cultivation/> May flip 1 of your Plant cards.
+<battle/> Each opponent suffers one wound."
+4,Vine_09_03,Rise and Vine,Vine,9,,{{ images.victory_victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.vine_lash_full.url }},{{ images.back_vine.url }},{{ images.cc_rise_and_vine.url }},🎲 Raise all your dice +2
+4,Vine_09_04,Vine and Dine,Vine,9,{{ images.worm_bee.url }},{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.withering_grasp_full.url }},{{ images.back_vine.url }},{{ images.cc_vine_and_dine.url }},"Trash a worm <worm/> or bee <bee/>
+to 🎲 Raise any die by 5."
+4,Vine_11_01,Reap What You Roll,Vine,11,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.reaping_tendrils_full.url }},{{ images.back_vine.url }},{{ images.cc_reap_what_you_roll.url }},"Discard 1 die; draw 2.
+
+<battle/> Place 1 drawn die in the discarded die's Strike Square."
+4,Vine_11_02,Saplink Trellis,Vine,11,,{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.saplink_trellis_full.url }},{{ images.back_vine.url }},{{ images.cc_saplink_trellis.url }},"For each Root or Vine,
+🎲 Raise any die +1"
+12,Vine_11_03,Vine and Punishment,Vine,11,{{ images.cultivation_battle.url }},{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.vine_and_punishment_full.url }},{{ images.back_vine.url }},{{ images.cc_vine_and_punishment.url }},"<cultivation/> Cultivation Only: 
+You may set any die to 3.
+<battle/> Choose 1 Strike row. Reduce all opponent dice there by 3."
+4,Vine_11_04,Vine's the Limit,Vine,11,,{{ images.victory.url }},{{ images.icon_vine.url }},5e8c61,f5f0c4,{{ images.vine_and_dine_full.url }},{{ images.back_vine.url }},{{ images.cc_vines_the_limit.url }},"Set a die up to a D12 
+to its maximum value"

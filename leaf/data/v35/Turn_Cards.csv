@@ -1,0 +1,24 @@
+quantity,name,title,effect_1_title,effect_1_text,effect_1_bg,effect_1_text_fg,effect_1_image,effect_1_icon,effect_2_title,effect_2_text,effect_2_bg,effect_2_text_fg,effect_2_image,effect_2_icon,back_image
+1,Battle_Beckon_Swell,Battle,Beckon,Gain 1 Wisp card,a30000,f8f5f2,{{ images.turn_surge_root.url }},{{ images.ic_root.url }},Swell,"Gain D10.
+Place in Discard.",7a0000,#f8f5f2,{{ images.turn_surge_D12.url }},{{ images.D10.url }},{{ images.battle_transition_back.url }}
+1,Battle_Beguile_Swell,Battle,Beguile,Steal 1 Wisp card randomly from any opponent,a30000,f8f5f2,{{ images.turn_surge_vine.url }},{{ images.ic_vine.url }},Swell,"Gain any die.
+Place in Discard.",7a0000,#f8f5f2,{{ images.turn_surge_D12.url }},{{ images.D12.url }},{{ images.battle_transition_back.url }}
+1,Battle_Bloom_Burrow,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,{{ images.turn_bloom.url }},{{ images.victory.url }},Burrow,Gain 2 Worms,7a0000,f8f5f2,{{ images.turn_surge_worm.url }},{{ images.worm_worm.url }},{{ images.battle_transition_back.url }}
+1,Battle_Bloom_Surge,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,{{ images.turn_beauty.url }},{{ images.victory.url }},Surge,"Gain D20. 
+Place in Discard.",7a0000,f8f5f2,{{ images.turn_surge_D20.url }},{{ images.D20.url }},{{ images.battle_transition_back.url }}
+1,Battle_Bloom_Swell,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,{{ images.turn_bloom.url }},{{ images.victory.url }},Swell,"Gain D12. 
+Place in Discard.",7a0000,#f8f5f2,{{ images.turn_surge_D12.url }},{{ images.D12.url }},{{ images.battle_transition_back.url }}
+1,Battle_Enthrall_Surge,Battle,Enthrall,Steal 1 Wisp card randomly from all opponents,a30000,f8f5f2,{{ images.turn_surge_flower.url }},{{ images.ic_flower.url }},Surge,"Gain any die.
+Place in Discard.",7a0000,#f8f5f2,{{ images.turn_surge_D20.url }},{{ images.D20.url }},{{ images.battle_transition_back.url }}
+2,Resource_Compost_Mulch,Cultivation,Compost,"Upgrade a die
+from your hand",#8f754f,f8f5f2,{{ images.resource_compost_full.url }},,Mulch,"Mulch a die
+from your hand",#f2c9c9,a42828,{{ images.resource_mulch_full.url }},{{ images.mulch.url }},{{ images.resource_back.url }}
+2,Resource_Sunlight_Compost,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,{{ images.resource_sunlight_full.url }},,Compost,"Upgrade a die
+from your hand",#8f754f,#f8f5f2,{{ images.resource_compost_full.url }},,{{ images.resource_back.url }}
+2,Resource_Sunlight_Mulch,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,{{ images.resource_sunlight_full.url }},,Mulch,"Mulch a die
+from your hand",#f2c9c9,a42828,{{ images.resource_mulch_full.url }},{{ images.mulch.url }},{{ images.resource_back.url }}
+2,Resource_Sunlight_Water,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,{{ images.resource_sunlight_full.url }},,Water,Gain Water token,#57e4fa,03333a,{{ images.resource_water_full.url }},{{ images.water.url }},{{ images.resource_back.url }}
+2,Resource_Water_Compost,Cultivation,Water,Gain Water token,#57e4fa,03333a,{{ images.resource_water_full.url }},{{ images.water.url }},Compost,"Upgrade a die
+from your hand",#8f754f,f8f5f2,{{ images.resource_compost_full.url }},,{{ images.resource_back.url }}
+2,Resource_Water_Mulch,Cultivation,Water,Gain Water token,#57e4fa,03333a,{{ images.resource_water_full.url }},{{ images.water.url }},Mulch,"Mulch a die
+from your hand",#f2c9c9,a42828,{{ images.resource_mulch_full.url }},{{ images.mulch.url }},{{ images.resource_back.url }}

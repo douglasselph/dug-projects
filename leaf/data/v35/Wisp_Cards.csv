@@ -1,0 +1,32 @@
+quantity,name,title,count,effect,line_icons,line_icons_height,vp_icon,main_backdrop
+2,Wisp_Award_VP,Wisp of Honor,2,Gain 1 VP,,80,{{ images.victory_victory.url }},{{ images.cloud_honor.url }}
+1,Wisp_Award_VP2,Berry Patient,1,Gain 1 VP,,80,{{ images.victory_victory_victory.url }},{{ images.cloud_honor.url }}
+3,Wisp_Gain_Critters,Whispering Wings,3,"Gain any 2 critters
+(🪱/🐝)",,80,{{ images.victory.url }},{{ images.cloud_whispering_wings.url }}
+4,Wisp_Gain_Green,Pollinating Wisp,4,"Gain or Refresh
+Green Butterfly",{{ images.butterfly_green.url }},160,{{ images.victory.url }},{{ images.cloud_pollinating.url }}
+2,Wisp_Gain_Purple,Pollinating Wisp,2,"Gain or Refresh 
+Purple Butterfly",{{ images.butterfly_purple.url }},160,{{ images.victory.url }},{{ images.cloud_pollinating.url }}
+4,Wisp_Gain_Red,Pollinating Wisp,4,"Gain or Refresh 
+Red Butterfly",{{ images.butterfly_red.url }},160,{{ images.victory.url }},{{ images.cloud_pollinating.url }}
+3,Wisp_Gain_Yellow,Pollinating Wisp,3,"Gain or Refresh 
+Yellow Butterfly",{{ images.butterfly_yellow.url }},160,{{ images.victory.url }},{{ images.cloud_pollinating.url }}
+4,Wisp_Mulch_Die,Pocketed Spark,4,"Gain Mulch;
+Store 1 die from your discard on it.",{{ images.mulch.url }},80,{{ images.victory.url }},{{ images.cloud_spark.url }}
+1,Wisp_Quake,Wispquake,1,"(Play immediately)
+All players must reroll all their dice.
+You may keep one of yours.",,40,,{{ images.cloud_spark.url }}
+3,Wisp_Reckoning,Wisp Reckoning,3,"Each opponent keeps up to 3 Wisps; 
+You keep 4. 
+Trash the rest.",,40,,{{ images.cloud_overgrowth.url }}
+3,Wisp_Swap_Die,Pollen Theft,3,"<battle/> Swap one of your dice
+with an opponent’s 
+same-size die
+(no re-rolls)",{{ images.battle.url }},40,{{ images.victory.url }},{{ images.cloud_theft.url }}
+4,Wisp_Upgrade_Die,Overgrowth,4,"Upgrade +2 steps — 
+skip missing sizes; 
+use gained die now",,40,{{ images.victory.url }},{{ images.cloud_overgrowth.url }}
+2,Wisps_Last_Word,Wisp's Last Word,2,"<battle/> Battle:
+Resolve a Strike immediately.
+Then return all dice & critters
+from that row.",{{ images.battle.url }},40,{{ images.victory.url }},{{ images.cloud_theft.url }}
