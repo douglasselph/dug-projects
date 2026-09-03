@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player
 
 import dugsolutions.leaf.v35.player.creature.Creature
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.player.wisp.WispHand
 import dugsolutions.leaf.v35.tokens.Butterflies
@@ -10,22 +11,15 @@ import dugsolutions.leaf.v35.tokens.Tokens
 /**
  * Aggregate root for state owned by one player.
  *
+ * Player owns its decision-policy composition so different players in the
+ * same simulation may use different strategies. Player itself does not invoke
+ * those strategies or execute their results; gameplay coordinators do that.
+ *
  * Player deliberately does not duplicate the APIs of its child state objects.
- * Gameplay coordinators and effects should operate through the appropriate
- * owned component:
- *
- * - creature
- * - dice
- * - critters
- * - tokens
- * - butterflies
- * - wisps
- *
- * Decisions and Chronicle are intentionally not part of this initial state
- * foundation.
  */
 class Player(
     val id: PlayerId,
+    val decisions: DecisionDirector,
     val creature: Creature = Creature(),
     val dice: PlayerDice = PlayerDice(),
     val critters: Critters = Critters(),

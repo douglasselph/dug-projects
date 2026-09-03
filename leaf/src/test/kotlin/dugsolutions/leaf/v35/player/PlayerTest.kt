@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player
 
 import dugsolutions.leaf.v35.player.creature.Creature
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.player.wisp.WispHand
 import dugsolutions.leaf.v35.tokens.Butterflies
@@ -17,12 +18,15 @@ import kotlin.test.assertTrue
 class PlayerTest {
 
     @Test
-    fun newPlayer_hasExplicitIdAndEmptyOwnedState() {
+    fun newPlayer_hasExplicitIdDecisionsAndEmptyOwnedState() {
+        val decisions = DecisionDirector.baseline()
         val player = Player(
-            id = PlayerId(3)
+            id = PlayerId(3),
+            decisions = decisions
         )
 
         assertEquals(PlayerId(3), player.id)
+        assertTrue(player.decisions === decisions)
         assertTrue(player.creature.isEmpty)
         assertTrue(player.dice.supply.isEmpty())
         assertTrue(player.dice.hand.isEmpty())
@@ -38,6 +42,7 @@ class PlayerTest {
 
     @Test
     fun constructor_usesSuppliedOwnedStateObjects() {
+        val decisions = DecisionDirector.baseline()
         val creature = Creature()
         val dice = PlayerDice()
         val critters = Critters()
@@ -47,6 +52,7 @@ class PlayerTest {
 
         val player = Player(
             id = PlayerId(1),
+            decisions = decisions,
             creature = creature,
             dice = dice,
             critters = critters,
@@ -55,6 +61,7 @@ class PlayerTest {
             wisps = wisps
         )
 
+        assertTrue(player.decisions === decisions)
         assertTrue(player.creature === creature)
         assertTrue(player.dice === dice)
         assertTrue(player.critters === critters)
@@ -64,12 +71,33 @@ class PlayerTest {
     }
 
     @Test
-    fun defaultOwnedState_isNotSharedBetweenPlayers() {
+    fun differentPlayers_canHaveDifferentDecisionDirectors() {
+        val firstDecisions = DecisionDirector.baseline()
+        val secondDecisions = DecisionDirector.baseline()
+
         val first = Player(
-            id = PlayerId(1)
+            id = PlayerId(1),
+            decisions = firstDecisions
         )
         val second = Player(
-            id = PlayerId(2)
+            id = PlayerId(2),
+            decisions = secondDecisions
+        )
+
+        assertTrue(first.decisions === firstDecisions)
+        assertTrue(second.decisions === secondDecisions)
+        assertTrue(first.decisions !== second.decisions)
+    }
+
+    @Test
+    fun defaultOwnedState_isNotSharedBetweenPlayers() {
+        val first = Player(
+            id = PlayerId(1),
+            decisions = DecisionDirector.baseline()
+        )
+        val second = Player(
+            id = PlayerId(2),
+            decisions = DecisionDirector.baseline()
         )
 
         first.critters.add(Critter.BEE)
@@ -88,9 +116,7 @@ class PlayerTest {
 
     @Test
     fun addVp_increasesVp() {
-        val player = Player(
-            id = PlayerId(1)
-        )
+        val player = newPlayer()
 
         player.addVp(1)
         player.addVp(3)
@@ -100,9 +126,7 @@ class PlayerTest {
 
     @Test
     fun addVp_withZero_throws() {
-        val player = Player(
-            id = PlayerId(1)
-        )
+        val player = newPlayer()
 
         assertFailsWith<IllegalArgumentException> {
             player.addVp(0)
@@ -113,9 +137,7 @@ class PlayerTest {
 
     @Test
     fun addVp_withNegativeAmount_throws() {
-        val player = Player(
-            id = PlayerId(1)
-        )
+        val player = newPlayer()
 
         assertFailsWith<IllegalArgumentException> {
             player.addVp(-1)
@@ -126,9 +148,7 @@ class PlayerTest {
 
     @Test
     fun resetVp_setsVpBackToZero() {
-        val player = Player(
-            id = PlayerId(1)
-        )
+        val player = newPlayer()
         player.addVp(5)
 
         player.resetVp()
@@ -143,4 +163,12 @@ class PlayerTest {
             PlayerId(7)
         )
     }
+
+    private fun newPlayer(
+        id: Int = 1
+    ): Player =
+        Player(
+            id = PlayerId(id),
+            decisions = DecisionDirector.baseline()
+        )
 }
