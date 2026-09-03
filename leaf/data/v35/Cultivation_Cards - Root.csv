@@ -1,28 +1,28 @@
 quantity,name,title,type,cost,line_icon,vp_icon,type_icon,fg_color,text_color,full_image,bg_image2,bg_card_image2,effect
-4,Root_05_01,Root Double Down,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reinforced_full.url }},{{ images.back_root2.url }},{{ images.cc_root_double_down.url }},🎲 Raise ×2 one die
-4,Root_05_02,Root Four More,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_flourish_full.url }},{{ images.back_root2.url }},{{ images.cc_root_four_more.url }},🎲 Raise a die +4
-4,Root_05_03,Root on a Roll,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_resonance_full.url }},{{ images.back_root2.url }},{{ images.cc_root_on_a_roll.url }},"Reroll a die until it rolls 3+.
+6,Root_05_01,Root Double Down,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reinforced_full.url }},{{ images.back_root2.url }},{{ images.cc_root_double_down.url }},🎲 Raise ×2 one die
+6,Root_05_02,Root Four More,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_flourish_full.url }},{{ images.back_root2.url }},{{ images.cc_root_four_more.url }},🎲 Raise a die +4
+6,Root_05_03,Root on a Roll,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_resonance_full.url }},{{ images.back_root2.url }},{{ images.cc_root_on_a_roll.url }},"Reroll a die until it rolls 3+.
 Ignore Roll Rewards."
-12,Root_05_04,Root Well,Root,5,{{ images.water_battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reservoir_full.url }},{{ images.back_root2.url }},{{ images.cc_root_well.url }},"Gain 1 Water.
+6,Root_05_04,Root Well,Root,5,{{ images.water_battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reservoir_full.url }},{{ images.back_root2.url }},{{ images.cc_root_well.url }},"Gain 1 Water.
 <battle/> Spend 3 Water to reroll any die on the Battle Grid—yours or an opponent’s."
-4,Root_07_01,Root & Scoot,Root,7,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_bulwark_full.url }},{{ images.back_root2.url }},{{ images.cc_root_and_scoot.url }},"🎲 Raise any die +1.
+6,Root_07_01,Root & Scoot,Root,7,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_bulwark_full.url }},{{ images.back_root2.url }},{{ images.cc_root_and_scoot.url }},"🎲 Raise any die +1.
 <battle/> Remove all your dice 
 from one Strike Square,
 you no longer partipate in that strike."
-12,Root_07_02,Root Appreciation,Root,7,{{ images.worm.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reach_full.url }},{{ images.back_root2.url }},{{ images.cc_root_appreciation.url }},"Gain 1 worm, 
+6,Root_07_02,Root Appreciation,Root,7,{{ images.worm.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reach_full.url }},{{ images.back_root2.url }},{{ images.cc_root_appreciation.url }},"Gain 1 worm,
 Each worm <worm/> is worth 2 more this round."
-4,Root_07_03,Root Down Payment,Root,7,{{ images.victory.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reflection_full.url }},{{ images.back_root2.url }},{{ images.cc_root_down_payment.url }},"Set any die showing 2+ to 1;
+6,Root_07_03,Root Down Payment,Root,7,{{ images.victory.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reflection_full.url }},{{ images.back_root2.url }},{{ images.cc_root_down_payment.url }},"Set any die showing 2+ to 1;
 gain 1 VP per 1 showing.
 No Roll Rewards earned."
-12,Root_07_04,Root Recall,Root,7,{{ images.cultivation_battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reinforced_full.url }},{{ images.back_root2.url }},{{ images.cc_root_recall.url }},"<cultivation/> Cultivation Only: Discard 
+6,Root_07_04,Root Recall,Root,7,{{ images.cultivation_battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reinforced_full.url }},{{ images.back_root2.url }},{{ images.cc_root_recall.url }},"<cultivation/> Cultivation Only: Discard
 any number of dice; draw that many.
 
 <battle/> Battle Only: Reroll 1 die."
-4,Root_09_01,Root Awakening,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_awakening_full.url }},{{ images.back_root2.url }},{{ images.cc_root_awakening.url }},"Upgrade a die; 
+6,Root_09_01,Root Awakening,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_awakening_full.url }},{{ images.back_root2.url }},{{ images.cc_root_awakening.url }},"Upgrade a die;
 use it now."
-3,Root_09_02,Root Cause,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_cause_full.url }},{{ images.back_root2.url }},{{ images.cc_root_cause.url }},"Flip one of your dice
+6,Root_09_02,Root Cause,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_cause_full.url }},{{ images.back_root2.url }},{{ images.cc_root_cause.url }},"Flip one of your dice
 to its opposite face"
-4,Root_09_03,Root Kindred,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_loot_full.url }},{{ images.back_root2.url }},{{ images.cc_root_kindred.url }},"Set a die to match
+6,Root_09_03,Root Kindred,Root,9,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_loot_full.url }},{{ images.back_root2.url }},{{ images.cc_root_kindred.url }},"Set a die to match
 the value of another"
-4,Root_09_04,Root Loot,Root,9,{{ images.mulch.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_renewal_full.url }},{{ images.back_root2.url }},{{ images.cc_root_loot.url }},"Mulch any die
+6,Root_09_04,Root Loot,Root,9,{{ images.mulch.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_renewal_full.url }},{{ images.back_root2.url }},{{ images.cc_root_loot.url }},"Mulch any die
 from Dice Discard Bin."

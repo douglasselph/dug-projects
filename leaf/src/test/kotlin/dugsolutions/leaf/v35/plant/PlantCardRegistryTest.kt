@@ -29,7 +29,7 @@ class PlantCardRegistryTest {
         assertEquals(12, registry.getAllCards().size)
 
         val card = assertNotNull(registry.getCard("Root_05_01"))
-        assertEquals(4, card.quantity)
+        assertEquals(6, card.quantity)
         assertEquals("Root Double Down", card.title)
         assertEquals(PlantType.ROOT, card.type)
         assertEquals(5, card.cost)
