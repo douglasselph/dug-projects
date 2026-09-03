@@ -1,4 +1,4 @@
-package dugsolutions.leaf.integration
+package dugsolutions.leaf.integration.v14
 
 import dugsolutions.leaf.v14.cards.CardManager
 import dugsolutions.leaf.v14.cards.GameCards

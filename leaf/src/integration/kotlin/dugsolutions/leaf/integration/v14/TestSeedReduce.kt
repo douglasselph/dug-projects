@@ -1,4 +1,4 @@
-package dugsolutions.leaf.integration
+package dugsolutions.leaf.integration.v14
 
 import dugsolutions.leaf.v14.cards.GameCards
 import dugsolutions.leaf.v14.cards.domain.FlourishType
@@ -13,15 +13,15 @@ import org.junit.jupiter.api.Test
  * These tests use real components instead of mocks to verify the game's behavior.
  *
  * Test for 2 Players
- * This test uses an equivalent set of cards in the market with identical player behaviors in order to:
- *  - verify the results at 50%
- *  - provide an example of a typical game flow
- *  - test game length and transition points.
+ *
+ * The difference is the Player Under Test will receive one specific Seedling Card.
+ * The other player will have the normal distribution of Seedling cards.
  */
-class TestBase {
+class TestSeedReduce {
 
     companion object {
-        private const val TEST_DIR = "base"
+        private const val TEST_DIR = "SeedReduce"
+        private const val CARD_UNDER_TEST = "SeedReduce"
         private const val NUM_PLAYERS = 2
     }
 
@@ -32,8 +32,8 @@ class TestBase {
         gameIntegrationCore = CoreSupport(TEST_DIR)
         gameIntegrationCore.setup(
             marketConfig = { core -> marketConfig(core) },
-            PUTSeedlings = { core -> seedlings(core) },
-            otherSeedlings = { core -> seedlings(core) }
+            PUTSeedlings = { core -> PUTSeedlings(core) },
+            otherSeedlings = { core -> otherSeedlings(core) }
         )
     }
 
@@ -57,7 +57,12 @@ class TestBase {
         gameIntegrationCore.test10000()
     }
 
-    private fun seedlings(core: CoreSupport): GameCards = with(core) {
+    private fun PUTSeedlings(core: CoreSupport): GameCards = with(core) {
+        val seedling = getCard(CARD_UNDER_TEST)
+        return gameCardsFactory(List(4) { seedling })
+    }
+
+    private fun otherSeedlings(core: CoreSupport): GameCards = with(core) {
         return getCards(FlourishType.SEEDLING).take(4)
     }
 
