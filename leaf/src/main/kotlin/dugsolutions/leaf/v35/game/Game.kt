@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.Randomizer
+import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
@@ -22,7 +23,9 @@ class Game(
     players: List<Player>,
     val chronicle: Chronicle,
     val roundDeck: RoundDeck,
-    val randomizer: Randomizer
+    val randomizer: Randomizer,
+    /** Game-local die construction preserving this Game's random/config state. */
+    val dieFactory: DieFactory = DieFactory(randomizer)
 ) {
     var status: GameStatus = GameStatus.READY
         private set

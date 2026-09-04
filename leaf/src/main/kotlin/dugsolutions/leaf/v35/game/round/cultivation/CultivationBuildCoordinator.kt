@@ -73,7 +73,7 @@ class CultivationBuildCoordinator(
                         "CultivationStrategy returned an action that was not offered: $chosen"
                     }
 
-                    executeAction(player, roundCard, chosen)
+                    executeAction(game, player, roundCard, chosen)
                     add(CultivationActionResult(player.id, actionNumber, chosen))
                     game.chronicle.record(
                         Moment.Marker(
@@ -104,6 +104,7 @@ class CultivationBuildCoordinator(
         }
 
     private fun executeAction(
+        game: Game,
         player: Player,
         roundCard: RoundCard,
         action: CultivationMainAction
@@ -121,6 +122,7 @@ class CultivationBuildCoordinator(
                 }
                 effectExecutor.execute(
                     GameEffectRequest(
+                        game = game,
                         actor = player,
                         effect = current.card.effect,
                         source = GameEffectSource.Plant(current),
@@ -133,14 +135,15 @@ class CultivationBuildCoordinator(
             }
 
             CultivationMainAction.RoundEffect1 ->
-                executeRoundEffect(player, roundCard, RoundEffectSlot.FIRST)
+                executeRoundEffect(game, player, roundCard, RoundEffectSlot.FIRST)
 
             CultivationMainAction.RoundEffect2 ->
-                executeRoundEffect(player, roundCard, RoundEffectSlot.SECOND)
+                executeRoundEffect(game, player, roundCard, RoundEffectSlot.SECOND)
         }
     }
 
     private fun executeRoundEffect(
+        game: Game,
         player: Player,
         roundCard: RoundCard,
         slot: RoundEffectSlot
@@ -151,6 +154,7 @@ class CultivationBuildCoordinator(
         }
         effectExecutor.execute(
             GameEffectRequest(
+                game = game,
                 actor = player,
                 effect = effect,
                 source = GameEffectSource.Round(roundCard, slot),

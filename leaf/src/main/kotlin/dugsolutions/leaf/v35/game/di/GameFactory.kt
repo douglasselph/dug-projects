@@ -78,7 +78,8 @@ class GameFactory(
             players = players,
             chronicle = GameChronicle(),
             roundDeck = roundDeck,
-            randomizer = randomizer
+            randomizer = randomizer,
+            dieFactory = dieFactory
         )
     }
 
