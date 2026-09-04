@@ -6,8 +6,8 @@ import org.koin.dsl.module
 /**
  * Only the stateless GameFactory is registered application-wide.
  *
- * Game, Grove, Chronicle, RoundDeck, Randomizer, Players, and future
- * BattleState are all per-game state and are not registered here.
+ * Game, Grove, Chronicle, RoundDeck, Randomizer, Players, and BattleState are
+ * all per-game/per-round state and are not registered here.
  */
 val gameModule: Module = module {
     single {

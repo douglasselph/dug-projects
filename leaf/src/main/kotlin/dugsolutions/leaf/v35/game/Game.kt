@@ -13,7 +13,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCard
 /**
  * Durable state graph for one isolated game.
  *
- * Game does not run itself. Future GameRunner / round coordinators execute
+ * Game does not run itself. GameRunner / round coordinators execute
  * rules against this state and record outcomes through [chronicle].
  *
  * v35 deliberately has no separate Table aggregate. Grove + Players + the
@@ -56,8 +56,8 @@ class Game(
         get() = config.roundSetup.totalRounds - roundDeck.remaining
 
     /**
-     * Means the final configured card has been revealed. A future GameRunner
-     * will own the stronger concept of "fully resolved and scored."
+     * Means the final configured card has been revealed. GameRunner owns the
+     * stronger concept of "fully resolved and complete."
      */
     val hasRevealedFinalRound: Boolean
         get() = roundDeck.isEmpty

@@ -105,9 +105,9 @@ class PetalToDie4EffectTest {
         assertEquals(4, firstD4.value)
         assertEquals(6, d8.value)
 
-        // Universal Trash rule: a Trashed D4 returns to the Graft Bed.
+        // Trash removes the D4 from the game; only Upgrade replacement returns D4s.
         assertEquals(
-            1,
+            0,
             game.grove.graftBed.count(
                 DieSides.D4
             )
@@ -230,7 +230,7 @@ class PetalToDie4EffectTest {
     }
 
     @Test
-    fun trashBranchInBattle_removesGridLocationReturnsD4AndRaisesRemainingDice() {
+    fun trashBranchInBattle_removesGridLocationTrashesD4AndRaisesRemainingDice() {
         val d4 = FixedEffectDie(4, 2)
         val d8 = FixedEffectDie(8, 3)
         val actor =
@@ -266,7 +266,7 @@ class PetalToDie4EffectTest {
         effect.execute(request, nested)
 
         assertEquals(null, battleState.grid.locationOf(d4))
-        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(0, game.grove.graftBed.count(DieSides.D4))
         assertEquals(listOf(d8), actor.dice.hand)
         assertEquals(7, d8.value)
         assertEquals(

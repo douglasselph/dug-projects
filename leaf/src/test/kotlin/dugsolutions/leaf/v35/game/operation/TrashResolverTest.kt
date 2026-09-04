@@ -34,7 +34,7 @@ class TrashResolverTest {
     }
 
     @Test
-    fun trashD4_removesItFromHandAndReturnsItToGraftBed() {
+    fun trashD4_removesItFromHandAndLeavesGame() {
         val d4 =
             FixedEffectDie(4, 3)
         val actor =
@@ -57,7 +57,7 @@ class TrashResolverTest {
 
         assertTrue(actor.dice.hand.isEmpty())
         assertEquals(
-            1,
+            0,
             game.grove.graftBed.count(
                 DieSides.D4
             )
@@ -66,7 +66,7 @@ class TrashResolverTest {
             DieSides.D4,
             result.sides
         )
-        assertTrue(
+        assertFalse(
             result.returnedToGraftBed
         )
     }

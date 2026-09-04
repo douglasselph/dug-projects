@@ -65,7 +65,7 @@ class DoomResolverTest {
     }
 
     @Test
-    fun doomUsesUniversalTrashRuleSoD4ReturnsToGraftBed() {
+    fun doomTrashesD4OutOfGameJustLikeEveryOtherDie() {
         val d4 = die(4, 1)
         val d6 = die(6, 2)
         val p1 = player(1, d4)
@@ -79,8 +79,8 @@ class DoomResolverTest {
         val result = resolver.execute(game, state)
 
         assertEquals(2, result.count)
-        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
-        assertTrue(result.dice.first { it.sides == DieSides.D4 }.returnedToGraftBed)
+        assertEquals(0, game.grove.graftBed.count(DieSides.D4))
+        assertFalse(result.dice.first { it.sides == DieSides.D4 }.returnedToGraftBed)
         assertFalse(result.dice.first { it.sides == DieSides.D6 }.returnedToGraftBed)
     }
 
