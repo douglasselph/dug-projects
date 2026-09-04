@@ -1,9 +1,11 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.battle.BattlePlacementResolver
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -11,17 +13,23 @@ import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
+import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.random.die.Die
 
 /**
  * Effects whose main behavior is Draw / reroll / discard-redraw.
  *
- * Effects that add a die to Hand are currently executable only during
- * Cultivation. Battle uses the same "Dice Hand" terminology, but newly added
- * dice must also receive a Battle Grid location; that phase-specific placement
- * belongs with the future Battle model rather than being guessed here.
+ * During Battle, any die newly added to Dice Hand must also receive a Battle
+ * Grid location. [BattlePlacementResolver] owns that phase-specific placement
+ * rule; this handler invokes it only after the die has been rolled and its Roll
+ * Reward has resolved.
  */
-class DrawEffectHandler : EffectHandler {
+class DrawEffectHandler(
+    private val battlePlacementResolver: BattlePlacementResolver =
+        BattlePlacementResolver()
+) : EffectHandler {
 
     private companion object {
         const val MAX_REROLL_ATTEMPTS = 1_000
@@ -45,8 +53,14 @@ class DrawEffectHandler : EffectHandler {
                     request.actor.dice.hand.isNotEmpty()
 
             GameEffect.DRAW_TWO_DICE ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    hasDrawableDie(request)
+                hasDrawableDie(request) &&
+                    hasBattlePlacementCapacity(
+                        request = request,
+                        diceToAdd = minOf(
+                            2,
+                            drawableDieCount(request)
+                        )
+                    )
 
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
@@ -54,12 +68,14 @@ class DrawEffectHandler : EffectHandler {
                     request.actor.dice.hand.isNotEmpty()
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.hand.isNotEmpty()
+                burstingBlossomChoices(request).isNotEmpty()
 
             GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.discard.isNotEmpty()
+                request.actor.dice.discard.isNotEmpty() &&
+                    hasBattlePlacementCapacity(
+                        request = request,
+                        diceToAdd = 1
+                    )
 
             else -> false
         }
@@ -120,7 +136,10 @@ class DrawEffectHandler : EffectHandler {
 
             GameEffect.DRAW_TWO_DICE ->
                 repeat(2) {
-                    rollResolver.draw(request.actor)
+                    drawAndPlaceIfBattle(
+                        request = request,
+                        rollResolver = rollResolver
+                    )
                 }
 
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
@@ -138,14 +157,17 @@ class DrawEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> {
                 chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor)
+                    burstingBlossomChoices(request)
                 ).adjustBy(1)
 
                 val maxCount = request.actor.dice.hand.count {
                     it.value == it.sides
                 }
                 repeat(maxCount) {
-                    rollResolver.draw(request.actor)
+                    drawAndPlaceIfBattle(
+                        request = request,
+                        rollResolver = rollResolver
+                    )
                 }
             }
 
@@ -159,6 +181,10 @@ class DrawEffectHandler : EffectHandler {
                 }
                 request.actor.dice.addToHand(die)
                 rollResolver.roll(request.actor, die)
+                placeIfBattle(
+                    request = request,
+                    die = die
+                )
             }
 
             else -> unsupportedGameEffect(
@@ -223,11 +249,124 @@ class DrawEffectHandler : EffectHandler {
         request.actor.dice.addToDiscard(die)
     }
 
+    private fun drawAndPlaceIfBattle(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        val resolution =
+            rollResolver.draw(request.actor)
+                ?: return
+
+        placeIfBattle(
+            request = request,
+            die = resolution.die
+        )
+    }
+
+    private fun placeIfBattle(
+        request: GameEffectRequest,
+        die: Die
+    ) {
+        if (request.phase != GameEffectPhase.BATTLE) {
+            return
+        }
+
+        val battleState =
+            stateNotNull(
+                request.battleState,
+                context = "DrawEffectHandler"
+            ) {
+                "Battle effect ${request.effect} requires BattleState to place die $die"
+            }
+
+        battlePlacementResolver.placeNewHandDie(
+            battleState = battleState,
+            player = request.actor,
+            die = die,
+            reason = BattleDiePlacementReason.EFFECT
+        )
+    }
+
+    /**
+     * Legal die targets for Bursting Blossom.
+     *
+     * In Cultivation every Hand die remains legal. In Battle a target is only
+     * offered when every die that can actually be Drawn after that +1 Raise
+     * can also be placed in an open Strike Square with room.
+     */
+    private fun burstingBlossomChoices(
+        request: GameEffectRequest
+    ): List<EffectDieChoice> {
+        val choices = handChoices(request.actor)
+
+        if (request.phase != GameEffectPhase.BATTLE) {
+            return choices
+        }
+
+        val battleState =
+            request.battleState
+                ?: return emptyList()
+
+        val availableSlots =
+            battlePlacementResolver.availableSlots(
+                battleState = battleState,
+                player = request.actor
+            )
+        val drawableCount = drawableDieCount(request)
+
+        return choices.filter { choice ->
+            val die =
+                request.actor.dice.hand.getOrNull(
+                    choice.index
+                ) ?: return@filter false
+
+            val maxAfterRaise =
+                request.actor.dice.hand.count { candidate ->
+                    if (candidate === die) {
+                        minOf(
+                            candidate.sides,
+                            candidate.value + 1
+                        ) == candidate.sides
+                    } else {
+                        candidate.value == candidate.sides
+                    }
+                }
+
+            minOf(
+                maxAfterRaise,
+                drawableCount
+            ) <= availableSlots
+        }
+    }
+
+    private fun hasBattlePlacementCapacity(
+        request: GameEffectRequest,
+        diceToAdd: Int
+    ): Boolean {
+        if (request.phase != GameEffectPhase.BATTLE) {
+            return true
+        }
+
+        val battleState =
+            request.battleState
+                ?: return false
+
+        return battlePlacementResolver.availableSlots(
+            battleState = battleState,
+            player = request.actor
+        ) >= diceToAdd
+    }
+
+    private fun drawableDieCount(
+        request: GameEffectRequest
+    ): Int =
+        request.actor.dice.supplySize +
+            request.actor.dice.discardSize
+
     private fun hasDrawableDie(
         request: GameEffectRequest
     ): Boolean =
-        !request.actor.dice.isSupplyEmpty ||
-            !request.actor.dice.isDiscardEmpty
+        drawableDieCount(request) > 0
 
     private fun rollResolver(
         request: GameEffectRequest,

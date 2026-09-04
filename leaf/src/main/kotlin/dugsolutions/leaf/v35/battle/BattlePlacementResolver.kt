@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.battle
 
 import dugsolutions.leaf.v35.battle.domain.BattleDiePlacement
+import dugsolutions.leaf.v35.battle.domain.BattleSquare
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateNotNull
@@ -25,6 +26,28 @@ class BattlePlacementResolver {
         StrikeRow.entries.filter { row ->
             !battleState.grid.isRowClosed(row) &&
                 !battleState.grid.square(player.id, row).isFull
+        }
+
+    /**
+     * Total number of additional dice this player can currently place.
+     *
+     * This is useful when an effect is known to add several dice and must
+     * verify that every successfully added die can receive a legal Grid
+     * location before the effect is offered.
+     */
+    fun availableSlots(
+        battleState: BattleState,
+        player: Player
+    ): Int =
+        legalRows(
+            battleState = battleState,
+            player = player
+        ).sumOf { row ->
+            BattleSquare.MAX_DICE -
+                battleState.grid.square(
+                    player.id,
+                    row
+                ).dieCount
         }
 
     fun placeNewHandDie(

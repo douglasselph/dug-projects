@@ -62,6 +62,33 @@ class BattlePlacementResolverTest {
     }
 
     @Test
+    fun availableSlots_countsAllOpenSquareCapacity() {
+        val player = BattleTestFixture.player(1)
+        val other = BattleTestFixture.player(2)
+        val state = BattleState(listOf(player, other))
+
+        state.grid.closeRow(StrikeRow.TOP)
+
+        repeat(2) {
+            val die = BattleTestFixture.die(6, it + 1)
+            player.dice.addToHand(die)
+            state.grid.placeDie(
+                player,
+                StrikeRow.MIDDLE,
+                die
+            )
+        }
+
+        assertEquals(
+            4,
+            BattlePlacementResolver().availableSlots(
+                state,
+                player
+            )
+        )
+    }
+
+    @Test
     fun illegalStrategyRow_isRejectedBeforePlacement() {
         val die = BattleTestFixture.die(6, 5)
         val strategy = RowStrategy(StrikeRow.TOP)
