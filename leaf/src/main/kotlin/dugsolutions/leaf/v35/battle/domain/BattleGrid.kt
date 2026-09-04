@@ -45,6 +45,16 @@ class BattleGrid(
 
     private val closedRows = mutableSetOf<StrikeRow>()
 
+    /**
+     * Player-specific Strike withdrawals for this Battle Round.
+     *
+     * This is deliberately separate from [closedRows]: a closed row is over for
+     * everyone, while a withdrawn player simply no longer participates in that
+     * otherwise-live Strike.
+     */
+    private val withdrawnRowsByPlayer: Map<PlayerId, MutableSet<StrikeRow>> =
+        orderedPlayerIds.associateWith { mutableSetOf() }
+
     val diePlacements: List<BattleDiePlacement>
         get() = buildList {
             orderedPlayerIds.forEach { playerId ->
@@ -89,6 +99,35 @@ class BattleGrid(
     fun isRowClosed(row: StrikeRow): Boolean =
         row in closedRows
 
+    /** True only when this player has withdrawn from this otherwise-live Strike. */
+    fun isPlayerWithdrawn(
+        playerId: PlayerId,
+        row: StrikeRow
+    ): Boolean =
+        withdrawnRowsByPlayer[playerId]?.contains(row) == true
+
+    /**
+     * Removes this player from future participation in one open Strike Row.
+     *
+     * This does not close the row for anyone else and does not move existing
+     * dice/Critters by itself. The effect performing the withdrawal owns those
+     * zone transitions before recording the state here.
+     */
+    fun withdrawPlayer(
+        playerId: PlayerId,
+        row: StrikeRow
+    ) {
+        ensurePlayerHasColumn(playerId)
+        ensureRowOpen(row)
+        stateCheck(
+            !isPlayerWithdrawn(playerId, row),
+            context = "BattleGrid"
+        ) {
+            "Player ${playerId.value} has already withdrawn from Strike Row $row"
+        }
+        withdrawnRowsByPlayer.getValue(playerId).add(row)
+    }
+
     /**
      * Marks a Strike Row closed. Existing contents stay where they are until a
      * resolver explicitly drains them; new placements/moves into the row are
@@ -108,7 +147,7 @@ class BattleGrid(
         die: Die
     ): BattleDiePlacement {
         ensurePlayerHasColumn(player)
-        ensureRowOpen(row)
+        ensurePlayerCanUseRow(player.id, row)
 
         stateCheck(
             player.dice.hand.any { it === die },
@@ -362,7 +401,7 @@ class BattleGrid(
         }
 
         if (from.row == toRow) return from
-        ensureRowOpen(toRow)
+        ensurePlayerCanUseRow(from.playerId, toRow)
 
         val target = square(from.playerId, toRow)
         stateCheck(!target.isFull, context = "BattleGrid") {
@@ -388,7 +427,7 @@ class BattleGrid(
         critter: Critter
     ): BattleCritterPlacement {
         ensurePlayerHasColumn(player)
-        ensureRowOpen(row)
+        ensurePlayerCanUseRow(player.id, row)
         stateCheck(
             player.critters.count(critter) > 0,
             context = "BattleGrid"
@@ -445,11 +484,28 @@ class BattleGrid(
         }
 
     private fun ensurePlayerHasColumn(player: Player) {
+        ensurePlayerHasColumn(player.id)
+    }
+
+    private fun ensurePlayerHasColumn(playerId: PlayerId) {
         stateCheck(
-            orderedPlayerIds.contains(player.id),
+            orderedPlayerIds.contains(playerId),
             context = "BattleGrid"
         ) {
-            "Player ${player.id.value} does not own a Battle Grid column"
+            "Player ${playerId.value} does not own a Battle Grid column"
+        }
+    }
+
+    private fun ensurePlayerCanUseRow(
+        playerId: PlayerId,
+        row: StrikeRow
+    ) {
+        ensureRowOpen(row)
+        stateCheck(
+            !isPlayerWithdrawn(playerId, row),
+            context = "BattleGrid"
+        ) {
+            "Player ${playerId.value} has withdrawn from Strike Row $row"
         }
     }
 

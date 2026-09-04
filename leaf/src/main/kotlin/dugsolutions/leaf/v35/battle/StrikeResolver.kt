@@ -50,11 +50,9 @@ data class BattleStrikeResolutionResult(
 /**
  * Resolves Battle Step 6 without changing Grid placements.
  *
- * Every player in BattleState participates in every open row for now. Empty
- * squares therefore contribute 0, matching the normal Battle Grid rule. A
- * later effect that explicitly removes participation from a Strike can add
- * that state to BattleGrid without changing the scoring algorithm's other
- * responsibilities.
+ * Every player still participating in an open row contributes that square's
+ * total. Root & Scoot withdrawals are player-specific and are omitted entirely
+ * from that Strike; a globally closed row is still skipped by [resolveAll].
  */
 class StrikeResolver(
     private val woundResolver: WoundResolver
@@ -99,20 +97,30 @@ class StrikeResolver(
             "Cannot resolve closed Strike Row $row"
         }
 
-        val totals = battleState.playersInBattleOrder.map { player ->
-            val square = battleState.grid.square(player.id, row)
-            StrikePlayerTotal(
-                playerId = player.id,
-                diceTotal = square.dice.sumOf { it.value },
-                critterTotal = square.critters.sumOf {
-                    player.critterValues.valueOf(it)
-                }
-            )
-        }
+        val totals = battleState.playersInBattleOrder
+            .filterNot { player ->
+                battleState.grid.isPlayerWithdrawn(player.id, row)
+            }
+            .map { player ->
+                val square = battleState.grid.square(player.id, row)
+                StrikePlayerTotal(
+                    playerId = player.id,
+                    diceTotal = square.dice.sumOf { it.value },
+                    critterTotal = square.critters.sumOf {
+                        player.critterValues.valueOf(it)
+                    }
+                )
+            }
 
-        val high = totals.maxOf { it.total }
-        val highPlayers = totals.filter { it.total == high }
-        val everyoneTied = highPlayers.size == totals.size
+        val high = totals.maxOfOrNull { it.total }
+        val highPlayers =
+            if (high == null) {
+                emptyList()
+            } else {
+                totals.filter { it.total == high }
+            }
+        val everyoneTied =
+            totals.size > 1 && highPlayers.size == totals.size
 
         val winners =
             if (everyoneTied) {
@@ -125,10 +133,11 @@ class StrikeResolver(
             if (winners.isEmpty()) {
                 emptyList()
             } else {
+                val winningTotal = winners.first().total
                 totals
                     .filter { total ->
                         total.playerId !in winners.map { it.playerId } &&
-                            high - total.total >= WOUND_MARGIN
+                            winningTotal - total.total >= WOUND_MARGIN
                     }
                     .map { wounded ->
                         val player = battleState.player(wounded.playerId)

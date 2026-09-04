@@ -37,6 +37,16 @@ internal fun openStrikeRows(
     }
 }
 
+/** Every globally open Strike Row from which the actor has not withdrawn. */
+internal fun actorParticipatingStrikeRows(
+    request: GameEffectRequest
+): List<StrikeRow> {
+    val battleState = request.battleState ?: return emptyList()
+    return openStrikeRows(request).filterNot { row ->
+        battleState.grid.isPlayerWithdrawn(request.actor.id, row)
+    }
+}
+
 /**
  * Actor Hand dice that are currently located in an open Strike Row.
  *

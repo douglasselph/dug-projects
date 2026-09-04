@@ -25,6 +25,7 @@ class BattlePlacementResolver {
     ): List<StrikeRow> =
         StrikeRow.entries.filter { row ->
             !battleState.grid.isRowClosed(row) &&
+                !battleState.grid.isPlayerWithdrawn(player.id, row) &&
                 !battleState.grid.square(player.id, row).isFull
         }
 

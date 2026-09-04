@@ -9,9 +9,14 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.error.InvalidDecisionException
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -19,6 +24,116 @@ class DieValueBattleRowEffectsTest {
 
     private val handler = DieValueEffectHandler()
     private val nested = GameEffectExecutor { }
+
+    @Test
+    fun rootAndScootBattle_raisesThenDiscardsChosenSquareAndWithdrawsOnlyActor() {
+        val raised = FixedEffectDie(8, 4)
+        val leaving = FixedEffectDie(10, 7)
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(raised, leaving),
+            effectStrategy = DieAndRowStrategy(
+                dieIndex = 0,
+                row = StrikeRow.MIDDLE
+            )
+        )
+        val opponentDie = FixedEffectDie(12, 9)
+        val opponent = EffectTestFixture.player(
+            id = 2,
+            hand = listOf(opponentDie)
+        )
+        val game = EffectTestFixture.game(actor, opponent)
+        val battleState = BattleState(listOf(actor, opponent))
+
+        battleState.grid.placeDie(actor, StrikeRow.TOP, raised)
+        battleState.grid.placeDie(actor, StrikeRow.MIDDLE, leaving)
+        battleState.grid.placeDie(opponent, StrikeRow.MIDDLE, opponentDie)
+
+        game.grove.critters.remove(Critter.BEE)
+        actor.critters.add(Critter.BEE)
+        battleState.grid.placeCritter(actor, StrikeRow.MIDDLE, Critter.BEE)
+        val groveBeesBefore = game.grove.critters.count(Critter.BEE)
+
+        val request = battleRequest(
+            game = game,
+            actor = actor,
+            battleState = battleState,
+            effect = GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(5, raised.value)
+        assertEquals(7, leaving.value)
+        assertNull(battleState.grid.locationOf(leaving))
+        assertTrue(actor.dice.hand.any { it === raised })
+        assertFalse(actor.dice.hand.any { it === leaving })
+        assertTrue(actor.dice.discard.any { it === leaving })
+        assertTrue(
+            battleState.grid.isPlayerWithdrawn(
+                actor.id,
+                StrikeRow.MIDDLE
+            )
+        )
+        assertFalse(battleState.grid.isRowClosed(StrikeRow.MIDDLE))
+        assertFalse(
+            battleState.grid.isPlayerWithdrawn(
+                opponent.id,
+                StrikeRow.MIDDLE
+            )
+        )
+        assertEquals(
+            StrikeRow.MIDDLE,
+            battleState.grid.locationOf(opponentDie)?.row
+        )
+        assertTrue(
+            battleState.grid.square(actor.id, StrikeRow.MIDDLE).isEmpty
+        )
+        assertEquals(
+            groveBeesBefore + 1,
+            game.grove.critters.count(Critter.BEE)
+        )
+    }
+
+    @Test
+    fun rootAndScootBattle_mayWithdrawFromAnEmptyStrikeSquare() {
+        val die = FixedEffectDie(8, 4)
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(die),
+            effectStrategy = DieAndRowStrategy(
+                dieIndex = 0,
+                row = StrikeRow.BOTTOM
+            )
+        )
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battleState = BattleState(listOf(actor, opponent))
+        battleState.grid.placeDie(actor, StrikeRow.TOP, die)
+
+        handler.execute(
+            battleRequest(
+                game,
+                actor,
+                battleState,
+                GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
+            ),
+            nested
+        )
+
+        assertEquals(5, die.value)
+        assertTrue(
+            battleState.grid.isPlayerWithdrawn(
+                actor.id,
+                StrikeRow.BOTTOM
+            )
+        )
+        assertEquals(
+            StrikeRow.TOP,
+            battleState.grid.locationOf(die)?.row
+        )
+    }
 
     @Test
     fun vineAndPunishmentBattle_reducesEveryOpposingDieInChosenRowByThreeMinimumOne() {
@@ -169,6 +284,20 @@ class DieValueBattleRowEffectsTest {
         phase = GameEffectPhase.BATTLE,
         battleState = battleState
     )
+
+    private class DieAndRowStrategy(
+        private val dieIndex: Int,
+        private val row: StrikeRow
+    ) : FirstEffectChoiceStrategy() {
+        override fun chooseDie(
+            request: ChooseEffectDieRequest
+        ): EffectDieChoice =
+            request.legalChoices.first { it.index == dieIndex }
+
+        override fun chooseStrikeRow(
+            request: ChooseEffectStrikeRowRequest
+        ): StrikeRow = row
+    }
 
     private class RowStrategy(
         private val row: StrikeRow

@@ -62,6 +62,24 @@ class BattlePlacementResolverTest {
     }
 
     @Test
+    fun legalRows_excludesOnlyThisPlayersWithdrawnStrike() {
+        val player = BattleTestFixture.player(1)
+        val other = BattleTestFixture.player(2)
+        val state = BattleState(listOf(player, other))
+
+        state.grid.withdrawPlayer(player.id, StrikeRow.MIDDLE)
+
+        assertEquals(
+            listOf(StrikeRow.TOP, StrikeRow.BOTTOM),
+            BattlePlacementResolver().legalRows(state, player)
+        )
+        assertEquals(
+            StrikeRow.entries.toList(),
+            BattlePlacementResolver().legalRows(state, other)
+        )
+    }
+
+    @Test
     fun availableSlots_countsAllOpenSquareCapacity() {
         val player = BattleTestFixture.player(1)
         val other = BattleTestFixture.player(2)

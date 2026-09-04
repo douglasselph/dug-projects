@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -33,8 +34,14 @@ class DieValueEffectHandler : EffectHandler {
                 request.actor.dice.hand.isNotEmpty()
 
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.hand.isNotEmpty()
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        request.actor.dice.hand.isNotEmpty()
+
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).isNotEmpty() &&
+                            actorParticipatingStrikeRows(request).isNotEmpty()
+                }
 
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
@@ -108,9 +115,17 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_4 ->
                 raiseOne(request, 4)
 
-            GameEffect.RAISE_ANY_DIE_PLUS_1,
-            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
+            GameEffect.RAISE_ANY_DIE_PLUS_1 ->
                 raiseOne(request, 1)
+
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        raiseOne(request, 1)
+
+                    GameEffectPhase.BATTLE ->
+                        rootAndScootBattle(request)
+                }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
                 when (request.phase) {
@@ -220,6 +235,66 @@ class DieValueEffectHandler : EffectHandler {
                 "Unsupported effect reached DieValueEffectHandler: ${request.effect}"
             )
         }
+    }
+
+    private fun rootAndScootBattle(
+        request: GameEffectRequest
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "RootAndScoot"
+        )
+
+        /* Printed order: first Raise any die +1, then choose the Strike to leave. */
+        chooseRequiredHandDie(
+            request = request,
+            legalChoices = battleHandChoices(request)
+        ).adjustBy(1)
+
+        val row = chooseRequiredStrikeRow(
+            request = request,
+            legalChoices = actorParticipatingStrikeRows(request)
+        )
+        val square = battleState.grid.square(request.actor.id, row)
+        val diceToDiscard = square.dice
+        val crittersToReturn = square.critters
+
+        diceToDiscard.forEach { die ->
+            stateCheck(
+                battleState.grid.removeDie(die) != null,
+                context = "RootAndScoot"
+            ) {
+                "Root & Scoot could not remove Battle die from row $row: $die"
+            }
+
+            val removed = request.actor.dice.removeExactFromHand(die)
+            stateCheck(
+                removed === die,
+                context = "RootAndScoot"
+            ) {
+                "Root & Scoot could not remove exact Hand die from row $row: $die"
+            }
+            request.actor.dice.addToDiscard(die)
+        }
+
+        crittersToReturn.forEach { critter ->
+            stateCheck(
+                battleState.grid.removeCritter(
+                    playerId = request.actor.id,
+                    row = row,
+                    critter = critter
+                ) != null,
+                context = "RootAndScoot"
+            ) {
+                "Root & Scoot could not remove committed Critter $critter from row $row"
+            }
+            request.game.grove.critters.add(critter)
+        }
+
+        battleState.grid.withdrawPlayer(
+            playerId = request.actor.id,
+            row = row
+        )
     }
 
     private fun vineAndPunishmentBattle(

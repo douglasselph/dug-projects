@@ -367,6 +367,47 @@ class BattleGridTest {
     }
 
     @Test
+    fun playerWithdrawalIsDistinctFromGlobalRowClosureAndRejectsOnlyThatPlayersNewParticipation() {
+        val first = BattleTestFixture.die(8, 5)
+        val second = BattleTestFixture.die(6, 4)
+        val otherDie = BattleTestFixture.die(10, 7)
+        val player = BattleTestFixture.player(1, first, second)
+        val other = BattleTestFixture.player(2, otherDie)
+        player.critters.add(Critter.BEE)
+        other.critters.add(Critter.WORM)
+        val grid = grid(1, 2)
+
+        grid.placeDie(player, StrikeRow.TOP, first)
+        grid.withdrawPlayer(PlayerId(1), StrikeRow.MIDDLE)
+
+        assertTrue(grid.isPlayerWithdrawn(PlayerId(1), StrikeRow.MIDDLE))
+        assertFalse(grid.isPlayerWithdrawn(PlayerId(2), StrikeRow.MIDDLE))
+        assertFalse(grid.isRowClosed(StrikeRow.MIDDLE))
+
+        assertFailsWith<InvalidGameStateException> {
+            grid.placeDie(player, StrikeRow.MIDDLE, second)
+        }
+        assertFailsWith<InvalidGameStateException> {
+            grid.placeCritter(player, StrikeRow.MIDDLE, Critter.BEE)
+        }
+        assertFailsWith<InvalidGameStateException> {
+            grid.moveDie(first, StrikeRow.MIDDLE)
+        }
+
+        // The Strike remains live for every other player.
+        grid.placeDie(other, StrikeRow.MIDDLE, otherDie)
+        grid.placeCritter(other, StrikeRow.MIDDLE, Critter.WORM)
+        assertEquals(
+            BattleLocation(PlayerId(2), StrikeRow.MIDDLE),
+            grid.locationOf(otherDie)
+        )
+        assertEquals(
+            listOf(Critter.WORM),
+            grid.square(PlayerId(2), StrikeRow.MIDDLE).critters
+        )
+    }
+
+    @Test
     fun placementViewsAreDefensiveStructuralLists() {
         val die = BattleTestFixture.die(8, 5)
         val player = BattleTestFixture.player(1, die)

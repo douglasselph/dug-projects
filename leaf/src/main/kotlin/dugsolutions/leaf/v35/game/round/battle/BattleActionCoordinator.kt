@@ -385,8 +385,9 @@ class BattleActionCoordinator(
                 }
 
             val openRows =
-                StrikeRow.entries.filterNot {
-                    battleState.grid.isRowClosed(it)
+                StrikeRow.entries.filter { row ->
+                    !battleState.grid.isRowClosed(row) &&
+                        !battleState.grid.isPlayerWithdrawn(player.id, row)
                 }
 
             Critter.entries.forEach { critter ->

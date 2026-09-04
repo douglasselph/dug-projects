@@ -106,6 +106,63 @@ class StrikeResolverTest {
     }
 
     @Test
+    fun withdrawnPlayerIsExcludedFromTotalsWoundsAndWinnerCalculation() {
+        val p1 = player(1, die(20, 12))
+        val p2 = player(2, die(12, 6))
+        val p3 = player(3, die(6, 1))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2, p3))
+        val state = placedTop(p1, p2, p3)
+
+        // Withdrawal state is authoritative even if stale Grid contents remain.
+        state.grid.withdrawPlayer(p1.id, StrikeRow.TOP)
+
+        val result = resolver(game).resolveRow(game, state, StrikeRow.TOP)
+
+        assertEquals(
+            listOf(PlayerId(2), PlayerId(3)),
+            result.totals.map { it.playerId }
+        )
+        assertEquals(listOf(PlayerId(2)), result.winnerIds)
+        assertEquals(listOf(PlayerId(3)), result.woundedPlayerIds)
+        assertEquals(3, result.vpPerWinner)
+        assertEquals(0, p1.vp)
+        assertEquals(3, p2.vp)
+    }
+
+    @Test
+    fun oneRemainingParticipantWinsInsteadOfBeingTreatedAsAnAllPlayerTie() {
+        val p1 = player(1, die(8, 8))
+        val p2 = player(2, die(6, 2))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = placedTop(p1, p2)
+        state.grid.withdrawPlayer(p1.id, StrikeRow.TOP)
+
+        val result = resolver(game).resolveRow(game, state, StrikeRow.TOP)
+
+        assertEquals(listOf(PlayerId(2)), result.winnerIds)
+        assertEquals(2, result.vpPerWinner)
+        assertEquals(2, p2.vp)
+    }
+
+    @Test
+    fun noRemainingParticipantsProducesNoContestWithoutClosingTheRow() {
+        val p1 = player(1, die(8, 8))
+        val p2 = player(2, die(6, 2))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = placedTop(p1, p2)
+        state.grid.withdrawPlayer(p1.id, StrikeRow.TOP)
+        state.grid.withdrawPlayer(p2.id, StrikeRow.TOP)
+
+        val result = resolver(game).resolveRow(game, state, StrikeRow.TOP)
+
+        assertTrue(result.totals.isEmpty())
+        assertTrue(result.winnerIds.isEmpty())
+        assertTrue(result.wounds.isEmpty())
+        assertEquals(0, result.vpPerWinner)
+        assertTrue(!state.grid.isRowClosed(StrikeRow.TOP))
+    }
+
+    @Test
     fun resolveAllUsesTopToBottomAndSkipsClosedRows() {
         val p1 = player(1, die(6, 6), die(6, 5), die(6, 4))
         val p2 = player(2, die(6, 3), die(6, 2), die(6, 1))
