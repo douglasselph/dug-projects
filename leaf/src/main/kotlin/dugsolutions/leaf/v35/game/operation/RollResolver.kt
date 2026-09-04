@@ -1,0 +1,249 @@
+package dugsolutions.leaf.v35.game.operation
+
+import dugsolutions.leaf.v35.chronicle.Chronicle
+import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
+import dugsolutions.leaf.v35.random.die.Die
+import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.wisp.domain.WispCard
+
+/**
+ * Controls whether a rule-significant roll resolves its normal Roll Reward.
+ */
+enum class RollRewardPolicy {
+    NORMAL,
+    IGNORE
+}
+
+/**
+ * What actually happened as a result of the roll.
+ *
+ * This is useful to coordinators/tests without requiring them to rediscover
+ * the outcome by inspecting mutable Player/Grove state after the fact.
+ */
+sealed interface RollRewardResult {
+
+    data object None : RollRewardResult
+
+    data object Ignored : RollRewardResult
+
+    data object CritterUnavailable : RollRewardResult
+
+    data object WispUnavailable : RollRewardResult
+
+    data class CritterGained(
+        val critter: Critter
+    ) : RollRewardResult
+
+    data class WispGained(
+        val card: WispCard
+    ) : RollRewardResult
+}
+
+data class RollResolution(
+    val die: Die,
+    val reward: RollRewardResult
+)
+
+/**
+ * Central v35 rule boundary for rolling dice and immediately resolving
+ * Roll Rewards.
+ *
+ * Normal Draw:
+ *   PlayerDice.draw()
+ *       -> selects lowest-sided available die
+ *       -> refills Supply only when needed
+ *       -> rolls it
+ *       -> moves it into Hand
+ *   RollResolver then immediately resolves the resulting Roll Reward.
+ *
+ * Other rule-significant rolls/rerolls should use [roll] so they cannot
+ * accidentally forget Roll Rewards. Effects that explicitly suppress rewards
+ * pass [RollRewardPolicy.IGNORE].
+ *
+ * RollResolver chooses/transfers rewards, but it does not execute card effects.
+ */
+class RollResolver(
+    private val grove: Grove,
+    private val chronicle: Chronicle
+) {
+
+    /**
+     * Performs a normal player Draw and immediately resolves its Roll Reward.
+     *
+     * Returns null only when PlayerDice cannot draw because both Supply and
+     * Discard are empty.
+     */
+    fun draw(
+        player: Player,
+        rewardPolicy: RollRewardPolicy =
+            RollRewardPolicy.NORMAL
+    ): RollResolution? {
+        val die =
+            player.dice.draw()
+                ?: return null
+
+        return resolveCompletedRoll(
+            player = player,
+            die = die,
+            rewardPolicy = rewardPolicy
+        )
+    }
+
+    /**
+     * Rolls the supplied live die in its current location and immediately
+     * resolves its Roll Reward.
+     *
+     * This method deliberately does not move the die. The caller owns any
+     * location rule (Hand, Battle placement, Mulch use, etc.).
+     */
+    fun roll(
+        player: Player,
+        die: Die,
+        rewardPolicy: RollRewardPolicy =
+            RollRewardPolicy.NORMAL
+    ): RollResolution {
+        die.roll()
+
+        return resolveCompletedRoll(
+            player = player,
+            die = die,
+            rewardPolicy = rewardPolicy
+        )
+    }
+
+    private fun resolveCompletedRoll(
+        player: Player,
+        die: Die,
+        rewardPolicy: RollRewardPolicy
+    ): RollResolution {
+        chronicle.record(
+            Moment.Marker(
+                "ROLL player=${player.id.value} " +
+                    "d${die.sides}=${die.value} " +
+                    "rewards=${rewardPolicy.name}"
+            )
+        )
+
+        val reward =
+            if (
+                rewardPolicy ==
+                RollRewardPolicy.IGNORE
+            ) {
+                RollRewardResult.Ignored
+            } else {
+                when (die.value) {
+                    1 -> resolveCritterReward(player)
+                    2 -> resolveWispReward(player)
+                    else -> RollRewardResult.None
+                }
+            }
+
+        recordReward(
+            player = player,
+            reward = reward
+        )
+
+        return RollResolution(
+            die = die,
+            reward = reward
+        )
+    }
+
+    private fun resolveCritterReward(
+        player: Player
+    ): RollRewardResult {
+        val legalChoices =
+            listOf(
+                Critter.BEE,
+                Critter.WORM
+            ).filter {
+                grove.critters.count(it) > 0
+            }
+
+        if (legalChoices.isEmpty()) {
+            return RollRewardResult.CritterUnavailable
+        }
+
+        val chosen =
+            player.decisions.reward.chooseCritter(
+                ChooseCritterRequest(
+                    legalChoices = legalChoices,
+                    ownedCritters =
+                        player.critters.all
+                )
+            )
+
+        check(chosen in legalChoices) {
+            "RewardStrategy returned illegal Critter choice: " +
+                "$chosen; legal=$legalChoices"
+        }
+
+        check(
+            grove.critters.remove(chosen)
+        ) {
+            "Chosen Critter was no longer available in Grove: $chosen"
+        }
+
+        player.critters.add(chosen)
+
+        return RollRewardResult.CritterGained(
+            chosen
+        )
+    }
+
+    private fun resolveWispReward(
+        player: Player
+    ): RollRewardResult {
+        val card =
+            grove.wispDeck.draw()
+                ?: return RollRewardResult.WispUnavailable
+
+        /*
+         * First-pass Wisp gain destination.
+         *
+         * Immediate-play Wisps will later hand off from this exact boundary to
+         * GameEffectExecutor/Wisp gain handling. Until that executor exists,
+         * the gained Wisp is retained in WispHand so the card is not lost.
+         */
+        player.wisps.add(card)
+
+        return RollRewardResult.WispGained(
+            card
+        )
+    }
+
+    private fun recordReward(
+        player: Player,
+        reward: RollRewardResult
+    ) {
+        val description =
+            when (reward) {
+                RollRewardResult.None ->
+                    return
+
+                RollRewardResult.Ignored ->
+                    "IGNORED"
+
+                RollRewardResult.CritterUnavailable ->
+                    "CRITTER_UNAVAILABLE"
+
+                RollRewardResult.WispUnavailable ->
+                    "WISP_UNAVAILABLE"
+
+                is RollRewardResult.CritterGained ->
+                    "CRITTER_${reward.critter.name}"
+
+                is RollRewardResult.WispGained ->
+                    "WISP_${reward.card.name}"
+            }
+
+        chronicle.record(
+            Moment.Marker(
+                "ROLL_REWARD player=${player.id.value} $description"
+            )
+        )
+    }
+}
