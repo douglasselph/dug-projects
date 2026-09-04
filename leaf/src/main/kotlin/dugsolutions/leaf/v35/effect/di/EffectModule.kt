@@ -8,6 +8,12 @@ import org.koin.dsl.module
 val effectModule = module {
     single { GameEffectConverter() }
 
-    /* Stateless: all mutable game context arrives in GameEffectRequest. */
-    single<GameEffectExecutor> { DefaultGameEffectExecutor() }
+    /*
+     * Stateless application-wide dispatcher. Its family/special handlers are
+     * implementation details and also retain no mutable game state; all live
+     * game context arrives in GameEffectRequest.
+     */
+    single<GameEffectExecutor> {
+        DefaultGameEffectExecutor()
+    }
 }
