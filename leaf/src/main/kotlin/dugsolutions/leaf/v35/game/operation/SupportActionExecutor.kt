@@ -64,15 +64,17 @@ class SupportActionExecutor(
             "Battle-only Wisp cannot be played during Cultivation: ${card.name}"
         }
 
-        effectExecutor.execute(
-            GameEffectRequest(
-                game = game,
-                actor = player,
-                effect = card.effect,
-                source = GameEffectSource.Wisp(card),
-                phase = GameEffectPhase.CULTIVATION
-            )
+        val request = GameEffectRequest(
+            game = game,
+            actor = player,
+            effect = card.effect,
+            source = GameEffectSource.Wisp(card),
+            phase = GameEffectPhase.CULTIVATION
         )
+        check(effectExecutor.canExecute(request)) {
+            "Wisp effect is not executable during Cultivation: ${card.name}"
+        }
+        effectExecutor.execute(request)
 
         check(player.wisps.remove(card)) {
             "Resolved Wisp could not be removed from player hand: ${card.name}"

@@ -11,6 +11,10 @@ import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.placement.BaselineCreaturePlacementStrategy
+import dugsolutions.leaf.v35.player.decision.effect.BaselineEffectStrategy
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.EffectStrategy
 import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
@@ -36,6 +40,7 @@ class DecisionDirectorTest {
         assertTrue(director.cultivation is BaselineCultivationStrategy)
         assertTrue(director.buy is BaselineBuyStrategy)
         assertTrue(director.support is BaselineSupportStrategy)
+        assertTrue(director.effect is BaselineEffectStrategy)
     }
 
     @Test
@@ -55,6 +60,7 @@ class DecisionDirectorTest {
         assertTrue(changed.placement === baseline.placement)
         assertTrue(changed.cultivation === baseline.cultivation)
         assertTrue(changed.buy === baseline.buy)
+        assertTrue(changed.effect === baseline.effect)
     }
 
     @Test
@@ -73,6 +79,7 @@ class DecisionDirectorTest {
         assertTrue(changed.placement === baseline.placement)
         assertTrue(changed.cultivation === baseline.cultivation)
         assertTrue(changed.support === baseline.support)
+        assertTrue(changed.effect === baseline.effect)
     }
 
     @Test
@@ -90,6 +97,27 @@ class DecisionDirectorTest {
         assertTrue(changed.reward === baseline.reward)
         assertTrue(changed.wound === baseline.wound)
         assertTrue(changed.placement === baseline.placement)
+        assertTrue(changed.buy === baseline.buy)
+        assertTrue(changed.support === baseline.support)
+        assertTrue(changed.effect === baseline.effect)
+    }
+
+    @Test
+    fun copy_canReplaceEffectWithoutChangingOtherStrategies() {
+        val baseline = DecisionDirector.baseline()
+        val custom = object : EffectStrategy {
+            override fun chooseDie(
+                request: ChooseEffectDieRequest
+            ): EffectDieChoice = request.legalChoices.last()
+        }
+
+        val changed = baseline.copy(effect = custom)
+
+        assertTrue(changed.effect === custom)
+        assertTrue(changed.reward === baseline.reward)
+        assertTrue(changed.wound === baseline.wound)
+        assertTrue(changed.placement === baseline.placement)
+        assertTrue(changed.cultivation === baseline.cultivation)
         assertTrue(changed.buy === baseline.buy)
         assertTrue(changed.support === baseline.support)
     }
@@ -110,6 +138,7 @@ class DecisionDirectorTest {
         assertTrue(changed.wound === baseline.wound)
         assertTrue(changed.placement === baseline.placement)
         assertTrue(changed.support === baseline.support)
+        assertTrue(changed.effect === baseline.effect)
     }
 
     @Test

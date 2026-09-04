@@ -83,7 +83,9 @@ class CultivationBuildCoordinator(
 
             while (true) {
                 val legalChoices = legalChoices(
+                    game = game,
                     player = player,
+                    roundCard = roundCard,
                     mainActionsRemaining = 2 - mainActionsUsed
                 )
                 check(legalChoices.isNotEmpty()) {
@@ -158,17 +160,19 @@ class CultivationBuildCoordinator(
     }
 
     private fun legalChoices(
+        game: Game,
         player: Player,
+        roundCard: RoundCard,
         mainActionsRemaining: Int
     ): List<CultivationAction> =
         buildList {
             if (mainActionsRemaining > 0) {
-                mainActions(player).mapTo(this) {
+                mainActions(game, player, roundCard).mapTo(this) {
                     CultivationAction.Main(it)
                 }
             }
 
-            supportActions(player).mapTo(this) {
+            supportActions(game, player).mapTo(this) {
                 CultivationAction.Support(it)
             }
 
@@ -178,25 +182,56 @@ class CultivationBuildCoordinator(
         }
 
     private fun mainActions(
-        player: Player
+        game: Game,
+        player: Player,
+        roundCard: RoundCard
     ): List<CultivationMainAction> =
         buildList {
             if (!player.dice.isSupplyEmpty || !player.dice.isDiscardEmpty) {
                 add(CultivationMainAction.Draw)
             }
+
             player.creature.cards
                 .filter { it.isFaceUp }
+                .filter { card ->
+                    effectExecutor.canExecute(
+                        GameEffectRequest(
+                            game = game,
+                            actor = player,
+                            effect = card.card.effect,
+                            source = GameEffectSource.Plant(card),
+                            phase = GameEffectPhase.CULTIVATION
+                        )
+                    )
+                }
                 .mapTo(this, CultivationMainAction::ActivatePlant)
-            add(CultivationMainAction.RoundEffect1)
-            add(CultivationMainAction.RoundEffect2)
+
+            if (canExecuteRoundEffect(game, player, roundCard, RoundEffectSlot.FIRST)) {
+                add(CultivationMainAction.RoundEffect1)
+            }
+            if (canExecuteRoundEffect(game, player, roundCard, RoundEffectSlot.SECOND)) {
+                add(CultivationMainAction.RoundEffect2)
+            }
         }
 
     private fun supportActions(
+        game: Game,
         player: Player
     ): List<SupportAction> =
         buildList {
             player.wisps.cards.cards
                 .filterNot { it.playImmediately || it.battleOnly }
+                .filter { card ->
+                    effectExecutor.canExecute(
+                        GameEffectRequest(
+                            game = game,
+                            actor = player,
+                            effect = card.effect,
+                            source = GameEffectSource.Wisp(card),
+                            phase = GameEffectPhase.CULTIVATION
+                        )
+                    )
+                }
                 .mapTo(this, SupportAction::PlayWisp)
 
             val handDice = player.dice.hand.mapIndexed { index, die ->
@@ -239,6 +274,27 @@ class CultivationBuildCoordinator(
                 }
         }
 
+    private fun canExecuteRoundEffect(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        slot: RoundEffectSlot
+    ): Boolean {
+        val effect = when (slot) {
+            RoundEffectSlot.FIRST -> roundCard.firstEffect.effect
+            RoundEffectSlot.SECOND -> roundCard.secondEffect.effect
+        }
+        return effectExecutor.canExecute(
+            GameEffectRequest(
+                game = game,
+                actor = player,
+                effect = effect,
+                source = GameEffectSource.Round(roundCard, slot),
+                phase = GameEffectPhase.CULTIVATION
+            )
+        )
+    }
+
     private fun executeMainAction(
         game: Game,
         player: Player,
@@ -256,15 +312,17 @@ class CultivationBuildCoordinator(
                 check(current != null && current.isFaceUp && current == action.card) {
                     "Plant activation target is no longer legal: ${action.card.id}"
                 }
-                effectExecutor.execute(
-                    GameEffectRequest(
-                        game = game,
-                        actor = player,
-                        effect = current.card.effect,
-                        source = GameEffectSource.Plant(current),
-                        phase = GameEffectPhase.CULTIVATION
-                    )
+                val request = GameEffectRequest(
+                    game = game,
+                    actor = player,
+                    effect = current.card.effect,
+                    source = GameEffectSource.Plant(current),
+                    phase = GameEffectPhase.CULTIVATION
                 )
+                check(effectExecutor.canExecute(request)) {
+                    "Plant effect is no longer executable: ${current.card.effect}"
+                }
+                effectExecutor.execute(request)
                 check(player.creature.faceDown(current.id)) {
                     "Activated Plant could not be flipped face down: ${current.id}"
                 }
@@ -288,15 +346,17 @@ class CultivationBuildCoordinator(
             RoundEffectSlot.FIRST -> roundCard.firstEffect.effect
             RoundEffectSlot.SECOND -> roundCard.secondEffect.effect
         }
-        effectExecutor.execute(
-            GameEffectRequest(
-                game = game,
-                actor = player,
-                effect = effect,
-                source = GameEffectSource.Round(roundCard, slot),
-                phase = GameEffectPhase.CULTIVATION
-            )
+        val request = GameEffectRequest(
+            game = game,
+            actor = player,
+            effect = effect,
+            source = GameEffectSource.Round(roundCard, slot),
+            phase = GameEffectPhase.CULTIVATION
         )
+        check(effectExecutor.canExecute(request)) {
+            "Round effect is no longer executable: $effect"
+        }
+        effectExecutor.execute(request)
     }
 
     private fun mainActionName(action: CultivationMainAction): String =

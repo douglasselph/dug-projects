@@ -236,6 +236,45 @@ class CultivationBuildCoordinatorTest {
         })
     }
 
+
+    @Test
+    fun execute_offersOnlyMainAndWispEffectsReportedExecutable() {
+        val strategy = RecordingStrategy()
+        val first = player(1, emptyList(), strategy)
+        val supportedWisp = wisp("Supported")
+        val unsupportedWisp = wisp("Unsupported").copy(effect = GameEffect.SET_DIE_TO_MATCH_ANOTHER)
+        first.wisps.addAll(listOf(supportedWisp, unsupportedWisp))
+
+        val effects = RecordingEffectExecutor { request ->
+            when (val source = request.source) {
+                is GameEffectSource.Round -> source.slot == RoundEffectSlot.FIRST
+                is GameEffectSource.Wisp -> source.card == supportedWisp
+                is GameEffectSource.Plant -> false
+            }
+        }
+        val fixture = fixture(
+            first,
+            player(2, emptyList(), RoundEffectStrategy()),
+            effects
+        )
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        val firstChoices = strategy.requests.first().legalChoices
+        assertTrue(
+            CultivationAction.Main(CultivationMainAction.RoundEffect1) in firstChoices
+        )
+        assertFalse(
+            CultivationAction.Main(CultivationMainAction.RoundEffect2) in firstChoices
+        )
+        val wisps = firstChoices
+            .filterIsInstance<CultivationAction.Support>()
+            .map { it.action }
+            .filterIsInstance<SupportAction.PlayWisp>()
+            .map { it.card }
+        assertEquals(listOf(supportedWisp), wisps)
+    }
+
     @Test
     fun execute_invalidSupportChoiceIsRejectedBeforeMutation() {
         val invalid = CultivationAction.Support(
@@ -282,13 +321,16 @@ class CultivationBuildCoordinatorTest {
         assertTrue(fixture.game.chronicle.entries.isEmpty())
     }
 
-    private fun fixture(first: Player, second: Player): Fixture {
+    private fun fixture(
+        first: Player,
+        second: Player,
+        effects: RecordingEffectExecutor = RecordingEffectExecutor()
+    ): Fixture {
         val game = GameEngineTestFixture.game(
             cultivationRounds = 1,
             battleRounds = 1,
             players = listOf(first, second)
         )
-        val effects = RecordingEffectExecutor()
         val roll = RollResolver(game.grove, game.chronicle)
         return Fixture(
             game = game,
@@ -428,8 +470,14 @@ class CultivationBuildCoordinatorTest {
         }
     }
 
-    private class RecordingEffectExecutor : GameEffectExecutor {
+    private class RecordingEffectExecutor(
+        private val executable: (GameEffectRequest) -> Boolean = { true }
+    ) : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
+
+        override fun canExecute(request: GameEffectRequest): Boolean =
+            executable(request)
+
         override fun execute(request: GameEffectRequest) {
             requests += request
         }

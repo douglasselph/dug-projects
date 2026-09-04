@@ -39,7 +39,16 @@ data class GameEffectRequest(
     val phase: GameEffectPhase
 )
 
-/** Progressive execution seam for gameplay effects. */
+/**
+ * Progressive execution seam for gameplay effects.
+ *
+ * [canExecute] lets round/action coordinators avoid offering effects whose
+ * required target or limited Grove resource is currently unavailable. The
+ * default remains true so focused recording executors used by tests and future
+ * specialized handlers stay lightweight.
+ */
 fun interface GameEffectExecutor {
     fun execute(request: GameEffectRequest)
+
+    fun canExecute(request: GameEffectRequest): Boolean = true
 }
