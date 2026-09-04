@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 
 enum class GameEffectPhase {
     CULTIVATION,
@@ -23,6 +24,10 @@ sealed interface GameEffectSource {
     data class Round(
         val card: RoundCard,
         val slot: RoundEffectSlot
+    ) : GameEffectSource
+
+    data class Wisp(
+        val card: WispCard
     ) : GameEffectSource
 }
 

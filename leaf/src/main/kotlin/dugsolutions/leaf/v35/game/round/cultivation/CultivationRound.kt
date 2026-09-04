@@ -1,12 +1,16 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
+import dugsolutions.leaf.v35.effect.GameEffectPhase
+import dugsolutions.leaf.v35.effect.GameEffectRequest
+import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.buy.BuyCoordinator
 import dugsolutions.leaf.v35.game.buy.BuyPhaseResult
 import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.RollResolver
+import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.game.round.RoundExecutor
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -37,12 +41,32 @@ class CultivationRound(
             "CultivationRound requires a Cultivation Round card: ${roundCard.type}"
         }
 
-        val build = CultivationBuildCoordinator(
-            rollResolver = RollResolver(
-                grove = game.grove,
-                chronicle = game.chronicle
-            ),
+        val rollResolver = RollResolver(
+            grove = game.grove,
+            chronicle = game.chronicle,
+            immediateWispHandler = { player, card ->
+                effectExecutor.execute(
+                    GameEffectRequest(
+                        game = game,
+                        actor = player,
+                        effect = card.effect,
+                        source = GameEffectSource.Wisp(card),
+                        phase = GameEffectPhase.CULTIVATION
+                    )
+                )
+            }
+        )
+        val refreshResolver = RefreshResolver(game.chronicle)
+        val supportActionExecutor = SupportActionExecutor(
+            rollResolver = rollResolver,
+            refreshResolver = refreshResolver,
             effectExecutor = effectExecutor
+        )
+
+        val build = CultivationBuildCoordinator(
+            rollResolver = rollResolver,
+            effectExecutor = effectExecutor,
+            supportActionExecutor = supportActionExecutor
         ).execute(game, roundCard)
 
         val buy = BuyCoordinator(
@@ -51,7 +75,7 @@ class CultivationRound(
         ).execute(game)
 
         val cleanup = CultivationCleanupCoordinator(
-            refreshResolver = RefreshResolver(game.chronicle)
+            refreshResolver = refreshResolver
         ).execute(game)
 
         return CultivationRoundResult(

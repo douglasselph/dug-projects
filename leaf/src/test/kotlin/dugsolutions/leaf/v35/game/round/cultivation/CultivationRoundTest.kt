@@ -16,7 +16,8 @@ import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePaymentRequest
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePurchaseRequest
-import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationMainActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.dice.PlayerDice
@@ -175,10 +176,14 @@ class CultivationRoundTest {
         )
 
     private class RoundEffectStrategy : CultivationStrategy {
-        override fun chooseMainAction(
-            request: ChooseCultivationMainActionRequest
-        ): CultivationMainAction =
-            CultivationMainAction.RoundEffect1
+        override fun chooseAction(
+            request: ChooseCultivationActionRequest
+        ): CultivationAction =
+            if (request.mainActionsRemaining > 0) {
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            } else {
+                CultivationAction.Done
+            }
     }
 
     private class DoneBuyStrategy : BuyStrategy {

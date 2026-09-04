@@ -89,7 +89,9 @@ class WispCardRegistry(
                 filePath
             ),
             vpIcon = optional(row, columns, "vp_icon"),
-            mainBackdrop = required(row, columns, "main_backdrop", filePath)
+            mainBackdrop = required(row, columns, "main_backdrop", filePath),
+            playImmediately = effectText.contains("(Play immediately)", ignoreCase = true),
+            battleOnly = effectText.contains("<battle/>", ignoreCase = true)
         )
     }
 

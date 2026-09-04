@@ -40,6 +40,10 @@ sealed interface RollRewardResult {
     data class WispGained(
         val card: WispCard
     ) : RollRewardResult
+
+    data class WispPlayedImmediately(
+        val card: WispCard
+    ) : RollRewardResult
 }
 
 data class RollResolution(
@@ -67,7 +71,8 @@ data class RollResolution(
  */
 class RollResolver(
     private val grove: Grove,
-    private val chronicle: Chronicle
+    private val chronicle: Chronicle,
+    private val immediateWispHandler: ((Player, WispCard) -> Unit)? = null
 ) {
 
     /**
@@ -201,18 +206,17 @@ class RollResolver(
             grove.wispDeck.draw()
                 ?: return RollRewardResult.WispUnavailable
 
-        /*
-         * First-pass Wisp gain destination.
-         *
-         * Immediate-play Wisps will later hand off from this exact boundary to
-         * GameEffectExecutor/Wisp gain handling. Until that executor exists,
-         * the gained Wisp is retained in WispHand so the card is not lost.
-         */
+        if (card.playImmediately) {
+            val handler = checkNotNull(immediateWispHandler) {
+                "Immediate-play Wisp requires an execution handler: ${card.name}"
+            }
+            handler(player, card)
+            return RollRewardResult.WispPlayedImmediately(card)
+        }
+
         player.wisps.add(card)
 
-        return RollRewardResult.WispGained(
-            card
-        )
+        return RollRewardResult.WispGained(card)
     }
 
     private fun recordReward(
@@ -238,6 +242,9 @@ class RollResolver(
 
                 is RollRewardResult.WispGained ->
                     "WISP_${reward.card.name}"
+
+                is RollRewardResult.WispPlayedImmediately ->
+                    "WISP_IMMEDIATE_${reward.card.name}"
             }
 
         chronicle.record(

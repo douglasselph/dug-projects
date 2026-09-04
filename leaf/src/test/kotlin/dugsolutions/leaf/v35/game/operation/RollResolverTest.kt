@@ -20,6 +20,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import dugsolutions.leaf.v35.wisp.WispDeck
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.file.Path
@@ -554,6 +555,43 @@ class RollResolverTest {
             listOf(Critter.WORM),
             observedOwned
         )
+    }
+
+    @Test
+    fun draw_whenWispIsImmediate_executesHandlerInsteadOfAddingToWispHand() {
+        val immediate = WispCard(
+            quantity = 1,
+            name = "Wisp_Quake",
+            title = "Wispquake",
+            count = 1,
+            effect = GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN,
+            lineIcons = null,
+            lineIconsHeight = 0,
+            vpIcon = null,
+            mainBackdrop = "",
+            playImmediately = true
+        )
+        val manager = WispCardManager().apply {
+            loadCards(listOf(immediate))
+        }
+        val localGrove = Grove(
+            selectedPlantCards = selectedCards(),
+            wispDeck = WispDeck(manager, IdentityRandomizer())
+        )
+        val localChronicle = GameChronicle()
+        var handled: WispCard? = null
+        val localResolver = RollResolver(
+            grove = localGrove,
+            chronicle = localChronicle,
+            immediateWispHandler = { _, card -> handled = card }
+        )
+        val player = playerWithSupply(FixedRollDie(4, 2))
+
+        val result = checkNotNull(localResolver.draw(player))
+
+        assertEquals(immediate, handled)
+        assertTrue(result.reward is RollRewardResult.WispPlayedImmediately)
+        assertTrue(player.wisps.isEmpty)
     }
 
     private fun playerWithSupply(

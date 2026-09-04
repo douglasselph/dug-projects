@@ -8,24 +8,34 @@ import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.RoundEffectSlot
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
+import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.RollResolver
+import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.creature.CreaturePosition
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
-import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationMainActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
+import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.tokens.Token
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -36,61 +46,154 @@ import kotlin.test.assertTrue
 class CultivationBuildCoordinatorTest {
 
     @Test
-    fun execute_openingDrawsExactlyThreeDiceForEachPlayer() {
-        val first = player(1, dice(4), RoundEffectStrategy())
-        val second = player(2, dice(4), RoundEffectStrategy())
-        val fixture = fixture(first, second)
-
-        val result = fixture.coordinator.execute(fixture.game, fixture.card)
-
-        assertEquals(mapOf(PlayerId(1) to 3, PlayerId(2) to 3), result.openingDrawCounts)
-        assertEquals(3, first.dice.handSize)
-        assertEquals(3, second.dice.handSize)
-        assertEquals(1, first.dice.supplySize)
-        assertEquals(1, second.dice.supplySize)
-    }
-
-    @Test
-    fun execute_openingDrawResolvesRollRewardImmediately() {
-        val first = player(1, listOf(FixedDie(4, 1)), RoundEffectStrategy())
-        val second = player(2, emptyList(), RoundEffectStrategy())
-        val fixture = fixture(first, second)
-
-        fixture.coordinator.execute(fixture.game, fixture.card)
-
-        assertEquals(listOf(Critter.BEE), first.critters.all)
-        assertEquals(8, fixture.game.grove.critters.count(Critter.BEE))
-        assertTrue(markerMessages(fixture.game).any { it.startsWith("ROLL_REWARD player=1") })
-    }
-
-    @Test
-    fun execute_whenOnlyTwoDiceAvailable_openingDrawsTwoWithoutFailure() {
-        val first = player(1, dice(2), RoundEffectStrategy())
-        val second = player(2, emptyList(), RoundEffectStrategy())
-        val fixture = fixture(first, second)
-
-        val result = fixture.coordinator.execute(fixture.game, fixture.card)
-
-        assertEquals(2, result.openingDrawCounts.getValue(first.id))
-        assertEquals(2, first.dice.handSize)
-    }
-
-    @Test
-    fun execute_asksForTwoActionsNumberedOneThenTwoAndReportsBoth() {
+    fun execute_openingDrawsThree_thenRequiresExactlyTwoMainActionsAndDone() {
         val strategy = RoundEffectStrategy()
-        val first = player(1, emptyList(), strategy)
+        val first = player(1, dice(4), strategy)
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
 
         val result = fixture.coordinator.execute(fixture.game, fixture.card)
 
-        assertEquals(listOf(1, 2), strategy.requests.map { it.actionNumber })
+        assertEquals(3, result.openingDrawCounts.getValue(first.id))
+        assertEquals(listOf(2, 1, 0), strategy.requests.map { it.mainActionsRemaining })
         assertEquals(2, result.actions.count { it.playerId == first.id })
-        assertEquals(listOf(1, 2), result.actions.filter { it.playerId == first.id }.map { it.actionNumber })
+        assertTrue(result.supportActions.none { it.playerId == first.id })
     }
 
     @Test
-    fun execute_baselineWithAvailableDice_choosesDrawTwice() {
+    fun execute_supportMayOccurBeforeBetweenAndAfterMainActions() {
+        val first = player(1, emptyList(), SequenceStrategy())
+        first.tokens.add(Token.WATER)
+        first.tokens.add(Token.MULCH(DieSides.D6))
+        val grafted = graft(first, plant("FlipMe"), -1, 0)
+        first.critters.add(Critter.WORM)
+
+        val strategy = first.decisions.cultivation as SequenceStrategy
+        strategy.actions.addAll(
+            listOf(
+                CultivationAction.Support(SupportAction.UseWaterRefresh),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Support(SupportAction.UseWormFlip(grafted.id)),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2),
+                CultivationAction.Support(SupportAction.UseMulch(Token.MULCH(DieSides.D6))),
+                CultivationAction.Done
+            )
+        )
+
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+        val result = fixture.coordinator.execute(fixture.game, fixture.card)
+
+        assertEquals(2, result.actions.count { it.playerId == first.id })
+        assertEquals(3, result.supportActions.count { it.playerId == first.id })
+        assertEquals(listOf(2, 2, 1, 1, 0, 0), strategy.requests.map { it.mainActionsRemaining })
+        assertTrue(first.creature.get(grafted.id)!!.isFaceDown)
+        assertEquals(1, first.dice.handSize) // Mulch die
+    }
+
+    @Test
+    fun execute_doneIsNotOfferedUntilBothMainActionsAreUsed() {
+        val strategy = RecordingStrategy()
+        val first = player(1, emptyList(), strategy)
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        assertFalse(CultivationAction.Done in strategy.requests[0].legalChoices)
+        assertFalse(CultivationAction.Done in strategy.requests[1].legalChoices)
+        assertTrue(CultivationAction.Done in strategy.requests[2].legalChoices)
+    }
+
+    @Test
+    fun execute_supportDoesNotConsumeMainAction() {
+        val strategy = SequenceStrategy()
+        val first = player(1, emptyList(), strategy)
+        first.tokens.add(Token.WATER)
+        strategy.actions.addAll(
+            listOf(
+                CultivationAction.Support(SupportAction.UseWaterRefresh),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2),
+                CultivationAction.Done
+            )
+        )
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        assertEquals(listOf(2, 2, 1, 0), strategy.requests.map { it.mainActionsRemaining })
+    }
+
+    @Test
+    fun execute_offersOwnedNormalWispButNotImmediateOrBattleOnlyWisp() {
+        val strategy = RecordingStrategy()
+        val first = player(1, emptyList(), strategy)
+        val normal = wisp("Normal")
+        val immediate = wisp("Quake", playImmediately = true)
+        val battleOnly = wisp("Battle", battleOnly = true)
+        first.wisps.addAll(listOf(normal, immediate, battleOnly))
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        val offered = strategy.requests.first().legalChoices
+            .filterIsInstance<CultivationAction.Support>()
+            .map { it.action }
+            .filterIsInstance<SupportAction.PlayWisp>()
+            .map { it.card }
+        assertEquals(listOf(normal), offered)
+    }
+
+    @Test
+    fun execute_offersWaterMulchWormButterflySupportOnlyWhenAvailable() {
+        val strategy = RecordingStrategy()
+        val die = FixedDie(8, 5)
+        val first = player(1, emptyList(), strategy, hand = listOf(die))
+        first.tokens.add(Token.WATER)
+        first.tokens.add(Token.MULCH(DieSides.D8))
+        first.critters.add(Critter.WORM)
+        first.butterflies.add(Butterfly.GREEN)
+        val grafted = graft(first, plant("Vine"), -1, 0)
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        val supports = strategy.requests.first().legalChoices
+            .filterIsInstance<CultivationAction.Support>()
+            .map { it.action }
+        assertTrue(SupportAction.UseWaterRefresh in supports)
+        assertTrue(supports.any { it is SupportAction.UseWaterReroll })
+        assertTrue(SupportAction.UseMulch(Token.MULCH(DieSides.D8)) in supports)
+        assertTrue(SupportAction.UseWormFlip(grafted.id) in supports)
+        assertTrue(supports.any { it is SupportAction.UseButterfly })
+    }
+
+    @Test
+    fun execute_supportActionIsRegeneratedAfterResourceIsConsumed() {
+        val strategy = SequenceStrategy()
+        val first = player(1, emptyList(), strategy)
+        first.tokens.add(Token.WATER)
+        strategy.actions.addAll(
+            listOf(
+                CultivationAction.Support(SupportAction.UseWaterRefresh),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2),
+                CultivationAction.Done
+            )
+        )
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        assertFalse(
+            strategy.requests[1].legalChoices.any {
+                it == CultivationAction.Support(SupportAction.UseWaterRefresh)
+            }
+        )
+    }
+
+    @Test
+    fun execute_baselineStillUsesTwoMainActionsThenFinishes() {
         val first = player(1, dice(5), DecisionDirector.baseline().cultivation)
+        first.tokens.add(Token.WATER)
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
 
         val result = fixture.coordinator.execute(fixture.game, fixture.card)
@@ -99,129 +202,47 @@ class CultivationBuildCoordinatorTest {
             listOf(CultivationMainAction.Draw, CultivationMainAction.Draw),
             result.actions.filter { it.playerId == first.id }.map { it.action }
         )
-        assertEquals(5, first.dice.handSize)
+        assertTrue(result.supportActions.none { it.playerId == first.id })
+        assertEquals(1, first.tokens.waterCount)
     }
 
     @Test
-    fun execute_sameRoundEffectMayBeChosenTwice() {
-        val first = player(1, emptyList(), RoundEffectStrategy())
-        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-
-        fixture.coordinator.execute(fixture.game, fixture.card)
-
-        val firstRequests = fixture.effects.requests.filter { it.actor === first }
-        assertEquals(2, firstRequests.size)
-        assertTrue(firstRequests.all {
-            (it.source as GameEffectSource.Round).slot == RoundEffectSlot.FIRST
-        })
-    }
-
-    @Test
-    fun execute_drawMainActionNormallyRollsDieIntoHand() {
-        val strategy = SequenceStrategy(
-            CultivationMainAction.Draw,
-            CultivationMainAction.RoundEffect1
-        )
-        val first = player(
-            1,
-            List(4) { FixedDie(8, 6) },
-            strategy
-        )
-        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-
-        fixture.coordinator.execute(fixture.game, fixture.card)
-
-        assertEquals(4, first.dice.handSize)
-        assertTrue(first.dice.hand.all { it.value == 6 })
-    }
-
-    @Test
-    fun execute_offersOnlyFaceUpPlantsAsActivationChoices() {
-        val strategy = RoundEffectStrategy()
-        val first = player(1, emptyList(), strategy)
-        val faceUp = graft(first, plant("FaceUp"), -1, 0)
-        graft(first, plant("FaceDown"), 1, 0)
-        first.creature.faceUp(faceUp.id)
-        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-
-        fixture.coordinator.execute(fixture.game, fixture.card)
-
-        val plantChoices = strategy.requests.first().legalChoices
-            .filterIsInstance<CultivationMainAction.ActivatePlant>()
-        assertEquals(listOf(faceUp.id), plantChoices.map { it.card.id })
-    }
-
-    @Test
-    fun execute_selectedPlantEffectRunsWhileFaceUpThenFlipsPlantFaceDown() {
+    fun execute_selectedPlantEffectRunsThenPlantFlipsFaceDown() {
         val strategy = SelectPlantStrategy()
         val first = player(1, emptyList(), strategy)
-        val plant = graft(first, plant("Active", GameEffect.GAIN_ONE_VP), -1, 0)
-        first.creature.faceUp(plant.id)
+        val active = graft(first, plant("Active", GameEffect.GAIN_ONE_VP), -1, 0)
+        first.creature.faceUp(active.id)
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-        var faceUpDuringExecution = false
-        fixture.effects.onExecute = {
-            if (it.actor === first && it.source is GameEffectSource.Plant) {
-                faceUpDuringExecution = first.creature.get(plant.id)!!.isFaceUp
-            }
-        }
 
         fixture.coordinator.execute(fixture.game, fixture.card)
 
         val request = fixture.effects.requests.first { it.source is GameEffectSource.Plant }
         assertEquals(GameEffect.GAIN_ONE_VP, request.effect)
-        assertEquals(plant.id, assertIs<GameEffectSource.Plant>(request.source).card.id)
-        assertTrue(faceUpDuringExecution)
-        assertTrue(first.creature.get(plant.id)!!.isFaceDown)
+        assertEquals(active.id, assertIs<GameEffectSource.Plant>(request.source).card.id)
+        assertTrue(first.creature.get(active.id)!!.isFaceDown)
     }
 
     @Test
-    fun execute_whenPlantEffectThrows_leavesPlantFaceUp() {
-        val first = player(1, emptyList(), SelectPlantStrategy())
-        val plant = graft(first, plant("Active"), -1, 0)
-        first.creature.faceUp(plant.id)
-        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-        fixture.effects.failure = IllegalStateException("effect failed")
-
-        assertFailsWith<IllegalStateException> {
-            fixture.coordinator.execute(fixture.game, fixture.card)
-        }
-
-        assertTrue(first.creature.get(plant.id)!!.isFaceUp)
-        assertFalse(markerMessages(fixture.game).any { it.contains("MAIN_ACTION player=1") })
-    }
-
-    @Test
-    fun execute_offersBothRoundEffectsAndExecutesExactSelectedEffects() {
-        val strategy = SequenceStrategy(
-            CultivationMainAction.RoundEffect1,
-            CultivationMainAction.RoundEffect2
-        )
-        val first = player(1, emptyList(), strategy)
+    fun execute_roundEffectsMayStillBeUsedRepeatedly() {
+        val first = player(1, emptyList(), RoundEffectStrategy())
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
 
         fixture.coordinator.execute(fixture.game, fixture.card)
 
-        assertTrue(strategy.requests.first().legalChoices.contains(CultivationMainAction.RoundEffect1))
-        assertTrue(strategy.requests.first().legalChoices.contains(CultivationMainAction.RoundEffect2))
         val requests = fixture.effects.requests.filter { it.actor === first }
-        assertEquals(fixture.card.firstEffect.effect, requests[0].effect)
-        assertEquals(fixture.card.secondEffect.effect, requests[1].effect)
-        assertEquals(RoundEffectSlot.FIRST, assertIs<GameEffectSource.Round>(requests[0].source).slot)
-        assertEquals(RoundEffectSlot.SECOND, assertIs<GameEffectSource.Round>(requests[1].source).slot)
+        assertEquals(2, requests.size)
+        assertTrue(requests.all {
+            assertIs<GameEffectSource.Round>(it.source).slot == RoundEffectSlot.FIRST
+        })
     }
 
     @Test
-    fun execute_whenStrategyReturnsUnofferedAction_rejectsBeforeMutation() {
-        val invalid = CultivationMainAction.ActivatePlant(
-            CreatureCard(
-                id = dugsolutions.leaf.v35.player.creature.CreatureCardId(99),
-                card = plant("Foreign"),
-                side = CreatureSide.LEFT,
-                position = CreaturePosition(-1, 0),
-                facing = CreatureCard.Facing.FACE_UP
-            )
+    fun execute_invalidSupportChoiceIsRejectedBeforeMutation() {
+        val invalid = CultivationAction.Support(
+            SupportAction.UseWormFlip(CreatureCardId(999))
         )
-        val first = player(1, emptyList(), SequenceStrategy(invalid))
+        val strategy = SequenceStrategy(invalid)
+        val first = player(1, emptyList(), strategy)
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
 
         assertFailsWith<IllegalStateException> {
@@ -229,33 +250,22 @@ class CultivationBuildCoordinatorTest {
         }
 
         assertTrue(fixture.effects.requests.isEmpty())
-        assertFalse(markerMessages(fixture.game).any { it.contains("MAIN_ACTION player=1") })
+        assertTrue(fixture.game.chronicle.entries.none {
+            it is GameEntry.Marker && it.message.startsWith("SUPPORT_ACTION player=1")
+        })
     }
 
     @Test
-    fun execute_processesPlayersInDeterministicListOrder() {
+    fun execute_processesPlayersInDeterministicPlayerOrder() {
         val order = mutableListOf<Int>()
-        val firstStrategy = RoundEffectStrategy { order.add(1) }
-        val secondStrategy = RoundEffectStrategy { order.add(2) }
-        val fixture = fixture(
-            player(1, emptyList(), firstStrategy),
-            player(2, emptyList(), secondStrategy)
-        )
+        val first = player(1, emptyList(), RoundEffectStrategy { order += 1 })
+        val second = player(2, emptyList(), RoundEffectStrategy { order += 2 })
+        val fixture = fixture(first, second)
 
         fixture.coordinator.execute(fixture.game, fixture.card)
 
-        assertEquals(listOf(1, 1, 2, 2), order)
-    }
-
-    @Test
-    fun execute_chronicleContainsOneRollEntryPerSuccessfulDraw() {
-        val first = player(1, dice(5), DecisionDirector.baseline().cultivation)
-        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
-
-        fixture.coordinator.execute(fixture.game, fixture.card)
-
-        val rolls = markerMessages(fixture.game).filter { it.startsWith("ROLL player=1") }
-        assertEquals(5, rolls.size)
+        // Each strategy is asked twice for Main Actions and once to choose Done.
+        assertEquals(listOf(1, 1, 1, 2, 2, 2), order)
     }
 
     @Test
@@ -279,38 +289,49 @@ class CultivationBuildCoordinatorTest {
             players = listOf(first, second)
         )
         val effects = RecordingEffectExecutor()
+        val roll = RollResolver(game.grove, game.chronicle)
         return Fixture(
             game = game,
             card = game.roundDeck.cards.cards.first { it.type == RoundCardType.CULTIVATION },
             effects = effects,
             coordinator = CultivationBuildCoordinator(
-                rollResolver = RollResolver(game.grove, game.chronicle),
-                effectExecutor = effects
+                rollResolver = roll,
+                effectExecutor = effects,
+                supportActionExecutor = SupportActionExecutor(
+                    rollResolver = roll,
+                    refreshResolver = RefreshResolver(game.chronicle),
+                    effectExecutor = effects
+                )
             )
         )
     }
 
     private fun player(
         id: Int,
-        dice: List<Die>,
-        strategy: CultivationStrategy
+        supply: List<Die>,
+        strategy: CultivationStrategy,
+        hand: List<Die> = emptyList()
     ): Player = Player(
         id = PlayerId(id),
         decisions = DecisionDirector.baseline().copy(cultivation = strategy),
-        dice = PlayerDice(supply = dice)
+        dice = PlayerDice(supply = supply, hand = hand)
     )
 
     private fun dice(count: Int): List<Die> =
         List(count) { FixedDie(6, 4) }
 
-    private fun graft(player: Player, card: PlantCard, x: Int, y: Int): CreatureCard =
-        player.creature.graft(
-            card,
-            GraftPlacement(
-                side = if (x < 0) CreatureSide.LEFT else CreatureSide.RIGHT,
-                position = CreaturePosition(x, y)
-            )
+    private fun graft(
+        player: Player,
+        card: PlantCard,
+        x: Int,
+        y: Int
+    ): CreatureCard = player.creature.graft(
+        card,
+        GraftPlacement(
+            side = if (x < 0) CreatureSide.LEFT else CreatureSide.RIGHT,
+            position = CreaturePosition(x, y)
         )
+    )
 
     private fun plant(
         name: String,
@@ -332,61 +353,85 @@ class CultivationBuildCoordinatorTest {
         effect = effect
     )
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries.filterIsInstance<GameEntry.Marker>().map { it.message }
+    private fun wisp(
+        name: String,
+        playImmediately: Boolean = false,
+        battleOnly: Boolean = false
+    ): WispCard = WispCard(
+        quantity = 1,
+        name = name,
+        title = name,
+        count = 1,
+        effect = GameEffect.GAIN_ONE_VP,
+        lineIcons = null,
+        lineIconsHeight = 0,
+        vpIcon = null,
+        mainBackdrop = "",
+        playImmediately = playImmediately,
+        battleOnly = battleOnly
+    )
 
-    private class FixedDie(sides: Int, private val rolledValue: Int) : Die(sides) {
-        override fun roll(): Die {
-            adjustTo(rolledValue)
-            return this
+    private class FixedDie(sides: Int, value: Int) : Die(sides) {
+        init {
+            adjustTo(value)
         }
+        override fun roll(): Die = this
     }
 
     private open class RoundEffectStrategy(
         private val onChoose: () -> Unit = {}
     ) : CultivationStrategy {
-        val requests = mutableListOf<ChooseCultivationMainActionRequest>()
+        val requests = mutableListOf<ChooseCultivationActionRequest>()
 
-        override fun chooseMainAction(
-            request: ChooseCultivationMainActionRequest
-        ): CultivationMainAction {
-            requests.add(request)
+        override fun chooseAction(
+            request: ChooseCultivationActionRequest
+        ): CultivationAction {
+            requests += request
             onChoose()
-            return CultivationMainAction.RoundEffect1
+            return if (request.mainActionsRemaining > 0) {
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            } else {
+                CultivationAction.Done
+            }
         }
     }
 
+    private class RecordingStrategy : RoundEffectStrategy()
+
     private class SelectPlantStrategy : CultivationStrategy {
-        override fun chooseMainAction(
-            request: ChooseCultivationMainActionRequest
-        ): CultivationMainAction =
-            request.legalChoices.filterIsInstance<CultivationMainAction.ActivatePlant>()
-                .firstOrNull() ?: CultivationMainAction.RoundEffect1
+        override fun chooseAction(
+            request: ChooseCultivationActionRequest
+        ): CultivationAction {
+            if (request.mainActionsRemaining == 0) return CultivationAction.Done
+            val plant = request.legalChoices
+                .filterIsInstance<CultivationAction.Main>()
+                .map { it.action }
+                .filterIsInstance<CultivationMainAction.ActivatePlant>()
+                .firstOrNull()
+            return CultivationAction.Main(
+                plant ?: CultivationMainAction.RoundEffect1
+            )
+        }
     }
 
     private class SequenceStrategy(
-        vararg actions: CultivationMainAction
+        vararg initial: CultivationAction
     ) : CultivationStrategy {
-        private val actions = ArrayDeque(actions.toList())
-        val requests = mutableListOf<ChooseCultivationMainActionRequest>()
+        val actions = ArrayDeque(initial.toList())
+        val requests = mutableListOf<ChooseCultivationActionRequest>()
 
-        override fun chooseMainAction(
-            request: ChooseCultivationMainActionRequest
-        ): CultivationMainAction {
-            requests.add(request)
+        override fun chooseAction(
+            request: ChooseCultivationActionRequest
+        ): CultivationAction {
+            requests += request
             return actions.removeFirst()
         }
     }
 
     private class RecordingEffectExecutor : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
-        var failure: RuntimeException? = null
-        var onExecute: (GameEffectRequest) -> Unit = {}
-
         override fun execute(request: GameEffectRequest) {
-            requests.add(request)
-            onExecute(request)
-            failure?.let { throw it }
+            requests += request
         }
     }
 

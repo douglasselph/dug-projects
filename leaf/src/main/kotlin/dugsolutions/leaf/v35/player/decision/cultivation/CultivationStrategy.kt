@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.cultivation
 
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
 sealed interface CultivationMainAction {
@@ -15,16 +16,30 @@ sealed interface CultivationMainAction {
     data object RoundEffect2 : CultivationMainAction
 }
 
-class ChooseCultivationMainActionRequest(
+/** One decision opportunity during Cultivation Build. */
+sealed interface CultivationAction {
+    data class Main(
+        val action: CultivationMainAction
+    ) : CultivationAction
+
+    data class Support(
+        val action: SupportAction
+    ) : CultivationAction
+
+    /** Legal only after both Main Actions have been completed. */
+    data object Done : CultivationAction
+}
+
+class ChooseCultivationActionRequest(
     val roundCard: RoundCard,
-    val actionNumber: Int,
-    legalChoices: List<CultivationMainAction>
+    val mainActionsRemaining: Int,
+    legalChoices: List<CultivationAction>
 ) {
-    val legalChoices: List<CultivationMainAction> = legalChoices.toList()
+    val legalChoices: List<CultivationAction> = legalChoices.toList()
 
     init {
-        require(actionNumber in 1..2) {
-            "Cultivation action number must be 1 or 2: $actionNumber"
+        require(mainActionsRemaining in 0..2) {
+            "Cultivation Main Actions remaining must be 0 to 2: $mainActionsRemaining"
         }
         require(this.legalChoices.isNotEmpty()) {
             "Cultivation decision requires at least one legal choice"
@@ -33,7 +48,7 @@ class ChooseCultivationMainActionRequest(
 }
 
 interface CultivationStrategy {
-    fun chooseMainAction(
-        request: ChooseCultivationMainActionRequest
-    ): CultivationMainAction
+    fun chooseAction(
+        request: ChooseCultivationActionRequest
+    ): CultivationAction
 }

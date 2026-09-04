@@ -11,5 +11,7 @@ data class WispCard(
     val lineIcons: String?,
     val lineIconsHeight: Int,
     val vpIcon: String?,
-    val mainBackdrop: String
+    val mainBackdrop: String,
+    val playImmediately: Boolean = false,
+    val battleOnly: Boolean = false
 )

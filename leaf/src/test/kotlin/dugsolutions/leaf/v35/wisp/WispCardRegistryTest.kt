@@ -102,6 +102,20 @@ class WispCardRegistryTest {
         assertEquals(emptyList(), registry.getAllCards())
     }
 
+    @Test
+    fun loadFromCsv_parsesCurrentWispTimingMetadata() {
+        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+
+        val quake = assertNotNull(registry.getCard("Wisp_Quake"))
+        val reckoning = assertNotNull(registry.getCard("Wisp_Reckoning"))
+        val pollenTheft = assertNotNull(registry.getCard("Wisp_Swap_Die"))
+
+        assertEquals(true, quake.playImmediately)
+        assertEquals(false, reckoning.playImmediately)
+        assertEquals(false, reckoning.battleOnly)
+        assertEquals(true, pollenTheft.battleOnly)
+    }
+
     private fun dataPath(fileName: String): String =
         Path.of("data", "v35", fileName).toString()
 }

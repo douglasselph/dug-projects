@@ -10,6 +10,8 @@ import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.wound.BaselineWoundStrategy
 import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
+import dugsolutions.leaf.v35.player.decision.support.BaselineSupportStrategy
+import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
 
 /**
  * Per-player composition of decision policies.
@@ -27,7 +29,8 @@ data class DecisionDirector(
     val wound: WoundStrategy,
     val placement: CreaturePlacementStrategy,
     val cultivation: CultivationStrategy,
-    val buy: BuyStrategy
+    val buy: BuyStrategy,
+    val support: SupportStrategy
 ) {
     companion object {
 
@@ -37,7 +40,8 @@ data class DecisionDirector(
                 wound = BaselineWoundStrategy(),
                 placement = BaselineCreaturePlacementStrategy(),
                 cultivation = BaselineCultivationStrategy(),
-                buy = BaselineBuyStrategy()
+                buy = BaselineBuyStrategy(),
+                support = BaselineSupportStrategy()
             )
     }
 }
