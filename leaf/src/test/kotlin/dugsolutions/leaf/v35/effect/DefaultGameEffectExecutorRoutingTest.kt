@@ -20,6 +20,9 @@ class DefaultGameEffectExecutorRoutingTest {
         val alluringNectar = RecordingHandler()
         val partingThorn = RecordingHandler()
         val snipHappens = RecordingHandler()
+        val vineAndAgain = RecordingHandler()
+        val oEdelweiss = RecordingHandler()
+        val wispReckoning = RecordingHandler()
         val overgrowth = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
@@ -33,6 +36,9 @@ class DefaultGameEffectExecutorRoutingTest {
             alluringNectarEffect = alluringNectar,
             partingThornEffect = partingThorn,
             snipHappensEffect = snipHappens,
+            vineAndAgainEffect = vineAndAgain,
+            oEdelweissEffect = oEdelweiss,
+            wispReckoningEffect = wispReckoning,
             overgrowthEffect = overgrowth,
             wispquakeEffect = wispquake
         )
@@ -120,6 +126,27 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
             )
         )
@@ -175,6 +202,18 @@ class DefaultGameEffectExecutorRoutingTest {
             snipHappens.effects
         )
         assertEquals(
+            listOf(GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT),
+            vineAndAgain.effects
+        )
+        assertEquals(
+            listOf(GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE),
+            oEdelweiss.effects
+        )
+        assertEquals(
+            listOf(GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS),
+            wispReckoning.effects
+        )
+        assertEquals(
             listOf(GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),
             overgrowth.effects
         )
@@ -192,7 +231,7 @@ class DefaultGameEffectExecutorRoutingTest {
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
+            GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
         )
 
         assertFalse(executor.canExecute(request))

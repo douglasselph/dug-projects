@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.effect
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 
@@ -36,7 +37,16 @@ data class GameEffectRequest(
     val actor: Player,
     val effect: GameEffect,
     val source: GameEffectSource,
-    val phase: GameEffectPhase
+    val phase: GameEffectPhase,
+    /**
+     * Plant cards whose effects are already active higher in the current
+     * recursive effect chain.
+     *
+     * This is engine-only recursion context. Strategies never receive it.
+     * Vine and Again and O Edelweiss use it to permit legitimate nested Plant
+     * effects while rejecting cycles such as A -> B -> A.
+     */
+    val plantEffectPath: List<CreatureCardId> = emptyList()
 )
 
 /**

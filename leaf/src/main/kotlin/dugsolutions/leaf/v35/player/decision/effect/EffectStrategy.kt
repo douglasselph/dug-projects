@@ -263,6 +263,112 @@ class ChooseEffectOpponentPlantWoundRequest(
     }
 }
 
+
+/**
+ * One of the actor's grafted Plant cards chosen specifically to execute its
+ * effect recursively.
+ *
+ * Unlike [EffectPlantChoice], this request is required rather than optional.
+ */
+class ChooseEffectPlantRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectPlantChoice>
+) {
+    val legalChoices: List<EffectPlantChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Plant effect decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
+/**
+ * One of O Edelweiss's two repeated choices.
+ *
+ * Play is only offered for a spent (face-down) Plant whose effect can execute.
+ * Flip is offered for any other grafted Plant, regardless of facing.
+ * Done ends the remaining optional choices.
+ */
+sealed interface OEdelweissChoice {
+    data class Play(
+        val card: EffectPlantChoice
+    ) : OEdelweissChoice
+
+    data class Flip(
+        val card: EffectPlantChoice
+    ) : OEdelweissChoice
+
+    data object Done : OEdelweissChoice
+}
+
+class ChooseOEdelweissRequest(
+    val effect: GameEffect,
+    val choiceNumber: Int,
+    legalChoices: List<OEdelweissChoice>
+) {
+    val legalChoices: List<OEdelweissChoice> = legalChoices.toList()
+
+    init {
+        require(choiceNumber in 1..2) {
+            "O Edelweiss choice number must be 1 or 2: $choiceNumber"
+        }
+        require(this.legalChoices.isNotEmpty()) {
+            "O Edelweiss decision requires at least one legal choice"
+        }
+    }
+}
+
+/** Immutable reference to one Wisp in the hand being trimmed. */
+data class EffectWispChoice(
+    val index: Int,
+    val name: String,
+    val title: String,
+    val effect: GameEffect
+) {
+    init {
+        require(index >= 0) {
+            "Wisp choice index cannot be negative: $index"
+        }
+    }
+}
+
+/** Complete set of Wisps that a player chooses to keep. */
+data class EffectWispsChoice(
+    val wisps: List<EffectWispChoice>
+) {
+    val selected: List<EffectWispChoice> = wisps.toList()
+
+    init {
+        require(
+            selected.map { it.index }.distinct().size ==
+                selected.size
+        ) {
+            "Wisp keep choice cannot select the same Wisp twice: $selected"
+        }
+    }
+}
+
+class ChooseWispsToKeepRequest(
+    val effect: GameEffect,
+    val playerId: PlayerId,
+    val keepLimit: Int,
+    legalChoices: List<EffectWispChoice>
+) {
+    val legalChoices: List<EffectWispChoice> =
+        legalChoices.toList()
+
+    init {
+        require(keepLimit >= 0) {
+            "Wisp keep limit cannot be negative: $keepLimit"
+        }
+        require(this.legalChoices.size > keepLimit) {
+            "Wisp keep decision is only needed when hand exceeds limit: " +
+                "size=${this.legalChoices.size}, limit=$keepLimit"
+        }
+    }
+}
+
 /**
  * Focused decision seam for effect-specific targeting.
  *
@@ -320,4 +426,24 @@ interface EffectStrategy {
     fun chooseOpponentPlantWound(
         request: ChooseEffectOpponentPlantWoundRequest
     ): EffectOpponentPlantWoundChoice = request.legalChoices.first()
+
+    /** Choose the exact spent Plant whose effect Vine and Again will reuse. */
+    fun choosePlantEffect(
+        request: ChooseEffectPlantRequest
+    ): EffectPlantChoice = request.legalChoices.first()
+
+    /** Choose O Edelweiss's next Play / Flip / Done action. */
+    fun chooseOEdelweiss(
+        request: ChooseOEdelweissRequest
+    ): OEdelweissChoice = request.legalChoices.first()
+
+    /** Choose exactly which Wisps this player keeps after Wisp Reckoning. */
+    fun chooseWispsToKeep(
+        request: ChooseWispsToKeepRequest
+    ): EffectWispsChoice =
+        EffectWispsChoice(
+            request.legalChoices.take(
+                request.keepLimit
+            )
+        )
 }

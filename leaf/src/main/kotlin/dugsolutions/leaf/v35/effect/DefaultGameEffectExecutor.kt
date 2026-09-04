@@ -11,11 +11,14 @@ import dugsolutions.leaf.v35.effect.handler.ResourceEffectHandler
 import dugsolutions.leaf.v35.effect.handler.UpgradeEffectHandler
 import dugsolutions.leaf.v35.effect.special.AlluringNectarEffect
 import dugsolutions.leaf.v35.effect.special.BeeLovedBloomEffect
+import dugsolutions.leaf.v35.effect.special.OEdelweissEffect
 import dugsolutions.leaf.v35.effect.special.OvergrowthEffect
 import dugsolutions.leaf.v35.effect.special.PartingThornEffect
 import dugsolutions.leaf.v35.effect.special.PetalToDie4Effect
 import dugsolutions.leaf.v35.effect.special.SnipHappensEffect
+import dugsolutions.leaf.v35.effect.special.VineAndAgainEffect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
+import dugsolutions.leaf.v35.effect.special.WispReckoningEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
 
 /**
@@ -36,6 +39,9 @@ class DefaultGameEffectExecutor(
     private val alluringNectarEffect: EffectHandler = AlluringNectarEffect(),
     private val partingThornEffect: EffectHandler = PartingThornEffect(),
     private val snipHappensEffect: EffectHandler = SnipHappensEffect(),
+    private val vineAndAgainEffect: EffectHandler = VineAndAgainEffect(),
+    private val oEdelweissEffect: EffectHandler = OEdelweissEffect(),
+    private val wispReckoningEffect: EffectHandler = WispReckoningEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
@@ -153,6 +159,15 @@ class DefaultGameEffectExecutor(
 
             GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE ->
                 snipHappensEffect
+
+            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT ->
+                vineAndAgainEffect
+
+            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE ->
+                oEdelweissEffect
+
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->
+                wispReckoningEffect
 
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
                 overgrowthEffect

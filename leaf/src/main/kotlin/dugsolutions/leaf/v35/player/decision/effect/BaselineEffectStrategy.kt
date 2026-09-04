@@ -41,4 +41,21 @@ class BaselineEffectStrategy : EffectStrategy {
     override fun chooseOpponentPlantWound(
         request: ChooseEffectOpponentPlantWoundRequest
     ): EffectOpponentPlantWoundChoice = request.legalChoices.first()
+
+    override fun choosePlantEffect(
+        request: ChooseEffectPlantRequest
+    ): EffectPlantChoice = request.legalChoices.first()
+
+    override fun chooseOEdelweiss(
+        request: ChooseOEdelweissRequest
+    ): OEdelweissChoice = request.legalChoices.first()
+
+    override fun chooseWispsToKeep(
+        request: ChooseWispsToKeepRequest
+    ): EffectWispsChoice =
+        EffectWispsChoice(
+            request.legalChoices.take(
+                request.keepLimit
+            )
+        )
 }

@@ -162,6 +162,80 @@ class BaselineEffectStrategyTest {
                 )
             )
         )
+
+        assertEquals(
+            plantTarget,
+            strategy.choosePlantEffect(
+                ChooseEffectPlantRequest(
+                    effect = GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT,
+                    legalChoices = listOf(plantTarget)
+                )
+            )
+        )
+
+        val edelweiss =
+            OEdelweissChoice.Flip(
+                plantTarget
+            )
+        assertEquals(
+            edelweiss,
+            strategy.chooseOEdelweiss(
+                ChooseOEdelweissRequest(
+                    effect = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+                    choiceNumber = 1,
+                    legalChoices = listOf(
+                        edelweiss,
+                        OEdelweissChoice.Done
+                    )
+                )
+            )
+        )
+
+        val wispChoices = listOf(
+            EffectWispChoice(
+                index = 0,
+                name = "A",
+                title = "A",
+                effect = GameEffect.GAIN_ONE_VP
+            ),
+            EffectWispChoice(
+                index = 1,
+                name = "B",
+                title = "B",
+                effect = GameEffect.GAIN_ONE_VP
+            ),
+            EffectWispChoice(
+                index = 2,
+                name = "C",
+                title = "C",
+                effect = GameEffect.GAIN_ONE_VP
+            ),
+            EffectWispChoice(
+                index = 3,
+                name = "D",
+                title = "D",
+                effect = GameEffect.GAIN_ONE_VP
+            ),
+            EffectWispChoice(
+                index = 4,
+                name = "E",
+                title = "E",
+                effect = GameEffect.GAIN_ONE_VP
+            )
+        )
+        assertEquals(
+            EffectWispsChoice(
+                wispChoices.take(4)
+            ),
+            strategy.chooseWispsToKeep(
+                ChooseWispsToKeepRequest(
+                    effect = GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+                    playerId = PlayerId(1),
+                    keepLimit = 4,
+                    legalChoices = wispChoices
+                )
+            )
+        )
     }
 
     @Test
@@ -235,6 +309,50 @@ class BaselineEffectStrategyTest {
                 effect = GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
                 legalChoices = opponentPlantMutable
             )
+        val requiredPlantMutable =
+            mutableListOf(
+                plantMutable.first()
+            )
+        val requiredPlant =
+            ChooseEffectPlantRequest(
+                effect = GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT,
+                legalChoices = requiredPlantMutable
+            )
+        val edelweissMutable =
+            mutableListOf<OEdelweissChoice>(
+                OEdelweissChoice.Flip(
+                    plantMutable.first()
+                ),
+                OEdelweissChoice.Done
+            )
+        val edelweiss =
+            ChooseOEdelweissRequest(
+                effect = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+                choiceNumber = 1,
+                legalChoices = edelweissMutable
+            )
+        val wispMutable =
+            mutableListOf(
+                EffectWispChoice(
+                    index = 0,
+                    name = "A",
+                    title = "A",
+                    effect = GameEffect.GAIN_ONE_VP
+                ),
+                EffectWispChoice(
+                    index = 1,
+                    name = "B",
+                    title = "B",
+                    effect = GameEffect.GAIN_ONE_VP
+                )
+            )
+        val wispKeep =
+            ChooseWispsToKeepRequest(
+                effect = GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+                playerId = PlayerId(1),
+                keepLimit = 1,
+                legalChoices = wispMutable
+            )
 
         mutable.clear()
         petalMutable.clear()
@@ -242,6 +360,9 @@ class BaselineEffectStrategyTest {
         butterflyMutable.clear()
         plantMutable.clear()
         opponentPlantMutable.clear()
+        requiredPlantMutable.clear()
+        edelweissMutable.clear()
+        wispMutable.clear()
 
         assertEquals(1, required.legalChoices.size)
         assertEquals(1, optional.legalChoices.size)
@@ -251,5 +372,8 @@ class BaselineEffectStrategyTest {
         assertEquals(1, butterfly.legalChoices.size)
         assertEquals(1, plant.legalChoices.size)
         assertEquals(1, opponentPlant.legalChoices.size)
+        assertEquals(1, requiredPlant.legalChoices.size)
+        assertEquals(2, edelweiss.legalChoices.size)
+        assertEquals(2, wispKeep.legalChoices.size)
     }
 }
