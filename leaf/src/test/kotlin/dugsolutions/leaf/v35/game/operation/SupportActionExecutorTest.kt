@@ -99,9 +99,9 @@ class SupportActionExecutorTest {
     }
 
     @Test
-    fun wormFlip_spendsWorm_flipsCard_andReturnsNormalWormToGrove() {
+    fun wormFlip_spendsWorm_flipsCard_andReturnsWormToGrove() {
         val player = player()
-        player.critters.add(Critter.BOOSTED_WORM)
+        player.critters.add(Critter.WORM)
         val grafted = player.creature.graft(
             plant("Vine"),
             GraftPlacement(CreatureSide.LEFT, CreaturePosition(-1, 0))

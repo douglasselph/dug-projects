@@ -1,16 +1,15 @@
 package dugsolutions.leaf.v35.tokens
 
-enum class Critter(val value: Int) {
+/**
+ * Physical Critter type.
+ *
+ * Temporary "this round" value changes are player state, not a different
+ * physical Critter identity. Use Player.critterValues when a rule needs the
+ * Critter's current effective value.
+ */
+enum class Critter(
+    val baseValue: Int
+) {
     BEE(2),
-    WORM(1),
-    BOOSTED_WORM(3),
-    BOOSTED_BEE(4);
-
-    val normal: Critter
-        get() {
-            return when (this) {
-                BEE, BOOSTED_BEE -> BEE
-                WORM, BOOSTED_WORM -> WORM
-            }
-        }
+    WORM(1)
 }

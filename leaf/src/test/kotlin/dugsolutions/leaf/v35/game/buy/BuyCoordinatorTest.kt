@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
+import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyDieResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyItem
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
@@ -103,22 +104,47 @@ class BuyCoordinatorTest {
     }
 
     @Test
-    fun execute_spentBoostedCritterUsesCurrentValueAndReturnsNormalForm() {
+    fun execute_temporaryCritterValuesAreVisibleToStrategyAndUsedForPayment() {
         val buyerStrategy = purchaseOnce(
             item = { it.filterIsInstance<BuyItem.Die>().first { die -> die.sides == DieSides.D6 } },
-            payment = { BuyPayment(critters = listOf(Critter.BOOSTED_BEE, Critter.BEE)) }
+            payment = { request ->
+                assertEquals(
+                    listOf(
+                        BuyCritterResource(Critter.WORM, 3),
+                        BuyCritterResource(Critter.WORM, 3)
+                    ),
+                    request.availableCritters
+                )
+                BuyPayment(critters = request.availableCritters)
+            }
         )
         val buyer = player(1, listOf(die(20, 1)), buyerStrategy)
-        buyer.critters.add(Critter.BOOSTED_BEE).add(Critter.BEE)
+        buyer.critters.add(Critter.WORM).add(Critter.WORM)
+        buyer.critterValues.boostForRound(Critter.WORM, 2)
         val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
-        val groveBees = fixture.game.grove.critters.count(Critter.BEE)
+        val groveWorms = fixture.game.grove.critters.count(Critter.WORM)
 
         val result = fixture.coordinator.execute(fixture.game)
 
         assertEquals(6, result.purchases.single().paymentTotal)
         assertTrue(buyer.critters.isEmpty)
-        assertEquals(groveBees + 2, fixture.game.grove.critters.count(Critter.BEE))
-        assertEquals(0, fixture.game.grove.critters.count(Critter.BOOSTED_BEE))
+        assertEquals(groveWorms + 2, fixture.game.grove.critters.count(Critter.WORM))
+    }
+
+    @Test
+    fun execute_futureBeeBoostUsesSamePlayerValueState() {
+        val buyerStrategy = purchaseOnce(
+            item = { it.filterIsInstance<BuyItem.Die>().first { die -> die.sides == DieSides.D8 } },
+            payment = { BuyPayment(critters = it.availableCritters) }
+        )
+        val buyer = player(1, emptyList(), buyerStrategy)
+        buyer.critters.add(Critter.BEE).add(Critter.BEE)
+        buyer.critterValues.setForRound(Critter.BEE, 4)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        assertEquals(8, result.purchases.single().paymentTotal)
     }
 
     @Test

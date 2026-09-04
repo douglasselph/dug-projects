@@ -205,10 +205,8 @@ class SupportActionExecutor(
     }
 
     private fun spendableWorm(player: Player): Critter? =
-        when {
-            player.critters.count(Critter.WORM) > 0 -> Critter.WORM
-            player.critters.count(Critter.BOOSTED_WORM) > 0 -> Critter.BOOSTED_WORM
-            else -> null
+        Critter.WORM.takeIf {
+            player.critters.count(Critter.WORM) > 0
         }
 
     private fun actionName(action: SupportAction): String =

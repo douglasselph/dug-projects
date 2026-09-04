@@ -5,12 +5,9 @@ import dugsolutions.leaf.v35.tokens.Critter
 /**
  * Deterministic baseline reward policy.
  *
- * If both Bee and Worm are legal, choose whichever normal type the player
- * currently owns fewer of. Bee wins ties.
- *
- * Boosted Bees/Worms count as their normal type when comparing holdings.
- * If the normal Bee/Worm pair is not both available, choose the first legal
- * option supplied by gameplay code.
+ * If both Bee and Worm are legal, choose whichever type the player currently
+ * owns fewer of. Bee wins ties. If both are not available, choose the first
+ * legal option supplied by gameplay code.
  */
 class BaselineRewardStrategy : RewardStrategy {
 
@@ -23,12 +20,8 @@ class BaselineRewardStrategy : RewardStrategy {
         val hasWorm = Critter.WORM in choices
 
         if (hasBee && hasWorm) {
-            val beeCount = request.ownedCritters.count {
-                it.normal == Critter.BEE
-            }
-            val wormCount = request.ownedCritters.count {
-                it.normal == Critter.WORM
-            }
+            val beeCount = request.ownedCritters.count { it == Critter.BEE }
+            val wormCount = request.ownedCritters.count { it == Critter.WORM }
 
             return if (beeCount <= wormCount) {
                 Critter.BEE

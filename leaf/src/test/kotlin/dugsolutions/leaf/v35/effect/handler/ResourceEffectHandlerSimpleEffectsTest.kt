@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
+import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispDeck
@@ -129,6 +130,80 @@ class ResourceEffectHandlerSimpleEffectsTest {
         assertTrue(Butterfly.PURPLE in actor.butterflies.all)
     }
 
+
+
+    @Test
+    fun rootAppreciationGainsWormAndMakesAllWormsWorthThreeThisRound() {
+        val actor = EffectTestFixture.player(1)
+        actor.critters.add(Critter.WORM)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, GameEffectExecutor { })
+
+        assertEquals(2, actor.critters.count(Critter.WORM))
+        assertEquals(3, actor.critterValues.valueOf(Critter.WORM))
+        assertEquals(2, actor.critterValues.valueOf(Critter.BEE))
+    }
+
+    @Test
+    fun rootAppreciationBoostAppliesToWormsGainedLaterThisRound() {
+        val actor = EffectTestFixture.player(1)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+        )
+
+        handler.execute(request, GameEffectExecutor { })
+        actor.critters.add(Critter.WORM)
+
+        assertEquals(2, actor.critters.count(Critter.WORM))
+        assertEquals(3, actor.critterValues.valueOf(Critter.WORM))
+    }
+
+    @Test
+    fun rootAppreciationStillEstablishesRoundValueWhenGroveHasNoWorm() {
+        val actor = EffectTestFixture.player(1)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        repeat(game.grove.critters.count(Critter.WORM)) {
+            check(game.grove.critters.remove(Critter.WORM))
+        }
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, GameEffectExecutor { })
+
+        assertTrue(actor.critters.isEmpty)
+        assertEquals(3, actor.critterValues.valueOf(Critter.WORM))
+    }
+
+    @Test
+    fun repeatedRootAppreciationStacksByTwoEachTime() {
+        val actor = EffectTestFixture.player(1)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+        )
+
+        handler.execute(request, GameEffectExecutor { })
+        handler.execute(request, GameEffectExecutor { })
+
+        assertEquals(2, actor.critters.count(Critter.WORM))
+        assertEquals(5, actor.critterValues.valueOf(Critter.WORM))
+    }
 
     @Test
     fun whisperingWingsGainsUpToTwoChosenCritters() {

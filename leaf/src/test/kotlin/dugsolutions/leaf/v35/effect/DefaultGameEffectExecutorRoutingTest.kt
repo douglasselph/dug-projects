@@ -54,6 +54,13 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.UPGRADE_DIE_FROM_HAND
             )
         )
@@ -88,7 +95,10 @@ class DefaultGameEffectExecutorRoutingTest {
             draw.effects
         )
         assertEquals(
-            listOf(GameEffect.GAIN_WATER_TOKEN),
+            listOf(
+                GameEffect.GAIN_WATER_TOKEN,
+                GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+            ),
             resource.effects
         )
         assertEquals(

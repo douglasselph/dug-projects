@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
+import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -110,6 +111,21 @@ class CultivationCleanupCoordinatorTest {
             ),
             first.tokens.mulchTokens
         )
+    }
+
+
+    @Test
+    fun execute_clearsTemporaryCritterValuesAfterBuyWindowEnds() {
+        val first = player(1, emptyList())
+        first.critterValues.boostForRound(Critter.WORM, 2)
+        first.critterValues.setForRound(Critter.BEE, 4)
+        val fixture = fixture(first, player(2, emptyList()))
+
+        fixture.coordinator.execute(fixture.game)
+
+        assertEquals(1, first.critterValues.valueOf(Critter.WORM))
+        assertEquals(2, first.critterValues.valueOf(Critter.BEE))
+        assertTrue(first.critterValues.overrides.isEmpty())
     }
 
     @Test

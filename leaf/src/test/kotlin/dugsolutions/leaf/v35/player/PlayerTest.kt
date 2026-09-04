@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player
 
 import dugsolutions.leaf.v35.player.creature.Creature
+import dugsolutions.leaf.v35.player.critter.CritterValueState
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.player.wisp.WispHand
@@ -32,6 +33,8 @@ class PlayerTest {
         assertTrue(player.dice.hand.isEmpty())
         assertTrue(player.dice.discard.isEmpty())
         assertTrue(player.critters.isEmpty)
+        assertEquals(1, player.critterValues.valueOf(Critter.WORM))
+        assertEquals(2, player.critterValues.valueOf(Critter.BEE))
         assertEquals(0, player.tokens.waterCount)
         assertEquals(0, player.tokens.mulchCount)
         assertEquals(0, player.tokens.pendingMulchCount)
@@ -46,6 +49,7 @@ class PlayerTest {
         val creature = Creature()
         val dice = PlayerDice()
         val critters = Critters()
+        val critterValues = CritterValueState()
         val tokens = Tokens()
         val butterflies = Butterflies()
         val wisps = WispHand()
@@ -56,6 +60,7 @@ class PlayerTest {
             creature = creature,
             dice = dice,
             critters = critters,
+            critterValues = critterValues,
             tokens = tokens,
             butterflies = butterflies,
             wisps = wisps
@@ -65,6 +70,7 @@ class PlayerTest {
         assertTrue(player.creature === creature)
         assertTrue(player.dice === dice)
         assertTrue(player.critters === critters)
+        assertTrue(player.critterValues === critterValues)
         assertTrue(player.tokens === tokens)
         assertTrue(player.butterflies === butterflies)
         assertTrue(player.wisps === wisps)
@@ -101,11 +107,14 @@ class PlayerTest {
         )
 
         first.critters.add(Critter.BEE)
+        first.critterValues.boostForRound(Critter.WORM, 2)
         first.tokens.add(Token.WATER)
         first.butterflies.add(Butterfly.GREEN)
 
         assertEquals(listOf(Critter.BEE), first.critters.all)
         assertTrue(second.critters.isEmpty)
+        assertEquals(3, first.critterValues.valueOf(Critter.WORM))
+        assertEquals(1, second.critterValues.valueOf(Critter.WORM))
 
         assertEquals(1, first.tokens.waterCount)
         assertEquals(0, second.tokens.waterCount)

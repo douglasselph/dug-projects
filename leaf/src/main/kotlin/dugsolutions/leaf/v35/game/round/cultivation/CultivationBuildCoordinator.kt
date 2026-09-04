@@ -252,8 +252,7 @@ class CultivationBuildCoordinator(
                 .mapTo(this, SupportAction::UseMulch)
 
             val hasWorm =
-                player.critters.count(Critter.WORM) > 0 ||
-                    player.critters.count(Critter.BOOSTED_WORM) > 0
+                player.critters.count(Critter.WORM) > 0
             if (hasWorm) {
                 player.creature.cards.forEach {
                     add(SupportAction.UseWormFlip(it.id))

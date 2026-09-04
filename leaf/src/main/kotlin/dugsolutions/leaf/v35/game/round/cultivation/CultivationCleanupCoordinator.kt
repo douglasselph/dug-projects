@@ -39,6 +39,9 @@ class CultivationCleanupCoordinator(
              */
             player.tokens.normalize()
 
+            /* Temporary Critter values last through Buy, then end with round cleanup. */
+            player.critterValues.clearRound()
+
             game.chronicle.record(
                 Moment.Marker(
                     "CULTIVATION_CLEANUP player=${player.id.value} " +

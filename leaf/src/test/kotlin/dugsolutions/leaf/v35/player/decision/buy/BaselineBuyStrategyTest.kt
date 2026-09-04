@@ -22,7 +22,7 @@ class BaselineBuyStrategyTest {
     }
 
     @Test
-    fun choosePayment_choosesSmallestSufficientTotalDeterministically() {
+    fun choosePayment_usesCurrentCritterValuesAndChoosesSmallestSufficientTotal() {
         val request = ChoosePaymentRequest(
             item = BuyItem.Die(DieSides.D8),
             availableDice = listOf(
@@ -30,7 +30,10 @@ class BaselineBuyStrategyTest {
                 BuyDieResource(4, 4),
                 BuyDieResource(10, 9)
             ),
-            availableCritters = listOf(Critter.WORM, Critter.BEE)
+            availableCritters = listOf(
+                BuyCritterResource(Critter.WORM, 3),
+                BuyCritterResource(Critter.BEE, 2)
+            )
         )
 
         val first = strategy.choosePayment(request)
@@ -60,7 +63,7 @@ class BaselineBuyStrategyTest {
     fun requestsDefensivelyCopyResourcesAndOptions() {
         val options = mutableListOf<BuyItem>(BuyItem.Die(DieSides.D6))
         val dice = mutableListOf(BuyDieResource(6, 6))
-        val critters = mutableListOf(Critter.BEE)
+        val critters = mutableListOf(BuyCritterResource(Critter.BEE, 4))
         val purchase = ChoosePurchaseRequest(options)
         val payment = ChoosePaymentRequest(options.single(), dice, critters)
 

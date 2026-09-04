@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
+import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyDieResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyItem
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
@@ -64,7 +65,12 @@ class BuyCoordinator(
                         availableDice = player.dice.hand.map {
                             BuyDieResource(it.sides, it.value)
                         },
-                        availableCritters = player.critters.all
+                        availableCritters = player.critters.all.map { critter ->
+                            BuyCritterResource(
+                                critter = critter,
+                                value = player.critterValues.valueOf(critter)
+                            )
+                        }
                     )
                 )
                 val resolvedPayment = validatePayment(player, item, payment)
@@ -117,7 +123,9 @@ class BuyCoordinator(
     private fun legalItems(game: Game, player: Player): List<BuyItem> {
         val purchasingPower =
             player.dice.hand.sumOf { it.value } +
-                player.critters.all.sumOf { it.value }
+                player.critters.all.sumOf {
+                    player.critterValues.valueOf(it)
+                }
 
         return buildList {
             game.grove.plantMarket.availableStacks
@@ -150,20 +158,26 @@ class BuyCoordinator(
         }
 
         val remainingCritters = player.critters.all.toMutableList()
-        payment.critters.forEach { critter ->
-            check(remainingCritters.remove(critter)) {
-                "Payment contains an unavailable Critter: $critter"
+        val actualCritters = payment.critters.map { resource ->
+            check(resource.value == player.critterValues.valueOf(resource.critter)) {
+                "Payment contains a stale Critter value: $resource"
             }
+            check(remainingCritters.remove(resource.critter)) {
+                "Payment contains an unavailable Critter: $resource"
+            }
+            resource.critter
         }
 
-        val total = actualDice.sumOf { it.value } + payment.critters.sumOf { it.value }
+        val total =
+            actualDice.sumOf { it.value } +
+                payment.critters.sumOf { it.value }
         check(total >= item.cost) {
             "Payment does not meet purchase cost: paid=$total cost=${item.cost}"
         }
         check(total > 0 || item.cost == 0) {
             "Non-zero purchase requires at least one payment resource"
         }
-        return ResolvedPayment(actualDice, payment.critters, total)
+        return ResolvedPayment(actualDice, actualCritters, total)
     }
 
     private fun commitPurchase(
@@ -193,7 +207,7 @@ class BuyCoordinator(
             check(player.critters.remove(critter)) {
                 "Validated payment Critter could not be removed"
             }
-            game.grove.critters.add(critter.normal)
+            game.grove.critters.add(critter)
         }
 
         when (item) {

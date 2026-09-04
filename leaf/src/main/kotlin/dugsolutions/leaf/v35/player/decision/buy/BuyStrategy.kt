@@ -31,12 +31,28 @@ data class BuyDieResource(
     }
 }
 
+/**
+ * Immutable snapshot of one owned Critter and its current effective value.
+ *
+ * The same physical WORM may therefore appear here with value 1 normally or
+ * value 3 after Root Appreciation. The strategy never has to infer temporary
+ * boost state from the Critter enum itself.
+ */
+data class BuyCritterResource(
+    val critter: Critter,
+    val value: Int
+) {
+    init {
+        require(value > 0) { "Buy Critter resource must have positive value: $value" }
+    }
+}
+
 class BuyPayment(
     dice: List<BuyDieResource> = emptyList(),
-    critters: List<Critter> = emptyList()
+    critters: List<BuyCritterResource> = emptyList()
 ) {
     val dice: List<BuyDieResource> = dice.toList()
-    val critters: List<Critter> = critters.toList()
+    val critters: List<BuyCritterResource> = critters.toList()
     val total: Int get() = dice.sumOf { it.value } + critters.sumOf { it.value }
 }
 
@@ -47,10 +63,10 @@ class ChoosePurchaseRequest(options: List<BuyItem>) {
 class ChoosePaymentRequest(
     val item: BuyItem,
     availableDice: List<BuyDieResource>,
-    availableCritters: List<Critter>
+    availableCritters: List<BuyCritterResource>
 ) {
     val availableDice: List<BuyDieResource> = availableDice.toList()
-    val availableCritters: List<Critter> = availableCritters.toList()
+    val availableCritters: List<BuyCritterResource> = availableCritters.toList()
     val cost: Int get() = item.cost
 }
 

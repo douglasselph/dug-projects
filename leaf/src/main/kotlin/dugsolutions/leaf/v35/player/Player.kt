@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player
 
 import dugsolutions.leaf.v35.player.creature.Creature
+import dugsolutions.leaf.v35.player.critter.CritterValueState
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.player.wisp.WispHand
@@ -23,6 +24,7 @@ class Player(
     val creature: Creature = Creature(),
     val dice: PlayerDice = PlayerDice(),
     val critters: Critters = Critters(),
+    val critterValues: CritterValueState = CritterValueState(),
     val tokens: Tokens = Tokens(),
     val butterflies: Butterflies = Butterflies(),
     val wisps: WispHand = WispHand()

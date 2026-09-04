@@ -14,9 +14,10 @@ import dugsolutions.leaf.v35.tokens.Token
 /**
  * Effects that gain, spend, or attach shared resources/components.
  *
- * Simple fixed-resource effects live here. Effects involving strategic target
- * selection across opponents, temporary round-wide boosts, or complex limits
- * remain intentionally unsupported until their dedicated behavior is built.
+ * Simple fixed-resource effects live here. Player-local temporary Critter value
+ * overrides also live here because they modify a gained shared resource without
+ * changing the physical Critter identity. Effects involving strategic target
+ * selection across opponents or complex limits remain separate.
  */
 class ResourceEffectHandler : EffectHandler {
 
@@ -48,6 +49,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_TWO_WORMS ->
                 request.game.grove.critters.count(Critter.WORM) > 0
+
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND ->
+                true
 
             GameEffect.GAIN_ONE_WISP ->
                 !request.game.grove.wispDeck.isEmpty
@@ -104,6 +108,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_TWO_WORMS ->
                 gainWorms(request, 2)
+
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND ->
+                gainWormAndBoostWorms(request)
 
             GameEffect.GAIN_ONE_WISP ->
                 gainOneWisp(request, executor)
@@ -218,6 +225,30 @@ class ResourceEffectHandler : EffectHandler {
             }
             request.actor.critters.add(chosen)
         }
+    }
+
+
+    private fun gainWormAndBoostWorms(
+        request: GameEffectRequest
+    ) {
+        /*
+         * The physical Critter remains WORM. Root Appreciation says each Worm
+         * is worth 2 MORE this round, so repeated resolutions stack:
+         *
+         *   1 -> 3 -> 5 -> 7 ...
+         *
+         * Because the boost is Player round state rather than a Critter
+         * variant, Worms gained later in the same round use the boosted value
+         * automatically.
+         */
+        if (request.game.grove.critters.remove(Critter.WORM)) {
+            request.actor.critters.add(Critter.WORM)
+        }
+
+        request.actor.critterValues.boostForRound(
+            critter = Critter.WORM,
+            amount = 2
+        )
     }
 
     private fun gainWorms(

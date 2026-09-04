@@ -13,8 +13,8 @@ import dugsolutions.leaf.v35.tokens.Critter
 /**
  * Vine and Dine: Trash 1 owned Worm/Bee and Raise a chosen die +5.
  *
- * The decision is deliberately atomic: the strategy chooses both the exact
- * Critter variant to Trash and the die to Raise in one immutable choice.
+ * The decision is deliberately atomic: the strategy chooses both the Critter
+ * to Trash and the die to Raise in one immutable choice.
  */
 class VineAndDineEffect : EffectHandler {
 
@@ -63,9 +63,8 @@ class VineAndDineEffect : EffectHandler {
         val dice = handChoices(request.actor)
         if (dice.isEmpty()) return emptyList()
 
-        /* Variants remain meaningful choices; duplicates of one variant do not. */
         val critters = request.actor.critters.all
-            .filter { it.normal == Critter.BEE || it.normal == Critter.WORM }
+            .filter { it == Critter.BEE || it == Critter.WORM }
             .distinct()
 
         return critters.flatMap { critter ->

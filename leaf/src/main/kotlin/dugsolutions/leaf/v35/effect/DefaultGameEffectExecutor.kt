@@ -108,6 +108,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_ONE_VP,
             GameEffect.GAIN_ONE_WISP,
             GameEffect.GAIN_TWO_WORMS,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_PURPLE_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_RED_BUTTERFLY,

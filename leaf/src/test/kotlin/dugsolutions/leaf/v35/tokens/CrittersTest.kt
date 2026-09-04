@@ -10,17 +10,14 @@ class CrittersTest {
 
     @Test
     fun constructor_withCritters_storesThemInOrder() {
-        // Arrange
         val source = listOf(
             Critter.BEE,
             Critter.WORM,
-            Critter.BOOSTED_WORM
+            Critter.WORM
         )
 
-        // Act
         val result = Critters(source)
 
-        // Assert
         assertEquals(source, result.all)
         assertEquals(3, result.size)
         assertTrue(result.isNotEmpty)
@@ -29,17 +26,14 @@ class CrittersTest {
 
     @Test
     fun constructor_whenIncomingListChanges_keepsOriginalCritters() {
-        // Arrange
         val source = mutableListOf(
             Critter.BEE,
             Critter.WORM
         )
         val result = Critters(source)
 
-        // Act
         source.clear()
 
-        // Assert
         assertEquals(
             listOf(Critter.BEE, Critter.WORM),
             result.all
@@ -48,56 +42,43 @@ class CrittersTest {
 
     @Test
     fun iterator_returnsCrittersInOrder() {
-        // Arrange
         val expected = listOf(
             Critter.WORM,
             Critter.BEE,
-            Critter.BOOSTED_BEE
+            Critter.BEE
         )
         val critters = Critters(expected)
 
-        // Act
-        val result = critters.toList()
-
-        // Assert
-        assertEquals(expected, result)
+        assertEquals(expected, critters.toList())
     }
 
     @Test
     fun add_addsCritterAndReturnsSameCollection() {
-        // Arrange
         val critters = Critters()
 
-        // Act
         val returned = critters.add(Critter.BEE)
 
-        // Assert
         assertTrue(returned === critters)
         assertEquals(listOf(Critter.BEE), critters.all)
     }
 
     @Test
     fun count_returnsNumberOfMatchingCritters() {
-        // Arrange
         val critters = Critters(
             listOf(
                 Critter.BEE,
                 Critter.WORM,
                 Critter.BEE,
-                Critter.BOOSTED_BEE
+                Critter.BEE
             )
         )
 
-        // Act / Assert
-        assertEquals(2, critters.count(Critter.BEE))
+        assertEquals(3, critters.count(Critter.BEE))
         assertEquals(1, critters.count(Critter.WORM))
-        assertEquals(1, critters.count(Critter.BOOSTED_BEE))
-        assertEquals(0, critters.count(Critter.BOOSTED_WORM))
     }
 
     @Test
     fun set_replacesExistingCountForThatCritter() {
-        // Arrange
         val critters = Critters(
             listOf(
                 Critter.BEE,
@@ -106,10 +87,8 @@ class CrittersTest {
             )
         )
 
-        // Act
         val returned = critters.set(Critter.BEE, 3)
 
-        // Assert
         assertTrue(returned === critters)
         assertEquals(3, critters.count(Critter.BEE))
         assertEquals(1, critters.count(Critter.WORM))
@@ -118,7 +97,6 @@ class CrittersTest {
 
     @Test
     fun set_toZero_removesAllMatchingCritters() {
-        // Arrange
         val critters = Critters(
             listOf(
                 Critter.WORM,
@@ -127,20 +105,16 @@ class CrittersTest {
             )
         )
 
-        // Act
         critters.set(Critter.WORM, 0)
 
-        // Assert
         assertEquals(0, critters.count(Critter.WORM))
         assertEquals(listOf(Critter.BEE), critters.all)
     }
 
     @Test
     fun set_whenAmountNegative_throws() {
-        // Arrange
         val critters = Critters()
 
-        // Act / Assert
         assertFailsWith<IllegalArgumentException> {
             critters.set(Critter.BEE, -1)
         }
@@ -148,7 +122,6 @@ class CrittersTest {
 
     @Test
     fun remove_removesOneMatchingCritter() {
-        // Arrange
         val critters = Critters(
             listOf(
                 Critter.BEE,
@@ -157,10 +130,8 @@ class CrittersTest {
             )
         )
 
-        // Act
         val result = critters.remove(Critter.BEE)
 
-        // Assert
         assertTrue(result)
         assertEquals(1, critters.count(Critter.BEE))
         assertEquals(2, critters.size)
@@ -168,20 +139,16 @@ class CrittersTest {
 
     @Test
     fun remove_whenCritterMissing_returnsFalse() {
-        // Arrange
         val critters = Critters(listOf(Critter.WORM))
 
-        // Act
         val result = critters.remove(Critter.BEE)
 
-        // Assert
         assertFalse(result)
         assertEquals(listOf(Critter.WORM), critters.all)
     }
 
     @Test
     fun replace_replacesAllMatchesAndReturnsNumberReplaced() {
-        // Arrange
         val critters = Critters(
             listOf(
                 Critter.WORM,
@@ -191,30 +158,24 @@ class CrittersTest {
             )
         )
 
-        // Act
         val result = critters.replace(
             Critter.WORM,
-            Critter.BOOSTED_WORM
+            Critter.BEE
         )
 
-        // Assert
         assertEquals(3, result)
         assertEquals(0, critters.count(Critter.WORM))
-        assertEquals(3, critters.count(Critter.BOOSTED_WORM))
-        assertEquals(1, critters.count(Critter.BEE))
+        assertEquals(4, critters.count(Critter.BEE))
     }
 
     @Test
     fun clear_removesAllCritters() {
-        // Arrange
         val critters = Critters(
             listOf(Critter.BEE, Critter.WORM)
         )
 
-        // Act
         critters.clear()
 
-        // Assert
         assertEquals(0, critters.size)
         assertTrue(critters.isEmpty)
         assertFalse(critters.isNotEmpty)

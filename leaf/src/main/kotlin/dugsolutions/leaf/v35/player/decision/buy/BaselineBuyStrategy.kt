@@ -1,7 +1,5 @@
 package dugsolutions.leaf.v35.player.decision.buy
 
-import dugsolutions.leaf.v35.tokens.Critter
-
 /** Deterministic baseline purchase and minimum-sufficient-payment policy. */
 class BaselineBuyStrategy : BuyStrategy {
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice =
@@ -11,7 +9,7 @@ class BaselineBuyStrategy : BuyStrategy {
     override fun choosePayment(request: ChoosePaymentRequest): BuyPayment {
         data class Resource(
             val die: BuyDieResource? = null,
-            val critter: Critter? = null,
+            val critter: BuyCritterResource? = null,
             val value: Int
         )
 

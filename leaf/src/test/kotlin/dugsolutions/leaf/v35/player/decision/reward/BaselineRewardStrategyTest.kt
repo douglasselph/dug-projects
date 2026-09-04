@@ -19,9 +19,7 @@ class BaselineRewardStrategyTest {
             ownedCritters = emptyList()
         )
 
-        val result = strategy.chooseCritter(request)
-
-        assertEquals(Critter.BEE, result)
+        assertEquals(Critter.BEE, strategy.chooseCritter(request))
     }
 
     @Test
@@ -38,9 +36,7 @@ class BaselineRewardStrategyTest {
             )
         )
 
-        val result = strategy.chooseCritter(request)
-
-        assertEquals(Critter.WORM, result)
+        assertEquals(Critter.WORM, strategy.chooseCritter(request))
     }
 
     @Test
@@ -57,28 +53,7 @@ class BaselineRewardStrategyTest {
             )
         )
 
-        val result = strategy.chooseCritter(request)
-
-        assertEquals(Critter.BEE, result)
-    }
-
-    @Test
-    fun chooseCritter_countsBoostedCrittersAsTheirNormalType() {
-        val request = ChooseCritterRequest(
-            legalChoices = listOf(
-                Critter.BEE,
-                Critter.WORM
-            ),
-            ownedCritters = listOf(
-                Critter.BOOSTED_BEE,
-                Critter.BEE,
-                Critter.BOOSTED_WORM
-            )
-        )
-
-        val result = strategy.chooseCritter(request)
-
-        assertEquals(Critter.WORM, result)
+        assertEquals(Critter.BEE, strategy.chooseCritter(request))
     }
 
     @Test
@@ -91,9 +66,7 @@ class BaselineRewardStrategyTest {
             )
         )
 
-        val result = strategy.chooseCritter(request)
-
-        assertEquals(Critter.WORM, result)
+        assertEquals(Critter.WORM, strategy.chooseCritter(request))
     }
 
     @Test
