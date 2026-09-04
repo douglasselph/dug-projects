@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.effectNotNull
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.grove.Grove
@@ -181,12 +184,12 @@ class RollResolver(
                 )
             )
 
-        check(chosen in legalChoices) {
+        decisionCheck(chosen in legalChoices) {
             "RewardStrategy returned illegal Critter choice: " +
                 "$chosen; legal=$legalChoices"
         }
 
-        check(
+        stateCheck(
             grove.critters.remove(chosen)
         ) {
             "Chosen Critter was no longer available in Grove: $chosen"
@@ -207,7 +210,7 @@ class RollResolver(
                 ?: return RollRewardResult.WispUnavailable
 
         if (card.playImmediately) {
-            val handler = checkNotNull(immediateWispHandler) {
+            val handler = effectNotNull(immediateWispHandler) {
                 "Immediate-play Wisp requires an execution handler: ${card.name}"
             }
             handler(player, card)

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
@@ -33,14 +34,14 @@ class TrashResolver {
                 it == die
             }
 
-        check(current != null) {
+        stateCheck(current != null) {
             "Trash die is not in player Hand: $die"
         }
 
         val sides =
             DieSides.from(current.sides)
 
-        check(
+        stateCheck(
             player.dice.removeFromHand(
                 current
             ) != null

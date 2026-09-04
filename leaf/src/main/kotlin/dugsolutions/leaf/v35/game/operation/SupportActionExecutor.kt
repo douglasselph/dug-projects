@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.decisionNotNull
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -54,13 +58,13 @@ class SupportActionExecutor(
         action: SupportAction.PlayWisp
     ) {
         val card = player.wisps.cards.cards.firstOrNull { it == action.card }
-        check(card != null) {
+        decisionCheck(card != null) {
             "Wisp is not in player hand: ${action.card.name}"
         }
-        check(!card.playImmediately) {
+        decisionCheck(!card.playImmediately) {
             "Immediate-play Wisp cannot be chosen as a normal Support Action: ${card.name}"
         }
-        check(!card.battleOnly) {
+        decisionCheck(!card.battleOnly) {
             "Battle-only Wisp cannot be played during Cultivation: ${card.name}"
         }
 
@@ -71,12 +75,12 @@ class SupportActionExecutor(
             source = GameEffectSource.Wisp(card),
             phase = GameEffectPhase.CULTIVATION
         )
-        check(effectExecutor.canExecute(request)) {
+        effectCheck(effectExecutor.canExecute(request)) {
             "Wisp effect is not executable during Cultivation: ${card.name}"
         }
         effectExecutor.execute(request)
 
-        check(player.wisps.remove(card)) {
+        stateCheck(player.wisps.remove(card)) {
             "Resolved Wisp could not be removed from player hand: ${card.name}"
         }
     }
@@ -86,12 +90,12 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseWaterReroll
     ) {
-        check(player.tokens.hasWater) {
+        decisionCheck(player.tokens.hasWater) {
             "Player has no Water token"
         }
         val die = resolveHandDie(player, action.die)
 
-        check(player.tokens.pull(Token.WATER) != null) {
+        stateCheck(player.tokens.pull(Token.WATER) != null) {
             "Validated Water token could not be spent"
         }
         rollResolver.roll(player, die)
@@ -102,11 +106,11 @@ class SupportActionExecutor(
         game: Game,
         player: Player
     ) {
-        check(player.tokens.hasWater) {
+        decisionCheck(player.tokens.hasWater) {
             "Player has no Water token"
         }
 
-        check(player.tokens.pull(Token.WATER) != null) {
+        stateCheck(player.tokens.pull(Token.WATER) != null) {
             "Validated Water token could not be spent"
         }
         refreshResolver.refresh(player)
@@ -118,14 +122,14 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseMulch
     ) {
-        val sides = checkNotNull(action.token.sides) {
+        val sides = decisionNotNull(action.token.sides) {
             "Stored Mulch Support Action requires a stored die size"
         }
-        check(action.token in player.tokens.mulchTokens) {
+        decisionCheck(action.token in player.tokens.mulchTokens) {
             "Mulch token is not owned by player: ${action.token}"
         }
 
-        check(player.tokens.pull(action.token) != null) {
+        stateCheck(player.tokens.pull(action.token) != null) {
             "Validated Mulch token could not be spent"
         }
 
@@ -140,18 +144,18 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseWormFlip
     ) {
-        val current = checkNotNull(player.creature.get(action.cardId)) {
+        val current = decisionNotNull(player.creature.get(action.cardId)) {
             "Worm Flip target is not grafted: ${action.cardId}"
         }
         val worm = spendableWorm(player)
-        check(worm != null) {
+        decisionCheck(worm != null) {
             "Player has no Worm available for Flip"
         }
 
-        check(player.critters.remove(worm)) {
+        stateCheck(player.critters.remove(worm)) {
             "Validated Worm could not be spent"
         }
-        check(player.creature.flip(current.id)) {
+        stateCheck(player.creature.flip(current.id)) {
             "Validated Worm Flip target could not be flipped: ${current.id}"
         }
         game.grove.critters.add(Critter.WORM)
@@ -161,10 +165,10 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseButterfly
     ) {
-        check(action.butterfly in player.butterflies.all) {
+        decisionCheck(action.butterfly in player.butterflies.all) {
             "Butterfly is not owned by player: ${action.butterfly}"
         }
-        check(player.butterflies.isFaceUp(action.butterfly)) {
+        decisionCheck(player.butterflies.isFaceUp(action.butterfly)) {
             "Butterfly is not face up: ${action.butterfly}"
         }
         val die = resolveHandDie(player, action.die)
@@ -184,7 +188,7 @@ class SupportActionExecutor(
             ButterflyRollChoice.REROLLED -> Unit
         }
 
-        check(player.butterflies.faceDown(action.butterfly)) {
+        stateCheck(player.butterflies.faceDown(action.butterfly)) {
             "Used Butterfly could not be flipped face down: ${action.butterfly}"
         }
     }
@@ -194,7 +198,7 @@ class SupportActionExecutor(
         choice: HandDieChoice
     ): Die {
         val die = player.dice.hand.getOrNull(choice.index)
-        check(
+        decisionCheck(
             die != null &&
                 die.sides == choice.sides &&
                 die.value == choice.value

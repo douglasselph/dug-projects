@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect
 
+import dugsolutions.leaf.v35.error.configurationCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import java.text.Normalizer
 
 /**
@@ -542,7 +544,7 @@ Gain Water token
             val key = normalize(effectText)
             val previous = put(key, effect)
 
-            check(previous == null || previous == effect) {
+            configurationCheck(previous == null || previous == effect) {
                 "Two GameEffects normalize to the same effect text: $previous and $effect"
             }
         }

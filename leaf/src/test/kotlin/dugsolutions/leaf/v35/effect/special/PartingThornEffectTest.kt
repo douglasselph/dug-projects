@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FirstEffectChoiceStrategy
@@ -85,7 +86,7 @@ class PartingThornEffectTest {
         val card = graft(game, actor, PlantType.ROOT)
         actor.creature.faceUp(card.id)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             effect.execute(
                 EffectTestFixture.request(
                     game,

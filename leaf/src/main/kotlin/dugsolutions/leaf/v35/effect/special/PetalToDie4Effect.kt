@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -41,7 +44,7 @@ class PetalToDie4Effect(
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Petal To Die 4 is not currently executable"
         }
 
@@ -54,7 +57,7 @@ class PetalToDie4Effect(
                 )
             )
 
-        check(chosen in legalChoices) {
+        decisionCheck(chosen in legalChoices) {
             "EffectStrategy returned illegal Petal To Die 4 choice: " +
                 "$chosen; legal=$legalChoices"
         }
@@ -96,7 +99,7 @@ class PetalToDie4Effect(
     private fun gainD4SetToFour(
         request: GameEffectRequest
     ) {
-        check(
+        stateCheck(
             request.game.grove.graftBed.take(
                 DieSides.D4
             )
@@ -122,7 +125,7 @@ class PetalToDie4Effect(
                 choice = choice.die
             )
 
-        check(die.sides == DieSides.D4.value) {
+        decisionCheck(die.sides == DieSides.D4.value) {
             "Petal To Die 4 trash target is no longer a D4: $die"
         }
 

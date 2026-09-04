@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -172,7 +173,7 @@ class SupportActionExecutorTest {
         player.wisps.add(immediate)
         val fixture = fixture(player)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             fixture.executor.executeCultivation(
                 fixture.game,
                 player,
@@ -191,7 +192,7 @@ class SupportActionExecutorTest {
         player.tokens.add(Token.WATER)
         val fixture = fixture(player)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             fixture.executor.executeCultivation(
                 fixture.game,
                 player,

@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -40,7 +43,7 @@ class SnipHappensEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(
+        effectCheck(
             canExecute(
                 request
             )
@@ -92,7 +95,7 @@ class SnipHappensEffect : EffectHandler {
          * face-down card is never offered for an opponent who still has a
          * face-up card.
          */
-        check(
+        decisionCheck(
             chosen in legalChoices
         ) {
             "EffectStrategy returned illegal Snip Happens target: " +
@@ -107,7 +110,7 @@ class SnipHappensEffect : EffectHandler {
                         chosen.ownerId
                 }
 
-        check(
+        decisionCheck(
             opponent != null
         ) {
             "Chosen Snip Happens opponent is not part of this game: " +
@@ -119,7 +122,7 @@ class SnipHappensEffect : EffectHandler {
                 chosen.cardId
             )
 
-        check(
+        decisionCheck(
             currentCard != null &&
                 currentCard.card.name ==
                 chosen.cardName

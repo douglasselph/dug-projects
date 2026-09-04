@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.error.unsupportedGameEffect
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -76,7 +80,7 @@ class DieValueEffectHandler : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Die-value handler cannot execute effect: ${request.effect}"
         }
 
@@ -147,7 +151,7 @@ class DieValueEffectHandler : EffectHandler {
                         legalChoices = legalChoices
                     )
                 )
-                check(chosen in legalChoices) {
+                decisionCheck(chosen in legalChoices) {
                     "EffectStrategy returned illegal Root Kindred pair: " +
                         "$chosen; legal=$legalChoices"
                 }
@@ -180,7 +184,7 @@ class DieValueEffectHandler : EffectHandler {
                 repeatRaises(request, count)
             }
 
-            else -> error(
+            else -> unsupportedGameEffect(
                 "Unsupported effect reached DieValueEffectHandler: ${request.effect}"
             )
         }

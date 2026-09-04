@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -29,7 +31,7 @@ class WispquakeEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Wispquake handler cannot execute effect: ${request.effect}"
         }
 

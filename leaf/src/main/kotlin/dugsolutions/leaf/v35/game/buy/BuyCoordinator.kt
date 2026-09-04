@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.game.buy
 
+import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.decisionNotNull
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.GraftPlan
@@ -54,7 +58,7 @@ class BuyCoordinator(
                     ChoosePurchaseRequest(legalItems)
                 )
                 if (choice == BuyChoice.Done) break
-                check(choice is BuyChoice.Purchase && choice.item in legalItems) {
+                decisionCheck(choice is BuyChoice.Purchase && choice.item in legalItems) {
                     "BuyStrategy returned a purchase that was not offered: $choice"
                 }
 
@@ -74,12 +78,12 @@ class BuyCoordinator(
                     )
                 )
                 val resolvedPayment = validatePayment(player, item, payment)
-                check(item in legalItems(game, player)) {
+                decisionCheck(item in legalItems(game, player)) {
                     "Selected purchase is no longer available: $item"
                 }
 
                 val graftPlan = when (item) {
-                    is BuyItem.Plant -> checkNotNull(
+                    is BuyItem.Plant -> decisionNotNull(
                         graftResolver.prepare(player, item.card)
                     ) { "Selected Plant no longer has a legal graft placement" }
                     is BuyItem.Die -> null
@@ -153,16 +157,16 @@ class BuyCoordinator(
             val index = remainingDice.indexOfFirst {
                 it.sides == resource.sides && it.value == resource.value
             }
-            check(index >= 0) { "Payment contains an unavailable Hand die: $resource" }
+            decisionCheck(index >= 0) { "Payment contains an unavailable Hand die: $resource" }
             remainingDice.removeAt(index)
         }
 
         val remainingCritters = player.critters.all.toMutableList()
         val actualCritters = payment.critters.map { resource ->
-            check(resource.value == player.critterValues.valueOf(resource.critter)) {
+            decisionCheck(resource.value == player.critterValues.valueOf(resource.critter)) {
                 "Payment contains a stale Critter value: $resource"
             }
-            check(remainingCritters.remove(resource.critter)) {
+            decisionCheck(remainingCritters.remove(resource.critter)) {
                 "Payment contains an unavailable Critter: $resource"
             }
             resource.critter
@@ -171,10 +175,10 @@ class BuyCoordinator(
         val total =
             actualDice.sumOf { it.value } +
                 payment.critters.sumOf { it.value }
-        check(total >= item.cost) {
+        decisionCheck(total >= item.cost) {
             "Payment does not meet purchase cost: paid=$total cost=${item.cost}"
         }
-        check(total > 0 || item.cost == 0) {
+        decisionCheck(total > 0 || item.cost == 0) {
             "Non-zero purchase requires at least one payment resource"
         }
         return ResolvedPayment(actualDice, actualCritters, total)
@@ -189,30 +193,30 @@ class BuyCoordinator(
         boughtDie: Die?
     ) {
         when (item) {
-            is BuyItem.Die -> check(game.grove.graftBed.take(item.sides)) {
+            is BuyItem.Die -> stateCheck(game.grove.graftBed.take(item.sides)) {
                 "Purchased die became unavailable: ${item.sides}"
             }
-            is BuyItem.Plant -> check(game.grove.plantMarket.take(item.card) != null) {
+            is BuyItem.Plant -> stateCheck(game.grove.plantMarket.take(item.card) != null) {
                 "Purchased Plant became unavailable: ${item.card.name}"
             }
         }
 
         payment.dice.forEach { die ->
-            check(player.dice.removeFromHand(die) != null) {
+            stateCheck(player.dice.removeFromHand(die) != null) {
                 "Validated payment die could not be removed"
             }
             player.dice.addToDiscard(die)
         }
         payment.critters.forEach { critter ->
-            check(player.critters.remove(critter)) {
+            stateCheck(player.critters.remove(critter)) {
                 "Validated payment Critter could not be removed"
             }
             game.grove.critters.add(critter)
         }
 
         when (item) {
-            is BuyItem.Die -> player.dice.addToDiscard(checkNotNull(boughtDie))
-            is BuyItem.Plant -> graftResolver.resolve(player, checkNotNull(graftPlan))
+            is BuyItem.Die -> player.dice.addToDiscard(stateNotNull(boughtDie) { "Validated bought die was not created" })
+            is BuyItem.Plant -> graftResolver.resolve(player, stateNotNull(graftPlan) { "Validated graft plan was not retained" })
         }
     }
 

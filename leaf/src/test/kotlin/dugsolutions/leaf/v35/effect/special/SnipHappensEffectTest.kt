@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FirstEffectChoiceStrategy
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -223,7 +224,7 @@ class SnipHappensEffectTest {
             )
 
         assertFailsWith<
-            IllegalStateException
+            InvalidDecisionException
         > {
             effect.execute(
                 EffectTestFixture.request(

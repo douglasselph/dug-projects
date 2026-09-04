@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
@@ -68,7 +71,7 @@ private fun chooseRequiredDie(
     legalChoices: List<EffectDieChoice>,
     resolve: (EffectDieChoice) -> Die
 ): Die {
-    check(legalChoices.isNotEmpty()) {
+    effectCheck(legalChoices.isNotEmpty()) {
         "No legal die targets for effect: ${request.effect}"
     }
 
@@ -78,7 +81,7 @@ private fun chooseRequiredDie(
             legalChoices = legalChoices
         )
     )
-    check(chosen in legalChoices) {
+    decisionCheck(chosen in legalChoices) {
         "EffectStrategy returned an illegal die choice: $chosen; legal=$legalChoices"
     }
 
@@ -95,7 +98,7 @@ internal fun chooseOptionalHandDie(
             legalChoices = legalChoices
         )
     )
-    check(chosen == null || chosen in legalChoices) {
+    decisionCheck(chosen == null || chosen in legalChoices) {
         "EffectStrategy returned an illegal optional die choice: $chosen"
     }
 
@@ -126,7 +129,7 @@ internal fun resolveHandDice(
     choices: List<EffectDieChoice>
 ): List<Die> {
     val handSnapshot = player.dice.hand
-    check(choices.map { it.index }.distinct().size == choices.size) {
+    decisionCheck(choices.map { it.index }.distinct().size == choices.size) {
         "Effect selected the same Hand die more than once: $choices"
     }
     return choices.map { choice ->
@@ -154,7 +157,7 @@ private fun resolveDie(
     zone: String
 ): Die {
     val die = dice.getOrNull(choice.index)
-    check(
+    decisionCheck(
         die != null &&
             die.sides == choice.sides &&
             die.value == choice.value

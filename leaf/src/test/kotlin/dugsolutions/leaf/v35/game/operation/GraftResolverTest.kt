@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -57,7 +58,7 @@ class GraftResolverTest {
             )
         )
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             GraftResolver(GameChronicle()).prepare(player, card(PlantType.ROOT))
         }
 

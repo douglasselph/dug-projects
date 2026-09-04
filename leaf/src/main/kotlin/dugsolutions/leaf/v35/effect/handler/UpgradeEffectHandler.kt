@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.error.effectNotNull
+import dugsolutions.leaf.v35.error.unsupportedGameEffect
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -39,7 +43,7 @@ class UpgradeEffectHandler(
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Upgrade handler cannot execute effect: ${request.effect}"
         }
 
@@ -63,7 +67,7 @@ class UpgradeEffectHandler(
                     legalChoices = upgradeChoices(request)
                 )
                 val from = DieSides.from(die.sides)
-                val to = checkNotNull(upgradeResolver.nextNormalStep(from)) {
+                val to = effectNotNull(upgradeResolver.nextNormalStep(from)) {
                     "Validated Root Awakening source had no next step: $from"
                 }
 
@@ -81,7 +85,7 @@ class UpgradeEffectHandler(
                 )
             }
 
-            else -> error(
+            else -> unsupportedGameEffect(
                 "Unsupported effect reached UpgradeEffectHandler: ${request.effect}"
             )
         }

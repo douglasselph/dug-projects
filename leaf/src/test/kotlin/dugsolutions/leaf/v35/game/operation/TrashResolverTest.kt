@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.InvalidGameStateException
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -169,7 +170,7 @@ class TrashResolverTest {
             game.grove.graftBed.counts
 
         assertFailsWith<
-            IllegalStateException
+            InvalidGameStateException
         > {
             resolver.trashDieFromHand(
                 game = game,

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FirstEffectChoiceStrategy
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -123,7 +124,7 @@ class AlluringNectarEffectTest {
         actor.butterflies.faceDown(Butterfly.YELLOW)
         moveButterflyFromGrove(game, opponent, Butterfly.GREEN)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             effect.execute(
                 EffectTestFixture.request(
                     game,

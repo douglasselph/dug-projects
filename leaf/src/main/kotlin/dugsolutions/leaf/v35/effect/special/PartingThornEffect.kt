@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -31,7 +34,7 @@ class PartingThornEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Parting Thorn received wrong effect: ${request.effect}"
         }
 
@@ -66,7 +69,7 @@ class PartingThornEffect : EffectHandler {
                 )
             ) ?: return
 
-        check(chosen in legalChoices) {
+        decisionCheck(chosen in legalChoices) {
             "EffectStrategy returned illegal Plant target: " +
                 "$chosen; legal=$legalChoices"
         }
@@ -76,7 +79,7 @@ class PartingThornEffect : EffectHandler {
                 chosen.cardId
             )
 
-        check(
+        decisionCheck(
             current != null &&
                 current.card.name == chosen.cardName &&
                 current.isFaceUp == chosen.isFaceUp
@@ -84,7 +87,7 @@ class PartingThornEffect : EffectHandler {
             "Chosen Parting Thorn Plant target is stale or no longer owned: $chosen"
         }
 
-        check(
+        stateCheck(
             request.actor.creature.flip(
                 chosen.cardId
             )

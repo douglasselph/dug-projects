@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -158,7 +159,7 @@ class WoundResolverTest {
         strategy.choiceOverride = { WoundChoice.Snip(it.first().card) }
 
         // Act / Assert
-        assertFailsWith<IllegalStateException> { resolver.resolve(player) }
+        assertFailsWith<InvalidDecisionException> { resolver.resolve(player) }
         assertTrue(player.creature.get(card.id)!!.isFaceUp)
         assertTrue(chronicle.entries.isEmpty())
     }
@@ -172,7 +173,7 @@ class WoundResolverTest {
         strategy.choiceOverride = { WoundChoice.Flip(it.first().card) }
 
         // Act / Assert
-        assertFailsWith<IllegalStateException> { resolver.resolve(player) }
+        assertFailsWith<InvalidDecisionException> { resolver.resolve(player) }
         assertEquals(card, player.creature.get(card.id))
         assertEquals(remainingBefore, stack.remaining)
         assertTrue(chronicle.entries.isEmpty())
@@ -187,7 +188,7 @@ class WoundResolverTest {
         strategy.choiceOverride = { WoundChoice.Flip(foreign) }
 
         // Act / Assert
-        assertFailsWith<IllegalStateException> { resolver.resolve(player) }
+        assertFailsWith<InvalidDecisionException> { resolver.resolve(player) }
         assertTrue(player.creature.get(offered.id)!!.isFaceUp)
         assertTrue(player.creature.get(foreign.id)!!.isFaceDown)
     }
@@ -295,7 +296,7 @@ class WoundResolverTest {
         )
 
         assertFailsWith<
-            IllegalStateException
+            InvalidDecisionException
         > {
             resolver.resolve(
                 player,

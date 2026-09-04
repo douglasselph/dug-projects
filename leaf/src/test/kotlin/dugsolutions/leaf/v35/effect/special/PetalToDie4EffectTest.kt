@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -234,7 +235,7 @@ class PetalToDie4EffectTest {
             )
 
         assertFailsWith<
-            IllegalStateException
+            InvalidDecisionException
         > {
             effect.execute(
                 EffectTestFixture.request(

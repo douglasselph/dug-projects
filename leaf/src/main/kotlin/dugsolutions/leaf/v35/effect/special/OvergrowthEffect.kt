@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectNotNull
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -40,7 +43,7 @@ class OvergrowthEffect(
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Overgrowth cannot execute in the current state"
         }
 
@@ -53,7 +56,7 @@ class OvergrowthEffect(
         }
         val die = chooseRequiredHandDie(request, legalChoices)
         val from = DieSides.from(die.sides)
-        val to = checkNotNull(
+        val to = effectNotNull(
             upgradeResolver.availableStep(
                 game = request.game,
                 sides = from,

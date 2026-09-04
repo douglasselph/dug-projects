@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -29,7 +32,7 @@ class AlluringNectarEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Alluring Nectar received wrong effect: ${request.effect}"
         }
 
@@ -44,7 +47,7 @@ class AlluringNectarEffect : EffectHandler {
                     )
                 )
 
-            check(chosen in legalChoices) {
+            decisionCheck(chosen in legalChoices) {
                 "EffectStrategy returned illegal Butterfly target: " +
                     "$chosen; legal=$legalChoices"
             }
@@ -56,7 +59,7 @@ class AlluringNectarEffect : EffectHandler {
         }
 
         request.actor.butterflies.all.forEach { butterfly ->
-            check(request.actor.butterflies.faceUp(butterfly)) {
+            stateCheck(request.actor.butterflies.faceUp(butterfly)) {
                 "Alluring Nectar could not Refresh owned Butterfly: $butterfly"
             }
         }
@@ -86,11 +89,11 @@ class AlluringNectarEffect : EffectHandler {
                     it.id == choice.ownerId
             }
 
-        check(opponent != null) {
+        stateCheck(opponent != null) {
             "Chosen Butterfly owner is not a legal opponent: ${choice.ownerId}"
         }
 
-        check(
+        stateCheck(
             opponent.butterflies.remove(
                 choice.butterfly
             )

@@ -1,5 +1,10 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.unsupportedGameEffect
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -84,7 +89,7 @@ class ResourceEffectHandler : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Resource handler cannot execute effect: ${request.effect}"
         }
 
@@ -136,7 +141,7 @@ class ResourceEffectHandler : EffectHandler {
             GameEffect.GAIN_OR_REFRESH_YELLOW_BUTTERFLY ->
                 gainOrRefreshButterfly(request, Butterfly.YELLOW)
 
-            else -> error(
+            else -> unsupportedGameEffect(
                 "Unsupported effect reached ResourceEffectHandler: ${request.effect}"
             )
         }
@@ -145,7 +150,7 @@ class ResourceEffectHandler : EffectHandler {
     private fun gainWater(
         request: GameEffectRequest
     ) {
-        val token = checkNotNull(
+        val token = stateNotNull(
             request.game.grove.tokens.pull(Token.WATER)
         ) {
             "Validated Water effect could not take Water from Grove"
@@ -180,7 +185,7 @@ class ResourceEffectHandler : EffectHandler {
     ) {
         val emptyMulch = request.game.grove.tokens.mulchTokens
             .firstOrNull { it.sides == null }
-        check(emptyMulch != null) {
+        stateCheck(emptyMulch != null) {
             "Validated Mulch effect has no empty Mulch token in Grove"
         }
 
@@ -189,10 +194,10 @@ class ResourceEffectHandler : EffectHandler {
         } else {
             request.actor.dice.removeFromHand(die)
         }
-        check(removed != null) {
+        stateCheck(removed != null) {
             "Validated Mulch die could not be removed from player dice: $die"
         }
-        check(request.game.grove.tokens.pull(emptyMulch) != null) {
+        stateCheck(request.game.grove.tokens.pull(emptyMulch) != null) {
             "Validated empty Mulch token could not be removed from Grove"
         }
 
@@ -216,11 +221,11 @@ class ResourceEffectHandler : EffectHandler {
                     ownedCritters = request.actor.critters.all
                 )
             )
-            check(chosen in legalChoices) {
+            decisionCheck(chosen in legalChoices) {
                 "RewardStrategy returned illegal Critter choice for effect: " +
                     "$chosen; legal=$legalChoices"
             }
-            check(request.game.grove.critters.remove(chosen)) {
+            stateCheck(request.game.grove.critters.remove(chosen)) {
                 "Chosen Critter was no longer available in Grove: $chosen"
             }
             request.actor.critters.add(chosen)
@@ -272,7 +277,7 @@ class ResourceEffectHandler : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        val card = checkNotNull(request.game.grove.wispDeck.draw()) {
+        val card = stateNotNull(request.game.grove.wispDeck.draw()) {
             "Validated Wisp gain found an empty Wisp deck"
         }
 
@@ -295,7 +300,7 @@ class ResourceEffectHandler : EffectHandler {
         request: GameEffectRequest,
         sides: DieSides
     ) {
-        check(request.game.grove.graftBed.take(sides)) {
+        stateCheck(request.game.grove.graftBed.take(sides)) {
             "Validated gained die was no longer available: $sides"
         }
         request.actor.dice.addToDiscard(
@@ -319,7 +324,7 @@ class ResourceEffectHandler : EffectHandler {
         butterfly: Butterfly
     ) {
         if (butterfly in request.actor.butterflies.all) {
-            check(request.actor.butterflies.faceUp(butterfly)) {
+            stateCheck(request.actor.butterflies.faceUp(butterfly)) {
                 "Owned Butterfly could not be refreshed: $butterfly"
             }
             return
@@ -331,11 +336,11 @@ class ResourceEffectHandler : EffectHandler {
         }
 
         if (previousOwner != null) {
-            check(previousOwner.butterflies.remove(butterfly)) {
+            stateCheck(previousOwner.butterflies.remove(butterfly)) {
                 "Butterfly could not be removed from previous owner: $butterfly"
             }
         } else {
-            check(request.game.grove.butterflies.remove(butterfly)) {
+            stateCheck(request.game.grove.butterflies.remove(butterfly)) {
                 "Butterfly could not be removed from Grove: $butterfly"
             }
         }

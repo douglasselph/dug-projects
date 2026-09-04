@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.error.lifecycleCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
@@ -61,14 +63,14 @@ class Game(
         get() = roundDeck.isEmpty
 
     internal fun start() {
-        check(status == GameStatus.READY) {
+        lifecycleCheck(status == GameStatus.READY) {
             "Game can only start from READY: $status"
         }
         status = GameStatus.RUNNING
     }
 
     internal fun complete() {
-        check(status == GameStatus.RUNNING) {
+        lifecycleCheck(status == GameStatus.RUNNING) {
             "Game can only complete from RUNNING: $status"
         }
         status = GameStatus.COMPLETE

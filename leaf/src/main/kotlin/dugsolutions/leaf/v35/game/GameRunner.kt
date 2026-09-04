@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 
@@ -17,7 +18,7 @@ class GameRunner(
 
         var roundsCompleted = 0
         while (!game.roundDeck.isEmpty) {
-            checkNotNull(roundCoordinator.executeNext(game)) {
+            stateNotNull(roundCoordinator.executeNext(game)) {
                 "RoundDeck reported cards remaining but revealed no card"
             }
             roundsCompleted++

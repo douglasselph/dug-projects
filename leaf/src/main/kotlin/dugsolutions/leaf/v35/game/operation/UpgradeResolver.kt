@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
@@ -101,7 +103,7 @@ class UpgradeResolver {
         die: Die
     ): UpgradeResolution {
         val from = DieSides.from(die.sides)
-        val to = checkNotNull(nextNormalStep(from)) {
+        val to = stateNotNull(nextNormalStep(from)) {
             "D20 cannot be upgraded by a normal one-step Upgrade"
         }
         return upgradeFromHand(
@@ -139,23 +141,23 @@ class UpgradeResolver {
         destination: Destination
     ): UpgradeResolution {
         val current = player.dice.hand.firstOrNull { it == die }
-        check(current != null) {
+        stateCheck(current != null) {
             "Upgrade die is not in player Hand: $die"
         }
 
         val from = DieSides.from(current.sides)
-        check(to in largerSizes(from)) {
+        stateCheck(to in largerSizes(from)) {
             "Upgrade target must be larger than source: from=$from to=$to"
         }
-        check(game.grove.graftBed.has(to)) {
+        stateCheck(game.grove.graftBed.has(to)) {
             "Upgrade size is unavailable in Graft Bed: $to"
         }
 
         /* Validate every expected failure before mutating any game state. */
-        check(player.dice.removeFromHand(current) != null) {
+        stateCheck(player.dice.removeFromHand(current) != null) {
             "Validated Upgrade die could not be removed from Hand: $current"
         }
-        check(game.grove.graftBed.take(to)) {
+        stateCheck(game.grove.graftBed.take(to)) {
             "Validated Upgrade die became unavailable in Graft Bed: $to"
         }
 

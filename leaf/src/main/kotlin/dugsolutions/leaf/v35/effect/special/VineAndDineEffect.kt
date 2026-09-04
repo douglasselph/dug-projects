@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -28,7 +31,7 @@ class VineAndDineEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Vine and Dine cannot execute in the current state"
         }
 
@@ -39,19 +42,19 @@ class VineAndDineEffect : EffectHandler {
                 legalChoices = legalChoices
             )
         )
-        check(chosen in legalChoices) {
+        decisionCheck(chosen in legalChoices) {
             "EffectStrategy returned illegal Vine and Dine choice: " +
                 "$chosen; legal=$legalChoices"
         }
 
         /* Resolve/validate every target before mutating either resource. */
         val die = resolveHandDie(request.actor, chosen.die)
-        check(chosen.critter in request.actor.critters.all) {
+        decisionCheck(chosen.critter in request.actor.critters.all) {
             "Chosen Vine and Dine Critter is no longer owned: ${chosen.critter}"
         }
 
         /* Trash means remove from the game: do NOT return this Critter to Grove. */
-        check(request.actor.critters.remove(chosen.critter)) {
+        stateCheck(request.actor.critters.remove(chosen.critter)) {
             "Validated Vine and Dine Critter could not be Trashed: ${chosen.critter}"
         }
         die.adjustBy(5)

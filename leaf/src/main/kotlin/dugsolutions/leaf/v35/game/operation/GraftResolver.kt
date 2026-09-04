@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.plant.domain.PlantCard
@@ -23,18 +25,18 @@ class GraftResolver(
         val placement = player.decisions.placement.choose(
             ChooseCreaturePlacementRequest(card, legal)
         )
-        check(placement in legal) {
+        decisionCheck(placement in legal) {
             "CreaturePlacementStrategy returned an illegal placement: $placement"
         }
         return GraftPlan(card, placement)
     }
 
     fun resolve(player: Player, plan: GraftPlan): CreatureCard {
-        check(player.creature.canGraft(plan.card, plan.placement)) {
+        stateCheck(player.creature.canGraft(plan.card, plan.placement)) {
             "Prepared graft placement is no longer legal: ${plan.placement}"
         }
         val grafted = player.creature.graft(plan.card, plan.placement)
-        check(grafted.isFaceDown) { "Newly grafted Plant must be face down" }
+        stateCheck(grafted.isFaceDown) { "Newly grafted Plant must be face down" }
         chronicle.record(
             Moment.Marker(
                 "GRAFT player=${player.id.value} plant=${plan.card.name}"

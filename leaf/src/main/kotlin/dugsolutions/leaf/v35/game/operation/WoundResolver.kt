@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.grove.Grove
@@ -80,7 +83,7 @@ class WoundResolver(
                 )
             )
 
-        check(choice in legalChoices) {
+        decisionCheck(choice in legalChoices) {
             "Wound strategy returned a choice that was not offered: $choice"
         }
 
@@ -104,7 +107,7 @@ class WoundResolver(
         val legalChoices =
             legalChoices(player)
 
-        check(choice in legalChoices) {
+        decisionCheck(choice in legalChoices) {
             "Explicit wound target is illegal: $choice; legal=$legalChoices"
         }
 
@@ -136,7 +139,7 @@ class WoundResolver(
         player: Player,
         card: CreatureCard
     ): WoundResolution.Flipped {
-        check(
+        stateCheck(
             player.creature.faceDown(
                 card.id
             )
@@ -145,11 +148,13 @@ class WoundResolver(
         }
 
         val flipped =
-            requireNotNull(
+            stateNotNull(
                 player.creature.get(
                     card.id
                 )
-            )
+            ) {
+                "Flipped wound target disappeared after mutation: ${card.id}"
+            }
 
         chronicle.record(
             Moment.Marker(
@@ -171,7 +176,7 @@ class WoundResolver(
                 card.card
             )
 
-        check(
+        stateCheck(
             stack != null &&
                 stack.remaining <
                 stack.card.quantity
@@ -180,7 +185,7 @@ class WoundResolver(
         }
 
         val snipped =
-            checkNotNull(
+            stateNotNull(
                 player.creature.snip(
                     card.id
                 )
@@ -188,7 +193,7 @@ class WoundResolver(
                 "Unable to snip wound target ${card.id}"
             }
 
-        check(
+        stateCheck(
             grove.plantMarket.returnCard(
                 snipped.card
             )

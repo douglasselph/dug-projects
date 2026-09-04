@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
+import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -88,7 +92,7 @@ class CultivationBuildCoordinator(
                     roundCard = roundCard,
                     mainActionsRemaining = 2 - mainActionsUsed
                 )
-                check(legalChoices.isNotEmpty()) {
+                stateCheck(legalChoices.isNotEmpty()) {
                     "Player ${player.id.value} has no legal Cultivation action"
                 }
 
@@ -99,13 +103,13 @@ class CultivationBuildCoordinator(
                         legalChoices = legalChoices
                     )
                 )
-                check(chosen in legalChoices) {
+                decisionCheck(chosen in legalChoices) {
                     "CultivationStrategy returned an action that was not offered: $chosen"
                 }
 
                 when (chosen) {
                     is CultivationAction.Main -> {
-                        check(mainActionsUsed < 2) {
+                        decisionCheck(mainActionsUsed < 2) {
                             "Player ${player.id.value} has already used both Main Actions"
                         }
                         executeMainAction(
@@ -143,7 +147,7 @@ class CultivationBuildCoordinator(
                     }
 
                     CultivationAction.Done -> {
-                        check(mainActionsUsed == 2) {
+                        decisionCheck(mainActionsUsed == 2) {
                             "Player ${player.id.value} cannot finish Build before using both Main Actions"
                         }
                         break
@@ -302,13 +306,13 @@ class CultivationBuildCoordinator(
     ) {
         when (action) {
             CultivationMainAction.Draw ->
-                checkNotNull(rollResolver.draw(player)) {
+                stateNotNull(rollResolver.draw(player)) {
                     "Draw became unavailable for player ${player.id.value}"
                 }
 
             is CultivationMainAction.ActivatePlant -> {
                 val current = player.creature.get(action.card.id)
-                check(current != null && current.isFaceUp && current == action.card) {
+                decisionCheck(current != null && current.isFaceUp && current == action.card) {
                     "Plant activation target is no longer legal: ${action.card.id}"
                 }
                 val request = GameEffectRequest(
@@ -318,11 +322,11 @@ class CultivationBuildCoordinator(
                     source = GameEffectSource.Plant(current),
                     phase = GameEffectPhase.CULTIVATION
                 )
-                check(effectExecutor.canExecute(request)) {
+                effectCheck(effectExecutor.canExecute(request)) {
                     "Plant effect is no longer executable: ${current.card.effect}"
                 }
                 effectExecutor.execute(request)
-                check(player.creature.faceDown(current.id)) {
+                stateCheck(player.creature.faceDown(current.id)) {
                     "Activated Plant could not be flipped face down: ${current.id}"
                 }
             }
@@ -352,7 +356,7 @@ class CultivationBuildCoordinator(
             source = GameEffectSource.Round(roundCard, slot),
             phase = GameEffectPhase.CULTIVATION
         )
-        check(effectExecutor.canExecute(request)) {
+        effectCheck(effectExecutor.canExecute(request)) {
             "Round effect is no longer executable: $effect"
         }
         effectExecutor.execute(request)

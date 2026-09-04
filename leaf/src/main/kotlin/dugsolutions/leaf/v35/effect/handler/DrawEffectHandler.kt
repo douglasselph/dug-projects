@@ -1,5 +1,9 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.error.unsupportedGameEffect
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -64,7 +68,7 @@ class DrawEffectHandler : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Draw handler cannot execute effect: ${request.effect}"
         }
 
@@ -95,7 +99,7 @@ class DrawEffectHandler : EffectHandler {
                 )
                 var attempts = 0
                 do {
-                    check(attempts++ < MAX_REROLL_ATTEMPTS) {
+                    effectCheck(attempts++ < MAX_REROLL_ATTEMPTS) {
                         "Reroll-until-3+ exceeded $MAX_REROLL_ATTEMPTS attempts"
                     }
                     rollResolver.roll(
@@ -150,14 +154,14 @@ class DrawEffectHandler : EffectHandler {
                     request,
                     discardChoices(request.actor)
                 )
-                check(request.actor.dice.removeFromDiscard(die) != null) {
+                stateCheck(request.actor.dice.removeFromDiscard(die) != null) {
                     "Selected Discard die could not be removed: $die"
                 }
                 request.actor.dice.addToHand(die)
                 rollResolver.roll(request.actor, die)
             }
 
-            else -> error(
+            else -> unsupportedGameEffect(
                 "Unsupported effect reached DrawEffectHandler: ${request.effect}"
             )
         }
@@ -177,14 +181,14 @@ class DrawEffectHandler : EffectHandler {
             )
         )
 
-        check(chosen.selected.size <= legalChoices.size) {
+        decisionCheck(chosen.selected.size <= legalChoices.size) {
             "Root Recall selected too many dice: ${chosen.selected}"
         }
-        check(chosen.selected.all { it in legalChoices }) {
+        decisionCheck(chosen.selected.all { it in legalChoices }) {
             "EffectStrategy returned illegal Root Recall dice: " +
                 "${chosen.selected}; legal=$legalChoices"
         }
-        check(chosen.selected.map { it.index }.distinct().size == chosen.selected.size) {
+        decisionCheck(chosen.selected.map { it.index }.distinct().size == chosen.selected.size) {
             "Root Recall selected the same die more than once: ${chosen.selected}"
         }
 
@@ -195,7 +199,7 @@ class DrawEffectHandler : EffectHandler {
         )
 
         selectedDice.forEach { die ->
-            check(request.actor.dice.removeFromHand(die) != null) {
+            stateCheck(request.actor.dice.removeFromHand(die) != null) {
                 "Validated Root Recall die could not be removed from Hand: $die"
             }
             request.actor.dice.addToDiscard(die)
@@ -213,7 +217,7 @@ class DrawEffectHandler : EffectHandler {
             request,
             handChoices(request.actor)
         )
-        check(request.actor.dice.removeFromHand(die) != null) {
+        stateCheck(request.actor.dice.removeFromHand(die) != null) {
             "Selected Hand die could not be discarded: $die"
         }
         request.actor.dice.addToDiscard(die)

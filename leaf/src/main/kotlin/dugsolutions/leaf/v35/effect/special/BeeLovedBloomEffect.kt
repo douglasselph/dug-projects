@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -32,7 +35,7 @@ class BeeLovedBloomEffect : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        check(canExecute(request)) {
+        effectCheck(canExecute(request)) {
             "Bee-loved Bloom received wrong effect: ${request.effect}"
         }
 
@@ -48,7 +51,7 @@ class BeeLovedBloomEffect : EffectHandler {
                     )
                 )
 
-            check(chosen in legalSources) {
+            decisionCheck(chosen in legalSources) {
                 "EffectStrategy returned illegal Bee source: " +
                     "$chosen; legal=$legalSources"
             }
@@ -101,7 +104,7 @@ class BeeLovedBloomEffect : EffectHandler {
     ) {
         when (source) {
             EffectBeeSourceChoice.Grove -> {
-                check(
+                stateCheck(
                     request.game.grove.critters.remove(
                         Critter.BEE
                     )
@@ -117,12 +120,12 @@ class BeeLovedBloomEffect : EffectHandler {
                             it !== request.actor
                     }
 
-                check(opponent != null) {
+                stateCheck(opponent != null) {
                     "Chosen Bee opponent is not part of this game: " +
                         source.playerId
                 }
 
-                check(
+                stateCheck(
                     opponent.critters.remove(
                         Critter.BEE
                     )

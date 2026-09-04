@@ -1,5 +1,8 @@
 package dugsolutions.leaf.v35.effect
 
+import dugsolutions.leaf.v35.error.effectNotNull
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.handler.DieValueEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
@@ -47,13 +50,13 @@ class DefaultGameEffectExecutor(
     override fun execute(
         request: GameEffectRequest
     ) {
-        val handler = checkNotNull(
+        val handler = effectNotNull(
             handlerFor(request.effect)
         ) {
             "GameEffect is not currently supported: ${request.effect}"
         }
 
-        check(handler.canExecute(request)) {
+        effectCheck(handler.canExecute(request)) {
             "GameEffect is not currently executable: ${request.effect}"
         }
 

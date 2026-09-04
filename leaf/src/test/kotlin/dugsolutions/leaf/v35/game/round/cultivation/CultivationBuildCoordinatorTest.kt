@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -303,7 +304,7 @@ class CultivationBuildCoordinatorTest {
         val first = player(1, emptyList(), strategy)
         val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             fixture.coordinator.execute(fixture.game, fixture.card)
         }
 

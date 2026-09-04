@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.operation
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.common.CardDataFiles
@@ -446,7 +447,7 @@ class RollResolverTest {
             )
 
         assertFailsWith<
-            IllegalStateException
+            InvalidDecisionException
         > {
             resolver.draw(player)
         }

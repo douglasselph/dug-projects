@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect
 
+import dugsolutions.leaf.v35.error.EffectExecutionException
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
@@ -170,7 +172,7 @@ class DefaultGameEffectExecutorTest {
         )
         val game = game(actor)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3))
         }
 
@@ -184,7 +186,7 @@ class DefaultGameEffectExecutorTest {
         val request = request(game, actor, GameEffect.SET_DIE_TO_MATCH_ANOTHER)
 
         assertFalse(executor.canExecute(request))
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<EffectExecutionException> {
             executor.execute(request)
         }
     }
@@ -215,7 +217,7 @@ class DefaultGameEffectExecutorTest {
         val request = request(game, actor, GameEffect.GAIN_WATER_TOKEN)
 
         assertFalse(executor.canExecute(request))
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<EffectExecutionException> {
             executor.execute(request)
         }
         assertEquals(0, actor.tokens.waterCount)

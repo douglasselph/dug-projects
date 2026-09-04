@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.buy
 
+import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
@@ -212,7 +213,7 @@ class BuyCoordinatorTest {
         val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
         val before = fixture.game.grove.graftBed.count(DieSides.D6)
 
-        assertFailsWith<IllegalStateException> { fixture.coordinator.execute(fixture.game) }
+        assertFailsWith<InvalidDecisionException> { fixture.coordinator.execute(fixture.game) }
 
         assertEquals(listOf(owned), buyer.dice.hand)
         assertTrue(buyer.dice.discard.isEmpty())
@@ -226,7 +227,7 @@ class BuyCoordinatorTest {
         val buyer = player(1, listOf(die(20, 20)), buyerStrategy)
         val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
 
-        assertFailsWith<IllegalStateException> { fixture.coordinator.execute(fixture.game) }
+        assertFailsWith<InvalidDecisionException> { fixture.coordinator.execute(fixture.game) }
 
         assertEquals(0, fixture.game.grove.graftBed.count(DieSides.D4))
         assertEquals(1, buyer.dice.handSize)
@@ -281,7 +282,7 @@ class BuyCoordinatorTest {
         val buyer = player(1, listOf(die(6, 6), die(8, 8)), buyerStrategy)
         val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<InvalidDecisionException> {
             fixture.coordinator.execute(fixture.game)
         }
 

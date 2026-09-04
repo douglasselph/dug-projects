@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.error.GameLifecycleException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
@@ -85,7 +86,7 @@ class GameRunnerTest {
         val entriesBefore = game.chronicle.entries
 
         // Act / Assert
-        assertFailsWith<IllegalStateException> { runner.run(game) }
+        assertFailsWith<GameLifecycleException> { runner.run(game) }
         assertEquals(entriesBefore, game.chronicle.entries)
     }
 
@@ -117,7 +118,7 @@ class GameRunnerTest {
         assertFailsWith<IllegalStateException> { failing.run(game) }
 
         // Act / Assert
-        assertFailsWith<IllegalStateException> { runner().run(game) }
+        assertFailsWith<GameLifecycleException> { runner().run(game) }
         assertEquals(GameStatus.RUNNING, game.status)
     }
 
