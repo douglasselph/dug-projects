@@ -24,69 +24,175 @@ sealed interface WoundResolution {
 /**
  * Coordinates one Flip It or Snip It wound without owning Creature geometry
  * or decision policy.
+ *
+ * Normal wounds use [resolve] and let the wounded player's WoundStrategy pick
+ * among the legal targets. Effects such as Snip Happens may instead choose the
+ * exact target externally and call [resolve] with an explicit [WoundChoice].
+ * Both paths use the same legality check and mutation code.
  */
 class WoundResolver(
     private val grove: Grove,
     private val chronicle: Chronicle
 ) {
 
-    fun resolve(player: Player): WoundResolution {
-        val faceUpCards = player.creature.cards.filter { it.isFaceUp }
-        val legalChoices =
-            if (faceUpCards.isNotEmpty()) {
-                faceUpCards.map(WoundChoice::Flip)
-            } else {
-                player.creature.snippableCards.map(WoundChoice::Snip)
+    /**
+     * Current legal wound targets for [player].
+     *
+     * Face-up cards always take priority. Only when none remain may a Wound
+     * Snip one of Creature's current outer/snippable cards.
+     */
+    fun legalChoices(
+        player: Player
+    ): List<WoundChoice> {
+        val faceUpCards =
+            player.creature.cards.filter {
+                it.isFaceUp
             }
+
+        return if (faceUpCards.isNotEmpty()) {
+            faceUpCards.map(
+                WoundChoice::Flip
+            )
+        } else {
+            player.creature.snippableCards.map(
+                WoundChoice::Snip
+            )
+        }
+    }
+
+    /**
+     * Resolve a normal wound, asking the wounded player's WoundStrategy.
+     */
+    fun resolve(
+        player: Player
+    ): WoundResolution {
+        val legalChoices =
+            legalChoices(player)
 
         if (legalChoices.isEmpty()) {
             return WoundResolution.NoLegalTarget
         }
 
-        val choice = player.decisions.wound.choose(
-            ChooseWoundRequest(legalChoices)
-        )
+        val choice =
+            player.decisions.wound.choose(
+                ChooseWoundRequest(
+                    legalChoices
+                )
+            )
 
         check(choice in legalChoices) {
             "Wound strategy returned a choice that was not offered: $choice"
         }
 
-        return when (choice) {
-            is WoundChoice.Flip -> flip(player, choice.card)
-            is WoundChoice.Snip -> snip(player, choice.card)
-        }
+        return resolveLegalChoice(
+            player = player,
+            choice = choice
+        )
     }
+
+    /**
+     * Resolve a wound whose exact target was chosen by another rule/effect.
+     *
+     * The choice is revalidated against the player's CURRENT wound legality
+     * before any mutation. This intentionally rejects a face-down/Snip target
+     * whenever that player still has any face-up Plant cards.
+     */
+    fun resolve(
+        player: Player,
+        choice: WoundChoice
+    ): WoundResolution {
+        val legalChoices =
+            legalChoices(player)
+
+        check(choice in legalChoices) {
+            "Explicit wound target is illegal: $choice; legal=$legalChoices"
+        }
+
+        return resolveLegalChoice(
+            player = player,
+            choice = choice
+        )
+    }
+
+    private fun resolveLegalChoice(
+        player: Player,
+        choice: WoundChoice
+    ): WoundResolution =
+        when (choice) {
+            is WoundChoice.Flip ->
+                flip(
+                    player,
+                    choice.card
+                )
+
+            is WoundChoice.Snip ->
+                snip(
+                    player,
+                    choice.card
+                )
+        }
 
     private fun flip(
         player: Player,
         card: CreatureCard
     ): WoundResolution.Flipped {
-        check(player.creature.faceDown(card.id)) {
+        check(
+            player.creature.faceDown(
+                card.id
+            )
+        ) {
             "Unable to flip wound target ${card.id}"
         }
 
-        val flipped = requireNotNull(player.creature.get(card.id))
+        val flipped =
+            requireNotNull(
+                player.creature.get(
+                    card.id
+                )
+            )
+
         chronicle.record(
             Moment.Marker(
                 "WOUND player=${player.id.value} FLIPPED plant=${card.card.name}"
             )
         )
-        return WoundResolution.Flipped(flipped)
+
+        return WoundResolution.Flipped(
+            flipped
+        )
     }
 
     private fun snip(
         player: Player,
         card: CreatureCard
     ): WoundResolution.Snipped {
-        val stack = grove.plantMarket.stackFor(card.card)
-        check(stack != null && stack.remaining < stack.card.quantity) {
+        val stack =
+            grove.plantMarket.stackFor(
+                card.card
+            )
+
+        check(
+            stack != null &&
+                stack.remaining <
+                stack.card.quantity
+        ) {
             "No Grove Plant stack can accept snipped card ${card.card.name}"
         }
 
-        val snipped = checkNotNull(player.creature.snip(card.id)) {
-            "Unable to snip wound target ${card.id}"
-        }
-        check(grove.plantMarket.returnCard(snipped.card)) {
+        val snipped =
+            checkNotNull(
+                player.creature.snip(
+                    card.id
+                )
+            ) {
+                "Unable to snip wound target ${card.id}"
+            }
+
+        check(
+            grove.plantMarket.returnCard(
+                snipped.card
+            )
+        ) {
             "Unable to return snipped card ${snipped.card.name} to the Grove"
         }
 
@@ -95,6 +201,9 @@ class WoundResolver(
                 "WOUND player=${player.id.value} SNIPPED plant=${snipped.card.name}"
             )
         )
-        return WoundResolution.Snipped(snipped)
+
+        return WoundResolution.Snipped(
+            snipped
+        )
     }
 }

@@ -2,6 +2,8 @@ package dugsolutions.leaf.v35.player.decision.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.creature.CreatureCardId
+import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -111,6 +113,55 @@ class BaselineEffectStrategyTest {
                 )
             )
         )
+
+
+        val butterflyTarget =
+            EffectButterflyTargetChoice(
+                ownerId = PlayerId(2),
+                butterfly = Butterfly.GREEN
+            )
+        assertEquals(
+            butterflyTarget,
+            strategy.chooseButterflyTarget(
+                ChooseEffectButterflyTargetRequest(
+                    effect = GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+                    legalChoices = listOf(butterflyTarget)
+                )
+            )
+        )
+
+        val plantTarget =
+            EffectPlantChoice(
+                cardId = CreatureCardId(4),
+                cardName = "Vine_A",
+                isFaceUp = false
+            )
+        assertEquals(
+            plantTarget,
+            strategy.chooseOptionalPlant(
+                ChooseOptionalEffectPlantRequest(
+                    effect = GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+                    legalChoices = listOf(plantTarget)
+                )
+            )
+        )
+
+
+        val opponentPlantTarget =
+            EffectOpponentPlantWoundChoice.Flip(
+                ownerId = PlayerId(2),
+                cardId = CreatureCardId(5),
+                cardName = "Root_B"
+            )
+        assertEquals(
+            opponentPlantTarget,
+            strategy.chooseOpponentPlantWound(
+                ChooseEffectOpponentPlantWoundRequest(
+                    effect = GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+                    legalChoices = listOf(opponentPlantTarget)
+                )
+            )
+        )
     }
 
     @Test
@@ -150,15 +201,55 @@ class BaselineEffectStrategyTest {
             effect = GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
             legalChoices = beeMutable
         )
+        val butterflyMutable = mutableListOf(
+            EffectButterflyTargetChoice(
+                ownerId = PlayerId(2),
+                butterfly = Butterfly.GREEN
+            )
+        )
+        val butterfly = ChooseEffectButterflyTargetRequest(
+            effect = GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            legalChoices = butterflyMutable
+        )
+        val plantMutable = mutableListOf(
+            EffectPlantChoice(
+                cardId = CreatureCardId(1),
+                cardName = "Root_A",
+                isFaceUp = true
+            )
+        )
+        val plant = ChooseOptionalEffectPlantRequest(
+            effect = GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            legalChoices = plantMutable
+        )
+        val opponentPlantMutable =
+            mutableListOf<EffectOpponentPlantWoundChoice>(
+                EffectOpponentPlantWoundChoice.Flip(
+                    ownerId = PlayerId(2),
+                    cardId = CreatureCardId(2),
+                    cardName = "Root_B"
+                )
+            )
+        val opponentPlant =
+            ChooseEffectOpponentPlantWoundRequest(
+                effect = GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+                legalChoices = opponentPlantMutable
+            )
 
         mutable.clear()
         petalMutable.clear()
         beeMutable.clear()
+        butterflyMutable.clear()
+        plantMutable.clear()
+        opponentPlantMutable.clear()
 
         assertEquals(1, required.legalChoices.size)
         assertEquals(1, optional.legalChoices.size)
         assertEquals(1, many.legalChoices.size)
         assertEquals(1, petal.legalChoices.size)
         assertEquals(1, bee.legalChoices.size)
+        assertEquals(1, butterfly.legalChoices.size)
+        assertEquals(1, plant.legalChoices.size)
+        assertEquals(1, opponentPlant.legalChoices.size)
     }
 }

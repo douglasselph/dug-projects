@@ -6,9 +6,12 @@ import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.ResourceEffectHandler
 import dugsolutions.leaf.v35.effect.handler.UpgradeEffectHandler
+import dugsolutions.leaf.v35.effect.special.AlluringNectarEffect
 import dugsolutions.leaf.v35.effect.special.BeeLovedBloomEffect
 import dugsolutions.leaf.v35.effect.special.OvergrowthEffect
+import dugsolutions.leaf.v35.effect.special.PartingThornEffect
 import dugsolutions.leaf.v35.effect.special.PetalToDie4Effect
+import dugsolutions.leaf.v35.effect.special.SnipHappensEffect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
 
@@ -27,6 +30,9 @@ class DefaultGameEffectExecutor(
     private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
     private val petalToDie4Effect: EffectHandler = PetalToDie4Effect(),
     private val beeLovedBloomEffect: EffectHandler = BeeLovedBloomEffect(),
+    private val alluringNectarEffect: EffectHandler = AlluringNectarEffect(),
+    private val partingThornEffect: EffectHandler = PartingThornEffect(),
+    private val snipHappensEffect: EffectHandler = SnipHappensEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
@@ -135,6 +141,15 @@ class DefaultGameEffectExecutor(
 
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
                 beeLovedBloomEffect
+
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
+                alluringNectarEffect
+
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE ->
+                partingThornEffect
+
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE ->
+                snipHappensEffect
 
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
                 overgrowthEffect

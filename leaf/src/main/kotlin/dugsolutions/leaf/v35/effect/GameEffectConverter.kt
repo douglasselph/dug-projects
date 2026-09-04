@@ -264,9 +264,10 @@ Draw 2 dice
 
             register(
                 """
-Flip 1 opponent's face up Vine face down
+Wound 1 card of your choice of an opponent's.
+You must choose a face up card first if there is one.
                 """,
-                GameEffect.FLIP_OPPONENT_FACE_UP_VINE_FACE_DOWN
+                GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
             )
 
             register(

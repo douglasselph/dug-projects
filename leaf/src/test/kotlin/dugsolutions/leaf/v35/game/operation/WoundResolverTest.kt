@@ -234,6 +234,93 @@ class WoundResolverTest {
         )
     }
 
+
+    @Test
+    fun explicitWoundChoice_resolvesChosenFaceUpCardWithoutAskingWoundStrategy() {
+        val card =
+            graft(
+                cards[0],
+                -1
+            )
+
+        player.creature.faceUp(
+            card.id
+        )
+
+        strategy.choiceOverride = {
+            error(
+                "Explicit wound target should not ask WoundStrategy"
+            )
+        }
+
+        val result =
+            resolver.resolve(
+                player,
+                WoundChoice.Flip(
+                    player.creature
+                        .get(card.id)!!
+                )
+            )
+
+        assertIs<
+            WoundResolution.Flipped
+        >(result)
+
+        assertTrue(
+            player.creature
+                .get(card.id)!!
+                .isFaceDown
+        )
+
+        assertTrue(
+            strategy.offered.isEmpty()
+        )
+    }
+
+    @Test
+    fun explicitSnipChoice_isRejectedWhenAnyFaceUpCardStillExists() {
+        val inner =
+            graft(
+                cards[0],
+                -1
+            )
+        val outer =
+            graft(
+                cards[1],
+                -2
+            )
+
+        player.creature.faceUp(
+            inner.id
+        )
+
+        assertFailsWith<
+            IllegalStateException
+        > {
+            resolver.resolve(
+                player,
+                WoundChoice.Snip(
+                    player.creature
+                        .get(outer.id)!!
+                )
+            )
+        }
+
+        assertTrue(
+            player.creature
+                .get(inner.id)!!
+                .isFaceUp
+        )
+        assertTrue(
+            player.creature
+                .get(outer.id)!!
+                .isFaceDown
+        )
+        assertTrue(
+            chronicle.entries.isEmpty()
+        )
+    }
+
     private fun graft(card: PlantCard, x: Int): CreatureCard {
         val acquired = requireNotNull(grove.plantMarket.take(card))
         return player.creature.graft(

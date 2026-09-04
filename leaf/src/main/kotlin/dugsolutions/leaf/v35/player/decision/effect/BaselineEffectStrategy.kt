@@ -29,4 +29,16 @@ class BaselineEffectStrategy : EffectStrategy {
     override fun chooseBeeSource(
         request: ChooseBeeSourceRequest
     ): EffectBeeSourceChoice = request.legalChoices.first()
+
+    override fun chooseButterflyTarget(
+        request: ChooseEffectButterflyTargetRequest
+    ): EffectButterflyTargetChoice = request.legalChoices.first()
+
+    override fun chooseOptionalPlant(
+        request: ChooseOptionalEffectPlantRequest
+    ): EffectPlantChoice? = request.legalChoices.firstOrNull()
+
+    override fun chooseOpponentPlantWound(
+        request: ChooseEffectOpponentPlantWoundRequest
+    ): EffectOpponentPlantWoundChoice = request.legalChoices.first()
 }

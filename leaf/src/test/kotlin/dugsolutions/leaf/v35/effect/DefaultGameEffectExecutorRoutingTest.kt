@@ -17,6 +17,9 @@ class DefaultGameEffectExecutorRoutingTest {
         val vineAndDine = RecordingHandler()
         val petalToDie4 = RecordingHandler()
         val beeLovedBloom = RecordingHandler()
+        val alluringNectar = RecordingHandler()
+        val partingThorn = RecordingHandler()
+        val snipHappens = RecordingHandler()
         val overgrowth = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
@@ -27,6 +30,9 @@ class DefaultGameEffectExecutorRoutingTest {
             vineAndDineEffect = vineAndDine,
             petalToDie4Effect = petalToDie4,
             beeLovedBloomEffect = beeLovedBloom,
+            alluringNectarEffect = alluringNectar,
+            partingThornEffect = partingThorn,
+            snipHappensEffect = snipHappens,
             overgrowthEffect = overgrowth,
             wispquakeEffect = wispquake
         )
@@ -93,6 +99,27 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
             )
         )
@@ -134,6 +161,18 @@ class DefaultGameEffectExecutorRoutingTest {
         assertEquals(
             listOf(GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND),
             beeLovedBloom.effects
+        )
+        assertEquals(
+            listOf(GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES),
+            alluringNectar.effects
+        )
+        assertEquals(
+            listOf(GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE),
+            partingThorn.effects
+        )
+        assertEquals(
+            listOf(GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE),
+            snipHappens.effects
         )
         assertEquals(
             listOf(GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),

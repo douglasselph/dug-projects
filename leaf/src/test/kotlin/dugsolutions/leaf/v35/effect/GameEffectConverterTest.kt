@@ -55,6 +55,21 @@ class GameEffectConverterTest {
     }
 
     @Test
+    fun invoke_whenSnipHappensUsesCurrentWoundText_returnsExpectedGameEffect() {
+        val result = converter(
+            """
+            Wound 1 card of your choice of an opponent's.
+            You must choose a face up card first if there is one.
+            """.trimIndent()
+        )
+
+        assertEquals(
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+            result
+        )
+    }
+
+    @Test
     fun invoke_whenEffectUnknown_returnsUnknownAndReportsSource() {
         // Arrange
         var reportedSource: String? = null

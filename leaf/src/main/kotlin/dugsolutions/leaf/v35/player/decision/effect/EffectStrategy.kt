@@ -2,6 +2,8 @@ package dugsolutions.leaf.v35.player.decision.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.creature.CreatureCardId
+import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 
 /**
@@ -180,6 +182,87 @@ class ChooseBeeSourceRequest(
     }
 }
 
+/** Exact opponent + Butterfly target for effects such as Alluring Nectar. */
+data class EffectButterflyTargetChoice(
+    val ownerId: PlayerId,
+    val butterfly: Butterfly
+)
+
+class ChooseEffectButterflyTargetRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectButterflyTargetChoice>
+) {
+    val legalChoices: List<EffectButterflyTargetChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Butterfly target decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
+/**
+ * Immutable reference to one grafted Plant card owned by the effect actor.
+ *
+ * The runtime card ID is sufficient to identify the exact physical graft.
+ * The additional fields are observation data for strategy decisions and allow
+ * validation against stale/foreign choices before mutation.
+ */
+data class EffectPlantChoice(
+    val cardId: CreatureCardId,
+    val cardName: String,
+    val isFaceUp: Boolean
+)
+
+class ChooseOptionalEffectPlantRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectPlantChoice>
+) {
+    val legalChoices: List<EffectPlantChoice> = legalChoices.toList()
+}
+
+
+/**
+ * Exact opponent Plant target and the wound operation that will be applied.
+ *
+ * Snip Happens gives the effect actor control of the wound target rather than
+ * asking the wounded player's WoundStrategy. Flip choices are legal whenever
+ * that opponent has at least one face-up graft. Snip choices are legal only
+ * when that opponent has no face-up grafts and the chosen card is currently
+ * snippable.
+ */
+sealed interface EffectOpponentPlantWoundChoice {
+    val ownerId: PlayerId
+    val cardId: CreatureCardId
+    val cardName: String
+
+    data class Flip(
+        override val ownerId: PlayerId,
+        override val cardId: CreatureCardId,
+        override val cardName: String
+    ) : EffectOpponentPlantWoundChoice
+
+    data class Snip(
+        override val ownerId: PlayerId,
+        override val cardId: CreatureCardId,
+        override val cardName: String
+    ) : EffectOpponentPlantWoundChoice
+}
+
+class ChooseEffectOpponentPlantWoundRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectOpponentPlantWoundChoice>
+) {
+    val legalChoices: List<EffectOpponentPlantWoundChoice> =
+        legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Opponent Plant wound decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
 /**
  * Focused decision seam for effect-specific targeting.
  *
@@ -222,4 +305,19 @@ interface EffectStrategy {
     fun chooseBeeSource(
         request: ChooseBeeSourceRequest
     ): EffectBeeSourceChoice = request.legalChoices.first()
+
+    /** Choose the exact opponent Butterfly to steal. */
+    fun chooseButterflyTarget(
+        request: ChooseEffectButterflyTargetRequest
+    ): EffectButterflyTargetChoice = request.legalChoices.first()
+
+    /** Choose one of the actor's Plants to flip, or decline when the effect says "may". */
+    fun chooseOptionalPlant(
+        request: ChooseOptionalEffectPlantRequest
+    ): EffectPlantChoice? = request.legalChoices.firstOrNull()
+
+    /** Choose the exact opponent Plant that Snip Happens will Wound. */
+    fun chooseOpponentPlantWound(
+        request: ChooseEffectOpponentPlantWoundRequest
+    ): EffectOpponentPlantWoundChoice = request.legalChoices.first()
 }
