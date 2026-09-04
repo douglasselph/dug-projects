@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect
 
+import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.creature.CreatureCard
@@ -38,6 +39,8 @@ data class GameEffectRequest(
     val effect: GameEffect,
     val source: GameEffectSource,
     val phase: GameEffectPhase,
+    /** Per-round Battle Grid state when [phase] is BATTLE. */
+    val battleState: BattleState? = null,
     /**
      * Plant cards whose effects are already active higher in the current
      * recursive effect chain.

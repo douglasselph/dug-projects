@@ -1,16 +1,19 @@
 package dugsolutions.leaf.v35.game.operation
 
-import dugsolutions.leaf.v35.error.decisionNotNull
-import dugsolutions.leaf.v35.error.effectCheck
-import dugsolutions.leaf.v35.error.decisionCheck
-import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.battle.BattlePlacementResolver
+import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
+import dugsolutions.leaf.v35.error.decisionCheck
+import dugsolutions.leaf.v35.error.decisionNotNull
+import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.support.ButterflyRollChoice
 import dugsolutions.leaf.v35.player.decision.support.ChooseButterflyRollRequest
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
@@ -20,15 +23,16 @@ import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
 
 /**
- * Executes the resource-backed support actions shared by round phases.
- *
- * This first implementation is cultivation-aware. Battle will reuse this
- * vocabulary while adding Battle placement/ordering rules around it.
+ * Executes the resource-backed support actions shared by Cultivation and
+ * Battle. Battle adds Grid-location rules around the same underlying resource
+ * actions.
  */
 class SupportActionExecutor(
     private val rollResolver: RollResolver,
     private val refreshResolver: RefreshResolver,
-    private val effectExecutor: GameEffectExecutor
+    private val effectExecutor: GameEffectExecutor,
+    private val battlePlacementResolver: BattlePlacementResolver =
+        BattlePlacementResolver()
 ) {
 
     fun executeCultivation(
@@ -37,25 +41,91 @@ class SupportActionExecutor(
         action: SupportAction
     ) {
         when (action) {
-            is SupportAction.PlayWisp -> playWisp(game, player, action)
-            is SupportAction.UseWaterReroll -> useWaterReroll(game, player, action)
-            SupportAction.UseWaterRefresh -> useWaterRefresh(game, player)
-            is SupportAction.UseMulch -> useMulch(game, player, action)
-            is SupportAction.UseWormFlip -> useWormFlip(game, player, action)
-            is SupportAction.UseButterfly -> useButterfly(player, action)
+            is SupportAction.PlayWisp ->
+                playWisp(
+                    game = game,
+                    player = player,
+                    action = action,
+                    phase = GameEffectPhase.CULTIVATION,
+                    battleState = null
+                )
+
+            is SupportAction.UseWaterReroll ->
+                useWaterReroll(game, player, action)
+
+            SupportAction.UseWaterRefresh ->
+                useWaterRefresh(game, player)
+
+            is SupportAction.UseMulch ->
+                useMulchCultivation(game, player, action)
+
+            is SupportAction.UseWormFlip ->
+                useWormFlip(game, player, action)
+
+            is SupportAction.UseButterfly ->
+                useButterfly(player, action)
         }
 
-        game.chronicle.record(
-            Moment.Marker(
-                "SUPPORT_ACTION player=${player.id.value} type=${actionName(action)} phase=CULTIVATION"
-            )
-        )
+        recordAction(game, player, action, GameEffectPhase.CULTIVATION)
+    }
+
+    fun executeBattle(
+        game: Game,
+        player: Player,
+        battleState: BattleState,
+        action: SupportAction
+    ) {
+        when (action) {
+            is SupportAction.PlayWisp ->
+                playWisp(
+                    game = game,
+                    player = player,
+                    action = action,
+                    phase = GameEffectPhase.BATTLE,
+                    battleState = battleState
+                )
+
+            is SupportAction.UseWaterReroll -> {
+                val die = resolveHandDie(player, action.die)
+                decisionCheck(
+                    battleState.grid.locationOf(die)?.playerId == player.id,
+                    context = "SupportActionExecutor"
+                ) {
+                    "Battle Water reroll target is not currently on player ${player.id.value}'s Grid: ${action.die}"
+                }
+                useWaterReroll(game, player, action)
+            }
+
+            SupportAction.UseWaterRefresh ->
+                useWaterRefresh(game, player)
+
+            is SupportAction.UseMulch ->
+                useMulchBattle(game, player, battleState, action)
+
+            is SupportAction.UseWormFlip ->
+                useWormFlip(game, player, action)
+
+            is SupportAction.UseButterfly -> {
+                val die = resolveHandDie(player, action.die)
+                decisionCheck(
+                    battleState.grid.locationOf(die)?.playerId == player.id,
+                    context = "SupportActionExecutor"
+                ) {
+                    "Battle Butterfly target is not currently on player ${player.id.value}'s Grid: ${action.die}"
+                }
+                useButterfly(player, action)
+            }
+        }
+
+        recordAction(game, player, action, GameEffectPhase.BATTLE)
     }
 
     private fun playWisp(
         game: Game,
         player: Player,
-        action: SupportAction.PlayWisp
+        action: SupportAction.PlayWisp,
+        phase: GameEffectPhase,
+        battleState: BattleState?
     ) {
         val card = player.wisps.cards.cards.firstOrNull { it == action.card }
         decisionCheck(card != null) {
@@ -64,8 +134,10 @@ class SupportActionExecutor(
         decisionCheck(!card.playImmediately) {
             "Immediate-play Wisp cannot be chosen as a normal Support Action: ${card.name}"
         }
-        decisionCheck(!card.battleOnly) {
-            "Battle-only Wisp cannot be played during Cultivation: ${card.name}"
+        if (phase == GameEffectPhase.CULTIVATION) {
+            decisionCheck(!card.battleOnly) {
+                "Battle-only Wisp cannot be played during Cultivation: ${card.name}"
+            }
         }
 
         val request = GameEffectRequest(
@@ -73,10 +145,11 @@ class SupportActionExecutor(
             actor = player,
             effect = card.effect,
             source = GameEffectSource.Wisp(card),
-            phase = GameEffectPhase.CULTIVATION
+            phase = phase,
+            battleState = battleState
         )
         effectCheck(effectExecutor.canExecute(request)) {
-            "Wisp effect is not executable during Cultivation: ${card.name}"
+            "Wisp effect is not executable during $phase: ${card.name}"
         }
         effectExecutor.execute(request)
 
@@ -117,11 +190,45 @@ class SupportActionExecutor(
         game.grove.tokens.add(Token.WATER)
     }
 
-    private fun useMulch(
+    private fun useMulchCultivation(
         game: Game,
         player: Player,
         action: SupportAction.UseMulch
     ) {
+        val die = consumeMulchAndRoll(game, player, action)
+        // Cultivation Mulch needs no extra location beyond Dice Hand.
+        stateCheck(player.dice.hand.any { it === die }) {
+            "Rolled Mulch die was not retained in Dice Hand"
+        }
+    }
+
+    private fun useMulchBattle(
+        game: Game,
+        player: Player,
+        battleState: BattleState,
+        action: SupportAction.UseMulch
+    ) {
+        decisionCheck(
+            battlePlacementResolver.legalRows(battleState, player).isNotEmpty(),
+            context = "SupportActionExecutor"
+        ) {
+            "Player ${player.id.value} has no Strike Square with room for Mulch die"
+        }
+
+        val die = consumeMulchAndRoll(game, player, action)
+        battlePlacementResolver.placeNewHandDie(
+            battleState = battleState,
+            player = player,
+            die = die,
+            reason = BattleDiePlacementReason.MULCH
+        )
+    }
+
+    private fun consumeMulchAndRoll(
+        game: Game,
+        player: Player,
+        action: SupportAction.UseMulch
+    ): Die {
         val sides = decisionNotNull(action.token.sides) {
             "Stored Mulch Support Action requires a stored die size"
         }
@@ -137,6 +244,7 @@ class SupportActionExecutor(
         player.dice.addToHand(die)
         rollResolver.roll(player, die)
         game.grove.tokens.add(Token.MULCH())
+        return die
     }
 
     private fun useWormFlip(
@@ -212,6 +320,19 @@ class SupportActionExecutor(
         Critter.WORM.takeIf {
             player.critters.count(Critter.WORM) > 0
         }
+
+    private fun recordAction(
+        game: Game,
+        player: Player,
+        action: SupportAction,
+        phase: GameEffectPhase
+    ) {
+        game.chronicle.record(
+            Moment.Marker(
+                "SUPPORT_ACTION player=${player.id.value} type=${actionName(action)} phase=${phase.name}"
+            )
+        )
+    }
 
     private fun actionName(action: SupportAction): String =
         when (action) {

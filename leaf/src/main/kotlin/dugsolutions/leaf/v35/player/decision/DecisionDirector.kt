@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.player.decision.cultivation.BaselineCultivationStra
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.buy.BaselineBuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BaselineBattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
 import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.wound.BaselineWoundStrategy
@@ -31,6 +33,7 @@ data class DecisionDirector(
     val wound: WoundStrategy,
     val placement: CreaturePlacementStrategy,
     val cultivation: CultivationStrategy,
+    val battle: BattleStrategy,
     val buy: BuyStrategy,
     val support: SupportStrategy,
     val effect: EffectStrategy
@@ -43,6 +46,7 @@ data class DecisionDirector(
                 wound = BaselineWoundStrategy(),
                 placement = BaselineCreaturePlacementStrategy(),
                 cultivation = BaselineCultivationStrategy(),
+                battle = BaselineBattleStrategy(),
                 buy = BaselineBuyStrategy(),
                 support = BaselineSupportStrategy(),
                 effect = BaselineEffectStrategy()

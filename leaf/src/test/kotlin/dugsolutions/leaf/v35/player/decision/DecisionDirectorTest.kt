@@ -1,5 +1,12 @@
 package dugsolutions.leaf.v35.player.decision
 
+import dugsolutions.leaf.v35.player.decision.battle.BaselineBattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleDiePlacementRequest
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 import dugsolutions.leaf.v35.player.decision.buy.BaselineBuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
@@ -38,6 +45,7 @@ class DecisionDirectorTest {
         assertTrue(director.wound is BaselineWoundStrategy)
         assertTrue(director.placement is BaselineCreaturePlacementStrategy)
         assertTrue(director.cultivation is BaselineCultivationStrategy)
+        assertTrue(director.battle is BaselineBattleStrategy)
         assertTrue(director.buy is BaselineBuyStrategy)
         assertTrue(director.support is BaselineSupportStrategy)
         assertTrue(director.effect is BaselineEffectStrategy)
@@ -59,7 +67,37 @@ class DecisionDirectorTest {
         assertTrue(changed.wound === baseline.wound)
         assertTrue(changed.placement === baseline.placement)
         assertTrue(changed.cultivation === baseline.cultivation)
+        assertTrue(changed.battle === baseline.battle)
         assertTrue(changed.buy === baseline.buy)
+        assertTrue(changed.effect === baseline.effect)
+    }
+
+    @Test
+    fun copy_canReplaceBattleWithoutChangingOtherStrategies() {
+        val baseline = DecisionDirector.baseline()
+        val custom = object : BattleStrategy {
+            override fun chooseFirstMainAction(
+                request: ChooseBattleFirstMainActionRequest
+            ): BattleMainAction = request.legalChoices.last()
+
+            override fun chooseTurnAction(
+                request: ChooseBattleTurnActionRequest
+            ): BattleTurnAction = request.legalChoices.last()
+
+            override fun chooseDiePlacement(
+                request: ChooseBattleDiePlacementRequest
+            ) = request.legalRows.last()
+        }
+
+        val changed = baseline.copy(battle = custom)
+
+        assertTrue(changed.battle === custom)
+        assertTrue(changed.reward === baseline.reward)
+        assertTrue(changed.wound === baseline.wound)
+        assertTrue(changed.placement === baseline.placement)
+        assertTrue(changed.cultivation === baseline.cultivation)
+        assertTrue(changed.buy === baseline.buy)
+        assertTrue(changed.support === baseline.support)
         assertTrue(changed.effect === baseline.effect)
     }
 
