@@ -13,6 +13,7 @@ class DefaultGameEffectExecutorRoutingTest {
         val dieValue = RecordingHandler()
         val draw = RecordingHandler()
         val resource = RecordingHandler()
+        val crossPlayer = RecordingHandler()
         val upgrade = RecordingHandler()
         val vineAndDine = RecordingHandler()
         val petalToDie4 = RecordingHandler()
@@ -29,6 +30,7 @@ class DefaultGameEffectExecutorRoutingTest {
             dieValueEffects = dieValue,
             drawEffects = draw,
             resourceEffects = resource,
+            crossPlayerEffects = crossPlayer,
             upgradeEffects = upgrade,
             vineAndDineEffect = vineAndDine,
             petalToDie4Effect = petalToDie4,
@@ -92,6 +94,20 @@ class DefaultGameEffectExecutorRoutingTest {
                 game,
                 actor,
                 GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE
             )
         )
         executor.execute(
@@ -196,6 +212,13 @@ class DefaultGameEffectExecutorRoutingTest {
                 GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
             ),
             resource.effects
+        )
+        assertEquals(
+            listOf(
+                GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
+                GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE
+            ),
+            crossPlayer.effects
         )
         assertEquals(
             listOf(GameEffect.UPGRADE_DIE_FROM_HAND),

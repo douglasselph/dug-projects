@@ -7,7 +7,6 @@ import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
-import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.player.PlayerId
@@ -35,10 +34,6 @@ class ResourceEffectHandler : EffectHandler {
         when (request.effect) {
             GameEffect.GAIN_WATER_TOKEN ->
                 request.game.grove.tokens.hasWater
-
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.game.grove.tokens.hasWater
 
             GameEffect.MULCH_DIE_FROM_HAND ->
                 request.actor.dice.hand.isNotEmpty() &&
@@ -104,8 +99,7 @@ class ResourceEffectHandler : EffectHandler {
         }
 
         when (request.effect) {
-            GameEffect.GAIN_WATER_TOKEN,
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE ->
+            GameEffect.GAIN_WATER_TOKEN ->
                 gainWater(request)
 
             GameEffect.MULCH_DIE_FROM_HAND ->

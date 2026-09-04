@@ -4,10 +4,17 @@ import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.effect.GameEffectRequest
+import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectBattleDieRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCrossPlayerDieSwapRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectBattleDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.EffectCrossPlayerDieSwapChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.random.die.Die
 
 /**
  * Shared Battle-targeting helpers for effect handlers.
@@ -74,6 +81,148 @@ internal fun battleHandChoices(
             )
         }
     }
+}
+
+/**
+ * Every live die currently controlled in an open Battle row, including
+ * opponents' dice. The Hand index is relative to that die's current owner.
+ */
+internal fun battleDieChoices(
+    request: GameEffectRequest
+): List<EffectBattleDieChoice> {
+    val battleState = request.battleState ?: return emptyList()
+
+    return battleState.grid.diePlacements.mapNotNull { placement ->
+        if (
+            battleState.grid.isRowClosed(placement.row) ||
+            battleState.grid.isPlayerWithdrawn(
+                placement.playerId,
+                placement.row
+            )
+        ) {
+            return@mapNotNull null
+        }
+
+        val owner = battleState.player(placement.playerId)
+        val index = owner.dice.hand.indexOfFirst { it === placement.die }
+        stateCheck(index >= 0, context = "EffectBattleTargeting") {
+            "Battle Grid die is not owned by its controlling player's Hand: $placement"
+        }
+
+        EffectBattleDieChoice(
+            ownerId = owner.id,
+            row = placement.row,
+            die = EffectDieChoice(
+                index = index,
+                sides = placement.die.sides,
+                value = placement.die.value
+            )
+        )
+    }
+}
+
+/** All legal same-size actor/opponent Battle-die pairings for Pollen Theft. */
+internal fun crossPlayerSameSizeSwapChoices(
+    request: GameEffectRequest
+): List<EffectCrossPlayerDieSwapChoice> {
+    val all = battleDieChoices(request)
+    val own = all.filter { it.ownerId == request.actor.id }
+    val opponents = all.filter { it.ownerId != request.actor.id }
+
+    return buildList {
+        own.forEach { ownDie ->
+            opponents
+                .filter { it.die.sides == ownDie.die.sides }
+                .forEach { opponentDie ->
+                    add(
+                        EffectCrossPlayerDieSwapChoice(
+                            ownDie = ownDie,
+                            opponentDie = opponentDie
+                        )
+                    )
+                }
+        }
+    }
+}
+
+internal fun chooseRequiredBattleDie(
+    request: GameEffectRequest,
+    legalChoices: List<EffectBattleDieChoice>
+): EffectBattleDieChoice {
+    effectCheck(legalChoices.isNotEmpty()) {
+        "No legal Battle die targets for effect: ${request.effect}"
+    }
+
+    val chosen = request.actor.decisions.effect.chooseBattleDie(
+        ChooseEffectBattleDieRequest(
+            effect = request.effect,
+            legalChoices = legalChoices
+        )
+    )
+
+    decisionCheck(chosen in legalChoices) {
+        "EffectStrategy returned illegal Battle die: $chosen; legal=$legalChoices"
+    }
+
+    return chosen
+}
+
+internal fun chooseRequiredCrossPlayerDieSwap(
+    request: GameEffectRequest,
+    legalChoices: List<EffectCrossPlayerDieSwapChoice>
+): EffectCrossPlayerDieSwapChoice {
+    effectCheck(legalChoices.isNotEmpty()) {
+        "No legal cross-player die swaps for effect: ${request.effect}"
+    }
+
+    val chosen = request.actor.decisions.effect.chooseCrossPlayerDieSwap(
+        ChooseEffectCrossPlayerDieSwapRequest(
+            effect = request.effect,
+            legalChoices = legalChoices
+        )
+    )
+
+    decisionCheck(chosen in legalChoices) {
+        "EffectStrategy returned illegal cross-player die swap: " +
+            "$chosen; legal=$legalChoices"
+    }
+
+    return chosen
+}
+
+/** Resolve and revalidate one immutable Battle target against current state. */
+internal fun resolveBattleDieChoice(
+    request: GameEffectRequest,
+    choice: EffectBattleDieChoice
+): Pair<Player, Die> {
+    val battleState = battleStateForEffect(
+        request = request,
+        context = "EffectBattleTargeting"
+    )
+    val owner = battleState.player(choice.ownerId)
+    val die = owner.dice.hand.getOrNull(choice.die.index)
+
+    decisionCheck(
+        die != null &&
+            die.sides == choice.die.sides &&
+            die.value == choice.die.value,
+        context = "EffectBattleTargeting"
+    ) {
+        "Battle die choice is no longer valid in owner ${choice.ownerId.value}'s Hand: $choice"
+    }
+
+    val location = battleState.grid.locationOf(die)
+    decisionCheck(
+        location?.playerId == choice.ownerId &&
+            location.row == choice.row &&
+            !battleState.grid.isRowClosed(choice.row) &&
+            !battleState.grid.isPlayerWithdrawn(choice.ownerId, choice.row),
+        context = "EffectBattleTargeting"
+    ) {
+        "Battle die choice is no longer valid on the Grid: $choice"
+    }
+
+    return owner to die
 }
 
 internal fun chooseRequiredStrikeRow(

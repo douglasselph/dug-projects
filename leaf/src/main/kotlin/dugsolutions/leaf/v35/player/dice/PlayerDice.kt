@@ -137,6 +137,36 @@ class PlayerDice(
     }
 
     /**
+     * Exchanges two exact live Hand dice between players while preserving each
+     * Hand's list position. This is intended for cross-player Battle effects
+     * such as Pollen Theft after both dice have already been validated.
+     *
+     * Returns false without mutation if either exact die is not currently in
+     * the expected Hand, the two [PlayerDice] objects are the same, or the
+     * supplied die references are identical.
+     */
+    fun swapExactHandDieWith(
+        other: PlayerDice,
+        ownDie: Die,
+        otherDie: Die
+    ): Boolean {
+        if (this === other || ownDie === otherDie) return false
+
+        val ownHand = _hand.dice.toMutableList()
+        val otherHand = other._hand.dice.toMutableList()
+        val ownIndex = ownHand.indexOfFirst { it === ownDie }
+        val otherIndex = otherHand.indexOfFirst { it === otherDie }
+
+        if (ownIndex < 0 || otherIndex < 0) return false
+
+        ownHand[ownIndex] = otherDie
+        otherHand[otherIndex] = ownDie
+        _hand.set(ownHand)
+        other._hand.set(otherHand)
+        return true
+    }
+
+    /**
      * Removes one matching die from Discard and returns the supplied die value
      * when successful. Equivalent dice are intentionally interchangeable.
      */

@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.error.effectNotNull
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.effect.handler.CrossPlayerEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DieValueEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
@@ -32,6 +33,7 @@ class DefaultGameEffectExecutor(
     private val dieValueEffects: EffectHandler = DieValueEffectHandler(),
     private val drawEffects: EffectHandler = DrawEffectHandler(),
     private val resourceEffects: EffectHandler = ResourceEffectHandler(),
+    private val crossPlayerEffects: EffectHandler = CrossPlayerEffectHandler(),
     private val upgradeEffects: EffectHandler = UpgradeEffectHandler(),
     private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
     private val petalToDie4Effect: EffectHandler = PetalToDie4Effect(),
@@ -133,13 +135,16 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_OR_REFRESH_PURPLE_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_RED_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_YELLOW_BUTTERFLY,
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
             GameEffect.GAIN_WATER_TOKEN,
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
             GameEffect.MULCH_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects
+
+            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
+            GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE ->
+                crossPlayerEffects
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_FROM_HAND ->

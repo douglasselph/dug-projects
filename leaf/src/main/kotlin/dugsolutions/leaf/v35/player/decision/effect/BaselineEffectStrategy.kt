@@ -6,6 +6,14 @@ class BaselineEffectStrategy : EffectStrategy {
         request: ChooseEffectDieRequest
     ): EffectDieChoice = request.legalChoices.first()
 
+    override fun chooseBattleDie(
+        request: ChooseEffectBattleDieRequest
+    ): EffectBattleDieChoice = request.legalChoices.first()
+
+    override fun chooseCrossPlayerDieSwap(
+        request: ChooseEffectCrossPlayerDieSwapRequest
+    ): EffectCrossPlayerDieSwapChoice = request.legalChoices.first()
+
     override fun chooseOptionalDie(
         request: ChooseOptionalEffectDieRequest
     ): EffectDieChoice? = request.legalChoices.firstOrNull()

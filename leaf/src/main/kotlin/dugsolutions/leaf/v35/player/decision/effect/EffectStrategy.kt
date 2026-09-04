@@ -40,6 +40,66 @@ class ChooseEffectDieRequest(
     }
 }
 
+/**
+ * Immutable reference to one exact Battle die and the player/row currently
+ * controlling it. The nested [EffectDieChoice] index is resolved against that
+ * owner's live Dice Hand before the effect mutates anything.
+ */
+data class EffectBattleDieChoice(
+    val ownerId: PlayerId,
+    val row: StrikeRow,
+    val die: EffectDieChoice
+)
+
+class ChooseEffectBattleDieRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectBattleDieChoice>
+) {
+    val legalChoices: List<EffectBattleDieChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Battle-die decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
+/**
+ * Complete cross-player swap target for effects such as Pollen Theft.
+ *
+ * The actor-controlled die and opponent-controlled die are selected together
+ * so the strategy sees every legal same-size pairing before any ownership or
+ * Battle location changes occur.
+ */
+data class EffectCrossPlayerDieSwapChoice(
+    val ownDie: EffectBattleDieChoice,
+    val opponentDie: EffectBattleDieChoice
+) {
+    init {
+        require(ownDie.ownerId != opponentDie.ownerId) {
+            "Cross-player die swap requires different owners"
+        }
+        require(ownDie.die.sides == opponentDie.die.sides) {
+            "Cross-player die swap requires same-size dice: " +
+                "d${ownDie.die.sides} vs d${opponentDie.die.sides}"
+        }
+    }
+}
+
+class ChooseEffectCrossPlayerDieSwapRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectCrossPlayerDieSwapChoice>
+) {
+    val legalChoices: List<EffectCrossPlayerDieSwapChoice> =
+        legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Cross-player die-swap decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
 class ChooseOptionalEffectDieRequest(
     val effect: GameEffect,
     legalChoices: List<EffectDieChoice>
@@ -429,6 +489,16 @@ class ChooseEffectStrikeRowRequest(
  */
 interface EffectStrategy {
     fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice
+
+    /** Choose one exact live Battle die, including its current owner and row. */
+    fun chooseBattleDie(
+        request: ChooseEffectBattleDieRequest
+    ): EffectBattleDieChoice = request.legalChoices.first()
+
+    /** Choose both sides of one legal same-size cross-player Battle swap. */
+    fun chooseCrossPlayerDieSwap(
+        request: ChooseEffectCrossPlayerDieSwapRequest
+    ): EffectCrossPlayerDieSwapChoice = request.legalChoices.first()
 
     /**
      * Used by effects where choosing no die is explicitly legal, such as

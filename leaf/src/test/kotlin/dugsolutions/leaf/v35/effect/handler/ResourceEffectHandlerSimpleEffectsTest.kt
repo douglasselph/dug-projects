@@ -4,7 +4,6 @@ import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
-import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.grove.Grove
@@ -24,27 +23,6 @@ import kotlin.test.assertTrue
 class ResourceEffectHandlerSimpleEffectsTest {
 
     private val handler = ResourceEffectHandler()
-
-    @Test
-    fun rootWellCultivationBranchGainsWaterButBattleBranchWaits() {
-        val actor = EffectTestFixture.player(1)
-        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
-        val cultivation = EffectTestFixture.request(
-            game,
-            actor,
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
-        )
-
-        assertTrue(handler.canExecute(cultivation))
-        handler.execute(cultivation, GameEffectExecutor { })
-
-        assertEquals(1, actor.tokens.waterCount)
-        assertFalse(
-            handler.canExecute(
-                cultivation.copy(phase = GameEffectPhase.BATTLE)
-            )
-        )
-    }
 
     @Test
     fun rootLootAndPocketedSparkStoreDiscardDieAsPendingMulch() {
