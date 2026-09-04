@@ -243,7 +243,9 @@ class DrawEffectHandler : EffectHandler {
                         actor = player,
                         effect = card.effect,
                         source = GameEffectSource.Wisp(card),
-                        phase = request.phase
+                        phase = request.phase,
+                        battleState = request.battleState,
+                        plantEffectPath = request.plantEffectPath
                     )
                 )
             }

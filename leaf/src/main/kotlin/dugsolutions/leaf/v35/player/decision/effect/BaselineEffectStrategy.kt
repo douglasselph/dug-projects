@@ -58,4 +58,12 @@ class BaselineEffectStrategy : EffectStrategy {
                 request.keepLimit
             )
         )
+
+    override fun chooseDieSize(
+        request: ChooseEffectDieSizeRequest
+    ) = request.legalChoices.first()
+
+    override fun choosePlayer(
+        request: ChooseEffectPlayerRequest
+    ) = request.legalChoices.first()
 }

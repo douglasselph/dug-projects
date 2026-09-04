@@ -197,6 +197,7 @@ class VineAndAgainEffect : EffectHandler {
                     card
                 ),
             phase = request.phase,
+            battleState = request.battleState,
             plantEffectPath =
                 activePath
         )

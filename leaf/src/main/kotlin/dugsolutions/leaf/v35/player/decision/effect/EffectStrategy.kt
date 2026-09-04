@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.effect
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 
@@ -369,6 +370,34 @@ class ChooseWispsToKeepRequest(
     }
 }
 
+/** Choose one currently available Graft Bed die size. */
+class ChooseEffectDieSizeRequest(
+    val effect: GameEffect,
+    legalChoices: List<DieSides>
+) {
+    val legalChoices: List<DieSides> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Die-size decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
+/** Choose one exact player target. */
+class ChooseEffectPlayerRequest(
+    val effect: GameEffect,
+    legalChoices: List<PlayerId>
+) {
+    val legalChoices: List<PlayerId> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Player-target decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
 /**
  * Focused decision seam for effect-specific targeting.
  *
@@ -446,4 +475,14 @@ interface EffectStrategy {
                 request.keepLimit
             )
         )
+
+    /** Choose one available die size for a gain effect. */
+    fun chooseDieSize(
+        request: ChooseEffectDieSizeRequest
+    ): DieSides = request.legalChoices.first()
+
+    /** Choose one exact opponent/player target. */
+    fun choosePlayer(
+        request: ChooseEffectPlayerRequest
+    ): PlayerId = request.legalChoices.first()
 }

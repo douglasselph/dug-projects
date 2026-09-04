@@ -10,6 +10,9 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
+import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieSizeRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlayerRequest
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
@@ -70,6 +73,13 @@ class ResourceEffectHandler : EffectHandler {
             GameEffect.GAIN_D20_TO_DISCARD ->
                 request.game.grove.graftBed.has(DieSides.D20)
 
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD ->
+                availableDieSizes(request).isNotEmpty()
+
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
+                opponentsWithWisps(request).isNotEmpty()
+
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY ->
                 butterflyAvailable(request, Butterfly.GREEN)
 
@@ -128,6 +138,15 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_D20_TO_DISCARD ->
                 gainFixedDie(request, DieSides.D20)
+
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD ->
+                gainChosenDie(request)
+
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT ->
+                stealRandomWispFromOneOpponent(request)
+
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
+                stealRandomWispFromAllOpponents(request)
 
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY ->
                 gainOrRefreshButterfly(request, Butterfly.GREEN)
@@ -288,7 +307,9 @@ class ResourceEffectHandler : EffectHandler {
                     actor = request.actor,
                     effect = card.effect,
                     source = GameEffectSource.Wisp(card),
-                    phase = request.phase
+                    phase = request.phase,
+                    battleState = request.battleState,
+                    plantEffectPath = request.plantEffectPath
                 )
             )
         } else {
@@ -306,6 +327,83 @@ class ResourceEffectHandler : EffectHandler {
         request.actor.dice.addToDiscard(
             request.game.dieFactory(sides)
         )
+    }
+
+    private fun availableDieSizes(
+        request: GameEffectRequest
+    ): List<DieSides> =
+        DieSides.entries.filter {
+            request.game.grove.graftBed.has(it)
+        }
+
+    private fun gainChosenDie(
+        request: GameEffectRequest
+    ) {
+        val legalChoices = availableDieSizes(request)
+        val chosen = request.actor.decisions.effect.chooseDieSize(
+            ChooseEffectDieSizeRequest(
+                effect = request.effect,
+                legalChoices = legalChoices
+            )
+        )
+        decisionCheck(chosen in legalChoices) {
+            "EffectStrategy chose unavailable gained die size: " +
+                "$chosen; legal=$legalChoices"
+        }
+        gainFixedDie(request, chosen)
+    }
+
+    private fun opponentsWithWisps(
+        request: GameEffectRequest
+    ): List<PlayerId> =
+        request.game.players
+            .filter { it !== request.actor && it.wisps.isNotEmpty }
+            .map { it.id }
+
+    private fun stealRandomWispFromOneOpponent(
+        request: GameEffectRequest
+    ) {
+        val legalChoices = opponentsWithWisps(request)
+        val chosen = request.actor.decisions.effect.choosePlayer(
+            ChooseEffectPlayerRequest(
+                effect = request.effect,
+                legalChoices = legalChoices
+            )
+        )
+        decisionCheck(chosen in legalChoices) {
+            "EffectStrategy chose opponent without a stealable Wisp: " +
+                "$chosen; legal=$legalChoices"
+        }
+        stealRandomWisp(request, chosen)
+    }
+
+    private fun stealRandomWispFromAllOpponents(
+        request: GameEffectRequest
+    ) {
+        opponentsWithWisps(request).forEach { opponentId ->
+            stealRandomWisp(request, opponentId)
+        }
+    }
+
+    private fun stealRandomWisp(
+        request: GameEffectRequest,
+        opponentId: PlayerId
+    ) {
+        val opponent = stateNotNull(
+            request.game.players.firstOrNull { it.id == opponentId }
+        ) {
+            "Validated Wisp-steal opponent is not in the game: $opponentId"
+        }
+        val selected = stateNotNull(
+            request.game.randomizer.randomOrNull(opponent.wisps.cards.cards)
+        ) {
+            "Validated opponent ${opponentId.value} had no Wisp to steal"
+        }
+        stateCheck(opponent.wisps.remove(selected)) {
+            "Randomly selected Wisp disappeared from opponent " +
+                "${opponentId.value}: ${selected.name}"
+        }
+        request.actor.wisps.add(selected)
     }
 
     private fun butterflyAvailable(

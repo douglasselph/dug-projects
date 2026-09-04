@@ -122,6 +122,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_D10_TO_DISCARD,
             GameEffect.GAIN_D12_TO_DISCARD,
             GameEffect.GAIN_D20_TO_DISCARD,
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD,
             GameEffect.GAIN_ANY_TWO_CRITTERS,
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
             GameEffect.GAIN_ONE_VP,
@@ -134,6 +135,8 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_OR_REFRESH_YELLOW_BUTTERFLY,
             GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
             GameEffect.GAIN_WATER_TOKEN,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
             GameEffect.MULCH_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects

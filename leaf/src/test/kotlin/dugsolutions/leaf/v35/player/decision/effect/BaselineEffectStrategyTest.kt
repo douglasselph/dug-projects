@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
@@ -376,4 +377,28 @@ class BaselineEffectStrategyTest {
         assertEquals(2, edelweiss.legalChoices.size)
         assertEquals(2, wispKeep.legalChoices.size)
     }
+    @Test
+    fun battleRoundResourceChoicesUseFirstLegalOption() {
+        val strategy = BaselineEffectStrategy()
+
+        assertEquals(
+            DieSides.D8,
+            strategy.chooseDieSize(
+                ChooseEffectDieSizeRequest(
+                    effect = GameEffect.GAIN_ANY_DIE_TO_DISCARD,
+                    legalChoices = listOf(DieSides.D8, DieSides.D20)
+                )
+            )
+        )
+        assertEquals(
+            PlayerId(2),
+            strategy.choosePlayer(
+                ChooseEffectPlayerRequest(
+                    effect = GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+                    legalChoices = listOf(PlayerId(2), PlayerId(3))
+                )
+            )
+        )
+    }
+
 }

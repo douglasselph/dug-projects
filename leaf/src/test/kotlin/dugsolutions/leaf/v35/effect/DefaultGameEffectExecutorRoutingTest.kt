@@ -70,6 +70,27 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.GAIN_ANY_DIE_TO_DISCARD
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
             )
         )
@@ -169,6 +190,9 @@ class DefaultGameEffectExecutorRoutingTest {
         assertEquals(
             listOf(
                 GameEffect.GAIN_WATER_TOKEN,
+                GameEffect.GAIN_ANY_DIE_TO_DISCARD,
+                GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+                GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
                 GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
             ),
             resource.effects
