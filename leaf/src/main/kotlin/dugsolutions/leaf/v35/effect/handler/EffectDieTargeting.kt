@@ -10,16 +10,28 @@ import dugsolutions.leaf.v35.random.die.Die
 /**
  * Shared die-targeting mechanics used by multiple effect families.
  *
- * These helpers expose immutable choices to strategies, then validate the
- * selected snapshot against the live PlayerDice state immediately before
- * mutation. Equivalent dice intentionally remain interchangeable; no physical
- * die identity is introduced.
+ * The zone-specific helpers expose immutable choices to strategies, then
+ * validate the selected snapshot against the live PlayerDice state immediately
+ * before mutation. Equivalent dice intentionally remain interchangeable; no
+ * physical die identity is introduced.
  */
 internal fun handChoices(
     player: Player,
     predicate: (Die) -> Boolean = { true }
 ): List<EffectDieChoice> =
-    player.dice.hand.mapIndexedNotNull { index, die ->
+    choices(player.dice.hand, predicate)
+
+internal fun discardChoices(
+    player: Player,
+    predicate: (Die) -> Boolean = { true }
+): List<EffectDieChoice> =
+    choices(player.dice.discard, predicate)
+
+private fun choices(
+    dice: List<Die>,
+    predicate: (Die) -> Boolean
+): List<EffectDieChoice> =
+    dice.mapIndexedNotNull { index, die ->
         if (!predicate(die)) {
             null
         } else {
@@ -34,6 +46,27 @@ internal fun handChoices(
 internal fun chooseRequiredHandDie(
     request: GameEffectRequest,
     legalChoices: List<EffectDieChoice>
+): Die =
+    chooseRequiredDie(
+        request = request,
+        legalChoices = legalChoices,
+        resolve = { resolveHandDie(request.actor, it) }
+    )
+
+internal fun chooseRequiredDiscardDie(
+    request: GameEffectRequest,
+    legalChoices: List<EffectDieChoice>
+): Die =
+    chooseRequiredDie(
+        request = request,
+        legalChoices = legalChoices,
+        resolve = { resolveDiscardDie(request.actor, it) }
+    )
+
+private fun chooseRequiredDie(
+    request: GameEffectRequest,
+    legalChoices: List<EffectDieChoice>,
+    resolve: (EffectDieChoice) -> Die
 ): Die {
     check(legalChoices.isNotEmpty()) {
         "No legal die targets for effect: ${request.effect}"
@@ -49,7 +82,7 @@ internal fun chooseRequiredHandDie(
         "EffectStrategy returned an illegal die choice: $chosen; legal=$legalChoices"
     }
 
-    return resolveHandDie(request.actor, chosen)
+    return resolve(chosen)
 }
 
 internal fun chooseOptionalHandDie(
@@ -74,14 +107,35 @@ internal fun chooseOptionalHandDie(
 internal fun resolveHandDie(
     player: Player,
     choice: EffectDieChoice
+): Die =
+    resolveDie(
+        dice = player.dice.hand,
+        choice = choice,
+        zone = "Hand"
+    )
+
+internal fun resolveDiscardDie(
+    player: Player,
+    choice: EffectDieChoice
+): Die =
+    resolveDie(
+        dice = player.dice.discard,
+        choice = choice,
+        zone = "Discard"
+    )
+
+private fun resolveDie(
+    dice: List<Die>,
+    choice: EffectDieChoice,
+    zone: String
 ): Die {
-    val die = player.dice.hand.getOrNull(choice.index)
+    val die = dice.getOrNull(choice.index)
     check(
         die != null &&
             die.sides == choice.sides &&
             die.value == choice.value
     ) {
-        "Effect die choice is no longer valid: $choice"
+        "Effect die choice is no longer valid in $zone: $choice"
     }
     return die
 }

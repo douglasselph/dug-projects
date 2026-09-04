@@ -11,11 +11,13 @@ class DefaultGameEffectExecutorRoutingTest {
     @Test
     fun routesSupportedEffectsToTheirExplicitOwners() {
         val dieValue = RecordingHandler()
+        val draw = RecordingHandler()
         val resource = RecordingHandler()
         val upgrade = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
             dieValueEffects = dieValue,
+            drawEffects = draw,
             resourceEffects = resource,
             upgradeEffects = upgrade,
             wispquakeEffect = wispquake
@@ -28,6 +30,13 @@ class DefaultGameEffectExecutorRoutingTest {
                 game,
                 actor,
                 GameEffect.RAISE_DIE_PLUS_3
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.DRAW_TWO_DICE
             )
         )
         executor.execute(
@@ -55,6 +64,10 @@ class DefaultGameEffectExecutorRoutingTest {
         assertEquals(
             listOf(GameEffect.RAISE_DIE_PLUS_3),
             dieValue.effects
+        )
+        assertEquals(
+            listOf(GameEffect.DRAW_TWO_DICE),
+            draw.effects
         )
         assertEquals(
             listOf(GameEffect.GAIN_WATER_TOKEN),

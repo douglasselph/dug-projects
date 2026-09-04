@@ -3,11 +3,11 @@ package dugsolutions.leaf.v35.player.decision.effect
 import dugsolutions.leaf.v35.effect.GameEffect
 
 /**
- * Immutable reference to one currently visible die in the actor's Hand.
+ * Immutable reference to one die in the zone named by the effect request.
  *
- * The coordinator/executor validates the snapshot against live PlayerDice
- * before mutating anything. Equivalent dice remain intentionally
- * interchangeable; no physical die ID is introduced.
+ * The executor validates the snapshot against the live PlayerDice zone before
+ * mutating anything. Equivalent dice remain intentionally interchangeable; no
+ * physical die ID is introduced.
  */
 data class EffectDieChoice(
     val index: Int,
@@ -44,8 +44,9 @@ class ChooseOptionalEffectDieRequest(
 /**
  * Focused decision seam for effect-specific die targeting.
  *
- * Strategies choose from immutable legal choices only. The executor validates
- * the returned choice and performs all game-state mutation.
+ * The request's legal choices define the relevant zone (Hand, Discard, etc.).
+ * Strategies choose immutable snapshots only; the executor validates the
+ * returned choice and performs all game-state mutation.
  */
 interface EffectStrategy {
     fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice
