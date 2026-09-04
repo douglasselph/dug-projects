@@ -10,11 +10,11 @@ class DieFactoryOneOfEachFaceBag(
 ) : DieFactoryImpl {
 
     override fun invoke(sides: DieSides): Die {
-        return OneOfEachFaceBag(sides.value, randomizer).roll()
+        return OneOfEachFaceBag(sides.value, randomizer)
     }
 
     override fun invoke(sides: Int): Die {
-        return OneOfEachFaceBag(sides, randomizer).roll()
+        return OneOfEachFaceBag(sides, randomizer)
     }
 
 }

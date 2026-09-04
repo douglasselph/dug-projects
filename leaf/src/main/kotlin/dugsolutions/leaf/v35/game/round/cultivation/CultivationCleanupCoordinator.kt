@@ -33,6 +33,12 @@ class CultivationCleanupCoordinator(
 
             val refreshed = refreshResolver.refreshIfReady(player)
 
+            /*
+             * Mulch gained/stored during this round is deliberately pending
+             * during Build. Cleanup makes it available for the next round.
+             */
+            player.tokens.normalize()
+
             game.chronicle.record(
                 Moment.Marker(
                     "CULTIVATION_CLEANUP player=${player.id.value} " +

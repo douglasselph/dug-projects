@@ -10,11 +10,11 @@ class DieFactoryRandom(
 ) : DieFactoryImpl {
 
     override fun invoke(sides: DieSides): Die {
-        return DieRandom(sides.value, randomizer).roll()
+        return DieRandom(sides.value, randomizer)
     }
 
     override fun invoke(sides: Int): Die {
-        return DieRandom(sides, randomizer).roll()
+        return DieRandom(sides, randomizer)
     }
 
 }

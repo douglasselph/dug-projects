@@ -73,7 +73,7 @@ class DefaultGameEffectExecutorTest {
     }
 
     @Test
-    fun mulchFromHand_storesChosenDieSizeAndRemovesDieFromHand() {
+    fun mulchFromHand_storesChosenDieAsPendingUntilCleanup() {
         val first = FixedDie(6, 3)
         val second = FixedDie(10, 7)
         val actor = player(
@@ -86,8 +86,12 @@ class DefaultGameEffectExecutorTest {
         executor.execute(request(game, actor, GameEffect.MULCH_DIE_FROM_HAND))
 
         assertEquals(listOf(first), actor.dice.hand)
-        assertEquals(1, actor.tokens.mulchCount)
-        assertEquals(DieSides.D10, actor.tokens.mulchTokens.single().sides)
+        assertEquals(0, actor.tokens.mulchCount)
+        assertEquals(1, actor.tokens.pendingMulchCount)
+        assertEquals(
+            listOf(Token.PENDING_MULCH(DieSides.D10)),
+            actor.tokens.pendingMulchTokens
+        )
         assertEquals(8, game.grove.tokens.mulchCount)
     }
 

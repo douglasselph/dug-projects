@@ -15,7 +15,9 @@ import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
+import dugsolutions.leaf.v35.tokens.Token
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -88,6 +90,26 @@ class CultivationCleanupCoordinatorTest {
 
         assertTrue(first.butterflies.isFaceDown(Butterfly.PURPLE))
         assertFalse(result.players.first().refreshed)
+    }
+
+    @Test
+    fun execute_normalizesPendingMulchForUseBeginningNextRound() {
+        val first = player(1, emptyList())
+        first.tokens.add(Token.MULCH(DieSides.D6))
+        first.tokens.add(Token.PENDING_MULCH(DieSides.D10))
+        val fixture = fixture(first, player(2, emptyList()))
+
+        fixture.coordinator.execute(fixture.game)
+
+        assertEquals(0, first.tokens.pendingMulchCount)
+        assertEquals(2, first.tokens.mulchCount)
+        assertEquals(
+            listOf(
+                Token.MULCH(DieSides.D6),
+                Token.MULCH(DieSides.D10)
+            ),
+            first.tokens.mulchTokens
+        )
     }
 
     @Test

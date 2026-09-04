@@ -24,6 +24,9 @@ class Tokens(
     val mulchTokens: List<Token.MULCH>
         get() = _mulchTokens.toList()
 
+    val pendingMulchTokens: List<Token.PENDING_MULCH>
+        get() = _pendingMulchTokens.toList()
+
     val hasWater: Boolean
         get() = waterCount > 0
 

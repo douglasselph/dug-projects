@@ -142,8 +142,13 @@ class DefaultGameEffectExecutor(
             "Validated empty Mulch token could not be removed from Grove"
         }
 
+        /*
+         * A die stored on Mulch cannot be used until a later round.
+         * Keep it pending through the rest of this Build; Cultivation cleanup
+         * normalizes pending Mulch into an ordinary usable Mulch token.
+         */
         request.actor.tokens.add(
-            Token.MULCH(sides)
+            Token.PENDING_MULCH(sides)
         )
     }
 

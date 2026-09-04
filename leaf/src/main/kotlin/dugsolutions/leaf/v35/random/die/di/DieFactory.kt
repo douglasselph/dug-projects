@@ -28,14 +28,6 @@ class DieFactory(
             }
         }
 
-    val startingDice: List<Die>
-        get() = listOf(
-            invoke(DieSides.D4),
-            invoke(DieSides.D4),
-            invoke(DieSides.D6),
-            invoke(DieSides.D6)
-        )
-
     operator fun invoke(sides: DieSides): Die {
         return dieFactory(sides)
     }

@@ -167,6 +167,25 @@ class CultivationBuildCoordinatorTest {
     }
 
     @Test
+    fun execute_pendingMulchIsNotOfferedAsSupportDuringSameBuild() {
+        val strategy = RecordingStrategy()
+        val first = player(1, emptyList(), strategy, hand = listOf(FixedDie(8, 5)))
+        first.tokens.add(Token.PENDING_MULCH(DieSides.D8))
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        val offeredSupports = strategy.requests
+            .flatMap { it.legalChoices }
+            .filterIsInstance<CultivationAction.Support>()
+            .map { it.action }
+
+        assertFalse(offeredSupports.any { it is SupportAction.UseMulch })
+        assertEquals(1, first.tokens.pendingMulchCount)
+        assertEquals(0, first.tokens.mulchCount)
+    }
+
+    @Test
     fun execute_supportActionIsRegeneratedAfterResourceIsConsumed() {
         val strategy = SequenceStrategy()
         val first = player(1, emptyList(), strategy)

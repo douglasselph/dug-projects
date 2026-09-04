@@ -61,6 +61,21 @@ class TokensTest {
     }
 
     @Test
+    fun pendingMulchTokens_exposesDefensiveSnapshotWithStoredDieSides() {
+        val tokens = Tokens()
+            .add(Token.PENDING_MULCH(DieSides.D10))
+
+        val snapshot = tokens.pendingMulchTokens
+        tokens.add(Token.PENDING_MULCH(DieSides.D6))
+
+        assertEquals(
+            listOf(Token.PENDING_MULCH(DieSides.D10)),
+            snapshot
+        )
+        assertEquals(2, tokens.pendingMulchTokens.size)
+    }
+
+    @Test
     fun add_pendingMulch_tracksItSeparatelyFromAcquiredMulch() {
         // Arrange
         val tokens = Tokens()
