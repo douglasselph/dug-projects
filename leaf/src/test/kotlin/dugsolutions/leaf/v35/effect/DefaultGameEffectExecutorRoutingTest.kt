@@ -24,6 +24,7 @@ class DefaultGameEffectExecutorRoutingTest {
         val vineAndAgain = RecordingHandler()
         val oEdelweiss = RecordingHandler()
         val wispReckoning = RecordingHandler()
+        val wispLastWord = RecordingHandler()
         val overgrowth = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
@@ -41,6 +42,7 @@ class DefaultGameEffectExecutorRoutingTest {
             vineAndAgainEffect = vineAndAgain,
             oEdelweissEffect = oEdelweiss,
             wispReckoningEffect = wispReckoning,
+            wispLastWordEffect = wispLastWord,
             overgrowthEffect = overgrowth,
             wispquakeEffect = wispquake
         )
@@ -184,6 +186,13 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
             )
         )
@@ -261,6 +270,10 @@ class DefaultGameEffectExecutorRoutingTest {
             wispReckoning.effects
         )
         assertEquals(
+            listOf(GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW),
+            wispLastWord.effects
+        )
+        assertEquals(
             listOf(GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),
             overgrowth.effects
         )
@@ -278,7 +291,7 @@ class DefaultGameEffectExecutorRoutingTest {
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW
+            GameEffect.UNKNOWN
         )
 
         assertFalse(executor.canExecute(request))

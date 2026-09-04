@@ -20,6 +20,7 @@ import dugsolutions.leaf.v35.effect.special.SnipHappensEffect
 import dugsolutions.leaf.v35.effect.special.VineAndAgainEffect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
 import dugsolutions.leaf.v35.effect.special.WispReckoningEffect
+import dugsolutions.leaf.v35.effect.special.WispLastWordEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
 
 /**
@@ -44,6 +45,7 @@ class DefaultGameEffectExecutor(
     private val vineAndAgainEffect: EffectHandler = VineAndAgainEffect(),
     private val oEdelweissEffect: EffectHandler = OEdelweissEffect(),
     private val wispReckoningEffect: EffectHandler = WispReckoningEffect(),
+    private val wispLastWordEffect: EffectHandler = WispLastWordEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
@@ -176,6 +178,9 @@ class DefaultGameEffectExecutor(
 
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->
                 wispReckoningEffect
+
+            GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW ->
+                wispLastWordEffect
 
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
                 overgrowthEffect
