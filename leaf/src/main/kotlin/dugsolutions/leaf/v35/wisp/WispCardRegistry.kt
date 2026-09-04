@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.wisp
 
+import dugsolutions.leaf.v35.common.VictoryPointIconParser
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.wisp.domain.WispCard
@@ -65,6 +66,7 @@ class WispCardRegistry(
     ): WispCard {
         val name = required(row, columns, "name", filePath)
         val effectText = required(row, columns, "effect", filePath)
+        val vpIcon = optional(row, columns, "vp_icon")
 
         val effect = gameEffectConverter(
             effectText = effectText,
@@ -88,12 +90,24 @@ class WispCardRegistry(
                 "line_icons_height",
                 filePath
             ),
-            vpIcon = optional(row, columns, "vp_icon"),
+            vpIcon = vpIcon,
             mainBackdrop = required(row, columns, "main_backdrop", filePath),
             playImmediately = effectText.contains("(Play immediately)", ignoreCase = true),
-            battleOnly = effectText.contains("<battle/>", ignoreCase = true)
+            battleOnly = effectText.contains("<battle/>", ignoreCase = true),
+            endGameVp = parseEndGameVp(
+                vpIcon = vpIcon,
+                cardName = name
+            )
         )
     }
+
+    private fun parseEndGameVp(
+        vpIcon: String?,
+        cardName: String
+    ): Int =
+        requireNotNull(VictoryPointIconParser.fixedPoints(vpIcon)) {
+            "Unknown Wisp VP icon '$vpIcon' for card '$cardName'"
+        }
 
     private fun validateRequiredColumns(
         columns: Map<String, Int>,

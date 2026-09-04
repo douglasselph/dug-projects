@@ -1,8 +1,10 @@
 package dugsolutions.leaf.v35.plant
 
+import dugsolutions.leaf.v35.common.VictoryPointIconParser
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import java.io.File
 
@@ -79,6 +81,7 @@ class PlantCardRegistry(
     ): PlantCard {
         val name = required(row, columns, "name", filePath)
         val effectText = required(row, columns, "effect", filePath)
+        val vpIcon = required(row, columns, "vp_icon", filePath)
 
         val effect = gameEffectConverter(
             effectText = effectText,
@@ -96,16 +99,40 @@ class PlantCardRegistry(
             type = parseType(required(row, columns, "type", filePath), name),
             cost = requiredInt(row, columns, "cost", filePath),
             lineIcon = optional(row, columns, "line_icon"),
-            vpIcon = required(row, columns, "vp_icon", filePath),
+            vpIcon = vpIcon,
             typeIcon = required(row, columns, "type_icon", filePath),
             fgColor = required(row, columns, "fg_color", filePath),
             textColor = required(row, columns, "text_color", filePath),
             fullImage = required(row, columns, "full_image", filePath),
             backgroundImage = requiredBackgroundImage(row, columns, filePath),
             cardBackgroundImage = required(row, columns, "bg_card_image2", filePath),
-            effect = effect
+            effect = effect,
+            scoringRule = parseScoringRule(
+                vpIcon = vpIcon,
+                cardName = name
+            )
         )
     }
+
+    private fun parseScoringRule(
+        vpIcon: String,
+        cardName: String
+    ): PlantScoringRule =
+        when (vpIcon.trim()) {
+            "{{ images.victory_per_vine.url }}" ->
+                PlantScoringRule.PerGraftedVine
+
+            "{{ images.victory_per_butterfly.url }}" ->
+                PlantScoringRule.PerButterfly
+
+            else -> {
+                val fixed = VictoryPointIconParser.fixedPoints(vpIcon)
+                requireNotNull(fixed) {
+                    "Unknown Plant VP icon '$vpIcon' for card '$cardName'"
+                }
+                PlantScoringRule.Fixed(fixed)
+            }
+        }
 
     private fun parseType(value: String, cardName: String): PlantType =
         when (value.trim().lowercase()) {

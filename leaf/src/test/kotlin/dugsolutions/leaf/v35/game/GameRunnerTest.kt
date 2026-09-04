@@ -28,7 +28,11 @@ class GameRunnerTest {
         val result = runner(executor, executor).run(game)
 
         // Assert
-        assertEquals(GameRunResult(2), result)
+        assertEquals(2, result.roundsCompleted)
+        assertEquals(
+            listOf(1, 2),
+            result.finalScoring.winnerIds.map { it.value }
+        )
         assertEquals(listOf(GameStatus.RUNNING, GameStatus.RUNNING), observedStatuses)
         assertEquals(GameStatus.COMPLETE, game.status)
         assertTrue(game.isComplete)
@@ -74,7 +78,10 @@ class GameRunnerTest {
         assertEquals(listOf(false, false), observations)
         val messages = markerMessages(game)
         assertEquals("GAME_COMPLETED rounds=2", messages.last())
-        assertTrue(messages[messages.lastIndex - 1].startsWith("ROUND_COMPLETED number=2"))
+        val finalRoundIndex = messages.indexOfLast { it.startsWith("ROUND_COMPLETED number=2") }
+        val firstFinalScoreIndex = messages.indexOfFirst { it.startsWith("FINAL_SCORE") }
+        assertTrue(finalRoundIndex >= 0)
+        assertTrue(firstFinalScoreIndex > finalRoundIndex)
     }
 
     @Test
@@ -139,8 +146,8 @@ class GameRunnerTest {
         assertEquals(3, secondResult.roundsCompleted)
         assertEquals(2, firstExecutor.cards.size)
         assertEquals(3, secondExecutor.cards.size)
-        assertEquals(5, first.chronicle.entries.size)
-        assertEquals(7, second.chronicle.entries.size)
+        assertEquals(8, first.chronicle.entries.size)
+        assertEquals(10, second.chronicle.entries.size)
         assertTrue(first.chronicle !== second.chronicle)
     }
 

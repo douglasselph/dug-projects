@@ -16,7 +16,8 @@ data class PlantCard(
     val fullImage: String,
     val backgroundImage: String,
     val cardBackgroundImage: String,
-    val effect: GameEffect
+    val effect: GameEffect,
+    val scoringRule: PlantScoringRule = PlantScoringRule.Fixed(0)
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -38,6 +39,7 @@ data class PlantCard(
         if (backgroundImage != other.backgroundImage) return false
         if (cardBackgroundImage != other.cardBackgroundImage) return false
         if (effect != other.effect) return false
+        if (scoringRule != other.scoringRule) return false
 
         return true
     }
@@ -57,11 +59,12 @@ data class PlantCard(
         result = 31 * result + backgroundImage.hashCode()
         result = 31 * result + cardBackgroundImage.hashCode()
         result = 31 * result + effect.hashCode()
+        result = 31 * result + scoringRule.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "PlantCard(quantity=$quantity, name='$name', title='$title', type=$type, cost=$cost, lineIcon=$lineIcon, vpIcon='$vpIcon', typeIcon='$typeIcon', fgColor='$fgColor', textColor='$textColor', fullImage='$fullImage', backgroundImage='$backgroundImage', cardBackgroundImage='$cardBackgroundImage', effect=$effect)"
+        return "PlantCard(quantity=$quantity, name='$name', title='$title', type=$type, cost=$cost, lineIcon=$lineIcon, vpIcon='$vpIcon', typeIcon='$typeIcon', fgColor='$fgColor', textColor='$textColor', fullImage='$fullImage', backgroundImage='$backgroundImage', cardBackgroundImage='$cardBackgroundImage', effect=$effect, scoringRule=$scoringRule)"
     }
 
 }

@@ -44,6 +44,17 @@ class WispCardRegistryTest {
         assertEquals(80, card.lineIconsHeight)
         assertEquals("{{ images.victory_victory.url }}", card.vpIcon)
         assertEquals("{{ images.cloud_honor.url }}", card.mainBackdrop)
+        assertEquals(2, card.endGameVp)
+    }
+
+    @Test
+    fun loadFromCsv_parsesAllWispEndGameVpValues() {
+        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+
+        assertEquals(3, assertNotNull(registry.getCard("Wisp_Award_VP2")).endGameVp)
+        assertEquals(1, assertNotNull(registry.getCard("Wisp_Gain_Critters")).endGameVp)
+        assertEquals(0, assertNotNull(registry.getCard("Wisp_Quake")).endGameVp)
+        assertEquals(0, assertNotNull(registry.getCard("Wisp_Reckoning")).endGameVp)
     }
 
     @Test

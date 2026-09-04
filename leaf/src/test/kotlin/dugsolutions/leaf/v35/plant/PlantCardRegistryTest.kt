@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.plant
 
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -42,6 +43,29 @@ class PlantCardRegistryTest {
         assertEquals("{{ images.back_root2.url }}", card.backgroundImage)
         assertEquals("{{ images.cc_root_double_down.url }}", card.cardBackgroundImage)
         assertEquals(GameEffect.DOUBLE_ONE_DIE, card.effect)
+        assertEquals(PlantScoringRule.Fixed(1), card.scoringRule)
+    }
+
+    @Test
+    fun loadFromCsv_parsesFixedAndVariableEndGameScoringRules() {
+        registry.loadFromCsv(dataPath(CardDataFiles.VF_CARD_LIST))
+
+        assertEquals(
+            PlantScoringRule.Fixed(3),
+            assertNotNull(registry.getCard("Vine_07_01")).scoringRule
+        )
+        assertEquals(
+            PlantScoringRule.Fixed(2),
+            assertNotNull(registry.getCard("Vine_09_03")).scoringRule
+        )
+        assertEquals(
+            PlantScoringRule.PerGraftedVine,
+            assertNotNull(registry.getCard("Vine_07_04")).scoringRule
+        )
+        assertEquals(
+            PlantScoringRule.PerButterfly,
+            assertNotNull(registry.getCard("Flower_11_02")).scoringRule
+        )
     }
 
     @Test

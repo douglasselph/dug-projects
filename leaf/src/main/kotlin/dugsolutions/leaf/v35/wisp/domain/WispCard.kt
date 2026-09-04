@@ -13,5 +13,12 @@ data class WispCard(
     val vpIcon: String?,
     val mainBackdrop: String,
     val playImmediately: Boolean = false,
-    val battleOnly: Boolean = false
-)
+    val battleOnly: Boolean = false,
+    val endGameVp: Int = 0
+) {
+    init {
+        require(endGameVp >= 0) {
+            "Wisp end-game VP must be non-negative: $endGameVp"
+        }
+    }
+}
