@@ -4,6 +4,12 @@ import dugsolutions.leaf.v35.player.decision.cultivation.BaselineCultivationStra
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationMainActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
+import dugsolutions.leaf.v35.player.decision.buy.BaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
+import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
+import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
+import dugsolutions.leaf.v35.player.decision.buy.ChoosePaymentRequest
+import dugsolutions.leaf.v35.player.decision.buy.ChoosePurchaseRequest
 import dugsolutions.leaf.v35.player.decision.placement.BaselineCreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
@@ -32,6 +38,24 @@ class DecisionDirectorTest {
         assertTrue(
             director.cultivation is BaselineCultivationStrategy
         )
+        assertTrue(director.buy is BaselineBuyStrategy)
+    }
+
+    @Test
+    fun copy_canReplaceBuyWithoutChangingOtherStrategies() {
+        val baseline = DecisionDirector.baseline()
+        val custom = object : BuyStrategy {
+            override fun choosePurchase(request: ChoosePurchaseRequest) = BuyChoice.Done
+            override fun choosePayment(request: ChoosePaymentRequest) = BuyPayment()
+        }
+
+        val changed = baseline.copy(buy = custom)
+
+        assertTrue(changed.buy === custom)
+        assertTrue(changed.reward === baseline.reward)
+        assertTrue(changed.wound === baseline.wound)
+        assertTrue(changed.placement === baseline.placement)
+        assertTrue(changed.cultivation === baseline.cultivation)
     }
 
     @Test

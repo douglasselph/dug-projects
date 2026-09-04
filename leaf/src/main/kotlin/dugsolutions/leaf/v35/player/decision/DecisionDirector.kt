@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.player.decision.placement.BaselineCreaturePlacement
 import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.BaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
+import dugsolutions.leaf.v35.player.decision.buy.BaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.wound.BaselineWoundStrategy
@@ -24,7 +26,8 @@ data class DecisionDirector(
     val reward: RewardStrategy,
     val wound: WoundStrategy,
     val placement: CreaturePlacementStrategy,
-    val cultivation: CultivationStrategy
+    val cultivation: CultivationStrategy,
+    val buy: BuyStrategy
 ) {
     companion object {
 
@@ -33,7 +36,8 @@ data class DecisionDirector(
                 reward = BaselineRewardStrategy(),
                 wound = BaselineWoundStrategy(),
                 placement = BaselineCreaturePlacementStrategy(),
-                cultivation = BaselineCultivationStrategy()
+                cultivation = BaselineCultivationStrategy(),
+                buy = BaselineBuyStrategy()
             )
     }
 }
