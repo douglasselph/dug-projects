@@ -114,6 +114,30 @@ internal fun resolveHandDie(
         zone = "Hand"
     )
 
+/**
+ * Resolves several Hand snapshots against one unchanged zone snapshot.
+ *
+ * This matters for effects such as Root Recall: resolving/removing the first
+ * selected die must not shift indices before the remaining choices are
+ * validated.
+ */
+internal fun resolveHandDice(
+    player: Player,
+    choices: List<EffectDieChoice>
+): List<Die> {
+    val handSnapshot = player.dice.hand
+    check(choices.map { it.index }.distinct().size == choices.size) {
+        "Effect selected the same Hand die more than once: $choices"
+    }
+    return choices.map { choice ->
+        resolveDie(
+            dice = handSnapshot,
+            choice = choice,
+            zone = "Hand"
+        )
+    }
+}
+
 internal fun resolveDiscardDie(
     player: Player,
     choice: EffectDieChoice

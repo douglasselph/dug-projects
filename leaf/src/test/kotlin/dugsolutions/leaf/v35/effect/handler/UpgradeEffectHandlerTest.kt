@@ -5,6 +5,8 @@ import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.LastEffectChoiceStrategy
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -34,6 +36,44 @@ class UpgradeEffectHandlerTest {
         }
 
         assertFalse(handler.canExecute(request))
+    }
+
+    @Test
+    fun rootAwakening_upgradesIntoHandAndRollsNewDieImmediately() {
+        val old = FixedEffectDie(4, 4)
+        val actor = EffectTestFixture.player(1, hand = listOf(old))
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nestedExecutor)
+
+        assertEquals(1, actor.dice.handSize)
+        assertEquals(6, actor.dice.hand.single().sides)
+        assertTrue(actor.dice.discard.isEmpty())
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(8, game.grove.graftBed.count(DieSides.D6))
+        assertTrue(game.chronicle.entries.filterIsInstance<GameEntry.Marker>().any {
+            it.message.startsWith("ROLL player=1")
+        })
+    }
+
+    @Test
+    fun rootAwakening_waitsForBattlePlacementSupport() {
+        val old = FixedEffectDie(4, 4)
+        val actor = EffectTestFixture.player(1, hand = listOf(old))
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val battle = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW
+        ).copy(phase = GameEffectPhase.BATTLE)
+
+        assertFalse(handler.canExecute(battle))
     }
 
     @Test

@@ -2,9 +2,13 @@ package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
+import dugsolutions.leaf.v35.effect.GameEffectSource
+import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.UpgradeResolver
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.random.die.DieSides
 
 /**
  * Upgrade-family effects.
@@ -23,6 +27,10 @@ class UpgradeEffectHandler(
         when (request.effect) {
             GameEffect.UPGRADE_DIE_FROM_HAND ->
                 upgradeChoices(request).isNotEmpty()
+
+            GameEffect.UPGRADE_DIE_AND_USE_NOW ->
+                request.phase == GameEffectPhase.CULTIVATION &&
+                    upgradeChoices(request).isNotEmpty()
 
             else -> false
         }
@@ -49,6 +57,30 @@ class UpgradeEffectHandler(
                 )
             }
 
+            GameEffect.UPGRADE_DIE_AND_USE_NOW -> {
+                val die = chooseRequiredHandDie(
+                    request = request,
+                    legalChoices = upgradeChoices(request)
+                )
+                val from = DieSides.from(die.sides)
+                val to = checkNotNull(upgradeResolver.nextNormalStep(from)) {
+                    "Validated Root Awakening source had no next step: $from"
+                }
+
+                val upgraded = upgradeResolver.upgradeFromHandToHand(
+                    game = request.game,
+                    player = request.actor,
+                    die = die,
+                    to = to
+                )
+
+                /* "Use the new die now": roll it in Hand and resolve reward. */
+                rollResolver(request, executor).roll(
+                    request.actor,
+                    upgraded.replacement
+                )
+            }
+
             else -> error(
                 "Unsupported effect reached UpgradeEffectHandler: ${request.effect}"
             )
@@ -64,4 +96,24 @@ class UpgradeEffectHandler(
                 die = die
             )
         }
+
+    private fun rollResolver(
+        request: GameEffectRequest,
+        executor: GameEffectExecutor
+    ): RollResolver =
+        RollResolver(
+            grove = request.game.grove,
+            chronicle = request.game.chronicle,
+            immediateWispHandler = { player, card ->
+                executor.execute(
+                    GameEffectRequest(
+                        game = request.game,
+                        actor = player,
+                        effect = card.effect,
+                        source = GameEffectSource.Wisp(card),
+                        phase = request.phase
+                    )
+                )
+            }
+        )
 }

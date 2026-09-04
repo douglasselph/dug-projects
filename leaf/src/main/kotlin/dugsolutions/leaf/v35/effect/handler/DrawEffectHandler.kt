@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
 
 /**
  * Effects whose main behavior is Draw / reroll / discard-redraw.
@@ -26,6 +27,12 @@ class DrawEffectHandler : EffectHandler {
         request: GameEffectRequest
     ): Boolean =
         when (request.effect) {
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> true
+                    GameEffectPhase.BATTLE -> request.actor.dice.hand.isNotEmpty()
+                }
+
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS ->
                 request.actor.dice.hand.isNotEmpty()
 
@@ -64,6 +71,23 @@ class DrawEffectHandler : EffectHandler {
         val rollResolver = rollResolver(request, executor)
 
         when (request.effect) {
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> rootRecallCultivation(
+                        request = request,
+                        rollResolver = rollResolver
+                    )
+
+                    GameEffectPhase.BATTLE -> {
+                        val die = chooseRequiredHandDie(
+                            request,
+                            handChoices(request.actor)
+                        )
+                        /* Reroll retains the live die in its Battle location. */
+                        rollResolver.roll(request.actor, die)
+                    }
+                }
+
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS -> {
                 val die = chooseRequiredHandDie(
                     request,
@@ -136,6 +160,49 @@ class DrawEffectHandler : EffectHandler {
             else -> error(
                 "Unsupported effect reached DrawEffectHandler: ${request.effect}"
             )
+        }
+    }
+
+    private fun rootRecallCultivation(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        val legalChoices = handChoices(request.actor)
+        val chosen = request.actor.decisions.effect.chooseDice(
+            ChooseEffectDiceRequest(
+                effect = request.effect,
+                legalChoices = legalChoices,
+                minChoices = 0,
+                maxChoices = legalChoices.size
+            )
+        )
+
+        check(chosen.selected.size <= legalChoices.size) {
+            "Root Recall selected too many dice: ${chosen.selected}"
+        }
+        check(chosen.selected.all { it in legalChoices }) {
+            "EffectStrategy returned illegal Root Recall dice: " +
+                "${chosen.selected}; legal=$legalChoices"
+        }
+        check(chosen.selected.map { it.index }.distinct().size == chosen.selected.size) {
+            "Root Recall selected the same die more than once: ${chosen.selected}"
+        }
+
+        /* Resolve the complete subset before any removal shifts Hand indices. */
+        val selectedDice = resolveHandDice(
+            player = request.actor,
+            choices = chosen.selected
+        )
+
+        selectedDice.forEach { die ->
+            check(request.actor.dice.removeFromHand(die) != null) {
+                "Validated Root Recall die could not be removed from Hand: $die"
+            }
+            request.actor.dice.addToDiscard(die)
+        }
+
+        repeat(selectedDice.size) {
+            rollResolver.draw(request.actor)
         }
     }
 

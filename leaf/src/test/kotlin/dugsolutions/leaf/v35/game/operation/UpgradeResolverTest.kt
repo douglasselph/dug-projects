@@ -42,6 +42,46 @@ class UpgradeResolverTest {
     }
 
     @Test
+    fun availableStep_skipsMissingLargerSizes() {
+        val player = player(FixedDie(4, 4))
+        val game = GameEngineTestFixture.game(players = listOf(player, player(2)))
+
+        repeat(9) { game.grove.graftBed.take(DieSides.D6) }
+        repeat(9) { game.grove.graftBed.take(DieSides.D10) }
+
+        assertEquals(
+            DieSides.D8,
+            resolver.availableStep(game, DieSides.D4, step = 1)
+        )
+        assertEquals(
+            DieSides.D12,
+            resolver.availableStep(game, DieSides.D4, step = 2)
+        )
+    }
+
+    @Test
+    fun upgradeFromHandToHand_preservesUseNowDestination() {
+        val old = FixedDie(4, 4)
+        val player = player(old)
+        val game = GameEngineTestFixture.game(players = listOf(player, player(2)))
+
+        val result = resolver.upgradeFromHandToHand(
+            game = game,
+            player = player,
+            die = old,
+            to = DieSides.D8
+        )
+
+        assertEquals(DieSides.D4, result.from)
+        assertEquals(DieSides.D8, result.to)
+        assertEquals(1, player.dice.handSize)
+        assertEquals(8, player.dice.hand.single().sides)
+        assertTrue(player.dice.discard.isEmpty())
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(8, game.grove.graftBed.count(DieSides.D8))
+    }
+
+    @Test
     fun upgradeD4_movesReplacementToDiscardAndReturnsD4ToGraftBed() {
         val old = FixedDie(4, 4)
         val player = player(old)

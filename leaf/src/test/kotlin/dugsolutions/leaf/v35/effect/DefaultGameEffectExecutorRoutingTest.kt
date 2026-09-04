@@ -14,12 +14,16 @@ class DefaultGameEffectExecutorRoutingTest {
         val draw = RecordingHandler()
         val resource = RecordingHandler()
         val upgrade = RecordingHandler()
+        val vineAndDine = RecordingHandler()
+        val overgrowth = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
             dieValueEffects = dieValue,
             drawEffects = draw,
             resourceEffects = resource,
             upgradeEffects = upgrade,
+            vineAndDineEffect = vineAndDine,
+            overgrowthEffect = overgrowth,
             wispquakeEffect = wispquake
         )
         val actor = EffectTestFixture.player(1)
@@ -57,6 +61,20 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN
             )
         )
@@ -78,6 +96,14 @@ class DefaultGameEffectExecutorRoutingTest {
             upgrade.effects
         )
         assertEquals(
+            listOf(GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5),
+            vineAndDine.effects
+        )
+        assertEquals(
+            listOf(GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),
+            overgrowth.effects
+        )
+        assertEquals(
             listOf(GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN),
             wispquake.effects
         )
@@ -91,7 +117,7 @@ class DefaultGameEffectExecutorRoutingTest {
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.SET_DIE_TO_MATCH_ANOTHER
+            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
         )
 
         assertFalse(executor.canExecute(request))

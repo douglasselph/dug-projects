@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.plant.domain.PlantType
 
 /**
@@ -46,6 +48,9 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 request.phase == GameEffectPhase.CULTIVATION &&
                     request.actor.dice.hand.isNotEmpty()
+
+            GameEffect.SET_DIE_TO_MATCH_ANOTHER ->
+                kindredChoices(request).isNotEmpty()
 
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX ->
                 request.actor.dice.hand.any { it.sides <= 12 }
@@ -134,6 +139,25 @@ class DieValueEffectHandler : EffectHandler {
                     handChoices(request.actor)
                 ).adjustTo(3)
 
+            GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
+                val legalChoices = kindredChoices(request)
+                val chosen = request.actor.decisions.effect.chooseDiePair(
+                    ChooseEffectDiePairRequest(
+                        effect = request.effect,
+                        legalChoices = legalChoices
+                    )
+                )
+                check(chosen in legalChoices) {
+                    "EffectStrategy returned illegal Root Kindred pair: " +
+                        "$chosen; legal=$legalChoices"
+                }
+
+                /* No state mutates between resolving source and target. */
+                val source = resolveHandDie(request.actor, chosen.source)
+                val target = resolveHandDie(request.actor, chosen.target)
+                target.adjustTo(source.value)
+            }
+
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX ->
                 chooseRequiredHandDie(
                     request,
@@ -159,6 +183,27 @@ class DieValueEffectHandler : EffectHandler {
             else -> error(
                 "Unsupported effect reached DieValueEffectHandler: ${request.effect}"
             )
+        }
+    }
+
+    private fun kindredChoices(
+        request: GameEffectRequest
+    ): List<EffectDiePairChoice> {
+        val dice = handChoices(request.actor)
+        return dice.flatMap { source ->
+            dice.mapNotNull { target ->
+                if (
+                    source.index == target.index ||
+                    source.value > target.sides
+                ) {
+                    null
+                } else {
+                    EffectDiePairChoice(
+                        source = source,
+                        target = target
+                    )
+                }
+            }
         }
     }
 

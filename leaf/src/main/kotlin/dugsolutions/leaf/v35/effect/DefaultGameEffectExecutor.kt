@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.ResourceEffectHandler
 import dugsolutions.leaf.v35.effect.handler.UpgradeEffectHandler
+import dugsolutions.leaf.v35.effect.special.OvergrowthEffect
+import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
 
 /**
@@ -20,6 +22,8 @@ class DefaultGameEffectExecutor(
     private val drawEffects: EffectHandler = DrawEffectHandler(),
     private val resourceEffects: EffectHandler = ResourceEffectHandler(),
     private val upgradeEffects: EffectHandler = UpgradeEffectHandler(),
+    private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
+    private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
 
@@ -81,10 +85,12 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
+            GameEffect.SET_DIE_TO_MATCH_ANOTHER,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX ->
                 dieValueEffects
 
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
             GameEffect.DRAW_TWO_DICE,
@@ -112,8 +118,15 @@ class DefaultGameEffectExecutor(
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects
 
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_FROM_HAND ->
                 upgradeEffects
+
+            GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5 ->
+                vineAndDineEffect
+
+            GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
+                overgrowthEffect
 
             GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN ->
                 wispquakeEffect
