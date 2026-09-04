@@ -188,4 +188,28 @@ class TrashResolverTest {
             game.grove.graftBed.counts
         )
     }
+    @Test
+    fun trashUsesExactIdentityWhenEquivalentDiceAreInHand() {
+        val first = FixedEffectDie(6, 4)
+        val second = FixedEffectDie(6, 4)
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(first, second)
+        )
+        val game = EffectTestFixture.game(
+            actor,
+            EffectTestFixture.player(2)
+        )
+
+        resolver.trashDieFromHand(
+            game = game,
+            player = actor,
+            die = second
+        )
+
+        assertEquals(1, actor.dice.handSize)
+        assertTrue(actor.dice.hand.single() === first)
+        assertFalse(actor.dice.hand.any { it === second })
+    }
+
 }

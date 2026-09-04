@@ -124,6 +124,19 @@ class PlayerDice(
     }
 
     /**
+     * Removes this exact live die instance from Hand.
+     *
+     * Most simulation rules intentionally treat equivalent dice as
+     * interchangeable and may use [removeFromHand]. Battle Grid location is
+     * different: two equivalent dice can occupy different Strike Squares, so
+     * Battle cleanup/Trash must preserve exact identity.
+     */
+    fun removeExactFromHand(die: Die): Die? {
+        val current = _hand.dice.firstOrNull { it === die } ?: return null
+        return if (_hand.removeExact(current)) current else null
+    }
+
+    /**
      * Removes one matching die from Discard and returns the supplied die value
      * when successful. Equivalent dice are intentionally interchangeable.
      */

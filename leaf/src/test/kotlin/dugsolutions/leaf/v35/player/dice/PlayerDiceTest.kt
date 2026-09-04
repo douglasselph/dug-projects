@@ -457,4 +457,17 @@ class PlayerDiceTest {
         override fun roll(): Die =
             this
     }
+    @Test
+    fun removeExactFromHand_preservesDistinctEquivalentDiceIdentity() {
+        val first = FixedDie(6, 4)
+        val second = FixedDie(6, 4)
+        val dice = PlayerDice(hand = listOf(first, second))
+
+        val removed = dice.removeExactFromHand(second)
+
+        assertTrue(removed === second)
+        assertEquals(1, dice.handSize)
+        assertTrue(dice.hand.single() === first)
+    }
+
 }

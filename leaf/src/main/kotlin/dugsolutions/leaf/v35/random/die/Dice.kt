@@ -140,6 +140,26 @@ class Dice(dice: List<Die> = emptyList()) {
         }
     }
 
+    /**
+     * Remove this exact live die instance rather than an equivalent die.
+     *
+     * This matters only when another subsystem, such as BattleGrid, has given
+     * equivalent dice distinct positional identity.
+     */
+    fun removeExact(die: Die): Boolean {
+        synchronized(lock) {
+            val index = _dice.indexOfFirst { it === die }
+            if (index < 0) return false
+
+            val removed = _dice.removeAt(index)
+            val orderedIndex = _diceInOrder.indexOfFirst { it === removed }
+            if (orderedIndex >= 0) {
+                _diceInOrder.removeAt(orderedIndex)
+            }
+            return true
+        }
+    }
+
     fun remove(die: DieValue): Boolean {
         synchronized(lock) {
             val index = _dice.indexOfFirst { it.equals(die) }

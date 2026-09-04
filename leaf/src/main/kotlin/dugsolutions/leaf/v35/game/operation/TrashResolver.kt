@@ -31,7 +31,7 @@ class TrashResolver {
     ): TrashDieResolution {
         val current =
             player.dice.hand.firstOrNull {
-                it == die
+                it === die
             }
 
         stateCheck(current != null) {
@@ -42,7 +42,7 @@ class TrashResolver {
             DieSides.from(current.sides)
 
         stateCheck(
-            player.dice.removeFromHand(
+            player.dice.removeExactFromHand(
                 current
             ) != null
         ) {
