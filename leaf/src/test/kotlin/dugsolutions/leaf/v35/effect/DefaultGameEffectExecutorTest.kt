@@ -180,7 +180,7 @@ class DefaultGameEffectExecutorTest {
     }
 
     @Test
-    fun unsupportedEffect_isNotExecutableAndThrowsIfForced() {
+    fun supportedEffectWithoutLegalTargets_isNotExecutableAndThrowsIfForced() {
         val actor = player(1)
         val game = game(actor)
         val request = request(game, actor, GameEffect.SET_DIE_TO_MATCH_ANOTHER)

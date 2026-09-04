@@ -21,8 +21,8 @@ import dugsolutions.leaf.v35.random.die.DieSides
  * Overgrowth: Upgrade +2 currently available larger steps, skipping missing
  * sizes, then use the gained die immediately.
  *
- * Battle support waits for Battle placement state because replacing a Grid die
- * must preserve its Strike Square. Cultivation is fully implemented here.
+ * In Battle, replacing a Grid die preserves its exact Strike Square. In
+ * Cultivation, the upgraded die follows the normal current-hand destination.
  */
 class OvergrowthEffect(
     private val upgradeResolver: UpgradeResolver = UpgradeResolver()

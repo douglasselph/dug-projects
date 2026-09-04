@@ -313,8 +313,8 @@ class BattleGrid(
      * Exchanges the Grid locations of two exact live dice without changing
      * either die's value or PlayerDice ownership.
      *
-     * This supports same-player swaps such as Transplant Tulip now and can be
-     * reused by later cross-player effects once their ownership rule is applied.
+     * This supports same-player swaps such as Transplant Tulip and cross-player
+     * swaps such as Pollen Theft when the caller also applies the ownership exchange.
      */
     fun swapDieLocations(
         first: Die,

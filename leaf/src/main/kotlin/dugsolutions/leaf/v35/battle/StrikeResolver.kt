@@ -82,8 +82,8 @@ class StrikeResolver(
     /**
      * Resolve exactly one open Strike Row.
      *
-     * This public seam is intentional: Wisp's Last Word will resolve one row
-     * immediately and then close it.
+     * Wisp's Last Word uses this public seam to resolve one row immediately
+     * before closing it.
      */
     fun resolveRow(
         game: Game,

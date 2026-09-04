@@ -1,15 +1,19 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.DefaultGameEffectExecutor
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FirstEffectChoiceStrategy
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseOEdelweissRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
 import org.junit.jupiter.api.Test
@@ -157,6 +161,124 @@ class OEdelweissEffectTest {
                             false
                     }
                 }
+        )
+    }
+
+    @Test
+    fun replayedBattleEffect_receivesBattleStateAndCanManipulateChosenStrikeRow() {
+        val strategy =
+            PlayBattleEffectThenDoneStrategy(
+                StrikeRow.MIDDLE
+            )
+
+        val actorDie =
+            FixedEffectDie(
+                sides = 8,
+                value = 4
+            )
+        val actor =
+            EffectTestFixture.player(
+                id = 1,
+                hand = listOf(actorDie),
+                effectStrategy = strategy
+            )
+        val opponentDie =
+            FixedEffectDie(
+                sides = 10,
+                value = 8
+            )
+        val opponent =
+            EffectTestFixture.player(
+                id = 2,
+                hand = listOf(opponentDie)
+            )
+        val game =
+            EffectTestFixture.game(
+                actor,
+                opponent
+            )
+        val battleState =
+            BattleState(
+                listOf(actor, opponent)
+            )
+
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.MIDDLE,
+            actorDie
+        )
+        battleState.grid.placeDie(
+            opponent,
+            StrikeRow.MIDDLE,
+            opponentDie
+        )
+
+        val target =
+            RecursivePlantEffectTestFixture
+                .graft(
+                    actor,
+                    RecursivePlantEffectTestFixture
+                        .plant(
+                            "VinePunishment",
+                            PlantType.VINE,
+                            GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3
+                        )
+                )
+        val source =
+            RecursivePlantEffectTestFixture
+                .graft(
+                    actor,
+                    RecursivePlantEffectTestFixture
+                        .plant(
+                            "OEdelweiss",
+                            PlantType.FLOWER,
+                            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
+                        )
+                )
+        val currentSource =
+            RecursivePlantEffectTestFixture
+                .faceUp(
+                    actor,
+                    source
+                )
+
+        strategy.target = target.id
+
+        DefaultGameEffectExecutor()
+            .execute(
+                EffectTestFixture.request(
+                    game = game,
+                    actor = actor,
+                    effect =
+                        GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+                    source =
+                        GameEffectSource.Plant(
+                            currentSource
+                        )
+                ).copy(
+                    phase = GameEffectPhase.BATTLE,
+                    battleState = battleState
+                )
+            )
+
+        assertEquals(
+            5,
+            opponentDie.value
+        )
+        assertEquals(
+            StrikeRow.MIDDLE,
+            battleState.grid.locationOf(
+                opponentDie
+            )?.row
+        )
+        assertTrue(
+            actor.creature
+                .get(target.id)!!
+                .isFaceDown
+        )
+        assertEquals(
+            2,
+            strategy.calls
         )
     }
 
@@ -415,6 +537,32 @@ class OEdelweissEffectTest {
                         }
             }
         }
+    }
+
+    private class PlayBattleEffectThenDoneStrategy(
+        private val row: StrikeRow
+    ) : FirstEffectChoiceStrategy() {
+        var target: CreatureCardId? = null
+        var calls = 0
+
+        override fun chooseOEdelweiss(
+            request: ChooseOEdelweissRequest
+        ): OEdelweissChoice {
+            calls++
+            if (request.choiceNumber == 2) {
+                return OEdelweissChoice.Done
+            }
+
+            return request.legalChoices
+                .filterIsInstance<OEdelweissChoice.Play>()
+                .first {
+                    it.card.cardId == target
+                }
+        }
+
+        override fun chooseStrikeRow(
+            request: ChooseEffectStrikeRowRequest
+        ): StrikeRow = row
     }
 
     private class IllegalPlayFaceUpStrategy :

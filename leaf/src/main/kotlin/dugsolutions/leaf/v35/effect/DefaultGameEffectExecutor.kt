@@ -88,8 +88,8 @@ class DefaultGameEffectExecutor(
      * Deliberately explicit routing table.
      *
      * Find an enum value here to see immediately which implementation family
-     * owns it. Unsupported / more involved effects intentionally remain absent
-     * until their complete rule can be implemented.
+     * owns it. Every defined effect except UNKNOWN is routed here; handler
+     * canExecute checks whether that effect is legal in the current state.
      */
     private fun handlerFor(
         effect: GameEffect

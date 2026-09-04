@@ -284,7 +284,52 @@ class DefaultGameEffectExecutorRoutingTest {
     }
 
     @Test
-    fun unsupportedEffect_hasNoHandler() {
+    fun everyDefinedNonUnknownEffect_hasExplicitRouting() {
+        val recording = RecordingHandler()
+        val executor =
+            DefaultGameEffectExecutor(
+                dieValueEffects = recording,
+                drawEffects = recording,
+                resourceEffects = recording,
+                crossPlayerEffects = recording,
+                upgradeEffects = recording,
+                vineAndDineEffect = recording,
+                petalToDie4Effect = recording,
+                beeLovedBloomEffect = recording,
+                alluringNectarEffect = recording,
+                partingThornEffect = recording,
+                snipHappensEffect = recording,
+                vineAndAgainEffect = recording,
+                oEdelweissEffect = recording,
+                wispReckoningEffect = recording,
+                wispLastWordEffect = recording,
+                overgrowthEffect = recording,
+                wispquakeEffect = recording
+            )
+        val actor = EffectTestFixture.player(1)
+        val game = EffectTestFixture.game(
+            actor,
+            EffectTestFixture.player(2)
+        )
+
+        GameEffect.values()
+            .filterNot { it == GameEffect.UNKNOWN }
+            .forEach { effect ->
+                assertTrue(
+                    executor.canExecute(
+                        EffectTestFixture.request(
+                            game,
+                            actor,
+                            effect
+                        )
+                    ),
+                    "GameEffect has no DefaultGameEffectExecutor route: $effect"
+                )
+            }
+    }
+
+    @Test
+    fun unknownEffect_hasNoHandler() {
         val actor = EffectTestFixture.player(1)
         val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
         val executor = DefaultGameEffectExecutor()

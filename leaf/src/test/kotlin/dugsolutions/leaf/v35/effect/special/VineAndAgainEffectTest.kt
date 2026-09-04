@@ -1,16 +1,20 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.effect.DefaultGameEffectExecutor
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FirstEffectChoiceStrategy
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlantRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -120,6 +124,120 @@ class VineAndAgainEffectTest {
             strategy.offered.map {
                 it.cardId
             }
+        )
+    }
+
+    @Test
+    fun nestedBattleEffect_receivesBattleStateAndCanManipulateChosenStrikeRow() {
+        val strategy =
+            ChoosePlantAndRowEffectStrategy(
+                StrikeRow.MIDDLE
+            )
+
+        val actorDie =
+            FixedEffectDie(
+                sides = 8,
+                value = 4
+            )
+        val actor =
+            EffectTestFixture.player(
+                id = 1,
+                hand = listOf(actorDie),
+                effectStrategy = strategy
+            )
+        val opponentDie =
+            FixedEffectDie(
+                sides = 10,
+                value = 8
+            )
+        val opponent =
+            EffectTestFixture.player(
+                id = 2,
+                hand = listOf(opponentDie)
+            )
+        val game =
+            EffectTestFixture.game(
+                actor,
+                opponent
+            )
+        val battleState =
+            BattleState(
+                listOf(actor, opponent)
+            )
+
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.MIDDLE,
+            actorDie
+        )
+        battleState.grid.placeDie(
+            opponent,
+            StrikeRow.MIDDLE,
+            opponentDie
+        )
+
+        val source =
+            RecursivePlantEffectTestFixture
+                .graft(
+                    actor,
+                    RecursivePlantEffectTestFixture
+                        .plant(
+                            "VineAgain",
+                            PlantType.VINE,
+                            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
+                        )
+                )
+        val spentVine =
+            RecursivePlantEffectTestFixture
+                .graft(
+                    actor,
+                    RecursivePlantEffectTestFixture
+                        .plant(
+                            "VinePunishment",
+                            PlantType.VINE,
+                            GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3
+                        )
+                )
+        val currentSource =
+            RecursivePlantEffectTestFixture
+                .faceUp(
+                    actor,
+                    source
+                )
+
+        strategy.target = spentVine.id
+
+        DefaultGameEffectExecutor()
+            .execute(
+                EffectTestFixture.request(
+                    game = game,
+                    actor = actor,
+                    effect =
+                        GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT,
+                    source =
+                        GameEffectSource.Plant(
+                            currentSource
+                        )
+                ).copy(
+                    phase = GameEffectPhase.BATTLE,
+                    battleState = battleState
+                )
+            )
+
+        assertEquals(
+            5,
+            opponentDie.value
+        )
+        assertEquals(
+            StrikeRow.MIDDLE,
+            battleState.grid.locationOf(
+                opponentDie
+            )?.row
+        )
+        assertTrue(
+            actor.creature
+                .get(spentVine.id)!!
+                .isFaceDown
         )
     }
 
@@ -392,6 +510,14 @@ class VineAndAgainEffectTest {
                             target
                 }
         }
+    }
+
+    private class ChoosePlantAndRowEffectStrategy(
+        private val row: StrikeRow
+    ) : ChoosePlantEffectStrategy() {
+        override fun chooseStrikeRow(
+            request: ChooseEffectStrikeRowRequest
+        ): StrikeRow = row
     }
 
     private class IllegalPlantEffectStrategy :
