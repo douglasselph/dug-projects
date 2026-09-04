@@ -50,6 +50,45 @@ class BattlePlacementResolver {
                 ).dieCount
         }
 
+    /**
+     * Places a newly added Hand die into one rule-mandated Strike Row.
+     *
+     * Unlike [placeNewHandDie], no strategy decision occurs because the effect
+     * itself determines the destination (for example Reap What You Roll or
+     * Transplant Tulip replacing a discarded die in its former square).
+     */
+    fun placeNewHandDieInRow(
+        battleState: BattleState,
+        player: Player,
+        die: Die,
+        row: StrikeRow
+    ): BattleDiePlacement {
+        stateNotNull(
+            player.dice.hand.firstOrNull { it === die },
+            context = "BattlePlacementResolver"
+        ) {
+            "Forced-placement Battle die is not the exact live Hand die for player ${player.id.value}: $die"
+        }
+
+        val legalRows = legalRows(
+            battleState = battleState,
+            player = player
+        )
+
+        stateNotNull(
+            row.takeIf { it in legalRows },
+            context = "BattlePlacementResolver"
+        ) {
+            "Rule-mandated Strike Row $row cannot accept new Battle die $die; legal=$legalRows"
+        }
+
+        return battleState.grid.placeDie(
+            player = player,
+            row = row,
+            die = die
+        )
+    }
+
     fun placeNewHandDie(
         battleState: BattleState,
         player: Player,

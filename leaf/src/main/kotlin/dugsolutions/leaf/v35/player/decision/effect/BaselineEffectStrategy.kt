@@ -18,6 +18,10 @@ class BaselineEffectStrategy : EffectStrategy {
         request: ChooseEffectDiePairRequest
     ): EffectDiePairChoice = request.legalChoices.first()
 
+    override fun chooseOptionalDiePair(
+        request: ChooseOptionalEffectDiePairRequest
+    ): EffectDiePairChoice? = request.legalChoices.firstOrNull()
+
     override fun chooseCritterAndDie(
         request: ChooseEffectCritterDieRequest
     ): EffectCritterDieChoice = request.legalChoices.first()

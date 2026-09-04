@@ -224,6 +224,129 @@ class BattleGrid(
     }
 
     /**
+     * Replaces one exact Grid die with another exact live die while preserving
+     * the original player's Strike Square.
+     *
+     * This is the location half of Battle Upgrade/replacement effects. The
+     * caller owns PlayerDice zone membership; the Grid owns only location.
+     */
+    fun replaceDie(
+        oldDie: Die,
+        newDie: Die
+    ): BattleDiePlacement {
+        val placement = stateNotNull(
+            placementOf(oldDie),
+            context = "BattleGrid"
+        ) {
+            "Cannot replace an unplaced Battle die: $oldDie"
+        }
+
+        stateCheck(
+            locationOf(newDie) == null,
+            context = "BattleGrid"
+        ) {
+            "Replacement die is already placed on the Battle Grid: $newDie"
+        }
+
+        val target =
+            square(
+                placement.playerId,
+                placement.row
+            )
+
+        stateCheck(
+            target.removeDieIdentity(oldDie),
+            context = "BattleGrid"
+        ) {
+            "Located Battle die disappeared before replacement: $placement"
+        }
+
+        target.addDie(newDie)
+
+        return BattleDiePlacement(
+            playerId = placement.playerId,
+            row = placement.row,
+            die = newDie
+        )
+    }
+
+    /**
+     * Exchanges the Grid locations of two exact live dice without changing
+     * either die's value or PlayerDice ownership.
+     *
+     * This supports same-player swaps such as Transplant Tulip now and can be
+     * reused by later cross-player effects once their ownership rule is applied.
+     */
+    fun swapDieLocations(
+        first: Die,
+        second: Die
+    ): Pair<BattleDiePlacement, BattleDiePlacement> {
+        stateCheck(first !== second, context = "BattleGrid") {
+            "Cannot swap a Battle die with itself"
+        }
+
+        val firstPlacement = stateNotNull(
+            placementOf(first),
+            context = "BattleGrid"
+        ) {
+            "First swap die is not placed on the Battle Grid: $first"
+        }
+        val secondPlacement = stateNotNull(
+            placementOf(second),
+            context = "BattleGrid"
+        ) {
+            "Second swap die is not placed on the Battle Grid: $second"
+        }
+
+        if (
+            firstPlacement.playerId == secondPlacement.playerId &&
+            firstPlacement.row == secondPlacement.row
+        ) {
+            return firstPlacement to secondPlacement
+        }
+
+        val firstSquare =
+            square(
+                firstPlacement.playerId,
+                firstPlacement.row
+            )
+        val secondSquare =
+            square(
+                secondPlacement.playerId,
+                secondPlacement.row
+            )
+
+        stateCheck(
+            firstSquare.removeDieIdentity(first),
+            context = "BattleGrid"
+        ) {
+            "First Battle die disappeared before swap: $firstPlacement"
+        }
+        stateCheck(
+            secondSquare.removeDieIdentity(second),
+            context = "BattleGrid"
+        ) {
+            "Second Battle die disappeared before swap: $secondPlacement"
+        }
+
+        firstSquare.addDie(second)
+        secondSquare.addDie(first)
+
+        return (
+            BattleDiePlacement(
+                playerId = secondPlacement.playerId,
+                row = secondPlacement.row,
+                die = first
+            ) to
+                BattleDiePlacement(
+                    playerId = firstPlacement.playerId,
+                    row = firstPlacement.row,
+                    die = second
+                )
+            )
+    }
+
+    /**
      * Changes only a die's Battle location. The live die and PlayerDice Hand
      * ownership are unchanged.
      */

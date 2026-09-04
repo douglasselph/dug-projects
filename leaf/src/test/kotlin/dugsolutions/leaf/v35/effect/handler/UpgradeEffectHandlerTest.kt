@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -63,17 +65,38 @@ class UpgradeEffectHandlerTest {
     }
 
     @Test
-    fun rootAwakening_waitsForBattlePlacementSupport() {
+    fun rootAwakeningInBattle_replacesExactDieInSameStrikeSquare() {
         val old = FixedEffectDie(4, 4)
         val actor = EffectTestFixture.player(1, hand = listOf(old))
-        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.MIDDLE,
+            old
+        )
+
         val battle = EffectTestFixture.request(
             game,
             actor,
             GameEffect.UPGRADE_DIE_AND_USE_NOW
-        ).copy(phase = GameEffectPhase.BATTLE)
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
 
-        assertFalse(handler.canExecute(battle))
+        assertTrue(handler.canExecute(battle))
+        handler.execute(battle, nestedExecutor)
+
+        val replacement = actor.dice.hand.single()
+        assertEquals(6, replacement.sides)
+        assertEquals(
+            StrikeRow.MIDDLE,
+            battleState.grid.locationOf(replacement)?.row
+        )
+        assertEquals(null, battleState.grid.locationOf(old))
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
     }
 
     @Test

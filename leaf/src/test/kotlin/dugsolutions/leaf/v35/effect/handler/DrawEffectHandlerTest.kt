@@ -315,6 +315,119 @@ class DrawEffectHandlerTest {
     }
 
     @Test
+    fun reapWhatYouRollInBattle_placesChosenDrawnDieInDiscardedDiceRow() {
+        val anchor = FixedEffectDie(10, 6)
+        val discarded = FixedEffectDie(20, 15)
+        val firstDraw = FixedEffectDie(6, 3)
+        val secondDraw = FixedEffectDie(12, 9)
+
+        val actor =
+            EffectTestFixture.player(
+                id = 1,
+                hand = listOf(anchor, discarded),
+                effectStrategy = LastEffectChoiceStrategy()
+            )
+        actor.dice.addAllToSupply(
+            listOf(firstDraw, secondDraw)
+        )
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.TOP,
+            anchor
+        )
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.MIDDLE,
+            discarded
+        )
+
+        val request =
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE
+            ).copy(
+                phase = GameEffectPhase.BATTLE,
+                battleState = battleState
+            )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertTrue(actor.dice.discard.any { it === discarded })
+        assertEquals(null, battleState.grid.locationOf(discarded))
+        assertEquals(
+            StrikeRow.MIDDLE,
+            battleState.grid.locationOf(secondDraw)?.row
+        )
+        assertEquals(
+            StrikeRow.TOP,
+            battleState.grid.locationOf(firstDraw)?.row
+        )
+    }
+
+    @Test
+    fun transplantTulipInBattle_replacesDiscardedLocationThenMaySwapOwnDice() {
+        val discarded = FixedEffectDie(8, 5)
+        val anchor = FixedEffectDie(10, 6)
+        val replacement = FixedEffectDie(6, 4)
+
+        val actor =
+            EffectTestFixture.player(
+                id = 1,
+                hand = listOf(discarded, anchor)
+            )
+        actor.dice.addToSupply(replacement)
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.TOP,
+            discarded
+        )
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.BOTTOM,
+            anchor
+        )
+
+        val request =
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE
+            ).copy(
+                phase = GameEffectPhase.BATTLE,
+                battleState = battleState
+            )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertTrue(actor.dice.discard.any { it === discarded })
+        assertEquals(null, battleState.grid.locationOf(discarded))
+
+        /*
+         * Baseline accepts the optional swap. The replacement first enters the
+         * discarded die's TOP square, then swaps with the anchor in BOTTOM.
+         */
+        assertEquals(
+            StrikeRow.BOTTOM,
+            battleState.grid.locationOf(replacement)?.row
+        )
+        assertEquals(
+            StrikeRow.TOP,
+            battleState.grid.locationOf(anchor)?.row
+        )
+    }
+
+    @Test
     fun queensBlossomInBattle_isNotOfferedWhenSuccessfulDrawsCannotAllBePlaced() {
         val existing =
             (1..8).map {

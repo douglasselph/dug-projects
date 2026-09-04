@@ -15,7 +15,9 @@ import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseOptionalEffectDiePairRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.random.die.Die
 
 /**
@@ -68,10 +70,24 @@ class DrawEffectHandler(
                         )
                     )
 
-            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        request.actor.dice.hand.isNotEmpty()
+
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).isNotEmpty()
+                }
+
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.hand.isNotEmpty()
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        request.actor.dice.hand.isNotEmpty()
+
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).isNotEmpty() &&
+                            hasReapBattleCapacity(request)
+                }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 burstingBlossomChoices(request).isNotEmpty()
@@ -157,17 +173,35 @@ class DrawEffectHandler(
                     )
                 }
 
-            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
-                discardChosenHandDie(request)
-                rollResolver.draw(request.actor)
-            }
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> {
+                        discardChosenHandDie(request)
+                        rollResolver.draw(request.actor)
+                    }
 
-            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE -> {
-                discardChosenHandDie(request)
-                repeat(2) {
-                    rollResolver.draw(request.actor)
+                    GameEffectPhase.BATTLE ->
+                        transplantTulipBattle(
+                            request = request,
+                            rollResolver = rollResolver
+                        )
                 }
-            }
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> {
+                        discardChosenHandDie(request)
+                        repeat(2) {
+                            rollResolver.draw(request.actor)
+                        }
+                    }
+
+                    GameEffectPhase.BATTLE ->
+                        reapWhatYouRollBattle(
+                            request = request,
+                            rollResolver = rollResolver
+                        )
+                }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> {
                 chooseRequiredHandDie(
@@ -206,6 +240,272 @@ class DrawEffectHandler(
                 "Unsupported effect reached DrawEffectHandler: ${request.effect}"
             )
         }
+    }
+
+    private data class DiscardedBattleDie(
+        val die: Die,
+        val row: dugsolutions.leaf.v35.battle.domain.StrikeRow
+    )
+
+    private fun transplantTulipBattle(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "TransplantTulip"
+        )
+        val discarded = discardBattleDie(
+            request = request,
+            context = "TransplantTulip"
+        )
+
+        val replacement =
+            rollResolver.draw(request.actor)?.die
+
+        if (replacement != null) {
+            battlePlacementResolver.placeNewHandDieInRow(
+                battleState = battleState,
+                player = request.actor,
+                die = replacement,
+                row = discarded.row
+            )
+        }
+
+        val legalPairs =
+            optionalBattleSwapPairs(request)
+
+        val chosen =
+            request.actor.decisions.effect.chooseOptionalDiePair(
+                ChooseOptionalEffectDiePairRequest(
+                    effect = request.effect,
+                    legalChoices = legalPairs
+                )
+            )
+
+        decisionCheck(
+            chosen == null || chosen in legalPairs
+        ) {
+            "EffectStrategy returned illegal Transplant Tulip swap pair: " +
+                "$chosen; legal=$legalPairs"
+        }
+
+        if (chosen != null) {
+            val (first, second) =
+                resolveHandDice(
+                    player = request.actor,
+                    choices = listOf(
+                        chosen.source,
+                        chosen.target
+                    )
+                )
+
+            val firstLocation =
+                battleState.grid.locationOf(first)
+            val secondLocation =
+                battleState.grid.locationOf(second)
+
+            decisionCheck(
+                firstLocation != null &&
+                    secondLocation != null &&
+                    firstLocation.playerId == request.actor.id &&
+                    secondLocation.playerId == request.actor.id &&
+                    firstLocation.row != secondLocation.row
+            ) {
+                "Transplant Tulip swap pair is no longer legal: $chosen"
+            }
+
+            battleState.grid.swapDieLocations(
+                first = first,
+                second = second
+            )
+        }
+    }
+
+    private fun reapWhatYouRollBattle(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "ReapWhatYouRoll"
+        )
+        val discarded = discardBattleDie(
+            request = request,
+            context = "ReapWhatYouRoll"
+        )
+
+        val drawn =
+            buildList {
+                repeat(2) {
+                    rollResolver.draw(request.actor)?.die?.let(::add)
+                }
+            }
+
+        if (drawn.isEmpty()) {
+            return
+        }
+
+        val replacement =
+            if (drawn.size == 1) {
+                drawn.single()
+            } else {
+                chooseRequiredHandDie(
+                    request = request,
+                    legalChoices = choicesForExactHandDice(
+                        request = request,
+                        dice = drawn
+                    )
+                )
+            }
+
+        battlePlacementResolver.placeNewHandDieInRow(
+            battleState = battleState,
+            player = request.actor,
+            die = replacement,
+            row = discarded.row
+        )
+
+        drawn
+            .filter { it !== replacement }
+            .forEach { die ->
+                battlePlacementResolver.placeNewHandDie(
+                    battleState = battleState,
+                    player = request.actor,
+                    die = die,
+                    reason = BattleDiePlacementReason.EFFECT
+                )
+            }
+    }
+
+    private fun discardBattleDie(
+        request: GameEffectRequest,
+        context: String
+    ): DiscardedBattleDie {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = context
+        )
+        val die = chooseRequiredHandDie(
+            request = request,
+            legalChoices = battleHandChoices(request)
+        )
+        val placement =
+            stateNotNull(
+                battleState.grid.placementOf(die),
+                context = context
+            ) {
+                "$context selected Battle die lost its Grid location: $die"
+            }
+
+        decisionCheck(
+            placement.playerId == request.actor.id
+        ) {
+            "$context selected a die not owned by the actor: $placement"
+        }
+
+        stateCheck(
+            battleState.grid.removeDie(die) != null
+        ) {
+            "$context could not remove selected die from Battle Grid: $die"
+        }
+        stateCheck(
+            request.actor.dice.removeExactFromHand(die) != null
+        ) {
+            "$context could not remove selected exact die from Hand: $die"
+        }
+        request.actor.dice.addToDiscard(die)
+
+        return DiscardedBattleDie(
+            die = die,
+            row = placement.row
+        )
+    }
+
+    private fun choicesForExactHandDice(
+        request: GameEffectRequest,
+        dice: List<Die>
+    ): List<EffectDieChoice> =
+        request.actor.dice.hand.mapIndexedNotNull { index, die ->
+            if (dice.none { candidate -> candidate === die }) {
+                null
+            } else {
+                EffectDieChoice(
+                    index = index,
+                    sides = die.sides,
+                    value = die.value
+                )
+            }
+        }
+
+    private fun optionalBattleSwapPairs(
+        request: GameEffectRequest
+    ): List<EffectDiePairChoice> {
+        val battleState =
+            request.battleState
+                ?: return emptyList()
+        val choices =
+            battleHandChoices(request)
+
+        return buildList {
+            for (firstIndex in choices.indices) {
+                for (secondIndex in (firstIndex + 1) until choices.size) {
+                    val firstChoice = choices[firstIndex]
+                    val secondChoice = choices[secondIndex]
+                    val first =
+                        request.actor.dice.hand.getOrNull(
+                            firstChoice.index
+                        ) ?: continue
+                    val second =
+                        request.actor.dice.hand.getOrNull(
+                            secondChoice.index
+                        ) ?: continue
+                    val firstLocation =
+                        battleState.grid.locationOf(first)
+                    val secondLocation =
+                        battleState.grid.locationOf(second)
+
+                    if (
+                        firstLocation != null &&
+                        secondLocation != null &&
+                        firstLocation.playerId == request.actor.id &&
+                        secondLocation.playerId == request.actor.id &&
+                        firstLocation.row != secondLocation.row
+                    ) {
+                        add(
+                            EffectDiePairChoice(
+                                source = firstChoice,
+                                target = secondChoice
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun hasReapBattleCapacity(
+        request: GameEffectRequest
+    ): Boolean {
+        val battleState =
+            request.battleState
+                ?: return false
+
+        /*
+         * Discarding the selected Grid die always creates one slot. Reap then
+         * draws up to two dice, so only the net extra die needs pre-existing
+         * Grid capacity.
+         */
+        val draws =
+            minOf(
+                2,
+                drawableDieCount(request)
+            )
+
+        return battlePlacementResolver.availableSlots(
+            battleState = battleState,
+            player = request.actor
+        ) + 1 >= draws
     }
 
     private fun gustOfPetalsBattle(

@@ -33,8 +33,7 @@ class UpgradeEffectHandler(
                 upgradeChoices(request).isNotEmpty()
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    upgradeChoices(request).isNotEmpty()
+                rootAwakeningChoices(request).isNotEmpty()
 
             else -> false
         }
@@ -64,11 +63,30 @@ class UpgradeEffectHandler(
             GameEffect.UPGRADE_DIE_AND_USE_NOW -> {
                 val die = chooseRequiredHandDie(
                     request = request,
-                    legalChoices = upgradeChoices(request)
+                    legalChoices = rootAwakeningChoices(request)
                 )
                 val from = DieSides.from(die.sides)
                 val to = effectNotNull(upgradeResolver.nextNormalStep(from)) {
                     "Validated Root Awakening source had no next step: $from"
+                }
+
+                val battleState =
+                    if (request.phase == GameEffectPhase.BATTLE) {
+                        battleStateForEffect(
+                            request = request,
+                            context = "RootAwakening"
+                        )
+                    } else {
+                        null
+                    }
+
+                if (battleState != null) {
+                    stateCheck(
+                        battleState.grid.locationOf(die)?.playerId ==
+                            request.actor.id
+                    ) {
+                        "Root Awakening Battle target lost its Grid location before Upgrade: $die"
+                    }
                 }
 
                 val upgraded = upgradeResolver.upgradeFromHandToHand(
@@ -77,6 +95,18 @@ class UpgradeEffectHandler(
                     die = die,
                     to = to
                 )
+
+                /*
+                 * During Battle, replacing a die changes the live object but not
+                 * its Strike Square. Put the replacement on the Grid before the
+                 * roll so any immediate Roll Reward sees coherent Battle state.
+                 */
+                if (battleState != null) {
+                    battleState.grid.replaceDie(
+                        oldDie = die,
+                        newDie = upgraded.replacement
+                    )
+                }
 
                 /* "Use the new die now": roll it in Hand and resolve reward. */
                 rollResolver(request, executor).roll(
@@ -90,6 +120,27 @@ class UpgradeEffectHandler(
             )
         }
     }
+
+    private fun rootAwakeningChoices(
+        request: GameEffectRequest
+    ): List<EffectDieChoice> =
+        when (request.phase) {
+            GameEffectPhase.CULTIVATION ->
+                upgradeChoices(request)
+
+            GameEffectPhase.BATTLE ->
+                battleHandChoices(request).filter { choice ->
+                    val die =
+                        request.actor.dice.hand.getOrNull(
+                            choice.index
+                        ) ?: return@filter false
+
+                    upgradeResolver.canUpgradeNormalStep(
+                        game = request.game,
+                        die = die
+                    )
+                }
+        }
 
     private fun upgradeChoices(
         request: GameEffectRequest

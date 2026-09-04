@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
@@ -49,10 +51,11 @@ class OvergrowthEffectTest {
     }
 
     @Test
-    fun requiresTwoAvailableLargerSizes_andWaitsForBattlePlacementSupport() {
+    fun requiresTwoAvailableLargerSizesInEitherPhase() {
         val old = FixedEffectDie(4, 4)
         val actor = EffectTestFixture.player(1, hand = listOf(old))
-        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
         empty(game, DieSides.D6)
         empty(game, DieSides.D8)
         empty(game, DieSides.D10)
@@ -65,7 +68,61 @@ class OvergrowthEffectTest {
         )
 
         assertFalse(effect.canExecute(request))
-        assertFalse(effect.canExecute(request.copy(phase = GameEffectPhase.BATTLE)))
+
+        val battleState = BattleState(listOf(actor, other))
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.TOP,
+            old
+        )
+        assertFalse(
+            effect.canExecute(
+                request.copy(
+                    phase = GameEffectPhase.BATTLE,
+                    battleState = battleState
+                )
+            )
+        )
+    }
+
+    @Test
+    fun battleUpgradePreservesOriginalStrikeSquare() {
+        val old = FixedEffectDie(4, 4)
+        val actor = EffectTestFixture.player(1, hand = listOf(old))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        empty(game, DieSides.D6)
+        empty(game, DieSides.D10)
+        empty(game, DieSides.D12)
+        /* D8 then D20 are the two available larger steps. */
+
+        val battleState = BattleState(listOf(actor, other))
+        battleState.grid.placeDie(
+            actor,
+            StrikeRow.BOTTOM,
+            old
+        )
+
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
+
+        assertTrue(effect.canExecute(request))
+        effect.execute(request, nested)
+
+        val replacement = actor.dice.hand.single()
+        assertEquals(20, replacement.sides)
+        assertEquals(
+            StrikeRow.BOTTOM,
+            battleState.grid.locationOf(replacement)?.row
+        )
+        assertEquals(null, battleState.grid.locationOf(old))
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
     }
 
     private fun empty(

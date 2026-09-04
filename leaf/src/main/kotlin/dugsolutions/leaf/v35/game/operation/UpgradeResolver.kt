@@ -140,7 +140,7 @@ class UpgradeResolver {
         to: DieSides,
         destination: Destination
     ): UpgradeResolution {
-        val current = player.dice.hand.firstOrNull { it == die }
+        val current = player.dice.hand.firstOrNull { it === die }
         stateCheck(current != null) {
             "Upgrade die is not in player Hand: $die"
         }
@@ -154,7 +154,7 @@ class UpgradeResolver {
         }
 
         /* Validate every expected failure before mutating any game state. */
-        stateCheck(player.dice.removeFromHand(current) != null) {
+        stateCheck(player.dice.removeExactFromHand(current) != null) {
             "Validated Upgrade die could not be removed from Hand: $current"
         }
         stateCheck(game.grove.graftBed.take(to)) {

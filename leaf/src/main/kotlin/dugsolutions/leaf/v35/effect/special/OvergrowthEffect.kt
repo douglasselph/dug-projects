@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.battleHandChoices
+import dugsolutions.leaf.v35.effect.handler.battleStateForEffect
 import dugsolutions.leaf.v35.effect.handler.chooseRequiredHandDie
 import dugsolutions.leaf.v35.effect.handler.handChoices
 import dugsolutions.leaf.v35.game.operation.RollResolver
@@ -30,14 +32,7 @@ class OvergrowthEffect(
         request: GameEffectRequest
     ): Boolean =
         request.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW &&
-            request.phase == GameEffectPhase.CULTIVATION &&
-            handChoices(request.actor) { die ->
-                upgradeResolver.canUpgradeAvailableSteps(
-                    game = request.game,
-                    die = die,
-                    steps = 2
-                )
-            }.isNotEmpty()
+            overgrowthChoices(request).isNotEmpty()
 
     override fun execute(
         request: GameEffectRequest,
@@ -47,13 +42,7 @@ class OvergrowthEffect(
             "Overgrowth cannot execute in the current state"
         }
 
-        val legalChoices = handChoices(request.actor) { die ->
-            upgradeResolver.canUpgradeAvailableSteps(
-                game = request.game,
-                die = die,
-                steps = 2
-            )
-        }
+        val legalChoices = overgrowthChoices(request)
         val die = chooseRequiredHandDie(request, legalChoices)
         val from = DieSides.from(die.sides)
         val to = effectNotNull(
@@ -66,12 +55,38 @@ class OvergrowthEffect(
             "Validated Overgrowth target lost its second available step: $from"
         }
 
+        val battleState =
+            if (request.phase == GameEffectPhase.BATTLE) {
+                battleStateForEffect(
+                    request = request,
+                    context = "Overgrowth"
+                )
+            } else {
+                null
+            }
+
+        if (battleState != null) {
+            stateCheck(
+                battleState.grid.locationOf(die)?.playerId ==
+                    request.actor.id
+            ) {
+                "Overgrowth Battle target lost its Grid location before Upgrade: $die"
+            }
+        }
+
         val upgraded = upgradeResolver.upgradeFromHandToHand(
             game = request.game,
             player = request.actor,
             die = die,
             to = to
         )
+
+        if (battleState != null) {
+            battleState.grid.replaceDie(
+                oldDie = die,
+                newDie = upgraded.replacement
+            )
+        }
 
         RollResolver(
             grove = request.game.grove,
@@ -91,4 +106,32 @@ class OvergrowthEffect(
             }
         ).roll(request.actor, upgraded.replacement)
     }
+
+    private fun overgrowthChoices(
+        request: GameEffectRequest
+    ) =
+        when (request.phase) {
+            GameEffectPhase.CULTIVATION ->
+                handChoices(request.actor) { die ->
+                    upgradeResolver.canUpgradeAvailableSteps(
+                        game = request.game,
+                        die = die,
+                        steps = 2
+                    )
+                }
+
+            GameEffectPhase.BATTLE ->
+                battleHandChoices(request).filter { choice ->
+                    val die =
+                        request.actor.dice.hand.getOrNull(
+                            choice.index
+                        ) ?: return@filter false
+
+                    upgradeResolver.canUpgradeAvailableSteps(
+                        game = request.game,
+                        die = die,
+                        steps = 2
+                    )
+                }
+        }
 }

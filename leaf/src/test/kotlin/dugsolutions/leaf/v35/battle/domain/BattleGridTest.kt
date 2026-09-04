@@ -296,6 +296,49 @@ class BattleGridTest {
     }
 
     @Test
+    fun replaceDiePreservesExactStrikeSquare() {
+        val old = BattleTestFixture.die(6, 4)
+        val replacement = BattleTestFixture.die(8, 7)
+        val player = BattleTestFixture.player(1, old, replacement)
+        val grid = grid(1, 2)
+
+        grid.placeDie(player, StrikeRow.BOTTOM, old)
+
+        val placed = grid.replaceDie(old, replacement)
+
+        assertNull(grid.locationOf(old))
+        assertEquals(
+            BattleLocation(PlayerId(1), StrikeRow.BOTTOM),
+            grid.locationOf(replacement)
+        )
+        assertSame(replacement, placed.die)
+    }
+
+    @Test
+    fun swapDieLocationsExchangesExactRowsWithoutChangingValues() {
+        val first = BattleTestFixture.die(6, 2)
+        val second = BattleTestFixture.die(10, 9)
+        val player = BattleTestFixture.player(1, first, second)
+        val grid = grid(1, 2)
+
+        grid.placeDie(player, StrikeRow.TOP, first)
+        grid.placeDie(player, StrikeRow.BOTTOM, second)
+
+        grid.swapDieLocations(first, second)
+
+        assertEquals(
+            BattleLocation(PlayerId(1), StrikeRow.BOTTOM),
+            grid.locationOf(first)
+        )
+        assertEquals(
+            BattleLocation(PlayerId(1), StrikeRow.TOP),
+            grid.locationOf(second)
+        )
+        assertEquals(2, first.value)
+        assertEquals(9, second.value)
+    }
+
+    @Test
     fun closedRowRejectsNewDiceCrittersAndMoves() {
         val placed = BattleTestFixture.die(8, 5)
         val unplaced = BattleTestFixture.die(6, 4)

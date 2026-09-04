@@ -110,6 +110,13 @@ class ChooseEffectDiePairRequest(
     }
 }
 
+class ChooseOptionalEffectDiePairRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectDiePairChoice>
+) {
+    val legalChoices: List<EffectDiePairChoice> = legalChoices.toList()
+}
+
 /** A complete Critter-to-trash + die-to-target decision for Vine and Dine. */
 data class EffectCritterDieChoice(
     val critter: Critter,
@@ -440,6 +447,11 @@ interface EffectStrategy {
     fun chooseDiePair(
         request: ChooseEffectDiePairRequest
     ): EffectDiePairChoice = request.legalChoices.first()
+
+    /** Choose an optional two-die pair, or decline when the effect says "may". */
+    fun chooseOptionalDiePair(
+        request: ChooseOptionalEffectDiePairRequest
+    ): EffectDiePairChoice? = request.legalChoices.firstOrNull()
 
     /** Choose both the Critter cost and die target as one explicit decision. */
     fun chooseCritterAndDie(

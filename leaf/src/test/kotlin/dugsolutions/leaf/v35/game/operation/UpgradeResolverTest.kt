@@ -99,6 +99,32 @@ class UpgradeResolverTest {
     }
 
     @Test
+    fun upgradeUsesExactHandIdentityWhenEquivalentDiceExist() {
+        val first = FixedDie(6, 4)
+        val second = FixedDie(6, 4)
+        val player = Player(
+            id = PlayerId(1),
+            decisions = DecisionDirector.baseline(),
+            dice = PlayerDice(hand = listOf(first, second))
+        )
+        val game = GameEngineTestFixture.game(
+            players = listOf(player, player(2))
+        )
+
+        resolver.upgradeFromHandToHand(
+            game = game,
+            player = player,
+            die = second,
+            to = DieSides.D8
+        )
+
+        assertTrue(player.dice.hand.any { it === first })
+        assertFalse(player.dice.hand.any { it === second })
+        assertEquals(2, player.dice.handSize)
+        assertEquals(8, player.dice.hand.last().sides)
+    }
+
+    @Test
     fun upgradeD6_removesOldDieFromGameRatherThanReturningItToGraftBed() {
         val old = FixedDie(6, 6)
         val player = player(old)
