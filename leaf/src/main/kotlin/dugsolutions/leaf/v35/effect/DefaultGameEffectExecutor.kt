@@ -6,7 +6,9 @@ import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.ResourceEffectHandler
 import dugsolutions.leaf.v35.effect.handler.UpgradeEffectHandler
+import dugsolutions.leaf.v35.effect.special.BeeLovedBloomEffect
 import dugsolutions.leaf.v35.effect.special.OvergrowthEffect
+import dugsolutions.leaf.v35.effect.special.PetalToDie4Effect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
 
@@ -23,6 +25,8 @@ class DefaultGameEffectExecutor(
     private val resourceEffects: EffectHandler = ResourceEffectHandler(),
     private val upgradeEffects: EffectHandler = UpgradeEffectHandler(),
     private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
+    private val petalToDie4Effect: EffectHandler = PetalToDie4Effect(),
+    private val beeLovedBloomEffect: EffectHandler = BeeLovedBloomEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
@@ -125,6 +129,12 @@ class DefaultGameEffectExecutor(
 
             GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5 ->
                 vineAndDineEffect
+
+            GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
+                petalToDie4Effect
+
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
+                beeLovedBloomEffect
 
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
                 overgrowthEffect

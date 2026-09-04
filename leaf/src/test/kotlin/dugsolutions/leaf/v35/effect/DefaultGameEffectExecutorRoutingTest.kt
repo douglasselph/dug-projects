@@ -15,6 +15,8 @@ class DefaultGameEffectExecutorRoutingTest {
         val resource = RecordingHandler()
         val upgrade = RecordingHandler()
         val vineAndDine = RecordingHandler()
+        val petalToDie4 = RecordingHandler()
+        val beeLovedBloom = RecordingHandler()
         val overgrowth = RecordingHandler()
         val wispquake = RecordingHandler()
         val executor = DefaultGameEffectExecutor(
@@ -23,6 +25,8 @@ class DefaultGameEffectExecutorRoutingTest {
             resourceEffects = resource,
             upgradeEffects = upgrade,
             vineAndDineEffect = vineAndDine,
+            petalToDie4Effect = petalToDie4,
+            beeLovedBloomEffect = beeLovedBloom,
             overgrowthEffect = overgrowth,
             wispquakeEffect = wispquake
         )
@@ -75,6 +79,20 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
+                GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND
+            )
+        )
+        executor.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
                 GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
             )
         )
@@ -108,6 +126,14 @@ class DefaultGameEffectExecutorRoutingTest {
         assertEquals(
             listOf(GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5),
             vineAndDine.effects
+        )
+        assertEquals(
+            listOf(GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4),
+            petalToDie4.effects
+        )
+        assertEquals(
+            listOf(GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND),
+            beeLovedBloom.effects
         )
         assertEquals(
             listOf(GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),

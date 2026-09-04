@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.tokens.Critter
 
 /**
@@ -124,6 +125,61 @@ class ChooseEffectCritterDieRequest(
     }
 }
 
+
+/**
+ * Complete branch/target decision for Petal To Die 4.
+ *
+ * GainD4 has no additional target. TrashD4AndRaiseAll names the exact Hand D4
+ * that will be Trashed before all remaining dice are Raised +4.
+ */
+sealed interface PetalToDie4Choice {
+    data object GainD4 : PetalToDie4Choice
+
+    data class TrashD4AndRaiseAll(
+        val die: EffectDieChoice
+    ) : PetalToDie4Choice
+}
+
+class ChoosePetalToDie4Request(
+    val effect: GameEffect,
+    legalChoices: List<PetalToDie4Choice>
+) {
+    val legalChoices: List<PetalToDie4Choice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Petal To Die 4 requires at least one legal branch"
+        }
+    }
+}
+
+/**
+ * Exact source of the Bee gained by Bee-loved Bloom.
+ *
+ * Opponent identifies the player from whom the Bee will be stolen. The actor
+ * is never a legal Opponent source.
+ */
+sealed interface EffectBeeSourceChoice {
+    data object Grove : EffectBeeSourceChoice
+
+    data class Opponent(
+        val playerId: PlayerId
+    ) : EffectBeeSourceChoice
+}
+
+class ChooseBeeSourceRequest(
+    val effect: GameEffect,
+    legalChoices: List<EffectBeeSourceChoice>
+) {
+    val legalChoices: List<EffectBeeSourceChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Bee source decision requires at least one legal source: $effect"
+        }
+    }
+}
+
 /**
  * Focused decision seam for effect-specific targeting.
  *
@@ -156,4 +212,14 @@ interface EffectStrategy {
     fun chooseCritterAndDie(
         request: ChooseEffectCritterDieRequest
     ): EffectCritterDieChoice = request.legalChoices.first()
+
+    /** Choose Petal To Die 4's branch, including the D4 target when Trashing. */
+    fun choosePetalToDie4(
+        request: ChoosePetalToDie4Request
+    ): PetalToDie4Choice = request.legalChoices.first()
+
+    /** Choose exactly where Bee-loved Bloom obtains its Bee. */
+    fun chooseBeeSource(
+        request: ChooseBeeSourceRequest
+    ): EffectBeeSourceChoice = request.legalChoices.first()
 }

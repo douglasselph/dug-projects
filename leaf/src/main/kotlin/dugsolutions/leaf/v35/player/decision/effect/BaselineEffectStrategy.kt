@@ -21,4 +21,12 @@ class BaselineEffectStrategy : EffectStrategy {
     override fun chooseCritterAndDie(
         request: ChooseEffectCritterDieRequest
     ): EffectCritterDieChoice = request.legalChoices.first()
+
+    override fun choosePetalToDie4(
+        request: ChoosePetalToDie4Request
+    ): PetalToDie4Choice = request.legalChoices.first()
+
+    override fun chooseBeeSource(
+        request: ChooseBeeSourceRequest
+    ): EffectBeeSourceChoice = request.legalChoices.first()
 }

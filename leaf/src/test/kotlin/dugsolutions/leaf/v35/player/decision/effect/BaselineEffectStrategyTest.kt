@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -86,6 +87,30 @@ class BaselineEffectStrategyTest {
                 )
             )
         )
+
+
+        val petal = PetalToDie4Choice.TrashD4AndRaiseAll(first)
+        assertEquals(
+            petal,
+            strategy.choosePetalToDie4(
+                ChoosePetalToDie4Request(
+                    effect = GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
+                    legalChoices = listOf(petal)
+                )
+            )
+        )
+
+        val beeSource =
+            EffectBeeSourceChoice.Opponent(PlayerId(2))
+        assertEquals(
+            beeSource,
+            strategy.chooseBeeSource(
+                ChooseBeeSourceRequest(
+                    effect = GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+                    legalChoices = listOf(beeSource)
+                )
+            )
+        )
     }
 
     @Test
@@ -105,11 +130,35 @@ class BaselineEffectStrategyTest {
             effect = GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             legalChoices = mutable
         )
+        val petalMutable =
+            mutableListOf<PetalToDie4Choice>(
+                PetalToDie4Choice.TrashD4AndRaiseAll(
+                    mutable.first()
+                )
+            )
+        val petal = ChoosePetalToDie4Request(
+            effect = GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
+            legalChoices = petalMutable
+        )
+        val beeMutable =
+            mutableListOf<EffectBeeSourceChoice>(
+                EffectBeeSourceChoice.Opponent(
+                    PlayerId(2)
+                )
+            )
+        val bee = ChooseBeeSourceRequest(
+            effect = GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+            legalChoices = beeMutable
+        )
 
         mutable.clear()
+        petalMutable.clear()
+        beeMutable.clear()
 
         assertEquals(1, required.legalChoices.size)
         assertEquals(1, optional.legalChoices.size)
         assertEquals(1, many.legalChoices.size)
+        assertEquals(1, petal.legalChoices.size)
+        assertEquals(1, bee.legalChoices.size)
     }
 }

@@ -12,8 +12,9 @@ import dugsolutions.leaf.v35.random.die.DieSides
  * - D4 = 0 (return space)
  * - D6/D8/D10/D12/D20 = 9 each
  *
- * Returned upgraded-away D4s may re-enter the D4 space. Replaced D6+ dice
- * leave the game and therefore have no generic return operation here.
+ * D4s returned by game rules (including Upgrade replacement and Trash) may
+ * re-enter the D4 space. D6+ dice that leave play do not return here unless a
+ * specific rule explicitly says otherwise.
  */
 class GraftBed {
 
@@ -51,7 +52,9 @@ class GraftBed {
     }
 
     /**
-     * Returns one upgraded-away D4 to its dedicated Graft Bed return space.
+     * Returns one D4 to its dedicated Graft Bed return space.
+     *
+     * This is used by universal rules such as Upgrade replacement and Trash.
      */
     fun returnD4() {
         countsBySides[DieSides.D4] =
