@@ -24,6 +24,12 @@ class Game(
     val roundDeck: RoundDeck,
     val randomizer: Randomizer
 ) {
+    var status: GameStatus = GameStatus.READY
+        private set
+
+    val isComplete: Boolean
+        get() = status == GameStatus.COMPLETE
+
     /**
      * Defensive structural view. The Player instances are the live mutable
      * player state for this Game.
@@ -50,4 +56,18 @@ class Game(
      */
     val hasRevealedFinalRound: Boolean
         get() = roundDeck.isEmpty
+
+    internal fun start() {
+        check(status == GameStatus.READY) {
+            "Game can only start from READY: $status"
+        }
+        status = GameStatus.RUNNING
+    }
+
+    internal fun complete() {
+        check(status == GameStatus.RUNNING) {
+            "Game can only complete from RUNNING: $status"
+        }
+        status = GameStatus.COMPLETE
+    }
 }

@@ -26,6 +26,14 @@ import kotlin.test.assertTrue
 class GameTest {
 
     @Test
+    fun newGame_isReadyAndNotComplete() {
+        val game = fixture(listOf(player(1), player(2))).game
+
+        assertEquals(GameStatus.READY, game.status)
+        assertFalse(game.isComplete)
+    }
+
+    @Test
     fun newGame_exposesOwnedStateAndDefensivePlayerList() {
         val incoming =
             mutableListOf(
