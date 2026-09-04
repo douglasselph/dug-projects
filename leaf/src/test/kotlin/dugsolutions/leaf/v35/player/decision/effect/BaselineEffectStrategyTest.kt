@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.effect
 
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -237,6 +238,19 @@ class BaselineEffectStrategyTest {
                 )
             )
         )
+
+        assertEquals(
+            StrikeRow.MIDDLE,
+            strategy.chooseStrikeRow(
+                ChooseEffectStrikeRowRequest(
+                    effect = GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+                    legalChoices = listOf(
+                        StrikeRow.MIDDLE,
+                        StrikeRow.BOTTOM
+                    )
+                )
+            )
+        )
     }
 
     @Test
@@ -354,6 +368,11 @@ class BaselineEffectStrategyTest {
                 keepLimit = 1,
                 legalChoices = wispMutable
             )
+        val rowMutable = mutableListOf(StrikeRow.TOP)
+        val rowRequest = ChooseEffectStrikeRowRequest(
+            effect = GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            legalChoices = rowMutable
+        )
 
         mutable.clear()
         petalMutable.clear()
@@ -364,6 +383,7 @@ class BaselineEffectStrategyTest {
         requiredPlantMutable.clear()
         edelweissMutable.clear()
         wispMutable.clear()
+        rowMutable.clear()
 
         assertEquals(1, required.legalChoices.size)
         assertEquals(1, optional.legalChoices.size)
@@ -376,7 +396,9 @@ class BaselineEffectStrategyTest {
         assertEquals(1, requiredPlant.legalChoices.size)
         assertEquals(2, edelweiss.legalChoices.size)
         assertEquals(2, wispKeep.legalChoices.size)
+        assertEquals(listOf(StrikeRow.TOP), rowRequest.legalChoices)
     }
+
     @Test
     fun battleRoundResourceChoicesUseFirstLegalOption() {
         val strategy = BaselineEffectStrategy()

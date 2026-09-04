@@ -49,8 +49,14 @@ class DrawEffectHandler(
                 request.actor.dice.hand.isNotEmpty()
 
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.hand.isNotEmpty()
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        request.actor.dice.hand.isNotEmpty()
+
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).isNotEmpty() &&
+                            openStrikeRows(request).isNotEmpty()
+                }
 
             GameEffect.DRAW_TWO_DICE ->
                 hasDrawableDie(request) &&
@@ -126,13 +132,22 @@ class DrawEffectHandler(
                 } while (die.value < 3)
             }
 
-            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW -> {
-                val die = chooseRequiredHandDie(
-                    request,
-                    handChoices(request.actor)
-                )
-                rollResolver.roll(request.actor, die)
-            }
+            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> {
+                        val die = chooseRequiredHandDie(
+                            request,
+                            handChoices(request.actor)
+                        )
+                        rollResolver.roll(request.actor, die)
+                    }
+
+                    GameEffectPhase.BATTLE ->
+                        gustOfPetalsBattle(
+                            request = request,
+                            rollResolver = rollResolver
+                        )
+                }
 
             GameEffect.DRAW_TWO_DICE ->
                 repeat(2) {
@@ -189,6 +204,64 @@ class DrawEffectHandler(
 
             else -> unsupportedGameEffect(
                 "Unsupported effect reached DrawEffectHandler: ${request.effect}"
+            )
+        }
+    }
+
+    private fun gustOfPetalsBattle(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "GustOfPetals"
+        )
+
+        val actorDie = chooseRequiredHandDie(
+            request = request,
+            legalChoices = battleHandChoices(request)
+        )
+        rollResolver.roll(
+            player = request.actor,
+            die = actorDie
+        )
+
+        /*
+         * The row choice occurs after the initial reroll, matching the card's
+         * ordered text. Determine every forced opposing reroll before any of
+         * those rerolls resolve so later Roll Rewards cannot change the target
+         * set partway through the effect.
+         */
+        val row = chooseRequiredStrikeRow(
+            request = request,
+            legalChoices = openStrikeRows(request)
+        )
+        val ownDice = battleState.grid.square(
+            request.actor.id,
+            row
+        ).dice
+
+        val qualifying =
+            if (ownDice.isEmpty()) {
+                emptyList()
+            } else {
+                val lowestOwnValue = ownDice.minOf { it.value }
+                battleState.playersInBattleOrder
+                    .filter { it.id != request.actor.id }
+                    .flatMap { opponent ->
+                        battleState.grid.square(
+                            opponent.id,
+                            row
+                        ).dice
+                            .filter { it.value > lowestOwnValue }
+                            .map { opponent to it }
+                    }
+            }
+
+        qualifying.forEach { (opponent, die) ->
+            rollResolver.roll(
+                player = opponent,
+                die = die
             )
         }
     }

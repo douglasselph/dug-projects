@@ -3,7 +3,7 @@ package dugsolutions.leaf.v35.effect.handler
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
-import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -16,10 +16,9 @@ import dugsolutions.leaf.v35.plant.domain.PlantType
  * Related effects that directly change visible die values without moving the
  * die between gameplay zones.
  *
- * Phase-combined cards are deliberately executable only in phases for which
- * their complete behavior is implemented. For example, Sapping Snapdragon's
- * Cultivation +2 is supported now, while its Battle row drain waits for the
- * Battle model rather than silently executing only half the card.
+ * Phase-combined cards execute their phase-specific branches against the live
+ * Battle Grid when a BattleState is present. Value changes never move dice;
+ * row-aware effects derive location from the exact selected live Hand die.
  */
 class DieValueEffectHandler : EffectHandler {
 
@@ -33,11 +32,19 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_3 ->
                 request.actor.dice.hand.isNotEmpty()
 
-            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
-            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
-            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
                 request.phase == GameEffectPhase.CULTIVATION &&
                     request.actor.dice.hand.isNotEmpty()
+
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        request.actor.dice.hand.isNotEmpty()
+
+                    GameEffectPhase.BATTLE ->
+                        battleHandChoices(request).isNotEmpty()
+                }
 
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
                 request.actor.dice.hand.any { it.sides > 4 }
@@ -50,8 +57,13 @@ class DieValueEffectHandler : EffectHandler {
                 request.actor.dice.hand.isNotEmpty()
 
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
-                request.phase == GameEffectPhase.CULTIVATION &&
-                    request.actor.dice.hand.isNotEmpty()
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        true
+
+                    GameEffectPhase.BATTLE ->
+                        openStrikeRows(request).isNotEmpty()
+                }
 
             GameEffect.SET_DIE_TO_MATCH_ANOTHER ->
                 kindredChoices(request).isNotEmpty()
@@ -97,12 +109,26 @@ class DieValueEffectHandler : EffectHandler {
                 raiseOne(request, 4)
 
             GameEffect.RAISE_ANY_DIE_PLUS_1,
-            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
-            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
                 raiseOne(request, 1)
 
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        raiseOne(request, 1)
+
+                    GameEffectPhase.BATTLE ->
+                        bloomBackflipBattle(request)
+                }
+
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW ->
-                raiseOne(request, 2)
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        raiseOne(request, 2)
+
+                    GameEffectPhase.BATTLE ->
+                        sappingSnapdragonBattle(request)
+                }
 
             GameEffect.RAISE_DIE_PLUS_3 ->
                 raiseOne(request, 3)
@@ -138,10 +164,16 @@ class DieValueEffectHandler : EffectHandler {
                 request.actor.dice.hand.forEach { it.adjustBy(2) }
 
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
-                chooseRequiredHandDie(
-                    request,
-                    handChoices(request.actor)
-                ).adjustTo(3)
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        chooseOptionalHandDie(
+                            request,
+                            handChoices(request.actor)
+                        )?.adjustTo(3)
+
+                    GameEffectPhase.BATTLE ->
+                        vineAndPunishmentBattle(request)
+                }
 
             GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
                 val legalChoices = kindredChoices(request)
@@ -188,6 +220,106 @@ class DieValueEffectHandler : EffectHandler {
                 "Unsupported effect reached DieValueEffectHandler: ${request.effect}"
             )
         }
+    }
+
+    private fun vineAndPunishmentBattle(
+        request: GameEffectRequest
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "VineAndPunishment"
+        )
+        val row = chooseRequiredStrikeRow(
+            request = request,
+            legalChoices = openStrikeRows(request)
+        )
+
+        battleState.playersInBattleOrder
+            .filter { it.id != request.actor.id }
+            .forEach { opponent ->
+                battleState.grid.square(
+                    opponent.id,
+                    row
+                ).dice.forEach { die ->
+                    die.adjustBy(-3)
+                }
+            }
+    }
+
+    private fun bloomBackflipBattle(
+        request: GameEffectRequest
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "BloomBackflip"
+        )
+        val die = chooseRequiredHandDie(
+            request = request,
+            legalChoices = battleHandChoices(request)
+        )
+
+        die.adjustBy(1)
+
+        val location = stateNotNull(
+            battleState.grid.locationOf(die),
+            context = "BloomBackflip"
+        ) {
+            "Chosen Battle die lost its Strike Row: $die"
+        }
+
+        battleState.playersInBattleOrder
+            .filter { it.id != request.actor.id }
+            .forEach { opponent ->
+                battleState.grid.square(
+                    opponent.id,
+                    location.row
+                ).dice
+                    .filter { opposing ->
+                        opposing.value > die.value &&
+                            opposing.sides > 4
+                    }
+                    .forEach { opposing ->
+                        opposing.flip()
+                    }
+            }
+    }
+
+    private fun sappingSnapdragonBattle(
+        request: GameEffectRequest
+    ) {
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "SappingSnapdragon"
+        )
+        val die = chooseRequiredHandDie(
+            request = request,
+            legalChoices = battleHandChoices(request)
+        )
+
+        die.adjustBy(2)
+
+        val location = stateNotNull(
+            battleState.grid.locationOf(die),
+            context = "SappingSnapdragon"
+        ) {
+            "Chosen Battle die lost its Strike Row: $die"
+        }
+
+        var totalReduced = 0
+        battleState.playersInBattleOrder
+            .filter { it.id != request.actor.id }
+            .forEach { opponent ->
+                battleState.grid.square(
+                    opponent.id,
+                    location.row
+                ).dice.forEach { opposing ->
+                    val before = opposing.value
+                    opposing.adjustBy(-2)
+                    totalReduced += before - opposing.value
+                }
+            }
+
+        die.adjustBy(totalReduced)
     }
 
     private fun kindredChoices(

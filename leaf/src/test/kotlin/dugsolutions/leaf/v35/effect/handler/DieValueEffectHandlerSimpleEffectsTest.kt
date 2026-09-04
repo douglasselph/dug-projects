@@ -13,7 +13,6 @@ import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DieValueEffectHandlerSimpleEffectsTest {
@@ -161,18 +160,31 @@ class DieValueEffectHandlerSimpleEffectsTest {
     }
 
     @Test
-    fun phaseCombinedBattleEffectsOnlyExposeSimpleCultivationBranchForNow() {
-        val actor = EffectTestFixture.player(1, hand = listOf(FixedEffectDie(8, 3)))
-        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+    fun sappingSnapdragonSupportsCultivationAndBattleWhenBattleDieIsPlaced() {
+        val die = FixedEffectDie(8, 3)
+        val actor = EffectTestFixture.player(1, hand = listOf(die))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
         val cultivation = EffectTestFixture.request(
             game,
             actor,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW
         )
-        val battle = cultivation.copy(phase = GameEffectPhase.BATTLE)
+        val battleState = dugsolutions.leaf.v35.battle.BattleState(
+            listOf(actor, other)
+        )
+        battleState.grid.placeDie(
+            actor,
+            dugsolutions.leaf.v35.battle.domain.StrikeRow.TOP,
+            die
+        )
+        val battle = cultivation.copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
 
         assertTrue(handler.canExecute(cultivation))
-        assertFalse(handler.canExecute(battle))
+        assertTrue(handler.canExecute(battle))
     }
 
     @Test

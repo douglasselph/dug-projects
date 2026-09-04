@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.effect
 
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
@@ -398,6 +399,20 @@ class ChooseEffectPlayerRequest(
     }
 }
 
+/** Choose one currently legal Strike Row for a Battle effect. */
+class ChooseEffectStrikeRowRequest(
+    val effect: GameEffect,
+    legalChoices: List<StrikeRow>
+) {
+    val legalChoices: List<StrikeRow> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Strike-row decision requires at least one legal choice: $effect"
+        }
+    }
+}
+
 /**
  * Focused decision seam for effect-specific targeting.
  *
@@ -485,4 +500,9 @@ interface EffectStrategy {
     fun choosePlayer(
         request: ChooseEffectPlayerRequest
     ): PlayerId = request.legalChoices.first()
+
+    /** Choose one exact Strike Row for a Battle effect. */
+    fun chooseStrikeRow(
+        request: ChooseEffectStrikeRowRequest
+    ): StrikeRow = request.legalChoices.first()
 }

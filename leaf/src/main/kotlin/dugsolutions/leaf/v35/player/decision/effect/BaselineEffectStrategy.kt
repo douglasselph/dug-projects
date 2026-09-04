@@ -66,4 +66,8 @@ class BaselineEffectStrategy : EffectStrategy {
     override fun choosePlayer(
         request: ChooseEffectPlayerRequest
     ) = request.legalChoices.first()
+
+    override fun chooseStrikeRow(
+        request: ChooseEffectStrikeRowRequest
+    ) = request.legalChoices.first()
 }
