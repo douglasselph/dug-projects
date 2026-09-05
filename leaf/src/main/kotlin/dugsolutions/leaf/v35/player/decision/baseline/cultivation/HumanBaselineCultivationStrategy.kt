@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCu
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineCultivationStrategy(
-    private val delegate: CultivationStrategy = MechanicalCultivationStrategy()
+    private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : CultivationStrategy by delegate

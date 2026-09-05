@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.di.PlayerFactory
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -47,9 +48,14 @@ class GameFactory(
 
         val players =
             config.playerDecisionFactories.mapIndexed { index, decisionFactory ->
+                val strategyRandomizer =
+                    StrategyRandomizer.create(
+                        config.strategySeedForPlayer(index)
+                    )
+
                 playerFactory(
                     id = PlayerId(index + 1),
-                    decisions = decisionFactory.create()
+                    decisions = decisionFactory.create(strategyRandomizer)
                 )
             }
 

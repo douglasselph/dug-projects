@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.game
 
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 
 /**
@@ -14,6 +15,15 @@ import dugsolutions.leaf.v35.random.die.di.DieFactory
 fun interface PlayerDecisionFactory {
     fun create(): DecisionDirector
 
+    /**
+     * GameFactory uses this overload so a strategy receives randomness that is
+     * isolated from dice, deck shuffles, and other mechanical game events.
+     * Existing deterministic/scripted factories may ignore it by relying on
+     * this default implementation.
+     */
+    fun create(strategyRandomizer: StrategyRandomizer): DecisionDirector =
+        create()
+
     companion object {
         fun mechanicalControl(): PlayerDecisionFactory =
             PlayerDecisionFactory {
@@ -21,8 +31,14 @@ fun interface PlayerDecisionFactory {
             }
 
         fun humanBaseline(): PlayerDecisionFactory =
-            PlayerDecisionFactory {
-                DecisionDirector.humanBaseline()
+            object : PlayerDecisionFactory {
+                override fun create(): DecisionDirector =
+                    DecisionDirector.humanBaseline()
+
+                override fun create(
+                    strategyRandomizer: StrategyRandomizer
+                ): DecisionDirector =
+                    DecisionDirector.humanBaseline(strategyRandomizer)
             }
 
         /** Canonical baseline means Human Baseline. */
@@ -49,8 +65,15 @@ class GameConfig(
     selectedPlantCards: List<PlantCard>,
     playerDecisionFactories: List<PlayerDecisionFactory>,
     val roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+    /** Mechanical game RNG seed: dice, decks, random game effects, etc. */
     val seed: Long? = null,
-    val dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+    val dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
+    /**
+     * Base seed for strategy-only tie breaking. By default it follows [seed]
+     * for whole-game reproducibility while remaining a separate RNG stream.
+     * Set it independently to vary strategy ties without changing mechanics.
+     */
+    val strategySeed: Long? = seed
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()
@@ -67,14 +90,30 @@ class GameConfig(
     val numPlayers: Int
         get() = playerDecisionFactories.size
 
+    /**
+     * Each player gets an independent deterministic strategy stream so one
+     * player's equal-score choices do not advance another player's stream.
+     */
+    internal fun strategySeedForPlayer(playerIndex: Int): Long? {
+        require(playerIndex in playerDecisionFactories.indices) {
+            "Strategy player index out of range: $playerIndex"
+        }
+        return strategySeed?.let { base ->
+            base xor (PLAYER_STRATEGY_SEED_STEP * (playerIndex + 1L))
+        }
+    }
+
     companion object {
+        private const val PLAYER_STRATEGY_SEED_STEP: Long = 0x5DEECE66DL
+
         /** Every player receives the deterministic Mechanical Control policy. */
         fun mechanicalControl(
             selectedPlantCards: List<PlantCard>,
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
-            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
+            strategySeed: Long? = seed
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -87,7 +126,8 @@ class GameConfig(
                 },
                 roundSetup = roundSetup,
                 seed = seed,
-                dieConfig = dieConfig
+                dieConfig = dieConfig,
+                strategySeed = strategySeed
             )
         }
 
@@ -97,7 +137,8 @@ class GameConfig(
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
-            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
+            strategySeed: Long? = seed
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -110,7 +151,8 @@ class GameConfig(
                 },
                 roundSetup = roundSetup,
                 seed = seed,
-                dieConfig = dieConfig
+                dieConfig = dieConfig,
+                strategySeed = strategySeed
             )
         }
 
@@ -120,34 +162,38 @@ class GameConfig(
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
-            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
+            strategySeed: Long? = seed
         ): GameConfig =
             humanBaseline(
                 selectedPlantCards = selectedPlantCards,
                 numPlayers = numPlayers,
                 roundSetup = roundSetup,
                 seed = seed,
-                dieConfig = dieConfig
+                dieConfig = dieConfig,
+                strategySeed = strategySeed
             )
 
         /** Backward-compatible old name for Mechanical Control. */
         @Deprecated(
             message = "Use mechanicalControl()",
-            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig)")
+            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed)")
         )
         fun mechanicalBaseline(
             selectedPlantCards: List<PlantCard>,
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
-            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
+            strategySeed: Long? = seed
         ): GameConfig =
             mechanicalControl(
                 selectedPlantCards = selectedPlantCards,
                 numPlayers = numPlayers,
                 roundSetup = roundSetup,
                 seed = seed,
-                dieConfig = dieConfig
+                dieConfig = dieConfig,
+                strategySeed = strategySeed
             )
     }
 }

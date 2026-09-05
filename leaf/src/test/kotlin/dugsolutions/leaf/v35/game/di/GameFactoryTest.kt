@@ -5,10 +5,13 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
+import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -269,6 +272,46 @@ class GameFactoryTest {
     }
 
     @Test
+    fun strategyTieRandomness_doesNotConsumeMechanicalRandomizer() {
+        val captured = mutableListOf<StrategyRandomizer>()
+        val decisionFactory =
+            object : PlayerDecisionFactory {
+                override fun create(): DecisionDirector =
+                    DecisionDirector.mechanicalControl()
+
+                override fun create(
+                    strategyRandomizer: StrategyRandomizer
+                ): DecisionDirector {
+                    captured += strategyRandomizer
+                    return DecisionDirector.mechanicalControl()
+                }
+            }
+        val mechanicalRandomizer = CountingRandomizer(24680L)
+
+        factory(
+            config = GameConfig(
+                selectedPlantCards = selectedCards,
+                playerDecisionFactories = listOf(decisionFactory, decisionFactory),
+                seed = 111L,
+                strategySeed = 222L
+            ),
+            randomizer = mechanicalRandomizer
+        )
+
+        assertEquals(2, captured.size)
+        assertTrue(captured[0] !== captured[1])
+
+        val mechanicalCallsBeforeTieBreak = mechanicalRandomizer.calls
+        captured[0].nextInt(10)
+        captured[1].nextInt(10)
+
+        assertEquals(
+            mechanicalCallsBeforeTieBreak,
+            mechanicalRandomizer.calls
+        )
+    }
+
+    @Test
     fun separateGames_doNotShareMutableGameState() {
         val config =
             GameConfig.baseline(
@@ -414,6 +457,40 @@ class GameFactoryTest {
                 exactRoundCards = oneRound,
                 exactWispCards = emptyList()
             )
+        }
+    }
+
+    private class CountingRandomizer(
+        seed: Long
+    ) : Randomizer {
+        private val delegate = Randomizer.create(seed)
+
+        var calls: Int = 0
+            private set
+
+        override fun nextBoolean(): Boolean {
+            calls++
+            return delegate.nextBoolean()
+        }
+
+        override fun nextInt(from: Int, until: Int): Int {
+            calls++
+            return delegate.nextInt(from, until)
+        }
+
+        override fun nextInt(until: Int): Int {
+            calls++
+            return delegate.nextInt(until)
+        }
+
+        override fun <T> randomOrNull(list: List<T>): T? {
+            calls++
+            return delegate.randomOrNull(list)
+        }
+
+        override fun <T> shuffled(list: List<T>): List<T> {
+            calls++
+            return delegate.shuffled(list)
         }
     }
 

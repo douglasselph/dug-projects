@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineBattleStrategy(
-    private val delegate: BattleStrategy = MechanicalBattleStrategy()
+    private val delegate: BattleStrategy = MechanicalBattleStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : BattleStrategy by delegate

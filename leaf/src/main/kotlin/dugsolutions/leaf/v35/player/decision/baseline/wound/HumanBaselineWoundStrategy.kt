@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.wound
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.wound.MechanicalWoundStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.wound.MechanicalWoundStr
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineWoundStrategy(
-    private val delegate: WoundStrategy = MechanicalWoundStrategy()
+    private val delegate: WoundStrategy = MechanicalWoundStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : WoundStrategy by delegate

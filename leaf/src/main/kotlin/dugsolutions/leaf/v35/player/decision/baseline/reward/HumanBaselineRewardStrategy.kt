@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.reward
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardS
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineRewardStrategy(
-    private val delegate: RewardStrategy = MechanicalRewardStrategy()
+    private val delegate: RewardStrategy = MechanicalRewardStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : RewardStrategy by delegate

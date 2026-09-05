@@ -18,7 +18,7 @@ object StrategyCatalog {
             StrategyLevel.HUMAN_BASELINE,
             implemented = true,
             purpose = "Canonical simulation baseline for simple, reasonable human play; " +
-                "its distinct wiring exists now and contextual scoring is the next implementation stage."
+                "scoring primitives and isolated tie RNG exist now, with detailed heuristics next."
         ),
         Family(
             StrategyLevel.TACTICAL,

@@ -237,9 +237,49 @@ class GameConfigTest {
             config.seed
         )
         assertEquals(
+            12345L,
+            config.strategySeed
+        )
+        assertEquals(
             DieFactory.Config.UNIFORM,
             config.dieConfig
         )
+    }
+
+    @Test
+    fun strategySeed_canVaryIndependentlyFromMechanicalSeed() {
+        val config =
+            GameConfig.baseline(
+                selectedPlantCards = selectedCards(),
+                numPlayers = 2,
+                seed = 12345L,
+                strategySeed = 98765L
+            )
+
+        assertEquals(12345L, config.seed)
+        assertEquals(98765L, config.strategySeed)
+    }
+
+    @Test
+    fun strategySeedForPlayer_isDeterministicAndDifferentPerSeat() {
+        val first =
+            GameConfig.baseline(
+                selectedPlantCards = selectedCards(),
+                numPlayers = 4,
+                seed = 12345L
+            )
+        val second =
+            GameConfig.baseline(
+                selectedPlantCards = selectedCards(),
+                numPlayers = 4,
+                seed = 12345L
+            )
+
+        val firstSeeds = (0 until 4).map(first::strategySeedForPlayer)
+        val secondSeeds = (0 until 4).map(second::strategySeedForPlayer)
+
+        assertEquals(firstSeeds, secondSeeds)
+        assertEquals(4, firstSeeds.distinct().size)
     }
 
     private fun selectedCards(): List<PlantCard> =

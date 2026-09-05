@@ -30,7 +30,9 @@ data class GameScenario(
      * Optional per-harness Randomizer factory. When absent, GameFactory uses
      * the normal seeded production Randomizer.
      */
-    val randomizerFactory: (() -> Randomizer)? = null
+    val randomizerFactory: (() -> Randomizer)? = null,
+    /** Strategy-only tie-breaking seed; independent from injected mechanics. */
+    val strategySeed: Long? = seed
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -61,7 +63,8 @@ data class GameScenario(
             playerDecisionFactories = factories,
             roundSetup = roundSetup,
             seed = seed,
-            dieConfig = dieConfig
+            dieConfig = dieConfig,
+            strategySeed = strategySeed
         )
     }
 }

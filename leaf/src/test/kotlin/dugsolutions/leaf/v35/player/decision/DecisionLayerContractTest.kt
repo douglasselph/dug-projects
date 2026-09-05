@@ -2,12 +2,14 @@ package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.reward.HumanBaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class DecisionLayerContractTest {
@@ -23,6 +25,18 @@ class DecisionLayerContractTest {
         assertIs<HumanBaselineBuyStrategy>(human.buy)
         assertNotSame(mechanical.battle, human.battle)
         assertNotSame(mechanical.buy, human.buy)
+    }
+
+    @Test
+    fun `human baseline decision areas share one score engine`() {
+        val human = DecisionDirector.humanBaseline()
+
+        val reward = human.reward as HumanBaselineRewardStrategy
+        val battle = human.battle as HumanBaselineBattleStrategy
+        val buy = human.buy as HumanBaselineBuyStrategy
+
+        assertSame(reward.scoreEngine, battle.scoreEngine)
+        assertSame(reward.scoreEngine, buy.scoreEngine)
     }
 
     @Test

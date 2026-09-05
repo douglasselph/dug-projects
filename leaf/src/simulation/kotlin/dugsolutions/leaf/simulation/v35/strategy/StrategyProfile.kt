@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.player.decision.DecisionArea
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.HumanBaseline
 import dugsolutions.leaf.v35.player.decision.MechanicalControl
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 
 /**
  * Named simulation strategy configuration.
@@ -32,6 +33,11 @@ class StrategyProfile(
     fun createDirector(): DecisionDirector =
         decisionFactory.create()
 
+    fun createDirector(
+        strategyRandomizer: StrategyRandomizer
+    ): DecisionDirector =
+        decisionFactory.create(strategyRandomizer)
+
     fun withDecisionArea(
         name: String,
         area: DecisionArea,
@@ -41,8 +47,16 @@ class StrategyProfile(
         StrategyProfile(
             name = name,
             levels = levels + (area to level),
-            decisionFactory = PlayerDecisionFactory {
-                transform(decisionFactory.create())
+            decisionFactory = object : PlayerDecisionFactory {
+                override fun create(): DecisionDirector =
+                    transform(decisionFactory.create())
+
+                override fun create(
+                    strategyRandomizer: StrategyRandomizer
+                ): DecisionDirector =
+                    transform(
+                        decisionFactory.create(strategyRandomizer)
+                    )
             }
         )
 

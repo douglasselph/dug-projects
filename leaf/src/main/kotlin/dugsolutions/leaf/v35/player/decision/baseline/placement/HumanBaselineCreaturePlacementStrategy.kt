@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.placement
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCrea
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineCreaturePlacementStrategy(
-    private val delegate: CreaturePlacementStrategy = MechanicalCreaturePlacementStrategy()
+    private val delegate: CreaturePlacementStrategy = MechanicalCreaturePlacementStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : CreaturePlacementStrategy by delegate

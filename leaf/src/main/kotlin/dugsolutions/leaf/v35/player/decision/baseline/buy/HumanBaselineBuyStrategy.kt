@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.buy
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrateg
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineBuyStrategy(
-    private val delegate: BuyStrategy = MechanicalBuyStrategy()
+    private val delegate: BuyStrategy = MechanicalBuyStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : BuyStrategy by delegate

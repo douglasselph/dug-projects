@@ -25,6 +25,7 @@ class Game(
     players: List<Player>,
     val chronicle: Chronicle,
     val roundDeck: RoundDeck,
+    /** Mechanical rules RNG only; strategy tie breaking owns separate streams. */
     val randomizer: Randomizer,
     /** Game-local die construction preserving this Game's random/config state. */
     val dieFactory: DieFactory = DieFactory(randomizer)

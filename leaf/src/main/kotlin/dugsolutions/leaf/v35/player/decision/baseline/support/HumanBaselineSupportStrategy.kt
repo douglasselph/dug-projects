@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.support
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy
 
@@ -11,5 +12,6 @@ import dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSuppor
  * simulation baseline from Mechanical Control without changing behavior yet.
  */
 class HumanBaselineSupportStrategy(
-    private val delegate: SupportStrategy = MechanicalSupportStrategy()
+    private val delegate: SupportStrategy = MechanicalSupportStrategy(),
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
 ) : SupportStrategy by delegate
