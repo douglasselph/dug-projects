@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.battle.domain.BattleCritterPlacement
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.di.appModules
+import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameRunResult
 import dugsolutions.leaf.v35.game.GameRunner
@@ -80,6 +81,10 @@ class IntegrationGameHarness(
         koin.get()
 
     val battleRound: BattleRound =
+        koin.get()
+
+    /** Production effect dispatcher used by card-effect contract audits. */
+    val effectExecutor: GameEffectExecutor =
         koin.get()
 
     private val exactRoundCards =

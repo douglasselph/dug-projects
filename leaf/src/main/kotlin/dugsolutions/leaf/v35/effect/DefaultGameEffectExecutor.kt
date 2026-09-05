@@ -52,6 +52,9 @@ class DefaultGameEffectExecutor(
     private val wispquakeEffect: EffectHandler = WispquakeEffect()
 ) : GameEffectExecutor {
 
+    override fun supports(effect: GameEffect): Boolean =
+        handlerFor(effect) != null
+
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =

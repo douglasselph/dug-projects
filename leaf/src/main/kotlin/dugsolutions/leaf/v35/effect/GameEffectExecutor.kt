@@ -64,4 +64,14 @@ fun interface GameEffectExecutor {
     fun execute(request: GameEffectRequest)
 
     fun canExecute(request: GameEffectRequest): Boolean = true
+
+    /**
+     * Static routing capability independent of the current game state.
+     *
+     * [canExecute] answers whether an effect is legal *now*. This answers the
+     * separate integration/audit question: does this executor know which
+     * implementation owns the effect at all? The conservative default is
+     * false; executors with a real static routing table opt in explicitly.
+     */
+    fun supports(effect: GameEffect): Boolean = false
 }
