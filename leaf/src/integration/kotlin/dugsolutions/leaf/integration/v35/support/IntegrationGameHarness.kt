@@ -11,6 +11,8 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameRunResult
 import dugsolutions.leaf.v35.game.GameRunner
+import dugsolutions.leaf.v35.game.scoring.FinalScorer
+import dugsolutions.leaf.v35.game.scoring.FinalScoringResult
 import dugsolutions.leaf.v35.game.GameStatus
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
@@ -75,6 +77,10 @@ class IntegrationGameHarness(
         koin.get()
 
     val gameRunner: GameRunner =
+        koin.get()
+
+    /** Production final scorer used by exact-state integration scenarios. */
+    val finalScorer: FinalScorer =
         koin.get()
 
     val cultivationRound: CultivationRound =
@@ -284,6 +290,10 @@ class IntegrationGameHarness(
         }
         return gameRunner.run(game)
     }
+
+    /** Scores the current exact game state without running any additional rounds. */
+    fun scoreFinalState(): FinalScoringResult =
+        finalScorer.score(game)
 
     fun snapshot(): GameSnapshot =
         GameSnapshot.capture(game)
