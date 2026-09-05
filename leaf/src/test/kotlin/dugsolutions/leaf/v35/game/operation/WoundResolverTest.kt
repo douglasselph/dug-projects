@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.operation
 import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.WoundKind
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.plant.domain.PlantCard
@@ -214,10 +215,10 @@ class WoundResolverTest {
         resolver.resolve(player)
 
         // Assert
-        assertEquals(
-            "WOUND player=1 FLIPPED plant=${card.card.name}",
-            markerMessages().single()
-        )
+        val entry = chronicle.entries.filterIsInstance<GameEntry.Wound>().single()
+        assertEquals(PlayerId(1), entry.playerId)
+        assertEquals(WoundKind.FLIPPED, entry.kind)
+        assertEquals(card.card.name, entry.plantName)
     }
 
     @Test
@@ -229,10 +230,10 @@ class WoundResolverTest {
         resolver.resolve(player)
 
         // Assert
-        assertEquals(
-            "WOUND player=1 SNIPPED plant=${card.card.name}",
-            markerMessages().single()
-        )
+        val entry = chronicle.entries.filterIsInstance<GameEntry.Wound>().single()
+        assertEquals(PlayerId(1), entry.playerId)
+        assertEquals(WoundKind.SNIPPED, entry.kind)
+        assertEquals(card.card.name, entry.plantName)
     }
 
 
@@ -339,8 +340,6 @@ class WoundResolverTest {
             decisions = DecisionDirector.baseline().copy(wound = woundStrategy)
         )
 
-    private fun markerMessages(): List<String> =
-        chronicle.entries.filterIsInstance<GameEntry.Marker>().map { it.message }
 
     private class RecordingWoundStrategy : WoundStrategy {
         var offered: List<WoundChoice> = emptyList()

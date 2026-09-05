@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.StrikeTotalSnapshot
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.WoundResolution
@@ -163,22 +164,19 @@ class StrikeResolver(
         val woundedIds = wounds.map { it.playerId }
 
         game.chronicle.record(
-            Moment.Marker(
-                "STRIKE row=$row totals=" +
-                    totals.joinToString(",") { "${it.playerId.value}:${it.total}" } +
-                    " winners=" +
-                    (if (winnerIds.isEmpty()) {
-                        "NONE"
-                    } else {
-                        winnerIds.joinToString(",") { it.value.toString() }
-                    }) +
-                    " wounded=" +
-                    (if (woundedIds.isEmpty()) {
-                        "NONE"
-                    } else {
-                        woundedIds.joinToString(",") { it.value.toString() }
-                    }) +
-                    " vpEach=$vpPerWinner"
+            Moment.StrikeResolved(
+                row = row,
+                totals = totals.map { total ->
+                    StrikeTotalSnapshot(
+                        playerId = total.playerId,
+                        diceTotal = total.diceTotal,
+                        critterTotal = total.critterTotal,
+                        total = total.total
+                    )
+                },
+                winnerIds = winnerIds,
+                woundedPlayerIds = woundedIds,
+                vpPerWinner = vpPerWinner
             )
         )
 

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.game.round.battle
 
 import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.Game
@@ -101,11 +102,12 @@ class BattleCleanupCoordinator(
             val mutable = resultByPlayer.getValue(player.id)
 
             game.chronicle.record(
-                Moment.Marker(
-                    "BATTLE_CLEANUP player=${player.id.value} " +
-                        "discarded=${mutable.discardedDice} " +
-                        "critters=${mutable.returnedCritters} " +
-                        "refreshed=$refreshed"
+                Moment.Cleanup(
+                    playerId = player.id,
+                    phase = ChroniclePhase.BATTLE,
+                    discardedDice = mutable.discardedDice,
+                    returnedCritters = mutable.returnedCritters,
+                    refreshed = refreshed
                 )
             )
 

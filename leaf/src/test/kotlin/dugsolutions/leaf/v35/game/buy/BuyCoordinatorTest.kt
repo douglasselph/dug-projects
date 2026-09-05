@@ -164,8 +164,12 @@ class BuyCoordinatorTest {
         assertEquals(selected.card, buyer.creature.cards.single().card)
         assertTrue(buyer.creature.cards.single().isFaceDown)
         assertEquals(selected.card.quantity - 1, fixture.game.grove.plantMarket.stackFor(selected.card)!!.remaining)
-        assertTrue(markerMessages(fixture.game).any { it.startsWith("GRAFT player=1") })
-        assertTrue(markerMessages(fixture.game).any { it.startsWith("PURCHASE player=1") })
+        assertTrue(fixture.game.chronicle.entries.any {
+            it is GameEntry.Graft && it.playerId == buyer.id
+        })
+        assertTrue(fixture.game.chronicle.entries.any {
+            it is GameEntry.Purchase && it.playerId == buyer.id
+        })
     }
 
     @Test
@@ -362,8 +366,6 @@ class BuyCoordinatorTest {
         }
     }
 
-    private fun markerMessages(game: Game) =
-        game.chronicle.entries.filterIsInstance<GameEntry.Marker>().map { it.message }
 
     private fun die(sides: Int, value: Int): Die = FixedDie(sides, value)
 

@@ -2,7 +2,9 @@ package dugsolutions.leaf.v35.game.operation
 
 import dugsolutions.leaf.v35.battle.BattlePlacementResolver
 import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -328,19 +330,24 @@ class SupportActionExecutor(
         phase: GameEffectPhase
     ) {
         game.chronicle.record(
-            Moment.Marker(
-                "SUPPORT_ACTION player=${player.id.value} type=${actionName(action)} phase=${phase.name}"
+            Moment.SupportAction(
+                playerId = player.id,
+                phase = when (phase) {
+                    GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
+                    GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
+                },
+                action = actionKind(action)
             )
         )
     }
 
-    private fun actionName(action: SupportAction): String =
+    private fun actionKind(action: SupportAction): SupportActionKind =
         when (action) {
-            is SupportAction.PlayWisp -> "WISP"
-            is SupportAction.UseWaterReroll -> "WATER_REROLL"
-            SupportAction.UseWaterRefresh -> "WATER_REFRESH"
-            is SupportAction.UseMulch -> "MULCH"
-            is SupportAction.UseWormFlip -> "WORM_FLIP"
-            is SupportAction.UseButterfly -> "BUTTERFLY"
+            is SupportAction.PlayWisp -> SupportActionKind.WISP
+            is SupportAction.UseWaterReroll -> SupportActionKind.WATER_REROLL
+            SupportAction.UseWaterRefresh -> SupportActionKind.WATER_REFRESH
+            is SupportAction.UseMulch -> SupportActionKind.MULCH
+            is SupportAction.UseWormFlip -> SupportActionKind.WORM_FLIP
+            is SupportAction.UseButterfly -> SupportActionKind.BUTTERFLY
         }
 }

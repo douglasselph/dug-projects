@@ -21,12 +21,12 @@ class RoundCoordinator(
         val roundNumber = game.roundNumber
 
         game.chronicle.record(
-            Moment.Marker(
-                marker(
-                    event = "ROUND_REVEALED",
-                    roundNumber = roundNumber,
-                    card = card
-                )
+            Moment.RoundRevealed(
+                roundNumber = roundNumber,
+                cardName = card.name,
+                cardType = card.type,
+                firstEffect = card.firstEffect.effect,
+                secondEffect = card.secondEffect.effect
             )
         )
 
@@ -36,12 +36,10 @@ class RoundCoordinator(
         }
 
         game.chronicle.record(
-            Moment.Marker(
-                marker(
-                    event = "ROUND_COMPLETED",
-                    roundNumber = roundNumber,
-                    card = card
-                )
+            Moment.RoundCompleted(
+                roundNumber = roundNumber,
+                cardName = card.name,
+                cardType = card.type
             )
         )
 
@@ -51,10 +49,4 @@ class RoundCoordinator(
         )
     }
 
-    private fun marker(
-        event: String,
-        roundNumber: Int,
-        card: RoundCard
-    ): String =
-        "$event number=$roundNumber type=${card.type} card=${card.name}"
 }

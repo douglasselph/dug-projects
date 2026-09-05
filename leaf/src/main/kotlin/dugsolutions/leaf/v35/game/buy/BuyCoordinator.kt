@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.error.decisionNotNull
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.GraftPlan
 import dugsolutions.leaf.v35.game.operation.GraftResolver
@@ -42,9 +43,8 @@ class BuyCoordinator(
     fun execute(game: Game): BuyPhaseResult {
         val order = BuyOrder.determine(game.players, game.randomizer)
         game.chronicle.record(
-            Moment.Marker(
-                "BUY_ORDER first=${order.firstOrNull()?.id?.value ?: "none"} " +
-                    "order=${order.joinToString(",") { it.id.value.toString() }}"
+            Moment.BuyOrder(
+                order = order.map { it.id }
             )
         )
 
@@ -110,9 +110,15 @@ class BuyCoordinator(
                 )
                 purchases.add(result)
                 game.chronicle.record(
-                    Moment.Marker(
-                        "PURCHASE player=${player.id.value} item=${itemName(item)} " +
-                            "cost=${item.cost} paid=${resolvedPayment.total}"
+                    Moment.Purchase(
+                        playerId = player.id,
+                        kind = when (item) {
+                            is BuyItem.Die -> PurchaseKind.DIE
+                            is BuyItem.Plant -> PurchaseKind.PLANT
+                        },
+                        itemName = itemName(item),
+                        cost = item.cost,
+                        paymentTotal = resolvedPayment.total
                     )
                 )
             }
@@ -221,8 +227,8 @@ class BuyCoordinator(
     }
 
     private fun itemName(item: BuyItem): String = when (item) {
-        is BuyItem.Die -> "DIE_${item.sides}"
-        is BuyItem.Plant -> "PLANT_${item.card.name}"
+        is BuyItem.Die -> item.sides.name
+        is BuyItem.Plant -> item.card.name
     }
 
     private data class ResolvedPayment(

@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.battle.DoomResolver
 import dugsolutions.leaf.v35.battle.DoomResult
 import dugsolutions.leaf.v35.battle.StrikeResolver
 import dugsolutions.leaf.v35.battle.domain.BattleDiePlacement
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -101,8 +102,10 @@ class BattleRound(
             }
             openingDrawCounts[player.id] = count
             game.chronicle.record(
-                Moment.Marker(
-                    "BATTLE_OPENING_DRAW_COMPLETE player=${player.id.value} count=$count"
+                Moment.OpeningDrawCompleted(
+                    phase = ChroniclePhase.BATTLE,
+                    playerId = player.id,
+                    count = count
                 )
             )
         }
@@ -116,10 +119,9 @@ class BattleRound(
         val initialPlacements = battleState.placeInitialHands()
 
         game.chronicle.record(
-            Moment.Marker(
-                "BATTLE_RANK_PLACE order=" +
-                    battleState.playerIdsInBattleOrder.joinToString(",") { it.value.toString() } +
-                    " dice=${initialPlacements.size}"
+            Moment.BattleOrder(
+                order = battleState.playerIdsInBattleOrder,
+                initialDiceCount = initialPlacements.size
             )
         )
 

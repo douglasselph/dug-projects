@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -72,8 +74,10 @@ class CultivationBuildCoordinator(
             }
             openingDrawCounts[player.id] = count
             game.chronicle.record(
-                Moment.Marker(
-                    "CULTIVATION_OPENING_DRAW_COMPLETE player=${player.id.value} count=$count"
+                Moment.OpeningDrawCompleted(
+                    phase = ChroniclePhase.CULTIVATION,
+                    playerId = player.id,
+                    count = count
                 )
             )
         }
@@ -125,9 +129,11 @@ class CultivationBuildCoordinator(
                             action = chosen.action
                         )
                         game.chronicle.record(
-                            Moment.Marker(
-                                "CULTIVATION_MAIN_ACTION player=${player.id.value} " +
-                                    "action=$mainActionsUsed type=${mainActionName(chosen.action)}"
+                            Moment.MainAction(
+                                playerId = player.id,
+                                phase = ChroniclePhase.CULTIVATION,
+                                action = mainActionKind(chosen.action),
+                                actionNumber = mainActionsUsed
                             )
                         )
                     }
@@ -362,11 +368,11 @@ class CultivationBuildCoordinator(
         effectExecutor.execute(request)
     }
 
-    private fun mainActionName(action: CultivationMainAction): String =
+    private fun mainActionKind(action: CultivationMainAction): MainActionKind =
         when (action) {
-            CultivationMainAction.Draw -> "DRAW"
-            is CultivationMainAction.ActivatePlant -> "ACTIVATE_PLANT"
-            CultivationMainAction.RoundEffect1 -> "ROUND_EFFECT_1"
-            CultivationMainAction.RoundEffect2 -> "ROUND_EFFECT_2"
+            CultivationMainAction.Draw -> MainActionKind.DRAW
+            is CultivationMainAction.ActivatePlant -> MainActionKind.ACTIVATE_PLANT
+            CultivationMainAction.RoundEffect1 -> MainActionKind.ROUND_EFFECT_1
+            CultivationMainAction.RoundEffect2 -> MainActionKind.ROUND_EFFECT_2
         }
 }

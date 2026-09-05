@@ -38,8 +38,9 @@ class GraftResolver(
         val grafted = player.creature.graft(plan.card, plan.placement)
         stateCheck(grafted.isFaceDown) { "Newly grafted Plant must be face down" }
         chronicle.record(
-            Moment.Marker(
-                "GRAFT player=${player.id.value} plant=${plan.card.name}"
+            Moment.Graft(
+                playerId = player.id,
+                plantName = plan.card.name
             )
         )
         return grafted

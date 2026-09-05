@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.Game
@@ -137,11 +138,14 @@ class CultivationCleanupCoordinatorTest {
         val result = fixture.coordinator.execute(fixture.game)
 
         assertEquals(listOf(first.id, second.id), result.players.map { it.playerId })
-        val messages = markerMessages(fixture.game)
-            .filter { it.startsWith("CULTIVATION_CLEANUP") }
-        assertEquals(2, messages.size)
-        assertTrue(messages[0].contains("player=1 discarded=1"))
-        assertTrue(messages[1].contains("player=2 discarded=2"))
+        val entries = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.Cleanup>()
+            .filter { it.phase == ChroniclePhase.CULTIVATION }
+        assertEquals(2, entries.size)
+        assertEquals(first.id, entries[0].playerId)
+        assertEquals(1, entries[0].discardedDice)
+        assertEquals(second.id, entries[1].playerId)
+        assertEquals(2, entries[1].discardedDice)
     }
 
     private fun fixture(first: Player, second: Player): Fixture {
@@ -206,10 +210,6 @@ class CultivationCleanupCoordinatorTest {
         override fun roll(): Die = this
     }
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
 
     private data class Fixture(
         val game: Game,

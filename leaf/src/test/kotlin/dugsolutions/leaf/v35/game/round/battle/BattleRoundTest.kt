@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round.battle
 
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -63,13 +64,19 @@ class BattleRoundTest {
         assertTrue(p1.dice.hand.isEmpty())
         assertTrue(p2.dice.hand.isEmpty())
 
-        val messages = markerMessages(game)
-        val drawIndex = messages.indexOfFirst { it.startsWith("BATTLE_OPENING_DRAW_COMPLETE") }
-        val placeIndex = messages.indexOfFirst { it.startsWith("BATTLE_RANK_PLACE") }
-        val actionIndex = messages.indexOfFirst { it.startsWith("BATTLE_MAIN_ACTION") }
-        val strikeIndex = messages.indexOfFirst { it.startsWith("STRIKE row=") }
-        val doomIndex = messages.indexOfFirst { it.startsWith("DOOM ") }
-        val cleanupIndex = messages.indexOfFirst { it.startsWith("BATTLE_CLEANUP") }
+        val entries = game.chronicle.entries
+        val drawIndex = entries.indexOfFirst {
+            it is GameEntry.OpeningDrawCompleted && it.phase == ChroniclePhase.BATTLE
+        }
+        val placeIndex = entries.indexOfFirst { it is GameEntry.BattleOrder }
+        val actionIndex = entries.indexOfFirst {
+            it is GameEntry.MainAction && it.phase == ChroniclePhase.BATTLE
+        }
+        val strikeIndex = entries.indexOfFirst { it is GameEntry.StrikeResolved }
+        val doomIndex = entries.indexOfFirst { it is GameEntry.Doom }
+        val cleanupIndex = entries.indexOfFirst {
+            it is GameEntry.Cleanup && it.phase == ChroniclePhase.BATTLE
+        }
 
         assertTrue(drawIndex >= 0)
         assertTrue(drawIndex < placeIndex)
@@ -95,13 +102,15 @@ class BattleRoundTest {
         assertEquals(RoundCardType.BATTLE, execution.card.type)
         assertEquals(1, execution.roundNumber)
         assertTrue(!cultivationCalled)
-        val messages = markerMessages(game)
-        assertTrue(messages.first().startsWith("ROUND_REVEALED"))
-        assertTrue(messages.any { it.startsWith("BATTLE_RANK_PLACE") })
-        assertTrue(messages.any { it.startsWith("STRIKE row=") })
-        assertTrue(messages.any { it.startsWith("DOOM ") })
-        assertTrue(messages.any { it.startsWith("BATTLE_CLEANUP") })
-        assertTrue(messages.last().startsWith("ROUND_COMPLETED"))
+        val entries = game.chronicle.entries
+        assertTrue(entries.first() is GameEntry.RoundRevealed)
+        assertTrue(entries.any { it is GameEntry.BattleOrder })
+        assertTrue(entries.any { it is GameEntry.StrikeResolved })
+        assertTrue(entries.any { it is GameEntry.Doom })
+        assertTrue(entries.any {
+            it is GameEntry.Cleanup && it.phase == ChroniclePhase.BATTLE
+        })
+        assertTrue(entries.last() is GameEntry.RoundCompleted)
     }
 
     @Test
@@ -124,7 +133,7 @@ class BattleRoundTest {
         assertEquals(3, p2.dice.supplySize)
         assertTrue(p1.dice.hand.isEmpty())
         assertTrue(p2.dice.hand.isEmpty())
-        assertTrue(markerMessages(game).isEmpty())
+        assertTrue(game.chronicle.entries.isEmpty())
     }
 
     private fun game(first: Player, second: Player): Game =
@@ -150,10 +159,6 @@ class BattleRoundTest {
             override fun roll(): Die = this
         }
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
 
     private class NoOpEffectExecutor : GameEffectExecutor {
         override fun execute(request: GameEffectRequest) = Unit

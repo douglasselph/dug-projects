@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.game.operation
 
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.TrashDestination
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.Die
@@ -51,8 +52,10 @@ class TrashResolver {
         }
 
         game.chronicle.record(
-            Moment.Marker(
-                "TRASH_DIE player=${player.id.value} sides=$sides destination=OUT_OF_GAME"
+            Moment.TrashDie(
+                playerId = player.id,
+                sides = sides,
+                destination = TrashDestination.OUT_OF_GAME
             )
         )
 

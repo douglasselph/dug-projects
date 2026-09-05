@@ -198,13 +198,11 @@ class DefaultGameEffectExecutorTest {
 
         executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3))
 
-        val markers = game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
-            .filter { it.startsWith("EFFECT_RESOLVED") }
+        val entries = game.chronicle.entries
+            .filterIsInstance<GameEntry.EffectResolved>()
 
-        assertEquals(1, markers.size)
-        assertTrue(markers.single().contains("RAISE_DIE_PLUS_3"))
+        assertEquals(1, entries.size)
+        assertEquals(GameEffect.RAISE_DIE_PLUS_3, entries.single().effect)
     }
 
     @Test

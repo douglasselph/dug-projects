@@ -59,8 +59,8 @@ class UpgradeEffectHandlerTest {
         assertTrue(actor.dice.discard.isEmpty())
         assertEquals(1, game.grove.graftBed.count(DieSides.D4))
         assertEquals(8, game.grove.graftBed.count(DieSides.D6))
-        assertTrue(game.chronicle.entries.filterIsInstance<GameEntry.Marker>().any {
-            it.message.startsWith("ROLL player=1")
+        assertTrue(game.chronicle.entries.any {
+            it is GameEntry.DieRolled && it.playerId == actor.id
         })
     }
 

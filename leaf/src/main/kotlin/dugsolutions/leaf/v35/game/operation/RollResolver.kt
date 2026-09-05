@@ -4,7 +4,10 @@ import dugsolutions.leaf.v35.error.effectNotNull
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
+import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.RollReason
+import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
@@ -86,8 +89,7 @@ class RollResolver(
      */
     fun draw(
         player: Player,
-        rewardPolicy: RollRewardPolicy =
-            RollRewardPolicy.NORMAL
+        rewardPolicy: RollRewardPolicy = RollRewardPolicy.NORMAL
     ): RollResolution? {
         val die =
             player.dice.draw()
@@ -96,7 +98,8 @@ class RollResolver(
         return resolveCompletedRoll(
             player = player,
             die = die,
-            rewardPolicy = rewardPolicy
+            rewardPolicy = rewardPolicy,
+            reason = RollReason.DRAW
         )
     }
 
@@ -118,20 +121,27 @@ class RollResolver(
         return resolveCompletedRoll(
             player = player,
             die = die,
-            rewardPolicy = rewardPolicy
+            rewardPolicy = rewardPolicy,
+            reason = RollReason.ROLL
         )
     }
 
     private fun resolveCompletedRoll(
         player: Player,
         die: Die,
-        rewardPolicy: RollRewardPolicy
+        rewardPolicy: RollRewardPolicy,
+        reason: RollReason
     ): RollResolution {
         chronicle.record(
-            Moment.Marker(
-                "ROLL player=${player.id.value} " +
-                    "d${die.sides}=${die.value} " +
-                    "rewards=${rewardPolicy.name}"
+            Moment.DieRolled(
+                playerId = player.id,
+                sides = die.sides,
+                value = die.value,
+                rewardPolicy = when (rewardPolicy) {
+                    RollRewardPolicy.NORMAL -> ChronicleRollRewardPolicy.NORMAL
+                    RollRewardPolicy.IGNORE -> ChronicleRollRewardPolicy.IGNORE
+                },
+                reason = reason
             )
         )
 
@@ -226,34 +236,35 @@ class RollResolver(
         player: Player,
         reward: RollRewardResult
     ) {
-        val description =
-            when (reward) {
-                RollRewardResult.None ->
-                    return
+        if (reward == RollRewardResult.None) return
 
-                RollRewardResult.Ignored ->
-                    "IGNORED"
-
-                RollRewardResult.CritterUnavailable ->
-                    "CRITTER_UNAVAILABLE"
-
-                RollRewardResult.WispUnavailable ->
-                    "WISP_UNAVAILABLE"
-
-                is RollRewardResult.CritterGained ->
-                    "CRITTER_${reward.critter.name}"
-
-                is RollRewardResult.WispGained ->
-                    "WISP_${reward.card.name}"
-
-                is RollRewardResult.WispPlayedImmediately ->
-                    "WISP_IMMEDIATE_${reward.card.name}"
-            }
-
-        chronicle.record(
-            Moment.Marker(
-                "ROLL_REWARD player=${player.id.value} $description"
+        val moment = when (reward) {
+            RollRewardResult.None -> error("Handled above")
+            RollRewardResult.Ignored -> Moment.RollReward(
+                player.id, RollRewardKind.IGNORED
             )
-        )
+            RollRewardResult.CritterUnavailable -> Moment.RollReward(
+                player.id, RollRewardKind.CRITTER_UNAVAILABLE
+            )
+            RollRewardResult.WispUnavailable -> Moment.RollReward(
+                player.id, RollRewardKind.WISP_UNAVAILABLE
+            )
+            is RollRewardResult.CritterGained -> Moment.RollReward(
+                playerId = player.id,
+                kind = RollRewardKind.CRITTER_GAINED,
+                critter = reward.critter
+            )
+            is RollRewardResult.WispGained -> Moment.RollReward(
+                playerId = player.id,
+                kind = RollRewardKind.WISP_GAINED,
+                wispName = reward.card.name
+            )
+            is RollRewardResult.WispPlayedImmediately -> Moment.RollReward(
+                playerId = player.id,
+                kind = RollRewardKind.WISP_PLAYED_IMMEDIATELY,
+                wispName = reward.card.name
+            )
+        }
+        chronicle.record(moment)
     }
 }

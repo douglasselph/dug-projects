@@ -97,10 +97,12 @@ class RoundCoordinatorTest {
         coordinator(cultivation = cultivation).executeNext(game)
 
         // Assert
-        val messages = markerMessages(game)
-        assertTrue(messages[0].startsWith("ROUND_REVEALED number=1"))
-        assertEquals("EXECUTOR", messages[1])
-        assertTrue(messages[2].startsWith("ROUND_COMPLETED number=1"))
+        val entries = game.chronicle.entries
+        assertTrue(entries[0] is GameEntry.RoundRevealed)
+        assertEquals(1, (entries[0] as GameEntry.RoundRevealed).roundNumber)
+        assertEquals("EXECUTOR", (entries[1] as GameEntry.Marker).message)
+        assertTrue(entries[2] is GameEntry.RoundCompleted)
+        assertEquals(1, (entries[2] as GameEntry.RoundCompleted).roundNumber)
     }
 
     @Test
@@ -117,9 +119,9 @@ class RoundCoordinatorTest {
 
         // Assert
         assertTrue(thrown === failure)
-        val messages = markerMessages(game)
-        assertEquals(1, messages.size)
-        assertTrue(messages.single().startsWith("ROUND_REVEALED"))
+        val entries = game.chronicle.entries
+        assertEquals(1, entries.size)
+        assertTrue(entries.single() is GameEntry.RoundRevealed)
     }
 
     @Test
@@ -156,10 +158,6 @@ class RoundCoordinatorTest {
         battle: RoundExecutor = RecordingExecutor()
     ): RoundCoordinator = RoundCoordinator(cultivation, battle)
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
 
     private class RecordingExecutor : RoundExecutor {
         val cards = mutableListOf<RoundCard>()

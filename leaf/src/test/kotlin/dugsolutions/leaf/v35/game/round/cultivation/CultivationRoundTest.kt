@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -51,10 +52,12 @@ class CultivationRoundTest {
         assertEquals(1, first.dice.discardSize)
         assertEquals(1, second.dice.discardSize)
 
-        val messages = markerMessages(game)
-        val actionIndex = messages.indexOfFirst { it.startsWith("CULTIVATION_MAIN_ACTION") }
-        val buyIndex = messages.indexOfFirst { it.startsWith("BUY_ORDER") }
-        val cleanupIndex = messages.indexOfFirst { it.startsWith("CULTIVATION_CLEANUP") }
+        val entries = game.chronicle.entries
+        val actionIndex = entries.indexOfFirst { it is GameEntry.MainAction }
+        val buyIndex = entries.indexOfFirst { it is GameEntry.BuyOrder }
+        val cleanupIndex = entries.indexOfFirst {
+            it is GameEntry.Cleanup && it.phase == ChroniclePhase.CULTIVATION
+        }
         assertTrue(actionIndex >= 0)
         assertTrue(actionIndex < buyIndex)
         assertTrue(buyIndex < cleanupIndex)
@@ -125,10 +128,12 @@ class CultivationRoundTest {
         assertEquals(RoundCardType.CULTIVATION, execution.card.type)
         assertEquals(1, execution.roundNumber)
         assertTrue(!battleCalled)
-        val messages = markerMessages(game)
-        assertTrue(messages.first().startsWith("ROUND_REVEALED"))
-        assertTrue(messages.last().startsWith("ROUND_COMPLETED"))
-        assertTrue(messages.any { it.startsWith("CULTIVATION_CLEANUP") })
+        val entries = game.chronicle.entries
+        assertTrue(entries.first() is GameEntry.RoundRevealed)
+        assertTrue(entries.last() is GameEntry.RoundCompleted)
+        assertTrue(entries.any {
+            it is GameEntry.Cleanup && it.phase == ChroniclePhase.CULTIVATION
+        })
     }
 
     @Test
@@ -151,7 +156,7 @@ class CultivationRoundTest {
 
         assertEquals(listOf(firstDie), first.dice.hand)
         assertTrue(first.dice.discard.isEmpty())
-        assertTrue(markerMessages(game).isEmpty())
+        assertTrue(game.chronicle.entries.isEmpty())
     }
 
     private fun game(first: Player, second: Player): Game =
@@ -241,8 +246,4 @@ class CultivationRoundTest {
         override fun roll(): Die = this
     }
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
 }

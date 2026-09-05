@@ -152,10 +152,9 @@ class RefreshResolverTest {
         assertFalse(resolver.refresh(player))
 
         // Assert
-        val messages = chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
-        assertEquals(listOf("REFRESH player=1"), messages)
+        val entries = chronicle.entries.filterIsInstance<GameEntry.Refresh>()
+        assertEquals(1, entries.size)
+        assertEquals(PlayerId(1), entries.single().playerId)
     }
 
     @Test

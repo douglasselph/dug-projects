@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.operation
 import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
@@ -475,34 +476,18 @@ class RollResolverTest {
 
         resolver.draw(player)
 
-        val messages =
-            chronicle.entries
-                .filterIsInstance<
-                    GameEntry.Marker
-                >()
-                .map {
-                    it.message
-                }
+        val entries = chronicle.entries
+        assertEquals(2, entries.size)
 
-        assertEquals(
-            2,
-            messages.size
-        )
-        assertTrue(
-            messages[0].contains(
-                "ROLL player=1"
-            )
-        )
-        assertTrue(
-            messages[1].contains(
-                "ROLL_REWARD player=1"
-            )
-        )
-        assertTrue(
-            messages[1].contains(
-                "CRITTER_BEE"
-            )
-        )
+        val roll = entries[0] as GameEntry.DieRolled
+        assertEquals(PlayerId(1), roll.playerId)
+        assertEquals(4, roll.sides)
+        assertEquals(1, roll.value)
+
+        val reward = entries[1] as GameEntry.RollReward
+        assertEquals(PlayerId(1), reward.playerId)
+        assertEquals(RollRewardKind.CRITTER_GAINED, reward.kind)
+        assertEquals(Critter.BEE, reward.critter)
     }
 
     @Test

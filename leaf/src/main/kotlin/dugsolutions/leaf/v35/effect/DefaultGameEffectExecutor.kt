@@ -3,6 +3,8 @@ package dugsolutions.leaf.v35.effect
 import dugsolutions.leaf.v35.error.effectNotNull
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
+import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.handler.CrossPlayerEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DieValueEffectHandler
@@ -76,10 +78,15 @@ class DefaultGameEffectExecutor(
         )
 
         request.game.chronicle.record(
-            Moment.Marker(
-                "EFFECT_RESOLVED player=${request.actor.id.value} " +
-                    "effect=${request.effect} source=${sourceName(request.source)} " +
-                    "phase=${request.phase}"
+            Moment.EffectResolved(
+                playerId = request.actor.id,
+                effect = request.effect,
+                sourceKind = sourceKind(request.source),
+                sourceName = sourceName(request.source),
+                phase = when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
+                    GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
+                }
             )
         )
     }
@@ -191,12 +198,17 @@ class DefaultGameEffectExecutor(
             else -> null
         }
 
-    private fun sourceName(
-        source: GameEffectSource
-    ): String =
+    private fun sourceKind(source: GameEffectSource): EffectSourceKind =
         when (source) {
-            is GameEffectSource.Plant -> "PLANT_${source.card.card.name}"
-            is GameEffectSource.Round -> "ROUND_${source.slot}"
-            is GameEffectSource.Wisp -> "WISP_${source.card.name}"
+            is GameEffectSource.Plant -> EffectSourceKind.PLANT
+            is GameEffectSource.Round -> EffectSourceKind.ROUND
+            is GameEffectSource.Wisp -> EffectSourceKind.WISP
+        }
+
+    private fun sourceName(source: GameEffectSource): String =
+        when (source) {
+            is GameEffectSource.Plant -> source.card.card.name
+            is GameEffectSource.Round -> "${source.card.name}:${source.slot.name}"
+            is GameEffectSource.Wisp -> source.card.name
         }
 }

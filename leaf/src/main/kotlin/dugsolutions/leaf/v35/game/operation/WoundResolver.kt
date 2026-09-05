@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.WoundKind
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.creature.CreatureCard
@@ -157,8 +158,10 @@ class WoundResolver(
             }
 
         chronicle.record(
-            Moment.Marker(
-                "WOUND player=${player.id.value} FLIPPED plant=${card.card.name}"
+            Moment.Wound(
+                playerId = player.id,
+                kind = WoundKind.FLIPPED,
+                plantName = card.card.name
             )
         )
 
@@ -202,8 +205,10 @@ class WoundResolver(
         }
 
         chronicle.record(
-            Moment.Marker(
-                "WOUND player=${player.id.value} SNIPPED plant=${snipped.card.name}"
+            Moment.Wound(
+                playerId = player.id,
+                kind = WoundKind.SNIPPED,
+                plantName = snipped.card.name
             )
         )
 

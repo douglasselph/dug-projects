@@ -67,7 +67,7 @@ class GameRunnerTest {
         val game = GameEngineTestFixture.game(1, 1)
         val observations = mutableListOf<Boolean>()
         val executor = RoundExecutor { receivedGame, _ ->
-            observations.add(markerMessages(receivedGame).any { it.startsWith("GAME_COMPLETED") })
+            observations.add(receivedGame.chronicle.entries.any { it is GameEntry.GameCompleted })
             receivedGame.chronicle.record(Moment.Marker("EXECUTOR_FINISHED"))
         }
 
@@ -76,10 +76,12 @@ class GameRunnerTest {
 
         // Assert
         assertEquals(listOf(false, false), observations)
-        val messages = markerMessages(game)
-        assertEquals("GAME_COMPLETED rounds=2", messages.last())
-        val finalRoundIndex = messages.indexOfLast { it.startsWith("ROUND_COMPLETED number=2") }
-        val firstFinalScoreIndex = messages.indexOfFirst { it.startsWith("FINAL_SCORE") }
+        val entries = game.chronicle.entries
+        assertEquals(2, (entries.last() as GameEntry.GameCompleted).roundsCompleted)
+        val finalRoundIndex = entries.indexOfLast {
+            it is GameEntry.RoundCompleted && it.roundNumber == 2
+        }
+        val firstFinalScoreIndex = entries.indexOfFirst { it is GameEntry.FinalScore }
         assertTrue(finalRoundIndex >= 0)
         assertTrue(firstFinalScoreIndex > finalRoundIndex)
     }
@@ -113,8 +115,8 @@ class GameRunnerTest {
         assertTrue(thrown === failure)
         assertEquals(GameStatus.RUNNING, game.status)
         assertFalse(game.isComplete)
-        assertFalse(markerMessages(game).any { it.startsWith("GAME_COMPLETED") })
-        assertFalse(markerMessages(game).any { it.startsWith("ROUND_COMPLETED") })
+        assertFalse(game.chronicle.entries.any { it is GameEntry.GameCompleted })
+        assertFalse(game.chronicle.entries.any { it is GameEntry.RoundCompleted })
     }
 
     @Test
@@ -157,10 +159,6 @@ class GameRunnerTest {
     ): GameRunner =
         GameRunner(RoundCoordinator(cultivation, battle))
 
-    private fun markerMessages(game: Game): List<String> =
-        game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
 
     private class RecordingExecutor : RoundExecutor {
         val cards = mutableListOf<RoundCard>()

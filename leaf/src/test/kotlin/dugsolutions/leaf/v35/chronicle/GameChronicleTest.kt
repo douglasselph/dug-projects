@@ -1,7 +1,10 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.RollReason
+import dugsolutions.leaf.v35.player.PlayerId
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -41,6 +44,46 @@ class GameChronicleTest {
                 message = "hello"
             ),
             result
+        )
+    }
+
+
+    @Test
+    fun record_transformsTypedMomentWithoutRetainingMutableInputList() {
+        val chronicle = GameChronicle()
+        val order = mutableListOf(PlayerId(2), PlayerId(1))
+
+        val recorded = chronicle.record(Moment.BuyOrder(order))
+        order.clear()
+
+        val entry = recorded as GameEntry.BuyOrder
+        assertEquals(listOf(PlayerId(2), PlayerId(1)), entry.order)
+    }
+
+    @Test
+    fun record_preservesStructuredDieRollData() {
+        val chronicle = GameChronicle()
+
+        val recorded = chronicle.record(
+            Moment.DieRolled(
+                playerId = PlayerId(3),
+                sides = 12,
+                value = 7,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.DRAW
+            )
+        )
+
+        assertEquals(
+            GameEntry.DieRolled(
+                sequence = 1L,
+                playerId = PlayerId(3),
+                sides = 12,
+                value = 7,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.DRAW
+            ),
+            recorded
         )
     }
 

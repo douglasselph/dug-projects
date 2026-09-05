@@ -30,9 +30,7 @@ class RefreshResolver(
         }
 
         chronicle.record(
-            Moment.Marker(
-                "REFRESH player=${player.id.value}"
-            )
+            Moment.Refresh(player.id)
         )
         return true
     }

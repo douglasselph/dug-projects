@@ -137,11 +137,9 @@ class PartingThornEffectTest {
         assertEquals(1, wound2.calls)
         assertEquals(1, wound3.calls)
 
-        val woundMarkers = game.chronicle.entries
-            .filterIsInstance<GameEntry.Marker>()
-            .map { it.message }
-            .filter { it.startsWith("WOUND ") }
-        assertEquals(2, woundMarkers.size)
+        val woundEntries = game.chronicle.entries
+            .filterIsInstance<GameEntry.Wound>()
+        assertEquals(2, woundEntries.size)
     }
 
     @Test

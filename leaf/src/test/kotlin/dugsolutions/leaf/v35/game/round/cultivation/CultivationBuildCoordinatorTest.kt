@@ -310,7 +310,7 @@ class CultivationBuildCoordinatorTest {
 
         assertTrue(fixture.effects.requests.isEmpty())
         assertTrue(fixture.game.chronicle.entries.none {
-            it is GameEntry.Marker && it.message.startsWith("SUPPORT_ACTION player=1")
+            it is GameEntry.SupportAction && it.playerId == first.id
         })
     }
 

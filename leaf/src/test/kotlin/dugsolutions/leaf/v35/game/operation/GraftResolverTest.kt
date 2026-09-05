@@ -89,8 +89,9 @@ class GraftResolverTest {
 
         GraftResolver(chronicle).resolve(player, card(PlantType.ROOT, "Root_A"))
 
-        val marker = chronicle.entries.filterIsInstance<GameEntry.Marker>().single()
-        assertEquals("GRAFT player=1 plant=Root_A", marker.message)
+        val entry = chronicle.entries.filterIsInstance<GameEntry.Graft>().single()
+        assertEquals(PlayerId(1), entry.playerId)
+        assertEquals("Root_A", entry.plantName)
     }
 
     private fun player(strategy: CreaturePlacementStrategy): Player = Player(

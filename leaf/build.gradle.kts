@@ -122,6 +122,32 @@ tasks.register<Test>("integrationTest") {
     }
 }
 
+
+tasks.register<Test>("v35IntegrationTest") {
+    description = "Runs v35 integration tests."
+    group = "verification"
+
+    testClassesDirs = sourceSets["integration"].output.classesDirs
+    classpath = sourceSets["integration"].runtimeClasspath
+
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching("dugsolutions.leaf.integration.v35.*")
+    }
+
+    dependsOn("test")
+
+    reports {
+        html.required.set(true)
+        junitXml.required.set(true)
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 kotlin {
     // Specific compiler options for integration tests
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

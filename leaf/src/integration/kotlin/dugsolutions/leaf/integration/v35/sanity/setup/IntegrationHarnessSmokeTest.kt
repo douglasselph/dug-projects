@@ -3,6 +3,7 @@ package dugsolutions.leaf.integration.v35.sanity.setup
 import dugsolutions.leaf.integration.v35.support.ChronicleAssertions
 import dugsolutions.leaf.integration.v35.support.GameScenario
 import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -44,16 +45,12 @@ class IntegrationHarnessSmokeTest {
             assertEquals(1, harness.game.roundNumber)
 
             val entries = harness.chronicleEntries()
-            ChronicleAssertions.assertContainsMarker(
-                entries,
-                "ROUND_REVEALED",
-                "number=1"
-            )
-            ChronicleAssertions.assertContainsMarker(
-                entries,
-                "ROUND_COMPLETED",
-                "number=1"
-            )
+            ChronicleAssertions.assertContains<GameEntry.RoundRevealed>(entries) {
+                it.roundNumber == 1
+            }
+            ChronicleAssertions.assertContains<GameEntry.RoundCompleted>(entries) {
+                it.roundNumber == 1
+            }
             ChronicleAssertions.assertSequenceContinuous(entries)
         } finally {
             harness.close()

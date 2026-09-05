@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.operation
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.UpgradeDestination
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.Die
@@ -172,9 +173,14 @@ class UpgradeResolver {
         }
 
         game.chronicle.record(
-            Moment.Marker(
-                "UPGRADE player=${player.id.value} from=$from to=$to " +
-                    "destination=${destination.name}"
+            Moment.Upgrade(
+                playerId = player.id,
+                from = from,
+                to = to,
+                destination = when (destination) {
+                    Destination.HAND -> UpgradeDestination.HAND
+                    Destination.DISCARD -> UpgradeDestination.DISCARD
+                }
             )
         )
 

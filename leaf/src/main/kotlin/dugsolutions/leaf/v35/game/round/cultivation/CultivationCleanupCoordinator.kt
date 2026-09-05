@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
@@ -43,9 +44,11 @@ class CultivationCleanupCoordinator(
             player.critterValues.clearRound()
 
             game.chronicle.record(
-                Moment.Marker(
-                    "CULTIVATION_CLEANUP player=${player.id.value} " +
-                        "discarded=$discarded refreshed=$refreshed"
+                Moment.Cleanup(
+                    playerId = player.id,
+                    phase = ChroniclePhase.CULTIVATION,
+                    discardedDice = discarded,
+                    refreshed = refreshed
                 )
             )
 

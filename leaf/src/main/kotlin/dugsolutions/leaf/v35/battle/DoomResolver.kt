@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.chronicle.domain.DoomDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.Game
@@ -98,9 +99,16 @@ class DoomResolver(
         }
 
         game.chronicle.record(
-            Moment.Marker(
-                "DOOM count=${results.size} values=" +
-                    results.map { it.value }.distinct().joinToString(",")
+            Moment.Doom(
+                dice = results.map { die ->
+                    DoomDieSnapshot(
+                        playerId = die.playerId,
+                        row = die.row,
+                        sides = die.sides,
+                        value = die.value,
+                        returnedToGraftBed = die.returnedToGraftBed
+                    )
+                }
             )
         )
 

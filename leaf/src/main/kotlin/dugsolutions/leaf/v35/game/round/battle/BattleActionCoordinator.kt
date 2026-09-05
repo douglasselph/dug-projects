@@ -3,7 +3,11 @@ package dugsolutions.leaf.v35.game.round.battle
 import dugsolutions.leaf.v35.battle.BattlePlacementResolver
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -499,9 +503,14 @@ class BattleActionCoordinator(
                     critter = action.critter
                 )
                 game.chronicle.record(
-                    Moment.Marker(
-                        "BATTLE_SUPPORT_ACTION player=${player.id.value} " +
-                            "type=CRITTER_${action.critter.name} row=${action.row}"
+                    Moment.SupportAction(
+                        playerId = player.id,
+                        phase = ChroniclePhase.BATTLE,
+                        action = when (action.critter) {
+                            Critter.BEE -> SupportActionKind.CRITTER_BEE
+                            Critter.WORM -> SupportActionKind.CRITTER_WORM
+                        },
+                        row = action.row
                     )
                 )
             }
@@ -563,18 +572,23 @@ class BattleActionCoordinator(
         action: BattleMainAction
     ) {
         game.chronicle.record(
-            Moment.Marker(
-                "BATTLE_MAIN_ACTION player=${player.id.value} " +
-                    "stage=${stage.name} type=${mainActionName(action)}"
+            Moment.MainAction(
+                playerId = player.id,
+                phase = ChroniclePhase.BATTLE,
+                action = mainActionKind(action),
+                battleStage = when (stage) {
+                    BattleMainActionStage.FIRST -> BattleMainStage.FIRST
+                    BattleMainActionStage.FINAL -> BattleMainStage.FINAL
+                }
             )
         )
     }
 
-    private fun mainActionName(action: BattleMainAction): String =
+    private fun mainActionKind(action: BattleMainAction): MainActionKind =
         when (action) {
-            BattleMainAction.Draw -> "DRAW"
-            is BattleMainAction.ActivatePlant -> "ACTIVATE_PLANT"
-            BattleMainAction.RoundEffect1 -> "ROUND_EFFECT_1"
-            BattleMainAction.RoundEffect2 -> "ROUND_EFFECT_2"
+            BattleMainAction.Draw -> MainActionKind.DRAW
+            is BattleMainAction.ActivatePlant -> MainActionKind.ACTIVATE_PLANT
+            BattleMainAction.RoundEffect1 -> MainActionKind.ROUND_EFFECT_1
+            BattleMainAction.RoundEffect2 -> MainActionKind.ROUND_EFFECT_2
         }
 }

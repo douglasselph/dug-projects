@@ -32,27 +32,24 @@ class GameRunner(
 
         finalScoring.scores.forEach { score ->
             game.chronicle.record(
-                Moment.Marker(
-                    "FINAL_SCORE player=${score.playerId.value} " +
-                        "existing=${score.existingVp} plants=${score.plantVp} " +
-                        "wisps=${score.unplayedWispVp} total=${score.totalVp} " +
-                        "plantCount=${score.graftedPlantCount}"
+                Moment.FinalScore(
+                    playerId = score.playerId,
+                    existingVp = score.existingVp,
+                    plantVp = score.plantVp,
+                    unplayedWispVp = score.unplayedWispVp,
+                    totalVp = score.totalVp,
+                    graftedPlantCount = score.graftedPlantCount
                 )
             )
         }
 
         game.chronicle.record(
-            Moment.Marker(
-                "FINAL_WINNERS players=" +
-                    finalScoring.winnerIds.joinToString(",") { it.value.toString() }
-            )
+            Moment.FinalWinners(finalScoring.winnerIds)
         )
 
         game.complete()
         game.chronicle.record(
-            Moment.Marker(
-                "GAME_COMPLETED rounds=$roundsCompleted"
-            )
+            Moment.GameCompleted(roundsCompleted)
         )
 
         return GameRunResult(
