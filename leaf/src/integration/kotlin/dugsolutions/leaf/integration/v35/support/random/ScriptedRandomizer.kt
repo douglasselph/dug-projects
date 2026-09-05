@@ -7,9 +7,9 @@ import java.util.ArrayDeque
  * Fail-fast deterministic Randomizer for scenario tests.
  *
  * It is intentionally independent of a seed. Tests enqueue the exact random
- * answers they expect production code to request. This class is introduced by
- * the harness foundation now; wiring it into GameFactory is a separate
- * production seam so the first harness can remain production-graph-only.
+ * answers they expect production code to request. IntegrationGameHarness can
+ * inject it through GameFactory, so deck setup and dice rolls can be made
+ * independent from unrelated random calls.
  */
 class ScriptedRandomizer : Randomizer {
     private val booleans = ArrayDeque<Boolean>()
@@ -24,6 +24,14 @@ class ScriptedRandomizer : Randomizer {
     fun ints(vararg values: Int): ScriptedRandomizer = apply {
         values.forEach(ints::addLast)
     }
+
+    /**
+     * Convenience alias for scripted die/D20 results. Random rolls in v35
+     * ultimately use Randomizer.nextInt, so these values are consumed by the
+     * next integer random requests in exact order.
+     */
+    fun rolls(vararg values: Int): ScriptedRandomizer =
+        ints(*values)
 
     /** Queue zero-based indexes for [randomOrNull]. */
     fun randomIndexes(vararg values: Int): ScriptedRandomizer = apply {

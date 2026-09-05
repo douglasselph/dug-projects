@@ -9,6 +9,7 @@ import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class WispDeckTest {
@@ -117,8 +118,54 @@ class WispDeckTest {
         assertEquals(36, deck.remaining)
     }
 
+
+    @Test
+    fun setupExact_preservesProvidedOrderWithoutShuffling() {
+        val honor = requireNotNull(manager.getCard("Wisp_Award_VP"))
+        val patient = requireNotNull(manager.getCard("Wisp_Award_VP2"))
+
+        deck.setupExact(listOf(honor, patient))
+
+        assertEquals(listOf(honor, patient), deck.cards.cards)
+        assertEquals(honor, deck.draw())
+        assertEquals(patient, deck.draw())
+    }
+
+    @Test
+    fun setupExact_rejectsMoreCopiesThanPhysicalQuantity() {
+        val patient = requireNotNull(manager.getCard("Wisp_Award_VP2"))
+
+        assertFailsWith<IllegalArgumentException> {
+            deck.setupExact(listOf(patient, patient))
+        }
+    }
+
+    @Test
+    fun exactResetCards_makeResetDeterministicWithoutShuffle() {
+        val honor = requireNotNull(manager.getCard("Wisp_Award_VP"))
+        val exactDeck = WispDeck(
+            wispCardManager = manager,
+            randomizer = ThrowingShuffleRandomizer(),
+            exactResetCards = listOf(honor)
+        )
+
+        exactDeck.reset()
+
+        assertEquals(listOf(honor), exactDeck.cards.cards)
+    }
+
     private fun dataPath(fileName: String): String =
         Path.of("data", "v35", fileName).toString()
+
+
+    private class ThrowingShuffleRandomizer : Randomizer {
+        override fun nextBoolean(): Boolean = throw UnsupportedOperationException()
+        override fun nextInt(from: Int, until: Int): Int = throw UnsupportedOperationException()
+        override fun nextInt(until: Int): Int = throw UnsupportedOperationException()
+        override fun <T> randomOrNull(list: List<T>): T? = throw UnsupportedOperationException()
+        override fun <T> shuffled(list: List<T>): List<T> =
+            error("Exact Wisp setup must not shuffle")
+    }
 
     private class ReversingRandomizer : Randomizer {
         override fun nextBoolean(): Boolean =

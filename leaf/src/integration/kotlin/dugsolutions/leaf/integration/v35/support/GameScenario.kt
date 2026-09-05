@@ -3,6 +3,7 @@ package dugsolutions.leaf.integration.v35.support
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
+import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 
 /**
@@ -20,7 +21,16 @@ data class GameScenario(
     val roundSetup: GameRoundSetup = GameRoundSetup.firstGame(),
     val seed: Long? = 1L,
     val dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
-    val decisionFactories: List<PlayerDecisionFactory> = emptyList()
+    val decisionFactories: List<PlayerDecisionFactory> = emptyList(),
+    /** Optional exact Round draw order, expressed as stable CSV names. */
+    val exactRoundNames: List<String>? = null,
+    /** Optional exact Wisp draw order, expressed as stable CSV names. */
+    val exactWispNames: List<String>? = null,
+    /**
+     * Optional per-harness Randomizer factory. When absent, GameFactory uses
+     * the normal seeded production Randomizer.
+     */
+    val randomizerFactory: (() -> Randomizer)? = null
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -29,6 +39,12 @@ data class GameScenario(
         require(decisionFactories.isEmpty() || decisionFactories.size == numPlayers) {
             "Decision factory count must be empty or equal numPlayers: " +
                 "factories=${decisionFactories.size}, players=$numPlayers"
+        }
+        exactRoundNames?.let { names ->
+            require(names.size == roundSetup.totalRounds) {
+                "Exact Round deck size must match roundSetup.totalRounds: " +
+                    "exact=${names.size}, configured=${roundSetup.totalRounds}"
+            }
         }
     }
 

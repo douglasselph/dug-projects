@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispDeck
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 
 /**
  * Creates one independent mutable Grove for one game.
@@ -19,13 +20,15 @@ class GroveFactory(
 
     operator fun invoke(
         selectedPlantCards: List<PlantCard>,
-        randomizer: Randomizer
+        randomizer: Randomizer,
+        exactWispCards: List<WispCard>? = null
     ): Grove =
         Grove(
             selectedPlantCards = selectedPlantCards,
             wispDeck = WispDeck(
                 wispCardManager = wispCardManager,
-                randomizer = randomizer
+                randomizer = randomizer,
+                exactResetCards = exactWispCards
             )
         )
 }

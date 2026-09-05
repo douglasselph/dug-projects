@@ -11,6 +11,8 @@ import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundDeck
+import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 
 /**
  * Creates a complete isolated mutable Game graph.
@@ -23,11 +25,11 @@ class GameFactory(
     private val roundCardManager: RoundCardManager
 ) {
     operator fun invoke(
-        config: GameConfig
+        config: GameConfig,
+        randomizer: Randomizer = Randomizer.create(config.seed),
+        exactRoundCards: List<RoundCard>? = null,
+        exactWispCards: List<WispCard>? = null
     ): Game {
-        val randomizer =
-            Randomizer.create(config.seed)
-
         val dieFactory =
             DieFactory(randomizer)
 
@@ -56,7 +58,9 @@ class GameFactory(
                 selectedPlantCards =
                     config.selectedPlantCards,
                 randomizer =
-                    randomizer
+                    randomizer,
+                exactWispCards =
+                    exactWispCards
             )
 
         val roundDeck =
@@ -67,10 +71,18 @@ class GameFactory(
                     randomizer
             )
 
-        setupRoundDeck(
-            roundDeck = roundDeck,
-            setup = config.roundSetup
-        )
+        if (exactRoundCards != null) {
+            require(exactRoundCards.size == config.roundSetup.totalRounds) {
+                "Exact Round deck size must match configured total rounds: " +
+                    "exact=${exactRoundCards.size}, configured=${config.roundSetup.totalRounds}"
+            }
+            roundDeck.setupExact(exactRoundCards)
+        } else {
+            setupRoundDeck(
+                roundDeck = roundDeck,
+                setup = config.roundSetup
+            )
+        }
 
         return Game(
             config = config,

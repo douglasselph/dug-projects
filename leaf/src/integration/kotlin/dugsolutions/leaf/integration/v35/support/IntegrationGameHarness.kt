@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.game.GameStatus
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.RoundExecution
+import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -58,8 +59,32 @@ class IntegrationGameHarness(
     val gameRunner: GameRunner =
         koin.get()
 
+    private val exactRoundCards =
+        scenario.exactRoundNames?.map(catalog::requireRound)
+
+    private val exactWispCards =
+        scenario.exactWispNames?.map(catalog::requireWisp)
+
+    /** Randomizer actually owned by this Game. */
+    val randomizer: Randomizer
+
     val game: Game =
-        gameFactory(scenario.toGameConfig(catalog))
+        scenario.randomizerFactory?.invoke()?.let { scripted ->
+            gameFactory(
+                config = scenario.toGameConfig(catalog),
+                randomizer = scripted,
+                exactRoundCards = exactRoundCards,
+                exactWispCards = exactWispCards
+            )
+        } ?: gameFactory(
+            config = scenario.toGameConfig(catalog),
+            exactRoundCards = exactRoundCards,
+            exactWispCards = exactWispCards
+        )
+
+    init {
+        randomizer = game.randomizer
+    }
 
     /**
      * Executes one production Round through RoundCoordinator.

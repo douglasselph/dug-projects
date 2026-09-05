@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
@@ -26,6 +27,8 @@ class GameFactoryTest {
 
     private lateinit var factory: GameFactory
     private lateinit var selectedCards: List<PlantCard>
+    private lateinit var wispManager: WispCardManager
+    private lateinit var roundManager: RoundCardManager
 
     @BeforeEach
     fun setup() {
@@ -39,7 +42,7 @@ class GameFactoryTest {
             dataPath(CardDataFiles.WISP_LIST)
         )
 
-        val wispManager =
+        wispManager =
             WispCardManager().apply {
                 loadCards(wispRegistry)
             }
@@ -51,7 +54,7 @@ class GameFactoryTest {
             dataPath(CardDataFiles.ROUND_CARD_LIST)
         )
 
-        val roundManager =
+        roundManager =
             RoundCardManager().apply {
                 loadCards(roundRegistry)
             }
@@ -357,6 +360,63 @@ class GameFactoryTest {
         )
     }
 
+
+    @Test
+    fun invoke_acceptsInjectedRandomizerAndExactDecksWithoutSetupShuffle() {
+        val randomizer = ExactOnlyRandomizer()
+        val roundCards = listOf(
+            requireNotNull(roundManager.getCard("Resource_Compost_Mulch")),
+            requireNotNull(roundManager.getCard("Battle_Bloom_Burrow"))
+        )
+        val wispCards = listOf(
+            requireNotNull(wispManager.getCard("Wisp_Award_VP"))
+        )
+        val config = GameConfig.baseline(
+            selectedPlantCards = selectedCards,
+            numPlayers = 2,
+            roundSetup = GameRoundSetup.Ordered(
+                cultivationRounds = 1,
+                battleRounds = 1
+            )
+        )
+
+        val game = factory(
+            config = config,
+            randomizer = randomizer,
+            exactRoundCards = roundCards,
+            exactWispCards = wispCards
+        )
+
+        assertTrue(game.randomizer === randomizer)
+        assertEquals(roundCards, game.roundDeck.cards.cards)
+        assertEquals(wispCards, game.grove.wispDeck.cards.cards)
+        assertEquals(0, randomizer.shuffleCalls)
+    }
+
+    @Test
+    fun invoke_exactRoundDeckSizeMustMatchConfiguredRoundCount() {
+        val config = GameConfig.baseline(
+            selectedPlantCards = selectedCards,
+            numPlayers = 2,
+            roundSetup = GameRoundSetup.Ordered(
+                cultivationRounds = 1,
+                battleRounds = 1
+            )
+        )
+        val oneRound = listOf(
+            requireNotNull(roundManager.getCard("Resource_Compost_Mulch"))
+        )
+
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            factory(
+                config = config,
+                randomizer = ExactOnlyRandomizer(),
+                exactRoundCards = oneRound,
+                exactWispCards = emptyList()
+            )
+        }
+    }
+
     private fun dataPath(
         fileName: String
     ): String =
@@ -365,4 +425,26 @@ class GameFactoryTest {
             "v35",
             fileName
         ).toString()
+    private class ExactOnlyRandomizer : Randomizer {
+        var shuffleCalls: Int = 0
+            private set
+
+        override fun nextBoolean(): Boolean =
+            error("No boolean randomness expected")
+
+        override fun nextInt(from: Int, until: Int): Int =
+            error("No integer randomness expected")
+
+        override fun nextInt(until: Int): Int =
+            error("No integer randomness expected")
+
+        override fun <T> randomOrNull(list: List<T>): T? =
+            error("No random selection expected")
+
+        override fun <T> shuffled(list: List<T>): List<T> {
+            shuffleCalls++
+            error("Exact deck construction must not shuffle")
+        }
+    }
+
 }

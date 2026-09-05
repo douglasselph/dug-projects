@@ -87,6 +87,19 @@ class RoundDeck(
     }
 
     /**
+     * Installs an exact draw order without consulting [randomizer].
+     *
+     * The first item in [cards] is the next card revealed. A scenario may use
+     * only part of the physical Round-card inventory, but it may not request
+     * more copies of a definition than the CSV quantity provides.
+     */
+    fun setupExact(cards: List<RoundCard>) {
+        validatePhysicalCopies(cards)
+        drawPile = RoundCards(cards.toList())
+        topCard = null
+    }
+
+    /**
      * Reveals and removes the next card from the draw pile.
      */
     fun next(): RoundCard? {
@@ -107,4 +120,27 @@ class RoundDeck(
             .flatMap { card ->
                 List(card.quantity) { card }
             }
+
+    private fun validatePhysicalCopies(cards: List<RoundCard>) {
+        cards.groupingBy { it.name.trim().lowercase() }
+            .eachCount()
+            .forEach { (name, requested) ->
+                val definition = requireNotNull(roundCardManager.getCard(name)) {
+                    "Exact Round deck contains unknown card: $name"
+                }
+                require(requested <= definition.quantity) {
+                    "Exact Round deck requests too many copies of ${definition.name}: " +
+                        "requested=$requested, available=${definition.quantity}"
+                }
+            }
+
+        cards.forEach { card ->
+            val definition = requireNotNull(roundCardManager.getCard(card.name)) {
+                "Exact Round deck contains unknown card: ${card.name}"
+            }
+            require(card == definition) {
+                "Exact Round deck card does not match catalog definition: ${card.name}"
+            }
+        }
+    }
 }

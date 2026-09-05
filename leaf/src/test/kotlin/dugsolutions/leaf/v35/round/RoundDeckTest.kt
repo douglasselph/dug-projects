@@ -190,6 +190,29 @@ class RoundDeckTest {
         assertEquals(4, deck.remaining)
     }
 
+
+    @Test
+    fun setupExact_preservesProvidedOrderWithoutShuffling() {
+        val first = requireNotNull(manager.getCard("Resource_Compost_Mulch"))
+        val second = requireNotNull(manager.getCard("Battle_Bloom_Burrow"))
+
+        deck.setupExact(listOf(first, second))
+
+        assertEquals(listOf(first, second), deck.cards.cards)
+        assertNull(deck.top)
+        assertEquals(first, deck.next())
+        assertEquals(second, deck.next())
+    }
+
+    @Test
+    fun setupExact_rejectsMoreCopiesThanPhysicalQuantity() {
+        val card = requireNotNull(manager.getCard("Battle_Bloom_Burrow"))
+
+        assertFailsWith<IllegalArgumentException> {
+            deck.setupExact(listOf(card, card))
+        }
+    }
+
     private fun dataPath(fileName: String): String =
         Path.of("data", "v35", fileName).toString()
 
