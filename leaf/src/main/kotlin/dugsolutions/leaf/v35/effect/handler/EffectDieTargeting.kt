@@ -78,7 +78,8 @@ private fun chooseRequiredDie(
     val chosen = request.actor.decisions.effect.chooseDie(
         ChooseEffectDieRequest(
             effect = request.effect,
-            legalChoices = legalChoices
+            legalChoices = legalChoices,
+            context = request.decisionContext()
         )
     )
     decisionCheck(chosen in legalChoices) {
@@ -95,7 +96,8 @@ internal fun chooseOptionalHandDie(
     val chosen = request.actor.decisions.effect.chooseOptionalDie(
         ChooseOptionalEffectDieRequest(
             effect = request.effect,
-            legalChoices = legalChoices
+            legalChoices = legalChoices,
+            context = request.decisionContext()
         )
     )
     decisionCheck(chosen == null || chosen in legalChoices) {

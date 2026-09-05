@@ -279,7 +279,8 @@ class DrawEffectHandler(
             request.actor.decisions.effect.chooseOptionalDiePair(
                 ChooseOptionalEffectDiePairRequest(
                     effect = request.effect,
-                    legalChoices = legalPairs
+                    legalChoices = legalPairs,
+                    context = request.decisionContext()
                 )
             )
 
@@ -373,7 +374,8 @@ class DrawEffectHandler(
                     battleState = battleState,
                     player = request.actor,
                     die = die,
-                    reason = BattleDiePlacementReason.EFFECT
+                    reason = BattleDiePlacementReason.EFFECT,
+                    context = request.decisionContext()
                 )
             }
     }
@@ -576,7 +578,8 @@ class DrawEffectHandler(
                 effect = request.effect,
                 legalChoices = legalChoices,
                 minChoices = 0,
-                maxChoices = legalChoices.size
+                maxChoices = legalChoices.size,
+                context = request.decisionContext()
             )
         )
 
@@ -656,7 +659,8 @@ class DrawEffectHandler(
             battleState = battleState,
             player = request.actor,
             die = die,
-            reason = BattleDiePlacementReason.EFFECT
+            reason = BattleDiePlacementReason.EFFECT,
+            context = request.decisionContext()
         )
     }
 
@@ -760,6 +764,7 @@ class DrawEffectHandler(
                         plantEffectPath = request.plantEffectPath
                     )
                 )
-            }
+            },
+            decisionContext = { player -> request.decisionContextFor(player) }
         )
 }

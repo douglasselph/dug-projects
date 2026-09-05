@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.effect.handler.battleHandChoices
 import dugsolutions.leaf.v35.effect.handler.battleStateForEffect
 import dugsolutions.leaf.v35.effect.handler.handChoices
@@ -57,7 +58,8 @@ class PetalToDie4Effect(
             request.actor.decisions.effect.choosePetalToDie4(
                 ChoosePetalToDie4Request(
                     effect = request.effect,
-                    legalChoices = legalChoices
+                    legalChoices = legalChoices,
+                    context = request.decisionContext()
                 )
             )
 
@@ -149,7 +151,8 @@ class PetalToDie4Effect(
                 battleState = battleState,
                 player = request.actor,
                 die = die,
-                reason = BattleDiePlacementReason.EFFECT
+                reason = BattleDiePlacementReason.EFFECT,
+                context = request.decisionContext()
             )
         }
     }

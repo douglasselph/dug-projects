@@ -21,6 +21,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
@@ -101,7 +102,8 @@ class BattleActionCoordinator(
                 player.decisions.battle.chooseFirstMainAction(
                     ChooseBattleFirstMainActionRequest(
                         roundCard = roundCard,
-                        legalChoices = legal
+                        legalChoices = legal,
+                        context = DecisionContextFactory.create(game, player, battleState)
                     )
                 )
 
@@ -161,7 +163,8 @@ class BattleActionCoordinator(
                         ChooseBattleTurnActionRequest(
                             roundCard = roundCard,
                             passNumber = passNumber,
-                            legalChoices = legalChoices
+                            legalChoices = legalChoices,
+                            context = DecisionContextFactory.create(game, player, battleState)
                         )
                     )
 
@@ -429,7 +432,8 @@ class BattleActionCoordinator(
                     battleState = battleState,
                     player = player,
                     die = rolled.die,
-                    reason = BattleDiePlacementReason.MAIN_DRAW
+                    reason = BattleDiePlacementReason.MAIN_DRAW,
+                    context = DecisionContextFactory.create(game, player, battleState)
                 )
             }
 

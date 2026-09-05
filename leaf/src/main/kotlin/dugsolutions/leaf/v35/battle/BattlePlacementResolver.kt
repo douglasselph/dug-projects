@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleDiePlacementRequest
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
@@ -94,7 +95,8 @@ class BattlePlacementResolver {
         battleState: BattleState,
         player: Player,
         die: Die,
-        reason: BattleDiePlacementReason
+        reason: BattleDiePlacementReason,
+        context: DecisionContext = DecisionContext.EMPTY
     ): BattleDiePlacement {
         val handIndex =
             player.dice.hand.indexOfFirst { it === die }
@@ -123,7 +125,8 @@ class BattlePlacementResolver {
                         value = die.value
                     ),
                     reason = reason,
-                    legalRows = legalRows
+                    legalRows = legalRows,
+                    context = context
                 )
             )
 

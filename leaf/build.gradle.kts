@@ -58,6 +58,10 @@ dependencies {
     // Configure test task to use JUnit Platform
     tasks.test {
         useJUnitPlatform()
+
+        filter {
+             includeTestsMatching("dugsolutions.leaf.v35.*")
+        }
     }
 }
 
@@ -109,24 +113,25 @@ dependencies {
 }
 
 tasks.register<Test>("integrationTest") {
-    description = "Runs integration tests."
+    description = "Runs v35 integration tests."
     group = "verification"
-    
+
     testClassesDirs = sourceSets["integration"].output.classesDirs
     classpath = sourceSets["integration"].runtimeClasspath
-    
+
     useJUnitPlatform()
-    
-    // Ensure integration tests run after unit tests
+
+    filter {
+        includeTestsMatching("dugsolutions.leaf.integration.v35.*")
+    }
+
     dependsOn("test")
-    
-    // Set up test reporting
+
     reports {
         html.required.set(true)
         junitXml.required.set(true)
     }
-    
-    // Configure test logging
+
     testLogging {
         events("passed", "skipped", "failed")
     }

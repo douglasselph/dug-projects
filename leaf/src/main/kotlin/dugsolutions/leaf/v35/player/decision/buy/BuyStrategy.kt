@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.buy
 
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Critter
 
@@ -56,14 +57,18 @@ class BuyPayment(
     val total: Int get() = dice.sumOf { it.value } + critters.sumOf { it.value }
 }
 
-class ChoosePurchaseRequest(options: List<BuyItem>) {
+class ChoosePurchaseRequest(
+    options: List<BuyItem>,
+    val context: DecisionContext = DecisionContext.EMPTY
+) {
     val options: List<BuyItem> = options.toList()
 }
 
 class ChoosePaymentRequest(
     val item: BuyItem,
     availableDice: List<BuyDieResource>,
-    availableCritters: List<BuyCritterResource>
+    availableCritters: List<BuyCritterResource>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val availableDice: List<BuyDieResource> = availableDice.toList()
     val availableCritters: List<BuyCritterResource> = availableCritters.toList()

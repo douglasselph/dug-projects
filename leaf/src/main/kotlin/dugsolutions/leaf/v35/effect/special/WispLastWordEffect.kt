@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.effect.handler.battleStateForEffect
 import dugsolutions.leaf.v35.effect.handler.chooseRequiredStrikeRow
 import dugsolutions.leaf.v35.effect.handler.openStrikeRows
@@ -58,7 +59,8 @@ class WispLastWordEffect : EffectHandler {
         StrikeResolver(
             WoundResolver(
                 grove = request.game.grove,
-                chronicle = request.game.chronicle
+                chronicle = request.game.chronicle,
+                decisionContext = { player -> request.decisionContextFor(player) }
             )
         ).resolveRow(
             game = request.game,

@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.WoundKind
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.decision.wound.ChooseWoundRequest
 import dugsolutions.leaf.v35.player.decision.wound.WoundChoice
@@ -36,7 +37,8 @@ sealed interface WoundResolution {
  */
 class WoundResolver(
     private val grove: Grove,
-    private val chronicle: Chronicle
+    private val chronicle: Chronicle,
+    private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY }
 ) {
 
     /**
@@ -80,7 +82,8 @@ class WoundResolver(
         val choice =
             player.decisions.wound.choose(
                 ChooseWoundRequest(
-                    legalChoices
+                    legalChoices = legalChoices,
+                    context = decisionContext(player)
                 )
             )
 

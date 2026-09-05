@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.effect.handler.battleHandChoices
 import dugsolutions.leaf.v35.effect.handler.battleStateForEffect
 import dugsolutions.leaf.v35.effect.handler.chooseRequiredHandDie
@@ -103,7 +104,8 @@ class OvergrowthEffect(
                         plantEffectPath = request.plantEffectPath
                     )
                 )
-            }
+            },
+            decisionContext = { player -> request.decisionContextFor(player) }
         ).roll(request.actor, upgraded.replacement)
     }
 

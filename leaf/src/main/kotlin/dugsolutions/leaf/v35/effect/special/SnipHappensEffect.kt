@@ -7,6 +7,8 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectOpponentPlantWoundRequest
@@ -54,7 +56,8 @@ class SnipHappensEffect : EffectHandler {
         val woundResolver =
             WoundResolver(
                 grove = request.game.grove,
-                chronicle = request.game.chronicle
+                chronicle = request.game.chronicle,
+                decisionContext = { player -> request.decisionContextFor(player) }
             )
 
         val legalChoices =
@@ -86,7 +89,8 @@ class SnipHappensEffect : EffectHandler {
                     ChooseEffectOpponentPlantWoundRequest(
                         effect = request.effect,
                         legalChoices =
-                            legalChoices
+                            legalChoices,
+                        context = request.decisionContext()
                     )
                 )
 

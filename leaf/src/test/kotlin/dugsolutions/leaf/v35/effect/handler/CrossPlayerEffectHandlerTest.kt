@@ -13,9 +13,11 @@ import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.round.battle.BattleCleanupCoordinator
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectBattleDieRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseRootWellBattleRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCrossPlayerDieSwapRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectBattleDieChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectCrossPlayerDieSwapChoice
+import dugsolutions.leaf.v35.player.decision.effect.RootWellBattleChoice
 import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
 import org.junit.jupiter.api.Test
@@ -35,7 +37,7 @@ class CrossPlayerEffectHandlerTest {
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
         )
 
         assertTrue(handler.canExecute(request))
@@ -46,7 +48,7 @@ class CrossPlayerEffectHandlerTest {
     }
 
     @Test
-    fun rootWellBattle_canTargetOpponentDie_spendsThreeWater_andOpponentGetsRollReward() {
+    fun rootWellBattle_canTargetOpponentDie_spendsOneWater_andOpponentGetsRollReward() {
         val actorDie = FixedEffectDie(8, 4)
         val opponentDie = SequenceEffectDie(10, initial = 7, next = 1)
         val actor = EffectTestFixture.player(
@@ -65,11 +67,9 @@ class CrossPlayerEffectHandlerTest {
         battleState.grid.placeDie(actor, StrikeRow.TOP, actorDie)
         battleState.grid.placeDie(opponent, StrikeRow.MIDDLE, opponentDie)
 
-        repeat(3) {
-            val water = game.grove.tokens.pull(Token.WATER)
-            check(water != null)
-            actor.tokens.add(water)
-        }
+        val water = game.grove.tokens.pull(Token.WATER)
+        check(water != null)
+        actor.tokens.add(water)
         val groveWaterBefore = game.grove.tokens.waterCount
         val opponentBeesBefore = opponent.critters.count(Critter.BEE)
 
@@ -77,14 +77,14 @@ class CrossPlayerEffectHandlerTest {
             game = game,
             actor = actor,
             battleState = battleState,
-            effect = GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
+            effect = GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
         )
 
         assertTrue(handler.canExecute(request))
         handler.execute(request, nested)
 
         assertEquals(0, actor.tokens.waterCount)
-        assertEquals(groveWaterBefore + 3, game.grove.tokens.waterCount)
+        assertEquals(groveWaterBefore + 1, game.grove.tokens.waterCount)
         assertEquals(1, opponentDie.value)
         assertEquals(
             opponentBeesBefore + 1,
@@ -102,28 +102,72 @@ class CrossPlayerEffectHandlerTest {
     }
 
     @Test
-    fun rootWellBattle_requiresThreeWaterAndAtLeastOneBattleDie() {
+    fun rootWellBattle_requiresOneWaterAndEitherTwoOwnDiceOrOneOpponentDie() {
         val actorDie = FixedEffectDie(8, 4)
         val actor = EffectTestFixture.player(1, hand = listOf(actorDie))
         val opponent = EffectTestFixture.player(2)
         val game = EffectTestFixture.game(actor, opponent)
         val battleState = BattleState(listOf(actor, opponent))
         battleState.grid.placeDie(actor, StrikeRow.TOP, actorDie)
-        actor.tokens.add(Token.WATER).add(Token.WATER)
 
         val request = battleRequest(
             game,
             actor,
             battleState,
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
         )
 
+        // One own die is not enough for the own-dice branch, and no opponent
+        // Battle die exists yet.
         assertFalse(handler.canExecute(request))
+
         actor.tokens.add(Token.WATER)
+        assertFalse(handler.canExecute(request))
+
+        val secondOwn = FixedEffectDie(10, 5)
+        actor.dice.addToHand(secondOwn)
+        battleState.grid.placeDie(actor, StrikeRow.MIDDLE, secondOwn)
         assertTrue(handler.canExecute(request))
 
-        battleState.grid.removeDie(actorDie)
-        assertFalse(handler.canExecute(request))
+        battleState.grid.removeDie(secondOwn)
+        actor.dice.removeExactFromHand(secondOwn)
+        val opponentDie = FixedEffectDie(6, 3)
+        opponent.dice.addToHand(opponentDie)
+        battleState.grid.placeDie(opponent, StrikeRow.BOTTOM, opponentDie)
+        assertTrue(handler.canExecute(request))
+    }
+
+    @Test
+    fun rootWellBattle_canRerollExactlyTwoOwnDice_forOneWater() {
+        val first = SequenceEffectDie(8, initial = 2, next = 5)
+        val second = SequenceEffectDie(10, initial = 3, next = 6)
+        val opponentDie = FixedEffectDie(12, 9)
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(first, second),
+            effectStrategy = CrossPlayerStrategy(preferOwnRootWell = true)
+        )
+        val opponent = EffectTestFixture.player(2, hand = listOf(opponentDie))
+        val game = EffectTestFixture.game(actor, opponent)
+        val battleState = BattleState(listOf(actor, opponent))
+        battleState.grid.placeDie(actor, StrikeRow.TOP, first)
+        battleState.grid.placeDie(actor, StrikeRow.MIDDLE, second)
+        battleState.grid.placeDie(opponent, StrikeRow.BOTTOM, opponentDie)
+        val water = game.grove.tokens.pull(Token.WATER)
+        check(water != null)
+        actor.tokens.add(water)
+
+        val request = battleRequest(
+            game, actor, battleState,
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
+        )
+
+        handler.execute(request, nested)
+
+        assertEquals(0, actor.tokens.waterCount)
+        assertEquals(5, first.value)
+        assertEquals(6, second.value)
+        assertEquals(9, opponentDie.value)
     }
 
     @Test
@@ -243,7 +287,8 @@ class CrossPlayerEffectHandlerTest {
 
     private class CrossPlayerStrategy(
         private val battleTargetOwner: PlayerId? = null,
-        private val swapOpponentOwner: PlayerId? = null
+        private val swapOpponentOwner: PlayerId? = null,
+        private val preferOwnRootWell: Boolean = false
     ) : FirstEffectChoiceStrategy() {
         override fun chooseBattleDie(
             request: ChooseEffectBattleDieRequest
@@ -251,6 +296,21 @@ class CrossPlayerEffectHandlerTest {
             battleTargetOwner?.let { owner ->
                 request.legalChoices.first { it.ownerId == owner }
             } ?: request.legalChoices.first()
+
+
+        override fun chooseRootWellBattle(
+            request: ChooseRootWellBattleRequest
+        ): RootWellBattleChoice =
+            if (preferOwnRootWell) {
+                request.legalChoices.first { it is RootWellBattleChoice.OwnDice }
+            } else {
+                battleTargetOwner?.let { owner ->
+                    request.legalChoices.first { choice ->
+                        choice is RootWellBattleChoice.OpponentDie &&
+                            choice.die.ownerId == owner
+                    }
+                } ?: request.legalChoices.first()
+            }
 
         override fun chooseCrossPlayerDieSwap(
             request: ChooseEffectCrossPlayerDieSwapRequest

@@ -231,7 +231,8 @@ class ResourceEffectHandler : EffectHandler {
             val chosen = request.actor.decisions.reward.chooseCritter(
                 ChooseCritterRequest(
                     legalChoices = legalChoices,
-                    ownedCritters = request.actor.critters.all
+                    ownedCritters = request.actor.critters.all,
+                    context = request.decisionContext()
                 )
             )
             decisionCheck(chosen in legalChoices) {
@@ -337,7 +338,8 @@ class ResourceEffectHandler : EffectHandler {
         val chosen = request.actor.decisions.effect.chooseDieSize(
             ChooseEffectDieSizeRequest(
                 effect = request.effect,
-                legalChoices = legalChoices
+                legalChoices = legalChoices,
+                context = request.decisionContext()
             )
         )
         decisionCheck(chosen in legalChoices) {
@@ -361,7 +363,8 @@ class ResourceEffectHandler : EffectHandler {
         val chosen = request.actor.decisions.effect.choosePlayer(
             ChooseEffectPlayerRequest(
                 effect = request.effect,
-                legalChoices = legalChoices
+                legalChoices = legalChoices,
+                context = request.decisionContext()
             )
         )
         decisionCheck(chosen in legalChoices) {

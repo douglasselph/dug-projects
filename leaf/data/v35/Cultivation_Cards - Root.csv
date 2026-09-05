@@ -4,7 +4,7 @@ quantity,name,title,type,cost,line_icon,vp_icon,type_icon,fg_color,text_color,fu
 6,Root_05_03,Root on a Roll,Root,5,,{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_resonance_full.url }},{{ images.back_root2.url }},{{ images.cc_root_on_a_roll.url }},"Reroll a die until it rolls 3+.
 Ignore Roll Rewards."
 6,Root_05_04,Root Well,Root,5,{{ images.water_battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_reservoir_full.url }},{{ images.back_root2.url }},{{ images.cc_root_well.url }},"Gain 1 Water.
-<battle/> Spend 3 Water to reroll any die on the Battle Grid—yours or an opponent’s."
+<battle/> Spend 1 Water to reroll 2 of your dice, or 1 of your opponent's."
 6,Root_07_01,Root & Scoot,Root,7,{{ images.battle.url }},{{ images.victory.url }},{{ images.icon_root.url }},8f754f,fcf5d9,{{ images.root_bulwark_full.url }},{{ images.back_root2.url }},{{ images.cc_root_and_scoot.url }},"🎲 Raise any die +1.
 <battle/> Remove all your dice 
 from one Strike Square,

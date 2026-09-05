@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.game.operation.GraftPlan
 import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
 import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyDieResource
@@ -55,7 +56,10 @@ class BuyCoordinator(
                 if (legalItems.isEmpty()) break
 
                 val choice = player.decisions.buy.choosePurchase(
-                    ChoosePurchaseRequest(legalItems)
+                    ChoosePurchaseRequest(
+                        options = legalItems,
+                        context = DecisionContextFactory.create(game, player)
+                    )
                 )
                 if (choice == BuyChoice.Done) break
                 decisionCheck(choice is BuyChoice.Purchase && choice.item in legalItems) {
@@ -74,7 +78,8 @@ class BuyCoordinator(
                                 critter = critter,
                                 value = player.critterValues.valueOf(critter)
                             )
-                        }
+                        },
+                        context = DecisionContextFactory.create(game, player)
                     )
                 )
                 val resolvedPayment = validatePayment(player, item, payment)

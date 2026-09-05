@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.player.decision.effect.ChooseBeeSourceRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectBeeSourceChoice
 import dugsolutions.leaf.v35.tokens.Critter
@@ -47,7 +48,8 @@ class BeeLovedBloomEffect : EffectHandler {
                 request.actor.decisions.effect.chooseBeeSource(
                     ChooseBeeSourceRequest(
                         effect = request.effect,
-                        legalChoices = legalSources
+                        legalChoices = legalSources,
+                        context = request.decisionContext()
                     )
                 )
 

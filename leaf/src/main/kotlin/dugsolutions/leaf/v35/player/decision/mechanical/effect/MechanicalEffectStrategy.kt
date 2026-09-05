@@ -12,6 +12,10 @@ class MechanicalEffectStrategy : EffectStrategy {
         request: ChooseEffectBattleDieRequest
     ): EffectBattleDieChoice = request.legalChoices.first()
 
+    override fun chooseRootWellBattle(
+        request: ChooseRootWellBattleRequest
+    ): RootWellBattleChoice = request.legalChoices.first()
+
     override fun chooseCrossPlayerDieSwap(
         request: ChooseEffectCrossPlayerDieSwapRequest
     ): EffectCrossPlayerDieSwapChoice = request.legalChoices.first()

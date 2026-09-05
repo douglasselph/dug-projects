@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.cultivation
 
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
@@ -33,7 +34,8 @@ sealed interface CultivationAction {
 class ChooseCultivationActionRequest(
     val roundCard: RoundCard,
     val mainActionsRemaining: Int,
-    legalChoices: List<CultivationAction>
+    legalChoices: List<CultivationAction>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<CultivationAction> = legalChoices.toList()
 

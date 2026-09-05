@@ -154,7 +154,7 @@ class DefaultGameEffectExecutor(
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects
 
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE,
             GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE ->
                 crossPlayerEffects
 

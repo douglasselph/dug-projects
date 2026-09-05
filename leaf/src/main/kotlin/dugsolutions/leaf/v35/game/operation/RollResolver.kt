@@ -10,6 +10,7 @@ import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.tokens.Critter
@@ -78,7 +79,8 @@ data class RollResolution(
 class RollResolver(
     private val grove: Grove,
     private val chronicle: Chronicle,
-    private val immediateWispHandler: ((Player, WispCard) -> Unit)? = null
+    private val immediateWispHandler: ((Player, WispCard) -> Unit)? = null,
+    private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY }
 ) {
 
     /**
@@ -190,7 +192,8 @@ class RollResolver(
                 ChooseCritterRequest(
                     legalChoices = legalChoices,
                     ownedCritters =
-                        player.critters.all
+                        player.critters.all,
+                    context = decisionContext(player)
                 )
             )
 

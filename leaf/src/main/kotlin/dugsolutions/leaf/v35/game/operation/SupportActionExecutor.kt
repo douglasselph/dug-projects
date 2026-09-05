@@ -15,6 +15,7 @@ import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.support.ButterflyRollChoice
 import dugsolutions.leaf.v35.player.decision.support.ChooseButterflyRollRequest
@@ -65,7 +66,7 @@ class SupportActionExecutor(
                 useWormFlip(game, player, action)
 
             is SupportAction.UseButterfly ->
-                useButterfly(player, action)
+                useButterfly(game, player, null, action)
         }
 
         recordAction(game, player, action, GameEffectPhase.CULTIVATION)
@@ -115,7 +116,7 @@ class SupportActionExecutor(
                 ) {
                     "Battle Butterfly target is not currently on player ${player.id.value}'s Grid: ${action.die}"
                 }
-                useButterfly(player, action)
+                useButterfly(game, player, battleState, action)
             }
         }
 
@@ -222,7 +223,8 @@ class SupportActionExecutor(
             battleState = battleState,
             player = player,
             die = die,
-            reason = BattleDiePlacementReason.MULCH
+            reason = BattleDiePlacementReason.MULCH,
+            context = DecisionContextFactory.create(game, player, battleState)
         )
     }
 
@@ -272,7 +274,9 @@ class SupportActionExecutor(
     }
 
     private fun useButterfly(
+        game: Game,
         player: Player,
+        battleState: BattleState?,
         action: SupportAction.UseButterfly
     ) {
         decisionCheck(action.butterfly in player.butterflies.all) {
@@ -289,7 +293,8 @@ class SupportActionExecutor(
             ChooseButterflyRollRequest(
                 sides = die.sides,
                 originalValue = originalValue,
-                rerolledValue = rerolled.die.value
+                rerolledValue = rerolled.die.value,
+                context = DecisionContextFactory.create(game, player, battleState)
             )
         )
 

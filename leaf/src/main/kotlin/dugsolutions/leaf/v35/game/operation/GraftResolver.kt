@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import dugsolutions.leaf.v35.player.decision.placement.ChooseCreaturePlacementRequest
@@ -16,14 +17,19 @@ data class GraftPlan(
 )
 
 class GraftResolver(
-    private val chronicle: Chronicle
+    private val chronicle: Chronicle,
+    private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY }
 ) {
     fun prepare(player: Player, card: PlantCard): GraftPlan? {
         val legal = player.creature.legalPlacements(card)
         if (legal.isEmpty()) return null
 
         val placement = player.decisions.placement.choose(
-            ChooseCreaturePlacementRequest(card, legal)
+            ChooseCreaturePlacementRequest(
+                card = card,
+                legalPlacements = legal,
+                context = decisionContext(player)
+            )
         )
         decisionCheck(placement in legal) {
             "CreaturePlacementStrategy returned an illegal placement: $placement"

@@ -77,9 +77,9 @@ Ignore Roll Rewards.
             register(
                 """
 Gain 1 Water.
-<battle/> Spend 3 Water to reroll any die on the Battle Grid—yours or an opponent’s.
+<battle/> Spend 1 Water to reroll 2 of your dice, or 1 of your opponent's.
                 """,
-                GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE
+                GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
             )
 
             register(

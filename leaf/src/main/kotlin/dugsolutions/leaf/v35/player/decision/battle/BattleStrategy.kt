@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -37,7 +38,8 @@ sealed interface BattleTurnAction {
 
 class ChooseBattleFirstMainActionRequest(
     val roundCard: RoundCard,
-    legalChoices: List<BattleMainAction>
+    legalChoices: List<BattleMainAction>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<BattleMainAction> = legalChoices.toList()
 
@@ -51,7 +53,8 @@ class ChooseBattleFirstMainActionRequest(
 class ChooseBattleTurnActionRequest(
     val roundCard: RoundCard,
     val passNumber: Int,
-    legalChoices: List<BattleTurnAction>
+    legalChoices: List<BattleTurnAction>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<BattleTurnAction> = legalChoices.toList()
 
@@ -79,7 +82,8 @@ enum class BattleDiePlacementReason {
 class ChooseBattleDiePlacementRequest(
     val die: HandDieChoice,
     val reason: BattleDiePlacementReason,
-    legalRows: List<StrikeRow>
+    legalRows: List<StrikeRow>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalRows: List<StrikeRow> = legalRows.toList()
 

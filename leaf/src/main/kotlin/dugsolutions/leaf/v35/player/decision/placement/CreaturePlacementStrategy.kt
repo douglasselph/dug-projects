@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.placement
 
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
 
 /**
@@ -13,7 +14,8 @@ import dugsolutions.leaf.v35.player.creature.GraftPlacement
  */
 class ChooseCreaturePlacementRequest(
     val card: PlantCard,
-    legalPlacements: List<GraftPlacement>
+    legalPlacements: List<GraftPlacement>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalPlacements: List<GraftPlacement> =
         legalPlacements.toList()

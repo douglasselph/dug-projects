@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.effect.handler.handChoices
 import dugsolutions.leaf.v35.effect.handler.resolveHandDie
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCritterDieRequest
@@ -39,7 +40,8 @@ class VineAndDineEffect : EffectHandler {
         val chosen = request.actor.decisions.effect.chooseCritterAndDie(
             ChooseEffectCritterDieRequest(
                 effect = request.effect,
-                legalChoices = legalChoices
+                legalChoices = legalChoices,
+                context = request.decisionContext()
             )
         )
         decisionCheck(chosen in legalChoices) {

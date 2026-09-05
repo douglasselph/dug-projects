@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
@@ -132,7 +133,8 @@ class CultivationBuildCoordinator(
                     ChooseCultivationActionRequest(
                         roundCard = roundCard,
                         mainActionsRemaining = 2 - mainActionsUsed,
-                        legalChoices = legalChoices
+                        legalChoices = legalChoices,
+                        context = DecisionContextFactory.create(game, player)
                     )
                 )
                 decisionCheck(chosen in legalChoices) {

@@ -134,7 +134,7 @@ class EffectFamilySanityTest {
 
             assertEquals(1, snapshot.player(1).water)
             assertEquals(
-                GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE,
+                GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE,
                 plantEffectsFor(harness, 1).single().effect
             )
             randomizer.assertExhausted()

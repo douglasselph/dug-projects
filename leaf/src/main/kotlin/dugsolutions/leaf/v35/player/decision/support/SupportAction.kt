@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.support
 
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Token
 import dugsolutions.leaf.v35.wisp.domain.WispCard
@@ -44,7 +45,8 @@ enum class ButterflyRollChoice {
 class ChooseButterflyRollRequest(
     val sides: Int,
     val originalValue: Int,
-    val rerolledValue: Int
+    val rerolledValue: Int,
+    val context: DecisionContext = DecisionContext.EMPTY
 )
 
 interface SupportStrategy {

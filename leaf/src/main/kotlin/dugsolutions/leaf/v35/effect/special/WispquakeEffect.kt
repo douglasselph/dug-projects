@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.effect.handler.chooseOptionalHandDie
 import dugsolutions.leaf.v35.effect.handler.handChoices
 import dugsolutions.leaf.v35.game.operation.RollResolver
@@ -55,7 +56,8 @@ class WispquakeEffect : EffectHandler {
                         plantEffectPath = request.plantEffectPath
                     )
                 )
-            }
+            },
+            decisionContext = { player -> request.decisionContextFor(player) }
         )
 
         /*

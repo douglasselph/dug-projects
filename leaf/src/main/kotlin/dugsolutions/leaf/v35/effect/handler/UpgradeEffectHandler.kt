@@ -171,6 +171,7 @@ class UpgradeEffectHandler(
                         plantEffectPath = request.plantEffectPath
                     )
                 )
-            }
+            },
+            decisionContext = { player -> request.decisionContextFor(player) }
         )
 }

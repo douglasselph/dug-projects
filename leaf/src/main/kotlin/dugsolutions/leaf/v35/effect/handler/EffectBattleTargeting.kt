@@ -11,9 +11,11 @@ import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectBattleDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCrossPlayerDieSwapRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectStrikeRowRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseRootWellBattleRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectBattleDieChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectCrossPlayerDieSwapChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.RootWellBattleChoice
 import dugsolutions.leaf.v35.random.die.Die
 
 /**
@@ -121,6 +123,60 @@ internal fun battleDieChoices(
     }
 }
 
+
+/**
+ * All legal Root Well Battle branches with their complete targets.
+ *
+ * The own-dice branch requires exactly two distinct actor-controlled Battle
+ * dice. The opponent branch requires exactly one opponent-controlled die.
+ */
+internal fun rootWellBattleChoices(
+    request: GameEffectRequest
+): List<RootWellBattleChoice> {
+    val all = battleDieChoices(request)
+    val own = all.filter { it.ownerId == request.actor.id }
+    val opponents = all.filter { it.ownerId != request.actor.id }
+
+    return buildList {
+        own.indices.forEach { firstIndex ->
+            for (secondIndex in firstIndex + 1 until own.size) {
+                add(
+                    RootWellBattleChoice.OwnDice(
+                        first = own[firstIndex],
+                        second = own[secondIndex]
+                    )
+                )
+            }
+        }
+        opponents.forEach { die ->
+            add(RootWellBattleChoice.OpponentDie(die))
+        }
+    }
+}
+
+internal fun chooseRootWellBattle(
+    request: GameEffectRequest,
+    legalChoices: List<RootWellBattleChoice>
+): RootWellBattleChoice {
+    effectCheck(legalChoices.isNotEmpty()) {
+        "No legal Root Well Battle targets"
+    }
+
+    val chosen = request.actor.decisions.effect.chooseRootWellBattle(
+        ChooseRootWellBattleRequest(
+            effect = request.effect,
+            legalChoices = legalChoices,
+            context = request.decisionContext()
+        )
+    )
+
+    decisionCheck(chosen in legalChoices) {
+        "EffectStrategy returned illegal Root Well Battle choice: " +
+            "$chosen; legal=$legalChoices"
+    }
+    return chosen
+}
+
 /** All legal same-size actor/opponent Battle-die pairings for Pollen Theft. */
 internal fun crossPlayerSameSizeSwapChoices(
     request: GameEffectRequest
@@ -156,7 +212,8 @@ internal fun chooseRequiredBattleDie(
     val chosen = request.actor.decisions.effect.chooseBattleDie(
         ChooseEffectBattleDieRequest(
             effect = request.effect,
-            legalChoices = legalChoices
+            legalChoices = legalChoices,
+            context = request.decisionContext()
         )
     )
 
@@ -178,7 +235,8 @@ internal fun chooseRequiredCrossPlayerDieSwap(
     val chosen = request.actor.decisions.effect.chooseCrossPlayerDieSwap(
         ChooseEffectCrossPlayerDieSwapRequest(
             effect = request.effect,
-            legalChoices = legalChoices
+            legalChoices = legalChoices,
+            context = request.decisionContext()
         )
     )
 
@@ -236,7 +294,8 @@ internal fun chooseRequiredStrikeRow(
     val chosen = request.actor.decisions.effect.chooseStrikeRow(
         ChooseEffectStrikeRowRequest(
             effect = request.effect,
-            legalChoices = legalChoices
+            legalChoices = legalChoices,
+            context = request.decisionContext()
         )
     )
 

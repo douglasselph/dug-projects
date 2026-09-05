@@ -195,7 +195,8 @@ class DieValueEffectHandler : EffectHandler {
                 val chosen = request.actor.decisions.effect.chooseDiePair(
                     ChooseEffectDiePairRequest(
                         effect = request.effect,
-                        legalChoices = legalChoices
+                        legalChoices = legalChoices,
+                        context = request.decisionContext()
                     )
                 )
                 decisionCheck(chosen in legalChoices) {

@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.game.round.RoundExecutor
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -72,7 +73,10 @@ class CultivationRound(
     /** Production Step 4 seam used by deterministic integration scenarios. */
     fun executeBuy(game: Game): BuyPhaseResult =
         BuyCoordinator(
-            graftResolver = GraftResolver(game.chronicle),
+            graftResolver = GraftResolver(
+                chronicle = game.chronicle,
+                decisionContext = { player -> DecisionContextFactory.create(game, player) }
+            ),
             createDie = { sides -> game.dieFactory(sides) }
         ).execute(game)
 
@@ -96,7 +100,8 @@ class CultivationRound(
                         phase = GameEffectPhase.CULTIVATION
                     )
                 )
-            }
+            },
+            decisionContext = { player -> DecisionContextFactory.create(game, player) }
         )
         val refreshResolver = RefreshResolver(game.chronicle)
         val supportActionExecutor = SupportActionExecutor(

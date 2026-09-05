@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.effect
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
@@ -29,7 +30,8 @@ data class EffectDieChoice(
 
 class ChooseEffectDieRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectDieChoice>
+    legalChoices: List<EffectDieChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectDieChoice> = legalChoices.toList()
 
@@ -51,9 +53,52 @@ data class EffectBattleDieChoice(
     val die: EffectDieChoice
 )
 
+/**
+ * Complete Battle branch/target choice for Root Well's current effect.
+ *
+ * OwnDice always contains exactly two distinct actor-controlled Battle dice.
+ * OpponentDie always names exactly one die controlled by another player.
+ */
+sealed interface RootWellBattleChoice {
+    data class OwnDice(
+        val first: EffectBattleDieChoice,
+        val second: EffectBattleDieChoice
+    ) : RootWellBattleChoice {
+        init {
+            require(first.ownerId == second.ownerId) {
+                "Root Well own-dice choice requires one owner"
+            }
+            require(first != second) {
+                "Root Well must reroll two distinct own dice"
+            }
+        }
+
+        val dice: List<EffectBattleDieChoice> get() = listOf(first, second)
+    }
+
+    data class OpponentDie(
+        val die: EffectBattleDieChoice
+    ) : RootWellBattleChoice
+}
+
+class ChooseRootWellBattleRequest(
+    val effect: GameEffect,
+    legalChoices: List<RootWellBattleChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
+) {
+    val legalChoices: List<RootWellBattleChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Root Well Battle decision requires at least one legal choice"
+        }
+    }
+}
+
 class ChooseEffectBattleDieRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectBattleDieChoice>
+    legalChoices: List<EffectBattleDieChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectBattleDieChoice> = legalChoices.toList()
 
@@ -88,7 +133,8 @@ data class EffectCrossPlayerDieSwapChoice(
 
 class ChooseEffectCrossPlayerDieSwapRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectCrossPlayerDieSwapChoice>
+    legalChoices: List<EffectCrossPlayerDieSwapChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectCrossPlayerDieSwapChoice> =
         legalChoices.toList()
@@ -102,7 +148,8 @@ class ChooseEffectCrossPlayerDieSwapRequest(
 
 class ChooseOptionalEffectDieRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectDieChoice>
+    legalChoices: List<EffectDieChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectDieChoice> = legalChoices.toList()
 }
@@ -130,7 +177,8 @@ class ChooseEffectDiceRequest(
     val effect: GameEffect,
     legalChoices: List<EffectDieChoice>,
     val minChoices: Int = 0,
-    val maxChoices: Int = legalChoices.size
+    val maxChoices: Int = legalChoices.size,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectDieChoice> = legalChoices.toList()
 
@@ -159,7 +207,8 @@ data class EffectDiePairChoice(
 
 class ChooseEffectDiePairRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectDiePairChoice>
+    legalChoices: List<EffectDiePairChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectDiePairChoice> = legalChoices.toList()
 
@@ -172,7 +221,8 @@ class ChooseEffectDiePairRequest(
 
 class ChooseOptionalEffectDiePairRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectDiePairChoice>
+    legalChoices: List<EffectDiePairChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectDiePairChoice> = legalChoices.toList()
 }
@@ -185,7 +235,8 @@ data class EffectCritterDieChoice(
 
 class ChooseEffectCritterDieRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectCritterDieChoice>
+    legalChoices: List<EffectCritterDieChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectCritterDieChoice> = legalChoices.toList()
 
@@ -213,7 +264,8 @@ sealed interface PetalToDie4Choice {
 
 class ChoosePetalToDie4Request(
     val effect: GameEffect,
-    legalChoices: List<PetalToDie4Choice>
+    legalChoices: List<PetalToDie4Choice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<PetalToDie4Choice> = legalChoices.toList()
 
@@ -240,7 +292,8 @@ sealed interface EffectBeeSourceChoice {
 
 class ChooseBeeSourceRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectBeeSourceChoice>
+    legalChoices: List<EffectBeeSourceChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectBeeSourceChoice> = legalChoices.toList()
 
@@ -259,7 +312,8 @@ data class EffectButterflyTargetChoice(
 
 class ChooseEffectButterflyTargetRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectButterflyTargetChoice>
+    legalChoices: List<EffectButterflyTargetChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectButterflyTargetChoice> = legalChoices.toList()
 
@@ -285,7 +339,8 @@ data class EffectPlantChoice(
 
 class ChooseOptionalEffectPlantRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectPlantChoice>
+    legalChoices: List<EffectPlantChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectPlantChoice> = legalChoices.toList()
 }
@@ -320,7 +375,8 @@ sealed interface EffectOpponentPlantWoundChoice {
 
 class ChooseEffectOpponentPlantWoundRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectOpponentPlantWoundChoice>
+    legalChoices: List<EffectOpponentPlantWoundChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectOpponentPlantWoundChoice> =
         legalChoices.toList()
@@ -341,7 +397,8 @@ class ChooseEffectOpponentPlantWoundRequest(
  */
 class ChooseEffectPlantRequest(
     val effect: GameEffect,
-    legalChoices: List<EffectPlantChoice>
+    legalChoices: List<EffectPlantChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectPlantChoice> = legalChoices.toList()
 
@@ -374,7 +431,8 @@ sealed interface OEdelweissChoice {
 class ChooseOEdelweissRequest(
     val effect: GameEffect,
     val choiceNumber: Int,
-    legalChoices: List<OEdelweissChoice>
+    legalChoices: List<OEdelweissChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<OEdelweissChoice> = legalChoices.toList()
 
@@ -422,7 +480,8 @@ class ChooseWispsToKeepRequest(
     val effect: GameEffect,
     val playerId: PlayerId,
     val keepLimit: Int,
-    legalChoices: List<EffectWispChoice>
+    legalChoices: List<EffectWispChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<EffectWispChoice> =
         legalChoices.toList()
@@ -441,7 +500,8 @@ class ChooseWispsToKeepRequest(
 /** Choose one currently available Graft Bed die size. */
 class ChooseEffectDieSizeRequest(
     val effect: GameEffect,
-    legalChoices: List<DieSides>
+    legalChoices: List<DieSides>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<DieSides> = legalChoices.toList()
 
@@ -455,7 +515,8 @@ class ChooseEffectDieSizeRequest(
 /** Choose one exact player target. */
 class ChooseEffectPlayerRequest(
     val effect: GameEffect,
-    legalChoices: List<PlayerId>
+    legalChoices: List<PlayerId>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<PlayerId> = legalChoices.toList()
 
@@ -469,7 +530,8 @@ class ChooseEffectPlayerRequest(
 /** Choose one currently legal Strike Row for a Battle effect. */
 class ChooseEffectStrikeRowRequest(
     val effect: GameEffect,
-    legalChoices: List<StrikeRow>
+    legalChoices: List<StrikeRow>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<StrikeRow> = legalChoices.toList()
 
@@ -494,6 +556,11 @@ interface EffectStrategy {
     fun chooseBattleDie(
         request: ChooseEffectBattleDieRequest
     ): EffectBattleDieChoice = request.legalChoices.first()
+
+    /** Choose Root Well's Battle branch together with all of its die targets. */
+    fun chooseRootWellBattle(
+        request: ChooseRootWellBattleRequest
+    ): RootWellBattleChoice = request.legalChoices.first()
 
     /** Choose both sides of one legal same-size cross-player Battle swap. */
     fun chooseCrossPlayerDieSwap(

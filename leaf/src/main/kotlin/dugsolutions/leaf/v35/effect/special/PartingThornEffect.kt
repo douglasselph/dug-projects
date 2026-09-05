@@ -8,6 +8,8 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 import dugsolutions.leaf.v35.player.decision.effect.ChooseOptionalEffectPlantRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
@@ -65,7 +67,8 @@ class PartingThornEffect : EffectHandler {
             request.actor.decisions.effect.chooseOptionalPlant(
                 ChooseOptionalEffectPlantRequest(
                     effect = request.effect,
-                    legalChoices = legalChoices
+                    legalChoices = legalChoices,
+                    context = request.decisionContext()
                 )
             ) ?: return
 
@@ -102,7 +105,8 @@ class PartingThornEffect : EffectHandler {
         val woundResolver =
             WoundResolver(
                 grove = request.game.grove,
-                chronicle = request.game.chronicle
+                chronicle = request.game.chronicle,
+                decisionContext = { player -> request.decisionContextFor(player) }
             )
 
         request.game.players

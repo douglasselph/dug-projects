@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.reward
 
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.tokens.Critter
 
 /**
@@ -10,7 +11,8 @@ import dugsolutions.leaf.v35.tokens.Critter
  */
 class ChooseCritterRequest(
     legalChoices: List<Critter>,
-    ownedCritters: List<Critter>
+    ownedCritters: List<Critter>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<Critter> = legalChoices.toList()
     val ownedCritters: List<Critter> = ownedCritters.toList()

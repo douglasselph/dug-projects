@@ -17,8 +17,9 @@ import dugsolutions.leaf.v35.tokens.Token
  * Battle die.
  *
  * Root Well owns both of its phase branches here so one GameEffect has one
- * execution owner: Cultivation gains Water; Battle spends 3 Water to reroll
- * any currently controlled die on the Battle Grid. Pollen Theft exchanges one
+ * execution owner: Cultivation gains Water; Battle spends 1 Water to reroll
+ * either two actor-controlled Battle dice or one opponent-controlled Battle
+ * die. Pollen Theft exchanges one
  * actor die with one same-size opponent die without rerolling either.
  */
 class CrossPlayerEffectHandler : EffectHandler {
@@ -27,14 +28,14 @@ class CrossPlayerEffectHandler : EffectHandler {
         request: GameEffectRequest
     ): Boolean =
         when (request.effect) {
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE ->
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION ->
                         request.game.grove.tokens.hasWater
 
                     GameEffectPhase.BATTLE ->
-                        request.actor.tokens.waterCount >= 3 &&
-                            battleDieChoices(request).isNotEmpty()
+                        request.actor.tokens.waterCount >= 1 &&
+                            rootWellBattleChoices(request).isNotEmpty()
                 }
 
             GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE ->
@@ -53,7 +54,7 @@ class CrossPlayerEffectHandler : EffectHandler {
         }
 
         when (request.effect) {
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE ->
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION -> gainWater(request)
                     GameEffectPhase.BATTLE -> rootWellBattle(request, executor)
@@ -84,34 +85,50 @@ class CrossPlayerEffectHandler : EffectHandler {
         request: GameEffectRequest,
         executor: GameEffectExecutor
     ) {
-        val chosen = chooseRequiredBattleDie(
+        val chosen = chooseRootWellBattle(
             request = request,
-            legalChoices = battleDieChoices(request)
-        )
-        val (targetPlayer, targetDie) = resolveBattleDieChoice(
-            request = request,
-            choice = chosen
+            legalChoices = rootWellBattleChoices(request)
         )
 
-        repeat(3) {
-            stateCheck(
-                request.actor.tokens.pull(Token.WATER) != null,
-                context = "RootWell"
-            ) {
-                "Validated Root Well could not spend 3 Water"
-            }
-            request.game.grove.tokens.add(Token.WATER)
+        stateCheck(
+            request.actor.tokens.pull(Token.WATER) != null,
+            context = "RootWell"
+        ) {
+            "Validated Root Well could not spend 1 Water"
         }
+        request.game.grove.tokens.add(Token.WATER)
 
-        /*
-         * The die's current controller receives any Roll Reward, even when the
-         * actor deliberately rerolls an opponent's die. RollResolver does not
-         * move the die, so its Strike Square remains unchanged.
-         */
-        rollResolver(request, executor).roll(
-            player = targetPlayer,
-            die = targetDie
-        )
+        when (chosen) {
+            is dugsolutions.leaf.v35.player.decision.effect.RootWellBattleChoice.OwnDice -> {
+                // Resolve both live targets before either reroll occurs. The
+                // first reroll can earn an immediate Wisp whose effect changes
+                // other Battle dice; resolving both up front keeps the second
+                // target stable without exposing mutable dice to the strategy.
+                val targets = chosen.dice.map { choice ->
+                    resolveBattleDieChoice(request, choice)
+                }
+                targets.forEach { (owner, _) ->
+                    stateCheck(owner.id == request.actor.id, context = "RootWell") {
+                        "Root Well own-dice branch targeted another player"
+                    }
+                }
+                targets.forEach { (owner, die) ->
+                    rollResolver(request, executor).roll(owner, die)
+                }
+            }
+
+            is dugsolutions.leaf.v35.player.decision.effect.RootWellBattleChoice.OpponentDie -> {
+                val (owner, die) = resolveBattleDieChoice(request, chosen.die)
+                stateCheck(owner.id != request.actor.id, context = "RootWell") {
+                    "Root Well opponent branch targeted the actor"
+                }
+                /*
+                 * The current controller receives any Roll Reward. RollResolver
+                 * does not move the die, so its Strike Square is unchanged.
+                 */
+                rollResolver(request, executor).roll(owner, die)
+            }
+        }
     }
 
     private fun pollenTheft(
@@ -185,6 +202,7 @@ class CrossPlayerEffectHandler : EffectHandler {
                         plantEffectPath = request.plantEffectPath
                     )
                 )
-            }
+            },
+            decisionContext = { player -> request.decisionContextFor(player) }
         )
 }

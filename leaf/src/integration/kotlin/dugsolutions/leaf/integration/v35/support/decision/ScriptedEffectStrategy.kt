@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectBattleDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectButterflyTargetRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCritterDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCrossPlayerDieSwapRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseRootWellBattleRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
@@ -37,6 +38,7 @@ import dugsolutions.leaf.v35.player.decision.effect.EffectStrategy
 import dugsolutions.leaf.v35.player.decision.effect.EffectWispsChoice
 import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
 import dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice
+import dugsolutions.leaf.v35.player.decision.effect.RootWellBattleChoice
 import dugsolutions.leaf.v35.random.die.DieSides
 
 /**
@@ -51,6 +53,7 @@ class ScriptedEffectStrategy(
 ) : EffectStrategy {
     private val dice = DecisionScript<ChooseEffectDieRequest, EffectDieChoice>("Effect die choices")
     private val battleDice = DecisionScript<ChooseEffectBattleDieRequest, EffectBattleDieChoice>("Effect Battle-die choices")
+    private val rootWell = DecisionScript<ChooseRootWellBattleRequest, RootWellBattleChoice>("Root Well Battle choices")
     private val swaps = DecisionScript<ChooseEffectCrossPlayerDieSwapRequest, EffectCrossPlayerDieSwapChoice>("Effect cross-player swaps")
     private val optionalDice = DecisionScript<ChooseOptionalEffectDieRequest, EffectDieChoice?>("Optional effect die choices")
     private val diceSets = DecisionScript<ChooseEffectDiceRequest, EffectDiceChoice>("Effect dice-set choices")
@@ -71,6 +74,7 @@ class ScriptedEffectStrategy(
 
     fun thenDie(selector: (ChooseEffectDieRequest) -> EffectDieChoice) = apply { dice.then(selector) }
     fun thenBattleDie(selector: (ChooseEffectBattleDieRequest) -> EffectBattleDieChoice) = apply { battleDice.then(selector) }
+    fun thenRootWellBattle(selector: (ChooseRootWellBattleRequest) -> RootWellBattleChoice) = apply { rootWell.then(selector) }
     fun thenCrossPlayerSwap(selector: (ChooseEffectCrossPlayerDieSwapRequest) -> EffectCrossPlayerDieSwapChoice) = apply { swaps.then(selector) }
     fun thenOptionalDie(selector: (ChooseOptionalEffectDieRequest) -> EffectDieChoice?) = apply { optionalDice.then(selector) }
     fun thenDice(selector: (ChooseEffectDiceRequest) -> EffectDiceChoice) = apply { diceSets.then(selector) }
@@ -94,6 +98,9 @@ class ScriptedEffectStrategy(
 
     override fun chooseBattleDie(request: ChooseEffectBattleDieRequest): EffectBattleDieChoice =
         legal(battleDice.nextOrElse(request, fallback::chooseBattleDie), request.legalChoices, "Battle die")
+
+    override fun chooseRootWellBattle(request: ChooseRootWellBattleRequest): RootWellBattleChoice =
+        legal(rootWell.nextOrElse(request, fallback::chooseRootWellBattle), request.legalChoices, "Root Well Battle")
 
     override fun chooseCrossPlayerDieSwap(request: ChooseEffectCrossPlayerDieSwapRequest): EffectCrossPlayerDieSwapChoice =
         legal(swaps.nextOrElse(request, fallback::chooseCrossPlayerDieSwap), request.legalChoices, "cross-player swap")
@@ -182,6 +189,7 @@ class ScriptedEffectStrategy(
     fun assertExhausted() {
         dice.assertExhausted()
         battleDice.assertExhausted()
+        rootWell.assertExhausted()
         swaps.assertExhausted()
         optionalDice.assertExhausted()
         diceSets.assertExhausted()

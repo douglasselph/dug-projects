@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -74,6 +75,7 @@ class WispReckoningEffect : EffectHandler {
                     }
                     .forEach { opponent ->
                         createTrimPlan(
+                            request = request,
                             player = opponent,
                             limit =
                                 OPPONENT_KEEP_LIMIT,
@@ -85,6 +87,7 @@ class WispReckoningEffect : EffectHandler {
                     }
 
                 createTrimPlan(
+                    request = request,
                     player = request.actor,
                     limit = ACTOR_KEEP_LIMIT,
                     sourceToExclude =
@@ -102,6 +105,7 @@ class WispReckoningEffect : EffectHandler {
     }
 
     private fun createTrimPlan(
+        request: GameEffectRequest,
         player: Player,
         limit: Int,
         sourceToExclude: WispCard?,
@@ -135,7 +139,8 @@ class WispReckoningEffect : EffectHandler {
                         playerId = player.id,
                         keepLimit = limit,
                         legalChoices =
-                            legalChoices
+                            legalChoices,
+                        context = request.decisionContextFor(player)
                     )
                 )
 

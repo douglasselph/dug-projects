@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectButterflyTargetRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectButterflyTargetChoice
 
@@ -43,7 +44,8 @@ class AlluringNectarEffect : EffectHandler {
                 request.actor.decisions.effect.chooseButterflyTarget(
                     ChooseEffectButterflyTargetRequest(
                         effect = request.effect,
-                        legalChoices = legalChoices
+                        legalChoices = legalChoices,
+                        context = request.decisionContext()
                     )
                 )
 

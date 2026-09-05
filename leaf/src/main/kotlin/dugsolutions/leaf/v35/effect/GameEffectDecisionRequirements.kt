@@ -15,6 +15,7 @@ package dugsolutions.leaf.v35.effect
 enum class EffectDecisionMechanism {
     EFFECT_DIE,
     EFFECT_BATTLE_DIE,
+    EFFECT_ROOT_WELL_BATTLE,
     EFFECT_CROSS_PLAYER_DIE_SWAP,
     EFFECT_OPTIONAL_DIE,
     EFFECT_DICE_SET,
@@ -144,10 +145,10 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
                 same(EffectDecisionMechanism.EFFECT_BEE_SOURCE)
 
-            GameEffect.GAIN_WATER_AND_SPEND_3_TO_REROLL_BATTLE_DIE ->
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE ->
                 phased(
                     cultivation = emptySet(),
-                    battle = setOf(EffectDecisionMechanism.EFFECT_BATTLE_DIE)
+                    battle = setOf(EffectDecisionMechanism.EFFECT_ROOT_WELL_BATTLE)
                 )
 
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->

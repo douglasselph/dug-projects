@@ -19,6 +19,7 @@ import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 import dugsolutions.leaf.v35.game.round.RoundExecutor
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
@@ -172,7 +173,10 @@ class BattleRound(
         StrikeResolver(
             woundResolver = WoundResolver(
                 grove = game.grove,
-                chronicle = game.chronicle
+                chronicle = game.chronicle,
+                decisionContext = { player ->
+                    DecisionContextFactory.create(game, player, battleState)
+                }
             )
         ).resolveAll(
             game = game,
@@ -219,6 +223,9 @@ class BattleRound(
                         battleState = battleState
                     )
                 )
+            },
+            decisionContext = { player ->
+                DecisionContextFactory.create(game, player, battleState)
             }
         )
 

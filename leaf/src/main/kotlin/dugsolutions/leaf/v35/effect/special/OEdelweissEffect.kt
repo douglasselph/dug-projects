@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
+import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -69,7 +70,8 @@ class OEdelweissEffect : EffectHandler {
                             choiceNumber =
                                 choiceNumber,
                             legalChoices =
-                                offered
+                                offered,
+                            context = request.decisionContext()
                         )
                     )
 

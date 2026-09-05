@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.wound
 
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 /**
  * One legal way to resolve a Wound.
@@ -22,7 +23,8 @@ sealed interface WoundChoice {
 }
 
 class ChooseWoundRequest(
-    legalChoices: List<WoundChoice>
+    legalChoices: List<WoundChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
 ) {
     val legalChoices: List<WoundChoice> =
         legalChoices.toList()
