@@ -1,30 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.cultivation
 
 /**
- * Deterministic baseline:
- * - prefer a Main Draw while Main Actions remain
- * - otherwise take the first offered Main Action
- * - once both Main Actions are spent, finish rather than using optional support
- * - fall back to the first legal choice
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalCultivationStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
  */
-class BaselineCultivationStrategy : CultivationStrategy {
-    override fun chooseAction(
-        request: ChooseCultivationActionRequest
-    ): CultivationAction {
-        request.legalChoices
-            .filterIsInstance<CultivationAction.Main>()
-            .firstOrNull { it.action == CultivationMainAction.Draw }
-            ?.let { return it }
-
-        request.legalChoices
-            .filterIsInstance<CultivationAction.Main>()
-            .firstOrNull()
-            ?.let { return it }
-
-        if (CultivationAction.Done in request.legalChoices) {
-            return CultivationAction.Done
-        }
-
-        return request.legalChoices.first()
-    }
-}
+@Deprecated(
+    message = "Use MechanicalCultivationStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalCultivationStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy"
+    )
+)
+typealias BaselineCultivationStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy

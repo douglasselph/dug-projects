@@ -38,8 +38,8 @@ import kotlin.test.assertTrue
 class DecisionDirectorTest {
 
     @Test
-    fun baseline_usesBaselineStrategies() {
-        val director = DecisionDirector.baseline()
+    fun mechanicalControl_usesMechanicalStrategies() {
+        val director = DecisionDirector.mechanicalControl()
 
         assertTrue(director.reward is BaselineRewardStrategy)
         assertTrue(director.wound is BaselineWoundStrategy)

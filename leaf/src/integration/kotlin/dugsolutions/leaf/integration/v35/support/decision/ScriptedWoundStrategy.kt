@@ -1,13 +1,13 @@
 package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
-import dugsolutions.leaf.v35.player.decision.wound.BaselineWoundStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.wound.MechanicalWoundStrategy
 import dugsolutions.leaf.v35.player.decision.wound.ChooseWoundRequest
 import dugsolutions.leaf.v35.player.decision.wound.WoundChoice
 import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 
 class ScriptedWoundStrategy(
-    private val fallback: WoundStrategy = BaselineWoundStrategy()
+    private val fallback: WoundStrategy = MechanicalWoundStrategy()
 ) : WoundStrategy {
     private val choices =
         DecisionScript<ChooseWoundRequest, WoundChoice>("Wound choices")

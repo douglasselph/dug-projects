@@ -1,13 +1,13 @@
 package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
-import dugsolutions.leaf.v35.player.decision.reward.BaselineRewardStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.tokens.Critter
 
 class ScriptedRewardStrategy(
-    private val fallback: RewardStrategy = BaselineRewardStrategy()
+    private val fallback: RewardStrategy = MechanicalRewardStrategy()
 ) : RewardStrategy {
     private val choices =
         DecisionScript<ChooseCritterRequest, Critter>("Critter rewards")

@@ -2,12 +2,12 @@ package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
-import dugsolutions.leaf.v35.player.decision.placement.BaselineCreaturePlacementStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.placement.ChooseCreaturePlacementRequest
 import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 
 class ScriptedCreaturePlacementStrategy(
-    private val fallback: CreaturePlacementStrategy = BaselineCreaturePlacementStrategy()
+    private val fallback: CreaturePlacementStrategy = MechanicalCreaturePlacementStrategy()
 ) : CreaturePlacementStrategy {
     private val choices =
         DecisionScript<ChooseCreaturePlacementRequest, GraftPlacement>(

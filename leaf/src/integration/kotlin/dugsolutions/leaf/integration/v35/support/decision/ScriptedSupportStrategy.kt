@@ -1,13 +1,13 @@
 package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
-import dugsolutions.leaf.v35.player.decision.support.BaselineSupportStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy
 import dugsolutions.leaf.v35.player.decision.support.ButterflyRollChoice
 import dugsolutions.leaf.v35.player.decision.support.ChooseButterflyRollRequest
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
 
 class ScriptedSupportStrategy(
-    private val fallback: SupportStrategy = BaselineSupportStrategy()
+    private val fallback: SupportStrategy = MechanicalSupportStrategy()
 ) : SupportStrategy {
     private val butterflyRolls =
         DecisionScript<ChooseButterflyRollRequest, ButterflyRollChoice>(

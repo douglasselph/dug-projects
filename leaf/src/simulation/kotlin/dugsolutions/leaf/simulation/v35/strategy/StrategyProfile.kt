@@ -3,14 +3,14 @@ package dugsolutions.leaf.simulation.v35.strategy
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.player.decision.DecisionArea
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
-import dugsolutions.leaf.v35.player.decision.MechanicalBaseline
+import dugsolutions.leaf.v35.player.decision.HumanBaseline
+import dugsolutions.leaf.v35.player.decision.MechanicalControl
 
 /**
  * Named simulation strategy configuration.
  *
- * [levels] describes the sophistication of each independent decision area.
- * [decisionFactory] creates a fresh director per player/game so future stateful
- * or learned strategies never leak runtime/training state between games.
+ * [levels] describes each independent decision area. [decisionFactory] creates
+ * a fresh director for each player/game so stateful strategies never leak.
  */
 class StrategyProfile(
     val name: String,
@@ -32,18 +32,6 @@ class StrategyProfile(
     fun createDirector(): DecisionDirector =
         decisionFactory.create()
 
-    /**
-     * Builds a new profile by changing exactly one strategic dimension.
-     *
-     * Example for future simulation code:
-     *
-     * mechanical.withDecisionArea("Simple Buy", BUY, SIMPLE_HEURISTIC) {
-     *     it.copy(buy = SimpleBuyStrategy())
-     * }
-     *
-     * [transform] is applied to a fresh director each time the new profile is
-     * instantiated, preserving isolation for stateful strategies.
-     */
     fun withDecisionArea(
         name: String,
         area: DecisionArea,
@@ -59,14 +47,33 @@ class StrategyProfile(
         )
 
     companion object {
-        /** Stable Strategy-0 control profile. */
-        fun mechanicalBaseline(): StrategyProfile =
+        /** Deterministic engine/test control profile. */
+        fun mechanicalControl(): StrategyProfile =
             StrategyProfile(
-                name = MechanicalBaseline.NAME,
+                name = MechanicalControl.NAME,
                 levels = DecisionArea.entries.associateWith {
-                    StrategyLevel.MECHANICAL_BASELINE
+                    StrategyLevel.MECHANICAL_CONTROL
                 },
-                decisionFactory = PlayerDecisionFactory.mechanicalBaseline()
+                decisionFactory = PlayerDecisionFactory.mechanicalControl()
             )
+
+        /** Canonical simulation baseline. */
+        fun humanBaseline(): StrategyProfile =
+            StrategyProfile(
+                name = HumanBaseline.NAME,
+                levels = DecisionArea.entries.associateWith {
+                    StrategyLevel.HUMAN_BASELINE
+                },
+                decisionFactory = PlayerDecisionFactory.humanBaseline()
+            )
+
+        /** Canonical shorthand for simulation callers. */
+        fun baseline(): StrategyProfile =
+            humanBaseline()
+
+        /** Backward-compatible old name for the Level-0 control profile. */
+        @Deprecated("Use mechanicalControl()")
+        fun mechanicalBaseline(): StrategyProfile =
+            mechanicalControl()
     }
 }

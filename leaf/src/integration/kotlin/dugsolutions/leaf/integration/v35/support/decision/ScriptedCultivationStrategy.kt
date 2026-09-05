@@ -1,7 +1,7 @@
 package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
-import dugsolutions.leaf.v35.player.decision.cultivation.BaselineCultivationStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
@@ -9,7 +9,7 @@ import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 
 class ScriptedCultivationStrategy(
-    private val fallback: CultivationStrategy = BaselineCultivationStrategy()
+    private val fallback: CultivationStrategy = MechanicalCultivationStrategy()
 ) : CultivationStrategy {
     private val actions =
         DecisionScript<ChooseCultivationActionRequest, CultivationAction>(

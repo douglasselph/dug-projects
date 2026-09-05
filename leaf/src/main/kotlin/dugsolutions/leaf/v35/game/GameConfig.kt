@@ -15,14 +15,27 @@ fun interface PlayerDecisionFactory {
     fun create(): DecisionDirector
 
     companion object {
-        fun mechanicalBaseline(): PlayerDecisionFactory =
+        fun mechanicalControl(): PlayerDecisionFactory =
             PlayerDecisionFactory {
-                DecisionDirector.mechanicalBaseline()
+                DecisionDirector.mechanicalControl()
             }
 
-        /** Backward-compatible shorthand for the Level-0 control. */
+        fun humanBaseline(): PlayerDecisionFactory =
+            PlayerDecisionFactory {
+                DecisionDirector.humanBaseline()
+            }
+
+        /** Canonical baseline means Human Baseline. */
         fun baseline(): PlayerDecisionFactory =
-            mechanicalBaseline()
+            humanBaseline()
+
+        /** Backward-compatible old name for Mechanical Control. */
+        @Deprecated(
+            message = "Use mechanicalControl()",
+            replaceWith = ReplaceWith("mechanicalControl()")
+        )
+        fun mechanicalBaseline(): PlayerDecisionFactory =
+            mechanicalControl()
     }
 }
 
@@ -55,11 +68,8 @@ class GameConfig(
         get() = playerDecisionFactories.size
 
     companion object {
-        /**
-         * Convenience configuration where every player receives a fresh
-         * Strategy Level-0 Mechanical Baseline director.
-         */
-        fun mechanicalBaseline(
+        /** Every player receives the deterministic Mechanical Control policy. */
+        fun mechanicalControl(
             selectedPlantCards: List<PlantCard>,
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
@@ -73,7 +83,7 @@ class GameConfig(
             return GameConfig(
                 selectedPlantCards = selectedPlantCards,
                 playerDecisionFactories = List(numPlayers) {
-                    PlayerDecisionFactory.mechanicalBaseline()
+                    PlayerDecisionFactory.mechanicalControl()
                 },
                 roundSetup = roundSetup,
                 seed = seed,
@@ -81,7 +91,30 @@ class GameConfig(
             )
         }
 
-        /** Backward-compatible shorthand for [mechanicalBaseline]. */
+        /** Every player receives the canonical Human Baseline policy. */
+        fun humanBaseline(
+            selectedPlantCards: List<PlantCard>,
+            numPlayers: Int,
+            roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+            seed: Long? = null,
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+        ): GameConfig {
+            require(numPlayers in 2..4) {
+                "Game requires 2 to 4 players: $numPlayers"
+            }
+
+            return GameConfig(
+                selectedPlantCards = selectedPlantCards,
+                playerDecisionFactories = List(numPlayers) {
+                    PlayerDecisionFactory.humanBaseline()
+                },
+                roundSetup = roundSetup,
+                seed = seed,
+                dieConfig = dieConfig
+            )
+        }
+
+        /** Canonical baseline now means Human Baseline. */
         fun baseline(
             selectedPlantCards: List<PlantCard>,
             numPlayers: Int,
@@ -89,7 +122,27 @@ class GameConfig(
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
         ): GameConfig =
-            mechanicalBaseline(
+            humanBaseline(
+                selectedPlantCards = selectedPlantCards,
+                numPlayers = numPlayers,
+                roundSetup = roundSetup,
+                seed = seed,
+                dieConfig = dieConfig
+            )
+
+        /** Backward-compatible old name for Mechanical Control. */
+        @Deprecated(
+            message = "Use mechanicalControl()",
+            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig)")
+        )
+        fun mechanicalBaseline(
+            selectedPlantCards: List<PlantCard>,
+            numPlayers: Int,
+            roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+            seed: Long? = null,
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+        ): GameConfig =
+            mechanicalControl(
                 selectedPlantCards = selectedPlantCards,
                 numPlayers = numPlayers,
                 roundSetup = roundSetup,

@@ -1,85 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.effect
 
-/** Deterministic first/legal-all baseline for effect targeting. */
-class BaselineEffectStrategy : EffectStrategy {
-    override fun chooseDie(
-        request: ChooseEffectDieRequest
-    ): EffectDieChoice = request.legalChoices.first()
-
-    override fun chooseBattleDie(
-        request: ChooseEffectBattleDieRequest
-    ): EffectBattleDieChoice = request.legalChoices.first()
-
-    override fun chooseCrossPlayerDieSwap(
-        request: ChooseEffectCrossPlayerDieSwapRequest
-    ): EffectCrossPlayerDieSwapChoice = request.legalChoices.first()
-
-    override fun chooseOptionalDie(
-        request: ChooseOptionalEffectDieRequest
-    ): EffectDieChoice? = request.legalChoices.firstOrNull()
-
-    override fun chooseDice(
-        request: ChooseEffectDiceRequest
-    ): EffectDiceChoice = EffectDiceChoice(request.legalChoices.take(1))
-
-    override fun chooseDiePair(
-        request: ChooseEffectDiePairRequest
-    ): EffectDiePairChoice = request.legalChoices.first()
-
-    override fun chooseOptionalDiePair(
-        request: ChooseOptionalEffectDiePairRequest
-    ): EffectDiePairChoice? = request.legalChoices.firstOrNull()
-
-    override fun chooseCritterAndDie(
-        request: ChooseEffectCritterDieRequest
-    ): EffectCritterDieChoice = request.legalChoices.first()
-
-    override fun choosePetalToDie4(
-        request: ChoosePetalToDie4Request
-    ): PetalToDie4Choice = request.legalChoices.first()
-
-    override fun chooseBeeSource(
-        request: ChooseBeeSourceRequest
-    ): EffectBeeSourceChoice = request.legalChoices.first()
-
-    override fun chooseButterflyTarget(
-        request: ChooseEffectButterflyTargetRequest
-    ): EffectButterflyTargetChoice = request.legalChoices.first()
-
-    override fun chooseOptionalPlant(
-        request: ChooseOptionalEffectPlantRequest
-    ): EffectPlantChoice? = request.legalChoices.firstOrNull()
-
-    override fun chooseOpponentPlantWound(
-        request: ChooseEffectOpponentPlantWoundRequest
-    ): EffectOpponentPlantWoundChoice = request.legalChoices.first()
-
-    override fun choosePlantEffect(
-        request: ChooseEffectPlantRequest
-    ): EffectPlantChoice = request.legalChoices.first()
-
-    override fun chooseOEdelweiss(
-        request: ChooseOEdelweissRequest
-    ): OEdelweissChoice = request.legalChoices.first()
-
-    override fun chooseWispsToKeep(
-        request: ChooseWispsToKeepRequest
-    ): EffectWispsChoice =
-        EffectWispsChoice(
-            request.legalChoices.take(
-                request.keepLimit
-            )
-        )
-
-    override fun chooseDieSize(
-        request: ChooseEffectDieSizeRequest
-    ) = request.legalChoices.first()
-
-    override fun choosePlayer(
-        request: ChooseEffectPlayerRequest
-    ) = request.legalChoices.first()
-
-    override fun chooseStrikeRow(
-        request: ChooseEffectStrikeRowRequest
-    ) = request.legalChoices.first()
-}
+/**
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalEffectStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
+ */
+@Deprecated(
+    message = "Use MechanicalEffectStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalEffectStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy"
+    )
+)
+typealias BaselineEffectStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy

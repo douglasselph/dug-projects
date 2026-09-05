@@ -12,7 +12,7 @@ class PlayerFactory(
 
     operator fun invoke(
         id: PlayerId,
-        decisions: DecisionDirector = DecisionDirector.mechanicalBaseline()
+        decisions: DecisionDirector = DecisionDirector.mechanicalControl()
     ): Player {
         val player = Player(
             id = id,

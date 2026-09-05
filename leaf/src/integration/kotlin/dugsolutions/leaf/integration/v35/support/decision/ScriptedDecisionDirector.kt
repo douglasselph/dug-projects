@@ -10,7 +10,7 @@ import dugsolutions.leaf.v35.player.decision.DecisionDirector
  * test has not scripted that decision. Create a separate instance per player.
  */
 class ScriptedDecisionDirector(
-    fallback: DecisionDirector = DecisionDirector.baseline()
+    fallback: DecisionDirector = DecisionDirector.mechanicalControl()
 ) {
     val reward = ScriptedRewardStrategy(fallback.reward)
     val wound = ScriptedWoundStrategy(fallback.wound)

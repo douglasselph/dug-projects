@@ -1,12 +1,17 @@
-# v35 simulation source set
+# v35 Simulation Layer
 
-This source set is deliberately separate from both the rules engine and integration tests.
+The v35 decision/simulation architecture has distinct purposes:
 
-- `src/main`: rules, decision contracts, and the frozen Mechanical Baseline control.
-- `src/test`: isolated unit correctness.
-- `src/integration`: deterministic real-engine scenarios and scripted decisions.
-- `src/simulation`: strategy experiments, large game batches, learning, persistence, and analysis.
+1. **Mechanical Control (Level 0, core)** — deterministic, legal, deliberately
+   naive behavior for engine tests and a bottom benchmark.
+2. **Human Baseline (Level 1, core)** — the canonical simulation control group,
+   intended to model simple, reasonable experienced-human behavior. Its
+   separate director/strategy types are established; priority/context scoring
+   is implemented in the next stages.
+3. **Tactical (Level 2, simulation)** — short-horizon improved play.
+4. **Strategic (Level 3, simulation)** — broader plans/opponent-aware play.
+5. **Learned/Adaptive (Level 4, simulation)** — trained/persisted behavior.
 
-Strategy levels are labels, not inheritance requirements. A profile may mix levels by decision area; for example a Level-1 Buy strategy can be compared against Level-0 behavior everywhere else.
-
-The higher-level strategy namespaces are intentionally scaffolding only. Do not make the Mechanical Baseline smarter to prototype a new strategy. Add a new strategy implementation here and compose it into a `DecisionDirector`/`StrategyProfile` for the experiment.
+Integration-test scripted strategies remain under `src/integration` and should
+normally fall back to **Mechanical Control**, never Human Baseline. This keeps
+engine tests deterministic as Human Baseline evolves.

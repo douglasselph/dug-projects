@@ -51,7 +51,7 @@ data class GameScenario(
     internal fun toGameConfig(catalog: IntegrationCatalog): GameConfig {
         val factories =
             if (decisionFactories.isEmpty()) {
-                List(numPlayers) { PlayerDecisionFactory.baseline() }
+                List(numPlayers) { PlayerDecisionFactory.mechanicalControl() }
             } else {
                 decisionFactories
             }

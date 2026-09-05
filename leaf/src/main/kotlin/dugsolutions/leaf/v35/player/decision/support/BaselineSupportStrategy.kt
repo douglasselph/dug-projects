@@ -1,13 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.support
 
-/** Deterministic baseline: keep whichever Butterfly result is higher. */
-class BaselineSupportStrategy : SupportStrategy {
-    override fun chooseButterflyRoll(
-        request: ChooseButterflyRollRequest
-    ): ButterflyRollChoice =
-        if (request.rerolledValue > request.originalValue) {
-            ButterflyRollChoice.REROLLED
-        } else {
-            ButterflyRollChoice.ORIGINAL
-        }
-}
+/**
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalSupportStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
+ */
+@Deprecated(
+    message = "Use MechanicalSupportStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalSupportStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy"
+    )
+)
+typealias BaselineSupportStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy

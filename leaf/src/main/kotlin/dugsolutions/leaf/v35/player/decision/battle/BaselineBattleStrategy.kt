@@ -1,33 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.battle
 
 /**
- * Deliberately simple deterministic Battle policy.
- *
- * It prefers Draw for Main Actions when legal. During Step 5 it finishes as
- * soon as possible rather than automatically spending Support resources.
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalBattleStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
  */
-class BaselineBattleStrategy : BattleStrategy {
-
-    override fun chooseFirstMainAction(
-        request: ChooseBattleFirstMainActionRequest
-    ): BattleMainAction =
-        request.legalChoices.firstOrNull {
-            it == BattleMainAction.Draw
-        } ?: request.legalChoices.first()
-
-    override fun chooseTurnAction(
-        request: ChooseBattleTurnActionRequest
-    ): BattleTurnAction {
-        val finalChoices =
-            request.legalChoices.filterIsInstance<BattleTurnAction.FinalMain>()
-
-        return finalChoices.firstOrNull {
-            it.action == BattleMainAction.Draw
-        } ?: finalChoices.firstOrNull()
-            ?: request.legalChoices.first()
-    }
-
-    override fun chooseDiePlacement(
-        request: ChooseBattleDiePlacementRequest
-    ) = request.legalRows.first()
-}
+@Deprecated(
+    message = "Use MechanicalBattleStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalBattleStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy"
+    )
+)
+typealias BaselineBattleStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy

@@ -12,13 +12,12 @@ import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 /**
  * Per-player composition of decision policies.
  *
- * This is intentionally a data class so simulations can vary one strategic
- * dimension while leaving all others unchanged:
+ * Core exposes two named complete directors:
+ * - [mechanicalControl]: deterministic engine/test control behavior.
+ * - [humanBaseline]: canonical ordinary-human simulation baseline.
  *
- * DecisionDirector.mechanicalBaseline().copy(reward = ExperimentalRewardStrategy())
- *
- * Additional strategy slots should be added only when their v35 coordinators
- * or executors are implemented.
+ * The data-class shape remains important because simulation code can replace
+ * one decision area while leaving all other areas unchanged.
  */
 data class DecisionDirector(
     val reward: RewardStrategy,
@@ -32,15 +31,25 @@ data class DecisionDirector(
 ) {
     companion object {
 
-        /** Preferred explicit name for the stable Strategy Level-0 control. */
-        fun mechanicalBaseline(): DecisionDirector =
-            MechanicalBaseline.createDirector()
+        fun mechanicalControl(): DecisionDirector =
+            MechanicalControl.createDirector()
+
+        fun humanBaseline(): DecisionDirector =
+            HumanBaseline.createDirector()
 
         /**
-         * Backward-compatible shorthand. New simulation code should prefer
-         * [mechanicalBaseline] so the control strategy is named explicitly.
+         * Canonical baseline now means Human Baseline. This name is retained
+         * for source compatibility while callers migrate to [humanBaseline].
          */
         fun baseline(): DecisionDirector =
-            mechanicalBaseline()
+            humanBaseline()
+
+        /** Backward-compatible old name for Mechanical Control. */
+        @Deprecated(
+            message = "Use mechanicalControl()",
+            replaceWith = ReplaceWith("mechanicalControl()")
+        )
+        fun mechanicalBaseline(): DecisionDirector =
+            mechanicalControl()
     }
 }

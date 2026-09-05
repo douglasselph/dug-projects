@@ -1,17 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.placement
 
-import dugsolutions.leaf.v35.player.creature.GraftPlacement
-
 /**
- * Deterministic baseline placement policy: choose the first legal placement.
- *
- * More sophisticated simulation strategies can later evaluate card type,
- * geometry, branch shape, future graft opportunities, and other factors.
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalCreaturePlacementStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
  */
-class BaselineCreaturePlacementStrategy : CreaturePlacementStrategy {
-
-    override fun choose(
-        request: ChooseCreaturePlacementRequest
-    ): GraftPlacement =
-        request.legalPlacements.first()
-}
+@Deprecated(
+    message = "Use MechanicalCreaturePlacementStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalCreaturePlacementStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy"
+    )
+)
+typealias BaselineCreaturePlacementStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy

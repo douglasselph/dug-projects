@@ -1,12 +1,6 @@
 package dugsolutions.leaf.simulation.v35.strategy
 
-/**
- * Central registry of strategy families and their implementation status.
- *
- * Only the Mechanical Baseline is implemented today. Higher levels are named
- * and reserved deliberately so new work is added as explicit strategy code
- * rather than silently making Level 0 smarter.
- */
+/** Central registry of named strategy layers and their current status. */
 object StrategyCatalog {
     data class Family(
         val level: StrategyLevel,
@@ -16,14 +10,15 @@ object StrategyCatalog {
 
     val families: List<Family> = listOf(
         Family(
-            StrategyLevel.MECHANICAL_BASELINE,
+            StrategyLevel.MECHANICAL_CONTROL,
             implemented = true,
-            purpose = "Stable deterministic control group with almost no strategic intelligence."
+            purpose = "Stable deterministic engine/test control with almost no strategic intelligence."
         ),
         Family(
-            StrategyLevel.SIMPLE_HEURISTIC,
-            implemented = false,
-            purpose = "Small local heuristics that improve one decision without planning ahead."
+            StrategyLevel.HUMAN_BASELINE,
+            implemented = true,
+            purpose = "Canonical simulation baseline for simple, reasonable human play; " +
+                "its distinct wiring exists now and contextual scoring is the next implementation stage."
         ),
         Family(
             StrategyLevel.TACTICAL,
@@ -42,6 +37,18 @@ object StrategyCatalog {
         )
     )
 
+    val mechanicalControl: StrategyProfile
+        get() = StrategyProfile.mechanicalControl()
+
+    val humanBaseline: StrategyProfile
+        get() = StrategyProfile.humanBaseline()
+
+    /** Canonical simulation baseline. */
+    val baseline: StrategyProfile
+        get() = humanBaseline
+
+    /** Backward-compatible old Level-0 property name. */
+    @Deprecated("Use mechanicalControl")
     val mechanicalBaseline: StrategyProfile
-        get() = StrategyProfile.mechanicalBaseline()
+        get() = mechanicalControl
 }

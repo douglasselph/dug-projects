@@ -1,7 +1,7 @@
 package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
-import dugsolutions.leaf.v35.player.decision.buy.BaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
@@ -11,7 +11,7 @@ import dugsolutions.leaf.v35.player.decision.buy.BuyItem
 import dugsolutions.leaf.v35.random.die.DieSides
 
 class ScriptedBuyStrategy(
-    private val fallback: BuyStrategy = BaselineBuyStrategy()
+    private val fallback: BuyStrategy = MechanicalBuyStrategy()
 ) : BuyStrategy {
     private val purchases =
         DecisionScript<ChoosePurchaseRequest, BuyChoice>("Buy choices")

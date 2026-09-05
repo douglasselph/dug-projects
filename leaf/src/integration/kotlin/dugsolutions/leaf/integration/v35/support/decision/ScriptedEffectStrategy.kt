@@ -3,7 +3,7 @@ package dugsolutions.leaf.integration.v35.support.decision
 import dugsolutions.leaf.integration.v35.support.DecisionScript
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.PlayerId
-import dugsolutions.leaf.v35.player.decision.effect.BaselineEffectStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy
 import dugsolutions.leaf.v35.player.decision.effect.ChooseBeeSourceRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectBattleDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectButterflyTargetRequest
@@ -47,7 +47,7 @@ import dugsolutions.leaf.v35.random.die.DieSides
  * scenario focused on the one behavior it is trying to prove.
  */
 class ScriptedEffectStrategy(
-    private val fallback: EffectStrategy = BaselineEffectStrategy()
+    private val fallback: EffectStrategy = MechanicalEffectStrategy()
 ) : EffectStrategy {
     private val dice = DecisionScript<ChooseEffectDieRequest, EffectDieChoice>("Effect die choices")
     private val battleDice = DecisionScript<ChooseEffectBattleDieRequest, EffectBattleDieChoice>("Effect Battle-die choices")

@@ -1,35 +1,16 @@
 package dugsolutions.leaf.v35.player.decision.reward
 
-import dugsolutions.leaf.v35.tokens.Critter
-
 /**
- * Deterministic baseline reward policy.
- *
- * If both Bee and Worm are legal, choose whichever type the player currently
- * owns fewer of. Bee wins ties. If both are not available, choose the first
- * legal option supplied by gameplay code.
+ * @deprecated The old Baseline name referred to the deterministic mechanical
+ * control policy. Use [MechanicalRewardStrategy] for engine/integration control code, or the
+ * HumanBaseline layer for simulation behavior.
  */
-class BaselineRewardStrategy : RewardStrategy {
-
-    override fun chooseCritter(
-        request: ChooseCritterRequest
-    ): Critter {
-        val choices = request.legalChoices
-
-        val hasBee = Critter.BEE in choices
-        val hasWorm = Critter.WORM in choices
-
-        if (hasBee && hasWorm) {
-            val beeCount = request.ownedCritters.count { it == Critter.BEE }
-            val wormCount = request.ownedCritters.count { it == Critter.WORM }
-
-            return if (beeCount <= wormCount) {
-                Critter.BEE
-            } else {
-                Critter.WORM
-            }
-        }
-
-        return choices.first()
-    }
-}
+@Deprecated(
+    message = "Use MechanicalRewardStrategy for the mechanical control policy",
+    replaceWith = ReplaceWith(
+        "MechanicalRewardStrategy()",
+        "dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy"
+    )
+)
+typealias BaselineRewardStrategy =
+    dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy

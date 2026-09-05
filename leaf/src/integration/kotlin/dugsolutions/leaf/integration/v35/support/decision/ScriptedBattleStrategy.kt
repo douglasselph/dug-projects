@@ -2,7 +2,7 @@ package dugsolutions.leaf.integration.v35.support.decision
 
 import dugsolutions.leaf.integration.v35.support.DecisionScript
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
-import dugsolutions.leaf.v35.player.decision.battle.BaselineBattleStrategy
+import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
@@ -11,7 +11,7 @@ import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionR
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 
 class ScriptedBattleStrategy(
-    private val fallback: BattleStrategy = BaselineBattleStrategy()
+    private val fallback: BattleStrategy = MechanicalBattleStrategy()
 ) : BattleStrategy {
     private val firstMain =
         DecisionScript<ChooseBattleFirstMainActionRequest, BattleMainAction>(
