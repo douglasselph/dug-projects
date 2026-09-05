@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.game.GameStatus
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.RoundExecution
+import dugsolutions.leaf.v35.game.round.RoundReveal
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
@@ -68,6 +69,8 @@ class IntegrationGameHarness(
     /** Randomizer actually owned by this Game. */
     val randomizer: Randomizer
 
+    private var pendingReveal: RoundReveal? = null
+
     val game: Game =
         scenario.randomizerFactory?.invoke()?.let { scripted ->
             gameFactory(
@@ -93,8 +96,35 @@ class IntegrationGameHarness(
      * ownership remains with GameRunner. Use a fresh harness when calling
      * [runGame] after round-by-round assertions.
      */
-    fun runNextRound(): RoundExecution? =
-        roundCoordinator.executeNext(game)
+    fun runNextRound(): RoundExecution? {
+        check(pendingReveal == null) {
+            "A Round has already been revealed but not executed: ${pendingReveal?.card?.name}"
+        }
+        return roundCoordinator.executeNext(game)
+    }
+
+    /**
+     * Executes only the production reveal step. No Draw, action, Strike, Doom,
+     * or Cleanup work occurs until [executeRevealedRound] is called.
+     */
+    fun revealNextRound(): RoundReveal? {
+        check(pendingReveal == null) {
+            "A Round has already been revealed but not executed: ${pendingReveal?.card?.name}"
+        }
+        return roundCoordinator.revealNext(game).also { reveal ->
+            pendingReveal = reveal
+        }
+    }
+
+    /** Completes the Round most recently returned by [revealNextRound]. */
+    fun executeRevealedRound(): RoundExecution {
+        val reveal = checkNotNull(pendingReveal) {
+            "No revealed Round is pending execution"
+        }
+        return roundCoordinator.executeRevealed(game, reveal).also {
+            pendingReveal = null
+        }
+    }
 
     /** Runs a fresh scenario to completion through the production GameRunner. */
     fun runGame(): GameRunResult {

@@ -14,6 +14,65 @@ import kotlin.test.assertTrue
 
 class RoundCoordinatorTest {
 
+
+    @Test
+    fun revealNext_recordsRevealWithoutInvokingExecutorOrCompletion() {
+        // Arrange
+        val cultivation = RecordingExecutor()
+        val battle = RecordingExecutor()
+        val game = GameEngineTestFixture.game(1, 1)
+        val coordinator = coordinator(cultivation, battle)
+
+        // Act
+        val reveal = coordinator.revealNext(game)
+
+        // Assert
+        assertEquals(1, reveal!!.roundNumber)
+        assertEquals(RoundCardType.CULTIVATION, reveal.card.type)
+        assertTrue(cultivation.cards.isEmpty())
+        assertTrue(battle.cards.isEmpty())
+        assertEquals(1, game.roundNumber)
+        assertTrue(game.currentRound === reveal.card)
+        assertEquals(1, game.chronicle.entries.size)
+        assertTrue(game.chronicle.entries.single() is GameEntry.RoundRevealed)
+    }
+
+    @Test
+    fun executeRevealed_executesSameCardAndRecordsCompletion() {
+        // Arrange
+        val cultivation = RecordingExecutor()
+        val battle = RecordingExecutor()
+        val game = GameEngineTestFixture.game(1, 1)
+        val coordinator = coordinator(cultivation, battle)
+        val reveal = coordinator.revealNext(game)!!
+
+        // Act
+        val execution = coordinator.executeRevealed(game, reveal)
+
+        // Assert
+        assertEquals(reveal.roundNumber, execution.roundNumber)
+        assertTrue(reveal.card === execution.card)
+        assertEquals(listOf(reveal.card), cultivation.cards)
+        assertTrue(battle.cards.isEmpty())
+        assertTrue(game.chronicle.entries.first() is GameEntry.RoundRevealed)
+        assertTrue(game.chronicle.entries.last() is GameEntry.RoundCompleted)
+    }
+
+    @Test
+    fun executeRevealed_rejectsStaleRevealAfterGameAdvances() {
+        // Arrange
+        val game = GameEngineTestFixture.game(2, 0)
+        val coordinator = coordinator()
+        val stale = coordinator.revealNext(game)!!
+        game.roundDeck.next()
+
+        // Act / Assert
+        val error = assertFailsWith<IllegalStateException> {
+            coordinator.executeRevealed(game, stale)
+        }
+        assertTrue(error.message.orEmpty().contains("stale Round reveal"))
+    }
+
     @Test
     fun executeNext_whenNoCardsRemain_returnsNull() {
         // Arrange
