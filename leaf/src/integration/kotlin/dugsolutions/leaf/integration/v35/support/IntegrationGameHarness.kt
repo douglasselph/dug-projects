@@ -10,6 +10,12 @@ import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.RoundExecution
 import dugsolutions.leaf.v35.game.round.RoundReveal
+import dugsolutions.leaf.v35.game.round.cultivation.CultivationBuildActionsResult
+import dugsolutions.leaf.v35.game.round.cultivation.CultivationCleanupResult
+import dugsolutions.leaf.v35.game.round.cultivation.CultivationRound
+import dugsolutions.leaf.v35.game.buy.BuyPhaseResult
+import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
@@ -58,6 +64,9 @@ class IntegrationGameHarness(
         koin.get()
 
     val gameRunner: GameRunner =
+        koin.get()
+
+    val cultivationRound: CultivationRound =
         koin.get()
 
     private val exactRoundCards =
@@ -124,6 +133,41 @@ class IntegrationGameHarness(
         return roundCoordinator.executeRevealed(game, reveal).also {
             pendingReveal = null
         }
+    }
+
+
+    /** Executes only Cultivation Step 2 against the currently revealed card. */
+    fun runCultivationOpeningDraw(): Map<PlayerId, Int> {
+        requirePendingCultivationReveal()
+        return cultivationRound.executeOpeningDraw(game)
+    }
+
+    /** Executes only Cultivation Step 3 against the currently revealed card. */
+    fun runCultivationBuildActions(): CultivationBuildActionsResult {
+        val reveal = requirePendingCultivationReveal()
+        return cultivationRound.executeBuildActions(game, reveal.card)
+    }
+
+    /** Executes only Cultivation Step 4 against the current game state. */
+    fun runCultivationBuy(): BuyPhaseResult {
+        requirePendingCultivationReveal()
+        return cultivationRound.executeBuy(game)
+    }
+
+    /** Executes only Cultivation Step 5 against the current game state. */
+    fun runCultivationCleanup(): CultivationCleanupResult {
+        requirePendingCultivationReveal()
+        return cultivationRound.executeCleanup(game)
+    }
+
+    private fun requirePendingCultivationReveal(): RoundReveal {
+        val reveal = checkNotNull(pendingReveal) {
+            "A Cultivation Round must be revealed before executing a Cultivation step"
+        }
+        check(reveal.card.type == RoundCardType.CULTIVATION) {
+            "Current revealed Round is not Cultivation: ${reveal.card.type}"
+        }
+        return reveal
     }
 
     /** Runs a fresh scenario to completion through the production GameRunner. */

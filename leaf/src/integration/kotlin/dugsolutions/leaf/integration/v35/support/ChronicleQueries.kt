@@ -68,6 +68,38 @@ object ChronicleQueries {
         entries.filterIsInstance<GameEntry.Purchase>()
             .filter { it.playerId == playerId }
 
+
+    fun rollRewardsFor(
+        entries: List<GameEntry>,
+        playerId: PlayerId
+    ): List<GameEntry.RollReward> =
+        entries.filterIsInstance<GameEntry.RollReward>()
+            .filter { it.playerId == playerId }
+
+    fun effectsFor(
+        entries: List<GameEntry>,
+        playerId: PlayerId
+    ): List<GameEntry.EffectResolved> =
+        entries.filterIsInstance<GameEntry.EffectResolved>()
+            .filter { it.playerId == playerId }
+
+    fun cleanupsFor(
+        entries: List<GameEntry>,
+        playerId: PlayerId
+    ): List<GameEntry.Cleanup> =
+        entries.filterIsInstance<GameEntry.Cleanup>()
+            .filter { it.playerId == playerId }
+
+    fun refreshesFor(
+        entries: List<GameEntry>,
+        playerId: PlayerId
+    ): List<GameEntry.Refresh> =
+        entries.filterIsInstance<GameEntry.Refresh>()
+            .filter { it.playerId == playerId }
+
+    fun buyOrders(entries: List<GameEntry>): List<GameEntry.BuyOrder> =
+        entries.filterIsInstance<GameEntry.BuyOrder>()
+
     fun finalScoreFor(
         entries: List<GameEntry>,
         playerId: PlayerId

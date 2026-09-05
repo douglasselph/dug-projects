@@ -4,7 +4,9 @@ import dugsolutions.leaf.integration.v35.support.DecisionScript
 import dugsolutions.leaf.v35.player.decision.cultivation.BaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 
 class ScriptedCultivationStrategy(
     private val fallback: CultivationStrategy = BaselineCultivationStrategy()
@@ -22,6 +24,21 @@ class ScriptedCultivationStrategy(
 
     fun thenChoose(choice: CultivationAction): ScriptedCultivationStrategy =
         thenChoose { choice }
+
+
+    fun thenMain(action: CultivationMainAction): ScriptedCultivationStrategy =
+        thenChoose(CultivationAction.Main(action))
+
+    fun thenSupport(
+        selector: (SupportAction) -> Boolean
+    ): ScriptedCultivationStrategy = thenChoose { request ->
+        request.legalChoices
+            .filterIsInstance<CultivationAction.Support>()
+            .first { selector(it.action) }
+    }
+
+    fun thenDone(): ScriptedCultivationStrategy =
+        thenChoose(CultivationAction.Done)
 
     override fun chooseAction(
         request: ChooseCultivationActionRequest

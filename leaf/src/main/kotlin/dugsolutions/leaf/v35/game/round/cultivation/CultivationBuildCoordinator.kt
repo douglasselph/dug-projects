@@ -40,6 +40,11 @@ data class CultivationSupportActionResult(
     val action: SupportAction
 )
 
+data class CultivationBuildActionsResult(
+    val actions: List<CultivationActionResult>,
+    val supportActions: List<CultivationSupportActionResult> = emptyList()
+)
+
 data class CultivationBuildResult(
     val openingDrawCounts: Map<PlayerId, Int>,
     val actions: List<CultivationActionResult>,
@@ -66,6 +71,18 @@ class CultivationBuildCoordinator(
             "Cultivation Build requires a Cultivation Round card: ${roundCard.type}"
         }
 
+        val openingDrawCounts = executeOpeningDraw(game)
+        val actions = executeActions(game, roundCard)
+
+        return CultivationBuildResult(
+            openingDrawCounts = openingDrawCounts,
+            actions = actions.actions,
+            supportActions = actions.supportActions
+        )
+    }
+
+    /** Executes only Cultivation Step 2: every player's opening Draw 3. */
+    fun executeOpeningDraw(game: Game): Map<PlayerId, Int> {
         val openingDrawCounts = linkedMapOf<PlayerId, Int>()
         game.players.forEach { player ->
             var count = 0
@@ -80,6 +97,17 @@ class CultivationBuildCoordinator(
                     count = count
                 )
             )
+        }
+        return openingDrawCounts.toMap()
+    }
+
+    /** Executes only Cultivation Step 3: Main/Support action selection. */
+    fun executeActions(
+        game: Game,
+        roundCard: RoundCard
+    ): CultivationBuildActionsResult {
+        require(roundCard.type == RoundCardType.CULTIVATION) {
+            "Cultivation Build requires a Cultivation Round card: ${roundCard.type}"
         }
 
         val mainActionResults = mutableListOf<CultivationActionResult>()
@@ -162,8 +190,7 @@ class CultivationBuildCoordinator(
             }
         }
 
-        return CultivationBuildResult(
-            openingDrawCounts = openingDrawCounts.toMap(),
+        return CultivationBuildActionsResult(
             actions = mainActionResults.toList(),
             supportActions = supportActionResults.toList()
         )

@@ -7,6 +7,8 @@ import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePaymentRequest
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePurchaseRequest
+import dugsolutions.leaf.v35.player.decision.buy.BuyItem
+import dugsolutions.leaf.v35.random.die.DieSides
 
 class ScriptedBuyStrategy(
     private val fallback: BuyStrategy = BaselineBuyStrategy()
@@ -23,6 +25,26 @@ class ScriptedBuyStrategy(
     fun thenPayment(
         selector: (ChoosePaymentRequest) -> BuyPayment
     ): ScriptedBuyStrategy = apply { payments.then(selector) }
+
+
+    fun thenDone(): ScriptedBuyStrategy =
+        thenPurchase { BuyChoice.Done }
+
+    fun thenPurchaseDie(sides: DieSides): ScriptedBuyStrategy =
+        thenPurchase { request ->
+            BuyChoice.Purchase(
+                request.options.filterIsInstance<BuyItem.Die>()
+                    .first { it.sides == sides }
+            )
+        }
+
+    fun thenPurchasePlant(nameOrTitle: String): ScriptedBuyStrategy =
+        thenPurchase { request ->
+            BuyChoice.Purchase(
+                request.options.filterIsInstance<BuyItem.Plant>()
+                    .first { it.card.name == nameOrTitle || it.card.title == nameOrTitle }
+            )
+        }
 
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         val chosen = purchases.nextOrElse(request, fallback::choosePurchase)

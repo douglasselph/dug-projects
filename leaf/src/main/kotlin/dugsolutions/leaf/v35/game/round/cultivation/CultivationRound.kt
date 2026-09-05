@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.game.round.RoundExecutor
+import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
@@ -37,10 +38,51 @@ class CultivationRound(
         game: Game,
         roundCard: RoundCard
     ): CultivationRoundResult {
-        require(roundCard.type == RoundCardType.CULTIVATION) {
-            "CultivationRound requires a Cultivation Round card: ${roundCard.type}"
-        }
+        requireCultivation(roundCard)
 
+        val openingDrawCounts = executeOpeningDraw(game)
+        val actions = executeBuildActions(game, roundCard)
+        val buy = executeBuy(game)
+        val cleanup = executeCleanup(game)
+
+        return CultivationRoundResult(
+            build = CultivationBuildResult(
+                openingDrawCounts = openingDrawCounts,
+                actions = actions.actions,
+                supportActions = actions.supportActions
+            ),
+            buy = buy,
+            cleanup = cleanup
+        )
+    }
+
+    /** Production Step 2 seam used by deterministic integration scenarios. */
+    fun executeOpeningDraw(game: Game): Map<PlayerId, Int> =
+        components(game).build.executeOpeningDraw(game)
+
+    /** Production Step 3 seam used by deterministic integration scenarios. */
+    fun executeBuildActions(
+        game: Game,
+        roundCard: RoundCard
+    ): CultivationBuildActionsResult {
+        requireCultivation(roundCard)
+        return components(game).build.executeActions(game, roundCard)
+    }
+
+    /** Production Step 4 seam used by deterministic integration scenarios. */
+    fun executeBuy(game: Game): BuyPhaseResult =
+        BuyCoordinator(
+            graftResolver = GraftResolver(game.chronicle),
+            createDie = { sides -> game.dieFactory(sides) }
+        ).execute(game)
+
+    /** Production Step 5 seam used by deterministic integration scenarios. */
+    fun executeCleanup(game: Game): CultivationCleanupResult =
+        CultivationCleanupCoordinator(
+            refreshResolver = RefreshResolver(game.chronicle)
+        ).execute(game)
+
+    private fun components(game: Game): Components {
         val rollResolver = RollResolver(
             grove = game.grove,
             chronicle = game.chronicle,
@@ -62,26 +104,22 @@ class CultivationRound(
             refreshResolver = refreshResolver,
             effectExecutor = effectExecutor
         )
-
-        val build = CultivationBuildCoordinator(
-            rollResolver = rollResolver,
-            effectExecutor = effectExecutor,
-            supportActionExecutor = supportActionExecutor
-        ).execute(game, roundCard)
-
-        val buy = BuyCoordinator(
-            graftResolver = GraftResolver(game.chronicle),
-            createDie = { sides -> game.dieFactory(sides) }
-        ).execute(game)
-
-        val cleanup = CultivationCleanupCoordinator(
-            refreshResolver = refreshResolver
-        ).execute(game)
-
-        return CultivationRoundResult(
-            build = build,
-            buy = buy,
-            cleanup = cleanup
+        return Components(
+            build = CultivationBuildCoordinator(
+                rollResolver = rollResolver,
+                effectExecutor = effectExecutor,
+                supportActionExecutor = supportActionExecutor
+            )
         )
     }
+
+    private fun requireCultivation(roundCard: RoundCard) {
+        require(roundCard.type == RoundCardType.CULTIVATION) {
+            "CultivationRound requires a Cultivation Round card: ${roundCard.type}"
+        }
+    }
+
+    private data class Components(
+        val build: CultivationBuildCoordinator
+    )
 }
