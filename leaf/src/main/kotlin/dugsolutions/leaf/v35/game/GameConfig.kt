@@ -15,10 +15,14 @@ fun interface PlayerDecisionFactory {
     fun create(): DecisionDirector
 
     companion object {
-        fun baseline(): PlayerDecisionFactory =
+        fun mechanicalBaseline(): PlayerDecisionFactory =
             PlayerDecisionFactory {
-                DecisionDirector.baseline()
+                DecisionDirector.mechanicalBaseline()
             }
+
+        /** Backward-compatible shorthand for the Level-0 control. */
+        fun baseline(): PlayerDecisionFactory =
+            mechanicalBaseline()
     }
 }
 
@@ -53,9 +57,9 @@ class GameConfig(
     companion object {
         /**
          * Convenience configuration where every player receives a fresh
-         * deterministic baseline DecisionDirector.
+         * Strategy Level-0 Mechanical Baseline director.
          */
-        fun baseline(
+        fun mechanicalBaseline(
             selectedPlantCards: List<PlantCard>,
             numPlayers: Int,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
@@ -69,13 +73,29 @@ class GameConfig(
             return GameConfig(
                 selectedPlantCards = selectedPlantCards,
                 playerDecisionFactories = List(numPlayers) {
-                    PlayerDecisionFactory.baseline()
+                    PlayerDecisionFactory.mechanicalBaseline()
                 },
                 roundSetup = roundSetup,
                 seed = seed,
                 dieConfig = dieConfig
             )
         }
+
+        /** Backward-compatible shorthand for [mechanicalBaseline]. */
+        fun baseline(
+            selectedPlantCards: List<PlantCard>,
+            numPlayers: Int,
+            roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+            seed: Long? = null,
+            dieConfig: DieFactory.Config = DieFactory.Config.RANDOM
+        ): GameConfig =
+            mechanicalBaseline(
+                selectedPlantCards = selectedPlantCards,
+                numPlayers = numPlayers,
+                roundSetup = roundSetup,
+                seed = seed,
+                dieConfig = dieConfig
+            )
     }
 }
 

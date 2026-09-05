@@ -71,7 +71,17 @@ sourceSets {
         compileClasspath += sourceSets.main.get().output
         runtimeClasspath += sourceSets.main.get().output
     }
+    create("simulation") {
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
 }
+
+// Simulation code is an application/research layer on top of the production
+// rules engine. It inherits production dependencies but cannot see test or
+// integration-only helpers.
+configurations["simulationImplementation"].extendsFrom(configurations["implementation"])
+configurations["simulationRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
 
 compose.desktop {
     application {
@@ -147,6 +157,16 @@ tasks.register<Test>("v35IntegrationTest") {
         events("passed", "skipped", "failed")
     }
 }
+
+// Lightweight architecture check for the research source set. Higher-level
+// strategies are intentionally scaffolding for now; this task proves that the
+// simulation boundary compiles without pulling code into integration tests.
+tasks.register("simulationCheck") {
+    description = "Compiles the v35 simulation/research source set."
+    group = "verification"
+    dependsOn("compileSimulationKotlin")
+}
+
 
 kotlin {
     // Specific compiler options for integration tests
