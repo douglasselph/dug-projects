@@ -7,3 +7,6 @@ internal fun <T> immutableList(values: Iterable<T>): List<T> =
 
 internal fun <K, V> immutableMap(values: Map<K, V>): Map<K, V> =
     Collections.unmodifiableMap(LinkedHashMap(values))
+
+internal fun <T> immutableSet(values: Iterable<T>): Set<T> =
+    Collections.unmodifiableSet(LinkedHashSet(values.toList()))

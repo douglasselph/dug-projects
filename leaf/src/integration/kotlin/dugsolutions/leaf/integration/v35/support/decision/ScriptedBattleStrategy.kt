@@ -30,13 +30,22 @@ class ScriptedBattleStrategy(
         selector: (ChooseBattleFirstMainActionRequest) -> BattleMainAction
     ): ScriptedBattleStrategy = apply { firstMain.then(selector) }
 
+    fun thenFirstMain(choice: BattleMainAction): ScriptedBattleStrategy =
+        thenFirstMain { choice }
+
     fun thenTurn(
         selector: (ChooseBattleTurnActionRequest) -> BattleTurnAction
     ): ScriptedBattleStrategy = apply { turns.then(selector) }
 
+    fun thenTurn(choice: BattleTurnAction): ScriptedBattleStrategy =
+        thenTurn { choice }
+
     fun thenPlacement(
         selector: (ChooseBattleDiePlacementRequest) -> StrikeRow
     ): ScriptedBattleStrategy = apply { placements.then(selector) }
+
+    fun thenPlacement(row: StrikeRow): ScriptedBattleStrategy =
+        thenPlacement { row }
 
     override fun chooseFirstMainAction(
         request: ChooseBattleFirstMainActionRequest

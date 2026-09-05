@@ -1,5 +1,10 @@
 package dugsolutions.leaf.integration.v35.support
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.BattleStrikeResolutionResult
+import dugsolutions.leaf.v35.battle.DoomResult
+import dugsolutions.leaf.v35.battle.domain.BattleCritterPlacement
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.Game
@@ -10,6 +15,10 @@ import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.RoundExecution
 import dugsolutions.leaf.v35.game.round.RoundReveal
+import dugsolutions.leaf.v35.game.round.battle.BattleActionLoopResult
+import dugsolutions.leaf.v35.game.round.battle.BattleCleanupResult
+import dugsolutions.leaf.v35.game.round.battle.BattleRankAndPlaceResult
+import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.game.round.cultivation.CultivationBuildActionsResult
 import dugsolutions.leaf.v35.game.round.cultivation.CultivationCleanupResult
 import dugsolutions.leaf.v35.game.round.cultivation.CultivationRound
@@ -23,6 +32,7 @@ import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
+import dugsolutions.leaf.v35.tokens.Critter
 import org.koin.dsl.koinApplication
 import java.nio.file.Path
 
@@ -69,6 +79,9 @@ class IntegrationGameHarness(
     val cultivationRound: CultivationRound =
         koin.get()
 
+    val battleRound: BattleRound =
+        koin.get()
+
     private val exactRoundCards =
         scenario.exactRoundNames?.map(catalog::requireRound)
 
@@ -79,6 +92,7 @@ class IntegrationGameHarness(
     val randomizer: Randomizer
 
     private var pendingReveal: RoundReveal? = null
+    private var activeBattleState: BattleState? = null
 
     val game: Game =
         scenario.randomizerFactory?.invoke()?.let { scripted ->
@@ -169,6 +183,93 @@ class IntegrationGameHarness(
         }
         return reveal
     }
+
+    /** Executes only Battle Step 2 against the currently revealed card. */
+    fun runBattleOpeningDraw(): Map<PlayerId, Int> {
+        requirePendingBattleReveal()
+        check(activeBattleState == null) {
+            "Battle Rank/Place has already created live Battle state"
+        }
+        return battleRound.executeOpeningDraw(game)
+    }
+
+    /** Executes only Battle Step 3 and retains the transient BattleState. */
+    fun runBattleRankAndPlace(): BattleRankAndPlaceResult {
+        requirePendingBattleReveal()
+        check(activeBattleState == null) {
+            "Battle Rank/Place has already been executed"
+        }
+        return battleRound.executeRankAndPlace(game).also {
+            activeBattleState = it.battleState
+        }
+    }
+
+    /** Executes Battle Steps 4-5 against the retained Battle state. */
+    fun runBattleActions(): BattleActionLoopResult {
+        val reveal = requirePendingBattleReveal()
+        return battleRound.executeActions(
+            game = game,
+            roundCard = reveal.card,
+            battleState = requireActiveBattleState()
+        )
+    }
+
+    /** Executes Battle Step 6 against the retained Battle state. */
+    fun runBattleStrikes(): BattleStrikeResolutionResult {
+        requirePendingBattleReveal()
+        return battleRound.executeStrikes(game, requireActiveBattleState())
+    }
+
+    /** Executes Battle Step 7 against the retained Battle state. */
+    fun runBattleDoom(): DoomResult {
+        requirePendingBattleReveal()
+        return battleRound.executeDoom(game, requireActiveBattleState())
+    }
+
+    /** Executes Battle Step 8 and discards the harness's transient Battle state. */
+    fun runBattleCleanup(): BattleCleanupResult {
+        requirePendingBattleReveal()
+        val state = requireActiveBattleState()
+        return battleRound.executeCleanup(game, state).also {
+            activeBattleState = null
+        }
+    }
+
+    /** Immutable snapshot of the currently active stepwise Battle Grid. */
+    fun battleSnapshot(): BattleSnapshot =
+        BattleSnapshot.capture(requireActiveBattleState())
+
+    fun battleSnapshotOrNull(): BattleSnapshot? =
+        activeBattleState?.let(BattleSnapshot::capture)
+
+    /** Test-state setup helper: commit one owned Critter to the live Battle Grid. */
+    fun placeBattleCritterForSetup(
+        playerId: Int,
+        row: StrikeRow,
+        critter: Critter
+    ): BattleCritterPlacement {
+        val player = game.players.single { it.id.value == playerId }
+        return requireActiveBattleState().grid.placeCritter(
+            player = player,
+            row = row,
+            critter = critter
+        )
+    }
+
+    private fun requirePendingBattleReveal(): RoundReveal {
+        val reveal = checkNotNull(pendingReveal) {
+            "A Battle Round must be revealed before executing a Battle step"
+        }
+        check(reveal.card.type == RoundCardType.BATTLE) {
+            "Current revealed Round is not Battle: ${reveal.card.type}"
+        }
+        return reveal
+    }
+
+    private fun requireActiveBattleState(): BattleState =
+        checkNotNull(activeBattleState) {
+            "Battle Rank/Place must be executed before this Battle step"
+        }
 
     /** Runs a fresh scenario to completion through the production GameRunner. */
     fun runGame(): GameRunResult {

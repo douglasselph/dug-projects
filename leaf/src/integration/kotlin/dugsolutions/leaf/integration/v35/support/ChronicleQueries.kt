@@ -100,6 +100,22 @@ object ChronicleQueries {
     fun buyOrders(entries: List<GameEntry>): List<GameEntry.BuyOrder> =
         entries.filterIsInstance<GameEntry.BuyOrder>()
 
+    fun battleOrders(entries: List<GameEntry>): List<GameEntry.BattleOrder> =
+        entries.filterIsInstance<GameEntry.BattleOrder>()
+
+    fun strikes(entries: List<GameEntry>): List<GameEntry.StrikeResolved> =
+        entries.filterIsInstance<GameEntry.StrikeResolved>()
+
+    fun woundsFor(
+        entries: List<GameEntry>,
+        playerId: PlayerId
+    ): List<GameEntry.Wound> =
+        entries.filterIsInstance<GameEntry.Wound>()
+            .filter { it.playerId == playerId }
+
+    fun doom(entries: List<GameEntry>): List<GameEntry.Doom> =
+        entries.filterIsInstance<GameEntry.Doom>()
+
     fun finalScoreFor(
         entries: List<GameEntry>,
         playerId: PlayerId

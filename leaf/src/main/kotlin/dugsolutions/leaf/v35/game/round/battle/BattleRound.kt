@@ -22,6 +22,13 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
+/** Immutable result of Battle Step 3, plus the live state used by later steps. */
+data class BattleRankAndPlaceResult(
+    val battleState: BattleState,
+    val battleOrder: List<PlayerId>,
+    val initialPlacements: List<BattleDiePlacement>
+)
+
 /** Immutable result of one complete Battle Round. */
 data class BattleRoundResult(
     val openingDrawCounts: Map<PlayerId, Int>,
@@ -46,8 +53,9 @@ data class BattleRoundResult(
  * 7. Doom
  * 8. Cleanup
  *
- * A fresh [BattleState] is created for every Battle Round and deliberately
- * discarded after cleanup. Player/Game state is durable; Grid state is not.
+ * The public step methods are production orchestration seams used by the
+ * deterministic integration harness. [executeRound] composes those same
+ * methods, so tests never run a parallel implementation of Battle rules.
  */
 class BattleRound(
     private val effectExecutor: GameEffectExecutor
@@ -64,37 +72,31 @@ class BattleRound(
         game: Game,
         roundCard: RoundCard
     ): BattleRoundResult {
-        require(roundCard.type == RoundCardType.BATTLE) {
-            "BattleRound requires a Battle Round card: ${roundCard.type}"
-        }
+        requireBattleCard(roundCard)
 
-        /*
-         * BattleState does not exist until after opening Draws establish the
-         * Rank order. Capture it so immediate Wisps gained during later rolls
-         * receive the live Grid state, while opening-draw immediate Wisps still
-         * execute correctly before Rank and Place.
-         */
-        var currentBattleState: BattleState? = null
+        val openingDrawCounts = executeOpeningDraw(game)
+        val rank = executeRankAndPlace(game)
+        val actions = executeActions(game, roundCard, rank.battleState)
+        val strikes = executeStrikes(game, rank.battleState)
+        val doom = executeDoom(game, rank.battleState)
+        val cleanup = executeCleanup(game, rank.battleState)
 
-        val rollResolver = RollResolver(
-            grove = game.grove,
-            chronicle = game.chronicle,
-            immediateWispHandler = { player, card ->
-                effectExecutor.execute(
-                    GameEffectRequest(
-                        game = game,
-                        actor = player,
-                        effect = card.effect,
-                        source = GameEffectSource.Wisp(card),
-                        phase = GameEffectPhase.BATTLE,
-                        battleState = currentBattleState
-                    )
-                )
-            }
+        return BattleRoundResult(
+            openingDrawCounts = openingDrawCounts,
+            battleOrder = rank.battleOrder,
+            initialPlacements = rank.initialPlacements,
+            actions = actions,
+            strikes = strikes,
+            doom = doom,
+            cleanup = cleanup
         )
+    }
 
-        // Step 2 — Draw and Roll 3 for every player.
+    /** Battle Step 2 — each player Draws and Rolls 3. */
+    fun executeOpeningDraw(game: Game): Map<PlayerId, Int> {
+        val rollResolver = createRollResolver(game, battleState = null)
         val openingDrawCounts = linkedMapOf<PlayerId, Int>()
+
         game.players.forEach { player ->
             var count = 0
             repeat(3) {
@@ -110,21 +112,40 @@ class BattleRound(
             )
         }
 
-        // Step 3 — Rank players, create the Grid, and place opening Hands.
+        return openingDrawCounts.toMap()
+    }
+
+    /** Battle Step 3 — establish Battle order and place current Hands. */
+    fun executeRankAndPlace(game: Game): BattleRankAndPlaceResult {
         val battleState = BattleState.create(
             players = game.players,
             randomizer = game.randomizer
         )
-        currentBattleState = battleState
-        val initialPlacements = battleState.placeInitialHands()
+        val placements = battleState.placeInitialHands()
 
         game.chronicle.record(
             Moment.BattleOrder(
                 order = battleState.playerIdsInBattleOrder,
-                initialDiceCount = initialPlacements.size
+                initialDiceCount = placements.size
             )
         )
 
+        return BattleRankAndPlaceResult(
+            battleState = battleState,
+            battleOrder = battleState.playerIdsInBattleOrder,
+            initialPlacements = placements.toList()
+        )
+    }
+
+    /** Battle Steps 4-5 — First Main, then Support/final Main passes. */
+    fun executeActions(
+        game: Game,
+        roundCard: RoundCard,
+        battleState: BattleState
+    ): BattleActionLoopResult {
+        requireBattleCard(roundCard)
+
+        val rollResolver = createRollResolver(game, battleState)
         val refreshResolver = RefreshResolver(game.chronicle)
         val supportActionExecutor = SupportActionExecutor(
             rollResolver = rollResolver,
@@ -132,8 +153,7 @@ class BattleRound(
             effectExecutor = effectExecutor
         )
 
-        // Steps 4-5 — Main Actions and Support passes.
-        val actions = BattleActionCoordinator(
+        return BattleActionCoordinator(
             rollResolver = rollResolver,
             effectExecutor = effectExecutor,
             supportActionExecutor = supportActionExecutor
@@ -142,9 +162,14 @@ class BattleRound(
             roundCard = roundCard,
             battleState = battleState
         )
+    }
 
-        // Step 6 — normal remaining Strikes. Closed rows are skipped here.
-        val strikes = StrikeResolver(
+    /** Battle Step 6 — resolve every currently open Strike top-to-bottom. */
+    fun executeStrikes(
+        game: Game,
+        battleState: BattleState
+    ): BattleStrikeResolutionResult =
+        StrikeResolver(
             woundResolver = WoundResolver(
                 grove = game.grove,
                 chronicle = game.chronicle
@@ -154,28 +179,52 @@ class BattleRound(
             battleState = battleState
         )
 
-        // Step 7 — Doom only the dice still present after Strike effects.
-        val doom = DoomResolver().execute(
+    /** Battle Step 7 — Doom the lowest value groups until at least two dice die. */
+    fun executeDoom(
+        game: Game,
+        battleState: BattleState
+    ): DoomResult =
+        DoomResolver().execute(
             game = game,
             battleState = battleState
         )
 
-        // Step 8 — reclaim survivors, return Critters, reset round state, Refresh.
-        val cleanup = BattleCleanupCoordinator(
-            refreshResolver = refreshResolver
+    /** Battle Step 8 — reclaim surviving dice/Critters and Refresh if ready. */
+    fun executeCleanup(
+        game: Game,
+        battleState: BattleState
+    ): BattleCleanupResult =
+        BattleCleanupCoordinator(
+            refreshResolver = RefreshResolver(game.chronicle)
         ).execute(
             game = game,
             battleState = battleState
         )
 
-        return BattleRoundResult(
-            openingDrawCounts = openingDrawCounts.toMap(),
-            battleOrder = battleState.playerIdsInBattleOrder,
-            initialPlacements = initialPlacements.toList(),
-            actions = actions,
-            strikes = strikes,
-            doom = doom,
-            cleanup = cleanup
+    private fun createRollResolver(
+        game: Game,
+        battleState: BattleState?
+    ): RollResolver =
+        RollResolver(
+            grove = game.grove,
+            chronicle = game.chronicle,
+            immediateWispHandler = { player, card ->
+                effectExecutor.execute(
+                    GameEffectRequest(
+                        game = game,
+                        actor = player,
+                        effect = card.effect,
+                        source = GameEffectSource.Wisp(card),
+                        phase = GameEffectPhase.BATTLE,
+                        battleState = battleState
+                    )
+                )
+            }
         )
+
+    private fun requireBattleCard(roundCard: RoundCard) {
+        require(roundCard.type == RoundCardType.BATTLE) {
+            "BattleRound requires a Battle Round card: ${roundCard.type}"
+        }
     }
 }
