@@ -1,17 +1,21 @@
 package dugsolutions.leaf.v35.player.decision.baseline.wound
 
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
-import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.mechanical.wound.MechanicalWoundStrategy
+import dugsolutions.leaf.v35.player.decision.wound.ChooseWoundRequest
+import dugsolutions.leaf.v35.player.decision.wound.WoundChoice
+import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 
-/**
- * Human Baseline wound policy shell.
- *
- * The Human Baseline scoring/context implementation will replace this
- * delegate incrementally. Keeping a distinct type now cleanly separates the
- * simulation baseline from Mechanical Control without changing behavior yet.
- */
 class HumanBaselineWoundStrategy(
     private val delegate: WoundStrategy = MechanicalWoundStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
-) : WoundStrategy by delegate
+) : WoundStrategy {
+    override fun choose(request: ChooseWoundRequest): WoundChoice {
+        if (request.context == DecisionContext.EMPTY) return delegate.choose(request)
+        return scoreEngine.chooseValue(
+            request.legalChoices.map { ScoredChoice(it, WoundPriority.score(request.context, it)) }
+        )
+    }
+}

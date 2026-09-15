@@ -15,18 +15,15 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
  * Canonical simulation baseline: simple, reasonable human play.
  *
  * This layer is intentionally separate from [MechanicalControl]. Scoring
- * primitives and a strategy-only random stream now exist; the detailed Human
- * Baseline heuristics are still added incrementally in the later stages.
+ * primitives and a strategy-only random stream now exist; Step 6 implements
+ * the non-card Human Baseline decisions while card-specific scoring remains Step 7.
  */
 object HumanBaseline {
     const val NAME: String = "Human Baseline"
     const val STRATEGY_LEVEL: Int = 1
 
-    /**
-     * False until the actual Human Baseline decision heuristics replace the
-     * temporary Mechanical Control delegates.
-     */
-    const val HEURISTICS_IMPLEMENTED: Boolean = false
+    /** Non-card Human Baseline heuristics (Step 6) are active. */
+    const val HEURISTICS_IMPLEMENTED: Boolean = true
 
     fun createDirector(
         strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()

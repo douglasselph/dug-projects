@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.player.decision.baseline.reward.HumanBaselineReward
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import kotlin.test.Test
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
@@ -48,8 +47,8 @@ class DecisionLayerContractTest {
     }
 
     @Test
-    fun `human baseline explicitly reports heuristic implementation pending`() {
+    fun `human baseline reports non-card heuristics implemented`() {
         assertTrue(HumanBaseline.NAME.isNotBlank())
-        assertFalse(HumanBaseline.HEURISTICS_IMPLEMENTED)
+        assertTrue(HumanBaseline.HEURISTICS_IMPLEMENTED)
     }
 }

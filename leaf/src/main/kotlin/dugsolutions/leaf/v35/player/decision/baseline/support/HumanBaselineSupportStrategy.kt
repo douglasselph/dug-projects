@@ -1,17 +1,18 @@
 package dugsolutions.leaf.v35.player.decision.baseline.support
 
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
+import dugsolutions.leaf.v35.player.decision.support.ButterflyRollChoice
+import dugsolutions.leaf.v35.player.decision.support.ChooseButterflyRollRequest
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
-import dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy
 
-/**
- * Human Baseline support policy shell.
- *
- * The Human Baseline scoring/context implementation will replace this
- * delegate incrementally. Keeping a distinct type now cleanly separates the
- * simulation baseline from Mechanical Control without changing behavior yet.
- */
+/** Once the Butterfly has been rolled, a normal player keeps the higher visible result. */
 class HumanBaselineSupportStrategy(
-    private val delegate: SupportStrategy = MechanicalSupportStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
-) : SupportStrategy by delegate
+) : SupportStrategy {
+    override fun chooseButterflyRoll(request: ChooseButterflyRollRequest): ButterflyRollChoice =
+        if (request.rerolledValue > request.originalValue) {
+            ButterflyRollChoice.REROLLED
+        } else {
+            ButterflyRollChoice.ORIGINAL
+        }
+}

@@ -1,17 +1,26 @@
 package dugsolutions.leaf.v35.player.decision.baseline.placement
 
+import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
-import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy
+import dugsolutions.leaf.v35.player.decision.placement.ChooseCreaturePlacementRequest
+import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 
-/**
- * Human Baseline placement policy shell.
- *
- * The Human Baseline scoring/context implementation will replace this
- * delegate incrementally. Keeping a distinct type now cleanly separates the
- * simulation baseline from Mechanical Control without changing behavior yet.
- */
 class HumanBaselineCreaturePlacementStrategy(
     private val delegate: CreaturePlacementStrategy = MechanicalCreaturePlacementStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
-) : CreaturePlacementStrategy by delegate
+) : CreaturePlacementStrategy {
+    override fun choose(request: ChooseCreaturePlacementRequest): GraftPlacement {
+        if (request.context == DecisionContext.EMPTY) return delegate.choose(request)
+        return scoreEngine.chooseValue(
+            request.legalPlacements.map { placement ->
+                ScoredChoice(
+                    placement,
+                    GraftPlacementPriority.score(request.context, request.card.type, placement)
+                )
+            }
+        )
+    }
+}
