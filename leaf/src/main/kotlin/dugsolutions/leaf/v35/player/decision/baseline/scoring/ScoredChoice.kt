@@ -12,4 +12,18 @@ data class ScoredChoice<T>(
         score.explanation(baseReason).copy(
             label = label
         )
+
+    companion object {
+        /** Preserve the candidate's base reasoning and append global influences. */
+        fun <T> from(
+            candidate: DecisionCandidate<T>,
+            additionalAdjustments: List<ScoreAdjustment> = emptyList()
+        ): ScoredChoice<T> =
+            ScoredChoice(
+                choice = candidate.choice,
+                score = candidate.score.copy(
+                    adjustments = candidate.score.adjustments + additionalAdjustments
+                )
+            )
+    }
 }

@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrate
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.HumanBaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.placement.HumanBaselineCreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.reward.HumanBaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
@@ -23,14 +24,30 @@ object HumanBaseline {
     ): DecisionDirector {
         val scoreEngine = BaselineScoreEngine(strategyRandomizer)
         val cardScorers = HumanBaselineCardScorerRegistry()
+        val influenceRegistry = BaselineInfluenceRegistry(cardScorers)
 
         return DecisionDirector(
-            reward = HumanBaselineRewardStrategy(scoreEngine = scoreEngine),
+            reward = HumanBaselineRewardStrategy(
+                scoreEngine = scoreEngine,
+                influenceRegistry = influenceRegistry
+            ),
             wound = HumanBaselineWoundStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
             placement = HumanBaselineCreaturePlacementStrategy(scoreEngine = scoreEngine),
-            cultivation = HumanBaselineCultivationStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
-            battle = HumanBaselineBattleStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
-            buy = HumanBaselineBuyStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
+            cultivation = HumanBaselineCultivationStrategy(
+                scoreEngine = scoreEngine,
+                cardScorers = cardScorers,
+                influenceRegistry = influenceRegistry
+            ),
+            battle = HumanBaselineBattleStrategy(
+                scoreEngine = scoreEngine,
+                cardScorers = cardScorers,
+                influenceRegistry = influenceRegistry
+            ),
+            buy = HumanBaselineBuyStrategy(
+                scoreEngine = scoreEngine,
+                cardScorers = cardScorers,
+                influenceRegistry = influenceRegistry
+            ),
             support = HumanBaselineSupportStrategy(scoreEngine = scoreEngine),
             effect = HumanBaselineEffectStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers)
         )

@@ -1,9 +1,12 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 object WaterPriority {
+    val tags: Set<DecisionTag> = setOf(DecisionTag.ACQUIRE_WATER)
+
     fun score(context: DecisionContext): PriorityScore =
         when (context.self.board.water) {
             0 -> PriorityScore(30).adjusted(20, "Acquire first Water")

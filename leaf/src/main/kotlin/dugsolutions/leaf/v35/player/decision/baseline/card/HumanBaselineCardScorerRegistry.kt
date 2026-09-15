@@ -6,7 +6,9 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.plant.flower.*
 import dugsolutions.leaf.v35.player.decision.baseline.card.plant.root.*
 import dugsolutions.leaf.v35.player.decision.baseline.card.plant.vine.*
 import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.*
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluencer
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 
 /** Single source of truth for every Human Baseline Plant/Wisp scorer. */
@@ -45,6 +47,14 @@ class HumanBaselineCardScorerRegistry(
     fun forWisp(card: WispCard): HumanBaselineCardScorer = forName(card.name)
 
     fun forEffect(effect: GameEffect): List<HumanBaselineCardScorer> = byEffect[effect].orEmpty()
+
+    fun influencersForCardName(name: String): List<BaselineInfluencer> =
+        findByName(name)?.influencers.orEmpty()
+
+    fun influencersForOwnedCards(context: DecisionContext): List<BaselineInfluencer> =
+        context.self.board.creature.flatMap { card ->
+            influencersForCardName(card.name)
+        }
 
     fun registeredNames(): Set<String> = byName.keys
 

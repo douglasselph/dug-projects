@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.reward
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.tokens.Critter
@@ -28,4 +29,12 @@ object CritterRewardPriority {
         }
         return score
     }
+
+    fun tags(critter: Critter): Set<DecisionTag> =
+        setOf(
+            when (critter) {
+                Critter.BEE -> DecisionTag.ACQUIRE_BEE
+                Critter.WORM -> DecisionTag.ACQUIRE_WORM
+            }
+        )
 }

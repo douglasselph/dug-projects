@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.buy
 
 import dugsolutions.leaf.v35.player.decision.baseline.common.ReserveResource
 import dugsolutions.leaf.v35.player.decision.baseline.common.ResourceReserveHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -32,5 +33,10 @@ object PaymentPriority {
             )
         }
         return score
+    }
+
+    fun tags(payment: BuyPayment): Set<DecisionTag> = buildSet {
+        if (payment.critters.any { it.critter == Critter.BEE }) add(DecisionTag.SPEND_BEE)
+        if (payment.critters.any { it.critter == Critter.WORM }) add(DecisionTag.SPEND_WORM)
     }
 }

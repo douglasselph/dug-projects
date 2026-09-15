@@ -1,7 +1,9 @@
 package dugsolutions.leaf.v35.player.decision.baseline.buy
 
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
 import dugsolutions.leaf.v35.player.decision.buy.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -10,7 +12,8 @@ import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrateg
 class HumanBaselineBuyStrategy(
     private val delegate: BuyStrategy = MechanicalBuyStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
-    internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+    internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
 ) : BuyStrategy {
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         if (request.context == DecisionContext.EMPTY || request.options.isEmpty()) {
@@ -51,9 +54,15 @@ class HumanBaselineBuyStrategy(
         if (payments.isEmpty()) return BuyPayment()
 
         return scoreEngine.chooseValue(
-            payments.map { payment ->
-                ScoredChoice(payment, PaymentPriority.score(request.context, payment, request.cost))
-            }
+            context = request.context,
+            candidates = payments.map { payment ->
+                DecisionCandidate(
+                    choice = payment,
+                    score = PaymentPriority.score(request.context, payment, request.cost),
+                    tags = PaymentPriority.tags(payment)
+                )
+            },
+            influenceRegistry = influenceRegistry
         )
     }
 

@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.card
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluencer
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -18,6 +19,8 @@ interface HumanBaselineCardScorer {
     val effect: GameEffect
     val cultivationPlayBase: Int
     val battlePlayBase: Int
+    val influencers: List<BaselineInfluencer>
+        get() = emptyList()
 
     fun playScore(
         context: DecisionContext,

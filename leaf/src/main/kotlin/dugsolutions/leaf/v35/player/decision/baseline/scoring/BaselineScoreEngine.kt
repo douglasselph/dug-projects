@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.scoring
 
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 
 /**
@@ -31,4 +33,22 @@ class BaselineScoreEngine(
     fun <T> chooseValue(
         choices: List<ScoredChoice<T>>
     ): T = choose(choices).choice
+
+    /** Apply owned-card influences before choosing among tagged candidates. */
+    fun <T> choose(
+        context: DecisionContext,
+        candidates: List<DecisionCandidate<T>>,
+        influenceRegistry: BaselineInfluenceRegistry
+    ): ScoredChoice<T> =
+        choose(
+            candidates.map { candidate ->
+                influenceRegistry.score(context, candidate)
+            }
+        )
+
+    fun <T> chooseValue(
+        context: DecisionContext,
+        candidates: List<DecisionCandidate<T>>,
+        influenceRegistry: BaselineInfluenceRegistry
+    ): T = choose(context, candidates, influenceRegistry).choice
 }

@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -19,6 +20,30 @@ object BattleSupportPriority {
         when (action) {
             is BattleSupportAction.PlaceCritter -> scoreCritter(context, action)
             is BattleSupportAction.Shared -> scoreShared(context, action.action, cardScorers)
+        }
+
+    fun tags(action: BattleSupportAction): Set<DecisionTag> =
+        when (action) {
+            is BattleSupportAction.PlaceCritter -> setOf(
+                when (action.critter) {
+                    Critter.BEE -> DecisionTag.SPEND_BEE
+                    Critter.WORM -> DecisionTag.SPEND_WORM
+                }
+            )
+            is BattleSupportAction.Shared -> when (action.action) {
+                is SupportAction.PlayWisp -> setOf(DecisionTag.PLAY_WISP)
+                is SupportAction.UseWaterReroll -> setOf(DecisionTag.SPEND_WATER)
+                SupportAction.UseWaterRefresh -> setOf(
+                    DecisionTag.SPEND_WATER,
+                    DecisionTag.REFRESH_CREATURE
+                )
+                is SupportAction.UseMulch -> setOf(DecisionTag.SPEND_MULCH)
+                is SupportAction.UseWormFlip -> setOf(
+                    DecisionTag.SPEND_WORM,
+                    DecisionTag.REFRESH_CREATURE
+                )
+                is SupportAction.UseButterfly -> emptySet()
+            }
         }
 
     private fun scoreCritter(context: DecisionContext, action: BattleSupportAction.PlaceCritter): PriorityScore {
