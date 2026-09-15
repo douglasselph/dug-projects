@@ -7,7 +7,6 @@ import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenc
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
-import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
 import dugsolutions.leaf.v35.player.decision.battle.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
@@ -58,9 +57,14 @@ class HumanBaselineBattleStrategy(
     override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest): StrikeRow {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseDiePlacement(request)
         return scoreEngine.chooseValue(
-            request.legalRows.map { row ->
-                ScoredChoice(row, BattlePlacementPriority.score(request.context, row, request.die.value))
-            }
+            context = request.context,
+            candidates = request.legalRows.map { row ->
+                DecisionCandidate(
+                    choice = row,
+                    score = BattlePlacementPriority.score(request.context, row, request.die.value)
+                )
+            },
+            influenceRegistry = influenceRegistry
         )
     }
 

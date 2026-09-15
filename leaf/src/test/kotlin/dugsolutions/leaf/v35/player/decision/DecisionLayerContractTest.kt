@@ -1,12 +1,13 @@
 package dugsolutions.leaf.v35.player.decision
 
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselineDecisionDirector
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.reward.HumanBaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
@@ -40,6 +41,21 @@ class DecisionLayerContractTest {
         val effect = human.effect as HumanBaselineEffectStrategy
         assertSame(battle.cardScorers, buy.cardScorers)
         assertSame(battle.cardScorers, effect.cardScorers)
+    }
+
+
+    @Test
+    fun `human baseline wiring object owns one shared scoring graph`() {
+        val wiring = HumanBaselineDecisionDirector()
+
+        assertSame(wiring.scoreEngine, wiring.reward.scoreEngine)
+        assertSame(wiring.scoreEngine, wiring.battle.scoreEngine)
+        assertSame(wiring.scoreEngine, wiring.buy.scoreEngine)
+        assertSame(wiring.scoreEngine, wiring.effect.scoreEngine)
+        assertSame(wiring.influenceRegistry, wiring.reward.influenceRegistry)
+        assertSame(wiring.influenceRegistry, wiring.battle.influenceRegistry)
+        assertSame(wiring.influenceRegistry, wiring.buy.influenceRegistry)
+        assertSame(wiring.influenceRegistry, wiring.effect.influenceRegistry)
     }
 
     @Test

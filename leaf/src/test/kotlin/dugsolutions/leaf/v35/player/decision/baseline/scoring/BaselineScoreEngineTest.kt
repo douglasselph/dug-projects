@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.scoring
 
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -92,6 +94,28 @@ class BaselineScoreEngineTest {
         assertEquals("second tied leader", chosen.choice)
         assertEquals(1, randomizer.calls)
         assertEquals(2, randomizer.lastUntil)
+    }
+
+
+    @Test
+    fun chooseValue_candidatePipelineScoresAllCandidatesAndKeepsUniqueWinnerDeterministic() {
+        val randomizer = RecordingStrategyRandomizer(next = 0)
+        val engine = BaselineScoreEngine(randomizer)
+        val context = DecisionContext.EMPTY
+        val registry = BaselineInfluenceRegistry()
+
+        val chosen = engine.chooseValue(
+            context = context,
+            candidates = listOf(
+                DecisionCandidate("low", PriorityScore(10)),
+                DecisionCandidate("high", PriorityScore(30)),
+                DecisionCandidate("middle", PriorityScore(20))
+            ),
+            influenceRegistry = registry
+        )
+
+        assertEquals("high", chosen)
+        assertEquals(0, randomizer.calls)
     }
 
     @Test

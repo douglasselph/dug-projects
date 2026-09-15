@@ -34,17 +34,27 @@ class BaselineScoreEngine(
         choices: List<ScoredChoice<T>>
     ): T = choose(choices).choice
 
-    /** Apply owned-card influences before choosing among tagged candidates. */
+    /** Score every legal candidate, including all owned-card influences. */
+    fun <T> scoreCandidates(
+        context: DecisionContext,
+        candidates: List<DecisionCandidate<T>>,
+        influenceRegistry: BaselineInfluenceRegistry
+    ): List<ScoredChoice<T>> {
+        require(candidates.isNotEmpty()) {
+            "Cannot score an empty Human Baseline candidate list"
+        }
+        return candidates.map { candidate ->
+            influenceRegistry.score(context, candidate)
+        }
+    }
+
+    /** Canonical Step-9 path: score all legal candidates, then select the best. */
     fun <T> choose(
         context: DecisionContext,
         candidates: List<DecisionCandidate<T>>,
         influenceRegistry: BaselineInfluenceRegistry
     ): ScoredChoice<T> =
-        choose(
-            candidates.map { candidate ->
-                influenceRegistry.score(context, candidate)
-            }
-        )
+        choose(scoreCandidates(context, candidates, influenceRegistry))
 
     fun <T> chooseValue(
         context: DecisionContext,
