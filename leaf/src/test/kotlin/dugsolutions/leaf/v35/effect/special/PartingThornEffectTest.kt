@@ -102,16 +102,16 @@ class PartingThornEffectTest {
 
     @Test
     fun battleForcesOneNormalWoundOnEveryOpponentButNotActor() {
-        val actor = Player(PlayerId(1), DecisionDirector.baseline())
+        val actor = Player(PlayerId(1), DecisionDirector.mechanicalControl())
         val wound2 = RecordingWoundStrategy()
         val wound3 = RecordingWoundStrategy()
         val opponent2 = Player(
             PlayerId(2),
-            DecisionDirector.baseline().copy(wound = wound2)
+            DecisionDirector.mechanicalControl().copy(wound = wound2)
         )
         val opponent3 = Player(
             PlayerId(3),
-            DecisionDirector.baseline().copy(wound = wound3)
+            DecisionDirector.mechanicalControl().copy(wound = wound3)
         )
         val game = EffectTestFixture.game(actor, opponent2, opponent3)
 
@@ -144,8 +144,8 @@ class PartingThornEffectTest {
 
     @Test
     fun battleUsesFullWoundResolverIncludingSnipAndReturnToGrove() {
-        val actor = Player(PlayerId(1), DecisionDirector.baseline())
-        val opponent = Player(PlayerId(2), DecisionDirector.baseline())
+        val actor = Player(PlayerId(1), DecisionDirector.mechanicalControl())
+        val opponent = Player(PlayerId(2), DecisionDirector.mechanicalControl())
         val game = EffectTestFixture.game(actor, opponent)
         val card = graft(game, opponent, PlantType.ROOT)
         val stack = game.grove.plantMarket.stackFor(card.card)!!

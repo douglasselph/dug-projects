@@ -1,8 +1,8 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
-import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
 import dugsolutions.leaf.v35.player.decision.battle.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -10,13 +10,14 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
 
 class HumanBaselineBattleStrategy(
     private val delegate: BattleStrategy = MechanicalBattleStrategy(),
-    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine()
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
+    internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
 ) : BattleStrategy {
     override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseFirstMainAction(request)
         return scoreEngine.chooseValue(
             request.legalChoices.map { action ->
-                ScoredChoice(action, BattleMainPriority.score(request.context, request.roundCard, action))
+                ScoredChoice(action, BattleMainPriority.score(request.context, request.roundCard, action, cardScorers))
             }
         )
     }
@@ -26,9 +27,9 @@ class HumanBaselineBattleStrategy(
         val scored = request.legalChoices.map { choice ->
             val score = when (choice) {
                 is BattleTurnAction.FinalMain ->
-                    BattleMainPriority.score(request.context, request.roundCard, choice.action)
+                    BattleMainPriority.score(request.context, request.roundCard, choice.action, cardScorers)
                         .adjusted(5, "Final Main action ends participation")
-                is BattleTurnAction.Support -> BattleSupportPriority.score(request.context, choice.action)
+                is BattleTurnAction.Support -> BattleSupportPriority.score(request.context, choice.action, cardScorers)
             }
             ScoredChoice(choice, score)
         }

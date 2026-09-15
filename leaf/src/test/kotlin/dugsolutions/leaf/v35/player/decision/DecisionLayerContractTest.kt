@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.reward.HumanBaselineRewardStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
@@ -36,6 +37,9 @@ class DecisionLayerContractTest {
 
         assertSame(reward.scoreEngine, battle.scoreEngine)
         assertSame(reward.scoreEngine, buy.scoreEngine)
+        val effect = human.effect as HumanBaselineEffectStrategy
+        assertSame(battle.cardScorers, buy.cardScorers)
+        assertSame(battle.cardScorers, effect.cardScorers)
     }
 
     @Test

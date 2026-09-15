@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
+import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.DrawPriority
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
@@ -8,10 +10,20 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
 object BattleMainPriority {
-    fun score(context: DecisionContext, roundCard: RoundCard, action: BattleMainAction): PriorityScore =
+    fun score(
+        context: DecisionContext,
+        roundCard: RoundCard,
+        action: BattleMainAction,
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+    ): PriorityScore =
         when (action) {
             BattleMainAction.Draw -> DrawPriority.score(context).adjusted(10, "An extra Battle die can reinforce a needy row")
-            is BattleMainAction.ActivatePlant -> PriorityScore(55) // Step 7 replaces this placeholder
+            is BattleMainAction.ActivatePlant ->
+                cardScorers.forPlant(action.card.card).playScore(
+                    context = context,
+                    phase = CardPhase.BATTLE,
+                    cardName = action.card.card.name
+                )
             BattleMainAction.RoundEffect1 -> scoreRoundEffect(roundCard.firstEffect.effect)
             BattleMainAction.RoundEffect2 -> scoreRoundEffect(roundCard.secondEffect.effect)
         }

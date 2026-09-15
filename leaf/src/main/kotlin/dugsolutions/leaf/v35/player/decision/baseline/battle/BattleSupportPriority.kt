@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
+import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
@@ -10,10 +11,14 @@ import dugsolutions.leaf.v35.tokens.Critter
 import kotlin.math.roundToInt
 
 object BattleSupportPriority {
-    fun score(context: DecisionContext, action: BattleSupportAction): PriorityScore =
+    fun score(
+        context: DecisionContext,
+        action: BattleSupportAction,
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+    ): PriorityScore =
         when (action) {
             is BattleSupportAction.PlaceCritter -> scoreCritter(context, action)
-            is BattleSupportAction.Shared -> scoreShared(context, action.action)
+            is BattleSupportAction.Shared -> scoreShared(context, action.action, cardScorers)
         }
 
     private fun scoreCritter(context: DecisionContext, action: BattleSupportAction.PlaceCritter): PriorityScore {
@@ -29,7 +34,11 @@ object BattleSupportPriority {
         return score
     }
 
-    private fun scoreShared(context: DecisionContext, action: SupportAction): PriorityScore =
+    private fun scoreShared(
+        context: DecisionContext,
+        action: SupportAction,
+        cardScorers: HumanBaselineCardScorerRegistry
+    ): PriorityScore =
         when (action) {
             is SupportAction.UseWaterReroll -> {
                 val row = findRow(context, action.die.index)
@@ -48,14 +57,18 @@ object BattleSupportPriority {
                 } ?: 0
                 PriorityScore(35 + (DieValueHeuristics.expectedRoll(sides) * 3).roundToInt() + highestNeed / 4)
             }
-            is SupportAction.UseWormFlip -> PriorityScore(35).adjusted(10, "Refreshing a spent Plant can create another useful action")
+            is SupportAction.UseWormFlip -> {
+                val card = context.self.board.creature.firstOrNull { it.id == action.cardId }
+                val preserve = card?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
+                PriorityScore(25 + preserve / 3).adjusted(10, "Refreshes a spent Plant")
+            }
             is SupportAction.UseButterfly -> {
                 val expected = DieValueHeuristics.expectedKeepBestRerollGain(action.die.sides, action.die.value)
                 val row = findRow(context, action.die.index)
                 val need = row?.let { RowNeedHeuristics.calculate(context, it).needScore } ?: 0
                 PriorityScore(30 + (expected * 5).roundToInt() + need / 4)
             }
-            is SupportAction.PlayWisp -> PriorityScore(25) // Step 7 supplies Wisp-specific play scoring
+            is SupportAction.PlayWisp -> cardScorers.forWisp(action.card).wispPlayScore(context, action.card)
         }
 
     private fun findRow(context: DecisionContext, handIndex: Int) =

@@ -30,11 +30,11 @@ internal object EffectTestFixture {
     fun player(
         id: Int,
         hand: List<Die> = emptyList(),
-        effectStrategy: EffectStrategy = DecisionDirector.baseline().effect
+        effectStrategy: EffectStrategy = DecisionDirector.mechanicalControl().effect
     ): Player =
         Player(
             id = PlayerId(id),
-            decisions = DecisionDirector.baseline().copy(
+            decisions = DecisionDirector.mechanicalControl().copy(
                 effect = effectStrategy
             ),
             dice = PlayerDice(hand = hand)

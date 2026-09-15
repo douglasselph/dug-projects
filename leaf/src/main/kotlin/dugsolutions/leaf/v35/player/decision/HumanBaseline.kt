@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.HumanBaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.placement.HumanBaselineCreaturePlacementStrategy
@@ -11,40 +12,27 @@ import dugsolutions.leaf.v35.player.decision.baseline.support.HumanBaselineSuppo
 import dugsolutions.leaf.v35.player.decision.baseline.wound.HumanBaselineWoundStrategy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 
-/**
- * Canonical simulation baseline: simple, reasonable human play.
- *
- * This layer is intentionally separate from [MechanicalControl]. Scoring
- * primitives and a strategy-only random stream now exist; Step 6 implements
- * the non-card Human Baseline decisions while card-specific scoring remains Step 7.
- */
+/** Canonical simulation baseline: simple, reasonable human play. */
 object HumanBaseline {
     const val NAME: String = "Human Baseline"
     const val STRATEGY_LEVEL: Int = 1
-
-    /** Non-card Human Baseline heuristics (Step 6) are active. */
     const val HEURISTICS_IMPLEMENTED: Boolean = true
 
     fun createDirector(
         strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()
     ): DecisionDirector {
-        /*
-         * One player owns one strategy stream. All Human Baseline decision
-         * areas share this score engine, so equal-score choices are random but
-         * can never consume the Game's mechanical RNG.
-         */
-        val scoreEngine =
-            BaselineScoreEngine(strategyRandomizer)
+        val scoreEngine = BaselineScoreEngine(strategyRandomizer)
+        val cardScorers = HumanBaselineCardScorerRegistry()
 
         return DecisionDirector(
             reward = HumanBaselineRewardStrategy(scoreEngine = scoreEngine),
-            wound = HumanBaselineWoundStrategy(scoreEngine = scoreEngine),
+            wound = HumanBaselineWoundStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
             placement = HumanBaselineCreaturePlacementStrategy(scoreEngine = scoreEngine),
-            cultivation = HumanBaselineCultivationStrategy(scoreEngine = scoreEngine),
-            battle = HumanBaselineBattleStrategy(scoreEngine = scoreEngine),
-            buy = HumanBaselineBuyStrategy(scoreEngine = scoreEngine),
+            cultivation = HumanBaselineCultivationStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
+            battle = HumanBaselineBattleStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
+            buy = HumanBaselineBuyStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers),
             support = HumanBaselineSupportStrategy(scoreEngine = scoreEngine),
-            effect = HumanBaselineEffectStrategy(scoreEngine = scoreEngine)
+            effect = HumanBaselineEffectStrategy(scoreEngine = scoreEngine, cardScorers = cardScorers)
         )
     }
 }
