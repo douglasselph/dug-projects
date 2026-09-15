@@ -3,10 +3,17 @@ package dugsolutions.leaf.v35.player.decision.baseline.scoring
 /** One legal action+target candidate together with its Human Baseline score. */
 data class ScoredChoice<T>(
     val choice: T,
-    val score: PriorityScore
+    val score: PriorityScore,
+    val label: String = choice.toString()
 ) {
+    init {
+        require(label.isNotBlank()) {
+            "Scored choice label cannot be blank"
+        }
+    }
+
     fun explanation(
-        label: String = choice.toString(),
+        label: String = this.label,
         baseReason: String = "Base score"
     ): ScoreExplanation =
         score.explanation(baseReason).copy(
@@ -23,7 +30,8 @@ data class ScoredChoice<T>(
                 choice = candidate.choice,
                 score = candidate.score.copy(
                     adjustments = candidate.score.adjustments + additionalAdjustments
-                )
+                ),
+                label = candidate.label
             )
     }
 }

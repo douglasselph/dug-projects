@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.di
 
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffectConverter
@@ -11,12 +12,15 @@ import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.junit.jupiter.api.BeforeEach
@@ -267,6 +271,75 @@ class GameFactoryTest {
             },
             second.grove.wispDeck.cards.cards.map {
                 it.name
+            }
+        )
+    }
+
+    @Test
+    fun recordDecisionReasoning_enabledWritesSelectedHumanBaselineScoreToGameChronicle() {
+        val game = factory(
+            GameConfig.humanBaseline(
+                selectedPlantCards = selectedCards,
+                numPlayers = 2,
+                seed = 123L,
+                recordDecisionReasoning = true
+            )
+        )
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            progress = DecisionContext.EMPTY.progress.copy(
+                currentCultivationRoundNumber = 1
+            )
+        )
+
+        game.players.first().decisions.reward.chooseCritter(
+            ChooseCritterRequest(
+                legalChoices = listOf(Critter.BEE, Critter.WORM),
+                ownedCritters = emptyList(),
+                context = context
+            )
+        )
+
+        val reasoningEntries =
+            game.chronicle.entries.filterIsInstance<GameEntry.DecisionReasoning>()
+
+        assertEquals(1, reasoningEntries.size)
+        assertEquals(game.players.first().id, reasoningEntries.single().playerId)
+        assertEquals("BEE", reasoningEntries.single().choiceLabel)
+        assertTrue(
+            reasoningEntries.single().adjustments.any { adjustment ->
+                adjustment.reason == "Early Cultivation prefers Bees"
+            }
+        )
+    }
+
+    @Test
+    fun recordDecisionReasoning_disabledByDefaultDoesNotWriteScoreEntries() {
+        val game = factory(
+            GameConfig.humanBaseline(
+                selectedPlantCards = selectedCards,
+                numPlayers = 2,
+                seed = 456L
+            )
+        )
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            progress = DecisionContext.EMPTY.progress.copy(
+                currentCultivationRoundNumber = 1
+            )
+        )
+
+        game.players.first().decisions.reward.chooseCritter(
+            ChooseCritterRequest(
+                legalChoices = listOf(Critter.BEE, Critter.WORM),
+                ownedCritters = emptyList(),
+                context = context
+            )
+        )
+
+        assertTrue(
+            game.chronicle.entries.none { entry ->
+                entry is GameEntry.DecisionReasoning
             }
         )
     }

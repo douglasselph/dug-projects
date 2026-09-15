@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngin
 import dugsolutions.leaf.v35.player.decision.baseline.support.HumanBaselineSupportStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.wound.HumanBaselineWoundStrategy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 
 /**
  * Canonical wiring for the Human Baseline layer.
@@ -24,7 +25,11 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
  */
 class HumanBaselineDecisionDirector(
     strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
-    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(strategyRandomizer),
+    reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE,
+    internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(
+        randomizer = strategyRandomizer,
+        reasoningSink = reasoningSink
+    ),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
 ) {

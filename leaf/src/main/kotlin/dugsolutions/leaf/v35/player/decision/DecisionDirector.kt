@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
 import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 
 /**
  * Per-player composition of decision policies.
@@ -36,9 +37,13 @@ data class DecisionDirector(
             MechanicalControl.createDirector()
 
         fun humanBaseline(
-            strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()
+            strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
+            reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE
         ): DecisionDirector =
-            HumanBaseline.createDirector(strategyRandomizer)
+            HumanBaseline.createDirector(
+                strategyRandomizer = strategyRandomizer,
+                reasoningSink = reasoningSink
+            )
 
         /**
          * Canonical baseline now means Human Baseline. This name is retained

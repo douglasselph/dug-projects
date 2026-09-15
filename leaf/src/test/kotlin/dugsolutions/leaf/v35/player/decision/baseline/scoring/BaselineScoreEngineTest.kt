@@ -3,6 +3,8 @@ package dugsolutions.leaf.v35.player.decision.baseline.scoring
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoning
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -58,6 +60,42 @@ class BaselineScoreEngineTest {
                 "+20  Reaches Flower-17 purchase tier\n" +
                 "Total  132",
             explanation.render()
+        )
+    }
+
+    @Test
+    fun choose_whenReasoningEnabled_recordsOnlySelectedChoiceBreakdown() {
+        val recorded = mutableListOf<DecisionReasoning>()
+        val engine = BaselineScoreEngine(
+            randomizer = RecordingStrategyRandomizer(next = 0),
+            reasoningSink = DecisionReasoningSink { reasoning ->
+                recorded += reasoning
+            }
+        )
+
+        engine.choose(
+            listOf(
+                ScoredChoice(
+                    choice = "low",
+                    score = PriorityScore(10),
+                    label = "Low candidate"
+                ),
+                ScoredChoice(
+                    choice = "high",
+                    score = PriorityScore(40)
+                        .adjusted(+15, "Useful context"),
+                    label = "High candidate"
+                )
+            )
+        )
+
+        assertEquals(1, recorded.size)
+        assertEquals("High candidate", recorded.single().choiceLabel)
+        assertEquals(40, recorded.single().baseScore)
+        assertEquals(55, recorded.single().total)
+        assertEquals(
+            listOf("Useful context"),
+            recorded.single().adjustments.map { it.reason }
         )
     }
 

@@ -83,6 +83,14 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.effect, moment.sourceKind,
                 moment.sourceName, moment.phase
             )
+            is Moment.DecisionReasoning -> GameEntry.DecisionReasoning(
+                sequence = sequence,
+                playerId = moment.playerId,
+                choiceLabel = moment.choiceLabel,
+                baseScore = moment.baseScore,
+                adjustments = moment.adjustments.toList(),
+                total = moment.total
+            )
             is Moment.BuyOrder -> GameEntry.BuyOrder(sequence, moment.order.toList())
             is Moment.Purchase -> GameEntry.Purchase(
                 sequence, moment.playerId, moment.kind, moment.itemName,

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.di
 
+import dugsolutions.leaf.v35.chronicle.ChronicleDecisionReasoningSink
 import dugsolutions.leaf.v35.chronicle.GameChronicle
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameConfig
@@ -8,6 +9,7 @@ import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.di.PlayerFactory
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -46,16 +48,31 @@ class GameFactory(
                 dieFactory(sides)
             }
 
+        val chronicle = GameChronicle()
+
         val players =
             config.playerDecisionFactories.mapIndexed { index, decisionFactory ->
+                val playerId = PlayerId(index + 1)
                 val strategyRandomizer =
                     StrategyRandomizer.create(
                         config.strategySeedForPlayer(index)
                     )
+                val reasoningSink =
+                    if (config.recordDecisionReasoning) {
+                        ChronicleDecisionReasoningSink(
+                            chronicle = chronicle,
+                            playerId = playerId
+                        )
+                    } else {
+                        DecisionReasoningSink.NONE
+                    }
 
                 playerFactory(
-                    id = PlayerId(index + 1),
-                    decisions = decisionFactory.create(strategyRandomizer)
+                    id = playerId,
+                    decisions = decisionFactory.create(
+                        strategyRandomizer = strategyRandomizer,
+                        reasoningSink = reasoningSink
+                    )
                 )
             }
 
@@ -94,7 +111,7 @@ class GameFactory(
             config = config,
             grove = grove,
             players = players,
-            chronicle = GameChronicle(),
+            chronicle = chronicle,
             roundDeck = roundDeck,
             randomizer = randomizer,
             dieFactory = dieFactory

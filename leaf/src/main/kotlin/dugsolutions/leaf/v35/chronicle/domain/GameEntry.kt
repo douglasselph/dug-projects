@@ -84,6 +84,16 @@ sealed interface GameEntry {
         val phase: ChroniclePhase
     ) : GameEntry
 
+    /** Optional recorded reasoning for a strategy-selected choice. */
+    data class DecisionReasoning(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val choiceLabel: String,
+        val baseScore: Int,
+        val adjustments: List<DecisionScoreAdjustmentSnapshot>,
+        val total: Int
+    ) : GameEntry
+
     data class BuyOrder(
         override val sequence: Long,
         val order: List<PlayerId>

@@ -77,6 +77,15 @@ sealed interface Moment {
         val phase: ChroniclePhase
     ) : Moment
 
+    /** Optional Human Baseline/debug score explanation for the selected choice. */
+    data class DecisionReasoning(
+        val playerId: PlayerId,
+        val choiceLabel: String,
+        val baseScore: Int,
+        val adjustments: List<DecisionScoreAdjustmentSnapshot>,
+        val total: Int
+    ) : Moment
+
     data class BuyOrder(val order: List<PlayerId>) : Moment
 
     data class Purchase(
@@ -178,6 +187,11 @@ enum class PurchaseKind { PLANT, DIE }
 enum class WoundKind { FLIPPED, SNIPPED }
 enum class UpgradeDestination { HAND, DISCARD }
 enum class TrashDestination { OUT_OF_GAME }
+
+data class DecisionScoreAdjustmentSnapshot(
+    val amount: Int,
+    val reason: String
+)
 
 data class StrikeTotalSnapshot(
     val playerId: PlayerId,

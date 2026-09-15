@@ -7,5 +7,12 @@ package dugsolutions.leaf.v35.player.decision.baseline.scoring
 data class DecisionCandidate<T>(
     val choice: T,
     val score: PriorityScore,
-    val tags: Set<DecisionTag> = emptySet()
-)
+    val tags: Set<DecisionTag> = emptySet(),
+    val label: String = choice.toString()
+) {
+    init {
+        require(label.isNotBlank()) {
+            "Decision candidate label cannot be blank"
+        }
+    }
+}

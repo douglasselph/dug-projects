@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 
 /**
@@ -24,6 +25,16 @@ fun interface PlayerDecisionFactory {
     fun create(strategyRandomizer: StrategyRandomizer): DecisionDirector =
         create()
 
+    /**
+     * Optional runtime debug channel. Factories that do not produce scored
+     * decisions may ignore it and inherit this default behavior.
+     */
+    fun create(
+        strategyRandomizer: StrategyRandomizer,
+        reasoningSink: DecisionReasoningSink
+    ): DecisionDirector =
+        create(strategyRandomizer)
+
     companion object {
         fun mechanicalControl(): PlayerDecisionFactory =
             PlayerDecisionFactory {
@@ -39,6 +50,15 @@ fun interface PlayerDecisionFactory {
                     strategyRandomizer: StrategyRandomizer
                 ): DecisionDirector =
                     DecisionDirector.humanBaseline(strategyRandomizer)
+
+                override fun create(
+                    strategyRandomizer: StrategyRandomizer,
+                    reasoningSink: DecisionReasoningSink
+                ): DecisionDirector =
+                    DecisionDirector.humanBaseline(
+                        strategyRandomizer = strategyRandomizer,
+                        reasoningSink = reasoningSink
+                    )
             }
 
         /** Canonical baseline means Human Baseline. */
@@ -73,7 +93,12 @@ class GameConfig(
      * for whole-game reproducibility while remaining a separate RNG stream.
      * Set it independently to vary strategy ties without changing mechanics.
      */
-    val strategySeed: Long? = seed
+    val strategySeed: Long? = seed,
+    /**
+     * When true, scored strategy choices emit their selected score explanation
+     * into this game's Chronicle. Disabled by default for large simulations.
+     */
+    val recordDecisionReasoning: Boolean = false
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()
@@ -113,7 +138,8 @@ class GameConfig(
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
-            strategySeed: Long? = seed
+            strategySeed: Long? = seed,
+            recordDecisionReasoning: Boolean = false
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -127,7 +153,8 @@ class GameConfig(
                 roundSetup = roundSetup,
                 seed = seed,
                 dieConfig = dieConfig,
-                strategySeed = strategySeed
+                strategySeed = strategySeed,
+                recordDecisionReasoning = recordDecisionReasoning
             )
         }
 
@@ -138,7 +165,8 @@ class GameConfig(
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
-            strategySeed: Long? = seed
+            strategySeed: Long? = seed,
+            recordDecisionReasoning: Boolean = false
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -152,7 +180,8 @@ class GameConfig(
                 roundSetup = roundSetup,
                 seed = seed,
                 dieConfig = dieConfig,
-                strategySeed = strategySeed
+                strategySeed = strategySeed,
+                recordDecisionReasoning = recordDecisionReasoning
             )
         }
 
@@ -163,7 +192,8 @@ class GameConfig(
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
-            strategySeed: Long? = seed
+            strategySeed: Long? = seed,
+            recordDecisionReasoning: Boolean = false
         ): GameConfig =
             humanBaseline(
                 selectedPlantCards = selectedPlantCards,
@@ -171,13 +201,14 @@ class GameConfig(
                 roundSetup = roundSetup,
                 seed = seed,
                 dieConfig = dieConfig,
-                strategySeed = strategySeed
+                strategySeed = strategySeed,
+                recordDecisionReasoning = recordDecisionReasoning
             )
 
         /** Backward-compatible old name for Mechanical Control. */
         @Deprecated(
             message = "Use mechanicalControl()",
-            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed)")
+            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed, recordDecisionReasoning)")
         )
         fun mechanicalBaseline(
             selectedPlantCards: List<PlantCard>,
@@ -185,7 +216,8 @@ class GameConfig(
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
-            strategySeed: Long? = seed
+            strategySeed: Long? = seed,
+            recordDecisionReasoning: Boolean = false
         ): GameConfig =
             mechanicalControl(
                 selectedPlantCards = selectedPlantCards,
@@ -193,7 +225,8 @@ class GameConfig(
                 roundSetup = roundSetup,
                 seed = seed,
                 dieConfig = dieConfig,
-                strategySeed = strategySeed
+                strategySeed = strategySeed,
+                recordDecisionReasoning = recordDecisionReasoning
             )
     }
 }
