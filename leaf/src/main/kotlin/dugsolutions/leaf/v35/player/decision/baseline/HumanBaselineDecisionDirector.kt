@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.buy.PurchaseScoreModifier
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.HumanBaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
@@ -26,6 +27,7 @@ import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 class HumanBaselineDecisionDirector(
     strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
     reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE,
+    purchaseScoreModifier: PurchaseScoreModifier = PurchaseScoreModifier.NONE,
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(
         randomizer = strategyRandomizer,
         reasoningSink = reasoningSink
@@ -59,7 +61,8 @@ class HumanBaselineDecisionDirector(
     internal val buy = HumanBaselineBuyStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        purchaseScoreModifier = purchaseScoreModifier
     )
     internal val support = HumanBaselineSupportStrategy(
         scoreEngine = scoreEngine,

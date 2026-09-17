@@ -79,6 +79,10 @@ sourceSets {
         compileClasspath += sourceSets.main.get().output
         runtimeClasspath += sourceSets.main.get().output
     }
+    create("simulationTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets["simulation"].output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets["simulation"].output
+    }
 }
 
 // Simulation code is an application/research layer on top of the production
@@ -86,6 +90,14 @@ sourceSets {
 // integration-only helpers.
 configurations["simulationImplementation"].extendsFrom(configurations["implementation"])
 configurations["simulationRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
+configurations["simulationTestImplementation"].extendsFrom(
+    configurations["simulationImplementation"],
+    configurations["testImplementation"]
+)
+configurations["simulationTestRuntimeOnly"].extendsFrom(
+    configurations["simulationRuntimeOnly"],
+    configurations["testRuntimeOnly"]
+)
 
 compose.desktop {
     application {
@@ -166,10 +178,34 @@ tasks.register<Test>("v35IntegrationTest") {
 // Lightweight architecture check for the research source set. Higher-level
 // strategies are intentionally scaffolding for now; this task proves that the
 // simulation boundary compiles without pulling code into integration tests.
-tasks.register("simulationCheck") {
-    description = "Compiles the v35 simulation/research source set."
+tasks.register<Test>("simulationTest") {
+    description = "Runs v35 simulation-layer unit tests."
     group = "verification"
-    dependsOn("compileSimulationKotlin")
+
+    testClassesDirs = sourceSets["simulationTest"].output.classesDirs
+    classpath = sourceSets["simulationTest"].runtimeClasspath
+
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching("dugsolutions.leaf.simulation.v35.*")
+    }
+
+    reports {
+        html.required.set(true)
+        junitXml.required.set(true)
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
+// Lightweight architecture + unit check for the research source set.
+tasks.register("simulationCheck") {
+    description = "Compiles and tests the v35 simulation/research source set."
+    group = "verification"
+    dependsOn("compileSimulationKotlin", "simulationTest")
 }
 
 

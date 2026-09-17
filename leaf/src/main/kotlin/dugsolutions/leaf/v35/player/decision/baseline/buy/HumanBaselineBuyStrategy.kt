@@ -13,16 +13,26 @@ class HumanBaselineBuyStrategy(
     private val delegate: BuyStrategy = MechanicalBuyStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
-    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
+    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
+    private val purchaseScoreModifier: PurchaseScoreModifier = PurchaseScoreModifier.NONE
 ) : BuyStrategy {
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePurchase(request)
         if (request.options.isEmpty()) return BuyChoice.Done
 
         val candidates = request.options.map { item ->
+            val baselineScore = PurchasePriority.score(
+                context = request.context,
+                item = item,
+                cardScorers = cardScorers
+            )
             DecisionCandidate<BuyChoice>(
                 choice = BuyChoice.Purchase(item),
-                score = PurchasePriority.score(request.context, item, cardScorers = cardScorers)
+                score = purchaseScoreModifier.modify(
+                    context = request.context,
+                    item = item,
+                    score = baselineScore
+                )
             )
         } + DecisionCandidate<BuyChoice>(
             choice = BuyChoice.Done,

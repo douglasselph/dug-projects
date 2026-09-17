@@ -1,5 +1,7 @@
 package dugsolutions.leaf.simulation.v35.strategy
 
+import dugsolutions.leaf.simulation.v35.strategy.planned.CreaturePlan
+
 /** Central registry of named strategy layers and their current status. */
 object StrategyCatalog {
     data class Family(
@@ -46,6 +48,13 @@ object StrategyCatalog {
     /** Canonical simulation baseline. */
     val baseline: StrategyProfile
         get() = humanBaseline
+
+    /** Human Baseline with explicit target-card counts layered onto Buy. */
+    fun plannedBaseline(
+        plan: CreaturePlan,
+        name: String? = null
+    ): StrategyProfile =
+        StrategyProfile.plannedBaseline(plan = plan, name = name)
 
     /** Backward-compatible old Level-0 property name. */
     @Deprecated("Use mechanicalControl")

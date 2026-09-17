@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.HumanBaseline
 import dugsolutions.leaf.v35.player.decision.MechanicalControl
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.simulation.v35.strategy.planned.CreaturePlan
+import dugsolutions.leaf.simulation.v35.strategy.planned.PlannedBaselineStrategy
 
 /**
  * Named simulation strategy configuration.
@@ -84,6 +86,17 @@ class StrategyProfile(
         /** Canonical shorthand for simulation callers. */
         fun baseline(): StrategyProfile =
             humanBaseline()
+
+        /** Human Baseline with an exact Plant-acquisition plan layered onto Buy. */
+        fun plannedBaseline(
+            plan: CreaturePlan,
+            name: String? = null
+        ): StrategyProfile =
+            if (name == null) {
+                PlannedBaselineStrategy.profile(plan)
+            } else {
+                PlannedBaselineStrategy.profile(plan, name)
+            }
 
         /** Backward-compatible old name for the Level-0 control profile. */
         @Deprecated("Use mechanicalControl()")
