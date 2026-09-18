@@ -85,6 +85,13 @@ sourceSets {
     }
 }
 
+kotlin {
+    target.compilations.getByName("simulationTest")
+        .associateWith(
+            target.compilations.getByName("simulation")
+        )
+}
+
 // Simulation code is an application/research layer on top of the production
 // rules engine. It inherits production dependencies but cannot see test or
 // integration-only helpers.
