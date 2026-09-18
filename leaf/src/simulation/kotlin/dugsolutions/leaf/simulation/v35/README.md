@@ -42,3 +42,36 @@ exact requested count is owned, the plan contributes no further bonus.
 Integration-test scripted strategies remain under `src/integration` and should
 normally fall back to **Mechanical Control**, never Human Baseline. This keeps
 engine tests deterministic as Human Baseline evolves.
+
+## Step 12: focused-card experiment harness
+
+`CardFocusExperiment` runs one Planned Baseline player against ordinary Human
+Baseline opponents and rotates the focused player through every seat. The same
+sample seed is reused for each seat rotation, while mechanical and strategy
+seed streams remain separate.
+
+```kotlin
+val experiment = CardFocusExperiment(
+    gameFactory = gameFactory,
+    gameRunner = gameRunner
+)
+
+val result = experiment.run(
+    spec = CardFocusExperimentSpec(
+        targetCard = TargetCard("Root_07_02"),
+        targetCount = 2,
+        numPlayers = 4,
+        gamesPerSeat = 1_000,
+        baseSeed = 10_000L
+    ),
+    selectedPlantCards = selectedPlantCards
+)
+
+println(CardExperimentReport.render(result))
+```
+
+A four-player `gamesPerSeat = 1_000` run executes 4,000 total games. Results
+include focused-vs-baseline win share and VP deltas, acquisition frequency,
+copies purchased/surviving, target-card activations, target Plant VP, Battle
+Strike VP, and a per-seat breakdown. The result is intentionally aggregate data
+rather than retained Games/Chronicles so high-volume batches stay lightweight.
