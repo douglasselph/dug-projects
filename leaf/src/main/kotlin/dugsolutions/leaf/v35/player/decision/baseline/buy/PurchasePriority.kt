@@ -8,7 +8,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.buy.BuyItem
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
-/** Generic Human Baseline purchase score; card-specific value arrives in Step 7. */
+/** Generic Human Baseline purchase score, including card-specific acquire value. */
 object PurchasePriority {
     fun score(
         context: DecisionContext,

@@ -19,8 +19,8 @@ object StrategyCatalog {
         Family(
             StrategyLevel.HUMAN_BASELINE,
             implemented = true,
-            purpose = "Canonical simulation baseline for simple, reasonable human play; " +
-                "scoring primitives and isolated tie RNG exist now, with detailed heuristics next."
+            purpose = "Canonical simulation baseline for simple, reasonable experienced-human play " +
+                "using shared heuristics, card scorers, influences, and isolated strategy tie RNG."
         ),
         Family(
             StrategyLevel.TACTICAL,

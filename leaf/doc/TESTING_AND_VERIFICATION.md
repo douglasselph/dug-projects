@@ -1,6 +1,30 @@
 # Testing and Verification
 
-The project has three verification layers that should normally be kept distinct: production unit tests, deterministic integration tests, and simulation-layer tests.
+The project uses three layers because they answer **different questions**. Keeping those questions distinct is one of the most important safeguards in the simulation project.
+
+```text
+UNIT
+Does one rule/helper/strategy make the intended local decision or state change?
+
+        ↓
+
+INTEGRATION
+Does the real game reach that situation, provide the correct inputs/legal choices,
+execute the result correctly, and record the expected state/events?
+
+        ↓
+
+SIMULATION
+Once the rules and strategies are trusted, what patterns emerge over many games?
+```
+
+For Human Baseline certification this becomes even more concrete:
+
+- **Unit:** does Human Baseline choose what the stated behavioral contract says a reasonable player should choose?
+- **Integration:** does the real engine ask the decision correctly and execute/Chronicle the answer correctly?
+- **Simulation:** after those two are trusted, what game-design conclusions emerge statistically?
+
+See [Human Baseline Specification](HUMAN_BASELINE.md) for the Milestone-2 review map.
 
 ## 1. Standard commands
 
@@ -91,9 +115,10 @@ The integration harness uses production CSV loading, the production object graph
 
 Integration tests should favor exact state assertions and invariants, not statistics.
 
-### Simulation tests — research tooling correctness
+### Simulation and simulation tests — statistical research vs tooling correctness
 
-`src/simulationTest` tests the simulation machinery itself:
+`src/simulation` contains the actual repeated-game research programs. `src/simulationTest` tests the simulation machinery itself:
+
 
 - experiment configuration validation;
 - seat/game-count math;

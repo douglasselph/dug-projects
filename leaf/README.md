@@ -6,8 +6,9 @@ The central design question is:
 
 > **Do better decisions matter enough to overcome ordinary game randomness?**
 
-The project supports two complementary kinds of verification:
+The project separates three different questions:
 
+- **Unit testing** asks whether an individual rule, helper, or decision policy behaves as intended.
 - **Integration testing** asks whether the real rules engine behaves correctly in a deliberately constructed scenario.
 - **Simulation research** asks what happens statistically when complete games are repeated under different strategies, seeds, cards, seats, and experimental conditions.
 
@@ -15,6 +16,8 @@ The current simulation architecture separates **mechanical randomness** (dice, d
 
 ## Documentation
 
+- [Documentation Map](doc/README.md) — index of cross-project and source-local documentation.
+- [Human Baseline Specification](doc/HUMAN_BASELINE.md) — Milestone-2 certification map for the eight major decision areas and 30 strategy hooks.
 - [Using the Simulator](doc/USING_THE_SIMULATOR.md) — how to choose between unit, integration, and simulation work; how to run existing experiments; how to add new scenarios and experiments.
 - [Testing and Verification](doc/TESTING_AND_VERIFICATION.md) — Gradle commands, test source sets, sanity checks, deterministic integration tests, and how to browse the existing suites.
 - [Code Architecture](doc/CODE_ARCHITECTURE.md) — a deeper programming-oriented tour of the repository, important packages, decision architecture, randomness, Chronicle, and source-set boundaries.
@@ -70,7 +73,7 @@ For a full local verification pass of the three current layers:
 ./gradlew test integrationTest simulationCheck
 ```
 
-The first place to look when working on balance research is [Using the Simulator](doc/USING_THE_SIMULATOR.md). If you instead need to understand how the engine is wired together, start with [Code Architecture](doc/CODE_ARCHITECTURE.md).
+For Milestone-2 Human Baseline review, start with [Human Baseline Specification](doc/HUMAN_BASELINE.md). For balance research workflow, start with [Using the Simulator](doc/USING_THE_SIMULATOR.md). If you instead need to understand how the engine is wired together, start with [Code Architecture](doc/CODE_ARCHITECTURE.md).
 
 ## Current Research Model
 

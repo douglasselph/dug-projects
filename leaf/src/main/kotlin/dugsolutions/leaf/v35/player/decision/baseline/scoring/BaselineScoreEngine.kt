@@ -58,7 +58,7 @@ class BaselineScoreEngine(
         }
     }
 
-    /** Canonical Step-9 path: score all legal candidates, then select the best. */
+    /** Score all legal candidates with shared influences, then select the best. */
     fun <T> choose(
         context: DecisionContext,
         candidates: List<DecisionCandidate<T>>,

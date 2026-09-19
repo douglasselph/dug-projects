@@ -321,9 +321,30 @@ These are future-facing. The project should continue to get value from scripted/
 
 ---
 
-## 8. Why `integration` and `simulation` are separate
+## 8. Unit, integration, and simulation have different jobs
 
-The separation prevents two common mistakes.
+The simplest way to understand the architecture is by the question each layer answers:
+
+```text
+UNIT
+Does one rule/helper/strategy behave correctly in isolation?
+
+        ↓
+
+INTEGRATION
+Does the real production game wire the pieces together correctly in an exact,
+controlled scenario?
+
+        ↓
+
+SIMULATION
+What statistical game-design conclusions emerge when trusted rules and
+strategies play many complete games?
+```
+
+For Human Baseline work, this means unit tests establish the intended decision behavior, integration tests establish that the game supplies and executes that decision correctly, and simulation experiments measure the consequences of that behavior over many games.
+
+This separation also prevents two common mistakes.
 
 ### Mistake 1: using statistical code to hide incorrect rules
 
@@ -336,6 +357,15 @@ Integration tests should prove the rule path first.
 A deterministic test should fail because an exact invariant changed. It should not fail because a win rate moved from 52.1% to 51.8%.
 
 Simulation experiments need aggregate metrics, uncertainty awareness, paired samples, seat rotation, and potentially long runtimes. Those concerns do not belong in engine sanity tests.
+
+Source-local navigation is available in:
+
+```text
+src/integration/kotlin/dugsolutions/leaf/integration/v35/README.md
+src/simulation/kotlin/dugsolutions/leaf/simulation/v35/README.md
+```
+
+The Human Baseline certification map is in [Human Baseline Specification](HUMAN_BASELINE.md).
 
 ---
 

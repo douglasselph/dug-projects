@@ -1,5 +1,21 @@
 # v35 Simulation Layer
 
+This source set answers the research question:
+
+> **What patterns emerge when trusted Leaf & Let Die rules and strategies play many complete games?**
+
+It is deliberately different from `src/integration`, which constructs exact deterministic scenarios to verify that the real engine behaves correctly. Simulation code measures tendencies; integration code proves exact behavior.
+
+The canonical **Human Baseline implementation does not live here**. It intentionally lives in production code at:
+
+```text
+src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/
+```
+
+This simulation layer consumes Human Baseline through `StrategyProfile.humanBaseline()` and adds research-specific strategies, modifiers, experiment runners, aggregation, and future learning infrastructure.
+
+See [Human Baseline Specification](../../../../../../../doc/HUMAN_BASELINE.md) for the eight-area Milestone-2 certification map and [Testing and Verification](../../../../../../../doc/TESTING_AND_VERIFICATION.md) for the Unit → Integration → Simulation distinction.
+
 The v35 decision/simulation architecture has distinct purposes:
 
 1. **Mechanical Control (Level 0, core)** — deterministic, legal, deliberately
@@ -43,7 +59,7 @@ Integration-test scripted strategies remain under `src/integration` and should
 normally fall back to **Mechanical Control**, never Human Baseline. This keeps
 engine tests deterministic as Human Baseline evolves.
 
-## Step 12: focused-card experiment harness
+## Focused-card experiment harness
 
 `CardFocusExperiment` runs one Planned Baseline player against ordinary Human
 Baseline opponents and rotates the focused player through every seat. The same
