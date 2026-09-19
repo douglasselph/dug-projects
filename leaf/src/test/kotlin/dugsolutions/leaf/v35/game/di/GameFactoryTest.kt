@@ -572,7 +572,6 @@ class GameFactoryTest {
     ): String =
         Path.of(
             "data",
-            "v35",
             fileName
         ).toString()
     private class ExactOnlyRandomizer : Randomizer {

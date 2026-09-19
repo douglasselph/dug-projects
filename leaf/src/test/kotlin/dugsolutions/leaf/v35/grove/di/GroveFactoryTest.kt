@@ -155,7 +155,6 @@ class GroveFactoryTest {
     ): String =
         Path.of(
             "data",
-            "v35",
             fileName
         ).toString()
 

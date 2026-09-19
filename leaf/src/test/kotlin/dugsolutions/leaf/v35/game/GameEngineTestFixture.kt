@@ -62,7 +62,7 @@ internal object GameEngineTestFixture {
     private fun roundManager(): RoundCardManager {
         val registry = RoundCardRegistry(GameEffectConverter())
         registry.loadFromCsv(
-            Path.of("data", "v35", CardDataFiles.ROUND_CARD_LIST).toString()
+            Path.of("data", CardDataFiles.ROUND_CARD_LIST).toString()
         )
         return RoundCardManager().apply { loadCards(registry) }
     }

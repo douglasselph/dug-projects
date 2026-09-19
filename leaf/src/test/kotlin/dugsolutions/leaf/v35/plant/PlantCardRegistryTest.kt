@@ -164,5 +164,5 @@ class PlantCardRegistryTest {
     }
 
     private fun dataPath(fileName: String): String =
-        Path.of("data", "v35", fileName).toString()
+        Path.of("data", fileName).toString()
 }

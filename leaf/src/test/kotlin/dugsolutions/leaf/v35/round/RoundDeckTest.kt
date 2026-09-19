@@ -214,7 +214,7 @@ class RoundDeckTest {
     }
 
     private fun dataPath(fileName: String): String =
-        Path.of("data", "v35", fileName).toString()
+        Path.of("data", fileName).toString()
 
     private class ReversingRandomizer : Randomizer {
         override fun nextBoolean(): Boolean =

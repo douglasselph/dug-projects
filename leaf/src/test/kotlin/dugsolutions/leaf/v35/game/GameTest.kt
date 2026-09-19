@@ -274,7 +274,6 @@ class GameTest {
     ): String =
         Path.of(
             "data",
-            "v35",
             fileName
         ).toString()
 

@@ -176,7 +176,7 @@ class GameEffectConverterTest {
     }
 
     private fun readAllSourceEffects(): List<SourceEffect> {
-        val dataDirectory = Path.of("data", "v35")
+        val dataDirectory = Path.of("data")
 
         assertTrue(
             Files.isDirectory(dataDirectory),

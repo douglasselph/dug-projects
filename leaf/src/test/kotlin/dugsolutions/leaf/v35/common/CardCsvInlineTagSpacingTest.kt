@@ -19,7 +19,7 @@ class CardCsvInlineTagSpacingTest {
         val problems = mutableListOf<String>()
 
         files.forEach { fileName ->
-            val path = Path.of("data", "v35", fileName)
+            val path = Path.of("data", fileName)
             Files.readAllLines(path).forEachIndexed { index, line ->
                 tag.findAll(line).forEach { match ->
                     val before = line.getOrNull(match.range.first - 1)

@@ -44,7 +44,7 @@ class IntegrationCatalog(
         )
 
         fun defaultDataRoot(): Path =
-            Paths.get("data", "v35")
+            Paths.get("data")
     }
 
     fun load(): IntegrationCatalog {
