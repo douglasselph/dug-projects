@@ -77,7 +77,7 @@ Ignore Roll Rewards.
             register(
                 """
 Gain 1 Water.
-<battle/> Spend 1 Water to reroll 2 of your dice, or 1 of your opponent's.
+<battle/> May spend 1 Water to reroll 2 of your dice, or 1 of your opponent's.
                 """,
                 GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE
             )
@@ -534,6 +534,178 @@ from your hand
 Gain Water token
                 """,
                 GameEffect.GAIN_WATER_TOKEN
+            )
+
+            // Current v36 CSV wording aliases and changed effects.
+            register(
+                """
+🎲 Raise any die +1.
+<battle/> Remove all your dice from one Strike Square, you no longer participate in that strike.
+                """,
+                GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
+            )
+
+            register(
+                """
+Gain 1 worm.
+Each worm <worm/> is worth 2 more this round.
+                """,
+                GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND
+            )
+
+            register(
+                """
+<cultivation/> Discard any number of dice; draw that many.
+<battle/> Reroll 1 die.
+                """,
+                GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+            )
+
+            register(
+                """
+Mulch any die
+from Dice Discard Bin
+                """,
+                GameEffect.MULCH_DIE_FROM_DISCARD
+            )
+
+            register(
+                """
+Gain or steal a Butterfly.
+Turn all your Butterflies face up.
+                """,
+                GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
+            )
+
+            register(
+                """
+🎲 Raise any die +2.
+<battle/> In its Strike Row, reduce all opposing dice by 2; Raise it by the total reduced.
+                """,
+                GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW
+            )
+
+            register(
+                """
+Draw 1 die.
+<battle/> You must swap 2 of your dice; 🎲 Raise 1 of them +2.
+                """,
+                GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE
+            )
+
+            register(
+                """
+Reroll one of your dice.
+<battle/> In one strike row, all opponent dice higher than one of your dice must reroll
+                """,
+                GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
+            )
+
+            register(
+                """
+🎲 Raise any die +1
+                """,
+                GameEffect.RAISE_ANY_DIE_PLUS_1
+            )
+
+            register(
+                """
+<cultivation/> Flip one of your cards.
+<battle/> Flip 1 opponent’s Root or Vine card.
+                """,
+                GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE
+            )
+
+            register(
+                """
+Set a die showing your lowest value to its maximum
+                """,
+                GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX
+            )
+
+            register(
+                """
+<cultivation/> May flip 1 of your Plant cards.
+<battle/> Choose 1 opponent.
+They suffer 1 Wound;
+you choose the card.
+                """,
+                GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE
+            )
+
+            register(
+                """
+Trash a worm or bee
+to 🎲 Raise any die by 5
+                """,
+                GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5
+            )
+
+            register(
+                """
+Discard 1 die; draw 2
+                """,
+                GameEffect.DISCARD_ONE_DIE_DRAW_TWO
+            )
+
+            register(
+                """
+<cultivation/> You may set any die to 3.
+<battle/> Choose 1 Strike row. Reduce all opponent dice there by 3.
+                """,
+                GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3
+            )
+
+            register(
+                """
+All players must reroll all their dice. The player that pulled the last wisp may keep one of theirs.
+                """,
+                GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN
+            )
+
+            register(
+                """
+You suffer a Wound from a Strike only if you lose by 10+
+                """,
+                GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS
+            )
+
+            register(
+                """
+Each opponent with wisps must choose 1 Wisp to trash
+                """,
+                GameEffect.EACH_OPPONENT_TRASH_ONE_WISP
+            )
+
+            register(
+                """
+Gain any Root or Vine
+                """,
+                GameEffect.GAIN_ANY_ROOT_OR_VINE
+            )
+
+            register(
+                """
+Refresh
+                """,
+                GameEffect.REFRESH_CREATURE
+            )
+
+            register(
+                """
+Choose 1:
+Gain 1 D4 to Hand→ set it to 4, or,
+Trash 1 D4 in Hand →
+Raise all your dice +4
+                """,
+                GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4
+            )
+
+            register(
+                """
+Gain 1 Wisp
+                """,
+                GameEffect.GAIN_ONE_WISP
             )
         }
 

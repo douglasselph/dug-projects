@@ -112,9 +112,17 @@ object CardScoringHelpers {
                     score = score.adjusted(10, "Below desired Mulch reserve")
                 }
             }
-            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE -> {
-                val targets = context.opponents.maxOfOrNull { it.board.creature.size } ?: 0
-                if (targets > 0) score = score.adjusted(15, "Opponent has a Plant that can be wounded")
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+            GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE -> {
+                if (phase == CardPhase.BATTLE) {
+                    val targets = context.opponents.sumOf { opponent ->
+                        opponent.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }
+                    }
+                    if (targets > 0) score = score.adjusted(15, "Opponent has a Root or Vine that can be flipped")
+                } else {
+                    val spent = context.self.board.creature.count { it.isFaceDown }
+                    if (spent > 0) score = score.adjusted(spent * 5, "Can refresh a spent Plant")
+                }
             }
             GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT -> {
                 val spent = context.self.board.creature.count { it.isFaceDown && (it.type == PlantType.ROOT || it.type == PlantType.VINE) }
@@ -128,6 +136,14 @@ object CardScoringHelpers {
                 if (phase == CardPhase.BATTLE) score = score.adjusted(context.opponents.size * 20, "Wounds every opponent")
                 else score = score.adjusted(context.self.board.creature.count { it.isFaceDown } * 5, "Can refresh a spent Plant")
             }
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE -> {
+                if (phase == CardPhase.BATTLE) {
+                    val targets = context.opponents.maxOfOrNull { it.board.creature.size } ?: 0
+                    if (targets > 0) score = score.adjusted(22, "Can choose an opponent and their affected Plant")
+                } else {
+                    score = score.adjusted(context.self.board.creature.count { it.isFaceDown } * 5, "Can refresh a spent Plant")
+                }
+            }
             GameEffect.RAISE_ALL_DICE_PLUS_2 -> addBestGain(
                 dice.sumOf { DieValueHeuristics.actualRaiseGain(it, 2) },
                 "Total +2 gain across all dice"
@@ -136,7 +152,8 @@ object CardScoringHelpers {
                 addBestGain(bestRaise(dice, 5), "Best +5 target")
                 if (context.self.board.bees <= 2 && context.self.board.worms <= 2) score = score.adjusted(-20, "Critters are at reserve levels")
             }
-            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE -> {
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO -> {
                 val weakest = dice.minByOrNull { it.value }
                 val nextExpected = expectedNextDraw(context)
                 if (weakest != null) score = score.adjusted(((nextExpected * 2) - weakest.value).roundToInt() * 2, "Two expected draws replace the weakest die")
@@ -161,10 +178,17 @@ object CardScoringHelpers {
                 addBestGain(bestRaise(dice, 2), "Initial +2 Raise")
                 if (phase == CardPhase.BATTLE) score = score.adjusted(bestBattleRowNeed(context) / 2, "Row drain is strongest where help is needed")
             }
-            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES -> {
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES -> {
                 val spent = context.self.board.butterflies.count { !it.isFaceUp }
                 val stealable = context.opponents.sumOf { it.board.butterflies.size }
-                score = score.adjusted(spent * 10 + if (stealable > 0) 15 else -15, "Butterfly refresh/theft opportunity")
+                val gainable = if (effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES) {
+                    context.grove.butterflies.size
+                } else 0
+                score = score.adjusted(
+                    spent * 10 + if (stealable + gainable > 0) 15 else -15,
+                    "Butterfly refresh/acquisition opportunity"
+                )
             }
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 -> {
                 val d4 = dice.any { it.sides == 4 }
@@ -175,6 +199,10 @@ object CardScoringHelpers {
                 val weakest = dice.minByOrNull { it.value }
                 if (weakest != null) score = score.adjusted(max(0.0, expectedNextDraw(context) - weakest.value).roundToInt() * 3, "Replace weakest die")
                 if (phase == CardPhase.BATTLE) score = score.adjusted(10, "Optional row-improving swap")
+            }
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE -> {
+                score = score.adjusted(expectedNextDraw(context).roundToInt() * 3, "Adds an extra die")
+                if (phase == CardPhase.BATTLE) score = score.adjusted(16, "Mandatory swap also raises one swapped die +2")
             }
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND -> {
                 score = score.adjusted(context.self.board.bees * 12, "Existing Bees benefit from the boost")
@@ -272,6 +300,11 @@ object CardScoringHelpers {
             is PlantScoringRule.Fixed -> rule.points
             PlantScoringRule.PerButterfly -> context.self.board.butterflies.size
             PlantScoringRule.PerGraftedVine -> context.self.board.creature.count { it.type == PlantType.VINE }
+            PlantScoringRule.PerOwnedD4 ->
+                (context.self.board.supply + context.self.board.hand + context.self.board.discard)
+                    .count { it.sides == 4 } +
+                    context.self.board.mulch.count { it.storedDieSides?.value == 4 } +
+                    context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }
         }
 
     fun scoreDieTarget(effect: GameEffect, context: DecisionContext, die: dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice): PriorityScore {

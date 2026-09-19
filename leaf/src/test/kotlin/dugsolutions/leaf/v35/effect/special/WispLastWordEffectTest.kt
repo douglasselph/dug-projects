@@ -152,8 +152,8 @@ class WispLastWordEffectTest {
     private fun wispLastWord() =
         WispCard(
             quantity = 1,
-            name = "Wisps_Last_Word",
-            title = "Wisp's Last Word",
+            name = "Wisps_Resolve",
+            title = "Wisp's Resolve",
             count = 1,
             effect = GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW,
             lineIcons = null,

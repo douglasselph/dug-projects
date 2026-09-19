@@ -58,6 +58,11 @@ internal object CardGameMetrics {
                 is PlantScoringRule.Fixed -> rule.points
                 PlantScoringRule.PerGraftedVine -> focusPlayer.creature.vines.size
                 PlantScoringRule.PerButterfly -> focusPlayer.butterflies.size
+                PlantScoringRule.PerOwnedD4 ->
+                    (focusPlayer.dice.supply + focusPlayer.dice.hand + focusPlayer.dice.discard)
+                        .count { it.sides == 4 } +
+                        focusPlayer.tokens.mulchTokens.count { it.sides?.value == 4 } +
+                        focusPlayer.tokens.pendingMulchTokens.count { it.sides?.value == 4 }
             }
         }
 

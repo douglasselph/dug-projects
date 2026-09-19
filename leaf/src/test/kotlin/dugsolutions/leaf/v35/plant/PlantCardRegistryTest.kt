@@ -64,8 +64,14 @@ class PlantCardRegistryTest {
         )
         assertEquals(
             PlantScoringRule.PerButterfly,
-            assertNotNull(registry.getCard("Flower_11_02")).scoringRule
+            assertNotNull(registry.getCard("Flower_11_01")).scoringRule
         )
+        assertEquals(
+            PlantScoringRule.PerOwnedD4,
+            assertNotNull(registry.getCard("Flower_14_04")).scoringRule
+        )
+        assertEquals(11, assertNotNull(registry.getCard("Flower_11_02")).cost)
+        assertEquals(14, assertNotNull(registry.getCard("Flower_14_04")).cost)
     }
 
     @Test
@@ -76,7 +82,7 @@ class PlantCardRegistryTest {
         // Assert
         assertEquals(24, registry.getAllCards().size)
 
-        val card = assertNotNull(registry.getCard("Flower_11_01"))
+        val card = assertNotNull(registry.getCard("Flower_11_03"))
         assertEquals(PlantType.FLOWER, card.type)
         assertEquals(11, card.cost)
         assertEquals("{{ images.back_flower.url }}", card.backgroundImage)

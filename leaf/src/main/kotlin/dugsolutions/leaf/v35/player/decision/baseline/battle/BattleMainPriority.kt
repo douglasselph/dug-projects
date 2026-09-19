@@ -35,6 +35,8 @@ object BattleMainPriority {
             GameEffect.GAIN_D12_TO_DISCARD -> PriorityScore(58)
             GameEffect.GAIN_D10_TO_DISCARD -> PriorityScore(54)
             GameEffect.GAIN_ONE_WISP -> PriorityScore(50)
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD -> PriorityScore(60)
+            GameEffect.REFRESH_CREATURE -> PriorityScore(55)
             GameEffect.GAIN_TWO_WORMS -> PriorityScore(55)
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT -> PriorityScore(58)
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS -> PriorityScore(70)

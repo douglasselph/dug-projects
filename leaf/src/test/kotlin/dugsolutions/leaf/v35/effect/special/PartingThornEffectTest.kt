@@ -14,7 +14,9 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectOpponentPlantWoundRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseOptionalEffectPlantRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectOpponentPlantWoundChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import dugsolutions.leaf.v35.player.decision.wound.ChooseWoundRequest
 import dugsolutions.leaf.v35.player.decision.wound.WoundChoice
@@ -98,6 +100,39 @@ class PartingThornEffectTest {
         }
 
         assertTrue(actor.creature.get(card.id)!!.isFaceUp)
+    }
+
+
+    @Test
+    fun currentBattleRule_woundsOnlyChosenOpponentAndActorChoosesAffectedCard() {
+        val strategy = ChooseOpponentPlantStrategy()
+        val actor = EffectTestFixture.player(1, effectStrategy = strategy)
+        val opponent2 = EffectTestFixture.player(2)
+        val opponent3 = EffectTestFixture.player(3)
+        val game = EffectTestFixture.game(actor, opponent2, opponent3)
+
+        val first2 = graft(game, opponent2, PlantType.ROOT)
+        val second2 = graft(game, opponent2, PlantType.VINE)
+        val card3 = graft(game, opponent3, PlantType.ROOT)
+        opponent2.creature.faceUp(first2.id)
+        opponent2.creature.faceUp(second2.id)
+        opponent3.creature.faceUp(card3.id)
+        strategy.ownerId = opponent2.id
+        strategy.cardId = second2.id
+
+        effect.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE
+            ).copy(phase = GameEffectPhase.BATTLE),
+            nested
+        )
+
+        assertTrue(opponent2.creature.get(first2.id)!!.isFaceUp)
+        assertTrue(opponent2.creature.get(second2.id)!!.isFaceDown)
+        assertTrue(opponent3.creature.get(card3.id)!!.isFaceUp)
+        assertEquals(3, strategy.offered.size)
     }
 
     @Test
@@ -200,6 +235,22 @@ class PartingThornEffectTest {
             return target?.let { targetId ->
                 request.legalChoices.first { it.cardId == targetId }
             } ?: request.legalChoices.firstOrNull()
+        }
+    }
+
+
+    private class ChooseOpponentPlantStrategy : FirstEffectChoiceStrategy() {
+        var ownerId: PlayerId? = null
+        var cardId: CreatureCardId? = null
+        var offered: List<EffectOpponentPlantWoundChoice> = emptyList()
+
+        override fun chooseOpponentPlantWound(
+            request: ChooseEffectOpponentPlantWoundRequest
+        ): EffectOpponentPlantWoundChoice {
+            offered = request.legalChoices
+            return request.legalChoices.first {
+                it.ownerId == ownerId && it.cardId == cardId
+            }
         }
     }
 

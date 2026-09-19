@@ -34,7 +34,7 @@ class HumanBaselineBattleStrategyTest {
     fun `strong Battle Plant can beat Draw`() {
         val thorn = CreatureCard(
             id = CreatureCardId(2),
-            card = PlantCard(6, "Vine_09_02", "Parting Thorn", PlantType.VINE, 9, null, "", "", "", "", "", "", "", GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE, PlantScoringRule.Fixed(1)),
+            card = PlantCard(6, "Vine_09_02", "Parting Thorn", PlantType.VINE, 9, null, "", "", "", "", "", "", "", GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE, PlantScoringRule.Fixed(1)),
             side = CreatureSide.LEFT,
             position = CreaturePosition(-1, 0),
             facing = CreatureCard.Facing.FACE_UP

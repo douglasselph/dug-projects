@@ -166,7 +166,7 @@ class BattleStrikeSanityTest {
         val p1 = ScriptedDecisionDirector()
         val p2 = ScriptedDecisionDirector()
         battleHarness(
-            wispNames = listOf("Wisps_Last_Word"),
+            wispNames = listOf("Wisps_Resolve"),
             decisions = listOf(p1, p2)
         ).use { harness ->
             harness.setPlayerDice(1, hand = hand(5, 4, 3))

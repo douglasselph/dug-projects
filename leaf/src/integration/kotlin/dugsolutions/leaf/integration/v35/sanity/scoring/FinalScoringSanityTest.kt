@@ -194,8 +194,8 @@ class FinalScoringSanityTest {
             "Vine_07_04", // Vine Yield
             "Vine_09_01", // Low & Behold
             // Flowers: includes variable Butterfly scoring.
-            "Flower_11_02", // Alluring Nectar
-            "Flower_14_02", // Bloom Backbone
+            "Flower_11_01", // Alluring Nectar
+            "Flower_11_02", // Bloom Backbone
             "Flower_17_04"  // Queen's Blossom
         )
     }

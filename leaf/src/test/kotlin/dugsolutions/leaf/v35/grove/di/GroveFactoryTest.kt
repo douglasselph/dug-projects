@@ -60,7 +60,7 @@ class GroveFactoryTest {
             )
         )
         assertEquals(
-            36,
+            32,
             grove.wispDeck.remaining
         )
     }

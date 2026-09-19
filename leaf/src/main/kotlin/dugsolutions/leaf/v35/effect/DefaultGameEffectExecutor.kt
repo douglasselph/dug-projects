@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.effect.handler.CrossPlayerEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DieValueEffectHandler
+import dugsolutions.leaf.v35.effect.handler.DeferredRoundEffectHandler
 import dugsolutions.leaf.v35.effect.handler.DrawEffectHandler
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.ResourceEffectHandler
@@ -19,6 +20,7 @@ import dugsolutions.leaf.v35.effect.special.OvergrowthEffect
 import dugsolutions.leaf.v35.effect.special.PartingThornEffect
 import dugsolutions.leaf.v35.effect.special.PetalToDie4Effect
 import dugsolutions.leaf.v35.effect.special.SnipHappensEffect
+import dugsolutions.leaf.v35.effect.special.ShiftHappensEffect
 import dugsolutions.leaf.v35.effect.special.VineAndAgainEffect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
 import dugsolutions.leaf.v35.effect.special.WispReckoningEffect
@@ -44,12 +46,14 @@ class DefaultGameEffectExecutor(
     private val alluringNectarEffect: EffectHandler = AlluringNectarEffect(),
     private val partingThornEffect: EffectHandler = PartingThornEffect(),
     private val snipHappensEffect: EffectHandler = SnipHappensEffect(),
+    private val shiftHappensEffect: EffectHandler = ShiftHappensEffect(),
     private val vineAndAgainEffect: EffectHandler = VineAndAgainEffect(),
     private val oEdelweissEffect: EffectHandler = OEdelweissEffect(),
     private val wispReckoningEffect: EffectHandler = WispReckoningEffect(),
     private val wispLastWordEffect: EffectHandler = WispLastWordEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
-    private val wispquakeEffect: EffectHandler = WispquakeEffect()
+    private val wispquakeEffect: EffectHandler = WispquakeEffect(),
+    private val deferredRoundEffects: EffectHandler = DeferredRoundEffectHandler()
 ) : GameEffectExecutor {
 
     override fun supports(effect: GameEffect): Boolean =
@@ -125,7 +129,9 @@ class DefaultGameEffectExecutor(
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO,
             GameEffect.DRAW_TWO_DICE,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
@@ -141,6 +147,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
             GameEffect.GAIN_ONE_VP,
             GameEffect.GAIN_ONE_WISP,
+            GameEffect.REFRESH_CREATURE,
             GameEffect.GAIN_TWO_WORMS,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,
@@ -171,14 +178,19 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
                 beeLovedBloomEffect
 
-            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
                 alluringNectarEffect
 
-            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE ->
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE ->
                 partingThornEffect
 
             GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE ->
                 snipHappensEffect
+
+            GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE ->
+                shiftHappensEffect
 
             GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT ->
                 vineAndAgainEffect
@@ -197,6 +209,11 @@ class DefaultGameEffectExecutor(
 
             GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN ->
                 wispquakeEffect
+
+            GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS,
+            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP,
+            GameEffect.GAIN_ANY_ROOT_OR_VINE ->
+                deferredRoundEffects
 
             else -> null
         }

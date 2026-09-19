@@ -79,6 +79,15 @@ class DrawEffectHandler(
                         battleHandChoices(request).isNotEmpty()
                 }
 
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION -> hasDrawableDie(request)
+                    GameEffectPhase.BATTLE ->
+                        hasDrawableDie(request) &&
+                            hasBattlePlacementCapacity(request, 1) &&
+                            battleSwapRaisePairs(request).isNotEmpty()
+                }
+
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION ->
@@ -88,6 +97,10 @@ class DrawEffectHandler(
                         battleHandChoices(request).isNotEmpty() &&
                             hasReapBattleCapacity(request)
                 }
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO ->
+                request.actor.dice.hand.isNotEmpty() &&
+                    (request.phase != GameEffectPhase.BATTLE || hasReapBattleCapacity(request))
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 burstingBlossomChoices(request).isNotEmpty()
@@ -187,6 +200,18 @@ class DrawEffectHandler(
                         )
                 }
 
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE ->
+                when (request.phase) {
+                    GameEffectPhase.CULTIVATION ->
+                        rollResolver.draw(request.actor)
+
+                    GameEffectPhase.BATTLE ->
+                        transplantTulipCurrentBattle(
+                            request = request,
+                            rollResolver = rollResolver
+                        )
+                }
+
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION -> {
@@ -202,6 +227,26 @@ class DrawEffectHandler(
                             rollResolver = rollResolver
                         )
                 }
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO -> {
+                if (request.phase == GameEffectPhase.BATTLE) {
+                    discardBattleDie(
+                        request = request,
+                        context = "ReapWhatYouRoll"
+                    )
+                    repeat(2) {
+                        drawAndPlaceIfBattle(
+                            request = request,
+                            rollResolver = rollResolver
+                        )
+                    }
+                } else {
+                    discardChosenHandDie(request)
+                    repeat(2) {
+                        rollResolver.draw(request.actor)
+                    }
+                }
+            }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> {
                 chooseRequiredHandDie(
@@ -323,6 +368,61 @@ class DrawEffectHandler(
         }
     }
 
+    private fun transplantTulipCurrentBattle(
+        request: GameEffectRequest,
+        rollResolver: RollResolver
+    ) {
+        drawAndPlaceIfBattle(
+            request = request,
+            rollResolver = rollResolver
+        )
+
+        val legalPairs = battleSwapRaisePairs(request)
+        effectCheck(legalPairs.isNotEmpty()) {
+            "Transplant Tulip requires two swappable Battle dice"
+        }
+
+        // The pair is mandatory. The source member is the die that receives +2.
+        val chosen = request.actor.decisions.effect.chooseDiePair(
+            dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest(
+                effect = request.effect,
+                legalChoices = legalPairs,
+                context = request.decisionContext()
+            )
+        )
+        decisionCheck(chosen in legalPairs) {
+            "EffectStrategy returned illegal Transplant Tulip swap pair: " +
+                "$chosen; legal=$legalPairs"
+        }
+
+        val (raisedDie, otherDie) = resolveHandDice(
+            player = request.actor,
+            choices = listOf(chosen.source, chosen.target)
+        )
+        val battleState = battleStateForEffect(
+            request = request,
+            context = "TransplantTulip"
+        )
+
+        val firstLocation = battleState.grid.locationOf(raisedDie)
+        val secondLocation = battleState.grid.locationOf(otherDie)
+        decisionCheck(
+            firstLocation != null &&
+                secondLocation != null &&
+                firstLocation.playerId == request.actor.id &&
+                secondLocation.playerId == request.actor.id &&
+                firstLocation.row != secondLocation.row
+        ) {
+            "Transplant Tulip swap pair is no longer legal: $chosen"
+        }
+
+        battleState.grid.swapDieLocations(
+            first = raisedDie,
+            second = otherDie
+        )
+        raisedDie.adjustBy(2)
+    }
+
     private fun reapWhatYouRollBattle(
         request: GameEffectRequest,
         rollResolver: RollResolver
@@ -438,6 +538,24 @@ class DrawEffectHandler(
                     value = die.value
                 )
             }
+        }
+
+    /**
+     * Current Transplant Tulip needs both a swap pair and a choice of which
+     * swapped die receives the +2 Raise.  Pair direction therefore matters:
+     * source is the die to Raise, target is the other swapped die.
+     */
+    private fun battleSwapRaisePairs(
+        request: GameEffectRequest
+    ): List<EffectDiePairChoice> =
+        optionalBattleSwapPairs(request).flatMap { pair ->
+            listOf(
+                pair,
+                EffectDiePairChoice(
+                    source = pair.target,
+                    target = pair.source
+                )
+            )
         }
 
     private fun optionalBattleSwapPairs(

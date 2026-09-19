@@ -18,8 +18,8 @@ class HumanBaselineCardScorerRegistryTest {
             "Flower_17_01", "Flower_17_02", "Flower_17_03", "Flower_17_04",
             "Wisp_Award_VP", "Wisp_Award_VP2", "Wisp_Gain_Critters",
             "Wisp_Gain_Green", "Wisp_Gain_Purple", "Wisp_Gain_Red", "Wisp_Gain_Yellow",
-            "Wisp_Mulch_Die", "Wisp_Quake", "Wisp_Reckoning", "Wisp_Swap_Die",
-            "Wisp_Upgrade_Die", "Wisps_Last_Word"
+            "Wisp_Mulch_Die", "Wisp_Quake", "Wisp_Swap_Die",
+            "Wisp_Upgrade_Die", "Wisps_Resolve"
         )
         assertEquals(expected, HumanBaselineCardScorerRegistry().registeredNames())
     }

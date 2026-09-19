@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
+import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieSizeRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlayerRequest
@@ -44,7 +45,8 @@ class ResourceEffectHandler : EffectHandler {
                 request.actor.dice.discard.isNotEmpty() &&
                     hasEmptyMulch(request)
 
-            GameEffect.GAIN_ONE_VP ->
+            GameEffect.GAIN_ONE_VP,
+            GameEffect.REFRESH_CREATURE ->
                 true
 
             GameEffect.GAIN_ANY_TWO_CRITTERS ->
@@ -111,6 +113,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_ONE_VP ->
                 request.actor.addVp(1)
+
+            GameEffect.REFRESH_CREATURE ->
+                RefreshResolver(request.game.chronicle).refresh(request.actor)
 
             GameEffect.GAIN_ANY_TWO_CRITTERS ->
                 gainChosenCritters(request, 2)

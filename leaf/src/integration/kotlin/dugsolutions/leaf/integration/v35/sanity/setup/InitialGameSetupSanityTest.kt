@@ -50,7 +50,7 @@ class InitialGameSetupSanityTest {
 
             // This sanity test intentionally uses the real CSV catalogs.
             assertEquals(36, harness.catalog.allPlants.size, "v35 Plant definitions")
-            assertEquals(13, harness.catalog.allWisps.size, "v35 Wisp definitions")
+            assertEquals(12, harness.catalog.allWisps.size, "v35 Wisp definitions")
             assertEquals(12, harness.catalog.allRounds.size, "v35 Round definitions")
             assertEquals(exactRounds, snapshot.roundDrawPile.map { it.name })
             assertEquals(exactWisps, snapshot.grove.wispDrawPile.map { it.name })

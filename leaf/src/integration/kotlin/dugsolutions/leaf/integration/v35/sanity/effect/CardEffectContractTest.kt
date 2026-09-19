@@ -78,8 +78,8 @@ class CardEffectContractTest {
                 }
             }
 
-            // 36 Plant definitions + 13 Wisp definitions + 12x2 Round effects.
-            assertEquals(73, occurrences.size)
+            // 36 Plant definitions + 12 Wisp definitions + 12x2 Round effects.
+            assertEquals(72, occurrences.size)
 
             occurrences.forEach { occurrence ->
                 assertNotEquals(
@@ -120,16 +120,26 @@ class CardEffectContractTest {
                     add(card.secondEffect.effect)
                 }
             }
-            val defined = GameEffect.entries
+            val retiredCompatibilityEffects = setOf(
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
+        )
+            val activeDefined = GameEffect.entries
                 .filterNot { it == GameEffect.UNKNOWN }
-                .toSet()
+                .toSet() - retiredCompatibilityEffects
 
             assertEquals(
-                defined,
+                activeDefined,
                 loaded,
-                "GameEffect enum and real CSV-backed effect catalog have drifted"
+                "Active GameEffect enum and real CSV-backed effect catalog have drifted"
             )
-            assertEquals(59, loaded.size)
+            assertEquals(60, loaded.size)
         }
     }
 

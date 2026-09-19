@@ -36,24 +36,24 @@ class RoundCardRegistryTest {
         registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Assert
-        val card = assertNotNull(registry.getCard("Battle_Beckon_Swell"))
+        val card = assertNotNull(registry.getCard("Battle_Whisper_Burst"))
         assertEquals(1, card.quantity)
         assertEquals(RoundCardType.BATTLE, card.type)
         assertEquals("{{ images.battle_transition_back.url }}", card.backImage)
 
-        assertEquals("Beckon", card.firstEffect.title)
-        assertEquals("a30000", card.firstEffect.backgroundColor)
+        assertEquals("Whisper", card.firstEffect.title)
+        assertEquals("b80000", card.firstEffect.backgroundColor)
         assertEquals("f8f5f2", card.firstEffect.textColor)
-        assertEquals("{{ images.turn_surge_root.url }}", card.firstEffect.image)
-        assertEquals("{{ images.ic_root.url }}", card.firstEffect.icon)
+        assertEquals("{{ images.turn_beauty.url }}", card.firstEffect.image)
+        assertEquals("{{ images.wisp_bg2.url }}", card.firstEffect.icon)
         assertEquals(GameEffect.GAIN_ONE_WISP, card.firstEffect.effect)
 
-        assertEquals("Swell", card.secondEffect.title)
+        assertEquals("Burst", card.secondEffect.title)
         assertEquals("7a0000", card.secondEffect.backgroundColor)
-        assertEquals("#f8f5f2", card.secondEffect.textColor)
-        assertEquals("{{ images.turn_surge_D12.url }}", card.secondEffect.image)
-        assertEquals("{{ images.D10.url }}", card.secondEffect.icon)
-        assertEquals(GameEffect.GAIN_D10_TO_DISCARD, card.secondEffect.effect)
+        assertEquals("f8f5f2", card.secondEffect.textColor)
+        assertEquals("{{ images.turn_surge_D20.url }}", card.secondEffect.image)
+        assertEquals("{{ images.D20.url }}", card.secondEffect.icon)
+        assertEquals(GameEffect.GAIN_D20_TO_DISCARD, card.secondEffect.effect)
     }
 
     @Test
@@ -70,15 +70,32 @@ class RoundCardRegistryTest {
     }
 
     @Test
+    fun loadFromCsv_parsesCurrentSimpleBattleRoundEffects() {
+        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+
+        val surge = assertNotNull(registry.getCard("Battle_Bloom_Surge"))
+        assertEquals(GameEffect.GAIN_D12_TO_DISCARD, surge.secondEffect.effect)
+
+        val swell = assertNotNull(registry.getCard("Battle_Scatter_Swell"))
+        assertEquals(GameEffect.GAIN_D10_TO_DISCARD, swell.secondEffect.effect)
+
+        val bath = assertNotNull(registry.getCard("Battle_Sprawl_Bath"))
+        assertEquals(GameEffect.REFRESH_CREATURE, bath.secondEffect.effect)
+
+        val flow = assertNotNull(registry.getCard("Battle_Barkskin_Flow"))
+        assertEquals(GameEffect.GAIN_ANY_DIE_TO_DISCARD, flow.secondEffect.effect)
+    }
+
+    @Test
     fun getCard_whenCaseAndWhitespaceDiffer_returnsCard() {
         // Arrange
         registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Act
-        val result = registry.getCard("  BATTLE_BECKON_SWELL  ")
+        val result = registry.getCard("  BATTLE_WHISPER_BURST  ")
 
         // Assert
-        assertEquals("Battle_Beckon_Swell", result?.name)
+        assertEquals("Battle_Whisper_Burst", result?.name)
     }
 
     @Test

@@ -49,9 +49,26 @@ class WispDeckTest {
         deck.reset()
 
         // Assert
-        assertEquals(36, expectedPhysicalCards)
+        assertEquals(32, expectedPhysicalCards)
         assertEquals(expectedPhysicalCards, deck.remaining)
         assertFalse(deck.isEmpty)
+    }
+
+    @Test
+    fun reset_excludesZeroQuantityWispquakeEventDefinition() {
+        deck.reset()
+
+        assertTrue(deck.cards.cards.none { it.name == "Wisp_Quake" })
+        assertEquals(32, deck.remaining)
+    }
+
+    @Test
+    fun setupExact_rejectsZeroQuantityWispquakeEventDefinition() {
+        val quake = requireNotNull(manager.getCard("Wisp_Quake"))
+
+        assertFailsWith<IllegalArgumentException> {
+            deck.setupExact(listOf(quake))
+        }
     }
 
     @Test
@@ -115,7 +132,7 @@ class WispDeckTest {
         deck.reset()
 
         // Assert
-        assertEquals(36, deck.remaining)
+        assertEquals(32, deck.remaining)
     }
 
 

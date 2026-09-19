@@ -427,6 +427,96 @@ class DrawEffectHandlerTest {
         )
     }
 
+
+    @Test
+    fun currentReapWhatYouRollInBattle_discardsOneThenPlacesBothDrawsFreely() {
+        val anchor = FixedEffectDie(10, 6)
+        val discarded = FixedEffectDie(20, 15)
+        val firstDraw = FixedEffectDie(6, 3)
+        val secondDraw = FixedEffectDie(12, 9)
+
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(anchor, discarded),
+            effectStrategy = LastEffectChoiceStrategy()
+        )
+        actor.dice.addAllToSupply(listOf(firstDraw, secondDraw))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+        battleState.grid.placeDie(actor, StrikeRow.TOP, anchor)
+        battleState.grid.placeDie(actor, StrikeRow.MIDDLE, discarded)
+
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertTrue(actor.dice.discard.any { it === discarded })
+        assertEquals(null, battleState.grid.locationOf(discarded))
+        assertEquals(StrikeRow.TOP, battleState.grid.locationOf(firstDraw)?.row)
+        assertEquals(StrikeRow.TOP, battleState.grid.locationOf(secondDraw)?.row)
+    }
+
+    @Test
+    fun currentTransplantTulipInCultivation_drawsOneWithoutDiscarding() {
+        val existing = FixedEffectDie(6, 5)
+        val drawn = FixedEffectDie(8, 7)
+        val actor = EffectTestFixture.player(1, hand = listOf(existing))
+        actor.dice.addToSupply(drawn)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(listOf(existing, drawn), actor.dice.hand)
+        assertTrue(actor.dice.discard.isEmpty())
+    }
+
+    @Test
+    fun currentTransplantTulipInBattle_drawsThenMustSwapAndRaisesOneSwappedDie() {
+        val first = FixedEffectDie(8, 5)
+        val second = FixedEffectDie(10, 6)
+        val drawn = FixedEffectDie(6, 4)
+        val actor = EffectTestFixture.player(1, hand = listOf(first, second))
+        actor.dice.addToSupply(drawn)
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+        battleState.grid.placeDie(actor, StrikeRow.TOP, first)
+        battleState.grid.placeDie(actor, StrikeRow.BOTTOM, second)
+
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(7, first.value)
+        assertEquals(StrikeRow.BOTTOM, battleState.grid.locationOf(first)?.row)
+        assertEquals(StrikeRow.TOP, battleState.grid.locationOf(second)?.row)
+        assertTrue(battleState.grid.locationOf(drawn) != null)
+        assertTrue(actor.dice.discard.isEmpty())
+    }
+
     @Test
     fun queensBlossomInBattle_isNotOfferedWhenSuccessfulDrawsCannotAllBePlaced() {
         val existing =

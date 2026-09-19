@@ -53,12 +53,20 @@ class FinalScorer {
         )
     }
 
+
+    private fun ownedD4Count(player: Player): Int =
+        (player.dice.supply + player.dice.hand + player.dice.discard)
+            .count { it.sides == 4 } +
+            player.tokens.mulchTokens.count { it.sides?.value == 4 } +
+            player.tokens.pendingMulchTokens.count { it.sides?.value == 4 }
+
     private fun scorePlayer(player: Player): PlayerFinalScore {
         val plantVp = player.creature.cards.sumOf { creatureCard ->
             when (val rule = creatureCard.card.scoringRule) {
                 is PlantScoringRule.Fixed -> rule.points
                 PlantScoringRule.PerGraftedVine -> player.creature.vines.size
                 PlantScoringRule.PerButterfly -> player.butterflies.size
+                PlantScoringRule.PerOwnedD4 -> ownedD4Count(player)
             }
         }
 

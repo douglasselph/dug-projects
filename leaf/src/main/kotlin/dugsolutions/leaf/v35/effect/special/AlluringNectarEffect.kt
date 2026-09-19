@@ -14,20 +14,20 @@ import dugsolutions.leaf.v35.player.decision.effect.EffectButterflyTargetChoice
 /**
  * Alluring Nectar:
  *
- * Steal one Butterfly controlled by an opponent, when any are available, then
- * turn every Butterfly controlled by the actor face up.
+ * Gain one Butterfly from the Grove or steal one controlled by an opponent,
+ * then turn every Butterfly controlled by the actor face up.
  *
- * The strategy chooses the exact opponent + Butterfly pair. If no opponent
- * controls a Butterfly, the Steal is skipped but the Refresh portion still
- * resolves.
+ * The strategy chooses the exact source + Butterfly pair from all currently
+ * legal Grove and opponent sources. If no Butterfly can be gained or stolen,
+ * the acquisition is skipped but the Refresh portion still resolves.
  */
 class AlluringNectarEffect : EffectHandler {
 
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
-        request.effect ==
-            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
+        request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ||
+            request.effect == GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
 
     override fun execute(
         request: GameEffectRequest,
@@ -54,7 +54,7 @@ class AlluringNectarEffect : EffectHandler {
                     "$chosen; legal=$legalChoices"
             }
 
-            stealButterfly(
+            takeButterfly(
                 request = request,
                 choice = chosen
             )
@@ -70,41 +70,61 @@ class AlluringNectarEffect : EffectHandler {
     private fun legalTargets(
         request: GameEffectRequest
     ): List<EffectButterflyTargetChoice> =
-        request.game.players
-            .filter { it !== request.actor }
-            .flatMap { opponent ->
-                opponent.butterflies.all.map { butterfly ->
-                    EffectButterflyTargetChoice(
-                        ownerId = opponent.id,
-                        butterfly = butterfly
+        buildList {
+            if (request.effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES) {
+                request.game.grove.butterflies.all.forEach { butterfly ->
+                    add(
+                        EffectButterflyTargetChoice(
+                            ownerId = null,
+                            butterfly = butterfly
+                        )
                     )
                 }
             }
 
-    private fun stealButterfly(
+            request.game.players
+                .filter { it !== request.actor }
+                .forEach { opponent ->
+                    opponent.butterflies.all.forEach { butterfly ->
+                        add(
+                            EffectButterflyTargetChoice(
+                                ownerId = opponent.id,
+                                butterfly = butterfly
+                            )
+                        )
+                    }
+                }
+        }
+
+    private fun takeButterfly(
         request: GameEffectRequest,
         choice: EffectButterflyTargetChoice
     ) {
-        val opponent =
-            request.game.players.firstOrNull {
-                it !== request.actor &&
-                    it.id == choice.ownerId
+        if (choice.ownerId == null) {
+            stateCheck(
+                request.game.grove.butterflies.remove(choice.butterfly)
+            ) {
+                "Chosen Grove no longer contains Butterfly: $choice"
+            }
+        } else {
+            val opponent =
+                request.game.players.firstOrNull {
+                    it !== request.actor &&
+                        it.id == choice.ownerId
+                }
+
+            stateCheck(opponent != null) {
+                "Chosen Butterfly owner is not a legal opponent: ${choice.ownerId}"
             }
 
-        stateCheck(opponent != null) {
-            "Chosen Butterfly owner is not a legal opponent: ${choice.ownerId}"
+            stateCheck(
+                opponent.butterflies.remove(choice.butterfly)
+            ) {
+                "Chosen opponent no longer controls Butterfly: $choice"
+            }
         }
 
-        stateCheck(
-            opponent.butterflies.remove(
-                choice.butterfly
-            )
-        ) {
-            "Chosen opponent no longer controls Butterfly: $choice"
-        }
-
-        request.actor.butterflies.add(
-            choice.butterfly
-        )
+        request.actor.butterflies.add(choice.butterfly)
     }
+
 }

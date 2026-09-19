@@ -45,7 +45,7 @@ class WispCardManagerTest {
         val result = manager.size
 
         // Assert
-        assertEquals(13, result)
+        assertEquals(12, result)
     }
 
     @Test

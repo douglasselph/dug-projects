@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.ConfiguredCardScorer
 
 object ReapWhatYouRollBaseline : ConfiguredCardScorer(
     cardNames = setOf("Vine_11_01"),
-    effect = GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+    effect = GameEffect.DISCARD_ONE_DIE_DRAW_TWO,
     cultivationPlayBase = 70,
     battlePlayBase = 70
 )

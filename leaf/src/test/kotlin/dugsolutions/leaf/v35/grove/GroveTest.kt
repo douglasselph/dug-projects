@@ -96,7 +96,7 @@ class GroveTest {
         )
 
         assertEquals(
-            36,
+            32,
             grove.wispDeck.remaining
         )
     }
@@ -178,7 +178,7 @@ class GroveTest {
         )
 
         assertEquals(
-            36,
+            32,
             grove.wispDeck.remaining
         )
     }
@@ -251,11 +251,11 @@ class GroveTest {
         )
 
         assertEquals(
-            35,
+            31,
             first.wispDeck.remaining
         )
         assertEquals(
-            36,
+            32,
             second.wispDeck.remaining
         )
     }

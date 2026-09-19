@@ -30,6 +30,9 @@ enum class EffectDecisionMechanism {
     EFFECT_PLANT_EFFECT,
     EFFECT_O_EDELWEISS,
     EFFECT_WISPS_TO_KEEP,
+    EFFECT_WISP_TO_TRASH,
+    EFFECT_PLANT_MARKET_CARD,
+    GRAFT_PLACEMENT,
     EFFECT_DIE_SIZE,
     EFFECT_PLAYER,
     EFFECT_STRIKE_ROW,
@@ -77,7 +80,25 @@ object GameEffectDecisionRequirements {
                     )
                 )
 
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE ->
+                phased(
+                    cultivation = emptySet(),
+                    battle = setOf(
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT,
+                        EffectDecisionMechanism.EFFECT_DIE_PAIR
+                    )
+                )
+
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
+                    battle = setOf(
+                        EffectDecisionMechanism.EFFECT_DIE,
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT
+                    )
+                )
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO ->
                 phased(
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
                     battle = setOf(
@@ -104,6 +125,18 @@ object GameEffectDecisionRequirements {
                 phased(
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_OPTIONAL_PLANT),
                     battle = setOf(EffectDecisionMechanism.WOUND_RESOLUTION)
+                )
+
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_OPTIONAL_PLANT),
+                    battle = setOf(EffectDecisionMechanism.EFFECT_OPPONENT_PLANT_WOUND)
+                )
+
+            GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_PLANT_EFFECT),
+                    battle = setOf(EffectDecisionMechanism.EFFECT_OPPONENT_PLANT_WOUND)
                 )
 
             GameEffect.GAIN_ANY_DIE_TO_DISCARD ->
@@ -144,6 +177,9 @@ object GameEffectDecisionRequirements {
 
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
                 same(EffectDecisionMechanism.EFFECT_BEE_SOURCE)
+
+            GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
+                same(EffectDecisionMechanism.EFFECT_BUTTERFLY_TARGET)
 
             GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE ->
                 phased(
@@ -234,6 +270,19 @@ object GameEffectDecisionRequirements {
 
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
                 same(EffectDecisionMechanism.EFFECT_BUTTERFLY_TARGET)
+
+            GameEffect.REFRESH_CREATURE,
+            GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS ->
+                same()
+
+            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP ->
+                same(EffectDecisionMechanism.EFFECT_WISP_TO_TRASH)
+
+            GameEffect.GAIN_ANY_ROOT_OR_VINE ->
+                same(
+                    EffectDecisionMechanism.EFFECT_PLANT_MARKET_CARD,
+                    EffectDecisionMechanism.GRAFT_PLACEMENT
+                )
 
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT ->
                 same(EffectDecisionMechanism.EFFECT_PLAYER)

@@ -22,4 +22,7 @@ sealed interface PlantScoringRule {
 
     /** 1 VP for each Butterfly this player controls. */
     data object PerButterfly : PlantScoringRule
+
+    /** 1 VP for each D4 this player owns at final scoring. */
+    data object PerOwnedD4 : PlantScoringRule
 }

@@ -11,26 +11,31 @@ import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.decisionContext
 import dugsolutions.leaf.v35.effect.handler.decisionContextFor
 import dugsolutions.leaf.v35.game.operation.WoundResolver
+import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectOpponentPlantWoundRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseOptionalEffectPlantRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectOpponentPlantWoundChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
+import dugsolutions.leaf.v35.player.decision.wound.WoundChoice
 
 /**
  * Parting Thorn:
  *
+ * Current rule:
  * Cultivation: the actor may flip one of their grafted Plant cards.
- * Battle: every opponent suffers one normal Wound.
+ * Battle: choose one opponent; they suffer one Wound, and the actor chooses
+ * the affected card while still obeying Flip-It-or-Snip-It legality.
  *
- * Battle delegates the complete Flip-It-or-Snip-It rule to WoundResolver,
- * including each opponent's own WoundStrategy decision and Grove returns for
- * Snipped cards.
+ * The retired "wound every opponent" enum remains supported temporarily so
+ * older focused tests and saved scenarios can be migrated independently.
  */
 class PartingThornEffect : EffectHandler {
 
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
-        request.effect ==
-            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE
+        request.effect == GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE ||
+            request.effect == GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE
 
     override fun execute(
         request: GameEffectRequest,
@@ -45,7 +50,11 @@ class PartingThornEffect : EffectHandler {
                 resolveCultivation(request)
 
             GameEffectPhase.BATTLE ->
-                resolveBattle(request)
+                if (request.effect == GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE) {
+                    resolveCurrentBattle(request)
+                } else {
+                    resolveLegacyBattle(request)
+                }
         }
     }
 
@@ -99,7 +108,7 @@ class PartingThornEffect : EffectHandler {
         }
     }
 
-    private fun resolveBattle(
+    private fun resolveLegacyBattle(
         request: GameEffectRequest
     ) {
         val woundResolver =
@@ -115,4 +124,81 @@ class PartingThornEffect : EffectHandler {
                 woundResolver.resolve(opponent)
             }
     }
+
+    private fun resolveCurrentBattle(
+        request: GameEffectRequest
+    ) {
+        val woundResolver =
+            WoundResolver(
+                grove = request.game.grove,
+                chronicle = request.game.chronicle,
+                decisionContext = { player -> request.decisionContextFor(player) }
+            )
+
+        val legalChoices = request.game.players
+            .filter { it !== request.actor }
+            .flatMap { opponent ->
+                woundResolver.legalChoices(opponent).map { wound ->
+                    wound.toEffectChoice(opponent)
+                }
+            }
+
+        if (legalChoices.isEmpty()) return
+
+        val chosen = request.actor.decisions.effect.chooseOpponentPlantWound(
+            ChooseEffectOpponentPlantWoundRequest(
+                effect = request.effect,
+                legalChoices = legalChoices,
+                context = request.decisionContext()
+            )
+        )
+        decisionCheck(chosen in legalChoices) {
+            "EffectStrategy returned illegal Parting Thorn target: " +
+                "$chosen; legal=$legalChoices"
+        }
+
+        val opponent = request.game.players.firstOrNull {
+            it !== request.actor && it.id == chosen.ownerId
+        }
+        decisionCheck(opponent != null) {
+            "Chosen Parting Thorn opponent is not part of this game: ${chosen.ownerId}"
+        }
+
+        val currentCard = opponent.creature.get(chosen.cardId)
+        decisionCheck(
+            currentCard != null && currentCard.card.name == chosen.cardName
+        ) {
+            "Chosen Parting Thorn Plant target is stale or no longer owned: $chosen"
+        }
+
+        val woundChoice = when (chosen) {
+            is EffectOpponentPlantWoundChoice.Flip -> WoundChoice.Flip(currentCard)
+            is EffectOpponentPlantWoundChoice.Snip -> WoundChoice.Snip(currentCard)
+        }
+
+        woundResolver.resolve(
+            player = opponent,
+            choice = woundChoice
+        )
+    }
+
+    private fun WoundChoice.toEffectChoice(
+        owner: Player
+    ): EffectOpponentPlantWoundChoice =
+        when (this) {
+            is WoundChoice.Flip ->
+                EffectOpponentPlantWoundChoice.Flip(
+                    ownerId = owner.id,
+                    cardId = card.id,
+                    cardName = card.card.name
+                )
+
+            is WoundChoice.Snip ->
+                EffectOpponentPlantWoundChoice.Snip(
+                    ownerId = owner.id,
+                    cardId = card.id,
+                    cardName = card.card.name
+                )
+        }
+
 }

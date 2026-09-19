@@ -13,7 +13,6 @@ import dugsolutions.leaf.integration.v35.support.decision.ScriptedDecisionDirect
 import dugsolutions.leaf.integration.v35.support.random.ScriptedRandomizer
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
-import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
@@ -24,7 +23,6 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -74,7 +72,7 @@ class EffectFamilySanityTest {
     }
 
     @Test
-    fun `draw replacement effect discards chosen die and rolls replacement through real resolver`() {
+    fun `current Transplant Tulip draws one die during Cultivation without discarding`() {
         val p1 = ScriptedDecisionDirector()
         val p2 = ScriptedDecisionDirector().apply { finishBuildWithWater() }
         val randomizer = ScriptedRandomizer().rolls(7)
@@ -88,7 +86,6 @@ class EffectFamilySanityTest {
             harness.graftPlant(1, "Berry Important")
             val tulip = harness.graftPlant(1, "Transplant Tulip", faceUp = true)
 
-            p1.effect.thenDie { it.legalChoices.single() }
             p1.cultivation.thenMain(CultivationMainAction.ActivatePlant(tulip))
             p1.cultivation.thenMain(CultivationMainAction.RoundEffect1)
             p1.cultivation.thenDone()
@@ -97,12 +94,11 @@ class EffectFamilySanityTest {
             harness.runCultivationBuildActions()
             val player = harness.snapshot().player(1)
 
-            assertEquals(listOf(8), player.hand.map { it.sides })
-            assertEquals(listOf(7), player.hand.map { it.value })
-            assertEquals(listOf(6), player.discard.map { it.sides })
-            assertEquals(listOf(5), player.discard.map { it.value })
+            assertEquals(listOf(6, 8), player.hand.map { it.sides })
+            assertEquals(listOf(5, 7), player.hand.map { it.value })
+            assertTrue(player.discard.isEmpty())
             assertEquals(
-                GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+                GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE,
                 plantEffectsFor(harness, 1).single().effect
             )
             assertEquals(
@@ -255,51 +251,6 @@ class EffectFamilySanityTest {
                 ),
                 plantEffectsFor(harness, 1).map { it.effect }
             )
-            p1.assertExhausted()
-            p2.assertExhausted()
-        }
-    }
-
-    @Test
-    fun `immediate Wisp gained from roll reward executes before opening draw continues`() {
-        val p1 = ScriptedDecisionDirector().apply {
-            effect.thenOptionalDie { null }
-        }
-        val p2 = ScriptedDecisionDirector()
-        val randomizer = ScriptedRandomizer().rolls(
-            2, // P1 first opening Draw: gains Wispquake
-            4, // immediate Wispquake rerolls that D4
-            3, 4, // P1 remaining opening dice
-            4, 4, 4 // P2 opening dice
-        )
-
-        cultivationHarness(
-            randomizer = randomizer,
-            wispNames = listOf("Wisp_Quake"),
-            first = p1,
-            second = p2
-        ).use { harness ->
-            harness.revealNextRound()
-            harness.runCultivationOpeningDraw()
-            val snapshot = harness.snapshot()
-
-            assertEquals(listOf(4, 3, 4), snapshot.player(1).hand.map { it.value })
-            assertEquals(listOf(4, 4, 4), snapshot.player(2).hand.map { it.value })
-            assertTrue(snapshot.player(1).wisps.isEmpty())
-            assertEquals(0, snapshot.grove.wispDrawPile.size)
-
-            val immediateReward = ChronicleQueries.rollRewardsFor(
-                harness.chronicleEntries(),
-                PlayerId(1)
-            ).single { it.kind == RollRewardKind.WISP_PLAYED_IMMEDIATELY }
-            assertEquals("Wisp_Quake", immediateReward.wispName)
-
-            val effect = ChronicleQueries.effectsFor(harness.chronicleEntries(), PlayerId(1))
-                .single { it.effect == GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN }
-            assertEquals(EffectSourceKind.WISP, effect.sourceKind)
-            assertFalse("Wisp_Quake" in snapshot.player(1).wisps)
-
-            randomizer.assertExhausted()
             p1.assertExhausted()
             p2.assertExhausted()
         }

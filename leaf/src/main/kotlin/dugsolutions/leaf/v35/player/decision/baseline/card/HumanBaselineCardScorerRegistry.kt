@@ -102,7 +102,6 @@ class HumanBaselineCardScorerRegistry(
             PollinatingWispBaseline,
             PocketedSparkBaseline,
             WispquakeBaseline,
-            WispReckoningBaseline,
             PollenTheftBaseline,
             OvergrowthBaseline,
             WispsLastWordBaseline

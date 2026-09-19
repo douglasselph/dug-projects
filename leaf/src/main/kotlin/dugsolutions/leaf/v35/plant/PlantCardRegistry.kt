@@ -125,6 +125,9 @@ class PlantCardRegistry(
             "{{ images.victory_per_butterfly.url }}" ->
                 PlantScoringRule.PerButterfly
 
+            "{{ images.victory_per_D4.url }}" ->
+                PlantScoringRule.PerOwnedD4
+
             else -> {
                 val fixed = VictoryPointIconParser.fixedPoints(vpIcon)
                 requireNotNull(fixed) {

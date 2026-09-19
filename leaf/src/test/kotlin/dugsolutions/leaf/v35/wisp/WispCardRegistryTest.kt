@@ -26,7 +26,7 @@ class WispCardRegistryTest {
         registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
 
         // Assert
-        assertEquals(13, registry.getAllCards().size)
+        assertEquals(12, registry.getAllCards().size)
     }
 
     @Test
@@ -54,7 +54,7 @@ class WispCardRegistryTest {
         assertEquals(3, assertNotNull(registry.getCard("Wisp_Award_VP2")).endGameVp)
         assertEquals(1, assertNotNull(registry.getCard("Wisp_Gain_Critters")).endGameVp)
         assertEquals(0, assertNotNull(registry.getCard("Wisp_Quake")).endGameVp)
-        assertEquals(0, assertNotNull(registry.getCard("Wisp_Reckoning")).endGameVp)
+        assertEquals(1, assertNotNull(registry.getCard("Wisps_Resolve")).endGameVp)
     }
 
     @Test
@@ -114,17 +114,23 @@ class WispCardRegistryTest {
     }
 
     @Test
-    fun loadFromCsv_parsesCurrentWispTimingMetadata() {
+    fun loadFromCsv_parsesCurrentWispDeckAndTimingMetadata() {
         registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
 
         val quake = assertNotNull(registry.getCard("Wisp_Quake"))
-        val reckoning = assertNotNull(registry.getCard("Wisp_Reckoning"))
+        val resolve = assertNotNull(registry.getCard("Wisps_Resolve"))
         val pollenTheft = assertNotNull(registry.getCard("Wisp_Swap_Die"))
 
-        assertEquals(true, quake.playImmediately)
-        assertEquals(false, reckoning.playImmediately)
-        assertEquals(false, reckoning.battleOnly)
+        assertEquals(0, quake.quantity)
+        assertEquals(0, quake.count)
+        assertEquals(0, quake.lineIconsHeight)
+        assertEquals("", quake.mainBackdrop)
+        assertEquals(false, quake.playImmediately)
+        assertEquals(false, quake.battleOnly)
+        assertEquals("Wisp's Resolve", resolve.title)
+        assertEquals(true, resolve.battleOnly)
         assertEquals(true, pollenTheft.battleOnly)
+        assertNull(registry.getCard("Wisp_Reckoning"))
     }
 
     private fun dataPath(fileName: String): String =

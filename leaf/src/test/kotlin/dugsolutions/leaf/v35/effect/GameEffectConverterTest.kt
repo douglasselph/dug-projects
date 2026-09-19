@@ -41,7 +41,7 @@ class GameEffectConverterTest {
         // Arrange
         val effectText = """
             Gain 1 Water.
-            <battle/> Spend 1 Water to reroll 2 of your dice, or 1 of your opponent’s.
+            <battle/> May spend 1 Water to reroll 2 of your dice, or 1 of your opponent’s.
         """.trimIndent()
 
         // Act
@@ -98,7 +98,10 @@ class GameEffectConverterTest {
      * their effect strings in test code. It catches both:
      *
      * 1. A CSV effect whose text no longer maps to a GameEffect.
-     * 2. A non-UNKNOWN GameEffect that is no longer represented by any CSV effect.
+     * 2. An active non-UNKNOWN GameEffect that is no longer represented by any CSV effect.
+     *
+     * Retired compatibility enums are intentionally excluded while older focused
+     * tests/scenarios are migrated; current CSV data never produces them.
      */
     @Test
     fun csvSources_andGameEffects_areInSync() {
@@ -135,9 +138,19 @@ class GameEffectConverterTest {
             .map { (_, effect) -> effect }
             .toSet()
 
+        val retiredCompatibilityEffects = setOf(
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
+        )
         val expectedEffects = GameEffect.values()
             .filterNot { it == GameEffect.UNKNOWN }
-            .toSet()
+            .toSet() - retiredCompatibilityEffects
 
         assertEquals(
             expectedEffects,

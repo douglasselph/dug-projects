@@ -77,21 +77,26 @@ class WispCardRegistry(
             "Unknown effect for Wisp card '$name' in $filePath: $effectText"
         }
 
+        val quantity = requiredInt(row, columns, "quantity", filePath)
+        require(quantity >= 0) {
+            "'quantity' must be non-negative in $filePath row: $row"
+        }
+
         return WispCard(
-            quantity = requiredPositiveInt(row, columns, "quantity", filePath),
+            quantity = quantity,
             name = name,
             title = required(row, columns, "title", filePath),
             count = requiredInt(row, columns, "count", filePath),
             effect = effect,
             lineIcons = optional(row, columns, "line_icons"),
-            lineIconsHeight = requiredInt(
-                row,
-                columns,
-                "line_icons_height",
-                filePath
-            ),
+            lineIconsHeight = optionalInt(
+                row = row,
+                columns = columns,
+                columnName = "line_icons_height",
+                filePath = filePath
+            ) ?: 0,
             vpIcon = vpIcon,
-            mainBackdrop = required(row, columns, "main_backdrop", filePath),
+            mainBackdrop = optional(row, columns, "main_backdrop").orEmpty(),
             playImmediately = effectText.contains("(Play immediately)", ignoreCase = true),
             battleOnly = effectText.contains("<battle/>", ignoreCase = true),
             endGameVp = parseEndGameVp(
@@ -163,17 +168,17 @@ class WispCardRegistry(
             )
     }
 
-    private fun requiredPositiveInt(
+    private fun optionalInt(
         row: List<String>,
         columns: Map<String, Int>,
         columnName: String,
         filePath: String
-    ): Int {
-        val value = requiredInt(row, columns, columnName, filePath)
-        require(value > 0) {
-            "'$columnName' must be positive in $filePath row: $row"
-        }
-        return value
+    ): Int? {
+        val value = optional(row, columns, columnName) ?: return null
+        return value.toIntOrNull()
+            ?: throw IllegalArgumentException(
+                "Invalid integer '$value' for '$columnName' in $filePath row: $row"
+            )
     }
 
     private fun optional(

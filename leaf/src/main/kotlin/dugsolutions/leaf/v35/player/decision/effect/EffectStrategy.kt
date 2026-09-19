@@ -304,9 +304,14 @@ class ChooseBeeSourceRequest(
     }
 }
 
-/** Exact opponent + Butterfly target for effects such as Alluring Nectar. */
+/**
+ * Exact Butterfly source for effects such as Alluring Nectar.
+ *
+ * [ownerId] is null when the Butterfly is being gained from the Grove;
+ * otherwise it identifies the opponent from whom it will be stolen.
+ */
 data class EffectButterflyTargetChoice(
-    val ownerId: PlayerId,
+    val ownerId: PlayerId?,
     val butterfly: Butterfly
 )
 
@@ -605,7 +610,7 @@ interface EffectStrategy {
         request: ChooseBeeSourceRequest
     ): EffectBeeSourceChoice = request.legalChoices.first()
 
-    /** Choose the exact opponent Butterfly to steal. */
+    /** Choose the exact Grove/opponent Butterfly source. */
     fun chooseButterflyTarget(
         request: ChooseEffectButterflyTargetRequest
     ): EffectButterflyTargetChoice = request.legalChoices.first()

@@ -17,6 +17,40 @@ import kotlin.test.assertTrue
 
 class AlluringNectarEffectTest {
 
+
+    @Test
+    fun currentRule_canGainButterflyFromGroveThenRefreshOwnedButterflies() {
+        val strategy = ChooseButterflyStrategy(
+            EffectButterflyTargetChoice(
+                ownerId = null,
+                butterfly = Butterfly.GREEN
+            )
+        )
+        val actor = EffectTestFixture.player(1, effectStrategy = strategy)
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+
+        moveButterflyFromGrove(game, actor, Butterfly.YELLOW)
+        actor.butterflies.faceDown(Butterfly.YELLOW)
+
+        effect.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES
+            ),
+            nested
+        )
+
+        assertTrue(Butterfly.GREEN in actor.butterflies.all)
+        assertFalse(Butterfly.GREEN in game.grove.butterflies.all)
+        assertTrue(actor.butterflies.isFaceUp(Butterfly.GREEN))
+        assertTrue(actor.butterflies.isFaceUp(Butterfly.YELLOW))
+        assertTrue(
+            EffectButterflyTargetChoice(null, Butterfly.GREEN) in strategy.offered
+        )
+    }
+
     private val effect = AlluringNectarEffect()
     private val nested = GameEffectExecutor { }
 

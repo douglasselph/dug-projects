@@ -38,8 +38,8 @@ class IntegrationCatalog(
             "Vine_07_01", // Berry Important
             "Vine_09_01", // Low & Behold
             "Vine_11_04", // Vine's the Limit
-            "Flower_11_01", // Sapping Snapdragon
-            "Flower_14_02", // Bloom Backbone
+            "Flower_11_03", // Sapping Snapdragon
+            "Flower_14_02", // Bloom Backflip
             "Flower_17_04" // Queen's Blossom
         )
 

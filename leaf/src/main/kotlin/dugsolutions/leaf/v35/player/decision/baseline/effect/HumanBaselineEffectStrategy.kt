@@ -190,9 +190,15 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
-                val faceUp = owner?.board?.butterflies?.firstOrNull { it.butterfly == choice.butterfly }?.isFaceUp == true
-                DecisionCandidate(choice, PriorityScore(if (faceUp) 70 else 55))
+                if (choice.ownerId == null) {
+                    DecisionCandidate(choice, PriorityScore(58))
+                } else {
+                    val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
+                    val faceUp = owner?.board?.butterflies
+                        ?.firstOrNull { it.butterfly == choice.butterfly }
+                        ?.isFaceUp == true
+                    DecisionCandidate(choice, PriorityScore(if (faceUp) 70 else 62))
+                }
             }
         )
     }
@@ -350,6 +356,16 @@ class HumanBaselineEffectStrategy(
                 val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
                 val improvement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
                 PriorityScore(50 + improvement)
+            }
+            GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE -> {
+                val sourceRow = rowFor(context, choice.source.index)
+                val targetRow = rowFor(context, choice.target.index)
+                if (sourceRow == null || targetRow == null || sourceRow == targetRow) return PriorityScore(45)
+                val sourceNeed = CardScoringHelpers.rowNeedBonus(context, sourceRow)
+                val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
+                val swapImprovement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
+                val raiseGain = DieValueHeuristics.actualRaiseGain(choice.source.sides, choice.source.value, 2)
+                PriorityScore(50 + swapImprovement + raiseGain * 4)
             }
             else -> PriorityScore(50)
         }
