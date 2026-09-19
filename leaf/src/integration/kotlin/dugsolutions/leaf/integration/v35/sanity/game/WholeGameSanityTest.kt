@@ -106,7 +106,7 @@ class WholeGameSanityTest {
     }
 
     @Test
-    fun `first-game 6 Cultivation plus 3 Battle baseline game completes with coherent lifecycle`() {
+    fun `first-game 6 Cultivation plus 3 Battle mechanical-control game completes with coherent lifecycle`() {
         val scenario = GameScenario(
             numPlayers = 4,
             selectedPlantNames = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
@@ -136,7 +136,7 @@ class WholeGameSanityTest {
     }
 
     @Test
-    fun `standard 8 Cultivation plus 4 Battle baseline game completes with coherent lifecycle`() {
+    fun `standard 8 Cultivation plus 4 Battle mechanical-control game completes with coherent lifecycle`() {
         val scenario = GameScenario(
             numPlayers = 4,
             roundSetup = GameRoundSetup.standard(),

@@ -193,7 +193,42 @@ src/simulationTest/kotlin/dugsolutions/leaf/simulation/v35/
 
 ---
 
-## 4. Running a focused-card experiment
+## 4. First visual sanity check: run one complete game
+
+Before doing statistical research, it is useful to simply watch the engine complete a game. The project now has a dedicated human-inspection smoke run:
+
+```bash
+./gradlew runMechanicalGameSmoke
+```
+
+It constructs a real four-player game through `IntegrationGameHarness`, uses the normal first-game Grove, and leaves every player's decision factory unspecified. `GameScenario` therefore supplies **Mechanical Control** to all four players. Mechanical Control is legal and deterministic but deliberately naive; the point of this run is not to judge strategy quality.
+
+The run should terminate normally and write:
+
+```text
+output/
+  smoke/
+    mechanical-control/
+      seed-13579/
+        summary.txt
+        chronicle.txt
+```
+
+`summary.txt` shows the setup, number of rounds completed, number of Chronicle entries, final scores, and winner(s). `chronicle.txt` is the chronological record of what the engine actually did: rolls, rewards, Main Actions, Support Actions, effects, purchases, grafts, Battle order, Strikes, Wounds, Doom, Cleanup, and final scoring.
+
+To rerun the same mechanical game, use the same seed. To inspect a different deterministic game:
+
+```bash
+./gradlew runMechanicalGameSmoke -PsmokeSeed=24680
+```
+
+This run complements, rather than replaces, `WholeGameSanityTest`. The test automatically asserts lifecycle invariants; the smoke runner gives a human a file to read.
+
+For the output convention and Chronicle design, see [Chronicle and Output](CHRONICLE_AND_OUTPUT.md).
+
+---
+
+## 5. Running a focused-card experiment
 
 `CardFocusExperiment` is the best current example of how a statistical experiment should be structured.
 
@@ -235,7 +270,7 @@ That pattern should be reused for future experiments: **define the intervention,
 
 ---
 
-## 5. Adding a new integration scenario
+## 6. Adding a new integration scenario
 
 Use an integration test when the expected outcome can be stated exactly.
 
@@ -256,7 +291,7 @@ When the test requires a new controllability seam, first ask whether that seam i
 
 ---
 
-## 6. Adding a new simulation experiment
+## 7. Adding a new simulation experiment
 
 Use this pattern.
 
@@ -329,7 +364,7 @@ Every report should preserve enough configuration information to rerun the same 
 
 ---
 
-## 7. What belongs in integration versus simulation?
+## 8. What belongs in integration versus simulation?
 
 A useful rule of thumb:
 
@@ -347,7 +382,7 @@ Many good simulation projects require **both**: first an integration test provin
 
 ---
 
-## 8. Reading results responsibly
+## 9. Reading results responsibly
 
 A large number of games can give a precise answer to the wrong question. Before interpreting an observed advantage, check for confounders:
 

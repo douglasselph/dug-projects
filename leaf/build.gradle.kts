@@ -229,6 +229,20 @@ kotlin {
     }
 }
 
+// Runs one complete Mechanical Control game and writes a human-readable
+// Chronicle under output/smoke/mechanical-control/. This is a visual engine
+// sanity check, not a statistical balance experiment.
+tasks.register<JavaExec>("runMechanicalGameSmoke") {
+    description = "Runs one full Mechanical Control game and writes its Chronicle to output/."
+    group = "verification"
+
+    dependsOn("integrationClasses")
+    classpath = sourceSets["integration"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.integration.v35.tool.MechanicalGameSmokeMainKt")
+
+    project.findProperty("smokeSeed")?.toString()?.let { args(it) }
+}
+
 // Add custom task to run SimpleTestRunner
 tasks.register<JavaExec>("runSimpleTestRunner") {
     description = "Runs the SimpleTestRunner to view test output"

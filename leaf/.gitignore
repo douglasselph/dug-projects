@@ -1,19 +1,9 @@
-# Ignore test output files
-/test-output/
-/output/*/
+# Generated simulation / diagnostic reports
+output/
 
-# General build and IDE files
+# Gradle / IDE build output
 .gradle/
 build/
 out/
 .idea/
 *.iml
-.DS_Store
-
-# Compiled class files
-*.class
-/bin/
-
-# Log files
-*.log
-*.~lock*

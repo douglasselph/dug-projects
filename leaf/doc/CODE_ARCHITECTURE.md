@@ -106,7 +106,7 @@ Typed Chronicle entries are useful for:
 - debugging;
 - statistical instrumentation;
 - future training datasets;
-- human-readable rendering without coupling tests to prose.
+- human-readable rendering without coupling tests to prose through `ChronicleTextRenderer`.
 
 ### `random/`
 
@@ -339,7 +339,34 @@ Simulation experiments need aggregate metrics, uncertainty awareness, paired sam
 
 ---
 
-## 9. Where to place a new change
+## 9. Chronicle persistence and generated output
+
+`GameChronicle` should remain an in-memory, game-scoped recorder. It should not know whether its caller is an integration test, a one-game diagnostic run, or a 100,000-game experiment. Keeping persistence outside the Chronicle prevents disk I/O and report-format concerns from leaking into the rules engine.
+
+Persistence belongs to the outer runner/report layer. The current `runMechanicalGameSmoke` task demonstrates the intended pattern: run a game, obtain `game.chronicle.entries`, render them with `ChronicleTextRenderer`, then write diagnostic artifacts beneath the top-level `output/` directory.
+
+Generated artifacts should be grouped by purpose:
+
+```text
+output/
+  smoke/
+    mechanical-control/
+      seed-13579/
+        summary.txt
+        chronicle.txt
+  card-focus/             # future persisted CardFocusExperiment reports
+  wisp-windfall/          # future early-Wisp stress-test reports
+  matchup/                # future strategy matchup reports
+  tournament/             # future tournament reports
+```
+
+The exact text/report formats may evolve without changing the typed Chronicle event model. `output/` is generated material and is ignored by Git.
+
+See [Chronicle and Output](CHRONICLE_AND_OUTPUT.md) for the operator-facing workflow.
+
+---
+
+## 10. Where to place a new change
 
 | Change | Location |
 | --- | --- |
@@ -355,7 +382,7 @@ Simulation experiments need aggregate metrics, uncertainty awareness, paired sam
 
 ---
 
-## 10. Data flow of a simulation game
+## 11. Data flow of a simulation game
 
 At a high level:
 

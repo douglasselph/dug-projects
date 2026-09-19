@@ -52,6 +52,20 @@ This verifies that the research source set compiles against production code and 
 
 This is the most useful pre-commit sanity command when changes may affect the engine, deterministic scenarios, and research layer.
 
+### Human-readable whole-game smoke run
+
+```bash
+./gradlew runMechanicalGameSmoke
+```
+
+This is intentionally different from a pass/fail test. It runs a complete real-engine game with Mechanical Control players and writes `summary.txt` and `chronicle.txt` beneath `output/smoke/mechanical-control/`. Use it when you want to inspect the actual sequence of play rather than only learn that assertions passed.
+
+A different deterministic seed can be supplied with:
+
+```bash
+./gradlew runMechanicalGameSmoke -PsmokeSeed=24680
+```
+
 ---
 
 ## 2. What each layer should prove
@@ -180,6 +194,8 @@ The production Chronicle uses typed events. Integration tests can therefore veri
 Prefer querying typed Chronicle entries over asserting formatted report strings. Presentation text can change without changing game semantics.
 
 The integration support package contains reusable `ChronicleQueries` and `ChronicleAssertions` for this purpose.
+
+For human review, `ChronicleTextRenderer` converts the same typed entries into a line-oriented diagnostic report. The smoke runner persists that rendering under `output/`; tests should continue to assert typed entries rather than formatted text.
 
 ---
 

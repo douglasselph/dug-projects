@@ -18,6 +18,7 @@ The current simulation architecture separates **mechanical randomness** (dice, d
 - [Using the Simulator](doc/USING_THE_SIMULATOR.md) — how to choose between unit, integration, and simulation work; how to run existing experiments; how to add new scenarios and experiments.
 - [Testing and Verification](doc/TESTING_AND_VERIFICATION.md) — Gradle commands, test source sets, sanity checks, deterministic integration tests, and how to browse the existing suites.
 - [Code Architecture](doc/CODE_ARCHITECTURE.md) — a deeper programming-oriented tour of the repository, important packages, decision architecture, randomness, Chronicle, and source-set boundaries.
+- [Chronicle and Output](doc/CHRONICLE_AND_OUTPUT.md) — how to run one complete Mechanical Control game, read what happened, and how generated run artifacts are organized under `output/`.
 - [Simulation Plan](doc/SIMULATION_PLAN.md) — the long-term research plan: exploit testing, luck resistance, strategy diversity, card studies, Wounds, Battle order, comeback behavior, and staged development.
 - [Experiment Cookbook](doc/EXPERIMENT_COOKBOOK.md) — practical templates for adding controlled experiments, including the proposed **early-Wisp windfall** stress test.
 
@@ -34,6 +35,28 @@ Run deterministic real-engine integration tests:
 ```bash
 ./gradlew integrationTest
 ```
+
+To **watch one complete game happen**, run the Mechanical Control smoke game:
+
+```bash
+./gradlew runMechanicalGameSmoke
+```
+
+This runs four deliberately naive Mechanical Control players through a complete game and writes a readable Chronicle plus a short score summary under:
+
+```text
+output/smoke/mechanical-control/seed-13579/
+  summary.txt
+  chronicle.txt
+```
+
+Use another reproducible seed with, for example:
+
+```bash
+./gradlew runMechanicalGameSmoke -PsmokeSeed=24680
+```
+
+This is the quickest visual sanity check that the complete rules engine ran to completion and that the players actually took actions. It is **not** a balance test and the Mechanical Control choices are intentionally unsophisticated. See [Chronicle and Output](doc/CHRONICLE_AND_OUTPUT.md).
 
 Compile and test the simulation/research layer:
 
