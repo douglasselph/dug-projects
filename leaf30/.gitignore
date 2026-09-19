@@ -1,0 +1,19 @@
+# Ignore test output files
+/test-output/
+/output/*/
+
+# General build and IDE files
+.gradle/
+build/
+out/
+.idea/
+*.iml
+.DS_Store
+
+# Compiled class files
+*.class
+/bin/
+
+# Log files
+*.log
+*.~lock*

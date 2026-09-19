@@ -1,0 +1,52 @@
+package dugsolutions.leaf.v14.game.turn.effect
+
+import dugsolutions.leaf.v14.cards.domain.GameCard
+import dugsolutions.leaf.v14.chronicle.GameChronicle
+import dugsolutions.leaf.v14.chronicle.domain.Moment
+import dugsolutions.leaf.v14.game.turn.effect.EffectCardToRetain
+import dugsolutions.leaf.v14.game.turn.select.SelectCardToRetain
+import dugsolutions.leaf.v14.player.Player
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+class EffectCardToRetainTest {
+
+    private val mockPlayer = mockk<Player>(relaxed = true)
+    private val mockSelectCardToRetain: SelectCardToRetain = mockk(relaxed = true)
+    private val card = mockk<GameCard>(relaxed = true)
+    private val chronicle: GameChronicle = mockk(relaxed = true)
+
+    private val SUT: EffectCardToRetain = EffectCardToRetain(mockSelectCardToRetain, chronicle)
+
+    @BeforeEach
+    fun setup() {
+    }
+
+    @Test
+    fun invoke_whenCardSelected_retainsCard_andCallsChronicle() {
+        // Arrange
+        every { mockSelectCardToRetain(mockPlayer.cardsInHand, null) } returns card
+
+        // Act
+        SUT(mockPlayer)
+
+        // Assert
+        verify { mockPlayer.retainCard(card) }
+        verify { chronicle(Moment.RETAIN_CARD(mockPlayer, card)) }
+    }
+
+    @Test
+    fun invoke_whenNoCardSelected_doesNothing() {
+        // Arrange
+        every { mockSelectCardToRetain(mockPlayer.cardsInHand, null) } returns null
+
+        // Act
+        SUT(mockPlayer)
+
+        // Assert
+        verify(exactly = 0) { chronicle(any()) }
+    }
+} 

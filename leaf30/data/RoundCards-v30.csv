@@ -1,0 +1,16 @@
+quantity,name,title,effect_1_title,effect_1_text,effect_1_bg,effect_1_text_fg,effect_1_image,effect_1_icon,effect_2_title,effect_2_text,effect_2_bg,effect_2_text_fg,effect_2_image,effect_2_icon,back_image
+1,Battle_Bloom_Burrow,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,images/turn_bloom.png,images/victory.png,Burrow,Gain Worm,7a0000,f8f5f2,images/turn_surge_worm.png,images/ic_token_worm.png,images/battle_transition_back.png
+1,Battle_Bloom_Surge,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,images/turn_beauty.png,images/victory.png,Surge,Gain D20,7a0000,f8f5f2,images/turn_surge_D20.png,images/D20.png,images/battle_transition_back.png
+1,Battle_Bloom_Swell,Battle,Bloom,Gain 1 VP,b80000,f8f5f2,images/turn_bloom.png,images/victory.png,Swell,Gain D12,7a0000,#f8f5f2,images/turn_surge_D12.png,images/D12.png,images/battle_transition_back.png
+1,Battle_Flowercall_Surge,Battle,Flowercall,Gain any Flower,a30000,f8f5f2,images/turn_surge_flower.png,images/ic_flower.png,Surge,Gain D20,7a0000,#f8f5f2,images/turn_surge_D20.png,images/D20.png,images/battle_transition_back.png
+1,Battle_Rootcall_Swell,Battle,Rootcall,Gain any Root,a30000,f8f5f2,images/turn_surge_root.png,images/ic_root.png,Swell,Gain D12,7a0000,#f8f5f2,images/turn_surge_D12.png,images/D12.png,images/battle_transition_back.png
+1,Battle_Vinecall_Swell,Battle,Vinecall,Gain any Vine,a30000,f8f5f2,images/turn_surge_vine.png,images/ic_vine.png,Swell,Gain D12,7a0000,#f8f5f2,images/turn_surge_D12.png,images/D12.png,images/battle_transition_back.png
+2,Resource_Compost_Mulch,Cultivation,Compost,Upgrade a die,#8f754f,f8f5f2,images/resource_compost_full.png,,Mulch,"Store a die
+on a Mulch token",#f2c9c9,a42828,images/resource_mulch_full.png,images/mulch.png,images/resource_back.png
+2,Resource_Sunlight_Compost,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,images/resource_sunlight_full.png,,Compost,Upgrade a die,#8f754f,#f8f5f2,images/resource_compost_full.png,,images/resource_back.png
+2,Resource_Sunlight_Mulch,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,images/resource_sunlight_full.png,,Mulch,"Store a die
+on a Mulch token",#f2c9c9,a42828,images/resource_mulch_full.png,images/mulch.png,images/resource_back.png
+2,Resource_Sunlight_Water,Cultivation,Sunlight,🎲 Raise a die +3,#f2ce42,5f4e07,images/resource_sunlight_full.png,,Water,Gain Water token,#57e4fa,03333a,images/resource_water_full.png,images/water.png,images/resource_back.png
+2,Resource_Water_Compost,Cultivation,Water,Gain Water token,#57e4fa,03333a,images/resource_water_full.png,images/water.png,Compost,Upgrade a die,#8f754f,f8f5f2,images/resource_compost_full.png,,images/resource_back.png
+2,Resource_Water_Mulch,Cultivation,Water,Gain Water token,#57e4fa,03333a,images/resource_water_full.png,images/water.png,Mulch,"Store a die
+on a Mulch token",#f2c9c9,a42828,images/resource_mulch_full.png,images/mulch.png,images/resource_back.png

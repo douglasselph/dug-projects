@@ -1,0 +1,283 @@
+package dugsolutions.leaf.v30.game.effect
+
+import dugsolutions.leaf.v30.cards.domain.GameCard
+import dugsolutions.leaf.v30.chronicle.Chronicle
+import dugsolutions.leaf.v30.chronicle.GameChronicle
+import dugsolutions.leaf.v30.chronicle.domain.Moment
+import dugsolutions.leaf.v30.chronicle.domain.WarningType
+import dugsolutions.leaf.v30.common.Critter
+import dugsolutions.leaf.v30.common.Token
+import dugsolutions.leaf.v30.game.effect.details.UpgradeDie
+import dugsolutions.leaf.v30.game.domain.MainActionException
+import dugsolutions.leaf.v30.player.Player
+import dugsolutions.leaf.v30.player.decision.domain.ExecuteTarget
+import dugsolutions.leaf.v30.player.decision.domain.ActionBattleMain
+import dugsolutions.leaf.v30.player.decision.domain.ActionCultivation
+import dugsolutions.leaf.v30.random.Randomizer
+import dugsolutions.leaf.v30.random.die.Dice
+import dugsolutions.leaf.v30.random.die.Die
+import dugsolutions.leaf.v30.random.die.DieSides
+import dugsolutions.leaf.v30.random.die.di.DieFactory
+import dugsolutions.leaf.v30.table.Table
+
+abstract class GameCardEffectExecutorBase(
+    protected val chronicle: Chronicle = GameChronicle(),
+    protected val dieFactory: DieFactory = DieFactory(Randomizer.create())
+) {
+
+    protected open fun gainWormAndBoostWorms(
+        table: Table,
+        player: Player,
+        action: ActionCultivation.ExecuteCard
+    ) {
+        gainWormAndBoostWorms(table, player, action.card)
+    }
+
+    protected open fun gainWormAndBoostWorms(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
+        gainWormAndBoostWorms(table, player, action.card)
+    }
+
+    protected open fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        action: ActionCultivation.ExecuteCard
+    ) {
+        gainOrStealBeeAndBoostBees(table, player, action.card, action.target)
+    }
+
+    protected open fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
+        gainOrStealBeeAndBoostBees(table, player, action.card, action.target)
+    }
+
+    private fun gainWormAndBoostWorms(
+        table: Table,
+        player: Player,
+        card: GameCard
+    ) {
+        if (table.grove.has(Critter.WORM)) {
+            table.grove.remove(Critter.WORM)
+            player.addCritter(Critter.WORM)
+        }
+        player.replaceCritter(Critter.WORM, Critter.BOOSTED_WORM)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Gained a worm from the Grove and boosted this player's worms for the round",
+                critter = Critter.BOOSTED_WORM
+            )
+        )
+    }
+
+    private fun gainOrStealBeeAndBoostBees(
+        table: Table,
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ) {
+        val sourcePlayer = target?.player
+        val gainedFrom = when {
+            sourcePlayer != null && stealBee(sourcePlayer, player) -> "player ${sourcePlayer.id}"
+            table.grove.has(Critter.BEE) -> {
+                table.grove.remove(Critter.BEE)
+                player.addCritter(Critter.BEE)
+                "the Grove"
+            }
+            else -> null
+        }
+        player.replaceCritter(Critter.BEE, Critter.BOOSTED_BEE)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Gained a bee from ${gainedFrom ?: "nowhere"} and boosted this player's bees for the round",
+                critter = Critter.BOOSTED_BEE
+            )
+        )
+    }
+
+    private fun stealBee(
+        sourcePlayer: Player,
+        targetPlayer: Player
+    ): Boolean {
+        val stolen = when {
+            sourcePlayer.removeCritter(Critter.BEE) -> Critter.BEE
+            sourcePlayer.removeCritter(Critter.BOOSTED_BEE) -> Critter.BOOSTED_BEE
+            else -> null
+        } ?: return false
+        targetPlayer.addCritter(stolen.normal)
+        return true
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        action: ActionCultivation.ExecuteCard
+    ) {
+        mulchDieFromDiscard(table, player, action.card)
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ) {
+        mulchDieFromDiscard(table, player, action.card)
+    }
+
+    protected open fun mulchDieFromDiscard(
+        table: Table,
+        player: Player,
+        card: GameCard
+    ) {
+        val groveToken = table.grove.remove(Token.MULCH()) ?: return
+        val die = player.drawHighestDieFromDiscard()
+        if (die == null) {
+            table.grove.add(groveToken)
+            return
+        }
+        val token = Token.MULCH(DieSides.from(die.sides))
+        player.add(token)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Mulched the highest-sided die from discard and gained a matching mulch token",
+                dice = Dice(listOf(die)),
+                token = token
+            )
+        )
+    }
+
+    protected open fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        action: ActionCultivation.ExecuteCard
+    ): Die? {
+        return upgradeDieAndUseNow(table, player, action.card, action.target)
+    }
+
+    protected open fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        action: ActionBattleMain.ExecuteCard
+    ): Die? {
+        return upgradeDieAndUseNow(table, player, action.card, action.target)
+    }
+
+    private fun upgradeDieAndUseNow(
+        table: Table,
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ): Die? {
+        val targetDie = target?.dice?.firstDie
+        if (targetDie == null) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_TARGET_MISSING, card = card))
+            return null
+        }
+        if (!player.diceHand.hasDie(targetDie)) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_NOT_FOUND, card = card))
+            return null
+        }
+
+        val upgraded = UpgradeDie(table.grove, dieFactory)(targetDie)
+        if (upgraded == null) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_UNAVAILABLE, card = card))
+            return null
+        }
+        if (!player.removeDieFromHand(targetDie)) {
+            chronicle(Moment.Warning(player = player, type = WarningType.UPGRADE_DIE_NOT_FOUND, card = card))
+            return null
+        }
+        upgraded.roll()
+        player.addDieToHand(upgraded)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Upgraded a die and used it now",
+                dice = Dice(listOf(upgraded))
+            )
+        )
+        return upgraded
+    }
+
+    /**
+     * Decision tree for cultivation:
+     *     val die = player.diceHand.dice
+     *             .minWithOrNull(
+     *                 compareBy<Die> { it.value }
+     *                     .thenByDescending { it.sides }
+     *             )
+     *             ?: return
+     * Decision tree for battle:
+     *    val die = player.diceHand.dice
+     *             .maxByOrNull { it.sides }
+     *             ?: return
+     */
+    protected open fun gainMulchOnCleanup(player: Player, card: GameCard, target: ExecuteTarget)
+    {
+        val die = target.dice.firstDie ?: return
+        val token = Token.PENDING_MULCH(DieSides.from(die.sides))
+        player.addMulchToken(DieSides.from(die.sides))
+        player.removeDieFromHand(die)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = "Set aside a die to become a mulch token during cleanup",
+                dice = Dice(listOf(die)),
+                token = token
+            )
+        )
+    }
+
+    protected fun flipOpponentFaceUpVineFaceDown(
+        player: Player,
+        card: GameCard,
+        target: ExecuteTarget?
+    ) {
+        val targetPlayer = target?.player
+        val targetCard = target?.card
+        if (targetPlayer == null || targetCard == null) {
+            chronicle(
+                Moment.GameCardEffect(
+                    player = player,
+                    card = card,
+                    effect = card.effect,
+                    detail = "Could not flip an opponent vine face down because the target player or card was missing"
+                )
+            )
+            return
+        }
+
+        val flipped = targetPlayer.flipCreatureCardFaceDown(targetCard)
+        chronicle(
+            Moment.GameCardEffect(
+                player = player,
+                card = card,
+                effect = card.effect,
+                detail = if (flipped) {
+                    "Flipped player ${targetPlayer.id}'s creature card ${targetCard.name} face down"
+                } else {
+                    "Could not flip player ${targetPlayer.id}'s creature card ${targetCard.name} face down"
+                }
+            )
+        )
+    }
+
+}
