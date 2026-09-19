@@ -176,35 +176,28 @@ class GameEffectConverterTest {
     }
 
     private fun readAllSourceEffects(): List<SourceEffect> {
-        val dataDirectory = Path.of("data")
-
-        assertTrue(
-            Files.isDirectory(dataDirectory),
-            "Expected v35 card data directory at ${dataDirectory.toAbsolutePath()}"
-        )
-
         return buildList {
             addAll(
                 readEffects(
-                    dataDirectory.resolve(CardDataFiles.ROOT_CARD_LIST),
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST)),
                     "effect"
                 )
             )
             addAll(
                 readEffects(
-                    dataDirectory.resolve(CardDataFiles.VF_CARD_LIST),
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)),
                     "effect"
                 )
             )
             addAll(
                 readEffects(
-                    dataDirectory.resolve(CardDataFiles.WISP_LIST),
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.WISP_LIST)),
                     "effect"
                 )
             )
             addAll(
                 readEffects(
-                    dataDirectory.resolve(CardDataFiles.ROUND_CARD_LIST),
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST)),
                     "effect_1_text",
                     "effect_2_text"
                 )

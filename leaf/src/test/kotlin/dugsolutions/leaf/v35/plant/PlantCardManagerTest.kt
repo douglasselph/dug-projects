@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -19,8 +18,8 @@ class PlantCardManagerTest {
     fun setup() {
         val registry = PlantCardRegistry()
         registry.loadFromCsv(
-            dataPath(CardDataFiles.ROOT_CARD_LIST),
-            dataPath(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
         )
 
         sourceCards = registry.getAllCards()
@@ -33,8 +32,8 @@ class PlantCardManagerTest {
         // Arrange
         val registry = PlantCardRegistry()
         registry.loadFromCsv(
-            dataPath(CardDataFiles.ROOT_CARD_LIST),
-            dataPath(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
         )
         val result = PlantCardManager()
 
@@ -154,6 +153,4 @@ class PlantCardManagerTest {
         assertEquals(emptyList(), manager.getAllCards().cards)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

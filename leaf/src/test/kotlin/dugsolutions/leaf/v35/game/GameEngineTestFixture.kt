@@ -16,7 +16,6 @@ import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispDeck
-import java.nio.file.Path
 
 internal object GameEngineTestFixture {
 
@@ -62,7 +61,7 @@ internal object GameEngineTestFixture {
     private fun roundManager(): RoundCardManager {
         val registry = RoundCardRegistry(GameEffectConverter())
         registry.loadFromCsv(
-            Path.of("data", CardDataFiles.ROUND_CARD_LIST).toString()
+            CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST)
         )
         return RoundCardManager().apply { loadCards(registry) }
     }

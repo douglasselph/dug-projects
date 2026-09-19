@@ -11,7 +11,6 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -27,7 +26,7 @@ class GroveFactoryTest {
             )
 
         registry.loadFromCsv(
-            dataPath(CardDataFiles.WISP_LIST)
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
         )
 
         val manager =
@@ -149,14 +148,6 @@ class GroveFactoryTest {
             cardBackgroundImage = "",
             effect = GameEffect.UNKNOWN
         )
-
-    private fun dataPath(
-        fileName: String
-    ): String =
-        Path.of(
-            "data",
-            fileName
-        ).toString()
 
     private class ReversingRandomizer :
         Randomizer {

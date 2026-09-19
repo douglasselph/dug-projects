@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.random.Randomizer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -20,7 +19,7 @@ class WispDeckTest {
     @BeforeEach
     fun setup() {
         val registry = WispCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         manager = WispCardManager()
         manager.loadCards(registry)
@@ -171,8 +170,6 @@ class WispDeckTest {
         assertEquals(listOf(honor), exactDeck.cards.cards)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 
 
     private class ThrowingShuffleRandomizer : Randomizer {

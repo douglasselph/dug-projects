@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -24,7 +23,7 @@ class PlantCardRegistryTest {
     @Test
     fun loadFromCsv_whenRootFileLoaded_parsesRootCards() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.ROOT_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST))
 
         // Assert
         assertEquals(12, registry.getAllCards().size)
@@ -48,7 +47,7 @@ class PlantCardRegistryTest {
 
     @Test
     fun loadFromCsv_parsesFixedAndVariableEndGameScoringRules() {
-        registry.loadFromCsv(dataPath(CardDataFiles.VF_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST))
 
         assertEquals(
             PlantScoringRule.Fixed(3),
@@ -77,7 +76,7 @@ class PlantCardRegistryTest {
     @Test
     fun loadFromCsv_whenVineFlowerFileLoaded_parsesAlternateBackgroundColumn() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.VF_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST))
 
         // Assert
         assertEquals(24, registry.getAllCards().size)
@@ -96,8 +95,8 @@ class PlantCardRegistryTest {
     fun loadFromCsv_whenBothPlantFilesLoaded_loadsAllCards() {
         // Act
         registry.loadFromCsv(
-            dataPath(CardDataFiles.ROOT_CARD_LIST),
-            dataPath(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
         )
 
         // Assert
@@ -107,7 +106,7 @@ class PlantCardRegistryTest {
     @Test
     fun getCard_whenCaseAndWhitespaceDiffer_returnsCard() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.ROOT_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST))
 
         // Act
         val result = registry.getCard("  ROOT_05_01  ")
@@ -119,7 +118,7 @@ class PlantCardRegistryTest {
     @Test
     fun getCard_whenNameDoesNotExist_returnsNull() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.ROOT_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST))
 
         // Act
         val result = registry.getCard("Root_99_99")
@@ -131,7 +130,7 @@ class PlantCardRegistryTest {
     @Test
     fun loadFromCsv_whenSameFileLoadedTwice_rejectsDuplicateNames() {
         // Arrange
-        val file = dataPath(CardDataFiles.ROOT_CARD_LIST)
+        val file = CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST)
         registry.loadFromCsv(file)
 
         // Act / Assert
@@ -152,8 +151,8 @@ class PlantCardRegistryTest {
     fun clear_removesAllCards() {
         // Arrange
         registry.loadFromCsv(
-            dataPath(CardDataFiles.ROOT_CARD_LIST),
-            dataPath(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
         )
 
         // Act
@@ -163,6 +162,4 @@ class PlantCardRegistryTest {
         assertEquals(emptyList(), registry.getAllCards())
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

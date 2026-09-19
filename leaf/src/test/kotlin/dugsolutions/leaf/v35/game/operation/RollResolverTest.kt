@@ -25,7 +25,6 @@ import dugsolutions.leaf.v35.wisp.WispDeck
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -46,7 +45,7 @@ class RollResolverTest {
             )
 
         registry.loadFromCsv(
-            dataPath(CardDataFiles.WISP_LIST)
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
         )
 
         val manager =
@@ -628,14 +627,6 @@ class RollResolverTest {
             cardBackgroundImage = "",
             effect = GameEffect.UNKNOWN
         )
-
-    private fun dataPath(
-        fileName: String
-    ): String =
-        Path.of(
-            "data",
-            fileName
-        ).toString()
 
     private class FixedRollDie(
         sides: Int,

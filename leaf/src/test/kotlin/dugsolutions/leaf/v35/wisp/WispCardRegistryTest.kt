@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -23,7 +22,7 @@ class WispCardRegistryTest {
     @Test
     fun loadFromCsv_loadsAllWispDefinitions() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         // Assert
         assertEquals(12, registry.getAllCards().size)
@@ -32,7 +31,7 @@ class WispCardRegistryTest {
     @Test
     fun loadFromCsv_parsesWispCardFieldsAndEffect() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         // Assert
         val card = assertNotNull(registry.getCard("Wisp_Award_VP"))
@@ -49,7 +48,7 @@ class WispCardRegistryTest {
 
     @Test
     fun loadFromCsv_parsesAllWispEndGameVpValues() {
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         assertEquals(3, assertNotNull(registry.getCard("Wisp_Award_VP2")).endGameVp)
         assertEquals(1, assertNotNull(registry.getCard("Wisp_Gain_Critters")).endGameVp)
@@ -60,7 +59,7 @@ class WispCardRegistryTest {
     @Test
     fun getCard_whenCaseAndWhitespaceDiffer_returnsCard() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         // Act
         val result = registry.getCard("  WISP_AWARD_VP  ")
@@ -72,7 +71,7 @@ class WispCardRegistryTest {
     @Test
     fun getCard_whenNameDoesNotExist_returnsNull() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         // Act
         val result = registry.getCard("Not_A_Wisp")
@@ -84,7 +83,7 @@ class WispCardRegistryTest {
     @Test
     fun loadFromCsv_whenSameFileLoadedTwice_rejectsDuplicateNames() {
         // Arrange
-        val file = dataPath(CardDataFiles.WISP_LIST)
+        val file = CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
         registry.loadFromCsv(file)
 
         // Act / Assert
@@ -104,7 +103,7 @@ class WispCardRegistryTest {
     @Test
     fun clear_removesAllCards() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         // Act
         registry.clear()
@@ -115,7 +114,7 @@ class WispCardRegistryTest {
 
     @Test
     fun loadFromCsv_parsesCurrentWispDeckAndTimingMetadata() {
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         val quake = assertNotNull(registry.getCard("Wisp_Quake"))
         val resolve = assertNotNull(registry.getCard("Wisps_Resolve"))
@@ -133,6 +132,4 @@ class WispCardRegistryTest {
         assertNull(registry.getCard("Wisp_Reckoning"))
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -19,7 +18,7 @@ class RoundCardManagerTest {
     @BeforeEach
     fun setup() {
         val registry = RoundCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         sourceCards = registry.getAllCards()
         manager = RoundCardManager()
@@ -30,7 +29,7 @@ class RoundCardManagerTest {
     fun loadCards_whenRegistryProvided_loadsAllCards() {
         // Arrange
         val registry = RoundCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
         val result = RoundCardManager()
 
         // Act
@@ -151,6 +150,4 @@ class RoundCardManagerTest {
         assertEquals(emptyList(), manager.getAllCards().cards)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

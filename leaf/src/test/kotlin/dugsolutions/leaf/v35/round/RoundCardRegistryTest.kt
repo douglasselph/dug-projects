@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -24,7 +23,7 @@ class RoundCardRegistryTest {
     @Test
     fun loadFromCsv_loadsAllRoundDefinitions() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Assert
         assertEquals(12, registry.getAllCards().size)
@@ -33,7 +32,7 @@ class RoundCardRegistryTest {
     @Test
     fun loadFromCsv_parsesBothEffectsAndPresentationFields() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Assert
         val card = assertNotNull(registry.getCard("Battle_Whisper_Burst"))
@@ -59,7 +58,7 @@ class RoundCardRegistryTest {
     @Test
     fun loadFromCsv_parsesCultivationTypeAndQuantity() {
         // Act
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Assert
         val card = assertNotNull(registry.getCard("Resource_Water_Mulch"))
@@ -71,7 +70,7 @@ class RoundCardRegistryTest {
 
     @Test
     fun loadFromCsv_parsesCurrentSimpleBattleRoundEffects() {
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         val surge = assertNotNull(registry.getCard("Battle_Bloom_Surge"))
         assertEquals(GameEffect.GAIN_D12_TO_DISCARD, surge.secondEffect.effect)
@@ -89,7 +88,7 @@ class RoundCardRegistryTest {
     @Test
     fun getCard_whenCaseAndWhitespaceDiffer_returnsCard() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Act
         val result = registry.getCard("  BATTLE_WHISPER_BURST  ")
@@ -101,7 +100,7 @@ class RoundCardRegistryTest {
     @Test
     fun getCard_whenNameDoesNotExist_returnsNull() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Act
         val result = registry.getCard("Not_A_Round_Card")
@@ -113,7 +112,7 @@ class RoundCardRegistryTest {
     @Test
     fun loadFromCsv_whenSameFileLoadedTwice_rejectsDuplicateNames() {
         // Arrange
-        val file = dataPath(CardDataFiles.ROUND_CARD_LIST)
+        val file = CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST)
         registry.loadFromCsv(file)
 
         // Act / Assert
@@ -133,7 +132,7 @@ class RoundCardRegistryTest {
     @Test
     fun clear_removesAllCards() {
         // Arrange
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         // Act
         registry.clear()
@@ -142,6 +141,4 @@ class RoundCardRegistryTest {
         assertEquals(emptyList(), registry.getAllCards())
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

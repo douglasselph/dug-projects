@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -21,7 +20,7 @@ class RoundDeckTest {
     @BeforeEach
     fun setup() {
         val registry = RoundCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
 
         manager = RoundCardManager()
         manager.loadCards(registry)
@@ -213,8 +212,6 @@ class RoundDeckTest {
         }
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 
     private class ReversingRandomizer : Randomizer {
         override fun nextBoolean(): Boolean =

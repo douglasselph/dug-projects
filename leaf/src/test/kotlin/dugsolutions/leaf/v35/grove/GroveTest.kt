@@ -15,7 +15,6 @@ import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import dugsolutions.leaf.v35.wisp.WispDeck
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -32,7 +31,7 @@ class GroveTest {
             )
 
         registry.loadFromCsv(
-            dataPath(CardDataFiles.WISP_LIST)
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
         )
 
         wispManager =
@@ -306,14 +305,6 @@ class GroveTest {
             cardBackgroundImage = "",
             effect = GameEffect.UNKNOWN
         )
-
-    private fun dataPath(
-        fileName: String
-    ): String =
-        Path.of(
-            "data",
-            fileName
-        ).toString()
 
     private class ReversingRandomizer :
         Randomizer {

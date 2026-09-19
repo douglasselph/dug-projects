@@ -17,7 +17,6 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.junit.jupiter.api.Test
 import org.koin.dsl.koinApplication
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -46,15 +45,15 @@ class GameModuleWiringTest {
 
         val plantRegistry = koin.get<PlantCardRegistry>().apply {
             loadFromCsv(
-                dataPath(CardDataFiles.ROOT_CARD_LIST),
-                dataPath(CardDataFiles.VF_CARD_LIST)
+                CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+                CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
             )
         }
         val wispRegistry = koin.get<WispCardRegistry>().apply {
-            loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+            loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
         }
         val roundRegistry = koin.get<RoundCardRegistry>().apply {
-            loadFromCsv(dataPath(CardDataFiles.ROUND_CARD_LIST))
+            loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
         }
 
         koin.get<WispCardManager>().loadCards(wispRegistry)
@@ -86,6 +85,4 @@ class GameModuleWiringTest {
         assertTrue(game.isComplete)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

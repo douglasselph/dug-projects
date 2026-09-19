@@ -25,7 +25,6 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -46,7 +45,7 @@ class GameFactoryTest {
             WispCardRegistry(converter)
 
         wispRegistry.loadFromCsv(
-            dataPath(CardDataFiles.WISP_LIST)
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
         )
 
         wispManager =
@@ -58,7 +57,7 @@ class GameFactoryTest {
             RoundCardRegistry(converter)
 
         roundRegistry.loadFromCsv(
-            dataPath(CardDataFiles.ROUND_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST)
         )
 
         roundManager =
@@ -70,8 +69,8 @@ class GameFactoryTest {
             PlantCardRegistry(converter)
 
         plantRegistry.loadFromCsv(
-            dataPath(CardDataFiles.ROOT_CARD_LIST),
-            dataPath(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)
         )
 
         val allPlants =
@@ -567,13 +566,6 @@ class GameFactoryTest {
         }
     }
 
-    private fun dataPath(
-        fileName: String
-    ): String =
-        Path.of(
-            "data",
-            fileName
-        ).toString()
     private class ExactOnlyRandomizer : Randomizer {
         var shuffleCalls: Int = 0
             private set

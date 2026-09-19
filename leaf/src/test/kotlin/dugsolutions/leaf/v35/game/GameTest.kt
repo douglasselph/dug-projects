@@ -17,7 +17,6 @@ import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispDeck
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -215,7 +214,7 @@ class GameTest {
             )
 
         registry.loadFromCsv(
-            dataPath(
+            CardDataFiles.dataPath(
                 CardDataFiles.ROUND_CARD_LIST
             )
         )
@@ -268,14 +267,6 @@ class GameTest {
             cardBackgroundImage = "",
             effect = GameEffect.UNKNOWN
         )
-
-    private fun dataPath(
-        fileName: String
-    ): String =
-        Path.of(
-            "data",
-            fileName
-        ).toString()
 
     private data class Fixture(
         val config: GameConfig,

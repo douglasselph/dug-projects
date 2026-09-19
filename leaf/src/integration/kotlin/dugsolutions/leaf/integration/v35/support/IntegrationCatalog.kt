@@ -11,7 +11,6 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * Loads the real v35 CSV definitions into the production registries/managers
@@ -44,23 +43,27 @@ class IntegrationCatalog(
         )
 
         fun defaultDataRoot(): Path =
-            Paths.get("data")
+            CardDataFiles.dataDirectory()
     }
 
     fun load(): IntegrationCatalog {
         plantRegistry.clear()
         plantRegistry.loadFromCsv(
-            path(CardDataFiles.ROOT_CARD_LIST),
-            path(CardDataFiles.VF_CARD_LIST)
+            CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST, dataRoot),
+            CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST, dataRoot)
         )
         plantManager.loadCards(plantRegistry)
 
         wispRegistry.clear()
-        wispRegistry.loadFromCsv(path(CardDataFiles.WISP_LIST))
+        wispRegistry.loadFromCsv(
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST, dataRoot)
+        )
         wispManager.loadCards(wispRegistry)
 
         roundRegistry.clear()
-        roundRegistry.loadFromCsv(path(CardDataFiles.ROUND_CARD_LIST))
+        roundRegistry.loadFromCsv(
+            CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST, dataRoot)
+        )
         roundManager.loadCards(roundRegistry)
 
         return this
@@ -111,6 +114,4 @@ class IntegrationCatalog(
             "Round card not found in v35 integration catalog: $name"
         }
 
-    private fun path(fileName: String): String =
-        dataRoot.resolve(fileName).toString()
 }

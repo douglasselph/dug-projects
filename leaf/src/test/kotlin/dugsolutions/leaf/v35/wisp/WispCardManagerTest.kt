@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -18,7 +17,7 @@ class WispCardManagerTest {
     @BeforeEach
     fun setup() {
         val registry = WispCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
 
         sourceCards = registry.getAllCards()
         manager = WispCardManager()
@@ -29,7 +28,7 @@ class WispCardManagerTest {
     fun loadCards_whenRegistryProvided_loadsAllCards() {
         // Arrange
         val registry = WispCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
         val result = WispCardManager()
 
         // Act
@@ -124,6 +123,4 @@ class WispCardManagerTest {
         assertEquals(emptyList(), manager.getAllCards().cards)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }

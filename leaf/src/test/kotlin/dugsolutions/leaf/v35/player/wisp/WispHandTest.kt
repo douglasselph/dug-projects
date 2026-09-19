@@ -6,7 +6,6 @@ import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.nio.file.Path
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -18,7 +17,7 @@ class WispHandTest {
     @BeforeEach
     fun setup() {
         val registry = WispCardRegistry(GameEffectConverter())
-        registry.loadFromCsv(dataPath(CardDataFiles.WISP_LIST))
+        registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST))
         sourceCards = registry.getAllCards()
     }
 
@@ -197,6 +196,4 @@ class WispHandTest {
         assertEquals(sixCards, hand.cards.cards)
     }
 
-    private fun dataPath(fileName: String): String =
-        Path.of("data", fileName).toString()
 }
