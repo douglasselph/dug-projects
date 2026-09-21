@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** B4 Cultivation Support scoring implemented; **not yet a certified Cultivation behavior contract**.
+**Status:** B5 explicit Human Baseline behavior-contract tests implemented; Cultivation is **not yet certified** because action/Effect target alignment and final verification remain.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -391,11 +391,13 @@ The precise numbers are illustrative, not approved values.
 
 The important goal is that a human reviewer can see **why** the chosen action beat the alternatives.
 
-## 10. Behavior-contract test plan
+## 10. Behavior-contract tests
 
-Certification should eventually make the unit tests read like an executable description of ordinary Cultivation behavior.
+B5 makes the direct strategy tests read like an executable description of ordinary Cultivation behavior, following the same certification pattern already used by Buy.
 
-The direct test suite should contain a clearly labeled `Human Baseline Behavior Contract` section covering at least these behavior families:
+`HumanBaselineCultivationStrategyTest` now contains a clearly labeled nested `Human Baseline Behavior Contract` section. Its tests assert externally visible choices rather than exact internal score arithmetic. Lower-level priority/policy tests retain responsibility for scorer math and wiring details.
+
+The broader certification matrix remains:
 
 ```text
 MAIN ACTIONS
@@ -429,7 +431,7 @@ CROSS-CUTTING
 - strategy RNG breaks equal choices without consuming mechanical RNG
 ```
 
-These are test **categories**, not yet approved numeric thresholds.
+The B5 top-level contract now directly covers the core Main/Support/Done behavior in this matrix. Target-consistency cases remain intentionally pending for B6 because the Effect strategy must first be aligned with the top-level action scorers. Detailed Wisp/refresh/Mulch/Worm/Butterfly arithmetic remains in lower-level scorer tests and the later card/Wisp audit.
 
 Coordinator/integration tests remain responsible for game legality and execution. Human Baseline unit tests are responsible for decision intent.
 
@@ -446,8 +448,8 @@ A4/B1 — document decisions + establish shared tuning policy           COMPLETE
 B2 — implement/refine Main Action scoring                              COMPLETE
 B3 — make Plant activation comparison explicit                         COMPLETE
 B4 — implement action-specific Support scoring                         COMPLETE
-B5 — align action scoring with Effect target/branch selection
-B6 — build explicit Human Baseline Behavior Contract tests
+B5 — build explicit Human Baseline Behavior Contract tests               COMPLETE
+B6 — align action scoring with Effect target/branch selection
 B7 — focused compile/test/fix until green
 
 C1 — update durable certification documentation

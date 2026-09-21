@@ -61,6 +61,10 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * `doc/HUMAN_BASELINE_POLICY.md`
  *
+ * The executable ordinary-human behavior contract is kept in:
+ *
+ * `src/test/kotlin/dugsolutions/leaf/v35/player/decision/baseline/cultivation/HumanBaselineCultivationStrategyTest.kt`
+ *
  * Cultivation is still under Milestone-2 implementation and verification. The
  * A3/A4 behavior direction is approved, but the area is not certified until the
  * remaining B/C checkpoints and full regression are complete.
