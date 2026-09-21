@@ -200,7 +200,7 @@ Shared cross-cutting tuning policy used by Cultivation and Buy:
 
 Decision hook: at each Build opportunity, choose among the currently legal Main Actions, Support Actions, or Done. The rules-engine caller repeatedly asks for another action until Done and contains a repeated-decision-state guard so a legal-but-nonprogressing strategy/executor cycle cannot loop forever.
 
-**Certification status:** implemented; A1/A2 analysis complete; A3 behavior principles approved; A4/B1 shared policy/tuning foundation introduced. Individual Cultivation scorers and Support behavior still require Stage-B implementation and tests.
+**Certification status:** Stage B complete through B7. Main Action scoring, Plant activation comparison, action-specific Support scoring, explicit behavior-contract tests, and action/Effect target alignment are implemented; focused production/test compilation and 57 relevant tests pass. Cultivation remains **not yet certified** until Stage C documentation and full unit + integration + simulation regression are complete.
 
 ### 3.5 Battle
 

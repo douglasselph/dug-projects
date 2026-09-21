@@ -2,7 +2,7 @@
 
 This document is the detailed navigation and review companion for the Human Baseline Cultivation decision area.
 
-**Milestone-2 status:** under designer review; **not yet certified**.
+**Milestone-2 status:** Stage B implementation and focused verification complete through B7; **not yet certified** pending Stage C documentation and full regression.
 
 The purpose of this document is to describe the code as it exists now: who owns the Build loop, what choices are offered to the strategy, how the Human Baseline currently ranks them, which shared features/scorers participate, and what direct tests exist. The companion [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) describes the target design we are working toward. Later Cultivation checkpoints will turn that plan into an approved ordinary-human behavior contract.
 
@@ -33,6 +33,8 @@ The Build coordinator itself has broader rule/legality coverage in:
 src/test/kotlin/dugsolutions/leaf/v35/game/round/cultivation/
     CultivationBuildCoordinatorTest.kt
 ```
+
+Focused B7 verification compiled production and test Kotlin successfully and ran 57 relevant tests with 0 failures. That set includes the direct Human Baseline Cultivation contract, Main/Support priority tests, Plant activation comparison, Effect target/branch alignment, shared policy/director wiring, and Build coordinator coverage. Full-project regression remains a Stage C requirement before certification.
 
 ## 1. Ownership of the Build loop
 
@@ -374,10 +376,12 @@ B3 — make Plant activation comparison explicit                     COMPLETE
 B4 — implement action-specific Support scoring                     COMPLETE
 B5 — build explicit Human Baseline Behavior Contract tests          COMPLETE
 B6 — align action scoring with Effect target/branch selection     COMPLETE
-B7 — focused compile/test/fix until green
+B7 — focused compile/test/fix until green                         COMPLETE
 
 C  — documentation, full regression, and certification
 ```
+
+B7 required no behavior corrections. Production and test Kotlin compiled successfully through Gradle, and the focused Cultivation/Human-Baseline verification selection ran 57 tests with 0 failures. Stage C remains responsible for the full project-wide regression before certification.
 
 This document should evolve as those checkpoints are completed. The durable final behavior contract should also be reflected in `HUMAN_BASELINE.md` and in the KDoc on `HumanBaselineCultivationStrategy`.
 

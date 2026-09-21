@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** B6 action/Effect target and branch alignment implemented; Cultivation is **not yet certified** because focused/final verification and Stage C certification remain.
+**Status:** Stage B is complete through B7. Focused production/test compilation is green and the focused Cultivation/Human-Baseline verification set passes. Cultivation is **not yet certified** because Stage C durable certification documentation and the full unit + integration + simulation regression remain.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -452,7 +452,7 @@ B3 — make Plant activation comparison explicit                         COMPLET
 B4 — implement action-specific Support scoring                         COMPLETE
 B5 — build explicit Human Baseline Behavior Contract tests               COMPLETE
 B6 — align action scoring with Effect target/branch selection                 COMPLETE
-B7 — focused compile/test/fix until green
+B7 — focused compile/test/fix until green                              COMPLETE
 
 C1 — update durable certification documentation
 C2 — run full unit + integration + simulation regression
@@ -460,6 +460,20 @@ C3 — mark Cultivation CERTIFIED and package final patch
 ```
 
 The exact B checkpoints may be split further if necessary. Intermediate WIP changes may intentionally be non-compilable as long as that status is explicit and the next checkpoint resolves it.
+
+### B7 focused verification result
+
+B7 required no additional behavior fixes. The latest source compiled successfully through Gradle for both production and test Kotlin, and the focused Cultivation/Human-Baseline test selection completed successfully:
+
+```text
+57 tests started
+57 tests successful
+0 failed
+```
+
+The focused selection covers the Cultivation behavior contract, Main and Support priorities, Plant activation comparison, Cultivation Effect target/branch alignment, shared policy wiring, Human Baseline director wiring, and the Cultivation Build coordinator safety/legality tests.
+
+The compile still reports the previously known unused `cardName` warning in `CardScoringHelpers`, and the test compile reports previously known deprecation warnings around the older `Baseline...` aliases. Those are not Cultivation B7 failures and are intentionally left outside this checkpoint.
 
 ## 12. Remaining calibration questions
 
