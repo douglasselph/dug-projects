@@ -221,7 +221,7 @@ baseline/battle/HumanBaselineBattleStrategyTest.kt
 
 **Certification status:** implemented; designer behavior review still required.
 
-### 3.6 Buy
+### 3.6 Buy — CERTIFIED
 
 Implementation:
 
@@ -241,10 +241,10 @@ ResourceReserveHeuristics.kt
 
 Buy has **two** strategy hooks:
 
-1. choose what to purchase, or choose Done;
-2. choose the exact dice/Critters used to pay for the selected item.
+1. `choosePurchase` — choose what to purchase, or choose Done;
+2. `choosePayment` — choose the exact dice/Critters used to pay for the selected item.
 
-Direct tests begin with:
+Direct tests:
 
 ```text
 baseline/buy/HumanBaselineBuyStrategyTest.kt
@@ -252,7 +252,41 @@ baseline/buy/PurchasePriorityTest.kt
 baseline/buy/PaymentPriorityTest.kt
 ```
 
-**Certification status:** implemented; this is the recommended first area for detailed Milestone-2 review.
+#### Certified Human Baseline Buy contract
+
+The Buy baseline is intended to model a recognizable ordinary player, not an optimized shopping algorithm. Its accepted behavior is:
+
+1. **Make one principal purchase, then stop.** Human Baseline does not deliberately split purchasing power across several purchases. Multi-buy optimization belongs to more advanced strategy levels.
+2. **Consider Plant-vs-die development balance before price.** If Plants are behind their development target while dice are not, prefer a Plant. If dice are behind while Plants are not, prefer a die. If both or neither are behind, do not force a category.
+3. **Within the chosen category, buy from the highest affordable cost tier.** This is the core ordinary-player tendency: buy the most expensive thing that fits the chosen development direction.
+4. **Use card-specific scoring only inside that highest-cost tier.** Card value can choose between comparable Plant cards, but Human Baseline does not deliberately drop to a cheaper tier for combo/efficiency optimization.
+5. **Do not penalize duplicate Plants merely for being duplicates.** A repeated card is evaluated by its actual value, not by a generic diversity preference.
+6. **Normally preserve 2 Bees and 1 Worm for Battle.** These are the Buy reserve targets.
+7. **Treat surplus Critters as probabilistically available purchasing power.** Let surplus be Bees above 2 plus Worms above 1. With zero surplus the spend chance is 0%. For positive surplus the chance is:
+
+   ```text
+   min(100, STARTING_PERCENTAGE + INCREMENT_PER_SURPLUS * surplus)
+   ```
+
+   The current constants are `STARTING_PERCENTAGE = 5` and `INCREMENT_PER_SURPLUS = 15`, producing 20%, 35%, 50%, 65%, 80%, 95%, and then 100% as surplus rises from 1 through 7+.
+8. **Treat a D20 and a cost-17 Flower as premium thresholds.** Human Baseline may spend Critters from the protected reserve when doing so makes one of those purchases affordable.
+9. **Prefer Bees over Worms when a Critter is required and either type can make the payment.** The current tendency is 67% Bee / 33% Worm because Worms retain the additional Flip use.
+10. **Use strategy RNG only for Human Baseline probabilities.** Critter-spend and Bee-vs-Worm variation must not consume the mechanical RNG used for dice, decks, or other physical game randomness.
+11. **When several legal payments remain, prefer efficient payment.** Minimize overpayment, prefer fewer physical resources, and preserve the Critter reserves where the purchase rules permit it.
+
+The implementation constants are deliberately named and centralized in `HumanBaselineBuyStrategy` so the designer can tune the baseline later without reconstructing the policy from scattered magic numbers.
+
+#### Buy behavior-contract tests
+
+`HumanBaselineBuyStrategyTest` contains a clearly labeled **Human Baseline Behavior Contract** section. Its tests directly demonstrate the rules above, including category balance, highest-cost selection, one-purchase behavior, Critter reserves, the surplus probability curve, premium 17/20 purchases, and both branches of the Bee/Worm preference. Separate implementation/edge-case tests cover fallback and payment mechanics.
+
+To run the Buy certification tests directly:
+
+```bash
+./gradlew test --tests 'dugsolutions.leaf.v35.player.decision.baseline.buy.*'
+```
+
+**Certification status:** **certified**. The behavioral contract, implementation, readable unit tests, and designer review agree for this area.
 
 ### 3.7 Butterfly Result
 
@@ -331,7 +365,7 @@ Use the eight areas as the high-level completion checklist:
 - [ ] Graft Placement certified
 - [ ] Cultivation certified
 - [ ] Battle certified
-- [ ] Buy certified
+- [x] Buy certified
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 

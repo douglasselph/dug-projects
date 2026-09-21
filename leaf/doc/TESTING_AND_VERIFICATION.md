@@ -76,6 +76,24 @@ This verifies that the research source set compiles against production code and 
 
 This is the most useful pre-commit sanity command when changes may affect the engine, deterministic scenarios, and research layer.
 
+### Human Baseline area-certification tests
+
+During Milestone 2, run the narrow unit package for the decision area being reviewed before running the full suite. For the certified Buy area:
+
+```bash
+./gradlew test --tests 'dugsolutions.leaf.v35.player.decision.baseline.buy.*'
+```
+
+These tests are intentionally more than implementation checks. The direct strategy test contains a clearly named **Human Baseline Behavior Contract** section whose test names should read like the approved plain-English policy. Supporting priority and edge-case tests remain separate.
+
+After an area passes its focused certification tests, use the full verification command before treating the change as complete:
+
+```bash
+./gradlew test integrationTest simulationCheck
+```
+
+See [Human Baseline Specification](HUMAN_BASELINE.md) for the current certification checklist and the accepted contract for each completed area.
+
 ### Human-readable whole-game smoke run
 
 ```bash

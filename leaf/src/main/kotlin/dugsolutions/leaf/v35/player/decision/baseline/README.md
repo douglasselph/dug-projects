@@ -50,3 +50,22 @@ src/test/kotlin/dugsolutions/leaf/v35/player/decision/baseline/
 ```
 
 During Milestone 2, each major strategy file should gain a concise class-level behavioral contract, and each direct strategy test should contain a clearly identifiable set of tests that demonstrates that contract. Supporting heuristic/edge-case tests can remain separate.
+
+## Certification progress
+
+Milestone 2 is certified one decision area at a time. The authoritative checklist and accepted plain-English contracts live in [`doc/HUMAN_BASELINE.md`](../../../../../../../../../doc/HUMAN_BASELINE.md).
+
+Current status:
+
+```text
+Critter Reward       pending designer certification
+Wound Resolution     pending designer certification
+Graft Placement      pending designer certification
+Cultivation          pending designer certification
+Battle               pending designer certification
+Buy                  CERTIFIED
+Butterfly Result     pending designer certification
+Effect Choices       pending designer certification
+```
+
+For a certified area, the class KDoc, implementation, behavior-contract tests, and the corresponding section of `doc/HUMAN_BASELINE.md` should all describe the same policy.

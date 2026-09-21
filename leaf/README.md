@@ -73,7 +73,7 @@ For a full local verification pass of the three current layers:
 ./gradlew test integrationTest simulationCheck
 ```
 
-For Milestone-2 Human Baseline review, start with [Human Baseline Specification](doc/HUMAN_BASELINE.md). For balance research workflow, start with [Using the Simulator](doc/USING_THE_SIMULATOR.md). If you instead need to understand how the engine is wired together, start with [Code Architecture](doc/CODE_ARCHITECTURE.md).
+For Milestone-2 Human Baseline review, start with [Human Baseline Specification](doc/HUMAN_BASELINE.md). For balance research workflow, start with [Using the Simulator](doc/USING_THE_SIMULATOR.md). If you instead need to understand how the engine is wired together, start with [Code Architecture](doc/CODE_ARCHITECTURE.md). The Buy decision area is the first certified Human Baseline area; its accepted behavior contract and focused test command are recorded in the Human Baseline specification.
 
 ## Current Research Model
 
