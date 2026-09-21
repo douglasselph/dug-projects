@@ -4,7 +4,7 @@ This document is the detailed navigation and review companion for the Human Base
 
 **Milestone-2 status:** under designer review; **not yet certified**.
 
-The purpose of this document at the A1 checkpoint is to describe the code as it exists now: who owns the Build loop, what choices are offered to the strategy, how the Human Baseline currently ranks them, and what direct tests exist. Later Cultivation checkpoints will turn this inventory into an approved ordinary-human behavior contract.
+The purpose of this document is to describe the code as it exists now: who owns the Build loop, what choices are offered to the strategy, how the Human Baseline currently ranks them, which shared features/scorers participate, and what direct tests exist. The companion [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) describes the target design we are working toward. Later Cultivation checkpoints will turn that plan into an approved ordinary-human behavior contract.
 
 The primary implementation is:
 
@@ -343,7 +343,7 @@ The remaining Cultivation certification work is intentionally divided into small
 
 ```text
 A1 — inventory current strategy, legal choices, tests          COMPLETE
-A2 — inspect shared features and Cultivation scorers
+A2 — inspect shared features and Cultivation scorers             COMPLETE
 A3 — propose the ordinary-human decision hierarchy
 A4 — resolve subjective behavior questions with Doug
 

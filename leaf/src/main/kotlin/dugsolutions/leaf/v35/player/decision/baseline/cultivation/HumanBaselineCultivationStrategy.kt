@@ -18,19 +18,39 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  * Human Baseline policy for one decision opportunity during Cultivation Build.
  *
  * The rules engine owns legality and repeatedly supplies the currently legal
- * choices. This strategy only ranks those choices. Main Actions are scored as
- * Draw, Plant activation, or one of the two Round Effects; Support Actions and
- * Done compete in the same candidate set. Shared [BaselineScoreEngine] logic
- * then applies card influences and uses strategy RNG only to break equal scores.
+ * choices. This strategy ranks those choices on one common [PriorityScore]
+ * scale; [BaselineScoreEngine] applies semantic card influences and uses
+ * strategy RNG only to break genuine ties.
  *
- * The current implementation is still under Milestone-2 designer review. Its
- * detailed A1 architecture inventory, legal-choice table, current scoring entry
- * points, tests, and known review questions are documented in:
+ * Target design, at a high level:
+ *
+ * - Main Actions compare Draw, Plant activation, and the two Round Effects by
+ *   their actual ordinary-human benefit in the current state.
+ * - Support Actions should ultimately be scored from the specific benefit of
+ *   the offered Wisp/reroll/refresh/Mulch/Worm/Butterfly rather than sharing a
+ *   generic Support score.
+ * - After both Main Actions, `Done` is a benchmark: useful Supports may beat it,
+ *   while weak or wasteful Supports should be saved and lose to it.
+ * - When an action's value depends on a target (for example Compost, Mulch, or
+ *   Sunlight), the top-level scorer and later Effect Choice must use compatible
+ *   target valuation so the chosen target realizes the value that justified
+ *   choosing the action.
+ * - Shared development, reserve, purchase-threshold, card-scoring, and
+ *   influence heuristics should be used only where they correspond to simple,
+ *   explainable ordinary-human judgment rather than deep optimization.
+ *
+ * Current implementation details and A1/A2 findings are documented in:
  *
  * `doc/HUMAN_BASELINE_CULTIVATION.md`
  *
- * That document describes the current implementation; it is not yet the final
- * certified Cultivation behavior contract.
+ * The forward-looking target architecture, open design questions, test plan,
+ * and remaining certification sequence are documented in:
+ *
+ * `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`
+ *
+ * Cultivation is still under Milestone-2 designer review. The plan document is
+ * intentionally not a certified behavior contract until the A3/A4 decisions
+ * are approved.
  */
 class HumanBaselineCultivationStrategy(
     private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),

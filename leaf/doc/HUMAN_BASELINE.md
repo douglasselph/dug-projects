@@ -186,13 +186,17 @@ Direct tests begin with:
 baseline/cultivation/HumanBaselineCultivationStrategyTest.kt
 ```
 
-Detailed architecture/review notes:
+Detailed current-state architecture inventory:
 
 [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md)
 
+Target design and certification plan:
+
+[`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md)
+
 Decision hook: at each Build opportunity, choose among the currently legal Main Actions, Support Actions, or Done. The rules-engine caller repeatedly asks for another action until Done and contains a repeated-decision-state guard so a legal-but-nonprogressing strategy/executor cycle cannot loop forever.
 
-**Certification status:** implemented; A1 architecture inventory complete; designer behavior review still required.
+**Certification status:** implemented; A1 architecture inventory and A2 scorer/shared-feature review complete; target design documented; designer behavior contract still requires A3/A4 review.
 
 ### 3.5 Battle
 
