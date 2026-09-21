@@ -147,6 +147,52 @@ class CultivationMainPriorityTest {
         )
     }
 
+    @Test
+    fun `Compost target scoring does not skip a missing normal Upgrade size`() {
+        val context = context(
+            hand = listOf(
+                DieView(index = 0, sides = 4, value = 1),
+                DieView(index = 1, sides = 6, value = 2)
+            ),
+            grove = DecisionContext.EMPTY.grove.copy(
+                graftBed = mapOf(DieSides.D8 to 1)
+            )
+        )
+
+        assertEquals(
+            null,
+            CompostPriority.targetScore(
+                context = context,
+                die = context.self.board.hand[0],
+                normalPurchasingPower = 3
+            )
+        )
+        assertTrue(
+            CompostPriority.targetScore(
+                context = context,
+                die = context.self.board.hand[1],
+                normalPurchasingPower = 3
+            ) != null
+        )
+    }
+
+    @Test
+    fun `Sunlight action and target use the same target-specific value`() {
+        val context = context(
+            hand = listOf(
+                DieView(index = 0, sides = 6, value = 5),
+                DieView(index = 1, sides = 10, value = 7)
+            )
+        )
+
+        val first = SunlightPriority.targetScore(context, context.self.board.hand[0], 12)
+        val second = SunlightPriority.targetScore(context, context.self.board.hand[1], 12)
+        val action = SunlightPriority.score(context, 12)
+
+        assertTrue(second.total > first.total)
+        assertEquals(35 + second.total, action.total)
+    }
+
     private fun context(
         supply: List<DieView> = emptyList(),
         hand: List<DieView> = emptyList(),

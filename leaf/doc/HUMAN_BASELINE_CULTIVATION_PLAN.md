@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** B5 explicit Human Baseline behavior-contract tests implemented; Cultivation is **not yet certified** because action/Effect target alignment and final verification remain.
+**Status:** B6 action/Effect target and branch alignment implemented; Cultivation is **not yet certified** because focused/final verification and Stage C certification remain.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -108,7 +108,7 @@ This allows cards to differ naturally without putting card-name special cases in
 
 The top-level strategy remains ignorant of individual card identities. Card-specific knowledge belongs in the card scorer registry; cross-cutting Cultivation policy belongs in `PlantActivationPriority`/`HumanBaselinePolicy`.
 
-B3 deliberately gives no generic Plant-development bonus for activation. Reusing an already grafted Plant does not increase Plant count. It also limits the permanent dice-development nudge to effects whose permanent improvement is unconditional. Conditional branch effects are deferred until the target/branch-alignment checkpoint, where the action score and the later branch choice can be made consistent together.
+B3 deliberately gives no generic Plant-development bonus for activation. Reusing an already grafted Plant does not increase Plant count. It also limits the permanent dice-development nudge to effects whose permanent improvement is unconditional. B6 now aligns the Cultivation target/branch choices that directly support activation valuation; broader Effect-choice behavior remains a separate Milestone-2 decision area and later card/Wisp scorer audit.
 
 The direct comparison tests now demonstrate both directions: a strong visible Plant opportunity can beat Draw, while a weak one can lose, and the same Plant can switch between those outcomes as the current state changes.
 
@@ -308,9 +308,11 @@ Butterfly → which die?
 Plant/Wisp effects → effect-specific target/branch choices
 ```
 
-The current system can sometimes value the best hypothetical target at the top level and then use a more generic Effect Choice scorer later. That can produce internally inconsistent Human Baseline behavior.
+B6 implements this requirement for the Cultivation cases that had exposed the mismatch. Compost, Mulch, and Sunlight now expose target-specific scorers used by both the top-level Round Effect valuation and `HumanBaselineEffectStrategy`. This also fixed an important rules mismatch in the old Compost scorer: it could value a later available die size as though a normal Upgrade could skip a missing intermediate size, while the real Upgrade rules require the exact next normal step.
 
-The target architecture is to centralize/reuse target evaluation so both layers answer the same question.
+Cultivation die-targeting Plant/Wisp effects now pass the same `HumanBaselinePolicy.normalPurchasingPower(context)` into downstream target scoring that was used when their activation value was calculated. `RAISE_DIE_PLUS_3` is explicitly target-scored as well. Petal To Die 4 now shares one branch evaluator between top-level card valuation and the later `choosePetalToDie4` branch decision.
+
+The architecture centralizes/reuses target evaluation so both layers answer the same question.
 
 A preferred pattern is:
 
@@ -431,7 +433,7 @@ CROSS-CUTTING
 - strategy RNG breaks equal choices without consuming mechanical RNG
 ```
 
-The B5 top-level contract now directly covers the core Main/Support/Done behavior in this matrix. Target-consistency cases remain intentionally pending for B6 because the Effect strategy must first be aligned with the top-level action scorers. Detailed Wisp/refresh/Mulch/Worm/Butterfly arithmetic remains in lower-level scorer tests and the later card/Wisp audit.
+The B5 top-level contract directly covers the core Main/Support/Done behavior in this matrix. B6 adds focused target/branch tests proving that the later Effect strategy realizes the target value anticipated by Compost, Mulch, Sunlight, and Petal To Die 4. Detailed Wisp/refresh/Mulch/Worm/Butterfly arithmetic remains in lower-level scorer tests and the later card/Wisp audit.
 
 Coordinator/integration tests remain responsible for game legality and execution. Human Baseline unit tests are responsible for decision intent.
 
@@ -449,7 +451,7 @@ B2 — implement/refine Main Action scoring                              COMPLET
 B3 — make Plant activation comparison explicit                         COMPLETE
 B4 — implement action-specific Support scoring                         COMPLETE
 B5 — build explicit Human Baseline Behavior Contract tests               COMPLETE
-B6 — align action scoring with Effect target/branch selection
+B6 — align action scoring with Effect target/branch selection                 COMPLETE
 B7 — focused compile/test/fix until green
 
 C1 — update durable certification documentation
@@ -463,7 +465,7 @@ The exact B checkpoints may be split further if necessary. Intermediate WIP chan
 
 A3/A4 resolved the cross-cutting policy questions: development need is a modest capped nudge; normal purchasing power excludes the protected 2-Bee/1-Worm reserve; `Done` is a tunable Support benchmark; and shared assumptions are accessed through an overridable `HumanBaselinePolicy`.
 
-B2 wired the approved cross-cutting policy into the threshold-sensitive Main Actions, and B3 made Plant activation comparison explicit through `PlantActivationPriority`, including the modest development nudge for unambiguous permanent die upgrades. The remaining questions belong to later Stage-B scorer work rather than to the policy architecture:
+B2 wired the approved cross-cutting policy into the threshold-sensitive Main Actions, B3 made Plant activation comparison explicit through `PlantActivationPriority`, and B6 now keeps target/branch execution aligned with the value anticipated by the top-level action. The remaining questions are calibration questions rather than architectural gaps:
 
 - the exact calibrated relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
 - later calibration of the B4 Water/Mulch/Worm/Butterfly/Wisp formulas if simulation evidence shows they are too conservative or too liberal;

@@ -77,7 +77,8 @@ class HumanBaselineDecisionDirector(
     internal val effect = HumanBaselineEffectStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy
     )
 
     fun createDirector(): DecisionDirector = DecisionDirector(

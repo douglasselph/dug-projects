@@ -48,6 +48,12 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  * Draw deliberately does not receive that long-term nudge because drawing an
  * existing die does not increase total dice-pool power.
  *
+ * B6 aligns downstream Effect choices with the value that justified the
+ * top-level action: Compost, Mulch, and Sunlight share target scorers with the
+ * Effect strategy; Cultivation die-targeting card effects use the same
+ * reserve-aware purchasing-power model; and Petal To Die 4 shares branch
+ * valuation between activation scoring and branch selection.
+ *
  * Current implementation details and A1/A2 findings are documented in:
  *
  * `doc/HUMAN_BASELINE_CULTIVATION.md`

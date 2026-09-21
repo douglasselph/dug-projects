@@ -27,10 +27,10 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
  * - Activating a Plant does not receive a generic "Plant development" bonus:
  *   activation reuses an already grafted Plant and does not increase Plant count.
  *
- * Target/branch consistency is deliberately a later checkpoint. This scorer
- * values the best visible result a card can currently realize; the Effect
- * strategy must eventually use compatible target valuation so that result is
- * actually chosen.
+ * B6 aligns downstream Cultivation target/branch valuation with the visible
+ * value used here: die-target effects share reserve-aware threshold assumptions,
+ * and specialized branch effects such as Petal To Die 4 share branch scoring.
+ * Broader Effect-choice certification remains a separate Milestone-2 area.
  */
 object PlantActivationPriority {
     fun score(
@@ -61,8 +61,8 @@ object PlantActivationPriority {
 
     /**
      * Effects included here must improve the permanent dice pool regardless of
-     * a later branch choice. Conditional effects stay out until their branch
-     * selection is aligned with top-level action scoring.
+     * a later branch choice. Conditional effects stay out unless permanent
+     * development is guaranteed by the chosen branch.
      */
     private fun permanentlyImprovesDicePool(effect: GameEffect): Boolean =
         effect == GameEffect.UPGRADE_DIE_AND_USE_NOW

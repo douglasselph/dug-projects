@@ -12,6 +12,8 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
+import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.wisp.domain.WispCard
 import kotlin.math.max
@@ -193,9 +195,11 @@ object CardScoringHelpers {
                 )
             }
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 -> {
-                val d4 = dice.any { it.sides == 4 }
-                val raiseAll = if (d4) dice.filterNot { it.sides == 4 && it.value == dice.firstOrNull { d -> d.sides == 4 }?.value }.sumOf { DieValueHeuristics.actualRaiseGain(it, 4) } else 0
-                score = score.adjusted(max(8, raiseAll * 2), "Best Petal To Die 4 branch")
+                val bestBranch = petalToDie4CultivationChoices(context)
+                    .maxOfOrNull { petalToDie4BranchScore(context, it).total }
+                if (bestBranch != null) {
+                    score = score.adjusted(bestBranch, "Best Petal To Die 4 branch")
+                }
             }
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
                 val weakest = dice.minByOrNull { it.value }
@@ -309,10 +313,16 @@ object CardScoringHelpers {
                     context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }
         }
 
-    fun scoreDieTarget(effect: GameEffect, context: DecisionContext, die: dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice): PriorityScore {
+    fun scoreDieTarget(
+        effect: GameEffect,
+        context: DecisionContext,
+        die: EffectDieChoice,
+        normalPurchasingPower: Int? = null
+    ): PriorityScore {
         val gain = when (effect) {
             GameEffect.DOUBLE_ONE_DIE -> minOf(die.sides, die.value * 2) - die.value
             GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 4)
+            GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 3)
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
@@ -331,12 +341,63 @@ object CardScoringHelpers {
         }
         var score = PriorityScore(50).adjusted(gain * 4, "Target value swing")
         if (context.phase != null && CardPhase.from(context.phase) == CardPhase.CULTIVATION && gain > 0) {
-            val power = PurchaseThresholdHeuristics.purchasingPower(context.self.board)
-            val bonus = PurchaseThresholdHeuristics.thresholdBonus(power, power + gain, PurchaseThresholdHeuristics.availableCostTiers(context.grove), 10)
+            val power = normalPurchasingPower
+                ?: PurchaseThresholdHeuristics.purchasingPower(context.self.board)
+            val bonus = PurchaseThresholdHeuristics.thresholdBonus(
+                power,
+                power + gain,
+                PurchaseThresholdHeuristics.availableCostTiers(context.grove),
+                10
+            )
             if (bonus != 0) score = score.adjusted(bonus, "Target crosses Buy threshold")
         }
         return score
     }
+
+    /**
+     * Candidate branches visible to Petal To Die 4 during Cultivation. The
+     * effect executor remains the owner of legality; this helper mirrors the
+     * player-visible branch conditions only so top-level card valuation and the
+     * later branch decision can use the same ordinary-human comparison.
+     */
+    fun petalToDie4CultivationChoices(context: DecisionContext): List<PetalToDie4Choice> =
+        buildList {
+            if ((context.grove.graftBed[DieSides.D4] ?: 0) > 0) {
+                add(PetalToDie4Choice.GainD4)
+            }
+            context.self.board.hand
+                .filter { it.sides == DieSides.D4.value }
+                .forEach { die ->
+                    add(
+                        PetalToDie4Choice.TrashD4AndRaiseAll(
+                            EffectDieChoice(die.index, die.sides, die.value)
+                        )
+                    )
+                }
+        }
+
+    /**
+     * Shared Petal To Die 4 branch valuation. A common zero base is deliberate:
+     * callers care about relative branch benefit, while the card's own base score
+     * remains in its card scorer.
+     */
+    fun petalToDie4BranchScore(
+        context: DecisionContext,
+        choice: PetalToDie4Choice
+    ): PriorityScore =
+        when (choice) {
+            PetalToDie4Choice.GainD4 ->
+                PriorityScore(0).adjusted(18, "Gain a D4 set to 4")
+
+            is PetalToDie4Choice.TrashD4AndRaiseAll -> {
+                val gain = context.self.board.hand
+                    .filterNot { it.index == choice.die.index }
+                    .sumOf { DieValueHeuristics.actualRaiseGain(it.sides, it.value, 4) }
+                PriorityScore(0)
+                    .adjusted(gain * 3, "Raise all remaining dice +4")
+                    .adjusted(-8, "Trash one D4")
+            }
+        }
 
     fun rowNeedBonus(context: DecisionContext, row: StrikeRow): Int =
         RowNeedHeuristics.calculate(context, row).needScore / 2

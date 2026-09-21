@@ -211,7 +211,7 @@ cross-cutting Cultivation policy
 
 The comparison rule is deliberately simple: a weak Plant activation can lose to Draw or another Main Action, while the same Plant can become preferable when its visible current effect is more useful. Activating an already grafted Plant receives no generic Plant-count-development bonus because activation does not increase the number of Plants in the Creature.
 
-At B3 the permanent-development nudge applies only where the Plant effect unambiguously improves permanent dice-pool strength (`UPGRADE_DIE_AND_USE_NOW`). Conditional branch effects remain deferred until action/target/branch consistency is handled in the later target-alignment checkpoint.
+The permanent-development nudge remains limited to Plant effects that unambiguously improve permanent dice-pool strength (`UPGRADE_DIE_AND_USE_NOW`). B6 aligns downstream Cultivation target/branch valuation where the top-level action depends on it; broader Effect-choice certification remains a separate Milestone-2 area.
 
 ### Round Effect — Compost
 
@@ -319,7 +319,7 @@ A separate `Policy wiring and implementation seams` section verifies injection d
 
 `PlantActivationPriorityTest` and `CultivationSupportPriorityTest` remain lower-level scorer tests. They verify implementation arithmetic and invariants without making those details the public behavior contract.
 
-The top-level Cultivation behavior contract is now explicit, but Cultivation is **not yet certified**: B6 still needs to align top-level action valuation with later Effect target/branch selection, followed by focused and full regression verification.
+The top-level Cultivation behavior contract is explicit and B6 now aligns the principal target/branch decisions with the values that justified choosing those actions. Cultivation is **not yet certified**: focused compile/test cleanup and the Stage-C full regression/certification steps remain.
 
 ## 8. Coordinator and integration-style coverage
 
@@ -357,7 +357,7 @@ The architecture is already cleanly separated: the coordinator owns legality and
 
 The A1/A2 inventory originally exposed several gaps that have now been addressed by B2-B5: Main Actions share reserve-aware purchasing-power assumptions, Plant activation has an explicit comparison boundary, Supports use action-specific valuation instead of one flat score, and the direct strategy suite now contains an executable behavior contract.
 
-The principal remaining implementation concern is **target/branch consistency**: a top-level action such as Compost, Mulch, or Sunlight can be chosen because a particular target makes it valuable, so the later Effect decision must select a target using compatible reasoning. Generic future Round Effects still use the fallback score of 45 until they receive explicit Human Baseline valuation.
+B6 resolves the principal target/branch consistency gap. Compost, Mulch, and Sunlight now share target-specific scoring with the downstream Effect strategy. The same policy-defined normal purchasing power is passed into Cultivation die-targeting card effects, and Petal To Die 4 shares branch valuation between activation scoring and branch choice. Compost target evaluation now mirrors the real one-step Upgrade rule instead of treating a missing intermediate die size as skippable. Generic future Round Effects still use the fallback score of 45 until they receive explicit Human Baseline valuation.
 
 ## 10. Planned Cultivation review sequence
 
@@ -373,7 +373,7 @@ B2 — apply shared policy to Main Action scoring                  COMPLETE
 B3 — make Plant activation comparison explicit                     COMPLETE
 B4 — implement action-specific Support scoring                     COMPLETE
 B5 — build explicit Human Baseline Behavior Contract tests          COMPLETE
-B6 — align action scoring with Effect target/branch selection
+B6 — align action scoring with Effect target/branch selection     COMPLETE
 B7 — focused compile/test/fix until green
 
 C  — documentation, full regression, and certification
@@ -384,4 +384,4 @@ This document should evolve as those checkpoints are completed. The durable fina
 
 ## Shared tuning policy
 
-Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B5, Plant activation plus Compost, Mulch, and Sunlight use policy-based purchasing power. Compost receives the modest long-term dice-development nudge, and Plant activation receives the same nudge only when its effect unambiguously improves permanent dice-pool strength. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.
+Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B6, Plant activation plus Compost, Mulch, Sunlight, and downstream Cultivation die-target choices use policy-based purchasing power. Compost receives the modest long-term dice-development nudge, and Plant activation receives the same nudge only when its effect unambiguously improves permanent dice-pool strength. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.

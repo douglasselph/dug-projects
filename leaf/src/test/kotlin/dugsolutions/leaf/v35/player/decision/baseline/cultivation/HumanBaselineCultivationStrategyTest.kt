@@ -108,8 +108,8 @@ class HumanBaselineCultivationStrategyTest {
             val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
             val usefulContext = context(
                 supply = listOf(DieView(0, 20, 1)),
-                hand = listOf(DieView(0, 4, 4)),
-                graftBed = mapOf(DieSides.D12 to 1)
+                hand = listOf(DieView(0, 12, 1)),
+                graftBed = mapOf(DieSides.D20 to 1)
             )
             val noTargetContext = context(
                 supply = listOf(DieView(0, 4, 1)),

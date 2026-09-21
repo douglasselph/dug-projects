@@ -20,8 +20,9 @@ import kotlin.math.roundToInt
  * soft: a clearly valuable Support can still beat [HumanBaselinePolicy.cultivationDoneScore].
  *
  * This scorer evaluates the currently named target (die, Plant, stored Mulch,
- * or Wisp). B5 remains responsible for making later effect/branch choices use
- * compatible target valuation when the Support itself triggers another choice.
+ * or Wisp). B6 aligns downstream Effect target/branch valuation where a Support
+ * or card launches a secondary choice; broader Effect-choice certification is
+ * intentionally handled in its own Milestone-2 area.
  */
 object CultivationSupportPriority {
     private const val WATER_REROLL_BASE = 30

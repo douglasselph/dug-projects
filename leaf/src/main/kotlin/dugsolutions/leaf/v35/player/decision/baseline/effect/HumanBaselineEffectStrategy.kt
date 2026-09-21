@@ -1,10 +1,14 @@
 package dugsolutions.leaf.v35.player.decision.baseline.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.CompostPriority
+import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.MulchPriority
+import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.SunlightPriority
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
@@ -18,20 +22,59 @@ import dugsolutions.leaf.v35.tokens.Critter
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/** Contextual target selection for Plant/Wisp effects in Human Baseline. */
+/**
+ * Contextual target/branch selection for Plant, Wisp, and Round Effects in Human Baseline.
+ *
+ * Cultivation target choices deliberately share valuation with the top-level
+ * action scorers. Compost, Mulch, and Sunlight delegate to their Round Effect
+ * target scorers, and other die-targeting Cultivation effects receive the same
+ * policy-defined normal purchasing power used when their card activation was
+ * valued. Petal To Die 4 likewise shares one branch scorer between activation
+ * valuation and the later branch decision.
+ *
+ * This prevents the strategy from choosing an action because one target or
+ * branch makes it attractive and then realizing a different, weaker result.
+ * See `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`, section 6.
+ */
 class HumanBaselineEffectStrategy(
     private val delegate: EffectStrategy = MechanicalEffectStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
-    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
+    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseDie(request)
+        val normalPower = policy.normalPurchasingPower(request.context)
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                DecisionCandidate(choice, CardScoringHelpers.scoreDieTarget(request.effect, request.context, choice))
+                val die = dugsolutions.leaf.v35.player.decision.context.DieView(
+                    index = choice.index,
+                    sides = choice.sides,
+                    value = choice.value
+                )
+                val score = when (request.effect) {
+                    GameEffect.UPGRADE_DIE_FROM_HAND ->
+                        CompostPriority.targetScore(request.context, die, normalPower)
+                            ?: PriorityScore(0).adjusted(-1000, "Not a legal normal Compost upgrade target")
+
+                    GameEffect.MULCH_DIE_FROM_HAND ->
+                        MulchPriority.targetScore(request.context, die, normalPower)
+
+                    GameEffect.RAISE_DIE_PLUS_3 ->
+                        SunlightPriority.targetScore(request.context, die, normalPower)
+
+                    else ->
+                        CardScoringHelpers.scoreDieTarget(
+                            effect = request.effect,
+                            context = request.context,
+                            die = choice,
+                            normalPurchasingPower = normalPower
+                        )
+                }
+                DecisionCandidate(choice, score)
             }
         )
     }
@@ -97,7 +140,12 @@ class HumanBaselineEffectStrategy(
                     val protected = choice.value - DieValueHeuristics.expectedRoll(choice.sides)
                     PriorityScore(50 + (protected * 5).roundToInt())
                 }
-                else -> CardScoringHelpers.scoreDieTarget(request.effect, request.context, choice)
+                else -> CardScoringHelpers.scoreDieTarget(
+                    effect = request.effect,
+                    context = request.context,
+                    die = choice,
+                    normalPurchasingPower = policy.normalPurchasingPower(request.context)
+                )
             }
             DecisionCandidate<EffectDieChoice?>(choice, score)
         } + DecisionCandidate<EffectDieChoice?>(null, PriorityScore(50))
@@ -157,16 +205,10 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val score = when (choice) {
-                    PetalToDie4Choice.GainD4 -> PriorityScore(55).adjusted(8, "Reliable D4=4 added to Hand")
-                    is PetalToDie4Choice.TrashD4AndRaiseAll -> {
-                        val gain = request.context.self.board.hand
-                            .filterNot { it.index == choice.die.index }
-                            .sumOf { DieValueHeuristics.actualRaiseGain(it.sides, it.value, 4) }
-                        PriorityScore(45 + gain * 3).adjusted(-8, "Trashes one D4")
-                    }
-                }
-                DecisionCandidate(choice, score)
+                DecisionCandidate(
+                    choice,
+                    CardScoringHelpers.petalToDie4BranchScore(request.context, choice)
+                )
             }
         )
     }
