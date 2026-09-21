@@ -59,8 +59,13 @@ class BuyPayment(
 
 class ChoosePurchaseRequest(
     options: List<BuyItem>,
-    val context: DecisionContext = DecisionContext.EMPTY
+    val context: DecisionContext = DecisionContext.EMPTY,
+    /** Number of purchases this player has already completed in the current Buy phase. */
+    val purchasesMadeThisBuy: Int = 0
 ) {
+    init {
+        require(purchasesMadeThisBuy >= 0) { "Purchases made this Buy cannot be negative" }
+    }
     val options: List<BuyItem> = options.toList()
 }
 

@@ -51,6 +51,7 @@ class BuyCoordinator(
 
         val purchases = mutableListOf<PurchaseResult>()
         order.forEach { player ->
+            var purchasesMadeThisBuy = 0
             while (true) {
                 val legalItems = legalItems(game, player)
                 if (legalItems.isEmpty()) break
@@ -58,7 +59,8 @@ class BuyCoordinator(
                 val choice = player.decisions.buy.choosePurchase(
                     ChoosePurchaseRequest(
                         options = legalItems,
-                        context = DecisionContextFactory.create(game, player)
+                        context = DecisionContextFactory.create(game, player),
+                        purchasesMadeThisBuy = purchasesMadeThisBuy
                     )
                 )
                 if (choice == BuyChoice.Done) break
@@ -114,6 +116,7 @@ class BuyCoordinator(
                     paymentTotal = resolvedPayment.total
                 )
                 purchases.add(result)
+                purchasesMadeThisBuy += 1
                 game.chronicle.record(
                     Moment.Purchase(
                         playerId = player.id,

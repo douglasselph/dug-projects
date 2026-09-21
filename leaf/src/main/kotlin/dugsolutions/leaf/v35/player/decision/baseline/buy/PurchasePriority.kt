@@ -36,10 +36,6 @@ object PurchasePriority {
                         "Creature is below its Plant development target"
                     )
                 }
-                val duplicates = context.self.board.creature.count { it.name == item.card.name }
-                if (duplicates > 0) {
-                    score = score.adjusted(-10 * duplicates.coerceAtMost(3), "Duplicate Plant penalty")
-                }
                 val cardValue = cardScorers.forPlant(item.card).acquireScore(context, item.card)
                 score = cardValue.adjustments.fold(score.adjusted(cardValue.base, "Card acquire value")) { acc, adjustment ->
                     acc.adjusted(adjustment)

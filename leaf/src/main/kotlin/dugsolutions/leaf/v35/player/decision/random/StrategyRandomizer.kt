@@ -5,10 +5,11 @@ import kotlin.random.Random
 /**
  * Randomness owned by a player's strategy rather than by the game rules.
  *
- * This deliberately exposes only the operation Human Baseline currently
- * needs: choosing one index from a tied set of equally scored candidates.
+ * This deliberately exposes only a bounded integer draw. Human Baseline uses
+ * it both for tied-score selection and for explicitly probabilistic human
+ * tendencies (for example, whether surplus Critters are spent during Buy).
  * Keeping this as a separate type makes it difficult to accidentally consume
- * the Game's mechanical RNG while breaking a strategy tie.
+ * the Game's mechanical RNG for a strategy choice.
  */
 fun interface StrategyRandomizer {
     fun nextInt(until: Int): Int
