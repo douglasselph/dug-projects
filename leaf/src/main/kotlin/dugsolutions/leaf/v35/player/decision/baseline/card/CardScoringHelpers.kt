@@ -26,11 +26,13 @@ object CardScoringHelpers {
         phase: CardPhase,
         effect: GameEffect,
         cardName: String,
-        base: Int
+        base: Int,
+        normalPurchasingPower: Int? = null
     ): PriorityScore {
         var score = PriorityScore(base)
         val dice = context.self.board.hand
-        val buyPower = PurchaseThresholdHeuristics.purchasingPower(context.self.board)
+        val buyPower = normalPurchasingPower
+            ?: PurchaseThresholdHeuristics.purchasingPower(context.self.board)
         val tiers = PurchaseThresholdHeuristics.availableCostTiers(context.grove)
 
         fun addBestGain(gain: Int, reason: String) {

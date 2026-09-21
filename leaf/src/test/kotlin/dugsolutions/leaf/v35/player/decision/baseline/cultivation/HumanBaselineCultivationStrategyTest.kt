@@ -89,6 +89,51 @@ class HumanBaselineCultivationStrategyTest {
 
 
     @Test
+    fun `Plant activation Buy-threshold scoring uses policy normal purchasing power`() {
+        val rootFourMore = creature("Root_05_02", GameEffect.RAISE_DIE_PLUS_4, PlantType.ROOT, 5)
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    supply = listOf(DieView(0, 20, 1)),
+                    hand = listOf(DieView(0, 10, 5)),
+                    bees = 2,
+                    worms = 1
+                )
+            ),
+            grove = DecisionContext.EMPTY.grove.copy(
+                graftBed = mapOf(dugsolutions.leaf.v35.random.die.DieSides.D8 to 1)
+            )
+        )
+        val choices = listOf(
+            CultivationAction.Main(CultivationMainAction.Draw),
+            CultivationAction.Main(CultivationMainAction.ActivatePlant(rootFourMore))
+        )
+        val request = ChooseCultivationActionRequest(
+            roundCard = round(RoundCardType.CULTIVATION),
+            mainActionsRemaining = 2,
+            legalChoices = choices,
+            context = context
+        )
+
+        val reserveAware = HumanBaselineCultivationStrategy().chooseAction(request)
+        val allCrittersSpendable = HumanBaselineCultivationStrategy(
+            policy = object : HumanBaselinePolicy() {
+                override fun normalPurchasingPower(context: DecisionContext): Int = 10
+            }
+        ).chooseAction(request)
+
+        // Root Four More is worth 70 before threshold effects. With normal power
+        // 5, its visible +4 crosses the available cost-8 tier and reaches 80,
+        // beating the D20 Draw (~77). If protected Critters are counted as cash,
+        // power already starts at 10, the threshold bonus disappears, and Draw wins.
+        assertIs<CultivationAction.Main>(reserveAware)
+        assertIs<CultivationMainAction.ActivatePlant>(reserveAware.action)
+        assertEquals(CultivationMainAction.Draw, (allCrittersSpendable as CultivationAction.Main).action)
+    }
+
+
+    @Test
     fun `Cultivation Done benchmark comes from the injected Human Baseline policy`() {
         val context = DecisionContext.EMPTY.copy(phase = RoundCardType.CULTIVATION)
         val choices = listOf(

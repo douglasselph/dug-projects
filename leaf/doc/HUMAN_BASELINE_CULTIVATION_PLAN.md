@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** A3 behavior principles approved and A4/B1 shared policy foundation implemented; **not yet a certified Cultivation behavior contract**.
+**Status:** B2 Main Action policy integration implemented; **not yet a certified Cultivation behavior contract**.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -75,7 +75,7 @@ Round Effect 2
 
 Draw should represent the ordinary value of adding the next available die to the current round.
 
-The existing expected-value model is a useful base because the player knows that the lowest-sided die is drawn first. The final behavior may also use a **modest** development adjustment when the player's dice pool is clearly behind expected development.
+The existing expected-value model remains the base because the player knows that the lowest-sided die is drawn first. B2 deliberately does **not** add the long-term dice-development deficit bonus to Draw: the shared `dicePower` target measures permanent pool strength, while Draw only moves an existing die from Supply/Discard into Hand for this round.
 
 The target behavior should remain simple. Human Baseline should not simulate every possible roll or future Buy sequence.
 
@@ -83,9 +83,10 @@ Conceptually:
 
 ```text
 expected value of next die
-+ modest dice-development need, if approved
 + obvious immediate context
 ```
+
+If a future experiment wants a separate notion of *current-round die availability need*, that should be modeled as its own explicit heuristic rather than reusing the permanent dice-development deficit.
 
 Roll Reward probabilities may be considered only if they materially improve ordinary-human realism without turning Draw into a probability-search system.
 
@@ -258,11 +259,11 @@ The target is to use shared features only where they correspond to an ordinary p
 
 ### Development targets
 
-Plant/dice development may provide a **modest directional adjustment**, for example making Draw or Compost somewhat more attractive when dice development is clearly behind.
+Plant/dice development may provide a **modest directional adjustment** only where the action actually changes the measured long-term development.
 
 It should not override obviously better immediate actions or turn Human Baseline into a development optimizer.
 
-Approved A3 direction: development deficits are **modest nudges, not commands**. The shared `HumanBaselinePolicy` currently defaults to +1 per missing dice-power point capped at +9. Individual scorers have not yet been rewritten to consume that bonus.
+Approved A3 direction: development deficits are **modest nudges, not commands**. The shared `HumanBaselinePolicy` defaults to +1 per missing dice-power point capped at +9. B2 applies that nudge to Compost because Compost permanently increases dice-pool power. It does not apply the same nudge to Draw because Draw does not change total dice-pool power.
 
 ### Resource reserves
 
@@ -276,7 +277,7 @@ Crossing a visible Buy cost threshold is a useful ordinary-human heuristic and s
 
 However, `PurchaseThresholdHeuristics.purchasingPower()` currently counts all Critters, while the certified Buy strategy normally protects 2 Bees and 1 Worm and makes surplus Critter spending probabilistic.
 
-A3 approved using normal spendable purchasing power: Hand dice plus only Critter value above the shared 2-Bee/1-Worm protected reserve. `HumanBaselinePolicy.normalPurchasingPower(context)` now encapsulates this model. Existing Cultivation scorers still need to be migrated to it during Stage B.
+A3 approved using normal spendable purchasing power: Hand dice plus only Critter value above the shared 2-Bee/1-Worm protected reserve. `HumanBaselinePolicy.normalPurchasingPower(context)` encapsulates this model. B2 now supplies that policy value to Plant activation scoring and to the Compost, Mulch, and Sunlight Round Effect scorers, so their Cultivation Buy-threshold calculations no longer treat protected Critters as ordinary spending power.
 
 ### Graft topology and Row Need
 
@@ -436,7 +437,7 @@ A2 — inspect shared features and Cultivation scorers                  COMPLETE
 A3 — approve ordinary-human behavior contract/direction               COMPLETE
 A4/B1 — document decisions + establish shared tuning policy           COMPLETE
 
-B2 — implement/refine Main Action scoring
+B2 — implement/refine Main Action scoring                              COMPLETE
 B3 — implement action-specific Support scoring
 B4 — align action scoring with Effect target selection
 B5 — build explicit Human Baseline Behavior Contract tests
@@ -453,7 +454,7 @@ The exact B checkpoints may be split further if necessary. Intermediate WIP chan
 
 A3/A4 resolved the cross-cutting policy questions: development need is a modest capped nudge; normal purchasing power excludes the protected 2-Bee/1-Worm reserve; `Done` is a tunable Support benchmark; and shared assumptions are accessed through an overridable `HumanBaselinePolicy`.
 
-The remaining questions belong to the Stage-B scorer work rather than to the policy architecture:
+B2 has now wired the approved cross-cutting policy into the threshold-sensitive Round Effects. The remaining questions belong to later Stage-B scorer work rather than to the policy architecture:
 
 - the exact calibrated relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
 - the intended reserve targets for Water, Mulch, and other Support resources where a specific reserve is actually useful;

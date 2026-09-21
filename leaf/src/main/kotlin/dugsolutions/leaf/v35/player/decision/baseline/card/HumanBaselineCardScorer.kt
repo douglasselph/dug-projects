@@ -25,14 +25,16 @@ interface HumanBaselineCardScorer {
     fun playScore(
         context: DecisionContext,
         phase: CardPhase,
-        cardName: String
+        cardName: String,
+        normalPurchasingPower: Int? = null
     ): PriorityScore =
         CardScoringHelpers.playScore(
             context = context,
             phase = phase,
             effect = effect,
             cardName = cardName,
-            base = if (phase == CardPhase.BATTLE) battlePlayBase else cultivationPlayBase
+            base = if (phase == CardPhase.BATTLE) battlePlayBase else cultivationPlayBase,
+            normalPurchasingPower = normalPurchasingPower
         )
 
     /** Small tie-break style value layered on top of Buy's dominant cost-tier score. */

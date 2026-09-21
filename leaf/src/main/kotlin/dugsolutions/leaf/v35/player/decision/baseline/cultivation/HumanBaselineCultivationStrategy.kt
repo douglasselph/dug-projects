@@ -40,6 +40,12 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *   influence heuristics should be used only where they correspond to simple,
  *   explainable ordinary-human judgment rather than deep optimization.
  *
+ * B2 wiring now makes the threshold-sensitive Round Effects use the injected
+ * policy's normal purchasing power (so protected Critters are not treated as
+ * ordinary Buy power). Compost also receives the policy's modest permanent
+ * dice-development nudge. Draw deliberately does not receive that long-term
+ * nudge because drawing an existing die does not increase total dice-pool power.
+ *
  * Current implementation details and A1/A2 findings are documented in:
  *
  * `doc/HUMAN_BASELINE_CULTIVATION.md`
@@ -53,9 +59,9 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * `doc/HUMAN_BASELINE_POLICY.md`
  *
- * Cultivation is still under Milestone-2 designer review. The plan document is
- * intentionally not a certified behavior contract until the A3/A4 decisions
- * are approved.
+ * Cultivation is still under Milestone-2 implementation and verification. The
+ * A3/A4 behavior direction is approved, but the area is not certified until the
+ * remaining B/C checkpoints and full regression are complete.
  */
 class HumanBaselineCultivationStrategy(
     private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),
@@ -91,7 +97,8 @@ class HumanBaselineCultivationStrategy(
                     cardScorers.forPlant(action.card.card).playScore(
                         context = request.context,
                         phase = CardPhase.CULTIVATION,
-                        cardName = action.card.card.name
+                        cardName = action.card.card.name,
+                        normalPurchasingPower = policy.normalPurchasingPower(request.context)
                     )
                 CultivationMainAction.RoundEffect1 -> scoreRoundEffect(request.roundCard.firstEffect.effect, request.context)
                 CultivationMainAction.RoundEffect2 -> scoreRoundEffect(request.roundCard.secondEffect.effect, request.context)
@@ -115,10 +122,20 @@ class HumanBaselineCultivationStrategy(
 
     private fun scoreRoundEffect(effect: GameEffect, context: DecisionContext): PriorityScore =
         when (effect) {
-            GameEffect.UPGRADE_DIE_FROM_HAND -> CompostPriority.score(context)
-            GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(context)
+            GameEffect.UPGRADE_DIE_FROM_HAND -> CompostPriority.score(
+                context = context,
+                normalPurchasingPower = policy.normalPurchasingPower(context),
+                developmentBonus = policy.cultivationDiceDevelopmentBonus(context)
+            )
+            GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(
+                context = context,
+                normalPurchasingPower = policy.normalPurchasingPower(context)
+            )
             GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
-            GameEffect.RAISE_DIE_PLUS_3 -> SunlightPriority.score(context)
+            GameEffect.RAISE_DIE_PLUS_3 -> SunlightPriority.score(
+                context = context,
+                normalPurchasingPower = policy.normalPurchasingPower(context)
+            )
             else -> PriorityScore(45)
         }
 

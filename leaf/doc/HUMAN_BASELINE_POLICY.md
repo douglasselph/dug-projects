@@ -142,7 +142,7 @@ Protected Critters are therefore not casually counted as ordinary purchasing pow
 
 Premium Buy exceptions such as reaching a D20 or cost-17 Flower are intentionally excluded from this calculation. Those are exceptional Buy decisions, not ordinary purchasing power.
 
-The Cultivation resource scorers have **not yet been rewritten** to use this method. That is deliberate: this checkpoint establishes the policy layer before changing their behavior.
+B2 now passes this value into Cultivation Plant activation scoring and the Compost, Mulch, and Sunlight Round Effect scorers. Their Buy-threshold reasoning therefore agrees with certified Buy about which Critters are normally spendable.
 
 ## 6. Dice-development nudge
 
@@ -167,7 +167,7 @@ The default behavior is:
 
 Because `+9` is the top of the documented **modest nudge** range, development need can break close decisions without making a mediocre Draw or Compost beat an obviously better immediate action.
 
-The individual Cultivation scorers have **not yet been changed** to consume this bonus. That belongs to the next implementation checkpoints.
+B2 now applies this bonus to Compost, where the action permanently improves dice-pool power. Draw intentionally does not receive this bonus because it only moves an existing die into Hand and does not improve the long-term dice-power measurement.
 
 ## 7. `Done` as a Support benchmark
 
@@ -281,7 +281,7 @@ The following designer decisions are now considered approved for the Cultivation
 7. **The willingness to continue using Supports should be tunable through a common `Done` benchmark and reserve-spend penalty.**
 8. **Cross-cutting tuning belongs in `HumanBaselinePolicy`; card/action-specific scoring remains local to its scorer.**
 
-This establishes the A4/B1 foundation. It does **not** yet rewrite Draw, Compost, Mulch, Water, Sunlight, Plant activation, or the Cultivation Support scorers.
+This establishes the shared A4/B1 policy foundation. B2 has now connected that foundation to the threshold-sensitive Cultivation Main Action scorers without changing the still-pending Support strategy.
 
 ## 11. Current wiring status
 
@@ -302,18 +302,18 @@ protected Critter reserve
 payment reserve evaluation
 ```
 
-Cultivation currently uses it for:
+Cultivation now consumes:
 
 ```text
-Done benchmark
+normal purchasing power      -> Plant activation, Compost, Mulch, Sunlight
+dice-development nudge       -> Compost
+Done benchmark               -> Done
 ```
 
-The policy already exposes, but Cultivation does not yet consume:
+The policy still exposes but Cultivation has not yet consumed:
 
 ```text
-normal purchasing power
-dice-development nudge
 reserve-spend penalty per unit
 ```
 
-Those are foundations for the upcoming scorer work rather than hidden behavior changes in this checkpoint.
+That remains foundation for B3 action-specific Support scoring.

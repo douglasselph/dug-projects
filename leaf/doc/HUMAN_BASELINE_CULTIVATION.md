@@ -347,8 +347,9 @@ A2 — inspect shared features and Cultivation scorers             COMPLETE
 A3 — propose/approve the ordinary-human decision hierarchy       COMPLETE
 A4/B1 — document decisions and introduce shared tuning policy      COMPLETE
 
-B2+ — implement the approved contract in small checkpoints
-       and build explicit behavior-contract tests
+B2 — apply shared policy to Main Action scoring                  COMPLETE
+B3+ — implement Support scoring, target alignment, and tests
+       in small checkpoints
 
 C  — documentation, full regression, and certification
 ```
@@ -358,4 +359,4 @@ This document should evolve as those checkpoints are completed. The durable fina
 
 ## Shared tuning policy
 
-Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation should obtain shared reserves, development nudges, and the `Done` benchmark through that policy rather than duplicate magic numbers.
+Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B2, Plant activation plus Compost, Mulch, and Sunlight use policy-based purchasing power; Compost also receives the modest long-term dice-development nudge. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.
