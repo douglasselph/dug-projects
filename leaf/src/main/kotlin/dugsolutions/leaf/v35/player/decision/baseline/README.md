@@ -61,7 +61,7 @@ Current status:
 Critter Reward       pending designer certification
 Wound Resolution     pending designer certification
 Graft Placement      pending designer certification
-Cultivation          pending designer certification
+Cultivation          CERTIFIED
 Battle               pending designer certification
 Buy                  CERTIFIED
 Butterfly Result     pending designer certification

@@ -58,8 +58,8 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * `doc/HUMAN_BASELINE_CULTIVATION.md`
  *
- * The forward-looking target architecture, open design questions, test plan,
- * and remaining certification sequence are documented in:
+ * The design rationale, approved target architecture, and completed certification
+ * sequence are documented in:
  *
  * `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`
  *
@@ -71,9 +71,9 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * `src/test/kotlin/dugsolutions/leaf/v35/player/decision/baseline/cultivation/HumanBaselineCultivationStrategyTest.kt`
  *
- * Cultivation is still under Milestone-2 implementation and verification. The
- * A3/A4 behavior direction is approved, but the area is not certified until the
- * remaining B/C checkpoints and full regression are complete.
+ * Milestone-2 Cultivation is CERTIFIED. The approved behavior contract, focused
+ * verification, target/branch alignment, designer review, and full unit +
+ * integration + simulation regression all agree for this decision area.
  */
 class HumanBaselineCultivationStrategy(
     private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),

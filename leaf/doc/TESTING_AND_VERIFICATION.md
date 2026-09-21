@@ -84,6 +84,14 @@ During Milestone 2, run the narrow unit package for the decision area being revi
 ./gradlew test --tests 'dugsolutions.leaf.v35.player.decision.baseline.buy.*'
 ```
 
+For the certified Cultivation area, the direct behavior-contract package begins with:
+
+```bash
+./gradlew test --tests 'dugsolutions.leaf.v35.player.decision.baseline.cultivation.*'
+```
+
+Cultivation certification also includes focused Effect-target alignment, shared-policy/director wiring, and Build-coordinator coverage; B7's focused selection ran 57 relevant tests before the full regression pass.
+
 These tests are intentionally more than implementation checks. The direct strategy test contains a clearly named **Human Baseline Behavior Contract** section whose test names should read like the approved plain-English policy. Supporting priority and edge-case tests remain separate.
 
 After an area passes its focused certification tests, use the full verification command before treating the change as complete:

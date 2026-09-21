@@ -281,7 +281,7 @@ The following designer decisions are now considered approved for the Cultivation
 7. **The willingness to continue using Supports should be tunable through a common `Done` benchmark and reserve-spend penalty.**
 8. **Cross-cutting tuning belongs in `HumanBaselinePolicy`; card/action-specific scoring remains local to its scorer.**
 
-This establishes the shared A4/B1 policy foundation. B2 has now connected that foundation to the threshold-sensitive Cultivation Main Action scorers without changing the still-pending Support strategy.
+This established the shared A4/B1 policy foundation. B2 connected it to threshold-sensitive Cultivation Main Action scorers, and B4 subsequently applied the same policy to action-specific Support scoring.
 
 ## 11. Current wiring status
 
@@ -302,18 +302,14 @@ protected Critter reserve
 payment reserve evaluation
 ```
 
-Cultivation now consumes:
+Cultivation consumes:
 
 ```text
-normal purchasing power      -> Plant activation, Compost, Mulch, Sunlight
-dice-development nudge       -> Compost
+normal purchasing power      -> Plant activation, Compost, Mulch, Sunlight, aligned Effect targets
+dice-development nudge       -> Compost and qualifying permanent die-development Plants
 Done benchmark               -> Done
+protected Support reserves   -> Water, Mulch, Worm conservation
+reserve-spend penalty        -> Water, Mulch, Worm Support scoring
 ```
 
-The policy still exposes but Cultivation has not yet consumed:
-
-```text
-reserve-spend penalty per unit
-```
-
-B4 now consumes this foundation for action-specific Cultivation Support scoring. The defaults remain experimental knobs and may be calibrated later without changing the scoring architecture.
+B4 connected the Support layer, and B6 passes the same policy into downstream Effect target/branch decisions where Cultivation action value depends on them. These defaults remain experimental knobs and may be calibrated later without changing the scoring architecture.

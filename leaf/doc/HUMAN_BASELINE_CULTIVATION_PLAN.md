@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** Stage B is complete through B7. Focused production/test compilation is green and the focused Cultivation/Human-Baseline verification set passes. Cultivation is **not yet certified** because Stage C durable certification documentation and the full unit + integration + simulation regression remain.
+**Status:** **CERTIFIED.** Stage B completed through B7, focused production/test verification passed, and Stage C durable documentation plus full unit + integration + simulation regression are complete.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -196,7 +196,7 @@ Water reroll should be based on the expected benefit of rerolling the **specific
 
 The strategy should naturally prefer rerolling a bad result over rerolling an already-good result.
 
-The score may also consider whether spending Water would violate the intended reserve policy once that policy is approved.
+The score also considers whether spending Water would cross the shared protected reserve, applying the policy's soft reserve-spend penalty rather than a hard prohibition.
 
 ### 3.3 Water refresh
 
@@ -281,7 +281,7 @@ B4 completes the initial Cultivation Support reserve semantics through the share
 
 Crossing a visible Buy cost threshold is a useful ordinary-human heuristic and should remain part of Cultivation valuation.
 
-However, `PurchaseThresholdHeuristics.purchasingPower()` currently counts all Critters, while the certified Buy strategy normally protects 2 Bees and 1 Worm and makes surplus Critter spending probabilistic.
+The original `PurchaseThresholdHeuristics.purchasingPower()` model counted all Critters, while certified Buy protects 2 Bees and 1 Worm and makes surplus Critter spending probabilistic.
 
 A3 approved using normal spendable purchasing power: Hand dice plus only Critter value above the shared 2-Bee/1-Worm protected reserve. `HumanBaselinePolicy.normalPurchasingPower(context)` encapsulates this model. B2 now supplies that policy value to Plant activation scoring and to the Compost, Mulch, and Sunlight Round Effect scorers, so their Cultivation Buy-threshold calculations no longer treat protected Critters as ordinary spending power.
 
@@ -371,7 +371,7 @@ For Cultivation, deterministic scores should normally make the choice. `Strategy
 
 ## 9. Explanation/auditability goal
 
-The eventual certified Cultivation strategy should be easy to inspect in Chronicle decision reasoning.
+The certified Cultivation strategy should remain easy to inspect in Chronicle decision reasoning.
 
 A useful decision explanation should make it possible to understand something like:
 
@@ -439,7 +439,7 @@ Coordinator/integration tests remain responsible for game legality and execution
 
 ## 11. Implementation sequence
 
-The planned Cultivation work remains deliberately chunked.
+The Cultivation work was deliberately chunked as follows; all certification checkpoints are now complete.
 
 ```text
 A1 — inventory current strategy, legal choices, tests                 COMPLETE
@@ -454,12 +454,12 @@ B5 — build explicit Human Baseline Behavior Contract tests               COMPL
 B6 — align action scoring with Effect target/branch selection                 COMPLETE
 B7 — focused compile/test/fix until green                              COMPLETE
 
-C1 — update durable certification documentation
-C2 — run full unit + integration + simulation regression
-C3 — mark Cultivation CERTIFIED and package final patch
+C1 — update durable certification documentation                          COMPLETE
+C2 — run full unit + integration + simulation regression                  COMPLETE
+C3 — mark Cultivation CERTIFIED and package final patch                    COMPLETE
 ```
 
-The exact B checkpoints may be split further if necessary. Intermediate WIP changes may intentionally be non-compilable as long as that status is explicit and the next checkpoint resolves it.
+This sequence is retained as a record of how the area was certified. The same checkpoint discipline should be reused for other large Human Baseline areas.
 
 ### B7 focused verification result
 
@@ -474,6 +474,16 @@ B7 required no additional behavior fixes. The latest source compiled successfull
 The focused selection covers the Cultivation behavior contract, Main and Support priorities, Plant activation comparison, Cultivation Effect target/branch alignment, shared policy wiring, Human Baseline director wiring, and the Cultivation Build coordinator safety/legality tests.
 
 The compile still reports the previously known unused `cardName` warning in `CardScoringHelpers`, and the test compile reports previously known deprecation warnings around the older `Baseline...` aliases. Those are not Cultivation B7 failures and are intentionally left outside this checkpoint.
+
+### Stage C certification result
+
+The final full-project verification completed successfully with:
+
+```bash
+./gradlew --offline --no-daemon test integrationTest simulationCheck
+```
+
+Result: `BUILD SUCCESSFUL`; unit, integration, and simulation-layer verification all passed. With durable documentation updated and the designer-approved behavior contract represented in code/tests, Cultivation is now **CERTIFIED** for Milestone 2.
 
 ## 12. Remaining calibration questions
 

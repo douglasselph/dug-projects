@@ -170,7 +170,7 @@ Decision hook: choose one legal physical graft position for a newly gained Plant
 
 **Certification status:** implemented; designer behavior review still required.
 
-### 3.4 Cultivation
+### 3.4 Cultivation — CERTIFIED
 
 Implementation:
 
@@ -190,7 +190,7 @@ Detailed current-state architecture inventory:
 
 [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md)
 
-Target design and certification plan:
+Design rationale and completed certification plan:
 
 [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md)
 
@@ -198,9 +198,30 @@ Shared cross-cutting tuning policy used by Cultivation and Buy:
 
 [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md)
 
-Decision hook: at each Build opportunity, choose among the currently legal Main Actions, Support Actions, or Done. The rules-engine caller repeatedly asks for another action until Done and contains a repeated-decision-state guard so a legal-but-nonprogressing strategy/executor cycle cannot loop forever.
+Decision hook: at each Build opportunity, choose among the currently legal Main Actions, Support Actions, or Done. The rules-engine caller repeatedly asks for another action until Done and contains both repeated-decision-state detection and a hard decision ceiling so a legal-but-nonprogressing strategy/executor cycle cannot loop forever.
 
-**Certification status:** Stage B complete through B7. Main Action scoring, Plant activation comparison, action-specific Support scoring, explicit behavior-contract tests, and action/Effect target alignment are implemented; focused production/test compilation and 57 relevant tests pass. Cultivation remains **not yet certified** until Stage C documentation and full unit + integration + simulation regression are complete.
+Accepted Human Baseline Cultivation behavior:
+
+- compare every currently legal Main or Support action on one explainable `PriorityScore` scale rather than using a rigid action-type ordering;
+- treat Draw as a reliable ordinary option, while allowing clearly stronger Plant activations or Round Effects to beat it;
+- treat permanent dice development such as useful Compost as valuable, with development deficit supplying only a capped **modest nudge** rather than a command;
+- evaluate Plant activation from the card's ordinary Cultivation value plus what its effect can visibly accomplish now;
+- use reserve-aware normal purchasing power, so the protected 2-Bee/1-Worm Buy reserve is not casually counted when valuing Cultivation Buy thresholds;
+- score Water, Mulch, Worm, Butterfly, and Wisp Supports from their specific current benefit rather than from a common flat Support score;
+- treat Water/Mulch/Worm reserves as soft conservation preferences: a sufficiently valuable Support may still spend below reserve;
+- use `Done` as a tunable benchmark after both Main Actions, so useful Supports may beat `Done` while marginal Supports are conserved;
+- use the same target/branch valuation downstream that justified selecting target-dependent actions such as Compost, Mulch, Sunlight, and Petal To Die 4;
+- use strategy RNG only for genuine strategy ties, never mechanical RNG.
+
+Focused B7 verification compiled the affected production/test sources and ran 57 relevant Cultivation/Human-Baseline tests with 0 failures. Stage C then passed the full project verification command:
+
+```bash
+./gradlew --offline --no-daemon test integrationTest simulationCheck
+```
+
+with unit, integration, and simulation-layer verification all green.
+
+**Certification status:** **certified**. The approved behavior contract, implementation, direct behavior-contract tests, target/branch alignment, designer review, and full regression now agree for this area.
 
 ### 3.5 Battle
 
@@ -375,11 +396,13 @@ Use the eight areas as the high-level completion checklist:
 - [ ] Critter Reward certified
 - [ ] Wound Resolution certified
 - [ ] Graft Placement certified
-- [ ] Cultivation certified
+- [x] Cultivation certified
 - [ ] Battle certified
 - [x] Buy certified
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
+
+Current progress: **2 of 8 major areas certified; 3 of 30 strategy hooks certified** (Buy: 2, Cultivation: 1).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 

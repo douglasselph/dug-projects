@@ -2,9 +2,9 @@
 
 This document is the detailed navigation and review companion for the Human Baseline Cultivation decision area.
 
-**Milestone-2 status:** Stage B implementation and focused verification complete through B7; **not yet certified** pending Stage C documentation and full regression.
+**Milestone-2 status:** **CERTIFIED.** Stage B behavior work is complete, focused B7 verification passed 57 relevant tests, and Stage C full unit + integration + simulation regression passed.
 
-The purpose of this document is to describe the code as it exists now: who owns the Build loop, what choices are offered to the strategy, how the Human Baseline currently ranks them, which shared features/scorers participate, and what direct tests exist. The companion [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) describes the target design we are working toward. Later Cultivation checkpoints will turn that plan into an approved ordinary-human behavior contract.
+The purpose of this document is to describe the certified implementation: who owns the Build loop, what choices are offered to the strategy, how Human Baseline ranks them, which shared features/scorers participate, and what direct tests protect the behavior. The companion [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) preserves the design rationale and checkpoint history that led to this certified behavior.
 
 The primary implementation is:
 
@@ -34,7 +34,7 @@ src/test/kotlin/dugsolutions/leaf/v35/game/round/cultivation/
     CultivationBuildCoordinatorTest.kt
 ```
 
-Focused B7 verification compiled production and test Kotlin successfully and ran 57 relevant tests with 0 failures. That set includes the direct Human Baseline Cultivation contract, Main/Support priority tests, Plant activation comparison, Effect target/branch alignment, shared policy/director wiring, and Build coordinator coverage. Full-project regression remains a Stage C requirement before certification.
+Focused B7 verification compiled production and test Kotlin successfully and ran 57 relevant tests with 0 failures. That set includes the direct Human Baseline Cultivation contract, Main/Support priority tests, Plant activation comparison, Effect target/branch alignment, shared policy/director wiring, and Build coordinator coverage. Stage C subsequently ran `test integrationTest simulationCheck` successfully, completing certification.
 
 ## 1. Ownership of the Build loop
 
@@ -178,7 +178,7 @@ A compatibility fallback remains for isolated legacy tests that construct a requ
 
 ## 5. Current Main Action scoring entry points
 
-These values describe the current implementation. They are **not yet the certified Cultivation contract**.
+These values describe the current implementation. The approved behavior contract is expressed at the strategy level in this document, in `HumanBaselineCultivationStrategy` KDoc, and in the direct behavior-contract tests; individual numeric values remain tuning knobs rather than game rules.
 
 ### Draw
 
@@ -294,7 +294,7 @@ B4 now performs that direct distinction before card influences are applied.
 
 After both Main Actions are used, `Done` currently has a policy-provided default score of 55. Before that point it has a score of 0, although the rules engine should not offer it before both Main Actions are complete. The result is intentionally contextual: a strong Support can exceed 55, while a marginal Support remains below it and is conserved.
 
-Whether that is the desired ordinary-human behavior is intentionally left for later Cultivation review.
+That behavior is now part of the certified ordinary-human policy: `Done` acts as the tunable conservation benchmark, while clearly valuable Supports may still beat it.
 
 ## 7. Current direct Human Baseline tests
 
@@ -321,7 +321,7 @@ A separate `Policy wiring and implementation seams` section verifies injection d
 
 `PlantActivationPriorityTest` and `CultivationSupportPriorityTest` remain lower-level scorer tests. They verify implementation arithmetic and invariants without making those details the public behavior contract.
 
-The top-level Cultivation behavior contract is explicit and B6 now aligns the principal target/branch decisions with the values that justified choosing those actions. Cultivation is **not yet certified**: focused compile/test cleanup and the Stage-C full regression/certification steps remain.
+The top-level Cultivation behavior contract is explicit and B6 aligns the principal target/branch decisions with the values that justified choosing those actions. B7 focused verification and the Stage-C full regression both passed, so Cultivation is **CERTIFIED**.
 
 ## 8. Coordinator and integration-style coverage
 
@@ -363,7 +363,7 @@ B6 resolves the principal target/branch consistency gap. Compost, Mulch, and Sun
 
 ## 10. Planned Cultivation review sequence
 
-The remaining Cultivation certification work is intentionally divided into small checkpoints.
+The Cultivation certification work was intentionally divided into small checkpoints; all checkpoints are now complete.
 
 ```text
 A1 — inventory current strategy, legal choices, tests          COMPLETE
