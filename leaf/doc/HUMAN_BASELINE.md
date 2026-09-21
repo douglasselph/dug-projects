@@ -194,9 +194,13 @@ Target design and certification plan:
 
 [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md)
 
+Shared cross-cutting tuning policy used by Cultivation and Buy:
+
+[`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md)
+
 Decision hook: at each Build opportunity, choose among the currently legal Main Actions, Support Actions, or Done. The rules-engine caller repeatedly asks for another action until Done and contains a repeated-decision-state guard so a legal-but-nonprogressing strategy/executor cycle cannot loop forever.
 
-**Certification status:** implemented; A1 architecture inventory and A2 scorer/shared-feature review complete; target design documented; designer behavior contract still requires A3/A4 review.
+**Certification status:** implemented; A1/A2 analysis complete; A3 behavior principles approved; A4/B1 shared policy/tuning foundation introduced. Individual Cultivation scorers and Support behavior still require Stage-B implementation and tests.
 
 ### 3.5 Battle
 
@@ -269,7 +273,7 @@ The Buy baseline is intended to model a recognizable ordinary player, not an opt
 3. **Within the chosen category, buy from the highest affordable cost tier.** This is the core ordinary-player tendency: buy the most expensive thing that fits the chosen development direction.
 4. **Use card-specific scoring only inside that highest-cost tier.** Card value can choose between comparable Plant cards, but Human Baseline does not deliberately drop to a cheaper tier for combo/efficiency optimization.
 5. **Do not penalize duplicate Plants merely for being duplicates.** A repeated card is evaluated by its actual value, not by a generic diversity preference.
-6. **Normally preserve 2 Bees and 1 Worm for Battle.** These are the Buy reserve targets.
+6. **Normally preserve 2 Bees and 1 Worm for Battle.** These are the shared Human Baseline protected-Critter reserve targets supplied by `HumanBaselinePolicy`.
 7. **Treat surplus Critters as probabilistically available purchasing power.** Let surplus be Bees above 2 plus Worms above 1. With zero surplus the spend chance is 0%. For positive surplus the chance is:
 
    ```text
@@ -282,7 +286,7 @@ The Buy baseline is intended to model a recognizable ordinary player, not an opt
 10. **Use strategy RNG only for Human Baseline probabilities.** Critter-spend and Bee-vs-Worm variation must not consume the mechanical RNG used for dice, decks, or other physical game randomness.
 11. **When several legal payments remain, prefer efficient payment.** Minimize overpayment, prefer fewer physical resources, and preserve the Critter reserves where the purchase rules permit it.
 
-The implementation constants are deliberately named and centralized in `HumanBaselineBuyStrategy` so the designer can tune the baseline later without reconstructing the policy from scattered magic numbers.
+The cross-cutting reserve values are centralized in `HumanBaselinePolicy`, and Buy asks the injected policy through `protectedCritterReserve(context)` rather than reading duplicated constants. Buy-specific probability and premium-purchase constants remain local to `HumanBaselineBuyStrategy`. See [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) for the tuning/override model.
 
 #### Buy behavior-contract tests
 

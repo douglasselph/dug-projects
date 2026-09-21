@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.creature.CreaturePosition
 import dugsolutions.leaf.v35.player.creature.CreatureSide
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
+import dugsolutions.leaf.v35.player.decision.baseline.common.ResourceReserveTargets
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.buy.*
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
@@ -161,6 +163,26 @@ class HumanBaselineBuyStrategyTest {
             assertEquals(100, strategy.critterSpendPercentage(20))
         }
 
+
+        @Test
+        fun `Buy uses the injected Human Baseline Critter reserve policy`() {
+            val root = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
+            val policy = object : HumanBaselinePolicy() {
+                override fun protectedCritterReserve(context: DecisionContext) =
+                    ResourceReserveTargets(bees = 1, worms = 1)
+            }
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(root)),
+                context = context(
+                    dice = listOf(DieView(0, 6, 6)),
+                    bees = 2,
+                    worms = 1
+                )
+            )
+
+            assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(0), policy).choosePurchase(request))
+        }
+
         @Test
         fun `D20 threshold may spend protected Bee reserve`() {
             val chosen = strategy().choosePurchase(
@@ -254,11 +276,14 @@ class HumanBaselineBuyStrategyTest {
         }
     }
 
-    private fun strategy(randomizer: StrategyRandomizer = QueueRandomizer(0)) =
-        HumanBaselineBuyStrategy(
-            scoreEngine = BaselineScoreEngine(randomizer = randomizer),
-            strategyRandomizer = randomizer
-        )
+    private fun strategy(
+        randomizer: StrategyRandomizer = QueueRandomizer(0),
+        policy: HumanBaselinePolicy = HumanBaselinePolicy()
+    ) = HumanBaselineBuyStrategy(
+        scoreEngine = BaselineScoreEngine(randomizer = randomizer),
+        strategyRandomizer = randomizer,
+        policy = policy
+    )
 
     private fun paymentRequest(context: DecisionContext, cost: Int): ChoosePaymentRequest =
         ChoosePaymentRequest(

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselineDecisionDirector
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 
@@ -12,10 +13,12 @@ object HumanBaseline {
 
     fun createDirector(
         strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
-        reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE
+        reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE,
+        policy: HumanBaselinePolicy = HumanBaselinePolicy()
     ): DecisionDirector =
         HumanBaselineDecisionDirector(
             strategyRandomizer = strategyRandomizer,
-            reasoningSink = reasoningSink
+            reasoningSink = reasoningSink,
+            policy = policy
         ).createDirector()
 }

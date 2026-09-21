@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.*
@@ -48,6 +49,10 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`
  *
+ * Cross-cutting tuning knobs and their overridable policy layer are documented in:
+ *
+ * `doc/HUMAN_BASELINE_POLICY.md`
+ *
  * Cultivation is still under Milestone-2 designer review. The plan document is
  * intentionally not a certified behavior contract until the A3/A4 decisions
  * are approved.
@@ -56,7 +61,8 @@ class HumanBaselineCultivationStrategy(
     private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
-    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
+    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
@@ -75,7 +81,9 @@ class HumanBaselineCultivationStrategy(
 
     private fun score(request: ChooseCultivationActionRequest, choice: CultivationAction): PriorityScore =
         when (choice) {
-            CultivationAction.Done -> PriorityScore(if (request.mainActionsRemaining == 0) 55 else 0)
+            CultivationAction.Done -> PriorityScore(
+                if (request.mainActionsRemaining == 0) policy.cultivationDoneScore(request.context) else 0
+            )
             is CultivationAction.Support -> PriorityScore(30)
             is CultivationAction.Main -> when (val action = choice.action) {
                 CultivationMainAction.Draw -> DrawPriority.score(request.context)

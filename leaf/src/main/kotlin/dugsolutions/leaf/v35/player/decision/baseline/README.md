@@ -39,7 +39,7 @@ support/      Butterfly original-vs-reroll choice
 wound/        Flip/Snip target choice
 ```
 
-`HumanBaselineDecisionDirector` wires these areas into the eight `DecisionDirector` strategy dimensions.
+`HumanBaselineDecisionDirector` wires these areas into the eight `DecisionDirector` strategy dimensions and supplies one shared `HumanBaselinePolicy` to decision areas that need cross-cutting tuning. See [`doc/HUMAN_BASELINE_POLICY.md`](../../../../../../../../../doc/HUMAN_BASELINE_POLICY.md).
 
 ## Test location
 

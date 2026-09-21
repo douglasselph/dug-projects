@@ -20,7 +20,9 @@ import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
  * Canonical wiring for the Human Baseline layer.
  *
  * Every decision area shares one score engine, one card-scorer registry and one
- * influence registry. Strategies enumerate legal candidates, score them, apply
+ * influence registry. Cross-cutting strategy assumptions are supplied by one
+ * injectable [HumanBaselinePolicy], allowing simulation experiments to tune or
+ * override Human Baseline behavior without changing the game engine. Strategies enumerate legal candidates, score them, apply
  * influences, and use the shared strategy RNG only when the highest-scoring
  * candidates tie.
  */
@@ -28,6 +30,7 @@ class HumanBaselineDecisionDirector(
     strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
     reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE,
     purchaseScoreModifier: PurchaseScoreModifier = PurchaseScoreModifier.NONE,
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(
         randomizer = strategyRandomizer,
         reasoningSink = reasoningSink
@@ -51,7 +54,8 @@ class HumanBaselineDecisionDirector(
     internal val cultivation = HumanBaselineCultivationStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy
     )
     internal val battle = HumanBaselineBattleStrategy(
         scoreEngine = scoreEngine,
@@ -63,7 +67,8 @@ class HumanBaselineDecisionDirector(
         cardScorers = cardScorers,
         influenceRegistry = influenceRegistry,
         purchaseScoreModifier = purchaseScoreModifier,
-        strategyRandomizer = strategyRandomizer
+        strategyRandomizer = strategyRandomizer,
+        policy = policy
     )
     internal val support = HumanBaselineSupportStrategy(
         scoreEngine = scoreEngine,

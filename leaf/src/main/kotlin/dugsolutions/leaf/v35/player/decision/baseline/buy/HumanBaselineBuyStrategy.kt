@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.buy
 
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.context.BaselineFeatureCalculator
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
@@ -27,8 +28,8 @@ import dugsolutions.leaf.v35.tokens.Critter
  *    tier. Card-specific value only breaks choices within that tier; it does
  *    not turn Human Baseline into an efficiency/combo optimizer.
  * 4. Duplicate Plants receive no generic penalty.
- * 5. Buy normally preserves [TARGET_BEE_RESERVE] Bees and
- *    [TARGET_WORM_RESERVE] Worms. Surplus Critters are treated as available
+ * 5. Buy normally preserves the Critter reserve supplied by
+ *    [HumanBaselinePolicy.protectedCritterReserve]. Surplus Critters are treated as available
  *    purchasing power probabilistically. For surplus > 0, the probability is
  *    [CRITTER_SPEND_STARTING_PERCENTAGE] +
  *    [CRITTER_SPEND_INCREMENT_PER_SURPLUS] * surplus, capped at 100%. Surplus
@@ -49,12 +50,11 @@ class HumanBaselineBuyStrategy(
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     private val purchaseScoreModifier: PurchaseScoreModifier = PurchaseScoreModifier.NONE,
-    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()
+    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
 ) : BuyStrategy {
 
     companion object {
-        const val TARGET_BEE_RESERVE: Int = 2
-        const val TARGET_WORM_RESERVE: Int = 1
         const val CRITTER_SPEND_STARTING_PERCENTAGE: Int = 5
         const val CRITTER_SPEND_INCREMENT_PER_SURPLUS: Int = 15
         const val BEE_PREFERENCE_PERCENTAGE: Int = 67
@@ -146,7 +146,7 @@ class HumanBaselineBuyStrategy(
             candidates = preferredPayments.map { payment ->
                 DecisionCandidate(
                     choice = payment,
-                    score = PaymentPriority.score(request.context, payment, request.cost),
+                    score = PaymentPriority.score(request.context, payment, request.cost, policy),
                     tags = PaymentPriority.tags(payment)
                 )
             },
@@ -166,8 +166,9 @@ class HumanBaselineBuyStrategy(
     private fun createCritterSpendPlan(context: DecisionContext): CritterSpendPlan {
         val bees = context.self.board.bees
         val worms = context.self.board.worms
-        val beeSurplus = (bees - TARGET_BEE_RESERVE).coerceAtLeast(0)
-        val wormSurplus = (worms - TARGET_WORM_RESERVE).coerceAtLeast(0)
+        val reserve = policy.protectedCritterReserve(context)
+        val beeSurplus = (bees - reserve.bees).coerceAtLeast(0)
+        val wormSurplus = (worms - reserve.worms).coerceAtLeast(0)
         val surplus = beeSurplus + wormSurplus
         val chance = critterSpendPercentage(surplus)
         val allowSurplus = chance > 0 && strategyRandomizer.nextInt(100) < chance

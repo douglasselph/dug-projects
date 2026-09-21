@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision
 
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
@@ -19,7 +20,8 @@ import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
  * - [humanBaseline]: canonical ordinary-human simulation baseline.
  *
  * The data-class shape remains important because simulation code can replace
- * one decision area while leaving all other areas unchanged.
+ * one decision area while leaving all other areas unchanged. Cross-cutting
+ * Human Baseline tuning can instead be injected through [HumanBaselinePolicy].
  */
 data class DecisionDirector(
     val reward: RewardStrategy,
@@ -38,11 +40,13 @@ data class DecisionDirector(
 
         fun humanBaseline(
             strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
-            reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE
+            reasoningSink: DecisionReasoningSink = DecisionReasoningSink.NONE,
+            policy: HumanBaselinePolicy = HumanBaselinePolicy()
         ): DecisionDirector =
             HumanBaseline.createDirector(
                 strategyRandomizer = strategyRandomizer,
-                reasoningSink = reasoningSink
+                reasoningSink = reasoningSink,
+                policy = policy
             )
 
         /**

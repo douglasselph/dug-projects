@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.buy
 
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -11,12 +12,13 @@ import kotlin.test.assertEquals
 class PaymentPriorityTest {
     @Test
     fun `at the normal reserve spending a Bee is less costly than spending a Worm`() {
-        val context = DecisionContext.EMPTY.copy(
-            phase = RoundCardType.CULTIVATION,
-            self = DecisionContext.EMPTY.self.copy(
-                board = DecisionContext.EMPTY.self.board.copy(
-                    bees = HumanBaselineBuyStrategy.TARGET_BEE_RESERVE,
-                    worms = HumanBaselineBuyStrategy.TARGET_WORM_RESERVE
+        val baseContext = DecisionContext.EMPTY.copy(phase = RoundCardType.CULTIVATION)
+        val reserve = HumanBaselinePolicy().protectedCritterReserve(baseContext)
+        val context = baseContext.copy(
+            self = baseContext.self.copy(
+                board = baseContext.self.board.copy(
+                    bees = reserve.bees,
+                    worms = reserve.worms
                 )
             )
         )

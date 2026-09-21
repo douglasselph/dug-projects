@@ -8,12 +8,14 @@ import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.creature.CreaturePosition
 import dugsolutions.leaf.v35.player.creature.CreatureSide
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -83,6 +85,30 @@ class HumanBaselineCultivationStrategyTest {
 
         assertEquals(CultivationMainAction.Draw, (plain as CultivationAction.Main).action)
         assertEquals(CultivationMainAction.RoundEffect1, (influenced as CultivationAction.Main).action)
+    }
+
+
+    @Test
+    fun `Cultivation Done benchmark comes from the injected Human Baseline policy`() {
+        val context = DecisionContext.EMPTY.copy(phase = RoundCardType.CULTIVATION)
+        val choices = listOf(
+            CultivationAction.Support(SupportAction.UseWaterRefresh),
+            CultivationAction.Done
+        )
+        val request = ChooseCultivationActionRequest(
+            roundCard = round(RoundCardType.CULTIVATION),
+            mainActionsRemaining = 0,
+            legalChoices = choices,
+            context = context
+        )
+
+        val defaultChoice = HumanBaselineCultivationStrategy().chooseAction(request)
+        val supportFriendlyChoice = HumanBaselineCultivationStrategy(
+            policy = HumanBaselinePolicy(cultivationDoneScoreValue = 20)
+        ).chooseAction(request)
+
+        assertEquals(CultivationAction.Done, defaultChoice)
+        assertEquals(CultivationAction.Support(SupportAction.UseWaterRefresh), supportFriendlyChoice)
     }
 
     private fun creature(name: String, effect: GameEffect, type: PlantType, cost: Int) = CreatureCard(

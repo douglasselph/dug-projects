@@ -344,13 +344,18 @@ The remaining Cultivation certification work is intentionally divided into small
 ```text
 A1 — inventory current strategy, legal choices, tests          COMPLETE
 A2 — inspect shared features and Cultivation scorers             COMPLETE
-A3 — propose the ordinary-human decision hierarchy
-A4 — resolve subjective behavior questions with Doug
+A3 — propose/approve the ordinary-human decision hierarchy       COMPLETE
+A4/B1 — document decisions and introduce shared tuning policy      COMPLETE
 
-B1+ — implement the approved contract in small checkpoints
+B2+ — implement the approved contract in small checkpoints
        and build explicit behavior-contract tests
 
 C  — documentation, full regression, and certification
 ```
 
 This document should evolve as those checkpoints are completed. The durable final behavior contract should also be reflected in `HUMAN_BASELINE.md` and in the KDoc on `HumanBaselineCultivationStrategy`.
+
+
+## Shared tuning policy
+
+Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation should obtain shared reserves, development nudges, and the `Done` benchmark through that policy rather than duplicate magic numbers.

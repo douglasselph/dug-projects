@@ -2,9 +2,9 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** design plan under review; **not yet a certified behavior contract**.
+**Status:** A3 behavior principles approved and A4/B1 shared policy foundation implemented; **not yet a certified Cultivation behavior contract**.
 
-The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. This document answers a different question:
+The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
 > What are we trying to make the Cultivation decision system become?
 
@@ -237,7 +237,7 @@ If the remaining Supports are weak, wasteful, or better saved,
 choose Done.
 ```
 
-The exact `Done` score and the willingness to spend resources remain designer-calibration questions for A3/A4. The important architectural requirement is that Supports receive meaningful action-specific scores so this comparison is real.
+A3 approved `Done` as a tunable benchmark. `HumanBaselinePolicy` supplies the default score of 55 through an overridable method. The remaining work is to replace flat Support scores with action-specific benefit so the comparison becomes meaningful.
 
 Before both Main Actions are complete, `Done` is not a legal choice and should not be used as part of strategy policy.
 
@@ -262,18 +262,13 @@ Plant/dice development may provide a **modest directional adjustment**, for exam
 
 It should not override obviously better immediate actions or turn Human Baseline into a development optimizer.
 
-Whether and how strongly Cultivation uses development deficits is still awaiting designer approval.
+Approved A3 direction: development deficits are **modest nudges, not commands**. The shared `HumanBaselinePolicy` currently defaults to +1 per missing dice-power point capped at +9. Individual scorers have not yet been rewritten to consume that bonus.
 
 ### Resource reserves
 
 Cultivation Support scoring should recognize that Water, Mulch, Worms, and other resources can have future value.
 
-However, reserve numbers must be intentional. Existing values currently come from several places and do not yet form one approved Cultivation policy.
-
-The final design should either:
-
-1. use a common shared reserve definition; or
-2. deliberately document why a particular Cultivation action has a different target reserve.
+A3 approved a shared, overridable policy layer for cross-cutting reserve assumptions. The canonical protected Critter reserve is 2 Bees / 1 Worm. The exact Water/Mulch Support reserve semantics are intentionally still deferred until Support scoring is implemented; they should not be inferred from unrelated legacy defaults.
 
 ### Purchase thresholds
 
@@ -281,7 +276,7 @@ Crossing a visible Buy cost threshold is a useful ordinary-human heuristic and s
 
 However, `PurchaseThresholdHeuristics.purchasingPower()` currently counts all Critters, while the certified Buy strategy normally protects 2 Bees and 1 Worm and makes surplus Critter spending probabilistic.
 
-A3/A4 must decide which purchasing-power model represents what an ordinary player would actually perceive during Cultivation. The implementation should then use that model consistently.
+A3 approved using normal spendable purchasing power: Hand dice plus only Critter value above the shared 2-Bee/1-Worm protected reserve. `HumanBaselinePolicy.normalPurchasingPower(context)` now encapsulates this model. Existing Cultivation scorers still need to be migrated to it during Stage B.
 
 ### Graft topology and Row Need
 
@@ -438,10 +433,9 @@ The planned Cultivation work remains deliberately chunked.
 ```text
 A1 — inventory current strategy, legal choices, tests                 COMPLETE
 A2 — inspect shared features and Cultivation scorers                  COMPLETE
-A3 — propose ordinary-human behavior contract and decision hierarchy
-A4 — resolve subjective behavior/calibration questions with Doug
+A3 — approve ordinary-human behavior contract/direction               COMPLETE
+A4/B1 — document decisions + establish shared tuning policy           COMPLETE
 
-B1 — establish approved KDoc/constants/common evaluator structure
 B2 — implement/refine Main Action scoring
 B3 — implement action-specific Support scoring
 B4 — align action scoring with Effect target selection
@@ -455,17 +449,16 @@ C3 — mark Cultivation CERTIFIED and package final patch
 
 The exact B checkpoints may be split further if necessary. Intermediate WIP changes may intentionally be non-compilable as long as that status is explicit and the next checkpoint resolves it.
 
-## 12. Decisions still intentionally open
+## 12. Remaining calibration questions
 
-This plan establishes the architecture and direction, but the following are **not yet settled** and should be decided during A3/A4 rather than silently encoded:
+A3/A4 resolved the cross-cutting policy questions: development need is a modest capped nudge; normal purchasing power excludes the protected 2-Bee/1-Worm reserve; `Done` is a tunable Support benchmark; and shared assumptions are accessed through an overridable `HumanBaselinePolicy`.
 
-- the exact priority relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
-- whether and how strongly dice/Plant development deficits affect Cultivation choices;
-- the intended Cultivation reserve levels for Water, Mulch, Worms, and other resources;
-- whether Buy-threshold calculations should count protected Critters and, if so, how;
-- the exact score/threshold represented by `Done`;
-- how willing an ordinary player should be to spend a useful Support before versus after the second Main Action;
-- the magnitude of individual scoring adjustments;
-- any intentionally probabilistic Cultivation behavior beyond equal-score tie-breaking.
+The remaining questions belong to the Stage-B scorer work rather than to the policy architecture:
 
-Those are designer judgments. Once approved, they become the plain-English behavior contract, KDoc, executable tests, and finally the certified implementation.
+- the exact calibrated relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
+- the intended reserve targets for Water, Mulch, and other Support resources where a specific reserve is actually useful;
+- the detailed benefit formulas for each Support family;
+- whether any Cultivation behavior besides genuine ties should be intentionally probabilistic;
+- the exact magnitude of local, action-specific adjustments after focused behavior tests expose where tuning is needed.
+
+These should be resolved in small scorer checkpoints and captured in readable behavior-contract tests. The shared cross-cutting defaults should remain in `HumanBaselinePolicy`; local card/action numbers should remain beside their scorers.
