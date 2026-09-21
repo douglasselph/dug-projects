@@ -7,6 +7,7 @@ Use the repository-level [`README.md`](../README.md) as the main entry point.
 ## Cross-cutting documents
 
 - [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md) — Milestone-2 specification and certification map for the eight Human Baseline decision areas and 30 strategy hooks.
+- [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) — detailed Cultivation architecture inventory and Milestone-2 review notes.
 - [`USING_THE_SIMULATOR.md`](USING_THE_SIMULATOR.md) — practical workflow for using the project as a design-research tool.
 - [`TESTING_AND_VERIFICATION.md`](TESTING_AND_VERIFICATION.md) — unit, integration, and simulation verification responsibilities and commands.
 - [`CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) — deeper programming-oriented architecture.

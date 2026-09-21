@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.game.round.cultivation
 
 import dugsolutions.leaf.v35.error.InvalidDecisionException
+import dugsolutions.leaf.v35.error.InvalidGameStateException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -101,6 +102,71 @@ class CultivationBuildCoordinatorTest {
         assertFalse(CultivationAction.Done in strategy.requests[0].legalChoices)
         assertFalse(CultivationAction.Done in strategy.requests[1].legalChoices)
         assertTrue(CultivationAction.Done in strategy.requests[2].legalChoices)
+    }
+
+    @Test
+    fun execute_repeatedDecisionStateFailsInsteadOfLoopingForever() {
+        val strategy = RepeatWispStrategy()
+        val first = player(1, emptyList(), strategy)
+        val loopingWisp = wisp("Looping")
+        first.wisps.addAll(listOf(loopingWisp))
+
+        val effects = RecordingEffectExecutor(
+            onExecute = { request ->
+                val source = request.source
+                if (source is GameEffectSource.Wisp) {
+                    // Simulate a broken effect/executor that leaves the same Support
+                    // Action available after it resolves. The coordinator must catch
+                    // the repeated decision state instead of trusting the strategy to
+                    // eventually choose something else.
+                    request.actor.wisps.addAll(listOf(source.card))
+                }
+            }
+        )
+        val fixture = fixture(
+            first,
+            player(2, emptyList(), RoundEffectStrategy()),
+            effects
+        )
+
+        val error = assertFailsWith<InvalidGameStateException> {
+            fixture.coordinator.execute(fixture.game, fixture.card)
+        }
+
+        assertTrue(error.reason.contains("could loop forever"))
+        assertEquals(1, strategy.requests.size)
+    }
+
+    @Test
+    fun execute_changingDecisionStateStillHasHardLoopCeiling() {
+        val strategy = RepeatWispStrategy()
+        val first = player(1, emptyList(), strategy)
+        val loopingWisp = wisp("ChangingLoop")
+        first.wisps.addAll(listOf(loopingWisp))
+
+        val effects = RecordingEffectExecutor(
+            onExecute = { request ->
+                val source = request.source
+                if (source is GameEffectSource.Wisp) {
+                    // Keep the same Support Action alive, but also change visible
+                    // state so the repeated-state guard alone cannot catch it.
+                    request.actor.wisps.addAll(listOf(source.card))
+                    request.actor.addVp(1)
+                }
+            }
+        )
+        val fixture = fixture(
+            first,
+            player(2, emptyList(), RoundEffectStrategy()),
+            effects
+        )
+
+        val error = assertFailsWith<InvalidGameStateException> {
+            fixture.coordinator.execute(fixture.game, fixture.card)
+        }
+
+        assertTrue(error.reason.contains("Build may be looping"))
+        assertEquals(100, strategy.requests.size)
     }
 
     @Test
@@ -476,6 +542,19 @@ class CultivationBuildCoordinatorTest {
         }
     }
 
+    private class RepeatWispStrategy : CultivationStrategy {
+        val requests = mutableListOf<ChooseCultivationActionRequest>()
+
+        override fun chooseAction(
+            request: ChooseCultivationActionRequest
+        ): CultivationAction {
+            requests += request
+            return request.legalChoices
+                .filterIsInstance<CultivationAction.Support>()
+                .first { it.action is SupportAction.PlayWisp }
+        }
+    }
+
     private class SequenceStrategy(
         vararg initial: CultivationAction
     ) : CultivationStrategy {
@@ -491,6 +570,7 @@ class CultivationBuildCoordinatorTest {
     }
 
     private class RecordingEffectExecutor(
+        private val onExecute: (GameEffectRequest) -> Unit = {},
         private val executable: (GameEffectRequest) -> Boolean = { true }
     ) : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
@@ -500,6 +580,7 @@ class CultivationBuildCoordinatorTest {
 
         override fun execute(request: GameEffectRequest) {
             requests += request
+            onExecute(request)
         }
     }
 

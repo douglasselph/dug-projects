@@ -14,6 +14,24 @@ import dugsolutions.leaf.v35.player.decision.cultivation.*
 import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 
+/**
+ * Human Baseline policy for one decision opportunity during Cultivation Build.
+ *
+ * The rules engine owns legality and repeatedly supplies the currently legal
+ * choices. This strategy only ranks those choices. Main Actions are scored as
+ * Draw, Plant activation, or one of the two Round Effects; Support Actions and
+ * Done compete in the same candidate set. Shared [BaselineScoreEngine] logic
+ * then applies card influences and uses strategy RNG only to break equal scores.
+ *
+ * The current implementation is still under Milestone-2 designer review. Its
+ * detailed A1 architecture inventory, legal-choice table, current scoring entry
+ * points, tests, and known review questions are documented in:
+ *
+ * `doc/HUMAN_BASELINE_CULTIVATION.md`
+ *
+ * That document describes the current implementation; it is not yet the final
+ * certified Cultivation behavior contract.
+ */
 class HumanBaselineCultivationStrategy(
     private val delegate: CultivationStrategy = MechanicalCultivationStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),

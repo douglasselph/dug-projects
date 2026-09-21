@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
@@ -53,10 +54,40 @@ data class CultivationBuildResult(
 )
 
 /**
+ * Last-resort circuit breaker for a malformed strategy/executor that keeps
+ * producing new observable states forever. Normal Cultivation Build is far
+ * below this many decision opportunities.
+ */
+private const val MAX_CULTIVATION_DECISIONS_PER_PLAYER = 100
+
+/**
+ * Observable state at one Cultivation Build decision boundary.
+ *
+ * If the same state is reached twice for one player, another call to the strategy
+ * would be asking the same question again without any observable progress.
+ */
+private data class CultivationDecisionState(
+    val mainActionsRemaining: Int,
+    val legalChoices: List<CultivationAction>,
+    val context: DecisionContext
+)
+
+/**
  * Executes Cultivation's opening Draw-and-Roll and Build action loop.
  *
  * Each player must complete exactly two Main Actions, but may interleave any
- * number of currently legal Support Actions before choosing Done.
+ * number of currently legal Support Actions before choosing Done. After every
+ * completed action the coordinator rebuilds the legal choices and player-facing
+ * [dugsolutions.leaf.v35.player.decision.context.DecisionContext] before asking
+ * the strategy again.
+ *
+ * The coordinator does not trust a strategy to eventually choose Done. It keeps
+ * the observable decision states seen for each player and fails if one repeats.
+ * Reaching the same Main-actions-remaining value, legal choices, and decision
+ * context again means the Build loop has made no observable progress and could
+ * otherwise cycle forever. A generous per-player decision-count ceiling is a
+ * final circuit breaker for a malformed loop that somehow changes observable
+ * state on every pass.
  */
 class CultivationBuildCoordinator(
     private val rollResolver: RollResolver,
@@ -117,24 +148,51 @@ class CultivationBuildCoordinator(
         game.players.forEach { player ->
             var mainActionsUsed = 0
             var supportSequence = 0
+            var decisionCount = 0
+            val seenDecisionStates = mutableSetOf<CultivationDecisionState>()
 
             while (true) {
+                decisionCount++
+                stateCheck(
+                    decisionCount <= MAX_CULTIVATION_DECISIONS_PER_PLAYER,
+                    context = "CultivationBuildCoordinator"
+                ) {
+                    "Player ${player.id.value} exceeded " +
+                        "$MAX_CULTIVATION_DECISIONS_PER_PLAYER Cultivation decisions without choosing Done; " +
+                        "Build may be looping"
+                }
+
+                val mainActionsRemaining = 2 - mainActionsUsed
                 val legalChoices = legalChoices(
                     game = game,
                     player = player,
                     roundCard = roundCard,
-                    mainActionsRemaining = 2 - mainActionsUsed
+                    mainActionsRemaining = mainActionsRemaining
                 )
                 stateCheck(legalChoices.isNotEmpty()) {
                     "Player ${player.id.value} has no legal Cultivation action"
                 }
 
+                val context = DecisionContextFactory.create(game, player)
+                val decisionState = CultivationDecisionState(
+                    mainActionsRemaining = mainActionsRemaining,
+                    legalChoices = legalChoices,
+                    context = context
+                )
+                stateCheck(
+                    seenDecisionStates.add(decisionState),
+                    context = "CultivationBuildCoordinator"
+                ) {
+                    "Player ${player.id.value} repeated the same Cultivation decision state; " +
+                        "Build is not making observable progress and could loop forever"
+                }
+
                 val chosen = player.decisions.cultivation.chooseAction(
                     ChooseCultivationActionRequest(
                         roundCard = roundCard,
-                        mainActionsRemaining = 2 - mainActionsUsed,
+                        mainActionsRemaining = mainActionsRemaining,
                         legalChoices = legalChoices,
-                        context = DecisionContextFactory.create(game, player)
+                        context = context
                     )
                 )
                 decisionCheck(chosen in legalChoices) {
