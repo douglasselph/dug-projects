@@ -19,6 +19,17 @@ class HumanBaselinePolicyTest {
         assertEquals(1, reserve.worms)
     }
 
+
+    @Test
+    fun `default Cultivation support reserve combines Critters with one Water and one Mulch`() {
+        val reserve = HumanBaselinePolicy().protectedCultivationResourceReserve(context())
+
+        assertEquals(2, reserve.bees)
+        assertEquals(1, reserve.worms)
+        assertEquals(1, reserve.water)
+        assertEquals(1, reserve.mulch)
+    }
+
     @Test
     fun `normal purchasing power excludes protected Critters and includes only surplus`() {
         val context = context(

@@ -26,9 +26,9 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * - Main Actions compare Draw, Plant activation, and the two Round Effects by
  *   their actual ordinary-human benefit in the current state.
- * - Support Actions should ultimately be scored from the specific benefit of
- *   the offered Wisp/reroll/refresh/Mulch/Worm/Butterfly rather than sharing a
- *   generic Support score.
+ * - Support Actions are scored from the specific benefit of the offered
+ *   Wisp/reroll/refresh/Mulch/Worm/Butterfly, with soft reserve penalties for
+ *   consumable resources.
  * - After both Main Actions, `Done` is a benchmark: useful Supports may beat it,
  *   while weak or wasteful Supports should be saved and lose to it.
  * - When an action's value depends on a target (for example Compost, Mulch, or
@@ -92,7 +92,12 @@ class HumanBaselineCultivationStrategy(
             CultivationAction.Done -> PriorityScore(
                 if (request.mainActionsRemaining == 0) policy.cultivationDoneScore(request.context) else 0
             )
-            is CultivationAction.Support -> PriorityScore(30)
+            is CultivationAction.Support -> CultivationSupportPriority.score(
+                context = request.context,
+                action = choice.action,
+                cardScorers = cardScorers,
+                policy = policy
+            )
             is CultivationAction.Main -> when (val action = choice.action) {
                 CultivationMainAction.Draw -> DrawPriority.score(request.context)
                 is CultivationMainAction.ActivatePlant ->

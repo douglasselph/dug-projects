@@ -28,6 +28,8 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 open class HumanBaselinePolicy(
     private val protectedBeeReserveValue: Int = DEFAULT_PROTECTED_BEE_RESERVE,
     private val protectedWormReserveValue: Int = DEFAULT_PROTECTED_WORM_RESERVE,
+    private val protectedWaterReserveValue: Int = DEFAULT_PROTECTED_WATER_RESERVE,
+    private val protectedMulchReserveValue: Int = DEFAULT_PROTECTED_MULCH_RESERVE,
     private val cultivationDiceDeficitPointsPerPowerValue: Int =
         DEFAULT_CULTIVATION_DICE_DEFICIT_POINTS_PER_POWER,
     private val cultivationDiceDeficitMaxBonusValue: Int =
@@ -40,6 +42,8 @@ open class HumanBaselinePolicy(
     init {
         require(protectedBeeReserveValue >= 0) { "Protected Bee reserve cannot be negative" }
         require(protectedWormReserveValue >= 0) { "Protected Worm reserve cannot be negative" }
+        require(protectedWaterReserveValue >= 0) { "Protected Water reserve cannot be negative" }
+        require(protectedMulchReserveValue >= 0) { "Protected Mulch reserve cannot be negative" }
         require(cultivationDiceDeficitPointsPerPowerValue >= 0) {
             "Cultivation dice-deficit points cannot be negative"
         }
@@ -56,6 +60,8 @@ open class HumanBaselinePolicy(
         /** Normal Critter reserve Human Baseline tries to carry toward Battle. */
         const val DEFAULT_PROTECTED_BEE_RESERVE: Int = 2
         const val DEFAULT_PROTECTED_WORM_RESERVE: Int = 1
+        const val DEFAULT_PROTECTED_WATER_RESERVE: Int = 1
+        const val DEFAULT_PROTECTED_MULCH_RESERVE: Int = 1
 
         /**
          * Development need is intentionally only a modest nudge. One missing
@@ -87,6 +93,23 @@ open class HumanBaselinePolicy(
             bees = protectedBeeReserveValue,
             worms = protectedWormReserveValue
         )
+
+    /**
+     * Resources Human Baseline normally prefers to preserve during Cultivation.
+     *
+     * Critter values delegate to [protectedCritterReserve] so the canonical
+     * 2-Bee/1-Worm assumption remains defined once. Water and Mulch begin with
+     * one protected unit each. Experiments may override this method directly.
+     */
+    open fun protectedCultivationResourceReserve(context: DecisionContext): ResourceReserveTargets {
+        val critters = protectedCritterReserve(context)
+        return ResourceReserveTargets(
+            bees = critters.bees,
+            worms = critters.worms,
+            water = protectedWaterReserveValue,
+            mulch = protectedMulchReserveValue
+        )
+    }
 
     /**
      * Purchasing power Human Baseline should normally perceive as spendable:

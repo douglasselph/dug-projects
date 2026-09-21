@@ -238,7 +238,7 @@ marginal Water reroll
     → conserve Water
 ```
 
-The exact Water/Mulch/etc. reserve targets are not being silently invented in this checkpoint. The penalty knob is established now so later Support scoring can use a consistent policy once those target semantics are finalized.
+B4 now defines the initial Cultivation Support reserves explicitly: 1 Water and 1 stored Mulch, while Worm uses the same protected Critter reserve already shared with Buy. `protectedCultivationResourceReserve(context)` exposes the combined targets through an overridable method. These are soft reserves: the scorer applies `cultivationReserveSpendPenaltyPerUnit(...)`, and a strong immediate Support may still spend below them.
 
 ## 9. Constructor tuning versus overrides
 
@@ -316,4 +316,4 @@ The policy still exposes but Cultivation has not yet consumed:
 reserve-spend penalty per unit
 ```
 
-That remains foundation for B3 action-specific Support scoring.
+B4 now consumes this foundation for action-specific Cultivation Support scoring. The defaults remain experimental knobs and may be calibrated later without changing the scoring architecture.

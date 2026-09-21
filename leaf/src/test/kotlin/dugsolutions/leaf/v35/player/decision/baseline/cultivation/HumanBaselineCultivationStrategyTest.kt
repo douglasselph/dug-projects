@@ -198,9 +198,17 @@ class HumanBaselineCultivationStrategyTest {
 
     @Test
     fun `Cultivation Done benchmark comes from the injected Human Baseline policy`() {
-        val context = DecisionContext.EMPTY.copy(phase = RoundCardType.CULTIVATION)
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(water = 2)
+            )
+        )
+        val weakReroll = SupportAction.UseWaterReroll(
+            dugsolutions.leaf.v35.player.decision.support.HandDieChoice(0, 4, 1)
+        )
         val choices = listOf(
-            CultivationAction.Support(SupportAction.UseWaterRefresh),
+            CultivationAction.Support(weakReroll),
             CultivationAction.Done
         )
         val request = ChooseCultivationActionRequest(
@@ -216,7 +224,7 @@ class HumanBaselineCultivationStrategyTest {
         ).chooseAction(request)
 
         assertEquals(CultivationAction.Done, defaultChoice)
-        assertEquals(CultivationAction.Support(SupportAction.UseWaterRefresh), supportFriendlyChoice)
+        assertEquals(CultivationAction.Support(weakReroll), supportFriendlyChoice)
     }
 
     private fun creature(name: String, effect: GameEffect, type: PlantType, cost: Int) = CreatureCard(

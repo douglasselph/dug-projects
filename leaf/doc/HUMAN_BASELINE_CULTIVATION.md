@@ -257,24 +257,28 @@ That fallback deserves later designer review rather than being treated as a cert
 
 ## 6. Current Support and Done scoring
 
-At the A1 checkpoint, all Support Actions begin with the same base score:
+B4 replaces the earlier flat Support score with `CultivationSupportPriority`. Each concrete Support now receives a score based on its visible current benefit:
+
+- Wisp: the card-specific Human Baseline Wisp play score;
+- Water reroll: expected reroll improvement for the named die;
+- Water refresh: value of face-down Plants and Butterflies that would refresh;
+- Mulch: expected roll value of the stored die;
+- Worm: value of the named face-down Plant that would be refreshed;
+- Butterfly: expected keep-best reroll improvement for the named die.
+
+Water, Mulch, and Worm spending use the shared policy reserve layer. Spending below the protected reserve applies a soft penalty rather than becoming illegal. The initial Cultivation defaults are one Water, one stored Mulch, and the already-shared one protected Worm. Butterfly use has no reserve penalty because the Butterfly is flipped rather than permanently spent, and Wisp preservation is already represented by the Wisp scorer.
+
+`Done` remains a policy-provided benchmark (55 by default), so a clearly useful Support can beat `Done` after both Main Actions while weak or wasteful Supports are conserved.
+
+For historical reference, at A1 all Support Actions began with the same base score:
 
 ```text
 30
 ```
 
-That currently includes:
+That historical flat score applied to Play Wisp, Water reroll, Water refresh, Mulch, Worm flip, and Butterfly reroll. B4 no longer uses that flat value.
 
-```text
-Play Wisp
-Water reroll
-Water refresh
-Mulch
-Worm flip
-Butterfly reroll
-```
-
-Semantic tags are attached to several Support choices so owned-card influences can adjust them. Examples include:
+Semantic tags remain attached to several Support choices so owned-card influences can further adjust the action-specific score. Examples include:
 
 ```text
 PLAY_WISP
@@ -284,11 +288,9 @@ SPEND_MULCH
 SPEND_WORM
 ```
 
-However, the base Cultivation strategy itself does not yet directly distinguish whether a particular reroll, refresh, Mulch, Worm target, Butterfly target, or Wisp is especially useful.
+B4 now performs that direct distinction before card influences are applied.
 
-After both Main Actions are used, `Done` currently has a base score of 55. Before that point it has a score of 0, although the rules engine should not offer it before both Main Actions are complete.
-
-The current score relationship therefore tends to prefer `Done` over an ordinary Support Action after the second Main Action unless another influence raises the Support choice sufficiently.
+After both Main Actions are used, `Done` currently has a policy-provided default score of 55. Before that point it has a score of 0, although the rules engine should not offer it before both Main Actions are complete. The result is intentionally contextual: a strong Support can exceed 55, while a marginal Support remains below it and is conserved.
 
 Whether that is the desired ordinary-human behavior is intentionally left for later Cultivation review.
 
@@ -364,7 +366,7 @@ A4/B1 — document decisions and introduce shared tuning policy      COMPLETE
 
 B2 — apply shared policy to Main Action scoring                  COMPLETE
 B3 — make Plant activation comparison explicit                     COMPLETE
-B4 — implement action-specific Support scoring
+B4 — implement action-specific Support scoring                     COMPLETE
 B5 — align action scoring with Effect target/branch selection
 B6 — build explicit Human Baseline Behavior Contract tests
 B7 — focused compile/test/fix until green

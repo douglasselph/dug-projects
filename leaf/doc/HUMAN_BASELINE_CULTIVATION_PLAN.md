@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** B3 Plant activation comparison implemented; **not yet a certified Cultivation behavior contract**.
+**Status:** B4 Cultivation Support scoring implemented; **not yet a certified Cultivation behavior contract**.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -167,7 +167,7 @@ The selected die in `HumanBaselineEffectStrategy` must be the same kind of die w
 
 ## 3. Support Actions — target plan
 
-The current implementation gives every Support Action the same base score of 30. That is intentionally treated as unfinished Human Baseline behavior.
+B4 replaces the earlier flat Support score with action-specific valuation through `CultivationSupportPriority`.
 
 The target system should score the **specific offered Support Action**, not merely the action type.
 
@@ -184,7 +184,7 @@ Butterfly reroll
 
 ### 3.1 Play Wisp
 
-A particular Wisp should use its Human Baseline Wisp scorer rather than receiving a generic Support score.
+A particular Wisp now uses its Human Baseline Wisp scorer rather than receiving a generic Support score.
 
 The decision should account for the immediate usefulness of the Wisp versus the value of retaining an unplayed Wisp for its printed end-game VP where relevant.
 
@@ -244,7 +244,7 @@ If the remaining Supports are weak, wasteful, or better saved,
 choose Done.
 ```
 
-A3 approved `Done` as a tunable benchmark. `HumanBaselinePolicy` supplies the default score of 55 through an overridable method. The remaining work is to replace flat Support scores with action-specific benefit so the comparison becomes meaningful.
+A3 approved `Done` as a tunable benchmark. `HumanBaselinePolicy` supplies the default score of 55 through an overridable method. B4 now gives each Support family an action-specific benefit score, so useful Supports can beat `Done` while marginal ones can be conserved.
 
 Before both Main Actions are complete, `Done` is not a legal choice and should not be used as part of strategy policy.
 
@@ -275,7 +275,7 @@ Approved A3 direction: development deficits are **modest nudges, not commands**.
 
 Cultivation Support scoring should recognize that Water, Mulch, Worms, and other resources can have future value.
 
-A3 approved a shared, overridable policy layer for cross-cutting reserve assumptions. The canonical protected Critter reserve is 2 Bees / 1 Worm. The exact Water/Mulch Support reserve semantics are intentionally still deferred until Support scoring is implemented; they should not be inferred from unrelated legacy defaults.
+B4 completes the initial Cultivation Support reserve semantics through the shared policy. The canonical protected Critter reserve remains 2 Bees / 1 Worm, while Cultivation also begins with a soft reserve of 1 Water and 1 stored Mulch. These are tunable defaults, not hard prohibitions: spending below reserve applies a score penalty and a sufficiently valuable Support can still win.
 
 ### Purchase thresholds
 
@@ -445,7 +445,7 @@ A4/B1 — document decisions + establish shared tuning policy           COMPLETE
 
 B2 — implement/refine Main Action scoring                              COMPLETE
 B3 — make Plant activation comparison explicit                         COMPLETE
-B4 — implement action-specific Support scoring
+B4 — implement action-specific Support scoring                         COMPLETE
 B5 — align action scoring with Effect target/branch selection
 B6 — build explicit Human Baseline Behavior Contract tests
 B7 — focused compile/test/fix until green
@@ -464,8 +464,7 @@ A3/A4 resolved the cross-cutting policy questions: development need is a modest 
 B2 wired the approved cross-cutting policy into the threshold-sensitive Main Actions, and B3 made Plant activation comparison explicit through `PlantActivationPriority`, including the modest development nudge for unambiguous permanent die upgrades. The remaining questions belong to later Stage-B scorer work rather than to the policy architecture:
 
 - the exact calibrated relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
-- the intended reserve targets for Water, Mulch, and other Support resources where a specific reserve is actually useful;
-- the detailed benefit formulas for each Support family;
+- later calibration of the B4 Water/Mulch/Worm/Butterfly/Wisp formulas if simulation evidence shows they are too conservative or too liberal;
 - whether any Cultivation behavior besides genuine ties should be intentionally probabilistic;
 - the exact magnitude of local, action-specific adjustments after focused behavior tests expose where tuning is needed.
 
