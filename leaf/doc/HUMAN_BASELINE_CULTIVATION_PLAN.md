@@ -2,7 +2,7 @@
 
 This document describes the **target design** for the Human Baseline Cultivation decision strategy as it moves through Milestone 2 certification.
 
-**Status:** B2 Main Action policy integration implemented; **not yet a certified Cultivation behavior contract**.
+**Status:** B3 Plant activation comparison implemented; **not yet a certified Cultivation behavior contract**.
 
 The companion document [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) describes the implementation as it exists today. Cross-cutting tuning defaults and override seams are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). This document answers a different question:
 
@@ -92,19 +92,25 @@ Roll Reward probabilities may be considered only if they materially improve ordi
 
 ### 2.2 Activate Plant
 
-Plant activation should continue to delegate to the card-specific Human Baseline scorer.
+Plant activation delegates card-local judgment to the card-specific Human Baseline scorer and B3 now makes the comparison boundary explicit through `PlantActivationPriority`.
 
 Conceptually:
 
 ```text
 card's ordinary Cultivation value
 + value of what the effect can accomplish right now
-+ simple contextual modifiers
++ obvious Buy-threshold/context modifiers
++ modest cross-cutting development nudge only when the effect
+  unambiguously improves permanent dice-pool strength
 ```
 
 This allows cards to differ naturally without putting card-name special cases into `HumanBaselineCultivationStrategy`.
 
-The top-level strategy should remain ignorant of most individual card identities. Card-specific knowledge belongs in the card scorer registry.
+The top-level strategy remains ignorant of individual card identities. Card-specific knowledge belongs in the card scorer registry; cross-cutting Cultivation policy belongs in `PlantActivationPriority`/`HumanBaselinePolicy`.
+
+B3 deliberately gives no generic Plant-development bonus for activation. Reusing an already grafted Plant does not increase Plant count. It also limits the permanent dice-development nudge to effects whose permanent improvement is unconditional. Conditional branch effects are deferred until the target/branch-alignment checkpoint, where the action score and the later branch choice can be made consistent together.
+
+The direct comparison tests now demonstrate both directions: a strong visible Plant opportunity can beat Draw, while a weak one can lose, and the same Plant can switch between those outcomes as the current state changes.
 
 ### 2.3 Compost
 
@@ -438,10 +444,11 @@ A3 — approve ordinary-human behavior contract/direction               COMPLETE
 A4/B1 — document decisions + establish shared tuning policy           COMPLETE
 
 B2 — implement/refine Main Action scoring                              COMPLETE
-B3 — implement action-specific Support scoring
-B4 — align action scoring with Effect target selection
-B5 — build explicit Human Baseline Behavior Contract tests
-B6 — focused compile/test/fix until green
+B3 — make Plant activation comparison explicit                         COMPLETE
+B4 — implement action-specific Support scoring
+B5 — align action scoring with Effect target/branch selection
+B6 — build explicit Human Baseline Behavior Contract tests
+B7 — focused compile/test/fix until green
 
 C1 — update durable certification documentation
 C2 — run full unit + integration + simulation regression
@@ -454,7 +461,7 @@ The exact B checkpoints may be split further if necessary. Intermediate WIP chan
 
 A3/A4 resolved the cross-cutting policy questions: development need is a modest capped nudge; normal purchasing power excludes the protected 2-Bee/1-Worm reserve; `Done` is a tunable Support benchmark; and shared assumptions are accessed through an overridable `HumanBaselinePolicy`.
 
-B2 has now wired the approved cross-cutting policy into the threshold-sensitive Round Effects. The remaining questions belong to later Stage-B scorer work rather than to the policy architecture:
+B2 wired the approved cross-cutting policy into the threshold-sensitive Main Actions, and B3 made Plant activation comparison explicit through `PlantActivationPriority`, including the modest development nudge for unambiguous permanent die upgrades. The remaining questions belong to later Stage-B scorer work rather than to the policy architecture:
 
 - the exact calibrated relationship among Draw, Plant activation, Compost, Mulch, Water, and Sunlight;
 - the intended reserve targets for Water, Mulch, and other Support resources where a specific reserve is actually useful;

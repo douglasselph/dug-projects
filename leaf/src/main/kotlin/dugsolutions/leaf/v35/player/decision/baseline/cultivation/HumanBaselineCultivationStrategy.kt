@@ -2,7 +2,6 @@ package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
-import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.*
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
@@ -40,11 +39,14 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *   influence heuristics should be used only where they correspond to simple,
  *   explainable ordinary-human judgment rather than deep optimization.
  *
- * B2 wiring now makes the threshold-sensitive Round Effects use the injected
- * policy's normal purchasing power (so protected Critters are not treated as
- * ordinary Buy power). Compost also receives the policy's modest permanent
- * dice-development nudge. Draw deliberately does not receive that long-term
- * nudge because drawing an existing die does not increase total dice-pool power.
+ * B2 wiring makes threshold-sensitive Main Actions use the injected policy's
+ * normal purchasing power (so protected Critters are not treated as ordinary
+ * Buy power). Compost receives the policy's modest permanent dice-development
+ * nudge. B3 routes Plant activation through [PlantActivationPriority], keeping
+ * card-local valuation in the card scorer while applying the same cross-cutting
+ * policy to Plants that unambiguously improve permanent dice-pool strength.
+ * Draw deliberately does not receive that long-term nudge because drawing an
+ * existing die does not increase total dice-pool power.
  *
  * Current implementation details and A1/A2 findings are documented in:
  *
@@ -94,11 +96,11 @@ class HumanBaselineCultivationStrategy(
             is CultivationAction.Main -> when (val action = choice.action) {
                 CultivationMainAction.Draw -> DrawPriority.score(request.context)
                 is CultivationMainAction.ActivatePlant ->
-                    cardScorers.forPlant(action.card.card).playScore(
+                    PlantActivationPriority.score(
                         context = request.context,
-                        phase = CardPhase.CULTIVATION,
-                        cardName = action.card.card.name,
-                        normalPurchasingPower = policy.normalPurchasingPower(request.context)
+                        card = action.card,
+                        cardScorers = cardScorers,
+                        policy = policy
                     )
                 CultivationMainAction.RoundEffect1 -> scoreRoundEffect(request.roundCard.firstEffect.effect, request.context)
                 CultivationMainAction.RoundEffect2 -> scoreRoundEffect(request.roundCard.secondEffect.effect, request.context)

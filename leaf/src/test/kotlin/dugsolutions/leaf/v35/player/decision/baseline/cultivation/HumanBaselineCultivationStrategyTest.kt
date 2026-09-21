@@ -52,6 +52,69 @@ class HumanBaselineCultivationStrategyTest {
     }
 
 
+
+    @Test
+    fun `strong Draw beats a weak Plant activation`() {
+        val berryImportant = creature("Vine_07_01", GameEffect.RAISE_ANY_DIE_PLUS_1, PlantType.VINE, 7)
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    supply = listOf(DieView(0, 20, 1)),
+                    hand = listOf(DieView(0, 4, 3))
+                )
+            )
+        )
+        val chosen = HumanBaselineCultivationStrategy().chooseAction(
+            ChooseCultivationActionRequest(
+                roundCard = round(RoundCardType.CULTIVATION),
+                mainActionsRemaining = 2,
+                legalChoices = listOf(
+                    CultivationAction.Main(CultivationMainAction.Draw),
+                    CultivationAction.Main(CultivationMainAction.ActivatePlant(berryImportant))
+                ),
+                context = context
+            )
+        )
+
+        assertEquals(CultivationMainAction.Draw, (chosen as CultivationAction.Main).action)
+    }
+
+    @Test
+    fun `same Plant activation can lose or beat Draw based on current effect value`() {
+        val rootFourMore = creature("Root_05_02", GameEffect.RAISE_DIE_PLUS_4, PlantType.ROOT, 5)
+        val choices = listOf(
+            CultivationAction.Main(CultivationMainAction.Draw),
+            CultivationAction.Main(CultivationMainAction.ActivatePlant(rootFourMore))
+        )
+        val weakContext = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    supply = listOf(DieView(0, 12, 1)),
+                    hand = listOf(DieView(0, 8, 8))
+                )
+            )
+        )
+        val usefulContext = weakContext.copy(
+            self = weakContext.self.copy(
+                board = weakContext.self.board.copy(
+                    hand = listOf(DieView(0, 8, 1))
+                )
+            )
+        )
+
+        val weakChoice = HumanBaselineCultivationStrategy().chooseAction(
+            ChooseCultivationActionRequest(round(RoundCardType.CULTIVATION), 2, choices, weakContext)
+        )
+        val usefulChoice = HumanBaselineCultivationStrategy().chooseAction(
+            ChooseCultivationActionRequest(round(RoundCardType.CULTIVATION), 2, choices, usefulContext)
+        )
+
+        assertEquals(CultivationMainAction.Draw, (weakChoice as CultivationAction.Main).action)
+        assertIs<CultivationMainAction.ActivatePlant>((usefulChoice as CultivationAction.Main).action)
+    }
+
     @Test
     fun `Root Well influence can make Water beat a strong Draw`() {
         val plainContext = DecisionContext.EMPTY.copy(

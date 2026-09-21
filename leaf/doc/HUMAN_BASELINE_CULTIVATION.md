@@ -190,17 +190,28 @@ This makes drawing a more developed die progressively more attractive.
 
 ### Activate Plant
 
-Plant activation does not use one generic fixed score. It delegates to the Human Baseline card scorer for that Plant:
+Plant activation does not use one generic fixed score. B3 routes it through `PlantActivationPriority`, which keeps card-local knowledge in the Human Baseline card scorer while applying cross-cutting Cultivation policy in one place:
 
 ```text
+Activate Plant
+    ↓
+PlantActivationPriority
+    ↓
 HumanBaselineCardScorerRegistry
     → scorer for this Plant
-    → playScore(..., phase = CULTIVATION)
+    → ordinary Cultivation base
+    → value the effect can realize right now
+    → obvious Buy-threshold/context adjustments
+    ↓
+cross-cutting Cultivation policy
+    → normal purchasing power
+    → modest permanent dice-development nudge when the effect
+      unambiguously improves the permanent dice pool
 ```
 
-This means Plant-specific valuation already participates directly in the Cultivation action comparison.
+The comparison rule is deliberately simple: a weak Plant activation can lose to Draw or another Main Action, while the same Plant can become preferable when its visible current effect is more useful. Activating an already grafted Plant receives no generic Plant-count-development bonus because activation does not increase the number of Plants in the Creature.
 
-The card-scoring layer will be inspected more deeply in later checkpoints.
+At B3 the permanent-development nudge applies only where the Plant effect unambiguously improves permanent dice-pool strength (`UPGRADE_DIE_AND_USE_NOW`). Conditional branch effects remain deferred until action/target/branch consistency is handled in the later target-alignment checkpoint.
 
 ### Round Effect — Compost
 
@@ -283,14 +294,18 @@ Whether that is the desired ordinary-human behavior is intentionally left for la
 
 ## 7. Current direct Human Baseline tests
 
-`HumanBaselineCultivationStrategyTest` currently contains two direct strategy tests:
+`HumanBaselineCultivationStrategyTest` now includes direct comparison coverage showing that:
 
 1. a sufficiently high-value Plant activation can beat an early Draw;
-2. owning Root Well can apply enough Water influence to make Water beat a strong Draw.
+2. a strong Draw can beat a weak Plant activation;
+3. the same Plant activation can lose or win against Draw depending on the effect value available in the current state;
+4. Plant Buy-threshold scoring uses policy-based normal purchasing power;
+5. owning Root Well can apply enough Water influence to make Water beat a strong Draw;
+6. the `Done` benchmark comes from the injected policy.
 
-Those tests prove useful pieces of the scoring architecture, especially that card influences can change the selected action.
+`PlantActivationPriorityTest` separately verifies that an unambiguous permanent die-upgrade Plant receives the policy's modest dice-development nudge while an ordinary activation does not receive a generic development bonus.
 
-They do **not** yet constitute a complete Human Baseline Cultivation behavior contract comparable to the certified Buy tests.
+These tests now make the intended Plant-comparison behavior substantially more explicit, but they do **not** yet constitute the complete Human Baseline Cultivation behavior contract comparable to the certified Buy tests.
 
 ## 8. Coordinator and integration-style coverage
 
@@ -348,8 +363,11 @@ A3 — propose/approve the ordinary-human decision hierarchy       COMPLETE
 A4/B1 — document decisions and introduce shared tuning policy      COMPLETE
 
 B2 — apply shared policy to Main Action scoring                  COMPLETE
-B3+ — implement Support scoring, target alignment, and tests
-       in small checkpoints
+B3 — make Plant activation comparison explicit                     COMPLETE
+B4 — implement action-specific Support scoring
+B5 — align action scoring with Effect target/branch selection
+B6 — build explicit Human Baseline Behavior Contract tests
+B7 — focused compile/test/fix until green
 
 C  — documentation, full regression, and certification
 ```
@@ -359,4 +377,4 @@ This document should evolve as those checkpoints are completed. The durable fina
 
 ## Shared tuning policy
 
-Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B2, Plant activation plus Compost, Mulch, and Sunlight use policy-based purchasing power; Compost also receives the modest long-term dice-development nudge. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.
+Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B3, Plant activation plus Compost, Mulch, and Sunlight use policy-based purchasing power. Compost receives the modest long-term dice-development nudge, and Plant activation receives the same nudge only when its effect unambiguously improves permanent dice-pool strength. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.
