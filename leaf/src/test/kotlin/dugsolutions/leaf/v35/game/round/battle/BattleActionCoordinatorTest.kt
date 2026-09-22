@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.error.InvalidDecisionException
+import dugsolutions.leaf.v35.error.InvalidGameStateException
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
@@ -35,6 +36,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -229,6 +231,62 @@ class BattleActionCoordinatorTest {
         assertTrue(roundRequests.all { it.battleState === fixture.battleState })
     }
 
+    @Test
+    fun execute_repeatedStep5DecisionStateFailsInsteadOfLoopingForever() {
+        val loopWisp = wisp("Looping Wisp")
+        val loopStrategy = AlwaysWispSupportStrategy()
+        val p1 = player(1, loopStrategy).apply {
+            wisps.add(loopWisp)
+        }
+        val p2 = player(2, finishStrategy("p2"))
+        val effects = RecordingEffects { request ->
+            if (request.source is GameEffectSource.Wisp) {
+                // Replenish exactly what SupportActionExecutor removes so the
+                // next Step-5 opportunity eventually presents the same game state.
+                request.actor.wisps.add(loopWisp)
+            }
+        }
+        val fixture = fixture(p1, p2, effects = effects)
+
+        val error = assertFailsWith<InvalidGameStateException> {
+            fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        }
+
+        assertTrue(error.message.orEmpty().contains("repeated the same Battle Step-5 decision state"))
+        // Pass 1 legitimately changed state when p2 became Done. The identical
+        // p1 state is therefore rejected only after that real progress settles.
+        assertEquals(2, loopStrategy.turnRequests.size)
+        assertEquals(setOf(p2.id), fixture.battleState.donePlayerIds)
+    }
+
+    @Test
+    fun execute_changingStep5StateStillTripsHardDecisionCeiling() {
+        val loopWisp = wisp("Changing Loop Wisp")
+        val loopStrategy = AlwaysWispSupportStrategy()
+        val p1 = player(1, loopStrategy).apply {
+            wisps.add(loopWisp)
+        }
+        val p2 = player(2, finishStrategy("p2"))
+        val effects = RecordingEffects { request ->
+            if (request.source is GameEffectSource.Wisp) {
+                // Make every observation genuinely different so repeated-state
+                // detection cannot fire. The hard ceiling must remain a final
+                // circuit breaker for an always-progressing malformed loop.
+                request.actor.addVp(1)
+                request.actor.wisps.add(loopWisp)
+            }
+        }
+        val fixture = fixture(p1, p2, effects = effects)
+
+        val error = assertFailsWith<InvalidGameStateException> {
+            fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        }
+
+        assertTrue(error.message.orEmpty().contains("exceeded 100 Battle Step-5 decisions"))
+        assertEquals(100, loopStrategy.turnRequests.size)
+        assertEquals(100, p1.vp)
+    }
+
     private data class Fixture(
         val game: Game,
         val roundCard: RoundCard,
@@ -238,11 +296,11 @@ class BattleActionCoordinatorTest {
     )
 
     private fun fixture(
-        vararg players: Player
+        vararg players: Player,
+        effects: RecordingEffects = RecordingEffects()
     ): Fixture {
         val game = GameEngineTestFixture.game(players = players.toList())
         val battleState = BattleState(players.toList())
-        val effects = RecordingEffects()
         val rollResolver = RollResolver(
             grove = game.grove,
             chronicle = game.chronicle,
@@ -320,6 +378,29 @@ class BattleActionCoordinatorTest {
         }
     }
 
+    private class AlwaysWispSupportStrategy : BattleStrategy {
+        val turnRequests = mutableListOf<ChooseBattleTurnActionRequest>()
+
+        override fun chooseFirstMainAction(
+            request: ChooseBattleFirstMainActionRequest
+        ) = BattleMainAction.RoundEffect1
+
+        override fun chooseTurnAction(
+            request: ChooseBattleTurnActionRequest
+        ): BattleTurnAction {
+            turnRequests += request
+            return request.legalChoices.first { choice ->
+                val support = choice as? BattleTurnAction.Support
+                val shared = support?.action as? BattleSupportAction.Shared
+                shared?.action is SupportAction.PlayWisp
+            }
+        }
+
+        override fun chooseDiePlacement(
+            request: ChooseBattleDiePlacementRequest
+        ) = request.legalRows.first()
+    }
+
     private class RecordingFinishStrategy : BattleStrategy {
         var first: BattleMainAction = BattleMainAction.RoundEffect1
         val turnRequests = mutableListOf<ChooseBattleTurnActionRequest>()
@@ -342,7 +423,9 @@ class BattleActionCoordinatorTest {
         ) = request.legalRows.first()
     }
 
-    private class RecordingEffects : GameEffectExecutor {
+    private class RecordingEffects(
+        private val onExecute: (GameEffectRequest) -> Unit = {}
+    ) : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
         val actorDoneWhenExecuted = mutableListOf<Pair<GameEffect, Boolean>>()
 
@@ -353,6 +436,7 @@ class BattleActionCoordinatorTest {
             request.battleState?.let { battleState ->
                 actorDoneWhenExecuted += request.effect to battleState.isDone(request.actor.id)
             }
+            onExecute(request)
         }
     }
 
@@ -394,6 +478,22 @@ class BattleActionCoordinatorTest {
             backgroundImage = "",
             cardBackgroundImage = "",
             effect = GameEffect.GAIN_ONE_VP
+        )
+
+    private fun wisp(name: String) =
+        WispCard(
+            quantity = 1,
+            name = name,
+            title = name,
+            count = 1,
+            effect = GameEffect.GAIN_ONE_VP,
+            lineIcons = null,
+            lineIconsHeight = 0,
+            vpIcon = null,
+            mainBackdrop = "",
+            playImmediately = false,
+            battleOnly = false,
+            endGameVp = 1
         )
 
     private fun fixedDie(

@@ -252,7 +252,7 @@ Direct tests begin with:
 baseline/battle/HumanBaselineBattleStrategyTest.kt
 ```
 
-**Stage status:** Stage A designer review (A1–A6) is complete. B1 established the durable contract/policy seam, and B2 now exposes authoritative Done state through Battle decision context. Tactical Battle behavior is still being implemented and is **not yet certified**.
+**Stage status:** Stage A designer review (A1–A6) is complete. B1 established the durable contract/policy seam, B2 exposes authoritative Done state through Battle decision context, and B3 protects the repeated Step-5 loop with repeated-state detection plus a hard per-player decision ceiling. Tactical Battle behavior is still being implemented and is **not yet certified**.
 
 Approved Battle behavior is documented in:
 

@@ -19,7 +19,7 @@ Stage B has begun.
 
 - [x] B1 — durable Battle plan + policy foundation
 - [x] B2 — Done state in engine / decision context
-- [ ] B3 — Battle Step-5 loop safety
+- [x] B3 — Battle Step-5 loop safety
 - [ ] B4 — `BattleRowAssessor`
 - [ ] B5 — `BattleSwingEvaluator`
 - [ ] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
@@ -44,6 +44,8 @@ Stage C:
 B1 intentionally changes no tactical Battle behavior.
 
 B2 moves Done into authoritative Battle-round state and exposes it through immutable decision context. It still does not implement tempo intelligence or tactical Battle scoring.
+
+B3 adds independent caller safety to the repeated Step-5 loop. It rejects a repeated per-player decision state and also enforces a generous per-player hard ceiling, while treating real changes made by other players as legitimate progress.
 
 B1 verification:
 
@@ -125,11 +127,38 @@ focused:
 
 ## B3 — Battle Step-5 loop safety
 
-Add repeated observable-state detection plus a generous hard decision/pass ceiling.
+**COMPLETE.**
 
-The signature must recognize legitimate progress such as resource consumption, Plant/Butterfly facing changes, grid changes, withdrawal/closure, and active/Done changes.
+`BattleActionCoordinator` now maintains a separate Step-5 safety history and decision count for each Battle player. Before each still-active player's Step-5 choice it records:
 
-Add pathological non-progress tests.
+- the currently legal Support / Final Main choices; and
+- a stable `DecisionContext` observation for **every** Battle player.
+
+Using all players' observations means legitimate changes in another player's private Wisp identity still count as progress to the coordinator even though that identity remains hidden from the acting strategy. The pass number is intentionally excluded: advancing to another pass without any legal-choice or game-state change is not progress.
+
+If the same player's Step-5 decision state appears again, the coordinator throws `InvalidGameStateException` rather than trusting the strategy/effect combination to eventually finish. A separate hard ceiling of **100 Step-5 decisions per player** protects against malformed loops that keep producing new observable states forever.
+
+Focused tests prove both protections:
+
+- a self-replenishing Wisp that restores the exact same state is rejected once other legitimate progress has settled;
+- an intentionally malformed Wisp loop that changes VP every time avoids repeated-state detection but is stopped by the hard ceiling.
+
+B3 does not change Human Baseline tactical choice behavior. It only makes the Battle caller safe before later Support-heavy strategy work.
+
+B3 verification:
+
+```text
+compileKotlin + compileTestKotlin
+    BUILD SUCCESSFUL
+
+focused:
+    BattleActionCoordinatorTest
+
+    8 tests
+    0 failures
+    0 errors
+    0 skipped
+```
 
 ## B4 — `BattleRowAssessor`
 

@@ -21,6 +21,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
@@ -59,6 +60,27 @@ data class BattleActionLoopResult(
 )
 
 /**
+ * Last-resort circuit breaker for malformed Battle strategy/effect loops that
+ * keep changing state forever without ever committing Final Main. A legitimate
+ * Battle has far fewer Step-5 decisions per player.
+ */
+private const val MAX_BATTLE_STEP5_DECISIONS_PER_PLAYER = 100
+
+/**
+ * Stable Step-5 state used only for loop-safety detection.
+ *
+ * [observations] contains a current DecisionContext for every Battle player, not
+ * only the actor. That makes legitimate progress in another player's private
+ * Wisp identity visible to the coordinator's safety check without exposing it to
+ * the acting strategy. Pass number is intentionally excluded: advancing a pass
+ * without any game-state or legal-choice change is not progress.
+ */
+private data class BattleStep5DecisionState(
+    val legalChoices: List<BattleTurnAction>,
+    val observations: List<DecisionContext>
+)
+
+/**
  * Executes Battle Steps 4 and 5 after Rank-and-Place has produced a
  * [BattleState].
  *
@@ -67,6 +89,12 @@ data class BattleActionLoopResult(
  *
  * Step 5: repeated left-to-right passes. Each still-active player chooses one
  * Support Action or takes their final Main Action and leaves the action loop.
+ *
+ * The coordinator does not trust a strategy/effect combination to eventually
+ * finish. For each player it rejects a repeated Step-5 decision state when the
+ * legal choices and complete Battle observations are unchanged, and it also
+ * enforces a generous per-player hard ceiling as a final circuit breaker for a
+ * malformed loop that keeps producing new states forever.
  */
 class BattleActionCoordinator(
     private val rollResolver: RollResolver,
@@ -138,10 +166,27 @@ class BattleActionCoordinator(
         // Done is authoritative Battle-round state so every later DecisionContext
         // can observe which opponents are no longer able to act.
         var passNumber = 1
+        val decisionCounts =
+            battleState.playerIdsInBattleOrder.associateWith { 0 }.toMutableMap()
+        val seenDecisionStates =
+            battleState.playerIdsInBattleOrder
+                .associateWith { mutableSetOf<BattleStep5DecisionState>() }
+                .toMutableMap()
 
         while (battleState.donePlayerIds.size < battleState.playerIdsInBattleOrder.size) {
             battleState.playersInBattleOrder.forEach { player ->
                 if (battleState.isDone(player.id)) return@forEach
+
+                val decisionCount = decisionCounts.getValue(player.id) + 1
+                decisionCounts[player.id] = decisionCount
+                stateCheck(
+                    decisionCount <= MAX_BATTLE_STEP5_DECISIONS_PER_PLAYER,
+                    context = "BattleActionCoordinator"
+                ) {
+                    "Player ${player.id.value} exceeded " +
+                        "$MAX_BATTLE_STEP5_DECISIONS_PER_PLAYER Battle Step-5 decisions " +
+                        "without taking Final Main; Battle action loop may be cycling"
+                }
 
                 val finalMains =
                     mainActions(game, player, roundCard, battleState)
@@ -158,13 +203,29 @@ class BattleActionCoordinator(
                     }
                 }
 
+                val context = DecisionContextFactory.create(game, player, battleState)
+                val decisionState =
+                    BattleStep5DecisionState(
+                        legalChoices = legalChoices,
+                        observations = battleState.playersInBattleOrder.map { observedPlayer ->
+                            DecisionContextFactory.create(game, observedPlayer, battleState)
+                        }
+                    )
+                stateCheck(
+                    seenDecisionStates.getValue(player.id).add(decisionState),
+                    context = "BattleActionCoordinator"
+                ) {
+                    "Player ${player.id.value} repeated the same Battle Step-5 decision state; " +
+                        "Battle action loop is not making observable progress and could loop forever"
+                }
+
                 val chosen =
                     player.decisions.battle.chooseTurnAction(
                         ChooseBattleTurnActionRequest(
                             roundCard = roundCard,
                             passNumber = passNumber,
                             legalChoices = legalChoices,
-                            context = DecisionContextFactory.create(game, player, battleState)
+                            context = context
                         )
                     )
 

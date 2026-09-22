@@ -14,7 +14,7 @@ The incremental implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PL
 
 Battle Stage A (A1–A6) is complete. The current source was inventoried before this contract was approved.
 
-B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. The existing tactical Battle decision behavior is **not yet certified** and later Stage-B checkpoints must implement this contract before Stage C can certify it.
+B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. The existing tactical Battle decision behavior is **not yet certified** and later Stage-B checkpoints must implement this contract before Stage C can certify it.
 
 Battle currently exposes three strategy hooks:
 
@@ -401,14 +401,14 @@ Target selection occurs before the replacement die roll, so use expectation. Lat
 
 ## 13. Step-5 loop safety
 
-Battle must gain caller defense analogous to Cultivation:
+Battle now has caller defense analogous to Cultivation:
 
-- repeated observable decision-state detection;
-- a generous hard Step-5 decision/pass ceiling.
+- repeated per-player Step-5 decision-state detection;
+- a generous hard ceiling of 100 Step-5 decisions per player.
 
-The observable state must be rich enough to recognize real progress in the active/Done set, grid, withdrawal/closed state, resources, Plant/Butterfly facing, and other relevant Support state.
+The repeated-state signature contains the actor's legal choices plus a `DecisionContext` observation for every Battle player. That recognizes legitimate progress in active/Done state, grid state, withdrawal/closure, resources, Plant/Butterfly facing, Wisp state, and other information represented by decision context. Using all players' observations also prevents another player's private Wisp change from being mistaken for no progress, while the acting strategy still sees only its own legal `DecisionContext`.
 
-The guard protects against broken strategy/effect loops and must not prevent legitimate Support-heavy Battle play.
+Pass number is intentionally excluded from the signature because merely advancing a pass is not progress. The hard ceiling remains a last-resort circuit breaker for a malformed loop that changes observable state forever. These guards protect against broken strategy/effect loops without changing legitimate Support-heavy Battle behavior.
 
 ## 14. Code-shape preference
 
