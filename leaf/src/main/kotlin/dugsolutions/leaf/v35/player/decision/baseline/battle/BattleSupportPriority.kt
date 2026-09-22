@@ -1,8 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
-import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
-import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
@@ -11,16 +10,20 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.tokens.Critter
 import kotlin.math.roundToInt
 
-object BattleSupportPriority {
+class BattleSupportPriority(
+    private val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+    policy: HumanBaselinePolicy = HumanBaselinePolicy(),
+    private val directAnalyzer: BattleDirectSupportAnalyzer =
+        BattleDirectSupportAnalyzer(policy)
+) {
     fun score(
         context: DecisionContext,
-        action: BattleSupportAction,
-        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
-    ): PriorityScore =
-        when (action) {
-            is BattleSupportAction.PlaceCritter -> scoreCritter(context, action)
-            is BattleSupportAction.Shared -> scoreShared(context, action.action, cardScorers)
-        }
+        action: BattleSupportAction
+    ): PriorityScore {
+        val direct = directAnalyzer(context, action)
+        if (direct != null) return scoreDirect(direct)
+        return scoreNonDirect(context, action)
+    }
 
     fun tags(action: BattleSupportAction): Set<DecisionTag> =
         when (action) {
@@ -46,58 +49,55 @@ object BattleSupportPriority {
             }
         }
 
-    private fun scoreCritter(context: DecisionContext, action: BattleSupportAction.PlaceCritter): PriorityScore {
-        val need = RowNeedHeuristics.calculate(context, action.row)
-        val value = if (action.critter == Critter.BEE) context.self.board.beeValue else context.self.board.wormValue
-        var score = PriorityScore(25 + need.needScore)
-        if (!need.currentlyWinning && need.pointsToBecomeWinner in 1..value) {
-            score = score.adjusted(25, "Critter changes the row to a win")
+    private fun scoreDirect(direct: BattleDirectSupportAnalysis): PriorityScore {
+        val tactical = direct.analysis.tacticalValue.roundToInt()
+        if (!direct.passesSpendingGate) {
+            return PriorityScore(DISQUALIFIED_PREMIUM_SCORE)
+                .adjusted(tactical, "Projected direct Battle Swing")
+                .adjusted(0, gateReason(direct.gate))
         }
-        if (need.woundRisk && need.pointsToAvoidWound in 1..value) {
-            score = score.adjusted(15, "Critter escapes Wound range")
-        }
-        return score
+        return PriorityScore(tactical)
+            .adjusted(0, "Projected direct Battle Swing")
     }
 
-    private fun scoreShared(
+    private fun scoreNonDirect(
         context: DecisionContext,
-        action: SupportAction,
-        cardScorers: HumanBaselineCardScorerRegistry
+        action: BattleSupportAction
     ): PriorityScore =
         when (action) {
-            is SupportAction.UseWaterReroll -> {
-                val row = findRow(context, action.die.index)
-                val expected = DieValueHeuristics.expectedRerollGain(action.die.sides, action.die.value)
-                val need = row?.let { RowNeedHeuristics.calculate(context, it).needScore } ?: 0
-                PriorityScore(25 + (expected * 4).roundToInt() + need / 3)
+            is BattleSupportAction.PlaceCritter -> PriorityScore(0)
+            is BattleSupportAction.Shared -> when (val shared = action.action) {
+                is SupportAction.PlayWisp ->
+                    cardScorers.forWisp(shared.card).wispPlayScore(context, shared.card)
+
+                SupportAction.UseWaterRefresh -> {
+                    val spent = context.self.board.creature.count { it.isFaceDown }
+                    PriorityScore(20 + spent * 15)
+                }
+
+                is SupportAction.UseWormFlip -> {
+                    val card = context.self.board.creature.firstOrNull { it.id == shared.cardId }
+                    val preserve = card?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
+                    PriorityScore(25 + preserve / 3).adjusted(10, "Refreshes a spent Plant")
+                }
+
+                is SupportAction.UseWaterReroll,
+                is SupportAction.UseMulch,
+                is SupportAction.UseButterfly -> PriorityScore(0)
             }
-            SupportAction.UseWaterRefresh -> {
-                val spent = context.self.board.creature.count { it.isFaceDown }
-                PriorityScore(20 + spent * 15)
-            }
-            is SupportAction.UseMulch -> {
-                val sides = action.token.sides?.value ?: 4
-                val highestNeed = context.battle?.rows?.maxOfOrNull {
-                    RowNeedHeuristics.calculate(context, it.row).needScore
-                } ?: 0
-                PriorityScore(35 + (DieValueHeuristics.expectedRoll(sides) * 3).roundToInt() + highestNeed / 4)
-            }
-            is SupportAction.UseWormFlip -> {
-                val card = context.self.board.creature.firstOrNull { it.id == action.cardId }
-                val preserve = card?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
-                PriorityScore(25 + preserve / 3).adjusted(10, "Refreshes a spent Plant")
-            }
-            is SupportAction.UseButterfly -> {
-                val expected = DieValueHeuristics.expectedKeepBestRerollGain(action.die.sides, action.die.value)
-                val row = findRow(context, action.die.index)
-                val need = row?.let { RowNeedHeuristics.calculate(context, it).needScore } ?: 0
-                PriorityScore(30 + (expected * 5).roundToInt() + need / 4)
-            }
-            is SupportAction.PlayWisp -> cardScorers.forWisp(action.card).wispPlayScore(context, action.card)
         }
 
-    private fun findRow(context: DecisionContext, handIndex: Int) =
-        context.battle?.rows?.firstOrNull { row ->
-            row.forPlayer(context.self.id)?.dice?.any { it.handIndex == handIndex } == true
-        }?.row
+    private fun gateReason(gate: BattleDirectSupportGate): String =
+        when (gate) {
+            BattleDirectSupportGate.WATER_REQUIRES_POSITIVE_TRANSITION ->
+                "Water reroll requires a positive named Battle transition"
+            BattleDirectSupportGate.MULCH_REQUIRES_WIN_FLIPPED ->
+                "Mulch requires expected WIN_FLIPPED"
+            BattleDirectSupportGate.NONE,
+            BattleDirectSupportGate.PASSED -> "Premium-resource gate passed"
+        }
+
+    private companion object {
+        const val DISQUALIFIED_PREMIUM_SCORE = -10_000
+    }
 }

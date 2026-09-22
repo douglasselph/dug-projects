@@ -19,9 +19,10 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * multiplayer row facts, immediate Battle Swing, pre-random expectation versus
  * post-random actual information, and the Step-5 Support/Final-Main continuation
  * decision. B7 applies the shared tactical layer to Step-4 Draw evaluation, B8
- * reuses it after the roll for actual die placement, and B9 supplies normalized
- * Support-capacity facts for later continuation decisions. Later checkpoints continue
- * migrating Support/Final-Main orchestration and target-dependent Effect alignment.
+ * reuses it after the roll for actual die placement, B9/B10 supply normalized
+ * Support-capacity/reachability facts, and B11 routes ordinary direct Supports
+ * through shared tactical analysis. Later checkpoints continue migrating enabling
+ * Supports, Support/Final-Main orchestration, and target-dependent Effect alignment.
  *
  * Durable behavior contract:
  *
@@ -42,7 +43,8 @@ class HumanBaselineBattleStrategy(
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     internal val firstMainPriority: BattleFirstMainPriority = BattleFirstMainPriority(cardScorers, policy),
-    internal val placementPriority: BattlePlacementPriority = BattlePlacementPriority(policy)
+    internal val placementPriority: BattlePlacementPriority = BattlePlacementPriority(policy),
+    internal val supportPriority: BattleSupportPriority = BattleSupportPriority(cardScorers, policy)
 ) : BattleStrategy {
     override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseFirstMainAction(request)
@@ -66,11 +68,11 @@ class HumanBaselineBattleStrategy(
                 is BattleTurnAction.FinalMain ->
                     BattleMainPriority.score(request.context, request.roundCard, choice.action, cardScorers)
                         .adjusted(5, "Final Main action ends participation")
-                is BattleTurnAction.Support -> BattleSupportPriority.score(request.context, choice.action, cardScorers)
+                is BattleTurnAction.Support -> supportPriority.score(request.context, choice.action)
             }
             val tags = when (choice) {
                 is BattleTurnAction.FinalMain -> mainTags(request, choice.action)
-                is BattleTurnAction.Support -> BattleSupportPriority.tags(choice.action)
+                is BattleTurnAction.Support -> supportPriority.tags(choice.action)
             }
             DecisionCandidate(choice, score, tags)
         }

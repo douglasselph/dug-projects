@@ -27,7 +27,7 @@ Stage B has begun.
 - [x] B8 — actual Battle die placement
 - [x] B9 — Support capacity
 - [x] B10 — Support reachability + continuation
-- [ ] B11 — direct Support analysis
+- [x] B11 — direct Support analysis
 - [ ] B12 — enabling Support analysis
 - [ ] B13 — special Battle effect evaluators
 - [ ] B14 — Support vs Final Main orchestration
@@ -60,6 +60,8 @@ B8 routes actual post-roll placement through that same shared tactical layer. `B
 B9 adds reusable `BattleSupportCapacityAssessor` and `BattleSupportCapacity` concepts. Own capacity is normalized from current legal Step-5 choices so targets do not multiply a resource's move count. Opponent capacity uses public board state only, treats hidden Wisp identities as unknown, excludes unusable visible resources and Done players, and reports the maximum among a caller-supplied relevant Live-Threat set rather than summing opponents as a coalition. Identifying close rows and the relevant opponent set remains a later continuation/tempo checkpoint.
 
 B10 adds `BattleSupportReachability`, `BattleContinuationAssessor`, and the immutable assessment results consumed by later Support orchestration. Reachability projects the actor's normalized legal Bee capacity at current Bee value plus expected keep-better Butterfly improvement, caps repeated reroll potential at visible die headroom, and deliberately excludes Worm, Water, Mulch, and Wisp from generic additive power. The continuation gate uses the policy-supplied minimum meaningful Strike-VP gain and succeeds for either an individually worthwhile Support or a meaningful cumulative path. B10 does not yet score individual Supports or select the actual Support/Final-Main action; B11/B12 and B14 own those layers.
+
+B11 adds `BattleDirectSupportAnalyzer` and routes ordinary direct Support priority through the shared tactical layer. Bee and direct Worm placement use current round-modified values; Butterfly uses expected keep-better gain on its exact die and row; Water reroll uses expected replacement value and requires a positive named transition; Mulch uses expected stored-die roll plus the best currently legal placement and requires `WIN_FLIPPED`. Hypothetical analysis consumes no mechanical RNG. Pre-Battle Critter reserves are not applied during Battle. Ordinary Wisps retain card-specific intrinsic scoring, while the cross-player swap, immediate resolution, and two-step upgrade target remain explicitly deferred to B13. Worm commitment/enabling rules remain B12, and B14 still owns Support-versus-Final-Main orchestration.
 
 B1 verification:
 
@@ -384,16 +386,52 @@ Battle remains uncertified pending B11–B17 and Stage C.
 
 ## B11 — direct Support analysis
 
-Migrate direct Supports to shared tactical analysis:
+**COMPLETE.**
 
-- Bee;
-- Butterfly;
-- Water reroll;
-- Mulch;
-- ordinary direct Wisp effects;
-- other direct Support discovered in current source.
+`BattleDirectSupportAnalyzer` builds deterministic or expected realizations for
+ordinary direct Support candidates and evaluates them through
+`BattleActionAnalyzer`:
 
-Apply premium-resource gates.
+- Bee and direct Worm placement use current round-modified Critter value on the
+  exact target row;
+- Butterfly uses expected keep-better gain on the exact visible die and row;
+- Water reroll uses signed expected reroll gain on the exact visible die and
+  row;
+- Mulch uses the stored die's expected roll and the highest-Battle-Swing legal
+  placement.
+
+Water is categorically disqualified unless its expectation creates a positive
+named Battle transition. Mulch is categorically disqualified unless its
+expected best placement creates `WIN_FLIPPED`. Direct results expose
+`individuallyWorthwhile` for later B10/B14 orchestration. No hypothetical
+analysis consumes mechanical RNG or pre-commits actual post-roll placement.
+
+Direct Support priority now comes from shared Battle Swing, without applying
+pre-Battle Critter reserves. Card-local influences remain valid current-state
+synergies. Ordinary Wisps preserve card-specific intrinsic value and normal
+unplayed-Wisp VP opportunity cost. The current tactical Wisp actions are the
+special B13 cases: cross-player die swap, immediate Strike resolution, and
+two-step die-upgrade target selection. Worm commitment/enabling rules remain
+B12, and B14 still owns Support-versus-Final-Main orchestration.
+
+B11 focused verification:
+
+```text
+147 tests
+0 failures
+0 errors
+0 skipped
+```
+
+Full regression:
+
+```text
+unit:        1,074 passed
+integration:    72 passed
+simulation:     10 passed
+```
+
+Battle remains uncertified pending B12–B17 and Stage C.
 
 ## B12 — enabling Support analysis
 
