@@ -25,7 +25,7 @@ Stage B has begun.
 - [x] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
 - [x] B7 — First Main
 - [x] B8 — actual Battle die placement
-- [ ] B9 — Support capacity
+- [x] B9 — Support capacity
 - [ ] B10 — Support reachability + continuation
 - [ ] B11 — direct Support analysis
 - [ ] B12 — enabling Support analysis
@@ -56,6 +56,8 @@ B6 adds `BattleVpImpact` and `BattleActionAnalyzer`. `BattleVpImpact` projects t
 B7 connects the shared tactical layer to Step-4 First Main. Draw now evaluates the known next die by expected roll and best currently legal expected placement, without consuming mechanical RNG or pre-committing the eventual row. Existing Plant/Round intrinsic scores remain intact; target-dependent Plant/Effect tactical projection stays intentionally deferred to B15 so the top-level action and downstream legal target request can share one implementation rather than duplicate target rules.
 
 B8 routes actual post-roll placement through that same shared tactical layer. `BattlePlacementPriority` evaluates the known rolled value in `ACTUAL` mode against each row in the current request and fresh Battle snapshot. `BaselineScoreEngine` uses `StrategyRandomizer` only when the resulting Battle Swing scores tie exactly. Existing rule-mandated placement remains a direct engine operation with no strategy call.
+
+B9 adds reusable `BattleSupportCapacityAssessor` and `BattleSupportCapacity` concepts. Own capacity is normalized from current legal Step-5 choices so targets do not multiply a resource's move count. Opponent capacity uses public board state only, treats hidden Wisp identities as unknown, excludes unusable visible resources and Done players, and reports the maximum among a caller-supplied relevant Live-Threat set rather than summing opponents as a coalition. Identifying close rows and the relevant opponent set remains a later continuation/tempo checkpoint.
 
 B1 verification:
 
@@ -309,9 +311,30 @@ Battle remains uncertified pending B9–B17 and Stage C.
 
 ## B9 — Support capacity
 
-Count Support move resources rather than legal target multiplicity.
+**COMPLETE.**
 
-Support own and public-opponent capacity, relevant Live-Threat opponents, and hidden-Wisp information boundaries.
+`BattleSupportCapacityAssessor` returns normalized counts for Wisps, Water, usable Mulch, Worms, Bees, and face-up usable Butterflies. Each physical resource instance contributes at most one remaining Support move even when it produces several legal targets or action forms:
+
+- Water reroll and Refresh choices share the same Water pool;
+- Worm placement and Plant Flip choices share the same Worm pool;
+- Bee row targets share the same Bee pool;
+- each face-up Butterfly counts once across all target dice;
+- each playable own Wisp and usable Mulch token counts once.
+
+Own capacity uses the current legal Step-5 choices, preserving exact effect and target legality. Public opponent capacity uses only visible resources and Battle state. Hidden opponent Wisp identities are never inferred; each held Wisp counts as one potential move. Done opponents have zero remaining capacity.
+
+The assessment accepts the relevant Live-Threat opponent IDs from its caller, validates that they identify active opponents, and exposes both their individual capacities and the strongest capacity. It deliberately does not add opponents together. Determining close contested rows and which Live Threats are relevant remains outside B9.
+
+B9 focused verification covered the five direct capacity-contract tests plus the shared Battle analysis/strategy package, Decision Context creation, and the Battle action coordinator:
+
+```text
+70 tests
+0 failures
+0 errors
+0 skipped
+```
+
+Battle remains uncertified pending B10–B17 and Stage C.
 
 ## B10 — Support reachability + continuation
 

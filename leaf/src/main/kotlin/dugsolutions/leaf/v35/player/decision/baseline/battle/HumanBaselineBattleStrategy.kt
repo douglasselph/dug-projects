@@ -18,8 +18,9 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * Battle Stage A has completed designer review. The approved target behavior separates
  * multiplayer row facts, immediate Battle Swing, pre-random expectation versus
  * post-random actual information, and the Step-5 Support/Final-Main continuation
- * decision. B7 applies the shared tactical layer to Step-4 Draw evaluation, and B8
- * reuses it after the roll for actual die placement. Later checkpoints continue
+ * decision. B7 applies the shared tactical layer to Step-4 Draw evaluation, B8
+ * reuses it after the roll for actual die placement, and B9 supplies normalized
+ * Support-capacity facts for later continuation decisions. Later checkpoints continue
  * migrating Support/Final-Main orchestration and target-dependent Effect alignment.
  *
  * Durable behavior contract:
