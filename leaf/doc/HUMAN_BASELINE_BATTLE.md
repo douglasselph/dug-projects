@@ -14,7 +14,7 @@ The incremental implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PL
 
 Battle Stage A (A1–A6) is complete. The current source was inventoried before this contract was approved.
 
-B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. Plant/Round intrinsic scoring remains intact; target-dependent Plant/Effect tactical projection is intentionally deferred to the later action/target-alignment checkpoint. Battle is **not yet certified**.
+B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. B10 adds cumulative ordinary Support reachability from legal Bees and expected keep-better Butterfly improvement, plus a fresh continuation assessment that combines the meaningful-Strike-VP path with the later direct-Support usefulness result. Plant/Round intrinsic scoring remains intact; target-dependent Plant/Effect tactical projection is intentionally deferred to the later action/target-alignment checkpoint. Battle is **not yet certified**.
 
 Battle currently exposes three strategy hooks:
 
@@ -306,6 +306,12 @@ Primary cumulative resources:
 
 Do not generically add Worm, Water, Mulch, or Wisp into this pool; those use dedicated rules.
 
+`BattleSupportReachability` implements this deliberately limited estimate. It
+projects every legal Bee at the actor's current Bee value and allocates legal
+Butterfly moves by expected keep-better gain without rolling. Repeated Butterfly
+potential is capped by visible die headroom, and secured rows are omitted from
+further cumulative commitment analysis.
+
 A separate Strike-VP impact measure is used as a spending/reachability gate.
 
 Current default:
@@ -315,6 +321,13 @@ minimum meaningful Strike-VP gain = 2
 ```
 
 An individually worthwhile Support can still justify continuing even when cumulative +2 VP is not reachable.
+
+`BattleContinuationAssessor` combines these facts on a fresh Step-5 snapshot. It
+reports Final Main when there are no relevant rows, every relevant row is secured,
+no Support moves remain, or neither an individually worthwhile Support nor a
+meaningful cumulative path exists. It reports continuation for either worthwhile
+case. Direct/enabling Support analysis supplies the individual-usefulness input in
+B11/B12; selection between the surviving Support and Final Main remains B14.
 
 ## 10. Support capacity and tempo
 

@@ -26,7 +26,7 @@ Stage B has begun.
 - [x] B7 — First Main
 - [x] B8 — actual Battle die placement
 - [x] B9 — Support capacity
-- [ ] B10 — Support reachability + continuation
+- [x] B10 — Support reachability + continuation
 - [ ] B11 — direct Support analysis
 - [ ] B12 — enabling Support analysis
 - [ ] B13 — special Battle effect evaluators
@@ -58,6 +58,8 @@ B7 connects the shared tactical layer to Step-4 First Main. Draw now evaluates t
 B8 routes actual post-roll placement through that same shared tactical layer. `BattlePlacementPriority` evaluates the known rolled value in `ACTUAL` mode against each row in the current request and fresh Battle snapshot. `BaselineScoreEngine` uses `StrategyRandomizer` only when the resulting Battle Swing scores tie exactly. Existing rule-mandated placement remains a direct engine operation with no strategy call.
 
 B9 adds reusable `BattleSupportCapacityAssessor` and `BattleSupportCapacity` concepts. Own capacity is normalized from current legal Step-5 choices so targets do not multiply a resource's move count. Opponent capacity uses public board state only, treats hidden Wisp identities as unknown, excludes unusable visible resources and Done players, and reports the maximum among a caller-supplied relevant Live-Threat set rather than summing opponents as a coalition. Identifying close rows and the relevant opponent set remains a later continuation/tempo checkpoint.
+
+B10 adds `BattleSupportReachability`, `BattleContinuationAssessor`, and the immutable assessment results consumed by later Support orchestration. Reachability projects the actor's normalized legal Bee capacity at current Bee value plus expected keep-better Butterfly improvement, caps repeated reroll potential at visible die headroom, and deliberately excludes Worm, Water, Mulch, and Wisp from generic additive power. The continuation gate uses the policy-supplied minimum meaningful Strike-VP gain and succeeds for either an individually worthwhile Support or a meaningful cumulative path. B10 does not yet score individual Supports or select the actual Support/Final-Main action; B11/B12 and B14 own those layers.
 
 B1 verification:
 
@@ -338,9 +340,23 @@ Battle remains uncertified pending B10–B17 and Stage C.
 
 ## B10 — Support reachability + continuation
 
-Implement limited cumulative reachability primarily from Bees and expected Butterfly improvement.
+**COMPLETE.**
 
-Implement the continuation gate:
+`BattleSupportReachability` makes the deliberately limited optimistic aggregate
+judgment permitted by the Battle contract. For every available non-secured row it
+combines all currently legal Bees at current Bee value with expected keep-better
+Butterfly improvement. Multiple Butterfly moves may contribute, but their aggregate
+cannot exceed the visible dice's physical headroom. No mechanical RNG is consumed.
+
+Worm, Water, Mulch, and Wisp capacity is not added to generic row power. Those
+resources remain available for the dedicated direct/enabling rules in B11/B12.
+
+Each row result retains its deterministic/expected `BattleActionAnalysis`, projected
+Strike-VP gain, and policy-derived meaningful threshold. The default remains +2 VP,
+while injected policy overrides flow through the same seam.
+
+`BattleContinuationAssessor` rebuilds available row facts, normalized own capacity,
+and cumulative reachability on every invocation. Its result continues when:
 
 ```text
 individually worthwhile Support
@@ -348,7 +364,23 @@ OR
 cumulative path with meaningful Strike-VP gain
 ```
 
-If every row is secured or no worthwhile path remains, commit Final Main.
+It reports Final Main when no relevant rows exist, every relevant row is secured,
+no Support moves remain, or no worthwhile path remains. The individually-worthwhile
+input is intentionally supplied by B11/B12; B14 will turn this factual assessment
+into the actual Step-5 choice.
+
+B10 focused verification covers the eleven direct reachability/continuation tests
+plus the shared Battle analysis/strategy package, Decision Context creation, and the
+Battle action coordinator:
+
+```text
+81 tests
+0 failures
+0 errors
+0 skipped
+```
+
+Battle remains uncertified pending B11–B17 and Stage C.
 
 ## B11 — direct Support analysis
 
