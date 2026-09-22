@@ -21,7 +21,7 @@ Stage B has begun.
 - [x] B2 — Done state in engine / decision context
 - [x] B3 — Battle Step-5 loop safety
 - [x] B4 — `BattleRowAssessor`
-- [ ] B5 — `BattleSwingEvaluator`
+- [x] B5 — `BattleSwingEvaluator`
 - [ ] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
 - [ ] B7 — First Main
 - [ ] B8 — actual Battle die placement
@@ -48,6 +48,8 @@ B2 moves Done into authoritative Battle-round state and exposes it through immut
 B3 adds independent caller safety to the repeated Step-5 loop. It rejects a repeated per-player decision state and also enforces a generous per-player hard ceiling, while treating real changes made by other players as legitimate progress.
 
 B4 adds the shared multiplayer-aware `BattleRowAssessor`. It separates actual Strike winner/Score-Benchmark facts from Live-Threat/Done information and derives temporary `securedForNow` / `potentiallyHopeless` observations through `HumanBaselinePolicy`.
+
+B5 adds `BattleSwingEvaluator`, the shared factual tactical valuation layer. It implements the 500/400/300/200/100 transition hierarchy from the policy transition scale, one strongest transition base per row, raw margin movement, symmetric reverse-scored harm, uncapped multi-row aggregation, and `Double` expected values. It does not yet change First Main, Support, Effect targeting, or actual die-placement behavior.
 
 B1 verification:
 
@@ -203,19 +205,46 @@ focused:
 
 ## B5 — `BattleSwingEvaluator`
 
-Implement:
+**COMPLETE.**
+
+`BattleSwingEvaluator` now implements the approved shared tactical transition model:
 
 ```text
-WIN_FLIPPED
-TIE_ACHIEVED
-WOUND_PREVENTED
-WOUND_CREATED
-SECURED_CREATED
+WIN_FLIPPED       tier 5
+TIE_ACHIEVED      tier 4
+WOUND_PREVENTED   tier 3
+WOUND_CREATED     tier 2
+SECURED_CREATED   tier 1
+NONE              tier 0
 ```
 
-with transition scale 100, one strongest transition base per row, raw swing, symmetric reverse-scored harm, multi-row aggregation, and `Double` expected values.
+The tier is multiplied by `HumanBaselinePolicy.battleTransitionScale(context)`, so the default scale of 100 yields bases 500/400/300/200/100. Only the strongest positive transition contributes a base for one row. Ordinary Score-Benchmark margin movement provides the raw detail; `SECURED_CREATED` instead uses Live-Threat margin movement because secured status is defined against opponents who can still respond.
 
-Add exhaustive boundary/collateral tests.
+Harmful movement is scored as the negative of what reversing the same movement would score. This gives swaps and collateral damage a symmetric cost without a second adverse-transition table. Changes that cross no named boundary receive only their signed raw margin movement.
+
+The evaluator accepts `BattleRowAssessment` directly and also exposes `BattleSwingState` with `Double` margins so later expected-value analysis can preserve values such as D8 = 4.5 without early rounding. `BattleActionSwing` sums one contribution per affected row with no default multi-row cap.
+
+B5 remains a factual tactical layer only: it does not decide resource conservation, continuation, tempo, or whether a row deserves attention. Those remain higher-level Battle decisions.
+
+B5 verification:
+
+```text
+compileKotlin
+    BUILD SUCCESSFUL
+
+compileTestKotlin
+    BUILD SUCCESSFUL
+
+focused:
+    BattleSwingEvaluatorTest
+    BattleRowAssessorTest
+    HumanBaselinePolicyTest
+
+    40 tests
+    0 failures
+    0 errors
+    0 skipped
+```
 
 ## B6 — `BattleVpImpact` + `BattleActionAnalyzer`
 

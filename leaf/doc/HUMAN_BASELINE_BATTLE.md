@@ -14,7 +14,7 @@ The incremental implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PL
 
 Battle Stage A (A1–A6) is complete. The current source was inventoried before this contract was approved.
 
-B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. The existing tactical Battle decision behavior is **not yet certified** and later Stage-B checkpoints must implement this contract before Stage C can certify it.
+B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. The existing tactical Battle decision behavior is **not yet certified** and later Stage-B checkpoints must consume these shared facts before Stage C can certify it.
 
 Battle currently exposes three strategy hooks:
 
