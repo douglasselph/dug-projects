@@ -84,6 +84,19 @@ class BattleActionCoordinatorTest {
         assertEquals(listOf(p1.id, p2.id), result.firstMainActions.map { it.playerId })
         assertEquals(listOf(p2.id, p1.id), result.finalMainActions.map { it.playerId })
         assertEquals(1, result.supportActions.size)
+        assertEquals(2, p1Strategy.turnRequests.size)
+        assertTrue(requireNotNull(p1Strategy.turnRequests[0].context.battle).donePlayerIds.isEmpty())
+        assertEquals(
+            setOf(p2.id),
+            requireNotNull(p1Strategy.turnRequests[1].context.battle).donePlayerIds
+        )
+        assertTrue(requireNotNull(p2Strategy.turnRequests.single().context.battle).donePlayerIds.isEmpty())
+        assertEquals(setOf(p1.id, p2.id), fixture.battleState.donePlayerIds)
+        assertTrue(
+            fixture.effects.actorDoneWhenExecuted
+                .filter { it.first == GameEffect.GAIN_TWO_WORMS }
+                .all { !it.second }
+        )
         assertEquals(
             listOf(Critter.BEE),
             fixture.battleState.grid.square(p1.id, StrikeRow.TOP).critters
@@ -282,6 +295,7 @@ class BattleActionCoordinatorTest {
         val turns = ArrayDeque<BattleTurnAction>()
         var placementRow: StrikeRow = StrikeRow.TOP
         val placementRequests = mutableListOf<ChooseBattleDiePlacementRequest>()
+        val turnRequests = mutableListOf<ChooseBattleTurnActionRequest>()
 
         override fun chooseFirstMainAction(
             request: ChooseBattleFirstMainActionRequest
@@ -294,6 +308,7 @@ class BattleActionCoordinatorTest {
             request: ChooseBattleTurnActionRequest
         ): BattleTurnAction {
             log += "$name:turn:${request.passNumber}"
+            turnRequests += request
             return turns.removeFirst()
         }
 
@@ -329,11 +344,15 @@ class BattleActionCoordinatorTest {
 
     private class RecordingEffects : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
+        val actorDoneWhenExecuted = mutableListOf<Pair<GameEffect, Boolean>>()
 
         override fun canExecute(request: GameEffectRequest): Boolean = true
 
         override fun execute(request: GameEffectRequest) {
             requests += request
+            request.battleState?.let { battleState ->
+                actorDoneWhenExecuted += request.effect to battleState.isDone(request.actor.id)
+            }
         }
     }
 

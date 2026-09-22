@@ -192,6 +192,7 @@ internal object DecisionContextFactory {
     private fun battleView(state: BattleState): BattleView =
         BattleView(
             playerOrder = state.playerIdsInBattleOrder,
+            donePlayerIds = state.donePlayerIds,
             rows = StrikeRow.entries.map { row ->
                 BattleRowView(
                     row = row,

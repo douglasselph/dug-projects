@@ -70,6 +70,7 @@ class DecisionContextFactoryTest {
         battle.grid.placeCritter(p1, StrikeRow.TOP, Critter.BEE)
         battle.grid.withdrawPlayer(p1.id, StrikeRow.BOTTOM)
         battle.grid.closeRow(StrikeRow.MIDDLE)
+        battle.markDone(p2.id)
 
         val context = DecisionContextFactory.create(
             game = game,
@@ -85,6 +86,9 @@ class DecisionContextFactoryTest {
         val bottom = cbattle.row(StrikeRow.BOTTOM)
 
         assertEquals(listOf(p1.id, p2.id), cbattle.playerOrder)
+        assertEquals(setOf(p2.id), cbattle.donePlayerIds)
+        assertTrue(cbattle.isDone(p2.id))
+        assertFalse(cbattle.isDone(p1.id))
         assertEquals(listOf(8), p1TopView.dice.map { it.value })
         assertEquals(listOf(1), p1TopView.dice.map { it.handIndex })
         assertEquals(8, p1TopView.dieTotal)
@@ -93,9 +97,11 @@ class DecisionContextFactoryTest {
         assertTrue(middle.closed)
         assertTrue(requireNotNull(bottom.forPlayer(p1.id)).withdrawn)
 
-        // The snapshot stores scalar values, not live Die references.
+        // The snapshot stores scalar values, not live Die or Done-state references.
         p1Top.adjustTo(1)
+        battle.markDone(p1.id)
         assertEquals(8, p1TopView.dice.single().value)
+        assertEquals(setOf(p2.id), cbattle.donePlayerIds)
     }
 
     private fun player(id: Int, dice: PlayerDice): Player =

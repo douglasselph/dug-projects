@@ -130,16 +130,7 @@ baseline/reward/CritterRewardPriorityTest.kt
 
 Decision hook: choose which legal Critter to gain after a qualifying roll.
 
-**Stage status:** Stage A designer review (A1–A6) is complete and B1 has established the durable contract/policy seam. Tactical Battle behavior is still being implemented and is **not yet certified**.
-
-Approved Battle behavior is documented in:
-
-```text
-doc/HUMAN_BASELINE_BATTLE.md
-doc/HUMAN_BASELINE_BATTLE_PLAN.md
-```
-
-The approved design distinguishes Score Benchmark from Live Threat, uses multiplayer-aware Battle Swing transitions on a 100-point tier scale, uses expectation before RNG and actual values after RNG, and treats Step-5 continuation as “is there still a worthwhile fight/support path?” rather than a flat Support-vs-Final-Main score comparison.
+**Certification status:** implemented; designer behavior review still required.
 
 ### 3.2 Wound Resolution
 
@@ -158,16 +149,7 @@ baseline/wound/WoundPriorityTest.kt
 
 Decision hook: choose among the legal Flip/Snip outcomes already computed by the rules engine.
 
-**Stage status:** Stage A designer review (A1–A6) is complete and B1 has established the durable contract/policy seam. Tactical Battle behavior is still being implemented and is **not yet certified**.
-
-Approved Battle behavior is documented in:
-
-```text
-doc/HUMAN_BASELINE_BATTLE.md
-doc/HUMAN_BASELINE_BATTLE_PLAN.md
-```
-
-The approved design distinguishes Score Benchmark from Live Threat, uses multiplayer-aware Battle Swing transitions on a 100-point tier scale, uses expectation before RNG and actual values after RNG, and treats Step-5 continuation as “is there still a worthwhile fight/support path?” rather than a flat Support-vs-Final-Main score comparison.
+**Certification status:** implemented; designer behavior review still required.
 
 ### 3.3 Graft Placement
 
@@ -186,16 +168,7 @@ baseline/common/GraftTopologyEvaluatorTest.kt
 
 Decision hook: choose one legal physical graft position for a newly gained Plant card.
 
-**Stage status:** Stage A designer review (A1–A6) is complete and B1 has established the durable contract/policy seam. Tactical Battle behavior is still being implemented and is **not yet certified**.
-
-Approved Battle behavior is documented in:
-
-```text
-doc/HUMAN_BASELINE_BATTLE.md
-doc/HUMAN_BASELINE_BATTLE_PLAN.md
-```
-
-The approved design distinguishes Score Benchmark from Live Threat, uses multiplayer-aware Battle Swing transitions on a 100-point tier scale, uses expectation before RNG and actual values after RNG, and treats Step-5 continuation as “is there still a worthwhile fight/support path?” rather than a flat Support-vs-Final-Main score comparison.
+**Certification status:** implemented; designer behavior review still required.
 
 ### 3.4 Cultivation — CERTIFIED
 
@@ -279,7 +252,7 @@ Direct tests begin with:
 baseline/battle/HumanBaselineBattleStrategyTest.kt
 ```
 
-**Stage status:** Stage A designer review (A1–A6) is complete and B1 has established the durable contract/policy seam. Tactical Battle behavior is still being implemented and is **not yet certified**.
+**Stage status:** Stage A designer review (A1–A6) is complete. B1 established the durable contract/policy seam, and B2 now exposes authoritative Done state through Battle decision context. Tactical Battle behavior is still being implemented and is **not yet certified**.
 
 Approved Battle behavior is documented in:
 
@@ -375,16 +348,7 @@ Direct tests:
 baseline/support/HumanBaselineSupportStrategyTest.kt
 ```
 
-**Stage status:** Stage A designer review (A1–A6) is complete and B1 has established the durable contract/policy seam. Tactical Battle behavior is still being implemented and is **not yet certified**.
-
-Approved Battle behavior is documented in:
-
-```text
-doc/HUMAN_BASELINE_BATTLE.md
-doc/HUMAN_BASELINE_BATTLE_PLAN.md
-```
-
-The approved design distinguishes Score Benchmark from Live Threat, uses multiplayer-aware Battle Swing transitions on a 100-point tier scale, uses expectation before RNG and actual values after RNG, and treats Step-5 continuation as “is there still a worthwhile fight/support path?” rather than a flat Support-vs-Final-Main score comparison.
+**Certification status:** implemented; designer behavior review still required.
 
 ### 3.8 Effect Choices
 

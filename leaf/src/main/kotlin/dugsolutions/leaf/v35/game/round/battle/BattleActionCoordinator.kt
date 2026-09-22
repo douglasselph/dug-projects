@@ -135,13 +135,13 @@ class BattleActionCoordinator(
         }
 
         // Step 5 — repeated passes, skipping players after their final Main.
-        val active =
-            battleState.playerIdsInBattleOrder.toMutableSet()
+        // Done is authoritative Battle-round state so every later DecisionContext
+        // can observe which opponents are no longer able to act.
         var passNumber = 1
 
-        while (active.isNotEmpty()) {
+        while (battleState.donePlayerIds.size < battleState.playerIdsInBattleOrder.size) {
             battleState.playersInBattleOrder.forEach { player ->
-                if (player.id !in active) return@forEach
+                if (battleState.isDone(player.id)) return@forEach
 
                 val finalMains =
                     mainActions(game, player, roundCard, battleState)
@@ -205,7 +205,7 @@ class BattleActionCoordinator(
                                 stage = BattleMainActionStage.FINAL,
                                 action = chosen.action
                             )
-                        active.remove(player.id)
+                        battleState.markDone(player.id)
                         recordMainAction(
                             game = game,
                             player = player,

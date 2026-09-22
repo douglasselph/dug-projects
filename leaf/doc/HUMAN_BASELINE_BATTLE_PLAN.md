@@ -18,7 +18,7 @@ Battle Stage A is complete:
 Stage B has begun.
 
 - [x] B1 — durable Battle plan + policy foundation
-- [ ] B2 — Done state in engine / decision context
+- [x] B2 — Done state in engine / decision context
 - [ ] B3 — Battle Step-5 loop safety
 - [ ] B4 — `BattleRowAssessor`
 - [ ] B5 — `BattleSwingEvaluator`
@@ -42,6 +42,8 @@ Stage C:
 - [ ] C3 — mark Battle CERTIFIED and package final patch
 
 B1 intentionally changes no tactical Battle behavior.
+
+B2 moves Done into authoritative Battle-round state and exposes it through immutable decision context. It still does not implement tempo intelligence or tactical Battle scoring.
 
 B1 verification:
 
@@ -84,13 +86,42 @@ Confirmed policy defaults:
 
 ## B2 — Done state in engine / decision context
 
-Move Done from coordinator-local knowledge into authoritative Battle-round state.
+**COMPLETE.**
 
-Expose immutable Done information through `BattleView` / `DecisionContext`.
+Done is now authoritative player-level state on `BattleState` rather than a coordinator-local active-set fact. `BattleState` exposes immutable `donePlayerIds`, `isDone(playerId)`, and a guarded `markDone(playerId)` mutation API.
 
-A player becomes Done only after Final Main completely resolves.
+`BattleView` copies `donePlayerIds` into every Battle `DecisionContext`, so strategies can observe who can no longer take Battle turns without holding private strategy memory or a live mutable state reference.
 
-Add engine/context/coordinator tests. Do not implement tempo intelligence yet.
+`BattleActionCoordinator` now uses `BattleState.isDone(...)` to skip completed players and calls `markDone(...)` only **after** the selected Final Main Action has completely returned from execution. A Done player still participates in Strike state and remains targetable according to normal effect legality; B2 does not equate Done with withdrawal.
+
+Focused tests cover:
+
+- fresh/monotonic Done state and invalid duplicate/non-participant completion;
+- immutable Done snapshots in `DecisionContext`;
+- later Step-5 requests observing opponents who have become Done;
+- Final Main effect execution observing the actor as not-yet-Done until resolution returns.
+
+B2 intentionally does not implement tempo intelligence yet.
+
+B2 verification:
+
+```text
+compileKotlin
+    BUILD SUCCESSFUL
+
+compileTestKotlin
+    BUILD SUCCESSFUL
+
+focused:
+    BattleStateTest
+    DecisionContextFactoryTest
+    BattleActionCoordinatorTest
+
+    14 tests
+    0 failures
+    0 errors
+    0 skipped
+```
 
 ## B3 — Battle Step-5 loop safety
 

@@ -273,8 +273,13 @@ data class BattleRowView(
 
 data class BattleView(
     val playerOrder: List<PlayerId>,
+    /** Players whose Final Main Action has completely resolved this Battle. */
+    val donePlayerIds: Set<PlayerId> = emptySet(),
     val rows: List<BattleRowView>
 ) {
+    fun isDone(playerId: PlayerId): Boolean =
+        playerId in donePlayerIds
+
     fun row(row: StrikeRow): BattleRowView =
         requireNotNull(rows.firstOrNull { it.row == row }) {
             "Battle view does not contain row $row"

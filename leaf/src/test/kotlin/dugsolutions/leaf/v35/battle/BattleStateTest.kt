@@ -6,7 +6,9 @@ import dugsolutions.leaf.v35.player.PlayerId
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class BattleStateTest {
 
@@ -78,6 +80,42 @@ class BattleStateTest {
             p2Bottom,
             state.grid.square(PlayerId(2), StrikeRow.BOTTOM).dice.single()
         )
+    }
+
+
+    @Test
+    fun doneStateStartsEmptyAndTracksCompletedFinalMainPlayers() {
+        val p1 = BattleTestFixture.player(1)
+        val p2 = BattleTestFixture.player(2)
+        val state = BattleState(listOf(p1, p2))
+        val before = state.donePlayerIds
+
+        assertTrue(before.isEmpty())
+        assertFalse(state.isDone(p1.id))
+
+        state.markDone(p1.id)
+
+        assertTrue(state.isDone(p1.id))
+        assertFalse(state.isDone(p2.id))
+        assertEquals(setOf(p1.id), state.donePlayerIds)
+        // Public observations are defensive snapshots, not mutable/live engine state.
+        assertTrue(before.isEmpty())
+    }
+
+    @Test
+    fun markDoneRejectsNonParticipantAndDuplicateCompletion() {
+        val p1 = BattleTestFixture.player(1)
+        val state = BattleState(listOf(p1, BattleTestFixture.player(2)))
+
+        assertFailsWith<InvalidGameStateException> {
+            state.markDone(PlayerId(99))
+        }
+
+        state.markDone(p1.id)
+
+        assertFailsWith<InvalidGameStateException> {
+            state.markDone(p1.id)
+        }
     }
 
     @Test
