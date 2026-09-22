@@ -12,7 +12,7 @@ import kotlin.math.abs
  * This helper is deliberately information-boundary agnostic: callers say whether
  * [dieValue] is an EXPECTED pre-roll value or an ACTUAL post-roll value. It never
  * rolls a die and never consumes mechanical RNG. B7 uses EXPECTED analysis for the
- * First-Main Draw comparison; B8 reuses the same projection for actual placement.
+ * First-Main Draw comparison; B8 uses the same projection for actual placement.
  */
 class BattleDiePlacementAnalyzer(
     private val policy: HumanBaselinePolicy = HumanBaselinePolicy(),

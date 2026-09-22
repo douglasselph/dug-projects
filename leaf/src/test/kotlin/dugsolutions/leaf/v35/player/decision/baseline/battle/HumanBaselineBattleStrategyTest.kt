@@ -10,9 +10,12 @@ import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.creature.CreaturePosition
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
+import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleDiePlacementRequest
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
 import dugsolutions.leaf.v35.player.decision.context.BattleDieView
@@ -22,6 +25,8 @@ import dugsolutions.leaf.v35.player.decision.context.BattleView
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -29,6 +34,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class HumanBaselineBattleStrategyTest {
     @Test
@@ -140,6 +146,90 @@ class HumanBaselineBattleStrategyTest {
         assertEquals(BattleMainAction.RoundEffect1, chosen)
     }
 
+    @Test
+    fun `actual placement uses rolled value rather than die expectation`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val randomizer = RecordingRandomizer(result = 1)
+        val context = placementContext(
+            actorId,
+            opponentId,
+            placementRow(StrikeRow.TOP, actorId, opponentId, actorTotal = 0, opponentTotal = 5),
+            placementRow(StrikeRow.MIDDLE, actorId, opponentId, actorTotal = 0, opponentTotal = 2)
+        )
+
+        val chosen = HumanBaselineBattleStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        ).chooseDiePlacement(
+            ChooseBattleDiePlacementRequest(
+                die = HandDieChoice(index = 0, sides = 20, value = 1),
+                reason = BattleDiePlacementReason.MAIN_DRAW,
+                legalRows = listOf(StrikeRow.TOP, StrikeRow.MIDDLE),
+                context = context
+            )
+        )
+
+        assertEquals(StrikeRow.TOP, chosen)
+        assertTrue(randomizer.bounds.isEmpty())
+    }
+
+    @Test
+    fun `actual placement reevaluates each fresh Battle context`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val strategy = HumanBaselineBattleStrategy()
+        val request: (DecisionContext) -> ChooseBattleDiePlacementRequest = { context ->
+            ChooseBattleDiePlacementRequest(
+                die = HandDieChoice(index = 0, sides = 6, value = 3),
+                reason = BattleDiePlacementReason.MULCH,
+                legalRows = listOf(StrikeRow.TOP, StrikeRow.MIDDLE),
+                context = context
+            )
+        }
+        val topNeedsDie = placementContext(
+            actorId,
+            opponentId,
+            placementRow(StrikeRow.TOP, actorId, opponentId, actorTotal = 5, opponentTotal = 7),
+            placementRow(StrikeRow.MIDDLE, actorId, opponentId, actorTotal = 10, opponentTotal = 1)
+        )
+        val middleNeedsDie = placementContext(
+            actorId,
+            opponentId,
+            placementRow(StrikeRow.TOP, actorId, opponentId, actorTotal = 10, opponentTotal = 1),
+            placementRow(StrikeRow.MIDDLE, actorId, opponentId, actorTotal = 5, opponentTotal = 7)
+        )
+
+        assertEquals(StrikeRow.TOP, strategy.chooseDiePlacement(request(topNeedsDie)))
+        assertEquals(StrikeRow.MIDDLE, strategy.chooseDiePlacement(request(middleNeedsDie)))
+    }
+
+    @Test
+    fun `exact actual placement tie uses StrategyRandomizer`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val randomizer = RecordingRandomizer(result = 1)
+        val context = placementContext(
+            actorId,
+            opponentId,
+            placementRow(StrikeRow.TOP, actorId, opponentId, actorTotal = 1, opponentTotal = 3),
+            placementRow(StrikeRow.MIDDLE, actorId, opponentId, actorTotal = 1, opponentTotal = 3)
+        )
+
+        val chosen = HumanBaselineBattleStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        ).chooseDiePlacement(
+            ChooseBattleDiePlacementRequest(
+                die = HandDieChoice(index = 0, sides = 6, value = 3),
+                reason = BattleDiePlacementReason.EFFECT,
+                legalRows = listOf(StrikeRow.TOP, StrikeRow.MIDDLE),
+                context = context
+            )
+        )
+
+        assertEquals(StrikeRow.MIDDLE, chosen)
+        assertEquals(listOf(2), randomizer.bounds)
+    }
+
 
     @Test
     fun `Bee-loved Bloom influence can preserve Bee during Battle Support`() {
@@ -233,6 +323,56 @@ class HumanBaselineBattleStrategyTest {
         )
     }
 
+    private fun placementContext(
+        actorId: PlayerId,
+        opponentId: PlayerId,
+        vararg rows: BattleRowView
+    ): DecisionContext =
+        DecisionContext.EMPTY.copy(
+            phase = RoundCardType.BATTLE,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(id = actorId)
+            ),
+            battle = BattleView(
+                playerOrder = listOf(actorId, opponentId),
+                rows = rows.toList()
+            )
+        )
+
+    private fun placementRow(
+        row: StrikeRow,
+        actorId: PlayerId,
+        opponentId: PlayerId,
+        actorTotal: Int,
+        opponentTotal: Int
+    ): BattleRowView =
+        BattleRowView(
+            row = row,
+            closed = false,
+            players = listOf(
+                BattlePlayerRowView(
+                    actorId,
+                    row,
+                    emptyList(),
+                    emptyList(),
+                    actorTotal,
+                    0,
+                    actorTotal,
+                    false
+                ),
+                BattlePlayerRowView(
+                    opponentId,
+                    row,
+                    emptyList(),
+                    emptyList(),
+                    opponentTotal,
+                    0,
+                    opponentTotal,
+                    false
+                )
+            )
+        )
+
     private fun beeLovedView() = CreatureCardView(
         id = CreatureCardId(99),
         name = "Flower_14_01",
@@ -255,4 +395,15 @@ class HumanBaselineBattleStrategyTest {
         secondEffect = RoundCardEffect("y", "", "", "", null, GameEffect.GAIN_ONE_VP),
         backImage = ""
     )
+
+    private class RecordingRandomizer(
+        private val result: Int
+    ) : StrategyRandomizer {
+        val bounds = mutableListOf<Int>()
+
+        override fun nextInt(until: Int): Int {
+            bounds += until
+            return result
+        }
+    }
 }

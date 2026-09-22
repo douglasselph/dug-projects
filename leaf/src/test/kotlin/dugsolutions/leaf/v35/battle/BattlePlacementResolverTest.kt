@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.player.dice.PlayerDice
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class BattlePlacementResolverTest {
@@ -40,6 +41,26 @@ class BattlePlacementResolverTest {
         assertEquals(BattleDiePlacementReason.MAIN_DRAW, strategy.request!!.reason)
         assertEquals(8, strategy.request!!.die.sides)
         assertEquals(6, strategy.request!!.die.value)
+    }
+
+    @Test
+    fun placeNewHandDieInRow_keepsRuleMandatedPlacementNonStrategic() {
+        val die = BattleTestFixture.die(8, 6)
+        val strategy = RowStrategy(StrikeRow.BOTTOM)
+        val player = player(1, strategy, die)
+        val other = BattleTestFixture.player(2)
+        val state = BattleState(listOf(player, other))
+
+        val placement = BattlePlacementResolver().placeNewHandDieInRow(
+            battleState = state,
+            player = player,
+            die = die,
+            row = StrikeRow.MIDDLE
+        )
+
+        assertEquals(StrikeRow.MIDDLE, placement.row)
+        assertEquals(StrikeRow.MIDDLE, state.grid.locationOf(die)?.row)
+        assertNull(strategy.request)
     }
 
     @Test

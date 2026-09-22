@@ -18,9 +18,9 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * Battle Stage A has completed designer review. The approved target behavior separates
  * multiplayer row facts, immediate Battle Swing, pre-random expectation versus
  * post-random actual information, and the Step-5 Support/Final-Main continuation
- * decision. B7 now applies the shared tactical layer to Step-4 Draw evaluation while later
- * checkpoints continue migrating actual placement, Support/Final-Main orchestration,
- * and target-dependent Effect alignment.
+ * decision. B7 applies the shared tactical layer to Step-4 Draw evaluation, and B8
+ * reuses it after the roll for actual die placement. Later checkpoints continue
+ * migrating Support/Final-Main orchestration and target-dependent Effect alignment.
  *
  * Durable behavior contract:
  *
@@ -40,7 +40,8 @@ class HumanBaselineBattleStrategy(
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
-    internal val firstMainPriority: BattleFirstMainPriority = BattleFirstMainPriority(cardScorers, policy)
+    internal val firstMainPriority: BattleFirstMainPriority = BattleFirstMainPriority(cardScorers, policy),
+    internal val placementPriority: BattlePlacementPriority = BattlePlacementPriority(policy)
 ) : BattleStrategy {
     override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseFirstMainAction(request)
@@ -86,7 +87,7 @@ class HumanBaselineBattleStrategy(
             candidates = request.legalRows.map { row ->
                 DecisionCandidate(
                     choice = row,
-                    score = BattlePlacementPriority.score(request.context, row, request.die.value)
+                    score = placementPriority(request.context, row, request.die.value)
                 )
             },
             influenceRegistry = influenceRegistry
