@@ -23,7 +23,7 @@ Stage B has begun.
 - [x] B4 — `BattleRowAssessor`
 - [x] B5 — `BattleSwingEvaluator`
 - [x] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
-- [ ] B7 — First Main
+- [x] B7 — First Main
 - [ ] B8 — actual Battle die placement
 - [ ] B9 — Support capacity
 - [ ] B10 — Support reachability + continuation
@@ -52,6 +52,8 @@ B4 adds the shared multiplayer-aware `BattleRowAssessor`. It separates actual St
 B5 adds `BattleSwingEvaluator`, the shared factual tactical valuation layer. It implements the 500/400/300/200/100 transition hierarchy from the policy transition scale, one strongest transition base per row, raw margin movement, symmetric reverse-scored harm, uncapped multi-row aggregation, and `Double` expected values. It does not yet change First Main, Support, Effect targeting, or actual die-placement behavior.
 
 B6 adds `BattleVpImpact` and `BattleActionAnalyzer`. `BattleVpImpact` projects the actor's real immediate Strike VP using the same base-2-plus-wounds semantics as `StrikeResolver`. `BattleActionAnalyzer` combines row-level Battle Swing, projected Strike-VP change, and the separate positive-boundary `improvementStepCount` needed by later premium-resource gates. Candidate realizations explicitly record whether they are deterministic, expected-before-RNG, or actual-after-RNG. The layer remains factual: it does not yet decide whether to spend a resource, delay Final Main, or prefer one intrinsic card value over another.
+
+B7 connects the shared tactical layer to Step-4 First Main. Draw now evaluates the known next die by expected roll and best currently legal expected placement, without consuming mechanical RNG or pre-committing the eventual row. Existing Plant/Round intrinsic scores remain intact; target-dependent Plant/Effect tactical projection stays intentionally deferred to B15 so the top-level action and downstream legal target request can share one implementation rather than duplicate target rules. Actual post-roll placement remains B8.
 
 B1 verification:
 
@@ -274,9 +276,13 @@ The analyzer itself never consumes mechanical RNG and does not decide resource c
 
 ## B7 — First Main
 
-Refactor First Main to combine intrinsic action/card value with shared tactical analysis.
+**COMPLETE.**
 
-Implement Plant-vs-Draw, expected Draw placement, Round Effect tactical contribution, random-information timing, and no long-horizon conservation.
+Step-4 First Main now has a dedicated `BattleFirstMainPriority`. Existing Plant and Round-Effect scores remain the intrinsic baseline value, while Draw adds shared tactical analysis using the expected value of the next legally drawn die and its best current legal expected placement. The expected analysis uses `BattleActionAnalyzer`/`BattleSwingEvaluator`, preserves half-point die expectations, and never consumes mechanical RNG.
+
+The expected best row justifies whether Draw is attractive; it does **not** pre-commit the actual rolled die to that row. B8 will route the existing post-roll `chooseDiePlacement` hook through the same placement analyzer using the actual value and fresh context.
+
+Target-dependent Plant/Effect projection is intentionally deferred to B15. The First-Main request does not contain those downstream target choices, so B7 does not duplicate Effect legality/target logic merely to manufacture a top-level projection. Existing intrinsic/contextual Plant scores therefore remain active until action/target alignment is implemented against the real Effect requests.
 
 ## B8 — actual Battle die placement
 

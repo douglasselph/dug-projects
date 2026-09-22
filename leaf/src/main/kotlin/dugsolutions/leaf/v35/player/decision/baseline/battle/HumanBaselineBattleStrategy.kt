@@ -18,8 +18,9 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * Battle Stage A has completed designer review. The approved target behavior separates
  * multiplayer row facts, immediate Battle Swing, pre-random expectation versus
  * post-random actual information, and the Step-5 Support/Final-Main continuation
- * decision. B1 only establishes the shared policy/documentation seam; the tactical
- * implementation remains intentionally unchanged until later Battle checkpoints.
+ * decision. B7 now applies the shared tactical layer to Step-4 Draw evaluation while later
+ * checkpoints continue migrating actual placement, Support/Final-Main orchestration,
+ * and target-dependent Effect alignment.
  *
  * Durable behavior contract:
  *
@@ -38,7 +39,8 @@ class HumanBaselineBattleStrategy(
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
-    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
+    internal val firstMainPriority: BattleFirstMainPriority = BattleFirstMainPriority(cardScorers, policy)
 ) : BattleStrategy {
     override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseFirstMainAction(request)
@@ -47,7 +49,7 @@ class HumanBaselineBattleStrategy(
             candidates = request.legalChoices.map { action ->
                 DecisionCandidate(
                     choice = action,
-                    score = BattleMainPriority.score(request.context, request.roundCard, action, cardScorers),
+                    score = firstMainPriority(request.context, request.roundCard, action),
                     tags = mainTags(request, action)
                 )
             },

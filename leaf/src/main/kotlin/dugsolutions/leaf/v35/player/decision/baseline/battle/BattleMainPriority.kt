@@ -10,14 +10,14 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
 object BattleMainPriority {
-    fun score(
+    fun intrinsicScore(
         context: DecisionContext,
         roundCard: RoundCard,
         action: BattleMainAction,
         cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
     ): PriorityScore =
         when (action) {
-            BattleMainAction.Draw -> DrawPriority.score(context).adjusted(10, "An extra Battle die can reinforce a needy row")
+            BattleMainAction.Draw -> DrawPriority.score(context)
             is BattleMainAction.ActivatePlant ->
                 cardScorers.forPlant(action.card.card).playScore(
                     context = context,
@@ -27,6 +27,24 @@ object BattleMainPriority {
             BattleMainAction.RoundEffect1 -> scoreRoundEffect(roundCard.firstEffect.effect)
             BattleMainAction.RoundEffect2 -> scoreRoundEffect(roundCard.secondEffect.effect)
         }
+
+    /**
+     * Legacy Step-5 Main score retained until B14 replaces the flat Support/Final-Main
+     * orchestration. First Main uses [BattleFirstMainPriority] from B7 instead.
+     */
+    fun score(
+        context: DecisionContext,
+        roundCard: RoundCard,
+        action: BattleMainAction,
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+    ): PriorityScore {
+        val intrinsic = intrinsicScore(context, roundCard, action, cardScorers)
+        return if (action == BattleMainAction.Draw) {
+            intrinsic.adjusted(10, "An extra Battle die can reinforce a needy row")
+        } else {
+            intrinsic
+        }
+    }
 
     private fun scoreRoundEffect(effect: GameEffect): PriorityScore =
         when (effect) {

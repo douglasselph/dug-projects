@@ -15,6 +15,7 @@ import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
+import dugsolutions.leaf.v35.player.decision.context.BattleDieView
 import dugsolutions.leaf.v35.player.decision.context.BattlePlayerRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleView
@@ -53,6 +54,90 @@ class HumanBaselineBattleStrategyTest {
             )
         )
         assertIs<BattleMainAction.ActivatePlant>(chosen)
+    }
+
+
+    @Test
+    fun `expected Draw that flips a loss can beat a weak Plant`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val weakPlant = CreatureCard(
+            id = CreatureCardId(3),
+            card = PlantCard(6, "Vine_07_01", "Berry Important", PlantType.VINE, 7, null, "", "", "", "", "", "", "", GameEffect.RAISE_ANY_DIE_PLUS_1, PlantScoringRule.Fixed(1)),
+            side = CreatureSide.LEFT,
+            position = CreaturePosition(-1, 0),
+            facing = CreatureCard.Facing.FACE_UP
+        )
+        val context = battleContext(
+            actorId = actorId,
+            opponentId = opponentId,
+            actorTotal = 5,
+            opponentTotal = 7,
+            supplySides = 6
+        )
+
+        val chosen = HumanBaselineBattleStrategy().chooseFirstMainAction(
+            ChooseBattleFirstMainActionRequest(
+                roundCard = round(),
+                legalChoices = listOf(BattleMainAction.Draw, BattleMainAction.ActivatePlant(weakPlant)),
+                context = context
+            )
+        )
+
+        assertEquals(BattleMainAction.Draw, chosen)
+    }
+
+    @Test
+    fun `strong Plant still beats Draw when expected placement only pads a secure row`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val thorn = CreatureCard(
+            id = CreatureCardId(4),
+            card = PlantCard(6, "Vine_09_02", "Parting Thorn", PlantType.VINE, 9, null, "", "", "", "", "", "", "", GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE, PlantScoringRule.Fixed(1)),
+            side = CreatureSide.LEFT,
+            position = CreaturePosition(-1, 0),
+            facing = CreatureCard.Facing.FACE_UP
+        )
+        val context = battleContext(
+            actorId = actorId,
+            opponentId = opponentId,
+            actorTotal = 15,
+            opponentTotal = 5,
+            supplySides = 4
+        )
+
+        val chosen = HumanBaselineBattleStrategy().chooseFirstMainAction(
+            ChooseBattleFirstMainActionRequest(
+                roundCard = round(),
+                legalChoices = listOf(BattleMainAction.Draw, BattleMainAction.ActivatePlant(thorn)),
+                context = context
+            )
+        )
+
+        assertIs<BattleMainAction.ActivatePlant>(chosen)
+    }
+
+    @Test
+    fun `non-grid Round Effect keeps intrinsic value against tactically weak Draw`() {
+        val actorId = PlayerId(0)
+        val opponentId = PlayerId(1)
+        val context = battleContext(
+            actorId = actorId,
+            opponentId = opponentId,
+            actorTotal = 15,
+            opponentTotal = 5,
+            supplySides = 4
+        )
+
+        val chosen = HumanBaselineBattleStrategy().chooseFirstMainAction(
+            ChooseBattleFirstMainActionRequest(
+                roundCard = round(),
+                legalChoices = listOf(BattleMainAction.Draw, BattleMainAction.RoundEffect1),
+                context = context
+            )
+        )
+
+        assertEquals(BattleMainAction.RoundEffect1, chosen)
     }
 
 
@@ -98,6 +183,54 @@ class HumanBaselineBattleStrategyTest {
         val support = assertIs<BattleTurnAction.Support>(chosen)
         val placement = assertIs<BattleSupportAction.PlaceCritter>(support.action)
         assertEquals(Critter.WORM, placement.critter)
+    }
+
+    private fun battleContext(
+        actorId: PlayerId,
+        opponentId: PlayerId,
+        actorTotal: Int,
+        opponentTotal: Int,
+        supplySides: Int
+    ): DecisionContext {
+        val row = BattleRowView(
+            row = StrikeRow.TOP,
+            closed = false,
+            players = listOf(
+                BattlePlayerRowView(
+                    actorId,
+                    StrikeRow.TOP,
+                    listOf(BattleDieView(0, 6, 1)),
+                    emptyList(),
+                    actorTotal,
+                    0,
+                    actorTotal,
+                    false
+                ),
+                BattlePlayerRowView(
+                    opponentId,
+                    StrikeRow.TOP,
+                    emptyList(),
+                    emptyList(),
+                    opponentTotal,
+                    0,
+                    opponentTotal,
+                    false
+                )
+            )
+        )
+        return DecisionContext.EMPTY.copy(
+            phase = RoundCardType.BATTLE,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    id = actorId,
+                    supply = listOf(DieView(0, supplySides, 1))
+                )
+            ),
+            battle = BattleView(
+                playerOrder = listOf(actorId, opponentId),
+                rows = listOf(row)
+            )
+        )
     }
 
     private fun beeLovedView() = CreatureCardView(
