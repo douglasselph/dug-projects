@@ -20,7 +20,7 @@ Stage B has begun.
 - [x] B1 — durable Battle plan + policy foundation
 - [x] B2 — Done state in engine / decision context
 - [x] B3 — Battle Step-5 loop safety
-- [ ] B4 — `BattleRowAssessor`
+- [x] B4 — `BattleRowAssessor`
 - [ ] B5 — `BattleSwingEvaluator`
 - [ ] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
 - [ ] B7 — First Main
@@ -46,6 +46,8 @@ B1 intentionally changes no tactical Battle behavior.
 B2 moves Done into authoritative Battle-round state and exposes it through immutable decision context. It still does not implement tempo intelligence or tactical Battle scoring.
 
 B3 adds independent caller safety to the repeated Step-5 loop. It rejects a repeated per-player decision state and also enforces a generous per-player hard ceiling, while treating real changes made by other players as legitimate progress.
+
+B4 adds the shared multiplayer-aware `BattleRowAssessor`. It separates actual Strike winner/Score-Benchmark facts from Live-Threat/Done information and derives temporary `securedForNow` / `potentiallyHopeless` observations through `HumanBaselinePolicy`.
 
 B1 verification:
 
@@ -162,19 +164,42 @@ focused:
 
 ## B4 — `BattleRowAssessor`
 
-Implement multiplayer-aware row facts:
+**COMPLETE.**
 
-- actual winner state;
-- Score Benchmark;
-- Live Threat;
-- score/live margins;
-- wound state;
-- secured-for-now;
-- potentially hopeless.
+`BattleRowAssessor` is now the shared single-purpose (`operator fun invoke`) source of multiplayer-aware row facts. It reports:
 
-Respect closed rows, withdrawal, Done players, shared winners, and everybody-tied no-winner states.
+- row availability and participating players;
+- actual high players / winner IDs using the same shared-winner versus all-player-tie semantics as `StrikeResolver`;
+- Score Benchmark player IDs, total, and margin across all participating opponents;
+- Live Threat player IDs, total, and margin across participating opponents who are not Done;
+- actual Wound risk;
+- `allOpponentsDone`;
+- temporary `securedForNow`;
+- temporary `potentiallyHopeless`.
 
-Prefer a focused `operator fun invoke()` helper.
+Done players remain in Score Benchmark/Strike reality but are removed only from Live Threat. Withdrawn opponents are removed from Strike participation entirely. Closed rows and actor-withdrawn rows return unavailable assessments rather than being treated as tactical candidates.
+
+The secured and hopeless thresholds are read through the injected `HumanBaselinePolicy`; they are observations recalculated from the current context, never persistent row memory. The assessor also accepts an optional projected `BattleView` so later hypothetical-action checkpoints can reuse the same row semantics without consuming or mutating live game state.
+
+Focused tests cover shared winners, all-player no-winner ties, withdrawal, closed/actor-withdrawn rows, Wound risk, Score Benchmark versus Live Threat, tied benchmark/threat groups, all-Done fixed benchmarks, secured rows, Done-nearest-opponent semantics, potentially hopeless rows, and policy overrides.
+
+B4 verification:
+
+```text
+compileKotlin
+    BUILD SUCCESSFUL
+
+compileTestKotlin
+    BUILD SUCCESSFUL
+
+focused:
+    BattleRowAssessorTest
+
+    15 tests
+    0 failures
+    0 errors
+    0 skipped
+```
 
 ## B5 — `BattleSwingEvaluator`
 

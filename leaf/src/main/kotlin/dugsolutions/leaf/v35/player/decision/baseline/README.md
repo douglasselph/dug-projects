@@ -64,7 +64,7 @@ Critter Reward       pending designer certification
 Wound Resolution     pending designer certification
 Graft Placement      pending designer certification
 Cultivation          CERTIFIED
-Battle               Stage A complete; implementation/certification pending
+Battle               Stage B through B4; implementation/certification pending
 Buy                  CERTIFIED
 Butterfly Result     pending designer certification
 Effect Choices       pending designer certification
