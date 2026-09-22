@@ -37,6 +37,7 @@ data class BattleColumnSnapshot(
  */
 data class BattleSnapshot(
     val order: List<PlayerId>,
+    val donePlayerIds: Set<PlayerId>,
     val closedRows: Set<StrikeRow>,
     val columns: Map<PlayerId, BattleColumnSnapshot>
 ) {
@@ -59,6 +60,7 @@ data class BattleSnapshot(
             val order = state.playerIdsInBattleOrder
             return BattleSnapshot(
                 order = immutableList(order),
+                donePlayerIds = immutableSet(state.donePlayerIds),
                 closedRows = StrikeRow.entries
                     .filter(state.grid::isRowClosed)
                     .let(::immutableSet),

@@ -14,7 +14,7 @@ The incremental implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PL
 
 Battle Stage A (A1–A6) is complete. The current source was inventoried before this contract was approved.
 
-B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. B10 adds cumulative ordinary Support reachability from legal Bees and expected keep-better Butterfly improvement, plus a fresh continuation assessment. B11 routes ordinary direct Supports through shared tactical analysis with premium-resource gates. B12 adds one-step enabled-Final-Main analysis for Worm Flip and Water Refresh, meaningful-VP gating for direct Worm placement, Water's improvement-step gate, and deterministic Worm-over-Water preference for equivalent recovery. B13 adds dedicated evaluators for Pollen Theft's complete cross-player swap, Wisp's Resolve's lead/remaining-Support lock-in policy, and Overgrowth's two-available-step target selection; the exact target hooks now use those helpers without consuming hypothetical mechanical RNG. Plant/Round intrinsic scoring remains intact; general Support-versus-Final-Main orchestration and broader target-dependent action/target alignment remain later checkpoints. Battle is **not yet certified**.
+B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. B10 adds cumulative ordinary Support reachability from legal Bees and expected keep-better Butterfly improvement, plus a fresh continuation assessment. B11 routes ordinary direct Supports through shared tactical analysis with premium-resource gates. B12 adds one-step enabled-Final-Main analysis for Worm Flip and Water Refresh, meaningful-VP gating for direct Worm placement, Water's improvement-step gate, and deterministic Worm-over-Water preference for equivalent recovery. B13 adds dedicated evaluators for Pollen Theft's complete cross-player swap, Wisp's Resolve's lead/remaining-Support lock-in policy, and Overgrowth's two-available-step target selection; the exact target hooks now use those helpers without consuming hypothetical mechanical RNG. B14 replaces the old flat Support-versus-Final-Main score race with explicit continuation-first orchestration and a bounded Live-Threat tempo modifier for already-useful soft Support. Plant/Round intrinsic scoring remains intact; broader target-dependent action/target alignment remains B15. Battle is **not yet certified**.
 
 Battle currently exposes three strategy hooks:
 
@@ -327,7 +327,9 @@ reports Final Main when there are no relevant rows, every relevant row is secure
 no Support moves remain, or neither an individually worthwhile Support nor a
 meaningful cumulative path exists. It reports continuation for either worthwhile
 case. Direct/enabling Support analysis supplies the individual-usefulness input in
-B11/B12; selection between the surviving Support and Final Main remains B14.
+B11/B12. B14's `BattleTurnOrchestrator` now consumes that result to restrict the
+actual Step-5 candidate set to worthwhile Supports or, when continuation fails,
+the current legal Final Mains.
 
 ## 10. Support capacity and tempo
 
@@ -341,7 +343,7 @@ For generic tempo comparison, compare our Support capacity with the largest rele
 
 `BattleSupportCapacityAssessor` implements this normalized counting layer. It consumes the actor's current legal Step-5 choices for exact own capacity, derives opponent capacity from public resources and Battle state, returns zero for Done opponents, and accepts the relevant Live-Threat IDs from the later tempo/continuation layer. It does not itself decide which rows are close or which opponents are relevant.
 
-Acting-last pressure may be represented categorically as `NONE`, `WEAK`, `MODERATE`, or `STRONG`, but it is a modifier rather than the primary continuation gate. Tempo can make a useful soft Support more attractive; it must not turn a useless/harmful action into a good one.
+`BattleTempoAssessor` represents acting-last pressure categorically as `NONE`, `WEAK`, `MODERATE`, or `STRONG`. It derives close contested rows from Live Threat and `battleCloseMargin`, compares normalized own capacity against the strongest relevant opponent, and ignores Done opponents as future responders. Tempo is a modifier rather than the primary continuation gate: it can make an already-useful soft Wisp Support modestly more attractive, but it never turns a useless/harmful/gated action into a good one.
 
 ## 11. Resource-specific Support rules
 
@@ -391,8 +393,8 @@ already legal. `BattleEnabledPlantAnalyzer` adds shared tactical projection for
 supported direct own-die effects while preserving deterministic versus expected
 information boundaries. Water's refreshed Butterflies are counted only after the
 Plant/improvement-step gate passes. The Step-5 strategy routes Worm Flip and Water
-Refresh through this analysis; the broader continue-versus-Final-Main decision
-remains B14.
+Refresh through this analysis. B14 now feeds those individual-usefulness results
+into the continuation gate before selecting Support or Final Main.
 
 ## 12. Special Wisp/effect policies
 

@@ -30,7 +30,7 @@ Stage B has begun.
 - [x] B11 — direct Support analysis
 - [x] B12 — enabling Support analysis
 - [x] B13 — special Battle effect evaluators
-- [ ] B14 — Support vs Final Main orchestration
+- [x] B14 — Support vs Final Main orchestration
 - [ ] B15 — action / target / branch alignment
 - [ ] B16 — single-purpose helper API cleanup + behavior-contract tests
 - [ ] B17 — focused compile / test / fix
@@ -64,6 +64,10 @@ B10 adds `BattleSupportReachability`, `BattleContinuationAssessor`, and the immu
 B11 routes ordinary direct Supports through shared whole-action analysis. Bee and direct Worm placement use current effective values; Butterfly and Water reroll use expectation on the exact die row; Mulch uses expected roll plus best legal placement. Premium-resource gates reject Water without a positive named transition and Mulch without expected `WIN_FLIPPED`, while special target-dependent Wisps remain B13.
 
 B12 adds one-step enabling analysis for Worm Flip and Water Refresh. It compares the best immediate Plant Main unlocked by refresh with the best Final Main already available, gates direct Worm placement on meaningful projected Strike-VP gain, requires Water's enabled Main to cross the policy minimum improvement steps, treats refreshed Butterflies only as a secondary bonus, and prefers Worm for equivalent single-Plant recovery.
+
+B13 adds the three approved dedicated special Battle effect evaluators and routes their exact target decisions through shared tactical reasoning.
+
+B14 replaces the flat Support-versus-Final-Main score race with explicit continuation orchestration. `BattleTurnOrchestrator` asks the fresh `BattleContinuationAssessor` first, admits only individually worthwhile Supports or ordinary Bee/Butterfly moves that advance a meaningful cumulative path, and otherwise restricts the choice to the current legal Final Mains. `BattleTempoAssessor` derives close live contests and compares normalized Support capacity against the strongest relevant Live Threat; its result only adds a small modifier to already-useful soft Wisp Support. Every actual Support returns control to the engine, so the next pass receives a fresh context and reassesses from current state. Final Main no longer receives the old arbitrary finishing bonus; authoritative Done marking remains the coordinator's post-resolution responsibility.
 
 B1 verification:
 
@@ -507,19 +511,68 @@ Battle remains uncertified pending B14–B17 and Stage C.
 
 ## B14 — Support vs Final Main orchestration
 
-Replace the current flat Support-vs-Final-Main scoring and fixed finishing bonus.
+**COMPLETE.**
 
-Use continuation assessment:
+`HumanBaselineBattleStrategy.chooseTurnAction()` no longer scores every Support and Final Main in one flat pool and no longer adds a fixed finishing bonus to Final Main.
+
+The Step-5 pipeline is now:
 
 ```text
-worthwhile continuation
-    -> choose best worthwhile Support and remain active
+fresh DecisionContext
+    -> BattleTurnOrchestrator
+    -> direct/enabling Support usefulness
+    -> BattleContinuationAssessor
 
-no worthwhile continuation
-    -> choose current best Final Main, resolve fully, become Done
+continuation worthwhile
+    -> choose among currently worthwhile Supports only
+    -> resolve one Support
+    -> engine builds a fresh next-pass context
+    -> reassess everything
+
+continuation not worthwhile
+    -> choose among current legal Final Mains only
+    -> resolve fully
+    -> coordinator marks Done
 ```
 
-Tempo is a modifier for useful soft Support, not the primary continuation gate.
+`BattleTurnOrchestrator` reuses the established B10-B12 helpers rather than duplicating their rules. Premium-resource gates remain authoritative. If continuation exists only because ordinary cumulative reachability succeeds, only legal Bees and Butterflies that can advance that B10 path are admitted as Support candidates.
+
+`BattleTempoAssessor` implements the bounded acting-last modifier from A6. It identifies close live contests using `battleCloseMargin`, uses Live Threat rather than a Done Score Benchmark, and compares own normalized Support capacity with the strongest relevant opponent rather than a coalition. Tempo never admits a rejected Support; it only adds a small preference to an already-positive soft Wisp candidate.
+
+Focused unit behavior verifies secured-state Final Main, individually worthwhile Support, meaningful cumulative continuation, no-worthwhile-path Final Main, close-contest tempo, and Done-opponent tempo exclusion. Focused integration exercises the real Battle coordinator for both:
+
+```text
+worthwhile Support -> fresh reassessment -> Final Main -> Done
+```
+
+and:
+
+```text
+legal Support exists but fails its gate -> immediate Final Main -> Done
+```
+
+B14 verification:
+
+```text
+focused Battle unit:
+    108 tests
+    0 failures
+    0 errors
+    0 skipped
+
+focused Battle action integration:
+    5 tests
+    0 failures
+    0 errors
+    0 skipped
+
+full regression:
+    unit:        1,105 tests, 0 failures, 0 errors, 0 skipped
+    integration:    74 tests, 0 failures, 0 errors, 0 skipped
+    simulation:     10 tests, 0 failures, 0 errors, 0 skipped
+```
+
+Battle remains uncertified pending B15-B17 and Stage C.
 
 ## B15 — action / target / branch alignment
 

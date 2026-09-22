@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.game.round.battle.BattleMainActionStage
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
@@ -101,6 +102,66 @@ class BattleActionSanityTest {
             BattleAssertions.assertCritters(battle, 1, StrikeRow.BOTTOM)
             assertEquals(0, harness.snapshot().player(1).bees)
             assertTrue(ChronicleQueries.supportActionsFor(harness.chronicleEntries(), PlayerId(2)).isEmpty())
+            p1.assertExhausted()
+            p2.assertExhausted()
+        }
+    }
+
+
+    @Test
+    fun `Human Baseline spends worthwhile Support then reassesses into Final Main and Done`() {
+        val p1 = ScriptedDecisionDirector(fallback = DecisionDirector.humanBaseline())
+        val p2 = ScriptedDecisionDirector()
+        p1.battle.thenFirstMain(BattleMainAction.RoundEffect1)
+        p2.battle.thenFirstMain(BattleMainAction.RoundEffect1)
+        p2.battle.thenTurn(BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1))
+
+        battleHarness(decisions = listOf(p1, p2)).use { harness ->
+            harness.setPlayerDice(1, hand = hand(7, 5, 4))
+            harness.setPlayerDice(2, hand = hand(6, 5, 4))
+            harness.giveCritter(1, Critter.BEE, count = 1)
+            checkNotNull(harness.revealNextRound())
+            harness.runBattleRankAndPlace()
+
+            val result = harness.runBattleActions()
+            val battle = harness.battleSnapshot()
+
+            assertEquals(listOf(PlayerId(1)), result.supportActions.map { it.playerId })
+            assertEquals(1, result.supportActions.single().passNumber)
+            assertEquals(
+                1,
+                StrikeRow.entries.sumOf { battle.square(1, it).critters.count { critter -> critter == Critter.BEE } }
+            )
+            assertEquals(0, harness.snapshot().player(1).bees)
+            assertTrue(PlayerId(1) in battle.donePlayerIds)
+            assertTrue(PlayerId(2) in battle.donePlayerIds)
+            assertEquals(listOf(PlayerId(2), PlayerId(1)), result.finalMainActions.map { it.playerId })
+            p1.assertExhausted()
+            p2.assertExhausted()
+        }
+    }
+
+    @Test
+    fun `Human Baseline takes Final Main immediately when legal Support has no worthwhile path`() {
+        val p1 = ScriptedDecisionDirector(fallback = DecisionDirector.humanBaseline())
+        val p2 = ScriptedDecisionDirector()
+        p1.battle.thenFirstMain(BattleMainAction.RoundEffect1)
+        p2.battle.thenFirstMain(BattleMainAction.RoundEffect1)
+        p2.battle.thenTurn(BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1))
+
+        battleHarness(decisions = listOf(p1, p2)).use { harness ->
+            harness.setPlayerDice(1, hand = hand(7, 5, 4))
+            harness.setPlayerDice(2, hand = hand(20, 19, 18))
+            harness.giveCritter(1, Critter.WORM, count = 1)
+            checkNotNull(harness.revealNextRound())
+            harness.runBattleRankAndPlace()
+
+            val result = harness.runBattleActions()
+            val battle = harness.battleSnapshot()
+
+            assertTrue(result.supportActions.none { it.playerId == PlayerId(1) })
+            assertEquals(1, harness.snapshot().player(1).worms)
+            assertTrue(PlayerId(1) in battle.donePlayerIds)
             p1.assertExhausted()
             p2.assertExhausted()
         }
