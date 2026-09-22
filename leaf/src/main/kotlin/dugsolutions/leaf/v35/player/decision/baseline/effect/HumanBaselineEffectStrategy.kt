@@ -3,6 +3,9 @@ package dugsolutions.leaf.v35.player.decision.baseline.effect
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
@@ -41,11 +44,32 @@ class HumanBaselineEffectStrategy(
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
-    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
+    internal val pollenTheftEvaluator: BattlePollenTheftEvaluator = BattlePollenTheftEvaluator(policy),
+    internal val immediateStrikeResolveEvaluator: BattleImmediateStrikeResolveEvaluator =
+        BattleImmediateStrikeResolveEvaluator(policy),
+    internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseDie(request)
+        if (request.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) {
+            val evaluations = twoStepUpgradeEvaluator.evaluateAll(request.context, request.legalChoices)
+            if (evaluations.isNotEmpty()) {
+                val bestSize = evaluations.maxOf { it.resultingSides.value }
+                val finalists = evaluations.filter { it.resultingSides.value == bestSize }
+                return choose(
+                    request.context,
+                    finalists.map { evaluation ->
+                        DecisionCandidate(
+                            evaluation.choice,
+                            PriorityScore(evaluation.battleAnalysis?.tacticalValue?.roundToInt() ?: 0)
+                                .adjusted(bestSize, "Maximize Overgrowth resulting die size")
+                        )
+                    }
+                )
+            }
+        }
         val normalPower = policy.normalPurchasingPower(request.context)
         return choose(
             request.context,
@@ -121,13 +145,16 @@ class HumanBaselineEffectStrategy(
 
     override fun chooseCrossPlayerDieSwap(request: ChooseEffectCrossPlayerDieSwapRequest): EffectCrossPlayerDieSwapChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseCrossPlayerDieSwap(request)
+        val evaluations = pollenTheftEvaluator.evaluateAll(request.context, request.legalChoices)
+        if (evaluations.isEmpty()) return delegate.chooseCrossPlayerDieSwap(request)
         return choose(
             request.context,
-            request.legalChoices.map { choice ->
-                val gain = choice.opponentDie.die.value - choice.ownDie.die.value
-                var score = PriorityScore(40 + gain * 8)
-                score = score.adjusted(CardScoringHelpers.rowNeedBonus(request.context, choice.ownDie.row), "Own row need")
-                DecisionCandidate(choice, score)
+            evaluations.map { evaluation ->
+                DecisionCandidate(
+                    evaluation.choice,
+                    PriorityScore(evaluation.analysis.tacticalValue.roundToInt())
+                        .adjusted(0, "Complete Pollen Theft Battle Swing")
+                )
             }
         )
     }
@@ -338,7 +365,20 @@ class HumanBaselineEffectStrategy(
 
     override fun chooseStrikeRow(request: ChooseEffectStrikeRowRequest) =
         if (request.context == DecisionContext.EMPTY) delegate.chooseStrikeRow(request)
-        else choose(
+        else if (request.effect == GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW) {
+            val evaluations = immediateStrikeResolveEvaluator.evaluateAll(request.context, request.legalChoices)
+            if (evaluations.isEmpty()) delegate.chooseStrikeRow(request)
+            else choose(
+                request.context,
+                evaluations.map { evaluation ->
+                    DecisionCandidate(
+                        evaluation.row,
+                        PriorityScore(if (evaluation.passesPolicy) 10_000 else 0)
+                            .adjusted(evaluation.currentStrikeVp, "Immediate Strike VP")
+                    )
+                }
+            )
+        } else choose(
             request.context,
             request.legalChoices.map { row ->
                 DecisionCandidate(row, PriorityScore(40 + CardScoringHelpers.rowNeedBonus(request.context, row)))

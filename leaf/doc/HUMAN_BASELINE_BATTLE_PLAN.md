@@ -29,7 +29,7 @@ Stage B has begun.
 - [x] B10 — Support reachability + continuation
 - [x] B11 — direct Support analysis
 - [x] B12 — enabling Support analysis
-- [ ] B13 — special Battle effect evaluators
+- [x] B13 — special Battle effect evaluators
 - [ ] B14 — Support vs Final Main orchestration
 - [ ] B15 — action / target / branch alignment
 - [ ] B16 — single-purpose helper API cleanup + behavior-contract tests
@@ -454,13 +454,56 @@ Battle remains uncertified pending B13–B17 and Stage C.
 
 ## B13 — special Battle effect evaluators
 
-Add dedicated focused helpers for:
+**COMPLETE.**
 
-1. cross-player same-size die swap Wisp — normally projected VP gain >= 2;
-2. immediate Strike-resolution Wisp — lead every opponent by at least 5 and each relevant active contender has at least 3 remaining Support moves;
-3. two-step die-upgrade target selection — maximize legal resulting die size, then use expected Battle context for ties.
+B13 adds three dedicated helpers rather than embedding special-case Battle logic in
+one large Effect-strategy branch:
 
-Do not bury these special policies in one giant Effect strategy branch.
+1. `BattlePollenTheftEvaluator` projects every legal same-size cross-player swap as
+   one complete deterministic multi-row realization. Actor benefit and collateral
+   benefit/harm use `BattleActionAnalyzer`, `BattleSwingEvaluator`, and
+   `BattleVpImpact` together. The approved meaningful-VP gate remains policy driven
+   through `battleMinimumMeaningfulVpGain` (default 2).
+2. `BattleImmediateStrikeResolveEvaluator` applies Wisp's Resolve's lock-in policy
+   to each legal row. It requires the policy lead over every participating opponent
+   (default 5) and uses authoritative Done state plus normalized public Support
+   capacity for each active contender (default minimum 3 moves). Hidden Wisp
+   identities are never inferred; only the public count contributes capacity.
+3. `BattleTwoStepUpgradeEvaluator` reproduces Overgrowth's two-available-step,
+   skip-missing-size ladder from the immutable Graft Bed view. It first maximizes
+   the legal resulting die size, then uses expected current-Battle analysis only to
+   break equal-result-size choices. It does not roll or pre-resolve the replacement.
+
+`HumanBaselineEffectStrategy` now routes only these exact B13 targets through the
+focused evaluators: Pollen Theft's complete swap, Wisp's Resolve's Strike Row, and
+Overgrowth's die target. Exact scored ties still use `StrategyRandomizer` through
+the existing `BaselineScoreEngine`.
+
+B13 verification:
+
+```text
+compileKotlin + compileTestKotlin
+    BUILD SUCCESSFUL
+
+focused special evaluators + Effect strategy integration:
+    14 tests
+    0 failures
+    0 errors
+    0 skipped
+
+focused Battle / affected Effect mechanics:
+    126 tests
+    0 failures
+    0 errors
+    0 skipped
+
+full regression:
+    unit:        1,099 tests, 0 failures, 0 errors, 0 skipped
+    integration:    72 tests, 0 failures, 0 errors, 0 skipped
+    simulation:     10 tests, 0 failures, 0 errors, 0 skipped
+```
+
+Battle remains uncertified pending B14–B17 and Stage C.
 
 ## B14 — Support vs Final Main orchestration
 
