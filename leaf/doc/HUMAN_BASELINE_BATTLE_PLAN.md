@@ -22,7 +22,7 @@ Stage B has begun.
 - [x] B3 — Battle Step-5 loop safety
 - [x] B4 — `BattleRowAssessor`
 - [x] B5 — `BattleSwingEvaluator`
-- [ ] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
+- [x] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
 - [ ] B7 — First Main
 - [ ] B8 — actual Battle die placement
 - [ ] B9 — Support capacity
@@ -50,6 +50,8 @@ B3 adds independent caller safety to the repeated Step-5 loop. It rejects a repe
 B4 adds the shared multiplayer-aware `BattleRowAssessor`. It separates actual Strike winner/Score-Benchmark facts from Live-Threat/Done information and derives temporary `securedForNow` / `potentiallyHopeless` observations through `HumanBaselinePolicy`.
 
 B5 adds `BattleSwingEvaluator`, the shared factual tactical valuation layer. It implements the 500/400/300/200/100 transition hierarchy from the policy transition scale, one strongest transition base per row, raw margin movement, symmetric reverse-scored harm, uncapped multi-row aggregation, and `Double` expected values. It does not yet change First Main, Support, Effect targeting, or actual die-placement behavior.
+
+B6 adds `BattleVpImpact` and `BattleActionAnalyzer`. `BattleVpImpact` projects the actor's real immediate Strike VP using the same base-2-plus-wounds semantics as `StrikeResolver`. `BattleActionAnalyzer` combines row-level Battle Swing, projected Strike-VP change, and the separate positive-boundary `improvementStepCount` needed by later premium-resource gates. Candidate realizations explicitly record whether they are deterministic, expected-before-RNG, or actual-after-RNG. The layer remains factual: it does not yet decide whether to spend a resource, delay Final Main, or prefer one intrinsic card value over another.
 
 B1 verification:
 
@@ -246,18 +248,29 @@ focused:
     0 skipped
 ```
 
-## B6 — `BattleVpImpact` + `BattleActionAnalyzer`
+## B6 — `BattleVpImpact` + `BattleActionAnalyzer` — COMPLETE
 
-Add the separate simple Strike-VP impact metric needed for substantial Support commitment and special-effect gates.
+B6 adds the separate Strike-VP impact and whole-realization analysis seams needed by later Main and Support strategy.
 
-Add shared action analysis for deterministic, expected-random, and actual-known results, including:
+`BattleVpImpact` mirrors immediate `StrikeResolver` scoring for the actor:
 
-- per-row Battle Swing;
-- multi-row collateral;
-- improvement-step count;
-- target realization.
+- a non-winner earns 0 VP;
+- a winner earns the base 2 VP;
+- each participating opponent trailing the actor by at least 5 adds 1 VP;
+- shared winners still receive wound VP from lower non-winners;
+- expected `Double` totals retain the real five-point wound boundary.
 
-Hypothetical analysis must never consume mechanical RNG.
+`BattleActionAnalyzer` accepts a complete legal realization and combines:
+
+- `BattleActionSwing` from `BattleSwingEvaluator`;
+- projected Strike-VP before/after/gain;
+- positive `improvementStepCount`;
+- the caller's realization/target object;
+- an explicit information mode: `DETERMINISTIC`, `EXPECTED`, or `ACTUAL`.
+
+Improvement steps are deliberately separate from Battle Swing. A wounded-loss-to-win realization may count Wound Prevented + equality/tie + Win as three positive steps while Battle Swing still applies only the single strongest `WIN_FLIPPED` transition base. This metric exists for later premium-resource gates such as Water Refresh.
+
+The analyzer itself never consumes mechanical RNG and does not decide resource conservation, continuation, tempo, or intrinsic card value. Those remain later strategy layers.
 
 ## B7 — First Main
 
