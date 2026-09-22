@@ -14,7 +14,7 @@ The incremental implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PL
 
 Battle Stage A (A1–A6) is complete. The current source was inventoried before this contract was approved.
 
-B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. B10 adds cumulative ordinary Support reachability from legal Bees and expected keep-better Butterfly improvement, plus a fresh continuation assessment that combines the meaningful-Strike-VP path with the later direct-Support usefulness result. B11 routes ordinary direct Critter, Butterfly, Water-reroll, and Mulch candidates through that same tactical analysis and enforces the approved Water/Mulch premium gates without applying pre-Battle Critter reserves. Ordinary Wisp intrinsic value remains intact; B13 owns the current source's special tactical Wisps and upgrade target. Plant/Round intrinsic scoring remains intact; target-dependent Plant/Effect tactical projection is intentionally deferred to the later action/target-alignment checkpoint. Battle is **not yet certified**.
+B1 established documentation/shared-policy wiring. B2 moved Done into authoritative Battle-round state and immutable decision context. B3 added repeated-state detection and a hard Step-5 decision ceiling so malformed Support loops cannot run forever. B4 implemented the shared multiplayer-aware `BattleRowAssessor`, including Score Benchmark, Live Threat, actual winner/Wound facts, and temporary secured/hopeless assessments. B5 implemented `BattleSwingEvaluator`, including the policy-scaled 500/400/300/200/100 transition hierarchy, raw swing, symmetric collateral harm, and multi-row aggregation. B6 adds `BattleVpImpact` plus `BattleActionAnalyzer`, so a complete deterministic/expected/actual realization can report Battle Swing, immediate Strike-VP change, collateral effects, and the separate positive-boundary improvement-step count used by later premium-resource gates. B7 connects that analysis to Step-4 First Main for Draw: the next die is valued by expectation and best legal expected placement without consuming mechanical RNG or pre-committing the eventual post-roll row. B8 reuses the shared placement analysis after the roll: the actual value, fresh Battle context, and current legal rows determine placement, with exact tactical ties delegated to strategy RNG and rule-mandated placement kept non-strategic. B9 provides normalized own and public-opponent Support capacity, including caller-supplied relevant Live-Threat capacity and hidden-Wisp boundaries. B10 adds cumulative ordinary Support reachability from legal Bees and expected keep-better Butterfly improvement, plus a fresh continuation assessment. B11 routes ordinary direct Supports through shared tactical analysis with premium-resource gates. B12 adds one-step enabled-Final-Main analysis for Worm Flip and Water Refresh, meaningful-VP gating for direct Worm placement, Water's improvement-step gate, and deterministic Worm-over-Water preference for equivalent recovery. Plant/Round intrinsic scoring remains intact; special Wisps and target-dependent action/target alignment remain later checkpoints. Battle is **not yet certified**.
 
 Battle currently exposes three strategy hooks:
 
@@ -351,10 +351,6 @@ Pre-Battle protected Critter reserves are not Battle reserves. Human Baseline is
 
 Critter placement uses the current effective Critter value, including round modifications.
 
-`BattleDirectSupportAnalyzer` applies that value to the exact target row through
-shared Battle Swing. Protected Cultivation/pre-Battle Critter reserves are not
-applied during Battle.
-
 Bee is the principal cumulative row-power resource.
 
 Worm is primarily preserved for Plant refresh. Direct Worm +1 placement is normally used only when that single Worm produces at least the minimum meaningful Strike-VP gain (default 2).
@@ -363,22 +359,13 @@ Worm is primarily preserved for Plant refresh. Direct Worm +1 placement is norma
 
 Before reroll, use expected keep-better value and Battle Swing. The actual original-vs-rerolled choice remains the separate Butterfly Result decision area.
 
-The direct analyzer uses the exact visible die and row without consuming
-mechanical RNG.
-
 ### Water reroll
 
 Water is valuable. Its target is chosen before the reroll, so use expected value. Baseline normally requires at least one positive named Battle transition before spending Water on a reroll; Water is not spent merely to stall.
 
-This is a categorical direct-Support gate; raw margin improvement alone cannot
-qualify the Water spend.
-
 ### Mulch
 
 Mulch is deliberately conservative. Use expected stored-die roll and expected best placement. Normally use Mulch only if that expectation produces `WIN_FLIPPED`. After the actual roll, choose actual placement from fresh state.
-
-The expected pass tests every currently legal placement and neither rolls nor
-pre-commits the later actual placement.
 
 ### Worm Flip
 
@@ -398,13 +385,18 @@ For this premium-resource gate only, count positive named boundaries crossed by 
 
 Prefer Worm over Water for an equivalent single-Plant recovery when appropriate.
 
+`BattleEnablingSupportAnalyzer` implements these rules without deep search. It
+compares the refreshed Plant's best visible immediate Main with the best Main
+already legal. `BattleEnabledPlantAnalyzer` adds shared tactical projection for
+supported direct own-die effects while preserving deterministic versus expected
+information boundaries. Water's refreshed Butterflies are counted only after the
+Plant/improvement-step gate passes. The Step-5 strategy routes Worm Flip and Water
+Refresh through this analysis; the broader continue-versus-Final-Main decision
+remains B14.
+
 ## 12. Special Wisp/effect policies
 
 Most Wisps use ordinary card-specific intrinsic scoring plus shared Battle analysis.
-
-At B11, ordinary non-tactical Wisps retain card-local intrinsic value and
-unplayed-Wisp VP opportunity cost. Current tactical Wisp actions require B13's
-dedicated target/policy helpers, so B11 does not invent their realizations.
 
 Three cases require dedicated target/policy helpers.
 

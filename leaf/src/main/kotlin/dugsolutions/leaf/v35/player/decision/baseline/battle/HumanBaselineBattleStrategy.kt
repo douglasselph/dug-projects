@@ -20,9 +20,10 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * post-random actual information, and the Step-5 Support/Final-Main continuation
  * decision. B7 applies the shared tactical layer to Step-4 Draw evaluation, B8
  * reuses it after the roll for actual die placement, B9/B10 supply normalized
- * Support-capacity/reachability facts, and B11 routes ordinary direct Supports
- * through shared tactical analysis. Later checkpoints continue migrating enabling
- * Supports, Support/Final-Main orchestration, and target-dependent Effect alignment.
+ * Support-capacity/reachability facts, B11 routes ordinary direct Supports
+ * through shared tactical analysis, and B12 evaluates enabling Supports through
+ * one-step refreshed-Plant reasoning. Later checkpoints continue migrating special
+ * Wisps, Support/Final-Main orchestration, and target-dependent Effect alignment.
  *
  * Durable behavior contract:
  *
@@ -63,12 +64,24 @@ class HumanBaselineBattleStrategy(
 
     override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseTurnAction(request)
+        val currentFinalMains = request.legalChoices
+            .filterIsInstance<BattleTurnAction.FinalMain>()
+            .map { it.action }
+        val legalSupports = request.legalChoices
+            .filterIsInstance<BattleTurnAction.Support>()
+            .map { it.action }
         val candidates = request.legalChoices.map { choice ->
             val score = when (choice) {
                 is BattleTurnAction.FinalMain ->
                     BattleMainPriority.score(request.context, request.roundCard, choice.action, cardScorers)
                         .adjusted(5, "Final Main action ends participation")
-                is BattleTurnAction.Support -> supportPriority.score(request.context, choice.action)
+                is BattleTurnAction.Support -> supportPriority.score(
+                    context = request.context,
+                    roundCard = request.roundCard,
+                    action = choice.action,
+                    currentFinalMains = currentFinalMains,
+                    legalSupports = legalSupports
+                )
             }
             val tags = when (choice) {
                 is BattleTurnAction.FinalMain -> mainTags(request, choice.action)

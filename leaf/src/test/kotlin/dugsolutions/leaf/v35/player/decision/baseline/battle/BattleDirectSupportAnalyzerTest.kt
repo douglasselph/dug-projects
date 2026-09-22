@@ -46,7 +46,7 @@ class BattleDirectSupportAnalyzerTest {
     }
 
     @Test
-    fun `direct Worm is factually analyzed while its commitment gate remains B12`() {
+    fun `direct Worm passes when it projects the policy minimum Strike VP gain`() {
         val result = requireNotNull(
             analyzer(
                 context(actorTotal = 4, opponentTotal = 5, wormValue = 2),
@@ -56,6 +56,25 @@ class BattleDirectSupportAnalyzerTest {
 
         assertEquals(BattleTransition.WIN_FLIPPED, result.analysis.swing.rowSwings.single().transition)
         assertEquals(BattleDirectSupportGate.NONE, result.gate)
+        assertTrue(result.individuallyWorthwhile)
+    }
+
+    @Test
+    fun `direct Worm fails when it does not project meaningful Strike VP gain`() {
+        val result = requireNotNull(
+            analyzer(
+                context(actorTotal = 4, opponentTotal = 8, wormValue = 2),
+                BattleSupportAction.PlaceCritter(Critter.WORM, StrikeRow.TOP)
+            )
+        )
+
+        assertEquals(0, result.analysis.vpImpact.gain)
+        assertEquals(
+            BattleDirectSupportGate.WORM_REQUIRES_MEANINGFUL_VP_GAIN,
+            result.gate
+        )
+        assertFalse(result.passesSpendingGate)
+        assertFalse(result.individuallyWorthwhile)
     }
 
     @Test

@@ -4,9 +4,11 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScor
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
+import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.tokens.Critter
 import kotlin.math.roundToInt
 
@@ -14,7 +16,9 @@ class BattleSupportPriority(
     private val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     private val directAnalyzer: BattleDirectSupportAnalyzer =
-        BattleDirectSupportAnalyzer(policy)
+        BattleDirectSupportAnalyzer(policy),
+    private val enablingAnalyzer: BattleEnablingSupportAnalyzer =
+        BattleEnablingSupportAnalyzer(cardScorers, policy)
 ) {
     fun score(
         context: DecisionContext,
@@ -22,6 +26,28 @@ class BattleSupportPriority(
     ): PriorityScore {
         val direct = directAnalyzer(context, action)
         if (direct != null) return scoreDirect(direct)
+        return scoreNonDirect(context, action)
+    }
+
+    fun score(
+        context: DecisionContext,
+        roundCard: RoundCard,
+        action: BattleSupportAction,
+        currentFinalMains: Collection<BattleMainAction>,
+        legalSupports: Collection<BattleSupportAction>
+    ): PriorityScore {
+        val direct = directAnalyzer(context, action)
+        if (direct != null) return scoreDirect(direct)
+        val enabling = (action as? BattleSupportAction.Shared)?.let {
+            enablingAnalyzer(
+                context = context,
+                roundCard = roundCard,
+                action = it,
+                currentFinalMains = currentFinalMains,
+                legalSupports = legalSupports
+            )
+        }
+        if (enabling != null) return enabling.priority
         return scoreNonDirect(context, action)
     }
 
@@ -89,6 +115,8 @@ class BattleSupportPriority(
 
     private fun gateReason(gate: BattleDirectSupportGate): String =
         when (gate) {
+            BattleDirectSupportGate.WORM_REQUIRES_MEANINGFUL_VP_GAIN ->
+                "Direct Worm requires the policy minimum projected Strike-VP gain"
             BattleDirectSupportGate.WATER_REQUIRES_POSITIVE_TRANSITION ->
                 "Water reroll requires a positive named Battle transition"
             BattleDirectSupportGate.MULCH_REQUIRES_WIN_FLIPPED ->
