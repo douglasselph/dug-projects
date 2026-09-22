@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
@@ -11,11 +12,33 @@ import dugsolutions.leaf.v35.player.decision.battle.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 
+/**
+ * Canonical ordinary-human Battle decision policy.
+ *
+ * Battle Stage A has completed designer review. The approved target behavior separates
+ * multiplayer row facts, immediate Battle Swing, pre-random expectation versus
+ * post-random actual information, and the Step-5 Support/Final-Main continuation
+ * decision. B1 only establishes the shared policy/documentation seam; the tactical
+ * implementation remains intentionally unchanged until later Battle checkpoints.
+ *
+ * Durable behavior contract:
+ *
+ * `doc/HUMAN_BASELINE_BATTLE.md`
+ *
+ * Incremental implementation/certification plan:
+ *
+ * `doc/HUMAN_BASELINE_BATTLE_PLAN.md`
+ *
+ * Cross-cutting Battle tuning belongs in [HumanBaselinePolicy]. Card/effect-specific
+ * intrinsic values remain beside their scorers. Strategy RNG remains reserved for
+ * genuine decision ties; hypothetical Battle analysis must never consume mechanical RNG.
+ */
 class HumanBaselineBattleStrategy(
     private val delegate: BattleStrategy = MechanicalBattleStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
-    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers)
+    internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
 ) : BattleStrategy {
     override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseFirstMainAction(request)

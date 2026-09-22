@@ -23,7 +23,8 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
  * action-specific valuation constants belong beside the scorer they describe.
  *
  * See `doc/HUMAN_BASELINE_POLICY.md` for the score scale, current defaults,
- * extension examples, and the Cultivation A3 decisions that introduced this layer.
+ * extension examples, the Cultivation decisions that introduced this layer, and
+ * the Battle Stage-A thresholds added during Battle B1.
  */
 open class HumanBaselinePolicy(
     private val protectedBeeReserveValue: Int = DEFAULT_PROTECTED_BEE_RESERVE,
@@ -37,6 +38,18 @@ open class HumanBaselinePolicy(
     private val cultivationDoneScoreValue: Int = DEFAULT_CULTIVATION_DONE_SCORE,
     private val cultivationReserveSpendPenaltyPerUnitValue: Int =
         DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT,
+    private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
+    private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
+    private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
+    private val battleHopelessDeficitValue: Int = DEFAULT_BATTLE_HOPELESS_DEFICIT,
+    private val battleMinimumMeaningfulVpGainValue: Int =
+        DEFAULT_BATTLE_MINIMUM_MEANINGFUL_VP_GAIN,
+    private val battleWaterRefreshMinImprovementStepsValue: Int =
+        DEFAULT_BATTLE_WATER_REFRESH_MIN_IMPROVEMENT_STEPS,
+    private val battleImmediateResolveMinLeadValue: Int =
+        DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_LEAD,
+    private val battleImmediateResolveMinOpponentSupportValue: Int =
+        DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT,
     private val developmentTargetConfig: DevelopmentTargetConfig = DevelopmentTargetConfig()
 ) {
     init {
@@ -53,6 +66,22 @@ open class HumanBaselinePolicy(
         require(cultivationDoneScoreValue >= 0) { "Cultivation Done score cannot be negative" }
         require(cultivationReserveSpendPenaltyPerUnitValue >= 0) {
             "Cultivation reserve-spend penalty cannot be negative"
+        }
+        require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
+        require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
+        require(battleSecuredLeadValue >= 0) { "Battle secured lead cannot be negative" }
+        require(battleHopelessDeficitValue >= 0) { "Battle hopeless deficit cannot be negative" }
+        require(battleMinimumMeaningfulVpGainValue >= 0) {
+            "Battle minimum meaningful VP gain cannot be negative"
+        }
+        require(battleWaterRefreshMinImprovementStepsValue >= 0) {
+            "Battle Water-refresh improvement-step threshold cannot be negative"
+        }
+        require(battleImmediateResolveMinLeadValue >= 0) {
+            "Battle immediate-resolve lead cannot be negative"
+        }
+        require(battleImmediateResolveMinOpponentSupportValue >= 0) {
+            "Battle immediate-resolve opponent Support threshold cannot be negative"
         }
     }
 
@@ -79,6 +108,30 @@ open class HumanBaselinePolicy(
          * scoring and the associated reserve targets are finalized.
          */
         const val DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT: Int = 15
+
+        /** Base spacing between Human Baseline Battle transition tiers. */
+        const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
+
+        /** Live-threat margin at or inside which a Strike Row is a close contest. */
+        const val DEFAULT_BATTLE_CLOSE_MARGIN: Int = 4
+
+        /** Live-threat lead at which Human Baseline treats a winning row as secured for now. */
+        const val DEFAULT_BATTLE_SECURED_LEAD: Int = 10
+
+        /** Score-benchmark deficit at which a non-winning row becomes potentially hopeless. */
+        const val DEFAULT_BATTLE_HOPELESS_DEFICIT: Int = 10
+
+        /** Minimum Strike-VP improvement that normally justifies a substantial Support commitment. */
+        const val DEFAULT_BATTLE_MINIMUM_MEANINGFUL_VP_GAIN: Int = 2
+
+        /** Minimum named-transition steps that normally justify spending Water to refresh. */
+        const val DEFAULT_BATTLE_WATER_REFRESH_MIN_IMPROVEMENT_STEPS: Int = 2
+
+        /** Minimum lead over every opponent before the immediate-resolve Wisp is considered. */
+        const val DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_LEAD: Int = 5
+
+        /** Minimum remaining Support moves on each live contender before immediate resolution is attractive. */
+        const val DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT: Int = 3
     }
 
     /**
@@ -156,4 +209,38 @@ open class HumanBaselinePolicy(
         context: DecisionContext,
         resource: ReserveResource
     ): Int = cultivationReserveSpendPenaltyPerUnitValue
+
+    /** Base spacing used when Battle Swing assigns importance to named row transitions. */
+    open fun battleTransitionScale(context: DecisionContext): Int =
+        battleTransitionScaleValue
+
+    /** Absolute Live-Threat margin that Human Baseline treats as a close Battle contest. */
+    open fun battleCloseMargin(context: DecisionContext): Int =
+        battleCloseMarginValue
+
+    /** Live-Threat lead at which a currently winning row is treated as secured for this decision. */
+    open fun battleSecuredLead(context: DecisionContext): Int =
+        battleSecuredLeadValue
+
+    /** Score-Benchmark deficit at which a non-winning row gets only exceptional tactical attention. */
+    open fun battleHopelessDeficit(context: DecisionContext): Int =
+        battleHopelessDeficitValue
+
+    /** Minimum immediate Strike-VP improvement that normally justifies a large Support commitment. */
+    open fun battleMinimumMeaningfulVpGain(context: DecisionContext): Int =
+        battleMinimumMeaningfulVpGainValue
+
+    /** Minimum named Battle-improvement steps that normally justify Water Refresh. */
+    open fun battleWaterRefreshMinImprovementSteps(context: DecisionContext): Int =
+        battleWaterRefreshMinImprovementStepsValue
+
+    /** Minimum lead over every participating opponent for the immediate-Strike-resolution Wisp. */
+    open fun battleImmediateResolveMinLead(context: DecisionContext): Int =
+        battleImmediateResolveMinLeadValue
+
+    /** Minimum Support capacity on each live contender that makes locking a won row attractive. */
+    open fun battleImmediateResolveMinOpponentSupport(context: DecisionContext): Int =
+        battleImmediateResolveMinOpponentSupportValue
+
 }
+

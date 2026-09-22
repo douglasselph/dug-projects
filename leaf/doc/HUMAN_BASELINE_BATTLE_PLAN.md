@@ -1,0 +1,277 @@
+# Human Baseline Battle Implementation Plan
+
+This document turns the approved Battle behavior contract into small implementation checkpoints.
+
+The behavior contract is [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md). Overall Milestone-2 certification state is tracked in [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md).
+
+## Status
+
+Battle Stage A is complete:
+
+- [x] A1 — current Battle inventory
+- [x] A2 — existing Row Need, scoring, Support, Effect, and policy inventory
+- [x] A3 — row-state / Score-Benchmark / Live-Threat / Done contract
+- [x] A4 — Battle Swing / transition contract
+- [x] A5 — First Main / random-information contract
+- [x] A6 — Support / Final Main / continuation / tempo contract
+
+Stage B has begun.
+
+- [x] B1 — durable Battle plan + policy foundation
+- [ ] B2 — Done state in engine / decision context
+- [ ] B3 — Battle Step-5 loop safety
+- [ ] B4 — `BattleRowAssessor`
+- [ ] B5 — `BattleSwingEvaluator`
+- [ ] B6 — `BattleVpImpact` + `BattleActionAnalyzer`
+- [ ] B7 — First Main
+- [ ] B8 — actual Battle die placement
+- [ ] B9 — Support capacity
+- [ ] B10 — Support reachability + continuation
+- [ ] B11 — direct Support analysis
+- [ ] B12 — enabling Support analysis
+- [ ] B13 — special Battle effect evaluators
+- [ ] B14 — Support vs Final Main orchestration
+- [ ] B15 — action / target / branch alignment
+- [ ] B16 — single-purpose helper API cleanup + behavior-contract tests
+- [ ] B17 — focused compile / test / fix
+
+Stage C:
+
+- [ ] C1 — durable certification documentation
+- [ ] C2 — full `test integrationTest simulationCheck` regression + Markdown-link verification
+- [ ] C3 — mark Battle CERTIFIED and package final patch
+
+B1 intentionally changes no tactical Battle behavior.
+
+B1 verification:
+
+```text
+compileKotlin + compileTestKotlin --rerun-tasks
+    BUILD SUCCESSFUL
+
+focused:
+    HumanBaselinePolicyTest
+    HumanBaselineDecisionDirectorTest
+    HumanBaselineBattleStrategyTest
+
+    13 tests
+    0 failures
+    0 errors
+    0 skipped
+
+relative Markdown-link issues
+    0
+```
+
+## B1 — durable Battle plan + policy foundation
+
+B1 establishes the durable contract, KDoc navigation, and a shared overridable policy seam.
+
+Confirmed policy defaults:
+
+| Policy | Default |
+|---|---:|
+| Battle transition scale | 100 |
+| Close margin | 4 |
+| Secured lead | 10 |
+| Potentially hopeless deficit | 10 |
+| Minimum meaningful Strike-VP gain | 2 |
+| Water Refresh minimum improvement steps | 2 |
+| Immediate-resolve Wisp minimum lead | 5 |
+| Immediate-resolve Wisp minimum opponent Support | 3 |
+
+`HumanBaselineBattleStrategy` now receives the same `HumanBaselinePolicy` instance supplied by `HumanBaselineDecisionDirector`. Later checkpoints must consume the overridable methods rather than reading companion constants directly.
+
+## B2 — Done state in engine / decision context
+
+Move Done from coordinator-local knowledge into authoritative Battle-round state.
+
+Expose immutable Done information through `BattleView` / `DecisionContext`.
+
+A player becomes Done only after Final Main completely resolves.
+
+Add engine/context/coordinator tests. Do not implement tempo intelligence yet.
+
+## B3 — Battle Step-5 loop safety
+
+Add repeated observable-state detection plus a generous hard decision/pass ceiling.
+
+The signature must recognize legitimate progress such as resource consumption, Plant/Butterfly facing changes, grid changes, withdrawal/closure, and active/Done changes.
+
+Add pathological non-progress tests.
+
+## B4 — `BattleRowAssessor`
+
+Implement multiplayer-aware row facts:
+
+- actual winner state;
+- Score Benchmark;
+- Live Threat;
+- score/live margins;
+- wound state;
+- secured-for-now;
+- potentially hopeless.
+
+Respect closed rows, withdrawal, Done players, shared winners, and everybody-tied no-winner states.
+
+Prefer a focused `operator fun invoke()` helper.
+
+## B5 — `BattleSwingEvaluator`
+
+Implement:
+
+```text
+WIN_FLIPPED
+TIE_ACHIEVED
+WOUND_PREVENTED
+WOUND_CREATED
+SECURED_CREATED
+```
+
+with transition scale 100, one strongest transition base per row, raw swing, symmetric reverse-scored harm, multi-row aggregation, and `Double` expected values.
+
+Add exhaustive boundary/collateral tests.
+
+## B6 — `BattleVpImpact` + `BattleActionAnalyzer`
+
+Add the separate simple Strike-VP impact metric needed for substantial Support commitment and special-effect gates.
+
+Add shared action analysis for deterministic, expected-random, and actual-known results, including:
+
+- per-row Battle Swing;
+- multi-row collateral;
+- improvement-step count;
+- target realization.
+
+Hypothetical analysis must never consume mechanical RNG.
+
+## B7 — First Main
+
+Refactor First Main to combine intrinsic action/card value with shared tactical analysis.
+
+Implement Plant-vs-Draw, expected Draw placement, Round Effect tactical contribution, random-information timing, and no long-horizon conservation.
+
+## B8 — actual Battle die placement
+
+Refactor placement to use actual known die value plus fresh Battle state and shared Battle Swing.
+
+Respect forced placement and exact tactical ties via `StrategyRandomizer`.
+
+## B9 — Support capacity
+
+Count Support move resources rather than legal target multiplicity.
+
+Support own and public-opponent capacity, relevant Live-Threat opponents, and hidden-Wisp information boundaries.
+
+## B10 — Support reachability + continuation
+
+Implement limited cumulative reachability primarily from Bees and expected Butterfly improvement.
+
+Implement the continuation gate:
+
+```text
+individually worthwhile Support
+OR
+cumulative path with meaningful Strike-VP gain
+```
+
+If every row is secured or no worthwhile path remains, commit Final Main.
+
+## B11 — direct Support analysis
+
+Migrate direct Supports to shared tactical analysis:
+
+- Bee;
+- Butterfly;
+- Water reroll;
+- Mulch;
+- ordinary direct Wisp effects;
+- other direct Support discovered in current source.
+
+Apply premium-resource gates.
+
+## B12 — enabling Support analysis
+
+Implement Worm Flip and Water Refresh.
+
+Worm is primarily refresh Support. Direct Worm +1 placement normally requires projected Strike-VP gain of at least 2.
+
+Water Refresh requires at least two improvement steps.
+
+Prefer Worm to Water for an equivalent single-Plant recovery when appropriate.
+
+## B13 — special Battle effect evaluators
+
+Add dedicated focused helpers for:
+
+1. cross-player same-size die swap Wisp — normally projected VP gain >= 2;
+2. immediate Strike-resolution Wisp — lead every opponent by at least 5 and each relevant active contender has at least 3 remaining Support moves;
+3. two-step die-upgrade target selection — maximize legal resulting die size, then use expected Battle context for ties.
+
+Do not bury these special policies in one giant Effect strategy branch.
+
+## B14 — Support vs Final Main orchestration
+
+Replace the current flat Support-vs-Final-Main scoring and fixed finishing bonus.
+
+Use continuation assessment:
+
+```text
+worthwhile continuation
+    -> choose best worthwhile Support and remain active
+
+no worthwhile continuation
+    -> choose current best Final Main, resolve fully, become Done
+```
+
+Tempo is a modifier for useful soft Support, not the primary continuation gate.
+
+## B15 — action / target / branch alignment
+
+Audit affected Battle Effect decisions so the tactical reason that selects an action also drives downstream target/branch choice.
+
+Cover own/opponent dice, swaps, Strike Rows, Plants, Wisps, random-result timing, and relevant card branches.
+
+This may improve Effect code but does not certify the overall Effect Choices area.
+
+## B16 — single-purpose helper API cleanup + behavior-contract tests
+
+For newly added or materially touched focused one-operation helpers, prefer `operator fun invoke()`.
+
+Do not perform unrelated repository-wide style churn.
+
+Restructure direct Battle tests with a clearly identifiable `Human Baseline Behavior Contract` section. Keep wiring/helper/edge-case/engine tests separate.
+
+## B17 — focused compile / test / fix
+
+Compile production and test Kotlin, then run the focused Battle, analysis-helper, policy, coordinator, placement, affected Effect, and relevant integration tests.
+
+Fix focused failures until green. Record exact test totals/results.
+
+Do not mark Battle certified yet.
+
+## Stage C
+
+### C1 — durable certification documentation
+
+Update Battle docs, `HUMAN_BASELINE.md`, local README/KDoc, testing references, and certification wording. Keep Battle pending until C2 succeeds.
+
+### C2 — full regression
+
+Run:
+
+```bash
+GRADLE_USER_HOME=/mnt/data/leaf-gradle-portable \
+    ./gradlew --offline --no-daemon \
+    test integrationTest simulationCheck
+```
+
+Verify relative Markdown links.
+
+### C3 — certify
+
+Only after C2 succeeds:
+
+- mark Battle CERTIFIED;
+- update progress to 3 of 8 major areas and 6 of 30 hooks, if the 3-hook count remains current;
+- package the final leaf-rooted patch.

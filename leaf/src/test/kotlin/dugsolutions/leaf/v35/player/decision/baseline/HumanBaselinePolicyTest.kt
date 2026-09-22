@@ -88,6 +88,57 @@ class HumanBaselinePolicyTest {
         assertEquals(12, policy.cultivationReserveSpendPenaltyPerUnit(context, ReserveResource.WATER))
     }
 
+
+    @Test
+    fun `default Battle policy centralizes approved Stage A thresholds`() {
+        val policy = HumanBaselinePolicy()
+        val context = context().copy(phase = RoundCardType.BATTLE)
+
+        assertEquals(100, policy.battleTransitionScale(context))
+        assertEquals(4, policy.battleCloseMargin(context))
+        assertEquals(10, policy.battleSecuredLead(context))
+        assertEquals(10, policy.battleHopelessDeficit(context))
+        assertEquals(2, policy.battleMinimumMeaningfulVpGain(context))
+        assertEquals(2, policy.battleWaterRefreshMinImprovementSteps(context))
+        assertEquals(5, policy.battleImmediateResolveMinLead(context))
+        assertEquals(3, policy.battleImmediateResolveMinOpponentSupport(context))
+    }
+
+    @Test
+    fun `constructor knobs can tune Battle policy without changing production constants`() {
+        val policy = HumanBaselinePolicy(
+            battleTransitionScaleValue = 200,
+            battleCloseMarginValue = 3,
+            battleSecuredLeadValue = 12,
+            battleHopelessDeficitValue = 11,
+            battleMinimumMeaningfulVpGainValue = 4,
+            battleWaterRefreshMinImprovementStepsValue = 3,
+            battleImmediateResolveMinLeadValue = 6,
+            battleImmediateResolveMinOpponentSupportValue = 4
+        )
+        val context = context().copy(phase = RoundCardType.BATTLE)
+
+        assertEquals(200, policy.battleTransitionScale(context))
+        assertEquals(3, policy.battleCloseMargin(context))
+        assertEquals(12, policy.battleSecuredLead(context))
+        assertEquals(11, policy.battleHopelessDeficit(context))
+        assertEquals(4, policy.battleMinimumMeaningfulVpGain(context))
+        assertEquals(3, policy.battleWaterRefreshMinImprovementSteps(context))
+        assertEquals(6, policy.battleImmediateResolveMinLead(context))
+        assertEquals(4, policy.battleImmediateResolveMinOpponentSupport(context))
+    }
+
+    @Test
+    fun `Battle strategy code can override policy by decision context`() {
+        val policy = object : HumanBaselinePolicy() {
+            override fun battleSecuredLead(context: DecisionContext): Int =
+                if (context.phase == RoundCardType.BATTLE) 7 else 10
+        }
+
+        assertEquals(7, policy.battleSecuredLead(context().copy(phase = RoundCardType.BATTLE)))
+        assertEquals(10, policy.battleSecuredLead(context()))
+    }
+
     private fun context(
         hand: List<DieView> = emptyList(),
         bees: Int = 0,

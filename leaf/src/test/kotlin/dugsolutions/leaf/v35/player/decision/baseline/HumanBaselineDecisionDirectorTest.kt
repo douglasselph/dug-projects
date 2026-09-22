@@ -27,7 +27,9 @@ class HumanBaselineDecisionDirectorTest {
         assertSame(wiring.influenceRegistry, wiring.effect.influenceRegistry)
 
         assertSame(wiring.policy, wiring.cultivation.policy)
+        assertSame(wiring.policy, wiring.battle.policy)
         assertSame(wiring.policy, wiring.buy.policy)
+        assertSame(wiring.policy, wiring.effect.policy)
     }
 
     @Test

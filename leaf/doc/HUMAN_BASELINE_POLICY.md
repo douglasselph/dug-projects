@@ -77,12 +77,22 @@ The current shared defaults are:
 
 | Knob | Default | Intent |
 |---|---:|---|
-| `DEFAULT_PROTECTED_BEE_RESERVE` | 2 | normally preserve 2 Bees for Battle |
-| `DEFAULT_PROTECTED_WORM_RESERVE` | 1 | normally preserve 1 Worm for Battle/Flip flexibility |
+| `DEFAULT_PROTECTED_BEE_RESERVE` | 2 | normally preserve 2 Bees on the way into Battle |
+| `DEFAULT_PROTECTED_WORM_RESERVE` | 1 | normally preserve 1 Worm on the way into Battle/Flip flexibility |
+| `DEFAULT_PROTECTED_WATER_RESERVE` | 1 | soft Cultivation reserve for Water |
+| `DEFAULT_PROTECTED_MULCH_RESERVE` | 1 | soft Cultivation reserve for stored Mulch |
 | `DEFAULT_CULTIVATION_DICE_DEFICIT_POINTS_PER_POWER` | 1 | one score point per missing dice-power point |
 | `DEFAULT_CULTIVATION_DICE_DEFICIT_MAX_BONUS` | 9 | cap development need at a modest nudge |
 | `DEFAULT_CULTIVATION_DONE_SCORE` | 55 | benchmark remaining Support opportunities must beat |
 | `DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT` | 15 | meaningful but non-absolute penalty for spending protected Support resources |
+| `DEFAULT_BATTLE_TRANSITION_SCALE` | 100 | spacing between named Battle Swing transition tiers |
+| `DEFAULT_BATTLE_CLOSE_MARGIN` | 4 | Live-Threat margin defining a close Battle contest |
+| `DEFAULT_BATTLE_SECURED_LEAD` | 10 | Live-Threat lead treated as secured-for-now |
+| `DEFAULT_BATTLE_HOPELESS_DEFICIT` | 10 | Score-Benchmark deficit treated as potentially hopeless |
+| `DEFAULT_BATTLE_MINIMUM_MEANINGFUL_VP_GAIN` | 2 | default VP gate for substantial Support commitment |
+| `DEFAULT_BATTLE_WATER_REFRESH_MIN_IMPROVEMENT_STEPS` | 2 | minimum improvement steps for Battle Water Refresh |
+| `DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_LEAD` | 5 | minimum lead for the immediate-Strike-resolution Wisp |
+| `DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT` | 3 | minimum live-contender Support capacity for that Wisp |
 
 These values are strategy defaults, not game rules.
 
@@ -313,3 +323,44 @@ reserve-spend penalty        -> Water, Mulch, Worm Support scoring
 ```
 
 B4 connected the Support layer, and B6 passes the same policy into downstream Effect target/branch decisions where Cultivation action value depends on them. These defaults remain experimental knobs and may be calibrated later without changing the scoring architecture.
+
+## 11. Battle Stage-A policy decisions
+
+Battle designer review (A1–A6) established a second group of cross-cutting Human Baseline knobs. B1 adds the policy seam only; later Battle checkpoints consume these values.
+
+The canonical overridable methods are:
+
+```kotlin
+policy.battleTransitionScale(context)
+policy.battleCloseMargin(context)
+policy.battleSecuredLead(context)
+policy.battleHopelessDeficit(context)
+policy.battleMinimumMeaningfulVpGain(context)
+policy.battleWaterRefreshMinImprovementSteps(context)
+policy.battleImmediateResolveMinLead(context)
+policy.battleImmediateResolveMinOpponentSupport(context)
+```
+
+The defaults are:
+
+```text
+transition scale                          100
+close Live-Threat margin                   4
+secured Live-Threat lead                  10
+potentially hopeless Score-Benchmark gap  10
+minimum meaningful Strike-VP gain          2
+Water Refresh improvement steps            2
+immediate-resolve Wisp minimum lead        5
+immediate-resolve opponent Support         3
+```
+
+These values are strategy assumptions, not rules. The actual Wound margin and legal effect timing remain engine/game-rule facts.
+
+The Battle transition scale intentionally lives in the hundreds. The planned Battle Swing system uses named transitions such as `WIN_FLIPPED`, `TIE_ACHIEVED`, and `WOUND_PREVENTED`, then adds raw margin movement as fine detail. A scale of 100 ensures ordinary die-size movement cannot accidentally reverse the intended transition hierarchy.
+
+The minimum meaningful VP gain is a separate resource-commitment gate. It does not replace Battle Swing. Human Baseline may still make individually useful Wound-prevention or other tactical plays; the +2 VP default primarily answers whether committing several Supports to a longer fight is worthwhile.
+
+The pre-Battle 2-Bee/1-Worm reserve should not be interpreted as a Battle reserve. Its purpose is largely to carry useful Critters into Battle. During Battle, the approved baseline is willing to spend them on the current fight when their Battle use is worthwhile.
+
+The complete approved Battle behavior is documented in [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md), and the implementation sequence is tracked in [`HUMAN_BASELINE_BATTLE_PLAN.md`](HUMAN_BASELINE_BATTLE_PLAN.md).
+

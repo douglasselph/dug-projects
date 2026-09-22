@@ -60,7 +60,8 @@ class HumanBaselineDecisionDirector(
     internal val battle = HumanBaselineBattleStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy
     )
     internal val buy = HumanBaselineBuyStrategy(
         scoreEngine = scoreEngine,

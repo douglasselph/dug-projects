@@ -41,6 +41,8 @@ wound/        Flip/Snip target choice
 
 `HumanBaselineDecisionDirector` wires these areas into the eight `DecisionDirector` strategy dimensions and supplies one shared `HumanBaselinePolicy` to decision areas that need cross-cutting tuning. See [`doc/HUMAN_BASELINE_POLICY.md`](../../../../../../../../../doc/HUMAN_BASELINE_POLICY.md).
 
+Battle Stage-A behavior and the implementation sequence are documented in [`doc/HUMAN_BASELINE_BATTLE.md`](../../../../../../../../../doc/HUMAN_BASELINE_BATTLE.md) and [`doc/HUMAN_BASELINE_BATTLE_PLAN.md`](../../../../../../../../../doc/HUMAN_BASELINE_BATTLE_PLAN.md).
+
 ## Test location
 
 Direct unit tests mirror this package beneath:
@@ -62,7 +64,7 @@ Critter Reward       pending designer certification
 Wound Resolution     pending designer certification
 Graft Placement      pending designer certification
 Cultivation          CERTIFIED
-Battle               pending designer certification
+Battle               Stage A complete; implementation/certification pending
 Buy                  CERTIFIED
 Butterfly Result     pending designer certification
 Effect Choices       pending designer certification

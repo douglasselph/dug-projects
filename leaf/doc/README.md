@@ -9,6 +9,8 @@ Use the repository-level [`README.md`](../README.md) as the main entry point.
 - [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md) — Milestone-2 specification and certification map for the eight Human Baseline decision areas and 30 strategy hooks.
 - [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) — detailed inventory of how Cultivation currently works.
 - [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) — design rationale, implementation checkpoints, and completed certification record for Human Baseline Cultivation.
+- [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md) — approved Stage-A behavior contract for Human Baseline Battle.
+- [`HUMAN_BASELINE_BATTLE_PLAN.md`](HUMAN_BASELINE_BATTLE_PLAN.md) — incremental Battle implementation and certification checkpoints.
 - [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) — shared Human Baseline tuning knobs, score scale, reserve policy, and simulation override seam.
 - [`USING_THE_SIMULATOR.md`](USING_THE_SIMULATOR.md) — practical workflow for using the project as a design-research tool.
 - [`TESTING_AND_VERIFICATION.md`](TESTING_AND_VERIFICATION.md) — unit, integration, and simulation verification responsibilities and commands.
