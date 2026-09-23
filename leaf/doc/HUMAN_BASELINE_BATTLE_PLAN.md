@@ -32,6 +32,13 @@ Stage B has begun.
 - [x] B13 — special Battle effect evaluators
 - [x] B14 — Support vs Final Main orchestration
 - [ ] B15 — action / target / branch alignment
+  - [x] B15A — inventory + alignment map
+  - [ ] B15B — own-die target alignment (split below into B15B1a/B15B1b/B15B2/B15B3/B15B4)
+  - [ ] B15C — opponent / any-Battle-die target alignment
+  - [ ] B15D — Strike-Row + multi-row alignment
+  - [ ] B15E — Plant / player / Wisp / branch alignment (split below into B15E1/B15E2/B15E3)
+  - [ ] B15F — random-timing + B13 end-to-end alignment (split below into B15F1/B15F2)
+  - [ ] B15G — integration + documentation + final B15 verification
 - [ ] B16 — single-purpose helper API cleanup + behavior-contract tests
 - [ ] B17 — focused compile / test / fix
 
@@ -576,11 +583,111 @@ Battle remains uncertified pending B15-B17 and Stage C.
 
 ## B15 — action / target / branch alignment
 
-Audit affected Battle Effect decisions so the tactical reason that selects an action also drives downstream target/branch choice.
+### Overall purpose
 
-Cover own/opponent dice, swaps, Strike Rows, Plants, Wisps, random-result timing, and relevant card branches.
+B15 closes the gap between top-level Battle action valuation and the later Effect target/branch request. The intended contract is:
 
-This may improve Effect code but does not certify the overall Effect Choices area.
+```text
+enumerate legal realizations
+    -> evaluate them with compatible shared Battle reasoning
+    -> use the best realization when valuing whether to take the action
+    -> when the downstream legal choice is requested, use the same reasoning
+    -> normally select the realization that justified taking the action
+```
+
+Alignment means **compatible current-state reasoning**, not a hidden stale target commitment. If legitimate game state changes before the downstream decision, Human Baseline must rebuild from the fresh `DecisionContext` and re-evaluate the then-legal choices.
+
+B15 may improve `HumanBaselineEffectStrategy`, but it does **not** certify the overall Effect Choices decision area.
+
+### B15A — inventory + alignment map — COMPLETE
+
+B15A inspected the current source rather than relying on historical hook names. The production `EffectStrategy` currently declares 20 methods. The phase-aware `GameEffectDecisionRequirements` contract exposes **17 of those methods during Battle**, producing **50 Battle effect/mechanism pairings**. Three EffectStrategy methods are not current Battle B15 seams:
+
+- `chooseBattleDie` — the shared helper exists, but no current `GameEffectDecisionRequirements` entry uses `EFFECT_BATTLE_DIE`, and `chooseRequiredBattleDie(...)` has no production caller;
+- `chooseDice` — `EFFECT_DICE_SET` is currently Cultivation-only for its one effect;
+- `chooseOptionalPlant` — current optional-Plant requests are Cultivation-side branches; their Battle variants use Wound/other decision families instead.
+
+The 50 current Battle pairings collapse into **22 implementation/audit slices** because several effects intentionally share one strategy request shape while some shared hooks have materially different Battle behavior.
+
+Current top-level alignment facts found by B15A:
+
+- Step-4 Plant and Round-effect actions still receive intrinsic/contextual scores in `BattleFirstMainPriority`; target-dependent tactical projection was deliberately deferred from B7 to B15.
+- Step-5 Wisp willingness still begins with the card-local `wispPlayScore(...)`; B14 decides whether a Wisp is an individually worthwhile soft Support but does not generally make the Wisp's downstream target analyzer authoritative at top level.
+- Generic `chooseDie(...)`, `chooseRootWellBattle(...)`, `scorePair(...)`, and non-special `chooseStrikeRow(...)` still use local die arithmetic / `RowNeed`-style heuristics rather than complete shared `BattleActionAnalyzer` realizations.
+- The B13 downstream target hooks are already specialized: Overgrowth uses `BattleTwoStepUpgradeEvaluator`, Pollen Theft uses `BattlePollenTheftEvaluator`, and immediate Strike resolution uses `BattleImmediateStrikeResolveEvaluator`. B15F2 must verify their **top-level willingness + downstream target** path end to end rather than redesign their target rules.
+- `chooseOptionalDie(...)` for Wispquake already uses expected protection value before the reroll. B15F1 owns the broader random-information audit.
+
+No broad production behavior was changed in B15A.
+
+#### B15A current alignment inventory
+
+| Primary owner | Strategy hook slice | Current Battle effects / decisions | Current downstream reasoning | B15 disposition |
+| --- | --- | --- | --- | --- |
+| B15B1a | generic `chooseDie` — pure deterministic own-die value transforms | `DOUBLE_ONE_DIE`; `FLIP_OWN_DIE_TO_OPPOSITE_FACE`; `RAISE_ANY_DIE_PLUS_1`; `RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER`; `RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE`; `RAISE_DIE_PLUS_3`; `RAISE_DIE_PLUS_4`; `SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE`; `SET_DIE_UP_TO_D12_TO_MAX`; `SET_LOWEST_VALUE_DIE_TO_MAX` | generic target-value arithmetic in `CardScoringHelpers.scoreDieTarget(...)` | align exact affected row with shared tactical analysis |
+| B15B1b | generic `chooseDie` — deterministic target with secondary/collateral Battle consequence | `RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW`; `RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE`; `RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW`; `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE` | local raise gain plus broad intrinsic/RowNeed adjustments | analyze the complete immediate realization; leave separate row branch to B15D |
+| B15B2 | generic `chooseDie` — discard/draw/Mulch/return source target | `DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE`; `DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE`; `DISCARD_ONE_DIE_DRAW_TWO`; `GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD`; `MULCH_DIE_FROM_DISCARD`; `MULCH_DIE_FROM_HAND`; `ROLL_DIE_FROM_DISCARD_INTO_HAND` | generic/local source-die heuristics | align source choice with expected immediate Battle consequence where legal; B15F1 verifies later RNG/placement timing |
+| B15B3 | generic `chooseDie` — reroll/upgrade own-die target | `DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE`; `REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS`; `UPGRADE_DIE_AND_USE_NOW`; `UPGRADE_DIE_FROM_HAND`; `REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW` | expected/local die gain; some later placement/row consequence | use expectation before RNG and shared row realization; B15F1 audits timing |
+| B15B4 | compound own-die target | `chooseDiePair` for `SET_DIE_TO_MATCH_ANOTHER`; `chooseCritterAndDie` for `TRASH_CRITTER_TO_RAISE_DIE_PLUS_5` | local numeric gain / reserve arithmetic | align pair/combined target with current Battle realization without adding future-Battle planning |
+| B15C | `chooseRootWellBattle` | `GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE` | expected reroll arithmetic plus RowNeed/value | compare complete own-two versus opponent-one expected Battle outcomes; preserve target-before-RNG timing |
+| B15D | own-die pair / Strike-Row realizations | `chooseOptionalDiePair` for `DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE`; `chooseDiePair` for `DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE`; non-special `chooseStrikeRow` for `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE`, `REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW`, and `SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3` | pair-local RowNeed arithmetic; generic row-need bonus | evaluate complete row/multi-row consequences and remove enum/first-legal bias |
+| B15E1 | Plant/opponent-Plant effect target | `chooseOpponentPlantWound` for 3 Battle effects; `choosePlantEffect` for `REUSE_SPENT_ROOT_OR_VINE_EFFECT` | card loss/play values | align immediate Battle-enabled/disabling value without deep future-combo search |
+| B15E2 | resource / player / Wisp-set target | `chooseBeeSource`; `chooseButterflyTarget` (2 effects); `chooseWispsToKeep`; `chooseDieSize`; `choosePlayer` | local resource/card heuristics | audit top-level compatibility; preserve simple logic when Battle consequences do not materially distinguish targets |
+| B15E3 | qualitative card branch | `choosePetalToDie4`; `chooseOEdelweiss` | existing branch/card scorer logic | align Battle branch choice with top-level action value; B15F1 audits any later random/placement seam |
+| B15F1 | random-timing primary seam | `chooseOptionalDie` for `REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN` | expected protected-value calculation before reroll | verify target-before-RNG commitment and audit all other B15 random seams cross-cutting B15B–B15E |
+| B15F2 | B13 end-to-end special alignment | Overgrowth `chooseDie`; Pollen Theft `chooseCrossPlayerDieSwap`; immediate-resolve `chooseStrikeRow` | dedicated B13 evaluators | preserve target policy; verify the top-level decision that spends/plays the effect is compatible with the dedicated target evaluator |
+
+#### B15A counts
+
+The 22 primary slices above account for all 50 Battle effect/mechanism pairings:
+
+- **B15B:** 5 slices / 28 effect-mechanism pairings;
+- **B15C:** 1 slice / 1 pairing;
+- **B15D:** 3 slices / 5 pairings;
+- **B15E:** 9 slices / 12 pairings;
+- **B15F:** 4 slices / 4 pairings.
+
+`B15G` is the integration/documentation/verification closeout and owns no new effect-mechanism pairing.
+
+#### Timeout-safe refinement discovered by B15A
+
+The source inventory confirms that the single B15B checkpoint from the external timeout-safe handoff is still too broad: generic `chooseDie(...)` alone serves 27 Battle effect pairings, 26 of them outside the B13 Overgrowth special case. Therefore B15B is subdivided before implementation:
+
+- **B15B1a — pure deterministic own-die transforms** (10 pairings);
+- **B15B1b — deterministic own-die targets with secondary/collateral Battle consequences** (4 pairings);
+- **B15B2 — discard/draw/Mulch/return source-die alignment** (7 pairings);
+- **B15B3 — reroll/upgrade own-die alignment** (5 pairings);
+- **B15B4 — compound pair/Critter + die alignment** (2 pairings).
+
+B15E is also split because it spans several unrelated request families:
+
+- **B15E1 — Plant/opponent-Plant alignment** (4 pairings);
+- **B15E2 — resource/player/Wisp-set target alignment** (6 pairings);
+- **B15E3 — qualitative branch alignment** (2 pairings).
+
+B15F is split into:
+
+- **B15F1 — random-information timing audit**, including the Wispquake keep-one seam and the target-before/post-random boundaries that cross B15B–B15E;
+- **B15F2 — B13 end-to-end special alignment**, covering Overgrowth, Pollen Theft, and immediate Strike resolution without redesigning their B13 target policies.
+
+This refinement is deliberately more granular than the external B15A–B15G sketch because the current source proves that `chooseDie(...)` is a much larger shared seam than the earlier plan could know before inventory.
+
+### Remaining B15 checkpoints
+
+- [ ] **B15B1a** — pure deterministic own-die transforms
+- [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences
+- [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
+- [ ] **B15B3** — reroll/upgrade own-die alignment
+- [ ] **B15B4** — compound own-die pair / Critter+die alignment
+- [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
+- [ ] **B15D** — Strike-Row and swap/multi-row alignment
+- [ ] **B15E1** — Plant/opponent-Plant alignment
+- [ ] **B15E2** — resource/player/Wisp-set target alignment
+- [ ] **B15E3** — qualitative branch alignment
+- [ ] **B15F1** — random-information timing audit
+- [ ] **B15F2** — B13 special end-to-end alignment
+- [ ] **B15G** — representative integration, durable documentation, and final B15 focused verification
+
+Every implementation sub-checkpoint must remain bounded: focused compile/tests while iterating, no automatic full-suite run, and a stop after the requested sub-checkpoint. B15G performs the combined B15 verification; B17/C2 remain the later Battle-wide verification/certification layers.
 
 ## B16 — single-purpose helper API cleanup + behavior-contract tests
 
