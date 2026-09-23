@@ -723,7 +723,11 @@ B15B3 is complete. Its random-information timing remains subject to the cross-cu
 
 B15B4 is complete. Compound own-die choices now evaluate the complete source/target or Critter/target candidate rather than independently optimizing raw numeric pieces.
 
-- [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
+### B15C — Root Well own-two versus opponent-one — COMPLETE
+
+`chooseRootWellBattle(...)` now compares every legal complete Root Well Battle branch through `BattleRootWellTargetAnalyzer`. The own-two branch aggregates the fair expected reroll changes of both committed actor dice by their actual Strike Rows; the opponent-one branch applies the fair expected reroll change to the selected opponent die's current row. Both feed projected expected row states into shared `BattleActionAnalyzer`, so a smaller raw expected movement that flips a Strike can beat a larger numerical movement that remains tactically weak. Root Well still commits its complete target branch before either reroll occurs, consumes no hypothetical mechanical RNG, and exact tactical ties continue through `StrategyRandomizer`.
+
+- [x] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment
 - [ ] **B15E1** — Plant/opponent-Plant alignment
 - [ ] **B15E2** — resource/player/Wisp-set target alignment

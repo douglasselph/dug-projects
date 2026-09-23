@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementA
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleRootWellTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSetDieToMatchAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
@@ -53,6 +54,7 @@ class HumanBaselineEffectStrategy(
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     internal val pollenTheftEvaluator: BattlePollenTheftEvaluator = BattlePollenTheftEvaluator(policy),
+    internal val rootWellTargetAnalyzer: BattleRootWellTargetAnalyzer = BattleRootWellTargetAnalyzer(policy),
     internal val immediateStrikeResolveEvaluator: BattleImmediateStrikeResolveEvaluator =
         BattleImmediateStrikeResolveEvaluator(policy),
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
@@ -218,23 +220,18 @@ class HumanBaselineEffectStrategy(
 
     override fun chooseRootWellBattle(request: ChooseRootWellBattleRequest): RootWellBattleChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseRootWellBattle(request)
-        return choose(
-            request.context,
-            request.legalChoices.map { choice ->
-                val score = when (choice) {
-                    is RootWellBattleChoice.OwnDice -> {
-                        val gain = choice.dice.sumOf { DieValueHeuristics.expectedRerollGain(it.die.sides, it.die.value) }
-                        val need = choice.dice.sumOf { CardScoringHelpers.rowNeedBonus(request.context, it.row) }
-                        PriorityScore(45 + (gain * 4).roundToInt() + need / 2)
-                    }
-                    is RootWellBattleChoice.OpponentDie -> {
-                        val loss = -DieValueHeuristics.expectedRerollGain(choice.die.die.sides, choice.die.die.value)
-                        PriorityScore(45 + (loss * 5).roundToInt() + choice.die.die.value)
-                    }
-                }
-                DecisionCandidate(choice, score, setOf(DecisionTag.SPEND_WATER))
+        val analyzed = request.legalChoices.mapNotNull { choice ->
+            rootWellTargetAnalyzer(request.context, choice)?.let { analysis ->
+                DecisionCandidate(
+                    choice,
+                    PriorityScore(analysis.tacticalValue.roundToInt())
+                        .adjusted(0, "Complete expected Root Well Battle realization"),
+                    setOf(DecisionTag.SPEND_WATER)
+                )
             }
-        )
+        }
+        if (analyzed.isEmpty()) return delegate.chooseRootWellBattle(request)
+        return choose(request.context, analyzed)
     }
 
     override fun chooseCrossPlayerDieSwap(request: ChooseEffectCrossPlayerDieSwapRequest): EffectCrossPlayerDieSwapChoice {
