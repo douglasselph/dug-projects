@@ -310,11 +310,37 @@ class HumanBaselineEffectStrategy(
             request.context,
             request.legalChoices.map { choice ->
                 val gain = DieValueHeuristics.actualRaiseGain(choice.die.sides, choice.die.value, 5)
-                val count = if (choice.critter == Critter.BEE) request.context.self.board.bees else request.context.self.board.worms
+                val count = if (choice.critter == Critter.BEE) {
+                    request.context.self.board.bees
+                } else {
+                    request.context.self.board.worms
+                }
                 val reservePenalty = if (count <= 2) -25 else if (count == 3) -10 else 0
+                val baseScore = if (
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                    request.effect == GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5
+                ) {
+                    val row = rowFor(request.context, choice.die.index)
+                    val analysis = row?.let {
+                        ownTotalChangeAnalyzer(
+                            context = request.context,
+                            realization = choice,
+                            row = it,
+                            change = gain.toDouble(),
+                            mode = BattleAnalysisMode.DETERMINISTIC
+                        )
+                    }
+                    analysis?.tacticalValue?.roundToInt() ?: (45 + gain * 4)
+                } else {
+                    45 + gain * 4
+                }
+                val critterLabel = if (choice.critter == Critter.BEE) "Bee" else "Worm"
                 DecisionCandidate(
                     choice = choice,
-                    score = PriorityScore(45 + gain * 4 + reservePenalty),
+                    score = PriorityScore(baseScore).adjusted(
+                        reservePenalty,
+                        "Existing $critterLabel availability preference"
+                    ),
                     tags = setOf(if (choice.critter == Critter.BEE) DecisionTag.SPEND_BEE else DecisionTag.SPEND_WORM)
                 )
             }

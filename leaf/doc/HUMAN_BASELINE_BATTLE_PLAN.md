@@ -719,7 +719,10 @@ B15B3 is complete. Its random-information timing remains subject to the cross-cu
 - [x] **B15B3** — reroll/upgrade own-die alignment complete
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
   - [x] **B15B4-1 — Set one die to match another** — `SET_DIE_TO_MATCH_ANOTHER` / `chooseDiePair` now evaluates each legal source/target pair as the complete deterministic target-row realization. The source remains unchanged; the target is set to the source's current value, so shared Battle analysis receives the exact signed target-row delta. A smaller copied-value gain that flips a Strike can beat a larger numeric gain elsewhere. `BattleEnabledPlantAnalyzer` enumerates the same legal pair shape for enabled-Plant valuation. Non-Battle pair behavior is preserved and exact tactical ties remain strategy-randomized.
-  - [ ] **B15B4-2 — Critter + die** — `TRASH_CRITTER_TO_RAISE_DIE_PLUS_5` / `chooseCritterAndDie`.
+  - [x] **B15B4-2 — Critter + die** — `TRASH_CRITTER_TO_RAISE_DIE_PLUS_5` / `chooseCritterAndDie` now evaluates the die half of each legal combined choice through the exact deterministic +5 change on that die's current Strike row. Meaningful Battle transitions therefore outrank larger raw +5 gains on tactically irrelevant rows. The existing Bee/Worm availability preference remains a secondary adjustment between otherwise comparable combined choices; it is not a future-Battle conservation gate and does not prevent spending a Critter for the current Battle.
+
+B15B4 is complete. Compound own-die choices now evaluate the complete source/target or Critter/target candidate rather than independently optimizing raw numeric pieces.
+
 - [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment
 - [ ] **B15E1** — Plant/opponent-Plant alignment

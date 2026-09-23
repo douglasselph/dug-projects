@@ -18,12 +18,15 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.context.OpponentView
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCritterDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectCritterDieChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -685,6 +688,61 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `Vine and Dine chooses smaller capped raise when it flips the Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 6, 4)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 20, 1)), player(opponent, 10)),
+            bees = 4,
+            worms = 4
+        )
+        val largeRawGain = EffectCritterDieChoice(
+            critter = Critter.WORM,
+            die = EffectDieChoice(1, 20, 1)
+        )
+        val strikeFlippingChoice = EffectCritterDieChoice(
+            critter = Critter.WORM,
+            die = EffectDieChoice(0, 6, 4)
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseCritterAndDie(
+            ChooseEffectCritterDieRequest(
+                effect = GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5,
+                legalChoices = listOf(largeRawGain, strikeFlippingChoice),
+                context = context
+            )
+        )
+
+        assertEquals(strikeFlippingChoice, chosen)
+    }
+
+    @Test
+    fun `Vine and Dine preserves existing Critter availability preference after Battle target value ties`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 6, 4)), player(opponent, 10)),
+            bees = 2,
+            worms = 4
+        )
+        val bee = EffectCritterDieChoice(
+            critter = Critter.BEE,
+            die = EffectDieChoice(0, 6, 4)
+        )
+        val worm = EffectCritterDieChoice(
+            critter = Critter.WORM,
+            die = EffectDieChoice(0, 6, 4)
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseCritterAndDie(
+            ChooseEffectCritterDieRequest(
+                effect = GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5,
+                legalChoices = listOf(bee, worm),
+                context = context
+            )
+        )
+
+        assertEquals(worm, chosen)
+    }
+
+    @Test
     fun `simple Battle reroll exact tactical tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
@@ -766,7 +824,9 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
         vararg rows: BattleRowView,
         creature: List<CreatureCardView> = emptyList(),
         supply: List<DieView> = emptyList(),
-        discard: List<DieView> = emptyList()
+        discard: List<DieView> = emptyList(),
+        bees: Int = 0,
+        worms: Int = 0
     ): DecisionContext {
         val hand = rows.flatMap { it.forPlayer(actor)?.dice.orEmpty() }
             .associateBy { it.handIndex }
@@ -781,6 +841,8 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
                     supply = supply,
                     hand = hand,
                     discard = discard,
+                    bees = bees,
+                    worms = worms,
                     creature = creature
                 )
             ),
