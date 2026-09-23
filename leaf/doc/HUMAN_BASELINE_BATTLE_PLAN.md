@@ -697,15 +697,15 @@ B15B1b is complete. These slices do not implement the later Strike-Row branch de
 B15B2 is being implemented as smaller source-target slices.
 
 - [x] **discard source for Draw effects** — the source-die choice for `DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE`, `DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE`, and `DISCARD_ONE_DIE_DRAW_TWO` now starts from the selected die's actual Battle row instead of generic weakest-die arithmetic. The strategy mirrors normal Draw order using visible die sizes and mathematical expected rolls only. Forced same-row replacements are included in the expected row projection; later optional swaps and free post-roll placements remain fresh downstream decisions and are not pre-committed. The free-placement two-Draw effect values the immediate tactical cost of removing the source die and only uses source-dependent expected Draw value as a small non-positional adjustment. No mechanical RNG is consumed.
-- [ ] **Mulch/discard/return source choices** — `GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD`, `MULCH_DIE_FROM_DISCARD`, `MULCH_DIE_FROM_HAND`, and `ROLL_DIE_FROM_DISCARD_INTO_HAND`.
+- [x] **Mulch/discard/return source choices** — audited `GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD`, `MULCH_DIE_FROM_DISCARD`, `MULCH_DIE_FROM_HAND`, and `ROLL_DIE_FROM_DISCARD_INTO_HAND`. The three Mulch-source decisions remain on their existing simple behavior because a Mulch created by one of these effects is `PENDING_MULCH` and is not normalized into a usable Mulch token until Battle Cleanup; selecting among those legal sources therefore does not create a distinct immediate current-Battle realization to optimize in this checkpoint. `ROLL_DIE_FROM_DISCARD_INTO_HAND` is different: the selected Discard die is immediately rolled and then placed in Battle, so Human Baseline now compares legal source dice by mathematical expected roll and best currently legal expected Battle placement. The source choice consumes no mechanical RNG and does not pre-commit the later actual placement row. Equal-size source dice remain exact tactical ties regardless of their current Discard face and continue to use `StrategyRandomizer`.
 
-B15B2 remains in progress and does not certify Effect Choices.
+B15B2 is complete and does not certify Effect Choices.
 
 ### Remaining B15 checkpoints
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
 - [x] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences complete
-- [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
+- [x] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [ ] **B15B3** — reroll/upgrade own-die alignment
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
 - [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment

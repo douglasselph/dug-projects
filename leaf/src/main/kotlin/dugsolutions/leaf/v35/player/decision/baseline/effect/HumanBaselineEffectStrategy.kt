@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
@@ -54,7 +55,8 @@ class HumanBaselineEffectStrategy(
         BattleImmediateStrikeResolveEvaluator(policy),
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
     internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy),
-    internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy)
+    internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy),
+    internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -99,6 +101,16 @@ class HumanBaselineEffectStrategy(
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in DISCARD_DRAW_SOURCE_BATTLE_EFFECTS ->
                         battleDiscardDrawSourceTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND ->
+                        battleRollDiscardIntoBattleTargetScore(request.context, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
                                 context = request.context,
@@ -548,6 +560,28 @@ class HumanBaselineEffectStrategy(
         ) ?: return null
         return PriorityScore(analysis.tacticalValue.roundToInt())
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
+    }
+
+
+    /**
+     * Chooses the Discard die for Forget-Me-Not during Battle by the honest
+     * expected value of the die after it is rolled and then placed. The source
+     * choice happens before that roll, so this deliberately uses mathematical
+     * expectation and best currently legal expected placement without consuming
+     * mechanical RNG or committing the later actual placement row.
+     */
+    private fun battleRollDiscardIntoBattleTargetScore(
+        context: DecisionContext,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val placement = diePlacementAnalyzer(
+            context = context,
+            dieValue = DieValueHeuristics.expectedRoll(choice.sides),
+            mode = BattleAnalysisMode.EXPECTED
+        ).maxByOrNull { it.tacticalValue } ?: return null
+
+        return PriorityScore(placement.tacticalValue.roundToInt())
+            .adjusted(0, "Expected Battle value after rolling and placing this Discard die")
     }
 
     /**

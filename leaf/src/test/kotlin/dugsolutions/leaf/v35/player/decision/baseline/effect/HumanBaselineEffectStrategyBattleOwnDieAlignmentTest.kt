@@ -450,6 +450,58 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `forget me not chooses discard die by expected rolled Battle placement rather than current face`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 5),
+                player(opponent, 8)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 20),
+                player(opponent, 10)
+            ),
+            discard = listOf(DieView(0, 4, 4), DieView(1, 20, 1))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+                context,
+                EffectDieChoice(0, 4, 4),  // current face is high, but expected reroll is only 2.5
+                EffectDieChoice(1, 20, 1)  // current face is low, but expected reroll can flip TOP
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `forget me not equal die sizes ignore current discard face and preserve StrategyRandomizer tie breaking`() {
+        val randomizer = RecordingRandomizer(1)
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        )
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 5), player(opponent, 8)),
+            discard = listOf(DieView(0, 8, 1), DieView(1, 8, 8))
+        )
+
+        val chosen = strategy.chooseDie(
+            request(
+                GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
+                context,
+                EffectDieChoice(0, 8, 1),
+                EffectDieChoice(1, 8, 8)
+            )
+        )
+
+        assertEquals(1, chosen.index)
+        assertEquals(listOf(2), randomizer.bounds)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
