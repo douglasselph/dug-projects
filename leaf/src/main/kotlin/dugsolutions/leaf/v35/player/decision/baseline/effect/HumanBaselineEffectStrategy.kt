@@ -97,6 +97,16 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect in DISCARD_DRAW_SOURCE_BATTLE_EFFECTS ->
+                        battleDiscardDrawSourceTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in SECONDARY_OWN_DIE_BATTLE_TRANSFORMS ->
                         battleSecondaryOwnDieTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
@@ -495,6 +505,12 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
         )
 
+        val DISCARD_DRAW_SOURCE_BATTLE_EFFECTS = setOf(
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO
+        )
+
         val SECONDARY_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
@@ -532,6 +548,93 @@ class HumanBaselineEffectStrategy(
         ) ?: return null
         return PriorityScore(analysis.tacticalValue.roundToInt())
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
+    }
+
+    /**
+     * Scores only the source die that is discarded before one/two Battle Draws.
+     *
+     * The selected die is still on the Battle Grid, so its row can be projected
+     * immediately. Draw values use the exact next physical die sizes visible in
+     * Supply/Discard and mathematical expectation; no mechanical RNG is consumed.
+     *
+     * Transplant Tulip's one replacement is forced back into the discarded row.
+     * Reap What You Roll's two-draw forced-row version receives the mean expected
+     * replacement because the later post-roll die choice remains a separate fresh
+     * decision. Any optional swap or free Battle placement is deliberately not
+     * pre-committed here. For the free-placement two-draw effect, source targeting
+     * therefore measures the tactical cost of removing the chosen die, with only a
+     * small expected-value adjustment for source-dependent future draw sizes.
+     */
+    private fun battleDiscardDrawSourceTargetScore(
+        context: DecisionContext,
+        effect: GameEffect,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val row = rowFor(context, choice.index) ?: return null
+        val drawCount = when (effect) {
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> 1
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO -> 2
+            else -> return null
+        }
+        val expectedDraws = expectedDrawValuesAfterDiscard(context, choice, drawCount)
+        val forcedReplacement = when (effect) {
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE ->
+                expectedDraws.firstOrNull() ?: 0.0
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE ->
+                expectedDraws.takeIf { it.isNotEmpty() }?.average() ?: 0.0
+
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO -> 0.0
+            else -> return null
+        }
+        val analysis = ownTotalChangeAnalyzer(
+            context = context,
+            realization = choice,
+            row = row,
+            change = forcedReplacement - choice.value,
+            mode = BattleAnalysisMode.EXPECTED
+        ) ?: return null
+
+        var score = PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Expected immediate Battle result of discarding this source die")
+
+        val laterExpectedDrawValue = (expectedDraws.sum() - forcedReplacement).coerceAtLeast(0.0)
+        if (laterExpectedDrawValue > 0.0) {
+            score = score.adjusted(
+                laterExpectedDrawValue.roundToInt(),
+                "Expected later Draw value remains for fresh post-roll placement/choice"
+            )
+        }
+        return score
+    }
+
+    /**
+     * Mirrors PlayerDice.draw() using only public die sizes. The selected source
+     * is first moved to Discard, Supply is used until empty, then Discard refills
+     * Supply, and each Draw takes the lowest-sided available die. Values are never
+     * rolled here; callers receive mathematical expected rolls only.
+     */
+    private fun expectedDrawValuesAfterDiscard(
+        context: DecisionContext,
+        choice: EffectDieChoice,
+        count: Int
+    ): List<Double> {
+        val supply = context.self.board.supply.map { it.sides }.toMutableList()
+        val discard = context.self.board.discard.map { it.sides }.toMutableList().apply {
+            add(choice.sides)
+        }
+        return buildList {
+            repeat(count) {
+                if (supply.isEmpty()) {
+                    supply += discard
+                    discard.clear()
+                }
+                val sides = supply.minOrNull() ?: return@repeat
+                supply.remove(sides)
+                add(DieValueHeuristics.expectedRoll(sides))
+            }
+        }
     }
 
     /**

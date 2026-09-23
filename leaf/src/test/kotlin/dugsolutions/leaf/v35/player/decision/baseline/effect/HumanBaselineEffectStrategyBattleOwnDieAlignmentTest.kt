@@ -366,6 +366,90 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `transplant tulip discards from safer row instead of simply discarding the lower die`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 5)),
+                player(opponent, 10)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 30, die(1, 20, 10)),
+                player(opponent, 10)
+            ),
+            supply = listOf(DieView(2, 4, 1))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+                context,
+                EffectDieChoice(0, 6, 5),  // lower die, but expected D4 replacement surrenders the tied row
+                EffectDieChoice(1, 20, 10) // larger discard, but the expected replacement leaves a safe win
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `reap forced-row source choice uses expected replacement without choosing the later placement`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 5)),
+                player(opponent, 10)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 30, die(1, 20, 10)),
+                player(opponent, 10)
+            ),
+            supply = listOf(DieView(2, 4, 1), DieView(3, 4, 1))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+                context,
+                EffectDieChoice(0, 6, 5),  // expected forced replacement would surrender TOP
+                EffectDieChoice(1, 20, 10) // expected forced replacement preserves the large MIDDLE lead
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `draw two source choice protects the tactically important row and leaves later placements fresh`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 2)),
+                player(opponent, 10)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 30, die(1, 20, 8)),
+                player(opponent, 10)
+            ),
+            supply = listOf(DieView(2, 4, 1), DieView(3, 4, 1))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.DISCARD_ONE_DIE_DRAW_TWO,
+                context,
+                EffectDieChoice(0, 6, 2), // numerically cheapest discard, but it breaks a tied Strike
+                EffectDieChoice(1, 20, 8) // larger discard from a row that remains securely won
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
@@ -422,7 +506,8 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     private fun context(
         vararg rows: BattleRowView,
         creature: List<CreatureCardView> = emptyList(),
-        supply: List<DieView> = emptyList()
+        supply: List<DieView> = emptyList(),
+        discard: List<DieView> = emptyList()
     ): DecisionContext {
         val hand = rows.flatMap { it.forPlayer(actor)?.dice.orEmpty() }
             .associateBy { it.handIndex }
@@ -436,6 +521,7 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
                     id = actor,
                     supply = supply,
                     hand = hand,
+                    discard = discard,
                     creature = creature
                 )
             ),
