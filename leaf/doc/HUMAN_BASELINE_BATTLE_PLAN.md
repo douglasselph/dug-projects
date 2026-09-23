@@ -688,14 +688,14 @@ These completed slices change only downstream Battle target alignment for straig
 B15B1b is also being implemented in timeout-safe micro-slices.
 
 - [x] **opposing-row collateral** — `RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW` and `RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW` now use shared complete-realization analysis for both top-level enabled-Plant valuation and downstream Battle die targeting. `BattleOwnDieCollateralAnalyzer` mirrors the actual engine order: Sapping Snapdragon applies the capped +2, reduces each opposing die by its actual capped amount, then raises the chosen die by the total reduction; Bloom Backflip applies the capped +1 and then flips only opposing D6+ dice still higher than the raised die. Opponent changes are included in the projected Strike totals, including harmful flips that can improve an opponent.
-- [ ] **remaining secondary-consequence own-die targets** — `RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE` and `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE`.
+- [x] **non-row secondary consequences** — `RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE` and `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE` now evaluate the selected +1 through its actual Strike row. Bursting Blossom additionally gives the selected target its existing card-scorer value for *creating* one additional maximum die when a die is actually drawable; existing maximum-die Draws are target-invariant. Root & Scoot deliberately does not pre-select its later withdrawal row: that mandatory row decision remains a fresh downstream request owned by B15D.
 
-This slice does not implement the later Strike-Row branch decisions and does not certify Effect Choices.
+B15B1b is complete. These slices do not implement the later Strike-Row branch decisions and do not certify Effect Choices.
 
 ### Remaining B15 checkpoints
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
-- [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences (opposing-row collateral slice complete)
+- [x] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences complete
 - [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [ ] **B15B3** — reroll/upgrade own-die alignment
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment

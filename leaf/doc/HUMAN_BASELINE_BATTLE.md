@@ -471,6 +471,8 @@ B15 target alignment is intentionally being added in bounded slices. For the str
 
 For `RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW` and `RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW`, Human Baseline now projects the complete deterministic same-row realization rather than scoring only the actor's initial raise. The shared `BattleOwnDieCollateralAnalyzer` mirrors the engine order, including capped own-die raises, actual per-die opponent reductions, Sapping Snapdragon's extra raise from total reduction, and Bloom Backflip's actual opposing flips after the chosen die is raised. The same analyzer is used by top-level enabled-Plant valuation and downstream target selection, so collateral benefit or harm cannot make those two stages disagree merely because one stage ignored the opposing dice. Cultivation behavior is unchanged.
 
+For `RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE` and `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE`, the initial Battle die target is likewise evaluated through its actual affected Strike row. Bursting Blossom also recognizes the target-specific value of turning a one-below-maximum die into a new maximum when a die can actually be drawn; existing maximum-die Draws are common to every target and do not affect target ranking. Root & Scoot keeps the printed timing boundary: the +1 target is chosen first, while the later Strike-row withdrawal remains a separate fresh decision and is not pre-committed by the die-target scorer.
+
 Do not force `invoke()` onto established multi-method interfaces or APIs where a descriptive method is materially clearer.
 
 ## 15. Explicit non-goals for Human Baseline Battle

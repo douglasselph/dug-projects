@@ -97,6 +97,16 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect in SECONDARY_OWN_DIE_BATTLE_TRANSFORMS ->
+                        battleSecondaryOwnDieTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS ->
                         battleDeterministicOwnDieTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
@@ -485,6 +495,11 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
         )
 
+        val SECONDARY_OWN_DIE_BATTLE_TRANSFORMS = setOf(
+            GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
+        )
+
         val DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
@@ -517,6 +532,43 @@ class HumanBaselineEffectStrategy(
         ) ?: return null
         return PriorityScore(analysis.tacticalValue.roundToInt())
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
+    }
+
+    /**
+     * Scores the initial die target for effects whose +1 Raise is followed by a
+     * separate automatic/branching consequence. The selected row is evaluated
+     * tactically now, while later legal placement/withdrawal decisions remain
+     * separate fresh decisions. Bursting Blossom also receives the same
+     * target-specific "create another maximum die" value used by its card
+     * scorer; existing maximum-die Draws are target-invariant.
+     */
+    private fun battleSecondaryOwnDieTargetScore(
+        context: DecisionContext,
+        effect: GameEffect,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val row = rowFor(context, choice.index) ?: return null
+        val gain = DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
+        val analysis = ownTotalChangeAnalyzer(
+            context = context,
+            realization = choice,
+            row = row,
+            change = gain.toDouble(),
+            mode = BattleAnalysisMode.DETERMINISTIC
+        ) ?: return null
+
+        var score = PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Immediate Battle realization for secondary-consequence +1 target")
+
+        if (
+            effect == GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE &&
+            choice.value == choice.sides - 1 &&
+            (context.self.board.supply.isNotEmpty() || context.self.board.discard.isNotEmpty())
+        ) {
+            score = score.adjusted(18, "Selected +1 creates an additional maximum die and Draw")
+        }
+
+        return score
     }
 
     /**

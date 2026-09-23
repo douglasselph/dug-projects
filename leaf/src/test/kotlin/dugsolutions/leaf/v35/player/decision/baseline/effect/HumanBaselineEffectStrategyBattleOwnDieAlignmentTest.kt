@@ -308,6 +308,64 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `bursting blossom prefers target that creates an additional maximum die and Draw`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 5, die(0, 20, 5)), player(opponent, 20)),
+            row(StrikeRow.MIDDLE, player(actor, 5, die(1, 6, 5)), player(opponent, 20)),
+            supply = listOf(DieView(2, 4, 1))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
+                context,
+                EffectDieChoice(0, 20, 5),
+                EffectDieChoice(1, 6, 5) // same +1 row swing, but creates a max and another Draw
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `root and scoot chooses plus one target by immediate Strike consequence without choosing withdrawal row early`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 10, die(0, 6, 5)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 2, die(1, 20, 2)), player(opponent, 10))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
+                context,
+                EffectDieChoice(1, 20, 2),
+                EffectDieChoice(0, 6, 5) // +1 flips tied no-winner to a win
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `bursting blossom does not invent a Draw bonus when no die can be drawn`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 10, die(0, 20, 5)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 5, die(1, 6, 5)), player(opponent, 20))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
+                context,
+                EffectDieChoice(1, 6, 5),
+                EffectDieChoice(0, 20, 5) // wins TOP; no Supply/Discard means no extra Draw value
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
@@ -363,7 +421,8 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
 
     private fun context(
         vararg rows: BattleRowView,
-        creature: List<CreatureCardView> = emptyList()
+        creature: List<CreatureCardView> = emptyList(),
+        supply: List<DieView> = emptyList()
     ): DecisionContext {
         val hand = rows.flatMap { it.forPlayer(actor)?.dice.orEmpty() }
             .associateBy { it.handIndex }
@@ -375,6 +434,7 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
             self = DecisionContext.EMPTY.self.copy(
                 board = DecisionContext.EMPTY.self.board.copy(
                     id = actor,
+                    supply = supply,
                     hand = hand,
                     creature = creature
                 )
