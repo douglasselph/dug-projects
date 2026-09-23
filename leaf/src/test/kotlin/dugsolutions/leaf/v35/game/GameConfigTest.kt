@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.random.die.di.DieFactory
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -194,6 +195,46 @@ class GameConfigTest {
             14,
             setup.totalRounds
         )
+    }
+
+    @Test
+    fun patternedRoundSetup_buildsCultivationBlocksSeparatedByBattles() {
+        val setup =
+            GameRoundSetup.patterned(3, 2, 2)
+
+        assertEquals(7, setup.cultivationRounds)
+        assertEquals(3, setup.battleRounds)
+        assertEquals(10, setup.totalRounds)
+        assertEquals(
+            listOf(
+                RoundCardType.CULTIVATION,
+                RoundCardType.CULTIVATION,
+                RoundCardType.CULTIVATION,
+                RoundCardType.BATTLE,
+                RoundCardType.CULTIVATION,
+                RoundCardType.CULTIVATION,
+                RoundCardType.BATTLE,
+                RoundCardType.CULTIVATION,
+                RoundCardType.CULTIVATION,
+                RoundCardType.BATTLE
+            ),
+            setup.roundTypes
+        )
+    }
+
+    @Test
+    fun patternedRoundSetup_rejectsEmptyOrNonPositiveBlocks() {
+        assertFailsWith<IllegalArgumentException> {
+            GameRoundSetup.Patterned(emptyList())
+        }
+
+        assertFailsWith<IllegalArgumentException> {
+            GameRoundSetup.patterned(3, 0, 2)
+        }
+
+        assertFailsWith<IllegalArgumentException> {
+            GameRoundSetup.patterned(3, -1, 2)
+        }
     }
 
     @Test

@@ -76,13 +76,10 @@ private fun buildSummary(
         appendLine("Seed: $seed")
         appendLine("Players: 4")
         appendLine("Strategy: Mechanical Control for every player")
-        when (roundSetup) {
-            is GameRoundSetup.Ordered ->
-                appendLine(
-                    "Rounds: ${roundSetup.cultivationRounds} Cultivation + " +
-                        "${roundSetup.battleRounds} Battle (${roundSetup.totalRounds} total)"
-                )
-        }
+        appendLine(
+            "Rounds: ${roundSetup.cultivationRounds} Cultivation + " +
+                "${roundSetup.battleRounds} Battle (${roundSetup.totalRounds} total)"
+        )
         appendLine("Rounds completed: ${result.roundsCompleted}")
         appendLine("Chronicle entries: $entryCount")
         appendLine()

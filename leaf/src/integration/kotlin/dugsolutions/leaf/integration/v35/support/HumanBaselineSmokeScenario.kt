@@ -5,9 +5,10 @@ import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
 /**
- * Canonical deterministic full-game smoke scenario for the current Human Baseline.
+ * Canonical seeded full-game smoke scenario for the current Human Baseline.
  *
- * The exact Round card order enforces the requested 3/2/2 cadence:
+ * Production Round setup selects shuffled physical Round cards while enforcing
+ * the requested 3/2/2 phase cadence:
  *
  * 3 Cultivation -> Battle -> 2 Cultivation -> Battle -> 2 Cultivation -> Battle.
  *
@@ -21,23 +22,7 @@ object HumanBaselineSmokeScenario {
     const val NUM_PLAYERS: Int = 4
 
     val roundSetup: GameRoundSetup =
-        GameRoundSetup.Ordered(
-            cultivationRounds = 7,
-            battleRounds = 3
-        )
-
-    val exactRoundNames: List<String> = listOf(
-        "Resource_Sunlight_Water",
-        "Resource_Compost_Mulch",
-        "Resource_Sunlight_Compost",
-        "Battle_Bloom_Burrow",
-        "Resource_Sunlight_Mulch",
-        "Resource_Water_Compost",
-        "Battle_Bloom_Surge",
-        "Resource_Water_Mulch",
-        "Resource_Compost_Mulch",
-        "Battle_Whisper_Burst"
-    )
+        GameRoundSetup.patterned(3, 2, 2)
 
     val expectedRoundTypes: List<RoundCardType> = listOf(
         RoundCardType.CULTIVATION,
@@ -64,7 +49,6 @@ object HumanBaselineSmokeScenario {
             decisionFactories = List(NUM_PLAYERS) {
                 PlayerDecisionFactory.humanBaseline()
             },
-            exactRoundNames = exactRoundNames,
             recordDecisionReasoning = recordDecisionReasoning
         )
 }

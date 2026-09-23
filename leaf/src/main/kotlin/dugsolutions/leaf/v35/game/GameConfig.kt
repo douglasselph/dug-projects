@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.die.di.DieFactory
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 
 /**
  * Creates a fresh DecisionDirector for one player each time a Game is built.
@@ -234,16 +235,23 @@ class GameConfig(
 /**
  * Round-deck construction policy.
  *
- * Ordered is the only implementation today. The sealed shape deliberately
- * leaves room for Advanced Mixed Rounds without turning GameConfig into a
- * collection of loosely related booleans/counts.
+ * [Ordered] selects shuffled Cultivation cards followed by shuffled Battle cards.
+ * [Patterned] selects the same shuffled physical card pools, but arranges them as
+ * Cultivation blocks separated by one Battle card. For example, 3/2/2 means:
+ *
+ * 3 Cultivation -> Battle -> 2 Cultivation -> Battle -> 2 Cultivation -> Battle.
  */
 sealed interface GameRoundSetup {
+    val cultivationRounds: Int
+    val battleRounds: Int
+    val roundTypes: List<RoundCardType>
+
     val totalRounds: Int
+        get() = roundTypes.size
 
     data class Ordered(
-        val cultivationRounds: Int,
-        val battleRounds: Int
+        override val cultivationRounds: Int,
+        override val battleRounds: Int
     ) : GameRoundSetup {
         init {
             require(cultivationRounds >= 0) {
@@ -257,11 +265,55 @@ sealed interface GameRoundSetup {
             }
         }
 
-        override val totalRounds: Int
-            get() = cultivationRounds + battleRounds
+        override val roundTypes: List<RoundCardType> =
+            List(cultivationRounds) { RoundCardType.CULTIVATION } +
+                List(battleRounds) { RoundCardType.BATTLE }
+    }
+
+    /**
+     * Cultivation blocks separated by exactly one Battle round after each block.
+     *
+     * The block list is copied so setup remains immutable even when a mutable
+     * caller list is supplied.
+     */
+    class Patterned(
+        cultivationBlocks: List<Int>
+    ) : GameRoundSetup {
+        val cultivationBlocks: List<Int> = cultivationBlocks.toList()
+
+        init {
+            require(this.cultivationBlocks.isNotEmpty()) {
+                "Patterned game must contain at least one Cultivation block"
+            }
+            require(this.cultivationBlocks.all { it > 0 }) {
+                "Cultivation block sizes must all be positive: ${this.cultivationBlocks}"
+            }
+        }
+
+        override val cultivationRounds: Int =
+            this.cultivationBlocks.sum()
+
+        override val battleRounds: Int =
+            this.cultivationBlocks.size
+
+        override val roundTypes: List<RoundCardType> =
+            buildList {
+                this@Patterned.cultivationBlocks.forEach { cultivationCount ->
+                    repeat(cultivationCount) {
+                        add(RoundCardType.CULTIVATION)
+                    }
+                    add(RoundCardType.BATTLE)
+                }
+            }
+
+        override fun toString(): String =
+            "Patterned(${cultivationBlocks.joinToString("/")})"
     }
 
     companion object {
+        fun patterned(vararg cultivationBlocks: Int): GameRoundSetup =
+            Patterned(cultivationBlocks.toList())
+
         fun firstGame(): GameRoundSetup =
             Ordered(
                 cultivationRounds = 6,
@@ -281,3 +333,4 @@ sealed interface GameRoundSetup {
             )
     }
 }
+

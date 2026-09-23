@@ -73,6 +73,44 @@ class RoundDeckTest {
     }
 
     @Test
+    fun setup_withPattern_shufflesEachPhysicalPoolThenInterleavesSelectedCards() {
+        val pattern = listOf(
+            RoundCardType.CULTIVATION,
+            RoundCardType.CULTIVATION,
+            RoundCardType.CULTIVATION,
+            RoundCardType.BATTLE,
+            RoundCardType.CULTIVATION,
+            RoundCardType.CULTIVATION,
+            RoundCardType.BATTLE,
+            RoundCardType.CULTIVATION,
+            RoundCardType.CULTIVATION,
+            RoundCardType.BATTLE
+        )
+        val expectedCultivation =
+            manager.getCardsByType(RoundCardType.CULTIVATION)
+                .flatMap { card -> List(card.quantity) { card } }
+                .reversed()
+                .take(7)
+        val expectedBattle =
+            manager.getCardsByType(RoundCardType.BATTLE)
+                .flatMap { card -> List(card.quantity) { card } }
+                .reversed()
+                .take(3)
+
+        deck.setup(pattern)
+
+        assertEquals(pattern, deck.cards.cards.map { it.type })
+        assertEquals(
+            expectedCultivation,
+            deck.cards.cards.filter { it.type == RoundCardType.CULTIVATION }
+        )
+        assertEquals(
+            expectedBattle,
+            deck.cards.cards.filter { it.type == RoundCardType.BATTLE }
+        )
+    }
+
+    @Test
     fun setup_expandsRoundDefinitionsByQuantity() {
         // Act
         deck.setup(

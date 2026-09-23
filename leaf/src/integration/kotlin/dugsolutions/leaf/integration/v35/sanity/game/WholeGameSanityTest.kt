@@ -147,6 +147,11 @@ class WholeGameSanityTest {
                 IntegrationCatalog.FIRST_GAME_PLANT_NAMES.toSet(),
                 initial.grove.plantStacks.map { it.name }.toSet()
             )
+            assertEquals(
+                HumanBaselineSmokeScenario.expectedRoundTypes,
+                harness.game.roundDeck.cards.cards.map { it.type }
+            )
+            assertEquals(null, scenario.exactRoundNames)
 
             val result = harness.runGame()
 

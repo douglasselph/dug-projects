@@ -122,14 +122,6 @@ class GameFactory(
         roundDeck: RoundDeck,
         setup: GameRoundSetup
     ) {
-        when (setup) {
-            is GameRoundSetup.Ordered ->
-                roundDeck.setup(
-                    numBattle =
-                        setup.battleRounds,
-                    numCultivation =
-                        setup.cultivationRounds
-                )
-        }
+        roundDeck.setup(setup.roundTypes)
     }
 }

@@ -42,12 +42,8 @@ class RoundDeck(
         get() = remaining == 0
 
     /**
-     * Creates the standard ordered Round deck:
-     * selected Cultivation rounds first, selected Battle rounds second.
-     *
-     * The definitions are expanded by quantity before selection. This matters
-     * because the current CSV has multiple physical copies of Cultivation
-     * Round card definitions.
+     * Creates the legacy ordered Round deck: selected Cultivation rounds first,
+     * then selected Battle rounds.
      */
     fun setup(
         numBattle: Int,
@@ -60,29 +56,60 @@ class RoundDeck(
             "Cultivation card count cannot be negative: $numCultivation"
         }
 
-        val battleCards = expandedCards(RoundCardType.BATTLE)
-        val cultivationCards = expandedCards(RoundCardType.CULTIVATION)
+        setup(
+            roundTypes =
+                List(numCultivation) { RoundCardType.CULTIVATION } +
+                    List(numBattle) { RoundCardType.BATTLE }
+        )
+    }
 
-        require(battleCards.size >= numBattle) {
-            "Not enough battle cards: requested=$numBattle " +
-                "available=${battleCards.size}"
+    /**
+     * Selects shuffled physical Round cards and places them in the requested
+     * phase pattern.
+     *
+     * Cultivation and Battle physical pools are shuffled independently before
+     * selection, exactly as in the ordered setup. [roundTypes] controls only
+     * where those randomly selected cards appear in the draw deck.
+     */
+    fun setup(roundTypes: List<RoundCardType>) {
+        require(roundTypes.isNotEmpty()) {
+            "Game must contain at least one Round card"
         }
+
+        val numCultivation = roundTypes.count { it == RoundCardType.CULTIVATION }
+        val numBattle = roundTypes.count { it == RoundCardType.BATTLE }
+        val cultivationCards = expandedCards(RoundCardType.CULTIVATION)
+        val battleCards = expandedCards(RoundCardType.BATTLE)
+
         require(cultivationCards.size >= numCultivation) {
             "Not enough cultivation cards: requested=$numCultivation " +
                 "available=${cultivationCards.size}"
         }
+        require(battleCards.size >= numBattle) {
+            "Not enough battle cards: requested=$numBattle " +
+                "available=${battleCards.size}"
+        }
 
+        // Keep the historical shuffle order stable: Cultivation first, Battle second.
         val selectedCultivation = randomizer
             .shuffled(cultivationCards)
             .take(numCultivation)
-
         val selectedBattle = randomizer
             .shuffled(battleCards)
             .take(numBattle)
 
-        drawPile = RoundCards(
-            selectedCultivation + selectedBattle
-        )
+        var cultivationIndex = 0
+        var battleIndex = 0
+        val selectedCards = roundTypes.map { type ->
+            when (type) {
+                RoundCardType.CULTIVATION ->
+                    selectedCultivation[cultivationIndex++]
+                RoundCardType.BATTLE ->
+                    selectedBattle[battleIndex++]
+            }
+        }
+
+        drawPile = RoundCards(selectedCards)
         topCard = null
     }
 

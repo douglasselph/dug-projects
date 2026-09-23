@@ -4,7 +4,6 @@ import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.game.Game
-import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -84,9 +83,8 @@ internal object DecisionContextFactory {
         val battleCompleted = completed.count {
             it.cardType == RoundCardType.BATTLE
         }
-        val ordered = game.config.roundSetup as? GameRoundSetup.Ordered
-        val totalCultivation = ordered?.cultivationRounds
-        val totalBattle = ordered?.battleRounds
+        val totalCultivation = game.config.roundSetup.cultivationRounds
+        val totalBattle = game.config.roundSetup.battleRounds
         val currentCultivation = if (phase == RoundCardType.CULTIVATION) {
             cultivationCompleted + 1
         } else {
@@ -109,13 +107,11 @@ internal object DecisionContextFactory {
             totalBattleRounds = totalBattle,
             currentCultivationRoundNumber = currentCultivation,
             currentBattleRoundNumber = currentBattle,
-            cultivationRoundsRemaining = totalCultivation?.minus(cultivationCompleted),
-            battleRoundsRemaining = totalBattle?.minus(battleCompleted),
+            cultivationRoundsRemaining = totalCultivation - cultivationCompleted,
+            battleRoundsRemaining = totalBattle - battleCompleted,
             isFinalRound = game.hasRevealedFinalRound,
-            isFinalCultivationRound = currentCultivation != null &&
-                totalCultivation != null && currentCultivation == totalCultivation,
-            isFinalBattleRound = currentBattle != null &&
-                totalBattle != null && currentBattle == totalBattle
+            isFinalCultivationRound = currentCultivation == totalCultivation,
+            isFinalBattleRound = currentBattle == totalBattle
         )
     }
 
