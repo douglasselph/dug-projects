@@ -89,6 +89,24 @@ object DieValueHeuristics {
         expectedRerollGain(die.sides, die.value)
 
     /**
+     * Signed expected face-value change when rerolling repeatedly until the
+     * result is at least [minimum]. Rejection sampling leaves a uniform
+     * distribution over the accepted faces [minimum]..[sides].
+     */
+    fun expectedRerollUntilAtLeastGain(
+        sides: Int,
+        value: Int,
+        minimum: Int
+    ): Double {
+        requireDie(sides, value)
+        require(minimum in 1..sides) {
+            "Minimum accepted face must be within the die: $minimum for D$sides"
+        }
+        val expectedAcceptedFace = (minimum + sides) / 2.0
+        return expectedAcceptedFace - value
+    }
+
+    /**
      * Expected gain when a reroll may be rejected after it is seen, as with a
      * Butterfly. This is E[max(original, reroll)] - original.
      */

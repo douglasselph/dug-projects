@@ -701,12 +701,18 @@ B15B2 is being implemented as smaller source-target slices.
 
 B15B2 is complete and does not certify Effect Choices.
 
+### B15B3 progress — reroll/upgrade own-die alignment
+
+B15B3 is being implemented in bounded random-target slices.
+
+- [x] **simple reroll targets** — `REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS` and the Battle one-die branch of `DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE` now choose the live die by the honest expected change on its actual Strike row rather than by generic expected face gain alone. Root on a Roll uses the exact accepted-face expectation for repeated rerolls until 3+; Root Recall uses ordinary one-roll expectation. Both use `BattleAnalysisMode.EXPECTED`, consume no mechanical RNG, and leave the live die in its existing Battle row. `BattleEnabledPlantAnalyzer` uses the same Root-on-a-Roll expectation so top-level enabled-Plant valuation and downstream target selection remain compatible. Exact tactical ties still use `StrategyRandomizer`.
+
 ### Remaining B15 checkpoints
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
 - [x] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences complete
 - [x] **B15B2** — discard/draw/Mulch/return source-die alignment
-- [ ] **B15B3** — reroll/upgrade own-die alignment
+- [ ] **B15B3** — reroll/upgrade own-die alignment (simple reroll slice complete)
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
 - [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment

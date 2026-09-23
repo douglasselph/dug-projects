@@ -99,6 +99,16 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect in SIMPLE_REROLL_OWN_DIE_BATTLE_EFFECTS ->
+                        battleSimpleRerollOwnDieTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in DISCARD_DRAW_SOURCE_BATTLE_EFFECTS ->
                         battleDiscardDrawSourceTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
@@ -517,6 +527,11 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
         )
 
+        val SIMPLE_REROLL_OWN_DIE_BATTLE_EFFECTS = setOf(
+            GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+        )
+
         val DISCARD_DRAW_SOURCE_BATTLE_EFFECTS = setOf(
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
@@ -562,6 +577,42 @@ class HumanBaselineEffectStrategy(
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
     }
 
+
+    /**
+     * Scores simple one-die Battle rerolls by their honest expected change on
+     * the die's current Strike row. This is target-before-RNG analysis only:
+     * no roll is sampled and the live die remains in its existing row.
+     */
+    private fun battleSimpleRerollOwnDieTargetScore(
+        context: DecisionContext,
+        effect: GameEffect,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val expectedChange = when (effect) {
+            GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS ->
+                DieValueHeuristics.expectedRerollUntilAtLeastGain(
+                    sides = choice.sides,
+                    value = choice.value,
+                    minimum = 3
+                )
+
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+                DieValueHeuristics.expectedRerollGain(choice.sides, choice.value)
+
+            else -> return null
+        }
+        val row = rowFor(context, choice.index) ?: return null
+        val analysis = ownTotalChangeAnalyzer(
+            context = context,
+            realization = choice,
+            row = row,
+            change = expectedChange,
+            mode = BattleAnalysisMode.EXPECTED
+        ) ?: return null
+
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Expected Battle realization for simple own-die reroll target")
+    }
 
     /**
      * Chooses the Discard die for Forget-Me-Not during Battle by the honest

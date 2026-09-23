@@ -160,7 +160,11 @@ class BattleEnabledPlantAnalyzer(
                     dice,
                     mode = BattleAnalysisMode.EXPECTED
                 ) { die ->
-                    if (die.value <= 2) ((die.sides + 3) / 2.0) - die.value else 0.0
+                    DieValueHeuristics.expectedRerollUntilAtLeastGain(
+                        sides = die.sides,
+                        value = die.value,
+                        minimum = 3
+                    )
                 }
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->

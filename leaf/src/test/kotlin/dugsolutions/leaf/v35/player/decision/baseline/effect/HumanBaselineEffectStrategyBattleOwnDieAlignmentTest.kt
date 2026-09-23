@@ -502,6 +502,68 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `reroll until three plus prefers smaller expected gain that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 10, die(0, 6, 2)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 20, 1)), player(opponent, 15))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
+                context,
+                EffectDieChoice(1, 20, 1), // expected +10.5, but still loses the Strike
+                EffectDieChoice(0, 6, 2)   // expected +2.5, but flips tied/no-winner to win
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `Root Recall Battle reroll prefers smaller expected gain that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 10, die(0, 6, 2)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 20, 1)), player(opponent, 15))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+                context,
+                EffectDieChoice(1, 20, 1), // expected +9.5, but still loses the Strike
+                EffectDieChoice(0, 6, 2)   // expected +1.5, but flips tied/no-winner to win
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `simple Battle reroll exact tactical tie uses StrategyRandomizer`() {
+        val randomizer = RecordingRandomizer(1)
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        )
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 8, 2)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 9, die(1, 8, 2)), player(opponent, 10))
+        )
+
+        val chosen = strategy.chooseDie(
+            request(
+                GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+                context,
+                EffectDieChoice(0, 8, 2),
+                EffectDieChoice(1, 8, 2)
+            )
+        )
+
+        assertEquals(1, chosen.index)
+        assertEquals(listOf(2), randomizer.bounds)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
