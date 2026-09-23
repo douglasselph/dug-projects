@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsT
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPairAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleRootWellTargetAnalyzer
@@ -60,6 +61,7 @@ class HumanBaselineEffectStrategy(
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
     internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy),
     internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy),
+    internal val ownDieSwapPairAnalyzer: BattleOwnDieSwapPairAnalyzer = BattleOwnDieSwapPairAnalyzer(policy),
     internal val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
         BattleGustOfPetalsTargetAnalyzer(policy),
     internal val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
@@ -562,24 +564,42 @@ class HumanBaselineEffectStrategy(
                     PriorityScore(50 + gain * 5)
                 }
             }
-            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
-                val sourceRow = rowFor(context, choice.source.index)
-                val targetRow = rowFor(context, choice.target.index)
-                if (sourceRow == null || targetRow == null || sourceRow == targetRow) return PriorityScore(45)
-                val sourceNeed = CardScoringHelpers.rowNeedBonus(context, sourceRow)
-                val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
-                val improvement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
-                PriorityScore(50 + improvement)
-            }
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE -> {
-                val sourceRow = rowFor(context, choice.source.index)
-                val targetRow = rowFor(context, choice.target.index)
-                if (sourceRow == null || targetRow == null || sourceRow == targetRow) return PriorityScore(45)
-                val sourceNeed = CardScoringHelpers.rowNeedBonus(context, sourceRow)
-                val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
-                val swapImprovement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
-                val raiseGain = DieValueHeuristics.actualRaiseGain(choice.source.sides, choice.source.value, 2)
-                PriorityScore(50 + swapImprovement + raiseGain * 4)
+                if (context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE) {
+                    val analysis = ownDieSwapPairAnalyzer(context, effect, choice)
+                    if (analysis != null) {
+                        PriorityScore(50 + analysis.tacticalValue.roundToInt())
+                            .adjusted(0, "Complete Battle realization for own-die swap pair")
+                    } else {
+                        PriorityScore(45)
+                    }
+                } else {
+                    when (effect) {
+                        GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
+                            val sourceRow = rowFor(context, choice.source.index)
+                            val targetRow = rowFor(context, choice.target.index)
+                            if (sourceRow == null || targetRow == null || sourceRow == targetRow) return PriorityScore(45)
+                            val sourceNeed = CardScoringHelpers.rowNeedBonus(context, sourceRow)
+                            val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
+                            val improvement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
+                            PriorityScore(50 + improvement)
+                        }
+
+                        GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE -> {
+                            val sourceRow = rowFor(context, choice.source.index)
+                            val targetRow = rowFor(context, choice.target.index)
+                            if (sourceRow == null || targetRow == null || sourceRow == targetRow) return PriorityScore(45)
+                            val sourceNeed = CardScoringHelpers.rowNeedBonus(context, sourceRow)
+                            val targetNeed = CardScoringHelpers.rowNeedBonus(context, targetRow)
+                            val swapImprovement = (sourceNeed - targetNeed) * (choice.target.value - choice.source.value) / 10
+                            val raiseGain = DieValueHeuristics.actualRaiseGain(choice.source.sides, choice.source.value, 2)
+                            PriorityScore(50 + swapImprovement + raiseGain * 4)
+                        }
+
+                        else -> PriorityScore(50)
+                    }
+                }
             }
             else -> PriorityScore(50)
         }

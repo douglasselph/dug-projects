@@ -729,6 +729,9 @@ B15B4 is complete. Compound own-die choices now evaluate the complete source/tar
 
 - [x] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment
+  - [x] **B15D-1 — Battle swap-pair targets** — `chooseOptionalDiePair` for `DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE` and `chooseDiePair` for `DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE` now evaluate each legal pair as the complete deterministic two-row Battle realization. The optional Tulip swap projects both rows after the exchange and may still decline the optional swap when it is not worthwhile. The current Tulip pair also applies the printed +2 to the designated source die *after* the swap, so pair direction is evaluated correctly. Shared multi-row Battle analysis therefore sees both the row helped by the incoming die and any row weakened by the outgoing die rather than using pair-local RowNeed arithmetic. No Strike-row targeting is changed here.
+  - [ ] **B15D-2 — deterministic Strike-row targets**
+  - [ ] **B15D-3 — Gust of Petals post-reroll Strike-row target**
 - [ ] **B15E1** — Plant/opponent-Plant alignment
 - [ ] **B15E2** — resource/player/Wisp-set target alignment
 - [ ] **B15E3** — qualitative branch alignment
