@@ -166,6 +166,48 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `set eligible die to maximum chooses smaller raw gain that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 6, 4)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 12, 1)), player(opponent, 20))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
+                context,
+                EffectDieChoice(1, 12, 1), // raw +11, but remains a loss
+                EffectDieChoice(0, 6, 4)   // raw +2, but flips the Strike
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `set lowest-value die to maximum chooses the tied-low die with better Battle consequence`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 6, die(0, 6, 1), die(1, 8, 5)),
+                player(opponent, 10)
+            ),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(2, 12, 1)), player(opponent, 20))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
+                context,
+                EffectDieChoice(2, 12, 1), // tied lowest, raw +11, remains a loss
+                EffectDieChoice(0, 6, 1)   // tied lowest, raw +5, flips the Strike
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(

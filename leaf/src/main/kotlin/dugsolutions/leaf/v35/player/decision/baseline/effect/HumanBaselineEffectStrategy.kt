@@ -475,7 +475,9 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_3,
-            GameEffect.RAISE_DIE_PLUS_4
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
+            GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX
         )
     }
 
@@ -513,6 +515,9 @@ class HumanBaselineEffectStrategy(
                 )
             GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 3)
             GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 4)
+            GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
+            GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX ->
+                DieValueHeuristics.setToMaximumGain(choice.sides, choice.value)
             else -> return null
         }
         val row = rowFor(context, choice.index) ?: return null

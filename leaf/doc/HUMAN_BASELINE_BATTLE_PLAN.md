@@ -673,18 +673,19 @@ This refinement is deliberately more granular than the external B15A–B15G sket
 
 ### B15B1a progress — pure deterministic own-die transforms
 
-B15B1a is being implemented in timeout-safe micro-slices rather than as one ten-effect patch. Three slices are complete:
+B15B1a is being implemented in timeout-safe micro-slices rather than as one ten-effect patch. Four slices are complete:
 
 - [x] **fixed Plant die raises** — `RAISE_ANY_DIE_PLUS_1` and `RAISE_DIE_PLUS_4` choose their downstream Battle die target by the exact affected row's shared deterministic Battle analysis rather than generic numeric raise gain. A capped smaller raise that flips a Strike can therefore beat a larger raw raise on a strategically weaker row. Exact tactical target ties continue to use `StrategyRandomizer`.
 - [x] **remaining straightforward raises** — `RAISE_DIE_PLUS_3`, `RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER`, and `RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE` use the same affected-row tactical projection. The creature-count effects derive their exact raise amount from the current Creature composition before analyzing each legal die.
 - [x] **Double and opposite-face Flip** — `DOUBLE_ONE_DIE` and `FLIP_OWN_DIE_TO_OPPOSITE_FACE` now project their exact deterministic signed value change through the affected Strike row. A smaller raw Double/Flip improvement that changes the Strike outcome can therefore beat a much larger numeric improvement on a row that remains strategically worse. Exact tactical ties still use `StrategyRandomizer`.
-- [ ] remaining B15B1a deterministic transforms — `SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE`; `SET_DIE_UP_TO_D12_TO_MAX`; `SET_LOWEST_VALUE_DIE_TO_MAX`.
+- [x] **set-to-maximum effects** — `SET_DIE_UP_TO_D12_TO_MAX` and `SET_LOWEST_VALUE_DIE_TO_MAX` project the exact gain to the selected die's physical maximum through its affected Strike row. A smaller raw set-to-max gain that flips a Strike can therefore beat a larger raw gain on a row that remains a loss. `SET_LOWEST_VALUE_DIE_TO_MAX` continues to choose only among the engine-provided tied-low legal dice.
+- [ ] remaining B15B1a deterministic transform — `SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE`.
 
 These completed slices change only downstream Battle target alignment for straightforward deterministic own-die transforms. They do not complete B15B1a, do not change Cultivation targeting, and do not certify Effect Choices.
 
 ### Remaining B15 checkpoints
 
-- [ ] **B15B1a** — pure deterministic own-die transforms (fixed raises, creature-count raises, Double, and opposite-face Flip complete; Set transforms still pending)
+- [ ] **B15B1a** — pure deterministic own-die transforms (fixed raises, creature-count raises, Double, opposite-face Flip, and set-to-maximum effects complete; set-to-1-plus-VP still pending)
 - [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences
 - [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [ ] **B15B3** — reroll/upgrade own-die alignment
