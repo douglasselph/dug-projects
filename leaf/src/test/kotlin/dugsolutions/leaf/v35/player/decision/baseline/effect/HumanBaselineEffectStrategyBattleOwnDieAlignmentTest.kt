@@ -583,6 +583,33 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `Gust of Petals rejects larger local reroll gain when forced opposing reroll erases it`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 20, 1), die(2, 6, 1)),
+                player(opponent, 10, die(0, 20, 2))
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 10, die(1, 6, 1)),
+                player(opponent, 10, die(1, 20, 2))
+            )
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+                context,
+                EffectDieChoice(0, 20, 1), // local expected +9.5, but every later row rerolls a D20 showing 2
+                EffectDieChoice(1, 6, 1)   // local expected +2.5; its row then avoids the harmful opponent reroll
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
     fun `simple Battle reroll exact tactical tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(

@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
@@ -56,6 +57,8 @@ class HumanBaselineEffectStrategy(
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
     internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy),
     internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy),
+    internal val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
+        BattleGustOfPetalsTargetAnalyzer(policy),
     internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy)
 ) : EffectStrategy {
 
@@ -91,6 +94,16 @@ class HumanBaselineEffectStrategy(
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS ->
                         battleCollateralOwnDieTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect == GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                        battleGustOfPetalsTargetScore(request.context, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
                                 context = request.context,
@@ -587,6 +600,26 @@ class HumanBaselineEffectStrategy(
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
     }
 
+
+    /**
+     * Scores Gust of Petals' first, own-die reroll target using the complete
+     * expected immediate Battle realization. The later Strike-Row choice remains
+     * a separate post-reroll decision; this valuation uses the best visible
+     * expected later row branch without committing it or consuming RNG.
+     */
+    private fun battleGustOfPetalsTargetScore(
+        context: DecisionContext,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val analysis = gustOfPetalsTargetAnalyzer(
+            context = context,
+            choice = choice,
+            realization = choice
+        ) ?: return null
+
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Expected complete Battle realization for Gust of Petals own-die target")
+    }
 
     /**
      * Scores Root Awakening's one-step Upgrade target by the expected value of

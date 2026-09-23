@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.BattleDieView
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
 import dugsolutions.leaf.v35.random.die.DieSides
 import kotlin.math.roundToInt
 
@@ -41,7 +42,9 @@ class BattleEnabledPlantAnalyzer(
     private val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer =
         BattleOwnTotalChangeAnalyzer(policy),
     private val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer =
-        BattleOwnDieCollateralAnalyzer(policy)
+        BattleOwnDieCollateralAnalyzer(policy),
+    private val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
+        BattleGustOfPetalsTargetAnalyzer(policy)
 ) {
     operator fun invoke(
         context: DecisionContext,
@@ -153,6 +156,19 @@ class BattleEnabledPlantAnalyzer(
                         DieValueHeuristics.actualRaiseGain(die.sides, die.value, 2).toDouble()
                     }
                 )
+
+            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                dice.mapNotNull { located ->
+                    gustOfPetalsTargetAnalyzer(
+                        context = context,
+                        choice = EffectDieChoice(
+                            index = located.die.handIndex,
+                            sides = located.die.sides,
+                            value = located.die.value
+                        ),
+                        realization = card.id
+                    )
+                }
 
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS ->
                 singleDieCandidates(

@@ -91,6 +91,73 @@ class BattleEnabledPlantAnalyzerTest {
     }
 
     @Test
+    fun `Gust of Petals top-level value includes expected opposing reroll collateral`() {
+        val actorDice = listOf(
+            BattleDieView(handIndex = 0, sides = 20, value = 1),
+            BattleDieView(handIndex = 1, sides = 6, value = 1)
+        )
+        val opponentDice = listOf(
+            BattleDieView(handIndex = 0, sides = 20, value = 2)
+        )
+        val context = DecisionContext.EMPTY.copy(
+            phase = dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    id = ACTOR,
+                    hand = actorDice.map { DieView(it.handIndex, it.sides, it.value) }
+                )
+            ),
+            battle = BattleView(
+                playerOrder = listOf(ACTOR, OPPONENT),
+                rows = listOf(
+                    BattleRowView(
+                        row = StrikeRow.TOP,
+                        closed = false,
+                        players = listOf(
+                            BattlePlayerRowView(
+                                ACTOR,
+                                StrikeRow.TOP,
+                                actorDice,
+                                emptyList(),
+                                10,
+                                0,
+                                10,
+                                false
+                            ),
+                            BattlePlayerRowView(
+                                OPPONENT,
+                                StrikeRow.TOP,
+                                opponentDice,
+                                emptyList(),
+                                10,
+                                0,
+                                10,
+                                false
+                            )
+                        )
+                    ),
+                    BattleRowView(StrikeRow.MIDDLE, true, emptyList()),
+                    BattleRowView(StrikeRow.BOTTOM, true, emptyList())
+                )
+            )
+        )
+
+        val opportunity = analyzer(
+            context,
+            plant(
+                name = "Flower_14_03",
+                effect = GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+                type = PlantType.FLOWER
+            )
+        )
+
+        val tactical = requireNotNull(opportunity.tacticalAnalysis)
+        assertEquals(BattleAnalysisMode.EXPECTED, tactical.mode)
+        assertEquals(BattleTransition.WIN_FLIPPED, tactical.swing.rowSwings.single().transition)
+        assertEquals(1.0, tactical.swing.rowSwings.single().rawSwing)
+    }
+
+    @Test
     fun `reroll Plant stays expected and does not execute hypothetical RNG`() {
         val opportunity = analyzer(
             context(actorTotal = 1, opponentTotal = 3, dieSides = 6, dieValue = 1),
