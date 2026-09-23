@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDeterministicStrikeRowTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPairAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
@@ -66,7 +67,9 @@ class HumanBaselineEffectStrategy(
         BattleGustOfPetalsTargetAnalyzer(policy),
     internal val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
         BattleSetDieToMatchAnalyzer(policy),
-    internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy)
+    internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy),
+    internal val deterministicStrikeRowTargetAnalyzer: BattleDeterministicStrikeRowTargetAnalyzer =
+        BattleDeterministicStrikeRowTargetAnalyzer(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -497,6 +500,18 @@ class HumanBaselineEffectStrategy(
                     )
                 }
             )
+        } else if (request.effect in DETERMINISTIC_STRIKE_ROW_BATTLE_EFFECTS) {
+            val analyzed = request.legalChoices.mapNotNull { row ->
+                deterministicStrikeRowTargetAnalyzer(request.context, request.effect, row)?.let { analysis ->
+                    DecisionCandidate(
+                        row,
+                        PriorityScore(analysis.tacticalValue.roundToInt())
+                            .adjusted(0, "Complete deterministic Strike-row realization")
+                    )
+                }
+            }
+            if (analyzed.isEmpty()) delegate.chooseStrikeRow(request)
+            else choose(request.context, analyzed)
         } else choose(
             request.context,
             request.legalChoices.map { row ->
@@ -625,6 +640,11 @@ class HumanBaselineEffectStrategy(
         val SECONDARY_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE
+        )
+
+        val DETERMINISTIC_STRIKE_ROW_BATTLE_EFFECTS = setOf(
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
+            GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3
         )
 
         val DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS = setOf(
