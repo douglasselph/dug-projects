@@ -19,7 +19,9 @@ import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.context.OpponentView
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
@@ -607,6 +609,79 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
         )
 
         assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `set die to match chooses smaller numeric pair that flips a Strike`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 4), die(2, 6, 6)),
+                player(opponent, 11)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 11, die(1, 20, 1), die(3, 20, 10)),
+                player(opponent, 25)
+            )
+        )
+        val largeRawGain = EffectDiePairChoice(
+            source = EffectDieChoice(3, 20, 10),
+            target = EffectDieChoice(1, 20, 1)
+        )
+        val strikeFlippingPair = EffectDiePairChoice(
+            source = EffectDieChoice(2, 6, 6),
+            target = EffectDieChoice(0, 6, 4)
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDiePair(
+            ChooseEffectDiePairRequest(
+                effect = GameEffect.SET_DIE_TO_MATCH_ANOTHER,
+                legalChoices = listOf(largeRawGain, strikeFlippingPair),
+                context = context
+            )
+        )
+
+        assertEquals(strikeFlippingPair, chosen)
+    }
+
+    @Test
+    fun `set die to match exact tactical tie uses StrategyRandomizer`() {
+        val randomizer = RecordingRandomizer(1)
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        )
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 7, die(0, 6, 3), die(2, 6, 4)),
+                player(opponent, 8)
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 7, die(1, 6, 3), die(3, 6, 4)),
+                player(opponent, 8)
+            )
+        )
+        val first = EffectDiePairChoice(
+            source = EffectDieChoice(2, 6, 4),
+            target = EffectDieChoice(0, 6, 3)
+        )
+        val second = EffectDiePairChoice(
+            source = EffectDieChoice(3, 6, 4),
+            target = EffectDieChoice(1, 6, 3)
+        )
+
+        val chosen = strategy.chooseDiePair(
+            ChooseEffectDiePairRequest(
+                effect = GameEffect.SET_DIE_TO_MATCH_ANOTHER,
+                legalChoices = listOf(first, second),
+                context = context
+            )
+        )
+
+        assertEquals(second, chosen)
+        assertEquals(listOf(2), randomizer.bounds)
     }
 
     @Test

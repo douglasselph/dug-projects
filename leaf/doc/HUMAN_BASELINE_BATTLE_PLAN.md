@@ -718,6 +718,8 @@ B15B3 is complete. Its random-information timing remains subject to the cross-cu
 - [x] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [x] **B15B3** — reroll/upgrade own-die alignment complete
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
+  - [x] **B15B4-1 — Set one die to match another** — `SET_DIE_TO_MATCH_ANOTHER` / `chooseDiePair` now evaluates each legal source/target pair as the complete deterministic target-row realization. The source remains unchanged; the target is set to the source's current value, so shared Battle analysis receives the exact signed target-row delta. A smaller copied-value gain that flips a Strike can beat a larger numeric gain elsewhere. `BattleEnabledPlantAnalyzer` enumerates the same legal pair shape for enabled-Plant valuation. Non-Battle pair behavior is preserved and exact tactical ties remain strategy-randomized.
+  - [ ] **B15B4-2 — Critter + die** — `TRASH_CRITTER_TO_RAISE_DIE_PLUS_5` / `chooseCritterAndDie`.
 - [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment
 - [ ] **B15E1** — Plant/opponent-Plant alignment

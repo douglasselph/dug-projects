@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.decision.context.BattleDieView
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
+import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.random.die.DieSides
 import kotlin.math.roundToInt
 
@@ -44,7 +45,9 @@ class BattleEnabledPlantAnalyzer(
     private val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer =
         BattleOwnDieCollateralAnalyzer(policy),
     private val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
-        BattleGustOfPetalsTargetAnalyzer(policy)
+        BattleGustOfPetalsTargetAnalyzer(policy),
+    private val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
+        BattleSetDieToMatchAnalyzer(policy)
 ) {
     operator fun invoke(
         context: DecisionContext,
@@ -138,12 +141,8 @@ class BattleEnabledPlantAnalyzer(
                     dice.filter { it.die.sides <= 12 }
                 ) { die -> die.sides - die.value }
 
-            GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
-                val highest = dice.maxOfOrNull { it.die.value } ?: return null
-                singleDieCandidates(context, card, dice) { die ->
-                    (highest - die.value).coerceAtLeast(0)
-                }
-            }
+            GameEffect.SET_DIE_TO_MATCH_ANOTHER ->
+                setDieToMatchCandidates(context, card, dice)
 
             GameEffect.RAISE_ALL_DICE_PLUS_2 ->
                 listOfNotNull(
@@ -219,6 +218,40 @@ class BattleEnabledPlantAnalyzer(
                 .thenBy { it.improvementStepCount }
         )
     }
+
+
+    private fun setDieToMatchCandidates(
+        context: DecisionContext,
+        card: CreatureCardView,
+        dice: List<LocatedBattleDie>
+    ): List<BattleActionAnalysis<CreatureCardId>> =
+        dice.flatMap { source ->
+            dice.mapNotNull { target ->
+                if (
+                    source.die.handIndex == target.die.handIndex ||
+                    source.die.value > target.die.sides
+                ) {
+                    null
+                } else {
+                    setDieToMatchAnalyzer(
+                        context = context,
+                        pair = EffectDiePairChoice(
+                            source = EffectDieChoice(
+                                index = source.die.handIndex,
+                                sides = source.die.sides,
+                                value = source.die.value
+                            ),
+                            target = EffectDieChoice(
+                                index = target.die.handIndex,
+                                sides = target.die.sides,
+                                value = target.die.value
+                            )
+                        ),
+                        realization = card.id
+                    )
+                }
+            }
+        }
 
     private fun collateralCandidates(
         context: DecisionContext,

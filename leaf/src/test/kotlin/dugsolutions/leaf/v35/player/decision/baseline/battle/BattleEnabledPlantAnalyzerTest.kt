@@ -158,6 +158,62 @@ class BattleEnabledPlantAnalyzerTest {
     }
 
     @Test
+    fun `Root Kindred top-level value uses the best complete source target pair`() {
+        val topDice = listOf(
+            BattleDieView(handIndex = 0, sides = 6, value = 4),
+            BattleDieView(handIndex = 2, sides = 6, value = 6)
+        )
+        val middleDice = listOf(
+            BattleDieView(handIndex = 1, sides = 20, value = 1),
+            BattleDieView(handIndex = 3, sides = 20, value = 10)
+        )
+        val allDice = topDice + middleDice
+        val context = DecisionContext.EMPTY.copy(
+            phase = dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE,
+            self = DecisionContext.EMPTY.self.copy(
+                board = DecisionContext.EMPTY.self.board.copy(
+                    id = ACTOR,
+                    hand = allDice.map { DieView(it.handIndex, it.sides, it.value) }
+                )
+            ),
+            battle = BattleView(
+                playerOrder = listOf(ACTOR, OPPONENT),
+                rows = listOf(
+                    BattleRowView(
+                        row = StrikeRow.TOP,
+                        closed = false,
+                        players = listOf(
+                            BattlePlayerRowView(ACTOR, StrikeRow.TOP, topDice, emptyList(), 10, 0, 10, false),
+                            BattlePlayerRowView(OPPONENT, StrikeRow.TOP, emptyList(), emptyList(), 11, 0, 11, false)
+                        )
+                    ),
+                    BattleRowView(
+                        row = StrikeRow.MIDDLE,
+                        closed = false,
+                        players = listOf(
+                            BattlePlayerRowView(ACTOR, StrikeRow.MIDDLE, middleDice, emptyList(), 11, 0, 11, false),
+                            BattlePlayerRowView(OPPONENT, StrikeRow.MIDDLE, emptyList(), emptyList(), 25, 0, 25, false)
+                        )
+                    )
+                )
+            )
+        )
+
+        val opportunity = analyzer(
+            context,
+            plant(
+                name = "Root_07_02",
+                effect = GameEffect.SET_DIE_TO_MATCH_ANOTHER,
+                type = PlantType.ROOT
+            )
+        )
+
+        val tactical = requireNotNull(opportunity.tacticalAnalysis)
+        assertEquals(BattleTransition.WIN_FLIPPED, tactical.swing.rowSwings.single().transition)
+        assertEquals(2.0, tactical.swing.rowSwings.single().rawSwing)
+    }
+
+    @Test
     fun `reroll Plant stays expected and does not execute hypothetical RNG`() {
         val opportunity = analyzer(
             context(actorTotal = 1, opponentTotal = 3, dieSides = 6, dieValue = 1),

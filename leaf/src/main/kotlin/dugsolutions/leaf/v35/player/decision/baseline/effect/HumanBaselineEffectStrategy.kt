@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementA
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSetDieToMatchAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
@@ -59,6 +60,8 @@ class HumanBaselineEffectStrategy(
     internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy),
     internal val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
         BattleGustOfPetalsTargetAnalyzer(policy),
+    internal val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
+        BattleSetDieToMatchAnalyzer(policy),
     internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy)
 ) : EffectStrategy {
 
@@ -518,8 +521,23 @@ class HumanBaselineEffectStrategy(
     private fun scorePair(effect: GameEffect, context: DecisionContext, choice: EffectDiePairChoice): PriorityScore {
         return when (effect) {
             GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
-                val gain = minOf(choice.target.sides, choice.source.value) - choice.target.value
-                PriorityScore(50 + gain * 5)
+                if (context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE) {
+                    val analysis = setDieToMatchAnalyzer(
+                        context = context,
+                        pair = choice,
+                        realization = choice
+                    )
+                    if (analysis != null) {
+                        PriorityScore(analysis.tacticalValue.roundToInt())
+                            .adjusted(0, "Complete Battle realization for set-die-to-match pair")
+                    } else {
+                        val gain = minOf(choice.target.sides, choice.source.value) - choice.target.value
+                        PriorityScore(50 + gain * 5)
+                    }
+                } else {
+                    val gain = minOf(choice.target.sides, choice.source.value) - choice.target.value
+                    PriorityScore(50 + gain * 5)
+                }
             }
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {
                 val sourceRow = rowFor(context, choice.source.index)
