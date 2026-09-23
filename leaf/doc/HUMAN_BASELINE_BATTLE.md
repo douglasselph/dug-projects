@@ -467,6 +467,8 @@ BattleTempoAssessment
 
 Dedicated special-effect evaluators should likewise remain small and composable.
 
+B15 target alignment is intentionally being added in bounded slices. For the fixed Plant die-raise effects `RAISE_ANY_DIE_PLUS_1` and `RAISE_DIE_PLUS_4`, downstream Battle target selection now projects each legal die's deterministic change through the same shared own-row Battle analysis used by Battle Plant valuation. Raw numeric raise size is therefore subordinate to the actual immediate Strike consequence. Cultivation targeting remains unchanged.
+
 Do not force `invoke()` onto established multi-method interfaces or APIs where a descriptive method is materially clearer.
 
 ## 15. Explicit non-goals for Human Baseline Battle

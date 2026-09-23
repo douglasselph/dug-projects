@@ -671,9 +671,18 @@ B15F is split into:
 
 This refinement is deliberately more granular than the external B15A–B15G sketch because the current source proves that `chooseDie(...)` is a much larger shared seam than the earlier plan could know before inventory.
 
+### B15B1a progress — pure deterministic own-die transforms
+
+B15B1a is being implemented in timeout-safe micro-slices rather than as one ten-effect patch. The first slice is complete:
+
+- [x] **fixed Plant die raises** — `RAISE_ANY_DIE_PLUS_1` and `RAISE_DIE_PLUS_4` now choose their downstream Battle die target by the exact affected row's shared deterministic Battle analysis rather than generic numeric raise gain. A capped smaller raise that flips a Strike can therefore beat a larger raw raise on a strategically weaker row. Exact tactical target ties continue to use `StrategyRandomizer`.
+- [ ] remaining B15B1a deterministic transforms — `DOUBLE_ONE_DIE`; `FLIP_OWN_DIE_TO_OPPOSITE_FACE`; the two creature-count-dependent +1 effects; `RAISE_DIE_PLUS_3`; `SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE`; `SET_DIE_UP_TO_D12_TO_MAX`; `SET_LOWEST_VALUE_DIE_TO_MAX`.
+
+This first slice changes only downstream target alignment for the two fixed Plant raises. It does not complete B15B1a, does not change Cultivation targeting, and does not certify Effect Choices.
+
 ### Remaining B15 checkpoints
 
-- [ ] **B15B1a** — pure deterministic own-die transforms
+- [ ] **B15B1a** — pure deterministic own-die transforms (fixed +1/+4 Plant raise slice complete; remaining transforms still pending)
 - [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences
 - [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [ ] **B15B3** — reroll/upgrade own-die alignment

@@ -3,7 +3,9 @@ package dugsolutions.leaf.v35.player.decision.baseline.effect
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
@@ -48,7 +50,8 @@ class HumanBaselineEffectStrategy(
     internal val pollenTheftEvaluator: BattlePollenTheftEvaluator = BattlePollenTheftEvaluator(policy),
     internal val immediateStrikeResolveEvaluator: BattleImmediateStrikeResolveEvaluator =
         BattleImmediateStrikeResolveEvaluator(policy),
-    internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy)
+    internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
+    internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -79,15 +82,25 @@ class HumanBaselineEffectStrategy(
                     sides = choice.sides,
                     value = choice.value
                 )
-                val score = when (request.effect) {
-                    GameEffect.UPGRADE_DIE_FROM_HAND ->
+                val score = when {
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect in FIXED_OWN_DIE_BATTLE_RAISES ->
+                        battleFixedRaiseTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.effect == GameEffect.UPGRADE_DIE_FROM_HAND ->
                         CompostPriority.targetScore(request.context, die, normalPower)
                             ?: PriorityScore(0).adjusted(-1000, "Not a legal normal Compost upgrade target")
 
-                    GameEffect.MULCH_DIE_FROM_HAND ->
+                    request.effect == GameEffect.MULCH_DIE_FROM_HAND ->
                         MulchPriority.targetScore(request.context, die, normalPower)
 
-                    GameEffect.RAISE_DIE_PLUS_3 ->
+                    request.effect == GameEffect.RAISE_DIE_PLUS_3 ->
                         SunlightPriority.targetScore(request.context, die, normalPower)
 
                     else ->
@@ -451,6 +464,42 @@ class HumanBaselineEffectStrategy(
             }
             else -> PriorityScore(50)
         }
+    }
+
+    private companion object {
+        val FIXED_OWN_DIE_BATTLE_RAISES = setOf(
+            GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_DIE_PLUS_4
+        )
+    }
+
+    /**
+     * Aligns the downstream target for the simple fixed +1/+4 own-die Plant
+     * effects with the same immediate Battle realization used by Battle Plant
+     * analysis. Numeric raise size alone is not enough: a smaller capped gain
+     * that flips a Strike should beat a larger gain on an irrelevant row.
+     */
+    private fun battleFixedRaiseTargetScore(
+        context: DecisionContext,
+        effect: GameEffect,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val amount = when (effect) {
+            GameEffect.RAISE_ANY_DIE_PLUS_1 -> 1
+            GameEffect.RAISE_DIE_PLUS_4 -> 4
+            else -> return null
+        }
+        val row = rowFor(context, choice.index) ?: return null
+        val gain = DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, amount)
+        val analysis = ownTotalChangeAnalyzer(
+            context = context,
+            realization = choice,
+            row = row,
+            change = gain.toDouble(),
+            mode = BattleAnalysisMode.DETERMINISTIC
+        ) ?: return null
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Immediate Battle realization for fixed die raise")
     }
 
     private fun rowFor(context: DecisionContext, handIndex: Int) =
