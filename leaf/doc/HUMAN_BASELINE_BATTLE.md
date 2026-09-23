@@ -467,7 +467,7 @@ BattleTempoAssessment
 
 Dedicated special-effect evaluators should likewise remain small and composable.
 
-B15 target alignment is intentionally being added in bounded slices. For the fixed Plant die-raise effects `RAISE_ANY_DIE_PLUS_1` and `RAISE_DIE_PLUS_4`, downstream Battle target selection now projects each legal die's deterministic change through the same shared own-row Battle analysis used by Battle Plant valuation. Raw numeric raise size is therefore subordinate to the actual immediate Strike consequence. Cultivation targeting remains unchanged.
+B15 target alignment is intentionally being added in bounded slices. For the straightforward deterministic own-die raises `RAISE_ANY_DIE_PLUS_1`, `RAISE_DIE_PLUS_3`, `RAISE_DIE_PLUS_4`, `RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER`, and `RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE`, downstream Battle target selection now projects each legal die's exact deterministic change through the same shared own-row Battle analysis used by top-level Battle valuation. The creature-count raises use the current Creature composition to determine their real raise amount. Raw numeric raise size is therefore subordinate to the actual immediate Strike consequence. Cultivation targeting remains unchanged.
 
 Do not force `invoke()` onto established multi-method interfaces or APIs where a descriptive method is materially clearer.
 

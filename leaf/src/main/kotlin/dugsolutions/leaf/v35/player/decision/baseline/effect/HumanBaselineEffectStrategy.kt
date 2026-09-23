@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
@@ -84,8 +85,8 @@ class HumanBaselineEffectStrategy(
                 )
                 val score = when {
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
-                        request.effect in FIXED_OWN_DIE_BATTLE_RAISES ->
-                        battleFixedRaiseTargetScore(request.context, request.effect, choice)
+                        request.effect in DETERMINISTIC_OWN_DIE_BATTLE_RAISES ->
+                        battleDeterministicRaiseTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
                                 context = request.context,
@@ -467,25 +468,37 @@ class HumanBaselineEffectStrategy(
     }
 
     private companion object {
-        val FIXED_OWN_DIE_BATTLE_RAISES = setOf(
+        val DETERMINISTIC_OWN_DIE_BATTLE_RAISES = setOf(
             GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4
         )
     }
 
     /**
-     * Aligns the downstream target for the simple fixed +1/+4 own-die Plant
-     * effects with the same immediate Battle realization used by Battle Plant
-     * analysis. Numeric raise size alone is not enough: a smaller capped gain
-     * that flips a Strike should beat a larger gain on an irrelevant row.
+     * Aligns downstream targets for straightforward deterministic own-die raises
+     * with the same immediate affected-row Battle realization used by top-level
+     * Battle analysis. Numeric raise size alone is not enough: a smaller capped
+     * gain that flips a Strike should beat a larger gain on an irrelevant row.
      */
-    private fun battleFixedRaiseTargetScore(
+    private fun battleDeterministicRaiseTargetScore(
         context: DecisionContext,
         effect: GameEffect,
         choice: EffectDieChoice
     ): PriorityScore? {
         val amount = when (effect) {
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> 1
+            GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
+                context.self.board.creature.count {
+                    it.type == PlantType.VINE || it.type == PlantType.FLOWER
+                }
+            GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE ->
+                context.self.board.creature.count {
+                    it.type == PlantType.ROOT || it.type == PlantType.VINE
+                }
+            GameEffect.RAISE_DIE_PLUS_3 -> 3
             GameEffect.RAISE_DIE_PLUS_4 -> 4
             else -> return null
         }
@@ -499,7 +512,7 @@ class HumanBaselineEffectStrategy(
             mode = BattleAnalysisMode.DETERMINISTIC
         ) ?: return null
         return PriorityScore(analysis.tacticalValue.roundToInt())
-            .adjusted(0, "Immediate Battle realization for fixed die raise")
+            .adjusted(0, "Immediate Battle realization for deterministic die raise")
     }
 
     private fun rowFor(context: DecisionContext, handIndex: Int) =
