@@ -13,6 +13,8 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDeterministic
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPairAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleEnabledPlantAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOpponentPlantTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleRootWellTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSetDieToMatchAnalyzer
@@ -72,7 +74,11 @@ class HumanBaselineEffectStrategy(
         BattleSetDieToMatchAnalyzer(policy),
     internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy),
     internal val deterministicStrikeRowTargetAnalyzer: BattleDeterministicStrikeRowTargetAnalyzer =
-        BattleDeterministicStrikeRowTargetAnalyzer(policy)
+        BattleDeterministicStrikeRowTargetAnalyzer(policy),
+    internal val enabledPlantAnalyzer: BattleEnabledPlantAnalyzer =
+        BattleEnabledPlantAnalyzer(cardScorers, policy),
+    internal val opponentPlantTargetAnalyzer: BattleOpponentPlantTargetAnalyzer =
+        BattleOpponentPlantTargetAnalyzer(cardScorers, enabledPlantAnalyzer)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -413,13 +419,22 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
-                val view = owner?.board?.creature?.firstOrNull { it.id == choice.cardId }
-                val value = if (view != null) {
-                    cardScorers.findByName(view.name)?.lossValue(request.context, view) ?: (view.cost * 4)
-                } else 0
-                val snipBonus = if (choice is EffectOpponentPlantWoundChoice.Snip) 20 else 0
-                DecisionCandidate(choice, PriorityScore(40 + value + snipBonus))
+                val battleScore = opponentPlantTargetAnalyzer(
+                    context = request.context,
+                    effect = request.effect,
+                    choice = choice
+                )
+                if (battleScore != null) {
+                    DecisionCandidate(choice, battleScore)
+                } else {
+                    val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
+                    val view = owner?.board?.creature?.firstOrNull { it.id == choice.cardId }
+                    val value = if (view != null) {
+                        cardScorers.findByName(view.name)?.lossValue(request.context, view) ?: (view.cost * 4)
+                    } else 0
+                    val snipBonus = if (choice is EffectOpponentPlantWoundChoice.Snip) 20 else 0
+                    DecisionCandidate(choice, PriorityScore(40 + value + snipBonus))
+                }
             }
         )
     }
@@ -429,11 +444,20 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val scorer = cardScorers.forName(choice.cardName)
-                DecisionCandidate(
-                    choice,
-                    scorer.playScore(request.context, CardPhase.from(request.context.phase), choice.cardName)
-                )
+                val view = request.context.self.board.creature.firstOrNull {
+                    it.id == choice.cardId && it.name == choice.cardName
+                }
+                val score = if (
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                    request.effect == GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT &&
+                    view != null
+                ) {
+                    enabledPlantAnalyzer(request.context, view).priority
+                } else {
+                    cardScorers.forName(choice.cardName)
+                        .playScore(request.context, CardPhase.from(request.context.phase), choice.cardName)
+                }
+                DecisionCandidate(choice, score)
             }
         )
     }

@@ -735,7 +735,14 @@ B15B4 is complete. Compound own-die choices now evaluate the complete source/tar
 
 B15D is complete. Own-die swap pairs, deterministic Strike-row branches, and Gust of Petals' post-reroll random-collateral row choice now all use complete current Battle realizations rather than pair-local/row-order heuristics. Gust retains its two-stage timing: the initial own-die target is valued before RNG in B15B3, while B15D-3 uses the actual first reroll result and fresh context to choose the later row by expected opposing collateral.
 
-- [ ] **B15E1** — Plant/opponent-Plant alignment
+### B15E1 — Plant/opponent-Plant alignment — COMPLETE
+
+- [x] **B15E1-1 — opponent Plant Flip/Wound targets** — the three Battle `chooseOpponentPlantWound(...)` paths now use `BattleOpponentPlantTargetAnalyzer`. Wound/Flip targets retain the existing card-loss/removal value, but face-up Plants also include the immediate current-Battle Plant use being denied. Shift Happens is treated according to its actual toggle semantics rather than generic card loss: flipping a face-up opponent Root/Vine down denies its current Battle use, while flipping a spent Root/Vine face up can enable that opponent and is scored as harmful to the actor. Done opponents receive no immediate-activation adjustment because they cannot take another Battle turn. Only public opponent board/Battle information is used; hidden Wisp identity is not reconstructed.
+- [x] **B15E1-2 — reuse spent Plant** — `REUSE_SPENT_ROOT_OR_VINE_EFFECT` / `choosePlantEffect(...)` now uses `BattleEnabledPlantAnalyzer` for each legal spent Root/Vine during Battle. This compares the best one-step immediate realizable Battle use of each reusable Plant, while keeping existing card scoring as the intrinsic layer. It does not recursively search Vine-and-Again chains or future combos, and Cultivation behavior is unchanged.
+
+B15E1 is complete. These changes align current-Battle Plant target choice only; they do not certify the later Wound Resolution or Effect Choices major areas.
+
+- [x] **B15E1** — Plant/opponent-Plant alignment
 - [ ] **B15E2** — resource/player/Wisp-set target alignment
 - [ ] **B15E3** — qualitative branch alignment
 - [ ] **B15F1** — random-information timing audit
