@@ -476,6 +476,7 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX
         )
@@ -515,6 +516,10 @@ class HumanBaselineEffectStrategy(
                 )
             GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 3)
             GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 4)
+            // Every legal Down Payment target becomes one showing 1, so the VP reward
+            // is identical across targets. The target decision therefore compares only
+            // the target-dependent Battle cost of reducing this die to 1.
+            GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> 1 - choice.value
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX ->
                 DieValueHeuristics.setToMaximumGain(choice.sides, choice.value)

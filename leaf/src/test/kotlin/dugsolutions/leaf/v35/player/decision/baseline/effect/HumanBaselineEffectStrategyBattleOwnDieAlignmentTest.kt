@@ -208,6 +208,52 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `set to one chooses larger raw sacrifice when it preserves the stronger Battle outcome`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 2), die(2, 4, 1)),
+                player(opponent, 10)
+            ),
+            row(StrikeRow.MIDDLE, player(actor, 20, die(1, 8, 6)), player(opponent, 10))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
+                context,
+                EffectDieChoice(0, 6, 2), // raw loss 1, but turns a tie into a loss
+                EffectDieChoice(1, 8, 6)  // raw loss 5, but still leaves the Strike won
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
+    fun `set to one target comparison is tactical because VP reward is identical for every legal target`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 11, die(0, 6, 2), die(2, 4, 1)),
+                player(opponent, 10)
+            ),
+            row(StrikeRow.MIDDLE, player(actor, 18, die(1, 8, 4)), player(opponent, 10))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
+                context,
+                EffectDieChoice(0, 6, 2), // both targets create the same extra showing-1 for VP
+                EffectDieChoice(1, 8, 4)  // larger sacrifice, but does not surrender the TOP win
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
