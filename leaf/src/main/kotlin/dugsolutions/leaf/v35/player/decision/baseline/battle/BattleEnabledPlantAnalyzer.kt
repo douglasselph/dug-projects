@@ -38,7 +38,9 @@ class BattleEnabledPlantAnalyzer(
         HumanBaselineCardScorerRegistry(),
     policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     private val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer =
-        BattleOwnTotalChangeAnalyzer(policy)
+        BattleOwnTotalChangeAnalyzer(policy),
+    private val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer =
+        BattleOwnDieCollateralAnalyzer(policy)
 ) {
     operator fun invoke(
         context: DecisionContext,
@@ -75,12 +77,12 @@ class BattleEnabledPlantAnalyzer(
 
             GameEffect.RAISE_DIE_PLUS_4 -> raiseCandidates(context, card, dice, 4)
             GameEffect.RAISE_DIE_PLUS_3 -> raiseCandidates(context, card, dice, 3)
-            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW ->
-                raiseCandidates(context, card, dice, 2)
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
+                collateralCandidates(context, card, dice)
 
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
-            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 raiseCandidates(context, card, dice, 1)
 
@@ -179,6 +181,20 @@ class BattleEnabledPlantAnalyzer(
                 .thenBy { it.improvementStepCount }
         )
     }
+
+    private fun collateralCandidates(
+        context: DecisionContext,
+        card: CreatureCardView,
+        dice: List<LocatedBattleDie>
+    ): List<BattleActionAnalysis<CreatureCardId>> =
+        dice.mapNotNull { located ->
+            ownDieCollateralAnalyzer(
+                context = context,
+                effect = card.effect,
+                handIndex = located.die.handIndex,
+                realization = card.id
+            )
+        }
 
     private fun raiseCandidates(
         context: DecisionContext,

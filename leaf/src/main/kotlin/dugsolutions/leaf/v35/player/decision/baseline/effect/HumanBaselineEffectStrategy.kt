@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
@@ -52,7 +53,8 @@ class HumanBaselineEffectStrategy(
     internal val immediateStrikeResolveEvaluator: BattleImmediateStrikeResolveEvaluator =
         BattleImmediateStrikeResolveEvaluator(policy),
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
-    internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy)
+    internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy),
+    internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -84,6 +86,16 @@ class HumanBaselineEffectStrategy(
                     value = choice.value
                 )
                 val score = when {
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect in COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS ->
+                        battleCollateralOwnDieTargetScore(request.context, request.effect, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS ->
                         battleDeterministicOwnDieTargetScore(request.context, request.effect, choice)
@@ -468,6 +480,11 @@ class HumanBaselineEffectStrategy(
     }
 
     private companion object {
+        val COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS = setOf(
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
+        )
+
         val DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
@@ -480,6 +497,26 @@ class HumanBaselineEffectStrategy(
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX
         )
+    }
+
+    /**
+     * Scores deterministic own-die effects whose selected row also changes
+     * opposing dice. The dedicated analyzer mirrors the complete engine
+     * realization so target choice sees both the actor raise and collateral.
+     */
+    private fun battleCollateralOwnDieTargetScore(
+        context: DecisionContext,
+        effect: GameEffect,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val analysis = ownDieCollateralAnalyzer(
+            context = context,
+            effect = effect,
+            handIndex = choice.index,
+            realization = choice
+        ) ?: return null
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
     }
 
     /**

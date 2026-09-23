@@ -42,6 +42,31 @@ class BattleEnabledPlantAnalyzerTest {
     }
 
     @Test
+    fun `sapping snapdragon top-level value includes opposing row drain`() {
+        val opportunity = analyzer(
+            context(
+                actorTotal = 8,
+                opponentTotal = 10,
+                dieSides = 6,
+                dieValue = 5,
+                opponentDice = listOf(
+                    BattleDieView(handIndex = 1, sides = 6, value = 6),
+                    BattleDieView(handIndex = 2, sides = 6, value = 4)
+                )
+            ),
+            plant(
+                name = "Flower_17_03",
+                effect = GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+                type = PlantType.FLOWER
+            )
+        )
+
+        val tactical = requireNotNull(opportunity.tacticalAnalysis)
+        assertEquals(BattleTransition.WIN_FLIPPED, tactical.swing.rowSwings.single().transition)
+        assertTrue(tactical.tacticalValue >= 500.0)
+    }
+
+    @Test
     fun `reroll Plant stays expected and does not execute hypothetical RNG`() {
         val opportunity = analyzer(
             context(actorTotal = 1, opponentTotal = 3, dieSides = 6, dieValue = 1),
@@ -61,7 +86,8 @@ class BattleEnabledPlantAnalyzerTest {
         actorTotal: Int,
         opponentTotal: Int,
         dieSides: Int,
-        dieValue: Int
+        dieValue: Int,
+        opponentDice: List<BattleDieView> = emptyList()
     ): DecisionContext {
         val die = BattleDieView(handIndex = 0, sides = dieSides, value = dieValue)
         return DecisionContext.EMPTY.copy(
@@ -91,7 +117,7 @@ class BattleEnabledPlantAnalyzerTest {
                             BattlePlayerRowView(
                                 OPPONENT,
                                 StrikeRow.TOP,
-                                emptyList(),
+                                opponentDice,
                                 emptyList(),
                                 opponentTotal,
                                 0,

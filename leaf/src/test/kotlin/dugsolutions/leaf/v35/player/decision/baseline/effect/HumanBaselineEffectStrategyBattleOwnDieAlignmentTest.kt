@@ -254,6 +254,60 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `sapping snapdragon chooses row where opposing reduction completes the win`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 8, die(0, 6, 5)),
+                player(opponent, 10, die(2, 6, 6), die(3, 6, 4))
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 8, die(1, 20, 1)),
+                player(opponent, 10)
+            )
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+                context,
+                EffectDieChoice(1, 20, 1), // +2 alone reaches only a tie
+                EffectDieChoice(0, 6, 5)   // capped own gain, but row drain flips the Strike to a win
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `bloom backflip avoids row where flipping a higher opponent die helps them`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 10, die(0, 6, 5)),
+                player(opponent, 10, die(2, 20, 7))
+            ),
+            row(
+                StrikeRow.MIDDLE,
+                player(actor, 9, die(1, 6, 5)),
+                player(opponent, 10, die(3, 6, 6))
+            )
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+                context,
+                EffectDieChoice(0, 6, 5), // +1 alone would win, but D20=7 flips up to 14
+                EffectDieChoice(1, 6, 5)   // +1 reaches a tie and D6=6 is not higher after the raise
+            )
+        )
+
+        assertEquals(1, chosen.index)
+    }
+
+    @Test
     fun `exact double Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(

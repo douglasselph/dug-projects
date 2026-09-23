@@ -683,10 +683,19 @@ B15B1a was implemented in timeout-safe micro-slices rather than as one ten-effec
 
 These completed slices change only downstream Battle target alignment for straightforward deterministic own-die transforms. B15B1a is now complete. Cultivation targeting is unchanged, and this does not certify Effect Choices.
 
+### B15B1b progress — deterministic own-die targets with secondary/collateral Battle consequences
+
+B15B1b is also being implemented in timeout-safe micro-slices.
+
+- [x] **opposing-row collateral** — `RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW` and `RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW` now use shared complete-realization analysis for both top-level enabled-Plant valuation and downstream Battle die targeting. `BattleOwnDieCollateralAnalyzer` mirrors the actual engine order: Sapping Snapdragon applies the capped +2, reduces each opposing die by its actual capped amount, then raises the chosen die by the total reduction; Bloom Backflip applies the capped +1 and then flips only opposing D6+ dice still higher than the raised die. Opponent changes are included in the projected Strike totals, including harmful flips that can improve an opponent.
+- [ ] **remaining secondary-consequence own-die targets** — `RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE` and `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE`.
+
+This slice does not implement the later Strike-Row branch decisions and does not certify Effect Choices.
+
 ### Remaining B15 checkpoints
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
-- [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences
+- [ ] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences (opposing-row collateral slice complete)
 - [ ] **B15B2** — discard/draw/Mulch/return source-die alignment
 - [ ] **B15B3** — reroll/upgrade own-die alignment
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
