@@ -5,6 +5,8 @@ import dugsolutions.leaf.integration.v35.support.IntegrationCatalog
 import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
 import dugsolutions.leaf.integration.v35.support.SnapshotAssertions
 import dugsolutions.leaf.v35.game.GameRoundSetup
+import dugsolutions.leaf.v35.random.Randomizer
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Test
@@ -58,6 +60,26 @@ class InitialGameSetupSanityTest {
         }
     }
 
+
+    @Test
+    fun `production Grove setup shuffles the physical Wisp deck`() {
+        val randomizer = WispShuffleRecordingRandomizer()
+        val scenario = GameScenario(
+            numPlayers = 2,
+            roundSetup = GameRoundSetup.Ordered(
+                cultivationRounds = 1,
+                battleRounds = 0
+            ),
+            exactRoundNames = listOf("Resource_Compost_Mulch"),
+            randomizerFactory = { randomizer }
+        )
+
+        IntegrationGameHarness(scenario).use { harness ->
+            assertEquals(1, randomizer.wispShuffleCalls)
+            assertEquals(32, harness.snapshot().grove.wispDrawPile.size)
+        }
+    }
+
     @Test
     fun `separate harnesses own independent mutable game state`() {
         val scenario = GameScenario(
@@ -89,4 +111,28 @@ class InitialGameSetupSanityTest {
             }
         }
     }
+    private class WispShuffleRecordingRandomizer : Randomizer {
+        var wispShuffleCalls: Int = 0
+            private set
+
+        override fun nextBoolean(): Boolean =
+            throw UnsupportedOperationException()
+
+        override fun nextInt(from: Int, until: Int): Int =
+            throw UnsupportedOperationException()
+
+        override fun nextInt(until: Int): Int =
+            throw UnsupportedOperationException()
+
+        override fun <T> randomOrNull(list: List<T>): T? =
+            throw UnsupportedOperationException()
+
+        override fun <T> shuffled(list: List<T>): List<T> {
+            if (list.firstOrNull() is WispCard) {
+                wispShuffleCalls += 1
+            }
+            return list.reversed()
+        }
+    }
+
 }

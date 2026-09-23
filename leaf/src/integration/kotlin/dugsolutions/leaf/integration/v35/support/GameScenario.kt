@@ -32,7 +32,9 @@ data class GameScenario(
      */
     val randomizerFactory: (() -> Randomizer)? = null,
     /** Strategy-only tie-breaking seed; independent from injected mechanics. */
-    val strategySeed: Long? = seed
+    val strategySeed: Long? = seed,
+    /** Emit scored Human Baseline decision reasoning into the game Chronicle. */
+    val recordDecisionReasoning: Boolean = false
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -64,7 +66,8 @@ data class GameScenario(
             roundSetup = roundSetup,
             seed = seed,
             dieConfig = dieConfig,
-            strategySeed = strategySeed
+            strategySeed = strategySeed,
+            recordDecisionReasoning = recordDecisionReasoning
         )
     }
 }

@@ -243,6 +243,19 @@ tasks.register<JavaExec>("runMechanicalGameSmoke") {
     project.findProperty("smokeSeed")?.toString()?.let { args(it) }
 }
 
+// Runs one complete four-player Human Baseline 3/2/2 game and writes both
+// summary and decision-rich Chronicle output under output/smoke/human-baseline/.
+tasks.register<JavaExec>("runHumanBaselineSmoke") {
+    description = "Runs one full 3/2/2 Human Baseline game and writes its Chronicle to output/."
+    group = "verification"
+
+    dependsOn("integrationClasses")
+    classpath = sourceSets["integration"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.integration.v35.tool.HumanBaselineGameSmokeMainKt")
+
+    project.findProperty("smokeSeed")?.toString()?.let { args(it) }
+}
+
 // Add custom task to run SimpleTestRunner
 tasks.register<JavaExec>("runSimpleTestRunner") {
     description = "Runs the SimpleTestRunner to view test output"

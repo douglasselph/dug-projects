@@ -4,6 +4,7 @@ import dugsolutions.leaf.integration.v35.support.FinalScoringAssertions
 import dugsolutions.leaf.integration.v35.support.GameScenario
 import dugsolutions.leaf.integration.v35.support.IntegrationCatalog
 import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
+import dugsolutions.leaf.integration.v35.support.HumanBaselineSmokeScenario
 import dugsolutions.leaf.integration.v35.support.WholeGameAssertions
 import dugsolutions.leaf.integration.v35.support.decision.ScriptedDecisionDirector
 import dugsolutions.leaf.integration.v35.support.random.ScriptedRandomizer
@@ -130,6 +131,37 @@ class WholeGameSanityTest {
                 expectedBattleRounds = 3
             )
 
+            assertEquals(4, result.finalScoring.scores.size)
+            assertTrue(result.finalScoring.scores.all { it.totalVp >= 0 })
+        }
+    }
+
+
+    @Test
+    fun `3-2-2 four-player Human Baseline game with first-game Plants completes with coherent Chronicle`() {
+        val scenario = HumanBaselineSmokeScenario.scenario(seed = 13_579L)
+
+        IntegrationGameHarness(scenario).use { harness ->
+            val initial = harness.snapshot()
+            assertEquals(
+                IntegrationCatalog.FIRST_GAME_PLANT_NAMES.toSet(),
+                initial.grove.plantStacks.map { it.name }.toSet()
+            )
+
+            val result = harness.runGame()
+
+            WholeGameAssertions.assertCompletedGame(
+                harness = harness,
+                result = result,
+                expectedCultivationRounds = 7,
+                expectedBattleRounds = 3
+            )
+
+            val revealedTypes =
+                harness.chronicleEntries()
+                    .filterIsInstance<GameEntry.RoundRevealed>()
+                    .map { it.cardType }
+            assertEquals(HumanBaselineSmokeScenario.expectedRoundTypes, revealedTypes)
             assertEquals(4, result.finalScoring.scores.size)
             assertTrue(result.finalScoring.scores.all { it.totalVp >= 0 })
         }
