@@ -84,6 +84,67 @@ class HumanBaselineEffectStrategyStrikeRowAlignmentTest {
         assertEquals(StrikeRow.MIDDLE, chosen)
     }
 
+
+    @Test
+    fun `Gust of Petals chooses second row when expected opposing reroll flips that Strike`() {
+        val context = context(
+            rows = listOf(
+                row(
+                    StrikeRow.TOP,
+                    player(p1, dieTotal = 10, dice = listOf(die(0, 12, 10))),
+                    player(p2, dieTotal = 9, dice = listOf(die(0, 20, 9)))
+                ),
+                row(
+                    StrikeRow.MIDDLE,
+                    player(p1, dieTotal = 11, dice = listOf(die(1, 12, 11))),
+                    player(p2, dieTotal = 12, dice = listOf(die(1, 20, 12)))
+                )
+            )
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseStrikeRow(
+            ChooseEffectStrikeRowRequest(
+                effect = GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+                legalChoices = listOf(StrikeRow.TOP, StrikeRow.MIDDLE),
+                context = context
+            )
+        )
+
+        assertEquals(StrikeRow.MIDDLE, chosen)
+    }
+
+    @Test
+    fun `Gust of Petals avoids row where expected opposing reroll turns a win into a loss`() {
+        val context = context(
+            rows = listOf(
+                row(
+                    StrikeRow.TOP,
+                    player(
+                        p1,
+                        dieTotal = 10,
+                        dice = listOf(die(0, 12, 1), die(1, 12, 9))
+                    ),
+                    player(p2, dieTotal = 2, dice = listOf(die(0, 20, 2)))
+                ),
+                row(
+                    StrikeRow.MIDDLE,
+                    player(p1, dieTotal = 10, dice = listOf(die(2, 12, 10))),
+                    player(p2, dieTotal = 9, dice = listOf(die(1, 20, 9)))
+                )
+            )
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseStrikeRow(
+            ChooseEffectStrikeRowRequest(
+                effect = GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+                legalChoices = listOf(StrikeRow.TOP, StrikeRow.MIDDLE),
+                context = context
+            )
+        )
+
+        assertEquals(StrikeRow.MIDDLE, chosen)
+    }
+
     private fun context(rows: List<BattleRowView>): DecisionContext =
         DecisionContext.EMPTY.copy(
             phase = RoundCardType.BATTLE,

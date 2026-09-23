@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsStrikeRowAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
@@ -65,6 +66,8 @@ class HumanBaselineEffectStrategy(
     internal val ownDieSwapPairAnalyzer: BattleOwnDieSwapPairAnalyzer = BattleOwnDieSwapPairAnalyzer(policy),
     internal val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
         BattleGustOfPetalsTargetAnalyzer(policy),
+    internal val gustOfPetalsStrikeRowAnalyzer: BattleGustOfPetalsStrikeRowAnalyzer =
+        BattleGustOfPetalsStrikeRowAnalyzer(policy),
     internal val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
         BattleSetDieToMatchAnalyzer(policy),
     internal val diePlacementAnalyzer: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(policy),
@@ -500,6 +503,21 @@ class HumanBaselineEffectStrategy(
                     )
                 }
             )
+        } else if (
+            request.effect ==
+                GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
+        ) {
+            val analyzed = request.legalChoices.mapNotNull { row ->
+                gustOfPetalsStrikeRowAnalyzer(request.context, row)?.let { analysis ->
+                    DecisionCandidate(
+                        row,
+                        PriorityScore(analysis.tacticalValue.roundToInt())
+                            .adjusted(0, "Expected complete Gust of Petals Strike-row realization")
+                    )
+                }
+            }
+            if (analyzed.isEmpty()) delegate.chooseStrikeRow(request)
+            else choose(request.context, analyzed)
         } else if (request.effect in DETERMINISTIC_STRIKE_ROW_BATTLE_EFFECTS) {
             val analyzed = request.legalChoices.mapNotNull { row ->
                 deterministicStrikeRowTargetAnalyzer(request.context, request.effect, row)?.let { analysis ->
