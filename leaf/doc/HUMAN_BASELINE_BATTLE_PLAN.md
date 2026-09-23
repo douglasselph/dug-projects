@@ -706,13 +706,14 @@ B15B2 is complete and does not certify Effect Choices.
 B15B3 is being implemented in bounded random-target slices.
 
 - [x] **simple reroll targets** — `REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS` and the Battle one-die branch of `DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE` now choose the live die by the honest expected change on its actual Strike row rather than by generic expected face gain alone. Root on a Roll uses the exact accepted-face expectation for repeated rerolls until 3+; Root Recall uses ordinary one-roll expectation. Both use `BattleAnalysisMode.EXPECTED`, consume no mechanical RNG, and leave the live die in its existing Battle row. `BattleEnabledPlantAnalyzer` uses the same Root-on-a-Roll expectation so top-level enabled-Plant valuation and downstream target selection remain compatible. Exact tactical ties still use `StrategyRandomizer`.
+- [x] **one-step upgrade targets** — `UPGRADE_DIE_AND_USE_NOW` (Root Awakening) now chooses among legal Battle dice by the mathematical expected value of the exact normal next-size replacement on that die's current Strike row. The normal ladder remains D4→D6→D8→D10→D12→D20 with no skip-missing behavior; the effect handler/request still owns Graft Bed legality. No replacement is rolled during strategy analysis, and the selected die's row is not changed or pre-resolved. `BattleEnabledPlantAnalyzer` uses the same expected one-step projection and checks visible next-size Graft Bed availability, keeping enabled-Plant valuation compatible with downstream target selection. `UPGRADE_DIE_FROM_HAND` was audited in this slice but intentionally retains its existing `CompostPriority` behavior: every current concrete source is a Cultivation Round Compost effect, and the effect places the upgraded die in Discard rather than rolling/using it now, so there is no current production Battle action/target path whose row value should be invented here. B13 Overgrowth (`UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW`) remains on its dedicated two-step evaluator unchanged.
 
 ### Remaining B15 checkpoints
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
 - [x] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences complete
 - [x] **B15B2** — discard/draw/Mulch/return source-die alignment
-- [ ] **B15B3** — reroll/upgrade own-die alignment (simple reroll slice complete)
+- [ ] **B15B3** — reroll/upgrade own-die alignment (simple reroll + one-step upgrade slices complete; opposing-collateral reroll remains)
 - [ ] **B15B4** — compound own-die pair / Critter+die alignment
 - [ ] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
 - [ ] **B15D** — Strike-Row and swap/multi-row alignment

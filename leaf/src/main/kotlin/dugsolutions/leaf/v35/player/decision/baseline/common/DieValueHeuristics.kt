@@ -76,6 +76,38 @@ object DieValueHeuristics {
     fun flipGain(die: DieView): Int =
         flipGain(die.sides, die.value)
 
+    /**
+     * Next size in the normal one-step Upgrade ladder.
+     *
+     * This mirrors the fixed normal Upgrade progression used by the rules
+     * engine: D4 -> D6 -> D8 -> D10 -> D12 -> D20. Missing Graft Bed sizes
+     * are not skipped by a normal one-step Upgrade; legality remains owned by
+     * the engine/request that supplies the strategy's legal choices.
+     */
+    fun nextNormalUpgradeSides(sides: Int): Int? = when (sides) {
+        4 -> 6
+        6 -> 8
+        8 -> 10
+        10 -> 12
+        12 -> 20
+        20 -> null
+        else -> null
+    }
+
+    /**
+     * Expected signed face-value change for "Upgrade a die; use it now."
+     * The replacement has not been rolled yet, so this is mathematical
+     * expectation only and never consumes mechanical RNG.
+     */
+    fun expectedNormalUpgradeUseNowGain(
+        sides: Int,
+        value: Int
+    ): Double? {
+        requireDie(sides, value)
+        val nextSides = nextNormalUpgradeSides(sides) ?: return null
+        return expectedRoll(nextSides) - value
+    }
+
     /** Signed expected face-value change if the current result is rerolled. */
     fun expectedRerollGain(
         sides: Int,

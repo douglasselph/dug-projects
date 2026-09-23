@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.BattleDieView
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.random.die.DieSides
 import kotlin.math.roundToInt
 
 /** One face-down Plant's best visible immediate Final-Main opportunity. */
@@ -175,6 +176,23 @@ class BattleEnabledPlantAnalyzer(
                     mode = BattleAnalysisMode.EXPECTED
                 ) { die ->
                     DieValueHeuristics.expectedRerollGain(die.sides, die.value)
+                }
+
+            GameEffect.UPGRADE_DIE_AND_USE_NOW ->
+                singleDieCandidates(
+                    context,
+                    card,
+                    dice.filter { located ->
+                        val next = DieValueHeuristics.nextNormalUpgradeSides(located.die.sides)
+                            ?: return@filter false
+                        (context.grove.graftBed[DieSides.from(next)] ?: 0) > 0
+                    },
+                    mode = BattleAnalysisMode.EXPECTED
+                ) { die ->
+                    DieValueHeuristics.expectedNormalUpgradeUseNowGain(
+                        sides = die.sides,
+                        value = die.value
+                    ) ?: 0.0
                 }
 
             else -> emptyList()

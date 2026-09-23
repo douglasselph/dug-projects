@@ -99,6 +99,16 @@ class HumanBaselineEffectStrategy(
                             )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW ->
+                        battleOneStepUpgradeUseNowTargetScore(request.context, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in SIMPLE_REROLL_OWN_DIE_BATTLE_EFFECTS ->
                         battleSimpleRerollOwnDieTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
@@ -577,6 +587,33 @@ class HumanBaselineEffectStrategy(
             .adjusted(0, "Complete immediate Battle realization for collateral own-die transform")
     }
 
+
+    /**
+     * Scores Root Awakening's one-step Upgrade target by the expected value of
+     * the replacement die on the selected die's existing Strike row. The
+     * request already owns normal-step/Graft-Bed legality; strategy analysis
+     * only projects the legal target before the replacement is actually rolled.
+     */
+    private fun battleOneStepUpgradeUseNowTargetScore(
+        context: DecisionContext,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val expectedChange = DieValueHeuristics.expectedNormalUpgradeUseNowGain(
+            sides = choice.sides,
+            value = choice.value
+        ) ?: return null
+        val row = rowFor(context, choice.index) ?: return null
+        val analysis = ownTotalChangeAnalyzer(
+            context = context,
+            realization = choice,
+            row = row,
+            change = expectedChange,
+            mode = BattleAnalysisMode.EXPECTED
+        ) ?: return null
+
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Expected Battle realization for one-step Upgrade-and-use-now target")
+    }
 
     /**
      * Scores simple one-die Battle rerolls by their honest expected change on

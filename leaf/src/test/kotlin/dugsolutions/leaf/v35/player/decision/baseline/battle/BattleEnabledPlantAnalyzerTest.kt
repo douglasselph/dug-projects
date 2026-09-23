@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.player.decision.context.BattleView
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
+import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -67,6 +68,29 @@ class BattleEnabledPlantAnalyzerTest {
     }
 
     @Test
+    fun `Root Awakening top-level value uses expected normal one-step upgrade in the same row`() {
+        val opportunity = analyzer(
+            context(
+                actorTotal = 10,
+                opponentTotal = 10,
+                dieSides = 4,
+                dieValue = 2,
+                graftBed = mapOf(DieSides.D6 to 1)
+            ),
+            plant(
+                name = "Root_09_01",
+                effect = GameEffect.UPGRADE_DIE_AND_USE_NOW,
+                type = PlantType.ROOT
+            )
+        )
+
+        val tactical = requireNotNull(opportunity.tacticalAnalysis)
+        assertEquals(BattleAnalysisMode.EXPECTED, tactical.mode)
+        assertEquals(BattleTransition.WIN_FLIPPED, tactical.swing.rowSwings.single().transition)
+        assertEquals(1.5, tactical.swing.rowSwings.single().rawSwing)
+    }
+
+    @Test
     fun `reroll Plant stays expected and does not execute hypothetical RNG`() {
         val opportunity = analyzer(
             context(actorTotal = 1, opponentTotal = 3, dieSides = 6, dieValue = 1),
@@ -87,7 +111,8 @@ class BattleEnabledPlantAnalyzerTest {
         opponentTotal: Int,
         dieSides: Int,
         dieValue: Int,
-        opponentDice: List<BattleDieView> = emptyList()
+        opponentDice: List<BattleDieView> = emptyList(),
+        graftBed: Map<DieSides, Int> = emptyMap()
     ): DecisionContext {
         val die = BattleDieView(handIndex = 0, sides = dieSides, value = dieValue)
         return DecisionContext.EMPTY.copy(
@@ -97,6 +122,7 @@ class BattleEnabledPlantAnalyzerTest {
                     hand = listOf(DieView(index = 0, sides = dieSides, value = dieValue))
                 )
             ),
+            grove = DecisionContext.EMPTY.grove.copy(graftBed = graftBed),
             battle = BattleView(
                 playerOrder = listOf(ACTOR, OPPONENT),
                 rows = listOf(

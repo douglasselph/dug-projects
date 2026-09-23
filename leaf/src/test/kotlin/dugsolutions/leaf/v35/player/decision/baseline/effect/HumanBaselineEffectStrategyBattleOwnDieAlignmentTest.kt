@@ -540,6 +540,49 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `Root Awakening chooses smaller expected upgrade gain that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 10, die(0, 4, 2)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 12, 1)), player(opponent, 20))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.UPGRADE_DIE_AND_USE_NOW,
+                context,
+                EffectDieChoice(1, 12, 1), // D20 expected +9.5, but still loses the Strike
+                EffectDieChoice(0, 4, 2)   // D6 expected +1.5, but flips tied/no-winner to win
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `Root Awakening exact expected tactical tie uses StrategyRandomizer`() {
+        val randomizer = RecordingRandomizer(1)
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        )
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 4, 1)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 9, die(1, 4, 1)), player(opponent, 10))
+        )
+
+        val chosen = strategy.chooseDie(
+            request(
+                GameEffect.UPGRADE_DIE_AND_USE_NOW,
+                context,
+                EffectDieChoice(0, 4, 1),
+                EffectDieChoice(1, 4, 1)
+            )
+        )
+
+        assertEquals(1, chosen.index)
+        assertEquals(listOf(2), randomizer.bounds)
+    }
+
+    @Test
     fun `simple Battle reroll exact tactical tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
