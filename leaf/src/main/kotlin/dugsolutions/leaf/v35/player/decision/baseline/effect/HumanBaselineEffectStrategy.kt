@@ -85,8 +85,8 @@ class HumanBaselineEffectStrategy(
                 )
                 val score = when {
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
-                        request.effect in DETERMINISTIC_OWN_DIE_BATTLE_RAISES ->
-                        battleDeterministicRaiseTargetScore(request.context, request.effect, choice)
+                        request.effect in DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS ->
+                        battleDeterministicOwnDieTargetScore(request.context, request.effect, choice)
                             ?: CardScoringHelpers.scoreDieTarget(
                                 effect = request.effect,
                                 context = request.context,
@@ -468,7 +468,9 @@ class HumanBaselineEffectStrategy(
     }
 
     private companion object {
-        val DETERMINISTIC_OWN_DIE_BATTLE_RAISES = setOf(
+        val DETERMINISTIC_OWN_DIE_BATTLE_TRANSFORMS = setOf(
+            GameEffect.DOUBLE_ONE_DIE,
+            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
@@ -478,41 +480,51 @@ class HumanBaselineEffectStrategy(
     }
 
     /**
-     * Aligns downstream targets for straightforward deterministic own-die raises
-     * with the same immediate affected-row Battle realization used by top-level
-     * Battle analysis. Numeric raise size alone is not enough: a smaller capped
-     * gain that flips a Strike should beat a larger gain on an irrelevant row.
+     * Aligns downstream targets for straightforward deterministic own-die value
+     * transforms with the same immediate affected-row Battle realization used by
+     * top-level Battle analysis. Numeric value change alone is not enough: a
+     * smaller change that flips a Strike can beat a larger change elsewhere.
      */
-    private fun battleDeterministicRaiseTargetScore(
+    private fun battleDeterministicOwnDieTargetScore(
         context: DecisionContext,
         effect: GameEffect,
         choice: EffectDieChoice
     ): PriorityScore? {
-        val amount = when (effect) {
-            GameEffect.RAISE_ANY_DIE_PLUS_1 -> 1
+        val change = when (effect) {
+            GameEffect.DOUBLE_ONE_DIE -> minOf(choice.sides, choice.value * 2) - choice.value
+            GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
+                DieValueHeuristics.flipGain(choice.sides, choice.value)
+            GameEffect.RAISE_ANY_DIE_PLUS_1 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
-                context.self.board.creature.count {
-                    it.type == PlantType.VINE || it.type == PlantType.FLOWER
-                }
+                DieValueHeuristics.actualRaiseGain(
+                    choice.sides,
+                    choice.value,
+                    context.self.board.creature.count {
+                        it.type == PlantType.VINE || it.type == PlantType.FLOWER
+                    }
+                )
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE ->
-                context.self.board.creature.count {
-                    it.type == PlantType.ROOT || it.type == PlantType.VINE
-                }
-            GameEffect.RAISE_DIE_PLUS_3 -> 3
-            GameEffect.RAISE_DIE_PLUS_4 -> 4
+                DieValueHeuristics.actualRaiseGain(
+                    choice.sides,
+                    choice.value,
+                    context.self.board.creature.count {
+                        it.type == PlantType.ROOT || it.type == PlantType.VINE
+                    }
+                )
+            GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 3)
+            GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 4)
             else -> return null
         }
         val row = rowFor(context, choice.index) ?: return null
-        val gain = DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, amount)
         val analysis = ownTotalChangeAnalyzer(
             context = context,
             realization = choice,
             row = row,
-            change = gain.toDouble(),
+            change = change.toDouble(),
             mode = BattleAnalysisMode.DETERMINISTIC
         ) ?: return null
         return PriorityScore(analysis.tacticalValue.roundToInt())
-            .adjusted(0, "Immediate Battle realization for deterministic die raise")
+            .adjusted(0, "Immediate Battle realization for deterministic own-die transform")
     }
 
     private fun rowFor(context: DecisionContext, handIndex: Int) =

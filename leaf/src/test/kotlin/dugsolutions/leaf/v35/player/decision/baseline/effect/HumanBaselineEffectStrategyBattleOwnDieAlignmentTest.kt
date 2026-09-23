@@ -128,6 +128,68 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `double chooses smaller raw gain that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 6, 3)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 5, die(1, 20, 5)), player(opponent, 20))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.DOUBLE_ONE_DIE,
+                context,
+                EffectDieChoice(1, 20, 5), // raw +5, but remains a loss
+                EffectDieChoice(0, 6, 3)   // raw +3, but flips the Strike
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `opposite face chooses smaller positive change that flips a Strike`() {
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 8, die(0, 6, 2)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 1, die(1, 20, 1)), player(opponent, 25))
+        )
+
+        val chosen = HumanBaselineEffectStrategy().chooseDie(
+            request(
+                GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
+                context,
+                EffectDieChoice(1, 20, 1), // raw +18, but remains a loss
+                EffectDieChoice(0, 6, 2)   // raw +3, but flips the Strike
+            )
+        )
+
+        assertEquals(0, chosen.index)
+    }
+
+    @Test
+    fun `exact double Battle tie uses StrategyRandomizer`() {
+        val randomizer = RecordingRandomizer(1)
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(randomizer)
+        )
+        val context = context(
+            row(StrikeRow.TOP, player(actor, 9, die(0, 6, 3)), player(opponent, 10)),
+            row(StrikeRow.MIDDLE, player(actor, 9, die(1, 8, 3)), player(opponent, 10))
+        )
+
+        val chosen = strategy.chooseDie(
+            request(
+                GameEffect.DOUBLE_ONE_DIE,
+                context,
+                EffectDieChoice(0, 6, 3),
+                EffectDieChoice(1, 8, 3)
+            )
+        )
+
+        assertEquals(1, chosen.index)
+        assertEquals(listOf(2), randomizer.bounds)
+    }
+
+    @Test
     fun `exact fixed raise Battle tie uses StrategyRandomizer`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineEffectStrategy(
