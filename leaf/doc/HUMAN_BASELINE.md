@@ -427,14 +427,14 @@ Use the eight areas as the high-level completion checklist:
 
 - [x] Critter Reward certified
 - [ ] Wound Resolution certified
-- [ ] Graft Placement certified
+- [x] Graft Placement certified
 - [x] Cultivation certified
 - [x] Battle certified
 - [x] Buy certified
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 
-Current progress: **4 of 8 major areas certified; 7 of 30 strategy hooks certified** (Critter Reward: 1, Buy: 2, Cultivation: 1, Battle: 3).
+Current progress: **5 of 8 major areas certified; 8 of 30 strategy hooks certified** (Critter Reward: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 

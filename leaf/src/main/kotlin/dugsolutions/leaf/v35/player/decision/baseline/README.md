@@ -62,7 +62,7 @@ Current status:
 ```text
 Critter Reward       CERTIFIED
 Wound Resolution     pending designer certification
-Graft Placement      pending designer certification
+Graft Placement      CERTIFIED
 Cultivation          CERTIFIED
 Battle               CERTIFIED
 Buy                  CERTIFIED

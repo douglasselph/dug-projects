@@ -4,7 +4,7 @@
 
 R2-A and R2-B established the approved behavior contract. R2-C aligned production scoring with that contract and added readable behavior-contract tests. R2-D adds one focused real-engine integration test for the live Buy/Graft placement seam.
 
-Graft Placement remains **IMPLEMENTED but NOT CERTIFIED**.
+Graft Placement is **CERTIFIED**. R2-E completed after the focused R2-C behavior-contract tests and R2-D real-engine integration test were green, followed by a successful full `test integrationTest simulationCheck` regression.
 
 ## Scope
 
@@ -147,10 +147,10 @@ R2-A  current behavior + legal geometry/topology review       COMPLETE
 R2-B  approved durable behavior/policy contract              COMPLETE
 R2-C  implementation alignment + behavior-contract tests     COMPLETE
 R2-D  focused real-engine integration if a seam warrants it  COMPLETE
-R2-E  docs + full regression + CERTIFY                       NEXT
+R2-E  docs + full regression + CERTIFY                       COMPLETE
 ```
 
-If the strategy API count remains unchanged, successful R2-E certification will move Milestone 2 to:
+R2-E certification leaves the strategy API count unchanged and moves Milestone 2 to:
 
 ```text
 5 of 8 major Human Baseline areas certified
