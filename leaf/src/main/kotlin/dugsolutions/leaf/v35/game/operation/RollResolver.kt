@@ -21,7 +21,9 @@ import dugsolutions.leaf.v35.wisp.domain.WispCard
  */
 enum class RollRewardPolicy {
     NORMAL,
-    IGNORE
+    IGNORE,
+    /** Roll now, but wait for the caller to decide whether this result is kept. */
+    DEFER
 }
 
 /**
@@ -35,6 +37,8 @@ sealed interface RollRewardResult {
     data object None : RollRewardResult
 
     data object Ignored : RollRewardResult
+
+    data object Deferred : RollRewardResult
 
     data object CritterUnavailable : RollRewardResult
 
@@ -142,35 +146,54 @@ class RollResolver(
                 rewardPolicy = when (rewardPolicy) {
                     RollRewardPolicy.NORMAL -> ChronicleRollRewardPolicy.NORMAL
                     RollRewardPolicy.IGNORE -> ChronicleRollRewardPolicy.IGNORE
+                    RollRewardPolicy.DEFER -> ChronicleRollRewardPolicy.DEFER
                 },
                 reason = reason
             )
         )
 
         val reward =
-            if (
-                rewardPolicy ==
-                RollRewardPolicy.IGNORE
-            ) {
-                RollRewardResult.Ignored
-            } else {
-                when (die.value) {
-                    1 -> resolveCritterReward(player)
-                    2 -> resolveWispReward(player)
-                    else -> RollRewardResult.None
-                }
+            when (rewardPolicy) {
+                RollRewardPolicy.IGNORE -> RollRewardResult.Ignored
+                RollRewardPolicy.DEFER -> RollRewardResult.Deferred
+                RollRewardPolicy.NORMAL -> resolveRewardForCurrentValue(player, die)
             }
 
-        recordReward(
-            player = player,
-            reward = reward
-        )
+        if (reward != RollRewardResult.Deferred) {
+            recordReward(
+                player = player,
+                reward = reward
+            )
+        }
 
         return RollResolution(
             die = die,
             reward = reward
         )
     }
+
+    /**
+     * Resolves the normal Roll Reward for a previously deferred roll whose
+     * current face has now been committed by its caller.
+     */
+    fun resolveDeferredReward(
+        player: Player,
+        die: Die
+    ): RollRewardResult {
+        val reward = resolveRewardForCurrentValue(player, die)
+        recordReward(player, reward)
+        return reward
+    }
+
+    private fun resolveRewardForCurrentValue(
+        player: Player,
+        die: Die
+    ): RollRewardResult =
+        when (die.value) {
+            1 -> resolveCritterReward(player)
+            2 -> resolveWispReward(player)
+            else -> RollRewardResult.None
+        }
 
     private fun resolveCritterReward(
         player: Player
@@ -243,6 +266,7 @@ class RollResolver(
 
         val moment = when (reward) {
             RollRewardResult.None -> error("Handled above")
+            RollRewardResult.Deferred -> error("Deferred reward must be committed or rejected before recording")
             RollRewardResult.Ignored -> Moment.RollReward(
                 player.id, RollRewardKind.IGNORED
             )

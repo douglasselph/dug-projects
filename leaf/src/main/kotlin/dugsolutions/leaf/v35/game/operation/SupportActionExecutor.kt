@@ -288,7 +288,7 @@ class SupportActionExecutor(
         val die = resolveHandDie(player, action.die)
         val originalValue = die.value
 
-        val rerolled = rollResolver.roll(player, die)
+        val rerolled = rollResolver.roll(player, die, RollRewardPolicy.DEFER)
         val choice = player.decisions.support.chooseButterflyRoll(
             ChooseButterflyRollRequest(
                 sides = die.sides,
@@ -300,7 +300,7 @@ class SupportActionExecutor(
 
         when (choice) {
             ButterflyRollChoice.ORIGINAL -> die.adjustTo(originalValue)
-            ButterflyRollChoice.REROLLED -> Unit
+            ButterflyRollChoice.REROLLED -> rollResolver.resolveDeferredReward(player, die)
         }
 
         stateCheck(player.butterflies.faceDown(action.butterfly)) {

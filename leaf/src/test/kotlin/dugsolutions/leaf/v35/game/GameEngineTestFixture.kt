@@ -15,6 +15,7 @@ import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.wisp.WispCardManager
+import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import dugsolutions.leaf.v35.wisp.WispDeck
 
 internal object GameEngineTestFixture {
@@ -23,7 +24,8 @@ internal object GameEngineTestFixture {
         cultivationRounds: Int = 2,
         battleRounds: Int = 2,
         seed: Long = 123L,
-        players: List<Player>? = null
+        players: List<Player>? = null,
+        populateWispDeck: Boolean = false
     ): Game {
         val gamePlayers = players ?: listOf(player(1), player(2))
         val randomizer = Randomizer.create(seed)
@@ -45,7 +47,10 @@ internal object GameEngineTestFixture {
         }
         val grove = Grove(
             selectedPlantCards = config.selectedPlantCards,
-            wispDeck = WispDeck(WispCardManager(), randomizer)
+            wispDeck = WispDeck(
+                if (populateWispDeck) populatedWispManager() else WispCardManager(),
+                randomizer
+            )
         )
 
         return Game(
@@ -56,6 +61,14 @@ internal object GameEngineTestFixture {
             roundDeck = roundDeck,
             randomizer = randomizer
         )
+    }
+
+    private fun populatedWispManager(): WispCardManager {
+        val registry = WispCardRegistry(GameEffectConverter())
+        registry.loadFromCsv(
+            CardDataFiles.dataPath(CardDataFiles.WISP_LIST)
+        )
+        return WispCardManager().apply { loadCards(registry) }
     }
 
     private fun roundManager(): RoundCardManager {

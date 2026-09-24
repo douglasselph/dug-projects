@@ -122,14 +122,12 @@ class SupportActionExecutorTest {
     }
 
     @Test
-    fun butterfly_canKeepOriginalAfterReroll_andFlipsFaceDown() {
+    fun butterfly_rejectedOne_restoresOriginal_andDoesNotGrantCritter() {
         val die = FixedRollDie(8, initial = 7, rolled = 1)
-        val support = object : SupportStrategy {
-            override fun chooseButterflyRoll(
-                request: ChooseButterflyRollRequest
-            ) = ButterflyRollChoice.ORIGINAL
-        }
-        val player = player(hand = listOf(die), support = support)
+        val player = player(
+            hand = listOf(die),
+            support = butterflyChoice(ButterflyRollChoice.ORIGINAL)
+        )
         player.butterflies.add(Butterfly.PURPLE)
         val fixture = fixture(player)
 
@@ -144,7 +142,71 @@ class SupportActionExecutorTest {
 
         assertEquals(7, die.value)
         assertTrue(player.butterflies.isFaceDown(Butterfly.PURPLE))
-        assertEquals(listOf(Critter.BEE), player.critters.all) // reroll reward still resolves
+        assertTrue(player.critters.isEmpty)
+    }
+
+    @Test
+    fun butterfly_keptOne_grantsCritterAfterResultIsChosen() {
+        val die = FixedRollDie(8, initial = 7, rolled = 1)
+        val player = player(
+            hand = listOf(die),
+            support = butterflyChoice(ButterflyRollChoice.REROLLED)
+        )
+        player.butterflies.add(Butterfly.PURPLE)
+        val fixture = fixture(player)
+
+        fixture.executor.executeCultivation(
+            fixture.game,
+            player,
+            SupportAction.UseButterfly(Butterfly.PURPLE, HandDieChoice(0, 8, 7))
+        )
+
+        assertEquals(1, die.value)
+        assertEquals(listOf(Critter.BEE), player.critters.all)
+    }
+
+    @Test
+    fun butterfly_rejectedTwo_restoresOriginal_andDoesNotDrawWisp() {
+        val die = FixedRollDie(8, initial = 7, rolled = 2)
+        val player = player(
+            hand = listOf(die),
+            support = butterflyChoice(ButterflyRollChoice.ORIGINAL)
+        )
+        player.butterflies.add(Butterfly.PURPLE)
+        val fixture = fixture(player)
+        val wispsBefore = fixture.game.grove.wispDeck.remaining
+
+        fixture.executor.executeCultivation(
+            fixture.game,
+            player,
+            SupportAction.UseButterfly(Butterfly.PURPLE, HandDieChoice(0, 8, 7))
+        )
+
+        assertEquals(7, die.value)
+        assertTrue(player.wisps.isEmpty)
+        assertEquals(wispsBefore, fixture.game.grove.wispDeck.remaining)
+    }
+
+    @Test
+    fun butterfly_keptTwo_drawsWispAfterResultIsChosen() {
+        val die = FixedRollDie(8, initial = 7, rolled = 2)
+        val player = player(
+            hand = listOf(die),
+            support = butterflyChoice(ButterflyRollChoice.REROLLED)
+        )
+        player.butterflies.add(Butterfly.PURPLE)
+        val fixture = fixture(player)
+        val wispsBefore = fixture.game.grove.wispDeck.remaining
+
+        fixture.executor.executeCultivation(
+            fixture.game,
+            player,
+            SupportAction.UseButterfly(Butterfly.PURPLE, HandDieChoice(0, 8, 7))
+        )
+
+        assertEquals(2, die.value)
+        assertEquals(1, player.wisps.size)
+        assertEquals(wispsBefore - 1, fixture.game.grove.wispDeck.remaining)
     }
 
     @Test
@@ -209,7 +271,8 @@ class SupportActionExecutorTest {
         val game = GameEngineTestFixture.game(
             cultivationRounds = 1,
             battleRounds = 0,
-            players = listOf(player, second)
+            players = listOf(player, second),
+            populateWispDeck = true
         )
         val effects = RecordingEffectExecutor()
         val roll = RollResolver(game.grove, game.chronicle)
@@ -223,6 +286,13 @@ class SupportActionExecutorTest {
             )
         )
     }
+
+    private fun butterflyChoice(choice: ButterflyRollChoice): SupportStrategy =
+        object : SupportStrategy {
+            override fun chooseButterflyRoll(
+                request: ChooseButterflyRollRequest
+            ) = choice
+        }
 
     private fun player(
         id: Int = 1,

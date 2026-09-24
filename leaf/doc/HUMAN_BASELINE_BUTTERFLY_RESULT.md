@@ -101,8 +101,8 @@ The existing test that expects a reward from a rejected Butterfly reroll must be
 ```text
 R4-A  current behavior + engine/timing/scorer review          COMPLETE
 R4-B  approved durable Butterfly Result contract              COMPLETE
-R4-C  engine timing fix + implementation/behavior tests       NEXT
-R4-D  focused real-engine integration if a seam warrants it   PENDING
+R4-C  engine timing fix + implementation/behavior tests       COMPLETE
+R4-D  focused real-engine integration if a seam warrants it   NEXT
 R4-E  docs + full regression + CERTIFY                        PENDING
 ```
 

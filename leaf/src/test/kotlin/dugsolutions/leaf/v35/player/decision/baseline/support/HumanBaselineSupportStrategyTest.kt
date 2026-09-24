@@ -22,6 +22,20 @@ class HumanBaselineSupportStrategyTest {
     }
 
     @Test
+    fun `does not keep lower one or two for a Roll Reward`() {
+        val strategy = HumanBaselineSupportStrategy()
+
+        assertEquals(
+            ButterflyRollChoice.ORIGINAL,
+            strategy.chooseButterflyRoll(ChooseButterflyRollRequest(8, 6, 1))
+        )
+        assertEquals(
+            ButterflyRollChoice.ORIGINAL,
+            strategy.chooseButterflyRoll(ChooseButterflyRollRequest(8, 6, 2))
+        )
+    }
+
+    @Test
     fun `equal visible results use strategy tie breaker`() {
         val randomizer = RecordingRandomizer(1)
         val strategy = HumanBaselineSupportStrategy(BaselineScoreEngine(randomizer))

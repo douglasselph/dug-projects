@@ -160,7 +160,7 @@ sealed interface Moment {
 }
 
 enum class ChroniclePhase { CULTIVATION, BATTLE }
-enum class ChronicleRollRewardPolicy { NORMAL, IGNORE }
+enum class ChronicleRollRewardPolicy { NORMAL, IGNORE, DEFER }
 enum class RollReason { DRAW, ROLL }
 enum class RollRewardKind {
     IGNORED,
