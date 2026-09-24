@@ -17,7 +17,9 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
@@ -78,10 +80,11 @@ class B15ActionTargetBranchIntegrationTest {
             val result = harness.runBattleActions()
 
             assertEquals(listOf(PlayerId(1)), result.supportActions.map { it.playerId })
-            assertTrue(
-                8 in harness.battleSnapshot().square(1, StrikeRow.TOP).dieValues,
-                "Expected the Butterfly-rerolled die to remain 8 in P1 TOP after Final Main"
-            )
+            val butterflyAction = (result.supportActions.single().action as BattleSupportAction.Shared).action
+            assertTrue(butterflyAction is SupportAction.UseButterfly)
+            assertEquals(2, butterflyAction.die.index)
+            assertEquals(2, butterflyAction.die.value)
+            BattleAssertions.assertDieValues(harness.battleSnapshot(), 1, StrikeRow.BOTTOM, 8)
             assertTrue(!harness.snapshot().player(1).butterflies.single { it.butterfly == Butterfly.GREEN }.faceUp)
             assertEquals(
                 listOf(8),
@@ -113,14 +116,12 @@ class B15ActionTargetBranchIntegrationTest {
             val result = harness.runBattleActions()
 
             assertEquals(listOf(PlayerId(1)), result.supportActions.map { it.playerId })
-            assertTrue(
-                5 in harness.battleSnapshot().square(1, StrikeRow.TOP).dieValues,
-                "Expected Pollen Theft to leave the stolen 5 in P1 TOP after Final Main"
-            )
-            assertTrue(
-                4 in harness.battleSnapshot().square(2, StrikeRow.TOP).dieValues,
-                "Expected Pollen Theft to leave P1's former 4 in P2 TOP"
-            )
+            // B13 evaluates the complete cross-row swap, not merely same-row theft.
+            // Moving P2 TOP 5 into P1 BOTTOM replaces a tied 2 while moving P1's
+            // 2 into P2 TOP also flips that row from a loss to a win for P1.
+            BattleAssertions.assertDieValues(harness.battleSnapshot(), 1, StrikeRow.TOP, 4)
+            BattleAssertions.assertDieValues(harness.battleSnapshot(), 1, StrikeRow.BOTTOM, 5)
+            BattleAssertions.assertDieValues(harness.battleSnapshot(), 2, StrikeRow.TOP, 2)
             assertTrue(harness.snapshot().player(1).wisps.isEmpty())
 
             val support = ChronicleQueries.supportActionsFor(harness.chronicleEntries(), PlayerId(1)).single()
