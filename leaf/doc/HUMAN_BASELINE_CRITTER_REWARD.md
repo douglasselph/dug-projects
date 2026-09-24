@@ -2,9 +2,9 @@
 
 ## Status
 
-R1-A designer review and R1-B behavior-contract approval are complete. R1-C implements the approved policy and adds readable behavior-contract tests.
+R1-A designer review and R1-B behavior-contract approval are complete. R1-C implements the approved policy and adds readable behavior-contract tests. R1-D adds a focused real-engine integration test for the reward seam.
 
-Critter Reward is **not yet CERTIFIED**. Any warranted R1-D integration coverage and R1-E regression/documentation certification remain.
+Critter Reward is **not yet CERTIFIED**. R1-E regression/documentation certification remains.
 
 ## Scope
 
@@ -109,14 +109,22 @@ R1-C should make the smallest production alignment necessary and add readable be
 
 Do not broaden R1-C into unrelated scorer cleanup.
 
+## R1-D real-engine seam coverage
+
+Inspection found one integration seam worth protecting: the production `RollResolver` must build a live `DecisionContext`, ask the player's wired Human Baseline `RewardStrategy`, validate the returned Critter, remove it from the Grove, and add it to the player.
+
+`HumanBaselineCritterRewardIntegrationTest` enters through a real Cultivation opening draw. Player 1 begins at 2 Bees / 0 Worms, an actual roll of 1 triggers the Critter reward, and the test verifies that the live Human Baseline protected-minimum policy chooses Worm and that the real engine transfers that Worm from Grove to player. Mechanical die randomness remains scripted independently.
+
+This is intentionally one representative seam test. The detailed reserve, probability, customization, influence, and strategy-RNG behavior remains owned by the R1-C unit behavior-contract tests.
+
 ## Remaining certification sequence
 
 ```text
 R1-A  current behavior + engine/legal-choice inventory       COMPLETE
 R1-B  approved durable behavior/policy contract              COMPLETE
 R1-C  implementation alignment + behavior-contract tests     COMPLETE
-R1-D  focused real-engine integration if inspection warrants NEXT
-R1-E  docs + full regression + CERTIFY                       PENDING
+R1-D  focused real-engine integration                        COMPLETE
+R1-E  docs + full regression + CERTIFY                       NEXT
 ```
 
 If the strategy API remains unchanged, certification of Critter Reward will move Milestone 2 to:

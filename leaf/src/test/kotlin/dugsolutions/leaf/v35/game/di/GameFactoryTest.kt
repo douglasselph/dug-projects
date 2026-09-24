@@ -307,7 +307,7 @@ class GameFactoryTest {
         assertEquals("BEE", reasoningEntries.single().choiceLabel)
         assertTrue(
             reasoningEntries.single().adjustments.any { adjustment ->
-                adjustment.reason == "Early Cultivation prefers Bees"
+                adjustment.reason == "Ordinary Critter reward preference"
             }
         )
     }
