@@ -54,7 +54,12 @@ class HumanBaselineEffectStrategyPlantAlignmentTest {
     fun `Parting Thorn wounds opponent Plant whose immediate Battle use can recover the Strike`() {
         val first = plant(1, "Root_07_02", GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND, faceUp = true)
         val tactical = plant(2, "Root_05_02", GameEffect.RAISE_DIE_PLUS_4, faceUp = true)
-        val context = battleContext(10, 6, BattleDieView(0, 6, 2), listOf(first, tactical))
+        val context = battleContext(
+            actorTotal = 10,
+            opponentTotal = 6,
+            opponentDie = BattleDieView(0, 6, 2),
+            opponentCreature = listOf(first, tactical)
+        )
 
         val chosen = HumanBaselineEffectStrategy().chooseOpponentPlantWound(
             ChooseEffectOpponentPlantWoundRequest(
@@ -74,7 +79,12 @@ class HumanBaselineEffectStrategyPlantAlignmentTest {
     fun `Snip Happens target selection also sees immediate Battle Plant value`() {
         val first = plant(1, "Root_07_02", GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND, faceUp = true)
         val tactical = plant(2, "Root_05_02", GameEffect.RAISE_DIE_PLUS_4, faceUp = true)
-        val context = battleContext(10, 6, BattleDieView(0, 6, 2), listOf(first, tactical))
+        val context = battleContext(
+            actorTotal = 10,
+            opponentTotal = 6,
+            opponentDie = BattleDieView(0, 6, 2),
+            opponentCreature = listOf(first, tactical)
+        )
 
         val chosen = HumanBaselineEffectStrategy().chooseOpponentPlantWound(
             ChooseEffectOpponentPlantWoundRequest(
