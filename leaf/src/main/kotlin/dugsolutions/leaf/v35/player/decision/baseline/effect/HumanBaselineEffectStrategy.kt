@@ -567,7 +567,15 @@ class HumanBaselineEffectStrategy(
             request.context,
             request.legalChoices.map { playerId ->
                 val target = request.context.opponents.firstOrNull { it.id == playerId }
-                DecisionCandidate(playerId, PriorityScore(40 + (target?.board?.vp ?: 0) + (target?.wispCount ?: 0) * 4))
+                val plantInvestment = target?.board?.creature?.sumOf { it.cost } ?: 0
+                val extraDiceInvestment = target?.board?.dicePower
+                    ?.minus(policy.startingDicePower())
+                    ?.coerceAtLeast(0) ?: 0
+                DecisionCandidate(
+                    playerId,
+                    PriorityScore(40 + plantInvestment + extraDiceInvestment)
+                        .adjusted(0, "Visible development: grafted Plant cost + extra dice power")
+                )
             }
         )
 

@@ -212,6 +212,9 @@ open class HumanBaselinePolicy(
             spendableWorms * board.wormValue
     }
 
+    /** Normal starting dice-pool power used by coarse visible-development comparisons. */
+    open fun startingDicePower(): Int = developmentTargetConfig.startingDicePower
+
     /**
      * Modest Cultivation bonus for being behind the expected dice-development
      * curve. Strong immediate opportunities should still be able to dominate it.
