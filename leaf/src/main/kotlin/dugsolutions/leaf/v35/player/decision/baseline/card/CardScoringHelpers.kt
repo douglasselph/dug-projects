@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
@@ -298,10 +299,20 @@ object CardScoringHelpers {
                 }
             }
             GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW -> {
-                val winning = StrikeRow.entries.map { RowNeedHeuristics.calculate(context, it) }
-                    .filter { it.available && it.currentlyWinning }
-                score = if (winning.isEmpty()) score.adjusted(-35, "No currently winning row to lock")
-                else score.adjusted(20 + winning.maxOf { max(0, 5 - it.margin) }, "Can lock a current Strike lead")
+                if (phase == CardPhase.BATTLE) {
+                    val tactical = immediateStrikeResolveBattleAdjustment(context)
+                    score = if (tactical == null) {
+                        score.adjusted(
+                            -10_000,
+                            "No Strike row meets the B13 immediate-resolution policy"
+                        )
+                    } else {
+                        score.adjusted(
+                            tactical.currentStrikeVp,
+                            "Immediate Strike VP of B13-selected Resolve row"
+                        )
+                    }
+                }
             }
             else -> Unit
         }
@@ -327,6 +338,20 @@ object CardScoringHelpers {
      * apply the evaluator's established meaningful-VP spending gate before the
      * Wisp is committed.
      */
+    /**
+     * B15F2-3 top-level Wisp's Resolve alignment. The downstream B13 row
+     * strategy only treats rows passing the established immediate-resolution
+     * lock-in policy as worthwhile. Top-level Wisp willingness must therefore
+     * require that same policy-qualified realization instead of treating any
+     * current lead as sufficient reason to spend the Wisp.
+     */
+    private fun immediateStrikeResolveBattleAdjustment(
+        context: DecisionContext
+    ) = BattleImmediateStrikeResolveEvaluator()
+        .evaluateAll(context, StrikeRow.entries)
+        .filter { it.passesPolicy }
+        .maxByOrNull { it.currentStrikeVp }
+
     private fun pollenTheftBattleTacticalAdjustment(
         context: DecisionContext
     ) = BattlePollenTheftEvaluator()
