@@ -183,7 +183,15 @@ baseline/common/GraftTopologyEvaluatorTest.kt
 
 Decision hook: choose one legal physical graft position for a newly gained Plant card.
 
-**Certification status:** implemented; designer behavior review still required.
+Approved R2-A/R2-B direction: legality remains engine-owned; avoid premature final-slot closure; compare future growth in bounded `BOXED IN` / `CONSTRAINED` / `ADEQUATE` topology bands rather than linearly rewarding every slot; use left/right balance only as a weak secondary preference; relax future-growth preservation on the final Cultivation round; and use `StrategyRandomizer` for genuine ties.
+
+Detailed contract and checkpoint plan:
+
+```text
+doc/HUMAN_BASELINE_GRAFT_PLACEMENT.md
+```
+
+**Certification status:** R2-A/R2-B complete; implementation alignment and certification still required.
 
 ### 3.4 Cultivation — CERTIFIED
 
