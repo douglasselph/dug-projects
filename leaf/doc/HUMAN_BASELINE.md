@@ -403,7 +403,7 @@ Card-specific Human Baseline scorers and their tests live under:
 baseline/card/
 ```
 
-**Certification status:** implemented but requires the broadest designer review. Certification must include both the generic hook behavior and important card-specific scoring differences.
+**Certification status:** **not certified**. E-A inventory and E-B contract/gap mapping are complete. The difficult Battle-facing realizations remain protected by certified Battle work; remaining work is focused on the general/non-Battle gaps and an explicit 20-for-20 hook audit. The approved `choosePlayer` baseline targets the legal opponent with the greatest visible development investment (grafted Plant printed costs plus die power above the normal starting pool), rather than VP/Wisp count. See [`HUMAN_BASELINE_EFFECT_CHOICES.md`](HUMAN_BASELINE_EFFECT_CHOICES.md).
 
 ## 4. What “certified” should mean
 
