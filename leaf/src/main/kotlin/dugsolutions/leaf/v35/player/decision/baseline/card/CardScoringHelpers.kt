@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
@@ -267,8 +268,18 @@ object CardScoringHelpers {
                 if (phase == CardPhase.BATTLE) score = score.adjusted(20, "Potential positive cross-player die swap")
             }
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> {
-                val smallest = dice.minOfOrNull { it.sides } ?: 4
-                score = score.adjusted(max(10, 30 - smallest), "Large persistent upgrade on a small die")
+                if (phase == CardPhase.BATTLE) {
+                    val tactical = overgrowthBattleTacticalAdjustment(context)
+                    if (tactical != null && tactical != 0) {
+                        score = score.adjusted(
+                            tactical,
+                            "Expected Battle value of B13-selected Overgrowth target"
+                        )
+                    }
+                } else {
+                    val smallest = dice.minOfOrNull { it.sides } ?: 4
+                    score = score.adjusted(max(10, 30 - smallest), "Large persistent upgrade on a small die")
+                }
             }
             GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW -> {
                 val winning = StrikeRow.entries.map { RowNeedHeuristics.calculate(context, it) }
@@ -280,6 +291,45 @@ object CardScoringHelpers {
         }
 
         return score
+    }
+
+    /**
+     * B15F2-1 top-level Overgrowth alignment. The downstream B13 target policy
+     * first restricts to the largest legal resulting die size, then uses
+     * expected current-Battle value to choose among equivalent results.
+     *
+     * Top-level Wisp willingness must therefore use the tactical value of that
+     * same policy-selected family rather than independently choosing the most
+     * tactically attractive legal upgrade. The card's configured Battle base
+     * remains its intrinsic/persistent-upgrade value; this method adds only the
+     * expected current-Battle consequence of the target B13 will actually use.
+     */
+    private fun overgrowthBattleTacticalAdjustment(
+        context: DecisionContext
+    ): Int? {
+        val battle = context.battle ?: return null
+        val legalChoices = battle.rows
+            .asSequence()
+            .filterNot { it.closed }
+            .flatMap { row -> row.forPlayer(context.self.id)?.dice.orEmpty().asSequence() }
+            .distinctBy { it.handIndex }
+            .map { die ->
+                EffectDieChoice(
+                    index = die.handIndex,
+                    sides = die.sides,
+                    value = die.value
+                )
+            }
+            .toList()
+
+        val evaluations = BattleTwoStepUpgradeEvaluator().evaluateAll(context, legalChoices)
+        if (evaluations.isEmpty()) return null
+
+        val bestResultingSides = evaluations.maxOf { it.resultingSides.value }
+        return evaluations
+            .asSequence()
+            .filter { it.resultingSides.value == bestResultingSides }
+            .maxOfOrNull { it.battleAnalysis?.tacticalValue?.roundToInt() ?: 0 }
     }
 
     fun acquireScore(
