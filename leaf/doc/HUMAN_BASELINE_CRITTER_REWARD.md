@@ -2,9 +2,9 @@
 
 ## Status
 
-R1-A designer review and R1-B behavior-contract approval are complete. R1-C implements the approved policy and adds readable behavior-contract tests. R1-D adds a focused real-engine integration test for the reward seam.
+R1-A designer review and R1-B behavior-contract approval are complete. R1-C implements the approved policy and adds readable behavior-contract tests. R1-D adds a focused real-engine integration test for the reward seam. R1-E completed durable documentation reconciliation and the full `test integrationTest simulationCheck` regression successfully.
 
-Critter Reward is **not yet CERTIFIED**. R1-E regression/documentation certification remains.
+Critter Reward is **CERTIFIED**.
 
 ## Scope
 
@@ -124,12 +124,25 @@ R1-A  current behavior + engine/legal-choice inventory       COMPLETE
 R1-B  approved durable behavior/policy contract              COMPLETE
 R1-C  implementation alignment + behavior-contract tests     COMPLETE
 R1-D  focused real-engine integration                        COMPLETE
-R1-E  docs + full regression + CERTIFY                       NEXT
+R1-E  docs + full regression + CERTIFY                       COMPLETE
 ```
 
-If the strategy API remains unchanged, certification of Critter Reward will move Milestone 2 to:
+Critter Reward certification moves Milestone 2 to:
 
 ```text
 4 of 8 major Human Baseline areas certified
 7 of 30 strategy hooks certified
 ```
+
+
+## R1-E certification result
+
+The designer reported `BUILD SUCCESSFUL` for the required full local regression:
+
+```text
+./gradlew test integrationTest simulationCheck
+```
+
+R1-A through R1-E are complete. The approved contract, implementation, readable unit behavior-contract tests, focused real-engine integration coverage, and full regression agree. Critter Reward is therefore **CERTIFIED** for Milestone 2.
+
+The strategy API remains one Critter Reward hook, so current overall Human Baseline progress is **4 of 8 major areas certified; 7 of 30 strategy hooks certified**.

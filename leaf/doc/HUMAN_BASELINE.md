@@ -145,7 +145,7 @@ The previous round-1/round-2 Bee bonus is **not** part of the approved contract.
 
 Detailed R1 contract and implementation plan: [`HUMAN_BASELINE_CRITTER_REWARD.md`](HUMAN_BASELINE_CRITTER_REWARD.md).
 
-**Certification status:** R1-A designer review and R1-B behavior contract complete; implementation alignment/tests and certification remain pending.
+**Certification status:** **certified**. R1-A through R1-E are complete. The approved behavior contract, policy-backed implementation, readable unit behavior-contract tests, focused real-engine integration coverage, and full `test integrationTest simulationCheck` regression agree.
 
 ### 3.2 Wound Resolution
 
@@ -417,7 +417,7 @@ The behavior-contract tests should be readable as a second expression of the spe
 
 Use the eight areas as the high-level completion checklist:
 
-- [ ] Critter Reward certified
+- [x] Critter Reward certified
 - [ ] Wound Resolution certified
 - [ ] Graft Placement certified
 - [x] Cultivation certified
@@ -426,7 +426,7 @@ Use the eight areas as the high-level completion checklist:
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 
-Current progress: **3 of 8 major areas certified; 6 of 30 strategy hooks certified** (Buy: 2, Cultivation: 1, Battle: 3).
+Current progress: **4 of 8 major areas certified; 7 of 30 strategy hooks certified** (Critter Reward: 1, Buy: 2, Cultivation: 1, Battle: 3).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 
