@@ -2,9 +2,9 @@
 
 ## Status
 
-R3-A current-behavior/scorer review and designer review are complete. R3-B records the approved Wound Resolution contract. Production behavior is not changed by R3-B.
+R3-A current-behavior/scorer review, R3-B contract, and R3-C implementation alignment with direct behavior-contract tests are complete.
 
-Wound Resolution remains **IMPLEMENTED but NOT CERTIFIED** pending R3-C through R3-E.
+Wound Resolution remains **IMPLEMENTED but NOT CERTIFIED** pending R3-D and R3-E.
 
 ## Scope
 
@@ -27,6 +27,7 @@ Relevant shared valuation machinery:
 src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/battle/BattleEnabledPlantAnalyzer.kt
 src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/card/HumanBaselineCardScorer.kt
 src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/card/CardScoringHelpers.kt
+src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/card/PlantPreservationEvaluator.kt
 ```
 
 The rules engine owns Wound legality. Human Baseline chooses only among the legal `WoundChoice`s supplied by the engine.
@@ -38,7 +39,7 @@ Normal Wound resolution does not ask Human Baseline to choose between Flip and S
 - If any face-up Plants remain, legal Wound choices are Flips of face-up Plants.
 - Only when no face-up Plants remain are Snips offered, and only currently snippable outer Plants are legal.
 
-Therefore the old `WoundPriority` adjustments that reward Flip merely for being temporary and penalize Snip merely for being permanent do not represent a real strategic comparison. R3-C should remove that misleading cross-operation arithmetic.
+Therefore the old `WoundPriority` adjustments that rewarded Flip merely for being temporary and penalized Snip merely for being permanent did not represent a real strategic comparison. R3-C removed that misleading cross-operation arithmetic.
 
 ## Approved behavior contract
 
@@ -56,7 +57,7 @@ The intended ordinary-human reasoning is:
 
 This is intentionally one-step and current-state based. Do not forecast how the grid may change before the Plant could actually be activated, search opponent responses, or plan a future refresh sequence.
 
-R3-C may refactor or rename the shared analyzer if needed so its reusable purpose is clear, but it must not duplicate the certified Battle effect-analysis logic or change certified Battle behavior merely to support Wound Resolution.
+R3-C reuses `BattleEnabledPlantAnalyzer` directly. It does not duplicate or alter the certified Battle effect-analysis logic.
 
 ### Snip: sacrifice the least valuable permanent Plant
 

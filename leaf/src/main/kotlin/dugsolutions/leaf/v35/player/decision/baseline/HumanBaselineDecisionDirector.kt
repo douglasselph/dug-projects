@@ -47,7 +47,8 @@ class HumanBaselineDecisionDirector(
     internal val wound = HumanBaselineWoundStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy
     )
     internal val placement = HumanBaselineCreaturePlacementStrategy(
         scoreEngine = scoreEngine,
