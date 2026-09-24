@@ -2,9 +2,9 @@
 
 ## Status
 
-R1-A designer review is complete. R1-B records the approved behavior contract.
+R1-A designer review and R1-B behavior-contract approval are complete. R1-C implements the approved policy and adds readable behavior-contract tests.
 
-Critter Reward is **not yet CERTIFIED**. R1-C implementation alignment and behavior-contract tests, any warranted R1-D integration coverage, and R1-E regression/documentation certification remain.
+Critter Reward is **not yet CERTIFIED**. Any warranted R1-D integration coverage and R1-E regression/documentation certification remain.
 
 ## Scope
 
@@ -42,7 +42,7 @@ Human Baseline Critter Reward behaves as follows.
    1 Worm
    ```
 
-   If exactly one Critter type is below its protected minimum, prefer that missing type. The minimum is a floor Human Baseline tries to establish, not a requirement to maintain an exact Bee:Worm ratio forever.
+   Prefer the Critter with the larger remaining deficit to its protected minimum. If both deficits are equal and still positive, prefer Bee. This fills the canonical 2-Bee/1-Worm minimum without using the later probability before the minimum is established. The minimum is a floor Human Baseline tries to establish, not a requirement to maintain an exact Bee:Worm ratio forever.
 
 3. **Probabilistic preference after the minimum is filled.** Once both protected minimums are satisfied, the otherwise-neutral canonical preference is:
 
@@ -114,8 +114,8 @@ Do not broaden R1-C into unrelated scorer cleanup.
 ```text
 R1-A  current behavior + engine/legal-choice inventory       COMPLETE
 R1-B  approved durable behavior/policy contract              COMPLETE
-R1-C  implementation alignment + behavior-contract tests     NEXT
-R1-D  focused real-engine integration if inspection warrants PENDING
+R1-C  implementation alignment + behavior-contract tests     COMPLETE
+R1-D  focused real-engine integration if inspection warrants NEXT
 R1-E  docs + full regression + CERTIFY                       PENDING
 ```
 

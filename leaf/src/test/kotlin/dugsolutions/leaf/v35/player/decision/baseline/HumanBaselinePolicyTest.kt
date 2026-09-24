@@ -19,6 +19,18 @@ class HumanBaselinePolicyTest {
         assertEquals(1, reserve.worms)
     }
 
+    @Test
+    fun `default post-reserve Critter preference is two-thirds Bee`() {
+        assertEquals(2.0 / 3.0, HumanBaselinePolicy().postReserveBeeProbability(context()))
+    }
+
+    @Test
+    fun `constructor knob can customize post-reserve Bee probability`() {
+        val policy = HumanBaselinePolicy(postReserveBeeProbabilityValue = 0.4)
+
+        assertEquals(0.4, policy.postReserveBeeProbability(context()))
+    }
+
 
     @Test
     fun `default Cultivation support reserve combines Critters with one Water and one Mulch`() {

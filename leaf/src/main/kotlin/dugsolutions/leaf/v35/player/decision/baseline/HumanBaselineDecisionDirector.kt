@@ -40,7 +40,9 @@ class HumanBaselineDecisionDirector(
 ) {
     internal val reward = HumanBaselineRewardStrategy(
         scoreEngine = scoreEngine,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy,
+        strategyRandomizer = strategyRandomizer
     )
     internal val wound = HumanBaselineWoundStrategy(
         scoreEngine = scoreEngine,

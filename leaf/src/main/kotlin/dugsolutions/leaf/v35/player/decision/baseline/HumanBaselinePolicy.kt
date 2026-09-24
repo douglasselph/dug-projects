@@ -31,6 +31,7 @@ open class HumanBaselinePolicy(
     private val protectedWormReserveValue: Int = DEFAULT_PROTECTED_WORM_RESERVE,
     private val protectedWaterReserveValue: Int = DEFAULT_PROTECTED_WATER_RESERVE,
     private val protectedMulchReserveValue: Int = DEFAULT_PROTECTED_MULCH_RESERVE,
+    private val postReserveBeeProbabilityValue: Double = DEFAULT_POST_RESERVE_BEE_PROBABILITY,
     private val cultivationDiceDeficitPointsPerPowerValue: Int =
         DEFAULT_CULTIVATION_DICE_DEFICIT_POINTS_PER_POWER,
     private val cultivationDiceDeficitMaxBonusValue: Int =
@@ -57,6 +58,9 @@ open class HumanBaselinePolicy(
         require(protectedWormReserveValue >= 0) { "Protected Worm reserve cannot be negative" }
         require(protectedWaterReserveValue >= 0) { "Protected Water reserve cannot be negative" }
         require(protectedMulchReserveValue >= 0) { "Protected Mulch reserve cannot be negative" }
+        require(postReserveBeeProbabilityValue in 0.0..1.0) {
+            "Post-reserve Bee probability must be between 0.0 and 1.0"
+        }
         require(cultivationDiceDeficitPointsPerPowerValue >= 0) {
             "Cultivation dice-deficit points cannot be negative"
         }
@@ -91,6 +95,9 @@ open class HumanBaselinePolicy(
         const val DEFAULT_PROTECTED_WORM_RESERVE: Int = 1
         const val DEFAULT_PROTECTED_WATER_RESERVE: Int = 1
         const val DEFAULT_PROTECTED_MULCH_RESERVE: Int = 1
+
+        /** Neutral Critter rewards favor Bees two times out of three after the reserve is filled. */
+        const val DEFAULT_POST_RESERVE_BEE_PROBABILITY: Double = 2.0 / 3.0
 
         /**
          * Development need is intentionally only a modest nudge. One missing
@@ -146,6 +153,16 @@ open class HumanBaselinePolicy(
             bees = protectedBeeReserveValue,
             worms = protectedWormReserveValue
         )
+
+    /**
+     * Bee probability for an otherwise-neutral Critter reward after both
+     * protected Critter minimums have been established.
+     *
+     * This is strategy variation, not game randomness. Reward strategy code
+     * consumes StrategyRandomizer when applying it.
+     */
+    open fun postReserveBeeProbability(context: DecisionContext): Double =
+        postReserveBeeProbabilityValue
 
     /**
      * Resources Human Baseline normally prefers to preserve during Cultivation.
