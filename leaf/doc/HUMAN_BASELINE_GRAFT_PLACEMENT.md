@@ -2,7 +2,7 @@
 
 ## Status
 
-R2-A and R2-B established the approved behavior contract. R2-C aligns production scoring with that contract and adds readable behavior-contract tests.
+R2-A and R2-B established the approved behavior contract. R2-C aligned production scoring with that contract and added readable behavior-contract tests. R2-D adds one focused real-engine integration test for the live Buy/Graft placement seam.
 
 Graft Placement remains **IMPLEMENTED but NOT CERTIFIED**.
 
@@ -123,14 +123,31 @@ Reuse `GraftTopologyEvaluator` for topology facts instead of duplicating Creatur
 
 R2-C inspection also tightened one expectation from R2-B: with the current Creature geometry, all legal placements for the same Flower consume one currently open Vine connector, so when exactly one connector remains every legal Flower placement consumes it. A same-request choice between a Flower placement that boxes the Creature in and another Flower placement that preserves the final connector does not currently exist. The last-slot penalty is retained because it accurately records the tactical consequence and is shared with card-level Buy reasoning; the placement behavior test therefore verifies the safeguard itself rather than inventing an impossible legal-choice pair.
 
+## R2-D real-engine seam
+
+Inspection found one integration seam worth protecting. Existing `GraftResolverTest` coverage proves legal-placement validation, mutation, face-down grafting, and Chronicle recording, while `CultivationBuySanityTest` proves that a Plant purchase reaches grafting. Those tests use fixed/scripted placement strategies, however, so neither proves that a real Buy passes live legal placements and `DecisionContext` through `GraftResolver` to `HumanBaselineCreaturePlacementStrategy` and commits its answer.
+
+R2-D therefore adds one representative integration scenario. The purchase/payment decision is scripted so the test owns only the placement seam. One Root is pre-grafted on one side; purchasing another Root through the production Buy phase must cause the real Human Baseline placement strategy to choose the opposite, less-developed side when topology is otherwise equivalent. This protects:
+
+```text
+production Buy
+    -> GraftResolver.prepare
+    -> live legal placements + DecisionContext
+    -> HumanBaselineCreaturePlacementStrategy
+    -> GraftResolver.resolve
+    -> committed Creature position
+```
+
+Detailed topology bands, policy customization, final-round behavior, legality containment, and strategic tie behavior remain R2-C unit-test responsibilities and are intentionally not duplicated here.
+
 ## Remaining certification sequence
 
 ```text
 R2-A  current behavior + legal geometry/topology review       COMPLETE
 R2-B  approved durable behavior/policy contract              COMPLETE
 R2-C  implementation alignment + behavior-contract tests     COMPLETE
-R2-D  focused real-engine integration if a seam warrants it  NEXT
-R2-E  docs + full regression + CERTIFY                       PENDING
+R2-D  focused real-engine integration if a seam warrants it  COMPLETE
+R2-E  docs + full regression + CERTIFY                       NEXT
 ```
 
 If the strategy API count remains unchanged, successful R2-E certification will move Milestone 2 to:
