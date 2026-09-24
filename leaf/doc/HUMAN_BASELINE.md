@@ -162,9 +162,13 @@ baseline/wound/HumanBaselineWoundStrategyTest.kt
 baseline/wound/WoundPriorityTest.kt
 ```
 
-Decision hook: choose among the legal Flip/Snip outcomes already computed by the rules engine.
+Decision hook: choose among the legal Wound outcomes already computed by the rules engine. The rules determine whether the current Wound offers Flips or Snips; Human Baseline does not compare Flip against Snip.
 
-**Certification status:** implemented; designer behavior review still required.
+Approved R3-A/R3-B direction: for legal Flips, reuse the certified current-Battle Plant-opportunity analysis and Flip the Plant with the least visible immediate Battle contribution; for legal Snips, choose the legal outer Plant with the lowest shared permanent preservation value, based on intrinsic usefulness, card cost, and projected end-game VP. Do not add future-grid, refresh-plan, opponent-response, or Creature-topology search. Exact strategic ties use `StrategyRandomizer`.
+
+Detailed R3 contract and implementation plan: [`HUMAN_BASELINE_WOUND_RESOLUTION.md`](HUMAN_BASELINE_WOUND_RESOLUTION.md).
+
+**Certification status:** implemented but not certified. R3-A and R3-B are complete; R3-C implementation alignment and readable behavior-contract tests are next.
 
 ### 3.3 Graft Placement
 

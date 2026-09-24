@@ -9,6 +9,7 @@ Use the repository-level [`README.md`](../README.md) as the main entry point.
 - [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md) — Milestone-2 specification and certification map for the eight Human Baseline decision areas and 30 strategy hooks.
 - [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) — detailed inventory of how Cultivation currently works.
 - [`HUMAN_BASELINE_GRAFT_PLACEMENT.md`](HUMAN_BASELINE_GRAFT_PLACEMENT.md) — approved Graft Placement behavior contract and R2 certification plan.
+- [`HUMAN_BASELINE_WOUND_RESOLUTION.md`](HUMAN_BASELINE_WOUND_RESOLUTION.md) — approved Wound Resolution behavior contract and R3 certification plan.
 - [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) — design rationale, implementation checkpoints, and completed certification record for Human Baseline Cultivation.
 - [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md) — approved Stage-A behavior contract for Human Baseline Battle.
 - [`HUMAN_BASELINE_BATTLE_PLAN.md`](HUMAN_BASELINE_BATTLE_PLAN.md) — incremental Battle implementation and certification checkpoints.
