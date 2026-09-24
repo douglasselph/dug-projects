@@ -2,7 +2,7 @@
 
 ## Status
 
-R4-A and R4-B are complete. Butterfly Result is **NOT CERTIFIED**. R4-C is next.
+R4-A through R4-D are complete. Butterfly Result is **NOT CERTIFIED**. R4-E is next.
 
 ## Scope
 
@@ -96,14 +96,25 @@ Behavior-contract coverage should demonstrate at least:
 
 The existing test that expects a reward from a rejected Butterfly reroll must be corrected because it asserts behavior contrary to the approved game rule.
 
+## R4-D integration finding
+
+A focused real-engine seam is warranted because R4-C changed the ordering between the Butterfly result decision and Roll Reward resolution. Unit coverage protects the executor boundary, while integration coverage now verifies the complete Cultivation path with the production Human Baseline result strategy.
+
+The integration scenarios deliberately provide a real Wisp in the deck and demonstrate both sides of the corrected rule:
+
+- original 1, rerolled 2: Human Baseline keeps the higher 2, then the engine grants the Wisp;
+- original 5, rerolled 2: Human Baseline restores the higher 5, and the provisional 2 grants no Wisp.
+
+The decision to use the Butterfly is scripted so this checkpoint isolates the one certified hook under review. The post-reroll ORIGINAL/REROLLED decision itself is production Human Baseline behavior. Existing B15 Battle integration already exercises production Human Baseline choosing the better actual Butterfly result through the Battle engine, so no duplicate Battle integration is needed here.
+
 ## Remaining certification sequence
 
 ```text
 R4-A  current behavior + engine/timing/scorer review          COMPLETE
 R4-B  approved durable Butterfly Result contract              COMPLETE
 R4-C  engine timing fix + implementation/behavior tests       COMPLETE
-R4-D  focused real-engine integration if a seam warrants it   NEXT
-R4-E  docs + full regression + CERTIFY                        PENDING
+R4-D  focused real-engine integration if a seam warrants it   COMPLETE
+R4-E  docs + full regression + CERTIFY                        NEXT
 ```
 
 Certification will leave the strategy API count unchanged. When R4-E succeeds, expected Milestone-2 progress is:

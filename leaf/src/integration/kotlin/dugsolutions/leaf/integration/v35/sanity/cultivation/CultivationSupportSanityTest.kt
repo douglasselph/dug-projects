@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.support.ButterflyRollChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -147,6 +148,70 @@ class CultivationSupportSanityTest {
             val snapshot = harness.snapshot()
 
             assertEquals(6, snapshot.player(1).hand.single().value)
+            assertFalse(snapshot.player(1).butterflies.single().faceUp)
+            assertEquals(SupportActionKind.BUTTERFLY, supportKinds(harness).single())
+            randomizer.assertExhausted()
+            first.assertExhausted()
+            second.assertExhausted()
+        }
+    }
+
+    @Test
+    fun `Human Baseline Butterfly keeps higher rerolled 2 then earns its Wisp reward`() {
+        val first = ScriptedDecisionDirector(fallback = DecisionDirector.humanBaseline()).apply {
+            cultivation.thenSupport { it is SupportAction.UseButterfly }
+            finishBuildWithWater()
+        }
+        val second = ScriptedDecisionDirector().apply { finishBuildWithWater() }
+        val randomizer = ScriptedRandomizer().rolls(2)
+
+        cultivationHarness(
+            randomizer = randomizer,
+            wispNames = listOf("Wisp_Award_VP"),
+            first = first,
+            second = second
+        ).use { harness ->
+            harness.setPlayerDice(1, hand = listOf(DieSpec(DieSides.D6, 1)))
+            harness.giveButterfly(1, Butterfly.GREEN)
+            harness.revealNextRound()
+
+            harness.runCultivationBuildActions()
+            val snapshot = harness.snapshot()
+
+            assertEquals(2, snapshot.player(1).hand.single().value)
+            assertEquals(listOf("Wisp_Award_VP"), snapshot.player(1).wisps)
+            assertFalse(snapshot.player(1).butterflies.single().faceUp)
+            assertEquals(SupportActionKind.BUTTERFLY, supportKinds(harness).single())
+            randomizer.assertExhausted()
+            first.assertExhausted()
+            second.assertExhausted()
+        }
+    }
+
+    @Test
+    fun `Human Baseline Butterfly rejects lower rerolled 2 and earns no Wisp reward`() {
+        val first = ScriptedDecisionDirector(fallback = DecisionDirector.humanBaseline()).apply {
+            cultivation.thenSupport { it is SupportAction.UseButterfly }
+            finishBuildWithWater()
+        }
+        val second = ScriptedDecisionDirector().apply { finishBuildWithWater() }
+        val randomizer = ScriptedRandomizer().rolls(2)
+
+        cultivationHarness(
+            randomizer = randomizer,
+            wispNames = listOf("Wisp_Award_VP"),
+            first = first,
+            second = second
+        ).use { harness ->
+            harness.setPlayerDice(1, hand = listOf(DieSpec(DieSides.D6, 5)))
+            harness.giveButterfly(1, Butterfly.GREEN)
+            harness.revealNextRound()
+
+            harness.runCultivationBuildActions()
+            val snapshot = harness.snapshot()
+
+            assertEquals(5, snapshot.player(1).hand.single().value)
+            assertTrue(snapshot.player(1).wisps.isEmpty())
             assertFalse(snapshot.player(1).butterflies.single().faceUp)
             assertEquals(SupportActionKind.BUTTERFLY, supportKinds(harness).single())
             randomizer.assertExhausted()
