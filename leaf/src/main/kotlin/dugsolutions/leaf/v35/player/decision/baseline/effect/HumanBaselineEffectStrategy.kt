@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPai
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleEnabledPlantAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOpponentPlantTargetAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOEdelweissAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleRootWellTargetAnalyzer
@@ -82,7 +83,9 @@ class HumanBaselineEffectStrategy(
     internal val opponentPlantTargetAnalyzer: BattleOpponentPlantTargetAnalyzer =
         BattleOpponentPlantTargetAnalyzer(cardScorers, enabledPlantAnalyzer),
     internal val beeSourceAnalyzer: BattleBeeSourceAnalyzer = BattleBeeSourceAnalyzer(),
-    internal val petalToDie4Analyzer: BattlePetalToDie4Analyzer = BattlePetalToDie4Analyzer(policy)
+    internal val petalToDie4Analyzer: BattlePetalToDie4Analyzer = BattlePetalToDie4Analyzer(policy),
+    internal val oEdelweissAnalyzer: BattleOEdelweissAnalyzer =
+        BattleOEdelweissAnalyzer(cardScorers, enabledPlantAnalyzer)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -495,22 +498,35 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val score = when (choice) {
-                    OEdelweissChoice.Done -> PriorityScore(35)
-                    is OEdelweissChoice.Play -> {
-                        cardScorers.forName(choice.card.cardName)
-                            .playScore(request.context, CardPhase.from(request.context.phase), choice.card.cardName)
-                    }
-                    is OEdelweissChoice.Flip -> {
-                        val view = request.context.self.board.creature.firstOrNull { it.id == choice.card.cardId }
-                        val value = view?.let { cardScorers.forPlant(it).lossValue(request.context, it) } ?: 30
-                        if (!choice.card.isFaceUp) PriorityScore(45 + value / 3) else PriorityScore(10 - value / 5)
-                    }
+                val score = if (
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+                ) {
+                    oEdelweissAnalyzer.scoreChoice(request.context, choice)
+                        ?: scoreOEdelweissFallback(request.context, choice)
+                } else {
+                    scoreOEdelweissFallback(request.context, choice)
                 }
                 DecisionCandidate(choice, score)
             }
         )
     }
+
+    private fun scoreOEdelweissFallback(
+        context: DecisionContext,
+        choice: OEdelweissChoice
+    ): PriorityScore =
+        when (choice) {
+            OEdelweissChoice.Done -> PriorityScore(35)
+            is OEdelweissChoice.Play -> {
+                cardScorers.forName(choice.card.cardName)
+                    .playScore(context, CardPhase.from(context.phase), choice.card.cardName)
+            }
+            is OEdelweissChoice.Flip -> {
+                val view = context.self.board.creature.firstOrNull { it.id == choice.card.cardId }
+                val value = view?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
+                if (!choice.card.isFaceUp) PriorityScore(45 + value / 3) else PriorityScore(10 - value / 5)
+            }
+        }
 
     override fun chooseWispsToKeep(request: ChooseWispsToKeepRequest): EffectWispsChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseWispsToKeep(request)

@@ -250,8 +250,10 @@ object CardScoringHelpers {
                 if (best != null) score = score.adjusted((DieValueHeuristics.expectedRoll(best.sides) * 3).roundToInt(), "Best discard die can return to Hand")
             }
             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> {
-                val useful = context.self.board.creature.count { it.isFaceDown }
-                score = score.adjusted(minOf(35, useful * 10), "Can reuse/refresh useful cards twice")
+                if (phase == CardPhase.CULTIVATION) {
+                    val useful = context.self.board.creature.count { it.isFaceDown }
+                    score = score.adjusted(minOf(35, useful * 10), "Can reuse/refresh useful cards twice")
+                }
             }
             GameEffect.DRAW_TWO_DICE -> {
                 score = score.adjusted((expectedNextDraw(context) * 5).roundToInt(), "Two additional dice")

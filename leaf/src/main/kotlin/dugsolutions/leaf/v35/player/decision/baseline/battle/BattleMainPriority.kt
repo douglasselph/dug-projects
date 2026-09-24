@@ -18,12 +18,20 @@ object BattleMainPriority {
     ): PriorityScore =
         when (action) {
             BattleMainAction.Draw -> DrawPriority.score(context)
-            is BattleMainAction.ActivatePlant ->
-                cardScorers.forPlant(action.card.card).playScore(
+            is BattleMainAction.ActivatePlant -> {
+                val intrinsic = cardScorers.forPlant(action.card.card).playScore(
                     context = context,
                     phase = CardPhase.BATTLE,
                     cardName = action.card.card.name
                 )
+                if (action.card.card.effect == GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE) {
+                    BattleOEdelweissAnalyzer(cardScorers)
+                        .topLevelPriority(context, action.card.id)
+                        ?: intrinsic
+                } else {
+                    intrinsic
+                }
+            }
             BattleMainAction.RoundEffect1 -> scoreRoundEffect(roundCard.firstEffect.effect)
             BattleMainAction.RoundEffect2 -> scoreRoundEffect(roundCard.secondEffect.effect)
         }

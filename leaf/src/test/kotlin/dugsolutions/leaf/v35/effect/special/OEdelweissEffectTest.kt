@@ -116,6 +116,10 @@ class OEdelweissEffectTest {
             2,
             strategy.requests.size
         )
+        assertEquals(
+            listOf<Boolean?>(true, false),
+            strategy.targetFacingInContext
+        )
 
         val first =
             strategy.requests[0]
@@ -505,6 +509,8 @@ class OEdelweissEffectTest {
             mutableListOf<
                 List<OEdelweissChoice>
             >()
+        val targetFacingInContext =
+            mutableListOf<Boolean?>()
 
         override fun chooseOEdelweiss(
             request:
@@ -512,6 +518,10 @@ class OEdelweissEffectTest {
         ): OEdelweissChoice {
             requests +=
                 request.legalChoices
+            targetFacingInContext +=
+                request.context.self.board.creature
+                    .firstOrNull { it.id == target }
+                    ?.isFaceUp
 
             return when (
                 request.choiceNumber
