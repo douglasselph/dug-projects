@@ -43,8 +43,10 @@ class B15ActionTargetBranchIntegrationTest {
         val p2 = scriptedOpponent()
 
         battleHarness(decisions = listOf(p1, p2)).use { harness ->
+            // Make TOP the unique worthwhile Bee target: 4->6 flips the 4-vs-5
+            // loss, while MIDDLE and BOTTOM are already winning without Support.
             harness.setPlayerDice(1, hand = d8Hand(4, 3, 2))
-            harness.setPlayerDice(2, hand = d8Hand(5, 3, 2))
+            harness.setPlayerDice(2, hand = d8Hand(5, 1, 1))
             harness.giveCritter(1, Critter.BEE)
 
             checkNotNull(harness.revealNextRound())
