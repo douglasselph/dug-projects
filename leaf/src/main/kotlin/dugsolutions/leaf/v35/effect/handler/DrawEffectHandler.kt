@@ -456,7 +456,8 @@ class DrawEffectHandler(
                     legalChoices = choicesForExactHandDice(
                         request = request,
                         dice = drawn
-                    )
+                    ),
+                    requiredBattleRow = discarded.row
                 )
             }
 

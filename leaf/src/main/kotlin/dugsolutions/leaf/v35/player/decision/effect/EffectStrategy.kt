@@ -31,7 +31,9 @@ data class EffectDieChoice(
 class ChooseEffectDieRequest(
     val effect: GameEffect,
     legalChoices: List<EffectDieChoice>,
-    val context: DecisionContext = DecisionContext.EMPTY
+    val context: DecisionContext = DecisionContext.EMPTY,
+    /** Rule-mandated destination when this die choice will immediately fill one Battle row. */
+    val requiredBattleRow: StrikeRow? = null
 ) {
     val legalChoices: List<EffectDieChoice> = legalChoices.toList()
 

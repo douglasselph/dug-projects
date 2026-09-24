@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -48,11 +49,13 @@ private fun choices(
 
 internal fun chooseRequiredHandDie(
     request: GameEffectRequest,
-    legalChoices: List<EffectDieChoice>
+    legalChoices: List<EffectDieChoice>,
+    requiredBattleRow: StrikeRow? = null
 ): Die =
     chooseRequiredDie(
         request = request,
         legalChoices = legalChoices,
+        requiredBattleRow = requiredBattleRow,
         resolve = { resolveHandDie(request.actor, it) }
     )
 
@@ -69,6 +72,7 @@ internal fun chooseRequiredDiscardDie(
 private fun chooseRequiredDie(
     request: GameEffectRequest,
     legalChoices: List<EffectDieChoice>,
+    requiredBattleRow: StrikeRow? = null,
     resolve: (EffectDieChoice) -> Die
 ): Die {
     effectCheck(legalChoices.isNotEmpty()) {
@@ -79,7 +83,8 @@ private fun chooseRequiredDie(
         ChooseEffectDieRequest(
             effect = request.effect,
             legalChoices = legalChoices,
-            context = request.decisionContext()
+            context = request.decisionContext(),
+            requiredBattleRow = requiredBattleRow
         )
     )
     decisionCheck(chosen in legalChoices) {

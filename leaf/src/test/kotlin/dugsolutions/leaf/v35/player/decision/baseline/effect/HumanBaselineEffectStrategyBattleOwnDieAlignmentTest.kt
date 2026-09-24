@@ -427,6 +427,46 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
     }
 
     @Test
+    fun `reap forced-row post-draw choice uses actual rolls in committed row`() {
+        val context = context(
+            row(
+                StrikeRow.TOP,
+                player(actor, 0),
+                player(opponent, 5)
+            )
+        )
+        val strategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(RecordingRandomizer(0))
+        )
+
+        val firstHigh = strategy.chooseDie(
+            ChooseEffectDieRequest(
+                effect = GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+                legalChoices = listOf(
+                    EffectDieChoice(0, 6, 6),
+                    EffectDieChoice(1, 6, 3)
+                ),
+                context = context,
+                requiredBattleRow = StrikeRow.TOP
+            )
+        )
+        val secondHigh = strategy.chooseDie(
+            ChooseEffectDieRequest(
+                effect = GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+                legalChoices = listOf(
+                    EffectDieChoice(0, 6, 3),
+                    EffectDieChoice(1, 6, 6)
+                ),
+                context = context,
+                requiredBattleRow = StrikeRow.TOP
+            )
+        )
+
+        assertEquals(0, firstHigh.index)
+        assertEquals(1, secondHigh.index)
+    }
+
+    @Test
     fun `draw two source choice protects the tactically important row and leaves later placements fresh`() {
         val context = context(
             row(

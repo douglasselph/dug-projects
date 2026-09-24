@@ -9,6 +9,9 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.LastEffectChoiceStrategy
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
@@ -315,6 +318,22 @@ class DrawEffectHandlerTest {
     }
 
     @Test
+    fun reapWhatYouRollInBattle_humanBaselineUsesActualDrawsForForcedRowChoice() {
+        assertTrue(
+            firstReapDrawWasForcedReplacement(
+                firstValue = 6,
+                secondValue = 3
+            )
+        )
+        assertFalse(
+            firstReapDrawWasForcedReplacement(
+                firstValue = 3,
+                secondValue = 6
+            )
+        )
+    }
+
+    @Test
     fun reapWhatYouRollInBattle_placesChosenDrawnDieInDiscardedDiceRow() {
         val anchor = FixedEffectDie(10, 6)
         val discarded = FixedEffectDie(20, 15)
@@ -577,6 +596,51 @@ class DrawEffectHandlerTest {
             )
 
         assertFalse(handler.canExecute(request))
+    }
+
+    private fun firstReapDrawWasForcedReplacement(
+        firstValue: Int,
+        secondValue: Int
+    ): Boolean {
+        val discarded = FixedEffectDie(8, 4)
+        val firstDraw = FixedEffectDie(6, firstValue)
+        val secondDraw = FixedEffectDie(6, secondValue)
+        val opponentDie = FixedEffectDie(8, 5)
+        val effectStrategy = HumanBaselineEffectStrategy(
+            scoreEngine = BaselineScoreEngine(
+                StrategyRandomizer { 0 }
+            )
+        )
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(discarded),
+            effectStrategy = effectStrategy
+        )
+        actor.dice.addAllToSupply(listOf(firstDraw, secondDraw))
+        val opponent = EffectTestFixture.player(
+            id = 2,
+            hand = listOf(opponentDie)
+        )
+        val game = EffectTestFixture.game(actor, opponent)
+        val battleState = BattleState(listOf(actor, opponent))
+
+        battleState.grid.placeDie(actor, StrikeRow.TOP, discarded)
+        battleState.grid.placeDie(opponent, StrikeRow.TOP, opponentDie)
+
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
+
+        handler.execute(request, nested)
+
+        // The forced replacement is placed before the other drawn die receives
+        // its separate normal Battle-placement decision, so it is first here.
+        return battleState.grid.square(actor.id, StrikeRow.TOP).dice.first() === firstDraw
     }
 
     private class SequenceRollDie(

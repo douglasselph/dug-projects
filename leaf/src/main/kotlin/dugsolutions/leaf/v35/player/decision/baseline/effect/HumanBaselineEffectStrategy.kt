@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.effect
 
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
@@ -117,6 +118,20 @@ class HumanBaselineEffectStrategy(
                     value = choice.value
                 )
                 val score = when {
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect == GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE &&
+                        request.requiredBattleRow != null ->
+                        battleReapWhatYouRollForcedRowTargetScore(
+                            context = request.context,
+                            choice = choice,
+                            row = request.requiredBattleRow
+                        ) ?: CardScoringHelpers.scoreDieTarget(
+                            effect = request.effect,
+                            context = request.context,
+                            die = choice,
+                            normalPurchasingPower = normalPower
+                        )
+
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS ->
                         battleCollateralOwnDieTargetScore(request.context, request.effect, choice)
@@ -870,6 +885,34 @@ class HumanBaselineEffectStrategy(
 
         return PriorityScore(placement.tacticalValue.roundToInt())
             .adjusted(0, "Expected Battle value after rolling and placing this Discard die")
+    }
+
+    /**
+     * Scores Reap What You Roll's post-Draw forced-row choice from the actual
+     * rolled values now known to the strategy. The row was legally committed
+     * by the earlier discard-source choice, but the replacement die was not:
+     * both Draws resolve first, then this fresh decision compares the actual
+     * candidates in that one mandated destination.
+     */
+    private fun battleReapWhatYouRollForcedRowTargetScore(
+        context: DecisionContext,
+        choice: EffectDieChoice,
+        row: StrikeRow
+    ): PriorityScore? {
+        val analysis = diePlacementAnalyzer(
+            context = context,
+            dieValue = choice.value.toDouble(),
+            mode = BattleAnalysisMode.ACTUAL,
+            legalRows = listOf(row)
+        ).singleOrNull() ?: return null
+
+        val tacticalValue = analysis.tacticalValue
+        val score = tacticalValue.roundToInt()
+        check(tacticalValue == score.toDouble()) {
+            "Actual Reap What You Roll forced placement produced non-integral tactical value $tacticalValue"
+        }
+        return PriorityScore(score)
+            .adjusted(0, "Actual post-Draw value in the committed Reap What You Roll row")
     }
 
     /**
