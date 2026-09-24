@@ -32,6 +32,7 @@ open class HumanBaselinePolicy(
     private val protectedWaterReserveValue: Int = DEFAULT_PROTECTED_WATER_RESERVE,
     private val protectedMulchReserveValue: Int = DEFAULT_PROTECTED_MULCH_RESERVE,
     private val postReserveBeeProbabilityValue: Double = DEFAULT_POST_RESERVE_BEE_PROBABILITY,
+    private val graftAdequateGrowthSlotsValue: Int = DEFAULT_GRAFT_ADEQUATE_GROWTH_SLOTS,
     private val cultivationDiceDeficitPointsPerPowerValue: Int =
         DEFAULT_CULTIVATION_DICE_DEFICIT_POINTS_PER_POWER,
     private val cultivationDiceDeficitMaxBonusValue: Int =
@@ -60,6 +61,9 @@ open class HumanBaselinePolicy(
         require(protectedMulchReserveValue >= 0) { "Protected Mulch reserve cannot be negative" }
         require(postReserveBeeProbabilityValue in 0.0..1.0) {
             "Post-reserve Bee probability must be between 0.0 and 1.0"
+        }
+        require(graftAdequateGrowthSlotsValue >= 2) {
+            "Adequate Graft growth-slot threshold must be at least 2"
         }
         require(cultivationDiceDeficitPointsPerPowerValue >= 0) {
             "Cultivation dice-deficit points cannot be negative"
@@ -98,6 +102,9 @@ open class HumanBaselinePolicy(
 
         /** Neutral Critter rewards favor Bees two times out of three after the reserve is filled. */
         const val DEFAULT_POST_RESERVE_BEE_PROBABILITY: Double = 2.0 / 3.0
+
+        /** Future Vine-growth slots at which Graft Placement considers expansion room adequate. */
+        const val DEFAULT_GRAFT_ADEQUATE_GROWTH_SLOTS: Int = 3
 
         /**
          * Development need is intentionally only a modest nudge. One missing
@@ -163,6 +170,13 @@ open class HumanBaselinePolicy(
      */
     open fun postReserveBeeProbability(context: DecisionContext): Double =
         postReserveBeeProbabilityValue
+
+    /**
+     * Minimum future Vine-growth slots that Graft Placement treats as ADEQUATE.
+     * Lower positive counts are CONSTRAINED; zero is BOXED IN.
+     */
+    open fun graftAdequateGrowthSlots(context: DecisionContext): Int =
+        graftAdequateGrowthSlotsValue
 
     /**
      * Resources Human Baseline normally prefers to preserve during Cultivation.

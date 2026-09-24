@@ -33,6 +33,19 @@ class HumanBaselinePolicyTest {
 
 
     @Test
+    fun `default Graft topology considers three future growth slots adequate`() {
+        assertEquals(3, HumanBaselinePolicy().graftAdequateGrowthSlots(context()))
+    }
+
+    @Test
+    fun `Graft adequate-growth threshold is configurable per policy`() {
+        val policy = HumanBaselinePolicy(graftAdequateGrowthSlotsValue = 5)
+
+        assertEquals(5, policy.graftAdequateGrowthSlots(context()))
+    }
+
+
+    @Test
     fun `default Cultivation support reserve combines Critters with one Water and one Mulch`() {
         val reserve = HumanBaselinePolicy().protectedCultivationResourceReserve(context())
 

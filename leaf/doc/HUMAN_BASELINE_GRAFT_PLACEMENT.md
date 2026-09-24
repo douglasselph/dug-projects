@@ -2,7 +2,7 @@
 
 ## Status
 
-R2-A current-behavior/topology review and designer review are complete. R2-B records the approved behavior contract and policy direction. Production behavior is not changed by R2-B.
+R2-A and R2-B established the approved behavior contract. R2-C aligns production scoring with that contract and adds readable behavior-contract tests.
 
 Graft Placement remains **IMPLEMENTED but NOT CERTIFIED**.
 
@@ -107,11 +107,11 @@ Do not add configuration merely for its own sake: geometry itself remains engine
 
 ## R2-C implementation/test target
 
-R2-C should make the smallest production alignment necessary and add readable behavior-contract tests demonstrating at least:
+R2-C makes the smallest production alignment necessary and adds readable behavior-contract tests demonstrating:
 
 - strategy chooses only from the supplied legal positions;
-- before final Cultivation, a placement preserving the last growth opportunity beats one that boxes the Creature in;
-- `CONSTRAINED` beats `BOXED IN` when both are legal;
+- before final Cultivation, the scorer applies the strong last-growth-slot safeguard when a Flower consumes that final connector;
+- the bounded band classifier distinguishes `BOXED IN` from `CONSTRAINED`;
 - `ADEQUATE` beats `CONSTRAINED`;
 - additional raw slots within `ADEQUATE` do not create a stronger topology preference;
 - weak left/right balance can decide between otherwise equivalent placements;
@@ -121,13 +121,15 @@ R2-C should make the smallest production alignment necessary and add readable be
 
 Reuse `GraftTopologyEvaluator` for topology facts instead of duplicating Creature geometry inside the strategy.
 
+R2-C inspection also tightened one expectation from R2-B: with the current Creature geometry, all legal placements for the same Flower consume one currently open Vine connector, so when exactly one connector remains every legal Flower placement consumes it. A same-request choice between a Flower placement that boxes the Creature in and another Flower placement that preserves the final connector does not currently exist. The last-slot penalty is retained because it accurately records the tactical consequence and is shared with card-level Buy reasoning; the placement behavior test therefore verifies the safeguard itself rather than inventing an impossible legal-choice pair.
+
 ## Remaining certification sequence
 
 ```text
 R2-A  current behavior + legal geometry/topology review       COMPLETE
 R2-B  approved durable behavior/policy contract              COMPLETE
-R2-C  implementation alignment + behavior-contract tests     NEXT
-R2-D  focused real-engine integration if a seam warrants it  PENDING
+R2-C  implementation alignment + behavior-contract tests     COMPLETE
+R2-D  focused real-engine integration if a seam warrants it  NEXT
 R2-E  docs + full regression + CERTIFY                       PENDING
 ```
 

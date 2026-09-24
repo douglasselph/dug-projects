@@ -81,6 +81,7 @@ The current shared defaults are:
 | `DEFAULT_PROTECTED_WORM_RESERVE` | 1 | normally preserve 1 Worm on the way into Battle/Flip flexibility |
 | `DEFAULT_PROTECTED_WATER_RESERVE` | 1 | soft Cultivation reserve for Water |
 | `DEFAULT_PROTECTED_MULCH_RESERVE` | 1 | soft Cultivation reserve for stored Mulch |
+| `DEFAULT_GRAFT_ADEQUATE_GROWTH_SLOTS` | 3 | 3+ future Vine-growth slots count as ADEQUATE rather than accumulating value per raw slot |
 | `DEFAULT_CULTIVATION_DICE_DEFICIT_POINTS_PER_POWER` | 1 | one score point per missing dice-power point |
 | `DEFAULT_CULTIVATION_DICE_DEFICIT_MAX_BONUS` | 9 | cap development need at a modest nudge |
 | `DEFAULT_CULTIVATION_DONE_SCORE` | 55 | benchmark remaining Support opportunities must beat |
@@ -105,6 +106,16 @@ R1-C must expose this as a companion-object default plus overridable `HumanBasel
 These values are strategy defaults, not game rules.
 
 Card-specific and action-specific values do **not** belong here. For example, the base score of Queen's Blossom or the low-roll bonus inside `MulchPriority` should remain beside those scorers. `HumanBaselinePolicy` is intentionally limited to assumptions that several decision areas may need to share.
+
+## 3a. Graft Placement topology threshold
+
+Graft Placement obtains its bounded topology threshold through:
+
+```kotlin
+policy.graftAdequateGrowthSlots(context)
+```
+
+The canonical default is `3`, producing the approved bands: `BOXED IN` at 0 future Vine-growth slots, `CONSTRAINED` at 1-2, and `ADEQUATE` at 3 or more. The placement scorer assigns value to the band, not to every raw slot, so 5 open positions do not outrank 4 merely because the count is larger. Experiments can change the constructor value or override the policy method for a particular player/context without changing Creature legality.
 
 ## 4. Protected Critter reserve
 

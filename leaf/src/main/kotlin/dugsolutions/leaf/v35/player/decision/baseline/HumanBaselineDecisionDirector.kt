@@ -51,7 +51,8 @@ class HumanBaselineDecisionDirector(
     )
     internal val placement = HumanBaselineCreaturePlacementStrategy(
         scoreEngine = scoreEngine,
-        influenceRegistry = influenceRegistry
+        influenceRegistry = influenceRegistry,
+        policy = policy
     )
     internal val cultivation = HumanBaselineCultivationStrategy(
         scoreEngine = scoreEngine,
