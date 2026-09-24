@@ -2,9 +2,7 @@
 
 ## Status
 
-R3-A current-behavior/scorer review, R3-B contract, R3-C implementation alignment with direct behavior-contract tests, and R3-D focused real-engine integration are complete.
-
-Wound Resolution remains **IMPLEMENTED but NOT CERTIFIED** pending R3-E.
+R3-A through R3-E are complete. Wound Resolution is **CERTIFIED** for Milestone 2.
 
 ## Scope
 
@@ -142,12 +140,24 @@ R3-A  current behavior + legality/scorer/designer review      COMPLETE
 R3-B  approved durable Wound Resolution contract             COMPLETE
 R3-C  implementation alignment + behavior-contract tests     COMPLETE
 R3-D  focused real-engine integration if a seam warrants it  COMPLETE
-R3-E  docs + full regression + CERTIFY                       PENDING
+R3-E  docs + full regression + CERTIFY                       COMPLETE
 ```
 
-If the strategy API count remains unchanged, successful R3-E certification moves Milestone 2 to:
+R3-E certification leaves the strategy API count unchanged and moves Milestone 2 to:
 
 ```text
 6 of 8 major Human Baseline areas certified
 9 of 30 strategy hooks certified
 ```
+
+## R3-E certification result
+
+The designer reported `BUILD SUCCESSFUL` for the required full local regression:
+
+```text
+./gradlew test integrationTest simulationCheck
+```
+
+R3-A through R3-E are complete. The approved contract, implementation, readable unit behavior-contract tests, focused real-engine integration coverage, and full regression agree. Wound Resolution is therefore **CERTIFIED** for Milestone 2.
+
+The strategy API remains one Wound Resolution hook, so current overall Human Baseline progress is **6 of 8 major areas certified; 9 of 30 strategy hooks certified**.

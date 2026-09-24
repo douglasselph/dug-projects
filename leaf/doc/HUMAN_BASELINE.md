@@ -147,7 +147,7 @@ Detailed R1 contract and implementation plan: [`HUMAN_BASELINE_CRITTER_REWARD.md
 
 **Certification status:** **certified**. R1-A through R1-E are complete. The approved behavior contract, policy-backed implementation, readable unit behavior-contract tests, focused real-engine integration coverage, and full `test integrationTest simulationCheck` regression agree.
 
-### 3.2 Wound Resolution
+### 3.2 Wound Resolution — CERTIFIED
 
 Implementation:
 
@@ -168,7 +168,7 @@ Approved R3-A/R3-B direction: for legal Flips, reuse the certified current-Battl
 
 Detailed R3 contract and implementation plan: [`HUMAN_BASELINE_WOUND_RESOLUTION.md`](HUMAN_BASELINE_WOUND_RESOLUTION.md).
 
-**Certification status:** implemented but not certified. R3-A and R3-B are complete; R3-C implementation alignment and readable behavior-contract tests are next.
+**Certification status:** **certified**. R3-A through R3-E are complete. The approved behavior contract, shared current-Battle Flip analysis, permanent Snip preservation evaluator, readable unit behavior-contract tests, focused real-engine integration coverage, and full `test integrationTest simulationCheck` regression agree.
 
 ### 3.3 Graft Placement
 
@@ -430,7 +430,7 @@ The behavior-contract tests should be readable as a second expression of the spe
 Use the eight areas as the high-level completion checklist:
 
 - [x] Critter Reward certified
-- [ ] Wound Resolution certified
+- [x] Wound Resolution certified
 - [x] Graft Placement certified
 - [x] Cultivation certified
 - [x] Battle certified
@@ -438,7 +438,7 @@ Use the eight areas as the high-level completion checklist:
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 
-Current progress: **5 of 8 major areas certified; 8 of 30 strategy hooks certified** (Critter Reward: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3).
+Current progress: **6 of 8 major areas certified; 9 of 30 strategy hooks certified** (Critter Reward: 1, Wound Resolution: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 
