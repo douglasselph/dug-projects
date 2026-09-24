@@ -753,13 +753,13 @@ The focused Battle helpers introduced or materially touched by B4-B15 were audit
 
 Restructure/strengthen direct Battle tests with a clearly identifiable `Human Baseline Behavior Contract` section. Keep behavior-contract tests conceptually distinct from helper, wiring, engine, and edge-case tests. Cover representative approved rules without reproducing every helper edge case. Do not alter Battle strategy merely to make a brittle contract test pass.
 
-## B17 — focused compile / test / fix
+## B17 — focused compile / test / fix — VERIFICATION ATTEMPTED, NOT YET GREEN
 
-Compile production and test Kotlin, then run the focused Battle, analysis-helper, policy, coordinator, placement, affected Effect, and relevant integration tests.
+B17 was run against the post-B15/B16-1 source archive. The required first gate was production + test Kotlin compilation before the consolidated focused Battle set. Three offline portable-Gradle compilation attempts were made: one normal `compileKotlin compileTestKotlin` invocation, then two in-process Kotlin compiler invocations to avoid daemon-related startup cost. The first two were allowed 120 seconds each; the final narrowed retry was allowed 240 seconds. All three reached Gradle configuration/resource processing (`checkKotlinGradlePluginConfigurationErrors`, `processResources NO-SOURCE`) but exceeded the execution window before Kotlin compilation completed.
 
-Fix focused failures until green. Record exact test totals/results.
+Exact observed B17 result in this environment: **production Kotlin compilation did not complete; test Kotlin compilation did not complete; 0 focused unit tests executed; 0 focused integration tests executed; 0 test failures were observed; no green B17 result is claimed.** Because the compilation gate never completed, the requested consolidated Battle test set was not started and there was no concrete Battle regression to repair. No production or test behavior was changed.
 
-Do not mark Battle certified yet.
+B17 therefore remains unchecked above. A later B17 retry must first obtain a completed `compileKotlin compileTestKotlin`, then run the focused Battle strategy/helper/policy/coordinator/placement/Effect/B15/integration set and record its actual totals. Battle remains **NOT CERTIFIED**.
 
 ## Stage C
 
