@@ -2,9 +2,9 @@
 
 ## Status
 
-R3-A current-behavior/scorer review, R3-B contract, and R3-C implementation alignment with direct behavior-contract tests are complete.
+R3-A current-behavior/scorer review, R3-B contract, R3-C implementation alignment with direct behavior-contract tests, and R3-D focused real-engine integration are complete.
 
-Wound Resolution remains **IMPLEMENTED but NOT CERTIFIED** pending R3-D and R3-E.
+Wound Resolution remains **IMPLEMENTED but NOT CERTIFIED** pending R3-E.
 
 ## Scope
 
@@ -127,13 +127,21 @@ R3-C should make the smallest production alignment necessary and add readable be
 
 Keep tests focused on the behavior contract. Do not duplicate the complete certified Battle analyzer test matrix inside Wound tests.
 
+## R3-D real-engine integration seam
+
+Inspection found one production seam worth protecting. Unit behavior-contract tests prove the Flip valuation itself, while existing Strike/Wound tests prove generic wound mutation. The missing link was that a real Battle Strike constructs a live Battle `DecisionContext`, passes it through `WoundResolver` to the wounded player's production Human Baseline strategy, and commits the selected Flip.
+
+`HumanBaselineWoundIntegrationTest` creates a real TOP Strike at 4 versus 9. The wounded player has face-up Vine's the Limit and Queen's Blossom. Against that live grid, Vine's the Limit can set the D10 to 10 and turn the visible loss into a win; Queen's Blossom has no comparable immediate grid realization. The integration test therefore requires Human Baseline to preserve Vine's the Limit and Flip Queen's Blossom.
+
+This test intentionally does not duplicate the R3-C Battle analyzer matrix or Snip preservation tests. Those remain direct behavior-contract responsibilities.
+
 ## Remaining certification sequence
 
 ```text
 R3-A  current behavior + legality/scorer/designer review      COMPLETE
 R3-B  approved durable Wound Resolution contract             COMPLETE
-R3-C  implementation alignment + behavior-contract tests     NEXT
-R3-D  focused real-engine integration if a seam warrants it  PENDING
+R3-C  implementation alignment + behavior-contract tests     COMPLETE
+R3-D  focused real-engine integration if a seam warrants it  COMPLETE
 R3-E  docs + full regression + CERTIFY                       PENDING
 ```
 
