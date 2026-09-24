@@ -526,7 +526,9 @@ The B13-special end-to-end contract is also aligned. Overgrowth top-level willin
 
 B15G adds small real-engine integration coverage rather than duplicating the unit matrix: Bee demonstrates deterministic target alignment, Butterfly demonstrates target-before-RNG followed by actual-result handling, and Pollen Theft demonstrates a B13-special top-level/downstream path. Each runs through production effect execution and verifies resulting Battle/Chronicle-observable state.
 
-Battle remains pending B16 cleanup/behavior-contract organization, B17 focused Battle verification, and Stage C documentation/full regression/certification.
+B16 cleanup is complete. `HumanBaselineBattleStrategyTest` now contains a clearly identified `Human Baseline Behavior Contract` section for representative direct strategy rules, while focused helper/effect/engine tests retain the detailed Done/Live-Threat, target/branch, random-timing, and edge-case matrices. No Battle policy changed in B16.
+
+Battle remains pending B17 focused Battle verification and the remaining Stage C regression/certification gates.
 
 ### B15 closeout verification note
 

@@ -39,9 +39,9 @@ Stage B implementation is complete through B15. Battle remains NOT CERTIFIED pen
   - [x] B15E — Plant / player / Wisp / branch alignment (B15E1/B15E2/B15E3)
   - [x] B15F — random-timing + B13 end-to-end alignment (B15F1/B15F2)
   - [x] B15G — representative real-engine integration + documentation + focused B15 verification
-- [ ] B16 — helper/API + behavior-contract cleanup
+- [x] B16 — helper/API + behavior-contract cleanup
   - [x] B16-1 — focused helper API audit/cleanup (no production change required)
-  - [ ] B16-2 — Human Baseline Battle behavior-contract test organization/coverage
+  - [x] B16-2 — Human Baseline Battle behavior-contract test organization/coverage
 - [ ] B17 — focused compile / test / fix
 
 Stage C:
@@ -738,7 +738,7 @@ The B15A inventory remains the authoritative enumeration of the **50 Battle effe
 - [x] **B15G-2** — durable B15 documentation and closeout complete
 - [x] **B15G** — complete
 
-B15 is COMPLETE. Battle is still **NOT CERTIFIED**. B16 is the next implementation checkpoint; B17 and Stage C remain required before certification.
+B15 is COMPLETE. Battle is still **NOT CERTIFIED**. B16 is complete; B17 and Stage C remain required before certification.
 
 
 ## B16 — helper/API + behavior-contract cleanup
@@ -749,9 +749,11 @@ B16 is split for timeout safety.
 
 The focused Battle helpers introduced or materially touched by B4-B15 were audited for the project's single-operation API convention. The helpers that fundamentally expose one operation already use `operator fun invoke(...)`; helpers retaining named public methods have genuinely distinct operations, evaluation/enumeration surfaces, scoring/tagging surfaces, or companion state-conversion responsibilities. No production API change was justified, so B16-1 is intentionally a no-op rather than style churn. No Battle behavior or engine API was changed.
 
-### B16-2 — Human Baseline Battle behavior-contract tests — NEXT
+### B16-2 — Human Baseline Battle behavior-contract tests — COMPLETE
 
-Restructure/strengthen direct Battle tests with a clearly identifiable `Human Baseline Behavior Contract` section. Keep behavior-contract tests conceptually distinct from helper, wiring, engine, and edge-case tests. Cover representative approved rules without reproducing every helper edge case. Do not alter Battle strategy merely to make a brittle contract test pass.
+`HumanBaselineBattleStrategyTest` now has a clearly identifiable `Human Baseline Behavior Contract` section. It expresses representative approved behavior through direct strategy choices: First Main tactical choice, actual-value and fresh-context die placement, meaningful versus policy-rejected Support continuation, cumulative Bee reachability, and premium-resource preservation. The section explicitly points to the focused Effect-alignment tests for action/target/branch and target-before-RNG contracts, and to the row/capacity/continuation tests for authoritative Done and Live-Threat semantics rather than duplicating those helper edge matrices. Helper, wiring, engine, and edge-case tests remain conceptually separate. No Battle production behavior was changed.
+
+Focused verification command: `./gradlew --offline --no-daemon test --tests 'dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategyTest'`. In this execution environment Gradle reached `checkKotlinGradlePluginConfigurationErrors`, `processResources NO-SOURCE`, and `processTestResources`, then exceeded the 45-second execution window before Kotlin compilation/test execution completed. Exact observed result: **0 tests reached execution; 0 test failures were observed; no green result is claimed.** B17 remains responsible for the consolidated focused Battle verification.
 
 ## B17 — focused compile / test / fix — VERIFICATION ATTEMPTED, NOT YET GREEN
 

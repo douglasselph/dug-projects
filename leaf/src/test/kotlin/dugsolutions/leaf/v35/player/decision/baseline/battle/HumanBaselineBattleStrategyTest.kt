@@ -31,12 +31,31 @@ import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.tokens.Critter
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class HumanBaselineBattleStrategyTest {
+
+    /**
+     * Executable statement of the approved ordinary-human Battle behavior.
+     *
+     * These tests intentionally assert externally visible strategy choices rather than
+     * helper arithmetic. Together they pin representative First Main tactical choice,
+     * actual-value/fresh-context die placement, Support-versus-Final-Main continuation,
+     * cumulative reachability, and premium-resource preservation. The actual-placement
+     * tie tests also keep StrategyRandomizer confined to genuine decision ties.
+     *
+     * Target/branch compatibility and target-before-RNG timing are exercised by the
+     * focused HumanBaselineEffectStrategy*Battle*AlignmentTest classes; authoritative
+     * Done/Live-Threat semantics remain focused in BattleRowAssessorTest,
+     * BattleSupportCapacityAssessorTest, and BattleContinuationAssessorTest. Those are
+     * part of the same approved contract without duplicating their edge matrices here.
+     */
+    @Nested
+    inner class `Human Baseline Behavior Contract` {
     @Test
     fun `strong Battle Plant can beat Draw`() {
         val thorn = CreatureCard(
@@ -273,6 +292,74 @@ class HumanBaselineBattleStrategyTest {
         val support = assertIs<BattleTurnAction.Support>(chosen)
         val placement = assertIs<BattleSupportAction.PlaceCritter>(support.action)
         assertEquals(Critter.WORM, placement.critter)
+    }
+
+        @Test
+        fun `meaningful Support can delay Final Main`() {
+            val actorId = PlayerId(0)
+            val opponentId = PlayerId(1)
+            val context = battleContext(actorId, opponentId, actorTotal = 4, opponentTotal = 7, supplySides = 4)
+                .let { it.copy(self = it.self.copy(board = it.self.board.copy(bees = 1))) }
+
+            val chosen = HumanBaselineBattleStrategy().chooseTurnAction(
+                ChooseBattleTurnActionRequest(
+                    roundCard = round(),
+                    passNumber = 1,
+                    legalChoices = listOf(
+                        BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.BEE, StrikeRow.TOP)),
+                        BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+                    ),
+                    context = context
+                )
+            )
+
+            assertIs<BattleTurnAction.Support>(chosen)
+        }
+
+        @Test
+        fun `policy-rejected Support does not delay Final Main`() {
+            val actorId = PlayerId(0)
+            val opponentId = PlayerId(1)
+            val context = battleContext(actorId, opponentId, actorTotal = 1, opponentTotal = 20, supplySides = 4)
+                .let { it.copy(self = it.self.copy(board = it.self.board.copy(worms = 1))) }
+
+            val chosen = HumanBaselineBattleStrategy().chooseTurnAction(
+                ChooseBattleTurnActionRequest(
+                    roundCard = round(),
+                    passNumber = 1,
+                    legalChoices = listOf(
+                        BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.WORM, StrikeRow.TOP)),
+                        BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+                    ),
+                    context = context
+                )
+            )
+
+            assertIs<BattleTurnAction.FinalMain>(chosen)
+        }
+
+        @Test
+        fun `cumulative Bee reachability can justify continuing one Support at a time`() {
+            val actorId = PlayerId(0)
+            val opponentId = PlayerId(1)
+            val context = battleContext(actorId, opponentId, actorTotal = 4, opponentTotal = 9, supplySides = 4)
+                .let { it.copy(self = it.self.copy(board = it.self.board.copy(bees = 3, beeValue = 2))) }
+
+            val chosen = HumanBaselineBattleStrategy().chooseTurnAction(
+                ChooseBattleTurnActionRequest(
+                    roundCard = round(),
+                    passNumber = 1,
+                    legalChoices = listOf(
+                        BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.BEE, StrikeRow.TOP)),
+                        BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+                    ),
+                    context = context
+                )
+            )
+
+            assertIs<BattleTurnAction.Support>(chosen)
+        }
+
     }
 
     private fun battleContext(
