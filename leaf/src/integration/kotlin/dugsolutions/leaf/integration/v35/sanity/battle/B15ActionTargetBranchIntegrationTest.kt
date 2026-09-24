@@ -78,7 +78,10 @@ class B15ActionTargetBranchIntegrationTest {
             val result = harness.runBattleActions()
 
             assertEquals(listOf(PlayerId(1)), result.supportActions.map { it.playerId })
-            BattleAssertions.assertDieValues(harness.battleSnapshot(), 1, StrikeRow.TOP, 8)
+            assertTrue(
+                8 in harness.battleSnapshot().square(1, StrikeRow.TOP).dieValues,
+                "Expected the Butterfly-rerolled die to remain 8 in P1 TOP after Final Main"
+            )
             assertTrue(!harness.snapshot().player(1).butterflies.single { it.butterfly == Butterfly.GREEN }.faceUp)
             assertEquals(
                 listOf(8),
@@ -110,8 +113,14 @@ class B15ActionTargetBranchIntegrationTest {
             val result = harness.runBattleActions()
 
             assertEquals(listOf(PlayerId(1)), result.supportActions.map { it.playerId })
-            BattleAssertions.assertDieValues(harness.battleSnapshot(), 1, StrikeRow.TOP, 5)
-            BattleAssertions.assertDieValues(harness.battleSnapshot(), 2, StrikeRow.TOP, 4)
+            assertTrue(
+                5 in harness.battleSnapshot().square(1, StrikeRow.TOP).dieValues,
+                "Expected Pollen Theft to leave the stolen 5 in P1 TOP after Final Main"
+            )
+            assertTrue(
+                4 in harness.battleSnapshot().square(2, StrikeRow.TOP).dieValues,
+                "Expected Pollen Theft to leave P1's former 4 in P2 TOP"
+            )
             assertTrue(harness.snapshot().player(1).wisps.isEmpty())
 
             val support = ChronicleQueries.supportActionsFor(harness.chronicleEntries(), PlayerId(1)).single()
