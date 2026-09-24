@@ -375,7 +375,7 @@ Direct tests:
 baseline/support/HumanBaselineSupportStrategyTest.kt
 ```
 
-**Certification status:** implemented; designer behavior review still required.
+**Certification status:** **not certified**. R4-A current-behavior/engine review and R4-B designer contract are complete. The approved Human Baseline behavior is deliberately simple: keep the higher die value in both Cultivation and Battle; do not retain a lower 1 or 2 for its Roll Reward or add post-reroll tactical optimization. R4-A also found an engine defect: a provisional Butterfly reroll currently resolves its Roll Reward before the keep/restore choice. The approved game rule requires a Roll Reward only when the new roll is kept. See [`HUMAN_BASELINE_BUTTERFLY_RESULT.md`](HUMAN_BASELINE_BUTTERFLY_RESULT.md). R4-C is next.
 
 ### 3.8 Effect Choices
 
