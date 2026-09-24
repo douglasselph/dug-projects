@@ -744,6 +744,7 @@ B15E1 is complete. These changes align current-Battle Plant target choice only; 
 
 - [x] **B15E1** — Plant/opponent-Plant alignment
 - [ ] **B15E2** — resource/player/Wisp-set target alignment
+  - [x] **B15E2-1 — Bee source** — `chooseBeeSource(...)` preserves the existing simple preference to steal rather than take from the Grove, because every legal source gives the actor the same Bee and the same Bee-loved Bloom round boost. During Battle, opponent sources are now distinguished only when the public current Battle makes one stolen Bee materially more valuable as denial: `BattleBeeSourceAnalyzer` projects that opponent's best still-legal Bee placement at its current round-modified Bee value and scores the harm it could cause to the actor. Done opponents receive no immediate-Battle denial adjustment. This is a one-Support, current-Battle check only; it adds no future-round conservation or response-tree planning.
 - [ ] **B15E3** — qualitative branch alignment
 - [ ] **B15F1** — random-information timing audit
 - [ ] **B15F2** — B13 special end-to-end alignment

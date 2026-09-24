@@ -510,3 +510,8 @@ Human Baseline does not:
 - calculate exact cyclic pass-order tactics.
 
 Those belong to later Tactical/Strategic strategy levels.
+
+
+### B15E2 Bee-loved Bloom source choice
+
+Bee-loved Bloom preserves the simple steal-over-Grove preference. During Battle, public immediate Bee-Support denial may distinguish opponent sources; Done opponents add no immediate denial value. No future-round conservation is added.

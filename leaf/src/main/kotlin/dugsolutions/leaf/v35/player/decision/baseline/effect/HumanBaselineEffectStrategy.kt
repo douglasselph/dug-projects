@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleBeeSourceAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsStrikeRowAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
@@ -78,7 +79,8 @@ class HumanBaselineEffectStrategy(
     internal val enabledPlantAnalyzer: BattleEnabledPlantAnalyzer =
         BattleEnabledPlantAnalyzer(cardScorers, policy),
     internal val opponentPlantTargetAnalyzer: BattleOpponentPlantTargetAnalyzer =
-        BattleOpponentPlantTargetAnalyzer(cardScorers, enabledPlantAnalyzer)
+        BattleOpponentPlantTargetAnalyzer(cardScorers, enabledPlantAnalyzer),
+    internal val beeSourceAnalyzer: BattleBeeSourceAnalyzer = BattleBeeSourceAnalyzer()
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -378,7 +380,19 @@ class HumanBaselineEffectStrategy(
             request.legalChoices.map { choice ->
                 val score = when (choice) {
                     EffectBeeSourceChoice.Grove -> PriorityScore(50)
-                    is EffectBeeSourceChoice.Opponent -> PriorityScore(62).adjusted(8, "Steal also denies an opponent a Bee")
+                    is EffectBeeSourceChoice.Opponent -> {
+                        var score = PriorityScore(62).adjusted(8, "Steal also denies an opponent a Bee")
+                        if (request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE) {
+                            val denial = beeSourceAnalyzer(request.context, choice.playerId).roundToInt()
+                            if (denial > 0) {
+                                score = score.adjusted(
+                                    denial,
+                                    "Steal the Bee whose remaining Battle Support is most tactically dangerous"
+                                )
+                            }
+                        }
+                        score
+                    }
                 }
                 DecisionCandidate(choice, score, setOf(DecisionTag.ACQUIRE_BEE))
             }
