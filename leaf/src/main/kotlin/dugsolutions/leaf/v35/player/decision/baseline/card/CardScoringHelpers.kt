@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
@@ -265,7 +266,22 @@ object CardScoringHelpers {
                 if (context.self.board.mulch.size < 2) score = score.adjusted(10, "Below Mulch reserve")
             }
             GameEffect.SWAP_OWN_DIE_WITH_OPPONENT_SAME_SIZE -> {
-                if (phase == CardPhase.BATTLE) score = score.adjusted(20, "Potential positive cross-player die swap")
+                if (phase == CardPhase.BATTLE) {
+                    val tactical = pollenTheftBattleTacticalAdjustment(context)
+                    if (tactical != null) {
+                        score = if (tactical.passesSpendingGate) {
+                            score.adjusted(
+                                tactical.analysis.tacticalValue.roundToInt(),
+                                "Battle value of B13-selected Pollen Theft swap"
+                            )
+                        } else {
+                            score.adjusted(
+                                -10_000,
+                                "No B13-selected Pollen Theft swap meets the meaningful-VP gate"
+                            )
+                        }
+                    }
+                }
             }
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> {
                 if (phase == CardPhase.BATTLE) {
@@ -304,6 +320,19 @@ object CardScoringHelpers {
      * remains its intrinsic/persistent-upgrade value; this method adds only the
      * expected current-Battle consequence of the target B13 will actually use.
      */
+    /**
+     * B15F2-2 top-level Pollen Theft alignment. The downstream B13 target
+     * strategy chooses the legal swap with the best complete multi-row tactical
+     * value. Top-level Wisp willingness must inspect that same realization and
+     * apply the evaluator's established meaningful-VP spending gate before the
+     * Wisp is committed.
+     */
+    private fun pollenTheftBattleTacticalAdjustment(
+        context: DecisionContext
+    ) = BattlePollenTheftEvaluator()
+        .evaluateAll(context, BattlePollenTheftEvaluator().legalChoices(context))
+        .maxByOrNull { it.analysis.tacticalValue }
+
     private fun overgrowthBattleTacticalAdjustment(
         context: DecisionContext
     ): Int? {
