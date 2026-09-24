@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPai
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleEnabledPlantAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOpponentPlantTargetAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePollenTheftEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleRootWellTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSetDieToMatchAnalyzer
@@ -46,8 +47,8 @@ import kotlin.math.roundToInt
  * action scorers. Compost, Mulch, and Sunlight delegate to their Round Effect
  * target scorers, and other die-targeting Cultivation effects receive the same
  * policy-defined normal purchasing power used when their card activation was
- * valued. Petal To Die 4 likewise shares one branch scorer between activation
- * valuation and the later branch decision.
+ * valued. Petal To Die 4 preserves the same Cultivation branch scorer and, in
+ * Battle, shares complete branch-realization analysis with its activation value.
  *
  * This prevents the strategy from choosing an action because one target or
  * branch makes it attractive and then realizing a different, weaker result.
@@ -80,7 +81,8 @@ class HumanBaselineEffectStrategy(
         BattleEnabledPlantAnalyzer(cardScorers, policy),
     internal val opponentPlantTargetAnalyzer: BattleOpponentPlantTargetAnalyzer =
         BattleOpponentPlantTargetAnalyzer(cardScorers, enabledPlantAnalyzer),
-    internal val beeSourceAnalyzer: BattleBeeSourceAnalyzer = BattleBeeSourceAnalyzer()
+    internal val beeSourceAnalyzer: BattleBeeSourceAnalyzer = BattleBeeSourceAnalyzer(),
+    internal val petalToDie4Analyzer: BattlePetalToDie4Analyzer = BattlePetalToDie4Analyzer(policy)
 ) : EffectStrategy {
 
     override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice {
@@ -365,10 +367,22 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                DecisionCandidate(
-                    choice,
+                val score = if (
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+                ) {
+                    petalToDie4Analyzer(request.context, choice)
+                        ?.let { analysis ->
+                            PriorityScore(analysis.tacticalValue.roundToInt())
+                                .adjusted(
+                                    0,
+                                    "Complete immediate Battle realization for Petal To Die 4 branch"
+                                )
+                        }
+                        ?: CardScoringHelpers.petalToDie4BranchScore(request.context, choice)
+                } else {
                     CardScoringHelpers.petalToDie4BranchScore(request.context, choice)
-                )
+                }
+                DecisionCandidate(choice, score)
             }
         )
     }

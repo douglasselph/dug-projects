@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattlePetalToDie4Analyzer
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
@@ -195,10 +196,23 @@ object CardScoringHelpers {
                 )
             }
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 -> {
-                val bestBranch = petalToDie4CultivationChoices(context)
-                    .maxOfOrNull { petalToDie4BranchScore(context, it).total }
+                val bestBranch = if (phase == CardPhase.BATTLE) {
+                    BattlePetalToDie4Analyzer()
+                        .evaluateAll(context)
+                        .maxOfOrNull { it.tacticalValue.roundToInt() }
+                } else {
+                    petalToDie4CultivationChoices(context)
+                        .maxOfOrNull { petalToDie4BranchScore(context, it).total }
+                }
                 if (bestBranch != null) {
-                    score = score.adjusted(bestBranch, "Best Petal To Die 4 branch")
+                    score = score.adjusted(
+                        bestBranch,
+                        if (phase == CardPhase.BATTLE) {
+                            "Best complete Petal To Die 4 Battle branch"
+                        } else {
+                            "Best Petal To Die 4 branch"
+                        }
+                    )
                 }
             }
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE -> {

@@ -8,11 +8,21 @@ import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
+import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleDiePlacementRequest
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChoosePetalToDie4Request
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectStrategy
 import dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice
+import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -230,6 +240,40 @@ class PetalToDie4EffectTest {
     }
 
     @Test
+    fun gainBranchInBattle_asksForPlacementAfterTheD4ExistsInFreshContext() {
+        val effectStrategy = ChooseGainD4Strategy()
+        val battleStrategy = FreshGainPlacementStrategy()
+        val actor = Player(
+            id = PlayerId(1),
+            decisions = DecisionDirector.mechanicalControl().copy(
+                effect = effectStrategy,
+                battle = battleStrategy
+            ),
+            dice = PlayerDice()
+        )
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        game.grove.graftBed.returnD4()
+        val battleState = BattleState(listOf(actor, other))
+
+        effect.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4
+            ).copy(
+                phase = GameEffectPhase.BATTLE,
+                battleState = battleState
+            ),
+            nested
+        )
+
+        val gained = actor.dice.hand.single()
+        assertTrue(battleStrategy.sawGainedD4InContext)
+        assertEquals(StrikeRow.BOTTOM, battleState.grid.locationOf(gained)?.row)
+    }
+
+    @Test
     fun trashBranchInBattle_removesGridLocationTrashesD4AndRaisesRemainingDice() {
         val d4 = FixedEffectDie(4, 2)
         val d8 = FixedEffectDie(8, 3)
@@ -317,6 +361,27 @@ class PetalToDie4EffectTest {
                 DieSides.D4
             )
         )
+    }
+
+    private class FreshGainPlacementStrategy : BattleStrategy {
+        var sawGainedD4InContext: Boolean = false
+
+        override fun chooseFirstMainAction(
+            request: ChooseBattleFirstMainActionRequest
+        ): BattleMainAction = request.legalChoices.first()
+
+        override fun chooseTurnAction(
+            request: ChooseBattleTurnActionRequest
+        ): BattleTurnAction = request.legalChoices.first()
+
+        override fun chooseDiePlacement(
+            request: ChooseBattleDiePlacementRequest
+        ): StrikeRow {
+            sawGainedD4InContext = request.context.self.board.hand.any { die ->
+                die.index == request.die.index && die.sides == 4 && die.value == 4
+            }
+            return StrikeRow.BOTTOM
+        }
     }
 
     private abstract class PetalStrategy :
