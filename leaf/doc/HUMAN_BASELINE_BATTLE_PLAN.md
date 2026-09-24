@@ -15,7 +15,7 @@ Battle Stage A is complete:
 - [x] A5 — First Main / random-information contract
 - [x] A6 — Support / Final Main / continuation / tempo contract
 
-Stage B has begun.
+Stage B implementation is complete through B15. Battle remains NOT CERTIFIED pending B16, B17, and Stage C.
 
 - [x] B1 — durable Battle plan + policy foundation
 - [x] B2 — Done state in engine / decision context
@@ -31,14 +31,14 @@ Stage B has begun.
 - [x] B12 — enabling Support analysis
 - [x] B13 — special Battle effect evaluators
 - [x] B14 — Support vs Final Main orchestration
-- [ ] B15 — action / target / branch alignment
+- [x] B15 — action / target / branch alignment — COMPLETE
   - [x] B15A — inventory + alignment map
-  - [ ] B15B — own-die target alignment (split below into B15B1a/B15B1b/B15B2/B15B3/B15B4)
-  - [ ] B15C — opponent / any-Battle-die target alignment
-  - [ ] B15D — Strike-Row + multi-row alignment
-  - [ ] B15E — Plant / player / Wisp / branch alignment (split below into B15E1/B15E2/B15E3)
-  - [ ] B15F — random-timing + B13 end-to-end alignment (split below into B15F1/B15F2)
-  - [ ] B15G — integration + documentation + final B15 verification
+  - [x] B15B — own-die target alignment (B15B1a/B15B1b/B15B2/B15B3/B15B4)
+  - [x] B15C — opponent / any-Battle-die target alignment
+  - [x] B15D — Strike-Row + multi-row alignment
+  - [x] B15E — Plant / player / Wisp / branch alignment (B15E1/B15E2/B15E3)
+  - [x] B15F — random-timing + B13 end-to-end alignment (B15F1/B15F2)
+  - [x] B15G — representative real-engine integration + documentation + focused B15 verification
 - [ ] B16 — single-purpose helper API cleanup + behavior-contract tests
 - [ ] B17 — focused compile / test / fix
 
@@ -614,8 +614,8 @@ Current top-level alignment facts found by B15A:
 - Step-4 Plant and Round-effect actions still receive intrinsic/contextual scores in `BattleFirstMainPriority`; target-dependent tactical projection was deliberately deferred from B7 to B15.
 - Step-5 Wisp willingness still begins with the card-local `wispPlayScore(...)`; B14 decides whether a Wisp is an individually worthwhile soft Support but does not generally make the Wisp's downstream target analyzer authoritative at top level.
 - Generic `chooseDie(...)`, `chooseRootWellBattle(...)`, `scorePair(...)`, and non-special `chooseStrikeRow(...)` still use local die arithmetic / `RowNeed`-style heuristics rather than complete shared `BattleActionAnalyzer` realizations.
-- The B13 downstream target hooks are already specialized: Overgrowth uses `BattleTwoStepUpgradeEvaluator`, Pollen Theft uses `BattlePollenTheftEvaluator`, and immediate Strike resolution uses `BattleImmediateStrikeResolveEvaluator`. B15F2 must verify their **top-level willingness + downstream target** path end to end rather than redesign their target rules.
-- `chooseOptionalDie(...)` for Wispquake already uses expected protection value before the reroll. B15F1 owns the broader random-information audit.
+- The B13 downstream target hooks are already specialized: Overgrowth uses `BattleTwoStepUpgradeEvaluator`, Pollen Theft uses `BattlePollenTheftEvaluator`, and immediate Strike resolution uses `BattleImmediateStrikeResolveEvaluator`. B15F2 verified their **top-level willingness + downstream target** paths end to end without redesigning their target rules.
+- `chooseOptionalDie(...)` for Wispquake uses expected protection value before the reroll. B15F1 completed the broader random-information audit and confirmed/repaired the target-before/post-random boundaries across B15.
 
 No broad production behavior was changed in B15A.
 
@@ -709,48 +709,35 @@ B15B3 is being implemented in bounded random-target slices.
 - [x] **one-step upgrade targets** — `UPGRADE_DIE_AND_USE_NOW` (Root Awakening) now chooses among legal Battle dice by the mathematical expected value of the exact normal next-size replacement on that die's current Strike row. The normal ladder remains D4→D6→D8→D10→D12→D20 with no skip-missing behavior; the effect handler/request still owns Graft Bed legality. No replacement is rolled during strategy analysis, and the selected die's row is not changed or pre-resolved. `BattleEnabledPlantAnalyzer` uses the same expected one-step projection and checks visible next-size Graft Bed availability, keeping enabled-Plant valuation compatible with downstream target selection. `UPGRADE_DIE_FROM_HAND` was audited in this slice but intentionally retains its existing `CompostPriority` behavior: every current concrete source is a Cultivation Round Compost effect, and the effect places the upgraded die in Discard rather than rolling/using it now, so there is no current production Battle action/target path whose row value should be invented here. B13 Overgrowth (`UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW`) remains on its dedicated two-step evaluator unchanged.
 - [x] **opposing-collateral reroll target** — `REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW` (Gust of Petals) now values each legal first own-die target as an expected complete immediate Battle realization instead of only the local expected face gain. `BattleGustOfPetalsTargetAnalyzer` applies the selected die's fair expected reroll on its current row, then compares the currently visible open-row branches for the later forced opposing rerolls. In each candidate row, opponent dice above the actor's projected lowest die contribute their fair expected reroll changes before shared `BattleActionAnalyzer` scoring. The strategy uses the best expected later branch only for valuation; it consumes no RNG and does not commit the actual later Strike-Row choice, which remains a fresh post-reroll B15D decision. `BattleEnabledPlantAnalyzer` shares the same helper so top-level enabled-Plant valuation and downstream own-die target choice remain compatible.
 
-B15B3 is complete. Its random-information timing remains subject to the cross-cutting B15F1 audit, and Gust's actual downstream Strike-Row selection remains B15D.
+B15B3 is complete. The cross-cutting B15F1 audit later confirmed/repaired its random-information timing contract, and B15D completed Gust's actual downstream Strike-Row selection.
 
-### Remaining B15 checkpoints
+### B15 closeout — COMPLETE
+
+The B15A inventory remains the authoritative enumeration of the **50 Battle effect/mechanism pairings**. Every pairing in that table now has a completed disposition. The aggregate accounting is unchanged: B15B = 28 pairings, B15C = 1, B15D = 5, B15E = 12, and B15F = 4, for **50 total**. B15G owns integration/documentation/verification and adds no new pairing.
 
 - [x] **B15B1a** — pure deterministic own-die transforms complete
 - [x] **B15B1b** — deterministic own-die targets with secondary/collateral Battle consequences complete
-- [x] **B15B2** — discard/draw/Mulch/return source-die alignment
+- [x] **B15B2** — discard/draw/Mulch/return source-die alignment complete
 - [x] **B15B3** — reroll/upgrade own-die alignment complete
-- [ ] **B15B4** — compound own-die pair / Critter+die alignment
-  - [x] **B15B4-1 — Set one die to match another** — `SET_DIE_TO_MATCH_ANOTHER` / `chooseDiePair` now evaluates each legal source/target pair as the complete deterministic target-row realization. The source remains unchanged; the target is set to the source's current value, so shared Battle analysis receives the exact signed target-row delta. A smaller copied-value gain that flips a Strike can beat a larger numeric gain elsewhere. `BattleEnabledPlantAnalyzer` enumerates the same legal pair shape for enabled-Plant valuation. Non-Battle pair behavior is preserved and exact tactical ties remain strategy-randomized.
-  - [x] **B15B4-2 — Critter + die** — `TRASH_CRITTER_TO_RAISE_DIE_PLUS_5` / `chooseCritterAndDie` now evaluates the die half of each legal combined choice through the exact deterministic +5 change on that die's current Strike row. Meaningful Battle transitions therefore outrank larger raw +5 gains on tactically irrelevant rows. The existing Bee/Worm availability preference remains a secondary adjustment between otherwise comparable combined choices; it is not a future-Battle conservation gate and does not prevent spending a Critter for the current Battle.
+- [x] **B15B4** — compound own-die pair / Critter+die alignment complete
+- [x] **B15C** — Root Well own-two versus opponent-one alignment complete
+- [x] **B15D** — Strike-Row and swap/multi-row alignment complete
+- [x] **B15E1** — Plant/opponent-Plant alignment complete
+- [x] **B15E2** — resource/player/Wisp-set target alignment complete. Bee-loved Bloom uses `BattleBeeSourceAnalyzer` to distinguish the immediate public Battle Support danger denied by stealing a Bee from a live opponent; Done opponents receive no denial value. Butterfly target, Wisp-set, die-size, and player choices retain bounded visible-information heuristics where no stronger immediate target-specific Battle realization is required.
+- [x] **B15E3-1** — Petal To Die 4 qualitative branch alignment complete. Gain-D4 projects the deterministic D4=4 through best currently legal placement without pre-committing the real later placement; Trash-D4/+4 removes the exact D4 and aggregates the capped +4 changes to all remaining actor Battle dice.
+- [x] **B15E3-2** — O Edelweiss qualitative branch alignment complete. Each request values only the current first choice; after resolution the second choice is rebuilt from fresh legal choices and current context. Done remains legal and no two-choice tree is preplanned.
+- [x] **B15E3** — qualitative branch alignment complete
+- [x] **B15F1** — random-information timing audit/repairs complete. B15 random seams now preserve target-before-RNG commitments, use mathematical expectation before unknown RNG, consume no hypothetical mechanical RNG, and leave post-RNG placement/branch decisions fresh when the rules ask them later. The timing contract is clean for the audited B15 seams, including Wispquake keep-one, rerolls, upgrades, Draw/Forget-Me-Not, Gust, and Petal To Die 4.
+- [x] **B15F2-1** — Overgrowth B13 end-to-end alignment complete. Top-level willingness values the same largest-result-family / expected-current-Battle tie-break policy used by the dedicated downstream evaluator.
+- [x] **B15F2-2** — Pollen Theft B13 end-to-end alignment complete. Top-level willingness uses the same best complete multi-row realization and meaningful-VP spending gate as `BattlePollenTheftEvaluator`.
+- [x] **B15F2-3** — immediate Strike resolution B13 end-to-end alignment complete. Top-level willingness requires a row passing `BattleImmediateStrikeResolveEvaluator`'s established lock-in policy rather than treating any current lead as sufficient.
+- [x] **B15F2** — B13 special end-to-end alignment complete
+- [x] **B15G-1** — representative real-engine integration complete. Production integration coverage exercises a deterministic Bee target path, Butterfly target-before-RNG/actual-result path, and Pollen Theft B13-special path through legal decision, Human Baseline willingness, downstream choice, real effect execution, resulting Battle state, and Chronicle/observable state.
+- [x] **B15G-2** — durable B15 documentation and closeout complete
+- [x] **B15G** — complete
 
-B15B4 is complete. Compound own-die choices now evaluate the complete source/target or Critter/target candidate rather than independently optimizing raw numeric pieces.
+B15 is COMPLETE. Battle is still **NOT CERTIFIED**. B16 is the next implementation checkpoint; B17 and Stage C remain required before certification.
 
-### B15C — Root Well own-two versus opponent-one — COMPLETE
-
-`chooseRootWellBattle(...)` now compares every legal complete Root Well Battle branch through `BattleRootWellTargetAnalyzer`. The own-two branch aggregates the fair expected reroll changes of both committed actor dice by their actual Strike Rows; the opponent-one branch applies the fair expected reroll change to the selected opponent die's current row. Both feed projected expected row states into shared `BattleActionAnalyzer`, so a smaller raw expected movement that flips a Strike can beat a larger numerical movement that remains tactically weak. Root Well still commits its complete target branch before either reroll occurs, consumes no hypothetical mechanical RNG, and exact tactical ties continue through `StrategyRandomizer`.
-
-- [x] **B15C** — Root Well own-two versus opponent-one Battle-die alignment
-- [x] **B15D** — Strike-Row and swap/multi-row alignment
-  - [x] **B15D-1 — Battle swap-pair targets** — `chooseOptionalDiePair` for `DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE` and `chooseDiePair` for `DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE` now evaluate each legal pair as the complete deterministic two-row Battle realization. The optional Tulip swap projects both rows after the exchange and may still decline the optional swap when it is not worthwhile. The current Tulip pair also applies the printed +2 to the designated source die *after* the swap, so pair direction is evaluated correctly. Shared multi-row Battle analysis therefore sees both the row helped by the incoming die and any row weakened by the outgoing die rather than using pair-local RowNeed arithmetic. No Strike-row targeting is changed here.
-  - [x] **B15D-2 — deterministic Strike-row targets** — `RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE` and `SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3` now choose their downstream Battle row from the complete deterministic consequence rather than `RowNeed`/enum order. Root & Scoot projects the actor leaving Strike participation entirely: abandoning a current win/VP position is costly, while withdrawing from a Wound-risk loss can be genuinely useful because withdrawal removes that Wound exposure. Vine & Punishment projects the exact capped -3 change to every participating opposing die in the chosen open row, preserving Critter totals and recomputing the real multiplayer outcome through shared `BattleActionAnalyzer`. No Gust-of-Petals post-reroll row behavior is changed in this slice.
-  - [x] **B15D-3 — Gust of Petals post-reroll Strike-row target** — after Gust's first own-die reroll has actually resolved, the downstream `chooseStrikeRow(...)` decision now evaluates each legal row from the fresh current Battle state. `BattleGustOfPetalsStrikeRowAnalyzer` identifies the opposing dice whose current values are above the actor's actual current lowest die in that row, projects only those forced rerolls by fair expectation, and compares the complete expected row consequence through shared `BattleActionAnalyzer`. This removes first-row/`RowNeed` bias while preserving the printed information boundary: the actor's first reroll is actual known information, the later opposing rerolls remain expected, and no mechanical RNG is consumed during row selection.
-
-B15D is complete. Own-die swap pairs, deterministic Strike-row branches, and Gust of Petals' post-reroll random-collateral row choice now all use complete current Battle realizations rather than pair-local/row-order heuristics. Gust retains its two-stage timing: the initial own-die target is valued before RNG in B15B3, while B15D-3 uses the actual first reroll result and fresh context to choose the later row by expected opposing collateral.
-
-### B15E1 — Plant/opponent-Plant alignment — COMPLETE
-
-- [x] **B15E1-1 — opponent Plant Flip/Wound targets** — the three Battle `chooseOpponentPlantWound(...)` paths now use `BattleOpponentPlantTargetAnalyzer`. Wound/Flip targets retain the existing card-loss/removal value, but face-up Plants also include the immediate current-Battle Plant use being denied. Shift Happens is treated according to its actual toggle semantics rather than generic card loss: flipping a face-up opponent Root/Vine down denies its current Battle use, while flipping a spent Root/Vine face up can enable that opponent and is scored as harmful to the actor. Done opponents receive no immediate-activation adjustment because they cannot take another Battle turn. Only public opponent board/Battle information is used; hidden Wisp identity is not reconstructed.
-- [x] **B15E1-2 — reuse spent Plant** — `REUSE_SPENT_ROOT_OR_VINE_EFFECT` / `choosePlantEffect(...)` now uses `BattleEnabledPlantAnalyzer` for each legal spent Root/Vine during Battle. This compares the best one-step immediate realizable Battle use of each reusable Plant, while keeping existing card scoring as the intrinsic layer. It does not recursively search Vine-and-Again chains or future combos, and Cultivation behavior is unchanged.
-
-B15E1 is complete. These changes align current-Battle Plant target choice only; they do not certify the later Wound Resolution or Effect Choices major areas.
-
-- [x] **B15E1** — Plant/opponent-Plant alignment
-- [ ] **B15E2** — resource/player/Wisp-set target alignment
-  - [x] **B15E2-1 — `chooseBeeSource` audit** — Bee-loved Bloom gives the actor the same Bee and applies the same round-value boost regardless of legal source. The existing simple preference for stealing from an opponent over taking from the Grove is preserved because stealing also removes one persistent opponent Bee. Legal opponent sources are intentionally left strategically equivalent here: source choice does not deterministically change a currently placed Battle total, and adding opponent-specific future-response/support-threat targeting would be extra sophistication rather than action/target alignment required by this seam. No production code or new tests were needed because behavior did not change.
-- [ ] **B15E3** — qualitative branch alignment
-- [ ] **B15F1** — random-information timing audit
-- [ ] **B15F2** — B13 special end-to-end alignment
-- [ ] **B15G** — representative integration, durable documentation, and final B15 focused verification
-
-Every implementation sub-checkpoint must remain bounded: focused compile/tests while iterating, no automatic full-suite run, and a stop after the requested sub-checkpoint. B15G performs the combined B15 verification; B17/C2 remain the later Battle-wide verification/certification layers.
 
 ## B16 — single-purpose helper API cleanup + behavior-contract tests
 
@@ -793,3 +780,9 @@ Only after C2 succeeds:
 - mark Battle CERTIFIED;
 - update progress to 3 of 8 major areas and 6 of 30 hooks, if the 3-hook count remains current;
 - package the final leaf-rooted patch.
+
+### B15G-2 focused verification record
+
+The B15 closeout attempted the focused verification set with the portable offline Gradle environment. Two focused unit-test invocations were attempted: first the Human Baseline Effect-strategy B15 family plus the three B13 end-to-end alignment tests, then a narrowed six-class set covering Bee source, Petal To Die 4, O Edelweiss, Overgrowth, Pollen Theft, and immediate Strike resolution. Both invocations reached Gradle task setup/resource processing but exceeded the execution window before Kotlin compilation/test execution completed. A separate focused `integrationTest` invocation for `B15ActionTargetBranchIntegrationTest` likewise reached integration/test resource processing but exceeded the execution window before test execution.
+
+Exact observed result for this closeout environment: **0 focused tests reached test execution; 0 test failures were reported; no green test result is claimed.** No full repository regression was run. B17 remains the later focused compile/test/fix checkpoint, and C2 remains the required full regression before Battle certification.
