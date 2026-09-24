@@ -61,12 +61,12 @@ Current status:
 
 ```text
 Critter Reward       CERTIFIED
-Wound Resolution     pending designer certification
+Wound Resolution     CERTIFIED
 Graft Placement      CERTIFIED
 Cultivation          CERTIFIED
 Battle               CERTIFIED
 Buy                  CERTIFIED
-Butterfly Result     pending designer certification
+Butterfly Result     CERTIFIED
 Effect Choices       pending designer certification
 ```
 

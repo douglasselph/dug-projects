@@ -357,7 +357,7 @@ To run the Buy certification tests directly:
 
 **Certification status:** **certified**. The behavioral contract, implementation, readable unit tests, and designer review agree for this area.
 
-### 3.7 Butterfly Result
+### 3.7 Butterfly Result — CERTIFIED
 
 Implementation:
 
@@ -375,7 +375,11 @@ Direct tests:
 baseline/support/HumanBaselineSupportStrategyTest.kt
 ```
 
-**Certification status:** **not certified**. R4-A current-behavior/engine review and R4-B designer contract are complete. The approved Human Baseline behavior is deliberately simple: keep the higher die value in both Cultivation and Battle; do not retain a lower 1 or 2 for its Roll Reward or add post-reroll tactical optimization. R4-A also found an engine defect: a provisional Butterfly reroll currently resolves its Roll Reward before the keep/restore choice. The approved game rule requires a Roll Reward only when the new roll is kept. See [`HUMAN_BASELINE_BUTTERFLY_RESULT.md`](HUMAN_BASELINE_BUTTERFLY_RESULT.md). R4-C is next.
+Approved behavior: after a Butterfly reroll, Human Baseline simply keeps the higher visible die value in both Cultivation and Battle. It does not deliberately retain a lower 1 or 2 for its Roll Reward and does not add post-reroll Battle-grid optimization. Exact equal faces use `StrategyRandomizer`.
+
+The engine treats the Butterfly reroll as provisional: a Roll Reward from the new face resolves only after `REROLLED` is selected. Rejecting a rerolled 1 or 2 grants no reward, and restoring the original face does not re-award an earlier reward. See [`HUMAN_BASELINE_BUTTERFLY_RESULT.md`](HUMAN_BASELINE_BUTTERFLY_RESULT.md).
+
+**Certification status:** **certified**. R4-A through R4-E are complete. The approved simple result policy, corrected deferred Roll Reward timing, readable unit/engine behavior-contract tests, focused real-engine Cultivation integration coverage, existing Battle integration coverage, and the successful full `test integrationTest simulationCheck` regression agree.
 
 ### 3.8 Effect Choices
 
@@ -435,10 +439,10 @@ Use the eight areas as the high-level completion checklist:
 - [x] Cultivation certified
 - [x] Battle certified
 - [x] Buy certified
-- [ ] Butterfly Result certified
+- [x] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 
-Current progress: **6 of 8 major areas certified; 9 of 30 strategy hooks certified** (Critter Reward: 1, Wound Resolution: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3).
+Current progress: **7 of 8 major areas certified; 10 of 30 strategy hooks certified** (Critter Reward: 1, Wound Resolution: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3, Butterfly Result: 1).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 

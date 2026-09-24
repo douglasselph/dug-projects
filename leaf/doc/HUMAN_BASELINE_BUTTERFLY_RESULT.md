@@ -2,7 +2,7 @@
 
 ## Status
 
-R4-A through R4-D are complete. Butterfly Result is **NOT CERTIFIED**. R4-E is next.
+R4-A through R4-E are complete. Butterfly Result is **CERTIFIED**.
 
 ## Scope
 
@@ -114,12 +114,24 @@ R4-A  current behavior + engine/timing/scorer review          COMPLETE
 R4-B  approved durable Butterfly Result contract              COMPLETE
 R4-C  engine timing fix + implementation/behavior tests       COMPLETE
 R4-D  focused real-engine integration if a seam warrants it   COMPLETE
-R4-E  docs + full regression + CERTIFY                        NEXT
+R4-E  docs + full regression + CERTIFY                        COMPLETE
 ```
 
-Certification will leave the strategy API count unchanged. When R4-E succeeds, expected Milestone-2 progress is:
+R4-E certification leaves the strategy API count unchanged. Current Milestone-2 progress is:
 
 ```text
 7 of 8 major Human Baseline areas certified
 10 of 30 strategy hooks certified
 ```
+
+## R4-E certification record
+
+The full certification regression was run after R4-D integration coverage:
+
+```bash
+./gradlew test integrationTest simulationCheck
+```
+
+Result: **BUILD SUCCESSFUL**.
+
+Butterfly Result is therefore **CERTIFIED**. The implementation, behavior-contract tests, corrected engine timing, focused real-engine integration coverage, and full regression agree with the approved designer contract.
