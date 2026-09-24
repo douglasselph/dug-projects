@@ -24,7 +24,9 @@ import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleS
  * through shared tactical analysis, B12 evaluates enabling Supports through
  * one-step refreshed-Plant reasoning, B13 handles the approved special Battle
  * effects, and B14 orchestrates worthwhile Support versus Final Main through the
- * continuation gate. Later checkpoints finish target-dependent Effect alignment.
+ * continuation gate. B15 aligns Battle action/target/branch decisions, B16 makes
+ * the behavior contract directly testable, and B17 closes focused verification.
+ * Milestone-2 Battle is CERTIFIED after the successful Stage C full regression.
  *
  * Durable behavior contract:
  *

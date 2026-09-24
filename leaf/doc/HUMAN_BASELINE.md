@@ -252,7 +252,7 @@ Direct tests begin with:
 baseline/battle/HumanBaselineBattleStrategyTest.kt
 ```
 
-**Stage status:** Stage A designer review (A1–A6) is complete. B1 established the durable contract/policy seam, B2 exposes authoritative Done state through Battle decision context, B3 protects the repeated Step-5 loop with repeated-state detection plus a hard per-player decision ceiling, B4 provides the shared multiplayer-aware `BattleRowAssessor`, B5 provides the shared `BattleSwingEvaluator` with policy-scaled transition tiers, raw swing, collateral harm, and multi-row aggregation, B6 provides shared whole-action analysis with projected Strike-VP impact and improvement-step metrics for deterministic, expected, and actual realizations, B7 connects Step-4 Draw choice to expected next-die placement through the shared tactical layer, B8 uses actual post-roll Battle Swing for the fresh legal-row placement decision, B9 provides normalized own/public/relevant-opponent Support capacity without target multiplicity or hidden-Wisp inference, B10 adds ordinary Bee/Butterfly reachability plus the reusable individual-or-cumulative Step-5 continuation gate, B11 migrates ordinary direct Supports to shared tactical analysis, and B12 evaluates Worm Flip and Water Refresh through the best immediate Main they enable while applying direct-Worm and Water spending gates. Plant/Round intrinsic scoring remains in place; special Wisps, orchestration, and target-dependent alignment remain later Battle checkpoints. Tactical Battle behavior is still being implemented and is **not yet certified**.
+**Stage status:** **CERTIFIED.** Stage A designer review (A1–A6), Stage B implementation/behavior-contract work (B1–B17), and Stage C documentation/regression/certification (C1–C3) are complete. Battle uses the shared multiplayer-aware row, Swing, Strike-VP, Support-capacity, reachability, continuation, special-effect, target/branch, and random-information policies documented in `HUMAN_BASELINE_BATTLE.md`. The final C2 full regression (`test integrationTest simulationCheck`) passed before C3 certification.
 
 Approved Battle behavior is documented in:
 
@@ -406,12 +406,12 @@ Use the eight areas as the high-level completion checklist:
 - [ ] Wound Resolution certified
 - [ ] Graft Placement certified
 - [x] Cultivation certified
-- [ ] Battle certified
+- [x] Battle certified
 - [x] Buy certified
 - [ ] Butterfly Result certified
 - [ ] Effect Choices certified, including material card-specific cases
 
-Current progress: **2 of 8 major areas certified; 3 of 30 strategy hooks certified** (Buy: 2, Cultivation: 1).
+Current progress: **3 of 8 major areas certified; 6 of 30 strategy hooks certified** (Buy: 2, Cultivation: 1, Battle: 3).
 
 After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 
