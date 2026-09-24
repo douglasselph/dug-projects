@@ -94,6 +94,14 @@ The current shared defaults are:
 | `DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_LEAD` | 5 | minimum lead for the immediate-Strike-resolution Wisp |
 | `DEFAULT_BATTLE_IMMEDIATE_RESOLVE_MIN_OPPONENT_SUPPORT` | 3 | minimum live-contender Support capacity for that Wisp |
 
+The approved Critter Reward contract adds one additional shared tuning knob during R1-C:
+
+| Knob | Approved default | Intent |
+|---|---:|---|
+| post-reserve Bee probability | `2.0 / 3.0` | once the protected Bee/Worm minimums are both satisfied, choose Bee with 2/3 probability and Worm with 1/3 probability in the otherwise-neutral case |
+
+R1-C must expose this as a companion-object default plus overridable `HumanBaselinePolicy` access. The existing protected Bee/Worm defaults already supply the approved 2-Bee/1-Worm minimum and must likewise be consumed through policy access rather than copied into the reward scorer. The exact production identifier/signature should follow the existing policy conventions when R1-C is implemented.
+
 These values are strategy defaults, not game rules.
 
 Card-specific and action-specific values do **not** belong here. For example, the base score of Queen's Blossom or the low-roll bonus inside `MulchPriority` should remain beside those scorers. `HumanBaselinePolicy` is intentionally limited to assumptions that several decision areas may need to share.

@@ -130,7 +130,22 @@ baseline/reward/CritterRewardPriorityTest.kt
 
 Decision hook: choose which legal Critter to gain after a qualifying roll.
 
-**Certification status:** implemented; designer behavior review still required.
+Approved Human Baseline Critter Reward contract:
+
+- choose only among Critters the engine currently makes legal; if only one Critter is legal, take it;
+- first fill the normal protected Critter mix supplied by `HumanBaselinePolicy` (default **2 Bees and 1 Worm**);
+- if exactly one Critter type is still below its protected minimum, prefer that missing type;
+- once both protected minimums are satisfied, use a policy-controlled strategic random preference: by default **Bee with probability 2/3, Worm with probability 1/3**; this is not an exact-ratio correction algorithm;
+- visible owned-card/global influences may override the ordinary reserve/probability preference when they make one Critter meaningfully more valuable;
+- reevaluate from fresh current state each time another Critter choice is requested;
+- probabilistic strategy variation must use seeded `StrategyRandomizer`, never mechanical game RNG;
+- the protected Bee count, protected Worm count, and post-reserve Bee probability must be exposed through top-level `HumanBaselinePolicy` defaults plus overridable policy access, so a simulation can customize them for one player without changing game rules or global Human Baseline behavior.
+
+The previous round-1/round-2 Bee bonus is **not** part of the approved contract. The protected 2-Bee/1-Worm minimum supplies the intended early Bee emphasis without a second overlapping rule.
+
+Detailed R1 contract and implementation plan: [`HUMAN_BASELINE_CRITTER_REWARD.md`](HUMAN_BASELINE_CRITTER_REWARD.md).
+
+**Certification status:** R1-A designer review and R1-B behavior contract complete; implementation alignment/tests and certification remain pending.
 
 ### 3.2 Wound Resolution
 

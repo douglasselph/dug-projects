@@ -60,7 +60,7 @@ Milestone 2 is certified one decision area at a time. The authoritative checklis
 Current status:
 
 ```text
-Critter Reward       pending designer certification
+Critter Reward       contract approved; implementation/certification pending
 Wound Resolution     pending designer certification
 Graft Placement      pending designer certification
 Cultivation          CERTIFIED
