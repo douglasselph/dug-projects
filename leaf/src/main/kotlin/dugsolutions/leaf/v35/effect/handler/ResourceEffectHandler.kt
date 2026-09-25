@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.effectCheck
@@ -437,25 +438,31 @@ class ResourceEffectHandler : EffectHandler {
             stateCheck(request.actor.butterflies.faceUp(butterfly)) {
                 "Owned Butterfly could not be refreshed: $butterfly"
             }
-            return
-        }
-
-        val previousOwner = request.game.players.firstOrNull { player ->
-            player !== request.actor &&
-                butterfly in player.butterflies.all
-        }
-
-        if (previousOwner != null) {
-            stateCheck(previousOwner.butterflies.remove(butterfly)) {
-                "Butterfly could not be removed from previous owner: $butterfly"
-            }
         } else {
-            stateCheck(request.game.grove.butterflies.remove(butterfly)) {
-                "Butterfly could not be removed from Grove: $butterfly"
+            val previousOwner = request.game.players.firstOrNull { player ->
+                player !== request.actor &&
+                    butterfly in player.butterflies.all
             }
+
+            if (previousOwner != null) {
+                stateCheck(previousOwner.butterflies.remove(butterfly)) {
+                    "Butterfly could not be removed from previous owner: $butterfly"
+                }
+            } else {
+                stateCheck(request.game.grove.butterflies.remove(butterfly)) {
+                    "Butterfly could not be removed from Grove: $butterfly"
+                }
+            }
+
+            request.actor.butterflies.add(butterfly)
         }
 
-        request.actor.butterflies.add(butterfly)
+        request.game.chronicle.record(
+            Moment.ButterflyState(
+                playerId = request.actor.id,
+                butterflies = request.actor.butterflies.stateSnapshot()
+            )
+        )
     }
 
     private fun hasEmptyMulch(

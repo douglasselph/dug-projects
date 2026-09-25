@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.battle
 
+import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.StrikeTotalSnapshot
@@ -98,18 +99,14 @@ class StrikeResolver(
             "Cannot resolve closed Strike Row $row"
         }
 
-        val totals = battleState.playersInBattleOrder
-            .filterNot { player ->
-                battleState.grid.isPlayerWithdrawn(player.id, row)
-            }
-            .map { player ->
-                val square = battleState.grid.square(player.id, row)
+        val rowSnapshot = BattleGridSnapshot.row(battleState, row)
+        val totals = rowSnapshot.squares
+            .filterNot { it.withdrawn }
+            .map { square ->
                 StrikePlayerTotal(
-                    playerId = player.id,
+                    playerId = square.playerId,
                     diceTotal = square.dice.sumOf { it.value },
-                    critterTotal = square.critters.sumOf {
-                        player.critterValues.valueOf(it)
-                    }
+                    critterTotal = square.critters.sumOf { it.value }
                 )
             }
 
@@ -161,6 +158,7 @@ class StrikeResolver(
                         total = total.total
                     )
                 },
+                rowSnapshot = rowSnapshot,
                 winnerIds = winnerIds,
                 woundedPlayerIds = woundedIds,
                 vpPerWinner = vpPerWinner

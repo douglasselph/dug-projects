@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.chronicle.domain
 
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
@@ -147,10 +148,26 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    data class BattleGridReport(
+        override val sequence: Long,
+        val kind: BattleGridReportKind,
+        val passNumber: Int?,
+        val rows: List<BattleGridRowSnapshot>,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
+    data class ButterflyState(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val butterflies: List<ButterflyStateSnapshot>,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class StrikeResolved(
         override val sequence: Long,
         val row: StrikeRow,
         val totals: List<StrikeTotalSnapshot>,
+        val rowSnapshot: BattleGridRowSnapshot? = null,
         val winnerIds: List<PlayerId>,
         val woundedPlayerIds: List<PlayerId>,
         val vpPerWinner: Int,

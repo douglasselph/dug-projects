@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -65,6 +67,13 @@ class AlluringNectarEffect : EffectHandler {
                 "Alluring Nectar could not Refresh owned Butterfly: $butterfly"
             }
         }
+
+        request.game.chronicle.record(
+            Moment.ButterflyState(
+                playerId = request.actor.id,
+                butterflies = request.actor.butterflies.stateSnapshot()
+            )
+        )
     }
 
     private fun legalTargets(

@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.chronicle
 
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
+import dugsolutions.leaf.v35.battle.domain.BattleGridSquareSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
@@ -15,7 +17,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
-import dugsolutions.leaf.v35.tokens.Butterfly
+import dugsolutions.leaf.v35.tokens.Critter
 
 /**
  * Simple human-readable rendering of a typed Chronicle.
@@ -199,8 +201,18 @@ object ChronicleTextRenderer {
                     else -> {
                         // Compact mode does not need a generic SUPPORT WISP line;
                         // the Wisp effect already says what was played and what it did.
-                        appendEntry(effect, depth)
-                        appendChildrenCompact(effectNode.children, depth + 1)
+                        val butterflyState = nested.filterIsInstance<GameEntry.ButterflyState>().lastOrNull()
+                        val body = buildString {
+                            append(renderBody(effect))
+                            butterflyState?.butterflies?.takeIf { it.isNotEmpty() }?.let { states ->
+                                append(" ${ButterflyReport.render(states)}")
+                            }
+                        }
+                        appendBody(body, depth)
+                        appendChildrenCompact(
+                            effectNode.children.filterNot { it.entry is GameEntry.ButterflyState },
+                            depth + 1
+                        )
                     }
                 }
             }
@@ -325,6 +337,13 @@ object ChronicleTextRenderer {
 
                         else -> Unit
                     }
+                }
+
+                if (entry is GameEntry.BattleGridReport) {
+                    entry.rows.forEach { row ->
+                        appendBody(renderGridRow(row), entry.hierarchyDepth)
+                    }
+                    return@forEach
                 }
 
                 if (detail) {
@@ -489,13 +508,7 @@ object ChronicleTextRenderer {
             }
             if (summary.wispCount > 0) add("Wi=${summary.wispCount}")
             if (summary.butterflies.isNotEmpty()) {
-                add(
-                    "BF=${summary.butterflies.size}[" +
-                        summary.butterflies
-                            .sortedBy { it.ordinal }
-                            .joinToString(",", transform = ::butterflyAbbreviation) +
-                        "]"
-                )
+                add("BF[${ButterflyReport.render(summary.butterflies)}]")
             }
             add(renderGraftedPlants(summary.graftedPlants))
         }.joinToString(" ")
@@ -541,12 +554,49 @@ object ChronicleTextRenderer {
             .joinToString(",")
     }
 
-    private fun butterflyAbbreviation(butterfly: Butterfly): String =
-        when (butterfly) {
-            Butterfly.GREEN -> "GB"
-            Butterfly.YELLOW -> "YB"
-            Butterfly.RED -> "RB"
-            Butterfly.PURPLE -> "PB"
+    private fun renderGridRow(
+        row: BattleGridRowSnapshot,
+        winnerIds: List<PlayerId>? = null,
+        woundedPlayerIds: List<PlayerId> = emptyList(),
+        vpPerWinner: Int? = null
+    ): String =
+        buildString {
+            append("GRID ROW #${row.row.ordinal + 1}")
+            row.squares.forEach { square ->
+                append(" ${renderGridSquare(square)}")
+            }
+            if (winnerIds != null) {
+                append(" winners=")
+                append(winnerIds.joinToString(", ") { player(it) }.ifBlank { "none" })
+                append(" wounded=")
+                append(woundedPlayerIds.joinToString(", ") { player(it) }.ifBlank { "none" })
+                append(" vpPerWinner=${vpPerWinner ?: 0}")
+            }
+        }
+
+    private fun renderGridSquare(square: BattleGridSquareSnapshot): String =
+        buildString {
+            append('[')
+            append(player(square.playerId))
+            if (square.withdrawn) append(" WITHDRAWN")
+            val parts = buildList {
+                square.dice.forEach { die -> add("${die.sides}=${die.value}") }
+                square.critters.forEach { critter -> add(renderGridCritter(critter.critter, critter.value)) }
+            }
+            if (parts.isEmpty()) {
+                append(" -")
+            } else {
+                append(' ')
+                append(parts.joinToString(" "))
+            }
+            append(" -> ${if (square.withdrawn) 0 else square.total}")
+            append(']')
+        }
+
+    private fun renderGridCritter(critter: Critter, value: Int): String =
+        when (critter) {
+            Critter.BEE -> "B+$value"
+            Critter.WORM -> "W+$value"
         }
 
     private fun renderBody(entry: GameEntry): String =
@@ -631,8 +681,28 @@ object ChronicleTextRenderer {
                     }
                 }
 
-            is GameEntry.StrikeResolved ->
+            is GameEntry.BattleGridReport ->
+                "GRID ${entry.kind}" + (entry.passNumber?.let { " pass=$it" } ?: "")
+
+            is GameEntry.ButterflyState ->
                 buildString {
+                    append("${player(entry.playerId)} BUTTERFLIES")
+                    if (entry.butterflies.isNotEmpty()) {
+                        append(" ${ButterflyReport.render(entry.butterflies)}")
+                    } else {
+                        append(" -")
+                    }
+                }
+
+            is GameEntry.StrikeResolved ->
+                entry.rowSnapshot?.let { row ->
+                    renderGridRow(
+                        row = row,
+                        winnerIds = entry.winnerIds,
+                        woundedPlayerIds = entry.woundedPlayerIds,
+                        vpPerWinner = entry.vpPerWinner
+                    )
+                } ?: buildString {
                     append("STRIKE ${entry.row} ")
                     append(
                         entry.totals.joinToString(", ") { total ->

@@ -89,6 +89,18 @@ This hierarchy is recorded by the engine; it is not inferred later from text. Ma
 
 The top-level `output/` directory is generated material and is listed in `.gitignore`.
 
+### Battle Grid and Butterfly shorthand
+
+Battle reports take a full Grid snapshot after the First-Main rotation and after every Step-5 pass. Each snapshot renders all three Strike Rows and every player square, for example:
+
+```text
+GRID ROW #1 [P2 D8=7 D4=3 B+2 -> 12] [P4 D6=5 -> 5] [P1 - -> 0]
+```
+
+`D8=7` is one exact placed die. `B+2` and `W+N` are individual Bee/Worm contributions using that player's current effective Critter value. `-> 12` is the square total. Strike resolution reuses the same formatter and appends `winners=`, `wounded=`, and `vpPerWinner=` rather than falling back to anonymous dice/Critter totals.
+
+Butterfly reports also use one shared shorthand. Uppercase means face up and ready; lowercase means face down and spent. Ownership order is preserved. For example, `YB gb` means a ready Yellow Butterfly and a spent Green Butterfly. End-of-round player summaries use the same formatter as inline Butterfly-changing effects.
+
 ## 4. What to look for in a smoke Chronicle
 
 For a first pass, do not worry about whether the players made good choices. Mechanical Control is not intended to be smart. Look for structural sanity instead:

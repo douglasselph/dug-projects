@@ -3,7 +3,6 @@ package dugsolutions.leaf.v35.chronicle.domain
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
-import dugsolutions.leaf.v35.tokens.Butterfly
 
 /** Compact immutable identity for one grafted Plant in an end-of-Round snapshot. */
 data class GraftedPlantSnapshot(
@@ -22,7 +21,7 @@ data class PlayerRoundSummarySnapshot(
     val waterCount: Int,
     val mulchDice: List<DieSides?>,
     val wispCount: Int,
-    val butterflies: List<Butterfly>
+    val butterflies: List<ButterflyStateSnapshot>
 ) {
     val graftedPlantCount: Int
         get() = graftedPlants.size

@@ -2,6 +2,8 @@ package dugsolutions.leaf.v35.game.round.battle
 
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -214,6 +216,24 @@ class BattleActionCoordinatorTest {
         }
 
         assertTrue(fixture.battleState.grid.critterPlacements.isEmpty())
+    }
+
+    @Test
+    fun execute_recordsGridAfterFirstMainAndAfterEachStep5Pass() {
+        val p1 = player(1, finishStrategy("p1"))
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        val reports = fixture.game.chronicle.entries.filterIsInstance<GameEntry.BattleGridReport>()
+        assertEquals(2, reports.size)
+        assertEquals(BattleGridReportKind.AFTER_FIRST_MAIN, reports[0].kind)
+        assertEquals(null, reports[0].passNumber)
+        assertEquals(3, reports[0].rows.size)
+        assertTrue(reports[0].rows.all { it.squares.size == 2 })
+        assertEquals(BattleGridReportKind.AFTER_PASS, reports[1].kind)
+        assertEquals(1, reports[1].passNumber)
     }
 
     @Test

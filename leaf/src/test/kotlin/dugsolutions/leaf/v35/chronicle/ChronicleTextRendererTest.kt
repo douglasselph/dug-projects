@@ -1,8 +1,14 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.battle.domain.BattleGridCritterSnapshot
+import dugsolutions.leaf.v35.battle.domain.BattleGridDieSnapshot
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
+import dugsolutions.leaf.v35.battle.domain.BattleGridSquareSnapshot
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
 import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
@@ -11,6 +17,7 @@ import dugsolutions.leaf.v35.chronicle.domain.UpgradeDestination
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.DecisionScoreAdjustmentSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.ButterflyStateSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
@@ -171,7 +178,10 @@ class ChronicleTextRendererTest {
                         waterCount = 2,
                         mulchDice = listOf(DieSides.D6, DieSides.D12),
                         wispCount = 3,
-                        butterflies = listOf(Butterfly.GREEN, Butterfly.YELLOW)
+                        butterflies = listOf(
+                            ButterflyStateSnapshot(Butterfly.GREEN, isFaceUp = true),
+                            ButterflyStateSnapshot(Butterfly.YELLOW, isFaceUp = false)
+                        )
                     ),
                     PlayerRoundSummarySnapshot(
                         playerId = PlayerId(2),
@@ -203,7 +213,7 @@ class ChronicleTextRendererTest {
         assertEquals("01.002  ROUND 1 COMPLETE CULTIVATION: first", lines[1])
         assertEquals("", lines[2])
         assertEquals(
-            "01.003  P1 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF=2[GB,YB] G[2R5 1V11 1F11 1F14]",
+            "01.003  P1 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF[GB yb] G[2R5 1V11 1F11 1F14]",
             lines[3]
         )
         assertEquals("01.004  P2 S=- D=1D4 W=1 G[]", lines[4])
@@ -842,6 +852,151 @@ class ChronicleTextRendererTest {
 
         assertEquals(
             "01.002  BATTLE ORDER P1(D8=6) -> P4(D12=5) -> P2(D6=5) -> P3(D4=3)",
+            lines[1]
+        )
+    }
+
+    @Test
+    fun `grid report renders all squares with dice critter contributions and totals`() {
+        val row = BattleGridRowSnapshot(
+            row = StrikeRow.TOP,
+            squares = listOf(
+                BattleGridSquareSnapshot(
+                    playerId = PlayerId(2),
+                    dice = listOf(
+                        BattleGridDieSnapshot(DieSides.D8, 7),
+                        BattleGridDieSnapshot(DieSides.D4, 3)
+                    ),
+                    critters = listOf(BattleGridCritterSnapshot(Critter.BEE, 2))
+                ),
+                BattleGridSquareSnapshot(
+                    playerId = PlayerId(4),
+                    dice = listOf(BattleGridDieSnapshot(DieSides.D6, 5)),
+                    critters = emptyList()
+                ),
+                BattleGridSquareSnapshot(
+                    playerId = PlayerId(1),
+                    dice = emptyList(),
+                    critters = emptyList()
+                )
+            )
+        )
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.BattleGridReport(
+                sequence = 2,
+                kind = BattleGridReportKind.AFTER_FIRST_MAIN,
+                passNumber = null,
+                rows = listOf(row)
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  GRID ROW #1 [P2 D8=7 D4=3 B+2 -> 12] [P4 D6=5 -> 5] [P1 - -> 0]",
+            lines[1]
+        )
+    }
+
+    @Test
+    fun `strike resolve reuses rich grid row format and appends outcome`() {
+        val row = BattleGridRowSnapshot(
+            row = StrikeRow.TOP,
+            squares = listOf(
+                BattleGridSquareSnapshot(
+                    playerId = PlayerId(2),
+                    dice = listOf(BattleGridDieSnapshot(DieSides.D8, 7)),
+                    critters = listOf(
+                        BattleGridCritterSnapshot(Critter.BEE, 2),
+                        BattleGridCritterSnapshot(Critter.BEE, 2)
+                    )
+                ),
+                BattleGridSquareSnapshot(
+                    playerId = PlayerId(4),
+                    dice = listOf(BattleGridDieSnapshot(DieSides.D12, 5)),
+                    critters = emptyList()
+                )
+            )
+        )
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.StrikeResolved(
+                sequence = 2,
+                row = StrikeRow.TOP,
+                totals = emptyList(),
+                rowSnapshot = row,
+                winnerIds = listOf(PlayerId(2)),
+                woundedPlayerIds = listOf(PlayerId(4)),
+                vpPerWinner = 3
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  GRID ROW #1 [P2 D8=7 B+2 B+2 -> 11] [P4 D12=5 -> 5] winners=P2 wounded=P4 vpPerWinner=3",
+            lines[1]
+        )
+    }
+
+    @Test
+    fun `butterfly Wisp appends shared butterfly report with lowercase face down state`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.SupportAction(
+                sequence = 2,
+                playerId = PlayerId(1),
+                phase = ChroniclePhase.BATTLE,
+                action = SupportActionKind.WISP,
+                row = null,
+                hierarchyDepth = 0
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(1),
+                effect = GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,
+                sourceKind = EffectSourceKind.WISP,
+                sourceName = "Wisp_Gain_Green",
+                phase = ChroniclePhase.BATTLE,
+                hierarchyDepth = 1
+            ),
+            GameEntry.ButterflyState(
+                sequence = 4,
+                playerId = PlayerId(1),
+                butterflies = listOf(
+                    ButterflyStateSnapshot(Butterfly.YELLOW, isFaceUp = false),
+                    ButterflyStateSnapshot(Butterfly.GREEN, isFaceUp = true)
+                ),
+                hierarchyDepth = 2
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  P1 BATTLE EFFECT WISP Wisp_Gain_Green: GAIN_OR_REFRESH_GREEN_BUTTERFLY yb GB",
             lines[1]
         )
     }

@@ -2,7 +2,9 @@ package dugsolutions.leaf.v35.game.round.battle
 
 import dugsolutions.leaf.v35.battle.BattlePlacementResolver
 import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
 import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
@@ -163,6 +165,13 @@ class BattleActionCoordinator(
                 )
         }
 
+        game.chronicle.record(
+            Moment.BattleGridReport(
+                kind = BattleGridReportKind.AFTER_FIRST_MAIN,
+                rows = BattleGridSnapshot.rows(battleState)
+            )
+        )
+
         // Step 5 — repeated passes, skipping players after their final Main.
         // Done is authoritative Battle-round state so every later DecisionContext
         // can observe which opponents are no longer able to act.
@@ -280,6 +289,13 @@ class BattleActionCoordinator(
                 }
             }
 
+            game.chronicle.record(
+                Moment.BattleGridReport(
+                    kind = BattleGridReportKind.AFTER_PASS,
+                    passNumber = passNumber,
+                    rows = BattleGridSnapshot.rows(battleState)
+                )
+            )
             passNumber++
         }
 

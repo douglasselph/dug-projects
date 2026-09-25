@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import java.util.ArrayDeque
 
 /**
@@ -184,14 +185,28 @@ class GameChronicle : Chronicle {
                 sequence, moment.order.toList(), moment.initialDiceCount,
                 moment.highestDice.toList(), hierarchyDepth
             )
+            is Moment.BattleGridReport -> GameEntry.BattleGridReport(
+                sequence = sequence,
+                kind = moment.kind,
+                passNumber = moment.passNumber,
+                rows = moment.rows.map(::copyGridRow),
+                hierarchyDepth = hierarchyDepth
+            )
+            is Moment.ButterflyState -> GameEntry.ButterflyState(
+                sequence = sequence,
+                playerId = moment.playerId,
+                butterflies = moment.butterflies.toList(),
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.StrikeResolved -> GameEntry.StrikeResolved(
-                sequence,
-                moment.row,
-                moment.totals.toList(),
-                moment.winnerIds.toList(),
-                moment.woundedPlayerIds.toList(),
-                moment.vpPerWinner,
-                hierarchyDepth
+                sequence = sequence,
+                row = moment.row,
+                totals = moment.totals.toList(),
+                rowSnapshot = moment.rowSnapshot?.let(::copyGridRow),
+                winnerIds = moment.winnerIds.toList(),
+                woundedPlayerIds = moment.woundedPlayerIds.toList(),
+                vpPerWinner = moment.vpPerWinner,
+                hierarchyDepth = hierarchyDepth
             )
             is Moment.Wound -> GameEntry.Wound(
                 sequence, moment.playerId, moment.kind, moment.plantName, hierarchyDepth
@@ -229,4 +244,14 @@ class GameChronicle : Chronicle {
                 sequence, moment.roundsCompleted, hierarchyDepth
             )
         }
+
+    private fun copyGridRow(row: BattleGridRowSnapshot): BattleGridRowSnapshot =
+        row.copy(
+            squares = row.squares.map { square ->
+                square.copy(
+                    dice = square.dice.toList(),
+                    critters = square.critters.toList()
+                )
+            }
+        )
 }

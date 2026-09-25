@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.chronicle.domain
 
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
@@ -119,9 +120,23 @@ sealed interface Moment {
         val highestDice: List<BattleOrderHighDieSnapshot> = emptyList()
     ) : Moment
 
+    /** Full immutable Battle Grid snapshot taken after one action rotation. */
+    data class BattleGridReport(
+        val kind: BattleGridReportKind,
+        val passNumber: Int? = null,
+        val rows: List<BattleGridRowSnapshot>
+    ) : Moment
+
+    /** Current Butterfly ownership/facing for one player after a state change. */
+    data class ButterflyState(
+        val playerId: PlayerId,
+        val butterflies: List<ButterflyStateSnapshot>
+    ) : Moment
+
     data class StrikeResolved(
         val row: StrikeRow,
         val totals: List<StrikeTotalSnapshot>,
+        val rowSnapshot: BattleGridRowSnapshot? = null,
         val winnerIds: List<PlayerId>,
         val woundedPlayerIds: List<PlayerId>,
         val vpPerWinner: Int
@@ -203,6 +218,7 @@ enum class RollRewardKind {
 }
 enum class MainActionKind { DRAW, ACTIVATE_PLANT, ROUND_EFFECT_1, ROUND_EFFECT_2 }
 enum class BattleMainStage { FIRST, FINAL }
+enum class BattleGridReportKind { AFTER_FIRST_MAIN, AFTER_PASS }
 enum class SupportActionKind {
     WISP,
     WATER_REROLL,

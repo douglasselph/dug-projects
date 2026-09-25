@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.round
 import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
+import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -108,7 +109,7 @@ class RoundCoordinator(
             waterCount = player.tokens.waterCount,
             mulchDice = player.tokens.mulchTokens.map { it.sides },
             wispCount = player.wisps.size,
-            butterflies = player.butterflies.all
+            butterflies = player.butterflies.stateSnapshot()
         )
 
     fun executeNext(game: Game): RoundExecution? =
