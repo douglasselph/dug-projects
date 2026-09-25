@@ -8,6 +8,10 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
+import dugsolutions.leaf.v35.game.intervention.MechanicalRollInterventionRequest
+import dugsolutions.leaf.v35.game.intervention.MechanicalRollSource
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.Player
@@ -577,6 +581,55 @@ class RollResolverTest {
         assertEquals(immediate, handled)
         assertTrue(result.reward is RollRewardResult.WispPlayedImmediately)
         assertTrue(player.wisps.isEmpty)
+    }
+
+
+    @Test
+    fun draw_interventionReplacesNaturalFaceAfterRoll_andNormalRewardUsesReplacement() {
+        var observed: MechanicalRollInterventionRequest? = null
+        val localResolver =
+            RollResolver(
+                grove = grove,
+                chronicle = chronicle,
+                mechanicalIntervention = MechanicalIntervention { request ->
+                    observed = request
+                    2
+                }
+            )
+        val player = playerWithSupply(FixedRollDie(sides = 6, rollValue = 4))
+
+        val result =
+            localResolver.draw(
+                player = player,
+                interventionContext = RollInterventionContext(
+                    roundNumber = 3,
+                    roundType = RoundCardType.CULTIVATION,
+                    source = MechanicalRollSource.CULTIVATION_OPENING_DRAW
+                )
+            )!!
+
+        assertEquals(4, observed!!.naturalValue)
+        assertEquals(player.id, observed!!.playerId)
+        assertEquals(3, observed!!.roundNumber)
+        assertEquals(RoundCardType.CULTIVATION, observed!!.roundType)
+        assertEquals(MechanicalRollSource.CULTIVATION_OPENING_DRAW, observed!!.source)
+        assertEquals(2, result.die.value)
+        assertTrue(result.reward is RollRewardResult.WispGained)
+    }
+
+    @Test
+    fun draw_interventionRejectsFaceOutsideDieRange() {
+        val localResolver =
+            RollResolver(
+                grove = grove,
+                chronicle = chronicle,
+                mechanicalIntervention = MechanicalIntervention { 7 }
+            )
+        val player = playerWithSupply(FixedRollDie(sides = 6, rollValue = 4))
+
+        assertFailsWith<IllegalArgumentException> {
+            localResolver.draw(player)
+        }
     }
 
     private fun playerWithSupply(

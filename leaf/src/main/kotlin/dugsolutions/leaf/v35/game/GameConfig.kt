@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.game
 
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
@@ -99,7 +100,9 @@ class GameConfig(
      * When true, scored strategy choices emit their selected score explanation
      * into this game's Chronicle. Disabled by default for large simulations.
      */
-    val recordDecisionReasoning: Boolean = false
+    val recordDecisionReasoning: Boolean = false,
+    /** Experiment-only mechanical outcome replacement; fresh policy per Game. */
+    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()

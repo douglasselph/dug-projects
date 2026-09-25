@@ -114,6 +114,7 @@ class GameFactory(
             chronicle = chronicle,
             roundDeck = roundDeck,
             randomizer = randomizer,
+            mechanicalIntervention = config.mechanicalInterventionFactory.create(),
             dieFactory = dieFactory
         )
     }

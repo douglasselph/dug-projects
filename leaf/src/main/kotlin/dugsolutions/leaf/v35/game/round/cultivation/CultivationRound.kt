@@ -90,6 +90,7 @@ class CultivationRound(
         val rollResolver = RollResolver(
             grove = game.grove,
             chronicle = game.chronicle,
+            mechanicalIntervention = game.mechanicalIntervention,
             immediateWispHandler = { player, card ->
                 effectExecutor.execute(
                     GameEffectRequest(

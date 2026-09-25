@@ -695,3 +695,9 @@ A practical sequence is:
 The core principle throughout is: **change one thing, control what you
 can, rotate confounding positions, run enough games, and record why the
 outcome changed.**
+
+### M3-C implementation note — controlled mechanical intervention seam
+
+M3-C adds an explicit experiment-only mechanical intervention boundary. A fresh intervention policy is created for each isolated `Game`. `RollResolver` always lets the die produce its natural mechanical result first, then offers that observed result to the intervention; a replacement face, when supplied, is validated and installed before Chronicle recording and normal Roll Reward resolution. Thus an intervention changes the selected observed outcome without skipping the underlying mechanical RNG consumption or bypassing normal rules.
+
+The first typed context is `CULTIVATION_OPENING_DRAW`. Cultivation Step 2 supplies player, round number/type, die sides, natural face, and source to the intervention. Ordinary games use `MechanicalIntervention.NONE`, so the seam is inert unless an experiment opts in. The policy is intentionally general rather than Wisp-specific; M3-D will provide the concrete first-two-Cultivation/affected-player policy and prove its real-engine scope.

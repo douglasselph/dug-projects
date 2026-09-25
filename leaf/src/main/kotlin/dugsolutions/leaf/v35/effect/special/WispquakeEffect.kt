@@ -44,6 +44,7 @@ class WispquakeEffect : EffectHandler {
         val rollResolver = RollResolver(
             grove = request.game.grove,
             chronicle = request.game.chronicle,
+            mechanicalIntervention = request.game.mechanicalIntervention,
             immediateWispHandler = { player, card ->
                 executor.execute(
                     GameEffectRequest(

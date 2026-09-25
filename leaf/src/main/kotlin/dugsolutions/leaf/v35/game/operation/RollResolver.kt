@@ -9,6 +9,10 @@ import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
+import dugsolutions.leaf.v35.game.intervention.MechanicalRollInterventionRequest
+import dugsolutions.leaf.v35.game.intervention.MechanicalRollSource
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
@@ -80,10 +84,17 @@ data class RollResolution(
  *
  * RollResolver chooses/transfers rewards, but it does not execute card effects.
  */
+data class RollInterventionContext(
+    val roundNumber: Int,
+    val roundType: RoundCardType,
+    val source: MechanicalRollSource
+)
+
 class RollResolver(
     private val grove: Grove,
     private val chronicle: Chronicle,
     private val immediateWispHandler: ((Player, WispCard) -> Unit)? = null,
+    private val mechanicalIntervention: MechanicalIntervention = MechanicalIntervention.NONE,
     private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY }
 ) {
 
@@ -95,11 +106,14 @@ class RollResolver(
      */
     fun draw(
         player: Player,
-        rewardPolicy: RollRewardPolicy = RollRewardPolicy.NORMAL
+        rewardPolicy: RollRewardPolicy = RollRewardPolicy.NORMAL,
+        interventionContext: RollInterventionContext? = null
     ): RollResolution? {
         val die =
             player.dice.draw()
                 ?: return null
+
+        applyIntervention(player, die, interventionContext)
 
         return resolveCompletedRoll(
             player = player,
@@ -123,6 +137,7 @@ class RollResolver(
             RollRewardPolicy.NORMAL
     ): RollResolution {
         die.roll()
+        applyIntervention(player, die, null)
 
         return resolveCompletedRoll(
             player = player,
@@ -130,6 +145,29 @@ class RollResolver(
             rewardPolicy = rewardPolicy,
             reason = RollReason.ROLL
         )
+    }
+
+    private fun applyIntervention(
+        player: Player,
+        die: Die,
+        context: RollInterventionContext?
+    ) {
+        val naturalValue = die.value
+        val replacement = mechanicalIntervention.replacementFor(
+            MechanicalRollInterventionRequest(
+                playerId = player.id,
+                sides = die.sides,
+                naturalValue = naturalValue,
+                roundNumber = context?.roundNumber,
+                roundType = context?.roundType,
+                source = context?.source ?: MechanicalRollSource.OTHER
+            )
+        ) ?: return
+
+        require(replacement in 1..die.sides) {
+            "Mechanical intervention replacement $replacement is invalid for D${die.sides}"
+        }
+        die.adjustTo(replacement)
     }
 
     private fun resolveCompletedRoll(

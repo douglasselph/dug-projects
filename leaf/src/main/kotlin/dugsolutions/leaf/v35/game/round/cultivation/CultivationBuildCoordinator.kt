@@ -14,6 +14,8 @@ import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.RoundEffectSlot
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
+import dugsolutions.leaf.v35.game.operation.RollInterventionContext
+import dugsolutions.leaf.v35.game.intervention.MechanicalRollSource
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -119,7 +121,16 @@ class CultivationBuildCoordinator(
         game.players.forEach { player ->
             var count = 0
             repeat(3) {
-                if (rollResolver.draw(player) != null) count++
+                if (
+                    rollResolver.draw(
+                        player = player,
+                        interventionContext = RollInterventionContext(
+                            roundNumber = game.roundNumber,
+                            roundType = RoundCardType.CULTIVATION,
+                            source = MechanicalRollSource.CULTIVATION_OPENING_DRAW
+                        )
+                    ) != null
+                ) count++
             }
             openingDrawCounts[player.id] = count
             game.chronicle.record(

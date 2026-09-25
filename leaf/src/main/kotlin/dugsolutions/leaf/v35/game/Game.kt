@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.error.lifecycleCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
@@ -27,6 +28,8 @@ class Game(
     val roundDeck: RoundDeck,
     /** Mechanical rules RNG only; strategy tie breaking owns separate streams. */
     val randomizer: Randomizer,
+    /** Fresh experiment intervention for this Game; NONE in ordinary play. */
+    val mechanicalIntervention: MechanicalIntervention = MechanicalIntervention.NONE,
     /** Game-local die construction preserving this Game's random/config state. */
     val dieFactory: DieFactory = DieFactory(randomizer)
 ) {
