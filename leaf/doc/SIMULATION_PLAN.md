@@ -381,6 +381,17 @@ reruns. The report carries a canonical stable-name Grove fingerprint. No
 acceptable fairness tolerance is encoded yet; that remains empirical research
 for M3-D2D.
 
+**M3-D2C implementation note.** `BaselineRandomnessDiagnostic` is the small-run
+Human Baseline sanity view. It retains only compact winner, Plant-signature,
+dice-signature, VP, and seed values from `GameSummary`. Same fixed seed cohorts
+must reproduce exactly; a materially different seed cohort must change the
+complete batch fingerprint. `BaselineRandomnessDiagnosticRenderer` prints the
+winner and all four final development signatures per game for human inspection.
+The diagnostic supports cumulative 4-, 8-, and 12-game views without asserting
+that winners or development shapes must be unique. Repetition is evidence to
+inspect, not by itself a software failure; frequency/distribution analysis
+remains later research.
+
 ### 5.2 First experiment: Six-Wisp Opening Stress Test
 
 This is the first priority because it answers an immediate rules
@@ -599,9 +610,9 @@ Implement the research harness in this order:
     -   prove six forced 2s occur only where intended and rewards use
         the normal path.
 5.  **M3-D2 --- Human Baseline calibration — IN PROGRESS**
-    -   M3-D2A compact Plant/dice development signatures implemented, pending focused test;
-    -   M3-D2B reusable baseline calibration spec + aggregator;
-    -   M3-D2C deterministic 4/8/12-game randomness diagnostics;
+    -   M3-D2A compact Plant/dice development signatures — GREEN;
+    -   M3-D2B reusable baseline calibration spec + aggregator — GREEN;
+    -   M3-D2C deterministic 4/8/12-game randomness diagnostics — implemented, pending focused test;
     -   M3-D2D manual cumulative long-run convergence runner.
 6.  **M3-E --- Six-Wisp batch experiment**
     -   2,000 intervention games + 2,000 matched controls;
