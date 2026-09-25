@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
@@ -108,7 +109,10 @@ class HumanBaselineCultivationStrategyTest {
             val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
             val usefulContext = context(
                 supply = listOf(DieView(0, 20, 1)),
-                hand = listOf(DieView(0, 12, 1)),
+                hand = listOf(
+                    DieView(0, 12, 1),
+                    DieView(1, 20, 5)
+                ),
                 graftBed = mapOf(DieSides.D20 to 1)
             )
             val noTargetContext = context(
@@ -116,11 +120,75 @@ class HumanBaselineCultivationStrategyTest {
                 hand = listOf(DieView(0, 4, 4))
             )
 
-            val usefulChoice = choose(round = round, context = usefulContext, choices = choices)
+            val usefulChoice = choose(
+                round = round,
+                context = usefulContext,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
             val noTargetChoice = choose(round = round, context = noTargetContext, choices = choices)
 
             assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(usefulChoice).action)
             assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(noTargetChoice).action)
+        }
+
+        @Test
+        fun `Compost tendency can accept or decline the same attractive low die upgrade`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(
+                    DieView(0, 4, 2),
+                    DieView(1, 20, 5)
+                ),
+                graftBed = mapOf(DieSides.D6 to 1)
+            )
+
+            val accepts = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
+            val declines = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(99))
+            )
+
+            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(accepts).action)
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
+        }
+
+        @Test
+        fun `Compost normally preserves cost five buying power even when tendency accepts`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND)
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(
+                    DieView(0, 4, 2),
+                    DieView(1, 20, 2)
+                ),
+                graftBed = mapOf(DieSides.D6 to 1)
+            )
+
+            val chosen = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
+
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
         }
 
         @Test
@@ -310,6 +378,13 @@ class HumanBaselineCultivationStrategyTest {
 
             assertEquals(CultivationAction.Done, defaultChoice)
             assertEquals(CultivationAction.Support(weakReroll), supportFriendlyChoice)
+        }
+    }
+
+    private class FixedRandomizer(private val value: Int) : StrategyRandomizer {
+        override fun nextInt(until: Int): Int {
+            require(value in 0 until until)
+            return value
         }
     }
 

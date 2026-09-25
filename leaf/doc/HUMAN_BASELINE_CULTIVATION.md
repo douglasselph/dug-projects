@@ -221,6 +221,10 @@ The permanent-development nudge remains limited to Plant effects that unambiguou
 
 Its current base score is 75, with contextual adjustments including permanent die development, purchase thresholds, and remaining Cultivation opportunities.
 
+Compost is intentionally **not automatic** even when that score is competitive. Human Baseline applies strategy-only variation after deterministic scoring: a preferred target showing 1 or 2 is followed about 75% of the time, other showing values about 50%, and a Compost that would leave less than 5 total showing value on the remaining Hand dice only about 10%. Dropping below that cost-5 Hand-die Buy floor also receives a strong score penalty. On the second Main Action, having only two or fewer Hand dice remaining halves the Compost tendency, making two-die Compost turns possible but uncommon.
+
+This randomness consumes `StrategyRandomizer`, never the game's mechanical RNG. The downstream Effect choice remains deterministic and uses the same `CompostPriority.targetScore` valuation that justified the top-level action.
+
 ### Round Effect — Mulch
 
 `MULCH_DIE_FROM_HAND` uses `MulchPriority`.

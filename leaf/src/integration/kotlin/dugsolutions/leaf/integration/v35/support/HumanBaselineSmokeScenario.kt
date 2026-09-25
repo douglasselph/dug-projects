@@ -39,6 +39,7 @@ object HumanBaselineSmokeScenario {
 
     fun scenario(
         seed: Long = DEFAULT_SEED,
+        strategySeed: Long = seed,
         recordDecisionReasoning: Boolean = false
     ): GameScenario =
         GameScenario(
@@ -46,6 +47,7 @@ object HumanBaselineSmokeScenario {
             selectedPlantNames = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
             roundSetup = roundSetup,
             seed = seed,
+            strategySeed = strategySeed,
             decisionFactories = List(NUM_PLAYERS) {
                 PlayerDecisionFactory.humanBaseline()
             },

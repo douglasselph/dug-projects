@@ -23,8 +23,8 @@ import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
  * influence registry. Cross-cutting strategy assumptions are supplied by one
  * injectable [HumanBaselinePolicy], allowing simulation experiments to tune or
  * override Human Baseline behavior without changing the game engine. Strategies enumerate legal candidates, score them, apply
- * influences, and use the shared strategy RNG only when the highest-scoring
- * candidates tie.
+ * influences, and use the shared strategy RNG for genuine score ties plus
+ * explicitly modeled human tendencies such as probabilistic Compost use.
  */
 class HumanBaselineDecisionDirector(
     strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
@@ -59,7 +59,8 @@ class HumanBaselineDecisionDirector(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
         influenceRegistry = influenceRegistry,
-        policy = policy
+        policy = policy,
+        strategyRandomizer = strategyRandomizer
     )
     internal val battle = HumanBaselineBattleStrategy(
         scoreEngine = scoreEngine,

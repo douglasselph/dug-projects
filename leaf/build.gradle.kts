@@ -253,7 +253,15 @@ tasks.register<JavaExec>("runHumanBaselineSmoke") {
     classpath = sourceSets["integration"].runtimeClasspath
     mainClass.set("dugsolutions.leaf.integration.v35.tool.HumanBaselineGameSmokeMainKt")
 
-    project.findProperty("smokeSeed")?.toString()?.let { args(it) }
+    val smokeSeed = project.findProperty("smokeSeed")?.toString()
+    val smokeStrategySeed = project.findProperty("smokeStrategySeed")?.toString()
+    if (smokeSeed != null) {
+        args(smokeSeed)
+        if (smokeStrategySeed != null) args(smokeStrategySeed)
+    } else if (smokeStrategySeed != null) {
+        args("13579")
+        args(smokeStrategySeed)
+    }
 }
 
 // Add custom task to run SimpleTestRunner

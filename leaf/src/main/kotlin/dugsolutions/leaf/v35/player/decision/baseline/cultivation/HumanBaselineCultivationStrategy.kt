@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.cultivation.*
 import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 
 /**
@@ -19,8 +20,8 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * The rules engine owns legality and repeatedly supplies the currently legal
  * choices. This strategy ranks those choices on one common [PriorityScore]
- * scale; [BaselineScoreEngine] applies semantic card influences and uses
- * strategy RNG only to break genuine ties.
+ * scale; [BaselineScoreEngine] applies semantic card influences. Strategy RNG
+ * breaks genuine ties and models the explicitly probabilistic Compost tendency.
  *
  * Target design, at a high level:
  *
@@ -80,7 +81,8 @@ class HumanBaselineCultivationStrategy(
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
-    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy()
+    internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
+    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
@@ -117,8 +119,16 @@ class HumanBaselineCultivationStrategy(
                         cardScorers = cardScorers,
                         policy = policy
                     )
-                CultivationMainAction.RoundEffect1 -> scoreRoundEffect(request.roundCard.firstEffect.effect, request.context)
-                CultivationMainAction.RoundEffect2 -> scoreRoundEffect(request.roundCard.secondEffect.effect, request.context)
+                CultivationMainAction.RoundEffect1 -> scoreRoundEffect(
+                    effect = request.roundCard.firstEffect.effect,
+                    context = request.context,
+                    mainActionsRemaining = request.mainActionsRemaining
+                )
+                CultivationMainAction.RoundEffect2 -> scoreRoundEffect(
+                    effect = request.roundCard.secondEffect.effect,
+                    context = request.context,
+                    mainActionsRemaining = request.mainActionsRemaining
+                )
             }
         }
 
@@ -137,12 +147,15 @@ class HumanBaselineCultivationStrategy(
             }
         }
 
-    private fun scoreRoundEffect(effect: GameEffect, context: DecisionContext): PriorityScore =
+    private fun scoreRoundEffect(
+        effect: GameEffect,
+        context: DecisionContext,
+        mainActionsRemaining: Int
+    ): PriorityScore =
         when (effect) {
-            GameEffect.UPGRADE_DIE_FROM_HAND -> CompostPriority.score(
+            GameEffect.UPGRADE_DIE_FROM_HAND -> scoreCompost(
                 context = context,
-                normalPurchasingPower = policy.normalPurchasingPower(context),
-                developmentBonus = policy.cultivationDiceDevelopmentBonus(context)
+                mainActionsRemaining = mainActionsRemaining
             )
             GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(
                 context = context,
@@ -155,6 +168,30 @@ class HumanBaselineCultivationStrategy(
             )
             else -> PriorityScore(45)
         }
+
+    private fun scoreCompost(
+        context: DecisionContext,
+        mainActionsRemaining: Int
+    ): PriorityScore {
+        val normalPurchasingPower = policy.normalPurchasingPower(context)
+        val score = CompostPriority.score(
+            context = context,
+            normalPurchasingPower = normalPurchasingPower,
+            developmentBonus = policy.cultivationDiceDevelopmentBonus(context)
+        )
+        val percentage = CompostPriority.usePercentage(
+            context = context,
+            normalPurchasingPower = normalPurchasingPower,
+            mainActionsRemaining = mainActionsRemaining
+        )
+        if (percentage <= 0) return score
+
+        val accepted = strategyRandomizer.nextInt(100) < percentage
+        return score.adjusted(
+            amount = if (accepted) 0 else -100,
+            reason = "Compost tendency ${if (accepted) "accepted" else "declined"} ($percentage%)"
+        )
+    }
 
     private fun roundEffectTags(effect: GameEffect): Set<DecisionTag> =
         when (effect) {

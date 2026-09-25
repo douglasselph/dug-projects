@@ -48,6 +48,58 @@ class CultivationMainPriorityTest {
     }
 
     @Test
+    fun `Compost applies a strong guardrail when it would leave less than five Buy power`() {
+        val context = context(
+            hand = listOf(DieView(index = 0, sides = 4, value = 2)),
+            grove = DecisionContext.EMPTY.grove.copy(
+                graftBed = mapOf(DieSides.D6 to 1)
+            )
+        )
+
+        val score = requireNotNull(
+            CompostPriority.targetScore(
+                context = context,
+                die = context.self.board.hand.single(),
+                normalPurchasingPower = 4
+            )
+        )
+
+        assertTrue(score.adjustments.any {
+            it.amount == -40 && it.reason == "Preserve at least 5 Hand-die Buy power"
+        })
+    }
+
+    @Test
+    fun `Compost use percentage favors low rolls and makes repeated die commitments rarer`() {
+        val lowRoll = context(
+            hand = listOf(
+                DieView(index = 0, sides = 4, value = 2),
+                DieView(index = 1, sides = 20, value = 5)
+            ),
+            grove = DecisionContext.EMPTY.grove.copy(graftBed = mapOf(DieSides.D6 to 1))
+        )
+        val ordinaryRoll = context(
+            hand = listOf(
+                DieView(index = 0, sides = 4, value = 3),
+                DieView(index = 1, sides = 20, value = 5)
+            ),
+            grove = DecisionContext.EMPTY.grove.copy(graftBed = mapOf(DieSides.D6 to 1))
+        )
+        val belowBuyFloor = context(
+            hand = listOf(
+                DieView(index = 0, sides = 4, value = 2),
+                DieView(index = 1, sides = 20, value = 2)
+            ),
+            grove = DecisionContext.EMPTY.grove.copy(graftBed = mapOf(DieSides.D6 to 1))
+        )
+
+        assertEquals(75, CompostPriority.usePercentage(lowRoll, 7, mainActionsRemaining = 2))
+        assertEquals(50, CompostPriority.usePercentage(ordinaryRoll, 8, mainActionsRemaining = 2))
+        assertEquals(10, CompostPriority.usePercentage(belowBuyFloor, 4, mainActionsRemaining = 2))
+        assertEquals(37, CompostPriority.usePercentage(lowRoll, 7, mainActionsRemaining = 1))
+    }
+
+    @Test
     fun `Mulch threshold scoring uses supplied normal purchasing power`() {
         val context = context(
             hand = listOf(DieView(index = 0, sides = 10, value = 7)),

@@ -18,17 +18,19 @@ import java.nio.file.Path
  * This is not a balance experiment.
  */
 fun main(args: Array<String>) {
-    val seed = args.firstOrNull()?.toLongOrNull()
+    val seed = args.getOrNull(0)?.toLongOrNull()
         ?: HumanBaselineSmokeScenario.DEFAULT_SEED
+    val strategySeed = args.getOrNull(1)?.toLongOrNull() ?: seed
     val scenario = HumanBaselineSmokeScenario.scenario(
         seed = seed,
+        strategySeed = strategySeed,
         recordDecisionReasoning = true
     )
 
     IntegrationGameHarness(scenario).use { harness ->
         val result = harness.runGame()
         val entries = harness.chronicleEntries()
-        val outputDir = outputDirectory(seed)
+        val outputDir = outputDirectory(seed, strategySeed)
         Files.createDirectories(outputDir)
 
         val chroniclePath = outputDir.resolve("chronicle.txt")
@@ -42,6 +44,7 @@ fun main(args: Array<String>) {
             summaryPath,
             buildSummary(
                 seed = seed,
+                strategySeed = strategySeed,
                 entryCount = entries.size,
                 result = result
             )
@@ -54,23 +57,25 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun outputDirectory(seed: Long): Path =
+private fun outputDirectory(seed: Long, strategySeed: Long): Path =
     Path.of(
         "output",
         "smoke",
         "human-baseline",
-        "seed-$seed"
+        "mechanical-$seed-strategy-$strategySeed"
     )
 
 private fun buildSummary(
     seed: Long,
+    strategySeed: Long,
     entryCount: Int,
     result: GameRunResult
 ): String =
     buildString {
         appendLine("Leaf & Let Die — Human Baseline smoke run")
         appendLine("Purpose: full-game Human Baseline/Chronicle sanity check; not a balance result")
-        appendLine("Seed: $seed")
+        appendLine("Mechanical seed: $seed")
+        appendLine("Strategy seed: $strategySeed")
         appendLine("Players: ${HumanBaselineSmokeScenario.NUM_PLAYERS}")
         appendLine("Strategy: Human Baseline for every player")
         appendLine("Plants: recommended first-game Plant set")

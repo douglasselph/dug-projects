@@ -14,17 +14,38 @@ object ChronicleTextRenderer {
 
     fun render(entries: List<GameEntry>): String =
         buildString {
+            var roundNumber = 0
+            var sequenceWithinRound = 0
+
             entries.forEach { entry ->
-                if (entry is GameEntry.RoundRevealed && isNotEmpty()) {
-                    appendLine()
+                if (entry is GameEntry.RoundRevealed) {
+                    if (isNotEmpty()) appendLine()
+                    roundNumber = entry.roundNumber
+                    sequenceWithinRound = 0
                 }
-                appendLine(render(entry))
+                sequenceWithinRound += 1
+                appendLine(renderWithRoundPrefix(entry, roundNumber, sequenceWithinRound))
             }
         }
 
+    /**
+     * Renders a standalone entry without round context. Full Chronicle reports
+     * should call [render] with the complete entry list so they receive the
+     * round-local `01.001`, `01.002`, ... numbering scheme.
+     */
     fun render(entry: GameEntry): String {
         val prefix = entry.sequence.toString().padStart(4, '0')
         return "$prefix  ${renderBody(entry)}"
+    }
+
+    private fun renderWithRoundPrefix(
+        entry: GameEntry,
+        roundNumber: Int,
+        sequenceWithinRound: Int
+    ): String {
+        val roundPrefix = roundNumber.toString().padStart(2, '0')
+        val localPrefix = sequenceWithinRound.toString().padStart(3, '0')
+        return "$roundPrefix.$localPrefix  ${renderBody(entry)}"
     }
 
     private fun renderBody(entry: GameEntry): String =
