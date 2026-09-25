@@ -134,7 +134,7 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
-        fun `Compost tendency can accept or decline the same attractive low die upgrade`() {
+        fun `Compost low die uses the seventy five percent boundary and carries probability metadata`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
@@ -153,16 +153,18 @@ class HumanBaselineCultivationStrategyTest {
                 round = round,
                 context = context,
                 choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(74))
             )
             val declines = choose(
                 round = round,
                 context = context,
                 choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(99))
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(75))
             )
 
-            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(accepts).action)
+            val acceptedMain = assertIs<CultivationAction.Main>(accepts)
+            assertEquals(CultivationMainAction.RoundEffect1, acceptedMain.action)
+            assertEquals(75, acceptedMain.decisionProbabilityPercent)
             assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
         }
 
@@ -218,7 +220,10 @@ class HumanBaselineCultivationStrategyTest {
                 strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(5))
             )
 
-            assertIs<SupportAction.PlayWisp>(assertIs<CultivationAction.Support>(accepts).action)
+            val acceptedWisp = assertIs<SupportAction.PlayWisp>(
+                assertIs<CultivationAction.Support>(accepts).action
+            )
+            assertEquals(5, acceptedWisp.decisionProbabilityPercent)
             assertEquals(CultivationAction.Done, declines)
         }
 

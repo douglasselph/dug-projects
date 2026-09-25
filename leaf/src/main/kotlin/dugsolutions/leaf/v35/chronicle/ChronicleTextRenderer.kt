@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
@@ -53,7 +54,7 @@ object ChronicleTextRenderer {
             val pendingUpgradeRewards = mutableMapOf<PlayerId, MutableList<GameEntry.RollReward>>()
             val pendingMulchStores = mutableMapOf<PlayerId, GameEntry.MulchStored>()
             val pendingOvergrowthEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
-            val suppressedRoundMains = mutableMapOf<PlayerId, MainActionKind>()
+            val pendingRoundEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
 
             fun appendBody(body: String) {
                 separatorAlreadyWritten = false
@@ -77,10 +78,14 @@ object ChronicleTextRenderer {
                 pendingUpgrades.keys.toList().forEach(::flushPendingUpgrade)
             }
 
-            fun compactRoundEffect(entry: GameEntry.EffectResolved) {
+            fun compactRoundEffect(
+                entry: GameEntry.EffectResolved,
+                decisionProbabilityPercent: Int? = null
+            ) {
                 val slot = roundEffectSlot(entry.sourceName)
                 val body = buildString {
                     append("${player(entry.playerId)} ROUND $slot ${entry.effect}")
+                    decisionProbabilityPercent?.let { append(" ($it%)") }
                     pendingMulchStores.remove(entry.playerId)?.let { stored ->
                         append(" ${stored.sides}=${stored.value}")
                     }
@@ -94,8 +99,11 @@ object ChronicleTextRenderer {
                 pendingUpgradeRolls.remove(entry.playerId)
                 pendingUpgradeRewards.remove(entry.playerId)
                 appendBody(body)
-                roundMainKind(entry.sourceName)?.let { kind ->
-                    suppressedRoundMains[entry.playerId] = kind
+            }
+
+            fun flushAllPendingRoundEffects() {
+                pendingRoundEffects.keys.toList().forEach { playerId ->
+                    pendingRoundEffects.remove(playerId)?.let { compactRoundEffect(it) }
                 }
             }
 
@@ -123,7 +131,10 @@ object ChronicleTextRenderer {
 
             entries.forEach { entry ->
                 if (entry is GameEntry.RoundRevealed) {
-                    if (!detail) flushAllPendingUpgrades()
+                    if (!detail) {
+                        flushAllPendingRoundEffects()
+                        flushAllPendingUpgrades()
+                    }
                     if (isNotEmpty() && !separatorAlreadyWritten) appendLine()
                     separatorAlreadyWritten = false
                     roundNumber = entry.roundNumber
@@ -133,7 +144,7 @@ object ChronicleTextRenderer {
                     completedOpeningDraws.clear()
                     pendingMulchStores.clear()
                     pendingOvergrowthEffects.clear()
-                    suppressedRoundMains.clear()
+                    pendingRoundEffects.clear()
                 }
 
                 if (!detail && entry is GameEntry.DecisionReasoning) {
@@ -217,7 +228,7 @@ object ChronicleTextRenderer {
                         is GameEntry.EffectResolved -> {
                             when {
                                 entry.sourceKind == EffectSourceKind.ROUND -> {
-                                    compactRoundEffect(entry)
+                                    pendingRoundEffects[entry.playerId] = entry
                                     return@forEach
                                 }
 
@@ -237,9 +248,25 @@ object ChronicleTextRenderer {
                         }
 
                         is GameEntry.MainAction -> {
-                            val suppressed = suppressedRoundMains[entry.playerId]
-                            if (suppressed != null && entry.action == suppressed) {
-                                suppressedRoundMains.remove(entry.playerId)
+                            // In compact Cultivation output, a Draw is already fully
+                            // represented by its ROLL line plus any REWARD line.
+                            if (
+                                entry.phase == ChroniclePhase.CULTIVATION &&
+                                entry.action == MainActionKind.DRAW
+                            ) {
+                                return@forEach
+                            }
+
+                            val pendingRoundEffect = pendingRoundEffects[entry.playerId]
+                            if (
+                                pendingRoundEffect != null &&
+                                roundMainKind(pendingRoundEffect.sourceName) == entry.action
+                            ) {
+                                pendingRoundEffects.remove(entry.playerId)
+                                compactRoundEffect(
+                                    entry = pendingRoundEffect,
+                                    decisionProbabilityPercent = entry.decisionProbabilityPercent
+                                )
                                 return@forEach
                             }
                         }
@@ -255,6 +282,7 @@ object ChronicleTextRenderer {
                         }
 
                         is GameEntry.RoundCompleted -> {
+                            flushAllPendingRoundEffects()
                             flushAllPendingUpgrades()
                         }
 
@@ -282,7 +310,10 @@ object ChronicleTextRenderer {
                 }
             }
 
-            if (!detail) flushAllPendingUpgrades()
+            if (!detail) {
+                flushAllPendingRoundEffects()
+                flushAllPendingUpgrades()
+            }
         }
 
 
@@ -474,6 +505,7 @@ object ChronicleTextRenderer {
                     append("${player(entry.playerId)} ${entry.phase} MAIN ${entry.action}")
                     entry.actionNumber?.let { append(" #$it") }
                     entry.battleStage?.let { append(" stage=$it") }
+                    entry.decisionProbabilityPercent?.let { append(" chance=$it%") }
                 }
 
             is GameEntry.SupportAction ->

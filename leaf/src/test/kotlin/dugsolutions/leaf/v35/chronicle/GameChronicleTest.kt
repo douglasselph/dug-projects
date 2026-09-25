@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
+import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.player.PlayerId
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
@@ -82,6 +84,34 @@ class GameChronicleTest {
                 value = 7,
                 rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
                 reason = RollReason.DRAW
+            ),
+            recorded
+        )
+    }
+
+    @Test
+    fun record_preservesMainActionDecisionProbabilityMetadata() {
+        val chronicle = GameChronicle()
+
+        val recorded = chronicle.record(
+            Moment.MainAction(
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                decisionProbabilityPercent = 75
+            )
+        )
+
+        assertEquals(
+            GameEntry.MainAction(
+                sequence = 1L,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                battleStage = null,
+                decisionProbabilityPercent = 75
             ),
             recorded
         )

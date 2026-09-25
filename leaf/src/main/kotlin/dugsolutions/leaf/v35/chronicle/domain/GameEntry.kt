@@ -65,8 +65,15 @@ sealed interface GameEntry {
         val phase: ChroniclePhase,
         val action: MainActionKind,
         val actionNumber: Int?,
-        val battleStage: BattleMainStage?
-    ) : GameEntry
+        val battleStage: BattleMainStage?,
+        val decisionProbabilityPercent: Int? = null
+    ) : GameEntry {
+        init {
+            require(decisionProbabilityPercent == null || decisionProbabilityPercent in 0..100) {
+                "Main Action decision probability must be 0..100: $decisionProbabilityPercent"
+            }
+        }
+    }
 
     data class SupportAction(
         override val sequence: Long,

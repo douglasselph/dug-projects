@@ -62,6 +62,27 @@ class CultivationBuildCoordinatorTest {
     }
 
     @Test
+    fun execute_recordsMainActionDecisionProbabilityMetadataWithoutChangingLegality() {
+        val strategy = SequenceStrategy(
+            CultivationAction.Main(
+                action = CultivationMainAction.RoundEffect1,
+                decisionProbabilityPercent = 75
+            ),
+            CultivationAction.Main(CultivationMainAction.RoundEffect2),
+            CultivationAction.Done
+        )
+        val first = player(1, emptyList(), strategy)
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        fixture.coordinator.execute(fixture.game, fixture.card)
+
+        val recorded = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.MainAction>()
+            .first { it.playerId == first.id }
+        assertEquals(75, recorded.decisionProbabilityPercent)
+    }
+
+    @Test
     fun execute_supportMayOccurBeforeBetweenAndAfterMainActions() {
         val first = player(1, emptyList(), SequenceStrategy())
         first.tokens.add(Token.WATER)

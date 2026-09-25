@@ -232,7 +232,8 @@ class CultivationBuildCoordinator(
                                 playerId = player.id,
                                 phase = ChroniclePhase.CULTIVATION,
                                 action = mainActionKind(chosen.action),
-                                actionNumber = mainActionsUsed
+                                actionNumber = mainActionsUsed,
+                                decisionProbabilityPercent = chosen.decisionProbabilityPercent
                             )
                         )
                     }

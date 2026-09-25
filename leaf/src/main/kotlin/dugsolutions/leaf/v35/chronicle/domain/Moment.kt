@@ -60,8 +60,15 @@ sealed interface Moment {
         val phase: ChroniclePhase,
         val action: MainActionKind,
         val actionNumber: Int? = null,
-        val battleStage: BattleMainStage? = null
-    ) : Moment
+        val battleStage: BattleMainStage? = null,
+        val decisionProbabilityPercent: Int? = null
+    ) : Moment {
+        init {
+            require(decisionProbabilityPercent == null || decisionProbabilityPercent in 0..100) {
+                "Main Action decision probability must be 0..100: $decisionProbabilityPercent"
+            }
+        }
+    }
 
     data class SupportAction(
         val playerId: PlayerId,

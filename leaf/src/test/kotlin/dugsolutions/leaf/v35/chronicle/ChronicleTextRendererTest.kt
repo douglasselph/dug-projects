@@ -186,6 +186,25 @@ class ChronicleTextRendererTest {
     }
 
     @Test
+    fun `compact Chronicle omits redundant Cultivation Main Draw after the roll`() {
+        val entries = openingDrawEntries() + GameEntry.MainAction(
+            sequence = 15,
+            playerId = PlayerId(1),
+            phase = ChroniclePhase.CULTIVATION,
+            action = MainActionKind.DRAW,
+            actionNumber = 1,
+            battleStage = null
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+        val detailLines = ChronicleTextRenderer.render(entries, detail = true).lines()
+
+        assertEquals(1, lines.count { "P1 ROLL D6=4 reason=DRAW" in it })
+        assertEquals(0, lines.count { "CULTIVATION MAIN DRAW" in it })
+        assertEquals(1, detailLines.count { "CULTIVATION MAIN DRAW #1" in it })
+    }
+
+    @Test
     fun `detail Chronicle preserves line by line opening draw and decisions`() {
         val lines = ChronicleTextRenderer.render(openingDrawEntries(), detail = true).lines()
 
@@ -387,7 +406,54 @@ class ChronicleTextRendererTest {
             "01.002  P1 ROUND EFFECT_2 MULCH_DIE_FROM_HAND D4=1",
             lines[1]
         )
-        assertEquals(2, lines.size)
+        assertEquals(2, lines.count { it.isNotEmpty() })
+    }
+
+    @Test
+    fun `compact Chronicle shows the recorded Compost willingness percentage`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "Resource_Compost_Mulch",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
+                secondEffect = GameEffect.MULCH_DIE_FROM_HAND
+            ),
+            GameEntry.Upgrade(
+                sequence = 2,
+                playerId = PlayerId(2),
+                from = DieSides.D4,
+                to = DieSides.D6,
+                destination = UpgradeDestination.DISCARD,
+                fromValue = 1
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(2),
+                effect = GameEffect.UPGRADE_DIE_FROM_HAND,
+                sourceKind = EffectSourceKind.ROUND,
+                sourceName = "Resource_Compost_Mulch:FIRST",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.MainAction(
+                sequence = 4,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                battleStage = null,
+                decisionProbabilityPercent = 75
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  P2 ROUND EFFECT_1 UPGRADE_DIE_FROM_HAND (75%) D4=1 -> D6",
+            lines[1]
+        )
+        assertEquals(2, lines.count { it.isNotEmpty() })
     }
 
     @Test
@@ -441,7 +507,7 @@ class ChronicleTextRendererTest {
             "01.002  P1 Wisp_Upgrade_Die (5%) D4 -> D8=7",
             lines[1]
         )
-        assertEquals(2, lines.size)
+        assertEquals(2, lines.count { it.isNotEmpty() })
     }
 
     @Test

@@ -92,18 +92,26 @@ class HumanBaselineCultivationStrategy(
             context = request.context,
             legalChoices = request.legalChoices
         )
+        val compost = applyCompostWillingness(
+            request = request,
+            legalChoices = overgrowth.legalChoices
+        )
         val selected = scoreEngine.chooseValue(
             context = request.context,
-            candidates = overgrowth.legalChoices.map { choice ->
+            candidates = compost.legalChoices.map { choice ->
                 DecisionCandidate(
                     choice = choice,
-                    score = score(request, choice),
+                    score = score(request, choice, compost),
                     tags = tags(request, choice)
                 )
             },
             influenceRegistry = influenceRegistry
         )
-        return attachOvergrowthProbability(selected, overgrowth)
+        return attachCompostProbability(
+            selected = attachOvergrowthProbability(selected, overgrowth),
+            request = request,
+            gate = compost
+        )
     }
 
     private fun applyOvergrowthWillingness(
@@ -144,7 +152,64 @@ class HumanBaselineCultivationStrategy(
         return CultivationAction.Support(wisp.withDecisionProbability(percent))
     }
 
-    private fun score(request: ChooseCultivationActionRequest, choice: CultivationAction): PriorityScore =
+    private fun applyCompostWillingness(
+        request: ChooseCultivationActionRequest,
+        legalChoices: List<CultivationAction>
+    ): CultivationCompostGate {
+        if (request.mainActionsRemaining !in 1..2) {
+            return CultivationCompostGate(legalChoices)
+        }
+
+        val compostChoices = legalChoices.filter { choice ->
+            val main = choice as? CultivationAction.Main ?: return@filter false
+            when (main.action) {
+                CultivationMainAction.RoundEffect1 ->
+                    request.roundCard.firstEffect.effect == GameEffect.UPGRADE_DIE_FROM_HAND
+                CultivationMainAction.RoundEffect2 ->
+                    request.roundCard.secondEffect.effect == GameEffect.UPGRADE_DIE_FROM_HAND
+                else -> false
+            }
+        }
+        if (compostChoices.isEmpty()) return CultivationCompostGate(legalChoices)
+
+        val normalPurchasingPower = policy.normalPurchasingPower(request.context)
+        val percentage = CompostPriority.usePercentage(
+            context = request.context,
+            normalPurchasingPower = normalPurchasingPower,
+            mainActionsRemaining = request.mainActionsRemaining
+        )
+        if (percentage <= 0) return CultivationCompostGate(legalChoices)
+
+        val accepted = strategyRandomizer.nextInt(100) < percentage
+        return CultivationCompostGate(
+            legalChoices = legalChoices,
+            percentage = percentage,
+            accepted = accepted
+        )
+    }
+
+    private fun attachCompostProbability(
+        selected: CultivationAction,
+        request: ChooseCultivationActionRequest,
+        gate: CultivationCompostGate
+    ): CultivationAction {
+        if (gate.accepted != true) return selected
+        val percent = gate.percentage ?: return selected
+        val main = selected as? CultivationAction.Main ?: return selected
+        val effect = when (main.action) {
+            CultivationMainAction.RoundEffect1 -> request.roundCard.firstEffect.effect
+            CultivationMainAction.RoundEffect2 -> request.roundCard.secondEffect.effect
+            else -> return selected
+        }
+        if (effect != GameEffect.UPGRADE_DIE_FROM_HAND) return selected
+        return main.withDecisionProbability(percent)
+    }
+
+    private fun score(
+        request: ChooseCultivationActionRequest,
+        choice: CultivationAction,
+        compostGate: CultivationCompostGate
+    ): PriorityScore =
         when (choice) {
             CultivationAction.Done -> PriorityScore(
                 if (request.mainActionsRemaining == 0) policy.cultivationDoneScore(request.context) else 0
@@ -165,12 +230,12 @@ class HumanBaselineCultivationStrategy(
                 CultivationMainAction.RoundEffect1 -> scoreRoundEffect(
                     effect = request.roundCard.firstEffect.effect,
                     context = request.context,
-                    mainActionsRemaining = request.mainActionsRemaining
+                    compostGate = compostGate
                 )
                 CultivationMainAction.RoundEffect2 -> scoreRoundEffect(
                     effect = request.roundCard.secondEffect.effect,
                     context = request.context,
-                    mainActionsRemaining = request.mainActionsRemaining
+                    compostGate = compostGate
                 )
             }
         }
@@ -207,13 +272,10 @@ class HumanBaselineCultivationStrategy(
     private fun scoreRoundEffect(
         effect: GameEffect,
         context: DecisionContext,
-        mainActionsRemaining: Int
+        compostGate: CultivationCompostGate
     ): PriorityScore =
         when (effect) {
-            GameEffect.UPGRADE_DIE_FROM_HAND -> scoreCompost(
-                context = context,
-                mainActionsRemaining = mainActionsRemaining
-            )
+            GameEffect.UPGRADE_DIE_FROM_HAND -> scoreCompost(context, compostGate)
             GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(
                 context = context,
                 normalPurchasingPower = policy.normalPurchasingPower(context)
@@ -228,7 +290,7 @@ class HumanBaselineCultivationStrategy(
 
     private fun scoreCompost(
         context: DecisionContext,
-        mainActionsRemaining: Int
+        gate: CultivationCompostGate
     ): PriorityScore {
         val normalPurchasingPower = policy.normalPurchasingPower(context)
         val score = CompostPriority.score(
@@ -236,17 +298,10 @@ class HumanBaselineCultivationStrategy(
             normalPurchasingPower = normalPurchasingPower,
             developmentBonus = policy.cultivationDiceDevelopmentBonus(context)
         )
-        val percentage = CompostPriority.usePercentage(
-            context = context,
-            normalPurchasingPower = normalPurchasingPower,
-            mainActionsRemaining = mainActionsRemaining
-        )
-        if (percentage <= 0) return score
-
-        val accepted = strategyRandomizer.nextInt(100) < percentage
+        val percentage = gate.percentage ?: return score
         return score.adjusted(
-            amount = if (accepted) 0 else -100,
-            reason = "Compost tendency ${if (accepted) "accepted" else "declined"} ($percentage%)"
+            amount = if (gate.accepted == true) 0 else -100,
+            reason = "Compost tendency ${if (gate.accepted == true) "accepted" else "declined"} ($percentage%)"
         )
     }
 
@@ -275,6 +330,12 @@ class HumanBaselineCultivationStrategy(
     private data class CultivationOvergrowthGate(
         val legalChoices: List<CultivationAction>,
         val acceptedPercentage: Int? = null
+    )
+
+    private data class CultivationCompostGate(
+        val legalChoices: List<CultivationAction>,
+        val percentage: Int? = null,
+        val accepted: Boolean? = null
     )
 
 }

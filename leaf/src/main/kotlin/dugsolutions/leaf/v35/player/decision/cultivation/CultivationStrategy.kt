@@ -19,9 +19,38 @@ sealed interface CultivationMainAction {
 
 /** One decision opportunity during Cultivation Build. */
 sealed interface CultivationAction {
-    data class Main(
-        val action: CultivationMainAction
-    ) : CultivationAction
+    /**
+     * One Main Action choice. [decisionProbabilityPercent] is optional strategy
+     * trace metadata for a probabilistic Human Baseline choice (currently
+     * Compost / UPGRADE_DIE_FROM_HAND). It is deliberately ignored by equality
+     * so attaching diagnostic metadata never makes the choice fail the
+     * coordinator's "chosen in legalChoices" validation.
+     */
+    class Main(
+        val action: CultivationMainAction,
+        val decisionProbabilityPercent: Int? = null
+    ) : CultivationAction {
+        init {
+            require(decisionProbabilityPercent == null || decisionProbabilityPercent in 0..100) {
+                "Main Action decision probability must be 0..100: $decisionProbabilityPercent"
+            }
+        }
+
+        fun withDecisionProbability(percent: Int?): Main =
+            Main(action, percent)
+
+        override fun equals(other: Any?): Boolean =
+            other is Main && action == other.action
+
+        override fun hashCode(): Int = action.hashCode()
+
+        override fun toString(): String =
+            buildString {
+                append("Main(action=$action")
+                decisionProbabilityPercent?.let { append(", decisionProbabilityPercent=$it") }
+                append(')')
+            }
+    }
 
     data class Support(
         val action: SupportAction

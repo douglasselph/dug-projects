@@ -82,7 +82,7 @@ class GameChronicle : Chronicle {
             )
             is Moment.MainAction -> GameEntry.MainAction(
                 sequence, moment.playerId, moment.phase, moment.action,
-                moment.actionNumber, moment.battleStage
+                moment.actionNumber, moment.battleStage, moment.decisionProbabilityPercent
             )
             is Moment.SupportAction -> GameEntry.SupportAction(
                 sequence, moment.playerId, moment.phase, moment.action, moment.row,
