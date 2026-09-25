@@ -701,3 +701,11 @@ outcome changed.**
 M3-C adds an explicit experiment-only mechanical intervention boundary. A fresh intervention policy is created for each isolated `Game`. `RollResolver` always lets the die produce its natural mechanical result first, then offers that observed result to the intervention; a replacement face, when supplied, is validated and installed before Chronicle recording and normal Roll Reward resolution. Thus an intervention changes the selected observed outcome without skipping the underlying mechanical RNG consumption or bypassing normal rules.
 
 The first typed context is `CULTIVATION_OPENING_DRAW`. Cultivation Step 2 supplies player, round number/type, die sides, natural face, and source to the intervention. Ordinary games use `MechanicalIntervention.NONE`, so the seam is inert unless an experiment opts in. The policy is intentionally general rather than Wisp-specific; M3-D will provide the concrete first-two-Cultivation/affected-player policy and prove its real-engine scope.
+
+### M3-D implementation note — Six-Wisp opening integration proof
+
+M3-D adds the first concrete reusable policy on the M3-C seam: `CultivationOpeningDrawFaceIntervention`. It targets one player, the first configured number of actual Cultivation opening rounds, and one forced face. It is deliberately phrased as an opening-draw face intervention rather than a Wisp grant; the Six-Wisp experiment configures it for Player A, the first two Cultivation rounds, and face `2`.
+
+The real-engine integration proof runs four Human Baseline players through three Cultivation rounds. A recording wrapper verifies 36 opening-roll intervention requests (4 players × 3 dice × 3 rounds), exactly six replacements for the affected player in the first two openings, no replacements for the other players, and no replacement in the affected player's third opening. It also verifies that natural die values were already generated before replacement and that the Chronicle records three observed 2s plus three normal Wisp rewards in each affected opening. The third opening is natural again.
+
+This checkpoint proves the intervention's scope and normal Roll Reward route. It does not yet run or aggregate the 2,000-pair research batch; that belongs to M3-E.

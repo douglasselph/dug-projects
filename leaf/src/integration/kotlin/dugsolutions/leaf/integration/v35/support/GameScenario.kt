@@ -3,6 +3,7 @@ package dugsolutions.leaf.integration.v35.support
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
+import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 
@@ -34,7 +35,9 @@ data class GameScenario(
     /** Strategy-only tie-breaking seed; independent from injected mechanics. */
     val strategySeed: Long? = seed,
     /** Emit scored Human Baseline decision reasoning into the game Chronicle. */
-    val recordDecisionReasoning: Boolean = false
+    val recordDecisionReasoning: Boolean = false,
+    /** Optional experiment-only mechanical intervention; fresh state per Game. */
+    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -67,7 +70,8 @@ data class GameScenario(
             seed = seed,
             dieConfig = dieConfig,
             strategySeed = strategySeed,
-            recordDecisionReasoning = recordDecisionReasoning
+            recordDecisionReasoning = recordDecisionReasoning,
+            mechanicalInterventionFactory = mechanicalInterventionFactory
         )
     }
 }
