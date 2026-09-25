@@ -276,3 +276,33 @@ tasks.register<JavaExec>("viewTestOutput") {
     // Allow command line arguments to be passed
     args = project.findProperty("args")?.toString()?.split("\\s+".toRegex()) ?: listOf()
 } 
+
+// Human-facing Milestone-3 research runners. These are deliberately separate
+// from simulationTest: tests verify the machinery; these tasks produce data
+// for a designer to inspect and interpret.
+tasks.register<JavaExec>("runBaselineRandomnessDiagnostic") {
+    description = "Runs a small Human Baseline cohort and prints per-game development diagnostics."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineResearchMainKt")
+    args("diagnostic")
+    project.findProperty("games")?.toString()?.let { args("--games=$it") }
+    project.findProperty("baseSeed")?.toString()?.let { args("--base-seed=$it") }
+    project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+    project.findProperty("plants")?.toString()?.let { args("--plants=$it") }
+}
+
+tasks.register<JavaExec>("runBaselineCalibration") {
+    description = "Runs cumulative Human Baseline seat calibration and prints aggregate checkpoints."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineResearchMainKt")
+    args("calibration")
+    project.findProperty("games")?.toString()?.let { args("--games=$it") }
+    project.findProperty("checkpoints")?.toString()?.let { args("--checkpoints=$it") }
+    project.findProperty("baseSeed")?.toString()?.let { args("--base-seed=$it") }
+    project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+    project.findProperty("plants")?.toString()?.let { args("--plants=$it") }
+}

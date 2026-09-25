@@ -785,3 +785,58 @@ M3-D adds the first concrete reusable policy on the M3-C seam: `CultivationOpeni
 The real-engine integration proof runs four Human Baseline players through three Cultivation rounds. A recording wrapper verifies 36 opening-roll intervention requests (4 players × 3 dice × 3 rounds), exactly six replacements for the affected player in the first two openings, no replacements for the other players, and no replacement in the affected player's third opening. It also verifies that natural die values were already generated before replacement and that the Chronicle records three observed 2s plus three normal Wisp rewards in each affected opening. The third opening is natural again.
 
 This checkpoint proves the intervention's scope and normal Roll Reward route. It does not yet run or aggregate the 2,000-pair research batch; that belongs to M3-E.
+
+## M3-D2D — manual baseline research runners
+
+M3-D2D separates **verification of the research machinery** from **running research for designer review**.
+
+- `simulationTest` remains the automated regression layer. It proves reproducibility, seed sensitivity, aggregation, extraction, and rendering behavior. It is not the normal interface for inspecting simulation results.
+- `runBaselineRandomnessDiagnostic` is the human-facing small-cohort runner. Use it for 4-, 8-, or 12-game reviews of winners, VP, final Plant Creature signatures, and final owned-dice signatures.
+- `runBaselineCalibration` is the long-run aggregate runner. It executes one deterministic sequence and reports cumulative checkpoint prefixes such as 100/250/500/1000/2000 games.
+
+### Small development/randomness diagnostic
+
+Examples:
+
+```bash
+./gradlew runBaselineRandomnessDiagnostic -Pgames=4
+./gradlew runBaselineRandomnessDiagnostic -Pgames=8
+./gradlew runBaselineRandomnessDiagnostic -Pgames=12
+```
+
+The default is 12 games. The default seeds are mechanical `12000` and strategy `22000`. Reproduce a run by supplying the same values; compare a different cohort by changing one or both:
+
+```bash
+./gradlew runBaselineRandomnessDiagnostic -Pgames=12 -PbaseSeed=12000 -PstrategySeed=22000
+./gradlew runBaselineRandomnessDiagnostic -Pgames=12 -PbaseSeed=32000 -PstrategySeed=42000
+```
+
+The report is deliberately diagnostic, not pass/fail. Repeated winners, Plant shapes, or dice profiles are legal. The designer is looking for gross suspicious sameness or other reasons to open a later explicit distribution/dominant-development experiment.
+
+### Long-run seat calibration
+
+Run one sequence through the largest checkpoint and inspect cumulative prefixes:
+
+```bash
+./gradlew runBaselineCalibration \
+  -Pgames=2000 \
+  -Pcheckpoints=100,250,500,1000,2000 \
+  -PbaseSeed=12000 \
+  -PstrategySeed=22000
+```
+
+The 500-game row is the first 500 games of the same run represented by the 1000- and 2000-game rows; it is not a fresh batch. The report shows physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and the contextual sampling reference defined in M3-D2B. No fairness threshold is automatically imposed.
+
+### Selecting a different nine-card Grove
+
+Both manual runners accept the same comma-separated nine stable Plant names:
+
+```bash
+./gradlew runBaselineRandomnessDiagnostic \
+  -Pgames=12 \
+  -Pplants=Root_05_02,Root_07_04,Root_09_03,Vine_07_01,Vine_09_01,Vine_11_04,Flower_11_03,Flower_14_02,Flower_17_04
+```
+
+Use `-Pplants=...` the same way with `runBaselineCalibration`. The default is the first-game nine-card Grove shown above. Calibration output includes the canonical Grove fingerprint so results from different setups are not confused.
+
+M3-D2D is the final baseline-research tooling checkpoint before M3-E. The baseline runner should be used to choose a defensible Six-Wisp sample size rather than treating 2000 as a magic number.

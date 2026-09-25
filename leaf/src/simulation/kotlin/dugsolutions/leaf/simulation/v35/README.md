@@ -115,3 +115,35 @@ whether one Plant/dice shape occurs unusually often are separate later research.
 `experiment.baseline.BaselineCalibrationSpec` identifies one exact nine-card Grove, deterministic seed schedule, total game count, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes only the compact `BatchRunResult` and reports physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and a labelled sampling-reference band. Checkpoints are cumulative prefixes of one run; no fairness tolerance is encoded yet.
 
 M3-D2C adds `BaselineRandomnessDiagnostic` and its renderer for 4/8/12-game diagnostic cohorts. Same fixed seeds must reproduce the complete winner/development fingerprint; a different seed cohort must change that complete fingerprint. The renderer shows each game's winner plus every player's Plant and dice signatures for human inspection of gross sameness. Repeated winners or shapes are explicitly not test failures; distributional questions remain later research.
+
+## Manual Human Baseline research
+
+`simulationTest` verifies that the simulation/research code behaves correctly. For designer-facing research output, use the dedicated Gradle tasks instead of running a JUnit test and reading its captured output.
+
+Small 4/8/12-game development diagnostics:
+
+```bash
+./gradlew runBaselineRandomnessDiagnostic -Pgames=4
+./gradlew runBaselineRandomnessDiagnostic -Pgames=8
+./gradlew runBaselineRandomnessDiagnostic -Pgames=12
+```
+
+Reproduce or deliberately change the seed cohort with `-PbaseSeed=<long>` and `-PstrategySeed=<long>`. Defaults are `12000` and `22000`.
+
+Long-run cumulative calibration:
+
+```bash
+./gradlew runBaselineCalibration \
+  -Pgames=2000 \
+  -Pcheckpoints=100,250,500,1000,2000 \
+  -PbaseSeed=12000 \
+  -PstrategySeed=22000
+```
+
+Both tasks use the first-game nine-card Grove by default. Supply another exact setup with a comma-separated list of stable names:
+
+```bash
+-Pplants=Root_05_02,Root_07_04,Root_09_03,Vine_07_01,Vine_09_01,Vine_11_04,Flower_11_03,Flower_14_02,Flower_17_04
+```
+
+The small diagnostic is for human inspection of gross variation. It does **not** require unique winners or unique development shapes. The calibration runner is aggregate research: checkpoint rows are cumulative prefixes of one run and no automatic fairness threshold is imposed.
