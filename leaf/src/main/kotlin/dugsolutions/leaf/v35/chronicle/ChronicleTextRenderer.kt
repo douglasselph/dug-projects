@@ -49,134 +49,229 @@ object ChronicleTextRenderer {
             val openingDraws = mutableMapOf<PlayerId, OpeningDrawBuffer>()
             val completedOpeningDraws = mutableSetOf<PlayerId>()
 
-            val pendingUpgrades = mutableMapOf<PlayerId, GameEntry.Upgrade>()
-            val pendingUpgradeRolls = mutableMapOf<PlayerId, GameEntry.DieRolled>()
-            val pendingUpgradeRewards = mutableMapOf<PlayerId, MutableList<GameEntry.RollReward>>()
-            val pendingMulchStores = mutableMapOf<PlayerId, GameEntry.MulchStored>()
-            val pendingDieValueChanges = mutableMapOf<PlayerId, GameEntry.DieValueChanged>()
-            val pendingOvergrowthEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
-            val pendingMulchWispEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
-            val pendingRoundEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
-            var pendingCompactRoll: GameEntry.DieRolled? = null
-
-            fun appendBody(body: String) {
+            fun appendBody(body: String, depth: Int = 0) {
                 separatorAlreadyWritten = false
                 sequenceWithinRound += 1
                 val roundPrefix = roundNumber.toString().padStart(2, '0')
                 val localPrefix = sequenceWithinRound.toString().padStart(3, '0')
-                appendLine("$roundPrefix.$localPrefix  $body")
+                val indent = "  ".repeat(depth.coerceAtLeast(0))
+                appendLine("$roundPrefix.$localPrefix  $indent$body")
             }
 
-            fun appendEntry(entry: GameEntry) {
-                appendBody(renderBody(entry))
+            fun appendEntry(entry: GameEntry, depth: Int = entry.hierarchyDepth) {
+                appendBody(renderBody(entry), depth)
             }
 
             fun appendCompactRoll(
                 roll: GameEntry.DieRolled,
-                reward: GameEntry.RollReward? = null
+                reward: GameEntry.RollReward? = null,
+                depth: Int = roll.hierarchyDepth
             ) {
                 val body = buildString {
                     append("${player(roll.playerId)} ROLL D${roll.sides}=${roll.value} reason=${roll.reason}")
                     reward?.let(::compactReward)?.let { append(" REWARD $it") }
                 }
-                appendBody(body)
+                appendBody(body, depth)
             }
 
-            fun flushPendingCompactRoll() {
-                pendingCompactRoll?.let(::appendCompactRoll)
-                pendingCompactRoll = null
-            }
-
-            fun flushPendingUpgrade(playerId: PlayerId) {
-                pendingUpgrades.remove(playerId)?.let(::appendEntry)
-                pendingUpgradeRolls.remove(playerId)?.let(::appendEntry)
-                pendingUpgradeRewards.remove(playerId)?.forEach(::appendEntry)
-            }
-
-            fun flushAllPendingUpgrades() {
-                pendingUpgrades.keys.toList().forEach(::flushPendingUpgrade)
-            }
-
-            fun compactRoundEffect(
-                entry: GameEntry.EffectResolved,
-                decisionProbabilityPercent: Int? = null
-            ) {
-                val slot = roundEffectSlot(entry.sourceName)
-                val body = buildString {
-                    append("${player(entry.playerId)} ROUND $slot ${entry.effect}")
-                    decisionProbabilityPercent?.let { append(" ($it%)") }
-                    pendingMulchStores.remove(entry.playerId)?.let { stored ->
-                        append(" ${stored.sides}=${stored.value}")
-                    }
-                    pendingUpgrades.remove(entry.playerId)?.let { upgrade ->
-                        append(' ')
-                        append(upgrade.from)
-                        upgrade.fromValue?.let { append("=$it") }
-                        append(" -> ${upgrade.to}")
-                    }
-                    pendingDieValueChanges.remove(entry.playerId)
-                        ?.takeIf { it.effect == entry.effect }
-                        ?.let { change ->
-                            append(" (${change.sides}=${change.before}->${change.after})")
+            fun descendants(node: ChronicleNode): List<GameEntry> =
+                buildList {
+                    fun visit(current: ChronicleNode) {
+                        current.children.forEach { child ->
+                            add(child.entry)
+                            visit(child)
                         }
+                    }
+                    visit(node)
                 }
-                pendingUpgradeRolls.remove(entry.playerId)
-                pendingUpgradeRewards.remove(entry.playerId)
-                appendBody(body)
-            }
 
-            fun flushAllPendingRoundEffects() {
-                pendingRoundEffects.keys.toList().forEach { playerId ->
-                    pendingRoundEffects.remove(playerId)?.let { compactRoundEffect(it) }
-                }
-            }
+            lateinit var appendNodeCompact: (ChronicleNode, Int) -> Unit
 
-            fun compactOvergrowth(
-                effect: GameEntry.EffectResolved,
-                support: GameEntry.SupportAction
+            fun appendChildrenCompact(
+                children: List<ChronicleNode>,
+                baseDepth: Int
             ) {
-                val upgrade = pendingUpgrades.remove(effect.playerId)
-                val roll = pendingUpgradeRolls.remove(effect.playerId)
-                val rewards = pendingUpgradeRewards.remove(effect.playerId).orEmpty()
-                val body = buildString {
-                    append("${player(effect.playerId)} ${effect.sourceName}")
-                    support.wispUsePercentage?.let { append(" ($it%)") }
-                    if (upgrade != null) {
-                        append(" ${upgrade.from} -> ${upgrade.to}")
-                        roll?.let { append("=${it.value}") }
+                var index = 0
+                while (index < children.size) {
+                    val child = children[index]
+                    val childDepth = baseDepth + (child.entry.hierarchyDepth - children.first().entry.hierarchyDepth)
+                    val entry = child.entry
+
+                    if (entry is GameEntry.DecisionReasoning) {
+                        index++
+                        continue
                     }
-                    val compactRewards = rewards.mapNotNull(::compactReward)
-                    if (compactRewards.isNotEmpty()) {
-                        append(" REWARD ${compactRewards.joinToString(" ")}")
+
+                    if (entry is GameEntry.DieRolled) {
+                        val next = children.getOrNull(index + 1)?.entry as? GameEntry.RollReward
+                        if (next != null && next.playerId == entry.playerId) {
+                            appendCompactRoll(entry, next, childDepth)
+                            index += 2
+                            continue
+                        }
+                        appendCompactRoll(entry, depth = childDepth)
+                        index++
+                        continue
                     }
+
+                    appendNodeCompact(child, childDepth)
+                    index++
                 }
-                appendBody(body)
             }
 
-            fun compactMulchWisp(
-                effect: GameEntry.EffectResolved,
-                support: GameEntry.SupportAction
-            ) {
-                val stored = pendingMulchStores.remove(effect.playerId)
+            fun compactRoundEffect(node: ChronicleNode, entry: GameEntry.MainAction, depth: Int) {
+                val effectNode = node.children.firstOrNull { it.entry is GameEntry.EffectResolved }
+                val effect = effectNode?.entry as? GameEntry.EffectResolved
+                if (effect == null) {
+                    appendEntry(entry, depth)
+                    appendChildrenCompact(node.children, depth + 1)
+                    return
+                }
+
+                val nested = descendants(effectNode)
+                val stored = nested.filterIsInstance<GameEntry.MulchStored>().firstOrNull()
+                val upgrade = nested.filterIsInstance<GameEntry.Upgrade>().firstOrNull()
+                val change = nested.filterIsInstance<GameEntry.DieValueChanged>()
+                    .firstOrNull { it.effect == effect.effect }
+
                 val body = buildString {
-                    append("${player(effect.playerId)} ${effect.sourceName}")
-                    support.wispUsePercentage?.let { append(" ($it%)") }
-                    if (stored != null) {
-                        append(" ${stored.sides}=${stored.value} -> MULCH")
-                    } else {
-                        append(" ${effect.effect}")
+                    append("${player(entry.playerId)} ROUND ${roundEffectSlot(effect.sourceName)} ${effect.effect}")
+                    entry.decisionProbabilityPercent?.let { append(" ($it%)") }
+                    stored?.let { append(" ${it.sides}=${it.value}") }
+                    upgrade?.let {
+                        append(' ')
+                        append(it.from)
+                        it.fromValue?.let { value -> append("=$value") }
+                        append(" -> ${it.to}")
+                    }
+                    change?.let {
+                        append(" (${it.sides}=${it.before}->${it.after})")
                     }
                 }
-                appendBody(body)
+                appendBody(body, depth)
             }
 
-            entries.forEach { entry ->
+            fun compactWisp(node: ChronicleNode, entry: GameEntry.SupportAction, depth: Int) {
+                val effectNode = node.children.firstOrNull { it.entry is GameEntry.EffectResolved }
+                val effect = effectNode?.entry as? GameEntry.EffectResolved
+                if (effect == null) {
+                    appendEntry(entry, depth)
+                    appendChildrenCompact(node.children, depth + 1)
+                    return
+                }
+
+                val nested = descendants(effectNode)
+                when (effect.effect) {
+                    GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> {
+                        val upgrade = nested.filterIsInstance<GameEntry.Upgrade>().firstOrNull()
+                        val roll = nested.filterIsInstance<GameEntry.DieRolled>()
+                            .firstOrNull { it.reason == RollReason.ROLL }
+                        val rewards = nested.filterIsInstance<GameEntry.RollReward>()
+                            .mapNotNull(::compactReward)
+                        val body = buildString {
+                            append("${player(effect.playerId)} ${effect.sourceName}")
+                            entry.wispUsePercentage?.let { append(" ($it%)") }
+                            upgrade?.let {
+                                append(" ${it.from} -> ${it.to}")
+                                roll?.let { rolled -> append("=${rolled.value}") }
+                            }
+                            if (rewards.isNotEmpty()) {
+                                append(" REWARD ${rewards.joinToString(" ")}")
+                            }
+                        }
+                        appendBody(body, depth)
+                    }
+
+                    GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> {
+                        val stored = nested.filterIsInstance<GameEntry.MulchStored>().firstOrNull()
+                        val body = buildString {
+                            append("${player(effect.playerId)} ${effect.sourceName}")
+                            entry.wispUsePercentage?.let { append(" ($it%)") }
+                            if (stored != null) {
+                                append(" ${stored.sides}=${stored.value} -> MULCH")
+                            } else {
+                                append(" ${effect.effect}")
+                            }
+                        }
+                        appendBody(body, depth)
+                    }
+
+                    else -> {
+                        // Compact mode does not need a generic SUPPORT WISP line;
+                        // the Wisp effect already says what was played and what it did.
+                        appendEntry(effect, depth)
+                        appendChildrenCompact(effectNode.children, depth + 1)
+                    }
+                }
+            }
+
+            appendNodeCompact = { node, depth ->
+                when (val entry = node.entry) {
+                    is GameEntry.DecisionReasoning -> Unit
+
+                    is GameEntry.MainAction -> when {
+                        entry.action == MainActionKind.ROUND_EFFECT_1 ||
+                            entry.action == MainActionKind.ROUND_EFFECT_2 ->
+                            compactRoundEffect(node, entry, depth)
+
+                        entry.action == MainActionKind.ACTIVATE_PLANT -> {
+                            val effectNode = node.children.firstOrNull { it.entry is GameEntry.EffectResolved }
+                            if (effectNode != null) {
+                                appendEntry(effectNode.entry, depth)
+                                appendChildrenCompact(effectNode.children, depth + 1)
+                            } else {
+                                appendEntry(entry, depth)
+                                appendChildrenCompact(node.children, depth + 1)
+                            }
+                        }
+
+                        entry.phase == ChroniclePhase.CULTIVATION && entry.action == MainActionKind.DRAW ->
+                            appendChildrenCompact(node.children, depth)
+
+                        else -> {
+                            appendEntry(entry, depth)
+                            appendChildrenCompact(node.children, depth + 1)
+                        }
+                    }
+
+                    is GameEntry.SupportAction -> {
+                        if (entry.action == SupportActionKind.WISP) {
+                            compactWisp(node, entry, depth)
+                        } else {
+                            appendEntry(entry, depth)
+                            appendChildrenCompact(node.children, depth + 1)
+                        }
+                    }
+
+                    is GameEntry.Cleanup -> {
+                        val body = buildString {
+                            append("${player(entry.playerId)} ${entry.phase} CLEANUP")
+                            if (entry.discardedDice != 0) append(" discardedDice=${entry.discardedDice}")
+                            if (entry.returnedCritters != 0) append(" returnedCritters=${entry.returnedCritters}")
+                            append(" refreshed=${entry.refreshed}")
+                        }
+                        appendBody(body, depth)
+                        appendChildrenCompact(node.children, depth + 1)
+                    }
+
+                    is GameEntry.DieRolled -> appendCompactRoll(entry, depth = depth)
+
+                    is GameEntry.RollReward -> compactReward(entry)?.let {
+                        appendBody("${player(entry.playerId)} REWARD $it", depth)
+                    }
+
+                    else -> {
+                        appendEntry(entry, depth)
+                        appendChildrenCompact(node.children, depth + 1)
+                    }
+                }
+            }
+
+            val roots = hierarchyForest(entries)
+            roots.forEach { node ->
+                val entry = node.entry
+
                 if (entry is GameEntry.RoundRevealed) {
-                    if (!detail) {
-                        flushPendingCompactRoll()
-                        flushAllPendingRoundEffects()
-                        flushAllPendingUpgrades()
-                    }
                     if (isNotEmpty() && !separatorAlreadyWritten) appendLine()
                     separatorAlreadyWritten = false
                     roundNumber = entry.roundNumber
@@ -184,15 +279,6 @@ object ChronicleTextRenderer {
                     openingRoundActive = true
                     openingDraws.clear()
                     completedOpeningDraws.clear()
-                    pendingMulchStores.clear()
-                    pendingDieValueChanges.clear()
-                    pendingOvergrowthEffects.clear()
-                    pendingMulchWispEffects.clear()
-                    pendingRoundEffects.clear()
-                }
-
-                if (!detail && entry is GameEntry.DecisionReasoning) {
-                    return@forEach
                 }
 
                 if (!detail && openingRoundActive) {
@@ -241,154 +327,15 @@ object ChronicleTextRenderer {
                     }
                 }
 
-                if (!detail) {
-                    when (entry) {
-                        is GameEntry.Upgrade -> {
-                            pendingUpgrades[entry.playerId] = entry
-                            return@forEach
-                        }
-
-                        is GameEntry.MulchStored -> {
-                            pendingMulchStores[entry.playerId] = entry
-                            return@forEach
-                        }
-
-                        is GameEntry.DieValueChanged -> {
-                            pendingDieValueChanges[entry.playerId] = entry
-                            return@forEach
-                        }
-
-                        is GameEntry.DieRolled -> {
-                            if (pendingUpgrades.containsKey(entry.playerId) && entry.reason == RollReason.ROLL) {
-                                pendingUpgradeRolls[entry.playerId] = entry
-                                return@forEach
-                            }
-                            flushPendingCompactRoll()
-                            if (
-                                entry.rewardPolicy == ChronicleRollRewardPolicy.NORMAL &&
-                                entry.value in 1..2
-                            ) {
-                                pendingCompactRoll = entry
-                            } else {
-                                appendCompactRoll(entry)
-                            }
-                            return@forEach
-                        }
-
-                        is GameEntry.RollReward -> {
-                            if (pendingUpgradeRolls.containsKey(entry.playerId)) {
-                                pendingUpgradeRewards
-                                    .getOrPut(entry.playerId) { mutableListOf() }
-                                    .add(entry)
-                                return@forEach
-                            }
-                            val roll = pendingCompactRoll
-                            if (roll != null && roll.playerId == entry.playerId) {
-                                appendCompactRoll(roll, entry)
-                                pendingCompactRoll = null
-                                return@forEach
-                            }
-                        }
-
-                        is GameEntry.EffectResolved -> {
-                            when {
-                                entry.sourceKind == EffectSourceKind.ROUND -> {
-                                    pendingRoundEffects[entry.playerId] = entry
-                                    return@forEach
-                                }
-
-                                entry.sourceKind == EffectSourceKind.WISP &&
-                                    entry.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> {
-                                    pendingOvergrowthEffects[entry.playerId] = entry
-                                    return@forEach
-                                }
-
-                                entry.sourceKind == EffectSourceKind.WISP &&
-                                    entry.effect == GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> {
-                                    pendingMulchWispEffects[entry.playerId] = entry
-                                    return@forEach
-                                }
-
-                                else -> {
-                                    // An Upgrade not consumed by a compact Round/Overgrowth line belongs
-                                    // to another detailed effect family; preserve its normal ordering.
-                                    flushPendingUpgrade(entry.playerId)
-                                    pendingMulchStores.remove(entry.playerId)
-                                    pendingDieValueChanges.remove(entry.playerId)
-                                }
-                            }
-                        }
-
-                        is GameEntry.MainAction -> {
-                            // In compact output, the preceding EffectResolved line already
-                            // identifies a Plant activation. Cultivation Draw is likewise
-                            // fully represented by its ROLL line plus any inline REWARD.
-                            if (entry.action == MainActionKind.ACTIVATE_PLANT) {
-                                return@forEach
-                            }
-                            if (
-                                entry.phase == ChroniclePhase.CULTIVATION &&
-                                entry.action == MainActionKind.DRAW
-                            ) {
-                                return@forEach
-                            }
-
-                            val pendingRoundEffect = pendingRoundEffects[entry.playerId]
-                            if (
-                                pendingRoundEffect != null &&
-                                roundMainKind(pendingRoundEffect.sourceName) == entry.action
-                            ) {
-                                pendingRoundEffects.remove(entry.playerId)
-                                compactRoundEffect(
-                                    entry = pendingRoundEffect,
-                                    decisionProbabilityPercent = entry.decisionProbabilityPercent
-                                )
-                                return@forEach
-                            }
-                        }
-
-                        is GameEntry.SupportAction -> {
-                            if (entry.action == SupportActionKind.WISP) {
-                                val overgrowth = pendingOvergrowthEffects.remove(entry.playerId)
-                                if (overgrowth != null) {
-                                    compactOvergrowth(overgrowth, entry)
-                                    return@forEach
-                                }
-                                val mulchWisp = pendingMulchWispEffects.remove(entry.playerId)
-                                if (mulchWisp != null) {
-                                    compactMulchWisp(mulchWisp, entry)
-                                    return@forEach
-                                }
-                            }
-                        }
-
-                        is GameEntry.Cleanup -> {
-                            flushPendingCompactRoll()
-                            val body = buildString {
-                                append("${player(entry.playerId)} ${entry.phase} CLEANUP")
-                                if (entry.discardedDice != 0) {
-                                    append(" discardedDice=${entry.discardedDice}")
-                                }
-                                if (entry.returnedCritters != 0) {
-                                    append(" returnedCritters=${entry.returnedCritters}")
-                                }
-                                append(" refreshed=${entry.refreshed}")
-                            }
-                            appendBody(body)
-                            return@forEach
-                        }
-
-                        is GameEntry.RoundCompleted -> {
-                            flushPendingCompactRoll()
-                            flushAllPendingRoundEffects()
-                            flushAllPendingUpgrades()
-                        }
-
-                        else -> Unit
+                if (detail) {
+                    fun appendDetailed(current: ChronicleNode) {
+                        appendEntry(current.entry)
+                        current.children.forEach(::appendDetailed)
                     }
+                    appendDetailed(node)
+                } else {
+                    appendNodeCompact(node, node.entry.hierarchyDepth)
                 }
-
-                appendEntry(entry)
 
                 if (entry is GameEntry.RoundCompleted && entry.playerSummaries.isNotEmpty()) {
                     openingRoundActive = false
@@ -407,13 +354,41 @@ object ChronicleTextRenderer {
                     separatorAlreadyWritten = true
                 }
             }
+        }
 
-            if (!detail) {
-                flushPendingCompactRoll()
-                flushAllPendingRoundEffects()
-                flushAllPendingUpgrades()
+    private data class ChronicleNode(
+        val entry: GameEntry,
+        val children: MutableList<ChronicleNode> = mutableListOf()
+    )
+
+    private fun hierarchyForest(entries: List<GameEntry>): List<ChronicleNode> {
+        val roots = mutableListOf<ChronicleNode>()
+        val stack = mutableListOf<ChronicleNode>()
+
+        entries.forEach { entry ->
+            val depth = entry.hierarchyDepth.coerceAtLeast(0)
+            require(depth <= stack.size) {
+                "Chronicle hierarchy jumps from depth ${stack.size} to $depth at sequence ${entry.sequence}"
+            }
+            while (stack.size > depth) stack.removeAt(stack.lastIndex)
+
+            val node = ChronicleNode(entry)
+            if (depth == 0) {
+                roots += node
+            } else {
+                stack[depth - 1].children += node
+            }
+
+            if (stack.size == depth) {
+                stack += node
+            } else {
+                stack[depth] = node
+                while (stack.size > depth + 1) stack.removeAt(stack.lastIndex)
             }
         }
+
+        return roots
+    }
 
 
     private fun roundEffectSlot(sourceName: String): String =
@@ -483,7 +458,8 @@ object ChronicleTextRenderer {
      */
     fun render(entry: GameEntry): String {
         val prefix = entry.sequence.toString().padStart(4, '0')
-        return "$prefix  ${renderBody(entry)}"
+        val indent = "  ".repeat(entry.hierarchyDepth.coerceAtLeast(0))
+        return "$prefix  $indent${renderBody(entry)}"
     }
 
     private fun renderSummaryWithRoundPrefix(

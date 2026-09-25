@@ -130,40 +130,27 @@ class StrikeResolver(
                 highPlayers
             }
 
-        val wounds =
+        val woundCandidates =
             if (winners.isEmpty()) {
                 emptyList()
             } else {
                 val winningTotal = winners.first().total
-                totals
-                    .filter { total ->
-                        total.playerId !in winners.map { it.playerId } &&
-                            winningTotal - total.total >= WOUND_MARGIN
-                    }
-                    .map { wounded ->
-                        val player = battleState.player(wounded.playerId)
-                        StrikeWoundResult(
-                            playerId = wounded.playerId,
-                            resolution = woundResolver.resolve(player)
-                        )
-                    }
+                totals.filter { total ->
+                    total.playerId !in winners.map { it.playerId } &&
+                        winningTotal - total.total >= WOUND_MARGIN
+                }
             }
-
         val vpPerWinner =
             if (winners.isEmpty()) {
                 0
             } else {
-                BASE_STRIKE_VP + wounds.size
+                BASE_STRIKE_VP + woundCandidates.size
             }
-
-        winners.forEach { winner ->
-            battleState.player(winner.playerId).addVp(vpPerWinner)
-        }
-
         val winnerIds = winners.map { it.playerId }
-        val woundedIds = wounds.map { it.playerId }
+        val woundedIds = woundCandidates.map { it.playerId }
+        var wounds = emptyList<StrikeWoundResult>()
 
-        game.chronicle.record(
+        game.chronicle.scoped(
             Moment.StrikeResolved(
                 row = row,
                 totals = totals.map { total ->
@@ -178,7 +165,19 @@ class StrikeResolver(
                 woundedPlayerIds = woundedIds,
                 vpPerWinner = vpPerWinner
             )
-        )
+        ) {
+            wounds = woundCandidates.map { wounded ->
+                val player = battleState.player(wounded.playerId)
+                StrikeWoundResult(
+                    playerId = wounded.playerId,
+                    resolution = woundResolver.resolve(player)
+                )
+            }
+
+            winners.forEach { winner ->
+                battleState.player(winner.playerId).addVp(vpPerWinner)
+            }
+        }
 
         return StrikeResolution(
             row = row,

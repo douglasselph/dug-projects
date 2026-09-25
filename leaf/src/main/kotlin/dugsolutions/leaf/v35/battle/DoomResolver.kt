@@ -68,49 +68,52 @@ class DoomResolver(
             }
         }
 
-        val results = doomedPlacements.map { placement ->
-            val player = battleState.player(placement.playerId)
-            val value = placement.die.value
-            val sides = DieSides.from(placement.die.sides)
-
-            val removed = battleState.grid.removeDie(placement.die)
-            stateCheck(
-                removed != null &&
-                    removed.playerId == placement.playerId &&
-                    removed.row == placement.row,
-                context = "DoomResolver"
-            ) {
-                "Doom die lost its expected Grid placement: $placement"
+        var results = emptyList<DoomedDie>()
+        game.chronicle.scoped(
+            parent = {
+                Moment.Doom(
+                    dice = results.map { die ->
+                        DoomDieSnapshot(
+                            playerId = die.playerId,
+                            row = die.row,
+                            sides = die.sides,
+                            value = die.value,
+                            returnedToGraftBed = die.returnedToGraftBed
+                        )
+                    }
+                )
             }
+        ) {
+            results = doomedPlacements.map { placement ->
+                val player = battleState.player(placement.playerId)
+                val value = placement.die.value
+                val sides = DieSides.from(placement.die.sides)
 
-            val trash = trashResolver.trashDieFromHand(
-                game = game,
-                player = player,
-                die = placement.die
-            )
-
-            DoomedDie(
-                playerId = placement.playerId,
-                row = placement.row,
-                sides = sides,
-                value = value,
-                returnedToGraftBed = trash.returnedToGraftBed
-            )
-        }
-
-        game.chronicle.record(
-            Moment.Doom(
-                dice = results.map { die ->
-                    DoomDieSnapshot(
-                        playerId = die.playerId,
-                        row = die.row,
-                        sides = die.sides,
-                        value = die.value,
-                        returnedToGraftBed = die.returnedToGraftBed
-                    )
+                val removed = battleState.grid.removeDie(placement.die)
+                stateCheck(
+                    removed != null &&
+                        removed.playerId == placement.playerId &&
+                        removed.row == placement.row,
+                    context = "DoomResolver"
+                ) {
+                    "Doom die lost its expected Grid placement: $placement"
                 }
-            )
-        )
+
+                val trash = trashResolver.trashDieFromHand(
+                    game = game,
+                    player = player,
+                    die = placement.die
+                )
+
+                DoomedDie(
+                    playerId = placement.playerId,
+                    row = placement.row,
+                    sides = sides,
+                    value = value,
+                    returnedToGraftBed = trash.returnedToGraftBed
+                )
+            }
+        }
 
         return DoomResult(results)
     }

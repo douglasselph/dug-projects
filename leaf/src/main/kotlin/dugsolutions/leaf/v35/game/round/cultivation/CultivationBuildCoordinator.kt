@@ -215,26 +215,28 @@ class CultivationBuildCoordinator(
                         decisionCheck(mainActionsUsed < 2) {
                             "Player ${player.id.value} has already used both Main Actions"
                         }
-                        executeMainAction(
-                            game = game,
-                            player = player,
-                            roundCard = roundCard,
-                            action = chosen.action
-                        )
-                        mainActionsUsed++
-                        mainActionResults += CultivationActionResult(
-                            playerId = player.id,
-                            actionNumber = mainActionsUsed,
-                            action = chosen.action
-                        )
-                        game.chronicle.record(
+                        val actionNumber = mainActionsUsed + 1
+                        game.chronicle.scoped(
                             Moment.MainAction(
                                 playerId = player.id,
                                 phase = ChroniclePhase.CULTIVATION,
                                 action = mainActionKind(chosen.action),
-                                actionNumber = mainActionsUsed,
+                                actionNumber = actionNumber,
                                 decisionProbabilityPercent = chosen.decisionProbabilityPercent
                             )
+                        ) {
+                            executeMainAction(
+                                game = game,
+                                player = player,
+                                roundCard = roundCard,
+                                action = chosen.action
+                            )
+                        }
+                        mainActionsUsed = actionNumber
+                        mainActionResults += CultivationActionResult(
+                            playerId = player.id,
+                            actionNumber = mainActionsUsed,
+                            action = chosen.action
                         )
                     }
 

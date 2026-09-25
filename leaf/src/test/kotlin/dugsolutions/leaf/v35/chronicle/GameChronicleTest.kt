@@ -312,4 +312,76 @@ class GameChronicleTest {
             executor.shutdownNow()
         }
     }
+    @Test
+    fun scoped_commitsParentBeforeBufferedChildrenWithHierarchyDepth() {
+        val chronicle = GameChronicle()
+
+        chronicle.scoped(Moment.Marker("parent")) {
+            chronicle.record(Moment.Marker("child"))
+            chronicle.scoped(Moment.Marker("grandchild-parent")) {
+                chronicle.record(Moment.Marker("grandchild"))
+            }
+        }
+
+        assertEquals(
+            listOf("parent", "child", "grandchild-parent", "grandchild"),
+            chronicle.entries.map { (it as GameEntry.Marker).message }
+        )
+        assertEquals(listOf(0, 1, 1, 2), chronicle.entries.map { it.hierarchyDepth })
+        assertEquals(listOf(1L, 2L, 3L, 4L), chronicle.entries.map { it.sequence })
+    }
+
+    @Test
+    fun scoped_whenBlockFails_discardsParentChildrenAndReservedSequences() {
+        val chronicle = GameChronicle()
+        chronicle.record(Moment.Marker("before"))
+
+        assertFailsWith<IllegalStateException> {
+            chronicle.scoped(Moment.Marker("parent")) {
+                chronicle.record(Moment.Marker("child"))
+                error("boom")
+            }
+        }
+
+        val after = chronicle.record(Moment.Marker("after"))
+        assertEquals(listOf("before", "after"), chronicle.entries.map { (it as GameEntry.Marker).message })
+        assertEquals(2L, after.sequence)
+    }
+
+    @Test
+    fun scoped_deferredParentCanUseDataComputedByBlock() {
+        val chronicle = GameChronicle()
+        var result = "not-set"
+
+        chronicle.scoped(parent = { Moment.Marker("parent:$result") }) {
+            chronicle.record(Moment.Marker("child"))
+            result = "done"
+        }
+
+        assertEquals("parent:done", (chronicle.entries[0] as GameEntry.Marker).message)
+        assertEquals("child", (chronicle.entries[1] as GameEntry.Marker).message)
+    }
+
+    @Test
+    fun scoped_whenDeferredParentFails_restoresOuterScopeAndSequence() {
+        val chronicle = GameChronicle()
+
+        chronicle.scoped(Moment.Marker("outer")) {
+            chronicle.record(Moment.Marker("before nested"))
+            assertFailsWith<IllegalStateException> {
+                chronicle.scoped(parent = { error("parent failed") }) {
+                    chronicle.record(Moment.Marker("discarded nested child"))
+                }
+            }
+            chronicle.record(Moment.Marker("after nested"))
+        }
+
+        assertEquals(
+            listOf("outer", "before nested", "after nested"),
+            chronicle.entries.map { (it as GameEntry.Marker).message }
+        )
+        assertEquals(listOf(1L, 2L, 3L), chronicle.entries.map { it.sequence })
+        assertEquals(listOf(0, 1, 1), chronicle.entries.map { it.hierarchyDepth })
+    }
+
 }

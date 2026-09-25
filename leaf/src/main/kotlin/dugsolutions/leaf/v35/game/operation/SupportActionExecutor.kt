@@ -43,7 +43,8 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction
     ) {
-        when (action) {
+        game.chronicle.scoped(supportMoment(player, action, GameEffectPhase.CULTIVATION)) {
+            when (action) {
             is SupportAction.PlayWisp ->
                 playWisp(
                     game = game,
@@ -65,11 +66,10 @@ class SupportActionExecutor(
             is SupportAction.UseWormFlip ->
                 useWormFlip(game, player, action)
 
-            is SupportAction.UseButterfly ->
-                useButterfly(game, player, null, action)
+                is SupportAction.UseButterfly ->
+                    useButterfly(game, player, null, action)
+            }
         }
-
-        recordAction(game, player, action, GameEffectPhase.CULTIVATION)
     }
 
     fun executeBattle(
@@ -78,7 +78,8 @@ class SupportActionExecutor(
         battleState: BattleState,
         action: SupportAction
     ) {
-        when (action) {
+        game.chronicle.scoped(supportMoment(player, action, GameEffectPhase.BATTLE)) {
+            when (action) {
             is SupportAction.PlayWisp ->
                 playWisp(
                     game = game,
@@ -108,19 +109,18 @@ class SupportActionExecutor(
             is SupportAction.UseWormFlip ->
                 useWormFlip(game, player, action)
 
-            is SupportAction.UseButterfly -> {
-                val die = resolveHandDie(player, action.die)
-                decisionCheck(
-                    battleState.grid.locationOf(die)?.playerId == player.id,
-                    context = "SupportActionExecutor"
-                ) {
-                    "Battle Butterfly target is not currently on player ${player.id.value}'s Grid: ${action.die}"
+                is SupportAction.UseButterfly -> {
+                    val die = resolveHandDie(player, action.die)
+                    decisionCheck(
+                        battleState.grid.locationOf(die)?.playerId == player.id,
+                        context = "SupportActionExecutor"
+                    ) {
+                        "Battle Butterfly target is not currently on player ${player.id.value}'s Grid: ${action.die}"
+                    }
+                    useButterfly(game, player, battleState, action)
                 }
-                useButterfly(game, player, battleState, action)
             }
         }
-
-        recordAction(game, player, action, GameEffectPhase.BATTLE)
     }
 
     private fun playWisp(
@@ -328,24 +328,20 @@ class SupportActionExecutor(
             player.critters.count(Critter.WORM) > 0
         }
 
-    private fun recordAction(
-        game: Game,
+    private fun supportMoment(
         player: Player,
         action: SupportAction,
         phase: GameEffectPhase
-    ) {
-        game.chronicle.record(
-            Moment.SupportAction(
-                playerId = player.id,
-                phase = when (phase) {
-                    GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
-                    GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
-                },
-                action = actionKind(action),
-                wispUsePercentage = (action as? SupportAction.PlayWisp)?.decisionProbabilityPercent
-            )
+    ): Moment.SupportAction =
+        Moment.SupportAction(
+            playerId = player.id,
+            phase = when (phase) {
+                GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
+                GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
+            },
+            action = actionKind(action),
+            wispUsePercentage = (action as? SupportAction.PlayWisp)?.decisionProbabilityPercent
         )
-    }
 
     private fun actionKind(action: SupportAction): SupportActionKind =
         when (action) {

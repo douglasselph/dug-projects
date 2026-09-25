@@ -79,12 +79,7 @@ class DefaultGameEffectExecutor(
             "GameEffect is not currently executable: ${request.effect}"
         }
 
-        handler.execute(
-            request = request,
-            executor = this
-        )
-
-        request.game.chronicle.record(
+        request.game.chronicle.scoped(
             Moment.EffectResolved(
                 playerId = request.actor.id,
                 effect = request.effect,
@@ -95,7 +90,12 @@ class DefaultGameEffectExecutor(
                     GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
                 }
             )
-        )
+        ) {
+            handler.execute(
+                request = request,
+                executor = this
+            )
+        }
     }
 
     /**

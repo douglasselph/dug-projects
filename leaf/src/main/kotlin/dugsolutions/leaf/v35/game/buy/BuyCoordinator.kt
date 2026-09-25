@@ -109,24 +109,7 @@ class BuyCoordinator(
                     is BuyItem.Plant -> null
                 }
 
-                commitPurchase(
-                    game = game,
-                    player = player,
-                    item = item,
-                    payment = resolvedPayment,
-                    graftPlan = graftPlan,
-                    boughtDie = boughtDie
-                )
-
-                val result = PurchaseResult(
-                    playerId = player.id,
-                    item = item,
-                    cost = item.cost,
-                    paymentTotal = resolvedPayment.total
-                )
-                purchases.add(result)
-                purchasesMadeThisBuy += 1
-                game.chronicle.record(
+                game.chronicle.scoped(
                     Moment.Purchase(
                         playerId = player.id,
                         kind = when (item) {
@@ -137,7 +120,25 @@ class BuyCoordinator(
                         cost = item.cost,
                         paymentTotal = resolvedPayment.total
                     )
+                ) {
+                    commitPurchase(
+                        game = game,
+                        player = player,
+                        item = item,
+                        payment = resolvedPayment,
+                        graftPlan = graftPlan,
+                        boughtDie = boughtDie
+                    )
+                }
+
+                val result = PurchaseResult(
+                    playerId = player.id,
+                    item = item,
+                    cost = item.cost,
+                    paymentTotal = resolvedPayment.total
                 )
+                purchases.add(result)
+                purchasesMadeThisBuy += 1
             }
         }
 

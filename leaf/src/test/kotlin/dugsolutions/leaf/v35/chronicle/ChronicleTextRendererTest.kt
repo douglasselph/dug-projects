@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.chronicle
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
@@ -25,6 +26,7 @@ import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ChronicleTextRendererTest {
 
@@ -410,6 +412,7 @@ class ChronicleTextRendererTest {
         )
 
 
+
     @Test
     fun `compact Chronicle combines Round Effect and affected Mulch die`() {
         val entries = listOf(
@@ -421,12 +424,14 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
                 secondEffect = GameEffect.MULCH_DIE_FROM_HAND
             ),
-            GameEntry.MulchStored(
+            GameEntry.MainAction(
                 sequence = 2,
                 playerId = PlayerId(1),
-                sides = DieSides.D4,
-                value = 1,
-                fromDiscard = false
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_2,
+                actionNumber = 1,
+                battleStage = null,
+                decisionProbabilityPercent = 80
             ),
             GameEntry.EffectResolved(
                 sequence = 3,
@@ -434,16 +439,16 @@ class ChronicleTextRendererTest {
                 effect = GameEffect.MULCH_DIE_FROM_HAND,
                 sourceKind = EffectSourceKind.ROUND,
                 sourceName = "Resource_Compost_Mulch:SECOND",
-                phase = ChroniclePhase.CULTIVATION
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
             ),
-            GameEntry.MainAction(
+            GameEntry.MulchStored(
                 sequence = 4,
                 playerId = PlayerId(1),
-                phase = ChroniclePhase.CULTIVATION,
-                action = MainActionKind.ROUND_EFFECT_2,
-                actionNumber = 1,
-                battleStage = null,
-                decisionProbabilityPercent = 80
+                sides = DieSides.D4,
+                value = 1,
+                fromDiscard = false,
+                hierarchyDepth = 2
             )
         )
 
@@ -456,6 +461,7 @@ class ChronicleTextRendererTest {
         assertEquals(2, lines.count { it.isNotEmpty() })
     }
 
+
     @Test
     fun `compact Chronicle shows the recorded Compost willingness percentage`() {
         val entries = listOf(
@@ -467,13 +473,14 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
                 secondEffect = GameEffect.MULCH_DIE_FROM_HAND
             ),
-            GameEntry.Upgrade(
+            GameEntry.MainAction(
                 sequence = 2,
                 playerId = PlayerId(2),
-                from = DieSides.D4,
-                to = DieSides.D6,
-                destination = UpgradeDestination.DISCARD,
-                fromValue = 1
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                battleStage = null,
+                decisionProbabilityPercent = 75
             ),
             GameEntry.EffectResolved(
                 sequence = 3,
@@ -481,16 +488,17 @@ class ChronicleTextRendererTest {
                 effect = GameEffect.UPGRADE_DIE_FROM_HAND,
                 sourceKind = EffectSourceKind.ROUND,
                 sourceName = "Resource_Compost_Mulch:FIRST",
-                phase = ChroniclePhase.CULTIVATION
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
             ),
-            GameEntry.MainAction(
+            GameEntry.Upgrade(
                 sequence = 4,
                 playerId = PlayerId(2),
-                phase = ChroniclePhase.CULTIVATION,
-                action = MainActionKind.ROUND_EFFECT_1,
-                actionNumber = 1,
-                battleStage = null,
-                decisionProbabilityPercent = 75
+                from = DieSides.D4,
+                to = DieSides.D6,
+                destination = UpgradeDestination.DISCARD,
+                fromValue = 1,
+                hierarchyDepth = 2
             )
         )
 
@@ -503,6 +511,7 @@ class ChronicleTextRendererTest {
         assertEquals(2, lines.count { it.isNotEmpty() })
     }
 
+
     @Test
     fun `compact Chronicle combines Overgrowth upgrade roll and willingness percentage`() {
         val entries = listOf(
@@ -514,37 +523,40 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
                 secondEffect = GameEffect.MULCH_DIE_FROM_HAND
             ),
-            GameEntry.Upgrade(
-                sequence = 2,
-                playerId = PlayerId(1),
-                from = DieSides.D4,
-                to = DieSides.D8,
-                destination = UpgradeDestination.HAND,
-                fromValue = 2
-            ),
-            GameEntry.DieRolled(
-                sequence = 3,
-                playerId = PlayerId(1),
-                sides = 8,
-                value = 7,
-                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
-                reason = RollReason.ROLL
-            ),
-            GameEntry.EffectResolved(
-                sequence = 4,
-                playerId = PlayerId(1),
-                effect = GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
-                sourceKind = EffectSourceKind.WISP,
-                sourceName = "Wisp_Upgrade_Die",
-                phase = ChroniclePhase.CULTIVATION
-            ),
             GameEntry.SupportAction(
-                sequence = 5,
+                sequence = 2,
                 playerId = PlayerId(1),
                 phase = ChroniclePhase.CULTIVATION,
                 action = SupportActionKind.WISP,
                 row = null,
                 wispUsePercentage = 5
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(1),
+                effect = GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
+                sourceKind = EffectSourceKind.WISP,
+                sourceName = "Wisp_Upgrade_Die",
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
+            ),
+            GameEntry.Upgrade(
+                sequence = 4,
+                playerId = PlayerId(1),
+                from = DieSides.D4,
+                to = DieSides.D8,
+                destination = UpgradeDestination.HAND,
+                fromValue = 2,
+                hierarchyDepth = 2
+            ),
+            GameEntry.DieRolled(
+                sequence = 5,
+                playerId = PlayerId(1),
+                sides = 8,
+                value = 7,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.ROLL,
+                hierarchyDepth = 2
             )
         )
 
@@ -556,7 +568,6 @@ class ChronicleTextRendererTest {
         )
         assertEquals(2, lines.count { it.isNotEmpty() })
     }
-
 
     @Test
     fun `compact Chronicle annotates Buy Order leader with highest Hand die`() {
@@ -581,6 +592,7 @@ class ChronicleTextRendererTest {
         assertEquals("01.002  BUY ORDER P1(D8=7) -> P2 -> P3 -> P4", lines[1])
     }
 
+
     @Test
     fun `compact Chronicle appends concrete Sunlight die change to Round Effect`() {
         val entries = listOf(
@@ -592,13 +604,14 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.RAISE_DIE_PLUS_3,
                 secondEffect = GameEffect.GAIN_WATER_TOKEN
             ),
-            GameEntry.DieValueChanged(
+            GameEntry.MainAction(
                 sequence = 2,
                 playerId = PlayerId(3),
-                effect = GameEffect.RAISE_DIE_PLUS_3,
-                sides = DieSides.D4,
-                before = 1,
-                after = 4
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                battleStage = null,
+                decisionProbabilityPercent = 50
             ),
             GameEntry.EffectResolved(
                 sequence = 3,
@@ -606,16 +619,17 @@ class ChronicleTextRendererTest {
                 effect = GameEffect.RAISE_DIE_PLUS_3,
                 sourceKind = EffectSourceKind.ROUND,
                 sourceName = "Resource_Sunlight_Water:FIRST",
-                phase = ChroniclePhase.CULTIVATION
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
             ),
-            GameEntry.MainAction(
+            GameEntry.DieValueChanged(
                 sequence = 4,
                 playerId = PlayerId(3),
-                phase = ChroniclePhase.CULTIVATION,
-                action = MainActionKind.ROUND_EFFECT_1,
-                actionNumber = 1,
-                battleStage = null,
-                decisionProbabilityPercent = 50
+                effect = GameEffect.RAISE_DIE_PLUS_3,
+                sides = DieSides.D4,
+                before = 1,
+                after = 4,
+                hierarchyDepth = 2
             )
         )
 
@@ -628,6 +642,7 @@ class ChronicleTextRendererTest {
         assertEquals(2, lines.count { it.isNotEmpty() })
     }
 
+
     @Test
     fun `compact Chronicle combines Pocketed Spark effect and stored discard die`() {
         val entries = listOf(
@@ -639,12 +654,12 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.GAIN_ONE_VP,
                 secondEffect = GameEffect.GAIN_ONE_VP
             ),
-            GameEntry.MulchStored(
+            GameEntry.SupportAction(
                 sequence = 2,
                 playerId = PlayerId(2),
-                sides = DieSides.D6,
-                value = 2,
-                fromDiscard = true
+                phase = ChroniclePhase.CULTIVATION,
+                action = SupportActionKind.WISP,
+                row = null
             ),
             GameEntry.EffectResolved(
                 sequence = 3,
@@ -652,14 +667,16 @@ class ChronicleTextRendererTest {
                 effect = GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
                 sourceKind = EffectSourceKind.WISP,
                 sourceName = "Wisp_Mulch_Die",
-                phase = ChroniclePhase.CULTIVATION
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
             ),
-            GameEntry.SupportAction(
+            GameEntry.MulchStored(
                 sequence = 4,
                 playerId = PlayerId(2),
-                phase = ChroniclePhase.CULTIVATION,
-                action = SupportActionKind.WISP,
-                row = null
+                sides = DieSides.D6,
+                value = 2,
+                fromDiscard = true,
+                hierarchyDepth = 2
             )
         )
 
@@ -687,20 +704,30 @@ class ChronicleTextRendererTest {
                 playerId = PlayerId(1),
                 count = 0
             ),
-            GameEntry.DieRolled(
+            GameEntry.MainAction(
                 sequence = 3,
+                playerId = PlayerId(1),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.DRAW,
+                actionNumber = 1,
+                battleStage = null
+            ),
+            GameEntry.DieRolled(
+                sequence = 4,
                 playerId = PlayerId(1),
                 sides = 8,
                 value = 2,
                 rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
-                reason = RollReason.DRAW
+                reason = RollReason.DRAW,
+                hierarchyDepth = 1
             ),
             GameEntry.RollReward(
-                sequence = 4,
+                sequence = 5,
                 playerId = PlayerId(1),
                 kind = RollRewardKind.WISP_GAINED,
                 critter = null,
-                wispName = "Wisp_Gain_Green"
+                wispName = "Wisp_Gain_Green",
+                hierarchyDepth = 1
             )
         )
 
@@ -709,6 +736,7 @@ class ChronicleTextRendererTest {
         assertEquals("01.003  P1 ROLL D8=2 reason=DRAW REWARD WISP_GAIN_GREEN", lines[2])
         assertEquals(0, lines.count { "ROLL REWARD" in it })
     }
+
 
     @Test
     fun `compact Chronicle suppresses redundant Plant Main Action line`() {
@@ -721,21 +749,22 @@ class ChronicleTextRendererTest {
                 firstEffect = GameEffect.GAIN_ONE_VP,
                 secondEffect = GameEffect.GAIN_ONE_VP
             ),
-            GameEntry.EffectResolved(
-                sequence = 2,
-                playerId = PlayerId(3),
-                effect = GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
-                sourceKind = EffectSourceKind.PLANT,
-                sourceName = "Vine_09_01",
-                phase = ChroniclePhase.CULTIVATION
-            ),
             GameEntry.MainAction(
-                sequence = 3,
+                sequence = 2,
                 playerId = PlayerId(3),
                 phase = ChroniclePhase.CULTIVATION,
                 action = MainActionKind.ACTIVATE_PLANT,
                 actionNumber = 1,
                 battleStage = null
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(3),
+                effect = GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
+                sourceKind = EffectSourceKind.PLANT,
+                sourceName = "Vine_09_01",
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
             )
         )
 
@@ -745,6 +774,44 @@ class ChronicleTextRendererTest {
         assertEquals(1, lines.count { "EFFECT PLANT Vine_09_01" in it })
         assertEquals(0, lines.count { "MAIN ACTIVATE_PLANT" in it })
         assertEquals(1, detail.count { "MAIN ACTIVATE_PLANT #1" in it })
+        assertTrue(detail.any { it.startsWith("01.003    P3 CULTIVATION EFFECT PLANT") })
+    }
+
+
+    @Test
+    fun `scoped Battle Draw renders parent before indented roll`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.MainAction(
+                sequence = 2,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.BATTLE,
+                action = MainActionKind.DRAW,
+                actionNumber = null,
+                battleStage = BattleMainStage.FIRST
+            ),
+            GameEntry.DieRolled(
+                sequence = 3,
+                playerId = PlayerId(2),
+                sides = 8,
+                value = 8,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.DRAW,
+                hierarchyDepth = 1
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals("01.002  P2 BATTLE MAIN DRAW stage=FIRST", lines[1])
+        assertEquals("01.003    P2 ROLL D8=8 reason=DRAW", lines[2])
     }
 
     @Test

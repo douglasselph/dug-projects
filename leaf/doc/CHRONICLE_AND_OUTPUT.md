@@ -74,6 +74,19 @@ Every `ROUND ... COMPLETE` entry also carries immutable end-of-Round player snap
 
 The current format is diagnostic and can be improved later without changing the underlying game mechanics.
 
+### Chronicle hierarchy and scoped recording
+
+Composite game operations use buffered Chronicle scopes. A scope reserves the parent sequence number, buffers all Chronicle entries produced by the operation, and commits only after the operation succeeds. The committed order is parent first, then children. Failed scopes discard both their buffered entries and their reserved sequence numbers. Scopes may nest.
+
+Every typed `GameEntry` therefore carries `hierarchyDepth`: top-level events are depth 0, direct child work is depth 1, grandchildren are depth 2, and so on. The text renderer indents two spaces per hierarchy level. For example:
+
+```text
+04.010  P2 BATTLE MAIN DRAW stage=FIRST
+04.011    P2 ROLL D8=8 reason=DRAW
+```
+
+This hierarchy is recorded by the engine; it is not inferred later from text. Main Actions, shared Support Actions, resolved Effects, Purchases, Strikes, Doom, and per-player Cleanup currently use scoped recording. Completion events such as `OpeningDrawCompleted`, `RoundCompleted`, and `GameCompleted` remain completion markers and therefore still appear after the work they summarize.
+
 The top-level `output/` directory is generated material and is listed in `.gitignore`.
 
 ## 4. What to look for in a smoke Chronicle

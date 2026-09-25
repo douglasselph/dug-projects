@@ -93,23 +93,26 @@ class BattleCleanupCoordinator(
                 "Player ${player.id.value} has ${player.dice.handSize} unplaced Hand dice after Battle Grid cleanup"
             }
 
-            val refreshed = refreshResolver.refreshIfReady(player)
-
-            /* Stored Mulch and temporary Critter values both roll over/reset here. */
-            player.tokens.normalize()
-            player.critterValues.clearRound()
-
             val mutable = resultByPlayer.getValue(player.id)
+            var refreshed = false
 
-            game.chronicle.record(
-                Moment.Cleanup(
-                    playerId = player.id,
-                    phase = ChroniclePhase.BATTLE,
-                    discardedDice = mutable.discardedDice,
-                    returnedCritters = mutable.returnedCritters,
-                    refreshed = refreshed
-                )
-            )
+            game.chronicle.scoped(
+                parent = {
+                    Moment.Cleanup(
+                        playerId = player.id,
+                        phase = ChroniclePhase.BATTLE,
+                        discardedDice = mutable.discardedDice,
+                        returnedCritters = mutable.returnedCritters,
+                        refreshed = refreshed
+                    )
+                }
+            ) {
+                refreshed = refreshResolver.refreshIfReady(player)
+
+                /* Stored Mulch and temporary Critter values both roll over/reset here. */
+                player.tokens.normalize()
+                player.critterValues.clearRound()
+            }
 
             BattlePlayerCleanupResult(
                 playerId = player.id,

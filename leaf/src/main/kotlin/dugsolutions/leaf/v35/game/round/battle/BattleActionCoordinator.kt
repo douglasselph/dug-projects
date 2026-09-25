@@ -139,13 +139,21 @@ class BattleActionCoordinator(
                 "BattleStrategy returned a first Main Action that was not offered: $chosen; legal=$legal"
             }
 
-            executeMainAction(
-                game = game,
-                player = player,
-                roundCard = roundCard,
-                battleState = battleState,
-                action = chosen
-            )
+            game.chronicle.scoped(
+                mainActionMoment(
+                    player = player,
+                    stage = BattleMainActionStage.FIRST,
+                    action = chosen
+                )
+            ) {
+                executeMainAction(
+                    game = game,
+                    player = player,
+                    roundCard = roundCard,
+                    battleState = battleState,
+                    action = chosen
+                )
+            }
 
             firstResults +=
                 BattleMainActionResult(
@@ -153,13 +161,6 @@ class BattleActionCoordinator(
                     stage = BattleMainActionStage.FIRST,
                     action = chosen
                 )
-
-            recordMainAction(
-                game = game,
-                player = player,
-                stage = BattleMainActionStage.FIRST,
-                action = chosen
-            )
         }
 
         // Step 5 — repeated passes, skipping players after their final Main.
@@ -253,13 +254,21 @@ class BattleActionCoordinator(
                     }
 
                     is BattleTurnAction.FinalMain -> {
-                        executeMainAction(
-                            game = game,
-                            player = player,
-                            roundCard = roundCard,
-                            battleState = battleState,
-                            action = chosen.action
-                        )
+                        game.chronicle.scoped(
+                            mainActionMoment(
+                                player = player,
+                                stage = BattleMainActionStage.FINAL,
+                                action = chosen.action
+                            )
+                        ) {
+                            executeMainAction(
+                                game = game,
+                                player = player,
+                                roundCard = roundCard,
+                                battleState = battleState,
+                                action = chosen.action
+                            )
+                        }
                         finalResults +=
                             BattleMainActionResult(
                                 playerId = player.id,
@@ -267,12 +276,6 @@ class BattleActionCoordinator(
                                 action = chosen.action
                             )
                         battleState.markDone(player.id)
-                        recordMainAction(
-                            game = game,
-                            player = player,
-                            stage = BattleMainActionStage.FINAL,
-                            action = chosen.action
-                        )
                     }
                 }
             }
@@ -630,24 +633,20 @@ class BattleActionCoordinator(
         effectExecutor.execute(request)
     }
 
-    private fun recordMainAction(
-        game: Game,
+    private fun mainActionMoment(
         player: Player,
         stage: BattleMainActionStage,
         action: BattleMainAction
-    ) {
-        game.chronicle.record(
-            Moment.MainAction(
-                playerId = player.id,
-                phase = ChroniclePhase.BATTLE,
-                action = mainActionKind(action),
-                battleStage = when (stage) {
-                    BattleMainActionStage.FIRST -> BattleMainStage.FIRST
-                    BattleMainActionStage.FINAL -> BattleMainStage.FINAL
-                }
-            )
+    ): Moment.MainAction =
+        Moment.MainAction(
+            playerId = player.id,
+            phase = ChroniclePhase.BATTLE,
+            action = mainActionKind(action),
+            battleStage = when (stage) {
+                BattleMainActionStage.FIRST -> BattleMainStage.FIRST
+                BattleMainActionStage.FINAL -> BattleMainStage.FINAL
+            }
         )
-    }
 
     private fun mainActionKind(action: BattleMainAction): MainActionKind =
         when (action) {
