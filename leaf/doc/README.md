@@ -1,33 +1,64 @@
 # Documentation Map
 
-The top-level `doc/` directory contains **cross-cutting project documentation**: material that explains how several source sets or subsystems fit together.
+The top-level `doc/` directory contains **cross-cutting project
+documentation**: material that explains how several source sets or
+subsystems fit together.
 
-Use the repository-level [`README.md`](../README.md) as the main entry point.
+Use the repository-level [`README.md`](../README.md) as the main entry
+point.
 
 ## Cross-cutting documents
 
-- [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md) — Milestone-2 specification and certification map for the eight Human Baseline decision areas and 30 strategy hooks.
-- [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) — detailed inventory of how Cultivation currently works.
-- [`HUMAN_BASELINE_GRAFT_PLACEMENT.md`](HUMAN_BASELINE_GRAFT_PLACEMENT.md) — approved Graft Placement behavior contract and R2 certification plan.
-- [`HUMAN_BASELINE_WOUND_RESOLUTION.md`](HUMAN_BASELINE_WOUND_RESOLUTION.md) — certified Wound Resolution behavior contract and R3 certification record.
-- [`HUMAN_BASELINE_BUTTERFLY_RESULT.md`](HUMAN_BASELINE_BUTTERFLY_RESULT.md) — certified Butterfly Result behavior/rules contract and R4 certification record.
-- [`HUMAN_BASELINE_EFFECT_CHOICES.md`](HUMAN_BASELINE_EFFECT_CHOICES.md) — Effect Choices contract, E-C implementation alignment, E-D seam audit, E-E 20-hook audit, E-F consolidated status, and remaining regression/certification checkpoints.
-- [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md) — design rationale, implementation checkpoints, and completed certification record for Human Baseline Cultivation.
-- [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md) — approved Stage-A behavior contract for Human Baseline Battle.
-- [`HUMAN_BASELINE_BATTLE_PLAN.md`](HUMAN_BASELINE_BATTLE_PLAN.md) — incremental Battle implementation and certification checkpoints.
-- [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) — shared Human Baseline tuning knobs, score scale, reserve policy, and simulation override seam.
-- [`USING_THE_SIMULATOR.md`](USING_THE_SIMULATOR.md) — practical workflow for using the project as a design-research tool.
-- [`TESTING_AND_VERIFICATION.md`](TESTING_AND_VERIFICATION.md) — unit, integration, and simulation verification responsibilities and commands.
-- [`CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) — deeper programming-oriented architecture.
-- [`CHRONICLE_AND_OUTPUT.md`](CHRONICLE_AND_OUTPUT.md) — Chronicle inspection and generated output conventions.
-- [`SIMULATION_PLAN.md`](SIMULATION_PLAN.md) — research questions and longer-term simulation plan.
-- [`EXPERIMENT_COOKBOOK.md`](EXPERIMENT_COOKBOOK.md) — templates for constructing controlled experiments.
+-   [`HUMAN_BASELINE.md`](HUMAN_BASELINE.md) --- Milestone-2
+    specification and certification map for the eight Human Baseline
+    decision areas and 30 strategy hooks.
+-   [`HUMAN_BASELINE_CULTIVATION.md`](HUMAN_BASELINE_CULTIVATION.md) ---
+    detailed inventory of how Cultivation currently works.
+-   [`HUMAN_BASELINE_GRAFT_PLACEMENT.md`](HUMAN_BASELINE_GRAFT_PLACEMENT.md)
+    --- approved Graft Placement behavior contract and R2 certification
+    plan.
+-   [`HUMAN_BASELINE_WOUND_RESOLUTION.md`](HUMAN_BASELINE_WOUND_RESOLUTION.md)
+    --- certified Wound Resolution behavior contract and R3
+    certification record.
+-   [`HUMAN_BASELINE_BUTTERFLY_RESULT.md`](HUMAN_BASELINE_BUTTERFLY_RESULT.md)
+    --- certified Butterfly Result behavior/rules contract and R4
+    certification record.
+-   [`HUMAN_BASELINE_EFFECT_CHOICES.md`](HUMAN_BASELINE_EFFECT_CHOICES.md)
+    --- Effect Choices contract, E-C implementation alignment, E-D seam
+    audit, E-E 20-hook audit, E-F consolidated status, and remaining
+    regression/certification checkpoints.
+-   [`HUMAN_BASELINE_CULTIVATION_PLAN.md`](HUMAN_BASELINE_CULTIVATION_PLAN.md)
+    --- design rationale, implementation checkpoints, and completed
+    certification record for Human Baseline Cultivation.
+-   [`HUMAN_BASELINE_BATTLE.md`](HUMAN_BASELINE_BATTLE.md) --- approved
+    Stage-A behavior contract for Human Baseline Battle.
+-   [`HUMAN_BASELINE_BATTLE_PLAN.md`](HUMAN_BASELINE_BATTLE_PLAN.md) ---
+    incremental Battle implementation and certification checkpoints.
+-   [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) --- shared
+    Human Baseline tuning knobs, score scale, reserve policy, and
+    simulation override seam.
+-   [`SIMULATION_PLAN.md`](SIMULATION_PLAN.md) --- primary
+    design-research mission, Milestone-3 experiment architecture,
+    Six-Wisp Opening Stress Test, exploit studies, and longer-term
+    simulation plan.
+-   [`USING_THE_SIMULATOR.md`](USING_THE_SIMULATOR.md) --- practical
+    workflow for using the project as a design-research tool.
+-   [`TESTING_AND_VERIFICATION.md`](TESTING_AND_VERIFICATION.md) ---
+    unit, integration, and simulation verification responsibilities and
+    commands.
+-   [`CODE_ARCHITECTURE.md`](CODE_ARCHITECTURE.md) --- deeper
+    programming-oriented architecture.
+-   [`CHRONICLE_AND_OUTPUT.md`](CHRONICLE_AND_OUTPUT.md) --- Chronicle
+    inspection and generated output conventions.
+-   [`EXPERIMENT_COOKBOOK.md`](EXPERIMENT_COOKBOOK.md) --- templates for
+    constructing controlled experiments.
 
 ## Source-local README files
 
-Some documentation is intentionally kept beside the code it describes. These files are useful when navigating the source tree directly:
+Some documentation is intentionally kept beside the code it describes.
+These files are useful when navigating the source tree directly:
 
-```text
+``` text
 src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/README.md
     Human Baseline package map and local navigation.
 
@@ -38,4 +69,6 @@ src/simulation/kotlin/dugsolutions/leaf/simulation/v35/README.md
     Purpose and organization of the simulation/research layer.
 ```
 
-This split is intentional: `doc/` holds the durable cross-project explanation, while a source-local README answers “what is this directory for?” when encountered during code navigation.
+This split is intentional: `doc/` holds the durable cross-project
+explanation, while a source-local README answers "what is this directory
+for?" when encountered during code navigation.
