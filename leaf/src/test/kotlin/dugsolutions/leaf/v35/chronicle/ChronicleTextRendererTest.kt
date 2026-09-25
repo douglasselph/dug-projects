@@ -6,7 +6,9 @@ import dugsolutions.leaf.v35.battle.domain.BattleGridDieSnapshot
 import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import dugsolutions.leaf.v35.battle.domain.BattleGridSquareSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
-import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderCritterSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderResourceSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
 import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
@@ -580,7 +582,7 @@ class ChronicleTextRendererTest {
     }
 
     @Test
-    fun `compact Chronicle annotates Buy Order leader with highest Hand die`() {
+    fun `compact Chronicle shows each players full Buy resources and total`() {
         val entries = listOf(
             GameEntry.RoundRevealed(
                 sequence = 1,
@@ -593,13 +595,36 @@ class ChronicleTextRendererTest {
             GameEntry.BuyOrder(
                 sequence = 2,
                 order = listOf(PlayerId(1), PlayerId(2), PlayerId(3), PlayerId(4)),
-                leaderDie = BuyOrderLeadDieSnapshot(DieSides.D8, 7)
+                resources = listOf(
+                    BuyOrderResourceSnapshot(
+                        playerId = PlayerId(1),
+                        dice = listOf(
+                            BuyOrderDieSnapshot(DieSides.D8, 7),
+                            BuyOrderDieSnapshot(DieSides.D4, 3)
+                        ),
+                        critters = listOf(BuyOrderCritterSnapshot(Critter.BEE, 2))
+                    ),
+                    BuyOrderResourceSnapshot(
+                        playerId = PlayerId(2),
+                        dice = listOf(BuyOrderDieSnapshot(DieSides.D6, 4)),
+                        critters = listOf(BuyOrderCritterSnapshot(Critter.WORM, 1))
+                    ),
+                    BuyOrderResourceSnapshot(PlayerId(3), emptyList(), emptyList()),
+                    BuyOrderResourceSnapshot(
+                        playerId = PlayerId(4),
+                        dice = listOf(BuyOrderDieSnapshot(DieSides.D12, 9)),
+                        critters = emptyList()
+                    )
+                )
             )
         )
 
         val lines = ChronicleTextRenderer.render(entries).lines()
 
-        assertEquals("01.002  BUY ORDER P1(D8=7) -> P2 -> P3 -> P4", lines[1])
+        assertEquals(
+            "01.002  BUY ORDER P1(D8=7 D4=3 B+2 -> 12) -> P2(D6=4 W+1 -> 5) -> P3(- -> 0) -> P4(D12=9 -> 9)",
+            lines[1]
+        )
     }
 
 

@@ -48,8 +48,35 @@ class BuyCoordinatorTest {
         assertTrue(result.purchases.isEmpty())
         val buyOrder = fixture.game.chronicle.entries.filterIsInstance<GameEntry.BuyOrder>().single()
         assertEquals(PlayerId(2), buyOrder.order.first())
-        assertEquals(DieSides.D20, buyOrder.leaderDie?.sides)
-        assertEquals(20, buyOrder.leaderDie?.value)
+        assertEquals(
+            listOf(DieSides.D20 to 20),
+            buyOrder.resources.first { it.playerId == PlayerId(2) }.dice.map { it.sides to it.value }
+        )
+        assertEquals(
+            listOf(DieSides.D20 to 15),
+            buyOrder.resources.first { it.playerId == PlayerId(1) }.dice.map { it.sides to it.value }
+        )
+    }
+
+    @Test
+    fun execute_buyOrderSnapshotsAllSpendableCrittersWithCurrentValues() {
+        val first = player(1, listOf(die(8, 7), die(4, 3)), doneStrategy())
+        first.critters.add(Critter.BEE).add(Critter.WORM)
+        first.critterValues.boostForRound(Critter.WORM, 2)
+        val second = player(2, listOf(die(6, 6)), doneStrategy())
+        val fixture = fixture(first, second)
+
+        fixture.coordinator.execute(fixture.game)
+
+        val snapshot = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.BuyOrder>()
+            .single()
+            .resources
+            .first { it.playerId == PlayerId(1) }
+
+        assertEquals(12, snapshot.dice.sumOf { it.value })
+        assertEquals(listOf(Critter.BEE to 2, Critter.WORM to 3), snapshot.critters.map { it.critter to it.value })
+        assertEquals(17, snapshot.total)
     }
 
     @Test

@@ -98,7 +98,7 @@ sealed interface Moment {
 
     data class BuyOrder(
         val order: List<PlayerId>,
-        val leaderDie: BuyOrderLeadDieSnapshot? = null
+        val resources: List<BuyOrderResourceSnapshot> = emptyList()
     ) : Moment
 
     data class Purchase(
@@ -247,10 +247,24 @@ enum class WoundKind { FLIPPED, SNIPPED }
 enum class UpgradeDestination { HAND, DISCARD }
 enum class TrashDestination { OUT_OF_GAME }
 
-data class BuyOrderLeadDieSnapshot(
+data class BuyOrderDieSnapshot(
     val sides: DieSides,
     val value: Int
 )
+
+data class BuyOrderCritterSnapshot(
+    val critter: Critter,
+    val value: Int
+)
+
+data class BuyOrderResourceSnapshot(
+    val playerId: PlayerId,
+    val dice: List<BuyOrderDieSnapshot>,
+    val critters: List<BuyOrderCritterSnapshot>
+) {
+    val total: Int
+        get() = dice.sumOf { it.value } + critters.sumOf { it.value }
+}
 
 data class BattleOrderHighDieSnapshot(
     val playerId: PlayerId,

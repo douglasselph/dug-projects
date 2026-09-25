@@ -1,7 +1,9 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
-import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderCritterSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderResourceSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
@@ -10,6 +12,7 @@ import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -58,17 +61,32 @@ class GameChronicleTest {
         val chronicle = GameChronicle()
         val order = mutableListOf(PlayerId(2), PlayerId(1))
 
+        val dice = mutableListOf(BuyOrderDieSnapshot(DieSides.D8, 7))
+        val critters = mutableListOf(BuyOrderCritterSnapshot(Critter.BEE, 2))
+        val resources = mutableListOf(
+            BuyOrderResourceSnapshot(PlayerId(2), dice, critters)
+        )
         val recorded = chronicle.record(
             Moment.BuyOrder(
                 order = order,
-                leaderDie = BuyOrderLeadDieSnapshot(DieSides.D8, 7)
+                resources = resources
             )
         )
         order.clear()
+        dice.clear()
+        critters.clear()
+        resources.clear()
 
         val entry = recorded as GameEntry.BuyOrder
         assertEquals(listOf(PlayerId(2), PlayerId(1)), entry.order)
-        assertEquals(BuyOrderLeadDieSnapshot(DieSides.D8, 7), entry.leaderDie)
+        assertEquals(
+            BuyOrderResourceSnapshot(
+                PlayerId(2),
+                listOf(BuyOrderDieSnapshot(DieSides.D8, 7)),
+                listOf(BuyOrderCritterSnapshot(Critter.BEE, 2))
+            ),
+            entry.resources.single()
+        )
     }
 
     @Test

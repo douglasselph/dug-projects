@@ -587,19 +587,29 @@ object ChronicleTextRenderer {
             append('[')
             append(player(square.playerId))
             if (square.withdrawn) append(" WITHDRAWN")
-            val parts = buildList {
-                square.dice.forEach { die -> add("${die.sides}=${die.value}") }
-                square.critters.forEach { critter -> add(renderGridCritter(critter.critter, critter.value)) }
-            }
-            if (parts.isEmpty()) {
-                append(" -")
-            } else {
-                append(' ')
-                append(parts.joinToString(" "))
-            }
-            append(" -> ${if (square.withdrawn) 0 else square.total}")
+            append(' ')
+            append(
+                renderResourceContents(
+                    dice = square.dice.map { it.sides to it.value },
+                    critters = square.critters.map { it.critter to it.value },
+                    totalOverride = if (square.withdrawn) 0 else null
+                )
+            )
             append(']')
         }
+
+    private fun renderResourceContents(
+        dice: List<Pair<DieSides, Int>>,
+        critters: List<Pair<Critter, Int>>,
+        totalOverride: Int? = null
+    ): String {
+        val parts = buildList {
+            dice.forEach { (sides, value) -> add("$sides=$value") }
+            critters.forEach { (critter, value) -> add(renderGridCritter(critter, value)) }
+        }
+        val total = totalOverride ?: dice.sumOf { it.second } + critters.sumOf { it.second }
+        return "${parts.joinToString(" ").ifBlank { "-" }} -> $total"
+    }
 
     private fun renderGridCritter(critter: Critter, value: Int): String =
         when (critter) {
@@ -664,14 +674,22 @@ object ChronicleTextRenderer {
                 }
 
             is GameEntry.BuyOrder ->
-                "BUY ORDER " + entry.order.mapIndexed { index, playerId ->
+                "BUY ORDER " + entry.order.joinToString(" -> ") { playerId ->
+                    val resources = entry.resources.firstOrNull { it.playerId == playerId }
                     buildString {
                         append(player(playerId))
-                        if (index == 0) {
-                            entry.leaderDie?.let { append("(${it.sides}=${it.value})") }
+                        resources?.let { snapshot ->
+                            append('(')
+                            append(
+                                renderResourceContents(
+                                    dice = snapshot.dice.map { it.sides to it.value },
+                                    critters = snapshot.critters.map { it.critter to it.value }
+                                )
+                            )
+                            append(')')
                         }
                     }
-                }.joinToString(" -> ")
+                }
 
             is GameEntry.Purchase ->
                 "${player(entry.playerId)} PURCHASE ${entry.kind} ${entry.itemName} " +

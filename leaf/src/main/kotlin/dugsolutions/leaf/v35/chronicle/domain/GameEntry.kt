@@ -117,7 +117,7 @@ sealed interface GameEntry {
     data class BuyOrder(
         override val sequence: Long,
         val order: List<PlayerId>,
-        val leaderDie: BuyOrderLeadDieSnapshot? = null,
+        val resources: List<BuyOrderResourceSnapshot> = emptyList(),
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

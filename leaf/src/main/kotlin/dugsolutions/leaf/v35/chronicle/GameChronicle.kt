@@ -172,7 +172,15 @@ class GameChronicle : Chronicle {
                 hierarchyDepth = hierarchyDepth
             )
             is Moment.BuyOrder -> GameEntry.BuyOrder(
-                sequence, moment.order.toList(), moment.leaderDie, hierarchyDepth
+                sequence = sequence,
+                order = moment.order.toList(),
+                resources = moment.resources.map { resource ->
+                    resource.copy(
+                        dice = resource.dice.toList(),
+                        critters = resource.critters.toList()
+                    )
+                },
+                hierarchyDepth = hierarchyDepth
             )
             is Moment.Purchase -> GameEntry.Purchase(
                 sequence, moment.playerId, moment.kind, moment.itemName,
