@@ -99,6 +99,14 @@ GRID ROW #1 [P2 D8=7 D4=3 B+2 -> 12] [P4 D6=5 -> 5] [P1 - -> 0]
 
 `D8=7` is one exact placed die. `B+2` and `W+N` are individual Bee/Worm contributions using that player's current effective Critter value. `-> 12` is the square total. Strike resolution reuses the same formatter and appends `winners=`, `wounded=`, and `vpPerWinner=` rather than falling back to anonymous dice/Critter totals.
 
+Immediately before normal final Strike resolution, the Chronicle prints a one-line foreshadow summary containing only the twelve square totals in row order and Battle order, for example:
+
+```text
+RESOLVE [18 12 10 9] [9 10 5 4] [6 9 16 9]
+```
+
+Each bracket is one Strike Row from top to bottom. Within a bracket, totals follow current Battle order. Withdrawn squares contribute `0` because they do not participate in that Strike.
+
 Butterfly reports also use one shared shorthand. Uppercase means face up and ready; lowercase means face down and spent. Ownership order is preserved. For example, `YB gb` means a ready Yellow Butterfly and a spent Green Butterfly. End-of-round player summaries use the same formatter as inline Butterfly-changing effects.
 
 ## 4. What to look for in a smoke Chronicle

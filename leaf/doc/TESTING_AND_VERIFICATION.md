@@ -225,6 +225,8 @@ This separation is essential when comparing two strategies: changing how a bot r
 
 For exact integration tests, prefer `ScriptedRandomizer` when a specific next result matters. A fixed seed is deterministic, but it is brittle if unrelated random calls are later added earlier in the execution path.
 
+The die tests also include a deterministic large-sample fairness check using the production `RandomizerDefault` + `DieRandom` path for D4, D6, D8, D10, D12, and D20. Each die is rolled 200,000 times with a fixed seed and its observed mean must remain within 0.03 of the fair-die expectation `(sides + 1) / 2`. This is not a proof of statistical randomness, but it catches range/off-by-one mistakes and substantial bias in the simulator's die-roll plumbing.
+
 ---
 
 ## 5. Chronicle as a verification surface

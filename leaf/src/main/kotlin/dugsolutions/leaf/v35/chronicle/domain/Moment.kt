@@ -127,6 +127,11 @@ sealed interface Moment {
         val rows: List<BattleGridRowSnapshot>
     ) : Moment
 
+    /** One-line preview of the three Battle rows immediately before final Strike resolution. */
+    data class BattleResolvePreview(
+        val rows: List<BattleGridRowSnapshot>
+    ) : Moment
+
     /**
      * Battle-row context associated with one exact DieRolled Chronicle entry.
      * See GameEntry.BattleDieRow for why this is a separate typed fact.

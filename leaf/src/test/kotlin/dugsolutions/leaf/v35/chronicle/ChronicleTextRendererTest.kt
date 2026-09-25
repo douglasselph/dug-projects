@@ -1085,4 +1085,47 @@ class ChronicleTextRendererTest {
             ChronicleTextRenderer.render(GameEntry.Marker(sequence = 42, message = "standalone"))
         )
     }
+    @Test
+    fun `resolve preview renders one line with all twelve square totals`() {
+        fun row(row: StrikeRow, values: List<Int>): BattleGridRowSnapshot =
+            BattleGridRowSnapshot(
+                row = row,
+                squares = values.mapIndexed { index, value ->
+                    BattleGridSquareSnapshot(
+                        playerId = PlayerId(index + 1),
+                        dice = if (value == 0) emptyList() else listOf(
+                            BattleGridDieSnapshot(DieSides.D20, value)
+                        ),
+                        critters = emptyList()
+                    )
+                }
+            )
+
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.BattleResolvePreview(
+                sequence = 2,
+                rows = listOf(
+                    row(StrikeRow.TOP, listOf(18, 12, 10, 9)),
+                    row(StrikeRow.MIDDLE, listOf(9, 10, 5, 4)),
+                    row(StrikeRow.BOTTOM, listOf(6, 9, 16, 9))
+                )
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  RESOLVE [18 12 10 9] [9 10 5 4] [6 9 16 9]",
+            lines[1]
+        )
+    }
+
 }

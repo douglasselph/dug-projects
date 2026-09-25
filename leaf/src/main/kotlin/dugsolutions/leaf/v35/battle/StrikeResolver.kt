@@ -68,8 +68,14 @@ class StrikeResolver(
     fun resolveAll(
         game: Game,
         battleState: BattleState
-    ): BattleStrikeResolutionResult =
-        BattleStrikeResolutionResult(
+    ): BattleStrikeResolutionResult {
+        game.chronicle.record(
+            Moment.BattleResolvePreview(
+                rows = BattleGridSnapshot.rows(battleState)
+            )
+        )
+
+        return BattleStrikeResolutionResult(
             strikes = StrikeRow.entries
                 .filterNot { battleState.grid.isRowClosed(it) }
                 .map { row ->
@@ -80,6 +86,7 @@ class StrikeResolver(
                     )
                 }
         )
+    }
 
     /**
      * Resolve exactly one open Strike Row.

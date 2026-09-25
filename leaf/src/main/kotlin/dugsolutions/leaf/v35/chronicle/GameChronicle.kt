@@ -200,6 +200,11 @@ class GameChronicle : Chronicle {
                 rows = moment.rows.map(::copyGridRow),
                 hierarchyDepth = hierarchyDepth
             )
+            is Moment.BattleResolvePreview -> GameEntry.BattleResolvePreview(
+                sequence = sequence,
+                rows = moment.rows.map(::copyGridRow),
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.BattleDieRow -> GameEntry.BattleDieRow(
                 sequence = sequence,
                 rollSequence = moment.rollSequence,

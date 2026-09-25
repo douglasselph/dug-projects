@@ -354,6 +354,11 @@ object ChronicleTextRenderer {
                     return@forEach
                 }
 
+                if (entry is GameEntry.BattleResolvePreview) {
+                    appendBody(renderResolvePreview(entry.rows), entry.hierarchyDepth)
+                    return@forEach
+                }
+
                 if (detail) {
                     fun appendDetailed(current: ChronicleNode) {
                         val extraRewardDepth = if (current.entry is GameEntry.RollReward) 1 else 0
@@ -563,6 +568,20 @@ object ChronicleTextRenderer {
             .joinToString(",")
     }
 
+    private fun renderResolvePreview(rows: List<BattleGridRowSnapshot>): String =
+        buildString {
+            append("RESOLVE")
+            rows.forEach { row ->
+                append(" [")
+                append(
+                    row.squares.joinToString(" ") { square ->
+                        if (square.withdrawn) "0" else square.total.toString()
+                    }
+                )
+                append(']')
+            }
+        }
+
     private fun renderGridRow(
         row: BattleGridRowSnapshot,
         winnerIds: List<PlayerId>? = null,
@@ -714,6 +733,9 @@ object ChronicleTextRenderer {
 
             is GameEntry.BattleGridReport ->
                 "GRID ${entry.kind}" + (entry.passNumber?.let { " pass=$it" } ?: "")
+
+            is GameEntry.BattleResolvePreview ->
+                renderResolvePreview(entry.rows)
 
             is GameEntry.BattleDieRow ->
                 "${player(entry.playerId)} BATTLE DIE D${entry.sides}=${entry.value} -> ROW#${entry.row.ordinal + 1}"

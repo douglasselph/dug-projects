@@ -17,8 +17,9 @@ abstract class Die(
             return DieValue(sides, value).boost(value)
         }
 
+    /** Mathematical mean of a fair die: (1 + sides) / 2. */
     val average: Float
-        get() = sides / 2f
+        get() = (sides + 1) / 2f
 
     abstract fun roll(): Die
 

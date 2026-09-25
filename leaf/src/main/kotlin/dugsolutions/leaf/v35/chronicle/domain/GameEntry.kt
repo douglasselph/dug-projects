@@ -156,6 +156,13 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    /** One-line preview of the three Battle rows immediately before final Strike resolution. */
+    data class BattleResolvePreview(
+        override val sequence: Long,
+        val rows: List<BattleGridRowSnapshot>,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     /**
      * Battle-row context for one exact Chronicle roll. The row is recorded
      * after placement for newly drawn dice, or from the die's existing Grid

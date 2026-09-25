@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.random.die
 
 import dugsolutions.leaf.v35.random.Randomizer
+import dugsolutions.leaf.v35.random.RandomizerDefault
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -8,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.math.abs
 
 class DieTest {
     companion object {
@@ -377,4 +379,37 @@ class DieTest {
 
         override fun <T> shuffled(list: List<T>): List<T> = throw UnsupportedOperationException()
     }
+    @Test
+    fun randomRolls_largeSamplesMatchFairDieMeansAcrossAllGameDieSizes() {
+        val sampleSize = 200_000
+        val tolerance = 0.03
+
+        listOf(4, 6, 8, 10, 12, 20).forEach { sides ->
+            val randomizer = RandomizerDefault().apply {
+                seed = 246_813_579L + sides
+            }
+            val die = DieRandom(sides, randomizer)
+            var total = 0L
+
+            repeat(sampleSize) {
+                total += die.roll().value
+            }
+
+            val actualMean = total.toDouble() / sampleSize
+            val expectedMean = (sides + 1) / 2.0
+            assertTrue(
+                abs(actualMean - expectedMean) < tolerance,
+                "D$sides mean $actualMean should be within $tolerance of $expectedMean"
+            )
+        }
+    }
+
+    @Test
+    fun average_matchesMathematicalMeanForFairDice() {
+        listOf(4, 6, 8, 10, 12, 20).forEach { sides ->
+            val die = DieRandom(sides, RandomizerDefault())
+            assertEquals((sides + 1) / 2f, die.average, "D$sides average")
+        }
+    }
+
 } 

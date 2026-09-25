@@ -74,6 +74,7 @@ class BattleRoundTest {
         val actionIndex = entries.indexOfFirst {
             it is GameEntry.MainAction && it.phase == ChroniclePhase.BATTLE
         }
+        val resolvePreviewIndex = entries.indexOfFirst { it is GameEntry.BattleResolvePreview }
         val strikeIndex = entries.indexOfFirst { it is GameEntry.StrikeResolved }
         val doomIndex = entries.indexOfFirst { it is GameEntry.Doom }
         val cleanupIndex = entries.indexOfFirst {
@@ -92,7 +93,8 @@ class BattleRoundTest {
         assertTrue(drawIndex >= 0)
         assertTrue(drawIndex < placeIndex)
         assertTrue(placeIndex < actionIndex)
-        assertTrue(actionIndex < strikeIndex)
+        assertTrue(actionIndex < resolvePreviewIndex)
+        assertTrue(resolvePreviewIndex < strikeIndex)
         assertTrue(strikeIndex < doomIndex)
         assertTrue(doomIndex < cleanupIndex)
     }
