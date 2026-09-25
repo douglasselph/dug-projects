@@ -348,7 +348,14 @@ class HumanBaselineEffectStrategy(
                 } else {
                     request.context.self.board.worms
                 }
-                val reservePenalty = if (count <= 2) -25 else if (count == 3) -10 else 0
+                val protectedReserve = policy.protectedCritterReserve(request.context).let { reserve ->
+                    if (choice.critter == Critter.BEE) reserve.bees else reserve.worms
+                }
+                val reservePenalty = when {
+                    count <= protectedReserve -> -25
+                    count == protectedReserve + 1 -> -10
+                    else -> 0
+                }
                 val baseScore = if (
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                     request.effect == GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5
