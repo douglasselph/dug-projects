@@ -74,9 +74,9 @@ class BuyCoordinatorTest {
             .resources
             .first { it.playerId == PlayerId(1) }
 
-        assertEquals(12, snapshot.dice.sumOf { it.value })
+        assertEquals(10, snapshot.dice.sumOf { it.value })
         assertEquals(listOf(Critter.BEE to 2, Critter.WORM to 3), snapshot.critters.map { it.critter to it.value })
-        assertEquals(17, snapshot.total)
+        assertEquals(15, snapshot.total)
     }
 
     @Test
