@@ -43,6 +43,8 @@ class RoundCoordinatorTest {
         val cultivation = RecordingExecutor()
         val battle = RecordingExecutor()
         val game = GameEngineTestFixture.game(1, 1)
+        game.players[0].addVp(4)
+        game.players[1].addVp(7)
         val coordinator = coordinator(cultivation, battle)
         val reveal = coordinator.revealNext(game)!!
 
@@ -57,6 +59,7 @@ class RoundCoordinatorTest {
         assertTrue(game.chronicle.entries.first() is GameEntry.RoundRevealed)
         val completed = game.chronicle.entries.last() as GameEntry.RoundCompleted
         assertEquals(listOf(1, 2), completed.playerSummaries.map { it.playerId.value })
+        assertEquals(listOf(4, 7), completed.playerSummaries.map { it.vp })
         completed.playerSummaries.forEach { summary ->
             assertTrue(summary.graftedPlants.isEmpty())
             assertTrue(summary.supplyDice.isEmpty())

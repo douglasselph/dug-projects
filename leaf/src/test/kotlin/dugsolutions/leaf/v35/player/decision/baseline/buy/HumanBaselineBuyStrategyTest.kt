@@ -31,55 +31,156 @@ class HumanBaselineBuyStrategyTest {
     @Nested
     inner class `Human Baseline Behavior Contract` {
         @Test
-        fun `Plant deficit chooses Plant category before higher-cost die`() {
-            val root = plant("Root_05_02", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_4)
-            val context = context(
-                plantCards = emptyList(),
-                dice = listOf(DieView(0, 20, 10), DieView(1, 20, 10))
+        fun `three point dice lead gives Plant category an eighty five percent boundary`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)),
+                view(plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP))
             )
-
-            val chosen = strategy().choosePurchase(
-                ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Plant(root), BuyItem.Die(DieSides.D12)),
-                    context = context
+            val newPlant = plant("Root_07_02", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_4)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12)),
+                context = context(
+                    plantCards = existing,
+                    dice = listOf(
+                        DieView(0, 8, 8),
+                        DieView(1, 10, 10),
+                        DieView(2, 10, 10),
+                        DieView(3, 20, 20)
+                    ),
+                    battleRoundsCompleted = 1
                 )
             )
 
-            assertEquals(BuyItem.Plant(root), assertIs<BuyChoice.Purchase>(chosen).item)
+            val acceptsPlant = strategy(QueueRandomizer(84)).choosePurchase(request)
+            val takesDie = strategy(QueueRandomizer(85)).choosePurchase(request)
+
+            assertEquals(BuyItem.Plant(newPlant), assertIs<BuyChoice.Purchase>(acceptsPlant).item)
+            assertEquals(BuyItem.Die(DieSides.D12), assertIs<BuyChoice.Purchase>(takesDie).item)
         }
 
         @Test
-        fun `dice deficit chooses die category before higher-cost Plant`() {
-            val root = plant("Root_09_01", PlantType.ROOT, 9, GameEffect.UPGRADE_DIE_AND_USE_NOW)
-            val context = context(
-                plantCards = listOf(view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))),
-                dice = listOf(DieView(0, 20, 9))
+        fun `three point Plant lead gives die category an eighty five percent boundary`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)),
+                view(plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP))
             )
-
-            val chosen = strategy().choosePurchase(
-                ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Plant(root), BuyItem.Die(DieSides.D8)),
-                    context = context
+            val newPlant = plant("Root_09_01", PlantType.ROOT, 9, GameEffect.UPGRADE_DIE_AND_USE_NOW)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D8)),
+                context = context(
+                    plantCards = existing,
+                    dice = listOf(
+                        DieView(0, 20, 20),
+                        DieView(1, 12, 12),
+                        DieView(2, 10, 10)
+                    ),
+                    battleRoundsCompleted = 1
                 )
             )
 
-            assertEquals(BuyItem.Die(DieSides.D8), assertIs<BuyChoice.Purchase>(chosen).item)
+            val rarePlant = strategy(QueueRandomizer(14)).choosePurchase(request)
+            val expectedDie = strategy(QueueRandomizer(15)).choosePurchase(request)
+
+            assertEquals(BuyItem.Plant(newPlant), assertIs<BuyChoice.Purchase>(rarePlant).item)
+            assertEquals(BuyItem.Die(DieSides.D8), assertIs<BuyChoice.Purchase>(expectedDie).item)
         }
 
         @Test
-        fun `when development does not force a category buy the most expensive option`() {
-            val root = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
-            val context = context(
-                plantCards = listOf(view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))),
-                dice = listOf(DieView(0, 20, 12), DieView(1, 20, 8))
+        fun `two Plants against forty eight dice power strongly buys another Plant`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
             )
-
-            val chosen = strategy().choosePurchase(
-                ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Plant(root), BuyItem.Die(DieSides.D12)),
-                    context = context
+            val newPlant = plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D20)),
+                context = context(
+                    plantCards = existing,
+                    dice = listOf(
+                        DieView(0, 8, 8),
+                        DieView(1, 10, 10),
+                        DieView(2, 10, 10),
+                        DieView(3, 20, 20)
+                    ),
+                    battleRoundsCompleted = 1
                 )
             )
+
+            val expectedPlant = strategy(QueueRandomizer(98)).choosePurchase(request)
+            val rareDie = strategy(QueueRandomizer(99)).choosePurchase(request)
+
+            assertEquals(BuyItem.Plant(newPlant), assertIs<BuyChoice.Purchase>(expectedPlant).item)
+            assertEquals(BuyItem.Die(DieSides.D20), assertIs<BuyChoice.Purchase>(rareDie).item)
+        }
+
+        @Test
+        fun `equal Plant and dice power is fifty fifty independent of cultivation round`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
+            )
+            val newPlant = plant("Root_07_02", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_4)
+            val options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12))
+            val dice = listOf(
+                DieView(0, 6, 6),
+                DieView(1, 6, 6),
+                DieView(2, 6, 6),
+                DieView(3, 6, 6),
+                DieView(4, 6, 6)
+            )
+
+            val roundFive = ChoosePurchaseRequest(
+                options = options,
+                context = context(
+                    plantCards = existing,
+                    dice = dice,
+                    cultivationRound = 5,
+                    battleRoundsCompleted = 1
+                )
+            )
+            val roundEight = ChoosePurchaseRequest(
+                options = options,
+                context = roundFive.context.copy(
+                    progress = roundFive.context.progress.copy(currentCultivationRoundNumber = 8)
+                )
+            )
+
+            assertEquals(
+                BuyItem.Plant(newPlant),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(49)).choosePurchase(roundFive)).item
+            )
+            assertEquals(
+                BuyItem.Die(DieSides.D12),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(50)).choosePurchase(roundFive)).item
+            )
+            assertEquals(
+                BuyItem.Plant(newPlant),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(49)).choosePurchase(roundEight)).item
+            )
+            assertEquals(
+                BuyItem.Die(DieSides.D12),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(50)).choosePurchase(roundEight)).item
+            )
+        }
+
+        @Test
+        fun `Buy category balance can be overridden by player policy`() {
+            val newPlant = plant("Root_07_02", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_4)
+            val policy = object : HumanBaselinePolicy() {
+                override fun buyPlantPriorityPercentage(context: DecisionContext): Int = 0
+            }
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12)),
+                context = context(
+                    plantCards = emptyList(),
+                    dice = listOf(DieView(0, 20, 20), DieView(1, 20, 20)),
+                    battleRoundsCompleted = 1
+                )
+            )
+
+            val chosen = strategy(QueueRandomizer(0), policy).choosePurchase(request)
 
             assertEquals(BuyItem.Die(DieSides.D12), assertIs<BuyChoice.Purchase>(chosen).item)
         }

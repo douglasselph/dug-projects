@@ -5,6 +5,9 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.DevelopmentTargetHe
 import dugsolutions.leaf.v35.player.decision.baseline.common.ReserveResource
 import dugsolutions.leaf.v35.player.decision.baseline.common.ResourceReserveTargets
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.roundToInt
 
 /**
  * Shared, experiment-friendly tuning policy for cross-cutting Human Baseline behavior.
@@ -77,6 +80,10 @@ open class HumanBaselinePolicy(
         DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE,
     private val earlyPlantFloorValue: Int =
         DEFAULT_EARLY_PLANT_FLOOR,
+    private val buyPlantEquivalentDicePowerPerCardValue: Int =
+        DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD,
+    private val buyBalanceDifferenceFor85PercentValue: Double =
+        DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -139,6 +146,12 @@ open class HumanBaselinePolicy(
             require(percentage in 0..100) { "Human Baseline percentage must be 0..100: $percentage" }
         }
         require(earlyPlantFloorValue >= 0) { "Early Plant floor cannot be negative" }
+        require(buyPlantEquivalentDicePowerPerCardValue > 0) {
+            "Buy Plant-equivalent dice power per card must be positive"
+        }
+        require(buyBalanceDifferenceFor85PercentValue > 0.0) {
+            "Buy balance 85-percent difference must be positive"
+        }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
         require(battleSecuredLeadValue >= 0) { "Battle secured lead cannot be negative" }
@@ -238,6 +251,18 @@ open class HumanBaselinePolicy(
          */
         const val DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE: Int = 90
         const val DEFAULT_EARLY_PLANT_FLOOR: Int = 2
+
+        /**
+         * Buy-category balance treats each grafted Plant as roughly fifteen
+         * die-side points. Thus the starting 30 die sides balance two Plants.
+         */
+        const val DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD: Int = 15
+
+        /**
+         * Logistic Buy-category tuning point. When one side is behind by this
+         * many balance points, Human Baseline favors the weaker side 85/15.
+         */
+        const val DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT: Double = 3.0
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -433,6 +458,41 @@ open class HumanBaselinePolicy(
         } else {
             0
         }
+    }
+
+    /** Visible Buy-balance value assigned to each grafted Plant. */
+    open fun buyPlantEquivalentDicePowerPerCard(context: DecisionContext): Int =
+        buyPlantEquivalentDicePowerPerCardValue
+
+    /**
+     * Probability of preferring the Plant category when both a Plant and a die
+     * are affordable during Buy.
+     *
+     * This deliberately ignores round number. It compares the player's visible
+     * long-term assets directly:
+     *
+     * `Plant power = grafted Plant count * 15`
+     * `Dice power = total sides of all owned dice`
+     *
+     * Positive difference means dice are ahead and therefore Plants deserve the
+     * stronger pull. The logistic curve is symmetric: equal development is
+     * 50/50; a three-point difference is 85/15 toward the weaker side.
+     * The default result is capped at 1..99 to preserve a small amount of
+     * ordinary-player variation under even a severe imbalance.
+     */
+    open fun buyPlantPriorityPercentage(context: DecisionContext): Int {
+        val plantPower =
+            context.self.board.plantCount * buyPlantEquivalentDicePowerPerCard(context)
+        val dicePower = context.self.board.dicePower
+        val difference = dicePower - plantPower
+        if (difference == 0) return 50
+
+        val slope = ln(85.0 / 15.0) / buyBalanceDifferenceFor85PercentValue
+        val probability = 100.0 / (1.0 + exp(-slope * difference))
+        // Preserve a tiny amount of ordinary-player variation even under a
+        // severe imbalance. Player-specific policies may still override this
+        // method and return a literal 0 or 100 when desired.
+        return probability.roundToInt().coerceIn(1, 99)
     }
 
     /** Base spacing used when Battle Swing assigns importance to named row transitions. */

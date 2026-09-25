@@ -3,7 +3,6 @@ package dugsolutions.leaf.v35.player.decision.baseline.buy
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
-import dugsolutions.leaf.v35.player.decision.baseline.context.BaselineFeatureCalculator
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
@@ -20,10 +19,12 @@ import dugsolutions.leaf.v35.tokens.Critter
  * Purchase contract:
  * 1. Normally make one principal purchase, then stop. Deliberately splitting
  *    purchasing power across several buys belongs to more advanced strategy.
- * 2. First decide whether development balance calls for a Plant or a die. If
- *    Plants are behind target while dice are not, prefer a Plant; if dice are
- *    behind while Plants are not, prefer a die. Otherwise either category may
- *    win normally.
+ * 2. First decide whether development balance calls for a Plant or a die. Buy
+ *    balance compares total owned die sides against grafted Plant count valued
+ *    at 15 points per Plant. When both categories are affordable, an injected
+ *    policy converts that visible imbalance into a probability; equal
+ *    development is 50/50 and a three-point difference is about 85/15 toward
+ *    the weaker side. This comparison is independent of round number.
  * 3. Within the selected category, buy from the most expensive affordable cost
  *    tier. Card-specific value only breaks choices within that tier; it does
  *    not turn Human Baseline into an efficiency/combo optimizer.
@@ -85,24 +86,17 @@ class HumanBaselineBuyStrategy(
             return BuyChoice.Done
         }
 
-        val features = BaselineFeatureCalculator().calculate(request.context)
         val affordablePlants = affordable.filterIsInstance<BuyItem.Plant>()
-        val earlyPlantPercentage = policy.earlyPlantPriorityPercentage(request.context)
-        val earlyPlantAccepted =
-            affordablePlants.isNotEmpty() &&
-                earlyPlantPercentage > 0 &&
-                strategyRandomizer.nextInt(100) < earlyPlantPercentage
-
-        val preferred = when {
-            earlyPlantAccepted ->
-                affordablePlants
-            features.plantDeficit > 0 && features.dicePowerDeficit == 0 ->
-                affordablePlants
-            features.dicePowerDeficit > 0 && features.plantDeficit == 0 ->
-                affordable.filterIsInstance<BuyItem.Die>()
-            else -> emptyList()
+        val affordableDice = affordable.filterIsInstance<BuyItem.Die>()
+        val categoryCandidates = when {
+            affordablePlants.isEmpty() -> affordableDice
+            affordableDice.isEmpty() -> affordablePlants
+            else -> chooseDevelopmentCategory(
+                context = request.context,
+                plants = affordablePlants,
+                dice = affordableDice
+            )
         }
-        val categoryCandidates = preferred.ifEmpty { affordable }
         val highestCost = categoryCandidates.maxOf { it.cost }
         val tier = categoryCandidates.filter { it.cost == highestCost }
 
@@ -161,6 +155,29 @@ class HumanBaselineBuyStrategy(
             },
             influenceRegistry = influenceRegistry
         )
+    }
+
+    private fun chooseDevelopmentCategory(
+        context: DecisionContext,
+        plants: List<BuyItem.Plant>,
+        dice: List<BuyItem.Die>
+    ): List<BuyItem> {
+        val earlyPlantPercentage = policy.earlyPlantPriorityPercentage(context)
+        if (earlyPlantPercentage > 0) {
+            return if (strategyRandomizer.nextInt(100) < earlyPlantPercentage) {
+                plants
+            } else {
+                dice
+            }
+        }
+
+        val plantPercentage = policy.buyPlantPriorityPercentage(context)
+        return when {
+            plantPercentage <= 0 -> dice
+            plantPercentage >= 100 -> plants
+            strategyRandomizer.nextInt(100) < plantPercentage -> plants
+            else -> dice
+        }
     }
 
     internal fun critterSpendPercentage(surplus: Int): Int {

@@ -96,6 +96,7 @@ class RoundCoordinator(
     private fun playerRoundSummary(player: Player): PlayerRoundSummarySnapshot =
         PlayerRoundSummarySnapshot(
             playerId = player.id,
+            vp = player.vp,
             graftedPlants = player.creature.cards.map { creatureCard ->
                 GraftedPlantSnapshot(
                     type = creatureCard.card.type,

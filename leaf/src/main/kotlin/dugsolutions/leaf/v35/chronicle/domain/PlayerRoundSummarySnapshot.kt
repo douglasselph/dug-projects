@@ -13,6 +13,7 @@ data class GraftedPlantSnapshot(
 /** Immutable end-of-Round player state used only for Chronicle diagnostics. */
 data class PlayerRoundSummarySnapshot(
     val playerId: PlayerId,
+    val vp: Int,
     val graftedPlants: List<GraftedPlantSnapshot>,
     val supplyDice: List<DieSides>,
     val discardDice: List<DieSides>,

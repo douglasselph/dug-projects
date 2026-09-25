@@ -508,6 +508,7 @@ object ChronicleTextRenderer {
     private fun renderPlayerSummary(summary: PlayerRoundSummarySnapshot): String =
         buildList {
             add(player(summary.playerId))
+            add("VP=${summary.vp}")
             add("S=${renderDiceCounts(summary.supplyDice)}")
             add("D=${renderDiceCounts(summary.discardDice)}")
             if (summary.beeCount > 0) add("B=${summary.beeCount}")

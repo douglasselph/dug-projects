@@ -166,6 +166,7 @@ class ChronicleTextRendererTest {
                 playerSummaries = listOf(
                     PlayerRoundSummarySnapshot(
                         playerId = PlayerId(1),
+                        vp = 10,
                         graftedPlants = listOf(
                             GraftedPlantSnapshot(PlantType.FLOWER, 14),
                             GraftedPlantSnapshot(PlantType.ROOT, 5),
@@ -187,6 +188,7 @@ class ChronicleTextRendererTest {
                     ),
                     PlayerRoundSummarySnapshot(
                         playerId = PlayerId(2),
+                        vp = 3,
                         graftedPlants = emptyList(),
                         supplyDice = emptyList(),
                         discardDice = listOf(DieSides.D4),
@@ -215,10 +217,10 @@ class ChronicleTextRendererTest {
         assertEquals("01.002  ROUND 1 COMPLETE CULTIVATION: first", lines[1])
         assertEquals("", lines[2])
         assertEquals(
-            "01.003  P1 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF[GB yb] G[2R5 1V11 1F11 1F14]",
+            "01.003  P1 VP=10 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF[GB yb] G[2R5 1V11 1F11 1F14]",
             lines[3]
         )
-        assertEquals("01.004  P2 S=- D=1D4 W=1 G[]", lines[4])
+        assertEquals("01.004  P2 VP=3 S=- D=1D4 W=1 G[]", lines[4])
         assertEquals("", lines[5])
         assertEquals("02.001  ROUND 2 REVEAL BATTLE: second [GAIN_ONE_VP | GAIN_ONE_VP]", lines[6])
     }
