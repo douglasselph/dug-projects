@@ -310,6 +310,17 @@ This is not merely a memory optimization. It creates the stable boundary
 between **what happened in one game** and **what an experiment concludes
 across many games**.
 
+**M3-A implementation note.** The first `GameSummary` deliberately records
+only metrics that the current typed Chronicle and completed game state can
+identify without inference: seeds, seats, winners/win shares, final VP
+breakdown, Battle Strike VP, Wounds taken, Wisp Roll Rewards, observable Wisp
+plays, final Wisp count, final Plant count/printed cost, and final dice
+count/power. The current Chronicle does not identify every Wisp removal source
+or an unambiguous player who "caused" every Wound, so M3-A does not invent
+those values. Add typed instrumentation when a concrete experiment requires
+them. Likewise, round/checkpoint snapshots should be added when the comeback
+study is implemented rather than retained speculatively in every summary.
+
 ### 5.2 First experiment: Six-Wisp Opening Stress Test
 
 This is the first priority because it answers an immediate rules
@@ -501,11 +512,12 @@ obvious counters before changing the card.
 
 Implement the research harness in this order:
 
-1.  **M3-A --- compact per-game summary**
-    -   introduce/finish `GameSummary`;
-    -   extract it from a completed `Game` + typed Chronicle;
-    -   prove the summary with focused tests;
-    -   do not retain the full Chronicle in batch results.
+1.  **M3-A --- compact per-game summary --- IMPLEMENTED, pending focused test**
+    -   `GameSummary` / `PlayerGameSummary` are compact immutable value records;
+    -   `GameSummaryExtractor` collapses a completed `Game` + typed Chronicle;
+    -   extraction includes only metrics supported reliably by current typed data;
+    -   focused simulation coverage runs a real completed Human Baseline game;
+    -   neither summary type retains the full Chronicle or mutable `Game`.
 2.  **M3-B --- reusable experiment batch/report boundary**
     -   run many games;
     -   retain compact summaries/observations;
