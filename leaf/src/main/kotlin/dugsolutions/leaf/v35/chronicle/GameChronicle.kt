@@ -192,6 +192,15 @@ class GameChronicle : Chronicle {
                 rows = moment.rows.map(::copyGridRow),
                 hierarchyDepth = hierarchyDepth
             )
+            is Moment.BattleDieRow -> GameEntry.BattleDieRow(
+                sequence = sequence,
+                rollSequence = moment.rollSequence,
+                playerId = moment.playerId,
+                sides = moment.sides,
+                value = moment.value,
+                row = moment.row,
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.ButterflyState -> GameEntry.ButterflyState(
                 sequence = sequence,
                 playerId = moment.playerId,

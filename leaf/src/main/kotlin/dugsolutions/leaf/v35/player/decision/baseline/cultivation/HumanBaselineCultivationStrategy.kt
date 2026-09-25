@@ -92,9 +92,13 @@ class HumanBaselineCultivationStrategy(
             context = request.context,
             legalChoices = request.legalChoices
         )
+        val pocketedSpark = applyPocketedSparkWillingness(
+            context = request.context,
+            legalChoices = overgrowth.legalChoices
+        )
         val compost = applyCompostWillingness(
             request = request,
-            legalChoices = overgrowth.legalChoices
+            legalChoices = pocketedSpark.legalChoices
         )
         val mulch = applyMulchWillingness(
             request = request,
@@ -118,7 +122,10 @@ class HumanBaselineCultivationStrategy(
         return attachSunlightProbability(
             selected = attachMulchProbability(
                 selected = attachCompostProbability(
-                    selected = attachOvergrowthProbability(selected, overgrowth),
+                    selected = attachPocketedSparkProbability(
+                        selected = attachOvergrowthProbability(selected, overgrowth),
+                        gate = pocketedSpark
+                    ),
                     request = request,
                     gate = compost
                 ),
@@ -165,6 +172,37 @@ class HumanBaselineCultivationStrategy(
         val support = selected as? CultivationAction.Support ?: return selected
         val wisp = support.action as? SupportAction.PlayWisp ?: return selected
         if (wisp.card.effect != GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) return selected
+        return CultivationAction.Support(wisp.withDecisionProbability(percent))
+    }
+
+    private fun applyPocketedSparkWillingness(
+        context: DecisionContext,
+        legalChoices: List<CultivationAction>
+    ): CultivationWispGate {
+        val choices = legalChoices.filter { choice ->
+            val wisp = (choice as? CultivationAction.Support)?.action as? SupportAction.PlayWisp
+            wisp?.card?.effect == GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD
+        }
+        if (choices.isEmpty()) return CultivationWispGate(legalChoices)
+
+        val bestDiscardSides = context.self.board.discard.maxOfOrNull { it.sides }
+            ?: return CultivationWispGate(removeChoices(legalChoices, choices))
+        val percentage = policy.pocketedSparkUsePercentage(context, bestDiscardSides)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        return CultivationWispGate(
+            legalChoices = if (accepted) legalChoices else removeChoices(legalChoices, choices),
+            acceptedPercentage = if (accepted) percentage else null
+        )
+    }
+
+    private fun attachPocketedSparkProbability(
+        selected: CultivationAction,
+        gate: CultivationWispGate
+    ): CultivationAction {
+        val percent = gate.acceptedPercentage ?: return selected
+        val support = selected as? CultivationAction.Support ?: return selected
+        val wisp = support.action as? SupportAction.PlayWisp ?: return selected
+        if (wisp.card.effect != GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD) return selected
         return CultivationAction.Support(wisp.withDecisionProbability(percent))
     }
 
@@ -442,6 +480,11 @@ class HumanBaselineCultivationStrategy(
             is SupportAction.UseButterfly -> emptySet()
         }
     private data class CultivationOvergrowthGate(
+        val legalChoices: List<CultivationAction>,
+        val acceptedPercentage: Int? = null
+    )
+
+    private data class CultivationWispGate(
         val legalChoices: List<CultivationAction>,
         val acceptedPercentage: Int? = null
     )

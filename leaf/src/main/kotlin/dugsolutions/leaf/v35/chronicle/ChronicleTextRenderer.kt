@@ -40,6 +40,9 @@ object ChronicleTextRenderer {
         selectedPlantCards: List<PlantCard> = emptyList()
     ): String =
         buildString {
+            val battleRowsByRollSequence =
+                entries.filterIsInstance<GameEntry.BattleDieRow>().associateBy { it.rollSequence }
+
             if (selectedPlantCards.isNotEmpty()) {
                 appendPlantCardHeader(selectedPlantCards)
             }
@@ -71,6 +74,9 @@ object ChronicleTextRenderer {
             ) {
                 val body = buildString {
                     append("${player(roll.playerId)} ROLL D${roll.sides}=${roll.value} reason=${roll.reason}")
+                    battleRowsByRollSequence[roll.sequence]?.let {
+                        append(" -> ROW#${it.row.ordinal + 1}")
+                    }
                     reward?.let(::compactReward)?.let { append(" REWARD $it") }
                 }
                 appendBody(body, depth)
@@ -272,6 +278,8 @@ object ChronicleTextRenderer {
                         appendBody("${player(entry.playerId)} REWARD $it", depth)
                     }
 
+                    is GameEntry.BattleDieRow -> Unit
+
                     else -> {
                         appendEntry(entry, depth)
                         appendChildrenCompact(node.children, depth + 1)
@@ -431,7 +439,7 @@ object ChronicleTextRenderer {
             .sortedWith(compareBy<PlantCard>({ plantTypeOrder(it.type) }, { it.cost }, { it.name }))
             .forEach { card ->
                 appendLine(
-                    "  ${plantTypeAbbreviation(card.type)}${card.cost}  ${card.title} [${card.name}]"
+                    "  ${plantTypeAbbreviation(card.type)}${card.cost}  ${card.title} [${card.name}] ${card.effect}"
                 )
             }
         appendLine()
@@ -683,6 +691,9 @@ object ChronicleTextRenderer {
 
             is GameEntry.BattleGridReport ->
                 "GRID ${entry.kind}" + (entry.passNumber?.let { " pass=$it" } ?: "")
+
+            is GameEntry.BattleDieRow ->
+                "${player(entry.playerId)} BATTLE DIE D${entry.sides}=${entry.value} -> ROW#${entry.row.ordinal + 1}"
 
             is GameEntry.ButterflyState ->
                 buildString {

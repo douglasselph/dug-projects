@@ -74,7 +74,11 @@ class HumanBaselineBattleStrategy(
         if (request.context == DecisionContext.EMPTY) return delegate.chooseTurnAction(request)
 
         val overgrowth = applyOvergrowthWillingness(request.context, request.legalChoices)
-        val legalChoices = overgrowth.legalChoices
+        val pocketedSpark = applyPocketedSparkWillingness(
+            context = request.context,
+            legalChoices = overgrowth.legalChoices
+        )
+        val legalChoices = pocketedSpark.legalChoices
         val orchestration = turnOrchestrator(
             context = request.context,
             roundCard = request.roundCard,
@@ -92,7 +96,10 @@ class HumanBaselineBattleStrategy(
         }
         if (candidates.isEmpty()) {
             val fallback = legalChoices.firstOrNull() ?: delegate.chooseTurnAction(request)
-            return attachOvergrowthProbability(fallback, overgrowth)
+            return attachPocketedSparkProbability(
+                attachOvergrowthProbability(fallback, overgrowth),
+                pocketedSpark
+            )
         }
 
         val selected = scoreEngine.chooseValue(
@@ -127,7 +134,10 @@ class HumanBaselineBattleStrategy(
             },
             influenceRegistry = influenceRegistry
         )
-        return attachOvergrowthProbability(selected, overgrowth)
+        return attachPocketedSparkProbability(
+            attachOvergrowthProbability(selected, overgrowth),
+            pocketedSpark
+        )
     }
 
 
@@ -176,6 +186,52 @@ class HumanBaselineBattleStrategy(
         return wisp.card.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
     }
 
+    private fun applyPocketedSparkWillingness(
+        context: DecisionContext,
+        legalChoices: List<BattleTurnAction>
+    ): BattleWispGate {
+        val choices = legalChoices.filter(::isPocketedSparkSupport)
+        if (choices.isEmpty()) return BattleWispGate(legalChoices)
+
+        val bestDiscardSides = context.self.board.discard.maxOfOrNull { it.sides }
+            ?: return BattleWispGate(removeWispChoices(legalChoices, choices))
+        val percentage = policy.pocketedSparkUsePercentage(context, bestDiscardSides)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        return BattleWispGate(
+            legalChoices = if (accepted) legalChoices else removeWispChoices(legalChoices, choices),
+            acceptedPercentage = if (accepted) percentage else null
+        )
+    }
+
+    private fun attachPocketedSparkProbability(
+        selected: BattleTurnAction,
+        gate: BattleWispGate
+    ): BattleTurnAction {
+        val percent = gate.acceptedPercentage ?: return selected
+        val support = selected as? BattleTurnAction.Support ?: return selected
+        val shared = support.action as? BattleSupportAction.Shared ?: return selected
+        val wisp = shared.action as? SupportAction.PlayWisp ?: return selected
+        if (wisp.card.effect != GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD) return selected
+        return BattleTurnAction.Support(
+            BattleSupportAction.Shared(wisp.withDecisionProbability(percent))
+        )
+    }
+
+    private fun isPocketedSparkSupport(choice: BattleTurnAction): Boolean {
+        val support = (choice as? BattleTurnAction.Support)?.action as? BattleSupportAction.Shared
+            ?: return false
+        val wisp = support.action as? SupportAction.PlayWisp ?: return false
+        return wisp.card.effect == GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD
+    }
+
+    private fun removeWispChoices(
+        legalChoices: List<BattleTurnAction>,
+        choicesToRemove: List<BattleTurnAction>
+    ): List<BattleTurnAction> {
+        val filtered = legalChoices.filterNot { it in choicesToRemove }
+        return filtered.ifEmpty { legalChoices }
+    }
+
     override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest): StrikeRow {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseDiePlacement(request)
         return scoreEngine.chooseValue(
@@ -220,6 +276,11 @@ class HumanBaselineBattleStrategy(
             else -> emptySet()
         }
     private data class BattleOvergrowthGate(
+        val legalChoices: List<BattleTurnAction>,
+        val acceptedPercentage: Int? = null
+    )
+
+    private data class BattleWispGate(
         val legalChoices: List<BattleTurnAction>,
         val acceptedPercentage: Int? = null
     )

@@ -86,9 +86,18 @@ class HumanBaselineBuyStrategy(
         }
 
         val features = BaselineFeatureCalculator().calculate(request.context)
+        val affordablePlants = affordable.filterIsInstance<BuyItem.Plant>()
+        val earlyPlantPercentage = policy.earlyPlantPriorityPercentage(request.context)
+        val earlyPlantAccepted =
+            affordablePlants.isNotEmpty() &&
+                earlyPlantPercentage > 0 &&
+                strategyRandomizer.nextInt(100) < earlyPlantPercentage
+
         val preferred = when {
+            earlyPlantAccepted ->
+                affordablePlants
             features.plantDeficit > 0 && features.dicePowerDeficit == 0 ->
-                affordable.filterIsInstance<BuyItem.Plant>()
+                affordablePlants
             features.dicePowerDeficit > 0 && features.plantDeficit == 0 ->
                 affordable.filterIsInstance<BuyItem.Die>()
             else -> emptyList()

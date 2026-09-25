@@ -85,6 +85,37 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
+        fun `before first Battle ninety percent branch protects a two Plant floor`() {
+            val existing = view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))
+            val newPlant = plant("Vine_09_01", PlantType.VINE, 9, GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12)),
+                context = context(
+                    plantCards = listOf(existing),
+                    dice = listOf(
+                        DieView(0, 10, 4),
+                        DieView(1, 10, 4),
+                        DieView(2, 10, 4)
+                    ),
+                    cultivationRound = 2,
+                    battleRoundsCompleted = 0
+                )
+            )
+
+            val acceptsPlantPriority = strategy(QueueRandomizer(89)).choosePurchase(request)
+            val declinesPlantPriority = strategy(QueueRandomizer(90)).choosePurchase(request)
+
+            assertEquals(
+                BuyItem.Plant(newPlant),
+                assertIs<BuyChoice.Purchase>(acceptsPlantPriority).item
+            )
+            assertEquals(
+                BuyItem.Die(DieSides.D12),
+                assertIs<BuyChoice.Purchase>(declinesPlantPriority).item
+            )
+        }
+
+        @Test
         fun `within Plant category choose highest affordable cost tier`() {
             val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
             val expensive = plant("Root_09_01", PlantType.ROOT, 9, GameEffect.UPGRADE_DIE_AND_USE_NOW)
@@ -302,12 +333,15 @@ class HumanBaselineBuyStrategyTest {
         plantCards: List<CreatureCardView> = listOf(view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))),
         dice: List<DieView> = listOf(DieView(0, 20, 10), DieView(1, 20, 10)),
         bees: Int = 0,
-        worms: Int = 0
+        worms: Int = 0,
+        cultivationRound: Int = 1,
+        battleRoundsCompleted: Int = 0
     ): DecisionContext = DecisionContext.EMPTY.copy(
         phase = RoundCardType.CULTIVATION,
         progress = DecisionContext.EMPTY.progress.copy(
-            currentCultivationRoundNumber = 1,
-            totalCultivationRounds = 8
+            currentCultivationRoundNumber = cultivationRound,
+            totalCultivationRounds = 8,
+            battleRoundsCompleted = battleRoundsCompleted
         ),
         self = DecisionContext.EMPTY.self.copy(
             board = DecisionContext.EMPTY.self.board.copy(

@@ -63,7 +63,9 @@ sealed interface RollRewardResult {
 
 data class RollResolution(
     val die: Die,
-    val reward: RollRewardResult
+    val reward: RollRewardResult,
+    /** Sequence of the exact DieRolled Chronicle entry for this roll. */
+    val chronicleSequence: Long
 )
 
 /**
@@ -176,7 +178,7 @@ class RollResolver(
         rewardPolicy: RollRewardPolicy,
         reason: RollReason
     ): RollResolution {
-        chronicle.record(
+        val rollEntry = chronicle.record(
             Moment.DieRolled(
                 playerId = player.id,
                 sides = die.sides,
@@ -206,7 +208,8 @@ class RollResolver(
 
         return RollResolution(
             die = die,
-            reward = reward
+            reward = reward,
+            chronicleSequence = rollEntry.sequence
         )
     }
 

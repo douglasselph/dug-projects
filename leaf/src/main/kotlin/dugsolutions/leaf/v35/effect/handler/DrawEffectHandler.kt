@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.battle.BattlePlacementResolver
+import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
@@ -12,6 +13,7 @@ import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RollResolver
+import dugsolutions.leaf.v35.game.operation.RollResolution
 import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
 import dugsolutions.leaf.v35.player.decision.battle.BattleDiePlacementReason
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
@@ -274,10 +276,10 @@ class DrawEffectHandler(
                     "Selected Discard die could not be removed: $die"
                 }
                 request.actor.dice.addToHand(die)
-                rollResolver.roll(request.actor, die)
+                val rolled = rollResolver.roll(request.actor, die)
                 placeIfBattle(
                     request = request,
-                    die = die
+                    resolution = rolled
                 )
             }
 
@@ -439,7 +441,7 @@ class DrawEffectHandler(
         val drawn =
             buildList {
                 repeat(2) {
-                    rollResolver.draw(request.actor)?.die?.let(::add)
+                    rollResolver.draw(request.actor)?.let(::add)
                 }
             }
 
@@ -449,35 +451,38 @@ class DrawEffectHandler(
 
         val replacement =
             if (drawn.size == 1) {
-                drawn.single()
+                drawn.single().die
             } else {
                 chooseRequiredHandDie(
                     request = request,
                     legalChoices = choicesForExactHandDice(
                         request = request,
-                        dice = drawn
+                        dice = drawn.map { it.die }
                     ),
                     requiredBattleRow = discarded.row
                 )
             }
 
-        battlePlacementResolver.placeNewHandDieInRow(
+        val replacementRoll = drawn.first { it.die === replacement }
+        val replacementPlacement = battlePlacementResolver.placeNewHandDieInRow(
             battleState = battleState,
             player = request.actor,
             die = replacement,
             row = discarded.row
         )
+        recordBattleRow(request, replacementRoll, replacementPlacement.row)
 
         drawn
-            .filter { it !== replacement }
-            .forEach { die ->
-                battlePlacementResolver.placeNewHandDie(
+            .filter { it.die !== replacement }
+            .forEach { rolled ->
+                val placement = battlePlacementResolver.placeNewHandDie(
                     battleState = battleState,
                     player = request.actor,
-                    die = die,
+                    die = rolled.die,
                     reason = BattleDiePlacementReason.EFFECT,
                     context = request.decisionContext()
                 )
+                recordBattleRow(request, rolled, placement.row)
             }
     }
 
@@ -754,18 +759,19 @@ class DrawEffectHandler(
 
         placeIfBattle(
             request = request,
-            die = resolution.die
+            resolution = resolution
         )
     }
 
     private fun placeIfBattle(
         request: GameEffectRequest,
-        die: Die
+        resolution: RollResolution
     ) {
         if (request.phase != GameEffectPhase.BATTLE) {
             return
         }
 
+        val die = resolution.die
         val battleState =
             stateNotNull(
                 request.battleState,
@@ -774,12 +780,29 @@ class DrawEffectHandler(
                 "Battle effect ${request.effect} requires BattleState to place die $die"
             }
 
-        battlePlacementResolver.placeNewHandDie(
+        val placement = battlePlacementResolver.placeNewHandDie(
             battleState = battleState,
             player = request.actor,
             die = die,
             reason = BattleDiePlacementReason.EFFECT,
             context = request.decisionContext()
+        )
+        recordBattleRow(request, resolution, placement.row)
+    }
+
+    private fun recordBattleRow(
+        request: GameEffectRequest,
+        resolution: RollResolution,
+        row: dugsolutions.leaf.v35.battle.domain.StrikeRow
+    ) {
+        request.game.chronicle.record(
+            Moment.BattleDieRow(
+                rollSequence = resolution.chronicleSequence,
+                playerId = request.actor.id,
+                sides = resolution.die.sides,
+                value = resolution.die.value,
+                row = row
+            )
         )
     }
 

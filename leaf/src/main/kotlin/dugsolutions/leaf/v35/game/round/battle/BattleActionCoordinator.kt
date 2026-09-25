@@ -508,12 +508,21 @@ class BattleActionCoordinator(
                         "Battle Draw became unavailable for player ${player.id.value}"
                     }
 
-                placementResolver.placeNewHandDie(
+                val placement = placementResolver.placeNewHandDie(
                     battleState = battleState,
                     player = player,
                     die = rolled.die,
                     reason = BattleDiePlacementReason.MAIN_DRAW,
                     context = DecisionContextFactory.create(game, player, battleState)
+                )
+                game.chronicle.record(
+                    Moment.BattleDieRow(
+                        rollSequence = rolled.chronicleSequence,
+                        playerId = player.id,
+                        sides = rolled.die.sides,
+                        value = rolled.die.value,
+                        row = placement.row
+                    )
                 )
             }
 

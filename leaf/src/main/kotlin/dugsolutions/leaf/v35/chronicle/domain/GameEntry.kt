@@ -156,6 +156,22 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    /**
+     * Battle-row context for one exact Chronicle roll. The row is recorded
+     * after placement for newly drawn dice, or from the die's existing Grid
+     * location for rerolls. [rollSequence] links back to the precise DieRolled
+     * entry so rendering never has to infer identity from size/value alone.
+     */
+    data class BattleDieRow(
+        override val sequence: Long,
+        val rollSequence: Long,
+        val playerId: PlayerId,
+        val sides: Int,
+        val value: Int,
+        val row: StrikeRow,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class ButterflyState(
         override val sequence: Long,
         val playerId: PlayerId,

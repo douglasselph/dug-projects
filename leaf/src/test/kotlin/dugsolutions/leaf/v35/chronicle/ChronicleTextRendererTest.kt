@@ -103,9 +103,9 @@ class ChronicleTextRendererTest {
         val lines = ChronicleTextRenderer.render(entries, selectedPlantCards = cards).lines()
 
         assertEquals("PLANTS (3)", lines[0])
-        assertEquals("  R5  Root Four More [Root_05_02]", lines[1])
-        assertEquals("  V11  Vine's the Limit [Vine_11_04]", lines[2])
-        assertEquals("  F14  Bloom Backflip [Flower_14_02]", lines[3])
+        assertEquals("  R5  Root Four More [Root_05_02] GAIN_ONE_VP", lines[1])
+        assertEquals("  V11  Vine's the Limit [Vine_11_04] GAIN_ONE_VP", lines[2])
+        assertEquals("  F14  Bloom Backflip [Flower_14_02] GAIN_ONE_VP", lines[3])
         assertEquals("", lines[4])
         assertEquals("01.001  ROUND 1 REVEAL CULTIVATION: first [GAIN_ONE_VP | GAIN_ONE_VP]", lines[5])
     }
@@ -698,6 +698,49 @@ class ChronicleTextRendererTest {
     }
 
     @Test
+    fun `Pocketed Spark compact line shows its actual willingness percentage`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.SupportAction(
+                sequence = 2,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.CULTIVATION,
+                action = SupportActionKind.WISP,
+                row = null,
+                wispUsePercentage = 5
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(2),
+                effect = GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
+                sourceKind = EffectSourceKind.WISP,
+                sourceName = "Wisp_Mulch_Die",
+                phase = ChroniclePhase.CULTIVATION,
+                hierarchyDepth = 1
+            ),
+            GameEntry.MulchStored(
+                sequence = 4,
+                playerId = PlayerId(2),
+                sides = DieSides.D6,
+                value = 1,
+                fromDiscard = true,
+                hierarchyDepth = 2
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals("01.002  P2 Wisp_Mulch_Die (5%) D6=1 -> MULCH", lines[1])
+    }
+
+    @Test
     fun `compact Chronicle appends an immediate roll reward to the roll line`() {
         val entries = listOf(
             GameEntry.RoundRevealed(
@@ -815,13 +858,22 @@ class ChronicleTextRendererTest {
                 rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
                 reason = RollReason.DRAW,
                 hierarchyDepth = 1
+            ),
+            GameEntry.BattleDieRow(
+                sequence = 4,
+                rollSequence = 3,
+                playerId = PlayerId(2),
+                sides = 8,
+                value = 8,
+                row = StrikeRow.MIDDLE,
+                hierarchyDepth = 1
             )
         )
 
         val lines = ChronicleTextRenderer.render(entries).lines()
 
         assertEquals("01.002  P2 BATTLE MAIN DRAW stage=FIRST", lines[1])
-        assertEquals("01.003    P2 ROLL D8=8 reason=DRAW", lines[2])
+        assertEquals("01.003    P2 ROLL D8=8 reason=DRAW -> ROW#2", lines[2])
     }
 
     @Test

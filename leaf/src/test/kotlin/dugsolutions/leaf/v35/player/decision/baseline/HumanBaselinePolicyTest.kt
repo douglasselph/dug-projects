@@ -162,6 +162,55 @@ class HumanBaselinePolicyTest {
     }
 
     @Test
+    fun `Pocketed Spark is conservative in Cultivation and much readier in Battle`() {
+        val policy = HumanBaselinePolicy()
+        val cultivation = context()
+        val battle = cultivation.copy(phase = RoundCardType.BATTLE)
+
+        assertEquals(0, policy.pocketedSparkUsePercentage(cultivation, 4))
+        assertEquals(5, policy.pocketedSparkUsePercentage(cultivation, 6))
+        assertEquals(10, policy.pocketedSparkUsePercentage(cultivation, 8))
+        assertEquals(20, policy.pocketedSparkUsePercentage(cultivation, 10))
+        assertEquals(50, policy.pocketedSparkUsePercentage(cultivation, 12))
+        assertEquals(80, policy.pocketedSparkUsePercentage(cultivation, 20))
+
+        assertEquals(5, policy.pocketedSparkUsePercentage(battle, 4))
+        assertEquals(15, policy.pocketedSparkUsePercentage(battle, 6))
+        assertEquals(30, policy.pocketedSparkUsePercentage(battle, 8))
+        assertEquals(50, policy.pocketedSparkUsePercentage(battle, 10))
+        assertEquals(75, policy.pocketedSparkUsePercentage(battle, 12))
+        assertEquals(95, policy.pocketedSparkUsePercentage(battle, 20))
+    }
+
+    @Test
+    fun `early Plant priority is ninety percent below the pre-Battle floor`() {
+        val policy = HumanBaselinePolicy()
+        val firstCultivation = context(
+            progress = GameProgressView.EMPTY.copy(
+                currentCultivationRoundNumber = 1,
+                battleRoundsCompleted = 0
+            )
+        )
+        val secondCultivation = context(
+            progress = GameProgressView.EMPTY.copy(
+                currentCultivationRoundNumber = 2,
+                battleRoundsCompleted = 0
+            )
+        )
+
+        assertEquals(90, policy.earlyPlantPriorityPercentage(firstCultivation))
+        assertEquals(90, policy.earlyPlantPriorityPercentage(secondCultivation))
+        assertEquals(
+            0,
+            policy.earlyPlantPriorityPercentage(
+                secondCultivation.copy(
+                    progress = secondCultivation.progress.copy(battleRoundsCompleted = 1)
+                )
+            )
+        )
+    }
+
+    @Test
     fun `default Battle policy centralizes approved Stage A thresholds`() {
         val policy = HumanBaselinePolicy()
         val context = context().copy(phase = RoundCardType.BATTLE)

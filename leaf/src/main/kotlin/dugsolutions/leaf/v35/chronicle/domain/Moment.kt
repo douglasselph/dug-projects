@@ -127,6 +127,18 @@ sealed interface Moment {
         val rows: List<BattleGridRowSnapshot>
     ) : Moment
 
+    /**
+     * Battle-row context associated with one exact DieRolled Chronicle entry.
+     * See GameEntry.BattleDieRow for why this is a separate typed fact.
+     */
+    data class BattleDieRow(
+        val rollSequence: Long,
+        val playerId: PlayerId,
+        val sides: Int,
+        val value: Int,
+        val row: StrikeRow
+    ) : Moment
+
     /** Current Butterfly ownership/facing for one player after a state change. */
     data class ButterflyState(
         val playerId: PlayerId,

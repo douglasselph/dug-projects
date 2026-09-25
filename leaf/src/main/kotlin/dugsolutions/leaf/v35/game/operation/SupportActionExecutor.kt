@@ -97,7 +97,7 @@ class SupportActionExecutor(
                 ) {
                     "Battle Water reroll target is not currently on player ${player.id.value}'s Grid: ${action.die}"
                 }
-                useWaterReroll(game, player, action)
+                useWaterReroll(game, player, action, battleState)
             }
 
             SupportAction.UseWaterRefresh ->
@@ -164,7 +164,8 @@ class SupportActionExecutor(
     private fun useWaterReroll(
         game: Game,
         player: Player,
-        action: SupportAction.UseWaterReroll
+        action: SupportAction.UseWaterReroll,
+        battleState: BattleState? = null
     ) {
         decisionCheck(player.tokens.hasWater) {
             "Player has no Water token"
@@ -174,7 +175,18 @@ class SupportActionExecutor(
         stateCheck(player.tokens.pull(Token.WATER) != null) {
             "Validated Water token could not be spent"
         }
-        rollResolver.roll(player, die)
+        val rolled = rollResolver.roll(player, die)
+        battleState?.grid?.placementOf(die)?.let { placement ->
+            game.chronicle.record(
+                Moment.BattleDieRow(
+                    rollSequence = rolled.chronicleSequence,
+                    playerId = player.id,
+                    sides = die.sides,
+                    value = die.value,
+                    row = placement.row
+                )
+            )
+        }
         game.grove.tokens.add(Token.WATER)
     }
 
@@ -198,7 +210,8 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseMulch
     ) {
-        val die = consumeMulchAndRoll(game, player, action)
+        val rolled = consumeMulchAndRoll(game, player, action)
+        val die = rolled.die
         // Cultivation Mulch needs no extra location beyond Dice Hand.
         stateCheck(player.dice.hand.any { it === die }) {
             "Rolled Mulch die was not retained in Dice Hand"
@@ -218,13 +231,23 @@ class SupportActionExecutor(
             "Player ${player.id.value} has no Strike Square with room for Mulch die"
         }
 
-        val die = consumeMulchAndRoll(game, player, action)
-        battlePlacementResolver.placeNewHandDie(
+        val rolled = consumeMulchAndRoll(game, player, action)
+        val die = rolled.die
+        val placement = battlePlacementResolver.placeNewHandDie(
             battleState = battleState,
             player = player,
             die = die,
             reason = BattleDiePlacementReason.MULCH,
             context = DecisionContextFactory.create(game, player, battleState)
+        )
+        game.chronicle.record(
+            Moment.BattleDieRow(
+                rollSequence = rolled.chronicleSequence,
+                playerId = player.id,
+                sides = die.sides,
+                value = die.value,
+                row = placement.row
+            )
         )
     }
 
@@ -232,7 +255,7 @@ class SupportActionExecutor(
         game: Game,
         player: Player,
         action: SupportAction.UseMulch
-    ): Die {
+    ): RollResolution {
         val sides = decisionNotNull(action.token.sides) {
             "Stored Mulch Support Action requires a stored die size"
         }
@@ -246,9 +269,9 @@ class SupportActionExecutor(
 
         val die = game.dieFactory(sides)
         player.dice.addToHand(die)
-        rollResolver.roll(player, die)
+        val rolled = rollResolver.roll(player, die)
         game.grove.tokens.add(Token.MULCH())
-        return die
+        return rolled
     }
 
     private fun useWormFlip(
@@ -289,6 +312,17 @@ class SupportActionExecutor(
         val originalValue = die.value
 
         val rerolled = rollResolver.roll(player, die, RollRewardPolicy.DEFER)
+        battleState?.grid?.placementOf(die)?.let { placement ->
+            game.chronicle.record(
+                Moment.BattleDieRow(
+                    rollSequence = rerolled.chronicleSequence,
+                    playerId = player.id,
+                    sides = die.sides,
+                    value = rerolled.die.value,
+                    row = placement.row
+                )
+            )
+        }
         val choice = player.decisions.support.chooseButterflyRoll(
             ChooseButterflyRollRequest(
                 sides = die.sides,

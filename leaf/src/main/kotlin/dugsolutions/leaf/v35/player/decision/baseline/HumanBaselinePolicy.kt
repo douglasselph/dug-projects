@@ -49,6 +49,34 @@ open class HumanBaselinePolicy(
     private val mulchValue2UsePercentageValue: Int = DEFAULT_MULCH_VALUE_2_USE_PERCENTAGE,
     private val mulchValue3UsePercentageValue: Int = DEFAULT_MULCH_VALUE_3_USE_PERCENTAGE,
     private val mulchValue4UsePercentageValue: Int = DEFAULT_MULCH_VALUE_4_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD4UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D4_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD6UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D6_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD8UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D8_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD10UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D10_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD12UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D12_USE_PERCENTAGE,
+    private val pocketedSparkCultivationD20UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_CULTIVATION_D20_USE_PERCENTAGE,
+    private val pocketedSparkBattleD4UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D4_USE_PERCENTAGE,
+    private val pocketedSparkBattleD6UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D6_USE_PERCENTAGE,
+    private val pocketedSparkBattleD8UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D8_USE_PERCENTAGE,
+    private val pocketedSparkBattleD10UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D10_USE_PERCENTAGE,
+    private val pocketedSparkBattleD12UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D12_USE_PERCENTAGE,
+    private val pocketedSparkBattleD20UsePercentageValue: Int =
+        DEFAULT_POCKETED_SPARK_BATTLE_D20_USE_PERCENTAGE,
+    private val earlyPlantPriorityPercentageValue: Int =
+        DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE,
+    private val earlyPlantFloorValue: Int =
+        DEFAULT_EARLY_PLANT_FLOOR,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -93,6 +121,24 @@ open class HumanBaselinePolicy(
         require(mulchValue2UsePercentageValue in 0..100) { "Mulch value-2 use percentage must be 0..100" }
         require(mulchValue3UsePercentageValue in 0..100) { "Mulch value-3 use percentage must be 0..100" }
         require(mulchValue4UsePercentageValue in 0..100) { "Mulch value-4 use percentage must be 0..100" }
+        listOf(
+            pocketedSparkCultivationD4UsePercentageValue,
+            pocketedSparkCultivationD6UsePercentageValue,
+            pocketedSparkCultivationD8UsePercentageValue,
+            pocketedSparkCultivationD10UsePercentageValue,
+            pocketedSparkCultivationD12UsePercentageValue,
+            pocketedSparkCultivationD20UsePercentageValue,
+            pocketedSparkBattleD4UsePercentageValue,
+            pocketedSparkBattleD6UsePercentageValue,
+            pocketedSparkBattleD8UsePercentageValue,
+            pocketedSparkBattleD10UsePercentageValue,
+            pocketedSparkBattleD12UsePercentageValue,
+            pocketedSparkBattleD20UsePercentageValue,
+            earlyPlantPriorityPercentageValue
+        ).forEach { percentage ->
+            require(percentage in 0..100) { "Human Baseline percentage must be 0..100: $percentage" }
+        }
+        require(earlyPlantFloorValue >= 0) { "Early Plant floor cannot be negative" }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
         require(battleSecuredLeadValue >= 0) { "Battle secured lead cannot be negative" }
@@ -166,6 +212,32 @@ open class HumanBaselinePolicy(
         const val DEFAULT_MULCH_VALUE_2_USE_PERCENTAGE: Int = 60
         const val DEFAULT_MULCH_VALUE_3_USE_PERCENTAGE: Int = 40
         const val DEFAULT_MULCH_VALUE_4_USE_PERCENTAGE: Int = 20
+
+        /**
+         * Pocketed Spark is normally saved for Battle and/or a large discarded
+         * die. A D6 in Cultivation is deliberately exceptional.
+         */
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D4_USE_PERCENTAGE: Int = 0
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D6_USE_PERCENTAGE: Int = 5
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D8_USE_PERCENTAGE: Int = 10
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D10_USE_PERCENTAGE: Int = 20
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D12_USE_PERCENTAGE: Int = 50
+        const val DEFAULT_POCKETED_SPARK_CULTIVATION_D20_USE_PERCENTAGE: Int = 80
+
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D4_USE_PERCENTAGE: Int = 5
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D6_USE_PERCENTAGE: Int = 15
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D8_USE_PERCENTAGE: Int = 30
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D10_USE_PERCENTAGE: Int = 50
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D12_USE_PERCENTAGE: Int = 75
+        const val DEFAULT_POCKETED_SPARK_BATTLE_D20_USE_PERCENTAGE: Int = 95
+
+        /**
+         * Before the first Battle, ordinary players strongly prefer to build a
+         * minimum two-card Creature whenever a Plant is affordable. The 90%
+         * gate keeps rare "take the shiny die anyway" games possible.
+         */
+        const val DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE: Int = 90
+        const val DEFAULT_EARLY_PLANT_FLOOR: Int = 2
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -325,6 +397,43 @@ open class HumanBaselinePolicy(
             4 -> mulchValue4UsePercentageValue
             else -> 0
         }
+
+    /**
+     * Willingness to spend Pocketed Spark on the largest die currently in the
+     * player's Discard. Cultivation is intentionally much more conservative
+     * than Battle because the Wisp itself has later Battle timing value.
+     */
+    open fun pocketedSparkUsePercentage(
+        context: DecisionContext,
+        discardSides: Int
+    ): Int {
+        val battle = context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+        return when (discardSides) {
+            4 -> if (battle) pocketedSparkBattleD4UsePercentageValue else pocketedSparkCultivationD4UsePercentageValue
+            6 -> if (battle) pocketedSparkBattleD6UsePercentageValue else pocketedSparkCultivationD6UsePercentageValue
+            8 -> if (battle) pocketedSparkBattleD8UsePercentageValue else pocketedSparkCultivationD8UsePercentageValue
+            10 -> if (battle) pocketedSparkBattleD10UsePercentageValue else pocketedSparkCultivationD10UsePercentageValue
+            12 -> if (battle) pocketedSparkBattleD12UsePercentageValue else pocketedSparkCultivationD12UsePercentageValue
+            20 -> if (battle) pocketedSparkBattleD20UsePercentageValue else pocketedSparkCultivationD20UsePercentageValue
+            else -> 0
+        }
+    }
+
+    /**
+     * Strong early-game tendency to reach a minimum Plant count before the
+     * first Battle. The required count ramps from one Plant in Cultivation 1
+     * to [earlyPlantFloorValue] by Cultivation 2 and later.
+     */
+    open fun earlyPlantPriorityPercentage(context: DecisionContext): Int {
+        if (context.progress.battleRoundsCompleted > 0) return 0
+        val cultivationRound = context.progress.currentCultivationRoundNumber ?: return 0
+        val required = minOf(earlyPlantFloorValue, cultivationRound)
+        return if (context.self.board.plantCount < required) {
+            earlyPlantPriorityPercentageValue
+        } else {
+            0
+        }
+    }
 
     /** Base spacing used when Battle Swing assigns importance to named row transitions. */
     open fun battleTransitionScale(context: DecisionContext): Int =

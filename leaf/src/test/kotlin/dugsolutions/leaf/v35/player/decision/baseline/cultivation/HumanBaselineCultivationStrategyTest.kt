@@ -257,6 +257,35 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
+        fun `Pocketed Spark D6 in Cultivation uses the five percent boundary`() {
+            val pocketedSpark = pocketedSparkWisp()
+            val choices = listOf(
+                CultivationAction.Support(SupportAction.PlayWisp(pocketedSpark)),
+                CultivationAction.Done
+            )
+            val context = context(discard = listOf(DieView(0, 6, 1)))
+
+            val accepts = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(4))
+            )
+            val declines = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(5))
+            )
+
+            val acceptedWisp = assertIs<SupportAction.PlayWisp>(
+                assertIs<CultivationAction.Support>(accepts).action
+            )
+            assertEquals(5, acceptedWisp.decisionProbabilityPercent)
+            assertEquals(CultivationAction.Done, declines)
+        }
+
+        @Test
         fun `Mulch value two uses the sixty percent boundary and carries probability metadata`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
@@ -519,6 +548,20 @@ class HumanBaselineCultivationStrategyTest {
     }
 
 
+    private fun pocketedSparkWisp(): WispCard =
+        WispCard(
+            quantity = 1,
+            name = "Wisp_Mulch_Die",
+            title = "Pocketed Spark",
+            count = 1,
+            effect = GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
+            lineIcons = null,
+            lineIconsHeight = 0,
+            vpIcon = null,
+            mainBackdrop = "",
+            endGameVp = 1
+        )
+
     private fun overgrowthWisp(): WispCard =
         WispCard(
             quantity = 1,
@@ -558,6 +601,7 @@ class HumanBaselineCultivationStrategyTest {
     private fun context(
         supply: List<DieView> = emptyList(),
         hand: List<DieView> = emptyList(),
+        discard: List<DieView> = emptyList(),
         bees: Int = 0,
         worms: Int = 0,
         water: Int = 0,
@@ -569,6 +613,7 @@ class HumanBaselineCultivationStrategyTest {
             board = DecisionContext.EMPTY.self.board.copy(
                 supply = supply,
                 hand = hand,
+                discard = discard,
                 bees = bees,
                 worms = worms,
                 water = water,
