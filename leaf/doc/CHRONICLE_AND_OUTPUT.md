@@ -58,7 +58,11 @@ output/
 
 `summary.txt` is the short answer: configuration, rounds completed, Chronicle entry count, final scores, and winner(s).
 
-`chronicle.txt` is the detailed chronological record. It is line-oriented on purpose so it is easy to open in any text editor, search, diff, or inspect beside the code. Visible line IDs are round-local: `01.001`, `01.002`, ... for Round 1, then `02.001`, `02.002`, ... for Round 2. The typed Chronicle still keeps its original globally increasing `GameEntry.sequence`; only the text renderer resets the visible counter at each `RoundRevealed` event. The current format is diagnostic and can be improved later without changing the typed Chronicle data underneath it.
+`chronicle.txt` is the detailed chronological record. It is line-oriented on purpose so it is easy to open in any text editor, search, diff, or inspect beside the code. Visible line IDs are round-local: `01.001`, `01.002`, ... for Round 1, then `02.001`, `02.002`, ... for Round 2. The typed Chronicle still keeps its original globally increasing `GameEntry.sequence`; only the text renderer resets the visible counter at each `RoundRevealed` event.
+
+Every `ROUND ... COMPLETE` entry also carries immutable end-of-Round player snapshots. The text renderer displays those snapshots as one compact line per player, separated from both the completed Round and the next Round by blank lines. `G` is grafted Plants, `S` is Dice Supply, `D` is Dice Discard, `B`/`W` are Bees/Worms, `Wa` is Water, `M` lists stored Mulch dice, `Wi` is Wisp count, and `BF` lists owned Butterflies. Zero-valued optional resources are omitted. These summary lines consume visible round-local report numbers but do not add separate Chronicle entries or alter the global `GameEntry.sequence`.
+
+The current format is diagnostic and can be improved later without changing the underlying game mechanics.
 
 The top-level `output/` directory is generated material and is listed in `.gitignore`.
 

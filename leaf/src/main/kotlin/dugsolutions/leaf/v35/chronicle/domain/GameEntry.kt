@@ -31,7 +31,8 @@ sealed interface GameEntry {
         override val sequence: Long,
         val roundNumber: Int,
         val cardName: String,
-        val cardType: RoundCardType
+        val cardType: RoundCardType,
+        val playerSummaries: List<PlayerRoundSummarySnapshot> = emptyList()
     ) : GameEntry
 
     data class DieRolled(

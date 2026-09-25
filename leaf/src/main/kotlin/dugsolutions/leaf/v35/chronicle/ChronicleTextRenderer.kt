@@ -1,7 +1,10 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.random.die.DieSides
+import dugsolutions.leaf.v35.tokens.Butterfly
 
 /**
  * Simple human-readable rendering of a typed Chronicle.
@@ -16,15 +19,36 @@ object ChronicleTextRenderer {
         buildString {
             var roundNumber = 0
             var sequenceWithinRound = 0
+            var separatorAlreadyWritten = false
 
             entries.forEach { entry ->
                 if (entry is GameEntry.RoundRevealed) {
-                    if (isNotEmpty()) appendLine()
+                    if (isNotEmpty() && !separatorAlreadyWritten) appendLine()
+                    separatorAlreadyWritten = false
                     roundNumber = entry.roundNumber
                     sequenceWithinRound = 0
+                } else {
+                    separatorAlreadyWritten = false
                 }
+
                 sequenceWithinRound += 1
                 appendLine(renderWithRoundPrefix(entry, roundNumber, sequenceWithinRound))
+
+                if (entry is GameEntry.RoundCompleted && entry.playerSummaries.isNotEmpty()) {
+                    appendLine()
+                    entry.playerSummaries.forEach { summary ->
+                        sequenceWithinRound += 1
+                        appendLine(
+                            renderSummaryWithRoundPrefix(
+                                summary = summary,
+                                roundNumber = roundNumber,
+                                sequenceWithinRound = sequenceWithinRound
+                            )
+                        )
+                    }
+                    appendLine()
+                    separatorAlreadyWritten = true
+                }
             }
         }
 
@@ -47,6 +71,62 @@ object ChronicleTextRenderer {
         val localPrefix = sequenceWithinRound.toString().padStart(3, '0')
         return "$roundPrefix.$localPrefix  ${renderBody(entry)}"
     }
+
+    private fun renderSummaryWithRoundPrefix(
+        summary: PlayerRoundSummarySnapshot,
+        roundNumber: Int,
+        sequenceWithinRound: Int
+    ): String {
+        val roundPrefix = roundNumber.toString().padStart(2, '0')
+        val localPrefix = sequenceWithinRound.toString().padStart(3, '0')
+        return "$roundPrefix.$localPrefix  ${renderPlayerSummary(summary)}"
+    }
+
+    private fun renderPlayerSummary(summary: PlayerRoundSummarySnapshot): String =
+        buildList {
+            add(player(summary.playerId))
+            add("G=${summary.graftedPlantCount}")
+            add("S=${renderDiceCounts(summary.supplyDice)}")
+            add("D=${renderDiceCounts(summary.discardDice)}")
+            if (summary.beeCount > 0) add("B=${summary.beeCount}")
+            if (summary.wormCount > 0) add("W=${summary.wormCount}")
+            if (summary.waterCount > 0) add("Wa=${summary.waterCount}")
+            if (summary.mulchDice.isNotEmpty()) {
+                add(
+                    "M=${summary.mulchDice.size}[" +
+                        summary.mulchDice.joinToString(",") { it?.toString() ?: "?" } +
+                        "]"
+                )
+            }
+            if (summary.wispCount > 0) add("Wi=${summary.wispCount}")
+            if (summary.butterflies.isNotEmpty()) {
+                add(
+                    "BF=${summary.butterflies.size}[" +
+                        summary.butterflies
+                            .sortedBy { it.ordinal }
+                            .joinToString(",", transform = ::butterflyAbbreviation) +
+                        "]"
+                )
+            }
+        }.joinToString(" ")
+
+    private fun renderDiceCounts(dice: List<DieSides>): String {
+        if (dice.isEmpty()) return "-"
+        val counts = dice.groupingBy { it }.eachCount()
+        return DieSides.entries
+            .mapNotNull { sides ->
+                counts[sides]?.let { count -> "$count$sides" }
+            }
+            .joinToString(",")
+    }
+
+    private fun butterflyAbbreviation(butterfly: Butterfly): String =
+        when (butterfly) {
+            Butterfly.GREEN -> "GB"
+            Butterfly.YELLOW -> "YB"
+            Butterfly.RED -> "RB"
+            Butterfly.PURPLE -> "PB"
+        }
 
     private fun renderBody(entry: GameEntry): String =
         when (entry) {

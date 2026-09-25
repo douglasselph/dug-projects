@@ -55,7 +55,13 @@ class RoundCoordinatorTest {
         assertEquals(listOf(reveal.card), cultivation.cards)
         assertTrue(battle.cards.isEmpty())
         assertTrue(game.chronicle.entries.first() is GameEntry.RoundRevealed)
-        assertTrue(game.chronicle.entries.last() is GameEntry.RoundCompleted)
+        val completed = game.chronicle.entries.last() as GameEntry.RoundCompleted
+        assertEquals(listOf(1, 2), completed.playerSummaries.map { it.playerId.value })
+        completed.playerSummaries.forEach { summary ->
+            assertEquals(0, summary.graftedPlantCount)
+            assertTrue(summary.supplyDice.isEmpty())
+            assertTrue(summary.discardDice.isEmpty())
+        }
     }
 
     @Test

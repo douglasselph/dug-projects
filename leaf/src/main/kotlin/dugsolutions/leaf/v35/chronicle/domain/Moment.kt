@@ -30,7 +30,8 @@ sealed interface Moment {
     data class RoundCompleted(
         val roundNumber: Int,
         val cardName: String,
-        val cardType: RoundCardType
+        val cardType: RoundCardType,
+        val playerSummaries: List<PlayerRoundSummarySnapshot> = emptyList()
     ) : Moment
 
     data class DieRolled(

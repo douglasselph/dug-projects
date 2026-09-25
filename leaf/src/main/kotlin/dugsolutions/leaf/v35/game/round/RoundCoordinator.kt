@@ -1,7 +1,11 @@
 package dugsolutions.leaf.v35.game.round
 
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.game.Game
+import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.random.die.DieSides
+import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
@@ -76,7 +80,8 @@ class RoundCoordinator(
             Moment.RoundCompleted(
                 roundNumber = reveal.roundNumber,
                 cardName = reveal.card.name,
-                cardType = reveal.card.type
+                cardType = reveal.card.type,
+                playerSummaries = game.players.map(::playerRoundSummary)
             )
         )
 
@@ -85,6 +90,20 @@ class RoundCoordinator(
             card = reveal.card
         )
     }
+
+    private fun playerRoundSummary(player: Player): PlayerRoundSummarySnapshot =
+        PlayerRoundSummarySnapshot(
+            playerId = player.id,
+            graftedPlantCount = player.creature.size,
+            supplyDice = player.dice.supply.map { DieSides.from(it.sides) },
+            discardDice = player.dice.discard.map { DieSides.from(it.sides) },
+            beeCount = player.critters.count(Critter.BEE),
+            wormCount = player.critters.count(Critter.WORM),
+            waterCount = player.tokens.waterCount,
+            mulchDice = player.tokens.mulchTokens.map { it.sides },
+            wispCount = player.wisps.size,
+            butterflies = player.butterflies.all
+        )
 
     fun executeNext(game: Game): RoundExecution? =
         revealNext(game)?.let { reveal ->

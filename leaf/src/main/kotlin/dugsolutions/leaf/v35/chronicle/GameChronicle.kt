@@ -60,7 +60,15 @@ class GameChronicle : Chronicle {
                 moment.firstEffect, moment.secondEffect
             )
             is Moment.RoundCompleted -> GameEntry.RoundCompleted(
-                sequence, moment.roundNumber, moment.cardName, moment.cardType
+                sequence, moment.roundNumber, moment.cardName, moment.cardType,
+                moment.playerSummaries.map { summary ->
+                    summary.copy(
+                        supplyDice = summary.supplyDice.toList(),
+                        discardDice = summary.discardDice.toList(),
+                        mulchDice = summary.mulchDice.toList(),
+                        butterflies = summary.butterflies.toList()
+                    )
+                }
             )
             is Moment.DieRolled -> GameEntry.DieRolled(
                 sequence, moment.playerId, moment.sides, moment.value,
