@@ -341,7 +341,8 @@ class SupportActionExecutor(
                     GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
                     GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
                 },
-                action = actionKind(action)
+                action = actionKind(action),
+                wispUsePercentage = (action as? SupportAction.PlayWisp)?.decisionProbabilityPercent
             )
         )
     }

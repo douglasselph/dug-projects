@@ -147,6 +147,7 @@ class UpgradeResolver {
         }
 
         val from = DieSides.from(current.sides)
+        val fromValue = current.value
         stateCheck(to in largerSizes(from)) {
             "Upgrade target must be larger than source: from=$from to=$to"
         }
@@ -180,7 +181,8 @@ class UpgradeResolver {
                 destination = when (destination) {
                     Destination.HAND -> UpgradeDestination.HAND
                     Destination.DISCARD -> UpgradeDestination.DISCARD
-                }
+                },
+                fromValue = fromValue
             )
         )
 

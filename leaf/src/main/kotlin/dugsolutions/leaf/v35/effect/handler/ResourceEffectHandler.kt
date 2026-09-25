@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.effectCheck
@@ -221,6 +222,15 @@ class ResourceEffectHandler : EffectHandler {
 
         request.actor.tokens.add(
             Token.PENDING_MULCH(DieSides.from(die.sides))
+        )
+
+        request.game.chronicle.record(
+            Moment.MulchStored(
+                playerId = request.actor.id,
+                sides = DieSides.from(die.sides),
+                value = die.value,
+                fromDiscard = fromDiscard
+            )
         )
     }
 

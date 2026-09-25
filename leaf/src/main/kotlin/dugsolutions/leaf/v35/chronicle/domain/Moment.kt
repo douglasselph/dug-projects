@@ -67,7 +67,8 @@ sealed interface Moment {
         val playerId: PlayerId,
         val phase: ChroniclePhase,
         val action: SupportActionKind,
-        val row: StrikeRow? = null
+        val row: StrikeRow? = null,
+        val wispUsePercentage: Int? = null
     ) : Moment
 
     data class EffectResolved(
@@ -137,7 +138,16 @@ sealed interface Moment {
         val playerId: PlayerId,
         val from: DieSides,
         val to: DieSides,
-        val destination: UpgradeDestination
+        val destination: UpgradeDestination,
+        val fromValue: Int? = null
+    ) : Moment
+
+    /** A die committed to a Mulch token by an effect. */
+    data class MulchStored(
+        val playerId: PlayerId,
+        val sides: DieSides,
+        val value: Int,
+        val fromDiscard: Boolean
     ) : Moment
 
     data class TrashDie(

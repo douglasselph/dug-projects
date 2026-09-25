@@ -73,7 +73,8 @@ sealed interface GameEntry {
         val playerId: PlayerId,
         val phase: ChroniclePhase,
         val action: SupportActionKind,
-        val row: StrikeRow?
+        val row: StrikeRow?,
+        val wispUsePercentage: Int? = null
     ) : GameEntry
 
     data class EffectResolved(
@@ -166,7 +167,16 @@ sealed interface GameEntry {
         val playerId: PlayerId,
         val from: DieSides,
         val to: DieSides,
-        val destination: UpgradeDestination
+        val destination: UpgradeDestination,
+        val fromValue: Int? = null
+    ) : GameEntry
+
+    data class MulchStored(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val sides: DieSides,
+        val value: Int,
+        val fromDiscard: Boolean
     ) : GameEntry
 
     data class TrashDie(

@@ -73,7 +73,8 @@ class HumanBaselineBattleStrategy(
     override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseTurnAction(request)
 
-        val legalChoices = applyOvergrowthWillingness(request.context, request.legalChoices)
+        val overgrowth = applyOvergrowthWillingness(request.context, request.legalChoices)
+        val legalChoices = overgrowth.legalChoices
         val orchestration = turnOrchestrator(
             context = request.context,
             roundCard = request.roundCard,
@@ -90,10 +91,11 @@ class HumanBaselineBattleStrategy(
             legalChoices.filterIsInstance<BattleTurnAction.FinalMain>()
         }
         if (candidates.isEmpty()) {
-            return legalChoices.firstOrNull() ?: delegate.chooseTurnAction(request)
+            val fallback = legalChoices.firstOrNull() ?: delegate.chooseTurnAction(request)
+            return attachOvergrowthProbability(fallback, overgrowth)
         }
 
-        return scoreEngine.chooseValue(
+        val selected = scoreEngine.chooseValue(
             context = request.context,
             candidates = candidates.map { choice ->
                 val score = when (choice) {
@@ -125,23 +127,46 @@ class HumanBaselineBattleStrategy(
             },
             influenceRegistry = influenceRegistry
         )
+        return attachOvergrowthProbability(selected, overgrowth)
     }
 
 
     private fun applyOvergrowthWillingness(
         context: DecisionContext,
         legalChoices: List<BattleTurnAction>
-    ): List<BattleTurnAction> {
+    ): BattleOvergrowthGate {
         val overgrowthChoices = legalChoices.filter(::isOvergrowthSupport)
-        if (overgrowthChoices.isEmpty()) return legalChoices
+        if (overgrowthChoices.isEmpty()) return BattleOvergrowthGate(legalChoices)
 
-        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context) ?: return legalChoices
+        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context)
+            ?: return BattleOvergrowthGate(legalChoices)
         val percentage = policy.overgrowthUsePercentage(context, targetSides)
         val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
-        if (accepted) return legalChoices
+        if (accepted) {
+            return BattleOvergrowthGate(
+                legalChoices = legalChoices,
+                acceptedPercentage = percentage
+            )
+        }
 
         val filtered = legalChoices.filterNot(::isOvergrowthSupport)
-        return if (filtered.isNotEmpty()) filtered else legalChoices
+        return BattleOvergrowthGate(
+            legalChoices = filtered.ifEmpty { legalChoices }
+        )
+    }
+
+    private fun attachOvergrowthProbability(
+        selected: BattleTurnAction,
+        gate: BattleOvergrowthGate
+    ): BattleTurnAction {
+        val percent = gate.acceptedPercentage ?: return selected
+        val support = selected as? BattleTurnAction.Support ?: return selected
+        val shared = support.action as? BattleSupportAction.Shared ?: return selected
+        val wisp = shared.action as? SupportAction.PlayWisp ?: return selected
+        if (wisp.card.effect != GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) return selected
+        return BattleTurnAction.Support(
+            BattleSupportAction.Shared(wisp.withDecisionProbability(percent))
+        )
     }
 
     private fun isOvergrowthSupport(choice: BattleTurnAction): Boolean {
@@ -194,4 +219,9 @@ class HumanBaselineBattleStrategy(
             GameEffect.GAIN_TWO_WORMS -> setOf(DecisionTag.ACQUIRE_WORM)
             else -> emptySet()
         }
+    private data class BattleOvergrowthGate(
+        val legalChoices: List<BattleTurnAction>,
+        val acceptedPercentage: Int? = null
+    )
+
 }

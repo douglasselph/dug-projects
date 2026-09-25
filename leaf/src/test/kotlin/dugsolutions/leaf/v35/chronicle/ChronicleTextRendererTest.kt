@@ -1,6 +1,10 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
+import dugsolutions.leaf.v35.chronicle.domain.UpgradeDestination
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.DecisionScoreAdjustmentSnapshot
@@ -339,6 +343,106 @@ class ChronicleTextRendererTest {
                 reason = RollReason.DRAW
             )
         )
+
+
+    @Test
+    fun `compact Chronicle combines Round Effect and affected Mulch die`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "Resource_Compost_Mulch",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
+                secondEffect = GameEffect.MULCH_DIE_FROM_HAND
+            ),
+            GameEntry.MulchStored(
+                sequence = 2,
+                playerId = PlayerId(1),
+                sides = DieSides.D4,
+                value = 1,
+                fromDiscard = false
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(1),
+                effect = GameEffect.MULCH_DIE_FROM_HAND,
+                sourceKind = EffectSourceKind.ROUND,
+                sourceName = "Resource_Compost_Mulch:SECOND",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.MainAction(
+                sequence = 4,
+                playerId = PlayerId(1),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_2,
+                actionNumber = 1,
+                battleStage = null
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  P1 ROUND EFFECT_2 MULCH_DIE_FROM_HAND D4=1",
+            lines[1]
+        )
+        assertEquals(2, lines.size)
+    }
+
+    @Test
+    fun `compact Chronicle combines Overgrowth upgrade roll and willingness percentage`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "Resource_Compost_Mulch",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.UPGRADE_DIE_FROM_HAND,
+                secondEffect = GameEffect.MULCH_DIE_FROM_HAND
+            ),
+            GameEntry.Upgrade(
+                sequence = 2,
+                playerId = PlayerId(1),
+                from = DieSides.D4,
+                to = DieSides.D8,
+                destination = UpgradeDestination.HAND,
+                fromValue = 2
+            ),
+            GameEntry.DieRolled(
+                sequence = 3,
+                playerId = PlayerId(1),
+                sides = 8,
+                value = 7,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.ROLL
+            ),
+            GameEntry.EffectResolved(
+                sequence = 4,
+                playerId = PlayerId(1),
+                effect = GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
+                sourceKind = EffectSourceKind.WISP,
+                sourceName = "Wisp_Upgrade_Die",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.SupportAction(
+                sequence = 5,
+                playerId = PlayerId(1),
+                phase = ChroniclePhase.CULTIVATION,
+                action = SupportActionKind.WISP,
+                row = null,
+                wispUsePercentage = 5
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  P1 Wisp_Upgrade_Die (5%) D4 -> D8=7",
+            lines[1]
+        )
+        assertEquals(2, lines.size)
+    }
 
     @Test
     fun `standalone entry rendering retains global sequence because round context is unavailable`() {

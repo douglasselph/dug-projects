@@ -6,6 +6,10 @@ import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
+import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
@@ -44,6 +48,13 @@ object ChronicleTextRenderer {
             val openingDraws = mutableMapOf<PlayerId, OpeningDrawBuffer>()
             val completedOpeningDraws = mutableSetOf<PlayerId>()
 
+            val pendingUpgrades = mutableMapOf<PlayerId, GameEntry.Upgrade>()
+            val pendingUpgradeRolls = mutableMapOf<PlayerId, GameEntry.DieRolled>()
+            val pendingUpgradeRewards = mutableMapOf<PlayerId, MutableList<GameEntry.RollReward>>()
+            val pendingMulchStores = mutableMapOf<PlayerId, GameEntry.MulchStored>()
+            val pendingOvergrowthEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
+            val suppressedRoundMains = mutableMapOf<PlayerId, MainActionKind>()
+
             fun appendBody(body: String) {
                 separatorAlreadyWritten = false
                 sequenceWithinRound += 1
@@ -56,8 +67,63 @@ object ChronicleTextRenderer {
                 appendBody(renderBody(entry))
             }
 
+            fun flushPendingUpgrade(playerId: PlayerId) {
+                pendingUpgrades.remove(playerId)?.let(::appendEntry)
+                pendingUpgradeRolls.remove(playerId)?.let(::appendEntry)
+                pendingUpgradeRewards.remove(playerId)?.forEach(::appendEntry)
+            }
+
+            fun flushAllPendingUpgrades() {
+                pendingUpgrades.keys.toList().forEach(::flushPendingUpgrade)
+            }
+
+            fun compactRoundEffect(entry: GameEntry.EffectResolved) {
+                val slot = roundEffectSlot(entry.sourceName)
+                val body = buildString {
+                    append("${player(entry.playerId)} ROUND $slot ${entry.effect}")
+                    pendingMulchStores.remove(entry.playerId)?.let { stored ->
+                        append(" ${stored.sides}=${stored.value}")
+                    }
+                    pendingUpgrades.remove(entry.playerId)?.let { upgrade ->
+                        append(' ')
+                        append(upgrade.from)
+                        upgrade.fromValue?.let { append("=$it") }
+                        append(" -> ${upgrade.to}")
+                    }
+                }
+                pendingUpgradeRolls.remove(entry.playerId)
+                pendingUpgradeRewards.remove(entry.playerId)
+                appendBody(body)
+                roundMainKind(entry.sourceName)?.let { kind ->
+                    suppressedRoundMains[entry.playerId] = kind
+                }
+            }
+
+            fun compactOvergrowth(
+                effect: GameEntry.EffectResolved,
+                support: GameEntry.SupportAction
+            ) {
+                val upgrade = pendingUpgrades.remove(effect.playerId)
+                val roll = pendingUpgradeRolls.remove(effect.playerId)
+                val rewards = pendingUpgradeRewards.remove(effect.playerId).orEmpty()
+                val body = buildString {
+                    append("${player(effect.playerId)} ${effect.sourceName}")
+                    support.wispUsePercentage?.let { append(" ($it%)") }
+                    if (upgrade != null) {
+                        append(" ${upgrade.from} -> ${upgrade.to}")
+                        roll?.let { append("=${it.value}") }
+                    }
+                    val compactRewards = rewards.mapNotNull(::compactReward)
+                    if (compactRewards.isNotEmpty()) {
+                        append(" REWARD ${compactRewards.joinToString(" ")}")
+                    }
+                }
+                appendBody(body)
+            }
+
             entries.forEach { entry ->
                 if (entry is GameEntry.RoundRevealed) {
+                    if (!detail) flushAllPendingUpgrades()
                     if (isNotEmpty() && !separatorAlreadyWritten) appendLine()
                     separatorAlreadyWritten = false
                     roundNumber = entry.roundNumber
@@ -65,6 +131,9 @@ object ChronicleTextRenderer {
                     openingRoundActive = true
                     openingDraws.clear()
                     completedOpeningDraws.clear()
+                    pendingMulchStores.clear()
+                    pendingOvergrowthEffects.clear()
+                    suppressedRoundMains.clear()
                 }
 
                 if (!detail && entry is GameEntry.DecisionReasoning) {
@@ -117,6 +186,82 @@ object ChronicleTextRenderer {
                     }
                 }
 
+                if (!detail) {
+                    when (entry) {
+                        is GameEntry.Upgrade -> {
+                            pendingUpgrades[entry.playerId] = entry
+                            return@forEach
+                        }
+
+                        is GameEntry.MulchStored -> {
+                            pendingMulchStores[entry.playerId] = entry
+                            return@forEach
+                        }
+
+                        is GameEntry.DieRolled -> {
+                            if (pendingUpgrades.containsKey(entry.playerId) && entry.reason == RollReason.ROLL) {
+                                pendingUpgradeRolls[entry.playerId] = entry
+                                return@forEach
+                            }
+                        }
+
+                        is GameEntry.RollReward -> {
+                            if (pendingUpgradeRolls.containsKey(entry.playerId)) {
+                                pendingUpgradeRewards
+                                    .getOrPut(entry.playerId) { mutableListOf() }
+                                    .add(entry)
+                                return@forEach
+                            }
+                        }
+
+                        is GameEntry.EffectResolved -> {
+                            when {
+                                entry.sourceKind == EffectSourceKind.ROUND -> {
+                                    compactRoundEffect(entry)
+                                    return@forEach
+                                }
+
+                                entry.sourceKind == EffectSourceKind.WISP &&
+                                    entry.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> {
+                                    pendingOvergrowthEffects[entry.playerId] = entry
+                                    return@forEach
+                                }
+
+                                else -> {
+                                    // An Upgrade not consumed by a compact Round/Overgrowth line belongs
+                                    // to another detailed effect family; preserve its normal ordering.
+                                    flushPendingUpgrade(entry.playerId)
+                                    pendingMulchStores.remove(entry.playerId)
+                                }
+                            }
+                        }
+
+                        is GameEntry.MainAction -> {
+                            val suppressed = suppressedRoundMains[entry.playerId]
+                            if (suppressed != null && entry.action == suppressed) {
+                                suppressedRoundMains.remove(entry.playerId)
+                                return@forEach
+                            }
+                        }
+
+                        is GameEntry.SupportAction -> {
+                            if (entry.action == SupportActionKind.WISP) {
+                                val effect = pendingOvergrowthEffects.remove(entry.playerId)
+                                if (effect != null) {
+                                    compactOvergrowth(effect, entry)
+                                    return@forEach
+                                }
+                            }
+                        }
+
+                        is GameEntry.RoundCompleted -> {
+                            flushAllPendingUpgrades()
+                        }
+
+                        else -> Unit
+                    }
+                }
+
                 appendEntry(entry)
 
                 if (entry is GameEntry.RoundCompleted && entry.playerSummaries.isNotEmpty()) {
@@ -136,6 +281,23 @@ object ChronicleTextRenderer {
                     separatorAlreadyWritten = true
                 }
             }
+
+            if (!detail) flushAllPendingUpgrades()
+        }
+
+
+    private fun roundEffectSlot(sourceName: String): String =
+        when (sourceName.substringAfterLast(':')) {
+            "FIRST" -> "EFFECT_1"
+            "SECOND" -> "EFFECT_2"
+            else -> "EFFECT"
+        }
+
+    private fun roundMainKind(sourceName: String): MainActionKind? =
+        when (sourceName.substringAfterLast(':')) {
+            "FIRST" -> MainActionKind.ROUND_EFFECT_1
+            "SECOND" -> MainActionKind.ROUND_EFFECT_2
+            else -> null
         }
 
 
@@ -318,6 +480,7 @@ object ChronicleTextRenderer {
                 buildString {
                     append("${player(entry.playerId)} ${entry.phase} SUPPORT ${entry.action}")
                     entry.row?.let { append(" row=$it") }
+                    entry.wispUsePercentage?.let { append(" chance=$it%") }
                 }
 
             is GameEntry.EffectResolved ->
@@ -392,7 +555,15 @@ object ChronicleTextRenderer {
                     "refreshed=${entry.refreshed}"
 
             is GameEntry.Upgrade ->
-                "${player(entry.playerId)} UPGRADE ${entry.from} -> ${entry.to} destination=${entry.destination}"
+                buildString {
+                    append("${player(entry.playerId)} UPGRADE ${entry.from}")
+                    entry.fromValue?.let { append("=$it") }
+                    append(" -> ${entry.to} destination=${entry.destination}")
+                }
+
+            is GameEntry.MulchStored ->
+                "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +
+                    "from=${if (entry.fromDiscard) "DISCARD" else "HAND"}"
 
             is GameEntry.TrashDie ->
                 "${player(entry.playerId)} TRASH ${entry.sides} destination=${entry.destination}"

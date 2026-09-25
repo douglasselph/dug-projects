@@ -85,7 +85,8 @@ class GameChronicle : Chronicle {
                 moment.actionNumber, moment.battleStage
             )
             is Moment.SupportAction -> GameEntry.SupportAction(
-                sequence, moment.playerId, moment.phase, moment.action, moment.row
+                sequence, moment.playerId, moment.phase, moment.action, moment.row,
+                moment.wispUsePercentage
             )
             is Moment.EffectResolved -> GameEntry.EffectResolved(
                 sequence, moment.playerId, moment.effect, moment.sourceKind,
@@ -126,7 +127,11 @@ class GameChronicle : Chronicle {
                 moment.returnedCritters, moment.refreshed
             )
             is Moment.Upgrade -> GameEntry.Upgrade(
-                sequence, moment.playerId, moment.from, moment.to, moment.destination
+                sequence, moment.playerId, moment.from, moment.to, moment.destination,
+                moment.fromValue
+            )
+            is Moment.MulchStored -> GameEntry.MulchStored(
+                sequence, moment.playerId, moment.sides, moment.value, moment.fromDiscard
             )
             is Moment.TrashDie -> GameEntry.TrashDie(
                 sequence, moment.playerId, moment.sides, moment.destination

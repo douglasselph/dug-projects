@@ -87,9 +87,14 @@ class HumanBaselineCultivationStrategy(
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
-        return scoreEngine.chooseValue(
+
+        val overgrowth = applyOvergrowthWillingness(
             context = request.context,
-            candidates = request.legalChoices.map { choice ->
+            legalChoices = request.legalChoices
+        )
+        val selected = scoreEngine.chooseValue(
+            context = request.context,
+            candidates = overgrowth.legalChoices.map { choice ->
                 DecisionCandidate(
                     choice = choice,
                     score = score(request, choice),
@@ -98,6 +103,45 @@ class HumanBaselineCultivationStrategy(
             },
             influenceRegistry = influenceRegistry
         )
+        return attachOvergrowthProbability(selected, overgrowth)
+    }
+
+    private fun applyOvergrowthWillingness(
+        context: DecisionContext,
+        legalChoices: List<CultivationAction>
+    ): CultivationOvergrowthGate {
+        val overgrowthChoices = legalChoices.filter { choice ->
+            val wisp = (choice as? CultivationAction.Support)?.action as? SupportAction.PlayWisp
+            wisp?.card?.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
+        }
+        if (overgrowthChoices.isEmpty()) return CultivationOvergrowthGate(legalChoices)
+
+        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context)
+            ?: return CultivationOvergrowthGate(legalChoices)
+        val percentage = policy.overgrowthUsePercentage(context, targetSides)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        if (accepted) {
+            return CultivationOvergrowthGate(
+                legalChoices = legalChoices,
+                acceptedPercentage = percentage
+            )
+        }
+
+        val filtered = legalChoices.filterNot { it in overgrowthChoices }
+        return CultivationOvergrowthGate(
+            legalChoices = filtered.ifEmpty { legalChoices }
+        )
+    }
+
+    private fun attachOvergrowthProbability(
+        selected: CultivationAction,
+        gate: CultivationOvergrowthGate
+    ): CultivationAction {
+        val percent = gate.acceptedPercentage ?: return selected
+        val support = selected as? CultivationAction.Support ?: return selected
+        val wisp = support.action as? SupportAction.PlayWisp ?: return selected
+        if (wisp.card.effect != GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) return selected
+        return CultivationAction.Support(wisp.withDecisionProbability(percent))
     }
 
     private fun score(request: ChooseCultivationActionRequest, choice: CultivationAction): PriorityScore =
@@ -142,16 +186,7 @@ class HumanBaselineCultivationStrategy(
             cardScorers = cardScorers,
             policy = policy
         )
-        val wisp = action as? SupportAction.PlayWisp ?: return base
-        if (wisp.card.effect != GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) return base
-
-        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context) ?: return base
-        val percentage = policy.overgrowthUsePercentage(context, targetSides)
-        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
-        return base.adjusted(
-            amount = if (accepted) 0 else -10_000,
-            reason = "Overgrowth tendency ${if (accepted) "accepted" else "declined"} ($percentage% for D$targetSides)"
-        )
+        return base
     }
 
     private fun tags(
@@ -237,4 +272,9 @@ class HumanBaselineCultivationStrategy(
             )
             is SupportAction.UseButterfly -> emptySet()
         }
+    private data class CultivationOvergrowthGate(
+        val legalChoices: List<CultivationAction>,
+        val acceptedPercentage: Int? = null
+    )
+
 }
