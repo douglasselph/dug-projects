@@ -1,7 +1,9 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
@@ -85,7 +87,6 @@ object ChronicleTextRenderer {
     private fun renderPlayerSummary(summary: PlayerRoundSummarySnapshot): String =
         buildList {
             add(player(summary.playerId))
-            add("G=${summary.graftedPlantCount}")
             add("S=${renderDiceCounts(summary.supplyDice)}")
             add("D=${renderDiceCounts(summary.discardDice)}")
             if (summary.beeCount > 0) add("B=${summary.beeCount}")
@@ -108,7 +109,39 @@ object ChronicleTextRenderer {
                         "]"
                 )
             }
+            add(renderGraftedPlants(summary.graftedPlants))
         }.joinToString(" ")
+
+    private fun renderGraftedPlants(plants: List<GraftedPlantSnapshot>): String {
+        if (plants.isEmpty()) return "G[]"
+
+        val counts = plants.groupingBy { it }.eachCount()
+        val body = counts.entries
+            .sortedWith(
+                compareBy<Map.Entry<GraftedPlantSnapshot, Int>>(
+                    { plantTypeOrder(it.key.type) },
+                    { it.key.cost }
+                )
+            )
+            .joinToString(" ") { (plant, count) ->
+                "$count${plantTypeAbbreviation(plant.type)}${plant.cost}"
+            }
+        return "G[$body]"
+    }
+
+    private fun plantTypeOrder(type: PlantType): Int =
+        when (type) {
+            PlantType.ROOT -> 0
+            PlantType.VINE -> 1
+            PlantType.FLOWER -> 2
+        }
+
+    private fun plantTypeAbbreviation(type: PlantType): String =
+        when (type) {
+            PlantType.ROOT -> "R"
+            PlantType.VINE -> "V"
+            PlantType.FLOWER -> "F"
+        }
 
     private fun renderDiceCounts(dice: List<DieSides>): String {
         if (dice.isEmpty()) return "-"

@@ -1,13 +1,20 @@
 package dugsolutions.leaf.v35.chronicle.domain
 
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
 
+/** Compact immutable identity for one grafted Plant in an end-of-Round snapshot. */
+data class GraftedPlantSnapshot(
+    val type: PlantType,
+    val cost: Int
+)
+
 /** Immutable end-of-Round player state used only for Chronicle diagnostics. */
 data class PlayerRoundSummarySnapshot(
     val playerId: PlayerId,
-    val graftedPlantCount: Int,
+    val graftedPlants: List<GraftedPlantSnapshot>,
     val supplyDice: List<DieSides>,
     val discardDice: List<DieSides>,
     val beeCount: Int,
@@ -16,4 +23,7 @@ data class PlayerRoundSummarySnapshot(
     val mulchDice: List<DieSides?>,
     val wispCount: Int,
     val butterflies: List<Butterfly>
-)
+) {
+    val graftedPlantCount: Int
+        get() = graftedPlants.size
+}

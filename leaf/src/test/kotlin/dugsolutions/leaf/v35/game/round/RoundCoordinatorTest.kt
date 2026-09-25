@@ -58,7 +58,7 @@ class RoundCoordinatorTest {
         val completed = game.chronicle.entries.last() as GameEntry.RoundCompleted
         assertEquals(listOf(1, 2), completed.playerSummaries.map { it.playerId.value })
         completed.playerSummaries.forEach { summary ->
-            assertEquals(0, summary.graftedPlantCount)
+            assertTrue(summary.graftedPlants.isEmpty())
             assertTrue(summary.supplyDice.isEmpty())
             assertTrue(summary.discardDice.isEmpty())
         }

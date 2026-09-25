@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game.round
 
+import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.game.Game
@@ -94,7 +95,12 @@ class RoundCoordinator(
     private fun playerRoundSummary(player: Player): PlayerRoundSummarySnapshot =
         PlayerRoundSummarySnapshot(
             playerId = player.id,
-            graftedPlantCount = player.creature.size,
+            graftedPlants = player.creature.cards.map { creatureCard ->
+                GraftedPlantSnapshot(
+                    type = creatureCard.card.type,
+                    cost = creatureCard.card.cost
+                )
+            },
             supplyDice = player.dice.supply.map { DieSides.from(it.sides) },
             discardDice = player.dice.discard.map { DieSides.from(it.sides) },
             beeCount = player.critters.count(Critter.BEE),

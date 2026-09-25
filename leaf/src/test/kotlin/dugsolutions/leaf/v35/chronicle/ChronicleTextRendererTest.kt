@@ -1,8 +1,10 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.GraftedPlantSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -66,7 +68,13 @@ class ChronicleTextRendererTest {
                 playerSummaries = listOf(
                     PlayerRoundSummarySnapshot(
                         playerId = PlayerId(1),
-                        graftedPlantCount = 2,
+                        graftedPlants = listOf(
+                            GraftedPlantSnapshot(PlantType.FLOWER, 14),
+                            GraftedPlantSnapshot(PlantType.ROOT, 5),
+                            GraftedPlantSnapshot(PlantType.VINE, 11),
+                            GraftedPlantSnapshot(PlantType.FLOWER, 11),
+                            GraftedPlantSnapshot(PlantType.ROOT, 5)
+                        ),
                         supplyDice = listOf(DieSides.D4, DieSides.D4, DieSides.D6),
                         discardDice = listOf(DieSides.D8, DieSides.D10),
                         beeCount = 1,
@@ -78,7 +86,7 @@ class ChronicleTextRendererTest {
                     ),
                     PlayerRoundSummarySnapshot(
                         playerId = PlayerId(2),
-                        graftedPlantCount = 0,
+                        graftedPlants = emptyList(),
                         supplyDice = emptyList(),
                         discardDice = listOf(DieSides.D4),
                         beeCount = 0,
@@ -106,10 +114,10 @@ class ChronicleTextRendererTest {
         assertEquals("01.002  ROUND 1 COMPLETE CULTIVATION: first", lines[1])
         assertEquals("", lines[2])
         assertEquals(
-            "01.003  P1 G=2 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF=2[GB,YB]",
+            "01.003  P1 S=2D4,1D6 D=1D8,1D10 B=1 Wa=2 M=2[D6,D12] Wi=3 BF=2[GB,YB] G[2R5 1V11 1F11 1F14]",
             lines[3]
         )
-        assertEquals("01.004  P2 G=0 S=- D=1D4 W=1", lines[4])
+        assertEquals("01.004  P2 S=- D=1D4 W=1 G[]", lines[4])
         assertEquals("", lines[5])
         assertEquals("02.001  ROUND 2 REVEAL BATTLE: second [GAIN_ONE_VP | GAIN_ONE_VP]", lines[6])
     }
