@@ -362,6 +362,22 @@ object ChronicleTextRenderer {
                             }
                         }
 
+                        is GameEntry.Cleanup -> {
+                            flushPendingCompactRoll()
+                            val body = buildString {
+                                append("${player(entry.playerId)} ${entry.phase} CLEANUP")
+                                if (entry.discardedDice != 0) {
+                                    append(" discardedDice=${entry.discardedDice}")
+                                }
+                                if (entry.returnedCritters != 0) {
+                                    append(" returnedCritters=${entry.returnedCritters}")
+                                }
+                                append(" refreshed=${entry.refreshed}")
+                            }
+                            appendBody(body)
+                            return@forEach
+                        }
+
                         is GameEntry.RoundCompleted -> {
                             flushPendingCompactRoll()
                             flushAllPendingRoundEffects()

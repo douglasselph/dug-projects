@@ -30,6 +30,50 @@ class ChronicleTextRendererTest {
 
 
     @Test
+    fun `compact cleanup omits zero discard and returned critter counts`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.Cleanup(
+                sequence = 2,
+                playerId = PlayerId(1),
+                phase = ChroniclePhase.CULTIVATION,
+                discardedDice = 0,
+                returnedCritters = 0,
+                refreshed = true
+            ),
+            GameEntry.Cleanup(
+                sequence = 3,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.BATTLE,
+                discardedDice = 2,
+                returnedCritters = 1,
+                refreshed = false
+            )
+        )
+
+        val compact = ChronicleTextRenderer.render(entries).lines()
+        assertEquals("01.002  P1 CULTIVATION CLEANUP refreshed=true", compact[1])
+        assertEquals(
+            "01.003  P2 BATTLE CLEANUP discardedDice=2 returnedCritters=1 refreshed=false",
+            compact[2]
+        )
+
+        val detail = ChronicleTextRenderer.render(entries, detail = true).lines()
+        assertEquals(
+            "01.002  P1 CULTIVATION CLEANUP discardedDice=0 returnedCritters=0 refreshed=true",
+            detail[1]
+        )
+    }
+
+
+    @Test
     fun `Chronicle can list selected Plant cards before round one`() {
         val cards = listOf(
             plant("Flower_14_02", "Bloom Backflip", PlantType.FLOWER, 14),
