@@ -553,8 +553,15 @@ class HumanBaselineEffectStrategy(
             }
             is OEdelweissChoice.Flip -> {
                 val view = context.self.board.creature.firstOrNull { it.id == choice.card.cardId }
-                val value = view?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
-                if (!choice.card.isFaceUp) PriorityScore(45 + value / 3) else PriorityScore(10 - value / 5)
+                if (!choice.card.isFaceUp) {
+                    view?.let {
+                        cardScorers.forPlant(it)
+                            .playScore(context, CardPhase.from(context.phase), it.name)
+                    } ?: PriorityScore(45)
+                } else {
+                    PriorityScore(-(view?.let { plantPreservationEvaluator(context, it) } ?: 30))
+                        .adjusted(0, "Avoid flipping down a valuable ready Plant")
+                }
             }
         }
 
