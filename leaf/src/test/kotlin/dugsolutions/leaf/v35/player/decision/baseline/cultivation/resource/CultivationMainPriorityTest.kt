@@ -3,17 +3,11 @@ package dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
-import dugsolutions.leaf.v35.player.decision.baseline.cultivation.HumanBaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.context.GroveView
-import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
-import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
-import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.effect.GameEffect
-import dugsolutions.leaf.v35.round.domain.RoundCard
-import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -102,7 +96,7 @@ class CultivationMainPriorityTest {
     @Test
     fun `Mulch threshold scoring uses supplied normal purchasing power`() {
         val context = context(
-            hand = listOf(DieView(index = 0, sides = 10, value = 7)),
+            hand = listOf(DieView(index = 0, sides = 10, value = 2)),
             grove = DecisionContext.EMPTY.grove.copy(
                 graftBed = mapOf(DieSides.D10 to 1)
             )
@@ -114,11 +108,12 @@ class CultivationMainPriorityTest {
         )
         val hypotheticalAllCrittersSpendable = MulchPriority.score(
             context = context,
-            normalPurchasingPower = 12
+            normalPurchasingPower = 11
         )
 
-        // At power 7, removing the die does not lose the D10 Buy tier because
-        // that tier was not affordable. At power 12, removing it loses D10.
+        // D10=2 is a legal Human-Baseline Mulch target. At power 7, removing
+        // it does not lose the D10 Buy tier because that tier was not affordable.
+        // At power 11, removing it drops purchasing power to 9 and loses D10.
         assertEquals(
             protectedCrittersExcluded.total - 10,
             hypotheticalAllCrittersSpendable.total
@@ -159,9 +154,9 @@ class CultivationMainPriorityTest {
     }
 
     @Test
-    fun `Sunlight Main choice respects policy purchasing power instead of protected Critters`() {
+    fun `Sunlight threshold scoring respects policy purchasing power instead of protected Critters`() {
         val context = context(
-            supply = listOf(DieView(index = 0, sides = 8, value = 1)),
+            supply = listOf(DieView(index = 0, sides = 4, value = 1)),
             hand = listOf(DieView(index = 0, sides = 10, value = 7)),
             bees = 2,
             worms = 1,
@@ -169,33 +164,25 @@ class CultivationMainPriorityTest {
                 graftBed = mapOf(DieSides.D10 to 1)
             )
         )
-        val request = ChooseCultivationActionRequest(
-            roundCard = sunlightRound(),
-            mainActionsRemaining = 2,
-            legalChoices = listOf(
-                CultivationAction.Main(CultivationMainAction.Draw),
-                CultivationAction.Main(CultivationMainAction.RoundEffect1)
-            ),
-            context = context
+        val reserveAwarePower = HumanBaselinePolicy().normalPurchasingPower(context)
+
+        val reserveAware = SunlightPriority.score(
+            context = context,
+            normalPurchasingPower = reserveAwarePower
+        )
+        val hypotheticalAllCrittersSpendable = SunlightPriority.score(
+            context = context,
+            normalPurchasingPower = 12
         )
 
-        val reserveAware = HumanBaselineCultivationStrategy().chooseAction(request)
-        val allCrittersSpendable = HumanBaselineCultivationStrategy(
-            policy = object : HumanBaselinePolicy() {
-                override fun normalPurchasingPower(context: DecisionContext): Int = 12
-            }
-        ).chooseAction(request)
-
-        // Reserve-aware power is 7, so +3 Sunlight crosses the D10 threshold:
-        // Sunlight 60 beats D8 Draw 53. If protected Critters are treated as
-        // ordinary purchasing power, the threshold bonus disappears and Draw wins.
+        // Reserve-aware power is 7, so the full +3 reaches the available D10
+        // Buy tier and earns the +10 threshold bonus. Treating the protected
+        // 2 Bees + 1 Worm as ordinary purchasing power starts at 12, so that
+        // threshold gain disappears. Sunlight's separate D4-only/50% willingness
+        // behavior is verified in HumanBaselineCultivationStrategyTest.
         assertEquals(
-            CultivationAction.Main(CultivationMainAction.RoundEffect1),
-            reserveAware
-        )
-        assertEquals(
-            CultivationAction.Main(CultivationMainAction.Draw),
-            allCrittersSpendable
+            hypotheticalAllCrittersSpendable.total + 10,
+            reserveAware.total
         )
     }
 
@@ -264,12 +251,4 @@ class CultivationMainPriorityTest {
         grove = grove
     )
 
-    private fun sunlightRound() = RoundCard(
-        quantity = 1,
-        name = "sunlight test",
-        type = RoundCardType.CULTIVATION,
-        firstEffect = RoundCardEffect("Sunlight", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
-        secondEffect = RoundCardEffect("VP", "", "", "", null, GameEffect.GAIN_ONE_VP),
-        backImage = ""
-    )
 }
