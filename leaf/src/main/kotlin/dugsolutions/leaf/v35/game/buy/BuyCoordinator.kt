@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.error.decisionNotNull
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.GraftPlan
@@ -43,9 +44,17 @@ class BuyCoordinator(
 ) {
     fun execute(game: Game): BuyPhaseResult {
         val order = BuyOrder.determine(game.players, game.randomizer)
+        val leaderDie = order.firstOrNull()?.dice?.hand
+            ?.maxWithOrNull(compareBy<Die>({ it.value }, { it.sides }))
         game.chronicle.record(
             Moment.BuyOrder(
-                order = order.map { it.id }
+                order = order.map { it.id },
+                leaderDie = leaderDie?.let {
+                    BuyOrderLeadDieSnapshot(
+                        sides = DieSides.from(it.sides),
+                        value = it.value
+                    )
+                }
             )
         )
 

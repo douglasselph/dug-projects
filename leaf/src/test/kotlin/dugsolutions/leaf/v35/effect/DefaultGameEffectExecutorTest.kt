@@ -61,6 +61,12 @@ class DefaultGameEffectExecutorTest {
 
         assertEquals(2, first.value)
         assertEquals(7, second.value)
+        val change = game.chronicle.entries.filterIsInstance<GameEntry.DieValueChanged>().single()
+        assertEquals(PlayerId(1), change.playerId)
+        assertEquals(GameEffect.RAISE_DIE_PLUS_3, change.effect)
+        assertEquals(DieSides.D8, change.sides)
+        assertEquals(4, change.before)
+        assertEquals(7, change.after)
     }
 
     @Test

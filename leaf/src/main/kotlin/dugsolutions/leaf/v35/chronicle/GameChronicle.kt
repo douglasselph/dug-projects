@@ -100,7 +100,9 @@ class GameChronicle : Chronicle {
                 adjustments = moment.adjustments.toList(),
                 total = moment.total
             )
-            is Moment.BuyOrder -> GameEntry.BuyOrder(sequence, moment.order.toList())
+            is Moment.BuyOrder -> GameEntry.BuyOrder(
+                sequence, moment.order.toList(), moment.leaderDie
+            )
             is Moment.Purchase -> GameEntry.Purchase(
                 sequence, moment.playerId, moment.kind, moment.itemName,
                 moment.cost, moment.paymentTotal
@@ -132,6 +134,10 @@ class GameChronicle : Chronicle {
             )
             is Moment.MulchStored -> GameEntry.MulchStored(
                 sequence, moment.playerId, moment.sides, moment.value, moment.fromDiscard
+            )
+            is Moment.DieValueChanged -> GameEntry.DieValueChanged(
+                sequence, moment.playerId, moment.effect, moment.sides,
+                moment.before, moment.after
             )
             is Moment.TrashDie -> GameEntry.TrashDie(
                 sequence, moment.playerId, moment.sides, moment.destination

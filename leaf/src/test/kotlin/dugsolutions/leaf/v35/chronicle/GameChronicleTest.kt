@@ -1,12 +1,15 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.random.die.DieSides
+import dugsolutions.leaf.v35.effect.GameEffect
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -55,11 +58,17 @@ class GameChronicleTest {
         val chronicle = GameChronicle()
         val order = mutableListOf(PlayerId(2), PlayerId(1))
 
-        val recorded = chronicle.record(Moment.BuyOrder(order))
+        val recorded = chronicle.record(
+            Moment.BuyOrder(
+                order = order,
+                leaderDie = BuyOrderLeadDieSnapshot(DieSides.D8, 7)
+            )
+        )
         order.clear()
 
         val entry = recorded as GameEntry.BuyOrder
         assertEquals(listOf(PlayerId(2), PlayerId(1)), entry.order)
+        assertEquals(BuyOrderLeadDieSnapshot(DieSides.D8, 7), entry.leaderDie)
     }
 
     @Test
@@ -112,6 +121,34 @@ class GameChronicleTest {
                 actionNumber = 1,
                 battleStage = null,
                 decisionProbabilityPercent = 75
+            ),
+            recorded
+        )
+    }
+
+
+    @Test
+    fun record_preservesDieValueChangeData() {
+        val chronicle = GameChronicle()
+
+        val recorded = chronicle.record(
+            Moment.DieValueChanged(
+                playerId = PlayerId(3),
+                effect = GameEffect.RAISE_DIE_PLUS_3,
+                sides = DieSides.D4,
+                before = 1,
+                after = 4
+            )
+        )
+
+        assertEquals(
+            GameEntry.DieValueChanged(
+                sequence = 1L,
+                playerId = PlayerId(3),
+                effect = GameEffect.RAISE_DIE_PLUS_3,
+                sides = DieSides.D4,
+                before = 1,
+                after = 4
             ),
             recorded
         )

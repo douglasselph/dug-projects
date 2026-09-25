@@ -46,6 +46,10 @@ class BuyCoordinatorTest {
         assertEquals(listOf(2, 1), result.order.map { it.value })
         assertEquals(listOf(2, 1), calls)
         assertTrue(result.purchases.isEmpty())
+        val buyOrder = fixture.game.chronicle.entries.filterIsInstance<GameEntry.BuyOrder>().single()
+        assertEquals(PlayerId(2), buyOrder.order.first())
+        assertEquals(DieSides.D20, buyOrder.leaderDie?.sides)
+        assertEquals(20, buyOrder.leaderDie?.value)
     }
 
     @Test

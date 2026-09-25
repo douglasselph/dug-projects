@@ -105,7 +105,8 @@ sealed interface GameEntry {
 
     data class BuyOrder(
         override val sequence: Long,
-        val order: List<PlayerId>
+        val order: List<PlayerId>,
+        val leaderDie: BuyOrderLeadDieSnapshot? = null
     ) : GameEntry
 
     data class Purchase(
@@ -184,6 +185,15 @@ sealed interface GameEntry {
         val sides: DieSides,
         val value: Int,
         val fromDiscard: Boolean
+    ) : GameEntry
+
+    data class DieValueChanged(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val effect: GameEffect,
+        val sides: DieSides,
+        val before: Int,
+        val after: Int
     ) : GameEntry
 
     data class TrashDie(

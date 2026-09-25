@@ -95,7 +95,10 @@ sealed interface Moment {
         val total: Int
     ) : Moment
 
-    data class BuyOrder(val order: List<PlayerId>) : Moment
+    data class BuyOrder(
+        val order: List<PlayerId>,
+        val leaderDie: BuyOrderLeadDieSnapshot? = null
+    ) : Moment
 
     data class Purchase(
         val playerId: PlayerId,
@@ -157,6 +160,15 @@ sealed interface Moment {
         val fromDiscard: Boolean
     ) : Moment
 
+    /** One die value mutation caused by a resolved effect. */
+    data class DieValueChanged(
+        val playerId: PlayerId,
+        val effect: GameEffect,
+        val sides: DieSides,
+        val before: Int,
+        val after: Int
+    ) : Moment
+
     data class TrashDie(
         val playerId: PlayerId,
         val sides: DieSides,
@@ -205,6 +217,11 @@ enum class PurchaseKind { PLANT, DIE }
 enum class WoundKind { FLIPPED, SNIPPED }
 enum class UpgradeDestination { HAND, DISCARD }
 enum class TrashDestination { OUT_OF_GAME }
+
+data class BuyOrderLeadDieSnapshot(
+    val sides: DieSides,
+    val value: Int
+)
 
 data class DecisionScoreAdjustmentSnapshot(
     val amount: Int,

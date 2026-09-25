@@ -53,7 +53,9 @@ object ChronicleTextRenderer {
             val pendingUpgradeRolls = mutableMapOf<PlayerId, GameEntry.DieRolled>()
             val pendingUpgradeRewards = mutableMapOf<PlayerId, MutableList<GameEntry.RollReward>>()
             val pendingMulchStores = mutableMapOf<PlayerId, GameEntry.MulchStored>()
+            val pendingDieValueChanges = mutableMapOf<PlayerId, GameEntry.DieValueChanged>()
             val pendingOvergrowthEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
+            val pendingMulchWispEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
             val pendingRoundEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
 
             fun appendBody(body: String) {
@@ -95,6 +97,11 @@ object ChronicleTextRenderer {
                         upgrade.fromValue?.let { append("=$it") }
                         append(" -> ${upgrade.to}")
                     }
+                    pendingDieValueChanges.remove(entry.playerId)
+                        ?.takeIf { it.effect == entry.effect }
+                        ?.let { change ->
+                            append(" (${change.sides}=${change.before}->${change.after})")
+                        }
                 }
                 pendingUpgradeRolls.remove(entry.playerId)
                 pendingUpgradeRewards.remove(entry.playerId)
@@ -129,6 +136,23 @@ object ChronicleTextRenderer {
                 appendBody(body)
             }
 
+            fun compactMulchWisp(
+                effect: GameEntry.EffectResolved,
+                support: GameEntry.SupportAction
+            ) {
+                val stored = pendingMulchStores.remove(effect.playerId)
+                val body = buildString {
+                    append("${player(effect.playerId)} ${effect.sourceName}")
+                    support.wispUsePercentage?.let { append(" ($it%)") }
+                    if (stored != null) {
+                        append(" ${stored.sides}=${stored.value} -> MULCH")
+                    } else {
+                        append(" ${effect.effect}")
+                    }
+                }
+                appendBody(body)
+            }
+
             entries.forEach { entry ->
                 if (entry is GameEntry.RoundRevealed) {
                     if (!detail) {
@@ -143,7 +167,9 @@ object ChronicleTextRenderer {
                     openingDraws.clear()
                     completedOpeningDraws.clear()
                     pendingMulchStores.clear()
+                    pendingDieValueChanges.clear()
                     pendingOvergrowthEffects.clear()
+                    pendingMulchWispEffects.clear()
                     pendingRoundEffects.clear()
                 }
 
@@ -209,6 +235,11 @@ object ChronicleTextRenderer {
                             return@forEach
                         }
 
+                        is GameEntry.DieValueChanged -> {
+                            pendingDieValueChanges[entry.playerId] = entry
+                            return@forEach
+                        }
+
                         is GameEntry.DieRolled -> {
                             if (pendingUpgrades.containsKey(entry.playerId) && entry.reason == RollReason.ROLL) {
                                 pendingUpgradeRolls[entry.playerId] = entry
@@ -238,11 +269,18 @@ object ChronicleTextRenderer {
                                     return@forEach
                                 }
 
+                                entry.sourceKind == EffectSourceKind.WISP &&
+                                    entry.effect == GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> {
+                                    pendingMulchWispEffects[entry.playerId] = entry
+                                    return@forEach
+                                }
+
                                 else -> {
                                     // An Upgrade not consumed by a compact Round/Overgrowth line belongs
                                     // to another detailed effect family; preserve its normal ordering.
                                     flushPendingUpgrade(entry.playerId)
                                     pendingMulchStores.remove(entry.playerId)
+                                    pendingDieValueChanges.remove(entry.playerId)
                                 }
                             }
                         }
@@ -273,9 +311,14 @@ object ChronicleTextRenderer {
 
                         is GameEntry.SupportAction -> {
                             if (entry.action == SupportActionKind.WISP) {
-                                val effect = pendingOvergrowthEffects.remove(entry.playerId)
-                                if (effect != null) {
-                                    compactOvergrowth(effect, entry)
+                                val overgrowth = pendingOvergrowthEffects.remove(entry.playerId)
+                                if (overgrowth != null) {
+                                    compactOvergrowth(overgrowth, entry)
+                                    return@forEach
+                                }
+                                val mulchWisp = pendingMulchWispEffects.remove(entry.playerId)
+                                if (mulchWisp != null) {
+                                    compactMulchWisp(mulchWisp, entry)
                                     return@forEach
                                 }
                             }
@@ -531,7 +574,14 @@ object ChronicleTextRenderer {
                 }
 
             is GameEntry.BuyOrder ->
-                "BUY ORDER ${entry.order.joinToString(" -> ") { player(it) }}"
+                "BUY ORDER " + entry.order.mapIndexed { index, playerId ->
+                    buildString {
+                        append(player(playerId))
+                        if (index == 0) {
+                            entry.leaderDie?.let { append("(${it.sides}=${it.value})") }
+                        }
+                    }
+                }.joinToString(" -> ")
 
             is GameEntry.Purchase ->
                 "${player(entry.playerId)} PURCHASE ${entry.kind} ${entry.itemName} " +
@@ -596,6 +646,10 @@ object ChronicleTextRenderer {
             is GameEntry.MulchStored ->
                 "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +
                     "from=${if (entry.fromDiscard) "DISCARD" else "HAND"}"
+
+            is GameEntry.DieValueChanged ->
+                "${player(entry.playerId)} DIE VALUE ${entry.effect} " +
+                    "${entry.sides}=${entry.before}->${entry.after}"
 
             is GameEntry.TrashDie ->
                 "${player(entry.playerId)} TRASH ${entry.sides} destination=${entry.destination}"

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
@@ -507,6 +508,118 @@ class ChronicleTextRendererTest {
             "01.002  P1 Wisp_Upgrade_Die (5%) D4 -> D8=7",
             lines[1]
         )
+        assertEquals(2, lines.count { it.isNotEmpty() })
+    }
+
+
+    @Test
+    fun `compact Chronicle annotates Buy Order leader with highest Hand die`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.BuyOrder(
+                sequence = 2,
+                order = listOf(PlayerId(1), PlayerId(2), PlayerId(3), PlayerId(4)),
+                leaderDie = BuyOrderLeadDieSnapshot(DieSides.D8, 7)
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals("01.002  BUY ORDER P1(D8=7) -> P2 -> P3 -> P4", lines[1])
+    }
+
+    @Test
+    fun `compact Chronicle appends concrete Sunlight die change to Round Effect`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "Resource_Sunlight_Water",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.RAISE_DIE_PLUS_3,
+                secondEffect = GameEffect.GAIN_WATER_TOKEN
+            ),
+            GameEntry.DieValueChanged(
+                sequence = 2,
+                playerId = PlayerId(3),
+                effect = GameEffect.RAISE_DIE_PLUS_3,
+                sides = DieSides.D4,
+                before = 1,
+                after = 4
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(3),
+                effect = GameEffect.RAISE_DIE_PLUS_3,
+                sourceKind = EffectSourceKind.ROUND,
+                sourceName = "Resource_Sunlight_Water:FIRST",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.MainAction(
+                sequence = 4,
+                playerId = PlayerId(3),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ROUND_EFFECT_1,
+                actionNumber = 1,
+                battleStage = null
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  P3 ROUND EFFECT_1 RAISE_DIE_PLUS_3 (D4=1->4)",
+            lines[1]
+        )
+        assertEquals(2, lines.count { it.isNotEmpty() })
+    }
+
+    @Test
+    fun `compact Chronicle combines Pocketed Spark effect and stored discard die`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.MulchStored(
+                sequence = 2,
+                playerId = PlayerId(2),
+                sides = DieSides.D6,
+                value = 2,
+                fromDiscard = true
+            ),
+            GameEntry.EffectResolved(
+                sequence = 3,
+                playerId = PlayerId(2),
+                effect = GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
+                sourceKind = EffectSourceKind.WISP,
+                sourceName = "Wisp_Mulch_Die",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.SupportAction(
+                sequence = 4,
+                playerId = PlayerId(2),
+                phase = ChroniclePhase.CULTIVATION,
+                action = SupportActionKind.WISP,
+                row = null
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals("01.002  P2 Wisp_Mulch_Die D6=2 -> MULCH", lines[1])
+        assertEquals(0, lines.count { "SUPPORT WISP" in it })
         assertEquals(2, lines.count { it.isNotEmpty() })
     }
 

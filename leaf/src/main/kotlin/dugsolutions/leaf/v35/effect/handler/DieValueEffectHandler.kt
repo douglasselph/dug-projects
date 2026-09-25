@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
@@ -12,6 +13,7 @@ import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectDiePairChoice
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.random.die.DieSides
 
 /**
  * Related effects that directly change visible die values without moving the
@@ -423,10 +425,21 @@ class DieValueEffectHandler : EffectHandler {
         request: GameEffectRequest,
         amount: Int
     ) {
-        chooseRequiredHandDie(
+        val die = chooseRequiredHandDie(
             request = request,
             legalChoices = handChoices(request.actor)
-        ).adjustBy(amount)
+        )
+        val before = die.value
+        die.adjustBy(amount)
+        request.game.chronicle.record(
+            Moment.DieValueChanged(
+                playerId = request.actor.id,
+                effect = request.effect,
+                sides = DieSides.from(die.sides),
+                before = before,
+                after = die.value
+            )
+        )
     }
 
     private fun repeatRaises(
