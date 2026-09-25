@@ -356,7 +356,8 @@ object ChronicleTextRenderer {
 
                 if (detail) {
                     fun appendDetailed(current: ChronicleNode) {
-                        appendEntry(current.entry)
+                        val extraRewardDepth = if (current.entry is GameEntry.RollReward) 1 else 0
+                        appendEntry(current.entry, current.entry.hierarchyDepth + extraRewardDepth)
                         current.children.forEach(::appendDetailed)
                     }
                     appendDetailed(node)
@@ -630,8 +631,12 @@ object ChronicleTextRenderer {
                 "ROUND ${entry.roundNumber} COMPLETE ${entry.cardType}: ${entry.cardName}"
 
             is GameEntry.DieRolled ->
-                "${player(entry.playerId)} ROLL D${entry.sides}=${entry.value} " +
-                    "reason=${entry.reason} rewards=${entry.rewardPolicy}"
+                buildString {
+                    append("${player(entry.playerId)} ROLL D${entry.sides}=${entry.value} reason=${entry.reason}")
+                    if (entry.rewardPolicy != ChronicleRollRewardPolicy.NORMAL) {
+                        append(" rewards=${entry.rewardPolicy}")
+                    }
+                }
 
             is GameEntry.RollReward ->
                 buildString {

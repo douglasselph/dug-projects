@@ -269,14 +269,14 @@ class ChronicleTextRendererTest {
         val lines = ChronicleTextRenderer.render(openingDrawEntries(), detail = true).lines()
 
         assertEquals(
-            "01.002  P1 ROLL D6=1 reason=DRAW rewards=NORMAL",
+            "01.002  P1 ROLL D6=1 reason=DRAW",
             lines[1]
         )
         assertEquals(
             "01.003  P1 DECISION BEE score=70 (base=50, +20 Ordinary Critter reward preference)",
             lines[2]
         )
-        assertEquals("01.004  P1 ROLL REWARD CRITTER_GAINED critter=BEE", lines[3])
+        assertEquals("01.004    P1 ROLL REWARD CRITTER_GAINED critter=BEE", lines[3])
         assertEquals(
             "01.008  P1 CULTIVATION OPENING DRAW complete (3 dice)",
             lines[7]

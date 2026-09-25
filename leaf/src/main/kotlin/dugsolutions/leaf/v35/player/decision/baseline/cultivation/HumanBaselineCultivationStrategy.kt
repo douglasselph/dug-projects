@@ -88,6 +88,10 @@ class HumanBaselineCultivationStrategy(
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
 
+        // Willingness gates are intentionally independent and ordered before scoring.
+        // In particular, Compost is sampled before Sunlight. A declined Compost does
+        // not imply Sunlight is accepted; Sunlight receives its own separate sample.
+        // If both are accepted they remain legal and the normal score comparison wins.
         val overgrowth = applyOvergrowthWillingness(
             context = request.context,
             legalChoices = request.legalChoices

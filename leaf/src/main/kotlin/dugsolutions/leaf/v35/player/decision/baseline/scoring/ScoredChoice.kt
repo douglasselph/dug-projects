@@ -4,7 +4,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.scoring
 data class ScoredChoice<T>(
     val choice: T,
     val score: PriorityScore,
-    val label: String = choice.toString()
+    val label: String = DecisionLabelFormatter.longForm(choice)
 ) {
     init {
         require(label.isNotBlank()) {

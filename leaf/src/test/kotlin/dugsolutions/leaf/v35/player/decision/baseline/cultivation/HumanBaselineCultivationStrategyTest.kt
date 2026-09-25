@@ -367,6 +367,131 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
+        fun `Compost gate is evaluated before Sunlight and accepted Compost wins their ordinary comparison`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2)
+            )
+            val round = roundWithEffects(
+                GameEffect.RAISE_DIE_PLUS_3,
+                GameEffect.UPGRADE_DIE_FROM_HAND
+            )
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 6, 2), DieView(1, 6, 5), DieView(2, 6, 2)),
+                graftBed = mapOf(DieSides.D8 to 4)
+            )
+
+            val chosen = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(
+                    strategyRandomizer = SequenceRandomizer(74, 49)
+                )
+            )
+            val afterOneSunlight = choose(
+                round = round,
+                context = context(
+                    supply = listOf(DieView(0, 4, 1)),
+                    hand = listOf(DieView(0, 6, 5), DieView(1, 6, 5), DieView(2, 6, 2)),
+                    graftBed = mapOf(DieSides.D8 to 4)
+                ),
+                choices = choices,
+                mainActionsRemaining = 1,
+                strategy = HumanBaselineCultivationStrategy(
+                    strategyRandomizer = SequenceRandomizer(74, 49)
+                )
+            )
+
+            val main = assertIs<CultivationAction.Main>(chosen)
+            assertEquals(CultivationMainAction.RoundEffect2, main.action)
+            assertEquals(75, main.decisionProbabilityPercent)
+            val secondMain = assertIs<CultivationAction.Main>(afterOneSunlight)
+            assertEquals(CultivationMainAction.RoundEffect2, secondMain.action)
+            assertEquals(75, secondMain.decisionProbabilityPercent)
+        }
+
+        @Test
+        fun `declined Compost then accepted Sunlight selects Sunlight while both declined selects Draw`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2)
+            )
+            val round = roundWithEffects(
+                GameEffect.RAISE_DIE_PLUS_3,
+                GameEffect.UPGRADE_DIE_FROM_HAND
+            )
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 6, 2), DieView(1, 6, 5), DieView(2, 6, 2)),
+                graftBed = mapOf(DieSides.D8 to 4)
+            )
+
+            val sunlight = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(
+                    strategyRandomizer = SequenceRandomizer(75, 49)
+                )
+            )
+            val draw = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(
+                    strategyRandomizer = SequenceRandomizer(75, 50)
+                )
+            )
+
+            val sunlightMain = assertIs<CultivationAction.Main>(sunlight)
+            assertEquals(CultivationMainAction.RoundEffect1, sunlightMain.action)
+            assertEquals(50, sunlightMain.decisionProbabilityPercent)
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(draw).action)
+        }
+
+        @Test
+        fun `two consecutive Sunlight choices can result from independent Compost declines and Sunlight accepts`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1),
+                CultivationAction.Main(CultivationMainAction.RoundEffect2)
+            )
+            val round = roundWithEffects(
+                GameEffect.RAISE_DIE_PLUS_3,
+                GameEffect.UPGRADE_DIE_FROM_HAND
+            )
+            val strategy = HumanBaselineCultivationStrategy(
+                strategyRandomizer = SequenceRandomizer(75, 49, 75, 49)
+            )
+            val firstContext = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 6, 2), DieView(1, 6, 5), DieView(2, 6, 2)),
+                graftBed = mapOf(DieSides.D8 to 4)
+            )
+            val secondContext = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 6, 5), DieView(1, 6, 5), DieView(2, 6, 2)),
+                graftBed = mapOf(DieSides.D8 to 4)
+            )
+
+            val first = choose(
+                round = round, context = firstContext, choices = choices,
+                mainActionsRemaining = 2, strategy = strategy
+            )
+            val second = choose(
+                round = round, context = secondContext, choices = choices,
+                mainActionsRemaining = 1, strategy = strategy
+            )
+
+            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(first).action)
+            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(second).action)
+        }
+
+        @Test
         fun `Sunlight rejects capped plus two even when next draw is D4`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
@@ -575,6 +700,20 @@ class HumanBaselineCultivationStrategyTest {
             mainBackdrop = "",
             endGameVp = 1
         )
+
+    private class SequenceRandomizer(vararg values: Int) : StrategyRandomizer {
+        private val values = values.toList()
+        private var index = 0
+
+        override fun nextInt(until: Int): Int {
+            check(index < values.size) { "No strategy random values remain" }
+            val value = values[index++]
+            require(value in 0 until until) {
+                "Fixed strategy random value $value is invalid for bound $until"
+            }
+            return value
+        }
+    }
 
     private class FixedRandomizer(private val value: Int) : StrategyRandomizer {
         override fun nextInt(until: Int): Int {
