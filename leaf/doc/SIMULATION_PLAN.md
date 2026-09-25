@@ -518,13 +518,14 @@ Implement the research harness in this order:
     -   extraction includes only metrics supported reliably by current typed data;
     -   focused simulation coverage runs a real completed Human Baseline game;
     -   neither summary type retains the full Chronicle or mutable `Game`.
-2.  **M3-B --- reusable experiment batch/report boundary**
-    -   run many games;
-    -   retain compact summaries/observations;
-    -   rotate seats;
-    -   pair seeds;
-    -   render experiment-specific text/CSV-style reports;
-    -   keep detailed Chronicle output off by default.
+2.  **M3-B --- reusable experiment batch/report boundary --- IMPLEMENTED, pending focused test**
+    -   `GameSummaryBatchRunner` runs isolated complete games and retains only `GameSummary` values;
+    -   deterministic per-sample mechanical and strategy seed schedules support matched runs;
+    -   `Matchup.seatRotations()` supplies cyclic role/strategy rotation across physical seats;
+    -   `BatchRunResult` is the compact handoff to experiment-specific aggregation;
+    -   `BatchReport` supplies a small generic text view and one-row-per-player CSV export without becoming a general analytics framework;
+    -   decision reasoning is disabled and completed `Game`/Chronicle objects are not retained by the batch result;
+    -   concrete experiments remain responsible for their own intervention metadata, paired deltas, and specialized reports.
 3.  **M3-C --- controlled mechanical intervention seam**
     -   add a reusable way to alter selected mechanical outcomes for
         experiments;

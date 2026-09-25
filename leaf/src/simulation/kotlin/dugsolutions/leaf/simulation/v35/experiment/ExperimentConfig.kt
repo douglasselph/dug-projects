@@ -15,4 +15,15 @@ data class ExperimentConfig(
     init {
         require(games > 0) { "Simulation experiment must run at least one game" }
     }
+
+    /** Stable per-sample mechanical seed; shared configs therefore form matched runs. */
+    fun mechanicalSeedAt(sample: Int): Long? = seedAt(baseSeed, sample)
+
+    /** Stable per-sample strategy seed, independent from the mechanical stream. */
+    fun strategySeedAt(sample: Int): Long? = seedAt(strategyBaseSeed, sample)
+
+    private fun seedAt(base: Long?, sample: Int): Long? {
+        require(sample in 0 until games) { "Sample index out of range: $sample" }
+        return base?.plus(sample.toLong())
+    }
 }
