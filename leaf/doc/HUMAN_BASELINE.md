@@ -444,7 +444,7 @@ Use the eight areas as the high-level completion checklist:
 
 Current progress: **7 of 8 major areas certified; 10 of 30 strategy hooks certified** (Critter Reward: 1, Wound Resolution: 1, Graft Placement: 1, Buy: 2, Cultivation: 1, Battle: 3, Butterfly Result: 1).
 
-After all eight are certified, add/run a full **Human Baseline smoke game** with decision reasoning enabled and inspect the Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
+After all eight are certified, run a full **Human Baseline smoke game** with Chronicle detail enabled (`-Pdetail=true`) and inspect the decision-rich Chronicle. That smoke run is a final whole-game confidence check; it does not replace the area-by-area behavior-contract tests.
 
 ## 6. Unit, Integration, and Simulation during Milestone 2
 

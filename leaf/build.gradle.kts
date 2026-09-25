@@ -241,10 +241,14 @@ tasks.register<JavaExec>("runMechanicalGameSmoke") {
     mainClass.set("dugsolutions.leaf.integration.v35.tool.MechanicalGameSmokeMainKt")
 
     project.findProperty("smokeSeed")?.toString()?.let { args(it) }
+    if (project.findProperty("detail")?.toString()?.toBoolean() == true) {
+        args("--detail")
+    }
 }
 
 // Runs one complete four-player Human Baseline 3/2/2 game and writes both
-// summary and decision-rich Chronicle output under output/smoke/human-baseline/.
+// summary and compact Chronicle output under output/smoke/human-baseline/.
+// Use -Pdetail=true for the full decision-rich diagnostic transcript.
 tasks.register<JavaExec>("runHumanBaselineSmoke") {
     description = "Runs one full 3/2/2 Human Baseline game and writes its Chronicle to output/."
     group = "verification"
@@ -261,6 +265,9 @@ tasks.register<JavaExec>("runHumanBaselineSmoke") {
     } else if (smokeStrategySeed != null) {
         args("13579")
         args(smokeStrategySeed)
+    }
+    if (project.findProperty("detail")?.toString()?.toBoolean() == true) {
+        args("--detail")
     }
 }
 

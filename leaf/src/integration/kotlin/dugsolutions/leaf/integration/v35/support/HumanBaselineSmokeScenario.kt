@@ -40,7 +40,8 @@ object HumanBaselineSmokeScenario {
     fun scenario(
         seed: Long = DEFAULT_SEED,
         strategySeed: Long = seed,
-        recordDecisionReasoning: Boolean = false
+        recordDecisionReasoning: Boolean = false,
+        chronicleDetail: Boolean = false
     ): GameScenario =
         GameScenario(
             numPlayers = NUM_PLAYERS,
@@ -51,6 +52,7 @@ object HumanBaselineSmokeScenario {
             decisionFactories = List(NUM_PLAYERS) {
                 PlayerDecisionFactory.humanBaseline()
             },
-            recordDecisionReasoning = recordDecisionReasoning
+            recordDecisionReasoning = recordDecisionReasoning,
+            chronicleDetail = chronicleDetail
         )
 }

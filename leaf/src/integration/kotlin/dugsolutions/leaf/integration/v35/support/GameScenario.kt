@@ -36,6 +36,8 @@ data class GameScenario(
     val strategySeed: Long? = seed,
     /** Emit scored Human Baseline decision reasoning into the game Chronicle. */
     val recordDecisionReasoning: Boolean = false,
+    /** Compact Chronicle text by default; true enables full diagnostic detail. */
+    val chronicleDetail: Boolean = false,
     /** Optional experiment-only mechanical intervention; fresh state per Game. */
     val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
 ) {
@@ -71,6 +73,7 @@ data class GameScenario(
             dieConfig = dieConfig,
             strategySeed = strategySeed,
             recordDecisionReasoning = recordDecisionReasoning,
+            chronicleDetail = chronicleDetail,
             mechanicalInterventionFactory = mechanicalInterventionFactory
         )
     }

@@ -15,13 +15,16 @@ import java.nio.file.Path
  * real game reaches completion, then read the Chronicle to see what happened.
  */
 fun main(args: Array<String>) {
-    val seed = args.firstOrNull()?.toLongOrNull() ?: DEFAULT_SEED
+    val detail = args.any { it.equals("--detail", ignoreCase = true) }
+    val seed = args.firstOrNull { !it.equals("--detail", ignoreCase = true) }
+        ?.toLongOrNull() ?: DEFAULT_SEED
     val roundSetup = GameRoundSetup.firstGame()
     val scenario = GameScenario(
         numPlayers = 4,
         selectedPlantNames = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
         roundSetup = roundSetup,
-        seed = seed
+        seed = seed,
+        chronicleDetail = detail
         // Empty decisionFactories is intentional: GameScenario defaults every
         // player to deterministic Mechanical Control.
     )
@@ -35,7 +38,7 @@ fun main(args: Array<String>) {
         val chroniclePath = outputDir.resolve("chronicle.txt")
         Files.writeString(
             chroniclePath,
-            ChronicleTextRenderer.render(entries)
+            ChronicleTextRenderer.render(entries, detail = detail)
         )
 
         val summaryPath = outputDir.resolve("summary.txt")
@@ -43,6 +46,7 @@ fun main(args: Array<String>) {
             summaryPath,
             buildSummary(
                 seed = seed,
+                detail = detail,
                 roundSetup = roundSetup,
                 entryCount = entries.size,
                 result = result
@@ -66,6 +70,7 @@ private fun outputDirectory(seed: Long): Path =
 
 private fun buildSummary(
     seed: Long,
+    detail: Boolean,
     roundSetup: GameRoundSetup,
     entryCount: Int,
     result: dugsolutions.leaf.v35.game.GameRunResult
@@ -74,6 +79,7 @@ private fun buildSummary(
         appendLine("Leaf & Let Die — Mechanical Control smoke run")
         appendLine("Purpose: full-game engine/Chronicle sanity check; not a balance result")
         appendLine("Seed: $seed")
+        appendLine("Chronicle detail: $detail")
         appendLine("Players: 4")
         appendLine("Strategy: Mechanical Control for every player")
         appendLine(

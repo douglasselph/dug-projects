@@ -313,6 +313,37 @@ class GameFactoryTest {
     }
 
     @Test
+    fun chronicleDetail_enabledAlsoRecordsSelectedHumanBaselineScore() {
+        val game = factory(
+            GameConfig.humanBaseline(
+                selectedPlantCards = selectedCards,
+                numPlayers = 2,
+                seed = 321L,
+                chronicleDetail = true
+            )
+        )
+        val context = DecisionContext.EMPTY.copy(
+            phase = RoundCardType.CULTIVATION,
+            progress = DecisionContext.EMPTY.progress.copy(
+                currentCultivationRoundNumber = 1
+            )
+        )
+
+        game.players.first().decisions.reward.chooseCritter(
+            ChooseCritterRequest(
+                legalChoices = listOf(Critter.BEE, Critter.WORM),
+                ownedCritters = emptyList(),
+                context = context
+            )
+        )
+
+        assertEquals(
+            1,
+            game.chronicle.entries.filterIsInstance<GameEntry.DecisionReasoning>().size
+        )
+    }
+
+    @Test
     fun recordDecisionReasoning_disabledByDefaultDoesNotWriteScoreEntries() {
         val game = factory(
             GameConfig.humanBaseline(

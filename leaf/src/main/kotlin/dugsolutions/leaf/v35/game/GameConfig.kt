@@ -101,6 +101,12 @@ class GameConfig(
      * into this game's Chronicle. Disabled by default for large simulations.
      */
     val recordDecisionReasoning: Boolean = false,
+    /**
+     * Human-facing Chronicle verbosity. Compact output is the default. When
+     * enabled, report renderers may show line-by-line opening rolls and the
+     * Game also records scored decision reasoning for those detailed reports.
+     */
+    val chronicleDetail: Boolean = false,
     /** Experiment-only mechanical outcome replacement; fresh policy per Game. */
     val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
 ) {
@@ -143,7 +149,8 @@ class GameConfig(
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
             strategySeed: Long? = seed,
-            recordDecisionReasoning: Boolean = false
+            recordDecisionReasoning: Boolean = false,
+            chronicleDetail: Boolean = false
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -158,7 +165,8 @@ class GameConfig(
                 seed = seed,
                 dieConfig = dieConfig,
                 strategySeed = strategySeed,
-                recordDecisionReasoning = recordDecisionReasoning
+                recordDecisionReasoning = recordDecisionReasoning,
+                chronicleDetail = chronicleDetail
             )
         }
 
@@ -170,7 +178,8 @@ class GameConfig(
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
             strategySeed: Long? = seed,
-            recordDecisionReasoning: Boolean = false
+            recordDecisionReasoning: Boolean = false,
+            chronicleDetail: Boolean = false
         ): GameConfig {
             require(numPlayers in 2..4) {
                 "Game requires 2 to 4 players: $numPlayers"
@@ -185,7 +194,8 @@ class GameConfig(
                 seed = seed,
                 dieConfig = dieConfig,
                 strategySeed = strategySeed,
-                recordDecisionReasoning = recordDecisionReasoning
+                recordDecisionReasoning = recordDecisionReasoning,
+                chronicleDetail = chronicleDetail
             )
         }
 
@@ -197,7 +207,8 @@ class GameConfig(
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
             strategySeed: Long? = seed,
-            recordDecisionReasoning: Boolean = false
+            recordDecisionReasoning: Boolean = false,
+            chronicleDetail: Boolean = false
         ): GameConfig =
             humanBaseline(
                 selectedPlantCards = selectedPlantCards,
@@ -206,13 +217,14 @@ class GameConfig(
                 seed = seed,
                 dieConfig = dieConfig,
                 strategySeed = strategySeed,
-                recordDecisionReasoning = recordDecisionReasoning
+                recordDecisionReasoning = recordDecisionReasoning,
+                chronicleDetail = chronicleDetail
             )
 
         /** Backward-compatible old name for Mechanical Control. */
         @Deprecated(
             message = "Use mechanicalControl()",
-            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed, recordDecisionReasoning)")
+            replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed, recordDecisionReasoning, chronicleDetail)")
         )
         fun mechanicalBaseline(
             selectedPlantCards: List<PlantCard>,
@@ -221,7 +233,8 @@ class GameConfig(
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
             strategySeed: Long? = seed,
-            recordDecisionReasoning: Boolean = false
+            recordDecisionReasoning: Boolean = false,
+            chronicleDetail: Boolean = false
         ): GameConfig =
             mechanicalControl(
                 selectedPlantCards = selectedPlantCards,
@@ -230,7 +243,8 @@ class GameConfig(
                 seed = seed,
                 dieConfig = dieConfig,
                 strategySeed = strategySeed,
-                recordDecisionReasoning = recordDecisionReasoning
+                recordDecisionReasoning = recordDecisionReasoning,
+                chronicleDetail = chronicleDetail
             )
     }
 }

@@ -58,7 +58,7 @@ class GameFactory(
                         config.strategySeedForPlayer(index)
                     )
                 val reasoningSink =
-                    if (config.recordDecisionReasoning) {
+                    if (config.chronicleDetail || config.recordDecisionReasoning) {
                         ChronicleDecisionReasoningSink(
                             chronicle = chronicle,
                             playerId = playerId

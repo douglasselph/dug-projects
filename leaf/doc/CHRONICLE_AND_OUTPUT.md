@@ -58,7 +58,17 @@ output/
 
 `summary.txt` is the short answer: configuration, rounds completed, Chronicle entry count, final scores, and winner(s).
 
-`chronicle.txt` is the detailed chronological record. It is line-oriented on purpose so it is easy to open in any text editor, search, diff, or inspect beside the code. Visible line IDs are round-local: `01.001`, `01.002`, ... for Round 1, then `02.001`, `02.002`, ... for Round 2. The typed Chronicle still keeps its original globally increasing `GameEntry.sequence`; only the text renderer resets the visible counter at each `RoundRevealed` event.
+`chronicle.txt` is the chronological record. It is line-oriented on purpose so it is easy to open in any text editor, search, diff, or inspect beside the code. Visible line IDs are round-local: `01.001`, `01.002`, ... for Round 1, then `02.001`, `02.002`, ... for Round 2. The typed Chronicle still keeps its original globally increasing `GameEntry.sequence`; only the text renderer resets the visible counter at each `RoundRevealed` event.
+
+The normal text report is intentionally compact. Each player's opening Draw 3 is rendered as one line such as `P1 HAND D6=1 D8=5 D10=4`. If those opening rolls gained rewards, all gained rewards are placed on one following line, for example `P1 REWARD BEE WISP_GAIN_GREEN`. The individual opening `ROLL`, `ROLL REWARD`, `OPENING DRAW complete`, and scored `DECISION` lines are hidden in compact output. Rolls that happen later in the Round remain ordinary Chronicle lines.
+
+For a full diagnostic transcript, enable Chronicle detail. The smoke tasks accept `-Pdetail=true`, for example:
+
+```bash
+./gradlew runHumanBaselineSmoke -Pdetail=true
+```
+
+Detail mode restores the line-by-line opening-roll entries and records/renders scored Human Baseline decision reasoning. At the engine configuration level this is `GameConfig.chronicleDetail`; it defaults to `false`. The older `recordDecisionReasoning` switch remains available for code that wants reasoning entries independently.
 
 Every `ROUND ... COMPLETE` entry also carries immutable end-of-Round player snapshots. The text renderer displays those snapshots as one compact line per player, separated from both the completed Round and the next Round by blank lines. `S` is Dice Supply, `D` is Dice Discard, `B`/`W` are Bees/Worms, `Wa` is Water, `M` lists stored Mulch dice, `Wi` is Wisp count, and `BF` lists owned Butterflies. Each line ends with `G[...]`, which groups grafted Plants by type and cost in Root/Vine/Flower order; for example, `G[2R5 1V11 1F11 1F14]` means two cost-5 Roots, one cost-11 Vine, one cost-11 Flower, and one cost-14 Flower. `G[]` means no Plants are grafted. Zero-valued optional resources are omitted. These summary lines consume visible round-local report numbers but do not add separate Chronicle entries or alter the global `GameEntry.sequence`.
 

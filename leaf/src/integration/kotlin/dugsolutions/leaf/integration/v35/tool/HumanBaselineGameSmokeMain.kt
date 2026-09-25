@@ -12,19 +12,21 @@ import java.nio.file.Path
  *
  * The game uses the recommended first-game Plant set and a 3/2/2 Round cadence:
  * 3 Cultivation, Battle, 2 Cultivation, Battle, 2 Cultivation, Battle.
- * Decision reasoning is recorded in the Chronicle so the smoke output can be
- * inspected while Human Baseline certification is still in progress.
+ * Compact Chronicle output is the default. Pass `--detail` to restore
+ * line-by-line opening rolls and scored decision reasoning.
  *
  * This is not a balance experiment.
  */
 fun main(args: Array<String>) {
-    val seed = args.getOrNull(0)?.toLongOrNull()
+    val detail = args.any { it.equals("--detail", ignoreCase = true) }
+    val positional = args.filterNot { it.equals("--detail", ignoreCase = true) }
+    val seed = positional.getOrNull(0)?.toLongOrNull()
         ?: HumanBaselineSmokeScenario.DEFAULT_SEED
-    val strategySeed = args.getOrNull(1)?.toLongOrNull() ?: seed
+    val strategySeed = positional.getOrNull(1)?.toLongOrNull() ?: seed
     val scenario = HumanBaselineSmokeScenario.scenario(
         seed = seed,
         strategySeed = strategySeed,
-        recordDecisionReasoning = true
+        chronicleDetail = detail
     )
 
     IntegrationGameHarness(scenario).use { harness ->
@@ -36,7 +38,7 @@ fun main(args: Array<String>) {
         val chroniclePath = outputDir.resolve("chronicle.txt")
         Files.writeString(
             chroniclePath,
-            ChronicleTextRenderer.render(entries)
+            ChronicleTextRenderer.render(entries, detail = detail)
         )
 
         val summaryPath = outputDir.resolve("summary.txt")
@@ -45,6 +47,7 @@ fun main(args: Array<String>) {
             buildSummary(
                 seed = seed,
                 strategySeed = strategySeed,
+                detail = detail,
                 entryCount = entries.size,
                 result = result
             )
@@ -68,6 +71,7 @@ private fun outputDirectory(seed: Long, strategySeed: Long): Path =
 private fun buildSummary(
     seed: Long,
     strategySeed: Long,
+    detail: Boolean,
     entryCount: Int,
     result: GameRunResult
 ): String =
@@ -76,6 +80,7 @@ private fun buildSummary(
         appendLine("Purpose: full-game Human Baseline/Chronicle sanity check; not a balance result")
         appendLine("Mechanical seed: $seed")
         appendLine("Strategy seed: $strategySeed")
+        appendLine("Chronicle detail: $detail")
         appendLine("Players: ${HumanBaselineSmokeScenario.NUM_PLAYERS}")
         appendLine("Strategy: Human Baseline for every player")
         appendLine("Plants: recommended first-game Plant set")
