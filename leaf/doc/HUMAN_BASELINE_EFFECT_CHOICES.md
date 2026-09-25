@@ -2,7 +2,7 @@
 
 ## Status
 
-**NOT CERTIFIED.** E-A inventory and E-B contract/gap mapping are complete. The next checkpoint is E-C, bounded implementation/test alignment.
+**NOT CERTIFIED.** E-A through E-F are complete. The approved contract, bounded E-C implementation/test alignment, E-D integration-seam audit, E-E 20-for-20 hook audit, and E-F documentation consolidation agree. The next checkpoint is E-G, the full `test integrationTest simulationCheck` regression.
 
 Effect Choices is the final Human Baseline major area. It owns 20 `EffectStrategy` hooks. The rules engine remains responsible for which effects are active, phase legality, legal-choice construction, mutation, and mechanical randomness. Human Baseline chooses only among the legal choices supplied to it.
 
@@ -42,7 +42,7 @@ extra dice power
 
 This is intentionally an approximation of the human table scan: “whose Plant and dice pool look biggest?” It does not add VP, Wisp count, hidden information, current Battle position, card-combo strength, or forecasted scoring. Exact ties use `StrategyRandomizer`.
 
-The current implementation instead scores opponent VP plus Wisp count. E-C must replace that old heuristic with this approved visible-development heuristic and add readable behavior-contract tests.
+E-C1 replaced the former opponent VP/Wisp-count heuristic with this approved visible-development heuristic and added readable behavior-contract tests.
 
 ## Complete 20-hook contract/gap map
 
@@ -119,8 +119,8 @@ Likewise, O Edelweiss and recursive Plant-effect execution already have real-eng
 ## Remaining checkpoints
 
 - **E-E — COMPLETE** — explicit 20-for-20 hook audit: all 20 hooks have an approved contract, matching implementation disposition, and adequate evidence.
-- **E-F** — documentation/status consolidation.
-- **E-G** — full `test integrationTest simulationCheck` regression.
+- **E-F — COMPLETE** — documentation/status consolidation: durable Human Baseline status pages now agree on the post-audit state without prematurely certifying Effect Choices.
+- **E-G — NEXT** — full `test integrationTest simulationCheck` regression.
 - **E-H** — certify Effect Choices and close the eighth major Human Baseline area.
 
 Effect Choices remains **NOT CERTIFIED** until E-H.
@@ -159,4 +159,13 @@ E-E audited every `EffectStrategy` hook against the approved E-B contract, the p
 - **20 / 20 have an implementation disposition matching that contract.**
 - **20 / 20 have adequate focused and/or previously certified integration evidence.**
 - No new production change, behavior-contract test, or integration scenario is warranted from the hook audit.
-- Effect Choices is **not yet certified**; E-F documentation consolidation, E-G full regression, and E-H certification remain.
+- Effect Choices is **not yet certified**; E-F documentation consolidation is complete. E-G full regression and E-H certification remain.
+
+
+## E-F documentation/status consolidation
+
+E-F reconciled the durable Human Baseline documentation with the completed E-C through E-E work. The 20-hook audit is now the authoritative pre-regression state: all 20 Effect Choices hooks have approved contracts, matching implementation dispositions, and adequate focused and/or previously certified integration evidence.
+
+This checkpoint does **not** certify the 20 hooks. Milestone-2 remains at **7 of 8 major areas certified and 10 of 30 strategy hooks certified** until the full E-G regression succeeds and E-H records certification.
+
+**Next checkpoint: E-G — run `./gradlew test integrationTest simulationCheck`.**

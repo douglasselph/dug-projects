@@ -170,7 +170,7 @@ Detailed R3 contract and implementation plan: [`HUMAN_BASELINE_WOUND_RESOLUTION.
 
 **Certification status:** **certified**. R3-A through R3-E are complete. The approved behavior contract, shared current-Battle Flip analysis, permanent Snip preservation evaluator, readable unit behavior-contract tests, focused real-engine integration coverage, and full `test integrationTest simulationCheck` regression agree.
 
-### 3.3 Graft Placement
+### 3.3 Graft Placement — CERTIFIED
 
 Implementation:
 
@@ -195,7 +195,7 @@ Detailed contract and checkpoint plan:
 doc/HUMAN_BASELINE_GRAFT_PLACEMENT.md
 ```
 
-**Certification status:** R2-A/R2-B complete; implementation alignment and certification still required.
+**Certification status:** **certified**. R2-A through R2-E are complete. The approved bounded topology-band behavior, weak balance preference, final-round relaxation, readable behavior-contract tests, focused real-engine Buy/Graft integration coverage, and successful full `test integrationTest simulationCheck` regression agree.
 
 ### 3.4 Cultivation — CERTIFIED
 
@@ -403,7 +403,7 @@ Card-specific Human Baseline scorers and their tests live under:
 baseline/card/
 ```
 
-**Certification status:** **not certified**. E-A inventory and E-B contract/gap mapping are complete. The difficult Battle-facing realizations remain protected by certified Battle work; remaining work is focused on the general/non-Battle gaps and an explicit 20-for-20 hook audit. The approved `choosePlayer` baseline targets the legal opponent with the greatest visible development investment (grafted Plant printed costs plus die power above the normal starting pool), rather than VP/Wisp count. See [`HUMAN_BASELINE_EFFECT_CHOICES.md`](HUMAN_BASELINE_EFFECT_CHOICES.md).
+**Certification status:** **not certified**. E-A through E-F are complete. E-C aligned the bounded general/non-Battle gaps while preserving certified Battle behavior; E-D found no additional real-engine integration scenario was warranted; and E-E verified all **20 of 20** Effect Choices hooks have an approved contract, matching implementation disposition, and adequate focused and/or previously certified integration evidence. The approved `choosePlayer` baseline targets the legal opponent with the greatest visible development investment (grafted Plant printed costs plus die power above the normal starting pool), rather than VP/Wisp count. E-F consolidates that pre-regression state. The next checkpoint is E-G, the full `test integrationTest simulationCheck` regression; certification remains reserved for E-H. See [`HUMAN_BASELINE_EFFECT_CHOICES.md`](HUMAN_BASELINE_EFFECT_CHOICES.md).
 
 ## 4. What “certified” should mean
 

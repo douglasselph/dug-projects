@@ -67,7 +67,7 @@ Cultivation          CERTIFIED
 Battle               CERTIFIED
 Buy                  CERTIFIED
 Butterfly Result     CERTIFIED
-Effect Choices       pending designer certification
+Effect Choices       20/20 audited; pending full regression + certification
 ```
 
 For a certified area, the class KDoc, implementation, behavior-contract tests, and the corresponding section of `doc/HUMAN_BASELINE.md` should all describe the same policy.
