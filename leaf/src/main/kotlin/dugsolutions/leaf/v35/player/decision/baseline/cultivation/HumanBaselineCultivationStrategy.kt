@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.OvergrowthUseHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.*
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
@@ -104,11 +105,9 @@ class HumanBaselineCultivationStrategy(
             CultivationAction.Done -> PriorityScore(
                 if (request.mainActionsRemaining == 0) policy.cultivationDoneScore(request.context) else 0
             )
-            is CultivationAction.Support -> CultivationSupportPriority.score(
+            is CultivationAction.Support -> scoreSupport(
                 context = request.context,
-                action = choice.action,
-                cardScorers = cardScorers,
-                policy = policy
+                action = choice.action
             )
             is CultivationAction.Main -> when (val action = choice.action) {
                 CultivationMainAction.Draw -> DrawPriority.score(request.context)
@@ -131,6 +130,29 @@ class HumanBaselineCultivationStrategy(
                 )
             }
         }
+
+
+    private fun scoreSupport(
+        context: DecisionContext,
+        action: SupportAction
+    ): PriorityScore {
+        val base = CultivationSupportPriority.score(
+            context = context,
+            action = action,
+            cardScorers = cardScorers,
+            policy = policy
+        )
+        val wisp = action as? SupportAction.PlayWisp ?: return base
+        if (wisp.card.effect != GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW) return base
+
+        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context) ?: return base
+        val percentage = policy.overgrowthUsePercentage(context, targetSides)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        return base.adjusted(
+            amount = if (accepted) 0 else -10_000,
+            reason = "Overgrowth tendency ${if (accepted) "accepted" else "declined"} ($percentage% for D$targetSides)"
+        )
+    }
 
     private fun tags(
         request: ChooseCultivationActionRequest,

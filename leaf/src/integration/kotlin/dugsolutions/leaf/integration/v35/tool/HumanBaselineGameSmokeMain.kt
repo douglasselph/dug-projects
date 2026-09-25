@@ -38,7 +38,11 @@ fun main(args: Array<String>) {
         val chroniclePath = outputDir.resolve("chronicle.txt")
         Files.writeString(
             chroniclePath,
-            ChronicleTextRenderer.render(entries, detail = detail)
+            ChronicleTextRenderer.render(
+                entries = entries,
+                detail = detail,
+                selectedPlantCards = harness.catalog.plants(scenario.selectedPlantNames)
+            )
         )
 
         val summaryPath = outputDir.resolve("summary.txt")

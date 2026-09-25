@@ -40,6 +40,10 @@ open class HumanBaselinePolicy(
     private val cultivationDoneScoreValue: Int = DEFAULT_CULTIVATION_DONE_SCORE,
     private val cultivationReserveSpendPenaltyPerUnitValue: Int =
         DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT,
+    private val overgrowthD4UsePercentageValue: Int = DEFAULT_OVERGROWTH_D4_USE_PERCENTAGE,
+    private val overgrowthD6UsePercentageValue: Int = DEFAULT_OVERGROWTH_D6_USE_PERCENTAGE,
+    private val overgrowthD8UsePercentageValue: Int = DEFAULT_OVERGROWTH_D8_USE_PERCENTAGE,
+    private val overgrowthD10UsePercentageValue: Int = DEFAULT_OVERGROWTH_D10_USE_PERCENTAGE,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -75,6 +79,10 @@ open class HumanBaselinePolicy(
         require(cultivationReserveSpendPenaltyPerUnitValue >= 0) {
             "Cultivation reserve-spend penalty cannot be negative"
         }
+        require(overgrowthD4UsePercentageValue in 0..100) { "Overgrowth D4 use percentage must be 0..100" }
+        require(overgrowthD6UsePercentageValue in 0..100) { "Overgrowth D6 use percentage must be 0..100" }
+        require(overgrowthD8UsePercentageValue in 0..100) { "Overgrowth D8 use percentage must be 0..100" }
+        require(overgrowthD10UsePercentageValue in 0..100) { "Overgrowth D10 use percentage must be 0..100" }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
         require(battleSecuredLeadValue >= 0) { "Battle secured lead cannot be negative" }
@@ -122,6 +130,16 @@ open class HumanBaselinePolicy(
          * scoring and the associated reserve targets are finalized.
          */
         const val DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT: Int = 15
+
+        /**
+         * Default willingness to spend Overgrowth on the best legal target.
+         * These deliberately favor saving the Wisp for a larger die or a later
+         * Battle opportunity instead of immediately consuming it on a D4/D6.
+         */
+        const val DEFAULT_OVERGROWTH_D4_USE_PERCENTAGE: Int = 5
+        const val DEFAULT_OVERGROWTH_D6_USE_PERCENTAGE: Int = 10
+        const val DEFAULT_OVERGROWTH_D8_USE_PERCENTAGE: Int = 20
+        const val DEFAULT_OVERGROWTH_D10_USE_PERCENTAGE: Int = 40
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -243,6 +261,27 @@ open class HumanBaselinePolicy(
         context: DecisionContext,
         resource: ReserveResource
     ): Int = cultivationReserveSpendPenaltyPerUnitValue
+
+    /**
+     * Probability that an ordinary Human Baseline player is willing to spend
+     * Overgrowth on the best currently legal target die. StrategyRandomizer
+     * consumes the probability; this policy only supplies the tunable value.
+     *
+     * Keeping this overridable makes player-specific experimental behavior
+     * straightforward later (for example, an enhanced player that saves D8s
+     * more aggressively or spends D10s more readily in Battle).
+     */
+    open fun overgrowthUsePercentage(
+        context: DecisionContext,
+        targetSides: Int
+    ): Int =
+        when (targetSides) {
+            4 -> overgrowthD4UsePercentageValue
+            6 -> overgrowthD6UsePercentageValue
+            8 -> overgrowthD8UsePercentageValue
+            10 -> overgrowthD10UsePercentageValue
+            else -> 0
+        }
 
     /** Base spacing used when Battle Swing assigns importance to named row transitions. */
     open fun battleTransitionScale(context: DecisionContext): Int =

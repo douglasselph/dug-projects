@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.ChronicleRollRewardPolicy
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -26,11 +27,19 @@ object ChronicleTextRenderer {
      * line, and scored decision reasoning is hidden. [detail] restores the
      * original line-by-line diagnostic rendering.
      */
-    fun render(entries: List<GameEntry>, detail: Boolean = false): String =
+    fun render(
+        entries: List<GameEntry>,
+        detail: Boolean = false,
+        selectedPlantCards: List<PlantCard> = emptyList()
+    ): String =
         buildString {
+            if (selectedPlantCards.isNotEmpty()) {
+                appendPlantCardHeader(selectedPlantCards)
+            }
+
             var roundNumber = 0
             var sequenceWithinRound = 0
-            var separatorAlreadyWritten = false
+            var separatorAlreadyWritten = selectedPlantCards.isNotEmpty()
             var openingRoundActive = false
             val openingDraws = mutableMapOf<PlayerId, OpeningDrawBuffer>()
             val completedOpeningDraws = mutableSetOf<PlayerId>()
@@ -128,6 +137,19 @@ object ChronicleTextRenderer {
                 }
             }
         }
+
+
+    private fun StringBuilder.appendPlantCardHeader(cards: List<PlantCard>) {
+        appendLine("PLANTS (${cards.size})")
+        cards
+            .sortedWith(compareBy<PlantCard>({ plantTypeOrder(it.type) }, { it.cost }, { it.name }))
+            .forEach { card ->
+                appendLine(
+                    "  ${plantTypeAbbreviation(card.type)}${card.cost}  ${card.title} [${card.name}]"
+                )
+            }
+        appendLine()
+    }
 
     private data class OpeningDie(
         val sides: Int,

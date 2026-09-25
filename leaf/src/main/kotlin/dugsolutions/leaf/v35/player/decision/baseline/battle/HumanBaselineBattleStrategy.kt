@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.OvergrowthUseHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
@@ -11,6 +12,8 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.battle.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
 
 /**
  * Canonical ordinary-human Battle decision policy.
@@ -46,6 +49,7 @@ class HumanBaselineBattleStrategy(
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
+    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
     internal val firstMainPriority: BattleFirstMainPriority = BattleFirstMainPriority(cardScorers, policy),
     internal val placementPriority: BattlePlacementPriority = BattlePlacementPriority(policy),
     internal val supportPriority: BattleSupportPriority = BattleSupportPriority(cardScorers, policy),
@@ -69,22 +73,25 @@ class HumanBaselineBattleStrategy(
     override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseTurnAction(request)
 
+        val legalChoices = applyOvergrowthWillingness(request.context, request.legalChoices)
         val orchestration = turnOrchestrator(
             context = request.context,
             roundCard = request.roundCard,
-            legalChoices = request.legalChoices
+            legalChoices = legalChoices
         )
         val currentFinalMains = orchestration.finalMains
-        val legalSupports = request.legalChoices
+        val legalSupports = legalChoices
             .filterIsInstance<BattleTurnAction.Support>()
             .map { it.action }
 
         val candidates: List<BattleTurnAction> = if (orchestration.chooseSupport) {
             orchestration.worthwhileSupports.map { BattleTurnAction.Support(it) }
         } else {
-            request.legalChoices.filterIsInstance<BattleTurnAction.FinalMain>()
+            legalChoices.filterIsInstance<BattleTurnAction.FinalMain>()
         }
-        if (candidates.isEmpty()) return delegate.chooseTurnAction(request)
+        if (candidates.isEmpty()) {
+            return legalChoices.firstOrNull() ?: delegate.chooseTurnAction(request)
+        }
 
         return scoreEngine.chooseValue(
             context = request.context,
@@ -118,6 +125,30 @@ class HumanBaselineBattleStrategy(
             },
             influenceRegistry = influenceRegistry
         )
+    }
+
+
+    private fun applyOvergrowthWillingness(
+        context: DecisionContext,
+        legalChoices: List<BattleTurnAction>
+    ): List<BattleTurnAction> {
+        val overgrowthChoices = legalChoices.filter(::isOvergrowthSupport)
+        if (overgrowthChoices.isEmpty()) return legalChoices
+
+        val targetSides = OvergrowthUseHeuristics.preferredTargetSides(context) ?: return legalChoices
+        val percentage = policy.overgrowthUsePercentage(context, targetSides)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        if (accepted) return legalChoices
+
+        val filtered = legalChoices.filterNot(::isOvergrowthSupport)
+        return if (filtered.isNotEmpty()) filtered else legalChoices
+    }
+
+    private fun isOvergrowthSupport(choice: BattleTurnAction): Boolean {
+        val support = (choice as? BattleTurnAction.Support)?.action as? BattleSupportAction.Shared
+            ?: return false
+        val wisp = support.action as? SupportAction.PlayWisp ?: return false
+        return wisp.card.effect == GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW
     }
 
     override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest): StrikeRow {

@@ -66,7 +66,8 @@ class HumanBaselineDecisionDirector(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
         influenceRegistry = influenceRegistry,
-        policy = policy
+        policy = policy,
+        strategyRandomizer = strategyRandomizer
     )
     internal val buy = HumanBaselineBuyStrategy(
         scoreEngine = scoreEngine,

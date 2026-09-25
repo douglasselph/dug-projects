@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -19,6 +21,35 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class ChronicleTextRendererTest {
+
+
+    @Test
+    fun `Chronicle can list selected Plant cards before round one`() {
+        val cards = listOf(
+            plant("Flower_14_02", "Bloom Backflip", PlantType.FLOWER, 14),
+            plant("Root_05_02", "Root Four More", PlantType.ROOT, 5),
+            plant("Vine_11_04", "Vine's the Limit", PlantType.VINE, 11)
+        )
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries, selectedPlantCards = cards).lines()
+
+        assertEquals("PLANTS (3)", lines[0])
+        assertEquals("  R5  Root Four More [Root_05_02]", lines[1])
+        assertEquals("  V11  Vine's the Limit [Vine_11_04]", lines[2])
+        assertEquals("  F14  Bloom Backflip [Flower_14_02]", lines[3])
+        assertEquals("", lines[4])
+        assertEquals("01.001  ROUND 1 REVEAL CULTIVATION: first [GAIN_ONE_VP | GAIN_ONE_VP]", lines[5])
+    }
 
     @Test
     fun `full Chronicle rendering resets the visible sequence for each round`() {
@@ -168,6 +199,31 @@ class ChronicleTextRendererTest {
             lines[7]
         )
     }
+
+
+    private fun plant(
+        name: String,
+        title: String,
+        type: PlantType,
+        cost: Int
+    ): PlantCard =
+        PlantCard(
+            quantity = 1,
+            name = name,
+            title = title,
+            type = type,
+            cost = cost,
+            lineIcon = null,
+            vpIcon = "",
+            typeIcon = "",
+            fgColor = "",
+            textColor = "",
+            fullImage = "",
+            backgroundImage = "",
+            cardBackgroundImage = "",
+            effect = GameEffect.GAIN_ONE_VP,
+            scoringRule = PlantScoringRule.Fixed(1)
+        )
 
     private fun openingDrawEntries(): List<GameEntry> =
         listOf(

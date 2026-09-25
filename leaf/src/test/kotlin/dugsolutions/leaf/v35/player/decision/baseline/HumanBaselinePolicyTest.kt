@@ -114,6 +114,35 @@ class HumanBaselinePolicyTest {
     }
 
 
+
+    @Test
+    fun `default Overgrowth willingness grows with target die size`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(5, policy.overgrowthUsePercentage(context, 4))
+        assertEquals(10, policy.overgrowthUsePercentage(context, 6))
+        assertEquals(20, policy.overgrowthUsePercentage(context, 8))
+        assertEquals(40, policy.overgrowthUsePercentage(context, 10))
+        assertEquals(0, policy.overgrowthUsePercentage(context, 12))
+    }
+
+    @Test
+    fun `Overgrowth willingness is configurable per policy`() {
+        val policy = HumanBaselinePolicy(
+            overgrowthD4UsePercentageValue = 1,
+            overgrowthD6UsePercentageValue = 2,
+            overgrowthD8UsePercentageValue = 3,
+            overgrowthD10UsePercentageValue = 90
+        )
+        val context = context()
+
+        assertEquals(1, policy.overgrowthUsePercentage(context, 4))
+        assertEquals(2, policy.overgrowthUsePercentage(context, 6))
+        assertEquals(3, policy.overgrowthUsePercentage(context, 8))
+        assertEquals(90, policy.overgrowthUsePercentage(context, 10))
+    }
+
     @Test
     fun `default Battle policy centralizes approved Stage A thresholds`() {
         val policy = HumanBaselinePolicy()

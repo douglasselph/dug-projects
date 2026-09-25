@@ -22,6 +22,7 @@ import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -189,6 +190,65 @@ class HumanBaselineCultivationStrategyTest {
             )
 
             assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
+        }
+
+
+        @Test
+        fun `Overgrowth is rarely spent on a D4 and uses the five percent boundary`() {
+            val overgrowth = overgrowthWisp()
+            val choices = listOf(
+                CultivationAction.Support(SupportAction.PlayWisp(overgrowth)),
+                CultivationAction.Done
+            )
+            val context = context(
+                hand = listOf(DieView(0, 4, 2)),
+                graftBed = mapOf(DieSides.D6 to 1, DieSides.D8 to 1)
+            )
+
+            val accepts = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(4))
+            )
+            val declines = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(5))
+            )
+
+            assertIs<SupportAction.PlayWisp>(assertIs<CultivationAction.Support>(accepts).action)
+            assertEquals(CultivationAction.Done, declines)
+        }
+
+        @Test
+        fun `Overgrowth D10 willingness uses the forty percent boundary`() {
+            val overgrowth = overgrowthWisp()
+            val choices = listOf(
+                CultivationAction.Support(SupportAction.PlayWisp(overgrowth)),
+                CultivationAction.Done
+            )
+            val context = context(
+                hand = listOf(DieView(0, 10, 2)),
+                graftBed = mapOf(DieSides.D12 to 1, DieSides.D20 to 1)
+            )
+
+            val accepts = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(39))
+            )
+            val declines = choose(
+                context = context,
+                mainActionsRemaining = 0,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(40))
+            )
+
+            assertIs<SupportAction.PlayWisp>(assertIs<CultivationAction.Support>(accepts).action)
+            assertEquals(CultivationAction.Done, declines)
         }
 
         @Test
@@ -380,6 +440,21 @@ class HumanBaselineCultivationStrategyTest {
             assertEquals(CultivationAction.Support(weakReroll), supportFriendlyChoice)
         }
     }
+
+
+    private fun overgrowthWisp(): WispCard =
+        WispCard(
+            quantity = 1,
+            name = "Wisp_Upgrade_Die",
+            title = "Overgrowth",
+            count = 1,
+            effect = GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
+            lineIcons = null,
+            lineIconsHeight = 0,
+            vpIcon = null,
+            mainBackdrop = "",
+            endGameVp = 1
+        )
 
     private class FixedRandomizer(private val value: Int) : StrategyRandomizer {
         override fun nextInt(until: Int): Int {
