@@ -86,6 +86,8 @@ The current shared defaults are:
 | `DEFAULT_CULTIVATION_DICE_DEFICIT_MAX_BONUS` | 9 | cap development need at a modest nudge |
 | `DEFAULT_CULTIVATION_DONE_SCORE` | 55 | benchmark remaining Support opportunities must beat |
 | `DEFAULT_CULTIVATION_RESERVE_SPEND_PENALTY_PER_UNIT` | 15 | meaningful but non-absolute penalty for spending protected Support resources |
+| `DEFAULT_LOW_PLANT_PRIORITY_PERCENTAGE` | 90 | when below the low-Plant floor, prefer the Plant category 90% of the time |
+| `DEFAULT_LOW_PLANT_FLOOR` | 2 | state-based Plant-count safety floor; applies regardless of round/Battle history |
 | `DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD` | 15 | Buy balance treats one grafted Plant as 15 die-side development points |
 | `DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT` | 3.0 | a 3-point Buy imbalance gives the weaker category an 85% preference |
 | `DEFAULT_BATTLE_TRANSITION_SCALE` | 100 | spacing between named Battle Swing transition tiers |
@@ -331,6 +333,8 @@ Buy uses it for:
 ```text
 protected Critter reserve
 payment reserve evaluation
+state-based low-Plant safety tendency (<2 Plants by default)
+round-independent Plant-vs-dice development balance
 ```
 
 Cultivation consumes:

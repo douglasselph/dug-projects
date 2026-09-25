@@ -5,6 +5,14 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.ResourceReserveTarg
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.context.GameProgressView
+import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.player.creature.CreatureCardId
+import dugsolutions.leaf.v35.player.creature.CreaturePosition
+import dugsolutions.leaf.v35.player.creature.CreatureSide
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
+import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -183,31 +191,45 @@ class HumanBaselinePolicyTest {
     }
 
     @Test
-    fun `early Plant priority is ninety percent below the pre-Battle floor`() {
+    fun `low Plant priority is ninety percent whenever Plant count is below two`() {
         val policy = HumanBaselinePolicy()
-        val firstCultivation = context(
-            progress = GameProgressView.EMPTY.copy(
-                currentCultivationRoundNumber = 1,
-                battleRoundsCompleted = 0
-            )
-        )
-        val secondCultivation = context(
-            progress = GameProgressView.EMPTY.copy(
-                currentCultivationRoundNumber = 2,
-                battleRoundsCompleted = 0
-            )
-        )
 
-        assertEquals(90, policy.earlyPlantPriorityPercentage(firstCultivation))
-        assertEquals(90, policy.earlyPlantPriorityPercentage(secondCultivation))
+        assertEquals(90, policy.lowPlantPriorityPercentage(context()))
         assertEquals(
-            0,
-            policy.earlyPlantPriorityPercentage(
-                secondCultivation.copy(
-                    progress = secondCultivation.progress.copy(battleRoundsCompleted = 1)
+            90,
+            policy.lowPlantPriorityPercentage(
+                context(
+                    plantCount = 1,
+                    progress = GameProgressView.EMPTY.copy(
+                        currentCultivationRoundNumber = 6,
+                        battleRoundsCompleted = 2
+                    )
                 )
             )
         )
+        assertEquals(
+            0,
+            policy.lowPlantPriorityPercentage(
+                context(
+                    plantCount = 2,
+                    progress = GameProgressView.EMPTY.copy(
+                        currentCultivationRoundNumber = 1,
+                        battleRoundsCompleted = 0
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `low Plant floor and percentage are configurable for player profiles`() {
+        val novice = HumanBaselinePolicy(
+            lowPlantPriorityPercentageValue = 25,
+            lowPlantFloorValue = 1
+        )
+
+        assertEquals(25, novice.lowPlantPriorityPercentage(context()))
+        assertEquals(0, novice.lowPlantPriorityPercentage(context(plantCount = 1)))
     }
 
     @Test
@@ -264,6 +286,7 @@ class HumanBaselinePolicyTest {
         hand: List<DieView> = emptyList(),
         bees: Int = 0,
         worms: Int = 0,
+        plantCount: Int = 0,
         progress: GameProgressView = GameProgressView.EMPTY
     ): DecisionContext = DecisionContext.EMPTY.copy(
         phase = RoundCardType.CULTIVATION,
@@ -272,8 +295,23 @@ class HumanBaselinePolicyTest {
             board = DecisionContext.EMPTY.self.board.copy(
                 hand = hand,
                 bees = bees,
-                worms = worms
+                worms = worms,
+                creature = List(plantCount) { index -> testPlant(index) }
             )
         )
+    )
+
+    private fun testPlant(index: Int) = CreatureCardView(
+        id = CreatureCardId(index + 1),
+        name = "TestPlant${index + 1}",
+        title = "Test Plant ${index + 1}",
+        type = PlantType.VINE,
+        cost = 7,
+        effect = GameEffect.RAISE_ANY_DIE_PLUS_1,
+        scoringRule = PlantScoringRule.Fixed(1),
+        side = CreatureSide.LEFT,
+        position = CreaturePosition(index, 0),
+        facing = CreatureCard.Facing.FACE_UP,
+        isSnippable = true
     )
 }

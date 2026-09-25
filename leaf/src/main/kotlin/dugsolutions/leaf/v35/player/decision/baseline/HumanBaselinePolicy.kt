@@ -76,10 +76,10 @@ open class HumanBaselinePolicy(
         DEFAULT_POCKETED_SPARK_BATTLE_D12_USE_PERCENTAGE,
     private val pocketedSparkBattleD20UsePercentageValue: Int =
         DEFAULT_POCKETED_SPARK_BATTLE_D20_USE_PERCENTAGE,
-    private val earlyPlantPriorityPercentageValue: Int =
-        DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE,
-    private val earlyPlantFloorValue: Int =
-        DEFAULT_EARLY_PLANT_FLOOR,
+    private val lowPlantPriorityPercentageValue: Int =
+        DEFAULT_LOW_PLANT_PRIORITY_PERCENTAGE,
+    private val lowPlantFloorValue: Int =
+        DEFAULT_LOW_PLANT_FLOOR,
     private val buyPlantEquivalentDicePowerPerCardValue: Int =
         DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD,
     private val buyBalanceDifferenceFor85PercentValue: Double =
@@ -141,11 +141,11 @@ open class HumanBaselinePolicy(
             pocketedSparkBattleD10UsePercentageValue,
             pocketedSparkBattleD12UsePercentageValue,
             pocketedSparkBattleD20UsePercentageValue,
-            earlyPlantPriorityPercentageValue
+            lowPlantPriorityPercentageValue
         ).forEach { percentage ->
             require(percentage in 0..100) { "Human Baseline percentage must be 0..100: $percentage" }
         }
-        require(earlyPlantFloorValue >= 0) { "Early Plant floor cannot be negative" }
+        require(lowPlantFloorValue >= 0) { "Low-Plant floor cannot be negative" }
         require(buyPlantEquivalentDicePowerPerCardValue > 0) {
             "Buy Plant-equivalent dice power per card must be positive"
         }
@@ -249,8 +249,8 @@ open class HumanBaselinePolicy(
          * minimum two-card Creature whenever a Plant is affordable. The 90%
          * gate keeps rare "take the shiny die anyway" games possible.
          */
-        const val DEFAULT_EARLY_PLANT_PRIORITY_PERCENTAGE: Int = 90
-        const val DEFAULT_EARLY_PLANT_FLOOR: Int = 2
+        const val DEFAULT_LOW_PLANT_PRIORITY_PERCENTAGE: Int = 90
+        const val DEFAULT_LOW_PLANT_FLOOR: Int = 2
 
         /**
          * Buy-category balance treats each grafted Plant as roughly fifteen
@@ -445,20 +445,22 @@ open class HumanBaselinePolicy(
     }
 
     /**
-     * Strong early-game tendency to reach a minimum Plant count before the
-     * first Battle. The required count ramps from one Plant in Cultivation 1
-     * to [earlyPlantFloorValue] by Cultivation 2 and later.
+     * Strong state-based tendency to recover from having too few grafted Plants.
+     *
+     * This is deliberately independent of round number and Battle history. A player
+     * who is knocked back below [lowPlantFloorValue] later in the game receives the
+     * same protection as a player who has not yet built up their creature.
+     *
+     * Player-specific policies can override either this percentage method or the
+     * configured floor/percentage constructor values to model a novice who is more
+     * willing to remain dangerously Plant-light.
      */
-    open fun earlyPlantPriorityPercentage(context: DecisionContext): Int {
-        if (context.progress.battleRoundsCompleted > 0) return 0
-        val cultivationRound = context.progress.currentCultivationRoundNumber ?: return 0
-        val required = minOf(earlyPlantFloorValue, cultivationRound)
-        return if (context.self.board.plantCount < required) {
-            earlyPlantPriorityPercentageValue
+    open fun lowPlantPriorityPercentage(context: DecisionContext): Int =
+        if (context.self.board.plantCount < lowPlantFloorValue) {
+            lowPlantPriorityPercentageValue
         } else {
             0
         }
-    }
 
     /** Visible Buy-balance value assigned to each grafted Plant. */
     open fun buyPlantEquivalentDicePowerPerCard(context: DecisionContext): Int =

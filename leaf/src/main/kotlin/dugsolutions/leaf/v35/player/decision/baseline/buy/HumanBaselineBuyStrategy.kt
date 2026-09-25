@@ -162,9 +162,9 @@ class HumanBaselineBuyStrategy(
         plants: List<BuyItem.Plant>,
         dice: List<BuyItem.Die>
     ): List<BuyItem> {
-        val earlyPlantPercentage = policy.earlyPlantPriorityPercentage(context)
-        if (earlyPlantPercentage > 0) {
-            return if (strategyRandomizer.nextInt(100) < earlyPlantPercentage) {
+        val lowPlantPercentage = policy.lowPlantPriorityPercentage(context)
+        if (lowPlantPercentage > 0) {
+            return if (strategyRandomizer.nextInt(100) < lowPlantPercentage) {
                 plants
             } else {
                 dice

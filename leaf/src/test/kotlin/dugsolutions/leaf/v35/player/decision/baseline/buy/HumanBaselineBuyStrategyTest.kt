@@ -166,7 +166,11 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `Buy category balance can be overridden by player policy`() {
+        fun `Buy category balance can be overridden by player policy once low Plant safety is satisfied`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
+            )
             val newPlant = plant("Root_07_02", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_4)
             val policy = object : HumanBaselinePolicy() {
                 override fun buyPlantPriorityPercentage(context: DecisionContext): Int = 0
@@ -174,7 +178,7 @@ class HumanBaselineBuyStrategyTest {
             val request = ChoosePurchaseRequest(
                 options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12)),
                 context = context(
-                    plantCards = emptyList(),
+                    plantCards = existing,
                     dice = listOf(DieView(0, 20, 20), DieView(1, 20, 20)),
                     battleRoundsCompleted = 1
                 )
@@ -186,7 +190,7 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `before first Battle ninety percent branch protects a two Plant floor`() {
+        fun `ninety percent low Plant branch applies even after prior Battles`() {
             val existing = view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))
             val newPlant = plant("Vine_09_01", PlantType.VINE, 9, GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX)
             val request = ChoosePurchaseRequest(
@@ -198,8 +202,8 @@ class HumanBaselineBuyStrategyTest {
                         DieView(1, 10, 4),
                         DieView(2, 10, 4)
                     ),
-                    cultivationRound = 2,
-                    battleRoundsCompleted = 0
+                    cultivationRound = 6,
+                    battleRoundsCompleted = 2
                 )
             )
 
@@ -214,6 +218,36 @@ class HumanBaselineBuyStrategyTest {
                 BuyItem.Die(DieSides.D12),
                 assertIs<BuyChoice.Purchase>(declinesPlantPriority).item
             )
+        }
+
+        @Test
+        fun `normal Plant versus dice balance resumes at two Plants`() {
+            val existing = listOf(
+                view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)),
+                view(plant("Vine_07_01", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
+            )
+            val newPlant = plant("Vine_09_01", PlantType.VINE, 9, GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(newPlant), BuyItem.Die(DieSides.D12)),
+                context = context(
+                    plantCards = existing,
+                    dice = listOf(
+                        DieView(0, 6, 6),
+                        DieView(1, 6, 6),
+                        DieView(2, 6, 6),
+                        DieView(3, 6, 6),
+                        DieView(4, 6, 6)
+                    ),
+                    cultivationRound = 6,
+                    battleRoundsCompleted = 2
+                )
+            )
+
+            val plantAt49 = strategy(QueueRandomizer(49)).choosePurchase(request)
+            val dieAt50 = strategy(QueueRandomizer(50)).choosePurchase(request)
+
+            assertEquals(BuyItem.Plant(newPlant), assertIs<BuyChoice.Purchase>(plantAt49).item)
+            assertEquals(BuyItem.Die(DieSides.D12), assertIs<BuyChoice.Purchase>(dieAt50).item)
         }
 
         @Test
