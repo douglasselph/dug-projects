@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.OpponentView
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectOpponentPlantWoundRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseOptionalEffectPlantRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlantRequest
 import dugsolutions.leaf.v35.player.decision.effect.EffectOpponentPlantWoundChoice
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
@@ -125,6 +126,83 @@ class HumanBaselineEffectStrategyPlantAlignmentTest {
         assertEquals(tactical.id, chosen.cardId)
     }
 
+
+    @Test
+    fun `optional Cultivation Plant flip wakes the more useful spent Plant`() {
+        val modest = plant(10, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false)
+        val useful = plant(11, "Vine_11_01", GameEffect.DISCARD_ONE_DIE_DRAW_TWO, faceUp = false)
+        val context = cultivationContext(selfCreature = listOf(modest, useful))
+
+        val chosen = HumanBaselineEffectStrategy().chooseOptionalPlant(
+            ChooseOptionalEffectPlantRequest(
+                effect = GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE,
+                legalChoices = listOf(
+                    EffectPlantChoice(modest.id, modest.name, isFaceUp = false),
+                    EffectPlantChoice(useful.id, useful.name, isFaceUp = false)
+                ),
+                context = context
+            )
+        )
+
+        assertEquals(useful.id, chosen?.cardId)
+    }
+
+    @Test
+    fun `optional Cultivation Plant flip declines rather than spend a face up Plant`() {
+        val faceUp = plant(12, "Vine_11_01", GameEffect.DISCARD_ONE_DIE_DRAW_TWO, faceUp = true)
+        val context = cultivationContext(selfCreature = listOf(faceUp))
+
+        val chosen = HumanBaselineEffectStrategy().chooseOptionalPlant(
+            ChooseOptionalEffectPlantRequest(
+                effect = GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE,
+                legalChoices = listOf(EffectPlantChoice(faceUp.id, faceUp.name, isFaceUp = true)),
+                context = context
+            )
+        )
+
+        assertEquals(null, chosen)
+    }
+
+    @Test
+    fun `mandatory Cultivation own Plant flip wakes a spent Plant instead of spending a face up Plant`() {
+        val faceUp = plant(13, "Vine_11_01", GameEffect.DISCARD_ONE_DIE_DRAW_TWO, faceUp = true)
+        val spent = plant(14, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false)
+        val context = cultivationContext(selfCreature = listOf(faceUp, spent))
+
+        val chosen = HumanBaselineEffectStrategy().choosePlantEffect(
+            ChooseEffectPlantRequest(
+                effect = GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE,
+                legalChoices = listOf(
+                    EffectPlantChoice(faceUp.id, faceUp.name, isFaceUp = true),
+                    EffectPlantChoice(spent.id, spent.name, isFaceUp = false)
+                ),
+                context = context
+            )
+        )
+
+        assertEquals(spent.id, chosen.cardId)
+    }
+
+    @Test
+    fun `general opponent Snip targets the Plant with greater permanent preservation value`() {
+        val cheaper = plant(15, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false, cost = 7)
+        val dearer = plant(16, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false, cost = 17)
+        val context = cultivationContext(opponentCreature = listOf(cheaper, dearer))
+
+        val chosen = HumanBaselineEffectStrategy().chooseOpponentPlantWound(
+            ChooseEffectOpponentPlantWoundRequest(
+                effect = GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+                legalChoices = listOf(
+                    EffectOpponentPlantWoundChoice.Snip(OPPONENT, cheaper.id, cheaper.name),
+                    EffectOpponentPlantWoundChoice.Snip(OPPONENT, dearer.id, dearer.name)
+                ),
+                context = context
+            )
+        )
+
+        assertEquals(dearer.id, chosen.cardId)
+    }
+
     private fun battleContext(
         actorTotal: Int,
         opponentTotal: Int,
@@ -182,17 +260,34 @@ class HumanBaselineEffectStrategyPlantAlignmentTest {
         )
     )
 
+    private fun cultivationContext(
+        selfCreature: List<CreatureCardView> = emptyList(),
+        opponentCreature: List<CreatureCardView> = emptyList()
+    ): DecisionContext = DecisionContext.EMPTY.copy(
+        phase = RoundCardType.CULTIVATION,
+        self = DecisionContext.EMPTY.self.copy(
+            board = DecisionContext.EMPTY.self.board.copy(id = ACTOR, creature = selfCreature)
+        ),
+        opponents = listOf(
+            OpponentView(
+                board = DecisionContext.EMPTY.self.board.copy(id = OPPONENT, creature = opponentCreature),
+                wispCount = 0
+            )
+        )
+    )
+
     private fun plant(
         id: Int,
         name: String,
         effect: GameEffect,
-        faceUp: Boolean
+        faceUp: Boolean,
+        cost: Int = 7
     ) = CreatureCardView(
         id = CreatureCardId(id),
         name = name,
         title = name,
         type = PlantType.ROOT,
-        cost = 7,
+        cost = cost,
         effect = effect,
         scoringRule = PlantScoringRule.Fixed(1),
         side = CreatureSide.LEFT,

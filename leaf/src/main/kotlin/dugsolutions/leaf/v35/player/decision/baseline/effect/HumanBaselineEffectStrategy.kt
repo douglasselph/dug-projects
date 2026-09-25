@@ -25,6 +25,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSetDieToMatch
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgradeEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.card.PlantPreservationEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.CompostPriority
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.MulchPriority
@@ -60,6 +61,7 @@ class HumanBaselineEffectStrategy(
     private val delegate: EffectStrategy = MechanicalEffectStrategy(),
     internal val scoreEngine: BaselineScoreEngine = BaselineScoreEngine(),
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+    internal val plantPreservationEvaluator: PlantPreservationEvaluator = PlantPreservationEvaluator(cardScorers),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     internal val pollenTheftEvaluator: BattlePollenTheftEvaluator = BattlePollenTheftEvaluator(policy),
@@ -460,10 +462,15 @@ class HumanBaselineEffectStrategy(
         if (request.context == DecisionContext.EMPTY) return delegate.chooseOptionalPlant(request)
         val candidates = request.legalChoices.map { choice ->
             val view = request.context.self.board.creature.firstOrNull { it.id == choice.cardId }
-            val value = view?.let { cardScorers.forPlant(it).lossValue(request.context, it) } ?: 30
-            val score = if (!choice.isFaceUp) PriorityScore(45 + value / 3) else PriorityScore(15 - value / 5)
+            val score = when {
+                view == null -> PriorityScore(0)
+                !choice.isFaceUp -> cardScorers.forPlant(view)
+                    .playScore(request.context, CardPhase.from(request.context.phase), view.name)
+                    .adjusted(50, "Flip a spent Plant face up for immediate current-phase use")
+                else -> PriorityScore(50 - plantPreservationEvaluator(request.context, view))
+            }
             DecisionCandidate<EffectPlantChoice?>(choice, score)
-        } + DecisionCandidate<EffectPlantChoice?>(null, PriorityScore(40))
+        } + DecisionCandidate<EffectPlantChoice?>(null, PriorityScore(50))
         return choose(request.context, candidates)
     }
 
@@ -483,10 +490,9 @@ class HumanBaselineEffectStrategy(
                     val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
                     val view = owner?.board?.creature?.firstOrNull { it.id == choice.cardId }
                     val value = if (view != null) {
-                        cardScorers.findByName(view.name)?.lossValue(request.context, view) ?: (view.cost * 4)
+                        plantPreservationEvaluator(request.context, view)
                     } else 0
-                    val snipBonus = if (choice is EffectOpponentPlantWoundChoice.Snip) 20 else 0
-                    DecisionCandidate(choice, PriorityScore(40 + value + snipBonus))
+                    DecisionCandidate(choice, PriorityScore(40 + value))
                 }
             }
         )
@@ -506,6 +512,8 @@ class HumanBaselineEffectStrategy(
                     view != null
                 ) {
                     enabledPlantAnalyzer(request.context, view).priority
+                } else if (view != null && choice.isFaceUp) {
+                    PriorityScore(-plantPreservationEvaluator(request.context, view))
                 } else {
                     cardScorers.forName(choice.cardName)
                         .playScore(request.context, CardPhase.from(request.context.phase), choice.cardName)
