@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameRunResult
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.random.die.DieSides
 
 /** Collapses one completed production Game into a compact immutable research record. */
 object GameSummaryExtractor {
@@ -41,8 +42,10 @@ object GameSummaryExtractor {
                 finalWispCount = player.wisps.size,
                 finalPlantCount = player.creature.size,
                 finalPlantPrintedCost = player.creature.cards.sumOf { it.card.cost },
+                plantCreatureSignature = plantCreatureSignature(player),
                 finalDiceCount = finalDiceCount(player),
-                finalDicePower = finalDicePower(player)
+                finalDicePower = finalDicePower(player),
+                ownedDiceSignature = ownedDiceSignature(player)
             )
         }
 
@@ -80,12 +83,53 @@ object GameSummaryExtractor {
                 entry.kind == RollRewardKind.WISP_PLAYED_IMMEDIATELY
         }
 
+
+    private fun plantCreatureSignature(player: Player): PlantCreatureSignature =
+        PlantCreatureSignature(
+            cards = player.creature.cards
+                .map { creatureCard ->
+                    PlantCreatureCardSignature(
+                        plantName = creatureCard.card.name,
+                        side = creatureCard.side,
+                        x = creatureCard.position.x,
+                        y = creatureCard.position.y
+                    )
+                }
+                .sortedWith(
+                    compareBy<PlantCreatureCardSignature>(
+                        { it.y },
+                        { it.x },
+                        { it.side.ordinal },
+                        { it.plantName }
+                    )
+                )
+        )
+
+    private fun ownedDiceSignature(player: Player): OwnedDiceSignature {
+        val sideValues = buildList {
+            addAll((player.dice.supply + player.dice.hand + player.dice.discard).map { it.sides })
+            addAll(player.tokens.mulchTokens.mapNotNull { it.sides?.value })
+            addAll(player.tokens.pendingMulchTokens.mapNotNull { it.sides?.value })
+        }
+
+        fun count(sides: DieSides): Int = sideValues.count { it == sides.value }
+
+        return OwnedDiceSignature(
+            d4 = count(DieSides.D4),
+            d6 = count(DieSides.D6),
+            d8 = count(DieSides.D8),
+            d10 = count(DieSides.D10),
+            d12 = count(DieSides.D12),
+            d20 = count(DieSides.D20)
+        )
+    }
+
     private fun finalDiceCount(player: Player): Int =
         player.dice.supply.size +
             player.dice.hand.size +
             player.dice.discard.size +
-            player.tokens.mulchTokens.size +
-            player.tokens.pendingMulchTokens.size
+            player.tokens.mulchTokens.count { it.sides != null } +
+            player.tokens.pendingMulchTokens.count { it.sides != null }
 
     private fun finalDicePower(player: Player): Int =
         (player.dice.supply + player.dice.hand + player.dice.discard).sumOf { it.sides } +

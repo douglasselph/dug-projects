@@ -92,23 +92,26 @@ copies purchased/surviving, target-card activations, target Plant VP, Battle
 Strike VP, and a per-seat breakdown. The result is intentionally aggregate data
 rather than retained Games/Chronicles so high-volume batches stay lightweight.
 
-## Baseline calibration before exploit experiments
+## Human Baseline calibration (M3-D2)
 
-Before interpreting an intervention such as Six-Wisp, run the same exact
-nine-card Grove with four ordinary Human Baseline players and establish the
-ordinary seat/noise behavior. The calibration API should accept the selected
-Plant-card list and requested game count/checkpoints as explicit inputs.
+Before the Six-Wisp batch experiment, ordinary four-player Human Baseline play
+is calibrated for the exact selected nine-card Grove. M3-D2A adds compact
+canonical development signatures to each `PlayerGameSummary`:
 
-Keep two layers separate:
+- `PlantCreatureSignature` records stable Plant names plus side and logical grid
+  positions, sorted canonically. It intentionally omits face-up/face-down state.
+- `OwnedDiceSignature` records counts of D4/D6/D8/D10/D12/D20 across Supply,
+  Hand, Discard, Mulch, and pending Mulch without retaining die objects.
 
-- a small deterministic regression proves reproducibility, seed sensitivity,
-  compact Plant/dice signatures, and aggregation correctness;
-- a manual long-run calibration reports cumulative seat win share at increasing
-  sample sizes (for example 100, 250, 500, 1,000, 2,000) so the designer can
-  see when the four seats settle near the neutral 25% reference.
+Later M3-D2 checkpoints will use these values for 4-, 8-, and 12-game diagnostic
+cohorts. Those small cohorts are for reproducibility, seed-sensitivity, and
+human inspection of gross development diversity; they must not assert that all
+winners or all final shapes are unique. Distributional questions such as
+whether one Plant/dice shape occurs unusually often are separate later research.
 
-Do not assert that four games must have four different winners, and do not put a
-large statistical fairness run in normal `integrationTest`. Both would confuse
-random variation with a software invariant. Long-run calibration is research
-output. Use the same Grove and matched seed schedule for the later intervention
-so its delta can be compared with ordinary baseline variation.
+
+### Human Baseline calibration
+
+`experiment.baseline.BaselineCalibrationSpec` identifies one exact nine-card Grove, deterministic seed schedule, total game count, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes only the compact `BatchRunResult` and reports physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and a labelled sampling-reference band. Checkpoints are cumulative prefixes of one run; no fairness tolerance is encoded yet.
+
+M3-D2C will use the compact development signatures for 4/8/12-game diagnostic cohorts. Those shape comparisons are for reproducibility, seed sensitivity, and human inspection of gross sameness; repeated shapes are not themselves test failures.

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.simulation.v35.analysis
 
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.creature.CreatureSide
 
 /**
  * Compact immutable research record for one completed game.
@@ -48,8 +49,12 @@ data class PlayerGameSummary(
     val finalWispCount: Int,
     val finalPlantCount: Int,
     val finalPlantPrintedCost: Int,
+    /** Canonical value-only description of the final Plant Creature. */
+    val plantCreatureSignature: PlantCreatureSignature,
     val finalDiceCount: Int,
-    val finalDicePower: Int
+    val finalDicePower: Int,
+    /** Canonical count-by-size description of all final owned dice. */
+    val ownedDiceSignature: OwnedDiceSignature
 ) {
     init {
         require(seat >= 0) { "Seat cannot be negative: $seat" }
@@ -64,4 +69,45 @@ data class PlayerGameSummary(
         require(finalDiceCount >= 0)
         require(finalDicePower >= 0)
     }
+}
+
+
+/**
+ * Canonical final Plant Creature shape for compact comparison across games.
+ *
+ * Cards are sorted by logical grid position, side, and stable Plant name.
+ * Facing is intentionally excluded: this signature describes development
+ * shape/card composition rather than transient ready/spent state.
+ */
+data class PlantCreatureSignature(
+    val cards: List<PlantCreatureCardSignature>
+)
+
+data class PlantCreatureCardSignature(
+    val plantName: String,
+    val side: CreatureSide,
+    val x: Int,
+    val y: Int
+)
+
+/** Canonical final owned-dice shape, independent of which owned zone holds a die. */
+data class OwnedDiceSignature(
+    val d4: Int,
+    val d6: Int,
+    val d8: Int,
+    val d10: Int,
+    val d12: Int,
+    val d20: Int
+) {
+    init {
+        require(listOf(d4, d6, d8, d10, d12, d20).all { it >= 0 }) {
+            "Owned die counts cannot be negative"
+        }
+    }
+
+    val totalDice: Int
+        get() = d4 + d6 + d8 + d10 + d12 + d20
+
+    val totalPower: Int
+        get() = d4 * 4 + d6 * 6 + d8 * 8 + d10 * 10 + d12 * 12 + d20 * 20
 }

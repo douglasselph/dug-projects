@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.di.GameFactory
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -83,7 +84,25 @@ class GameSummaryExtractorTest {
                 assertEquals(score.unplayedWispVp, playerSummary.unplayedWispVp)
                 assertEquals(player.creature.cards.sumOf { it.card.cost }, playerSummary.finalPlantPrintedCost)
                 assertEquals(player.creature.size, playerSummary.finalPlantCount)
+                assertEquals(
+                    player.creature.cards
+                        .map { PlantCreatureCardSignature(it.card.name, it.side, it.position.x, it.position.y) }
+                        .sortedWith(compareBy({ it.y }, { it.x }, { it.side.ordinal }, { it.plantName })),
+                    playerSummary.plantCreatureSignature.cards
+                )
                 assertEquals(player.wisps.size, playerSummary.finalWispCount)
+                assertEquals(playerSummary.finalDiceCount, playerSummary.ownedDiceSignature.totalDice)
+                assertEquals(playerSummary.finalDicePower, playerSummary.ownedDiceSignature.totalPower)
+                val allOwnedDieSides =
+                    (player.dice.supply + player.dice.hand + player.dice.discard).map { it.sides } +
+                        player.tokens.mulchTokens.mapNotNull { it.sides?.value } +
+                        player.tokens.pendingMulchTokens.mapNotNull { it.sides?.value }
+                assertEquals(allOwnedDieSides.count { it == DieSides.D4.value }, playerSummary.ownedDiceSignature.d4)
+                assertEquals(allOwnedDieSides.count { it == DieSides.D6.value }, playerSummary.ownedDiceSignature.d6)
+                assertEquals(allOwnedDieSides.count { it == DieSides.D8.value }, playerSummary.ownedDiceSignature.d8)
+                assertEquals(allOwnedDieSides.count { it == DieSides.D10.value }, playerSummary.ownedDiceSignature.d10)
+                assertEquals(allOwnedDieSides.count { it == DieSides.D12.value }, playerSummary.ownedDiceSignature.d12)
+                assertEquals(allOwnedDieSides.count { it == DieSides.D20.value }, playerSummary.ownedDiceSignature.d20)
                 assertEquals(
                     entries.filterIsInstance<GameEntry.StrikeResolved>()
                         .sumOf { if (player.id in it.winnerIds) it.vpPerWinner else 0 },
@@ -123,7 +142,10 @@ class GameSummaryExtractorTest {
             assertTrue(summary.players.filterNot { it.won }.all { it.winShare == 0.0 })
 
             val retainedTypes = GameSummary::class.java.declaredFields.map { it.type.name } +
-                PlayerGameSummary::class.java.declaredFields.map { it.type.name }
+                PlayerGameSummary::class.java.declaredFields.map { it.type.name } +
+                PlantCreatureSignature::class.java.declaredFields.map { it.type.name } +
+                PlantCreatureCardSignature::class.java.declaredFields.map { it.type.name } +
+                OwnedDiceSignature::class.java.declaredFields.map { it.type.name }
             assertFalse(retainedTypes.any { it.contains("GameChronicle") || it.endsWith(".Game") })
         } finally {
             application.close()
