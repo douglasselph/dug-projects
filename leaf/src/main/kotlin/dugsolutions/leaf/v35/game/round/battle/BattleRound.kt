@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.battle.StrikeResolver
 import dugsolutions.leaf.v35.battle.domain.BattleDiePlacement
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -124,10 +125,27 @@ class BattleRound(
         )
         val placements = battleState.placeInitialHands()
 
+        val highestDice = battleState.playerIdsInBattleOrder.mapNotNull { playerId ->
+            placements
+                .filter { it.playerId == playerId }
+                .maxWithOrNull(
+                    compareBy<BattleDiePlacement> { it.die.value }
+                        .thenBy { it.die.sides }
+                )
+                ?.let { placement ->
+                    BattleOrderHighDieSnapshot(
+                        playerId = playerId,
+                        sides = dugsolutions.leaf.v35.random.die.DieSides.from(placement.die.sides),
+                        value = placement.die.value
+                    )
+                }
+        }
+
         game.chronicle.record(
             Moment.BattleOrder(
                 order = battleState.playerIdsInBattleOrder,
-                initialDiceCount = placements.size
+                initialDiceCount = placements.size,
+                highestDice = highestDice
             )
         )
 

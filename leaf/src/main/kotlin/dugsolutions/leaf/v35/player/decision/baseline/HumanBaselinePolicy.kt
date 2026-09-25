@@ -44,6 +44,11 @@ open class HumanBaselinePolicy(
     private val overgrowthD6UsePercentageValue: Int = DEFAULT_OVERGROWTH_D6_USE_PERCENTAGE,
     private val overgrowthD8UsePercentageValue: Int = DEFAULT_OVERGROWTH_D8_USE_PERCENTAGE,
     private val overgrowthD10UsePercentageValue: Int = DEFAULT_OVERGROWTH_D10_USE_PERCENTAGE,
+    private val sunlightUsePercentageValue: Int = DEFAULT_SUNLIGHT_USE_PERCENTAGE,
+    private val mulchValue1UsePercentageValue: Int = DEFAULT_MULCH_VALUE_1_USE_PERCENTAGE,
+    private val mulchValue2UsePercentageValue: Int = DEFAULT_MULCH_VALUE_2_USE_PERCENTAGE,
+    private val mulchValue3UsePercentageValue: Int = DEFAULT_MULCH_VALUE_3_USE_PERCENTAGE,
+    private val mulchValue4UsePercentageValue: Int = DEFAULT_MULCH_VALUE_4_USE_PERCENTAGE,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -83,6 +88,11 @@ open class HumanBaselinePolicy(
         require(overgrowthD6UsePercentageValue in 0..100) { "Overgrowth D6 use percentage must be 0..100" }
         require(overgrowthD8UsePercentageValue in 0..100) { "Overgrowth D8 use percentage must be 0..100" }
         require(overgrowthD10UsePercentageValue in 0..100) { "Overgrowth D10 use percentage must be 0..100" }
+        require(sunlightUsePercentageValue in 0..100) { "Sunlight use percentage must be 0..100" }
+        require(mulchValue1UsePercentageValue in 0..100) { "Mulch value-1 use percentage must be 0..100" }
+        require(mulchValue2UsePercentageValue in 0..100) { "Mulch value-2 use percentage must be 0..100" }
+        require(mulchValue3UsePercentageValue in 0..100) { "Mulch value-3 use percentage must be 0..100" }
+        require(mulchValue4UsePercentageValue in 0..100) { "Mulch value-4 use percentage must be 0..100" }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
         require(battleSecuredLeadValue >= 0) { "Battle secured lead cannot be negative" }
@@ -140,6 +150,22 @@ open class HumanBaselinePolicy(
         const val DEFAULT_OVERGROWTH_D6_USE_PERCENTAGE: Int = 10
         const val DEFAULT_OVERGROWTH_D8_USE_PERCENTAGE: Int = 20
         const val DEFAULT_OVERGROWTH_D10_USE_PERCENTAGE: Int = 40
+
+        /**
+         * Sunlight is a marginal alternative to drawing a D4. Once the visible
+         * +3 can actually beat that expected draw, an ordinary player still
+         * chooses the effect only about half the time.
+         */
+        const val DEFAULT_SUNLIGHT_USE_PERCENTAGE: Int = 50
+
+        /**
+         * Willingness to Mulch a die from Hand by its current showing value.
+         * Five or higher is never voluntarily Mulched by the Human Baseline.
+         */
+        const val DEFAULT_MULCH_VALUE_1_USE_PERCENTAGE: Int = 80
+        const val DEFAULT_MULCH_VALUE_2_USE_PERCENTAGE: Int = 60
+        const val DEFAULT_MULCH_VALUE_3_USE_PERCENTAGE: Int = 40
+        const val DEFAULT_MULCH_VALUE_4_USE_PERCENTAGE: Int = 20
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -280,6 +306,23 @@ open class HumanBaselinePolicy(
             6 -> overgrowthD6UsePercentageValue
             8 -> overgrowthD8UsePercentageValue
             10 -> overgrowthD10UsePercentageValue
+            else -> 0
+        }
+
+    /** Willingness to choose a worthwhile Sunlight Round Effect instead of drawing. */
+    open fun sunlightUsePercentage(context: DecisionContext): Int =
+        sunlightUsePercentageValue
+
+    /** Willingness to Mulch a Hand die based on the value currently showing. */
+    open fun mulchUsePercentage(
+        context: DecisionContext,
+        dieValue: Int
+    ): Int =
+        when (dieValue) {
+            1 -> mulchValue1UsePercentageValue
+            2 -> mulchValue2UsePercentageValue
+            3 -> mulchValue3UsePercentageValue
+            4 -> mulchValue4UsePercentageValue
             else -> 0
         }
 

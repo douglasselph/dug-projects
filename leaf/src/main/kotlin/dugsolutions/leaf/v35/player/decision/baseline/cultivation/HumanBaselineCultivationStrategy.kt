@@ -96,9 +96,17 @@ class HumanBaselineCultivationStrategy(
             request = request,
             legalChoices = overgrowth.legalChoices
         )
+        val mulch = applyMulchWillingness(
+            request = request,
+            legalChoices = compost.legalChoices
+        )
+        val sunlight = applySunlightWillingness(
+            request = request,
+            legalChoices = mulch.legalChoices
+        )
         val selected = scoreEngine.chooseValue(
             context = request.context,
-            candidates = compost.legalChoices.map { choice ->
+            candidates = sunlight.legalChoices.map { choice ->
                 DecisionCandidate(
                     choice = choice,
                     score = score(request, choice, compost),
@@ -107,10 +115,18 @@ class HumanBaselineCultivationStrategy(
             },
             influenceRegistry = influenceRegistry
         )
-        return attachCompostProbability(
-            selected = attachOvergrowthProbability(selected, overgrowth),
+        return attachSunlightProbability(
+            selected = attachMulchProbability(
+                selected = attachCompostProbability(
+                    selected = attachOvergrowthProbability(selected, overgrowth),
+                    request = request,
+                    gate = compost
+                ),
+                request = request,
+                gate = mulch
+            ),
             request = request,
-            gate = compost
+            gate = sunlight
         )
     }
 
@@ -203,6 +219,104 @@ class HumanBaselineCultivationStrategy(
         }
         if (effect != GameEffect.UPGRADE_DIE_FROM_HAND) return selected
         return main.withDecisionProbability(percent)
+    }
+
+    private fun applyMulchWillingness(
+        request: ChooseCultivationActionRequest,
+        legalChoices: List<CultivationAction>
+    ): CultivationRoundEffectGate {
+        val mulchChoices = legalChoices.filter { choice ->
+            val main = choice as? CultivationAction.Main ?: return@filter false
+            effectForMain(request, main.action) == GameEffect.MULCH_DIE_FROM_HAND
+        }
+        if (mulchChoices.isEmpty()) return CultivationRoundEffectGate(legalChoices)
+
+        val normalPower = policy.normalPurchasingPower(request.context)
+        val target = MulchPriority.preferredTarget(request.context, normalPower)
+        val percentage = target?.let { policy.mulchUsePercentage(request.context, it.value) } ?: 0
+        if (percentage <= 0) {
+            return CultivationRoundEffectGate(removeChoices(legalChoices, mulchChoices))
+        }
+        val accepted = strategyRandomizer.nextInt(100) < percentage
+        return CultivationRoundEffectGate(
+            legalChoices = if (accepted) legalChoices else removeChoices(legalChoices, mulchChoices),
+            acceptedPercentage = if (accepted) percentage else null
+        )
+    }
+
+    private fun attachMulchProbability(
+        selected: CultivationAction,
+        request: ChooseCultivationActionRequest,
+        gate: CultivationRoundEffectGate
+    ): CultivationAction =
+        attachRoundEffectProbability(
+            selected = selected,
+            request = request,
+            gate = gate,
+            effect = GameEffect.MULCH_DIE_FROM_HAND
+        )
+
+    private fun applySunlightWillingness(
+        request: ChooseCultivationActionRequest,
+        legalChoices: List<CultivationAction>
+    ): CultivationRoundEffectGate {
+        val sunlightChoices = legalChoices.filter { choice ->
+            val main = choice as? CultivationAction.Main ?: return@filter false
+            effectForMain(request, main.action) == GameEffect.RAISE_DIE_PLUS_3
+        }
+        if (sunlightChoices.isEmpty()) return CultivationRoundEffectGate(legalChoices)
+        if (!SunlightPriority.isWorthConsidering(request.context)) {
+            return CultivationRoundEffectGate(removeChoices(legalChoices, sunlightChoices))
+        }
+
+        val percentage = policy.sunlightUsePercentage(request.context)
+        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
+        return CultivationRoundEffectGate(
+            legalChoices = if (accepted) legalChoices else removeChoices(legalChoices, sunlightChoices),
+            acceptedPercentage = if (accepted) percentage else null
+        )
+    }
+
+    private fun attachSunlightProbability(
+        selected: CultivationAction,
+        request: ChooseCultivationActionRequest,
+        gate: CultivationRoundEffectGate
+    ): CultivationAction =
+        attachRoundEffectProbability(
+            selected = selected,
+            request = request,
+            gate = gate,
+            effect = GameEffect.RAISE_DIE_PLUS_3
+        )
+
+    private fun attachRoundEffectProbability(
+        selected: CultivationAction,
+        request: ChooseCultivationActionRequest,
+        gate: CultivationRoundEffectGate,
+        effect: GameEffect
+    ): CultivationAction {
+        val percent = gate.acceptedPercentage ?: return selected
+        val main = selected as? CultivationAction.Main ?: return selected
+        if (effectForMain(request, main.action) != effect) return selected
+        return main.withDecisionProbability(percent)
+    }
+
+    private fun effectForMain(
+        request: ChooseCultivationActionRequest,
+        action: CultivationMainAction
+    ): GameEffect? =
+        when (action) {
+            CultivationMainAction.RoundEffect1 -> request.roundCard.firstEffect.effect
+            CultivationMainAction.RoundEffect2 -> request.roundCard.secondEffect.effect
+            else -> null
+        }
+
+    private fun removeChoices(
+        legalChoices: List<CultivationAction>,
+        choicesToRemove: List<CultivationAction>
+    ): List<CultivationAction> {
+        val filtered = legalChoices.filterNot { it in choicesToRemove }
+        return filtered.ifEmpty { legalChoices }
     }
 
     private fun score(
@@ -336,6 +450,11 @@ class HumanBaselineCultivationStrategy(
         val legalChoices: List<CultivationAction>,
         val percentage: Int? = null,
         val accepted: Boolean? = null
+    )
+
+    private data class CultivationRoundEffectGate(
+        val legalChoices: List<CultivationAction>,
+        val acceptedPercentage: Int? = null
     )
 
 }

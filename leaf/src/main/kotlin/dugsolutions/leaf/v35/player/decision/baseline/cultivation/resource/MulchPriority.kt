@@ -8,8 +8,10 @@ import dugsolutions.leaf.v35.player.decision.context.DieView
 /**
  * Scores the best currently available die for the Mulch Round Effect.
  *
- * [targetScore] is also used by the downstream Effect strategy so the die that
- * makes Mulch attractive is the die Human Baseline subsequently stores.
+ * Human Baseline only voluntarily Mulches dice showing 1 through 4. The actual
+ * willingness percentage is supplied by HumanBaselinePolicy; this scorer keeps
+ * target choice aligned with the action-level gate and prevents a 5+ die from
+ * being selected after the player decided that Mulch was worth considering.
  */
 object MulchPriority {
     private const val NO_TARGET_SCORE = 10
@@ -20,6 +22,7 @@ object MulchPriority {
     private const val HIGH_SIDED_BONUS_DIVISOR = 4
     private const val HIGH_SIDED_BONUS_CAP = 5
     private const val POINTS_PER_BUY_TIER = 10
+    private const val NEVER_MULCH_SCORE = -1000
 
     fun score(
         context: DecisionContext,
@@ -27,20 +30,29 @@ object MulchPriority {
     ): PriorityScore {
         require(normalPurchasingPower >= 0) { "Normal purchasing power cannot be negative" }
 
-        val bestTarget = context.self.board.hand
-            .map { die -> targetScore(context, die, normalPurchasingPower) }
-            .maxByOrNull { it.total }
+        val bestTarget = preferredTarget(context, normalPurchasingPower)
             ?: return PriorityScore(NO_TARGET_SCORE)
-
         var score = PriorityScore(
             base = BASE_SCORE,
-            adjustments = bestTarget.adjustments
+            adjustments = targetScore(context, bestTarget, normalPurchasingPower).adjustments
         )
         val stored = context.self.board.mulch.size + context.self.board.pendingMulch.size
         if (stored < DESIRED_PREPARED_MULCH) {
             score = score.adjusted(BELOW_RESERVE_BONUS, "Fewer than two Mulched dice prepared")
         }
         return score
+    }
+
+    /** The target that the downstream Effect strategy should also prefer. */
+    fun preferredTarget(
+        context: DecisionContext,
+        normalPurchasingPower: Int
+    ): DieView? {
+        val eligible = context.self.board.hand.filter { it.value in 1..4 }
+        val lowestValue = eligible.minOfOrNull { it.value } ?: return null
+        return eligible
+            .filter { it.value == lowestValue }
+            .maxByOrNull { targetScore(context, it, normalPurchasingPower).total }
     }
 
     /** Target-specific Mulch value shared by action scoring and Effect choice. */
@@ -50,6 +62,10 @@ object MulchPriority {
         normalPurchasingPower: Int
     ): PriorityScore {
         require(normalPurchasingPower >= 0) { "Normal purchasing power cannot be negative" }
+        if (die.value >= 5) {
+            return PriorityScore(NEVER_MULCH_SCORE)
+                .adjusted(0, "Human Baseline never voluntarily Mulches a die showing 5+")
+        }
 
         var score = PriorityScore(0)
         if (die.value <= 2) {

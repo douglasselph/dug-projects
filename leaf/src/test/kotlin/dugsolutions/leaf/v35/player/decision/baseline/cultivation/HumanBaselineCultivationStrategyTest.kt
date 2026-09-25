@@ -257,50 +257,122 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
-        fun `Mulch favors storing a poor roll but can lose to Draw when the roll is already useful`() {
+        fun `Mulch value two uses the sixty percent boundary and carries probability metadata`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
             )
             val round = roundWithEffects(GameEffect.MULCH_DIE_FROM_HAND)
-            val poorRollContext = context(
-                supply = listOf(DieView(0, 12, 1)),
-                hand = listOf(DieView(0, 12, 1))
-            )
-            val usefulRollContext = context(
-                supply = listOf(DieView(0, 12, 1)),
-                hand = listOf(DieView(0, 12, 12))
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 12, 2))
             )
 
-            val poorRollChoice = choose(round = round, context = poorRollContext, choices = choices)
-            val usefulRollChoice = choose(round = round, context = usefulRollContext, choices = choices)
+            val accepts = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(59))
+            )
+            val declines = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(60))
+            )
 
-            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(poorRollChoice).action)
-            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(usefulRollChoice).action)
+            val acceptedMain = assertIs<CultivationAction.Main>(accepts)
+            assertEquals(CultivationMainAction.RoundEffect1, acceptedMain.action)
+            assertEquals(60, acceptedMain.decisionProbabilityPercent)
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
         }
 
         @Test
-        fun `Sunlight can beat Draw when its visible raise crosses a Buy threshold`() {
+        fun `Mulch never voluntarily stores a die showing five or more`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val chosen = choose(
+                round = roundWithEffects(GameEffect.MULCH_DIE_FROM_HAND),
+                context = context(
+                    supply = listOf(DieView(0, 4, 1)),
+                    hand = listOf(DieView(0, 20, 5))
+                ),
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
+
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
+        }
+
+        @Test
+        fun `Sunlight uses fifty percent boundary only when full plus three beats a D4 draw`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
             )
             val round = roundWithEffects(GameEffect.RAISE_DIE_PLUS_3)
-            val withoutThreshold = context(
-                supply = listOf(DieView(0, 10, 1)),
-                hand = listOf(DieView(0, 10, 6))
-            )
-            val withThreshold = context(
-                supply = listOf(DieView(0, 10, 1)),
-                hand = listOf(DieView(0, 10, 6)),
-                graftBed = mapOf(DieSides.D8 to 1)
+            val context = context(
+                supply = listOf(DieView(0, 4, 1)),
+                hand = listOf(DieView(0, 6, 1))
             )
 
-            val ordinaryChoice = choose(round = round, context = withoutThreshold, choices = choices)
-            val thresholdChoice = choose(round = round, context = withThreshold, choices = choices)
+            val accepts = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(49))
+            )
+            val declines = choose(
+                round = round,
+                context = context,
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(50))
+            )
 
-            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(ordinaryChoice).action)
-            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(thresholdChoice).action)
+            val acceptedMain = assertIs<CultivationAction.Main>(accepts)
+            assertEquals(CultivationMainAction.RoundEffect1, acceptedMain.action)
+            assertEquals(50, acceptedMain.decisionProbabilityPercent)
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
+        }
+
+        @Test
+        fun `Sunlight rejects capped plus two even when next draw is D4`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val chosen = choose(
+                round = roundWithEffects(GameEffect.RAISE_DIE_PLUS_3),
+                context = context(
+                    supply = listOf(DieView(0, 4, 1)),
+                    hand = listOf(DieView(0, 6, 4))
+                ),
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
+
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
+        }
+
+        @Test
+        fun `Sunlight is never chosen over a D6 next draw`() {
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val chosen = choose(
+                round = roundWithEffects(GameEffect.RAISE_DIE_PLUS_3),
+                context = context(
+                    supply = listOf(DieView(0, 6, 1)),
+                    hand = listOf(DieView(0, 20, 1))
+                ),
+                choices = choices,
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
+            )
+
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
         }
 
         @Test

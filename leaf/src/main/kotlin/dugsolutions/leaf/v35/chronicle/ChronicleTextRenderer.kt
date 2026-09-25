@@ -57,6 +57,7 @@ object ChronicleTextRenderer {
             val pendingOvergrowthEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
             val pendingMulchWispEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
             val pendingRoundEffects = mutableMapOf<PlayerId, GameEntry.EffectResolved>()
+            var pendingCompactRoll: GameEntry.DieRolled? = null
 
             fun appendBody(body: String) {
                 separatorAlreadyWritten = false
@@ -68,6 +69,22 @@ object ChronicleTextRenderer {
 
             fun appendEntry(entry: GameEntry) {
                 appendBody(renderBody(entry))
+            }
+
+            fun appendCompactRoll(
+                roll: GameEntry.DieRolled,
+                reward: GameEntry.RollReward? = null
+            ) {
+                val body = buildString {
+                    append("${player(roll.playerId)} ROLL D${roll.sides}=${roll.value} reason=${roll.reason}")
+                    reward?.let(::compactReward)?.let { append(" REWARD $it") }
+                }
+                appendBody(body)
+            }
+
+            fun flushPendingCompactRoll() {
+                pendingCompactRoll?.let(::appendCompactRoll)
+                pendingCompactRoll = null
             }
 
             fun flushPendingUpgrade(playerId: PlayerId) {
@@ -156,6 +173,7 @@ object ChronicleTextRenderer {
             entries.forEach { entry ->
                 if (entry is GameEntry.RoundRevealed) {
                     if (!detail) {
+                        flushPendingCompactRoll()
                         flushAllPendingRoundEffects()
                         flushAllPendingUpgrades()
                     }
@@ -245,6 +263,16 @@ object ChronicleTextRenderer {
                                 pendingUpgradeRolls[entry.playerId] = entry
                                 return@forEach
                             }
+                            flushPendingCompactRoll()
+                            if (
+                                entry.rewardPolicy == ChronicleRollRewardPolicy.NORMAL &&
+                                entry.value in 1..2
+                            ) {
+                                pendingCompactRoll = entry
+                            } else {
+                                appendCompactRoll(entry)
+                            }
+                            return@forEach
                         }
 
                         is GameEntry.RollReward -> {
@@ -252,6 +280,12 @@ object ChronicleTextRenderer {
                                 pendingUpgradeRewards
                                     .getOrPut(entry.playerId) { mutableListOf() }
                                     .add(entry)
+                                return@forEach
+                            }
+                            val roll = pendingCompactRoll
+                            if (roll != null && roll.playerId == entry.playerId) {
+                                appendCompactRoll(roll, entry)
+                                pendingCompactRoll = null
                                 return@forEach
                             }
                         }
@@ -286,8 +320,12 @@ object ChronicleTextRenderer {
                         }
 
                         is GameEntry.MainAction -> {
-                            // In compact Cultivation output, a Draw is already fully
-                            // represented by its ROLL line plus any REWARD line.
+                            // In compact output, the preceding EffectResolved line already
+                            // identifies a Plant activation. Cultivation Draw is likewise
+                            // fully represented by its ROLL line plus any inline REWARD.
+                            if (entry.action == MainActionKind.ACTIVATE_PLANT) {
+                                return@forEach
+                            }
                             if (
                                 entry.phase == ChroniclePhase.CULTIVATION &&
                                 entry.action == MainActionKind.DRAW
@@ -325,6 +363,7 @@ object ChronicleTextRenderer {
                         }
 
                         is GameEntry.RoundCompleted -> {
+                            flushPendingCompactRoll()
                             flushAllPendingRoundEffects()
                             flushAllPendingUpgrades()
                         }
@@ -354,6 +393,7 @@ object ChronicleTextRenderer {
             }
 
             if (!detail) {
+                flushPendingCompactRoll()
                 flushAllPendingRoundEffects()
                 flushAllPendingUpgrades()
             }
@@ -591,8 +631,13 @@ object ChronicleTextRenderer {
                 "${player(entry.playerId)} GRAFT ${entry.plantName}"
 
             is GameEntry.BattleOrder ->
-                "BATTLE ORDER ${entry.order.joinToString(" -> ") { player(it) }} " +
-                    "openingDice=${entry.initialDiceCount}"
+                "BATTLE ORDER " + entry.order.joinToString(" -> ") { playerId ->
+                    val high = entry.highestDice.firstOrNull { it.playerId == playerId }
+                    buildString {
+                        append(player(playerId))
+                        high?.let { append("(${it.sides}=${it.value})") }
+                    }
+                }
 
             is GameEntry.StrikeResolved ->
                 buildString {

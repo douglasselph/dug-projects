@@ -144,6 +144,24 @@ class HumanBaselinePolicyTest {
     }
 
     @Test
+    fun `default Sunlight willingness is fifty percent`() {
+        assertEquals(50, HumanBaselinePolicy().sunlightUsePercentage(context()))
+    }
+
+    @Test
+    fun `default Mulch willingness falls with showing value and stops at five`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(80, policy.mulchUsePercentage(context, 1))
+        assertEquals(60, policy.mulchUsePercentage(context, 2))
+        assertEquals(40, policy.mulchUsePercentage(context, 3))
+        assertEquals(20, policy.mulchUsePercentage(context, 4))
+        assertEquals(0, policy.mulchUsePercentage(context, 5))
+        assertEquals(0, policy.mulchUsePercentage(context, 6))
+    }
+
+    @Test
     fun `default Battle policy centralizes approved Stage A thresholds`() {
         val policy = HumanBaselinePolicy()
         val context = context().copy(phase = RoundCardType.BATTLE)

@@ -129,7 +129,8 @@ sealed interface GameEntry {
     data class BattleOrder(
         override val sequence: Long,
         val order: List<PlayerId>,
-        val initialDiceCount: Int
+        val initialDiceCount: Int,
+        val highestDice: List<BattleOrderHighDieSnapshot> = emptyList()
     ) : GameEntry
 
     data class StrikeResolved(

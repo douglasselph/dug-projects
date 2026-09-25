@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.game.round.battle
 
 import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.game.Game
@@ -13,6 +14,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -77,6 +79,15 @@ class BattleRoundTest {
         val cleanupIndex = entries.indexOfFirst {
             it is GameEntry.Cleanup && it.phase == ChroniclePhase.BATTLE
         }
+
+        val battleOrderEntry = entries.filterIsInstance<GameEntry.BattleOrder>().single()
+        assertEquals(
+            listOf(
+                BattleOrderHighDieSnapshot(p1.id, DieSides.D10, 9),
+                BattleOrderHighDieSnapshot(p2.id, DieSides.D10, 6)
+            ),
+            battleOrderEntry.highestDice
+        )
 
         assertTrue(drawIndex >= 0)
         assertTrue(drawIndex < placeIndex)

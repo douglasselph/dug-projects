@@ -109,7 +109,7 @@ class GameChronicle : Chronicle {
             )
             is Moment.Graft -> GameEntry.Graft(sequence, moment.playerId, moment.plantName)
             is Moment.BattleOrder -> GameEntry.BattleOrder(
-                sequence, moment.order.toList(), moment.initialDiceCount
+                sequence, moment.order.toList(), moment.initialDiceCount, moment.highestDice.toList()
             )
             is Moment.StrikeResolved -> GameEntry.StrikeResolved(
                 sequence,

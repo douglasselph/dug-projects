@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.chronicle
 
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderLeadDieSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BattleOrderHighDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
@@ -179,7 +180,7 @@ class ChronicleTextRendererTest {
         assertEquals("01.003  P1 REWARD BEE WISP_GAIN_GREEN", lines[2])
         assertEquals("01.004  P2 HAND D4=3 D6=4 D8=6", lines[3])
         assertEquals(
-            "01.005  P1 ROLL D6=4 reason=DRAW rewards=NORMAL",
+            "01.005  P1 ROLL D6=4 reason=DRAW",
             lines[4]
         )
         assertEquals(-1, lines.indexOfFirst { "DECISION" in it })
@@ -397,14 +398,15 @@ class ChronicleTextRendererTest {
                 phase = ChroniclePhase.CULTIVATION,
                 action = MainActionKind.ROUND_EFFECT_2,
                 actionNumber = 1,
-                battleStage = null
+                battleStage = null,
+                decisionProbabilityPercent = 80
             )
         )
 
         val lines = ChronicleTextRenderer.render(entries).lines()
 
         assertEquals(
-            "01.002  P1 ROUND EFFECT_2 MULCH_DIE_FROM_HAND D4=1",
+            "01.002  P1 ROUND EFFECT_2 MULCH_DIE_FROM_HAND (80%) D4=1",
             lines[1]
         )
         assertEquals(2, lines.count { it.isNotEmpty() })
@@ -568,14 +570,15 @@ class ChronicleTextRendererTest {
                 phase = ChroniclePhase.CULTIVATION,
                 action = MainActionKind.ROUND_EFFECT_1,
                 actionNumber = 1,
-                battleStage = null
+                battleStage = null,
+                decisionProbabilityPercent = 50
             )
         )
 
         val lines = ChronicleTextRenderer.render(entries).lines()
 
         assertEquals(
-            "01.002  P3 ROUND EFFECT_1 RAISE_DIE_PLUS_3 (D4=1->4)",
+            "01.002  P3 ROUND EFFECT_1 RAISE_DIE_PLUS_3 (50%) (D4=1->4)",
             lines[1]
         )
         assertEquals(2, lines.count { it.isNotEmpty() })
@@ -621,6 +624,115 @@ class ChronicleTextRendererTest {
         assertEquals("01.002  P2 Wisp_Mulch_Die D6=2 -> MULCH", lines[1])
         assertEquals(0, lines.count { "SUPPORT WISP" in it })
         assertEquals(2, lines.count { it.isNotEmpty() })
+    }
+
+    @Test
+    fun `compact Chronicle appends an immediate roll reward to the roll line`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.OpeningDrawCompleted(
+                sequence = 2,
+                phase = ChroniclePhase.CULTIVATION,
+                playerId = PlayerId(1),
+                count = 0
+            ),
+            GameEntry.DieRolled(
+                sequence = 3,
+                playerId = PlayerId(1),
+                sides = 8,
+                value = 2,
+                rewardPolicy = ChronicleRollRewardPolicy.NORMAL,
+                reason = RollReason.DRAW
+            ),
+            GameEntry.RollReward(
+                sequence = 4,
+                playerId = PlayerId(1),
+                kind = RollRewardKind.WISP_GAINED,
+                critter = null,
+                wispName = "Wisp_Gain_Green"
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals("01.003  P1 ROLL D8=2 reason=DRAW REWARD WISP_GAIN_GREEN", lines[2])
+        assertEquals(0, lines.count { "ROLL REWARD" in it })
+    }
+
+    @Test
+    fun `compact Chronicle suppresses redundant Plant Main Action line`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "first",
+                cardType = RoundCardType.CULTIVATION,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.EffectResolved(
+                sequence = 2,
+                playerId = PlayerId(3),
+                effect = GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
+                sourceKind = EffectSourceKind.PLANT,
+                sourceName = "Vine_09_01",
+                phase = ChroniclePhase.CULTIVATION
+            ),
+            GameEntry.MainAction(
+                sequence = 3,
+                playerId = PlayerId(3),
+                phase = ChroniclePhase.CULTIVATION,
+                action = MainActionKind.ACTIVATE_PLANT,
+                actionNumber = 1,
+                battleStage = null
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+        val detail = ChronicleTextRenderer.render(entries, detail = true).lines()
+
+        assertEquals(1, lines.count { "EFFECT PLANT Vine_09_01" in it })
+        assertEquals(0, lines.count { "MAIN ACTIVATE_PLANT" in it })
+        assertEquals(1, detail.count { "MAIN ACTIVATE_PLANT #1" in it })
+    }
+
+    @Test
+    fun `Battle Order shows each players highest opening die and omits opening count`() {
+        val entries = listOf(
+            GameEntry.RoundRevealed(
+                sequence = 1,
+                roundNumber = 1,
+                cardName = "battle",
+                cardType = RoundCardType.BATTLE,
+                firstEffect = GameEffect.GAIN_ONE_VP,
+                secondEffect = GameEffect.GAIN_ONE_VP
+            ),
+            GameEntry.BattleOrder(
+                sequence = 2,
+                order = listOf(PlayerId(1), PlayerId(4), PlayerId(2), PlayerId(3)),
+                initialDiceCount = 12,
+                highestDice = listOf(
+                    BattleOrderHighDieSnapshot(PlayerId(1), DieSides.D8, 6),
+                    BattleOrderHighDieSnapshot(PlayerId(4), DieSides.D12, 5),
+                    BattleOrderHighDieSnapshot(PlayerId(2), DieSides.D6, 5),
+                    BattleOrderHighDieSnapshot(PlayerId(3), DieSides.D4, 3)
+                )
+            )
+        )
+
+        val lines = ChronicleTextRenderer.render(entries).lines()
+
+        assertEquals(
+            "01.002  BATTLE ORDER P1(D8=6) -> P4(D12=5) -> P2(D6=5) -> P3(D4=3)",
+            lines[1]
+        )
     }
 
     @Test

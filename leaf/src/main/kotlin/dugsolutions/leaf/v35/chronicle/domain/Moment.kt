@@ -115,7 +115,8 @@ sealed interface Moment {
 
     data class BattleOrder(
         val order: List<PlayerId>,
-        val initialDiceCount: Int
+        val initialDiceCount: Int,
+        val highestDice: List<BattleOrderHighDieSnapshot> = emptyList()
     ) : Moment
 
     data class StrikeResolved(
@@ -219,6 +220,12 @@ enum class UpgradeDestination { HAND, DISCARD }
 enum class TrashDestination { OUT_OF_GAME }
 
 data class BuyOrderLeadDieSnapshot(
+    val sides: DieSides,
+    val value: Int
+)
+
+data class BattleOrderHighDieSnapshot(
+    val playerId: PlayerId,
     val sides: DieSides,
     val value: Int
 )

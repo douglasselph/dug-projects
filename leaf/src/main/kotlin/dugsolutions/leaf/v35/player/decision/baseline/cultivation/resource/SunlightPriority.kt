@@ -7,10 +7,13 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
 
 /**
- * Scores the best immediate +3 Raise opportunity offered by Sunlight.
+ * Scores the immediate +3 Raise offered by Sunlight.
  *
- * [targetScore] is shared with the later Effect decision so Sunlight is applied
- * to the same kind of die that justified selecting the Round Effect.
+ * For ordinary Human Baseline play, Sunlight is only worth considering when a
+ * full +3 on a Hand die beats the expected value of drawing the next die. With
+ * the current dice ladder that means the next draw must be a D4 and the chosen
+ * target must actually gain all 3 (so D6=4 -> 6, a gain of only 2, never
+ * qualifies). The 50% willingness gate itself lives in HumanBaselinePolicy.
  */
 object SunlightPriority {
     private const val BASE_SCORE = 35
@@ -24,15 +27,35 @@ object SunlightPriority {
     ): PriorityScore {
         require(normalPurchasingPower >= 0) { "Normal purchasing power cannot be negative" }
 
-        val bestTarget = context.self.board.hand
-            .map { die -> targetScore(context, die, normalPurchasingPower) }
-            .maxByOrNull { it.total }
-            ?: PriorityScore(0)
+        val bestTarget = preferredTarget(context)
+            ?: return PriorityScore(0)
 
         return PriorityScore(
             base = BASE_SCORE,
-            adjustments = bestTarget.adjustments
+            adjustments = targetScore(context, bestTarget, normalPurchasingPower).adjustments
         )
+    }
+
+    /** True only when Sunlight's best actual gain beats the expected next draw. */
+    fun isWorthConsidering(context: DecisionContext): Boolean {
+        val nextSides = context.self.board.supply.minOfOrNull { it.sides }
+            ?: context.self.board.discard.minOfOrNull { it.sides }
+            ?: return false
+        val expectedDraw = DieValueHeuristics.expectedRoll(nextSides)
+        val bestGain = context.self.board.hand.maxOfOrNull {
+            DieValueHeuristics.actualRaiseGain(it, RAISE_AMOUNT)
+        } ?: return false
+        return bestGain > expectedDraw
+    }
+
+    /** Prefer a target receiving the largest actual raise; ties use the normal target score. */
+    fun preferredTarget(context: DecisionContext): DieView? {
+        val bestGain = context.self.board.hand.maxOfOrNull {
+            DieValueHeuristics.actualRaiseGain(it, RAISE_AMOUNT)
+        } ?: return null
+        return context.self.board.hand
+            .filter { DieValueHeuristics.actualRaiseGain(it, RAISE_AMOUNT) == bestGain }
+            .maxByOrNull { it.sides }
     }
 
     /** Target-specific Sunlight value shared by action scoring and Effect choice. */
@@ -44,6 +67,13 @@ object SunlightPriority {
         require(normalPurchasingPower >= 0) { "Normal purchasing power cannot be negative" }
 
         val gain = DieValueHeuristics.actualRaiseGain(die, RAISE_AMOUNT)
+        val bestGain = context.self.board.hand.maxOfOrNull {
+            DieValueHeuristics.actualRaiseGain(it, RAISE_AMOUNT)
+        } ?: gain
+        if (gain < bestGain) {
+            return PriorityScore(-1000)
+                .adjusted(0, "Prefer the die receiving the full visible Sunlight gain")
+        }
         return PriorityScore(0)
             .adjusted(gain * POINTS_PER_ACTUAL_GAIN, "Actual +3 value gain")
             .adjusted(
