@@ -49,14 +49,22 @@ The immediate questions are practical design questions:
 -   Are multiple development paths viable, or does one low-complexity
     strategy win too often?
 
-The first concrete Milestone-3 experiment is the **Six-Wisp Opening
-Stress Test**. In a four-player Human Baseline game, one designated
-player has the three dice from the opening Draw 3 forced to **2** in
-each of the first two Cultivation rounds. This creates six early
-Wisp-producing rolls through the normal Roll Reward path. The rest of
-the game then proceeds normally. The initial study will compare **2,000
-intervention games** with matched controls, rotating the affected-player
-role across all four seats.
+Before interpreting an intervention, Milestone 3 first **calibrates the ordinary
+four-player Human Baseline** for the exact selected nine-card Grove. A small
+fixed-seed sanity cohort checks reproducibility and outcome/development
+variation; a larger manual calibration reports cumulative seat win share at
+increasing sample sizes so we can discover how many games are needed before the
+four symmetric seats settle acceptably near the 25% reference. The calibration
+is parameterized by both game count/checkpoints and selected Plant-card setup.
+
+The first concrete intervention experiment is the **Six-Wisp Opening Stress
+Test**. In a four-player Human Baseline game, one designated player has the
+three dice from the opening Draw 3 forced to **2** in each of the first two
+Cultivation rounds. This creates six early Wisp-producing rolls through the
+normal Roll Reward path. The intervention will be compared with matched
+ordinary Human Baseline controls using the calibrated Grove, seed schedule, and
+sample-size evidence rather than assuming in advance that 2,000 is a magic
+number.
 
 The experiment architecture must keep one game's detailed typed
 Chronicle only long enough to produce a compact per-game **summary

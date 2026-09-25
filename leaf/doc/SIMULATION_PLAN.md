@@ -321,6 +321,125 @@ those values. Add typed instrumentation when a concrete experiment requires
 them. Likewise, round/checkpoint snapshots should be added when the comeback
 study is implemented rather than retained speculatively in every summary.
 
+### 5.2 Baseline calibration before intervention experiments
+
+Before interpreting the Six-Wisp intervention, establish what an ordinary
+four-player Human Baseline batch looks like for the **same selected nine-card
+Grove setup**. This is a calibration study, not another attempt to make Human
+Baseline stronger.
+
+There are two distinct checks and they should not be conflated.
+
+#### Small-run randomness sanity
+
+A short fixed-seed real-engine scenario should demonstrate that randomness is
+actually reaching complete-game outcomes. Across a small cohort (for example,
+four or more complete games), record:
+
+- the winner(s) and win share by physical seat;
+- each player's final Plant Creature signature;
+- each player's final owned-dice signature.
+
+The Plant signature should preserve enough information to distinguish both card
+composition and topology (stable Plant-card name plus final Creature position).
+The dice signature should be the count of each owned die size across all owned
+zones, for example `D4=2,D6=3,D8=1,D10=0,D12=1,D20=0`. These signatures belong
+in compact summary/diagnostic data, not retained `Game` objects.
+
+**Do not require four games to produce four different winners.** Randomness does
+not imply that outcome, and such an assertion would be a statistically invalid
+and brittle integration test. Likewise, two players can legitimately finish
+with the same compact shape. The small-run check should detect a degenerate
+randomization failure (for example, an entire fixed-seed cohort reproducing the
+same complete outcome/signatures) while also proving exact reproducibility when
+the same seeds are rerun. The detailed diversity values are diagnostic output
+for human inspection, not arbitrary pass/fail balance thresholds.
+
+#### Large-run seat-balance calibration
+
+The more important baseline question is:
+
+> **As the number of ordinary Human Baseline games grows, how quickly do the
+> four physical seats approach equal win share for this Grove setup?**
+
+Use **win share**, not only winner count, because shared winners must divide one
+win rather than each count as a full win. With four symmetric Human Baseline
+players the neutral reference is 25% win share per seat.
+
+Create a reusable calibration entry point conceptually like:
+
+``` text
+BaselineCalibrationSpec(
+    selectedPlantCards = <exact nine-card setup>,
+    games = N,
+    baseSeed = ...,
+    strategyBaseSeed = ...,
+    checkpoints = [...]
+)
+```
+
+The selected Plant cards and game count are first-class arguments. The report
+must print a stable fingerprint/list of the exact nine-card setup so results
+from different Groves cannot be accidentally compared as if they were the same
+experiment.
+
+For each cumulative checkpoint, report at least:
+
+``` text
+Games   Seat 1   Seat 2   Seat 3   Seat 4   Max deviation from 25%
+  100     ...      ...      ...      ...              ...
+  250     ...      ...      ...      ...              ...
+  500     ...      ...      ...      ...              ...
+ 1000     ...      ...      ...      ...              ...
+ 2000     ...      ...      ...      ...              ...
+```
+
+Checkpoints must be **prefixes of one deterministic run**, not fresh unrelated
+batches. That makes convergence interpretable: the 500-game row contains the
+first 500 games represented by the 1,000-game row. Include final VP by seat and
+tie frequency as secondary diagnostics.
+
+Initially, do **not** bake a magic fairness tolerance into a regression test. A
+25% expectation is a population hypothesis; finite samples naturally wander.
+The calibration report should show the absolute percentage-point deviation of
+each seat from 25% and the maximum deviation. A binomial-style 95% sampling
+reference around 25% may be printed as context, but it must be labelled a
+reference rather than a proof because fractional win shares from ties are not
+a simple binomial variable.
+
+After observing several Grove setups, we can define an empirical operational
+criterion such as "within X percentage points for K consecutive cumulative
+checkpoints." Until then, the purpose is to **discover** the sample size at
+which results become acceptably stable rather than choose that number in
+advance.
+
+#### Test-layer boundary
+
+Keep fast deterministic correctness checks in `integrationTest` /
+`simulationTest`: reproducibility, seed sensitivity, signature extraction,
+checkpoint arithmetic, and exact aggregation. Do **not** make a 500- or
+2,000-game statistical fairness run part of the normal integration regression.
+That would make correctness testing slow and would confuse a game-balance
+observation with a software invariant.
+
+Provide a dedicated baseline-calibration runner/task for the long study. The
+user can run it manually for 250, 500, 1,000, 2,000, or a larger number of
+games and inspect the cumulative report. If runtime proves cheap, the runner
+may accept a checkpoint sequence and execute once through the largest value.
+
+#### Relationship to Six-Wisp
+
+The Six-Wisp experiment should use the same Grove setup, seed schedule, and
+seat accounting as its calibrated ordinary Human Baseline control. Prefer
+matched control/intervention pairs. The calibration answers how much ordinary
+seat noise remains at a given sample size; the intervention experiment then
+asks whether the affected-role delta is materially larger than that ordinary
+variation.
+
+Repeat baseline calibration for each materially different nine-card Grove setup
+used for exploit research. Do not assume that a sample size that stabilizes one
+Grove automatically stabilizes every Grove.
+
 ### 5.2 First experiment: Six-Wisp Opening Stress Test
 
 This is the first priority because it answers an immediate rules
@@ -538,22 +657,29 @@ Implement the research harness in this order:
         first-two-Cultivation opening intervention;
     -   prove six forced 2s occur only where intended and rewards use
         the normal path.
-5.  **M3-E --- Six-Wisp batch experiment**
+5.  **M3-D2 --- Human Baseline calibration harness**
+    -   extend compact summaries with Plant Creature and owned-dice signatures needed for diversity diagnostics;
+    -   add a reusable baseline calibration spec accepting the exact selected nine-card Plant setup and game count/checkpoints;
+    -   add small deterministic sanity coverage for reproducibility, seed sensitivity, signatures, and aggregation;
+    -   add a long-run manual calibration entry point that reports cumulative seat win share and deviation from 25%;
+    -   determine empirically how many games are needed for acceptably stable seat results for each Grove setup;
+    -   keep statistical balance thresholds out of the normal regression suite until evidence supports a durable criterion.
+6.  **M3-E --- Six-Wisp batch experiment**
     -   2,000 intervention games + 2,000 matched controls;
     -   500 affected-role games per seat;
     -   Human Baseline for all players;
     -   aggregate/report from compact summaries.
-6.  **M3-F --- interpret and diagnose**
+7.  **M3-F --- interpret and diagnose**
     -   identify effect size and seat consistency;
     -   rerun representative seeds with full Chronicle;
     -   decide whether a dose-response study is warranted;
     -   do not change game rules merely because the intervention helps.
-7.  **M3-G --- first strategy exploit experiment**
+8.  **M3-G --- first strategy exploit experiment**
     -   implement the minimal-Plant/high-dice strategy modifier;
     -   matched Human Baseline control;
     -   rotate seats and report the same core development/outcome
         metrics.
-8.  **M3-H --- card-break experiment family**
+9.  **M3-H --- card-break experiment family**
     -   use the existing card-focus foundation;
     -   add remove/prioritize variants as actual questions require.
 

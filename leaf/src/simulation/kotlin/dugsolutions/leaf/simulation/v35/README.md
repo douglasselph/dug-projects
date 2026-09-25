@@ -91,3 +91,24 @@ include focused-vs-baseline win share and VP deltas, acquisition frequency,
 copies purchased/surviving, target-card activations, target Plant VP, Battle
 Strike VP, and a per-seat breakdown. The result is intentionally aggregate data
 rather than retained Games/Chronicles so high-volume batches stay lightweight.
+
+## Baseline calibration before exploit experiments
+
+Before interpreting an intervention such as Six-Wisp, run the same exact
+nine-card Grove with four ordinary Human Baseline players and establish the
+ordinary seat/noise behavior. The calibration API should accept the selected
+Plant-card list and requested game count/checkpoints as explicit inputs.
+
+Keep two layers separate:
+
+- a small deterministic regression proves reproducibility, seed sensitivity,
+  compact Plant/dice signatures, and aggregation correctness;
+- a manual long-run calibration reports cumulative seat win share at increasing
+  sample sizes (for example 100, 250, 500, 1,000, 2,000) so the designer can
+  see when the four seats settle near the neutral 25% reference.
+
+Do not assert that four games must have four different winners, and do not put a
+large statistical fairness run in normal `integrationTest`. Both would confuse
+random variation with a software invariant. Long-run calibration is research
+output. Use the same Grove and matched seed schedule for the later intervention
+so its delta can be compared with ordinary baseline variation.
