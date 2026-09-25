@@ -102,13 +102,61 @@ Shared valuation introduced by earlier certified areas should be reused where it
 
 The player-target policy was the outstanding E-A design judgment. The approved visible-development rule above resolves it. The remaining E-C work is implementation/test alignment under already established Human Baseline principles; if source inspection exposes a genuinely new game-design choice rather than an implementation detail, stop and return it to the designer rather than choosing silently.
 
+## E-C implementation alignment
+
+E-C is complete in five bounded families. It aligned visible-development player targeting, shared Critter reserves, Plant preservation/current-use semantics, and non-Battle O Edelweiss behavior, while adding readable contracts for the remaining resource-source, die/set/pair, Wisp-set, die-size, and qualitative choices. Existing certified Battle analyzers were retained rather than reopened.
+
+## E-D real-engine integration audit
+
+E-D found no additional integration scenario that would add meaningful seam coverage. The production effect dispatcher and real card/round action graph are already protected by `EffectFamilySanityTest`, `CardEffectContractTest`, the B15 Battle integrations, and the earlier certified-area integrations. The E-C changes are strategy-selection policy behind the same centralized `EffectStrategy` request/legality boundary, so their detailed choice contracts belong in the focused strategy tests added during E-C.
+
+The one newly changed general hook with a notably different policy, `choosePlayer`, is currently reachable only through the retired compatibility effect `STEAL_RANDOM_WISP_FROM_ONE_OPPONENT`; the active CSV-backed catalog contains no current effect that calls it. Creating a bespoke integration scenario solely for that retired effect would not prove a current real-card engine seam and would manufacture coverage rather than protect live gameplay. Its visible-development behavior is therefore protected at the strategy contract level until an active effect uses the hook.
+
+Likewise, O Edelweiss and recursive Plant-effect execution already have real-engine effect-family coverage, while B15 protects their Battle-specific Human Baseline path. E-C's non-Battle choice semantics are adequately isolated by the new behavior-contract tests and do not require another duplicate round scenario.
+
+**E-D result: no new integration code is warranted.**
+
 ## Remaining checkpoints
 
-- **E-C** — bounded implementation + readable behavior-contract tests for the identified gaps, grouped by coherent choice families.
-- **E-D** — representative real-engine integration only where a meaningful seam is not already protected.
-- **E-E** — explicit 20-for-20 hook audit: every hook has contract, implementation disposition, and adequate evidence.
+- **E-E — COMPLETE** — explicit 20-for-20 hook audit: all 20 hooks have an approved contract, matching implementation disposition, and adequate evidence.
 - **E-F** — documentation/status consolidation.
 - **E-G** — full `test integrationTest simulationCheck` regression.
 - **E-H** — certify Effect Choices and close the eighth major Human Baseline area.
 
 Effect Choices remains **NOT CERTIFIED** until E-H.
+
+## E-E explicit 20-for-20 hook audit
+
+E-E audited every `EffectStrategy` hook against the approved E-B contract, the post-E-C implementation, and existing focused/integration evidence. The audit found **20 of 20 hooks adequately protected** and no new implementation or integration gap. Certified Battle behavior remains evidence for Battle-only/shared branches rather than being duplicated here.
+
+| # | Hook | Implementation disposition | Primary evidence | E-E verdict |
+| --- | --- | --- | --- | --- |
+| 1 | `chooseDie` | Existing phase/effect-aware scoring retained; Cultivation special cases and certified Battle analyzers preserved. | `HumanBaselineEffectStrategyTest`, `HumanBaselineEffectStrategyDiceChoiceAlignmentTest`, Battle alignment/end-to-end tests | PASS |
+| 2 | `chooseBattleDie` | Existing current-Battle expected reroll swing, row need, and disruption scoring retained. | Certified B15 Battle effect/mechanism audit and Battle effect-family coverage | PASS |
+| 3 | `chooseRootWellBattle` | Certified complete current-Battle realization retained. | `HumanBaselineEffectStrategyRootWellBattleAlignmentTest` | PASS |
+| 4 | `chooseCrossPlayerDieSwap` | Certified current-Battle Pollen Theft swap analysis retained. | `HumanBaselineEffectStrategyBattleSpecialTest`, `BattlePollenTheftEndToEndAlignmentTest` | PASS |
+| 5 | `chooseOptionalDie` | Immediate effect-specific value with explicit decline; no future planning. | `HumanBaselineEffectStrategyDiceChoiceAlignmentTest`; certified Battle/Wispquake coverage | PASS |
+| 6 | `chooseDice` | Complete legal subset scoring retained. | `HumanBaselineEffectStrategyTest`, `HumanBaselineEffectStrategyDiceChoiceAlignmentTest` | PASS |
+| 7 | `chooseDiePair` | Complete legal pair scoring retained, including target-side constraints. | `HumanBaselineEffectStrategyDiceChoiceAlignmentTest`; Battle pair alignment tests | PASS |
+| 8 | `chooseOptionalDiePair` | Complete pair compared with decline; current reach is Battle-protected. | `HumanBaselineEffectStrategyBattleSwapPairAlignmentTest` and certified B15 Tulip coverage | PASS |
+| 9 | `chooseCritterAndDie` | Immediate +5 value retained; scarcity now uses shared 2-Bee/1-Worm protected reserves; Battle tactical realization preserved. | `HumanBaselineEffectStrategyResourceChoiceTest`, `HumanBaselineEffectStrategyBattleOwnDieAlignmentTest` | PASS |
+| 10 | `choosePetalToDie4` | Existing phase-aware Gain D4 versus Trash/Raise-All comparison retained. | `HumanBaselineEffectStrategyTest`, `HumanBaselineEffectStrategyPetalToDie4BattleAlignmentTest` | PASS |
+| 11 | `chooseBeeSource` | General steal-over-Grove preference protected; certified Battle tactical denial preserved. | `HumanBaselineEffectStrategyResourceChoiceTest`, `HumanBaselineEffectStrategyBeeSourceAlignmentTest` | PASS |
+| 12 | `chooseButterflyTarget` | Simple visible opponent-face-up Butterfly preference protected. | `HumanBaselineEffectStrategyResourceChoiceTest` | PASS |
+| 13 | `chooseOptionalPlant` | Face-down activation uses current-phase usefulness; face-up loss uses preservation value; decline remains legal. | `HumanBaselineEffectStrategyPlantAlignmentTest` | PASS |
+| 14 | `chooseOpponentPlantWound` | General permanent loss reuses `PlantPreservationEvaluator`; certified Battle immediate-opportunity targeting preserved. | `HumanBaselineEffectStrategyPlantAlignmentTest` plus certified B15 Plant-target coverage | PASS |
+| 15 | `choosePlantEffect` | General current-phase Plant usefulness retained; certified Battle current-opportunity analysis preserved. | `HumanBaselineEffectStrategyPlantAlignmentTest` plus certified B15 Vine-and-Again coverage | PASS |
+| 16 | `chooseOEdelweiss` | Non-Battle Play/Flip/Done uses immediate Plant semantics; certified Battle analyzer unchanged. | `HumanBaselineEffectStrategySpecialChoiceAlignmentTest`, `HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest` | PASS |
+| 17 | `chooseWispsToKeep` | Exact legal keep-set enumeration and complete-set scoring retained. | `HumanBaselineEffectStrategySpecialChoiceAlignmentTest`; Wisp Reckoning engine coverage | PASS |
+| 18 | `chooseDieSize` | Largest legal die remains the deliberately simple baseline. | `HumanBaselineEffectStrategyGeneralChoiceTest` | PASS |
+| 19 | `choosePlayer` | E-C1 replaced VP/Wisp targeting with approved visible development: grafted Plant cost plus dice power above starting 30. Current caller is retired compatibility effect only. | `HumanBaselineEffectStrategyGeneralChoiceTest`; E-D reachability audit | PASS |
+| 20 | `chooseStrikeRow` | Certified effect-specific Battle analyzers and row-need fallback retained. | `HumanBaselineEffectStrategyStrikeRowAlignmentTest`, `HumanBaselineEffectStrategyBattleSpecialTest`, `BattleImmediateStrikeResolveEndToEndAlignmentTest` | PASS |
+
+### E-E conclusion
+
+- **20 / 20 Effect Choices hooks audited.**
+- **20 / 20 have an approved Human Baseline contract.**
+- **20 / 20 have an implementation disposition matching that contract.**
+- **20 / 20 have adequate focused and/or previously certified integration evidence.**
+- No new production change, behavior-contract test, or integration scenario is warranted from the hook audit.
+- Effect Choices is **not yet certified**; E-F documentation consolidation, E-G full regression, and E-H certification remain.
