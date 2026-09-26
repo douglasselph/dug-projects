@@ -14,6 +14,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -242,6 +243,58 @@ class HumanBaselinePolicyTest {
         assertTrue(cheapestPercentage in 1.9..2.1)
         assertTrue(weights.zipWithNext().all { (a, b) -> b > a })
         assertEquals(5, policy.buyCheaperPlantMinimumRemainingDice(context()))
+    }
+
+    @Test
+    fun `one Bee die upgrade chance rises exponentially with die tier`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(4, policy.buyBeeUpgradeDiePercentage(context, DieSides.D4, 1))
+        assertEquals(11, policy.buyBeeUpgradeDiePercentage(context, DieSides.D6, 1))
+        assertEquals(26, policy.buyBeeUpgradeDiePercentage(context, DieSides.D8, 1))
+        assertEquals(50, policy.buyBeeUpgradeDiePercentage(context, DieSides.D10, 1))
+        assertEquals(0, policy.buyBeeUpgradeDiePercentage(context, DieSides.D12, 1))
+        assertEquals(0, policy.buyBeeUpgradeDiePercentage(context, DieSides.D20, 1))
+    }
+
+    @Test
+    fun `additional Bees multiply Buy upgrade odds while low die use stays rarer`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(14, policy.buyBeeUpgradeDiePercentage(context, DieSides.D4, 3))
+        assertEquals(32, policy.buyBeeUpgradeDiePercentage(context, DieSides.D6, 3))
+        assertEquals(58, policy.buyBeeUpgradeDiePercentage(context, DieSides.D8, 3))
+        assertEquals(80, policy.buyBeeUpgradeDiePercentage(context, DieSides.D10, 3))
+
+        assertEquals(20, policy.buyBeeUpgradePlantPercentage(context, 1))
+        assertEquals(33, policy.buyBeeUpgradePlantPercentage(context, 2))
+        assertEquals(50, policy.buyBeeUpgradePlantPercentage(context, 3))
+    }
+
+    @Test
+    fun `Worm Buy bridge begins at two Worms and grows conservatively`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(0, policy.buyWormBridgePercentage(context, 1))
+        assertEquals(5, policy.buyWormBridgePercentage(context, 2))
+        assertEquals(10, policy.buyWormBridgePercentage(context, 3))
+        assertEquals(17, policy.buyWormBridgePercentage(context, 4))
+        assertEquals(30, policy.buyWormBridgePercentage(context, 5))
+    }
+
+    @Test
+    fun `Buy overpay concern grows exponentially after one`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        assertEquals(0, policy.buyOverpayPenalty(context, 0))
+        assertEquals(1, policy.buyOverpayPenalty(context, 1))
+        assertEquals(3, policy.buyOverpayPenalty(context, 2))
+        assertEquals(7, policy.buyOverpayPenalty(context, 3))
+        assertEquals(15, policy.buyOverpayPenalty(context, 4))
     }
 
     @Test

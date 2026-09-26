@@ -80,7 +80,8 @@ class BuyCoordinator(
                     ChoosePurchaseRequest(
                         options = legalItems,
                         context = DecisionContextFactory.create(game, player),
-                        purchasesMadeThisBuy = purchasesMadeThisBuy
+                        purchasesMadeThisBuy = purchasesMadeThisBuy,
+                        marketOptions = marketItems(game)
                     )
                 )
                 if (choice == BuyChoice.Done) break
@@ -157,6 +158,15 @@ class BuyCoordinator(
             order = order.map { it.id },
             purchases = purchases.toList()
         )
+    }
+
+
+    private fun marketItems(game: Game): List<BuyItem> = buildList {
+        game.grove.plantMarket.availableStacks
+            .mapTo(this) { BuyItem.Plant(it.card) }
+        DieSides.entries
+            .filter { game.grove.graftBed.has(it) }
+            .mapTo(this) { BuyItem.Die(it) }
     }
 
     private fun legalItems(game: Game, player: Player): List<BuyItem> {

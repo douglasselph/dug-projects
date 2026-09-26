@@ -90,6 +90,13 @@ The current shared defaults are:
 | `DEFAULT_LOW_PLANT_FLOOR` | 2 | state-based Plant-count safety floor; applies regardless of round/Battle history |
 | `DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD` | 15 | Buy balance treats one grafted Plant as 15 die-side development points |
 | `DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT` | 3.0 | a 3-point Buy imbalance gives the weaker category an 85% preference |
+| `DEFAULT_BUY_PLANT_COST_TIER_EXPONENTIAL_BASE` | 1.89 | raw Plant-tier preference is roughly 2/4/7/13/25/48% across six standard tiers |
+| `DEFAULT_BUY_BEE_ODDS_MULTIPLIER_PER_ADDITIONAL_BEE` | 2.0 | each additional owned Bee doubles Buy tier-step odds |
+| `DEFAULT_BUY_DIE_BEE_D4_BASE_ODDS` | `1/24` | one Bee gives D4→D6 about 4% starting probability |
+| `DEFAULT_BUY_DIE_BEE_ODDS_GROWTH_PER_TIER` | ~2.8845 | each higher die tier increases one-Bee upgrade odds, reaching 50% at D10→D12 |
+| `DEFAULT_BUY_PLANT_BEE_BASE_ODDS` | 0.25 | one Bee gives an eligible Plant bridge 20% probability |
+| `DEFAULT_BUY_WORM_BASE_ODDS_AT_TWO_WORMS` | `1/19` | two Worms give an exact one-point Buy bridge about 5% probability |
+| `DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM` | 2.0 | each Worm beyond the second doubles Worm-bridge odds |
 | `DEFAULT_BATTLE_TRANSITION_SCALE` | 100 | spacing between named Battle Swing transition tiers |
 | `DEFAULT_BATTLE_CLOSE_MARGIN` | 4 | Live-Threat margin defining a close Battle contest |
 | `DEFAULT_BATTLE_SECURED_LEAD` | 10 | Live-Threat lead treated as secured-for-now |
@@ -173,7 +180,9 @@ Worm value above protected Worm reserve
 
 Protected Critters are therefore not casually counted as ordinary purchasing power.
 
-Buy no longer has a special protected-Critter exception for D20 or cost-17 Flower. Premium prices compete through the same category, Plant-tier, affordability, and payment rules as other purchases.
+The Buy planner makes the reserve deliberately soft in two narrow ways. First, a Bee may be spent from inside the normal two-Bee reserve when a shared probability gate approves a one-tier purchase bridge. This is not generic extra purchasing power: it is a specific D4→D6 / D6→D8 / D8→D10 / D10→D12 bridge, or a Plant bridge where +2 reaches the next legal standard Plant price tier. Second, if at least two Worms are owned, a much lower-probability Worm gate may spend one Worm when the desired purchase is exactly one point above the dice-group budget. One shared Bee willingness roll and one shared Worm willingness roll are reused across every candidate grouping in the same planning pass.
+
+Buy still has no special protected-Critter exception for D20 or cost-17 Flower. Premium prices compete through the same development, two-purchase grouping, and overpay rules as other purchases.
 
 B2 passes this value into Cultivation Plant activation scoring and the Compost, Mulch, and Sunlight Round Effect scorers. B6 also injects the same policy into `HumanBaselineEffectStrategy`, so downstream Cultivation die-target choices use the same reserve-aware Buy-threshold assumptions. Their reasoning therefore agrees with certified Buy about which Critters are normally spendable.
 

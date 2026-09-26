@@ -89,6 +89,18 @@ open class HumanBaselinePolicy(
         DEFAULT_BUY_PLANT_COST_TIER_EXPONENTIAL_BASE,
     private val buyCheaperPlantMinimumRemainingDiceValue: Int =
         DEFAULT_BUY_CHEAPER_PLANT_MINIMUM_REMAINING_DICE,
+    private val buyBeeOddsMultiplierPerAdditionalBeeValue: Double =
+        DEFAULT_BUY_BEE_ODDS_MULTIPLIER_PER_ADDITIONAL_BEE,
+    private val buyDieBeeD4BaseOddsValue: Double =
+        DEFAULT_BUY_DIE_BEE_D4_BASE_ODDS,
+    private val buyDieBeeOddsGrowthPerTierValue: Double =
+        DEFAULT_BUY_DIE_BEE_ODDS_GROWTH_PER_TIER,
+    private val buyPlantBeeBaseOddsValue: Double =
+        DEFAULT_BUY_PLANT_BEE_BASE_ODDS,
+    private val buyWormBaseOddsAtTwoWormsValue: Double =
+        DEFAULT_BUY_WORM_BASE_ODDS_AT_TWO_WORMS,
+    private val buyWormOddsMultiplierPerAdditionalWormValue: Double =
+        DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -162,6 +174,24 @@ open class HumanBaselinePolicy(
         }
         require(buyCheaperPlantMinimumRemainingDiceValue >= 0) {
             "Buy cheaper-Plant remaining-dice minimum cannot be negative"
+        }
+        require(buyBeeOddsMultiplierPerAdditionalBeeValue > 0.0) {
+            "Buy Bee odds multiplier must be positive"
+        }
+        require(buyDieBeeD4BaseOddsValue >= 0.0) {
+            "Buy D4 Bee-upgrade base odds cannot be negative"
+        }
+        require(buyDieBeeOddsGrowthPerTierValue > 0.0) {
+            "Buy die Bee-upgrade odds growth must be positive"
+        }
+        require(buyPlantBeeBaseOddsValue >= 0.0) {
+            "Buy Plant Bee-upgrade base odds cannot be negative"
+        }
+        require(buyWormBaseOddsAtTwoWormsValue >= 0.0) {
+            "Buy Worm-upgrade base odds cannot be negative"
+        }
+        require(buyWormOddsMultiplierPerAdditionalWormValue > 0.0) {
+            "Buy Worm odds multiplier must be positive"
         }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
@@ -287,6 +317,32 @@ open class HumanBaselinePolicy(
          * much die value in Hand so a plausible follow-up purchase remains.
          */
         const val DEFAULT_BUY_CHEAPER_PLANT_MINIMUM_REMAINING_DICE: Int = 5
+
+        /**
+         * Buy-phase Bee use is intentionally softer than the normal two-Bee
+         * reserve. Extra Bees multiply the odds of spending one to step a
+         * purchase up by one tier. Doubling odds gives a useful intuitive
+         * progression while never making one-Bee use mandatory.
+         */
+        const val DEFAULT_BUY_BEE_ODDS_MULTIPLIER_PER_ADDITIONAL_BEE: Double = 2.0
+
+        /** One Bee gives a D4 -> D6 purchase about a 4% starting chance (odds 1:24). */
+        const val DEFAULT_BUY_DIE_BEE_D4_BASE_ODDS: Double = 1.0 / 24.0
+
+        /**
+         * Each higher die tier multiplies the one-Bee odds by the cube root of 24.
+         * This produces approximately 4%, 11%, 26%, 50% for D4/D6/D8/D10.
+         */
+        const val DEFAULT_BUY_DIE_BEE_ODDS_GROWTH_PER_TIER: Double = 2.8844991406148166
+
+        /** One Bee gives an eligible Plant tier-step a 20% chance (odds 1:4). */
+        const val DEFAULT_BUY_PLANT_BEE_BASE_ODDS: Double = 0.25
+
+        /** Two Worms give a one-point Buy bridge about a 5% starting chance (odds 1:19). */
+        const val DEFAULT_BUY_WORM_BASE_ODDS_AT_TWO_WORMS: Double = 1.0 / 19.0
+
+        /** Each Worm beyond the second doubles the odds of spending one as a one-point bridge. */
+        const val DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM: Double = 2.0
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -508,6 +564,86 @@ open class HumanBaselinePolicy(
     /** Minimum Hand die-value preserved by an intentionally cheaper Plant buy. */
     open fun buyCheaperPlantMinimumRemainingDice(context: DecisionContext): Int =
         buyCheaperPlantMinimumRemainingDiceValue
+
+    /**
+     * Chance to spend one Bee to step an otherwise-limited die purchase up by
+     * one die tier. Only D4/D6/D8/D10 base purchases are eligible.
+     *
+     * With one Bee the defaults are approximately 4%, 11%, 26%, and 50%.
+     * Each additional Bee doubles the odds, so three Bees make D10 -> D12 an
+     * 80% decision while D4 -> D6 remains relatively uncommon (~14%).
+     */
+    open fun buyBeeUpgradeDiePercentage(
+        context: DecisionContext,
+        baseDie: dugsolutions.leaf.v35.random.die.DieSides,
+        beeCount: Int
+    ): Int {
+        if (beeCount <= 0) return 0
+        val tier = when (baseDie) {
+            dugsolutions.leaf.v35.random.die.DieSides.D4 -> 0
+            dugsolutions.leaf.v35.random.die.DieSides.D6 -> 1
+            dugsolutions.leaf.v35.random.die.DieSides.D8 -> 2
+            dugsolutions.leaf.v35.random.die.DieSides.D10 -> 3
+            dugsolutions.leaf.v35.random.die.DieSides.D12,
+            dugsolutions.leaf.v35.random.die.DieSides.D20 -> return 0
+        }
+        val odds = buyDieBeeD4BaseOddsValue *
+            buyDieBeeOddsGrowthPerTierValue.pow(tier) *
+            buyBeeOddsMultiplierPerAdditionalBeeValue.pow(beeCount - 1)
+        return oddsToPercentage(odds)
+    }
+
+    /**
+     * Chance to spend one Bee to bridge a Plant purchase to the next standard
+     * Plant price tier when that tier is no more than two points above the
+     * dice-group budget. The planner determines whether a useful tier is
+     * actually reachable; this method supplies the willingness only.
+     *
+     * Defaults are 20% with one Bee, 33% with two, and 50% with three.
+     */
+    open fun buyBeeUpgradePlantPercentage(
+        context: DecisionContext,
+        beeCount: Int
+    ): Int {
+        if (beeCount <= 0) return 0
+        val odds = buyPlantBeeBaseOddsValue *
+            buyBeeOddsMultiplierPerAdditionalBeeValue.pow(beeCount - 1)
+        return oddsToPercentage(odds)
+    }
+
+    /**
+     * Chance to spend one Worm as a Buy bridge. Human Baseline only considers
+     * this when it owns at least two Worms and the desired purchase is exactly
+     * one point above the dice-group budget.
+     *
+     * Defaults are approximately 5%, 10%, 17%, 30% for 2/3/4/5 Worms.
+     */
+    open fun buyWormBridgePercentage(
+        context: DecisionContext,
+        wormCount: Int
+    ): Int {
+        if (wormCount < 2) return 0
+        val odds = buyWormBaseOddsAtTwoWormsValue *
+            buyWormOddsMultiplierPerAdditionalWormValue.pow(wormCount - 2)
+        return oddsToPercentage(odds)
+    }
+
+    /**
+     * Buy-plan penalty for wasting purchasing power through overpay. One point
+     * is intentionally cheap; from two upward the concern grows exponentially.
+     * Defaults: 0 -> 0, 1 -> 1, 2 -> 3, 3 -> 7, 4 -> 15.
+     */
+    open fun buyOverpayPenalty(context: DecisionContext, overpay: Int): Int {
+        require(overpay >= 0) { "Buy overpay cannot be negative" }
+        if (overpay == 0) return 0
+        return (2.0.pow(overpay).roundToInt() - 1).coerceAtMost(1_000_000)
+    }
+
+    private fun oddsToPercentage(odds: Double): Int {
+        if (odds <= 0.0) return 0
+        val probability = odds / (1.0 + odds)
+        return (probability * 100.0).roundToInt().coerceIn(0, 99)
+    }
 
     /**
      * Probability of preferring the Plant category when both a Plant and a die

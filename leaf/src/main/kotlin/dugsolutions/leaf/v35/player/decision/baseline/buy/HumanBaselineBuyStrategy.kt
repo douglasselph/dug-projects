@@ -12,40 +12,45 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.tokens.Critter
 
 /**
- * Human Baseline Buy behavior: simple, recognizable ordinary play rather than
- * optimized shopping.
+ * Human Baseline Buy behavior: recognizable ordinary shopping with short
+ * multi-buy look-ahead rather than a one-item greedy rule.
  *
  * Purchase contract:
- * 1. Continue buying while legal/affordable purchases remain. The BuyCoordinator
- *    re-enters this strategy after each committed purchase with fresh Hand,
- *    Creature, and Grove state.
- * 2. First decide whether development balance calls for a Plant or a die. Buy
- *    balance compares total owned die sides against grafted Plant count valued
- *    at 15 points per Plant. When both categories are affordable, an injected
- *    policy converts that visible imbalance into a probability.
- * 3. Within the die category, buy the most expensive affordable die.
- * 4. Within the Plant category, prefer expensive cost tiers exponentially rather
- *    than always choosing the maximum. A deliberately cheaper-than-maximum Plant
- *    is considered only when a minimum-overpay payment can leave at least the
- *    policy's remaining Hand-dice reserve (normally 5), preserving a plausible
- *    follow-up purchase. Otherwise Human Baseline falls back to the maximum tier.
- * 5. Within a selected Plant cost tier, ordinary card acquire scoring may break
- *    same-cost choices; duplicate Plants receive no generic penalty.
- * 6. Buy normally preserves the Critter reserve supplied by
- *    [HumanBaselinePolicy.protectedCritterReserve]. Surplus Critters are treated as available
- *    purchasing power probabilistically. For surplus > 0, the probability is
- *    [CRITTER_SPEND_STARTING_PERCENTAGE] +
- *    [CRITTER_SPEND_INCREMENT_PER_SURPLUS] * surplus, capped at 100%. Surplus
- *    0 therefore remains 0%; the starting percentage is an offset once surplus
- *    exists. There is no special D20/F17 reserve exception.
- * 7. Payment always minimizes overpay first. Among equal-overpay payments, the
- *    normal reserve/fewer-resources scoring applies.
- * 8. When a Critter is actually required and either type can make an equal-overpay
- *    payment, prefer a Bee [BEE_PREFERENCE_PERCENTAGE]% of the time because Worms
- *    have the additional Flip use.
+ * 1. Continue buying while a legal purchase remains. BuyCoordinator re-enters
+ *    the strategy after every committed purchase with fresh state.
+ * 2. Plant-vs-die category choice still comes from [HumanBaselinePolicy]: the
+ *    low-Plant safety tendency first, then current Plant-power vs owned-dice
+ *    power. It is independent of round number.
+ * 3. [HumanBaselineBuyPlanner] partitions the current Hand into plausible Buy
+ *    groups and looks ahead at no more than two purchases at a time. Whole
+ *    plans are preferred by low total overpay penalty, then by total value
+ *    purchased. Overpay concern grows exponentially from 2 upward.
+ * 4. For a die group, the normal item is the most expensive die that group can
+ *    buy. Equal-quality complete plans prefer the larger first die.
+ * 5. Plant tiers retain the exponential expensive-card preference, but the
+ *    recursive grouping can make a cheaper Plant attractive when it creates a
+ *    much cleaner multi-buy sequence.
+ * 6. A Bee may be spent even from inside the normal two-Bee reserve when it
+ *    bridges one otherwise-limited purchase to the next useful tier. Die
+ *    upgrade odds rise with die size: spending a lone Bee on D4 -> D6 is rare,
+ *    while D10 -> D12 is much more tempting. Plant bridges use a lower flat
+ *    starting chance. More owned Bees multiply the odds.
+ * 7. Two or more Worms may very occasionally supply a one-point Buy bridge.
+ *    Worm willingness is much lower than Bee willingness and never bridges a
+ *    gap larger than one.
+ * 8. One Bee-willingness roll and one Worm-willingness roll are shared by all
+ *    candidate groupings in the same planner pass. Candidates do not receive
+ *    separate random lottery tickets.
+ * 9. The planner projects Grove supply and graft topology, so buying a Vine can
+ *    make a Flower a legal later purchase in the same Buy phase. Every cached
+ *    projected step is revalidated against the real coordinator options before
+ *    use; any mismatch discards the remainder and replans.
+ * 10. Legacy minimum-overpay/Critter logic remains as a fallback for unusual
+ *    states the dice-partition planner intentionally does not optimize (for
+ *    example a Critter-only purchase).
  *
- * Every probability above consumes StrategyRandomizer only. Mechanical dice,
- * deck, and other game randomness must never be consumed by this strategy.
+ * All Human Baseline randomness uses [StrategyRandomizer], never the mechanical
+ * RNG used for dice, decks, or other game state.
  */
 class HumanBaselineBuyStrategy(
     private val delegate: BuyStrategy = MechanicalBuyStrategy(),
@@ -73,13 +78,47 @@ class HumanBaselineBuyStrategy(
     private var pendingPlan: CritterSpendPlan? = null
     private var pendingMinimumRemainingDice: Int? = null
 
+    private val buyPlanner = HumanBaselineBuyPlanner(
+        policy = policy,
+        cardScorers = cardScorers,
+        purchaseScoreModifier = purchaseScoreModifier,
+        strategyRandomizer = strategyRandomizer
+    )
+    private val plannedSteps = ArrayDeque<HumanBaselineBuyPlanner.PlannedStep>()
+    private var pendingPlannedStep: HumanBaselineBuyPlanner.PlannedStep? = null
+
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePurchase(request)
+        if (request.purchasesMadeThisBuy == 0) clearPlannedSequence()
         if (request.options.isEmpty()) {
             clearPendingPlan()
+            clearPlannedSequence()
             return BuyChoice.Done
         }
 
+        val cached = plannedSteps.firstOrNull()
+        if (cached != null && plannedStepStillAvailable(cached, request)) {
+            pendingPlannedStep = cached
+            pendingItem = cached.item
+            pendingPlan = null
+            pendingMinimumRemainingDice = null
+            return BuyChoice.Purchase(cached.item)
+        }
+        if (cached != null) clearPlannedSequence()
+
+        val projected = buyPlanner.plan(request)
+        if (projected.isNotEmpty()) {
+            plannedSteps.addAll(projected)
+            val first = plannedSteps.first()
+            pendingPlannedStep = first
+            pendingItem = first.item
+            pendingPlan = null
+            pendingMinimumRemainingDice = null
+            return BuyChoice.Purchase(first.item)
+        }
+
+        // Fallback retains legacy Critter-only/surplus behavior for unusual
+        // states the dice-partition planner intentionally does not optimize.
         val plan = createCritterSpendPlan(request.context)
         val affordable = request.options.filter { isOrdinarilyAffordable(request.context, it, plan) }
         if (affordable.isEmpty()) {
@@ -121,6 +160,15 @@ class HumanBaselineBuyStrategy(
 
     override fun choosePayment(request: ChoosePaymentRequest): BuyPayment {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePayment(request)
+
+        val planned = pendingPlannedStep
+        if (planned != null && planned.item == request.item && plannedPaymentStillAvailable(planned.payment, request)) {
+            pendingPlannedStep = null
+            if (plannedSteps.firstOrNull() == planned) plannedSteps.removeFirst()
+            clearPendingPlan()
+            return planned.payment
+        }
+        if (planned != null) clearPlannedSequence()
 
         val matchedPendingItem = pendingItem == request.item
         val plan = if (matchedPendingItem) {
@@ -360,6 +408,44 @@ class HumanBaselineBuyStrategy(
         pendingItem = null
         pendingPlan = null
         pendingMinimumRemainingDice = null
+    }
+
+    private fun clearPlannedSequence() {
+        plannedSteps.clear()
+        pendingPlannedStep = null
+    }
+
+    private fun plannedStepStillAvailable(
+        step: HumanBaselineBuyPlanner.PlannedStep,
+        request: ChoosePurchaseRequest
+    ): Boolean =
+        step.item in request.options &&
+            containsDiceResources(request.context.self.board.hand.map { BuyDieResource(it.sides, it.value) }, step.payment.dice) &&
+            request.context.self.board.bees >= step.payment.critters.count { it.critter == Critter.BEE } &&
+            request.context.self.board.worms >= step.payment.critters.count { it.critter == Critter.WORM }
+
+    private fun plannedPaymentStillAvailable(
+        payment: BuyPayment,
+        request: ChoosePaymentRequest
+    ): Boolean =
+        containsDiceResources(request.availableDice, payment.dice) &&
+            containsCritterResources(request.availableCritters, payment.critters) &&
+            payment.total >= request.cost
+
+    private fun containsDiceResources(
+        available: List<BuyDieResource>,
+        required: List<BuyDieResource>
+    ): Boolean {
+        val remaining = available.toMutableList()
+        return required.all { remaining.remove(it) }
+    }
+
+    private fun containsCritterResources(
+        available: List<BuyCritterResource>,
+        required: List<BuyCritterResource>
+    ): Boolean {
+        val remaining = available.toMutableList()
+        return required.all { remaining.remove(it) }
     }
 
     /** Enumerate complete sufficient payments; never add resources after a payment is already sufficient. */

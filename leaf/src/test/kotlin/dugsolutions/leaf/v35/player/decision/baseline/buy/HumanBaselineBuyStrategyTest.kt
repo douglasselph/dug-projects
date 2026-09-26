@@ -271,67 +271,367 @@ class HumanBaselineBuyStrategyTest {
                 plant("Flower_17_01", PlantType.FLOWER, 17, GameEffect.DRAW_TWO_DICE)
             )
             val context = context(
-                plantCards = emptyList(),
+                plantCards = listOf(
+                    view(plant("Vine_07_existing", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
+                ),
                 dice = listOf(DieView(0, 20, 20), DieView(1, 20, 20))
             )
             val request = ChoosePurchaseRequest(plants.map(BuyItem::Plant), context)
-            val policy = HumanBaselinePolicy()
-            val weights = (0..5).map { policy.buyPlantCostTierWeight(context, it) }
-            val topTierStart = weights.dropLast(1).sum()
-
             val rareCheap = strategy(QueueRandomizer(0)).choosePurchase(request)
-            val commonExpensive = strategy(QueueRandomizer(topTierStart)).choosePurchase(request)
+            val commonExpensive = strategy(QueueRandomizer(999_999)).choosePurchase(request)
 
             assertEquals(5, assertIs<BuyChoice.Purchase>(rareCheap).item.cost)
             assertEquals(17, assertIs<BuyChoice.Purchase>(commonExpensive).item.cost)
         }
 
         @Test
-        fun `cheaper Plant is rejected when minimum overpay payment would leave less than five dice value`() {
-            val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
-            val expensive = plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP)
-            val request = ChoosePurchaseRequest(
-                options = listOf(BuyItem.Plant(cheap), BuyItem.Plant(expensive)),
-                context = context(
-                    plantCards = emptyList(),
-                    dice = listOf(DieView(0, 10, 9), DieView(1, 6, 4))
-                )
-            )
-
-            val chosen = strategy(QueueRandomizer(0)).choosePurchase(request)
-
-            assertEquals(BuyItem.Plant(expensive), assertIs<BuyChoice.Purchase>(chosen).item)
-        }
-
-        @Test
-        fun `selected cheaper Plant payment preserves five die value for another buy`() {
-            val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
-            val expensive = plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP)
+        fun `recursive planner uses the exact chosen dice group as payment`() {
+            val root5 = plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)
             val context = context(
                 plantCards = emptyList(),
-                dice = listOf(DieView(0, 8, 7), DieView(1, 6, 5))
+                dice = listOf(DieView(0, 6, 5), DieView(1, 6, 5), DieView(2, 6, 5))
             )
-            val strategy = strategy(QueueRandomizer(0))
+            val options = listOf(BuyItem.Plant(root5), BuyItem.Die(DieSides.D10))
+            val strategy = strategy(MidpointRandomizer())
             val choice = strategy.choosePurchase(
-                ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Plant(cheap), BuyItem.Plant(expensive)),
-                    context = context
-                )
+                ChoosePurchaseRequest(options, context, marketOptions = options)
             )
-            assertEquals(BuyItem.Plant(cheap), assertIs<BuyChoice.Purchase>(choice).item)
+            assertEquals(BuyItem.Plant(root5), assertIs<BuyChoice.Purchase>(choice).item)
 
             val payment = strategy.choosePayment(
                 ChoosePaymentRequest(
-                    item = BuyItem.Plant(cheap),
-                    availableDice = listOf(BuyDieResource(8, 7), BuyDieResource(6, 5)),
+                    item = BuyItem.Plant(root5),
+                    availableDice = context.self.board.hand.map { BuyDieResource(it.sides, it.value) },
                     availableCritters = emptyList(),
                     context = context
                 )
             )
 
-            assertEquals(7, payment.total)
-            assertEquals(listOf(BuyDieResource(8, 7)), payment.dice)
-            assertEquals(5, 12 - payment.dice.sumOf { it.value })
+            assertEquals(5, payment.total)
+            assertEquals(1, payment.dice.size)
+        }
+
+        @Test
+        fun `recursive Buy planning prefers R5 plus D10 over V11 with four overpay`() {
+            val root5 = plant("Root_05_02", PlantType.ROOT, 5, GameEffect.RAISE_DIE_PLUS_4)
+            val vine9 = plant("Vine_09_01", PlantType.VINE, 9, GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX)
+            val vine11 = plant("Vine_11_04", PlantType.VINE, 11, GameEffect.SET_DIE_UP_TO_D12_TO_MAX)
+            val existingRoot = view(plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE))
+            val firstContext = context(
+                plantCards = listOf(existingRoot),
+                dice = listOf(
+                    DieView(0, 6, 5),
+                    DieView(1, 6, 5),
+                    DieView(2, 6, 5)
+                )
+            )
+            val market = listOf(
+                BuyItem.Plant(root5),
+                BuyItem.Plant(vine9),
+                BuyItem.Plant(vine11),
+                BuyItem.Die(DieSides.D4),
+                BuyItem.Die(DieSides.D10)
+            )
+            val strategy = strategy(MidpointRandomizer())
+
+            val first = strategy.choosePurchase(
+                ChoosePurchaseRequest(
+                    options = market,
+                    context = firstContext,
+                    marketOptions = market
+                )
+            )
+            assertEquals(BuyItem.Plant(root5), assertIs<BuyChoice.Purchase>(first).item)
+            val firstPayment = strategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Plant(root5),
+                    availableDice = firstContext.self.board.hand.map { BuyDieResource(it.sides, it.value) },
+                    availableCritters = emptyList(),
+                    context = firstContext
+                )
+            )
+            assertEquals(5, firstPayment.total)
+            assertEquals(1, firstPayment.dice.size)
+
+            val secondContext = firstContext.copy(
+                self = firstContext.self.copy(
+                    board = firstContext.self.board.copy(
+                        hand = listOf(DieView(1, 6, 5), DieView(2, 6, 5)),
+                        creature = firstContext.self.board.creature + view(root5)
+                    )
+                )
+            )
+            val second = strategy.choosePurchase(
+                ChoosePurchaseRequest(
+                    options = listOf(BuyItem.Die(DieSides.D4), BuyItem.Die(DieSides.D10)),
+                    context = secondContext,
+                    purchasesMadeThisBuy = 1,
+                    marketOptions = market
+                )
+            )
+            assertEquals(BuyItem.Die(DieSides.D10), assertIs<BuyChoice.Purchase>(second).item)
+            val secondPayment = strategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Die(DieSides.D10),
+                    availableDice = secondContext.self.board.hand.map { BuyDieResource(it.sides, it.value) },
+                    availableCritters = emptyList(),
+                    context = secondContext
+                )
+            )
+            assertEquals(10, secondPayment.total)
+            assertEquals(2, secondPayment.dice.size)
+        }
+
+        @Test
+        fun `planner can project a Flower becoming legal after buying a Vine`() {
+            val vine11 = plant("Vine_11_04", PlantType.VINE, 11, GameEffect.SET_DIE_UP_TO_D12_TO_MAX)
+            val flower17 = plant("Flower_17_04", PlantType.FLOWER, 17, GameEffect.DRAW_TWO_DICE)
+            val firstContext = context(
+                plantCards = emptyList(),
+                dice = listOf(DieView(0, 12, 11), DieView(1, 20, 17))
+            )
+            val strategy = strategy(MidpointRandomizer())
+            val market = listOf(BuyItem.Plant(vine11), BuyItem.Plant(flower17))
+
+            val first = strategy.choosePurchase(
+                ChoosePurchaseRequest(
+                    options = listOf(BuyItem.Plant(vine11)),
+                    context = firstContext,
+                    marketOptions = market
+                )
+            )
+            assertEquals(BuyItem.Plant(vine11), assertIs<BuyChoice.Purchase>(first).item)
+            strategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Plant(vine11),
+                    availableDice = firstContext.self.board.hand.map { BuyDieResource(it.sides, it.value) },
+                    availableCritters = emptyList(),
+                    context = firstContext
+                )
+            )
+
+            val vineView = view(vine11)
+            val secondContext = firstContext.copy(
+                self = firstContext.self.copy(
+                    board = firstContext.self.board.copy(
+                        hand = listOf(DieView(1, 20, 17)),
+                        creature = listOf(vineView)
+                    )
+                )
+            )
+            val second = strategy.choosePurchase(
+                ChoosePurchaseRequest(
+                    options = listOf(BuyItem.Plant(flower17)),
+                    context = secondContext,
+                    purchasesMadeThisBuy = 1,
+                    marketOptions = listOf(BuyItem.Plant(flower17))
+                )
+            )
+
+            assertEquals(BuyItem.Plant(flower17), assertIs<BuyChoice.Purchase>(second).item)
+        }
+
+        @Test
+        fun `one Bee makes D4 to D6 a four percent Buy bridge`() {
+            val context = context(
+                dice = listOf(DieView(0, 4, 4)),
+                bees = 1
+            )
+            val options = listOf(BuyItem.Die(DieSides.D4), BuyItem.Die(DieSides.D6))
+            val request = ChoosePurchaseRequest(options, context, marketOptions = options)
+
+            val upgradingStrategy = strategy(QueueRandomizer(3))
+            val upgrade = upgradingStrategy.choosePurchase(request)
+            val stay = strategy(QueueRandomizer(4)).choosePurchase(request)
+
+            assertEquals(BuyItem.Die(DieSides.D6), assertIs<BuyChoice.Purchase>(upgrade).item)
+            val upgradePayment = upgradingStrategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Die(DieSides.D6),
+                    availableDice = listOf(BuyDieResource(4, 4)),
+                    availableCritters = listOf(BuyCritterResource(Critter.BEE, 2)),
+                    context = context
+                )
+            )
+            assertEquals(6, upgradePayment.total)
+            assertEquals(1, upgradePayment.critters.count { it.critter == Critter.BEE })
+            assertEquals(BuyItem.Die(DieSides.D4), assertIs<BuyChoice.Purchase>(stay).item)
+        }
+
+        @Test
+        fun `three Bees make D10 to D12 an eighty percent Buy bridge`() {
+            val context = context(
+                dice = listOf(DieView(0, 10, 10)),
+                bees = 3
+            )
+            val options = listOf(BuyItem.Die(DieSides.D10), BuyItem.Die(DieSides.D12))
+            val request = ChoosePurchaseRequest(options, context, marketOptions = options)
+
+            assertEquals(
+                BuyItem.Die(DieSides.D12),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(79)).choosePurchase(request)).item
+            )
+            assertEquals(
+                BuyItem.Die(DieSides.D10),
+                assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(80)).choosePurchase(request)).item
+            )
+        }
+
+        @Test
+        fun `three Bees make R5 to cost seven Plant upgrade fifty percent`() {
+            val root5 = plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE)
+            val root7 = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
+            val context = context(
+                plantCards = emptyList(),
+                dice = listOf(DieView(0, 6, 5)),
+                bees = 3
+            )
+            val options = listOf(BuyItem.Plant(root5), BuyItem.Plant(root7))
+            val request = ChoosePurchaseRequest(options, context, marketOptions = options)
+
+            val upgrade = strategy(QueueRandomizer(49)).choosePurchase(request)
+            val stay = strategy(QueueRandomizer(50)).choosePurchase(request)
+
+            assertEquals(BuyItem.Plant(root7), assertIs<BuyChoice.Purchase>(upgrade).item)
+            assertEquals(BuyItem.Plant(root5), assertIs<BuyChoice.Purchase>(stay).item)
+        }
+
+        @Test
+        fun `Bee Plant bridge can reach fourteen and seventeen cost tiers`() {
+            val vine = view(plant("Vine_07_existing", PlantType.VINE, 7, GameEffect.RAISE_ANY_DIE_PLUS_1))
+
+            val flower14 = plant("Flower_14_01", PlantType.FLOWER, 14, GameEffect.GAIN_ONE_VP)
+            val vine11 = plant("Vine_11_01", PlantType.VINE, 11, GameEffect.SET_DIE_UP_TO_D12_TO_MAX)
+            val context13 = context(
+                plantCards = listOf(vine),
+                dice = listOf(DieView(0, 20, 13)),
+                bees = 1
+            )
+            val options14 = listOf(BuyItem.Plant(vine11), BuyItem.Plant(flower14))
+            assertEquals(
+                BuyItem.Plant(flower14),
+                assertIs<BuyChoice.Purchase>(
+                    strategy(QueueRandomizer(0)).choosePurchase(
+                        ChoosePurchaseRequest(options14, context13, marketOptions = options14)
+                    )
+                ).item
+            )
+
+            val flower17 = plant("Flower_17_01", PlantType.FLOWER, 17, GameEffect.DRAW_TWO_DICE)
+            val context16 = context(
+                plantCards = listOf(vine),
+                dice = listOf(DieView(0, 20, 16)),
+                bees = 1
+            )
+            val options17 = listOf(BuyItem.Plant(flower14), BuyItem.Plant(flower17))
+            assertEquals(
+                BuyItem.Plant(flower17),
+                assertIs<BuyChoice.Purchase>(
+                    strategy(QueueRandomizer(0)).choosePurchase(
+                        ChoosePurchaseRequest(options17, context16, marketOptions = options17)
+                    )
+                ).item
+            )
+        }
+
+        @Test
+        fun `two Worms can bridge a purchase only when exactly one point short`() {
+            val exactGapContext = context(
+                dice = listOf(DieView(0, 6, 5)),
+                worms = 2
+            )
+            val dieOptions = listOf(BuyItem.Die(DieSides.D4), BuyItem.Die(DieSides.D6))
+            val upgradeStrategy = strategy(QueueRandomizer(4))
+            val upgraded = upgradeStrategy.choosePurchase(
+                ChoosePurchaseRequest(dieOptions, exactGapContext, marketOptions = dieOptions)
+            )
+            assertEquals(BuyItem.Die(DieSides.D6), assertIs<BuyChoice.Purchase>(upgraded).item)
+            val payment = upgradeStrategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Die(DieSides.D6),
+                    availableDice = listOf(BuyDieResource(6, 5)),
+                    availableCritters = List(2) { BuyCritterResource(Critter.WORM, 1) },
+                    context = exactGapContext
+                )
+            )
+            assertEquals(1, payment.critters.count { it.critter == Critter.WORM })
+
+            assertEquals(
+                BuyItem.Die(DieSides.D4),
+                assertIs<BuyChoice.Purchase>(
+                    strategy(QueueRandomizer(5)).choosePurchase(
+                        ChoosePurchaseRequest(dieOptions, exactGapContext, marketOptions = dieOptions)
+                    )
+                ).item
+            )
+
+            val twoShortContext = context(
+                dice = listOf(DieView(0, 6, 4)),
+                worms = 5
+            )
+            assertEquals(
+                BuyItem.Die(DieSides.D4),
+                assertIs<BuyChoice.Purchase>(
+                    strategy(QueueRandomizer(0)).choosePurchase(
+                        ChoosePurchaseRequest(dieOptions, twoShortContext, marketOptions = dieOptions)
+                    )
+                ).item
+            )
+        }
+
+        @Test
+        fun `one shared Bee willingness roll is reused across all candidate groupings`() {
+            val randomizer = RecordingRandomizer(37)
+            val context = context(
+                dice = listOf(
+                    DieView(0, 4, 4),
+                    DieView(1, 10, 10)
+                ),
+                bees = 1
+            )
+            val options = listOf(
+                BuyItem.Die(DieSides.D4),
+                BuyItem.Die(DieSides.D6),
+                BuyItem.Die(DieSides.D10),
+                BuyItem.Die(DieSides.D12)
+            )
+
+            strategy(randomizer).choosePurchase(
+                ChoosePurchaseRequest(options, context, marketOptions = options)
+            )
+
+            assertEquals(1, randomizer.calls.count { it == 100 })
+        }
+
+        @Test
+        fun `planner look ahead never returns more than two purchases`() {
+            val root5 = plant("Root_05_02", PlantType.ROOT, 5, GameEffect.RAISE_DIE_PLUS_4)
+            val context = context(
+                plantCards = emptyList(),
+                dice = listOf(
+                    DieView(0, 6, 5),
+                    DieView(1, 6, 5),
+                    DieView(2, 6, 5),
+                    DieView(3, 6, 5)
+                )
+            )
+            val market = listOf(
+                BuyItem.Plant(root5),
+                BuyItem.Die(DieSides.D4),
+                BuyItem.Die(DieSides.D10)
+            )
+            val planner = HumanBaselineBuyPlanner(
+                policy = HumanBaselinePolicy(),
+                cardScorers = dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry(),
+                purchaseScoreModifier = PurchaseScoreModifier.NONE,
+                strategyRandomizer = MidpointRandomizer()
+            )
+
+            val planned = planner.plan(
+                ChoosePurchaseRequest(market, context, marketOptions = market)
+            )
+
+            assertTrue(planned.size <= 2)
         }
 
         @Test
@@ -365,19 +665,23 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `one surplus Critter uses 20 percent threshold`() {
-            val root = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
+        fun `one surplus Critter uses 20 percent fallback threshold`() {
+            // D12 -> D20 is intentionally not a Bee tier-step, so this isolates
+            // the legacy surplus-Critter fallback rather than the new planner bridge.
             val request = ChoosePurchaseRequest(
-                options = listOf(BuyItem.Plant(root)),
+                options = listOf(BuyItem.Die(DieSides.D20)),
                 context = context(
-                    dice = listOf(DieView(0, 6, 6)),
+                    dice = listOf(DieView(0, 20, 18)),
                     bees = 3,
                     worms = 1
                 )
             )
 
-            assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(19)).choosePurchase(request))
-            assertEquals(BuyChoice.Done, strategy(QueueRandomizer(20)).choosePurchase(request))
+            // The planner samples the shared Bee willingness roll first even
+            // though D12 -> D20 is not bridgeable; the second roll is the
+            // legacy surplus-Critter fallback gate being tested here.
+            assertIs<BuyChoice.Purchase>(strategy(QueueRandomizer(99, 19)).choosePurchase(request))
+            assertEquals(BuyChoice.Done, strategy(QueueRandomizer(99, 20)).choosePurchase(request))
         }
 
         @Test
@@ -627,6 +931,20 @@ class HumanBaselineBuyStrategyTest {
         facing = CreatureCard.Facing.FACE_UP,
         isSnippable = true
     )
+
+    private class MidpointRandomizer : StrategyRandomizer {
+        override fun nextInt(until: Int): Int = until / 2
+    }
+
+    private class RecordingRandomizer(
+        private val value: Int
+    ) : StrategyRandomizer {
+        val calls = mutableListOf<Int>()
+        override fun nextInt(until: Int): Int {
+            calls += until
+            return value.coerceIn(0, until - 1)
+        }
+    }
 
     private class QueueRandomizer(vararg values: Int) : StrategyRandomizer {
         private val values = ArrayDeque(values.toList())

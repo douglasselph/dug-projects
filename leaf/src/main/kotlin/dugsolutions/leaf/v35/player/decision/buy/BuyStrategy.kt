@@ -61,12 +61,22 @@ class ChoosePurchaseRequest(
     options: List<BuyItem>,
     val context: DecisionContext = DecisionContext.EMPTY,
     /** Number of purchases this player has already completed in the current Buy phase. */
-    val purchasesMadeThisBuy: Int = 0
+    val purchasesMadeThisBuy: Int = 0,
+    /**
+     * All Grove purchases that still have physical supply, including Plants that
+     * are not graftable yet and items that are not currently affordable.
+     *
+     * This lets a strategy perform short Buy-phase look-ahead without receiving
+     * mutable Game/Grove objects. Legacy/direct callers may omit it; in that case
+     * the currently legal [options] are the complete visible market.
+     */
+    marketOptions: List<BuyItem> = options
 ) {
     init {
         require(purchasesMadeThisBuy >= 0) { "Purchases made this Buy cannot be negative" }
     }
     val options: List<BuyItem> = options.toList()
+    val marketOptions: List<BuyItem> = marketOptions.toList()
 }
 
 class ChoosePaymentRequest(
