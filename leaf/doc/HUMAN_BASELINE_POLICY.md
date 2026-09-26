@@ -173,7 +173,7 @@ Worm value above protected Worm reserve
 
 Protected Critters are therefore not casually counted as ordinary purchasing power.
 
-Premium Buy exceptions such as reaching a D20 or cost-17 Flower are intentionally excluded from this calculation. Those are exceptional Buy decisions, not ordinary purchasing power.
+Buy no longer has a special protected-Critter exception for D20 or cost-17 Flower. Premium prices compete through the same category, Plant-tier, affordability, and payment rules as other purchases.
 
 B2 passes this value into Cultivation Plant activation scoring and the Compost, Mulch, and Sunlight Round Effect scorers. B6 also injects the same policy into `HumanBaselineEffectStrategy`, so downstream Cultivation die-target choices use the same reserve-aware Buy-threshold assumptions. Their reasoning therefore agrees with certified Buy about which Critters are normally spendable.
 

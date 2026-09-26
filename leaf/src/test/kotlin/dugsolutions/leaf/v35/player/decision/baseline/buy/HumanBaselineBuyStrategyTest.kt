@@ -251,39 +251,104 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `within Plant category choose highest affordable cost tier`() {
-            val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
-            val expensive = plant("Root_09_01", PlantType.ROOT, 9, GameEffect.UPGRADE_DIE_AND_USE_NOW)
+        fun `Plant cost tiers use exponential weighting with about two percent on R5`() {
+            val policy = HumanBaselinePolicy()
+            val weights = (0..5).map { policy.buyPlantCostTierWeight(DecisionContext.EMPTY, it) }
+            val cheapestPercentage = weights.first().toDouble() / weights.sum() * 100.0
+
+            assertTrue(cheapestPercentage in 1.9..2.1)
+            assertTrue(weights.zipWithNext().all { (a, b) -> b > a })
+        }
+
+        @Test
+        fun `Plant weighting can select cheap tier while expensive tier remains most likely`() {
+            val plants = listOf(
+                plant("Root_05_01", PlantType.ROOT, 5, GameEffect.DOUBLE_ONE_DIE),
+                plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1),
+                plant("Root_09_01", PlantType.ROOT, 9, GameEffect.UPGRADE_DIE_AND_USE_NOW),
+                plant("Vine_11_01", PlantType.VINE, 11, GameEffect.SET_DIE_UP_TO_D12_TO_MAX),
+                plant("Flower_14_01", PlantType.FLOWER, 14, GameEffect.GAIN_ONE_VP),
+                plant("Flower_17_01", PlantType.FLOWER, 17, GameEffect.DRAW_TWO_DICE)
+            )
             val context = context(
                 plantCards = emptyList(),
-                dice = listOf(DieView(0, 20, 10), DieView(1, 20, 10))
+                dice = listOf(DieView(0, 20, 20), DieView(1, 20, 20))
             )
+            val request = ChoosePurchaseRequest(plants.map(BuyItem::Plant), context)
+            val policy = HumanBaselinePolicy()
+            val weights = (0..5).map { policy.buyPlantCostTierWeight(context, it) }
+            val topTierStart = weights.dropLast(1).sum()
 
-            val chosen = strategy().choosePurchase(
-                ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Plant(cheap), BuyItem.Plant(expensive)),
-                    context = context
+            val rareCheap = strategy(QueueRandomizer(0)).choosePurchase(request)
+            val commonExpensive = strategy(QueueRandomizer(topTierStart)).choosePurchase(request)
+
+            assertEquals(5, assertIs<BuyChoice.Purchase>(rareCheap).item.cost)
+            assertEquals(17, assertIs<BuyChoice.Purchase>(commonExpensive).item.cost)
+        }
+
+        @Test
+        fun `cheaper Plant is rejected when minimum overpay payment would leave less than five dice value`() {
+            val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
+            val expensive = plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP)
+            val request = ChoosePurchaseRequest(
+                options = listOf(BuyItem.Plant(cheap), BuyItem.Plant(expensive)),
+                context = context(
+                    plantCards = emptyList(),
+                    dice = listOf(DieView(0, 10, 9), DieView(1, 6, 4))
                 )
             )
+
+            val chosen = strategy(QueueRandomizer(0)).choosePurchase(request)
 
             assertEquals(BuyItem.Plant(expensive), assertIs<BuyChoice.Purchase>(chosen).item)
         }
 
         @Test
-        fun `after one principal purchase Human Baseline stops buying`() {
+        fun `selected cheaper Plant payment preserves five die value for another buy`() {
+            val cheap = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
+            val expensive = plant("Flower_11_01", PlantType.FLOWER, 11, GameEffect.GAIN_ONE_VP)
+            val context = context(
+                plantCards = emptyList(),
+                dice = listOf(DieView(0, 8, 7), DieView(1, 6, 5))
+            )
+            val strategy = strategy(QueueRandomizer(0))
+            val choice = strategy.choosePurchase(
+                ChoosePurchaseRequest(
+                    options = listOf(BuyItem.Plant(cheap), BuyItem.Plant(expensive)),
+                    context = context
+                )
+            )
+            assertEquals(BuyItem.Plant(cheap), assertIs<BuyChoice.Purchase>(choice).item)
+
+            val payment = strategy.choosePayment(
+                ChoosePaymentRequest(
+                    item = BuyItem.Plant(cheap),
+                    availableDice = listOf(BuyDieResource(8, 7), BuyDieResource(6, 5)),
+                    availableCritters = emptyList(),
+                    context = context
+                )
+            )
+
+            assertEquals(7, payment.total)
+            assertEquals(listOf(BuyDieResource(8, 7)), payment.dice)
+            assertEquals(5, 12 - payment.dice.sumOf { it.value })
+        }
+
+        @Test
+        fun `Human Baseline may continue buying after an earlier purchase`() {
             val chosen = strategy().choosePurchase(
                 ChoosePurchaseRequest(
-                    options = listOf(BuyItem.Die(DieSides.D20)),
-                    context = context(dice = listOf(DieView(0, 20, 20))),
+                    options = listOf(BuyItem.Die(DieSides.D6)),
+                    context = context(dice = listOf(DieView(0, 20, 6))),
                     purchasesMadeThisBuy = 1
                 )
             )
 
-            assertEquals(BuyChoice.Done, chosen)
+            assertEquals(BuyItem.Die(DieSides.D6), assertIs<BuyChoice.Purchase>(chosen).item)
         }
 
         @Test
-        fun `zero Critter surplus is not normally available for a non-premium purchase`() {
+        fun `zero Critter surplus is not normally available for a purchase`() {
             val root = plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
             val chosen = strategy().choosePurchase(
                 ChoosePurchaseRequest(
@@ -350,7 +415,7 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `D20 threshold may spend protected Bee reserve`() {
+        fun `D20 no longer spends protected Bee reserve just to cross premium threshold`() {
             val chosen = strategy().choosePurchase(
                 ChoosePurchaseRequest(
                     options = listOf(BuyItem.Die(DieSides.D20)),
@@ -362,11 +427,11 @@ class HumanBaselineBuyStrategyTest {
                 )
             )
 
-            assertEquals(BuyItem.Die(DieSides.D20), assertIs<BuyChoice.Purchase>(chosen).item)
+            assertEquals(BuyChoice.Done, chosen)
         }
 
         @Test
-        fun `cost 17 Flower threshold may spend protected Critter reserve`() {
+        fun `cost 17 Flower no longer spends protected Critter reserve just to cross premium threshold`() {
             val flower = plant("Flower_17_01", PlantType.FLOWER, 17, GameEffect.DRAW_TWO_DICE)
             val chosen = strategy().choosePurchase(
                 ChoosePurchaseRequest(
@@ -379,16 +444,45 @@ class HumanBaselineBuyStrategyTest {
                 )
             )
 
-            assertEquals(BuyItem.Plant(flower), assertIs<BuyChoice.Purchase>(chosen).item)
+            assertEquals(BuyChoice.Done, chosen)
         }
 
         @Test
-        fun `when a Critter is required Bee is preferred on the 67 percent branch`() {
+        fun `minimum overpay wins even when exact payment spends a surplus Critter`() {
+            val request = ChoosePaymentRequest(
+                item = BuyItem.Plant(
+                    plant("Root_07_01", PlantType.ROOT, 7, GameEffect.RAISE_ANY_DIE_PLUS_1)
+                ),
+                availableDice = listOf(
+                    BuyDieResource(6, 5),
+                    BuyDieResource(8, 8)
+                ),
+                availableCritters = listOf(
+                    BuyCritterResource(Critter.BEE, 2),
+                    BuyCritterResource(Critter.BEE, 2),
+                    BuyCritterResource(Critter.BEE, 2),
+                    BuyCritterResource(Critter.WORM, 1)
+                ),
+                context = context(
+                    dice = listOf(DieView(0, 6, 5), DieView(1, 8, 8)),
+                    bees = 3,
+                    worms = 1
+                )
+            )
+
+            val chosen = strategy(QueueRandomizer(0)).choosePayment(request)
+
+            assertEquals(7, chosen.total)
+            assertEquals(listOf(BuyDieResource(6, 5)), chosen.dice)
+            assertEquals(listOf(BuyCritterResource(Critter.BEE, 2)), chosen.critters)
+        }
+
+        @Test
+        fun `equal overpay Critter choices prefer Bee on the 67 percent branch`() {
             val random = QueueRandomizer(0, 0) // surplus allowed; then Bee preference
             val chosen = strategy(random).choosePayment(
-                paymentRequest(
-                    context = context(bees = 3, worms = 2),
-                    cost = 7
+                equalOverpayCritterPaymentRequest(
+                    context = context(bees = 3, worms = 3)
                 )
             )
 
@@ -396,12 +490,11 @@ class HumanBaselineBuyStrategyTest {
         }
 
         @Test
-        fun `when a Critter is required Worm is preferred on the other branch`() {
+        fun `equal overpay Critter choices prefer Worm on the other branch`() {
             val random = QueueRandomizer(0, 99) // surplus allowed; then Worm preference
             val chosen = strategy(random).choosePayment(
-                paymentRequest(
-                    context = context(bees = 3, worms = 2),
-                    cost = 7
+                equalOverpayCritterPaymentRequest(
+                    context = context(bees = 3, worms = 3)
                 )
             )
 
@@ -450,6 +543,20 @@ class HumanBaselineBuyStrategyTest {
         strategyRandomizer = randomizer,
         policy = policy
     )
+
+    private fun equalOverpayCritterPaymentRequest(context: DecisionContext): ChoosePaymentRequest =
+        ChoosePaymentRequest(
+            item = BuyItem.Plant(
+                plant("Root_08_01", PlantType.ROOT, 8, GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
+            ),
+            availableDice = listOf(BuyDieResource(6, 6)),
+            availableCritters = listOf(
+                BuyCritterResource(Critter.BEE, 2),
+                BuyCritterResource(Critter.WORM, 1),
+                BuyCritterResource(Critter.WORM, 1)
+            ),
+            context = context
+        )
 
     private fun paymentRequest(context: DecisionContext, cost: Int): ChoosePaymentRequest =
         ChoosePaymentRequest(

@@ -176,7 +176,7 @@ class BuyCoordinator(
                 }
 
             DieSides.entries
-                .filter { it != DieSides.D4 && game.grove.graftBed.has(it) }
+                .filter { game.grove.graftBed.has(it) }
                 .map { BuyItem.Die(it) }
                 .filterTo(this) { it.cost <= purchasingPower }
         }

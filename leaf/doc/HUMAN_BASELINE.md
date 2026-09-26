@@ -325,29 +325,24 @@ baseline/buy/PaymentPriorityTest.kt
 
 The Buy baseline is intended to model a recognizable ordinary player, not an optimized shopping algorithm. Its accepted behavior is:
 
-1. **Make one principal purchase, then stop.** Human Baseline does not deliberately split purchasing power across several purchases. Multi-buy optimization belongs to more advanced strategy levels.
-2. **Consider Plant-vs-die development balance before price.** This Buy-only comparison is independent of round number. Each grafted Plant counts as 15 development points; dice development is the total number of sides across all owned dice. When both categories are affordable, the difference feeds a symmetric probability curve: equal development is 50/50, while a 3-point imbalance is about 85/15 toward the weaker side. The default curve retains a 1% minimum chance of the stronger-side category so ordinary play never becomes completely deterministic. A separate state-based low-Plant safety tendency takes precedence whenever the player has fewer than 2 grafted Plants: by default that is a 90% Plant / 10% die category choice regardless of round number or how many Battles have already occurred. Once the player has 2+ Plants, the normal 15-points-per-Plant balance curve resumes.
-3. **Within the chosen category, buy from the highest affordable cost tier.** This is the core ordinary-player tendency: buy the most expensive thing that fits the chosen development direction.
-4. **Use card-specific scoring only inside that highest-cost tier.** Card value can choose between comparable Plant cards, but Human Baseline does not deliberately drop to a cheaper tier for combo/efficiency optimization.
-5. **Do not penalize duplicate Plants merely for being duplicates.** A repeated card is evaluated by its actual value, not by a generic diversity preference.
-6. **Normally preserve 2 Bees and 1 Worm for Battle.** These are the shared Human Baseline protected-Critter reserve targets supplied by `HumanBaselinePolicy`.
-7. **Treat surplus Critters as probabilistically available purchasing power.** Let surplus be Bees above 2 plus Worms above 1. With zero surplus the spend chance is 0%. For positive surplus the chance is:
+1. **Keep buying while another legal/affordable purchase remains.** `BuyCoordinator` already loops; Human Baseline now participates in that loop instead of stopping after one principal purchase. Every committed purchase regenerates legal options and a fresh decision context before the next choice.
+2. **Consider Plant-vs-die development balance before price.** This Buy-only comparison is independent of round number. Each grafted Plant counts as 15 development points; dice development is the total number of sides across all owned dice. When both categories are affordable, the difference feeds a symmetric probability curve: equal development is 50/50, while a 3-point imbalance is about 85/15 toward the weaker side. The default curve retains a 1% minimum chance of the stronger-side category. A separate state-based low-Plant safety tendency takes precedence whenever the player has fewer than 2 grafted Plants: by default that is a 90% Plant / 10% die category choice regardless of round number or Battle history.
+3. **Within the die category, buy the most expensive affordable die.** If a D4 has been returned to the Graft Bed and is the best remaining affordable die, it is a legal Buy option.
+4. **Within the Plant category, prefer expensive tiers exponentially rather than always taking the maximum.** With all normal cost tiers 5/7/9/11/14/17 available, the default tier weights are approximately 2% / 4% / 7% / 13% / 25% / 48%. This keeps F17 the most likely single tier without making it automatic, while an R5 remains a real long-shot.
+5. **A deliberately cheaper-than-maximum Plant must preserve follow-up purchasing power.** Human Baseline first finds the minimum-overpay payment for that cheaper Plant. If no such payment leaves at least 5 total die value in Hand, that cheaper tier is rejected and the most expensive Plant tier remains the fallback. This lets a later Buy iteration still acquire something small, including a returned D4.
+6. **Use card-specific scoring only inside the selected Plant cost tier.** Card value can choose between same-cost Plants, but it does not decide which price tier Human Baseline shops.
+7. **Do not penalize duplicate Plants merely for being duplicates.** A repeated card is evaluated by its actual value, not by a generic diversity preference.
+8. **Normally preserve 2 Bees and 1 Worm for Battle.** These are the shared Human Baseline protected-Critter reserve targets supplied by `HumanBaselinePolicy`.
+9. **Treat surplus Critters as probabilistically available purchasing power.** Let surplus be Bees above 2 plus Worms above 1. With zero surplus the spend chance is 0%. For positive surplus the chance is `min(100, 5 + 15 * surplus)`, producing 20%, 35%, 50%, 65%, 80%, 95%, and then 100% as surplus rises from 1 through 7+. There is no special protected-reserve exception for D20 or F17.
+10. **Minimize overpayment first.** Payment selection is lexicographic: first keep only minimum-overpay payments; among those, prefer fewer resources and preserve reserves.
+11. **Prefer Bees over Worms only among equal-overpay Critter payments.** The current tendency is 67% Bee / 33% Worm because Worms retain the additional Flip use.
+12. **Use strategy RNG only for Human Baseline probabilities.** Category balance, Plant-tier weighting, Critter spending, and Bee-vs-Worm variation never consume the mechanical RNG used for dice/decks.
 
-   ```text
-   min(100, STARTING_PERCENTAGE + INCREMENT_PER_SURPLUS * surplus)
-   ```
-
-   The current constants are `STARTING_PERCENTAGE = 5` and `INCREMENT_PER_SURPLUS = 15`, producing 20%, 35%, 50%, 65%, 80%, 95%, and then 100% as surplus rises from 1 through 7+.
-8. **Treat a D20 and a cost-17 Flower as premium thresholds.** Human Baseline may spend Critters from the protected reserve when doing so makes one of those purchases affordable.
-9. **Prefer Bees over Worms when a Critter is required and either type can make the payment.** The current tendency is 67% Bee / 33% Worm because Worms retain the additional Flip use.
-10. **Use strategy RNG only for Human Baseline probabilities.** Critter-spend and Bee-vs-Worm variation must not consume the mechanical RNG used for dice, decks, or other physical game randomness.
-11. **When several legal payments remain, prefer efficient payment.** Minimize overpayment, prefer fewer physical resources, and preserve the Critter reserves where the purchase rules permit it.
-
-The cross-cutting reserve values are centralized in `HumanBaselinePolicy`, and Buy asks the injected policy through `protectedCritterReserve(context)` rather than reading duplicated constants. Buy-specific probability and premium-purchase constants remain local to `HumanBaselineBuyStrategy`. See [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) for the tuning/override model.
+The cross-cutting reserve and Buy-tuning values are centralized in `HumanBaselinePolicy`, including Plant-equivalent power, Plant-tier exponential weights, and the cheaper-Plant follow-up reserve. See [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md) for the tuning/override model.
 
 #### Buy behavior-contract tests
 
-`HumanBaselineBuyStrategyTest` contains a clearly labeled **Human Baseline Behavior Contract** section. Its tests directly demonstrate the rules above, including category balance, highest-cost selection, one-purchase behavior, Critter reserves, the surplus probability curve, premium 17/20 purchases, and both branches of the Bee/Worm preference. Separate implementation/edge-case tests cover fallback and payment mechanics.
+`HumanBaselineBuyStrategyTest` contains a clearly labeled **Human Baseline Behavior Contract** section. Its tests directly demonstrate category balance, exponential Plant-tier selection, cheaper-Plant follow-up reserves, repeated Buy participation, Critter reserves, minimum-overpay payment, and equal-overpay Bee/Worm preference. `BuyCoordinatorTest` additionally proves actual repeated Human Baseline purchases and Grove supply regeneration between purchases.
 
 To run the Buy certification tests directly:
 

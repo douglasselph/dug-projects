@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
+import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
 import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyDieResource
@@ -16,6 +17,8 @@ import dugsolutions.leaf.v35.player.decision.buy.BuyPayment
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePaymentRequest
 import dugsolutions.leaf.v35.player.decision.buy.ChoosePurchaseRequest
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class BuyCoordinatorTest {
@@ -112,6 +116,27 @@ class BuyCoordinatorTest {
                 .filterIsInstance<BuyItem.Die>()
                 .any { it.sides == DieSides.D8 }
         )
+    }
+
+    @Test
+    fun execute_HumanBaselineCanMakeMultiplePurchasesUntilHandCanNoLongerBuy() {
+        val dieOnlyPolicy = object : HumanBaselinePolicy(lowPlantFloorValue = 0) {
+            override fun buyPlantPriorityPercentage(context: DecisionContext): Int = 0
+        }
+        val baselineBuy = DecisionDirector.humanBaseline(
+            strategyRandomizer = StrategyRandomizer { 0 },
+            policy = dieOnlyPolicy
+        ).buy
+        val buyer = player(1, listOf(die(20, 20), die(10, 10)), baselineBuy)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        val boughtDice = result.purchases
+            .filter { it.playerId == buyer.id }
+            .map { assertIs<BuyItem.Die>(it.item).sides }
+        assertEquals(listOf(DieSides.D20, DieSides.D10), boughtDice)
+        assertTrue(buyer.dice.hand.isEmpty())
     }
 
     @Test
@@ -220,6 +245,21 @@ class BuyCoordinatorTest {
         assertFalse(options.any { it is BuyItem.Die && it.sides == DieSides.D4 })
         assertFalse(options.any { it is BuyItem.Die && it.sides == DieSides.D6 })
         assertFalse(options.any { it.cost > 6 })
+    }
+
+    @Test
+    fun execute_returnedD4IsOfferedAsARealBuyOption() {
+        val observing = doneStrategy()
+        val buyer = player(1, listOf(die(20, 4)), observing)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
+        fixture.game.grove.graftBed.returnD4()
+
+        fixture.coordinator.execute(fixture.game)
+
+        assertTrue(
+            observing.purchaseRequests.single().options
+                .any { it == BuyItem.Die(DieSides.D4) }
+        )
     }
 
     @Test

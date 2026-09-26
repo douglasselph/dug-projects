@@ -16,6 +16,7 @@ import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class HumanBaselinePolicyTest {
 
@@ -230,6 +231,31 @@ class HumanBaselinePolicyTest {
 
         assertEquals(25, novice.lowPlantPriorityPercentage(context()))
         assertEquals(0, novice.lowPlantPriorityPercentage(context(plantCount = 1)))
+    }
+
+    @Test
+    fun `default Buy Plant tier curve makes cheapest standard tier about two percent`() {
+        val policy = HumanBaselinePolicy()
+        val weights = (0..5).map { policy.buyPlantCostTierWeight(context(), it) }
+        val cheapestPercentage = weights.first().toDouble() / weights.sum() * 100.0
+
+        assertTrue(cheapestPercentage in 1.9..2.1)
+        assertTrue(weights.zipWithNext().all { (a, b) -> b > a })
+        assertEquals(5, policy.buyCheaperPlantMinimumRemainingDice(context()))
+    }
+
+    @Test
+    fun `Buy Plant tier curve and follow up reserve are configurable`() {
+        val policy = HumanBaselinePolicy(
+            buyPlantCostTierExponentialBaseValue = 1.5,
+            buyCheaperPlantMinimumRemainingDiceValue = 7
+        )
+
+        assertTrue(
+            policy.buyPlantCostTierWeight(context(), 1) >
+                policy.buyPlantCostTierWeight(context(), 0)
+        )
+        assertEquals(7, policy.buyCheaperPlantMinimumRemainingDice(context()))
     }
 
     @Test

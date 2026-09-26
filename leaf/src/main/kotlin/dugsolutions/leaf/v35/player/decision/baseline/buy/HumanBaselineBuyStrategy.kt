@@ -1,6 +1,5 @@
 package dugsolutions.leaf.v35.player.decision.baseline.buy
 
-import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
@@ -17,30 +16,33 @@ import dugsolutions.leaf.v35.tokens.Critter
  * optimized shopping.
  *
  * Purchase contract:
- * 1. Normally make one principal purchase, then stop. Deliberately splitting
- *    purchasing power across several buys belongs to more advanced strategy.
+ * 1. Continue buying while legal/affordable purchases remain. The BuyCoordinator
+ *    re-enters this strategy after each committed purchase with fresh Hand,
+ *    Creature, and Grove state.
  * 2. First decide whether development balance calls for a Plant or a die. Buy
  *    balance compares total owned die sides against grafted Plant count valued
  *    at 15 points per Plant. When both categories are affordable, an injected
- *    policy converts that visible imbalance into a probability; equal
- *    development is 50/50 and a three-point difference is about 85/15 toward
- *    the weaker side. This comparison is independent of round number.
- * 3. Within the selected category, buy from the most expensive affordable cost
- *    tier. Card-specific value only breaks choices within that tier; it does
- *    not turn Human Baseline into an efficiency/combo optimizer.
- * 4. Duplicate Plants receive no generic penalty.
- * 5. Buy normally preserves the Critter reserve supplied by
+ *    policy converts that visible imbalance into a probability.
+ * 3. Within the die category, buy the most expensive affordable die.
+ * 4. Within the Plant category, prefer expensive cost tiers exponentially rather
+ *    than always choosing the maximum. A deliberately cheaper-than-maximum Plant
+ *    is considered only when a minimum-overpay payment can leave at least the
+ *    policy's remaining Hand-dice reserve (normally 5), preserving a plausible
+ *    follow-up purchase. Otherwise Human Baseline falls back to the maximum tier.
+ * 5. Within a selected Plant cost tier, ordinary card acquire scoring may break
+ *    same-cost choices; duplicate Plants receive no generic penalty.
+ * 6. Buy normally preserves the Critter reserve supplied by
  *    [HumanBaselinePolicy.protectedCritterReserve]. Surplus Critters are treated as available
  *    purchasing power probabilistically. For surplus > 0, the probability is
  *    [CRITTER_SPEND_STARTING_PERCENTAGE] +
  *    [CRITTER_SPEND_INCREMENT_PER_SURPLUS] * surplus, capped at 100%. Surplus
  *    0 therefore remains 0%; the starting percentage is an offset once surplus
- *    exists.
- * 6. A D20 (cost 20) or cost-17 Flower is a premium threshold. Human Baseline
- *    may spend protected Critters to reach one of those purchases.
- * 7. When a Critter is actually required and either type can make the payment,
- *    prefer a Bee [BEE_PREFERENCE_PERCENTAGE]% of the time because Worms have
- *    the additional Flip use.
+ *    exists. There is no special D20/F17 reserve exception.
+ * 7. Payment always minimizes overpay first. Among equal-overpay payments, the
+ *    normal reserve/fewer-resources scoring applies.
+ * 8. When a Critter is actually required and either type can make an equal-overpay
+ *    payment, prefer a Bee [BEE_PREFERENCE_PERCENTAGE]% of the time because Worms
+ *    have the additional Flip use.
  *
  * Every probability above consumes StrategyRandomizer only. Mechanical dice,
  * deck, and other game randomness must never be consumed by this strategy.
@@ -59,8 +61,6 @@ class HumanBaselineBuyStrategy(
         const val CRITTER_SPEND_STARTING_PERCENTAGE: Int = 5
         const val CRITTER_SPEND_INCREMENT_PER_SURPLUS: Int = 15
         const val BEE_PREFERENCE_PERCENTAGE: Int = 67
-        const val PREMIUM_DIE_COST: Int = 20
-        const val PREMIUM_FLOWER_COST: Int = 17
     }
 
     private data class CritterSpendPlan(
@@ -71,10 +71,11 @@ class HumanBaselineBuyStrategy(
 
     private var pendingItem: BuyItem? = null
     private var pendingPlan: CritterSpendPlan? = null
+    private var pendingMinimumRemainingDice: Int? = null
 
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePurchase(request)
-        if (request.purchasesMadeThisBuy > 0 || request.options.isEmpty()) {
+        if (request.options.isEmpty()) {
             clearPendingPlan()
             return BuyChoice.Done
         }
@@ -97,53 +98,55 @@ class HumanBaselineBuyStrategy(
                 dice = affordableDice
             )
         }
-        val highestCost = categoryCandidates.maxOf { it.cost }
-        val tier = categoryCandidates.filter { it.cost == highestCost }
-
-        val selected = scoreEngine.chooseValue(
-            context = request.context,
-            candidates = tier.map { item ->
-                val baselineScore = PurchasePriority.score(
-                    context = request.context,
-                    item = item,
-                    cardScorers = cardScorers
+        val selection = when {
+            categoryCandidates.firstOrNull() is BuyItem.Die ->
+                PurchaseSelection(
+                    choice = chooseHighestCostTier(request.context, categoryCandidates),
+                    minimumRemainingDice = null
                 )
-                DecisionCandidate<BuyChoice>(
-                    choice = BuyChoice.Purchase(item),
-                    score = purchaseScoreModifier.modify(
-                        context = request.context,
-                        item = item,
-                        score = baselineScore
-                    )
-                )
-            },
-            influenceRegistry = influenceRegistry
-        )
 
-        val purchased = (selected as BuyChoice.Purchase).item
+            else -> choosePlantPurchase(
+                context = request.context,
+                plants = categoryCandidates.filterIsInstance<BuyItem.Plant>(),
+                plan = plan
+            )
+        }
+
+        val purchased = (selection.choice as BuyChoice.Purchase).item
         pendingItem = purchased
         pendingPlan = plan
-        return selected
+        pendingMinimumRemainingDice = selection.minimumRemainingDice
+        return selection.choice
     }
 
     override fun choosePayment(request: ChoosePaymentRequest): BuyPayment {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePayment(request)
 
-        val plan = if (pendingItem == request.item) {
+        val matchedPendingItem = pendingItem == request.item
+        val plan = if (matchedPendingItem) {
             pendingPlan ?: createCritterSpendPlan(request.context)
         } else {
             createCritterSpendPlan(request.context)
         }
+        val minimumRemainingDice = if (matchedPendingItem) pendingMinimumRemainingDice else null
         clearPendingPlan()
 
-        val permitted = enumeratePayments(request).filter { paymentAllowed(request, it, plan) }
+        val permitted = enumeratePayments(request).filter { paymentAllowed(it, plan) }
         // Production Human Baseline should never need this fallback because choosePurchase
         // applies the same plan. It keeps direct/legacy callers legal rather than returning
         // an invalid payment if they invoke choosePayment in isolation.
         val payments = permitted.ifEmpty { enumeratePayments(request) }
         if (payments.isEmpty()) return BuyPayment()
 
-        val preferredPayments = preferCritterTypeWhenRequired(payments)
+        val minimumOverpay = payments.minOf { it.total - request.cost }
+        val minimumOverpayPayments = payments.filter { it.total - request.cost == minimumOverpay }
+        val reserveAwarePayments = minimumRemainingDice?.let { minimum ->
+            minimumOverpayPayments.filter { payment ->
+                remainingDicePower(request, payment) >= minimum
+            }.ifEmpty { minimumOverpayPayments }
+        } ?: minimumOverpayPayments
+
+        val preferredPayments = preferCritterTypeWhenRequired(reserveAwarePayments)
         return scoreEngine.chooseValue(
             context = request.context,
             candidates = preferredPayments.map { payment ->
@@ -180,6 +183,120 @@ class HumanBaselineBuyStrategy(
         }
     }
 
+    private data class PurchaseSelection(
+        val choice: BuyChoice,
+        val minimumRemainingDice: Int?
+    )
+
+    private fun choosePlantPurchase(
+        context: DecisionContext,
+        plants: List<BuyItem.Plant>,
+        plan: CritterSpendPlan
+    ): PurchaseSelection {
+        require(plants.isNotEmpty()) { "Plant purchase selection requires candidates" }
+
+        val maxCost = plants.maxOf { it.cost }
+        val minimumRemainingDice = policy.buyCheaperPlantMinimumRemainingDice(context)
+        val allCosts = plants.map { it.cost }.distinct().sorted()
+        val weightedCost = chooseWeightedPlantCostTier(context, allCosts)
+        val selectedCost = if (weightedCost < maxCost) {
+            val representative = plants.first { it.cost == weightedCost }
+            if (canLeaveMinimumDiceAfterPurchase(
+                    context = context,
+                    item = representative,
+                    plan = plan,
+                    minimumRemainingDice = minimumRemainingDice
+                )
+            ) weightedCost else maxCost
+        } else {
+            maxCost
+        }
+        val tier = plants.filter { it.cost == selectedCost }
+        val choice = chooseHighestCostTier(context, tier)
+        return PurchaseSelection(
+            choice = choice,
+            minimumRemainingDice = if (selectedCost < maxCost) minimumRemainingDice else null
+        )
+    }
+
+    private fun chooseWeightedPlantCostTier(
+        context: DecisionContext,
+        costsAscending: List<Int>
+    ): Int {
+        require(costsAscending.isNotEmpty()) { "Plant cost-tier selection requires costs" }
+        if (costsAscending.size == 1) return costsAscending.single()
+
+        val weighted = costsAscending.mapIndexed { index, cost ->
+            cost to policy.buyPlantCostTierWeight(context, index)
+        }
+        val totalWeight = weighted.sumOf { it.second }
+        var roll = strategyRandomizer.nextInt(totalWeight)
+        weighted.forEach { (cost, weight) ->
+            if (roll < weight) return cost
+            roll -= weight
+        }
+        return weighted.last().first
+    }
+
+    private fun chooseHighestCostTier(
+        context: DecisionContext,
+        items: List<BuyItem>
+    ): BuyChoice {
+        require(items.isNotEmpty()) { "Purchase selection requires candidates" }
+        val highestCost = items.maxOf { it.cost }
+        val tier = items.filter { it.cost == highestCost }
+        return scoreEngine.chooseValue(
+            context = context,
+            candidates = tier.map { item ->
+                val baselineScore = PurchasePriority.score(
+                    context = context,
+                    item = item,
+                    cardScorers = cardScorers
+                )
+                DecisionCandidate<BuyChoice>(
+                    choice = BuyChoice.Purchase(item),
+                    score = purchaseScoreModifier.modify(
+                        context = context,
+                        item = item,
+                        score = baselineScore
+                    )
+                )
+            },
+            influenceRegistry = influenceRegistry
+        )
+    }
+
+    private fun canLeaveMinimumDiceAfterPurchase(
+        context: DecisionContext,
+        item: BuyItem.Plant,
+        plan: CritterSpendPlan,
+        minimumRemainingDice: Int
+    ): Boolean {
+        val request = ChoosePaymentRequest(
+            item = item,
+            availableDice = context.self.board.hand.map { BuyDieResource(it.sides, it.value) },
+            availableCritters = buildList {
+                repeat(context.self.board.bees) {
+                    add(BuyCritterResource(Critter.BEE, context.self.board.beeValue))
+                }
+                repeat(context.self.board.worms) {
+                    add(BuyCritterResource(Critter.WORM, context.self.board.wormValue))
+                }
+            },
+            context = context
+        )
+        val permitted = enumeratePayments(request).filter { paymentAllowed(it, plan) }
+        if (permitted.isEmpty()) return false
+        val minimumOverpay = permitted.minOf { it.total - item.cost }
+        return permitted
+            .asSequence()
+            .filter { it.total - item.cost == minimumOverpay }
+            .any { remainingDicePower(request, it) >= minimumRemainingDice }
+    }
+
+    private fun remainingDicePower(request: ChoosePaymentRequest, payment: BuyPayment): Int =
+        request.availableDice.sumOf { it.value } - payment.dice.sumOf { it.value }
+
     internal fun critterSpendPercentage(surplus: Int): Int {
         require(surplus >= 0) { "Critter surplus cannot be negative: $surplus" }
         if (surplus == 0) return 0
@@ -214,31 +331,20 @@ class HumanBaselineBuyStrategy(
         val ordinaryCritterPower = if (plan.allowSurplus) {
             plan.beeSurplus * beeValue + plan.wormSurplus * wormValue
         } else 0
-        if (dicePower + ordinaryCritterPower >= item.cost) return true
-
-        if (!isPremium(item)) return false
-        val allCritterPower = context.self.board.bees * beeValue + context.self.board.worms * wormValue
-        return dicePower + allCritterPower >= item.cost
+        return dicePower + ordinaryCritterPower >= item.cost
     }
 
     private fun paymentAllowed(
-        request: ChoosePaymentRequest,
         payment: BuyPayment,
         plan: CritterSpendPlan
     ): Boolean {
         if (payment.critters.isEmpty()) return true
-        if (isPremium(request.item)) return true
         if (!plan.allowSurplus) return false
         val beesSpent = payment.critters.count { it.critter == Critter.BEE }
         val wormsSpent = payment.critters.count { it.critter == Critter.WORM }
         return beesSpent <= plan.beeSurplus && wormsSpent <= plan.wormSurplus
     }
 
-    private fun isPremium(item: BuyItem): Boolean =
-        when (item) {
-            is BuyItem.Die -> item.cost == PREMIUM_DIE_COST
-            is BuyItem.Plant -> item.card.type == PlantType.FLOWER && item.cost == PREMIUM_FLOWER_COST
-        }
 
     private fun preferCritterTypeWhenRequired(payments: List<BuyPayment>): List<BuyPayment> {
         if (payments.any { it.critters.isEmpty() }) return payments
@@ -253,6 +359,7 @@ class HumanBaselineBuyStrategy(
     private fun clearPendingPlan() {
         pendingItem = null
         pendingPlan = null
+        pendingMinimumRemainingDice = null
     }
 
     /** Enumerate complete sufficient payments; never add resources after a payment is already sufficient. */

@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.ResourceReserveTarg
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
@@ -84,6 +85,10 @@ open class HumanBaselinePolicy(
         DEFAULT_BUY_PLANT_EQUIVALENT_DICE_POWER_PER_CARD,
     private val buyBalanceDifferenceFor85PercentValue: Double =
         DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT,
+    private val buyPlantCostTierExponentialBaseValue: Double =
+        DEFAULT_BUY_PLANT_COST_TIER_EXPONENTIAL_BASE,
+    private val buyCheaperPlantMinimumRemainingDiceValue: Int =
+        DEFAULT_BUY_CHEAPER_PLANT_MINIMUM_REMAINING_DICE,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -151,6 +156,12 @@ open class HumanBaselinePolicy(
         }
         require(buyBalanceDifferenceFor85PercentValue > 0.0) {
             "Buy balance 85-percent difference must be positive"
+        }
+        require(buyPlantCostTierExponentialBaseValue > 1.0) {
+            "Buy Plant cost-tier exponential base must be greater than 1"
+        }
+        require(buyCheaperPlantMinimumRemainingDiceValue >= 0) {
+            "Buy cheaper-Plant remaining-dice minimum cannot be negative"
         }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
@@ -245,9 +256,9 @@ open class HumanBaselinePolicy(
         const val DEFAULT_POCKETED_SPARK_BATTLE_D20_USE_PERCENTAGE: Int = 95
 
         /**
-         * Before the first Battle, ordinary players strongly prefer to build a
-         * minimum two-card Creature whenever a Plant is affordable. The 90%
-         * gate keeps rare "take the shiny die anyway" games possible.
+         * Ordinary players strongly prefer to recover to a minimum two-card
+         * Creature whenever they currently have fewer than two grafted Plants.
+         * The 90% gate keeps rare "take the shiny die anyway" games possible.
          */
         const val DEFAULT_LOW_PLANT_PRIORITY_PERCENTAGE: Int = 90
         const val DEFAULT_LOW_PLANT_FLOOR: Int = 2
@@ -263,6 +274,19 @@ open class HumanBaselinePolicy(
          * many balance points, Human Baseline favors the weaker side 85/15.
          */
         const val DEFAULT_BUY_BALANCE_DIFFERENCE_FOR_85_PERCENT: Double = 3.0
+
+        /**
+         * Exponential preference between affordable Plant cost tiers. With the
+         * normal six tiers (5, 7, 9, 11, 14, 17), 1.89 gives approximately
+         * 2/4/7/13/25/48 percent from cheapest to most expensive.
+         */
+        const val DEFAULT_BUY_PLANT_COST_TIER_EXPONENTIAL_BASE: Double = 1.89
+
+        /**
+         * A deliberately cheaper-than-maximum Plant buy must leave at least this
+         * much die value in Hand so a plausible follow-up purchase remains.
+         */
+        const val DEFAULT_BUY_CHEAPER_PLANT_MINIMUM_REMAINING_DICE: Int = 5
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -465,6 +489,25 @@ open class HumanBaselinePolicy(
     /** Visible Buy-balance value assigned to each grafted Plant. */
     open fun buyPlantEquivalentDicePowerPerCard(context: DecisionContext): Int =
         buyPlantEquivalentDicePowerPerCardValue
+
+    /**
+     * Relative weight for one affordable Plant cost tier. Rank zero is the
+     * cheapest eligible tier, rank one the next-cheapest, and so on.
+     *
+     * Human Baseline intentionally uses price preference rather than a fixed
+     * "always buy the most expensive Plant" rule. Player-specific policies may
+     * override this to model different shopping personalities.
+     */
+    open fun buyPlantCostTierWeight(context: DecisionContext, rankFromCheapest: Int): Int {
+        require(rankFromCheapest >= 0) { "Plant cost-tier rank cannot be negative" }
+        return (1000.0 * buyPlantCostTierExponentialBaseValue.pow(rankFromCheapest))
+            .roundToInt()
+            .coerceAtLeast(1)
+    }
+
+    /** Minimum Hand die-value preserved by an intentionally cheaper Plant buy. */
+    open fun buyCheaperPlantMinimumRemainingDice(context: DecisionContext): Int =
+        buyCheaperPlantMinimumRemainingDiceValue
 
     /**
      * Probability of preferring the Plant category when both a Plant and a die
