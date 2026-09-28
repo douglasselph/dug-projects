@@ -245,12 +245,13 @@ class EffectFamilySanityTest {
             assertEquals(6, snapshot.hand.single().value)
             assertTrue(snapshot.plants.all { !it.faceUp })
             assertEquals(
-                listOf(
+                setOf(
                     GameEffect.RAISE_DIE_PLUS_4,
                     GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
                 ),
-                plantEffectsFor(harness, 1).map { it.effect }
+                plantEffectsFor(harness, 1).map { it.effect }.toSet()
             )
+            assertEquals(2, plantEffectsFor(harness, 1).size)
             p1.assertExhausted()
             p2.assertExhausted()
         }

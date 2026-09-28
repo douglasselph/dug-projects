@@ -176,7 +176,10 @@ class WholeGameSanityTest {
     fun `standard 8 Cultivation plus 4 Battle mechanical-control game completes with coherent lifecycle`() {
         val scenario = GameScenario(
             numPlayers = 4,
-            roundSetup = GameRoundSetup.standard(),
+            roundSetup = GameRoundSetup.Ordered(
+                cultivationRounds = 8,
+                battleRounds = 4
+            ),
             seed = 24_680L
         )
 

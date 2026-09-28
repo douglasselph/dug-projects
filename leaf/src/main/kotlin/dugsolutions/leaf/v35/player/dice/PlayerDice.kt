@@ -120,7 +120,13 @@ class PlayerDice(
      * when successful. Equivalent dice are intentionally interchangeable.
      */
     fun removeFromHand(die: Die): Die? {
-        return if (_hand.remove(die)) die else null
+        val exact = _hand.dice.firstOrNull { it === die }
+        if (exact != null) {
+            return if (_hand.removeExact(exact)) exact else null
+        }
+
+        val equivalent = _hand.dice.firstOrNull { it == die } ?: return null
+        return if (_hand.removeExact(equivalent)) equivalent else null
     }
 
     /**
@@ -171,7 +177,13 @@ class PlayerDice(
      * when successful. Equivalent dice are intentionally interchangeable.
      */
     fun removeFromDiscard(die: Die): Die? {
-        return if (_discard.remove(die)) die else null
+        val exact = _discard.dice.firstOrNull { it === die }
+        if (exact != null) {
+            return if (_discard.removeExact(exact)) exact else null
+        }
+
+        val equivalent = _discard.dice.firstOrNull { it == die } ?: return null
+        return if (_discard.removeExact(equivalent)) equivalent else null
     }
 
     /**

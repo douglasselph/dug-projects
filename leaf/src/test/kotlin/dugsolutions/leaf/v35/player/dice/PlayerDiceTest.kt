@@ -287,6 +287,21 @@ class PlayerDiceTest {
         assertTrue(playerDice.hand.isEmpty())
     }
 
+
+    @Test
+    fun removeFromHand_whenExactDieHasEquivalentSibling_removesExactIdentity() {
+        val first = FixedDie(4, 3)
+        val selected = FixedDie(4, 3)
+        val playerDice = PlayerDice(hand = listOf(first, selected))
+
+        val removed = playerDice.removeFromHand(selected)
+
+        assertTrue(removed === selected)
+        assertEquals(1, playerDice.handSize)
+        assertTrue(playerDice.hand.single() === first)
+        assertTrue(playerDice.hand.none { it === selected })
+    }
+
     @Test
     fun removeFromHand_whenNoMatchingDieExists_returnsNull() {
         val playerDice = PlayerDice(
@@ -299,6 +314,20 @@ class PlayerDiceTest {
 
         assertNull(result)
         assertEquals(1, playerDice.handSize)
+    }
+
+    @Test
+    fun removeFromDiscard_whenExactDieHasEquivalentSibling_removesExactIdentity() {
+        val first = FixedDie(4, 3)
+        val selected = FixedDie(4, 3)
+        val playerDice = PlayerDice(discard = listOf(first, selected))
+
+        val removed = playerDice.removeFromDiscard(selected)
+
+        assertTrue(removed === selected)
+        assertEquals(1, playerDice.discardSize)
+        assertTrue(playerDice.discard.single() === first)
+        assertTrue(playerDice.discard.none { it === selected })
     }
 
     @Test
