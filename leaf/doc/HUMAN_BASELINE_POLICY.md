@@ -97,6 +97,10 @@ The current shared defaults are:
 | `DEFAULT_BUY_PLANT_BEE_BASE_ODDS` | 0.25 | one Bee gives an eligible Plant bridge 20% probability |
 | `DEFAULT_BUY_WORM_BASE_ODDS_AT_TWO_WORMS` | `1/19` | two Worms give an exact one-point Buy bridge about 5% probability |
 | `DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM` | 2.0 | each Worm beyond the second doubles Worm-bridge odds |
+| `DEFAULT_BUY_PLANT_NORMAL_VP_POINTS_PER_VP` | 1 | ordinary Plant buying keeps VP secondary to reusable effect value |
+| `DEFAULT_BUY_PLANT_END_GAME_VP_POINTS_PER_VP` | 5 | end-game Plant-buying window strongly emphasizes projected VP |
+| `DEFAULT_BUY_PLANT_DIVERSITY_PENALTY_BASE` | 10.0 | maximum per-owned-copy diversification pressure for a very weak current purchase |
+| `DEFAULT_BUY_PLANT_DIVERSITY_VALUE_SCALE` | 15.0 | exponential scale that makes duplicate pressure fade as current purchase value rises |
 | `DEFAULT_BATTLE_TRANSITION_SCALE` | 100 | spacing between named Battle Swing transition tiers |
 | `DEFAULT_BATTLE_CLOSE_MARGIN` | 4 | Live-Threat margin defining a close Battle contest |
 | `DEFAULT_BATTLE_SECURED_LEAD` | 10 | Live-Threat lead treated as secured-for-now |
@@ -183,6 +187,8 @@ Protected Critters are therefore not casually counted as ordinary purchasing pow
 The Buy planner makes the reserve deliberately soft in two narrow ways. First, a Bee may be spent from inside the normal two-Bee reserve when a shared probability gate approves a one-tier purchase bridge. This is not generic extra purchasing power: it is a specific D4→D6 / D6→D8 / D8→D10 / D10→D12 bridge, or a Plant bridge where +2 reaches the next legal standard Plant price tier. Second, if at least two Worms are owned, a much lower-probability Worm gate may spend one Worm when the desired purchase is exactly one point above the dice-group budget. One shared Bee willingness roll and one shared Worm willingness roll are reused across every candidate grouping in the same planning pass.
 
 Buy still has no special protected-Critter exception for D20 or cost-17 Flower. Premium prices compete through the same development, two-purchase grouping, and overpay rules as other purchases.
+
+Plant selection within a chosen cost tier now also uses policy-controlled time-sensitive VP and diversification. `buyPlantVpPointsPerProjectedVp(context)` contributes 1 point per projected VP during ordinary engine building and 5 during the end-game Plant-buying window. That window is defined publicly and structurally: the current phase is Cultivation and `battleRoundsRemaining == 1`; it can span multiple Cultivation rounds in the final block before the last Battle. `buyPlantDiversityPenaltyPerOwnedCopy(context, currentPurchaseValue)` applies a per-copy preference for variety, but the penalty decays exponentially as the card's current effect+VP purchase value grows. This allows a weak high-VP card to be a plausible one-of early, discourages repetitive early copies, and then makes repeated copies reasonable when final scoring or a genuinely powerful effect makes the card compelling.
 
 B2 passes this value into Cultivation Plant activation scoring and the Compost, Mulch, and Sunlight Round Effect scorers. B6 also injects the same policy into `HumanBaselineEffectStrategy`, so downstream Cultivation die-target choices use the same reserve-aware Buy-threshold assumptions. Their reasoning therefore agrees with certified Buy about which Critters are normally spendable.
 

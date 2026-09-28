@@ -101,6 +101,14 @@ open class HumanBaselinePolicy(
         DEFAULT_BUY_WORM_BASE_ODDS_AT_TWO_WORMS,
     private val buyWormOddsMultiplierPerAdditionalWormValue: Double =
         DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM,
+    private val buyPlantNormalVpPointsPerVpValue: Int =
+        DEFAULT_BUY_PLANT_NORMAL_VP_POINTS_PER_VP,
+    private val buyPlantEndGameVpPointsPerVpValue: Int =
+        DEFAULT_BUY_PLANT_END_GAME_VP_POINTS_PER_VP,
+    private val buyPlantDiversityPenaltyBaseValue: Double =
+        DEFAULT_BUY_PLANT_DIVERSITY_PENALTY_BASE,
+    private val buyPlantDiversityValueScaleValue: Double =
+        DEFAULT_BUY_PLANT_DIVERSITY_VALUE_SCALE,
     private val battleTransitionScaleValue: Int = DEFAULT_BATTLE_TRANSITION_SCALE,
     private val battleCloseMarginValue: Int = DEFAULT_BATTLE_CLOSE_MARGIN,
     private val battleSecuredLeadValue: Int = DEFAULT_BATTLE_SECURED_LEAD,
@@ -192,6 +200,18 @@ open class HumanBaselinePolicy(
         }
         require(buyWormOddsMultiplierPerAdditionalWormValue > 0.0) {
             "Buy Worm odds multiplier must be positive"
+        }
+        require(buyPlantNormalVpPointsPerVpValue >= 0) {
+            "Buy Plant normal VP points per VP cannot be negative"
+        }
+        require(buyPlantEndGameVpPointsPerVpValue >= buyPlantNormalVpPointsPerVpValue) {
+            "Buy Plant end-game VP points per VP cannot be below the normal value"
+        }
+        require(buyPlantDiversityPenaltyBaseValue >= 0.0) {
+            "Buy Plant diversity penalty base cannot be negative"
+        }
+        require(buyPlantDiversityValueScaleValue > 0.0) {
+            "Buy Plant diversity value scale must be positive"
         }
         require(battleTransitionScaleValue > 0) { "Battle transition scale must be positive" }
         require(battleCloseMarginValue >= 0) { "Battle close margin cannot be negative" }
@@ -343,6 +363,27 @@ open class HumanBaselinePolicy(
 
         /** Each Worm beyond the second doubles the odds of spending one as a one-point bridge. */
         const val DEFAULT_BUY_WORM_ODDS_MULTIPLIER_PER_ADDITIONAL_WORM: Double = 2.0
+
+        /**
+         * During ordinary Buy decisions, printed/projected VP matters but is
+         * intentionally secondary to the Plant's reusable effect.
+         */
+        const val DEFAULT_BUY_PLANT_NORMAL_VP_POINTS_PER_VP: Int = 1
+
+        /**
+         * During the final Cultivation block before the game's last Battle,
+         * Plant VP becomes much more important as final scoring approaches.
+         */
+        const val DEFAULT_BUY_PLANT_END_GAME_VP_POINTS_PER_VP: Int = 5
+
+        /** Maximum per-copy diversification pressure for a very weak current purchase. */
+        const val DEFAULT_BUY_PLANT_DIVERSITY_PENALTY_BASE: Double = 10.0
+
+        /**
+         * Current purchase-value scale over which diversification pressure
+         * decays exponentially. Strong cards therefore invite repeat buys.
+         */
+        const val DEFAULT_BUY_PLANT_DIVERSITY_VALUE_SCALE: Double = 15.0
 
         /** Base spacing between Human Baseline Battle transition tiers. */
         const val DEFAULT_BATTLE_TRANSITION_SCALE: Int = 100
@@ -626,6 +667,44 @@ open class HumanBaselinePolicy(
         val odds = buyWormBaseOddsAtTwoWormsValue *
             buyWormOddsMultiplierPerAdditionalWormValue.pow(wormCount - 2)
         return oddsToPercentage(odds)
+    }
+
+    /**
+     * True throughout the end-game Plant-buying window: any Cultivation
+     * round with exactly one Battle still to come. This uses visible Round Deck structure,
+     * not a hidden or guessed round-number threshold.
+     */
+    open fun isEndGamePlantBuyingWindow(context: DecisionContext): Boolean =
+        context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.CULTIVATION &&
+            context.progress.battleRoundsRemaining == 1
+
+    /**
+     * Buy preference points contributed by each projected Plant VP. VP is a
+     * secondary consideration during normal engine building, then becomes a
+     * major consideration during the end-game Plant-buying window.
+     */
+    open fun buyPlantVpPointsPerProjectedVp(context: DecisionContext): Int =
+        if (isEndGamePlantBuyingWindow(context)) {
+            buyPlantEndGameVpPointsPerVpValue
+        } else {
+            buyPlantNormalVpPointsPerVpValue
+        }
+
+    /**
+     * Per-owned-copy diversification penalty for a Plant with the supplied
+     * current purchase value. The penalty decays exponentially as the card's
+     * effect + time-sensitive VP value rises, so ordinary players diversify
+     * weak/medium cards but happily repeat genuinely compelling cards.
+     */
+    open fun buyPlantDiversityPenaltyPerOwnedCopy(
+        context: DecisionContext,
+        currentPurchaseValue: Int
+    ): Int {
+        val value = currentPurchaseValue.coerceAtLeast(0)
+        return (buyPlantDiversityPenaltyBaseValue *
+            exp(-value.toDouble() / buyPlantDiversityValueScaleValue))
+            .roundToInt()
+            .coerceAtLeast(0)
     }
 
     /**

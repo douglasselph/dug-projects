@@ -286,6 +286,36 @@ class HumanBaselinePolicyTest {
     }
 
     @Test
+    fun `Plant VP pressure jumps throughout Cultivation once only one Battle remains`() {
+        val policy = HumanBaselinePolicy()
+        val ordinary = context(
+            progress = GameProgressView.EMPTY.copy(battleRoundsRemaining = 2)
+        )
+        val finalBuy = context(
+            progress = GameProgressView.EMPTY.copy(
+                battleRoundsRemaining = 1,
+                isFinalCultivationRound = false
+            )
+        )
+
+        assertEquals(1, policy.buyPlantVpPointsPerProjectedVp(ordinary))
+        assertEquals(5, policy.buyPlantVpPointsPerProjectedVp(finalBuy))
+        assertTrue(policy.isEndGamePlantBuyingWindow(finalBuy))
+    }
+
+    @Test
+    fun `Plant diversification pressure fades as current purchase value rises`() {
+        val policy = HumanBaselinePolicy()
+        val context = context()
+
+        val weak = policy.buyPlantDiversityPenaltyPerOwnedCopy(context, 9)
+        val strong = policy.buyPlantDiversityPenaltyPerOwnedCopy(context, 30)
+
+        assertTrue(weak > strong)
+        assertTrue(strong >= 0)
+    }
+
+    @Test
     fun `Buy overpay concern grows exponentially after one`() {
         val policy = HumanBaselinePolicy()
         val context = context()

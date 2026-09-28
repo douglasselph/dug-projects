@@ -365,7 +365,7 @@ internal class HumanBaselineBuyPlanner(
         require(plants.isNotEmpty()) { "Plant selection requires candidates" }
         return plants.maxWithOrNull(
             compareBy<BuyItem.Plant> { plant ->
-                val baseline = PurchasePriority.score(context, plant, cardScorers)
+                val baseline = PurchasePriority.score(context, plant, cardScorers, policy)
                 purchaseScoreModifier.modify(context, plant, baseline).total
             }.thenBy { it.card.name }
         )!!

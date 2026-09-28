@@ -299,7 +299,8 @@ class HumanBaselineBuyStrategy(
                 val baselineScore = PurchasePriority.score(
                     context = context,
                     item = item,
-                    cardScorers = cardScorers
+                    cardScorers = cardScorers,
+                    policy = policy
                 )
                 DecisionCandidate<BuyChoice>(
                     choice = BuyChoice.Purchase(item),
