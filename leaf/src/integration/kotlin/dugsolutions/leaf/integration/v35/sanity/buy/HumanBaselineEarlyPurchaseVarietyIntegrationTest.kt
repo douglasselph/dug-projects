@@ -97,7 +97,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
                 gameNumber = gameNumber,
                 roundNumber = roundNumber,
                 playerId = resources.playerId,
-                purchasingPower = resources.total,
+                purchasingPower = resources.dice.sumOf { it.value },
+                hasCritters = resources.critters.isNotEmpty(),
                 resourceShape = resourceShape(resources),
                 outcome = purchaseOutcome(playerPurchases)
             )
@@ -141,9 +142,18 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         val roundNumber: Int,
         val playerId: PlayerId,
         val purchasingPower: Int,
+        val hasCritters: Boolean,
         val resourceShape: String,
         val outcome: String
     )
+
+    private data class PowerBucket(
+        val purchasingPower: Int,
+        val hasCritters: Boolean
+    ) {
+        fun label(): String =
+            "$purchasingPower purchasing power" + if (hasCritters) " with Critters" else ""
+    }
 
     private object PurchaseVarietyReport {
         fun render(
@@ -159,16 +169,18 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             appendLine("Detailed-report threshold: $commonThreshold observations")
             appendLine()
 
-            val byPower = observations.groupBy { it.purchasingPower }.toSortedMap()
-            val common = byPower.filterValues { it.size >= commonThreshold }
-            val uncommon = byPower.filterValues { it.size < commonThreshold }
+            val groups = observations
+                .groupBy { PowerBucket(it.purchasingPower, it.hasCritters) }
+                .toSortedMap(compareBy<PowerBucket>({ it.purchasingPower }, { it.hasCritters }))
+            val common = groups.filterValues { it.size >= commonThreshold }
+            val uncommon = groups.filterValues { it.size < commonThreshold }
 
             appendLine("ALL PURCHASING POWERS")
-            appendLine(byPower.entries.joinToString(", ") { (power, rows) -> "$power=${rows.size}" })
+            appendLine(groups.entries.joinToString(", ") { (bucket, rows) -> "${bucket.label()}=${rows.size}" })
             appendLine()
 
-            common.forEach { (power, rows) ->
-                appendLine("$power purchasing power: ${rows.size} observations")
+            common.forEach { (bucket, rows) ->
+                appendLine("${bucket.label()}: ${rows.size} observations")
                 val outcomeCounts = rows.groupingBy { it.outcome }.eachCount()
                     .entries
                     .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
@@ -190,9 +202,9 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
 
             if (uncommon.isNotEmpty()) {
                 appendLine("UNCOMMON PURCHASING POWERS (< $commonThreshold observations)")
-                uncommon.forEach { (power, rows) ->
+                uncommon.forEach { (bucket, rows) ->
                     val distinct = rows.map { it.outcome }.toSet().size
-                    appendLine("  $power purchasing power: ${rows.size} times; $distinct distinct purchase outcome${if (distinct == 1) "" else "s"}")
+                    appendLine("  ${bucket.label()}: ${rows.size} times; $distinct distinct purchase outcome${if (distinct == 1) "" else "s"}")
                 }
                 appendLine()
             }
@@ -200,14 +212,18 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             appendLine("ROUND BREAKDOWN")
             for (round in 1..2) {
                 val roundRows = observations.filter { it.roundNumber == round }
+                val roundGroups = roundRows
+                    .groupingBy { PowerBucket(it.purchasingPower, it.hasCritters) }
+                    .eachCount()
+                    .toSortedMap(compareBy<PowerBucket>({ it.purchasingPower }, { it.hasCritters }))
                 appendLine("  Round $round: ${roundRows.size} observations; purchasing powers " +
-                    roundRows.groupingBy { it.purchasingPower }.eachCount().toSortedMap()
-                        .entries.joinToString(", ") { (power, count) -> "$power=$count" })
+                    roundGroups.entries.joinToString(", ") { (bucket, count) -> "${bucket.label()}=$count" })
             }
             appendLine()
             appendLine("NOTE: 'Looks healthy' is a diagnostic flag, not a game-balance assertion.")
             appendLine("A common bucket is flagged when it has only one observed purchase outcome or one outcome exceeds 95%.")
-            appendLine("Resource composition is retained in each observation for follow-up diagnostics even though this report groups by total purchasing power.")
+            appendLine("Purchasing power means rolled dice value only. Observations containing one or more Critters are reported separately as 'with Critters'; Critter value is not added to the displayed purchasing-power number.")
+            appendLine("Resource composition is retained in each observation for follow-up diagnostics.")
         }
 
         private fun healthLine(distinctOutcomes: Int, dominantPercent: Double): String = when {
