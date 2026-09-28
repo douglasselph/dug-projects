@@ -71,7 +71,9 @@ class BaselineRandomnessDiagnosticTest {
             val text = BaselineRandomnessDiagnosticRenderer.render(first)
             assertTrue(text.contains("Games: 4"))
             assertTrue(text.contains("Plant=["))
-            assertTrue(text.contains("Dice=[D4="))
+            assertTrue(text.contains("Dice=["))
+            assertTrue(text.contains("D4"))
+            assertTrue(text.contains("R5") || text.contains("R7") || text.contains("R9"))
             assertTrue(text.contains("diagnostic, not pass/fail"))
         } finally {
             application.close()
