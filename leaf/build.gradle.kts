@@ -329,3 +329,14 @@ tasks.register<JavaExec>("runBaselineCalibration") {
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
     project.findProperty("plants")?.toString()?.let { args("--plants=$it") }
 }
+
+tasks.register<JavaExec>("runSixWispExperiment") {
+    description = "Runs matched Human Baseline control vs Six-Wisp opening games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.sixwisp.SixWispExperimentMainKt")
+    project.findProperty("games")?.toString()?.let { args(it) }
+    project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
+    project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+}
