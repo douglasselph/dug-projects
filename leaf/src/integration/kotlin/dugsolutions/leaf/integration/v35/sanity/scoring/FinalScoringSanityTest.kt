@@ -172,7 +172,6 @@ class FinalScoringSanityTest {
         IntegrationGameHarness(
             GameScenario(
                 numPlayers = 2,
-                selectedPlantNames = SCORING_PLANTS,
                 roundSetup = GameRoundSetup.Ordered(
                     cultivationRounds = 1,
                     battleRounds = 0
@@ -183,20 +182,4 @@ class FinalScoringSanityTest {
             )
         )
 
-    companion object {
-        private val SCORING_PLANTS = listOf(
-            // Roots
-            "Root_05_02", // Root Four More
-            "Root_07_04", // Root Recall
-            "Root_09_03", // Root Kindred
-            // Vines: includes fixed and variable scoring.
-            "Vine_07_01", // Berry Important
-            "Vine_07_04", // Vine Yield
-            "Vine_09_01", // Low & Behold
-            // Flowers: includes variable Butterfly scoring.
-            "Flower_11_01", // Alluring Nectar
-            "Flower_11_02", // Bloom Backbone
-            "Flower_17_04"  // Queen's Blossom
-        )
-    }
 }
