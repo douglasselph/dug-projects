@@ -19,7 +19,7 @@ data class BuyEvolutionConfig(
         require(populationSize >= 2)
         require(eliteCount in 1 until populationSize)
         require(mutationSigma > 0.0 && mutationSigma.isFinite())
-        require(mutationsPerChild in 1..BuyFeature.entries.size)
+        require(mutationsPerChild >= 1)
     }
 }
 
@@ -45,11 +45,20 @@ class BuyPolicyEvolution(private val config: BuyEvolutionConfig) {
 
     fun mutate(parent: LearnedBuyWeights): LearnedBuyWeights {
         val values = parent.toDoubleArray()
+        val named = parent.namedWeights().toMutableMap()
+        val namedKeys = named.keys.sorted()
+        val total = values.size + namedKeys.size
+        require(total > 0) { "Cannot mutate an empty learned Buy policy" }
         repeat(config.mutationsPerChild) {
-            val index = random.nextInt(values.size)
-            values[index] += gaussian() * config.mutationSigma
+            val index = random.nextInt(total)
+            val delta = gaussian() * config.mutationSigma
+            if (index < values.size) values[index] += delta
+            else {
+                val key = namedKeys[index - values.size]
+                named[key] = named.getValue(key) + delta
+            }
         }
-        return LearnedBuyWeights.fromDoubleArray(values, parent.provenance)
+        return LearnedBuyWeights.fromDoubleArray(values, parent.provenance, named)
     }
 
     // Box-Muller, driven only by the dedicated deterministic evolution RNG.

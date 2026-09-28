@@ -52,6 +52,8 @@ object BuyFeatureExtractor {
             }
             is BuyItem.Plant -> {
                 put(BuyFeature.ACTION_IS_PLANT, 1); put(BuyFeature.ACTION_COST, action.cost)
+                putNamed(LearnedBuyWeights.cardFeature(action.card.name), 1.0)
+                putNamed(LearnedBuyWeights.costFeature(action.cost), 1.0)
                 this[when (action.card.type) {
                     PlantType.ROOT -> BuyFeature.ACTION_IS_ROOT
                     PlantType.VINE -> BuyFeature.ACTION_IS_VINE
@@ -81,5 +83,6 @@ object BuyFeatureExtractor {
                 this[BuyFeature.valueOf("${base.name}_$suffix")] = baseValue
             }
         }
+        if (action is BuyItem.Plant) putNamed("${LearnedBuyWeights.costFeature(action.cost)}_$suffix", 1.0)
     }
 }

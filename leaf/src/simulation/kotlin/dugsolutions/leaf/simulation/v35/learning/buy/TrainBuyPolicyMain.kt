@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuy
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyProvenance
+import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyCardCatalog
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -34,7 +35,7 @@ fun main(args: Array<String>) {
         val grove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
-        val initial = LearnedBuyWeights.load(o.input)
+        val initial = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(o.input), plantManager.getAllCards().cards)
         val evolution = BuyPolicyEvolution(BuyEvolutionConfig(o.population, o.elites, o.sigma, o.mutations, o.evolutionSeed))
         var population = evolution.initialPopulation(initial)
         var allTime = EvaluatedBuyPolicy(initial, Double.NEGATIVE_INFINITY)
@@ -59,7 +60,7 @@ fun main(args: Array<String>) {
                     trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
                     generations = generation + 1, gamesPerPolicy = o.games, population = o.population,
                     mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed, mechanicalSeedStart = o.seed,
-                    strategySeedStart = o.strategySeed, fitness = best.fitness
+                    strategySeedStart = o.strategySeed, fitness = best.fitness, cardManifest = initial.provenance.cardManifest
                 )).save(o.output) // checkpoint every genuine improvement
             }
             val mean = evaluated.map { it.fitness }.average()
@@ -72,7 +73,7 @@ fun main(args: Array<String>) {
             trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
             generations = o.generations, gamesPerPolicy = o.games, population = o.population,
             mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed,
-            mechanicalSeedStart = o.seed, strategySeedStart = o.strategySeed, fitness = allTime.fitness
+            mechanicalSeedStart = o.seed, strategySeedStart = o.strategySeed, fitness = allTime.fitness, cardManifest = initial.provenance.cardManifest
         )).save(o.output)
         println()
         println("Training complete. Best candidate written to ${o.output}")

@@ -66,6 +66,18 @@ class LearnedBuyFoundationTest {
     }
 
     @Test
+    fun `named card and cost weights save and load exactly`(@TempDir dir: Path) {
+        val path = dir.resolve("named.weights")
+        val original = LearnedBuyWeights.zeros()
+            .withNamed("CARD_Vine_09_01", 1.25)
+            .withNamed("ACTION_COST_9", -0.4)
+            .withNamed("ACTION_COST_9_STAGE_2", 0.75)
+        original.save(path)
+        val loaded = LearnedBuyWeights.load(path)
+        assertEquals(original.namedWeights(), loaded.namedWeights())
+    }
+
+    @Test
     fun `unknown weight key fails loudly`(@TempDir dir: Path) {
         val path = dir.resolve("weights.txt")
         LearnedBuyWeights.zeros().save(path)
