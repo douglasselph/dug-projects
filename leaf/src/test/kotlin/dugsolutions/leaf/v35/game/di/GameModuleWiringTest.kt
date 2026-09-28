@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.game.round.cultivation.CultivationRound
 import dugsolutions.leaf.v35.game.scoring.FinalScorer
+import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -56,6 +57,7 @@ class GameModuleWiringTest {
             loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST))
         }
 
+        koin.get<PlantCardManager>().loadCards(plantRegistry)
         koin.get<WispCardManager>().loadCards(wispRegistry)
         koin.get<RoundCardManager>().loadCards(roundRegistry)
 
