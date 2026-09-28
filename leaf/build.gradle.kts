@@ -140,6 +140,14 @@ tasks.register<Test>("integrationTest") {
 
     useJUnitPlatform()
 
+    listOf(
+        "leaf.purchaseVariety.games",
+        "leaf.purchaseVariety.commonThreshold",
+        "leaf.purchaseVariety.detail"
+    ).forEach { propertyName ->
+        System.getProperty(propertyName)?.let { systemProperty(propertyName, it) }
+    }
+
     filter {
         includeTestsMatching("dugsolutions.leaf.integration.v35.*")
     }

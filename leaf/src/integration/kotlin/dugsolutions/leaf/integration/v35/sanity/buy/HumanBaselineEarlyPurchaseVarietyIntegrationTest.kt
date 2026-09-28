@@ -34,6 +34,7 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
     fun `early Human Baseline purchases show their variety by purchasing power`() {
         val gameCount = Integer.getInteger(GAMES_PROPERTY, DEFAULT_GAMES)
         val commonThreshold = Integer.getInteger(COMMON_THRESHOLD_PROPERTY, DEFAULT_COMMON_THRESHOLD)
+        val detail = java.lang.Boolean.getBoolean(DETAIL_PROPERTY)
         require(gameCount > 0) { "$GAMES_PROPERTY must be positive" }
         require(commonThreshold > 0) { "$COMMON_THRESHOLD_PROPERTY must be positive" }
 
@@ -59,6 +60,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
                 for (roundNumber in 1..2) {
                     observations += observationsForRound(
                         gameNumber = gameIndex + 1,
+                        mechanicalSeed = mechanicalSeed,
+                        strategySeed = strategySeed,
                         roundNumber = roundNumber,
                         entries = ChronicleQueries.entriesForRound(entries, roundNumber)
                     )
@@ -73,7 +76,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         val report = PurchaseVarietyReport.render(
             observations = observations,
             gameCount = gameCount,
-            commonThreshold = commonThreshold
+            commonThreshold = commonThreshold,
+            detail = detail
         )
         println("\n$report")
 
@@ -85,6 +89,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
 
     private fun observationsForRound(
         gameNumber: Int,
+        mechanicalSeed: Long,
+        strategySeed: Long,
         roundNumber: Int,
         entries: List<GameEntry>
     ): List<PurchaseObservation> {
@@ -95,6 +101,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             val playerPurchases = purchases.filter { it.playerId == resources.playerId }
             PurchaseObservation(
                 gameNumber = gameNumber,
+                mechanicalSeed = mechanicalSeed,
+                strategySeed = strategySeed,
                 roundNumber = roundNumber,
                 playerId = resources.playerId,
                 purchasingPower = resources.dice.sumOf { it.value },
@@ -139,6 +147,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
 
     private data class PurchaseObservation(
         val gameNumber: Int,
+        val mechanicalSeed: Long,
+        val strategySeed: Long,
         val roundNumber: Int,
         val playerId: PlayerId,
         val purchasingPower: Int,
@@ -159,7 +169,8 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         fun render(
             observations: List<PurchaseObservation>,
             gameCount: Int,
-            commonThreshold: Int
+            commonThreshold: Int,
+            detail: Boolean
         ): String = buildString {
             appendLine("HUMAN BASELINE — EARLY PURCHASE VARIETY")
             appendLine("Games: $gameCount")
@@ -187,10 +198,17 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
                 val displayed = outcomeCounts.take(MAX_OUTCOMES_SHOWN)
                 displayed.forEach { (outcome, count) ->
                     appendLine("  $outcome = ${percent(count, rows.size)}")
+                    if (detail) {
+                        appendLine("    ${exampleLine(rows.first { it.outcome == outcome })}")
+                    }
                 }
                 val otherCount = outcomeCounts.drop(MAX_OUTCOMES_SHOWN).sumOf { it.value }
                 if (otherCount > 0) {
                     appendLine("  other = ${percent(otherCount, rows.size)}")
+                    if (detail) {
+                        val otherOutcomes = outcomeCounts.drop(MAX_OUTCOMES_SHOWN).map { it.key }.toSet()
+                        appendLine("    ${exampleLine(rows.first { it.outcome in otherOutcomes })}")
+                    }
                 }
 
                 val dominantCount = outcomeCounts.firstOrNull()?.value ?: 0
@@ -203,8 +221,17 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             if (uncommon.isNotEmpty()) {
                 appendLine("UNCOMMON PURCHASING POWERS (< $commonThreshold observations)")
                 uncommon.forEach { (bucket, rows) ->
-                    val distinct = rows.map { it.outcome }.toSet().size
+                    val outcomeCounts = rows.groupingBy { it.outcome }.eachCount()
+                        .entries
+                        .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+                    val distinct = outcomeCounts.size
                     appendLine("  ${bucket.label()}: ${rows.size} times; $distinct distinct purchase outcome${if (distinct == 1) "" else "s"}")
+                    if (detail) {
+                        outcomeCounts.forEach { (outcome, count) ->
+                            appendLine("    $outcome = ${percent(count, rows.size)}")
+                            appendLine("      ${exampleLine(rows.first { it.outcome == outcome })}")
+                        }
+                    }
                 }
                 appendLine()
             }
@@ -224,7 +251,14 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             appendLine("A common bucket is flagged when it has only one observed purchase outcome or one outcome exceeds 95%.")
             appendLine("Purchasing power means rolled dice value only. Observations containing one or more Critters are reported separately as 'with Critters'; Critter value is not added to the displayed purchasing-power number.")
             appendLine("Resource composition is retained in each observation for follow-up diagnostics.")
+            if (detail) {
+                appendLine("Detail examples show one reproducible mechanical/strategy seed pair for every reported outcome.")
+            }
         }
+
+        private fun exampleLine(row: PurchaseObservation): String =
+            "example: mechanical=${row.mechanicalSeed} strategy=${row.strategySeed} " +
+                "round=${row.roundNumber} player=${row.playerId} resources=${row.resourceShape}"
 
         private fun healthLine(distinctOutcomes: Int, dominantPercent: Double): String = when {
             distinctOutcomes <= 1 -> "CHECK: only one purchase outcome observed."
@@ -250,5 +284,6 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         private const val STRATEGY_SEED_BASE = 22000L
         private const val GAMES_PROPERTY = "leaf.purchaseVariety.games"
         private const val COMMON_THRESHOLD_PROPERTY = "leaf.purchaseVariety.commonThreshold"
+        private const val DETAIL_PROPERTY = "leaf.purchaseVariety.detail"
     }
 }
