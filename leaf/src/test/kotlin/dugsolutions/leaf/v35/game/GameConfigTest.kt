@@ -14,6 +14,16 @@ import kotlin.test.assertFalse
 class GameConfigTest {
 
     @Test
+    fun humanBaseline_defaultsToFourPlayersNoPlantOverridesAndStandardRounds() {
+        val config = GameConfig.humanBaseline()
+
+        assertEquals(4, config.numPlayers)
+        assertEquals(emptyList(), config.selectedPlantCards)
+        val rounds = config.roundSetup as GameRoundSetup.Patterned
+        assertEquals(listOf(3, 2, 2), rounds.cultivationBlocks)
+    }
+
+    @Test
     fun baseline_createsRequestedNumberOfPlayerDecisionFactories() {
         val config =
             GameConfig.baseline(
@@ -138,23 +148,15 @@ class GameConfigTest {
     }
 
     @Test
-    fun standardRoundSetup_isEightCultivationAndFourBattle() {
+    fun standardRoundSetup_isPatternedThreeTwoTwo() {
         val setup =
             GameRoundSetup.standard()
-                as GameRoundSetup.Ordered
+                as GameRoundSetup.Patterned
 
-        assertEquals(
-            8,
-            setup.cultivationRounds
-        )
-        assertEquals(
-            4,
-            setup.battleRounds
-        )
-        assertEquals(
-            12,
-            setup.totalRounds
-        )
+        assertEquals(listOf(3, 2, 2), setup.cultivationBlocks)
+        assertEquals(7, setup.cultivationRounds)
+        assertEquals(3, setup.battleRounds)
+        assertEquals(10, setup.totalRounds)
     }
 
     @Test

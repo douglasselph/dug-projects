@@ -84,7 +84,12 @@ fun interface PlayerDecisionFactory {
  * Players, Grove, Chronicle, RoundDeck, Randomizer, and dice from this config.
  */
 class GameConfig(
-    selectedPlantCards: List<PlantCard>,
+    /**
+     * Explicit Grove slot overrides. The list may contain zero through nine
+     * cards; GameFactory fills every unspecified type/cost slot randomly from
+     * the loaded Plant catalog using mechanical RNG.
+     */
+    selectedPlantCards: List<PlantCard> = emptyList(),
     playerDecisionFactories: List<PlayerDecisionFactory>,
     val roundSetup: GameRoundSetup = GameRoundSetup.standard(),
     /** Mechanical game RNG seed: dice, decks, random game effects, etc. */
@@ -143,8 +148,8 @@ class GameConfig(
 
         /** Every player receives the deterministic Mechanical Control policy. */
         fun mechanicalControl(
-            selectedPlantCards: List<PlantCard>,
-            numPlayers: Int,
+            selectedPlantCards: List<PlantCard> = emptyList(),
+            numPlayers: Int = 4,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
@@ -172,8 +177,8 @@ class GameConfig(
 
         /** Every player receives the canonical Human Baseline policy. */
         fun humanBaseline(
-            selectedPlantCards: List<PlantCard>,
-            numPlayers: Int,
+            selectedPlantCards: List<PlantCard> = emptyList(),
+            numPlayers: Int = 4,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
@@ -201,8 +206,8 @@ class GameConfig(
 
         /** Canonical baseline now means Human Baseline. */
         fun baseline(
-            selectedPlantCards: List<PlantCard>,
-            numPlayers: Int,
+            selectedPlantCards: List<PlantCard> = emptyList(),
+            numPlayers: Int = 4,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
@@ -227,8 +232,8 @@ class GameConfig(
             replaceWith = ReplaceWith("mechanicalControl(selectedPlantCards, numPlayers, roundSetup, seed, dieConfig, strategySeed, recordDecisionReasoning, chronicleDetail)")
         )
         fun mechanicalBaseline(
-            selectedPlantCards: List<PlantCard>,
-            numPlayers: Int,
+            selectedPlantCards: List<PlantCard> = emptyList(),
+            numPlayers: Int = 4,
             roundSetup: GameRoundSetup = GameRoundSetup.standard(),
             seed: Long? = null,
             dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
@@ -338,10 +343,7 @@ sealed interface GameRoundSetup {
             )
 
         fun standard(): GameRoundSetup =
-            Ordered(
-                cultivationRounds = 8,
-                battleRounds = 4
-            )
+            patterned(3, 2, 2)
 
         fun extended(): GameRoundSetup =
             Ordered(

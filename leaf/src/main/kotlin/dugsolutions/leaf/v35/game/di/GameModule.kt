@@ -17,7 +17,8 @@ val gameModule: Module = module {
     single {
         GameFactory(
             groveFactory = get(),
-            roundCardManager = get()
+            roundCardManager = get(),
+            grovePlantResolver = get()
         )
     }
 

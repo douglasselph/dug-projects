@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRunner
@@ -24,17 +25,7 @@ import kotlin.test.assertTrue
 class GameSummaryExtractorTest {
 
     companion object {
-        private val FIRST_GAME_PLANT_NAMES = listOf(
-            "Root_05_02",
-            "Root_07_04",
-            "Root_09_03",
-            "Vine_07_01",
-            "Vine_09_01",
-            "Vine_11_04",
-            "Flower_11_03",
-            "Flower_14_02",
-            "Flower_17_04"
-        )
+        private val FIRST_GAME_PLANT_NAMES = FirstGameDefault.PLANT_NAMES
     }
 
     @Test

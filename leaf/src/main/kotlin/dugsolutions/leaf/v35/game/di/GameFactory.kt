@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.plant.GrovePlantResolver
 import dugsolutions.leaf.v35.player.di.PlayerFactory
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
@@ -25,7 +26,8 @@ import dugsolutions.leaf.v35.wisp.domain.WispCard
  */
 class GameFactory(
     private val groveFactory: GroveFactory,
-    private val roundCardManager: RoundCardManager
+    private val roundCardManager: RoundCardManager,
+    private val grovePlantResolver: GrovePlantResolver
 ) {
     operator fun invoke(
         config: GameConfig,
@@ -76,10 +78,16 @@ class GameFactory(
                 )
             }
 
+        val resolvedPlantCards =
+            grovePlantResolver.resolve(
+                overrides = config.selectedPlantCards,
+                randomizer = randomizer
+            )
+
         val grove =
             groveFactory(
                 selectedPlantCards =
-                    config.selectedPlantCards,
+                    resolvedPlantCards,
                 randomizer =
                     randomizer,
                 exactWispCards =

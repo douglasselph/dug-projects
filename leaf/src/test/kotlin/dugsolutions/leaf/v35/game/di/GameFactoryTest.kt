@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.grove.di.GroveFactory
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
+import dugsolutions.leaf.v35.plant.PlantCardManager
+import dugsolutions.leaf.v35.plant.GrovePlantResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
@@ -35,6 +37,7 @@ class GameFactoryTest {
     private lateinit var selectedCards: List<PlantCard>
     private lateinit var wispManager: WispCardManager
     private lateinit var roundManager: RoundCardManager
+    private lateinit var plantManager: PlantCardManager
 
     @BeforeEach
     fun setup() {
@@ -77,32 +80,19 @@ class GameFactoryTest {
             plantRegistry.getAllCards()
 
         selectedCards =
-            buildList {
-                addAll(
-                    allPlants
-                        .filter {
-                            it.type ==
-                                PlantType.ROOT
-                        }
-                        .take(3)
-                )
-                addAll(
-                    allPlants
-                        .filter {
-                            it.type ==
-                                PlantType.VINE
-                        }
-                        .take(3)
-                )
-                addAll(
-                    allPlants
-                        .filter {
-                            it.type ==
-                                PlantType.FLOWER
-                        }
-                        .take(3)
-                )
-            }
+            listOf(
+                allPlants.first { it.type == PlantType.ROOT && it.cost == 5 },
+                allPlants.first { it.type == PlantType.ROOT && it.cost == 7 },
+                allPlants.first { it.type == PlantType.ROOT && it.cost == 9 },
+                allPlants.first { it.type == PlantType.VINE && it.cost == 7 },
+                allPlants.first { it.type == PlantType.VINE && it.cost == 9 },
+                allPlants.first { it.type == PlantType.VINE && it.cost == 11 },
+                allPlants.first { it.type == PlantType.FLOWER && it.cost == 11 },
+                allPlants.first { it.type == PlantType.FLOWER && it.cost == 14 },
+                allPlants.first { it.type == PlantType.FLOWER && it.cost == 17 }
+            )
+
+        plantManager = PlantCardManager().apply { loadCards(plantRegistry) }
 
         factory =
             GameFactory(
@@ -112,8 +102,26 @@ class GameFactoryTest {
                             wispManager
                     ),
                 roundCardManager =
-                    roundManager
+                    roundManager,
+                grovePlantResolver =
+                    GrovePlantResolver(plantManager)
             )
+    }
+
+    @Test
+    fun invoke_withoutPlantOverrides_resolvesAReproducibleRulesLegalGrove() {
+        fun names(seed: Long): List<String> {
+            val game = factory(
+                GameConfig.humanBaseline(seed = seed, strategySeed = 999L)
+            )
+            return game.grove.plantMarket.stacks.map { it.card.name }
+        }
+
+        val first = names(12000L)
+        val repeated = names(12000L)
+
+        assertEquals(first, repeated)
+        assertEquals(9, first.size)
     }
 
     @Test

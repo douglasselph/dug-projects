@@ -3,6 +3,7 @@ package dugsolutions.leaf.simulation.v35.experiment.sixwisp
 import dugsolutions.leaf.simulation.v35.analysis.GameSummary
 import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRunner
@@ -19,11 +20,7 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
 
-private val DEFAULT_PLANTS = listOf(
-    "Root_05_02", "Root_07_04", "Root_09_03",
-    "Vine_07_01", "Vine_09_01", "Vine_11_04",
-    "Flower_11_03", "Flower_14_02", "Flower_17_04"
-)
+private val DEFAULT_PLANTS = FirstGameDefault.PLANT_NAMES
 
 fun main(args: Array<String>) {
     val options = Options.parse(args.toList())

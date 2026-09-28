@@ -1,6 +1,7 @@
 package dugsolutions.leaf.integration.v35.support
 
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
@@ -30,17 +31,7 @@ class IntegrationCatalog(
 ) {
     companion object {
         /** Stable CSV keys for the recommended first-game Grove. */
-        val FIRST_GAME_PLANT_NAMES: List<String> = listOf(
-            "Root_05_02", // Root Four More
-            "Root_07_04", // Root Recall
-            "Root_09_03", // Root Kindred
-            "Vine_07_01", // Berry Important
-            "Vine_09_01", // Low & Behold
-            "Vine_11_04", // Vine's the Limit
-            "Flower_11_03", // Sapping Snapdragon
-            "Flower_14_02", // Bloom Backflip
-            "Flower_17_04" // Queen's Blossom
-        )
+        val FIRST_GAME_PLANT_NAMES: List<String> = FirstGameDefault.PLANT_NAMES
 
         fun defaultDataRoot(): Path =
             CardDataFiles.dataDirectory()

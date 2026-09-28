@@ -4,6 +4,7 @@ import dugsolutions.leaf.simulation.v35.experiment.GameSummaryBatchRunner
 import dugsolutions.leaf.simulation.v35.experiment.Matchup
 import dugsolutions.leaf.simulation.v35.strategy.StrategyProfile
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.di.GameFactory
@@ -121,10 +122,6 @@ class BaselineRandomnessDiagnosticTest {
     }
 
     companion object {
-        private val FIRST_GAME_PLANT_NAMES = listOf(
-            "Root_05_02", "Root_07_04", "Root_09_03",
-            "Vine_07_01", "Vine_09_01", "Vine_11_04",
-            "Flower_11_03", "Flower_14_02", "Flower_17_04"
-        )
+        private val FIRST_GAME_PLANT_NAMES = FirstGameDefault.PLANT_NAMES
     }
 }
