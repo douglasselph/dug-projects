@@ -14,10 +14,12 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
 class CultivationOpeningDrawFaceIntervention(
     private val affectedPlayerId: PlayerId,
     private val firstCultivationRounds: Int,
-    private val forcedFace: Int
+    private val forcedFace: Int,
+    private val forcedDicePerOpeningRound: Int = 3
 ) : MechanicalIntervention {
 
     private val cultivationOpeningRounds = linkedSetOf<Int>()
+    private val forcedDiceByRound = mutableMapOf<Int, Int>()
 
     init {
         require(firstCultivationRounds > 0) {
@@ -25,6 +27,9 @@ class CultivationOpeningDrawFaceIntervention(
         }
         require(forcedFace > 0) {
             "Forced die face must be positive: $forcedFace"
+        }
+        require(forcedDicePerOpeningRound in 1..3) {
+            "Forced opening dice per round must be 1..3: $forcedDicePerOpeningRound"
         }
     }
 
@@ -45,6 +50,12 @@ class CultivationOpeningDrawFaceIntervention(
         if (request.playerId != affectedPlayerId) {
             return null
         }
+
+        val forcedSoFar = forcedDiceByRound.getOrDefault(roundNumber, 0)
+        if (forcedSoFar >= forcedDicePerOpeningRound) {
+            return null
+        }
+        forcedDiceByRound[roundNumber] = forcedSoFar + 1
 
         require(forcedFace <= request.sides) {
             "Forced face $forcedFace is invalid for D${request.sides}"

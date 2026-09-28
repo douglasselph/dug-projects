@@ -339,4 +339,5 @@ tasks.register<JavaExec>("runSixWispExperiment") {
     project.findProperty("games")?.toString()?.let { args(it) }
     project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+    project.findProperty("wisps")?.toString()?.let { args("--wisps=$it") }
 }

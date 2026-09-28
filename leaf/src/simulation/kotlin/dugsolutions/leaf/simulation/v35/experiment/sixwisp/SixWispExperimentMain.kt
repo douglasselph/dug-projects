@@ -59,7 +59,8 @@ fun main(args: Array<String>) {
                     CultivationOpeningDrawFaceIntervention(
                         affectedPlayerId = affectedId,
                         firstCultivationRounds = 2,
-                        forcedFace = 2
+                        forcedFace = 2,
+                        forcedDicePerOpeningRound = options.wisps / 2
                     )
                 }
             )
@@ -119,19 +120,20 @@ private fun printReport(options: Options, control: Accumulator, intervention: Ac
     val cVp = control.affectedVp.toDouble() / options.games
     val iVp = intervention.affectedVp.toDouble() / options.games
 
-    println("Six-Wisp Opening Experiment")
+    println("Forced-Wisp Opening Experiment")
     println("Matched games per condition: ${options.games}")
     println("Mechanical seeds: ${options.baseSeed}..${options.baseSeed + options.games - 1}")
     println("Strategy seeds:   ${options.strategyBaseSeed}..${options.strategyBaseSeed + options.games - 1}")
     println("Affected role rotates seats 1, 2, 3, 4.")
-    println("Intervention: first three opening dice in each of the first two Cultivation rounds are forced to 2 after the natural roll is consumed.")
+    println("Forced Wisps: ${options.wisps} (${options.wisps / 2} opening dice forced to 2 in each of the first two Cultivation rounds)")
+    println("Intervention: selected opening dice are forced to 2 after each natural roll is consumed.")
     println()
     println("Affected Player A")
     println("  Control win share:      ${pct(cRate)} (${"%.2f".format(control.affectedWinShare)} wins)")
-    println("  Six-Wisp win share:     ${pct(iRate)} (${"%.2f".format(intervention.affectedWinShare)} wins)")
+    println("  ${options.wisps}-Wisp win share:     ${pct(iRate)} (${"%.2f".format(intervention.affectedWinShare)} wins)")
     println("  Matched win-share delta: ${if (iRate - cRate >= 0) "+" else ""}${pct(iRate - cRate)}")
     println("  Control average VP:     ${avg(control.affectedVp)}")
-    println("  Six-Wisp average VP:    ${avg(intervention.affectedVp)}")
+    println("  ${options.wisps}-Wisp average VP:    ${avg(intervention.affectedVp)}")
     println("  Average VP delta:       ${if (iVp - cVp >= 0) "+" else ""}${"%.2f".format(iVp - cVp)}")
     println()
     println("Affected Player A win share by physical seat")
@@ -142,27 +144,29 @@ private fun printReport(options: Options, control: Accumulator, intervention: Ac
         } else {
             val c = control.affectedWinShareBySeat[seat] / n
             val i = intervention.affectedWinShareBySeat[seat] / n
-            println("  Seat ${seat + 1} (n=$n): control=${pct(c)}  six-wisp=${pct(i)}  delta=${if (i - c >= 0) "+" else ""}${pct(i - c)}")
+            println("  Seat ${seat + 1} (n=$n): control=${pct(c)}  ${options.wisps}-wisp=${pct(i)}  delta=${if (i - c >= 0) "+" else ""}${pct(i - c)}")
         }
     }
     println()
     println("Physical-seat win share across all games")
     for (seat in 0..3) {
-        println("  Seat ${seat + 1}: control=${pct(control.seatWinShare[seat] / options.games)}  six-wisp=${pct(intervention.seatWinShare[seat] / options.games)}")
+        println("  Seat ${seat + 1}: control=${pct(control.seatWinShare[seat] / options.games)}  ${options.wisps}-wisp=${pct(intervention.seatWinShare[seat] / options.games)}")
     }
 }
 
-private data class Options(val games: Int, val baseSeed: Long, val strategyBaseSeed: Long) {
+private data class Options(val games: Int, val baseSeed: Long, val strategyBaseSeed: Long, val wisps: Int) {
     companion object {
         fun parse(args: List<String>): Options {
             var games = 2000
             var baseSeed = 12_000L
             var strategySeed = 22_000L
+            var wisps = 6
             var positionalGamesSeen = false
             for (arg in args) {
                 when {
                     arg.startsWith("--seed=") -> baseSeed = arg.substringAfter('=').toLong()
                     arg.startsWith("--strategy-seed=") -> strategySeed = arg.substringAfter('=').toLong()
+                    arg.startsWith("--wisps=") -> wisps = arg.substringAfter('=').toInt()
                     arg.startsWith("--") -> error("Unknown option: $arg")
                     !positionalGamesSeen -> {
                         games = arg.toInt()
@@ -172,7 +176,8 @@ private data class Options(val games: Int, val baseSeed: Long, val strategyBaseS
                 }
             }
             require(games > 0) { "Games must be positive" }
-            return Options(games, baseSeed, strategySeed)
+            require(wisps in listOf(2, 4, 6)) { "--wisps must be 2, 4, or 6 so it can be split evenly across the first two Cultivation rounds" }
+            return Options(games, baseSeed, strategySeed, wisps)
         }
     }
 }
