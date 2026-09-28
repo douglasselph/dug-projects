@@ -104,6 +104,11 @@ Cookbook](doc/EXPERIMENT_COOKBOOK.md) for experiment patterns.
 -   [Experiment Cookbook](doc/EXPERIMENT_COOKBOOK.md) --- practical
     templates for adding controlled experiments, including the proposed
     **early-Wisp windfall** stress test.
+-   [`bin/` Command Reference](doc/BIN_COMMANDS.md) --- designer-facing
+    wrappers for replay, diagnostics, experiments, and Buy-policy training.
+-   [Learned Buy Policy](doc/LEARNED_BUY_POLICY.md) --- current learned-Buy
+    architecture, card identity/cost/stage features, manifest provenance,
+    CSV-change workflow, training, compatibility checks, and future usage.
 
 ## Quick Start
 
@@ -196,7 +201,10 @@ The decision system currently distinguishes these roles:
                                       play; architecture exists for
                                       continued development.
 
-  **Learned/Adaptive (Level 4)**      Future trained/persisted behavior.
+  **Learned/Adaptive (Level 4)**      Buy-only learning is implemented:
+                                      linear named features, persisted weights,
+                                      evolutionary training, provenance, and
+                                      Plant-catalog compatibility checks.
   -----------------------------------------------------------------------
 
 A key principle is to keep **engine correctness** and **game-design
@@ -204,3 +212,22 @@ conclusions** separate. Integration tests should be exact and
 deterministic. Simulation experiments should run many complete games,
 rotate or control confounding factors, and report aggregates rather than
 treating one game as evidence.
+
+
+## Learned Buy research
+
+Milestone 3 now includes a deliberately narrow learned strategy: only Buy
+selection is evolved while every other decision remains Human Baseline. The
+linear model uses inspectable general action/type features, exact Plant costs,
+Cultivation-stage interactions, and stable per-card identity features. Training
+output records the round/Grove/seed/evolution provenance and a generated
+fingerprint snapshot of the Plant catalog.
+
+The Plant CSV files loaded through `common/CardDataFiles` remain authoritative.
+The manifest is generated from the canonical parsed cards; it is not a second
+card database. After changing a Plant CSV, run the regression suite before
+research. Tests detect card-feature schema drift, and trained policies reject
+strategically incompatible card manifests instead of silently reusing stale
+card-specific knowledge. See [Learned Buy Policy](doc/LEARNED_BUY_POLICY.md)
+for the exact workflow and [the `bin/` command reference](doc/BIN_COMMANDS.md)
+for the training and experiment commands.

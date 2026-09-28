@@ -52,6 +52,12 @@ point.
     inspection and generated output conventions.
 -   [`EXPERIMENT_COOKBOOK.md`](EXPERIMENT_COOKBOOK.md) --- templates for
     constructing controlled experiments.
+-   [`BIN_COMMANDS.md`](BIN_COMMANDS.md) --- reference for every designer-facing
+    shell command under `bin/`, including replay, diagnostics, experiments,
+    and Buy-policy training.
+-   [`LEARNED_BUY_POLICY.md`](LEARNED_BUY_POLICY.md) --- learned Buy feature
+    model, persistence/provenance, generated Plant manifest, CSV-change
+    workflow, training, compatibility checks, and future direction.
 
 ## Source-local README files
 
