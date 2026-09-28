@@ -25,6 +25,11 @@ class InvalidDecisionException(
     reason: String
 ) : LeafGameException(context, reason)
 
+class InvalidBattleMainActionDecisionException(
+    context: String,
+    reason: String
+) : LeafGameException(context, reason)
+
 /** Mutable game state violated an invariant after legality had been checked. */
 class InvalidGameStateException(
     context: String,

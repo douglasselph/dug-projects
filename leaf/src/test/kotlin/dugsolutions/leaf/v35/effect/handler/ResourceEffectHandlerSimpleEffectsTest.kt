@@ -22,6 +22,25 @@ import kotlin.test.assertTrue
 
 class ResourceEffectHandlerSimpleEffectsTest {
 
+    @Test
+    fun scatterEachOpponentTrashesExactlyOneWisp() {
+        val actor = EffectTestFixture.player(1)
+        val p2 = EffectTestFixture.player(2)
+        val p3 = EffectTestFixture.player(3)
+        p2.wisps.add(wisp("p2-a")).add(wisp("p2-b"))
+        p3.wisps.add(wisp("p3-a"))
+        val game = EffectTestFixture.game(actor, p2, p3)
+        val request = EffectTestFixture.request(game, actor, GameEffect.EACH_OPPONENT_TRASH_ONE_WISP)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, GameEffectExecutor { })
+
+        assertEquals(1, p2.wisps.size)
+        assertEquals(0, p3.wisps.size)
+        assertEquals(0, actor.wisps.size)
+    }
+
+
     private val handler = ResourceEffectHandler()
 
     @Test
@@ -316,4 +335,19 @@ class ResourceEffectHandlerSimpleEffectsTest {
         override fun <T> randomOrNull(list: List<T>): T? = list.firstOrNull()
         override fun <T> shuffled(list: List<T>): List<T> = list
     }
+    private fun wisp(name: String) = WispCard(
+        quantity = 1,
+        name = name,
+        title = name,
+        count = 1,
+        effect = GameEffect.GAIN_ONE_VP,
+        lineIcons = null,
+        lineIconsHeight = 0,
+        vpIcon = null,
+        mainBackdrop = "",
+        playImmediately = false,
+        battleOnly = false,
+        endGameVp = 1
+    )
+
 }

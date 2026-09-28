@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.RoundEffectSlot
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
+import dugsolutions.leaf.v35.error.InvalidBattleMainActionDecisionException
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.game.Game
@@ -137,9 +138,7 @@ class BattleActionCoordinator(
                     )
                 )
 
-            decisionCheck(chosen in legal, context = "BattleActionCoordinator") {
-                "BattleStrategy returned a first Main Action that was not offered: $chosen; legal=$legal"
-            }
+            validateChosenMainAction(player, chosen, legal, "first")
 
             game.chronicle.scoped(
                 mainActionMoment(
@@ -239,11 +238,11 @@ class BattleActionCoordinator(
                         )
                     )
 
-                decisionCheck(
-                    chosen in legalChoices,
-                    context = "BattleActionCoordinator"
-                ) {
-                    "BattleStrategy returned a Step-5 action that was not offered: $chosen; legal=$legalChoices"
+                when (chosen) {
+                    is BattleTurnAction.FinalMain -> validateChosenMainAction(player, chosen.action, finalMains, "final")
+                    is BattleTurnAction.Support -> decisionCheck(chosen in legalChoices, context = "BattleActionCoordinator") {
+                        "BattleStrategy returned a Step-5 Support Action that was not offered: $chosen; legal=$legalChoices"
+                    }
                 }
 
                 when (chosen) {
@@ -386,6 +385,17 @@ class BattleActionCoordinator(
                 add(BattleMainAction.RoundEffect2)
             }
         }
+
+    private fun validateChosenMainAction(player: Player, chosen: BattleMainAction, legal: List<BattleMainAction>, stage: String) {
+        if (chosen in legal) return
+        val reason = when (chosen) {
+            BattleMainAction.Draw -> "BattleStrategy selected Draw for player ${player.id.value} during $stage Main Action, but no die can legally be drawn and placed"
+            is BattleMainAction.ActivatePlant -> "BattleStrategy selected Plant activation ${chosen.card.id} for player ${player.id.value} during $stage Main Action, but that Plant is not legally activatable"
+            BattleMainAction.RoundEffect1 -> "BattleStrategy selected Round Effect 1 for player ${player.id.value} during $stage Main Action, but that Round effect is not executable"
+            BattleMainAction.RoundEffect2 -> "BattleStrategy selected Round Effect 2 for player ${player.id.value} during $stage Main Action, but that Round effect is not executable"
+        }
+        throw InvalidBattleMainActionDecisionException("BattleActionCoordinator", "$reason; legal=$legal")
+    }
 
     private fun supportActions(
         game: Game,

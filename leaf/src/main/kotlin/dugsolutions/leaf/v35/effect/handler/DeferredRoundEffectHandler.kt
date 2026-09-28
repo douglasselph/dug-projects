@@ -24,7 +24,6 @@ class DeferredRoundEffectHandler : EffectHandler {
     companion object {
         val effects: Set<GameEffect> = setOf(
             GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS,
-            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP,
             GameEffect.GAIN_ANY_ROOT_OR_VINE
         )
     }

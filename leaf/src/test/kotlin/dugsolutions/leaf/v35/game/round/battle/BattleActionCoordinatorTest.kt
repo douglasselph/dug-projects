@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.error.InvalidDecisionException
+import dugsolutions.leaf.v35.error.InvalidBattleMainActionDecisionException
+import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.error.InvalidGameStateException
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
@@ -46,6 +48,85 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class BattleActionCoordinatorTest {
+
+
+    @Test
+    fun execute_zeroPlantsAndNoDrawableDice_humanBaselineUsesRoundMainActions() {
+        val p1 = player(1, HumanBaselineBattleStrategy())
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        val p1First = result.firstMainActions.single { it.playerId == p1.id }.action
+        val p1Final = result.finalMainActions.single { it.playerId == p1.id }.action
+        assertTrue(p1First == BattleMainAction.RoundEffect1 || p1First == BattleMainAction.RoundEffect2)
+        assertTrue(p1Final == BattleMainAction.RoundEffect1 || p1Final == BattleMainAction.RoundEffect2)
+        assertTrue(p1.creature.cards.isEmpty())
+        assertTrue(p1.dice.isSupplyEmpty && p1.dice.isDiscardEmpty)
+    }
+
+    @Test
+    fun execute_noDrawableDice_neverOffersDrawToDecisionCode() {
+        val strategy = RecordingFinishStrategy()
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(strategy.turnRequests.single().legalChoices.none {
+            it is BattleTurnAction.FinalMain && it.action == BattleMainAction.Draw
+        })
+    }
+
+    @Test
+    fun execute_zeroPlants_neverOffersPlantActivationToDecisionCode() {
+        val strategy = RecordingFinishStrategy()
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(strategy.turnRequests.single().legalChoices.none {
+            it is BattleTurnAction.FinalMain && it.action is BattleMainAction.ActivatePlant
+        })
+    }
+
+    @Test
+    fun execute_strategyReturningDrawWithNoDrawableDiceThrowsSpecificBattleDecisionException() {
+        val strategy = ScriptedStrategy("p1", mutableListOf()).apply { first = BattleMainAction.Draw }
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        val error = assertFailsWith<InvalidBattleMainActionDecisionException> {
+            fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        }
+        assertTrue(error.message.orEmpty().contains("selected Draw"))
+        assertTrue(error.message.orEmpty().contains("no die can legally be drawn and placed"))
+    }
+
+    @Test
+    fun execute_strategyReturningUnavailablePlantThrowsSpecificBattleDecisionException() {
+        val strategy = ScriptedStrategy("p1", mutableListOf())
+        val p1 = player(1, strategy)
+        val absent = p1.creature.graft(
+            plant("Absent Plant"),
+            GraftPlacement(CreatureSide.LEFT, CreaturePosition(-1, -1))
+        )
+        // Leave it face down: activation is not legal.
+        strategy.first = BattleMainAction.ActivatePlant(absent)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        val error = assertFailsWith<InvalidBattleMainActionDecisionException> {
+            fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        }
+        assertTrue(error.message.orEmpty().contains("Plant activation"))
+        assertTrue(error.message.orEmpty().contains("not legally activatable"))
+    }
 
     @Test
     fun execute_allFirstMainsOccurBeforeSupportThenRepeatedPassesSkipFinishedPlayers() {

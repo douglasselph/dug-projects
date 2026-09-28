@@ -15,6 +15,8 @@ import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieSizeRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlayerRequest
+import dugsolutions.leaf.v35.player.decision.effect.ChooseWispsToKeepRequest
+import dugsolutions.leaf.v35.player.decision.effect.EffectWispChoice
 import dugsolutions.leaf.v35.player.decision.reward.ChooseCritterRequest
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Butterfly
@@ -77,6 +79,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
+                opponentsWithWisps(request).isNotEmpty()
+
+            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP ->
                 opponentsWithWisps(request).isNotEmpty()
 
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY ->
@@ -148,6 +153,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
                 stealRandomWispFromAllOpponents(request)
+
+            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP ->
+                eachOpponentTrashOneWisp(request)
 
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY ->
                 gainOrRefreshButterfly(request, Butterfly.GREEN)
@@ -395,6 +403,24 @@ class ResourceEffectHandler : EffectHandler {
     ) {
         opponentsWithWisps(request).forEach { opponentId ->
             stealRandomWisp(request, opponentId)
+        }
+    }
+
+    private fun eachOpponentTrashOneWisp(request: GameEffectRequest) {
+        request.game.players.filter { it !== request.actor && it.wisps.isNotEmpty }.forEach { opponent ->
+            val cards = opponent.wisps.cards.cards
+            val choices = cards.mapIndexed { index, card -> EffectWispChoice(index, card.name, card.title, card.effect) }
+            val keepLimit = cards.size - 1
+            val chosen = opponent.decisions.effect.chooseWispsToKeep(
+                ChooseWispsToKeepRequest(request.effect, opponent.id, keepLimit, choices, request.decisionContextFor(opponent))
+            )
+            decisionCheck(chosen.selected.size == keepLimit && chosen.selected.all { it in choices }) {
+                "Scatter player ${opponent.id.value} must choose exactly $keepLimit Wisps to keep; chosen=${chosen.selected}; legal=$choices"
+            }
+            val keepIndexes = chosen.selected.map { it.index }.toSet()
+            cards.forEachIndexed { index, card -> if (index !in keepIndexes) {
+                stateCheck(opponent.wisps.remove(card)) { "Scatter could not trash Wisp from player ${opponent.id.value}: ${card.name}" }
+            }}
         }
     }
 

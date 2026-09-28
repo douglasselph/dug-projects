@@ -157,6 +157,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_WATER_TOKEN,
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
+            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP,
             GameEffect.MULCH_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_HAND ->
                 resourceEffects
@@ -211,7 +212,6 @@ class DefaultGameEffectExecutor(
                 wispquakeEffect
 
             GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS,
-            GameEffect.EACH_OPPONENT_TRASH_ONE_WISP,
             GameEffect.GAIN_ANY_ROOT_OR_VINE ->
                 deferredRoundEffects
 
