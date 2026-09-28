@@ -347,3 +347,14 @@ tasks.register<JavaExec>("runSixWispExperiment") {
         args("--random-grove")
     }
 }
+
+tasks.register<JavaExec>("runFocusedPlantShapeExperiment") {
+    description = "Runs matched Human Baseline control vs focused Lean Creature strategy games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.FocusedPlantShapeExperimentMainKt")
+    project.findProperty("games")?.toString()?.let { args(it) }
+    project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
+    project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+}
