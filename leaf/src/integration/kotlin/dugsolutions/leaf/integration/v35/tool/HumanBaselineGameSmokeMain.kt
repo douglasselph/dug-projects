@@ -4,6 +4,7 @@ import dugsolutions.leaf.integration.v35.support.HumanBaselineSmokeScenario
 import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
 import dugsolutions.leaf.v35.chronicle.ChronicleTextRenderer
 import dugsolutions.leaf.v35.game.GameRunResult
+import dugsolutions.leaf.v35.plant.GrovePlantCode
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -19,17 +20,22 @@ import java.nio.file.Path
  */
 fun main(args: Array<String>) {
     val detail = args.any { it.equals("--detail", ignoreCase = true) }
-    val positional = args.filterNot { it.equals("--detail", ignoreCase = true) }
+    val groveArg = args.firstOrNull { it.startsWith("--grove=") }?.substringAfter('=')
+    val positional = args.filterNot { it.equals("--detail", ignoreCase = true) || it.startsWith("--grove=") }
     val seed = positional.getOrNull(0)?.toLongOrNull()
         ?: HumanBaselineSmokeScenario.DEFAULT_SEED
     val strategySeed = positional.getOrNull(1)?.toLongOrNull() ?: seed
+    val selectedNames = groveArg?.let(GrovePlantCode::overrideNames)
     val scenario = HumanBaselineSmokeScenario.scenario(
         seed = seed,
         strategySeed = strategySeed,
-        chronicleDetail = detail
+        chronicleDetail = detail,
+        selectedPlantNames = selectedNames ?: dugsolutions.leaf.integration.v35.support.IntegrationCatalog.FIRST_GAME_PLANT_NAMES
     )
 
     IntegrationGameHarness(scenario).use { harness ->
+        val resolvedPlants = harness.game.grove.plantMarket.stacks.map { it.card }
+        val resolvedGroveCode = GrovePlantCode.encode(resolvedPlants)
         val result = harness.runGame()
         val entries = harness.chronicleEntries()
         val outputDir = outputDirectory(seed, strategySeed)
@@ -41,7 +47,7 @@ fun main(args: Array<String>) {
             ChronicleTextRenderer.render(
                 entries = entries,
                 detail = detail,
-                selectedPlantCards = harness.catalog.plants(scenario.selectedPlantNames)
+                selectedPlantCards = resolvedPlants
             )
         )
 
@@ -52,6 +58,8 @@ fun main(args: Array<String>) {
                 seed = seed,
                 strategySeed = strategySeed,
                 detail = detail,
+                groveCode = resolvedGroveCode,
+                plantNames = resolvedPlants.map { it.name },
                 entryCount = entries.size,
                 result = result
             )
@@ -76,6 +84,8 @@ private fun buildSummary(
     seed: Long,
     strategySeed: Long,
     detail: Boolean,
+    groveCode: String,
+    plantNames: List<String>,
     entryCount: Int,
     result: GameRunResult
 ): String =
@@ -87,7 +97,8 @@ private fun buildSummary(
         appendLine("Chronicle detail: $detail")
         appendLine("Players: ${HumanBaselineSmokeScenario.NUM_PLAYERS}")
         appendLine("Strategy: Human Baseline for every player")
-        appendLine("Plants: recommended first-game Plant set")
+        appendLine("Grove code: $groveCode")
+        appendLine("Plants: ${plantNames.joinToString(", ")}")
         appendLine("Round cadence: 3 Cultivation / Battle / 2 Cultivation / Battle / 2 Cultivation / Battle (3/2/2)")
         appendLine("Rounds completed: ${result.roundsCompleted}")
         appendLine("Chronicle entries: $entryCount")

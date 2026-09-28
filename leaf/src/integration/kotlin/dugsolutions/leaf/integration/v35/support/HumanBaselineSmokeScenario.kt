@@ -41,11 +41,12 @@ object HumanBaselineSmokeScenario {
         seed: Long = DEFAULT_SEED,
         strategySeed: Long = seed,
         recordDecisionReasoning: Boolean = false,
-        chronicleDetail: Boolean = false
+        chronicleDetail: Boolean = false,
+        selectedPlantNames: List<String> = IntegrationCatalog.FIRST_GAME_PLANT_NAMES
     ): GameScenario =
         GameScenario(
             numPlayers = NUM_PLAYERS,
-            selectedPlantNames = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
+            selectedPlantNames = selectedPlantNames,
             roundSetup = roundSetup,
             seed = seed,
             strategySeed = strategySeed,

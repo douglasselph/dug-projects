@@ -274,6 +274,7 @@ tasks.register<JavaExec>("runHumanBaselineSmoke") {
         args("13579")
         args(smokeStrategySeed)
     }
+    project.findProperty("grove")?.toString()?.let { args("--grove=$it") }
     if (project.findProperty("detail")?.toString()?.toBoolean() == true) {
         args("--detail")
     }
@@ -340,4 +341,9 @@ tasks.register<JavaExec>("runSixWispExperiment") {
     project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
     project.findProperty("wisps")?.toString()?.let { args("--wisps=$it") }
+    project.findProperty("rounds")?.toString()?.let { args("--rounds=$it") }
+    project.findProperty("grove")?.toString()?.let { args("--grove=$it") }
+    if (project.findProperty("randomGrove")?.toString()?.toBoolean() == true) {
+        args("--random-grove")
+    }
 }

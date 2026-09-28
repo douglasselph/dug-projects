@@ -6,12 +6,14 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.game.intervention.CultivationOpeningDrawFaceIntervention
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.plant.GrovePlantCode
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -20,8 +22,6 @@ import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
 
-private val DEFAULT_PLANTS = FirstGameDefault.PLANT_NAMES
-
 fun main(args: Array<String>) {
     val options = Options.parse(args.toList())
     val application = koinApplication { modules(appModules) }
@@ -29,7 +29,16 @@ fun main(args: Array<String>) {
         val koin = application.koin
         loadCatalogs(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
-        val plants = DEFAULT_PLANTS.map { name ->
+        // Resolve the Grove code ONCE for the whole experiment. Zero positions are
+        // randomized here, not once per game, so every matched game uses the same Grove.
+        val groveCode = if (options.grovePattern == null) {
+            GrovePlantCode.encode(FirstGameDefault.PLANT_NAMES.map { name ->
+                requireNotNull(plantManager.getCard(name)) { "Unknown Plant card: $name" }
+            })
+        } else {
+            GrovePlantCode.generate(options.grovePattern)
+        }
+        val plants = GrovePlantCode.overrideNames(groveCode).map { name ->
             requireNotNull(plantManager.getCard(name)) { "Unknown Plant card: $name" }
         }
         val factory = koin.get<GameFactory>()
@@ -45,13 +54,13 @@ fun main(args: Array<String>) {
             val affectedId = PlayerId(affectedSeat + 1)
 
             val controlSummary = runOne(
-                factory, runner, plants, factories, mechanicalSeed, strategySeed,
+                factory, runner, plants, factories, options.roundSetup, mechanicalSeed, strategySeed,
                 MechanicalInterventionFactory.NONE
             )
             control.add(controlSummary, affectedSeat)
 
             val interventionSummary = runOne(
-                factory, runner, plants, factories, mechanicalSeed, strategySeed,
+                factory, runner, plants, factories, options.roundSetup, mechanicalSeed, strategySeed,
                 MechanicalInterventionFactory {
                     CultivationOpeningDrawFaceIntervention(
                         affectedPlayerId = affectedId,
@@ -64,7 +73,7 @@ fun main(args: Array<String>) {
             intervention.add(interventionSummary, affectedSeat)
         }
 
-        printReport(options, control, intervention)
+        printReport(options, groveCode, plants.map { it.name }, control, intervention)
     } finally {
         application.close()
     }
@@ -75,6 +84,7 @@ private fun runOne(
     runner: GameRunner,
     plants: List<dugsolutions.leaf.v35.plant.domain.PlantCard>,
     decisions: List<PlayerDecisionFactory>,
+    roundSetup: GameRoundSetup,
     mechanicalSeed: Long,
     strategySeed: Long,
     intervention: MechanicalInterventionFactory
@@ -83,6 +93,7 @@ private fun runOne(
         GameConfig(
             selectedPlantCards = plants,
             playerDecisionFactories = decisions,
+            roundSetup = roundSetup,
             seed = mechanicalSeed,
             strategySeed = strategySeed,
             recordDecisionReasoning = false,
@@ -109,7 +120,7 @@ private class Accumulator {
     }
 }
 
-private fun printReport(options: Options, control: Accumulator, intervention: Accumulator) {
+private fun printReport(options: Options, groveCode: String, plantNames: List<String>, control: Accumulator, intervention: Accumulator) {
     fun pct(value: Double) = "%.2f%%".format(value * 100.0)
     fun avg(value: Long) = "%.2f".format(value.toDouble() / options.games)
     val cRate = control.affectedWinShare / options.games
@@ -119,6 +130,9 @@ private fun printReport(options: Options, control: Accumulator, intervention: Ac
 
     println("Forced-Wisp Opening Experiment")
     println("Matched games per condition: ${options.games}")
+    println("Grove code: $groveCode")
+    println("Plant cards: ${plantNames.joinToString(", ")}")
+    println("Round structure: ${options.roundLabel}")
     println("Mechanical seeds: ${options.baseSeed}..${options.baseSeed + options.games - 1}")
     println("Strategy seeds:   ${options.strategyBaseSeed}..${options.strategyBaseSeed + options.games - 1}")
     println("Affected role rotates seats 1, 2, 3, 4.")
@@ -151,30 +165,46 @@ private fun printReport(options: Options, control: Accumulator, intervention: Ac
     }
 }
 
-private data class Options(val games: Int, val baseSeed: Long, val strategyBaseSeed: Long, val wisps: Int) {
+private data class Options(
+    val games: Int,
+    val baseSeed: Long,
+    val strategyBaseSeed: Long,
+    val wisps: Int,
+    val grovePattern: String?,
+    val roundSetup: GameRoundSetup,
+    val roundLabel: String
+) {
     companion object {
         fun parse(args: List<String>): Options {
             var games = 2000
             var baseSeed = 12_000L
             var strategySeed = 22_000L
             var wisps = 6
+            var grovePattern: String? = null // null preserves historical FirstGameDefault
+            var roundLabel = "3/2/2"
             var positionalGamesSeen = false
             for (arg in args) {
                 when {
                     arg.startsWith("--seed=") -> baseSeed = arg.substringAfter('=').toLong()
                     arg.startsWith("--strategy-seed=") -> strategySeed = arg.substringAfter('=').toLong()
                     arg.startsWith("--wisps=") -> wisps = arg.substringAfter('=').toInt()
-                    arg.startsWith("--") -> error("Unknown option: $arg")
+                    arg.startsWith("--grove=") -> grovePattern = GrovePlantCode.validate(arg.substringAfter('='))
+                    arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
+                    arg.startsWith("--rounds=") -> roundLabel = arg.substringAfter('=')
                     !positionalGamesSeen -> {
                         games = arg.toInt()
                         positionalGamesSeen = true
                     }
-                    else -> error("Unexpected argument: $arg")
+                    else -> error("Unknown argument: $arg")
                 }
             }
             require(games > 0) { "Games must be positive" }
-            require(wisps in listOf(2, 4, 6)) { "--wisps must be 2, 4, or 6 so it can be split evenly across the first two Cultivation rounds" }
-            return Options(games, baseSeed, strategySeed, wisps)
+            require(wisps in listOf(2, 4, 6)) {
+                "--wisps must be 2, 4, or 6 so it can be split evenly across the first two Cultivation rounds"
+            }
+            val blocks = roundLabel.split('/').map { it.toInt() }
+            require(blocks.isNotEmpty() && blocks.all { it > 0 }) { "--rounds must be positive Cultivation blocks such as 3/2/2" }
+            return Options(games, baseSeed, strategySeed, wisps, grovePattern, GameRoundSetup.Patterned(blocks), blocks.joinToString("/"))
         }
     }
 }
