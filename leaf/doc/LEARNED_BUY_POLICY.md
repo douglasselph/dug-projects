@@ -102,6 +102,63 @@ This provenance answers two separate questions:
 The manifest is a historical snapshot. It is generated from the current CSVs
 when a policy is prepared/trained; it is not another source of game rules.
 
+## Training terminology
+
+The trainer uses evolutionary terminology. The terms are simpler than they may
+first sound:
+
+- **Policy** — one complete candidate set of Buy weights. A policy is one
+  possible Buy strategy. For example, one policy may strongly favor D12s and
+  `Vine_09_01`, while another policy has different weights and therefore makes
+  different purchases.
+- **Population** — all candidate policies being compared in one generation. A
+  population of 8 means eight different candidate Buy strategies are evaluated.
+- **Generation** — one complete evaluate/select/reproduce cycle. Every policy in
+  the population plays its controlled cohort of games, fitness is measured, the
+  better policies are retained, and mutated descendants are created for the next
+  generation. The term is used in the biological/evolutionary sense.
+- **Fitness** — the number used to compare candidate policies. The current
+  trainer uses the affected learned role's mean win share over its training
+  cohort. Fitness is training/selection evidence, not held-out proof that the
+  policy generalizes.
+- **Elite** — one of the best policies copied unchanged into the next generation.
+  Elitism prevents a good candidate from being lost merely because its children
+  mutate badly.
+- **Mutation** — a small random change to some weights when producing a child
+  policy. Gaussian mutation is currently used.
+- **Champion** — the best policy found by the training run. It is a candidate for
+  later evaluation, not automatically the new checked-in policy.
+- **Training cohort** — the controlled games used to measure fitness. Candidates
+  within a generation receive the same underlying seed cohort and the learned
+  role rotates seats so luck and seat position interfere less with comparisons.
+- **Held-out evaluation** — new games/seeds that were not used to select the
+  champion. This is the important follow-up test for whether the learned strategy
+  generalizes rather than merely fitting peculiarities of its training games.
+
+For example, the default settings use 5 generations, a population of 8 policies,
+and 20 games per policy. One generation therefore evaluates `8 × 20 = 160`
+policy-games, and five generations evaluate `5 × 8 × 20 = 800` policy-games. A
+**policy-game** simply means one game used to evaluate one candidate policy.
+Those 800 games are not 800 independent confirmations of the final champion: the
+trainer is actively using them to search for that champion. Independent evidence
+comes later from held-out evaluation.
+
+A simplified generation looks like this:
+
+```text
+8 candidate policies
+        ↓
+each plays the same controlled 20-game cohort
+        ↓
+measure each policy's fitness
+        ↓
+keep the elites / best candidates
+        ↓
+create mutated children
+        ↓
+next generation
+```
+
 ## Training workflow
 
 Before training, make the full relevant regression gate green:
