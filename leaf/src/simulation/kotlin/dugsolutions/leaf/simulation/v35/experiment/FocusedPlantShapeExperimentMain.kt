@@ -88,7 +88,14 @@ private class Accumulator {
         val p = summary.players.single { it.seat == seat }
         winShare += p.winShare; vp += p.totalVp; plants += p.finalPlantCount; plantCost += p.finalPlantPrintedCost
         dice += p.finalDiceCount; dicePower += p.finalDicePower; battleVp += p.battleStrikeVp; wounds += p.woundsTaken
-        with(p.ownedDiceSignature) { d4+=this.d4; d6+=this.d6; d8+=this.d8; d10+=this.d10; d12+=this.d12; d20+=this.d20 }
+        with(p.ownedDiceSignature) {
+            this@Accumulator.d4 += d4
+            this@Accumulator.d6 += d6
+            this@Accumulator.d8 += d8
+            this@Accumulator.d10 += d10
+            this@Accumulator.d12 += d12
+            this@Accumulator.d20 += d20
+        }
         val names = p.plantCreatureSignature.cards.map { it.plantName }
         val vines = names.count { it == LeanCreatureStrategy.VINE_9 || it == LeanCreatureStrategy.VINE_11 }
         val flowers = names.count { it == LeanCreatureStrategy.FLOWER_17 }
