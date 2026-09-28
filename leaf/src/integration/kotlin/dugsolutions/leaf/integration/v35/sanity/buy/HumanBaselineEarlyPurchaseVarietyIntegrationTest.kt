@@ -105,7 +105,7 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
                 strategySeed = strategySeed,
                 roundNumber = roundNumber,
                 playerId = resources.playerId,
-                purchasingPower = resources.dice.sumOf { it.value },
+                purchasingPower = resources.dice.sumOf { it.value } + resources.critters.sumOf { it.value },
                 hasCritters = resources.critters.isNotEmpty(),
                 resourceShape = resourceShape(resources),
                 outcome = purchaseOutcome(playerPurchases)
@@ -249,7 +249,7 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             appendLine()
             appendLine("NOTE: 'Looks healthy' is a diagnostic flag, not a game-balance assertion.")
             appendLine("A common bucket is flagged when it has only one observed purchase outcome or one outcome exceeds 95%.")
-            appendLine("Purchasing power means rolled dice value only. Observations containing one or more Critters are reported separately as 'with Critters'; Critter value is not added to the displayed purchasing-power number.")
+            appendLine("Purchasing power is total spendable value at Buy: dice plus Critters. A plain 'N purchasing power' bucket has no Critters; 'N purchasing power with Critters' includes Critter value in N and means Critters are part of the available purchasing power.")
             appendLine("Resource composition is retained in each observation for follow-up diagnostics.")
             if (detail) {
                 appendLine("Detail examples show one reproducible mechanical/strategy seed pair for every reported outcome.")
