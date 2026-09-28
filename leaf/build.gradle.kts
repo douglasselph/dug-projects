@@ -358,3 +358,13 @@ tasks.register<JavaExec>("runFocusedPlantShapeExperiment") {
     project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
 }
+
+// M3-F2 transparent linear Buy-policy evolutionary trainer.
+tasks.register<JavaExec>("runTrainBuyPolicy") {
+    description = "Evolves the learned Buy policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.TrainBuyPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}

@@ -6,6 +6,9 @@ import java.nio.file.Path
 /** Versioned, strict, Git-friendly persistence for learned Buy weights. */
 class LearnedBuyWeights private constructor(private val values: DoubleArray) {
     operator fun get(feature: BuyFeature): Double = values[feature.ordinal]
+
+    /** Stable feature-ordered copy for research optimizers; callers cannot mutate this policy. */
+    fun toDoubleArray(): DoubleArray = values.copyOf()
     fun with(feature: BuyFeature, value: Double): LearnedBuyWeights {
         require(value.isFinite()) { "Weight $feature must be finite: $value" }
         return LearnedBuyWeights(values.copyOf().also { it[feature.ordinal] = value })
@@ -23,6 +26,16 @@ class LearnedBuyWeights private constructor(private val values: DoubleArray) {
 
     companion object {
         fun zeros(): LearnedBuyWeights = LearnedBuyWeights(DoubleArray(BuyFeature.entries.size))
+
+        fun fromDoubleArray(values: DoubleArray): LearnedBuyWeights {
+            require(values.size == BuyFeature.entries.size) {
+                "Expected ${BuyFeature.entries.size} learned Buy weights, got ${values.size}"
+            }
+            values.forEachIndexed { index, value ->
+                require(value.isFinite()) { "Weight ${BuyFeature.entries[index]} must be finite: $value" }
+            }
+            return LearnedBuyWeights(values.copyOf())
+        }
         fun load(path: Path): LearnedBuyWeights {
             val entries = Files.readAllLines(path).filter { it.isNotBlank() && !it.trimStart().startsWith("#") }
                 .associate { line ->
