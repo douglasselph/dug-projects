@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuy
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
+import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyProvenance
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.round.RoundCardManager
@@ -54,12 +55,25 @@ fun main(args: Array<String>) {
             val best = evaluated.first()
             if (best.fitness > allTime.fitness) {
                 allTime = best
-                allTime.weights.save(o.output) // checkpoint every genuine improvement
+                allTime.weights.withProvenance(LearnedBuyProvenance(
+                    trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
+                    generations = generation + 1, gamesPerPolicy = o.games, population = o.population,
+                    mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed, mechanicalSeedStart = o.seed,
+                    strategySeedStart = o.strategySeed, fitness = best.fitness
+                )).save(o.output) // checkpoint every genuine improvement
             }
             val mean = evaluated.map { it.fitness }.average()
             println("generation=${generation + 1}/${o.generations} best=${pct(best.fitness)} mean=${pct(mean)} allTime=${pct(allTime.fitness)} saved=${o.output}")
             if (generation + 1 < o.generations) population = evolution.nextPopulation(evaluated)
         }
+        // Rewrite the final champion with provenance for the complete training run,
+        // even when the champion itself was first discovered in an earlier generation.
+        allTime.weights.withProvenance(LearnedBuyProvenance(
+            trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
+            generations = o.generations, gamesPerPolicy = o.games, population = o.population,
+            mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed,
+            mechanicalSeedStart = o.seed, strategySeedStart = o.strategySeed, fitness = allTime.fitness
+        )).save(o.output)
         println()
         println("Training complete. Best candidate written to ${o.output}")
         println("The checked-in input policy was NOT overwritten; promote the output deliberately after held-out evaluation.")

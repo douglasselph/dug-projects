@@ -63,5 +63,23 @@ object BuyFeatureExtractor {
                 }
             }
         }
+
+        // Buy decisions occur in Cultivation. Each completed Battle separates
+        // one Cultivation block from the next, so 3/2/2 and 2/2/3 share the
+        // same three strategic stage identities despite different block sizes.
+        val stage = (p.battleRoundsCompleted + 1).coerceAtLeast(1)
+        val suffix = when (stage) { 1 -> "STAGE_1"; 2 -> "STAGE_2"; 3 -> "STAGE_3"; else -> "STAGE_4_PLUS" }
+        val interactionBases = listOf(
+            BuyFeature.ACTION_DONE, BuyFeature.ACTION_IS_PLANT, BuyFeature.ACTION_IS_ROOT,
+            BuyFeature.ACTION_IS_VINE, BuyFeature.ACTION_IS_FLOWER, BuyFeature.ACTION_IS_DIE,
+            BuyFeature.ACTION_D4, BuyFeature.ACTION_D6, BuyFeature.ACTION_D8,
+            BuyFeature.ACTION_D10, BuyFeature.ACTION_D12, BuyFeature.ACTION_D20
+        )
+        interactionBases.forEach { base ->
+            val baseValue = this[base] ?: 0.0
+            if (baseValue != 0.0) {
+                this[BuyFeature.valueOf("${base.name}_$suffix")] = baseValue
+            }
+        }
     }
 }

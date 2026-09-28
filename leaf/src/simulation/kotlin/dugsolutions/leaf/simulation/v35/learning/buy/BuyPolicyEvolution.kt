@@ -49,7 +49,7 @@ class BuyPolicyEvolution(private val config: BuyEvolutionConfig) {
             val index = random.nextInt(values.size)
             values[index] += gaussian() * config.mutationSigma
         }
-        return LearnedBuyWeights.fromDoubleArray(values)
+        return LearnedBuyWeights.fromDoubleArray(values, parent.provenance)
     }
 
     // Box-Muller, driven only by the dedicated deterministic evolution RNG.
