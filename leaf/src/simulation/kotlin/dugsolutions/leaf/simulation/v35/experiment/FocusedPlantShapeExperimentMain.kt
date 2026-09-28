@@ -2,6 +2,8 @@ package dugsolutions.leaf.simulation.v35.experiment
 
 import dugsolutions.leaf.simulation.v35.analysis.GameSummary
 import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
+import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunContext
+import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
 import dugsolutions.leaf.simulation.v35.strategy.lean.LeanCreatureStrategy
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
@@ -51,8 +53,8 @@ fun main(args: Array<String>) {
             val leanFactories = List(4) { seat ->
                 if (seat == affectedSeat) LeanCreatureStrategy.decisionFactory() else PlayerDecisionFactory.humanBaseline()
             }
-            control.add(runOne(factory, runner, plants, controlFactories, mechanicalSeed, strategySeed), affectedSeat)
-            lean.add(runOne(factory, runner, plants, leanFactories, mechanicalSeed, strategySeed), affectedSeat)
+            control.add(runOne(factory, runner, plants, controlFactories, mechanicalSeed, strategySeed, sample, affectedSeat, "CONTROL"), affectedSeat)
+            lean.add(runOne(factory, runner, plants, leanFactories, mechanicalSeed, strategySeed, sample, affectedSeat, "LEAN"), affectedSeat)
         }
         printReport(options, control, lean)
     } finally { app.close() }
@@ -64,7 +66,10 @@ private fun runOne(
     plants: List<dugsolutions.leaf.v35.plant.domain.PlantCard>,
     decisions: List<PlayerDecisionFactory>,
     seed: Long,
-    strategySeed: Long
+    strategySeed: Long,
+    sample: Int,
+    affectedSeat: Int,
+    variant: String
 ): GameSummary {
     val game = factory(GameConfig(
         selectedPlantCards = plants,
@@ -74,7 +79,22 @@ private fun runOne(
         strategySeed = strategySeed,
         recordDecisionReasoning = false
     ))
-    return GameSummaryExtractor.extract(game, runner.run(game))
+    val result = withSimulationFailureDiagnostics(
+        game = game,
+        context = SimulationRunContext(
+            experiment = "focused_plant_shape",
+            sample = sample,
+            variant = variant,
+            affectedSeat = affectedSeat,
+            mechanicalSeed = seed,
+            strategySeed = strategySeed,
+            grove = "FirstGameDefault",
+            roundStructure = "3/2/2"
+        )
+    ) {
+        runner.run(game)
+    }
+    return GameSummaryExtractor.extract(game, result)
 }
 
 private class Accumulator {
