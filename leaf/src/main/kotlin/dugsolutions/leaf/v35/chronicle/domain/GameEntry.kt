@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.chronicle.domain
 
+import dugsolutions.leaf.v35.battle.StrikeContributionLedger
 import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -194,6 +195,7 @@ sealed interface GameEntry {
         val winnerIds: List<PlayerId>,
         val woundedPlayerIds: List<PlayerId>,
         val vpPerWinner: Int,
+        val contributionLedger: StrikeContributionLedger? = null,
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

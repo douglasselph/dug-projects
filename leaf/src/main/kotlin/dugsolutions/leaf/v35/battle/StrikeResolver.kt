@@ -31,7 +31,8 @@ data class StrikeResolution(
     val totals: List<StrikePlayerTotal>,
     val winnerIds: List<PlayerId>,
     val wounds: List<StrikeWoundResult>,
-    val vpPerWinner: Int
+    val vpPerWinner: Int,
+    val contributionLedger: StrikeContributionLedger
 ) {
     val woundedPlayerIds: List<PlayerId>
         get() = wounds.map { it.playerId }
@@ -152,6 +153,12 @@ class StrikeResolver(
             }
         val winnerIds = winners.map { it.playerId }
         val woundedIds = woundCandidates.map { it.playerId }
+        val contributionLedger = StrikeContributionAnalyzer.analyze(
+            rowSnapshot = rowSnapshot,
+            winnerIds = winnerIds,
+            woundedPlayerIds = woundedIds,
+            vpPerWinner = vpPerWinner
+        )
         var wounds = emptyList<StrikeWoundResult>()
 
         game.chronicle.scoped(
@@ -168,7 +175,8 @@ class StrikeResolver(
                 rowSnapshot = rowSnapshot,
                 winnerIds = winnerIds,
                 woundedPlayerIds = woundedIds,
-                vpPerWinner = vpPerWinner
+                vpPerWinner = vpPerWinner,
+                contributionLedger = contributionLedger
             )
         ) {
             wounds = woundCandidates.map { wounded ->
@@ -189,7 +197,8 @@ class StrikeResolver(
             totals = totals,
             winnerIds = winnerIds,
             wounds = wounds,
-            vpPerWinner = vpPerWinner
+            vpPerWinner = vpPerWinner,
+            contributionLedger = contributionLedger
         )
     }
 }

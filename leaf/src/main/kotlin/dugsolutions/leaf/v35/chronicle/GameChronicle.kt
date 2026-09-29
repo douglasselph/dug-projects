@@ -228,6 +228,7 @@ class GameChronicle : Chronicle {
                 winnerIds = moment.winnerIds.toList(),
                 woundedPlayerIds = moment.woundedPlayerIds.toList(),
                 vpPerWinner = moment.vpPerWinner,
+                contributionLedger = moment.contributionLedger,
                 hierarchyDepth = hierarchyDepth
             )
             is Moment.Wound -> GameEntry.Wound(

@@ -58,6 +58,48 @@ class StrikeResolverTest {
     }
 
     @Test
+    fun contributionLedgerSeparatesWinningAssociationFromIndividualDecisiveness() {
+        val p1 = player(1, die(12, 6), die(6, 2))
+        val p2 = player(2, die(12, 7))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = BattleState(listOf(p1, p2))
+        p1.dice.hand.forEach { state.grid.placeDie(p1, StrikeRow.TOP, it) }
+        state.grid.placeDie(p2, StrikeRow.TOP, p2.dice.hand.single())
+
+        val result = resolver(game).resolveRow(game, state, StrikeRow.TOP)
+        val p1Contributions = result.contributionLedger.contributions
+            .filter { it.playerId == p1.id }
+
+        assertEquals(listOf(PlayerId(1)), result.winnerIds)
+        assertEquals(2, result.vpPerWinner)
+        assertEquals(listOf(6, 2), p1Contributions.map { it.magnitude })
+        assertTrue(p1Contributions.all { it.used && it.contributesValue })
+        assertTrue(p1Contributions.all { it.associatedBattleVp == 2 })
+        assertTrue(p1Contributions.all { it.individuallyWinnerDecisive })
+        assertTrue(p1Contributions.none { it.individuallyWoundDecisive })
+    }
+
+    @Test
+    fun contributionCanBeWoundDecisiveWithoutBeingWinnerDecisive() {
+        val p1 = player(1, die(12, 7), die(6, 2))
+        val p2 = player(2, die(12, 4))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        val state = BattleState(listOf(p1, p2))
+        p1.dice.hand.forEach { state.grid.placeDie(p1, StrikeRow.TOP, it) }
+        state.grid.placeDie(p2, StrikeRow.TOP, p2.dice.hand.single())
+
+        val result = resolver(game).resolveRow(game, state, StrikeRow.TOP)
+        val twoPointContribution = result.contributionLedger.contributions
+            .single { it.playerId == p1.id && it.magnitude == 2 }
+
+        assertEquals(listOf(PlayerId(1)), result.winnerIds)
+        assertEquals(listOf(PlayerId(2)), result.woundedPlayerIds)
+        assertTrue(!twoPointContribution.individuallyWinnerDecisive)
+        assertTrue(twoPointContribution.individuallyWoundDecisive)
+        assertEquals(3, twoPointContribution.associatedBattleVp)
+    }
+
+    @Test
     fun tiedHighPlayersAllWinAndEachGetsSameWoundBonus() {
         val p1 = player(1, die(12, 10))
         val p2 = player(2, die(12, 10))

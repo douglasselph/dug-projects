@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.chronicle.domain
 
+import dugsolutions.leaf.v35.battle.StrikeContributionLedger
 import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -156,7 +157,8 @@ sealed interface Moment {
         val rowSnapshot: BattleGridRowSnapshot? = null,
         val winnerIds: List<PlayerId>,
         val woundedPlayerIds: List<PlayerId>,
-        val vpPerWinner: Int
+        val vpPerWinner: Int,
+        val contributionLedger: StrikeContributionLedger? = null
     ) : Moment
 
     data class Wound(
