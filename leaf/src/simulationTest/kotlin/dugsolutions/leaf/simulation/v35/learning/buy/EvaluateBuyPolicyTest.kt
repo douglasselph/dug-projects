@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.chronicle.domain.BuyOrderResourceSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderDieSnapshot
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
+import dugsolutions.leaf.v35.chronicle.domain.*
+import dugsolutions.leaf.v35.effect.GameEffect
 
 class EvaluateBuyPolicyTest {
     @Test fun `evaluation accumulator starts empty and keeps four seat buckets`() {
@@ -39,6 +41,23 @@ class EvaluateBuyPolicyTest {
         assertEquals(17L, shape.startingPower)
         assertEquals(17L, shape.spentPower)
         assertEquals(3L, shape.overpayment)
+    }
+
+
+    @Test fun `effect utilization records round effects support upgrades and exact final wisp scoring`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.EffectResolved(1,p,GameEffect.UPGRADE_DIE_FROM_HAND,EffectSourceKind.ROUND,"Resource_Water_Compost",ChroniclePhase.CULTIVATION,0),
+            GameEntry.Upgrade(2,p,DieSides.D12,DieSides.D20,UpgradeDestination.DISCARD,12,1),
+            GameEntry.SupportAction(3,p,ChroniclePhase.BATTLE,SupportActionKind.WATER_REROLL,null,null,0),
+            GameEntry.RollReward(4,p,RollRewardKind.WISP_GAINED,null,"Wisp_01",0),
+            GameEntry.EffectResolved(5,p,GameEffect.GAIN_ONE_VP,EffectSourceKind.WISP,"Wisp_01",ChroniclePhase.BATTLE,0),
+            GameEntry.FinalScore(6,p,10,5,2,17,3,0)
+        )
+        val a=EffectResourceAccumulator(); a.addGame(entries,p)
+        assertEquals(1L,a.upgrades["D12->D20"]); assertEquals(1L,a.upgradeSources["ROUND:Resource_Water_Compost"])
+        assertEquals(1L,a.supportActions["WATER_REROLL"]); assertEquals(1L,a.rollWispsGained)
+        assertEquals(1L,a.wispEffects["Wisp_01"]); assertEquals(2L,a.finalWispVp)
     }
 
     @Test fun `default evaluation keeps FirstGameDefault`() {

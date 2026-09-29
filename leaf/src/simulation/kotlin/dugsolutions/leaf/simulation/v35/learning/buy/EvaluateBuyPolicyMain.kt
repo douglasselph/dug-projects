@@ -6,6 +6,8 @@ import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunConte
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
+import dugsolutions.leaf.v35.chronicle.domain.*
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
@@ -95,6 +97,7 @@ internal class EvalAccumulator {
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
+    val utilization = EffectResourceAccumulator()
     val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
     val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
@@ -105,6 +108,7 @@ internal class EvalAccumulator {
         mapOf("D4" to p.ownedDiceSignature.d4,"D6" to p.ownedDiceSignature.d6,"D8" to p.ownedDiceSignature.d8,"D10" to p.ownedDiceSignature.d10,"D12" to p.ownedDiceSignature.d12,"D20" to p.ownedDiceSignature.d20).forEach { (k,v) -> finalDiceSizes[k]=(finalDiceSizes[k]?:0)+v }
         buyShape.addGame(game.entries, p.playerId)
         battleShape.addGame(game.entries, p.playerId)
+        utilization.addGame(game.entries, p.playerId)
         grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
         WATCHED_CARDS.forEach { name ->
             val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
@@ -163,6 +167,80 @@ internal class BattleShapeAccumulator {
         }
     }
     private fun List<GameEntry>.indexOfFirstFrom(start:Int,p:(GameEntry)->Boolean):Int { for(i in start until size) if(p(this[i])) return i; return -1 }
+}
+
+
+internal class EffectResourceAccumulator {
+    var games = 0L
+    var finalWisps = 0L
+    var finalWispVp = 0L
+    var rollWispsGained = 0L
+    var immediateWispsPlayed = 0L
+    val roundEffects = sortedMapOf<String, Long>()
+    val battleRoundEffects = sortedMapOf<String, Long>()
+    val plantEffects = sortedMapOf<String, Long>()
+    val wispEffects = sortedMapOf<String, Long>()
+    val supportActions = sortedMapOf<String, Long>()
+    val upgrades = sortedMapOf<String, Long>()
+    val upgradeSources = sortedMapOf<String, Long>()
+    val wispGainTriggers = sortedMapOf<String, Long>()
+    var plantRoundExposure = 0L
+    var battlePlantExposure = 0L
+    var battleRounds = 0L
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
+        games++
+        entries.filterIsInstance<GameEntry.RoundCompleted>().forEach { completed ->
+            val ps = completed.playerSummaries.singleOrNull { it.playerId == playerId } ?: return@forEach
+            plantRoundExposure += ps.graftedPlantCount
+            if (completed.cardType == RoundCardType.BATTLE) { battlePlantExposure += ps.graftedPlantCount; battleRounds++ }
+        }
+        entries.filterIsInstance<GameEntry.FinalScore>().singleOrNull { it.playerId == playerId }?.let {
+            finalWispVp += it.unplayedWispVp
+        }
+        entries.filterIsInstance<GameEntry.RoundCompleted>().lastOrNull()?.playerSummaries?.singleOrNull { it.playerId == playerId }?.let { finalWisps += it.wispCount }
+        entries.filterIsInstance<GameEntry.RollReward>().filter { it.playerId == playerId }.forEach {
+            when (it.kind) {
+                RollRewardKind.WISP_GAINED -> { rollWispsGained++; wispGainTriggers.bump("Roll reward") }
+                RollRewardKind.WISP_PLAYED_IMMEDIATELY -> { immediateWispsPlayed++; wispGainTriggers.bump("Roll reward (immediate play)") }
+                else -> Unit
+            }
+        }
+        entries.filterIsInstance<GameEntry.SupportAction>().filter { it.playerId == playerId }.forEach { supportActions.bump(it.action.name) }
+        entries.filterIsInstance<GameEntry.EffectResolved>().filter { it.playerId == playerId }.forEach { e ->
+            when (e.sourceKind) {
+                EffectSourceKind.ROUND -> {
+                    val label = "${e.sourceName}: ${e.effect.name}"
+                    roundEffects.bump(label)
+                    if (e.phase == ChroniclePhase.BATTLE) battleRoundEffects.bump(label)
+                }
+                EffectSourceKind.PLANT -> plantEffects.bump(e.sourceName)
+                EffectSourceKind.WISP -> wispEffects.bump(e.sourceName)
+            }
+            when (e.effect) {
+                GameEffect.GAIN_ONE_WISP -> wispGainTriggers.bump("Gain 1 Wisp effect")
+                GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT -> wispGainTriggers.bump("Steal Wisp from one opponent")
+                GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS -> wispGainTriggers.bump("Steal Wisp from all opponents")
+                else -> Unit
+            }
+        }
+        entries.withIndex().filter { it.value is GameEntry.Upgrade && (it.value as GameEntry.Upgrade).playerId == playerId }.forEach { indexed ->
+            val u = indexed.value as GameEntry.Upgrade
+            upgrades.bump("${u.from.name}->${u.to.name}")
+            val source = enclosingEffect(entries, indexed.index)
+            upgradeSources.bump(source?.let { "${it.sourceKind.name}:${it.sourceName}" } ?: "unscoped")
+        }
+    }
+
+    private fun enclosingEffect(entries: List<GameEntry>, index: Int): GameEntry.EffectResolved? {
+        val depth = entries[index].hierarchyDepth
+        for (i in index - 1 downTo 0) {
+            val e = entries[i]
+            if (e.hierarchyDepth < depth) return e as? GameEntry.EffectResolved
+        }
+        return null
+    }
+    private fun MutableMap<String, Long>.bump(key: String) { this[key] = (this[key] ?: 0L) + 1L }
 }
 
 internal class BuyShapeAccumulator {
@@ -265,6 +343,33 @@ private fun printBattleShape(c:BattleShapeAccumulator,l:BattleShapeAccumulator) 
     }
 }
 
+
+private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: EffectResourceAccumulator) {
+    fun avg(v: Long, n: Long) = if (n == 0L) "0.00" else "%.2f".format(v.toDouble() / n)
+    fun mapLines(title: String, cm: Map<String,Long>, lm: Map<String,Long>) {
+        println("  $title:")
+        val keys=(cm.keys+lm.keys).sortedWith(compareByDescending<String>{(cm[it]?:0)+(lm[it]?:0)}.thenBy{it})
+        if(keys.isEmpty()) println("    none recorded") else keys.forEach { k -> println("    $k: control=${avg(cm[k]?:0,c.games)} learned=${avg(lm[k]?:0,l.games)} per game") }
+    }
+    println("Effect and resource utilization (affected role)")
+    println("  Plant scale/exposure: final Plants are reported above; Plant-round exposure=${avg(c.plantRoundExposure,c.games)} -> ${avg(l.plantRoundExposure,l.games)} card-rounds/game; Battle Plant size=${avg(c.battlePlantExposure,c.battleRounds)} -> ${avg(l.battlePlantExposure,l.battleRounds)}")
+    mapLines("Cultivation/Battle round effects actually resolved", c.roundEffects, l.roundEffects)
+    mapLines("Battle round effects actually resolved", c.battleRoundEffects, l.battleRoundEffects)
+    mapLines("Support actions", c.supportActions, l.supportActions)
+    mapLines("Compost/other die upgrades by step", c.upgrades, l.upgrades)
+    mapLines("Upgrade source", c.upgradeSources, l.upgradeSources)
+    println("  Wisps:")
+    println("    roll-reward Wisps gained: control=${avg(c.rollWispsGained,c.games)} learned=${avg(l.rollWispsGained,l.games)} per game")
+    println("    immediate Wisps played from roll reward: control=${avg(c.immediateWispsPlayed,c.games)} learned=${avg(l.immediateWispsPlayed,l.games)} per game")
+    println("    final unplayed Wisp count: control=${avg(c.finalWisps,c.games)} learned=${avg(l.finalWisps,l.games)} per game")
+    println("    final unplayed Wisp VP: control=${avg(c.finalWispVp,c.games)} learned=${avg(l.finalWispVp,l.games)} per game")
+    mapLines("Wisp acquisition triggers visible in Chronicle", c.wispGainTriggers, l.wispGainTriggers)
+    mapLines("Wisp effects actually played/resolved (by card)", c.wispEffects, l.wispEffects)
+    mapLines("Plant effects actually resolved (by card)", c.plantEffects, l.plantEffects)
+    println("  Note: Wisp gain triggers are event counts, not an exact acquired-card count: steal-all can transfer multiple Wisps, and current Chronicle does not record the identity of a Wisp drawn by a round/Plant gain effect. Final Wisp count and FinalScore Wisp VP are exact.")
+    println("  Plant-round exposure sums the player's grafted Plant count at every completed round; it helps distinguish equal resource-use counts applied to differently sized Plant creatures.")
+}
+
 private fun printWatchedCards(c:EvalAccumulator,l:EvalAccumulator) {
     println("Grove sensitivity and notable VP cards")
     WATCHED_CARDS.forEach { name ->
@@ -310,6 +415,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printBuyShape(c.buyShape, l.buyShape)
     println()
     printBattleShape(c.battleShape,l.battleShape)
+    println()
+    printEffectResourceUtilization(c.utilization,l.utilization)
     println()
     printWatchedCards(c,l)
     println()
