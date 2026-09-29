@@ -97,6 +97,17 @@ class BaselineScoreEngineTest {
             listOf("Useful context"),
             recorded.single().adjustments.map { it.reason }
         )
+        assertEquals(2, recorded.single().alternatives.size)
+        assertEquals(
+            listOf("Low candidate", "High candidate"),
+            recorded.single().alternatives.map { it.choiceLabel }
+        )
+        assertEquals(listOf(10, 55), recorded.single().alternatives.map { it.total })
+        assertEquals(listOf(false, true), recorded.single().alternatives.map { it.selected })
+        assertEquals(
+            listOf("Useful context"),
+            recorded.single().alternatives.single { it.selected }.adjustments.map { it.reason }
+        )
     }
 
     @Test
