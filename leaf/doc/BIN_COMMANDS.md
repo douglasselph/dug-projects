@@ -69,6 +69,26 @@ bin/focused_plant_shape 20
 bin/focused_plant_shape 1000 --seed 31000 --strategy-seed 41000
 ```
 
+## `bin/evaluate_buy_policy`
+
+Runs M3-G1 matched held-out evaluation of a trained Buy-policy champion. For
+each sample it runs a Human Baseline control and a learned-Buy variant with the
+same mechanical seed, strategy seed, Grove, round structure, and affected
+physical seat. The affected role rotates across all four seats.
+
+```bash
+bin/evaluate_buy_policy
+bin/evaluate_buy_policy 1000 --input output/ai/buy-policy-v1-trained.weights
+```
+
+Defaults are 1000 matched samples, held-out mechanical seeds beginning at
+161000 and strategy seeds beginning at 171000, `FirstGameDefault`, and `3/2/2`.
+The command refuses recorded training-seed overlap and validates the policy's
+Plant manifest against current `CardDataFiles`. It reports control/learned win
+share and VP, seat results, final development metrics, and purchase behavior by
+Plant cost/type/card and die size. Training fitness is printed only as provenance;
+the held-out result is the independent evidence.
+
 ## `bin/train_buy_policy`
 
 Evolves **only the Buy-selection policy**. Every other decision remains Human

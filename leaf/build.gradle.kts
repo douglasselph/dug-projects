@@ -368,3 +368,13 @@ tasks.register<JavaExec>("runTrainBuyPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.TrainBuyPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// M3-G1 matched held-out evaluation for a trained learned Buy policy.
+tasks.register<JavaExec>("runEvaluateBuyPolicy") {
+    description = "Evaluates a trained learned Buy policy on held-out matched games against Human Baseline."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.EvaluateBuyPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}

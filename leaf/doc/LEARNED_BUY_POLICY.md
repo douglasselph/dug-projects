@@ -189,6 +189,26 @@ Confirm that weights evolved, provenance and manifest data are present, and
 card-identity/exact-cost/stage features are changing. Do **not** automatically
 copy this file over `data/ai/buy-policy-v1.weights`.
 
+After a training smoke run produces a champion, evaluate it before promotion:
+
+```bash
+bin/evaluate_buy_policy --input output/ai/buy-policy-v1-trained.weights
+```
+
+The M3-G1 evaluator defaults to 1000 **matched samples** (2000 complete games):
+one Human Baseline control and one learned-Buy game per sample. The pair shares
+mechanical/strategy seeds and affected seat, while the affected role rotates
+through all four seats. Default evaluation seeds start at 161000/171000 and the
+evaluator refuses ranges that overlap the training cohorts recorded in policy
+provenance. It reports win-share/VP deltas, seat effects, end-state development,
+and Buy behavior by Plant cost, Plant type, individual Plant identity, and die
+size. This first evaluator intentionally remains on `FirstGameDefault` and
+`3/2/2`; Grove and round-pattern generalization are later questions.
+
+A no-purchase (`Done`) choice is not currently a production Chronicle purchase
+event, so M3-G1 does not change decision tracing just to report Done-by-stage.
+That metric can be added later with an explicit compact observation seam.
+
 For a larger explicitly requested run:
 
 ```bash
