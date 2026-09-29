@@ -14,6 +14,7 @@ import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.tokens.Critter
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -72,11 +73,16 @@ class StrikeResolverTest {
 
         assertEquals(listOf(PlayerId(1)), result.winnerIds)
         assertEquals(2, result.vpPerWinner)
-        assertEquals(listOf(6, 2), p1Contributions.map { it.magnitude })
+        assertEquals(listOf(2, 6), p1Contributions.map { it.magnitude }.sorted())
         assertTrue(p1Contributions.all { it.used && it.contributesValue })
         assertTrue(p1Contributions.all { it.associatedBattleVp == 2 })
         assertTrue(p1Contributions.all { it.individuallyWinnerDecisive })
-        assertTrue(p1Contributions.none { it.individuallyWoundDecisive })
+
+        val sixContribution = p1Contributions.single { it.magnitude == 6 }
+        val twoContribution = p1Contributions.single { it.magnitude == 2 }
+
+        assertTrue(sixContribution.individuallyWoundDecisive)
+        assertFalse(twoContribution.individuallyWoundDecisive)
     }
 
     @Test
