@@ -431,6 +431,12 @@ class DieValueEffectHandler : EffectHandler {
         )
         val before = die.value
         die.adjustBy(amount)
+        if (request.effect == GameEffect.RAISE_DIE_PLUS_4) {
+            val sourceCard = (request.source as? dugsolutions.leaf.v35.effect.GameEffectSource.Plant)?.card?.name ?: request.effect.name
+            request.game.assetProvenance.recordImmediateDieEffect(
+                request.actor, die, sourceCard, request.effect, before, die.value
+            )
+        }
         request.game.chronicle.record(
             Moment.DieValueChanged(
                 playerId = request.actor.id,

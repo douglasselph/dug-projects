@@ -272,6 +272,8 @@ class DrawEffectHandler(
                     request,
                     discardChoices(request.actor)
                 )
+                val sourceCard = (request.source as? GameEffectSource.Plant)?.card?.name ?: request.effect.name
+                request.game.assetProvenance.recordForgetMeNot(request.actor, die, sourceCard)
                 stateCheck(request.actor.dice.removeFromDiscard(die) != null) {
                     "Selected Discard die could not be removed: $die"
                 }
@@ -787,6 +789,7 @@ class DrawEffectHandler(
             reason = BattleDiePlacementReason.EFFECT,
             context = request.decisionContext()
         )
+        request.game.assetProvenance.markBattlePlacement(request.actor.id, die, placement.row)
         recordBattleRow(request, resolution, placement.row)
     }
 

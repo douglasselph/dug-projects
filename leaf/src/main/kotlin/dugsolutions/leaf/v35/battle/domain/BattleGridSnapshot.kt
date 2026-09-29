@@ -4,11 +4,13 @@ import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.research.provenance.AssetProvenance
 
 /** Immutable reporting snapshot of one die currently placed in a Strike Square. */
 data class BattleGridDieSnapshot(
     val sides: DieSides,
-    val value: Int
+    val value: Int,
+    val assetId: Long? = null
 )
 
 /** Immutable reporting snapshot of one committed Critter and its current effective value. */
@@ -46,7 +48,8 @@ object BattleGridSnapshot {
 
     fun row(
         battleState: BattleState,
-        row: StrikeRow
+        row: StrikeRow,
+        provenance: AssetProvenance? = null
     ): BattleGridRowSnapshot =
         BattleGridRowSnapshot(
             row = row,
@@ -57,7 +60,8 @@ object BattleGridSnapshot {
                     dice = square.dice.map { die ->
                         BattleGridDieSnapshot(
                             sides = DieSides.from(die.sides),
-                            value = die.value
+                            value = die.value,
+                            assetId = provenance?.assetId(die)
                         )
                     },
                     critters = square.critters.map { critter ->

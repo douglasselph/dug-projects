@@ -124,6 +124,10 @@ class BattleRound(
             randomizer = game.randomizer
         )
         val placements = battleState.placeInitialHands()
+        game.players.forEach { game.assetProvenance.markBattleReached(it) }
+        placements.forEach { placement ->
+            game.assetProvenance.markBattlePlacement(placement.playerId, placement.die, placement.row)
+        }
 
         val highestDice = battleState.playerIdsInBattleOrder.mapNotNull { playerId ->
             placements

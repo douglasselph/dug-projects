@@ -6,7 +6,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 
 /** The concrete row asset whose current value contributes to a Strike total. */
 sealed interface StrikeContributionSource {
-    data class Die(val index: Int, val sides: Int) : StrikeContributionSource
+    data class Die(val index: Int, val sides: Int, val assetId: Long? = null) : StrikeContributionSource
     data class Critter(val index: Int, val name: String) : StrikeContributionSource
 }
 
@@ -55,7 +55,7 @@ object StrikeContributionAnalyzer {
             val dice = square.dice.mapIndexed { index, die ->
                 contribution(
                     playerId = square.playerId,
-                    source = StrikeContributionSource.Die(index, die.sides.value),
+                    source = StrikeContributionSource.Die(index, die.sides.value, die.assetId),
                     magnitude = die.value,
                     originalTotals = originalTotals,
                     originalWinners = originalWinners,

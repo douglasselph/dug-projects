@@ -107,7 +107,7 @@ class StrikeResolver(
             "Cannot resolve closed Strike Row $row"
         }
 
-        val rowSnapshot = BattleGridSnapshot.row(battleState, row)
+        val rowSnapshot = BattleGridSnapshot.row(battleState, row, game.assetProvenance)
         val totals = rowSnapshot.squares
             .filterNot { it.withdrawn }
             .map { square ->
@@ -159,6 +159,7 @@ class StrikeResolver(
             woundedPlayerIds = woundedIds,
             vpPerWinner = vpPerWinner
         )
+        game.assetProvenance.observeStrike(contributionLedger)
         var wounds = emptyList<StrikeWoundResult>()
 
         game.chronicle.scoped(

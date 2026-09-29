@@ -10,6 +10,7 @@ import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.research.provenance.AssetProvenance
 
 /**
  * Durable state graph for one isolated game.
@@ -31,7 +32,9 @@ class Game(
     /** Fresh experiment intervention for this Game; NONE in ordinary play. */
     val mechanicalIntervention: MechanicalIntervention = MechanicalIntervention.NONE,
     /** Game-local die construction preserving this Game's random/config state. */
-    val dieFactory: DieFactory = DieFactory(randomizer)
+    val dieFactory: DieFactory = DieFactory(randomizer),
+    /** Narrow game-local research provenance; never consulted by gameplay decisions. */
+    val assetProvenance: AssetProvenance = AssetProvenance()
 ) {
     var status: GameStatus = GameStatus.READY
         private set

@@ -264,6 +264,31 @@ class StrikeResolverTest {
         return player.creature.get(grafted.id)!!
     }
 
+    @Test
+    fun immediateDieEffectProvenanceConnectsRaisedDieToStrikeContribution() {
+        val raised = die(12, 6)
+        val p1 = player(1, raised)
+        val p2 = player(2, die(12, 5))
+        val game = GameEngineTestFixture.game(players = listOf(p1, p2))
+        game.assetProvenance.recordImmediateDieEffect(
+            p1, raised, "Root_05_02", dugsolutions.leaf.v35.effect.GameEffect.RAISE_DIE_PLUS_4, 2, 6
+        )
+        val state = BattleState(listOf(p1, p2))
+        state.grid.placeDie(p1, StrikeRow.TOP, raised)
+        state.grid.placeDie(p2, StrikeRow.TOP, p2.dice.hand.single())
+        game.assetProvenance.markBattlePlacement(p1.id, raised, StrikeRow.TOP)
+
+        resolver(game).resolveRow(game, state, StrikeRow.TOP)
+
+        val record = game.assetProvenance.immediateDieEffects.single()
+        assertEquals("Root_05_02", record.sourceCard)
+        assertEquals(4, record.magnitude)
+        assertTrue(record.placedInBattle)
+        assertTrue(record.contributedToWinningStrike)
+        assertTrue(record.individuallyWinnerDecisive)
+        assertEquals(2, record.associatedBattleVp)
+    }
+
     private fun player(
         id: Int,
         vararg dice: Die
