@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
+import dugsolutions.leaf.v35.player.decision.baseline.context.CreatureRefreshValue
+import dugsolutions.leaf.v35.player.decision.baseline.context.PhasePreservationValue
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 /**
@@ -45,6 +47,23 @@ object PlantActivationPriority {
             cardName = card.card.name,
             normalPurchasingPower = policy.normalPurchasingPower(context)
         )
+
+        val selectedView = context.self.board.creature.firstOrNull { it.id == card.id }
+        if (selectedView != null && selectedView.isFaceUp) {
+            val refreshValue = CreatureRefreshValue(cardScorers)
+            val refresh = refreshValue.observe(context, selectedView)
+            val refreshAdjustment = refreshValue.priorityAdjustment(refresh)
+            if (refreshAdjustment != 0) {
+                score = score.adjusted(refreshAdjustment, "Shared Creature Refresh Value")
+            }
+
+            val preservationValue = PhasePreservationValue(cardScorers, refreshValue)
+            val preservation = preservationValue.observe(context, selectedView)
+            val preservationAdjustment = preservationValue.priorityAdjustment(preservation)
+            if (preservationAdjustment != 0) {
+                score = score.adjusted(preservationAdjustment, "Shared Phase-Preservation Value")
+            }
+        }
 
         if (permanentlyImprovesDicePool(card.card.effect)) {
             val developmentBonus = policy.cultivationDiceDevelopmentBonus(context)

@@ -7,5 +7,5 @@ object ForgetMeNotBaseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_17_02"),
     effect = GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND,
     cultivationPlayBase = 72,
-    battlePlayBase = 72
+    battlePlayBase = 82
 )

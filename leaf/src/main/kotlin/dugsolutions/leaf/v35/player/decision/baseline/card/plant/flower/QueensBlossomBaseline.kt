@@ -7,5 +7,5 @@ object QueensBlossomBaseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_17_04"),
     effect = GameEffect.DRAW_TWO_DICE,
     cultivationPlayBase = 82,
-    battlePlayBase = 82
+    battlePlayBase = 104
 )

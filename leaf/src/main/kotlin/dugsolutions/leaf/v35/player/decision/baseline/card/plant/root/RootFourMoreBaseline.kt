@@ -7,5 +7,5 @@ object RootFourMoreBaseline : ConfiguredCardScorer(
     cardNames = setOf("Root_05_02"),
     effect = GameEffect.RAISE_DIE_PLUS_4,
     cultivationPlayBase = 58,
-    battlePlayBase = 58
+    battlePlayBase = 68
 )

@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleTwoStepUpgrad
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -249,8 +250,20 @@ object CardScoringHelpers {
                 score = score.adjusted(maxNow * 15 + if (canCreate) 18 else 0, "Maximum dice create extra Draws")
             }
             GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND -> {
-                val best = context.self.board.discard.maxByOrNull { it.sides }
-                if (best != null) score = score.adjusted((DieValueHeuristics.expectedRoll(best.sides) * 3).roundToInt(), "Best discard die can return to Hand")
+                val candidates = context.self.board.discard.map { die ->
+                    val availability = FutureDiceAvailability.forDiscardDie(context, die)
+                    val quality = (DieValueHeuristics.expectedRoll(die.sides) * 3).roundToInt()
+                    val acceleration = (availability.approximateDrawsUntilAvailable - 1).coerceAtLeast(0)
+                    val battleTiming = if (availability.battleIsNext && acceleration > 0) 12 else 0
+                    Triple(die, quality + acceleration.coerceAtMost(12) + battleTiming, availability)
+                }
+                val best = candidates.maxByOrNull { it.second }
+                if (best != null) {
+                    score = score.adjusted(best.second, "Valuable discard die can return earlier")
+                    if (best.third.battleIsNext && best.third.approximateDrawsUntilAvailable > 1) {
+                        score = score.adjusted(8, "Recovered die would not naturally return before imminent Battle")
+                    }
+                }
             }
             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> {
                 if (phase == CardPhase.CULTIVATION) {
@@ -460,6 +473,20 @@ object CardScoringHelpers {
             else -> 0
         }
         var score = PriorityScore(50).adjusted(gain * 4, "Target value swing")
+        if (effect == GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND) {
+            val discardDie = context.self.board.discard.firstOrNull { it.index == die.index }
+            if (discardDie != null) {
+                val availability = FutureDiceAvailability.forDiscardDie(context, discardDie)
+                score = score.adjusted(die.sides * 2, "Recover a higher-sided discarded die")
+                score = score.adjusted(
+                    (availability.approximateDrawsUntilAvailable - 1).coerceIn(0, 12),
+                    "Accelerate natural recycle availability"
+                )
+                if (availability.battleIsNext && availability.approximateDrawsUntilAvailable > 1) {
+                    score = score.adjusted(15, "Make die available before imminent Battle")
+                }
+            }
+        }
         if (context.phase != null && CardPhase.from(context.phase) == CardPhase.CULTIVATION && gain > 0) {
             val power = normalPurchasingPower
                 ?: PurchaseThresholdHeuristics.purchasingPower(context.self.board)

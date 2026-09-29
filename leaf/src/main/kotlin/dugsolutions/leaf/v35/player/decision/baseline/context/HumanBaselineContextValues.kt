@@ -40,6 +40,24 @@ data class CreatureRefreshObservation(
 class CreatureRefreshValue(
     private val scorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
 ) {
+    /**
+     * Provisional shared priority adjustment.  This is deliberately shallow:
+     * it values cards restored by the refresh rather than predicting their future targets.
+     */
+    fun priorityAdjustment(observation: CreatureRefreshObservation): Int = when {
+        observation.immediateRefresh -> {
+            val restored = if (observation.battleIsNext)
+                observation.restoredBattleBaseTotal else observation.restoredCultivationBaseTotal
+            12 + (restored / 25).coerceAtMost(20)
+        }
+        observation.twoActionRefreshOpportunity -> {
+            val restored = if (observation.battleIsNext)
+                observation.restoredBattleBaseTotal else observation.restoredCultivationBaseTotal
+            4 + (restored / 50).coerceAtMost(10)
+        }
+        else -> 0
+    }
+
     fun observe(context: DecisionContext, selected: CreatureCardView): CreatureRefreshObservation {
         val creature = context.self.board.creature
         require(selected in creature) { "Selected Plant is not in the acting player's Creature" }
@@ -79,6 +97,17 @@ class PhasePreservationValue(
     private val scorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     private val refreshValue: CreatureRefreshValue = CreatureRefreshValue(scorers)
 ) {
+    /** Negative means preserve the Plant for the imminent Battle. */
+    fun priorityAdjustment(observation: PhasePreservationObservation): Int {
+        if (!observation.preservationRelevant) return 0
+        val premium = observation.battleValuePremium.coerceAtLeast(0)
+        // Even equal-base cards have some option value in Battle; cards calibrated
+        // with a larger Battle premium are preserved more strongly.
+        var penalty = 8 + premium / 2
+        if (observation.twoActionRefreshOpportunity) penalty /= 2
+        return -penalty.coerceAtMost(30)
+    }
+
     fun observe(context: DecisionContext, card: CreatureCardView): PhasePreservationObservation {
         val scorer = scorers.forPlant(card)
         val refresh = refreshValue.observe(context, card)

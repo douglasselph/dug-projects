@@ -7,5 +7,5 @@ object RootCauseBaseline : ConfiguredCardScorer(
     cardNames = setOf("Root_09_02"),
     effect = GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
     cultivationPlayBase = 55,
-    battlePlayBase = 55
+    battlePlayBase = 75
 )
