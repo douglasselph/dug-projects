@@ -180,8 +180,13 @@ class CultivationBuildCoordinator(
                     roundCard = roundCard,
                     mainActionsRemaining = mainActionsRemaining
                 )
-                stateCheck(legalChoices.isNotEmpty()) {
-                    "Player ${player.id.value} has no legal Cultivation action"
+                // A player can legitimately run out of legal Build actions. For example,
+                // Battle Doom can leave them with no dice anywhere, while their face-up
+                // Plants and both Round effects require a die. In that state there is no
+                // decision for the strategy to make: finish this player's Build even if
+                // fewer than two Main Actions were possible.
+                if (legalChoices.isEmpty()) {
+                    break
                 }
 
                 val context = DecisionContextFactory.create(game, player)

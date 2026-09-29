@@ -126,6 +126,24 @@ class CultivationBuildCoordinatorTest {
     }
 
     @Test
+    fun executeActions_finishesWhenPlayerHasNoLegalCultivationAction() {
+        val strategy = RecordingStrategy()
+        val first = player(1, emptyList(), strategy)
+        val effects = RecordingEffectExecutor(executable = { false })
+        val fixture = fixture(
+            first,
+            player(2, emptyList(), RoundEffectStrategy()),
+            effects
+        )
+
+        val result = fixture.coordinator.executeActions(fixture.game, fixture.card)
+
+        assertTrue(result.actions.none { it.playerId == first.id })
+        assertTrue(result.supportActions.none { it.playerId == first.id })
+        assertTrue(strategy.requests.isEmpty())
+    }
+
+    @Test
     fun execute_repeatedDecisionStateFailsInsteadOfLoopingForever() {
         val strategy = RepeatWispStrategy()
         val first = player(1, emptyList(), strategy)
