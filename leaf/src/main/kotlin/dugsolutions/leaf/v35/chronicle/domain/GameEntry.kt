@@ -112,6 +112,8 @@ sealed interface GameEntry {
         val baseScore: Int,
         val adjustments: List<DecisionScoreAdjustmentSnapshot>,
         val total: Int,
+        val observations: Map<String, String> = emptyMap(),
+        val alternatives: List<DecisionAlternativeSnapshot> = emptyList(),
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

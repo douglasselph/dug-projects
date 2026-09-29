@@ -24,7 +24,8 @@ data class DecisionReasoningAlternative(
     val baseScore: Int,
     val adjustments: List<DecisionReasoningAdjustment>,
     val total: Int,
-    val selected: Boolean
+    val selected: Boolean,
+    val observations: Map<String, String> = emptyMap()
 ) {
     init {
         require(choiceLabel.isNotBlank()) {
@@ -54,7 +55,8 @@ data class DecisionReasoning(
     val baseScore: Int,
     val adjustments: List<DecisionReasoningAdjustment>,
     val total: Int,
-    val alternatives: List<DecisionReasoningAlternative> = emptyList()
+    val alternatives: List<DecisionReasoningAlternative> = emptyList(),
+    val observations: Map<String, String> = emptyMap()
 ) {
     init {
         require(choiceLabel.isNotBlank()) {
@@ -73,7 +75,8 @@ data class DecisionReasoning(
                 selected.choiceLabel == choiceLabel &&
                     selected.baseScore == baseScore &&
                     selected.adjustments == adjustments &&
-                    selected.total == total
+                    selected.total == total &&
+                    selected.observations == observations
             ) {
                 "Selected alternative must match the selected decision reasoning fields"
             }

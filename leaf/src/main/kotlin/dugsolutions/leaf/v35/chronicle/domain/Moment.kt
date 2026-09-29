@@ -94,7 +94,9 @@ sealed interface Moment {
         val choiceLabel: String,
         val baseScore: Int,
         val adjustments: List<DecisionScoreAdjustmentSnapshot>,
-        val total: Int
+        val total: Int,
+        val observations: Map<String, String> = emptyMap(),
+        val alternatives: List<DecisionAlternativeSnapshot> = emptyList()
     ) : Moment
 
     data class BuyOrder(
@@ -277,6 +279,15 @@ data class BattleOrderHighDieSnapshot(
     val playerId: PlayerId,
     val sides: DieSides,
     val value: Int
+)
+
+data class DecisionAlternativeSnapshot(
+    val choiceLabel: String,
+    val baseScore: Int,
+    val adjustments: List<DecisionScoreAdjustmentSnapshot>,
+    val total: Int,
+    val observations: Map<String, String>,
+    val selected: Boolean
 )
 
 data class DecisionScoreAdjustmentSnapshot(

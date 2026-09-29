@@ -5,6 +5,9 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.OvergrowthUseHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.*
+import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
+import dugsolutions.leaf.v35.player.decision.baseline.context.PhaseProximity
+import dugsolutions.leaf.v35.player.decision.baseline.context.DicePoolQuality
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
@@ -118,7 +121,8 @@ class HumanBaselineCultivationStrategy(
                 DecisionCandidate(
                     choice = choice,
                     score = score(request, choice, compost),
-                    tags = tags(request, choice)
+                    tags = tags(request, choice),
+                    observations = calibrationObservations(request, choice)
                 )
             },
             influenceRegistry = influenceRegistry
@@ -395,6 +399,62 @@ class HumanBaselineCultivationStrategy(
                 )
             }
         }
+
+
+    /** Compact, immutable facts used only when decision reasoning is enabled. */
+    private fun calibrationObservations(
+        request: ChooseCultivationActionRequest,
+        choice: CultivationAction
+    ): Map<String, String> {
+        val context = request.context
+        val common = linkedMapOf(
+            "nextPhase" to if (PhaseProximity.battleIsNext(context)) "BATTLE" else "CULTIVATION",
+            "faceUpPlants" to context.self.board.creature.count { it.isFaceUp }.toString(),
+            "faceDownPlants" to context.self.board.creature.count { !it.isFaceUp }.toString(),
+            "drawUtility" to DrawPriority.score(context).total.toString()
+        )
+        val main = (choice as? CultivationAction.Main)?.action ?: return common
+        when (main) {
+            is CultivationMainAction.ActivatePlant -> {
+                common["card"] = main.card.card.name
+                if (main.card.card.name == "Flower_17_02") {
+                    val best = context.self.board.discard.maxByOrNull { die ->
+                        val availability = FutureDiceAvailability.forDiscardDie(context, die)
+                        die.sides * 2 + (availability.approximateDrawsUntilAvailable - 1).coerceIn(0, 12) +
+                            if (availability.battleIsNext && availability.approximateDrawsUntilAvailable > 1) 15 else 0
+                    }
+                    if (best != null) {
+                        val availability = FutureDiceAvailability.forDiscardDie(context, best)
+                        val quality = DicePoolQuality.observe(context)
+                        common["targetDieSides"] = best.sides.toString()
+                        common["recycleDistance"] = availability.approximateDrawsUntilAvailable.toString()
+                        common["battleNext"] = availability.battleIsNext.toString()
+                        common["upcomingDiceQuality"] = quality.nextSupplySides.take(3).joinToString("/").ifEmpty { "none" }
+                        common["poolSize"] = quality.ownedDiceCount.toString()
+                    }
+                }
+            }
+            CultivationMainAction.RoundEffect1, CultivationMainAction.RoundEffect2 -> {
+                val effect = if (main == CultivationMainAction.RoundEffect1) request.roundCard.firstEffect.effect else request.roundCard.secondEffect.effect
+                common["effect"] = effect.name
+                if (effect == GameEffect.MULCH_DIE_FROM_HAND) {
+                    val power = policy.normalPurchasingPower(context)
+                    val target = MulchPriority.preferredTarget(context, power)
+                    if (target != null) {
+                        val timing = MulchPriority.timingObservation(context, target)
+                        common["targetDieSides"] = target.sides.toString()
+                        common["targetDieValue"] = target.value.toString()
+                        common["battleNext"] = timing.battleIsNext.toString()
+                        common["upcomingDiceQuality"] = timing.upcomingSupplySides.take(3).joinToString("/").ifEmpty { "none" }
+                        common["recycleDistance"] = timing.approximateNaturalRecycleDraws.toString()
+                        common["preparedMulch"] = timing.preparedMulchCount.toString()
+                    }
+                }
+            }
+            else -> Unit
+        }
+        return common
+    }
 
 
     private fun scoreSupport(

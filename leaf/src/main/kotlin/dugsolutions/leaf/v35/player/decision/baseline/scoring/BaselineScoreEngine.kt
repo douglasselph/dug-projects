@@ -97,6 +97,7 @@ class BaselineScoreEngine(
                 )
             },
             total = score.total,
+            observations = observations,
             alternatives = alternatives
         )
 
@@ -113,6 +114,7 @@ class BaselineScoreEngine(
                 )
             },
             total = score.total,
+            observations = observations,
             selected = selected
         )
 }

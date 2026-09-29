@@ -8,7 +8,8 @@ data class DecisionCandidate<T>(
     val choice: T,
     val score: PriorityScore,
     val tags: Set<DecisionTag> = emptySet(),
-    val label: String = DecisionLabelFormatter.longForm(choice)
+    val label: String = DecisionLabelFormatter.longForm(choice),
+    val observations: Map<String, String> = emptyMap()
 ) {
     init {
         require(label.isNotBlank()) {

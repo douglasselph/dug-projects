@@ -4,7 +4,8 @@ package dugsolutions.leaf.v35.player.decision.baseline.scoring
 data class ScoredChoice<T>(
     val choice: T,
     val score: PriorityScore,
-    val label: String = DecisionLabelFormatter.longForm(choice)
+    val label: String = DecisionLabelFormatter.longForm(choice),
+    val observations: Map<String, String> = emptyMap()
 ) {
     init {
         require(label.isNotBlank()) {
@@ -31,6 +32,7 @@ data class ScoredChoice<T>(
                 score = candidate.score.copy(
                     adjustments = candidate.score.adjustments + additionalAdjustments
                 ),
+                observations = candidate.observations,
                 label = candidate.label
             )
     }

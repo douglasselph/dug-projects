@@ -378,3 +378,12 @@ tasks.register<JavaExec>("runEvaluateBuyPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.EvaluateBuyPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+tasks.register<JavaExec>("runTargetedDecisionCalibration") {
+    description = "Runs reusable Human Baseline targeted decision calibration observations."
+    group = "verification"
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.decisioncalibration.TargetedDecisionCalibrationMainKt")
+    val rawArgs = providers.gradleProperty("args").orNull
+    if (!rawArgs.isNullOrBlank()) args(rawArgs.split(Regex("\\s+")).filter(String::isNotBlank))
+}

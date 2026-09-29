@@ -169,6 +169,8 @@ class GameChronicle : Chronicle {
                 baseScore = moment.baseScore,
                 adjustments = moment.adjustments.toList(),
                 total = moment.total,
+                observations = moment.observations.toMap(),
+                alternatives = moment.alternatives.toList(),
                 hierarchyDepth = hierarchyDepth
             )
             is Moment.BuyOrder -> GameEntry.BuyOrder(
