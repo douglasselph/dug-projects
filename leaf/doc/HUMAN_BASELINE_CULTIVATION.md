@@ -382,7 +382,7 @@ B5 — build explicit Human Baseline Behavior Contract tests          COMPLETE
 B6 — align action scoring with Effect target/branch selection     COMPLETE
 B7 — focused compile/test/fix until green                         COMPLETE
 
-C  — documentation, full regression, and certification
+C — documentation, full regression, and certification
 ```
 
 B7 required no behavior corrections. Production and test Kotlin compiled successfully through Gradle, and the focused Cultivation/Human-Baseline verification selection ran 57 tests with 0 failures. Stage C remains responsible for the full project-wide regression before certification.

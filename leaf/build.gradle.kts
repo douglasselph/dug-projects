@@ -359,7 +359,7 @@ tasks.register<JavaExec>("runFocusedPlantShapeExperiment") {
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
 }
 
-// M3-F2 transparent linear Buy-policy evolutionary trainer.
+//  transparent linear Buy-policy evolutionary trainer.
 tasks.register<JavaExec>("runTrainBuyPolicy") {
     description = "Evolves the learned Buy policy against Human Baseline opponents."
     group = "simulation research"
@@ -369,7 +369,7 @@ tasks.register<JavaExec>("runTrainBuyPolicy") {
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
 
-// M3-G1 matched held-out evaluation for a trained learned Buy policy.
+//  matched held-out evaluation for a trained learned Buy policy.
 tasks.register<JavaExec>("runEvaluateBuyPolicy") {
     description = "Evaluates a trained learned Buy policy on held-out matched games against Human Baseline."
     group = "simulation research"

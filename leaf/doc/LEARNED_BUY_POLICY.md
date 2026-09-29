@@ -195,7 +195,7 @@ After a training smoke run produces a champion, evaluate it before promotion:
 bin/evaluate_buy_policy --input output/ai/buy-policy-v1-trained.weights
 ```
 
-The M3-G1 evaluator defaults to 1000 **matched samples** (2000 complete games):
+The  evaluator defaults to 1000 **matched samples** (2000 complete games):
 one Human Baseline control and one learned-Buy game per sample. The pair shares
 mechanical/strategy seeds and affected seat, while the affected role rotates
 through all four seats. Default evaluation seeds start at 161000/171000 and the
@@ -213,7 +213,7 @@ The Grove RNG defaults to seed 181000 and can be changed with `--grove-seed`; it
 does not consume the game's mechanical or strategy RNG streams.
 
 A no-purchase (`Done`) choice is not currently a production Chronicle purchase
-event, so M3-G1 does not change decision tracing just to report Done-by-stage.
+event, so  does not change decision tracing just to report Done-by-stage.
 That metric can be added later with an explicit compact observation seam.
 
 For a larger explicitly requested run:

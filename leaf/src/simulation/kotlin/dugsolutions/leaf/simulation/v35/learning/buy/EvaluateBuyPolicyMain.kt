@@ -28,7 +28,7 @@ import org.koin.dsl.koinApplication
 import java.nio.file.Path
 import java.nio.file.Paths
 
-/** M3-G1: matched held-out evaluation of one trained Buy policy against Human Baseline control. */
+/** Matched held-out evaluation of one trained Buy policy against Human Baseline control. */
 fun main(args: Array<String>) {
     val o = EvalOptions.parse(args.toList())
     val app = koinApplication { modules(appModules) }
@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
         val control = EvalAccumulator()
         val learned = EvalAccumulator()
 
-        println("M3-G1 — Learned Buy Policy Held-Out Evaluation")
+        println("Learned Buy Policy Held-Out Evaluation")
         println("policy=${o.input}")
         println("matched samples=${o.games}; games run=${o.games * 2}")
         println("evaluation seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
@@ -90,11 +90,13 @@ internal class EvalAccumulator {
     var plantPurchases=0L; var diePurchases=0L
     val seatWins=DoubleArray(4); val seatGames=IntArray(4)
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>()
+    val buyShape = BuyShapeAccumulator()
 
     fun add(game: CompletedEvalGame, seat: Int, plantsByName: Map<String,PlantCard>) {
         val p=game.summary.players.single { it.seat==seat }
         winShare+=p.winShare; vp+=p.totalVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
         seatWins[seat]+=p.winShare; seatGames[seat]++
+        buyShape.addGame(game.entries, p.playerId)
         game.entries.filterIsInstance<GameEntry.Purchase>().filter { it.playerId==p.playerId }.forEach { purchase ->
             when(purchase.kind) {
                 PurchaseKind.PLANT -> { plantPurchases++; plantCosts.bump(purchase.cost); plantCards.bump(purchase.itemName); plantTypes.bump(plantsByName[purchase.itemName]?.type?.name ?: "UNKNOWN") }
@@ -103,6 +105,92 @@ internal class EvalAccumulator {
         }
     }
     private fun <K> MutableMap<K,Long>.bump(key:K) { this[key]=(this[key]?:0L)+1L }
+}
+
+
+internal class BuyShapeAccumulator {
+    var phases = 0L
+    var purchases = 0L
+    var startingPower = 0L
+    var spentPower = 0L
+    var overpayment = 0L
+    var maxPurchases = 0
+    val purchaseCount = sortedMapOf<Int, Long>()
+    val kindSequences = mutableMapOf<String, Long>()
+    val itemSequences = mutableMapOf<String, Long>()
+    val plantCostSequences = mutableMapOf<String, Long>()
+    val stagePhases = sortedMapOf<Int, Long>()
+    val stagePurchases = sortedMapOf<Int, Long>()
+    val stagePlants = sortedMapOf<Int, Long>()
+    val stageDice = sortedMapOf<Int, Long>()
+    val stageSpent = sortedMapOf<Int, Long>()
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
+        val orders = entries.withIndex().filter { it.value is GameEntry.BuyOrder }
+        orders.forEachIndexed { phaseIndex, indexed ->
+            val order = indexed.value as GameEntry.BuyOrder
+            val start = indexed.index + 1
+            val end = orders.getOrNull(phaseIndex + 1)?.index ?: entries.size
+            val ps = entries.subList(start, end).filterIsInstance<GameEntry.Purchase>().filter { it.playerId == playerId }
+            val power = order.resources.singleOrNull { it.playerId == playerId }?.total ?: 0
+            val stage = when (phaseIndex) { 0, 1, 2 -> 1; 3, 4 -> 2; else -> 3 }
+            phases++
+            startingPower += power
+            purchases += ps.size
+            maxPurchases = maxOf(maxPurchases, ps.size)
+            purchaseCount.bump(ps.size)
+            stagePhases.bump(stage)
+            stagePurchases.add(stage, ps.size.toLong())
+            val spent = ps.sumOf { it.paymentTotal }
+            spentPower += spent
+            stageSpent.add(stage, spent.toLong())
+            overpayment += ps.sumOf { it.overpayment }.toLong()
+            stagePlants.add(stage, ps.count { it.kind == PurchaseKind.PLANT }.toLong())
+            stageDice.add(stage, ps.count { it.kind == PurchaseKind.DIE }.toLong())
+            if (ps.isNotEmpty()) {
+                kindSequences.bump(ps.joinToString(" -> ") { if (it.kind == PurchaseKind.PLANT) "Plant" else "Die" })
+                itemSequences.bump(ps.joinToString(" -> ") { if (it.kind == PurchaseKind.PLANT) "P${it.cost}" else it.itemName })
+                val plantCosts = ps.filter { it.kind == PurchaseKind.PLANT }.map { it.cost }
+                if (plantCosts.isNotEmpty()) plantCostSequences.bump(plantCosts.joinToString(" -> "))
+            }
+        }
+    }
+
+    private fun MutableMap<Int, Long>.add(key: Int, value: Long) { this[key] = (this[key] ?: 0L) + value }
+    private fun <K> MutableMap<K, Long>.bump(key: K) { this[key] = (this[key] ?: 0L) + 1L }
+}
+
+private fun printBuyShape(c: BuyShapeAccumulator, l: BuyShapeAccumulator) {
+    fun avg(value: Long, phases: Long) = if (phases == 0L) "0.00" else "%.2f".format(value.toDouble() / phases)
+    fun percent(value: Long, phases: Long) = if (phases == 0L) "0.00%" else pct(value.toDouble() / phases)
+    println("Buy-phase shape (affected role)")
+    println("  Buy phases observed: control=${c.phases} learned=${l.phases}")
+    println("  Purchases / phase:   control=${avg(c.purchases,c.phases)} learned=${avg(l.purchases,l.phases)}")
+    println("  Max purchases seen:  control=${c.maxPurchases} learned=${l.maxPurchases}")
+    println("  Starting power:      control=${avg(c.startingPower,c.phases)} learned=${avg(l.startingPower,l.phases)}")
+    println("  Power spent:         control=${avg(c.spentPower,c.phases)} learned=${avg(l.spentPower,l.phases)}")
+    println("  Power left:          control=${avg(c.startingPower-c.spentPower,c.phases)} learned=${avg(l.startingPower-l.spentPower,l.phases)}")
+    println("  Overpayment / phase: control=${avg(c.overpayment,c.phases)} learned=${avg(l.overpayment,l.phases)}")
+    println("  Purchases per Buy phase:")
+    val buckets = (c.purchaseCount.keys + l.purchaseCount.keys).toSortedSet()
+    buckets.forEach { n -> println("    $n: control=${c.purchaseCount[n]?:0} (${percent(c.purchaseCount[n]?:0,c.phases)}) learned=${l.purchaseCount[n]?:0} (${percent(l.purchaseCount[n]?:0,l.phases)})") }
+    println("  By Cultivation stage:")
+    (c.stagePhases.keys + l.stagePhases.keys).toSortedSet().forEach { stage ->
+        val cp=c.stagePhases[stage]?:0; val lp=l.stagePhases[stage]?:0
+        println("    Stage $stage: purchases/phase ${avg(c.stagePurchases[stage]?:0,cp)} -> ${avg(l.stagePurchases[stage]?:0,lp)}; Plants/phase ${avg(c.stagePlants[stage]?:0,cp)} -> ${avg(l.stagePlants[stage]?:0,lp)}; dice/phase ${avg(c.stageDice[stage]?:0,cp)} -> ${avg(l.stageDice[stage]?:0,lp)}; power spent ${avg(c.stageSpent[stage]?:0,cp)} -> ${avg(l.stageSpent[stage]?:0,lp)}")
+    }
+    printTopSequences("Most common purchase-kind sequences", c.kindSequences, l.kindSequences, c.phases, l.phases)
+    printTopSequences("Most common cost/item sequences (P=Plant cost)", c.itemSequences, l.itemSequences, c.phases, l.phases)
+    printTopSequences("Most common Plant-cost sequences", c.plantCostSequences, l.plantCostSequences, c.phases, l.phases)
+}
+
+private fun printTopSequences(title: String, c: Map<String,Long>, l: Map<String,Long>, cPhases:Long, lPhases:Long, limit:Int=12) {
+    println("  $title:")
+    val keys = (c.keys + l.keys).sortedWith(compareByDescending<String> { (c[it]?:0)+(l[it]?:0) }.thenBy { it }).take(limit)
+    keys.forEach { key ->
+        val cv=c[key]?:0; val lv=l[key]?:0
+        println("    $key: control=$cv (${if(cPhases==0L) "0.00%" else pct(cv.toDouble()/cPhases)}) learned=$lv (${if(lPhases==0L) "0.00%" else pct(lv.toDouble()/lPhases)})")
+    }
 }
 
 private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumulator, l:EvalAccumulator) {
@@ -132,6 +220,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printCounts("Die purchases by size",c.dieSizes,l.dieSizes)
     printCounts("Individual Plant acquisitions",c.plantCards,l.plantCards)
     println()
+    printBuyShape(c.buyShape, l.buyShape)
+    println()
     println("Policy provenance")
     println("  trained rounds=${weights.provenance.roundPattern}; Grove=${weights.provenance.grove}; generations=${weights.provenance.generations}; games/policy=${weights.provenance.gamesPerPolicy}; training fitness=${weights.provenance.fitness?.let(::pct) ?: "unknown"}")
     println("  training mechanical seed start=${weights.provenance.mechanicalSeedStart}; strategy seed start=${weights.provenance.strategySeedStart}")
@@ -139,7 +229,7 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     if (o.grovePattern != null) println("  Grove pattern=${o.grovePattern}; Grove seeds=${o.groveSeed}..${o.groveSeed+o.games-1}; zeros resolved once per matched sample")
     println()
     println("Interpretation: this is held-out evidence for this policy with ${o.groveInterpretation()} and 3/2/2, not evidence for other Grove constraints or round structures.")
-    println("Note: Done-by-stage is not reported yet because the production Chronicle records purchases, not a no-purchase Buy decision; M3-G1 does not alter production decision tracing merely to manufacture that metric.")
+    println("Note: a zero-purchase Buy phase means the player made no recorded purchase in that phase; the Chronicle does not distinguish an explicit Done choice from having no legal purchase.")
 }
 
 private fun <K:Comparable<K>> printCounts(title:String,c:Map<K,Long>,l:Map<K,Long>) { println("  $title:"); (c.keys+l.keys).toSortedSet().forEach { k -> println("    $k: control=${c[k]?:0} learned=${l[k]?:0}") } }

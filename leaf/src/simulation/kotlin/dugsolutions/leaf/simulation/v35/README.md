@@ -92,10 +92,10 @@ copies purchased/surviving, target-card activations, target Plant VP, Battle
 Strike VP, and a per-seat breakdown. The result is intentionally aggregate data
 rather than retained Games/Chronicles so high-volume batches stay lightweight.
 
-## Human Baseline calibration (M3-D2)
+## Human Baseline calibration ()
 
 Before the Six-Wisp batch experiment, ordinary four-player Human Baseline play
-is calibrated for the exact selected nine-card Grove. M3-D2A adds compact
+is calibrated for the exact selected nine-card Grove.  adds compact
 canonical development signatures to each `PlayerGameSummary`:
 
 - `PlantCreatureSignature` records stable Plant names plus side and logical grid
@@ -103,7 +103,7 @@ canonical development signatures to each `PlayerGameSummary`:
 - `OwnedDiceSignature` records counts of D4/D6/D8/D10/D12/D20 across Supply,
   Hand, Discard, Mulch, and pending Mulch without retaining die objects.
 
-Later M3-D2 checkpoints will use these values for 4-, 8-, and 12-game diagnostic
+Later  checkpoints will use these values for 4-, 8-, and 12-game diagnostic
 cohorts. Those small cohorts are for reproducibility, seed-sensitivity, and
 human inspection of gross development diversity; they must not assert that all
 winners or all final shapes are unique. Distributional questions such as
@@ -114,7 +114,7 @@ whether one Plant/dice shape occurs unusually often are separate later research.
 
 `experiment.baseline.BaselineCalibrationSpec` identifies one exact nine-card Grove, deterministic seed schedule, total game count, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes only the compact `BatchRunResult` and reports physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and a labelled sampling-reference band. Checkpoints are cumulative prefixes of one run; no fairness tolerance is encoded yet.
 
-M3-D2C adds `BaselineRandomnessDiagnostic` and its renderer for 4/8/12-game diagnostic cohorts. Same fixed seeds must reproduce the complete winner/development fingerprint; a different seed cohort must change that complete fingerprint. The renderer shows each game's winner plus every player's Plant and dice signatures for human inspection of gross sameness. Repeated winners or shapes are explicitly not test failures; distributional questions remain later research.
+The baseline randomness diagnostic adds `BaselineRandomnessDiagnostic` and its renderer for 4/8/12-game diagnostic cohorts. Same fixed seeds must reproduce the complete winner/development fingerprint; a different seed cohort must change that complete fingerprint. The renderer shows each game's winner plus every player's Plant and dice signatures for human inspection of gross sameness. Repeated winners or shapes are explicitly not test failures; distributional questions remain later research.
 
 ## Manual Human Baseline research
 

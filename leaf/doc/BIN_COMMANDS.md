@@ -71,7 +71,7 @@ bin/focused_plant_shape 1000 --seed 31000 --strategy-seed 41000
 
 ## `bin/evaluate_buy_policy`
 
-Runs M3-G1 matched held-out evaluation of a trained Buy-policy champion. For
+Runs  matched held-out evaluation of a trained Buy-policy champion. For
 each sample it runs a Human Baseline control and a learned-Buy variant with the
 same mechanical seed, strategy seed, Grove, round structure, and affected
 physical seat. The affected role rotates across all four seats.

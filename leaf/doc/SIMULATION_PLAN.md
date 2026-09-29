@@ -309,14 +309,13 @@ transient.
 This is not merely a memory optimization. It creates the stable boundary
 between **what happened in one game** and **what an experiment concludes
 across many games**.
-
-**M3-A implementation note.** The first `GameSummary` deliberately records
+**Implementation note.** The first `GameSummary` deliberately records
 only metrics that the current typed Chronicle and completed game state can
 identify without inference: seeds, seats, winners/win shares, final VP
 breakdown, Battle Strike VP, Wounds taken, Wisp Roll Rewards, observable Wisp
 plays, final Wisp count, final Plant count/printed cost, and final dice
 count/power. The current Chronicle does not identify every Wisp removal source
-or an unambiguous player who "caused" every Wound, so M3-A does not invent
+or an unambiguous player who "caused" every Wound, so  does not invent
 those values. Add typed instrumentation when a concrete experiment requires
 them. Likewise, round/checkpoint snapshots should be added when the comeback
 study is implemented rather than retained speculatively in every summary.
@@ -325,7 +324,7 @@ study is implemented rather than retained speculatively in every summary.
 
 Before interpreting the Six-Wisp experiment, calibrate ordinary four-player
 Human Baseline behavior for the exact selected nine-card Grove. This is
-**M3-D2**, inserted between the Six-Wisp integration proof and the batch
+****, inserted between the Six-Wisp integration proof and the batch
 experiment.
 
 The calibration has two separate jobs. First, small deterministic cohorts
@@ -336,7 +335,7 @@ neutral 25% reference for that Grove. The selected nine Plant cards, game
 count/checkpoints, and seed schedule must all be explicit inputs.
 
 Small-run development diversity is **diagnostic, not a pass/fail balance
-criterion**. M3-D2C should support human-readable 4-, 8-, and 12-game cohorts
+criterion**.  should support human-readable 4-, 8-, and 12-game cohorts
 showing winner(s), final Plant Creature signature, and owned-dice signature for
 each player. Same seeds must reproduce exactly and different seed cohorts must
 change the batch outcome/signature set, but tests must not require four games
@@ -345,32 +344,30 @@ to have four winners or require every player to have a unique final shape. If
 separately. Statistical questions about which development shapes occur most
 often or correlate with winning are deferred to later Milestone-3 research.
 
-M3-D2 implementation sequence:
+ implementation sequence:
 
-1. **M3-D2A — compact development signatures.** Add canonical value-only final
+1. ** — compact development signatures.** Add canonical value-only final
    Plant Creature and owned-dice signatures to `PlayerGameSummary`.
-2. **M3-D2B — baseline calibration spec + aggregator.** Parameterize the exact
+2. ** — baseline calibration spec + aggregator.** Parameterize the exact
    nine-card Grove, game count, seeds, and cumulative checkpoints.
-3. **M3-D2C — small deterministic randomness sanity.** Prove reproducibility,
+3. ** — small deterministic randomness sanity.** Prove reproducibility,
    seed sensitivity, signature extraction, and aggregation; provide 4/8/12
    diagnostic cohort output for human review.
-4. **M3-D2D — long-run manual calibration runner.** Run cumulative checkpoints
+4. ** — long-run manual calibration runner.** Run cumulative checkpoints
    such as 100/250/500/1000/2000 and report seat win-share convergence without
    putting long-running balance assertions in normal regression.
 
 The Six-Wisp sample size should then be chosen from observed baseline
 convergence rather than treating 2,000 as a magic number. Use the same Grove,
 seed schedule, and seat accounting for matched control/intervention runs.
-
-**M3-D2A implementation note.** `PlayerGameSummary` now includes a canonical
+**Implementation note.** `PlayerGameSummary` now includes a canonical
 Plant Creature signature (stable Plant name + side + logical grid position) and
 an owned-dice signature (counts of D4/D6/D8/D10/D12/D20 across all owned
 zones). These are immutable values only; no Plant-card or die objects are
 retained. Plant facing is intentionally excluded because this signature
 describes final development shape/card composition rather than transient
 ready/spent state.
-
-**M3-D2B implementation note.** `BaselineCalibrationSpec` binds the exact
+**Implementation note.** `BaselineCalibrationSpec` binds the exact
 nine-card Grove, total game count, deterministic mechanical/strategy seed
 schedule, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes
 only compact `BatchRunResult` summaries and calculates physical-seat win share,
@@ -379,9 +376,8 @@ winner frequency, and a clearly labelled binomial-style 95% sampling reference.
 Checkpoints are prefixes of one deterministic run rather than independent
 reruns. The report carries a canonical stable-name Grove fingerprint. No
 acceptable fairness tolerance is encoded yet; that remains empirical research
-for M3-D2D.
-
-**M3-D2C implementation note.** `BaselineRandomnessDiagnostic` is the small-run
+for .
+**Implementation note.** `BaselineRandomnessDiagnostic` is the small-run
 Human Baseline sanity view. It retains only compact winner, Plant-signature,
 dice-signature, VP, and seed values from `GameSummary`. Same fixed seed cohorts
 must reproduce exactly; a materially different seed cohort must change the
@@ -583,13 +579,13 @@ obvious counters before changing the card.
 
 Implement the research harness in this order:
 
-1.  **M3-A --- compact per-game summary --- IMPLEMENTED, pending focused test**
+1.  **Compact per-game summary — IMPLEMENTED, pending focused test**
     -   `GameSummary` / `PlayerGameSummary` are compact immutable value records;
     -   `GameSummaryExtractor` collapses a completed `Game` + typed Chronicle;
     -   extraction includes only metrics supported reliably by current typed data;
     -   focused simulation coverage runs a real completed Human Baseline game;
     -   neither summary type retains the full Chronicle or mutable `Game`.
-2.  **M3-B --- reusable experiment batch/report boundary --- IMPLEMENTED, pending focused test**
+2.  **Reusable experiment batch/report boundary — IMPLEMENTED, pending focused test**
     -   `GameSummaryBatchRunner` runs isolated complete games and retains only `GameSummary` values;
     -   deterministic per-sample mechanical and strategy seed schedules support matched runs;
     -   `Matchup.seatRotations()` supplies cyclic role/strategy rotation across physical seats;
@@ -597,39 +593,39 @@ Implement the research harness in this order:
     -   `BatchReport` supplies a small generic text view and one-row-per-player CSV export without becoming a general analytics framework;
     -   decision reasoning is disabled and completed `Game`/Chronicle objects are not retained by the batch result;
     -   concrete experiments remain responsible for their own intervention metadata, paired deltas, and specialized reports.
-3.  **M3-C --- controlled mechanical intervention seam**
+3.  **Controlled mechanical intervention seam**
     -   add a reusable way to alter selected mechanical outcomes for
         experiments;
     -   preserve normal engine rule execution;
     -   preserve later RNG alignment by consuming displaced natural
         results;
     -   keep intervention logic out of normal game strategy.
-4.  **M3-D --- Six-Wisp integration proof — GREEN**
+4.  **Six-Wisp integration proof — GREEN**
     -   deterministic real-engine test of the exact
         first-two-Cultivation opening intervention;
     -   prove six forced 2s occur only where intended and rewards use
         the normal path.
-5.  **M3-D2 --- Human Baseline calibration — IN PROGRESS**
-    -   M3-D2A compact Plant/dice development signatures — GREEN;
-    -   M3-D2B reusable baseline calibration spec + aggregator — GREEN;
-    -   M3-D2C deterministic 4/8/12-game randomness diagnostics — implemented, pending focused test;
-    -   M3-D2D manual cumulative long-run convergence runner.
-6.  **M3-E --- Six-Wisp batch experiment**
+5.  **Human Baseline calibration — IN PROGRESS**
+    -    compact Plant/dice development signatures — GREEN;
+    -    reusable baseline calibration spec + aggregator — GREEN;
+    -    deterministic 4/8/12-game randomness diagnostics — implemented, pending focused test;
+    -    manual cumulative long-run convergence runner.
+6.  **Six-Wisp batch experiment**
     -   2,000 intervention games + 2,000 matched controls;
     -   500 affected-role games per seat;
     -   Human Baseline for all players;
     -   aggregate/report from compact summaries.
-7.  **M3-F --- interpret and diagnose**
+7.  **Interpret and diagnose**
     -   identify effect size and seat consistency;
     -   rerun representative seeds with full Chronicle;
     -   decide whether a dose-response study is warranted;
     -   do not change game rules merely because the intervention helps.
-8.  **M3-G --- first strategy exploit experiment**
+8.  **First strategy exploit experiment**
     -   implement the minimal-Plant/high-dice strategy modifier;
     -   matched Human Baseline control;
     -   rotate seats and report the same core development/outcome
         metrics.
-9.  **M3-H --- card-break experiment family**
+9.  **Card-break experiment family**
     -   use the existing card-focus foundation;
     -   add remove/prioritize variants as actual questions require.
 
@@ -772,23 +768,23 @@ The core principle throughout is: **change one thing, control what you
 can, rotate confounding positions, run enough games, and record why the
 outcome changed.**
 
-### M3-C implementation note — controlled mechanical intervention seam
+### Implementation note — controlled mechanical intervention seam
 
-M3-C adds an explicit experiment-only mechanical intervention boundary. A fresh intervention policy is created for each isolated `Game`. `RollResolver` always lets the die produce its natural mechanical result first, then offers that observed result to the intervention; a replacement face, when supplied, is validated and installed before Chronicle recording and normal Roll Reward resolution. Thus an intervention changes the selected observed outcome without skipping the underlying mechanical RNG consumption or bypassing normal rules.
+The controlled mechanical intervention seam adds an explicit experiment-only mechanical intervention boundary. A fresh intervention policy is created for each isolated `Game`. `RollResolver` always lets the die produce its natural mechanical result first, then offers that observed result to the intervention; a replacement face, when supplied, is validated and installed before Chronicle recording and normal Roll Reward resolution. Thus an intervention changes the selected observed outcome without skipping the underlying mechanical RNG consumption or bypassing normal rules.
 
-The first typed context is `CULTIVATION_OPENING_DRAW`. Cultivation Step 2 supplies player, round number/type, die sides, natural face, and source to the intervention. Ordinary games use `MechanicalIntervention.NONE`, so the seam is inert unless an experiment opts in. The policy is intentionally general rather than Wisp-specific; M3-D will provide the concrete first-two-Cultivation/affected-player policy and prove its real-engine scope.
+The first typed context is `CULTIVATION_OPENING_DRAW`. Cultivation Step 2 supplies player, round number/type, die sides, natural face, and source to the intervention. Ordinary games use `MechanicalIntervention.NONE`, so the seam is inert unless an experiment opts in. The policy is intentionally general rather than Wisp-specific; the Six-Wisp integration proof provides the concrete first-two-Cultivation/affected-player policy and proves its real-engine scope.
 
-### M3-D implementation note — Six-Wisp opening integration proof
+### Implementation note — Six-Wisp opening integration proof
 
-M3-D adds the first concrete reusable policy on the M3-C seam: `CultivationOpeningDrawFaceIntervention`. It targets one player, the first configured number of actual Cultivation opening rounds, and one forced face. It is deliberately phrased as an opening-draw face intervention rather than a Wisp grant; the Six-Wisp experiment configures it for Player A, the first two Cultivation rounds, and face `2`.
+The Six-Wisp integration proof adds the first concrete reusable policy on the mechanical intervention seam: `CultivationOpeningDrawFaceIntervention`. It targets one player, the first configured number of actual Cultivation opening rounds, and one forced face. It is deliberately phrased as an opening-draw face intervention rather than a Wisp grant; the Six-Wisp experiment configures it for Player A, the first two Cultivation rounds, and face `2`.
 
 The real-engine integration proof runs four Human Baseline players through three Cultivation rounds. A recording wrapper verifies 36 opening-roll intervention requests (4 players × 3 dice × 3 rounds), exactly six replacements for the affected player in the first two openings, no replacements for the other players, and no replacement in the affected player's third opening. It also verifies that natural die values were already generated before replacement and that the Chronicle records three observed 2s plus three normal Wisp rewards in each affected opening. The third opening is natural again.
 
-This checkpoint proves the intervention's scope and normal Roll Reward route. It does not yet run or aggregate the 2,000-pair research batch; that belongs to M3-E.
+This checkpoint proves the intervention's scope and normal Roll Reward route. It does not itself run or aggregate the full paired research batch.
 
-## M3-D2D — manual baseline research runners
+## Manual baseline research runners
 
-M3-D2D separates **verification of the research machinery** from **running research for designer review**.
+The manual baseline research runners separate **verification of the research machinery** from **running research for designer review**.
 
 - `simulationTest` remains the automated regression layer. It proves reproducibility, seed sensitivity, aggregation, extraction, and rendering behavior. It is not the normal interface for inspecting simulation results.
 - `runBaselineRandomnessDiagnostic` is the human-facing small-cohort runner. Use it for 4-, 8-, or 12-game reviews of winners, VP, final Plant Creature signatures, and final owned-dice signatures.
@@ -825,7 +821,7 @@ Run one sequence through the largest checkpoint and inspect cumulative prefixes:
   -PstrategySeed=22000
 ```
 
-The 500-game row is the first 500 games of the same run represented by the 1000- and 2000-game rows; it is not a fresh batch. The report shows physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and the contextual sampling reference defined in M3-D2B. No fairness threshold is automatically imposed.
+The 500-game row is the first 500 games of the same run represented by the 1000- and 2000-game rows; it is not a fresh batch. The report shows physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and the contextual sampling reference defined in . No fairness threshold is automatically imposed.
 
 ### Selecting a different nine-card Grove
 
@@ -839,4 +835,4 @@ Both manual runners accept the same comma-separated nine stable Plant names:
 
 Use `-Pplants=...` the same way with `runBaselineCalibration`. The default is the first-game nine-card Grove shown above. Calibration output includes the canonical Grove fingerprint so results from different setups are not confused.
 
-M3-D2D is the final baseline-research tooling checkpoint before M3-E. The baseline runner should be used to choose a defensible Six-Wisp sample size rather than treating 2000 as a magic number.
+ is the final baseline-research tooling checkpoint before . The baseline runner should be used to choose a defensible Six-Wisp sample size rather than treating 2000 as a magic number.

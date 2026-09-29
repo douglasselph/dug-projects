@@ -24,7 +24,7 @@ import org.koin.dsl.koinApplication
 import java.nio.file.Path
 import java.nio.file.Paths
 
-/** M3-F2: evolve only Buy selection; every other decision remains Human Baseline. */
+/** : evolve only Buy selection; every other decision remains Human Baseline. */
 fun main(args: Array<String>) {
     val o = TrainOptions.parse(args.toList())
     val app = koinApplication { modules(appModules) }
@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
         var population = evolution.initialPopulation(initial)
         var allTime = EvaluatedBuyPolicy(initial, Double.NEGATIVE_INFINITY)
 
-        println("M3-F2 — Learned Buy Policy Evolution")
+        println(" — Learned Buy Policy Evolution")
         println("input=${o.input} output=${o.output}")
         println("generations=${o.generations} population=${o.population} games/policy=${o.games}")
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")

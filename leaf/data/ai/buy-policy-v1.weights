@@ -1,4 +1,4 @@
-# M3-F2A initial untrained learned Buy policy. Check trained champions into Git deliberately.
+#  initial untrained learned Buy policy. Check trained champions into Git deliberately.
 formatVersion=3
 policy=buy-v1
 trainingStatus=untrained
