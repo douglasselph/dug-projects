@@ -221,6 +221,32 @@ class EffectFamilySanityTest {
     }
 
     @Test
+    fun `Vine and Again with no reusable spent Plant simply spends itself`() {
+        val p1 = ScriptedDecisionDirector()
+        val p2 = ScriptedDecisionDirector().apply { finishBuildWithWater() }
+
+        cultivationHarness(first = p1, second = p2).use { harness ->
+            val vineAndAgain = harness.graftPlant(1, "Vine and Again", faceUp = true)
+
+            p1.cultivation.thenMain(CultivationMainAction.ActivatePlant(vineAndAgain))
+            p1.cultivation.thenMain(CultivationMainAction.RoundEffect1)
+            p1.cultivation.thenDone()
+
+            harness.revealNextRound()
+            harness.runCultivationBuildActions()
+
+            val snapshot = harness.snapshot().player(1)
+            assertTrue(snapshot.plants.single { it.id == vineAndAgain.id.value }.faceUp.not())
+            assertEquals(
+                listOf(GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT),
+                plantEffectsFor(harness, 1).map { it.effect }
+            )
+            p1.assertExhausted()
+            p2.assertExhausted()
+        }
+    }
+
+    @Test
     fun `recursive Vine and Again reuses spent Root through same top level executor`() {
         val p1 = ScriptedDecisionDirector()
         val p2 = ScriptedDecisionDirector().apply { finishBuildWithWater() }

@@ -19,7 +19,6 @@ import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class VineAndAgainEffectTest {
@@ -352,6 +351,52 @@ class VineAndAgainEffectTest {
     }
 
     @Test
+    fun noExecutableSpentRootOrVine_isLegalAndResolvesWithoutChoosingTarget() {
+        val strategy =
+            ChoosePlantEffectStrategy()
+        val actor =
+            EffectTestFixture.player(
+                id = 1,
+                effectStrategy = strategy
+            )
+        val game =
+            EffectTestFixture.game(
+                actor,
+                EffectTestFixture.player(2)
+            )
+        val source =
+            RecursivePlantEffectTestFixture
+                .graft(
+                    actor,
+                    RecursivePlantEffectTestFixture
+                        .plant(
+                            "VineAgain",
+                            PlantType.VINE,
+                            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
+                        )
+                )
+        val currentSource =
+            RecursivePlantEffectTestFixture
+                .faceUp(
+                    actor,
+                    source
+                )
+        val request =
+            EffectTestFixture.request(
+                game = game,
+                actor = actor,
+                effect = GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT,
+                source = GameEffectSource.Plant(currentSource)
+            )
+        val handler = VineAndAgainEffect()
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, DefaultGameEffectExecutor())
+
+        assertTrue(strategy.offered.isEmpty())
+    }
+
+    @Test
     fun flowersAreNeverReuseTargets() {
         val actor =
             EffectTestFixture.player(
@@ -412,7 +457,7 @@ class VineAndAgainEffectTest {
                     )
             )
 
-        assertFalse(
+        assertTrue(
             VineAndAgainEffect()
                 .canExecute(
                     request
@@ -479,7 +524,7 @@ class VineAndAgainEffectTest {
                     )
             )
 
-        assertFalse(
+        assertTrue(
             VineAndAgainEffect()
                 .canExecute(
                     request

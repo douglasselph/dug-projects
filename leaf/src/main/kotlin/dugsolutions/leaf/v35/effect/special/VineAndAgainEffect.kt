@@ -30,8 +30,7 @@ class VineAndAgainEffect : EffectHandler {
         request: GameEffectRequest
     ): Boolean =
         request.effect ==
-            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT &&
-            structuralCandidates(request).isNotEmpty()
+            GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT
 
     override fun execute(
         request: GameEffectRequest,
@@ -63,10 +62,12 @@ class VineAndAgainEffect : EffectHandler {
                     }
                 }
 
-        effectCheck(
-            candidates.isNotEmpty()
-        ) {
-            "Vine and Again has no spent Root or Vine with an executable effect"
+        // Vine and Again is still a legal Plant activation when there is
+        // nothing useful to reuse. In that case its effect simply does
+        // nothing; the normal Plant-activation flow will still spend the
+        // source card by flipping it face down.
+        if (candidates.isEmpty()) {
+            return
         }
 
         val legalChoices =
