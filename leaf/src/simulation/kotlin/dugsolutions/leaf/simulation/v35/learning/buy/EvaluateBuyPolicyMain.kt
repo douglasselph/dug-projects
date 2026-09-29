@@ -99,7 +99,8 @@ internal class EvalAccumulator {
 }
 
 private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumulator, l:EvalAccumulator) {
-    fun avg(x:Long)="%.2f".format(x.toDouble()/o.games); fun delta(a:Double,b:Double)="%+.2f".format(b-a)
+    fun avg(x: Long): String = "%.2f".format(x.toDouble() / o.games)
+    fun delta(a: Double, b: Double): String = "%+.2f".format(b - a)
     val cw=c.winShare/o.games; val lw=l.winShare/o.games
     println("Held-out result")
     println("  Control win share: ${pct(cw)}")
@@ -147,4 +148,56 @@ private fun rejectTrainingSeedOverlap(weights:LearnedBuyWeights,o:EvalOptions) {
 private fun learnedFactory(weights:LearnedBuyWeights):PlayerDecisionFactory=object:PlayerDecisionFactory { override fun create()=LearnedBuy.createDirector(weights); override fun create(strategyRandomizer:StrategyRandomizer)=LearnedBuy.createDirector(weights,strategyRandomizer); override fun create(strategyRandomizer:StrategyRandomizer,reasoningSink:DecisionReasoningSink)=LearnedBuy.createDirector(weights,strategyRandomizer) }
 private fun loadCards(plantRegistry:PlantCardRegistry,plantManager:PlantCardManager,wispRegistry:WispCardRegistry,wispManager:WispCardManager,roundRegistry:RoundCardRegistry,roundManager:RoundCardManager){ val root=CardDataFiles.dataDirectory(); plantRegistry.clear(); plantRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST,root),CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST,root)); plantManager.loadCards(plantRegistry); wispRegistry.clear(); wispRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST,root)); wispManager.loadCards(wispRegistry); roundRegistry.clear(); roundRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST,root)); roundManager.loadCards(roundRegistry) }
 
-private data class EvalOptions(val games:Int,val seed:Long,val strategySeed:Long,val input:Path){ companion object { fun parse(args:List<String>):EvalOptions { var games=1000; var seed=161000L; var strategy=171000L; var input=Paths.get("output/ai/buy-policy-v1-trained.weights"); var positional=false; var i=0; fun value(a:String)=if('=' in a)a.substringAfter('=')else args[++i]; while(i<args.size){val a=args[i];when{ !positional&&a.matches(Regex("[1-9][0-9]*"))->{games=a.toInt();positional=true}; a.startsWith("--games")->games=value(a).toInt(); a.startsWith("--seed")->seed=value(a).toLong(); a.startsWith("--strategy-seed")->strategy=value(a).toLong(); a.startsWith("--input")->input=Paths.get(value(a)); a=="--help"->{usage();kotlin.system.exitProcess(0)}; else->error("Unknown argument: $a")};i++ }; require(games>0); return EvalOptions(games,seed,strategy,input) }; private fun usage()=println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--input PATH]") } }
+private data class EvalOptions(
+    val games: Int,
+    val seed: Long,
+    val strategySeed: Long,
+    val input: Path,
+) {
+    companion object {
+        fun parse(args: List<String>): EvalOptions {
+            var games = 1000
+            var seed = 161000L
+            var strategy = 171000L
+            var input = Paths.get("output/ai/buy-policy-v1-trained.weights")
+            var positional = false
+            var i = 0
+
+            fun value(argument: String): String {
+                return if ('=' in argument) {
+                    argument.substringAfter('=')
+                } else {
+                    i++
+                    args[i]
+                }
+            }
+
+            while (i < args.size) {
+                val argument = args[i]
+                when {
+                    !positional && argument.matches(Regex("[1-9][0-9]*")) -> {
+                        games = argument.toInt()
+                        positional = true
+                    }
+                    argument.startsWith("--games") -> games = value(argument).toInt()
+                    argument.startsWith("--seed") -> seed = value(argument).toLong()
+                    argument.startsWith("--strategy-seed") -> strategy = value(argument).toLong()
+                    argument.startsWith("--input") -> input = Paths.get(value(argument))
+                    argument == "--help" -> {
+                        usage()
+                        kotlin.system.exitProcess(0)
+                    }
+                    else -> error("Unknown argument: $argument")
+                }
+                i++
+            }
+
+            require(games > 0)
+            return EvalOptions(games, seed, strategy, input)
+        }
+
+        private fun usage() {
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--input PATH]")
+        }
+    }
+}
