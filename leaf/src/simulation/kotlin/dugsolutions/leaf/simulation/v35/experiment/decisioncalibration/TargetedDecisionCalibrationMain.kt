@@ -39,7 +39,13 @@ data class CalibrationOpportunity(
     val finalVp: Int?
 )
 
-private data class Options(val target: String, val games: Int, val seed: Long, val strategySeed: Long) {
+private data class Options(
+    val target: String,
+    val games: Int,
+    val seed: Long,
+    val strategySeed: Long,
+    val counterfactual: Boolean
+) {
     companion object {
         fun parse(args: Array<String>): Options {
             val values = args.associate { arg ->
@@ -50,7 +56,8 @@ private data class Options(val target: String, val games: Int, val seed: Long, v
                 target = values["target"] ?: "mulch",
                 games = values["games"]?.toInt() ?: 200,
                 seed = values["seed"]?.toLong() ?: 312_000L,
-                strategySeed = values["strategy-seed"]?.toLong() ?: 322_000L
+                strategySeed = values["strategy-seed"]?.toLong() ?: 322_000L,
+                counterfactual = values["counterfactual"]?.toBooleanStrictOrNull() ?: false
             )
         }
     }
@@ -70,6 +77,10 @@ fun main(args: Array<String>) {
             val slot = plants.indexOfFirst { it.type == requestedPlant.type && it.cost == requestedPlant.cost }
             require(slot >= 0) { "Target Plant ${requestedPlant.name} has no matching default Grove slot" }
             plants[slot] = requestedPlant
+        }
+        if (options.counterfactual) {
+            println(runCounterfactual(options, plants, koin.get(), koin.get()))
+            return
         }
         val records = mutableListOf<CalibrationOpportunity>()
         repeat(options.games) { sample ->
@@ -160,6 +171,92 @@ private fun render(options: Options, records: List<CalibrationOpportunity>): Str
 }
 
 private fun List<Int>.averageOrZero(): Double = if (isEmpty()) 0.0 else average()
+
+
+private data class CounterfactualResult(
+    val sample: Int,
+    val opportunity: Boolean,
+    val useVp: Int?,
+    val drawVp: Int?,
+    val useWon: Boolean,
+    val drawWon: Boolean,
+    val useProvenance: String?,
+    val baselineChoice: String?
+)
+
+private fun runCounterfactual(
+    options: Options,
+    plants: List<dugsolutions.leaf.v35.plant.domain.PlantCard>,
+    gameFactory: GameFactory,
+    gameRunner: GameRunner
+): String {
+    val cardName = when (options.target.lowercase()) {
+        "forget-me-not" -> "Flower_17_02"
+        "root-four-more" -> "Root_05_02"
+        else -> options.target
+    }
+    require(cardName in setOf("Flower_17_02", "Root_05_02")) {
+        "Counterfactual mode is intentionally limited to Flower_17_02 and Root_05_02; got ${options.target}"
+    }
+    val rows = (0 until options.games).map { sample ->
+        fun branch(which: CounterfactualBranch): Pair<dugsolutions.leaf.v35.game.Game, CounterfactualIntervention> {
+            val intervention = CounterfactualIntervention()
+            val factories = MutableList(4) { PlayerDecisionFactory.humanBaseline() }
+            factories[0] = counterfactualHumanBaselineFactory(cardName, which, intervention)
+            val game = gameFactory(
+                GameConfig(
+                    selectedPlantCards = plants,
+                    playerDecisionFactories = factories,
+                    roundSetup = GameRoundSetup.standard(),
+                    seed = options.seed + sample,
+                    strategySeed = options.strategySeed + sample,
+                    recordDecisionReasoning = true
+                )
+            )
+            gameRunner.run(game)
+            return game to intervention
+        }
+        val (useGame, useIntervention) = branch(CounterfactualBranch.USE_EFFECT)
+        val (drawGame, drawIntervention) = branch(CounterfactualBranch.DRAW)
+        check(useIntervention.opportunitySeen == drawIntervention.opportunitySeen) {
+            "Paired games disagreed on pre-intervention opportunity at sample ${sample + 1}"
+        }
+        val playerId = useGame.players.first().id
+        fun vp(game: dugsolutions.leaf.v35.game.Game): Int? = game.chronicle.entries
+            .filterIsInstance<GameEntry.FinalScore>().singleOrNull { it.playerId == playerId }?.totalVp
+        fun won(game: dugsolutions.leaf.v35.game.Game): Boolean = game.chronicle.entries
+            .filterIsInstance<GameEntry.FinalWinners>().lastOrNull()?.winnerIds?.contains(playerId) == true
+        val provenance = when (cardName) {
+            "Flower_17_02" -> useGame.assetProvenance.forgetMeNot.lastOrNull { it.playerId == playerId && it.sourceCard == cardName }?.let {
+                "D${it.dieSides} recycle=${it.estimatedNaturalDrawsUntilAvailable} accelerated=${it.estimatedDrawsAccelerated} reachedBattle=${it.reachedNextBattle} winning=${it.contributedToWinningStrike} decisive=${it.individuallyWinnerDecisive} battleVp=${it.associatedBattleVp}"
+            }
+            "Root_05_02" -> useGame.assetProvenance.immediateDieEffects.lastOrNull { it.playerId == playerId && it.sourceCard == cardName }?.let {
+                "delta=${it.before}->${it.after} winning=${it.contributedToWinningStrike} decisive=${it.individuallyWinnerDecisive} battleVp=${it.associatedBattleVp}"
+            }
+            else -> null
+        }
+        CounterfactualResult(sample + 1, useIntervention.opportunitySeen, vp(useGame), vp(drawGame), won(useGame), won(drawGame), provenance, useIntervention.baselineChoice)
+    }
+    val qualified = rows.filter { it.opportunity }
+    return buildString {
+        appendLine("TARGETED COUNTERFACTUAL CALIBRATION")
+        appendLine("target=$cardName games=${options.games} qualifying=${qualified.size}")
+        appendLine("PAIRING: USE EFFECT and DRAW start with identical mechanical seed=${options.seed}+sample and strategy seed=${options.strategySeed}+sample.")
+        appendLine("The baseline chooser is invoked before override in both branches, preserving strategy-RNG consumption through the intervention decision.")
+        appendLine("CONTROL LIMIT: after USE and DRAW create different state, later legal choices and RNG call counts can diverge; subsequent random events are not event-for-event matched.")
+        if (qualified.isNotEmpty()) {
+            val deltas = qualified.mapNotNull { r -> if (r.useVp != null && r.drawVp != null) r.useVp - r.drawVp else null }
+            appendLine("avg final VP: use=${"%.2f".format(qualified.mapNotNull { it.useVp }.averageOrZero())} draw=${"%.2f".format(qualified.mapNotNull { it.drawVp }.averageOrZero())} delta=${"%.2f".format(deltas.averageOrZero())}")
+            appendLine("wins: use=${qualified.count { it.useWon }} draw=${qualified.count { it.drawWon }}")
+        }
+        appendLine("PAIRS (first 30 qualifying)")
+        qualified.take(30).forEach { r ->
+            appendLine("g${r.sample} useVP=${r.useVp} drawVP=${r.drawVp} delta=${if (r.useVp != null && r.drawVp != null) r.useVp-r.drawVp else "-"} useWon=${r.useWon} drawWon=${r.drawWon}")
+            appendLine("  baseline-at-opportunity=${r.baselineChoice ?: "-"}")
+            if (r.useProvenance != null) appendLine("  use provenance: ${r.useProvenance}")
+        }
+    }
+}
 
 private fun loadCatalogs(
     plantRegistry: PlantCardRegistry, plantManager: PlantCardManager,
