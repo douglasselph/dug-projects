@@ -71,7 +71,7 @@ bin/focused_plant_shape 1000 --seed 31000 --strategy-seed 41000
 
 ## `bin/evaluate_buy_policy`
 
-Runs  matched held-out evaluation of a trained Buy-policy champion. For
+Runs matched held-out evaluation of a trained Buy-policy champion. For
 each sample it runs a Human Baseline control and a learned-Buy variant with the
 same mechanical seed, strategy seed, Grove, round structure, and affected
 physical seat. The affected role rotates across all four seats.
@@ -99,8 +99,10 @@ bin/evaluate_buy_policy --random-grove --grove-seed 281000
 
 The command refuses recorded training-seed overlap and validates the policy's
 Plant manifest against current `CardDataFiles`. It reports control/learned win
-share and VP, seat results, final development metrics, and purchase behavior by
-Plant cost/type/card and die size. Training fitness is printed only as provenance;
+share and VP, seat results, final Plant and dice-pool composition, Buy-phase shape,
+Battle-by-Battle VP/wounds and dice utilization, and purchase behavior by Plant
+cost/type/card and die size. It also reports exploratory Grove-conditional results
+for the four 7-cost Vines and notable higher-VP Plants. Training fitness is printed only as provenance;
 the held-out result is the independent evidence.
 
 ## `bin/train_buy_policy`

@@ -15,6 +15,9 @@ import dugsolutions.leaf.v35.plant.GrovePlantCode
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
+import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.learned.buy.*
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
@@ -70,8 +73,8 @@ fun main(args: Array<String>) {
             val groveCode = GrovePlantCode.encode(resolvedGrove)
             val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(4) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
-            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL"), seat, plantsByName)
-            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED"), seat, plantsByName)
+            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL"), seat, plantsByName, resolvedGrove)
+            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED"), seat, plantsByName, resolvedGrove)
         }
         printReport(o, weights, control, learned)
     } finally { app.close() }
@@ -89,14 +92,28 @@ internal class EvalAccumulator {
     var winShare=0.0; var vp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
     val seatWins=DoubleArray(4); val seatGames=IntArray(4)
-    val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>()
+    val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
     val buyShape = BuyShapeAccumulator()
+    val battleShape = BattleShapeAccumulator()
+    val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
+    val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
-    fun add(game: CompletedEvalGame, seat: Int, plantsByName: Map<String,PlantCard>) {
+    fun add(game: CompletedEvalGame, seat: Int, plantsByName: Map<String,PlantCard>, grove: List<PlantCard>) {
         val p=game.summary.players.single { it.seat==seat }
         winShare+=p.winShare; vp+=p.totalVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
         seatWins[seat]+=p.winShare; seatGames[seat]++
+        mapOf("D4" to p.ownedDiceSignature.d4,"D6" to p.ownedDiceSignature.d6,"D8" to p.ownedDiceSignature.d8,"D10" to p.ownedDiceSignature.d10,"D12" to p.ownedDiceSignature.d12,"D20" to p.ownedDiceSignature.d20).forEach { (k,v) -> finalDiceSizes[k]=(finalDiceSizes[k]?:0)+v }
         buyShape.addGame(game.entries, p.playerId)
+        battleShape.addGame(game.entries, p.playerId)
+        grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
+        WATCHED_CARDS.forEach { name ->
+            val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
+            if(copies>0) {
+                watchedCardCopies[name]=(watchedCardCopies[name]?:0)+copies
+                val card=plantsByName[name]
+                if(card!=null) scoreWatchedCard(card,copies,p)?.let { watchedCardVp[name]=(watchedCardVp[name]?:0)+it.toLong() }
+            }
+        }
         game.entries.filterIsInstance<GameEntry.Purchase>().filter { it.playerId==p.playerId }.forEach { purchase ->
             when(purchase.kind) {
                 PurchaseKind.PLANT -> { plantPurchases++; plantCosts.bump(purchase.cost); plantCards.bump(purchase.itemName); plantTypes.bump(plantsByName[purchase.itemName]?.type?.name ?: "UNKNOWN") }
@@ -107,6 +124,46 @@ internal class EvalAccumulator {
     private fun <K> MutableMap<K,Long>.bump(key:K) { this[key]=(this[key]?:0L)+1L }
 }
 
+private val WATCHED_CARDS = listOf("Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Flower_11_01","Flower_14_04","Vine_09_03")
+
+private fun scoreWatchedCard(card: PlantCard, copies: Int, p: dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary): Int? {
+    val perCopy = when(val rule=card.scoringRule) {
+        is PlantScoringRule.Fixed -> rule.points
+        PlantScoringRule.PerGraftedVine -> p.plantCreatureSignature.cards.count { it.plantName.startsWith("Vine_") }
+        PlantScoringRule.PerButterfly -> return null // reported separately as unavailable from compact final summary
+        PlantScoringRule.PerOwnedD4 -> p.ownedDiceSignature.d4
+    }
+    return copies * perCopy
+}
+
+internal class BattleShapeAccumulator {
+    var battles=0L
+    val battleCount=sortedMapOf<Int,Long>(); val vp=sortedMapOf<Int,Long>(); val wounds=sortedMapOf<Int,Long>()
+    val poolDice=sortedMapOf<Int,Long>(); val poolPower=sortedMapOf<Int,Long>(); val poolBySize=mutableMapOf<Int,MutableMap<String,Long>>()
+    val usedDice=sortedMapOf<Int,Long>(); val usedPower=sortedMapOf<Int,Long>(); val usedBySize=mutableMapOf<Int,MutableMap<String,Long>>()
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
+        val reveals=entries.withIndex().filter { (it.value as? GameEntry.RoundRevealed)?.cardType==RoundCardType.BATTLE }
+        reveals.forEachIndexed { bi, indexed ->
+            val battle=bi+1; battles++; battleCount[battle]=(battleCount[battle]?:0)+1
+            val end=entries.indexOfFirstFrom(indexed.index+1) { it is GameEntry.RoundCompleted && it.cardType==RoundCardType.BATTLE }.let { if(it<0) entries.size else it+1 }
+            val segment=entries.subList(indexed.index,end)
+            vp[battle]=(vp[battle]?:0)+segment.filterIsInstance<GameEntry.StrikeResolved>().sumOf { if(playerId in it.winnerIds) it.vpPerWinner else 0 }
+            wounds[battle]=(wounds[battle]?:0)+segment.filterIsInstance<GameEntry.StrikeResolved>().count { playerId in it.woundedPlayerIds }
+            val before=entries.subList(0,indexed.index).filterIsInstance<GameEntry.RoundCompleted>().lastOrNull()?.playerSummaries?.singleOrNull { it.playerId==playerId }
+            if(before!=null) {
+                val ds=before.supplyDice+before.discardDice
+                poolDice[battle]=(poolDice[battle]?:0)+ds.size; poolPower[battle]=(poolPower[battle]?:0)+ds.sumOf { it.value }
+                ds.forEach { poolBySize.getOrPut(battle){mutableMapOf()}[it.name]=(poolBySize.getOrPut(battle){mutableMapOf()}[it.name]?:0)+1 }
+            }
+            val preview=segment.filterIsInstance<GameEntry.BattleResolvePreview>().lastOrNull()
+            val dice=preview?.rows?.flatMap { row -> row.squares.singleOrNull { it.playerId==playerId }?.dice.orEmpty() }.orEmpty()
+            usedDice[battle]=(usedDice[battle]?:0)+dice.size; usedPower[battle]=(usedPower[battle]?:0)+dice.sumOf { it.sides.value }
+            dice.forEach { d -> usedBySize.getOrPut(battle){mutableMapOf()}[d.sides.name]=(usedBySize.getOrPut(battle){mutableMapOf()}[d.sides.name]?:0)+1 }
+        }
+    }
+    private fun List<GameEntry>.indexOfFirstFrom(start:Int,p:(GameEntry)->Boolean):Int { for(i in start until size) if(p(this[i])) return i; return -1 }
+}
 
 internal class BuyShapeAccumulator {
     var phases = 0L
@@ -193,6 +250,33 @@ private fun printTopSequences(title: String, c: Map<String,Long>, l: Map<String,
     }
 }
 
+private fun printBattleShape(c:BattleShapeAccumulator,l:BattleShapeAccumulator) {
+    fun av(m:Map<Int,Long>, b:Int, n:Long)=if(n==0L) "0.00" else "%.2f".format((m[b]?:0).toDouble()/n)
+    fun avgSize(power:Map<Int,Long>, dice:Map<Int,Long>, b:Int)=if((dice[b]?:0)==0L) "0.00" else "%.2f".format((power[b]?:0).toDouble()/(dice[b]?:0))
+    println("Battle dice utilization (affected role)")
+    (c.battleCount.keys+l.battleCount.keys).toSortedSet().forEach { b ->
+        val cn=c.battleCount[b]?:0; val ln=l.battleCount[b]?:0
+        println("  Battle $b: VP ${av(c.vp,b,cn)} -> ${av(l.vp,b,ln)}; wounds ${av(c.wounds,b,cn)} -> ${av(l.wounds,b,ln)}")
+        println("    entering pool: dice ${av(c.poolDice,b,cn)} -> ${av(l.poolDice,b,ln)}; avg sides/die ${avgSize(c.poolPower,c.poolDice,b)} -> ${avgSize(l.poolPower,l.poolDice,b)}")
+        println("    used on grid:  dice ${av(c.usedDice,b,cn)} -> ${av(l.usedDice,b,ln)}; avg sides/die ${avgSize(c.usedPower,c.usedDice,b)} -> ${avgSize(l.usedPower,l.usedDice,b)}")
+        val sizes=listOf("D4","D6","D8","D10","D12","D20")
+        println("    pool by size:  "+sizes.joinToString("; ") { s -> "$s ${"%.2f".format((c.poolBySize[b]?.get(s)?:0).toDouble()/cn)} -> ${"%.2f".format((l.poolBySize[b]?.get(s)?:0).toDouble()/ln)}" })
+        println("    grid by size:  "+sizes.joinToString("; ") { s -> "$s ${"%.2f".format((c.usedBySize[b]?.get(s)?:0).toDouble()/cn)} -> ${"%.2f".format((l.usedBySize[b]?.get(s)?:0).toDouble()/ln)}" })
+    }
+}
+
+private fun printWatchedCards(c:EvalAccumulator,l:EvalAccumulator) {
+    println("Grove sensitivity and notable VP cards")
+    WATCHED_CARDS.forEach { name ->
+        val n=c.groveCardGames[name]?:0; if(n==0L) return@forEach
+        val cw=(c.groveCardWins[name]?:0.0)/n; val lw=(l.groveCardWins[name]?:0.0)/n
+        val cvp=if(name=="Flower_11_01") "n/a" else "${c.watchedCardVp[name]?:0}"; val lvp=if(name=="Flower_11_01") "n/a" else "${l.watchedCardVp[name]?:0}"
+        println("  $name present (n=$n): win share ${pct(cw)} -> ${pct(lw)} delta=${signedPct(lw-cw)}; final copies ${c.watchedCardCopies[name]?:0} -> ${l.watchedCardCopies[name]?:0}; attributed Plant VP $cvp -> $lvp")
+    }
+    println("  Note: conditional Grove win shares are exploratory associations, not isolated causal effects, because the other eight Grove slots also vary.")
+    println("  Attributed Plant VP follows the production scoring rule; Butterfly-based scoring is omitted from this compact attribution because final Butterfly count is not retained in GameSummary.")
+}
+
 private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumulator, l:EvalAccumulator) {
     fun avg(x: Long): String = "%.2f".format(x.toDouble() / o.games)
     fun delta(a: Double, b: Double): String = "%+.2f".format(b - a)
@@ -202,12 +286,15 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println("  Learned win share: ${pct(lw)}")
     println("  Win-share delta:   ${signedPct(lw-cw)}")
     println("  Avg VP:             control=${avg(c.vp)} learned=${avg(l.vp)} delta=${delta(c.vp.toDouble()/o.games,l.vp.toDouble()/o.games)}")
-    println("  Avg final Plants:   control=${avg(c.plants)} learned=${avg(l.plants)}")
-    println("  Avg Plant cost:     control=${avg(c.plantCost)} learned=${avg(l.plantCost)}")
+    println("  Avg final Plants:   control=${avg(c.plants)} learned=${avg(l.plants)} delta=${delta(c.plants.toDouble()/o.games,l.plants.toDouble()/o.games)}")
+    println("  Avg Plant cost:     control=${avg(c.plantCost)} learned=${avg(l.plantCost)} delta=${delta(c.plantCost.toDouble()/o.games,l.plantCost.toDouble()/o.games)}")
     println("  Avg final dice:     control=${avg(c.dice)} learned=${avg(l.dice)}")
     println("  Avg die-side power: control=${avg(c.dicePower)} learned=${avg(l.dicePower)}")
+    println("  Avg sides / die:    control=${"%.2f".format(c.dicePower.toDouble()/c.dice)} learned=${"%.2f".format(l.dicePower.toDouble()/l.dice)}")
     println("  Avg Battle VP:      control=${avg(c.battleVp)} learned=${avg(l.battleVp)}")
     println("  Avg Wounds:         control=${avg(c.wounds)} learned=${avg(l.wounds)}")
+    println("  Avg final dice by size:")
+    listOf("D4","D6","D8","D10","D12","D20").forEach { size -> println("    $size: control=${avg(c.finalDiceSizes[size]?:0)} learned=${avg(l.finalDiceSizes[size]?:0)}") }
     println()
     println("Affected-role win share by physical seat")
     for(s in 0..3) { val n=c.seatGames[s]; println("  Seat ${s+1} (n=$n): control=${pct(c.seatWins[s]/n)} learned=${pct(l.seatWins[s]/n)} delta=${signedPct(l.seatWins[s]/n-c.seatWins[s]/n)}") }
@@ -221,6 +308,10 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printCounts("Individual Plant acquisitions",c.plantCards,l.plantCards)
     println()
     printBuyShape(c.buyShape, l.buyShape)
+    println()
+    printBattleShape(c.battleShape,l.battleShape)
+    println()
+    printWatchedCards(c,l)
     println()
     println("Policy provenance")
     println("  trained rounds=${weights.provenance.roundPattern}; Grove=${weights.provenance.grove}; generations=${weights.provenance.generations}; games/policy=${weights.provenance.gamesPerPolicy}; training fitness=${weights.provenance.fitness?.let(::pct) ?: "unknown"}")

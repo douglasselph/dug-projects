@@ -200,9 +200,11 @@ one Human Baseline control and one learned-Buy game per sample. The pair shares
 mechanical/strategy seeds and affected seat, while the affected role rotates
 through all four seats. Default evaluation seeds start at 161000/171000 and the
 evaluator refuses ranges that overlap the training cohorts recorded in policy
-provenance. It reports win-share/VP deltas, seat effects, end-state development,
-and Buy behavior by Plant cost, Plant type, individual Plant identity, and die
-size. The default evaluator remains on `FirstGameDefault` and `3/2/2`. To test Grove
+provenance. It reports win-share/VP deltas, seat effects, end-state Plant/dice development,
+Buy-phase shape, Battle-by-Battle VP/wounds and dice utilization, and Buy behavior
+by Plant cost, Plant type, individual Plant identity, and die size. The random-Grove
+report also gives exploratory conditional win shares for all four 7-cost Vines and
+notable higher-VP Plants; these are associations, not isolated causal estimates. The default evaluator remains on `FirstGameDefault` and `3/2/2`. To test Grove
 generalization without confounding the matched comparison, pass `--grove CODE`.
 Every zero in the nine-position code is resolved using a dedicated Grove RNG
 once per matched sample, and that exact concrete Grove is then shared by the
