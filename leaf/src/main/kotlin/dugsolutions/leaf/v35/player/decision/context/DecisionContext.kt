@@ -67,7 +67,9 @@ data class GameProgressView(
     val battleRoundsRemaining: Int?,
     val isFinalRound: Boolean,
     val isFinalCultivationRound: Boolean,
-    val isFinalBattleRound: Boolean
+    val isFinalBattleRound: Boolean,
+    /** Public phase pattern for rounds not yet revealed; card identities/effects remain hidden. */
+    val upcomingRoundTypes: List<RoundCardType> = emptyList()
 ) {
     companion object {
         val EMPTY = GameProgressView(

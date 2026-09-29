@@ -111,7 +111,8 @@ internal object DecisionContextFactory {
             battleRoundsRemaining = totalBattle - battleCompleted,
             isFinalRound = game.hasRevealedFinalRound,
             isFinalCultivationRound = currentCultivation == totalCultivation,
-            isFinalBattleRound = currentBattle == totalBattle
+            isFinalBattleRound = currentBattle == totalBattle,
+            upcomingRoundTypes = game.roundDeck.cards.cards.map { it.type }
         )
     }
 
