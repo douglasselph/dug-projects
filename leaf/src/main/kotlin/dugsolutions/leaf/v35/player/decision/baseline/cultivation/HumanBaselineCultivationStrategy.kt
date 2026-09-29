@@ -275,7 +275,7 @@ class HumanBaselineCultivationStrategy(
 
         val normalPower = policy.normalPurchasingPower(request.context)
         val target = MulchPriority.preferredTarget(request.context, normalPower)
-        val percentage = target?.let { policy.mulchUsePercentage(request.context, it.value) } ?: 0
+        val percentage = target?.let { policy.mulchUsePercentage(request.context, it) } ?: 0
         if (percentage <= 0) {
             return CultivationRoundEffectGate(removeChoices(legalChoices, mulchChoices))
         }

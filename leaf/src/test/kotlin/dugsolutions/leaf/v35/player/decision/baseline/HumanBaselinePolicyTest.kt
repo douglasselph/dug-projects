@@ -159,7 +159,7 @@ class HumanBaselinePolicyTest {
     }
 
     @Test
-    fun `default Mulch willingness falls with showing value and stops at five`() {
+    fun `default Mulch willingness is graded and does not make five plus categorically illegal`() {
         val policy = HumanBaselinePolicy()
         val context = context()
 
@@ -167,8 +167,8 @@ class HumanBaselinePolicyTest {
         assertEquals(60, policy.mulchUsePercentage(context, 2))
         assertEquals(40, policy.mulchUsePercentage(context, 3))
         assertEquals(20, policy.mulchUsePercentage(context, 4))
-        assertEquals(0, policy.mulchUsePercentage(context, 5))
-        assertEquals(0, policy.mulchUsePercentage(context, 6))
+        assertEquals(10, policy.mulchUsePercentage(context, 5))
+        assertEquals(8, policy.mulchUsePercentage(context, 6))
     }
 
     @Test

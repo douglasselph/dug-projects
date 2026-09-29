@@ -393,3 +393,9 @@ This document should evolve as those checkpoints are completed. The durable fina
 ## Shared tuning policy
 
 Cross-cutting defaults and experiment overrides are documented in [`HUMAN_BASELINE_POLICY.md`](HUMAN_BASELINE_POLICY.md). Cultivation obtains the `Done` benchmark, normal spendable purchasing power, and permanent dice-development nudge through that policy rather than duplicating magic numbers. As of B6, Plant activation plus Compost, Mulch, Sunlight, and downstream Cultivation die-target choices use policy-based purchasing power. Compost receives the modest long-term dice-development nudge, and Plant activation receives the same nudge only when its effect unambiguously improves permanent dice-pool strength. Draw intentionally does not receive that nudge because drawing a die does not increase total dice-pool power.
+
+## Mulch / Compost decision-quality review
+
+Mulch is a graded valuation, not a face-value eligibility cutoff. Low current rolls remain the strongest ordinary incentive, while die size, Battle-next timing, weak naturally upcoming dice, prepared-Mulch scarcity, visible Buy-threshold loss, and approximate recycle timing are explicit observations or score inputs. D4/D6 cleanup remains only a low-probability tendency. Numerical weights and percentages are calibration candidates rather than designer-approved values.
+
+Compost remains intentionally conservative rather than rewritten. `CompostPriority.certificationObservation` exposes the concepts already represented by the heuristic: permanent upgrade size, current-roll opportunity cost, remaining Cultivation rounds, Battle-next context, dice-development nudge, current Buy-threshold effects, and the minimum Hand Buy-power guardrail. Battle-next is recorded for certification but does not receive a new Compost score bonus in this checkpoint.

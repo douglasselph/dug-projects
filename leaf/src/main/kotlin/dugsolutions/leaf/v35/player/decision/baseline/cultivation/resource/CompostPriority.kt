@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource
 
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.context.PhaseProximity
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
@@ -53,6 +54,40 @@ object CompostPriority {
         val score: PriorityScore,
         val handDicePowerAfter: Int
     )
+
+    /** Typed certification snapshot for the existing Compost heuristic. */
+    data class CertificationObservation(
+        val target: DieView?,
+        val permanentUpgradeSides: Int?,
+        val currentRollOpportunityCost: Int?,
+        val cultivationRoundsRemaining: Int?,
+        val battleIsNext: Boolean,
+        val handDicePowerAfter: Int?,
+        val belowBuyPowerGuardrail: Boolean,
+        val developmentBonus: Int,
+        val score: PriorityScore
+    )
+
+    fun certificationObservation(
+        context: DecisionContext,
+        normalPurchasingPower: Int,
+        developmentBonus: Int
+    ): CertificationObservation {
+        val target = bestTarget(context, normalPurchasingPower)
+        val current = target?.die?.let { die -> DieSides.entries.firstOrNull { it.value == die.sides } }
+        val next = current?.let(::nextNormalStep)
+        return CertificationObservation(
+            target = target?.die,
+            permanentUpgradeSides = if (current != null && next != null) next.value - current.value else null,
+            currentRollOpportunityCost = target?.die?.value,
+            cultivationRoundsRemaining = context.progress.cultivationRoundsRemaining,
+            battleIsNext = PhaseProximity.battleIsNext(context),
+            handDicePowerAfter = target?.handDicePowerAfter,
+            belowBuyPowerGuardrail = target?.handDicePowerAfter?.let { it < MIN_HAND_DICE_BUY_POWER_AFTER_COMPOST } ?: false,
+            developmentBonus = developmentBonus,
+            score = score(context, normalPurchasingPower, developmentBonus)
+        )
+    }
 
     fun score(
         context: DecisionContext,

@@ -531,7 +531,11 @@ open class HumanBaselinePolicy(
     open fun sunlightUsePercentage(context: DecisionContext): Int =
         sunlightUsePercentageValue
 
-    /** Willingness to Mulch a Hand die based on the value currently showing. */
+    /**
+     * Base willingness to Mulch by current showing. Values above four are not
+     * categorically illegal: five is the neutral edge of the ordinary roll
+     * incentive and higher faces retain a small calibration-level chance.
+     */
     open fun mulchUsePercentage(
         context: DecisionContext,
         dieValue: Int
@@ -541,8 +545,31 @@ open class HumanBaselinePolicy(
             2 -> mulchValue2UsePercentageValue
             3 -> mulchValue3UsePercentageValue
             4 -> mulchValue4UsePercentageValue
-            else -> 0
+            5 -> 10
+            6 -> 8
+            else -> 5
         }
+
+    /** Contextual Mulch willingness. All additions are calibration candidates. */
+    open fun mulchUsePercentage(
+        context: DecisionContext,
+        die: dugsolutions.leaf.v35.player.decision.context.DieView
+    ): Int {
+        var percentage = mulchUsePercentage(context, die.value)
+        if (dugsolutions.leaf.v35.player.decision.baseline.context.PhaseProximity.battleIsNext(context)) {
+            percentage += 20
+            if (die.sides >= 12) percentage += 10
+        }
+        val quality = dugsolutions.leaf.v35.player.decision.baseline.context.DicePoolQuality.observe(context)
+        if (quality.preparedMulchCount == 0) percentage += 10
+        if (quality.nextSupplySides.isNotEmpty() && quality.nextSupplySides.average() < die.sides) percentage += 10
+
+        // Deliberate D4/D6 pool cleanup is intentionally only a low-probability
+        // tendency. Ten percent is a provisional calibration seed, not an
+        // approved human-behavior percentage.
+        if (die.sides <= 6 && die.value >= 5) percentage = maxOf(percentage, 10)
+        return percentage.coerceIn(0, 100)
+    }
 
     /**
      * Willingness to spend Pocketed Spark on the largest die currently in the
