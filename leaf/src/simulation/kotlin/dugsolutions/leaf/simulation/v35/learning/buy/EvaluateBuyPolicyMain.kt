@@ -98,6 +98,7 @@ internal class EvalAccumulator {
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
     val utilization = EffectResourceAccumulator()
+    val vpLedger = VpLedgerAccumulator()
     val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
     val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
@@ -109,6 +110,7 @@ internal class EvalAccumulator {
         buyShape.addGame(game.entries, p.playerId)
         battleShape.addGame(game.entries, p.playerId)
         utilization.addGame(game.entries, p.playerId)
+        vpLedger.addGame(p, game.entries, plantsByName)
         grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
         WATCHED_CARDS.forEach { name ->
             val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
@@ -243,6 +245,74 @@ internal class EffectResourceAccumulator {
     private fun MutableMap<String, Long>.bump(key: String) { this[key] = (this[key] ?: 0L) + 1L }
 }
 
+
+internal class VpLedgerAccumulator {
+    var games = 0L
+    var finalVp = 0L
+    var existingVp = 0L
+    var battleStrikeVp = 0L
+    var directEffectVp = 0L
+    var otherExistingVp = 0L
+    var plantVp = 0L
+    var unattributedPlantVp = 0L
+    var wispVp = 0L
+    val directEffectVpBySource = sortedMapOf<String, Long>()
+    val plantVpByCard = sortedMapOf<String, Long>()
+
+    fun addGame(
+        p: dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary,
+        entries: List<GameEntry>,
+        plantsByName: Map<String, PlantCard>
+    ) {
+        games++
+        finalVp += p.totalVp
+        existingVp += p.existingVp
+        battleStrikeVp += p.battleStrikeVp
+        plantVp += p.plantVp
+        wispVp += p.unplayedWispVp
+
+        val gainOneEvents = entries.filterIsInstance<GameEntry.EffectResolved>()
+            .filter { it.playerId == p.playerId && it.effect == GameEffect.GAIN_ONE_VP }
+        directEffectVp += gainOneEvents.size
+        gainOneEvents.forEach { e ->
+            val key = "${e.sourceKind.name}:${e.sourceName}"
+            directEffectVpBySource[key] = (directEffectVpBySource[key] ?: 0L) + 1L
+        }
+
+        val other = p.existingVp - p.battleStrikeVp - gainOneEvents.size
+        require(other >= 0) {
+            "VP ledger cannot reconcile existing VP for ${p.playerId}: existing=${p.existingVp}, " +
+                "Battle=${p.battleStrikeVp}, recorded GAIN_ONE_VP=${gainOneEvents.size}"
+        }
+        otherExistingVp += other
+
+        val vineCount = p.plantCreatureSignature.cards.count { it.plantName.startsWith("Vine_") }
+        var attributedPlants = 0
+        p.plantCreatureSignature.cards.groupingBy { it.plantName }.eachCount().forEach { (name, copies) ->
+            val card = plantsByName[name] ?: return@forEach
+            val perCopy = when (val rule = card.scoringRule) {
+                is PlantScoringRule.Fixed -> rule.points
+                PlantScoringRule.PerGraftedVine -> vineCount
+                PlantScoringRule.PerOwnedD4 -> p.ownedDiceSignature.d4
+                PlantScoringRule.PerButterfly -> return@forEach
+            }
+            val vp = copies * perCopy
+            attributedPlants += vp
+            plantVpByCard[name] = (plantVpByCard[name] ?: 0L) + vp
+        }
+        val plantResidual = p.plantVp - attributedPlants
+        require(plantResidual >= 0) {
+            "VP ledger over-attributed Plant VP for ${p.playerId}: final=${p.plantVp}, attributed=$attributedPlants"
+        }
+        unattributedPlantVp += plantResidual
+
+        val reconciled = p.battleStrikeVp + gainOneEvents.size + other + p.plantVp + p.unplayedWispVp
+        require(reconciled == p.totalVp) {
+            "VP ledger does not reconcile for ${p.playerId}: components=$reconciled final=${p.totalVp}"
+        }
+    }
+}
+
 internal class BuyShapeAccumulator {
     var phases = 0L
     var purchases = 0L
@@ -370,6 +440,44 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
     println("  Plant-round exposure sums the player's grafted Plant count at every completed round; it helps distinguish equal resource-use counts applied to differently sized Plant creatures.")
 }
 
+
+private fun printVpLedger(c: VpLedgerAccumulator, l: VpLedgerAccumulator) {
+    fun avg(v: Long, n: Long) = if (n == 0L) "0.00" else "%.2f".format(v.toDouble() / n)
+    fun delta(cv: Long, cn: Long, lv: Long, ln: Long): String {
+        val cAvg = if (cn == 0L) 0.0 else cv.toDouble() / cn
+        val lAvg = if (ln == 0L) 0.0 else lv.toDouble() / ln
+        return "%+.2f".format(lAvg - cAvg)
+    }
+    fun line(label: String, cv: Long, lv: Long) =
+        println("  ${label.padEnd(30)} control=${avg(cv,c.games)} learned=${avg(lv,l.games)} delta=${delta(cv,c.games,lv,l.games)}")
+
+    println("VP ledger (affected role; exact reconciliation to FinalScore)")
+    line("Final VP", c.finalVp, l.finalVp)
+    line("Battle Strike VP", c.battleStrikeVp, l.battleStrikeVp)
+    line("Direct GAIN_ONE_VP effects", c.directEffectVp, l.directEffectVp)
+    line("Other in-play VP", c.otherExistingVp, l.otherExistingVp)
+    line("Plant end-game VP", c.plantVp, l.plantVp)
+    line("Unplayed Wisp VP", c.wispVp, l.wispVp)
+    println("  Existing/in-play VP check: control=${avg(c.existingVp,c.games)} learned=${avg(l.existingVp,l.games)} (Battle + direct effects + other in-play)")
+    println("  Reconciliation: Final VP = Battle Strike VP + direct GAIN_ONE_VP + other in-play VP + Plant end-game VP + unplayed Wisp VP")
+
+    val effectKeys=(c.directEffectVpBySource.keys+l.directEffectVpBySource.keys).sortedWith(compareByDescending<String>{(c.directEffectVpBySource[it]?:0)+(l.directEffectVpBySource[it]?:0)}.thenBy{it})
+    println("  Direct GAIN_ONE_VP by source:")
+    if(effectKeys.isEmpty()) println("    none recorded") else effectKeys.forEach { k ->
+        println("    $k: control=${avg(c.directEffectVpBySource[k]?:0,c.games)} learned=${avg(l.directEffectVpBySource[k]?:0,l.games)} per game")
+    }
+
+    val plantKeys=(c.plantVpByCard.keys+l.plantVpByCard.keys).sortedWith(compareByDescending<String>{(c.plantVpByCard[it]?:0)+(l.plantVpByCard[it]?:0)}.thenBy{it})
+    println("  Plant end-game VP by card identity:")
+    if(plantKeys.isEmpty()) println("    none recorded") else plantKeys.forEach { k ->
+        println("    $k: control=${avg(c.plantVpByCard[k]?:0,c.games)} learned=${avg(l.plantVpByCard[k]?:0,l.games)} per game")
+    }
+    if(c.unattributedPlantVp != 0L || l.unattributedPlantVp != 0L) {
+        println("    Butterfly-dependent Plant VP (identity not attributable from compact final state): control=${avg(c.unattributedPlantVp,c.games)} learned=${avg(l.unattributedPlantVp,l.games)} per game")
+    }
+    println("  Note: 'Other in-play VP' is the exact FinalScore existing-VP remainder after recorded Battle Strike VP and GAIN_ONE_VP effects; it includes variable VP effects whose awarded amount is not carried by EffectResolved.")
+}
+
 private fun printWatchedCards(c:EvalAccumulator,l:EvalAccumulator) {
     println("Grove sensitivity and notable VP cards")
     WATCHED_CARDS.forEach { name ->
@@ -417,6 +525,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printBattleShape(c.battleShape,l.battleShape)
     println()
     printEffectResourceUtilization(c.utilization,l.utilization)
+    println()
+    printVpLedger(c.vpLedger,l.vpLedger)
     println()
     printWatchedCards(c,l)
     println()

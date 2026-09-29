@@ -201,7 +201,7 @@ mechanical/strategy seeds and affected seat, while the affected role rotates
 through all four seats. Default evaluation seeds start at 161000/171000 and the
 evaluator refuses ranges that overlap the training cohorts recorded in policy
 provenance. It reports win-share/VP deltas, seat effects, end-state Plant/dice development,
-Buy-phase shape, Battle-by-Battle VP/wounds and dice utilization, effect/resource utilization (including round effects, support actions, upgrade paths/sources, Plant effects, and Wisp lifecycle), and Buy behavior
+Buy-phase shape, Battle-by-Battle VP/wounds and dice utilization, effect/resource utilization (including round effects, support actions, upgrade paths/sources, Plant effects, and Wisp lifecycle), an exact VP ledger reconciling Battle/direct-effect/other in-play/Plant/Wisp VP to FinalScore, and Buy behavior
 by Plant cost, Plant type, individual Plant identity, and die size. The random-Grove
 report also gives exploratory conditional win shares for all four 7-cost Vines and
 notable higher-VP Plants; these are associations, not isolated causal estimates. The default evaluator remains on `FirstGameDefault` and `3/2/2`. To test Grove

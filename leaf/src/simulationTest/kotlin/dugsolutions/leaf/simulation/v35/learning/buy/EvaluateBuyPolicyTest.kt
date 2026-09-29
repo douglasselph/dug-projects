@@ -11,6 +11,9 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.chronicle.domain.*
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.simulation.v35.analysis.*
+import dugsolutions.leaf.v35.player.creature.CreatureSide
+import dugsolutions.leaf.v35.plant.domain.*
 
 class EvaluateBuyPolicyTest {
     @Test fun `evaluation accumulator starts empty and keeps four seat buckets`() {
@@ -58,6 +61,30 @@ class EvaluateBuyPolicyTest {
         assertEquals(1L,a.upgrades["D12->D20"]); assertEquals(1L,a.upgradeSources["ROUND:Resource_Water_Compost"])
         assertEquals(1L,a.supportActions["WATER_REROLL"]); assertEquals(1L,a.rollWispsGained)
         assertEquals(1L,a.wispEffects["Wisp_01"]); assertEquals(2L,a.finalWispVp)
+    }
+
+
+    @Test fun `VP ledger reconciles battle effects plants wisps and remainder`() {
+        val p = PlayerId(1)
+        val summary = PlayerGameSummary(
+            seat=0, playerId=p, won=true, winShare=1.0,
+            existingVp=8, plantVp=3, unplayedWispVp=2, totalVp=13,
+            battleStrikeVp=4, woundsTaken=0, rollRewardWispsGained=0, wispsPlayed=0, finalWispCount=1,
+            finalPlantCount=1, finalPlantPrintedCost=7,
+            plantCreatureSignature=PlantCreatureSignature(listOf(PlantCreatureCardSignature("Vine_07_01",CreatureSide.VINE,0,0))),
+            finalDiceCount=0, finalDicePower=0, ownedDiceSignature=OwnedDiceSignature(0,0,0,0,0,0)
+        )
+        val entries = listOf(
+            GameEntry.EffectResolved(1,p,GameEffect.GAIN_ONE_VP,EffectSourceKind.WISP,"Wisp_Award_VP",ChroniclePhase.BATTLE,0)
+        )
+        val card = PlantCard(1,"Vine_07_01","test",PlantType.VINE,7,null,"","","","","","","",GameEffect.GAIN_ONE_VP,PlantScoringRule.Fixed(3))
+        val a=VpLedgerAccumulator(); a.addGame(summary,entries,mapOf(card.name to card))
+        assertEquals(4L,a.battleStrikeVp)
+        assertEquals(1L,a.directEffectVp)
+        assertEquals(3L,a.otherExistingVp)
+        assertEquals(3L,a.plantVpByCard["Vine_07_01"])
+        assertEquals(2L,a.wispVp)
+        assertEquals(13L,a.finalVp)
     }
 
     @Test fun `default evaluation keeps FirstGameDefault`() {

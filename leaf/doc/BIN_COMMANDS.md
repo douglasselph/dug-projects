@@ -100,7 +100,7 @@ bin/evaluate_buy_policy --random-grove --grove-seed 281000
 The command refuses recorded training-seed overlap and validates the policy's
 Plant manifest against current `CardDataFiles`. It reports control/learned win
 share and VP, seat results, final Plant and dice-pool composition, Buy-phase shape,
-Battle-by-Battle VP/wounds and dice utilization, effect/resource utilization (round effects, support actions, Compost/other upgrades, Plant effects, and Wisp lifecycle), and purchase behavior by Plant
+Battle-by-Battle VP/wounds and dice utilization, effect/resource utilization (round effects, support actions, Compost/other upgrades, Plant effects, and Wisp lifecycle), an exact VP ledger reconciling Battle/direct-effect/other in-play/Plant/Wisp VP to FinalScore, and purchase behavior by Plant
 cost/type/card and die size. It also reports exploratory Grove-conditional results
 for the four 7-cost Vines and notable higher-VP Plants. Training fitness is printed only as provenance;
 the held-out result is the independent evidence.
