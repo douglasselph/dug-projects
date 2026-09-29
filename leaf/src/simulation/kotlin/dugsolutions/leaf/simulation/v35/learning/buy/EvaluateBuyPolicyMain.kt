@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.*
 import dugsolutions.leaf.v35.game.di.GameFactory
+import dugsolutions.leaf.v35.plant.GrovePlantCode
 import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
@@ -18,6 +19,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.learned.buy.*
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
+import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.wisp.WispCardManager
@@ -35,7 +37,7 @@ fun main(args: Array<String>) {
         loadCards(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
         val allPlants = plantManager.getAllCards().cards
-        val grove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
+        val defaultGrove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
         val raw = LearnedBuyWeights.load(o.input)
         require(raw.provenance.trainingStatus == "trained") {
             "Held-out evaluation requires a trained policy; ${o.input} has trainingStatus=${raw.provenance.trainingStatus}"
@@ -52,7 +54,10 @@ fun main(args: Array<String>) {
         println("policy=${o.input}")
         println("matched samples=${o.games}; games run=${o.games * 2}")
         println("evaluation seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
-        println("affected role rotates across physical seats; opponents=Human Baseline; Grove=FirstGameDefault; rounds=3/2/2")
+        println("affected role rotates across physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=3/2/2")
+        if (o.grovePattern != null) {
+            println("Grove zeros are resolved independently once per matched sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; CONTROL and LEARNED share that resolved Grove")
+        }
         println("CONTROL=Human Baseline; LEARNED=same role with learned Buy selection only; all other decisions=Human Baseline")
         println("training fitness recorded in policy=${weights.provenance.fitness?.let(::pct) ?: "unknown"}; evaluation seeds are required not to overlap its recorded training cohorts")
         println()
@@ -61,10 +66,12 @@ fun main(args: Array<String>) {
             val seat = sample % 4
             val mechanicalSeed = o.seed + sample
             val strategySeed = o.strategySeed + sample
+            val resolvedGrove = resolveGroveForSample(o, sample, plantManager, defaultGrove)
+            val groveCode = GrovePlantCode.encode(resolvedGrove)
             val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(4) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
-            control.add(runOne(factory, runner, grove, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL"), seat, plantsByName)
-            learned.add(runOne(factory, runner, grove, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED"), seat, plantsByName)
+            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL"), seat, plantsByName)
+            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED"), seat, plantsByName)
         }
         printReport(o, weights, control, learned)
     } finally { app.close() }
@@ -72,9 +79,9 @@ fun main(args: Array<String>) {
 
 internal data class CompletedEvalGame(val summary: GameSummary, val entries: List<GameEntry>)
 
-private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String): CompletedEvalGame {
+private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, groveCode: String, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String): CompletedEvalGame {
     val game = factory(GameConfig(selectedPlantCards=grove, playerDecisionFactories=decisions, roundSetup=GameRoundSetup.standard(), seed=seed, strategySeed=strategySeed, recordDecisionReasoning=false))
-    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_buy_policy", sample, variant, affectedSeat, seed, strategySeed, "FirstGameDefault", "3/2/2")) { runner.run(game) }
+    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_buy_policy", sample, variant, affectedSeat, seed, strategySeed, groveCode, "3/2/2")) { runner.run(game) }
     return CompletedEvalGame(GameSummaryExtractor.extract(game, result), game.chronicle.entries.toList())
 }
 
@@ -129,14 +136,28 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println("  trained rounds=${weights.provenance.roundPattern}; Grove=${weights.provenance.grove}; generations=${weights.provenance.generations}; games/policy=${weights.provenance.gamesPerPolicy}; training fitness=${weights.provenance.fitness?.let(::pct) ?: "unknown"}")
     println("  training mechanical seed start=${weights.provenance.mechanicalSeedStart}; strategy seed start=${weights.provenance.strategySeedStart}")
     println("  evaluation mechanical seeds=${o.seed}..${o.seed+o.games-1}; strategy seeds=${o.strategySeed}..${o.strategySeed+o.games-1}")
+    if (o.grovePattern != null) println("  Grove pattern=${o.grovePattern}; Grove seeds=${o.groveSeed}..${o.groveSeed+o.games-1}; zeros resolved once per matched sample")
     println()
-    println("Interpretation: this is held-out evidence for this policy on FirstGameDefault with 3/2/2, not evidence for other Groves or round structures.")
+    println("Interpretation: this is held-out evidence for this policy with ${o.groveInterpretation()} and 3/2/2, not evidence for other Grove constraints or round structures.")
     println("Note: Done-by-stage is not reported yet because the production Chronicle records purchases, not a no-purchase Buy decision; M3-G1 does not alter production decision tracing merely to manufacture that metric.")
 }
 
 private fun <K:Comparable<K>> printCounts(title:String,c:Map<K,Long>,l:Map<K,Long>) { println("  $title:"); (c.keys+l.keys).toSortedSet().forEach { k -> println("    $k: control=${c[k]?:0} learned=${l[k]?:0}") } }
 private fun pct(x:Double)="%.2f%%".format(x*100.0)
 private fun signedPct(x:Double)=(if(x>=0) "+" else "")+pct(x)
+
+internal fun resolveGroveForSample(
+    options: EvalOptions,
+    sample: Int,
+    plantManager: PlantCardManager,
+    defaultGrove: List<PlantCard>,
+): List<PlantCard> {
+    val pattern = options.grovePattern ?: return defaultGrove
+    val concreteCode = GrovePlantCode.generate(pattern, Randomizer.create(options.groveSeed + sample))
+    return GrovePlantCode.overrideNames(concreteCode).map { name ->
+        requireNotNull(plantManager.getCard(name)) { "Unknown Plant card generated for Grove: $name" }
+    }
+}
 
 private fun rejectTrainingSeedOverlap(weights:LearnedBuyWeights,o:EvalOptions) {
     val n=weights.provenance.gamesPerPolicy ?: return
@@ -148,18 +169,25 @@ private fun rejectTrainingSeedOverlap(weights:LearnedBuyWeights,o:EvalOptions) {
 private fun learnedFactory(weights:LearnedBuyWeights):PlayerDecisionFactory=object:PlayerDecisionFactory { override fun create()=LearnedBuy.createDirector(weights); override fun create(strategyRandomizer:StrategyRandomizer)=LearnedBuy.createDirector(weights,strategyRandomizer); override fun create(strategyRandomizer:StrategyRandomizer,reasoningSink:DecisionReasoningSink)=LearnedBuy.createDirector(weights,strategyRandomizer) }
 private fun loadCards(plantRegistry:PlantCardRegistry,plantManager:PlantCardManager,wispRegistry:WispCardRegistry,wispManager:WispCardManager,roundRegistry:RoundCardRegistry,roundManager:RoundCardManager){ val root=CardDataFiles.dataDirectory(); plantRegistry.clear(); plantRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST,root),CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST,root)); plantManager.loadCards(plantRegistry); wispRegistry.clear(); wispRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.WISP_LIST,root)); wispManager.loadCards(wispRegistry); roundRegistry.clear(); roundRegistry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST,root)); roundManager.loadCards(roundRegistry) }
 
-private data class EvalOptions(
+internal data class EvalOptions(
     val games: Int,
     val seed: Long,
     val strategySeed: Long,
     val input: Path,
+    val grovePattern: String?,
+    val groveSeed: Long,
 ) {
+    fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
+    fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
+
     companion object {
         fun parse(args: List<String>): EvalOptions {
             var games = 1000
             var seed = 161000L
             var strategy = 171000L
             var input = Paths.get("output/ai/buy-policy-v1-trained.weights")
+            var grovePattern: String? = null
+            var groveSeed = 181000L
             var positional = false
             var i = 0
 
@@ -183,6 +211,9 @@ private data class EvalOptions(
                     argument.startsWith("--seed") -> seed = value(argument).toLong()
                     argument.startsWith("--strategy-seed") -> strategy = value(argument).toLong()
                     argument.startsWith("--input") -> input = Paths.get(value(argument))
+                    argument.startsWith("--grove-seed") -> groveSeed = value(argument).toLong()
+                    argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
+                    argument == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     argument == "--help" -> {
                         usage()
                         kotlin.system.exitProcess(0)
@@ -193,11 +224,13 @@ private data class EvalOptions(
             }
 
             require(games > 0)
-            return EvalOptions(games, seed, strategy, input)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--input PATH]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--input PATH] [--grove CODE|--random-grove] [--grove-seed N]")
+            println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")
+            println("  CONTROL and LEARNED always share the same concrete Grove within a matched sample.")
         }
     }
 }

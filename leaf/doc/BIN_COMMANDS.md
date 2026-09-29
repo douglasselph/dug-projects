@@ -83,6 +83,20 @@ bin/evaluate_buy_policy 1000 --input output/ai/buy-policy-v1-trained.weights
 
 Defaults are 1000 matched samples, held-out mechanical seeds beginning at
 161000 and strategy seeds beginning at 171000, `FirstGameDefault`, and `3/2/2`.
+For Grove-robustness evaluation, `--grove CODE` uses the normal nine-position
+Grove key but resolves every `0` to a new random legal card **once per matched
+sample**. The CONTROL and LEARNED games in that sample receive the same concrete
+Grove. Grove selection has its own deterministic RNG (`--grove-seed`, default
+181000), so choosing a Grove does not consume mechanical or strategy randomness.
+For example, `--grove 000100000` fixes `Vine_07_01` while independently
+randomizing the other eight slots for every matched sample. `--random-grove` is
+shorthand for `--grove 000000000`.
+
+```bash
+bin/evaluate_buy_policy --grove 000100000
+bin/evaluate_buy_policy --random-grove --grove-seed 281000
+```
+
 The command refuses recorded training-seed overlap and validates the policy's
 Plant manifest against current `CardDataFiles`. It reports control/learned win
 share and VP, seat results, final development metrics, and purchase behavior by

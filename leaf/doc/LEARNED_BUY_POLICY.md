@@ -202,8 +202,15 @@ through all four seats. Default evaluation seeds start at 161000/171000 and the
 evaluator refuses ranges that overlap the training cohorts recorded in policy
 provenance. It reports win-share/VP deltas, seat effects, end-state development,
 and Buy behavior by Plant cost, Plant type, individual Plant identity, and die
-size. This first evaluator intentionally remains on `FirstGameDefault` and
-`3/2/2`; Grove and round-pattern generalization are later questions.
+size. The default evaluator remains on `FirstGameDefault` and `3/2/2`. To test Grove
+generalization without confounding the matched comparison, pass `--grove CODE`.
+Every zero in the nine-position code is resolved using a dedicated Grove RNG
+once per matched sample, and that exact concrete Grove is then shared by the
+CONTROL and LEARNED games. Thus `--grove 000100000` keeps `Vine_07_01` fixed
+while exposing the frozen policy to a newly resolved set of the other eight
+Plants on each sample. `--random-grove` is equivalent to `--grove 000000000`.
+The Grove RNG defaults to seed 181000 and can be changed with `--grove-seed`; it
+does not consume the game's mechanical or strategy RNG streams.
 
 A no-purchase (`Done`) choice is not currently a production Chronicle purchase
 event, so M3-G1 does not change decision tracing just to report Done-by-stage.
