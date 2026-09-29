@@ -272,7 +272,7 @@ class DrawEffectHandler(
                     request,
                     discardChoices(request.actor)
                 )
-                val sourceCard = (request.source as? GameEffectSource.Plant)?.card?.name ?: request.effect.name
+                val sourceCard = (request.source as? GameEffectSource.Plant)?.card?.card?.name ?: request.effect.name
                 request.game.assetProvenance.recordForgetMeNot(request.actor, die, sourceCard)
                 stateCheck(request.actor.dice.removeFromDiscard(die) != null) {
                     "Selected Discard die could not be removed: $die"

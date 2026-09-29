@@ -286,7 +286,7 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
-        fun `Mulch value two uses the sixty percent boundary and carries probability metadata`() {
+        fun `Mulch value two includes contextual willingness and carries probability metadata`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
@@ -301,23 +301,23 @@ class HumanBaselineCultivationStrategyTest {
                 round = round,
                 context = context,
                 choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(59))
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(79))
             )
             val declines = choose(
                 round = round,
                 context = context,
                 choices = choices,
-                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(60))
+                strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(80))
             )
 
             val acceptedMain = assertIs<CultivationAction.Main>(accepts)
             assertEquals(CultivationMainAction.RoundEffect1, acceptedMain.action)
-            assertEquals(60, acceptedMain.decisionProbabilityPercent)
+            assertEquals(80, acceptedMain.decisionProbabilityPercent)
             assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(declines).action)
         }
 
         @Test
-        fun `Mulch never voluntarily stores a die showing five or more`() {
+        fun `Mulch can voluntarily store a high sided die showing five when context supports it`() {
             val choices = listOf(
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
@@ -332,7 +332,9 @@ class HumanBaselineCultivationStrategyTest {
                 strategy = HumanBaselineCultivationStrategy(strategyRandomizer = FixedRandomizer(0))
             )
 
-            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(chosen).action)
+            val chosenMain = assertIs<CultivationAction.Main>(chosen)
+            assertEquals(CultivationMainAction.RoundEffect1, chosenMain.action)
+            assertEquals(30, chosenMain.decisionProbabilityPercent)
         }
 
         @Test
