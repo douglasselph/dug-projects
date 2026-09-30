@@ -370,13 +370,13 @@ class BattleActionCoordinatorTest {
             wisps.add(loopWisp)
         }
         val p2 = player(2, finishStrategy("p2"))
-        val effects = RecordingEffects { request ->
+        val effects = RecordingEffects(onExecute = { request ->
             if (request.source is GameEffectSource.Wisp) {
                 // Replenish exactly what SupportActionExecutor removes so the
                 // next Step-5 opportunity eventually presents the same game state.
                 request.actor.wisps.add(loopWisp)
             }
-        }
+        })
         val fixture = fixture(p1, p2, effects = effects)
 
         val error = assertFailsWith<InvalidGameStateException> {
@@ -398,7 +398,7 @@ class BattleActionCoordinatorTest {
             wisps.add(loopWisp)
         }
         val p2 = player(2, finishStrategy("p2"))
-        val effects = RecordingEffects { request ->
+        val effects = RecordingEffects(onExecute = { request ->
             if (request.source is GameEffectSource.Wisp) {
                 // Make every observation genuinely different so repeated-state
                 // detection cannot fire. The hard ceiling must remain a final
@@ -406,7 +406,7 @@ class BattleActionCoordinatorTest {
                 request.actor.addVp(1)
                 request.actor.wisps.add(loopWisp)
             }
-        }
+        })
         val fixture = fixture(p1, p2, effects = effects)
 
         val error = assertFailsWith<InvalidGameStateException> {
