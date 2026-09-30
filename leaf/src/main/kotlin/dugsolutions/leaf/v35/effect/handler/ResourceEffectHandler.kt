@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.chronicle.domain.WispAcquisitionSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
@@ -318,6 +319,15 @@ class ResourceEffectHandler : EffectHandler {
         val card = stateNotNull(request.game.grove.wispDeck.draw()) {
             "Validated Wisp gain found an empty Wisp deck"
         }
+        request.game.chronicle.record(
+            Moment.WispAcquired(
+                playerId = request.actor.id,
+                wispName = card.name,
+                sourceKind = WispAcquisitionSourceKind.EFFECT_DRAW,
+                sourceName = wispAcquisitionSourceName(request),
+                playedImmediately = card.playImmediately
+            )
+        )
 
         if (card.playImmediately) {
             executor.execute(
@@ -443,7 +453,22 @@ class ResourceEffectHandler : EffectHandler {
                 "${opponentId.value}: ${selected.name}"
         }
         request.actor.wisps.add(selected)
+        request.game.chronicle.record(
+            Moment.WispAcquired(
+                playerId = request.actor.id,
+                wispName = selected.name,
+                sourceKind = WispAcquisitionSourceKind.STEAL,
+                sourceName = wispAcquisitionSourceName(request)
+            )
+        )
     }
+
+    private fun wispAcquisitionSourceName(request: GameEffectRequest): String =
+        when (val source = request.source) {
+            is GameEffectSource.Plant -> source.card.card.name
+            is GameEffectSource.Round -> source.card.name
+            is GameEffectSource.Wisp -> source.card.name
+        }
 
     private fun butterflyAvailable(
         request: GameEffectRequest,

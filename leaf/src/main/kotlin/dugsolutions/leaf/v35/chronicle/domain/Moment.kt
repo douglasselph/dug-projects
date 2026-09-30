@@ -57,6 +57,15 @@ sealed interface Moment {
         val count: Int
     ) : Moment
 
+    /** Exact Wisp acquisition outside RollReward, including effect draws and steals. */
+    data class WispAcquired(
+        val playerId: PlayerId,
+        val wispName: String,
+        val sourceKind: WispAcquisitionSourceKind,
+        val sourceName: String,
+        val playedImmediately: Boolean = false
+    ) : Moment
+
     /** Snapshot of which Round effects are legal at one Main-Action decision point. */
     data class RoundEffectOpportunity(
         val playerId: PlayerId,
@@ -229,13 +238,16 @@ sealed interface Moment {
         val plantVp: Int,
         val unplayedWispVp: Int,
         val totalVp: Int,
-        val graftedPlantCount: Int
+        val graftedPlantCount: Int,
+        val unplayedWispNames: List<String> = emptyList()
     ) : Moment
 
     data class FinalWinners(val winnerIds: List<PlayerId>) : Moment
 
     data class GameCompleted(val roundsCompleted: Int) : Moment
 }
+
+enum class WispAcquisitionSourceKind { EFFECT_DRAW, STEAL }
 
 enum class ChroniclePhase { CULTIVATION, BATTLE }
 enum class ChronicleRollRewardPolicy { NORMAL, IGNORE, DEFER }

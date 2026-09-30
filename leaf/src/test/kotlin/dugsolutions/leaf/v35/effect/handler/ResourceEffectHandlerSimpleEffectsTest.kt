@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.effect.EffectTestFixture
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.WispAcquisitionSourceKind
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -261,6 +263,11 @@ class ResourceEffectHandlerSimpleEffectsTest {
 
         assertEquals(listOf(normal), actor.wisps.cards.cards)
         assertEquals(0, game.grove.wispDeck.remaining)
+        val acquired = game.chronicle.entries.filterIsInstance<GameEntry.WispAcquired>().single()
+        assertEquals(actor.id, acquired.playerId)
+        assertEquals(normal.name, acquired.wispName)
+        assertEquals(WispAcquisitionSourceKind.EFFECT_DRAW, acquired.sourceKind)
+        assertFalse(acquired.playedImmediately)
     }
 
     @Test

@@ -38,7 +38,8 @@ class GameRunner(
                     plantVp = score.plantVp,
                     unplayedWispVp = score.unplayedWispVp,
                     totalVp = score.totalVp,
-                    graftedPlantCount = score.graftedPlantCount
+                    graftedPlantCount = score.graftedPlantCount,
+                    unplayedWispNames = game.players.single { it.id == score.playerId }.wisps.cards.cards.map { it.name }
                 )
             )
         }

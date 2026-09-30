@@ -67,6 +67,16 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    data class WispAcquired(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val wispName: String,
+        val sourceKind: WispAcquisitionSourceKind,
+        val sourceName: String,
+        val playedImmediately: Boolean = false,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class RoundEffectOpportunity(
         override val sequence: Long,
         val playerId: PlayerId,
@@ -291,6 +301,7 @@ sealed interface GameEntry {
         val unplayedWispVp: Int,
         val totalVp: Int,
         val graftedPlantCount: Int,
+        val unplayedWispNames: List<String> = emptyList(),
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

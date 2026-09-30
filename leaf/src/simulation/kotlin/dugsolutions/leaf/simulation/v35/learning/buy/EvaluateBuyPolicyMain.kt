@@ -187,6 +187,9 @@ internal class EffectResourceAccumulator {
     val roundCategoryUses = sortedMapOf<String, Long>()
     val plantEffects = sortedMapOf<String, Long>()
     val wispEffects = sortedMapOf<String, Long>()
+    val wispAcquiredByCard = sortedMapOf<String, Long>()
+    val wispRetainedByCard = sortedMapOf<String, Long>()
+    val wispAcquisitionSources = sortedMapOf<String, Long>()
     val supportActions = sortedMapOf<String, Long>()
     val upgrades = sortedMapOf<String, Long>()
     val upgradeSources = sortedMapOf<String, Long>()
@@ -233,11 +236,24 @@ internal class EffectResourceAccumulator {
         entries.filterIsInstance<GameEntry.RoundCompleted>().lastOrNull()?.playerSummaries?.singleOrNull { it.playerId == playerId }?.let { finalWisps += it.wispCount }
         entries.filterIsInstance<GameEntry.RollReward>().filter { it.playerId == playerId }.forEach {
             when (it.kind) {
-                RollRewardKind.WISP_GAINED -> { rollWispsGained++; wispGainTriggers.bump("Roll reward") }
-                RollRewardKind.WISP_PLAYED_IMMEDIATELY -> { immediateWispsPlayed++; wispGainTriggers.bump("Roll reward (immediate play)") }
+                RollRewardKind.WISP_GAINED -> {
+                    rollWispsGained++; wispGainTriggers.bump("Roll reward")
+                    it.wispName?.let { name -> wispAcquiredByCard.bump(name) }
+                    it.wispName?.let { name -> wispAcquisitionSources.bump("ROLL_REWARD:$name") }
+                }
+                RollRewardKind.WISP_PLAYED_IMMEDIATELY -> {
+                    immediateWispsPlayed++; wispGainTriggers.bump("Roll reward (immediate play)")
+                    it.wispName?.let { name -> wispAcquiredByCard.bump(name) }
+                    it.wispName?.let { name -> wispAcquisitionSources.bump("ROLL_REWARD:$name") }
+                }
                 else -> Unit
             }
         }
+        entries.filterIsInstance<GameEntry.WispAcquired>().filter { it.playerId == playerId }.forEach { acquired ->
+            wispAcquiredByCard.bump(acquired.wispName)
+            wispAcquisitionSources.bump("${acquired.sourceKind.name}:${acquired.sourceName}:${acquired.wispName}")
+        }
+        entries.filterIsInstance<GameEntry.FinalScore>().singleOrNull { it.playerId == playerId }?.unplayedWispNames?.forEach { name -> wispRetainedByCard.bump(name) }
         entries.filterIsInstance<GameEntry.SupportAction>().filter { it.playerId == playerId }.forEach { supportActions.bump(it.action.name) }
         entries.filterIsInstance<GameEntry.EffectResolved>().filter { it.playerId == playerId }.forEach { e ->
             when (e.sourceKind) {
@@ -514,10 +530,20 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
     println("    immediate Wisps played from roll reward: control=${avg(c.immediateWispsPlayed,c.games)} learned=${avg(l.immediateWispsPlayed,l.games)} per game")
     println("    final unplayed Wisp count: control=${avg(c.finalWisps,c.games)} learned=${avg(l.finalWisps,l.games)} per game")
     println("    final unplayed Wisp VP: control=${avg(c.finalWispVp,c.games)} learned=${avg(l.finalWispVp,l.games)} per game")
-    mapLines("Wisp acquisition triggers visible in Chronicle", c.wispGainTriggers, l.wispGainTriggers)
+    mapLines("Wisp acquisition triggers", c.wispGainTriggers, l.wispGainTriggers)
+    mapLines("Exact Wisp acquisitions by card", c.wispAcquiredByCard, l.wispAcquiredByCard)
+    mapLines("Wisp acquisition source and card", c.wispAcquisitionSources, l.wispAcquisitionSources)
+    println("    Wisp acquisition/use/retention by card (per player-game; use rate is uses / acquisitions):")
+    (c.wispAcquiredByCard.keys + l.wispAcquiredByCard.keys + c.wispEffects.keys + l.wispEffects.keys + c.wispRetainedByCard.keys + l.wispRetainedByCard.keys).toSortedSet().forEach { name ->
+        val ca=c.wispAcquiredByCard[name]?:0; val la=l.wispAcquiredByCard[name]?:0
+        val cu=c.wispEffects[name]?:0; val lu=l.wispEffects[name]?:0
+        val cr=c.wispRetainedByCard[name]?:0; val lr=l.wispRetainedByCard[name]?:0
+        fun rate(used:Long, acquired:Long)=if(acquired==0L) "n/a" else "%.1f%%".format(100.0*used/acquired)
+        println("      $name: control acquired=${avg(ca,c.games)} used=${avg(cu,c.games)} rate=${rate(cu,ca)} retained=${avg(cr,c.games)}; learned acquired=${avg(la,l.games)} used=${avg(lu,l.games)} rate=${rate(lu,la)} retained=${avg(lr,l.games)}")
+    }
     mapLines("Wisp effects actually played/resolved (by card)", c.wispEffects, l.wispEffects)
     mapLines("Plant effects actually resolved (by card)", c.plantEffects, l.plantEffects)
-    println("  Note: Wisp gain triggers are event counts, not an exact acquired-card count: steal-all can transfer multiple Wisps, and current Chronicle does not record the identity of a Wisp drawn by a round/Plant gain effect. Final Wisp count and FinalScore Wisp VP are exact.")
+    println("  Note: exact Wisp acquisitions include Roll Rewards, effect draws, and steals. Retained-by-card is the exact final hand snapshot. Existing Upgrade source reporting shows resulting Wisp-driven die upgrades by card.")
     println("  Plant-round exposure sums the player's grafted Plant count at every completed round; it helps distinguish equal resource-use counts applied to differently sized Plant creatures.")
 }
 

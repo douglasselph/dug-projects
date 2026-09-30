@@ -668,6 +668,10 @@ object ChronicleTextRenderer {
             is GameEntry.OpeningDrawCompleted ->
                 "${player(entry.playerId)} ${entry.phase} OPENING DRAW complete (${entry.count} dice)"
 
+            is GameEntry.WispAcquired ->
+                "${player(entry.playerId)} WISP ACQUIRED ${entry.wispName} via ${entry.sourceKind}:${entry.sourceName}" +
+                    if (entry.playedImmediately) " (immediate)" else ""
+
             is GameEntry.RoundEffectOpportunity ->
                 "${player(entry.playerId)} ${entry.phase} ROUND EFFECT OPPORTUNITY ${entry.roundCardName} " +
                     "[1=${entry.firstExecutable}:${entry.firstEffect} | 2=${entry.secondExecutable}:${entry.secondEffect}]"

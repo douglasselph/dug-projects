@@ -149,6 +149,10 @@ class GameChronicle : Chronicle {
             is Moment.OpeningDrawCompleted -> GameEntry.OpeningDrawCompleted(
                 sequence, moment.phase, moment.playerId, moment.count, hierarchyDepth
             )
+            is Moment.WispAcquired -> GameEntry.WispAcquired(
+                sequence, moment.playerId, moment.wispName, moment.sourceKind,
+                moment.sourceName, moment.playedImmediately, hierarchyDepth
+            )
             is Moment.RoundEffectOpportunity -> GameEntry.RoundEffectOpportunity(
                 sequence, moment.playerId, moment.phase, moment.roundCardName,
                 moment.firstEffect, moment.secondEffect, moment.firstExecutable,
@@ -263,9 +267,10 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.sides, moment.destination, hierarchyDepth
             )
             is Moment.FinalScore -> GameEntry.FinalScore(
-                sequence, moment.playerId, moment.existingVp, moment.plantVp,
-                moment.unplayedWispVp, moment.totalVp, moment.graftedPlantCount,
-                hierarchyDepth
+                sequence = sequence, playerId = moment.playerId, existingVp = moment.existingVp,
+                plantVp = moment.plantVp, unplayedWispVp = moment.unplayedWispVp,
+                totalVp = moment.totalVp, graftedPlantCount = moment.graftedPlantCount,
+                unplayedWispNames = moment.unplayedWispNames.toList(), hierarchyDepth = hierarchyDepth
             )
             is Moment.FinalWinners -> GameEntry.FinalWinners(
                 sequence, moment.winnerIds.toList(), hierarchyDepth

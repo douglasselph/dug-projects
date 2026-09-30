@@ -58,7 +58,7 @@ class EvaluateBuyPolicyTest {
             GameEntry.SupportAction(3,p,ChroniclePhase.BATTLE,SupportActionKind.WATER_REROLL,null,null,0),
             GameEntry.RollReward(4,p,RollRewardKind.WISP_GAINED,null,"Wisp_01",0),
             GameEntry.EffectResolved(5,p,GameEffect.GAIN_ONE_VP,EffectSourceKind.WISP,"Wisp_01",ChroniclePhase.BATTLE,0),
-            GameEntry.FinalScore(6,p,10,5,2,17,3,0)
+            GameEntry.FinalScore(6,p,10,5,2,17,3,hierarchyDepth=0)
         )
         val a=EffectResourceAccumulator(); a.addGame(entries,p)
         assertEquals(1L,a.upgrades["D12->D20"]); assertEquals(1L,a.upgradeSources["ROUND:Resource_Water_Compost"])
@@ -66,6 +66,25 @@ class EvaluateBuyPolicyTest {
         assertEquals(1L,a.wispEffects["Wisp_01"]); assertEquals(2L,a.finalWispVp)
     }
 
+
+    @Test fun `wisp acquisition use and retention remain distinct by card`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.RollReward(1,p,RollRewardKind.WISP_GAINED,null,"Wisp_Keep",0),
+            GameEntry.WispAcquired(2,p,"Wisp_Play",WispAcquisitionSourceKind.EFFECT_DRAW,"Flower_Test",false,0),
+            GameEntry.EffectResolved(3,p,GameEffect.GAIN_ONE_VP,EffectSourceKind.WISP,"Wisp_Play",ChroniclePhase.CULTIVATION,0),
+            GameEntry.FinalScore(4,p,0,0,2,2,0,listOf("Wisp_Keep"),0)
+        )
+        val a = EffectResourceAccumulator()
+        a.addGame(entries,p)
+        assertEquals(1L,a.wispAcquiredByCard["Wisp_Keep"])
+        assertEquals(1L,a.wispAcquiredByCard["Wisp_Play"])
+        assertEquals(null,a.wispEffects["Wisp_Keep"])
+        assertEquals(1L,a.wispEffects["Wisp_Play"])
+        assertEquals(1L,a.wispRetainedByCard["Wisp_Keep"])
+        assertEquals(null,a.wispRetainedByCard["Wisp_Play"])
+        assertEquals(1L,a.wispAcquisitionSources["EFFECT_DRAW:Flower_Test:Wisp_Play"])
+    }
 
     @Test fun `VP ledger reconciles battle effects plants wisps and remainder`() {
         val p = PlayerId(1)
