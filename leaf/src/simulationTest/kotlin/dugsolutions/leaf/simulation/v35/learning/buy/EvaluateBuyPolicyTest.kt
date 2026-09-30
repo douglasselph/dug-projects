@@ -3,6 +3,8 @@ package dugsolutions.leaf.simulation.v35.learning.buy
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertIs
+import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderResourceSnapshot
@@ -103,4 +105,27 @@ class EvaluateBuyPolicyTest {
         val o = EvalOptions.parse(listOf("--random-grove"))
         assertEquals("000000000", o.grovePattern)
     }
+
+    @Test fun `weights alias exclusions and standard round blocks parse`() {
+        val o = EvalOptions.parse(listOf(
+            "--weights", "data/ai/frozen-buy-first-game-default-v1.weights",
+            "--random-grove",
+            "--exclude-card", "Vine_07_04,Vine_07_01",
+            "--rounds", "3/2/2"
+        ))
+        assertEquals("data/ai/frozen-buy-first-game-default-v1.weights", o.input.toString())
+        assertEquals(setOf("Vine_07_04", "Vine_07_01"), o.excludedCards)
+        val setup = assertIs<GameRoundSetup.Patterned>(o.roundSetup)
+        assertEquals(listOf(3, 2, 2), setup.cultivationBlocks)
+        assertEquals("3/2/2", o.roundLabel)
+    }
+
+    @Test fun `compact round pattern is cultivation followed by battle`() {
+        val o = EvalOptions.parse(listOf("--rounds", "95"))
+        val setup = assertIs<GameRoundSetup.Ordered>(o.roundSetup)
+        assertEquals(9, setup.cultivationRounds)
+        assertEquals(5, setup.battleRounds)
+        assertEquals("95", o.roundLabel)
+    }
+
 }
