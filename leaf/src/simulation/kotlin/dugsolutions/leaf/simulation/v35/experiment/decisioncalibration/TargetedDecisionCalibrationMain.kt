@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
@@ -71,8 +72,8 @@ fun main(args: Array<String>) {
         loadCatalogs(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
         val plants = FirstGameDefault.PLANT_NAMES.map { name -> requireNotNull(plantManager.getCard(name)) }.toMutableList()
-        val requestedPlant = plantManager.getCard(options.target)
-            ?: if (options.target.equals("forget-me-not", true)) plantManager.getCard("Flower_17_02") else null
+        val resolvedTarget = resolveTarget(options.target)
+        val requestedPlant = plantManager.getCard(resolvedTarget)
         if (requestedPlant != null && plants.none { it.name == requestedPlant.name }) {
             val slot = plants.indexOfFirst { it.type == requestedPlant.type && it.cost == requestedPlant.cost }
             require(slot >= 0) { "Target Plant ${requestedPlant.name} has no matching default Grove slot" }
@@ -95,10 +96,24 @@ fun main(args: Array<String>) {
                 )
             )
             koin.get<GameRunner>().run(game)
-            records += extract(sample + 1, options.target, game.chronicle.entries, game)
+            records += extract(sample + 1, resolvedTarget, game.chronicle.entries, game)
         }
         println(render(options, records))
     } finally { app.close() }
+}
+
+private fun resolveTarget(target: String): String = when (target.lowercase()) {
+    "root-four-more" -> "Root_05_02"
+    "root-cause" -> "Root_09_02"
+    "forget-me-not" -> "Flower_17_02"
+    "queen\'s-blossom", "queens-blossom", "queen-blossom" -> "Flower_17_04"
+    "saplink-trellis" -> "Vine_11_02"
+    "bloom-backbone" -> "Flower_11_02"
+    "bee-loved-bloom" -> "Flower_14_01"
+    "petal-to-die", "petal-to-die-4" -> "Flower_14_04"
+    "transplant-tulip" -> "Flower_11_04"
+    "o-edelweiss" -> "Flower_17_03"
+    else -> target
 }
 
 private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, game: dugsolutions.leaf.v35.game.Game): List<CalibrationOpportunity> {
@@ -110,7 +125,7 @@ private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, g
         val next = reasoning.drop(index + 1).firstOrNull { it.playerId == event.playerId }
         val observations = targetAlt.observations
         val targetOrBranch = listOfNotNull(observations["targetDieSides"]?.let { "D$it" }, observations["targetDieValue"]?.let { "showing $it" }).joinToString(" ").ifBlank { null }
-        val provenance = if (targetAlt.selected && (target.equals("Flower_17_02", true) || target.equals("forget-me-not", true))) {
+        val provenance = if (targetAlt.selected && target.equals("Flower_17_02", true)) {
             val sides = observations["targetDieSides"]?.toIntOrNull()
             game.assetProvenance.forgetMeNot.filter { it.playerId == event.playerId && (sides == null || it.dieSides == sides) }.lastOrNull()?.let {
                 "reachedBattle=${it.reachedNextBattle}, placed=${it.placedInBattle}, winning=${it.contributedToWinningStrike}, decisive=${it.individuallyWinnerDecisive}, battleVp=${it.associatedBattleVp}"
@@ -141,13 +156,17 @@ private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, g
 
 private fun matches(target: String, observations: Map<String, String>): Boolean = when (target.lowercase()) {
     "mulch" -> observations["effect"] == GameEffect.MULCH_DIE_FROM_HAND.name
-    "forget-me-not", "flower_17_02" -> observations["card"] == "Flower_17_02"
     else -> observations["card"].equals(target, true) || observations["effect"].equals(target, true)
 }
 
 private fun bucket(target: String, o: Map<String, String>): String = when (target.lowercase()) {
     "mulch" -> "roll=${o["targetDieValue"] ?: "?"}|sides=${o["targetDieSides"] ?: "?"}|battle=${o["battleNext"] ?: "?"}|upcoming=${o["upcomingDiceQuality"] ?: "?"}"
-    "forget-me-not", "flower_17_02" -> "discard=D${o["targetDieSides"] ?: "?"}|recycle=${o["recycleDistance"] ?: "?"}|battle=${o["battleNext"] ?: "?"}|upcoming=${o["upcomingDiceQuality"] ?: "?"}"
+    "flower_17_02" -> "discard=D${o["targetDieSides"] ?: "?"}|recycle=${o["recycleDistance"] ?: "?"}|battle=${o["battleNext"] ?: "?"}|upcoming=${o["upcomingDiceQuality"] ?: "?"}"
+    "vine_11_02", "flower_11_02" -> "next=${o["nextPhase"] ?: "?"}|synergy=${o["synergyPlants"] ?: "?"}|realizable=${o["realizableRaises"] ?: "?"}|headroom=${o["dieHeadroom"] ?: "?"}"
+    "flower_14_01" -> "next=${o["nextPhase"] ?: "?"}|bees=${o["bees"] ?: "?"}|beeValue=${o["beeValue"] ?: "?"}"
+    "flower_14_04" -> "next=${o["nextPhase"] ?: "?"}|d4=${o["ownedD4"] ?: "?"}|gain=${o["gainD4Branch"] ?: "NA"}|trash=${o["bestTrashD4Branch"] ?: "NA"}"
+    "flower_11_04" -> "next=${o["nextPhase"] ?: "?"}|hand=${o["handDice"] ?: "?"}|power=${o["handPower"] ?: "?"}"
+    "flower_17_03" -> "next=${o["nextPhase"] ?: "?"}|spent=${o["spentPlants"] ?: "?"}"
     else -> "next=${o["nextPhase"] ?: "?"}|up=${o["faceUpPlants"] ?: "?"}|down=${o["faceDownPlants"] ?: "?"}"
 }
 

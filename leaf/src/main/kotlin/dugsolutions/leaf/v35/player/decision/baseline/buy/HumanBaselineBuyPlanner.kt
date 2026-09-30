@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.GraftTopologyEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
 import dugsolutions.leaf.v35.player.decision.buy.BuyChoice
 import dugsolutions.leaf.v35.player.decision.buy.BuyCritterResource
 import dugsolutions.leaf.v35.player.decision.buy.BuyDieResource
@@ -48,6 +50,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 internal class HumanBaselineBuyPlanner(
     private val policy: HumanBaselinePolicy,
     private val cardScorers: HumanBaselineCardScorerRegistry,
+    private val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     private val purchaseScoreModifier: PurchaseScoreModifier,
     private val strategyRandomizer: StrategyRandomizer
 ) {
@@ -366,7 +369,15 @@ internal class HumanBaselineBuyPlanner(
         return plants.maxWithOrNull(
             compareBy<BuyItem.Plant> { plant ->
                 val baseline = PurchasePriority.score(context, plant, cardScorers, policy)
-                purchaseScoreModifier.modify(context, plant, baseline).total
+                val influenced = influenceRegistry.score(
+                    context,
+                    DecisionCandidate(
+                        choice = plant,
+                        score = baseline,
+                        tags = PurchasePriority.tags(plant)
+                    )
+                ).score
+                purchaseScoreModifier.modify(context, plant, influenced).total
             }.thenBy { it.card.name }
         )!!
     }

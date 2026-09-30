@@ -81,6 +81,7 @@ class HumanBaselineBuyStrategy(
     private val buyPlanner = HumanBaselineBuyPlanner(
         policy = policy,
         cardScorers = cardScorers,
+        influenceRegistry = influenceRegistry,
         purchaseScoreModifier = purchaseScoreModifier,
         strategyRandomizer = strategyRandomizer
     )

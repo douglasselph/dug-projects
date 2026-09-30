@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
+import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.wisp.OvergrowthUseHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.*
 import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
@@ -417,6 +418,47 @@ class HumanBaselineCultivationStrategy(
         when (main) {
             is CultivationMainAction.ActivatePlant -> {
                 common["card"] = main.card.card.name
+                when (main.card.card.name) {
+                    "Vine_11_02" -> {
+                        val raises = context.self.board.creature.count { it.type.name == "ROOT" || it.type.name == "VINE" }
+                        val headroom = context.self.board.hand.sumOf { (it.sides - it.value).coerceAtLeast(0) }
+                        common["synergyPlants"] = raises.toString()
+                        common["realizableRaises"] = minOf(raises, headroom).toString()
+                        common["dieHeadroom"] = headroom.toString()
+                    }
+                    "Flower_11_02" -> {
+                        val raises = context.self.board.creature.count { it.type.name == "VINE" || it.type.name == "FLOWER" }
+                        val headroom = context.self.board.hand.sumOf { (it.sides - it.value).coerceAtLeast(0) }
+                        common["synergyPlants"] = raises.toString()
+                        common["realizableRaises"] = minOf(raises, headroom).toString()
+                        common["dieHeadroom"] = headroom.toString()
+                    }
+                    "Flower_14_01" -> {
+                        common["bees"] = context.self.board.bees.toString()
+                        common["beeValue"] = context.self.board.beeValue.toString()
+                    }
+                    "Flower_14_04" -> {
+                        common["ownedD4"] = (context.self.board.supply + context.self.board.hand + context.self.board.discard).count { it.sides == 4 } + context.self.board.mulch.count { it.storedDieSides?.value == 4 } + context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }.toString()
+                        val choices = CardScoringHelpers.petalToDie4CultivationChoices(context)
+                        choices.forEach { petalChoice ->
+                            val score = CardScoringHelpers.petalToDie4BranchScore(context, petalChoice).total
+                            when (petalChoice) {
+                                dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice.GainD4 -> common["gainD4Branch"] = score.toString()
+                                is dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice.TrashD4AndRaiseAll -> {
+                                    val prior = common["bestTrashD4Branch"]?.toIntOrNull()
+                                    if (prior == null || score > prior) common["bestTrashD4Branch"] = score.toString()
+                                }
+                            }
+                        }
+                    }
+                    "Flower_11_04" -> {
+                        common["handDice"] = context.self.board.hand.size.toString()
+                        common["handPower"] = context.self.board.hand.sumOf { it.value }.toString()
+                    }
+                    "Flower_17_03" -> {
+                        common["spentPlants"] = context.self.board.creature.count { !it.isFaceUp }.toString()
+                    }
+                }
                 if (main.card.card.name == "Flower_17_02") {
                     val best = context.self.board.discard.maxByOrNull { die ->
                         val availability = FutureDiceAvailability.forDiscardDie(context, die)
