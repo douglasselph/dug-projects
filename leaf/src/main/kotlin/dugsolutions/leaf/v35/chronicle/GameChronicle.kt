@@ -149,6 +149,11 @@ class GameChronicle : Chronicle {
             is Moment.OpeningDrawCompleted -> GameEntry.OpeningDrawCompleted(
                 sequence, moment.phase, moment.playerId, moment.count, hierarchyDepth
             )
+            is Moment.RoundEffectOpportunity -> GameEntry.RoundEffectOpportunity(
+                sequence, moment.playerId, moment.phase, moment.roundCardName,
+                moment.firstEffect, moment.secondEffect, moment.firstExecutable,
+                moment.secondExecutable, hierarchyDepth
+            )
             is Moment.MainAction -> GameEntry.MainAction(
                 sequence, moment.playerId, moment.phase, moment.action,
                 moment.actionNumber, moment.battleStage, moment.decisionProbabilityPercent,

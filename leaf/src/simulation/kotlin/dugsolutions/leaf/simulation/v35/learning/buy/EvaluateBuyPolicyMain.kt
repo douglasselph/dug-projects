@@ -180,6 +180,11 @@ internal class EffectResourceAccumulator {
     var immediateWispsPlayed = 0L
     val roundEffects = sortedMapOf<String, Long>()
     val battleRoundEffects = sortedMapOf<String, Long>()
+    val roundCardReveals = sortedMapOf<String, Long>()
+    val roundEffectOpportunities = sortedMapOf<String, Long>()
+    val roundEffectUses = sortedMapOf<String, Long>()
+    val roundCategoryOpportunities = sortedMapOf<String, Long>()
+    val roundCategoryUses = sortedMapOf<String, Long>()
     val plantEffects = sortedMapOf<String, Long>()
     val wispEffects = sortedMapOf<String, Long>()
     val supportActions = sortedMapOf<String, Long>()
@@ -192,6 +197,31 @@ internal class EffectResourceAccumulator {
 
     fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
         games++
+        entries.filterIsInstance<GameEntry.RoundRevealed>().forEach { revealed ->
+            roundCardReveals.bump(revealed.cardName)
+        }
+        entries.filterIsInstance<GameEntry.RoundEffectOpportunity>()
+            .filter { it.playerId == playerId }
+            .forEach { opportunity ->
+                if (opportunity.firstExecutable) {
+                    roundEffectOpportunities.bump(roundEffectKey(opportunity.roundCardName, 1, opportunity.firstEffect))
+                    roundCategories(opportunity.firstEffect).forEach { roundCategoryOpportunities.bump(it) }
+                }
+                if (opportunity.secondExecutable) {
+                    roundEffectOpportunities.bump(roundEffectKey(opportunity.roundCardName, 2, opportunity.secondEffect))
+                    roundCategories(opportunity.secondEffect).forEach { roundCategoryOpportunities.bump(it) }
+                }
+            }
+        entries.filterIsInstance<GameEntry.MainAction>()
+            .filter { it.playerId == playerId && (it.action == MainActionKind.ROUND_EFFECT_1 || it.action == MainActionKind.ROUND_EFFECT_2) }
+            .forEach { action ->
+                val revealed = entries.filterIsInstance<GameEntry.RoundRevealed>().lastOrNull { it.sequence < action.sequence }
+                    ?: return@forEach
+                val slot = if (action.action == MainActionKind.ROUND_EFFECT_1) 1 else 2
+                val effect = if (slot == 1) revealed.firstEffect else revealed.secondEffect
+                roundEffectUses.bump(roundEffectKey(revealed.cardName, slot, effect))
+                roundCategories(effect).forEach { roundCategoryUses.bump(it) }
+            }
         entries.filterIsInstance<GameEntry.RoundCompleted>().forEach { completed ->
             val ps = completed.playerSummaries.singleOrNull { it.playerId == playerId } ?: return@forEach
             plantRoundExposure += ps.graftedPlantCount
@@ -231,6 +261,37 @@ internal class EffectResourceAccumulator {
             upgrades.bump("${u.from.name}->${u.to.name}")
             val source = enclosingEffect(entries, indexed.index)
             upgradeSources.bump(source?.let { "${it.sourceKind.name}:${it.sourceName}" } ?: "unscoped")
+        }
+    }
+
+    private fun roundEffectKey(cardName: String, slot: Int, effect: GameEffect): String =
+        "$cardName / Effect $slot / ${effect.name}"
+
+    private fun roundCategories(effect: GameEffect): List<String> = buildList {
+        when (effect) {
+            GameEffect.UPGRADE_DIE_AND_USE_NOW, GameEffect.UPGRADE_DIE_FROM_HAND,
+            GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> add("Die upgrade")
+            GameEffect.GAIN_ANY_DIE_TO_DISCARD, GameEffect.GAIN_D10_TO_DISCARD,
+            GameEffect.GAIN_D12_TO_DISCARD, GameEffect.GAIN_D20_TO_DISCARD -> {
+                add("Direct die gain")
+                if (effect != GameEffect.GAIN_ANY_DIE_TO_DISCARD) add("High-sided die gain")
+            }
+            GameEffect.MULCH_DIE_FROM_DISCARD, GameEffect.MULCH_DIE_FROM_HAND,
+            GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> add("Mulch")
+            GameEffect.RAISE_ALL_DICE_PLUS_2, GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
+            GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_3, GameEffect.RAISE_DIE_PLUS_4 -> add("Raise")
+            GameEffect.GAIN_ANY_TWO_CRITTERS, GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+            GameEffect.GAIN_TWO_WORMS, GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND -> add("Critter gain")
+            GameEffect.GAIN_ONE_WISP, GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS -> add("Wisp gain")
+            GameEffect.GAIN_ONE_VP, GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> add("VP")
+            else -> Unit
         }
     }
 
@@ -423,6 +484,26 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
     }
     println("Effect and resource utilization (affected role)")
     println("  Plant scale/exposure: final Plants are reported above; Plant-round exposure=${avg(c.plantRoundExposure,c.games)} -> ${avg(l.plantRoundExposure,l.games)} card-rounds/game; Battle Plant size=${avg(c.battlePlantExposure,c.battleRounds)} -> ${avg(l.battlePlantExposure,l.battleRounds)}")
+    println("  Round card exposure and use:")
+    val revealedKeys=(c.roundCardReveals.keys+l.roundCardReveals.keys).toSortedSet()
+    revealedKeys.forEach { k -> println("    revealed $k: control=${avg(c.roundCardReveals[k]?:0,c.games)} learned=${avg(l.roundCardReveals[k]?:0,l.games)} per player-game") }
+    val effectKeys=(c.roundEffectOpportunities.keys+l.roundEffectOpportunities.keys+c.roundEffectUses.keys+l.roundEffectUses.keys).toSortedSet()
+    effectKeys.forEach { k ->
+        val co=c.roundEffectOpportunities[k]?:0; val lo=l.roundEffectOpportunities[k]?:0
+        val cu=c.roundEffectUses[k]?:0; val lu=l.roundEffectUses[k]?:0
+        fun rate(u:Long,o:Long)=if(o==0L) "n/a" else pct(u.toDouble()/o)
+        println("    $k: opportunities control=${avg(co,c.games)} learned=${avg(lo,l.games)}; used control=${avg(cu,c.games)} learned=${avg(lu,l.games)}; use/opportunity control=${rate(cu,co)} learned=${rate(lu,lo)}")
+    }
+    val categoryKeys=(c.roundCategoryOpportunities.keys+l.roundCategoryOpportunities.keys+c.roundCategoryUses.keys+l.roundCategoryUses.keys).toSortedSet()
+    if(categoryKeys.isNotEmpty()) {
+        println("    Economic categories (decision-point opportunities / uses):")
+        categoryKeys.forEach { k ->
+            val co=c.roundCategoryOpportunities[k]?:0; val lo=l.roundCategoryOpportunities[k]?:0
+            val cu=c.roundCategoryUses[k]?:0; val lu=l.roundCategoryUses[k]?:0
+            println("      $k: control=${avg(co,c.games)} / ${avg(cu,c.games)}; learned=${avg(lo,l.games)} / ${avg(lu,l.games)}")
+        }
+    }
+    println("    Note: an opportunity is one Main-Action decision point where that Round effect was executable; the same revealed effect can create more than one opportunity if it remains legal across later decisions.")
     mapLines("Cultivation/Battle round effects actually resolved", c.roundEffects, l.roundEffects)
     mapLines("Battle round effects actually resolved", c.battleRoundEffects, l.battleRoundEffects)
     mapLines("Support actions", c.supportActions, l.supportActions)

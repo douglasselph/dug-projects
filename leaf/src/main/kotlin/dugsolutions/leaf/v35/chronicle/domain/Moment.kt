@@ -57,6 +57,17 @@ sealed interface Moment {
         val count: Int
     ) : Moment
 
+    /** Snapshot of which Round effects are legal at one Main-Action decision point. */
+    data class RoundEffectOpportunity(
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val roundCardName: String,
+        val firstEffect: GameEffect,
+        val secondEffect: GameEffect,
+        val firstExecutable: Boolean,
+        val secondExecutable: Boolean
+    ) : Moment
+
     data class MainAction(
         val playerId: PlayerId,
         val phase: ChroniclePhase,

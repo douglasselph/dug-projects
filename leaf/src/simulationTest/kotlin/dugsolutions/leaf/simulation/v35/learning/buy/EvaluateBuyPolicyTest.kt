@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.chronicle.domain.*
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.simulation.v35.analysis.*
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.plant.domain.*
@@ -126,6 +127,25 @@ class EvaluateBuyPolicyTest {
         assertEquals(9, setup.cultivationRounds)
         assertEquals(5, setup.battleRounds)
         assertEquals("95", o.roundLabel)
+    }
+
+    @Test fun `round exposure opportunities and use remain distinct`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.RoundRevealed(1,1,"Cultivation_Test",RoundCardType.CULTIVATION,GameEffect.UPGRADE_DIE_FROM_HAND,GameEffect.GAIN_ONE_WISP,0),
+            GameEntry.RoundEffectOpportunity(2,p,ChroniclePhase.CULTIVATION,"Cultivation_Test",GameEffect.UPGRADE_DIE_FROM_HAND,GameEffect.GAIN_ONE_WISP,true,true,0),
+            GameEntry.MainAction(3,p,ChroniclePhase.CULTIVATION,MainActionKind.ROUND_EFFECT_1,1,null,null,0),
+            GameEntry.RoundEffectOpportunity(4,p,ChroniclePhase.CULTIVATION,"Cultivation_Test",GameEffect.UPGRADE_DIE_FROM_HAND,GameEffect.GAIN_ONE_WISP,false,true,0)
+        )
+        val a = EffectResourceAccumulator()
+        a.addGame(entries,p)
+        assertEquals(1L,a.roundCardReveals["Cultivation_Test"])
+        assertEquals(1L,a.roundEffectOpportunities["Cultivation_Test / Effect 1 / UPGRADE_DIE_FROM_HAND"])
+        assertEquals(2L,a.roundEffectOpportunities["Cultivation_Test / Effect 2 / GAIN_ONE_WISP"])
+        assertEquals(1L,a.roundEffectUses["Cultivation_Test / Effect 1 / UPGRADE_DIE_FROM_HAND"])
+        assertEquals(null,a.roundEffectUses["Cultivation_Test / Effect 2 / GAIN_ONE_WISP"])
+        assertEquals(1L,a.roundCategoryUses["Die upgrade"])
+        assertEquals(2L,a.roundCategoryOpportunities["Wisp gain"])
     }
 
 }

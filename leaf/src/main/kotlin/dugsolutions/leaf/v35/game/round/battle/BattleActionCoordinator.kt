@@ -125,6 +125,7 @@ class BattleActionCoordinator(
         // Step 4 — everybody's first Main Action before anybody may Support.
         battleState.playersInBattleOrder.forEach { player ->
             val legal = mainActions(game, player, roundCard, battleState)
+            recordRoundEffectOpportunity(game, player, roundCard, legal)
             // In very long Battle sequences a player can legitimately exhaust every
             // possible Main Action: no cycling die remains, all usable Plants are
             // face down, and neither Round effect is currently executable. A human
@@ -210,6 +211,8 @@ class BattleActionCoordinator(
                         BattleTurnAction.FinalMain(it)
                     }
                 }
+
+                recordRoundEffectOpportunity(game, player, roundCard, finalMains)
 
                 // A player may likewise reach Step 5 with neither a Support Action
                 // nor a legal final Main Action. Treat that as being finished rather
@@ -337,6 +340,25 @@ class BattleActionCoordinator(
                 }
             }
         }
+    }
+
+    private fun recordRoundEffectOpportunity(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        mains: List<BattleMainAction>
+    ) {
+        game.chronicle.record(
+            Moment.RoundEffectOpportunity(
+                playerId = player.id,
+                phase = ChroniclePhase.BATTLE,
+                roundCardName = roundCard.name,
+                firstEffect = roundCard.firstEffect.effect,
+                secondEffect = roundCard.secondEffect.effect,
+                firstExecutable = BattleMainAction.RoundEffect1 in mains,
+                secondExecutable = BattleMainAction.RoundEffect2 in mains
+            )
+        )
     }
 
     private fun mainActions(

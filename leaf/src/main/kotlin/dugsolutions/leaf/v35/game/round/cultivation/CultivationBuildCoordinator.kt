@@ -180,6 +180,7 @@ class CultivationBuildCoordinator(
                     roundCard = roundCard,
                     mainActionsRemaining = mainActionsRemaining
                 )
+                recordRoundEffectOpportunity(game, player, roundCard, legalChoices)
                 // A player can legitimately run out of legal Build actions. For example,
                 // Battle Doom can leave them with no dice anywhere, while their face-up
                 // Plants and both Round effects require a die. In that state there is no
@@ -272,6 +273,26 @@ class CultivationBuildCoordinator(
         return CultivationBuildActionsResult(
             actions = mainActionResults.toList(),
             supportActions = supportActionResults.toList()
+        )
+    }
+
+    private fun recordRoundEffectOpportunity(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        legalChoices: List<CultivationAction>
+    ) {
+        val mains = legalChoices.filterIsInstance<CultivationAction.Main>().map { it.action }.toSet()
+        game.chronicle.record(
+            Moment.RoundEffectOpportunity(
+                playerId = player.id,
+                phase = ChroniclePhase.CULTIVATION,
+                roundCardName = roundCard.name,
+                firstEffect = roundCard.firstEffect.effect,
+                secondEffect = roundCard.secondEffect.effect,
+                firstExecutable = CultivationMainAction.RoundEffect1 in mains,
+                secondExecutable = CultivationMainAction.RoundEffect2 in mains
+            )
         )
     }
 

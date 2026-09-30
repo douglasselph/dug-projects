@@ -180,6 +180,12 @@ class BattleActionCoordinatorTest {
             fixture.battleState
         )
 
+        val opportunities = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.RoundEffectOpportunity>()
+            .filter { it.playerId == p1.id }
+        assertTrue(opportunities.isNotEmpty())
+        assertTrue(opportunities.first().firstExecutable)
+
         assertEquals(
             listOf(
                 "p1:first",

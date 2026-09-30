@@ -80,6 +80,12 @@ class CultivationBuildCoordinatorTest {
             .filterIsInstance<GameEntry.MainAction>()
             .first { it.playerId == first.id }
         assertEquals(75, recorded.decisionProbabilityPercent)
+        val opportunities = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.RoundEffectOpportunity>()
+            .filter { it.playerId == first.id }
+        assertTrue(opportunities.isNotEmpty())
+        assertTrue(opportunities.first().firstExecutable)
+        assertTrue(opportunities.first().secondExecutable)
     }
 
     @Test

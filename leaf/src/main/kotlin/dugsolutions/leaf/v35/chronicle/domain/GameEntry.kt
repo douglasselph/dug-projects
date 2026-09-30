@@ -67,6 +67,18 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    data class RoundEffectOpportunity(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val roundCardName: String,
+        val firstEffect: GameEffect,
+        val secondEffect: GameEffect,
+        val firstExecutable: Boolean,
+        val secondExecutable: Boolean,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class MainAction(
         override val sequence: Long,
         val playerId: PlayerId,
