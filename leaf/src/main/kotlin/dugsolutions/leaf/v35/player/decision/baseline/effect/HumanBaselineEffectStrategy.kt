@@ -556,7 +556,7 @@ class HumanBaselineEffectStrategy(
                     observations = buildMap {
                         put("decisionFamily", "o-edelweiss-downstream")
                         put("choiceNumber", request.choiceNumber.toString())
-                        put("phase", request.context.phase.name)
+                        put("phase", request.context.phase?.name ?: "")
                         put("branch", when (choice) {
                             OEdelweissChoice.Done -> "DONE"
                             is OEdelweissChoice.Play -> "PLAY"
