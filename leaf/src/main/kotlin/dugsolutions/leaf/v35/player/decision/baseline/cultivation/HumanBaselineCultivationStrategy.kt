@@ -438,7 +438,7 @@ class HumanBaselineCultivationStrategy(
                         common["beeValue"] = context.self.board.beeValue.toString()
                     }
                     "Flower_14_04" -> {
-                        common["ownedD4"] = (context.self.board.supply + context.self.board.hand + context.self.board.discard).count { it.sides == 4 } + context.self.board.mulch.count { it.storedDieSides?.value == 4 } + context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }.toString()
+                        common["ownedD4"] = ((context.self.board.supply + context.self.board.hand + context.self.board.discard).count { it.sides == 4 } + context.self.board.mulch.count { it.storedDieSides?.value == 4 } + context.self.board.pendingMulch.count { it.storedDieSides?.value == 4 }).toString()
                         val choices = CardScoringHelpers.petalToDie4CultivationChoices(context)
                         choices.forEach { petalChoice ->
                             val score = CardScoringHelpers.petalToDie4BranchScore(context, petalChoice).total

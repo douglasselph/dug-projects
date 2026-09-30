@@ -95,7 +95,10 @@ class HumanBaselineEffectStrategyTest {
                     DieView(index = 0, sides = 4, value = 1),
                     DieView(index = 1, sides = 20, value = 1),
                     DieView(index = 2, sides = 12, value = 2),
-                    DieView(index = 3, sides = 10, value = 1)
+                    DieView(index = 3, sides = 10, value = 1),
+                    // Keep this as an intentionally strong trash case even after
+                    // pricing the D4's lost Petal To Die 4 end-game VP.
+                    DieView(index = 4, sides = 8, value = 1)
                 ),
                 graftBed = mapOf(DieSides.D4 to 1)
             )
