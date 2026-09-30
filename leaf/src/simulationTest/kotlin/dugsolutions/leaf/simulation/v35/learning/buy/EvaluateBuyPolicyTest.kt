@@ -71,7 +71,7 @@ class EvaluateBuyPolicyTest {
             existingVp=8, plantVp=3, unplayedWispVp=2, totalVp=13,
             battleStrikeVp=4, woundsTaken=0, rollRewardWispsGained=0, wispsPlayed=0, finalWispCount=1,
             finalPlantCount=1, finalPlantPrintedCost=7,
-            plantCreatureSignature=PlantCreatureSignature(listOf(PlantCreatureCardSignature("Vine_07_01",CreatureSide.VINE,0,0))),
+            plantCreatureSignature=PlantCreatureSignature(listOf(PlantCreatureCardSignature("Vine_07_01",CreatureSide.LEFT,0,0))),
             finalDiceCount=0, finalDicePower=0, ownedDiceSignature=OwnedDiceSignature(0,0,0,0,0,0)
         )
         val entries = listOf(

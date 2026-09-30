@@ -387,3 +387,12 @@ tasks.register<JavaExec>("runTargetedDecisionCalibration") {
     val rawArgs = providers.gradleProperty("args").orNull
     if (!rawArgs.isNullOrBlank()) args(rawArgs.split(Regex("\\s+")).filter(String::isNotBlank))
 }
+
+tasks.register<JavaExec>("runHumanBaselineGlobalCertification") {
+    description = "Runs substantial all-Human-Baseline global certification cohorts."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.HumanBaselineGlobalCertificationMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
