@@ -58,6 +58,14 @@ class HumanBaselineEffectStrategyPetalToDie4BattleAlignmentTest {
         assertEquals(5.0, trashAnalysis.swing.rowSwings.sumOf { it.rawSwing })
         assertEquals(4.0, gainAnalysis.swing.rowSwings.sumOf { it.rawSwing })
         assertTrue(gainAnalysis.tacticalValue > trashAnalysis.tacticalValue)
+        val gainScore = CardScoringHelpers.petalToDie4BattleBranchScore(context, gainAnalysis)
+        assertTrue(gainScore.adjustments.any {
+            it.amount == 10 && it.reason.contains("end-game VP")
+        })
+        assertTrue(gainScore.adjustments.any {
+            it.amount == gainAnalysis.vpImpact.gain * 5 &&
+                it.reason.contains("Battle VP benefit")
+        })
 
         val chosen = HumanBaselineEffectStrategy().choosePetalToDie4(
             ChoosePetalToDie4Request(
@@ -91,7 +99,9 @@ class HumanBaselineEffectStrategyPetalToDie4BattleAlignmentTest {
             )
         )
         val analyzer = BattlePetalToDie4Analyzer()
-        val best = analyzer.evaluateAll(context).maxBy { it.tacticalValue }
+        val best = analyzer.evaluateAll(context).maxBy {
+            CardScoringHelpers.petalToDie4BattleBranchScore(context, it).total
+        }
 
         val topLevel = CardScoringHelpers.playScore(
             context = context,
@@ -101,7 +111,8 @@ class HumanBaselineEffectStrategyPetalToDie4BattleAlignmentTest {
             base = 65
         )
 
-        assertEquals(65 + best.tacticalValue.roundToInt(), topLevel.total)
+        val bestScore = CardScoringHelpers.petalToDie4BattleBranchScore(context, best)
+        assertEquals(65 + bestScore.total, topLevel.total)
         assertEquals(PetalToDie4Choice.GainD4, best.realization)
     }
 

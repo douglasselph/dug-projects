@@ -169,7 +169,8 @@ object CardScoringHelpers {
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE -> {
                 val count = context.self.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }
-                score = score.adjusted(count * 5, "Scales with Root/Vine grafts")
+                val realizable = realizableSequentialRaises(dice, count)
+                score = score.adjusted(realizable * 5, "Realizable +1 Raises from Root/Vine grafts")
             }
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> {
                 if (phase == CardPhase.CULTIVATION) {
@@ -203,7 +204,7 @@ object CardScoringHelpers {
                 val bestBranch = if (phase == CardPhase.BATTLE) {
                     BattlePetalToDie4Analyzer()
                         .evaluateAll(context)
-                        .maxOfOrNull { it.tacticalValue.roundToInt() }
+                        .maxOfOrNull { analysis -> petalToDie4BattleBranchScore(context, analysis).total }
                 } else {
                     petalToDie4CultivationChoices(context)
                         .maxOfOrNull { petalToDie4BranchScore(context, it).total }
@@ -233,7 +234,8 @@ object CardScoringHelpers {
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
                 val count = context.self.board.creature.count { it.type == PlantType.VINE || it.type == PlantType.FLOWER }
-                score = score.adjusted(count * 5, "Scales with Vine/Flower grafts")
+                val realizable = realizableSequentialRaises(dice, count)
+                score = score.adjusted(realizable * 5, "Realizable +1 Raises from Vine/Flower grafts")
             }
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW -> {
                 addBestGain(bestRaise(dice, 1), "Initial +1 Raise")
@@ -534,7 +536,9 @@ object CardScoringHelpers {
     ): PriorityScore =
         when (choice) {
             PetalToDie4Choice.GainD4 ->
-                PriorityScore(0).adjusted(18, "Gain a D4 set to 4")
+                PriorityScore(0)
+                    .adjusted(18, "Gain a D4 set to 4")
+                    .adjusted(PETAL_D4_END_GAME_VP_POINTS, "Additional D4 increases Petal To Die 4 end-game VP")
 
             is PetalToDie4Choice.TrashD4AndRaiseAll -> {
                 val gain = context.self.board.hand
@@ -543,8 +547,38 @@ object CardScoringHelpers {
                 PriorityScore(0)
                     .adjusted(gain * 3, "Raise all remaining dice +4")
                     .adjusted(-8, "Trash one D4")
+                    .adjusted(-PETAL_D4_END_GAME_VP_POINTS, "Trashed D4 reduces Petal To Die 4 end-game VP")
             }
         }
+
+    /**
+     * Petal To Die 4 Battle branch value combines the existing complete tactical
+     * realization with the D4's persistent scoring value. Immediate Strike VP
+     * adds a graded premium: two gained VP is deliberately meaningful, but not
+     * a hard branch-selection threshold.
+     */
+    fun petalToDie4BattleBranchScore(
+        context: DecisionContext,
+        analysis: dugsolutions.leaf.v35.player.decision.baseline.battle.BattleActionAnalysis<PetalToDie4Choice>
+    ): PriorityScore {
+        val d4Vp = when (analysis.realization) {
+            PetalToDie4Choice.GainD4 -> PETAL_D4_END_GAME_VP_POINTS
+            is PetalToDie4Choice.TrashD4AndRaiseAll -> -PETAL_D4_END_GAME_VP_POINTS
+        }
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(d4Vp, if (d4Vp > 0) {
+                "Additional D4 increases Petal To Die 4 end-game VP"
+            } else {
+                "Trashed D4 reduces Petal To Die 4 end-game VP"
+            })
+            .adjusted(
+                analysis.vpImpact.gain * PETAL_IMMEDIATE_BATTLE_VP_POINTS,
+                "Immediate Petal To Die 4 Battle VP benefit"
+            )
+    }
+
+    private fun realizableSequentialRaises(dice: List<DieView>, raises: Int): Int =
+        minOf(raises, dice.sumOf { (it.sides - it.value).coerceAtLeast(0) })
 
     fun rowNeedBonus(context: DecisionContext, row: StrikeRow): Int =
         RowNeedHeuristics.calculate(context, row).needScore / 2
@@ -571,6 +605,9 @@ object CardScoringHelpers {
             ?: context.self.board.discard.minByOrNull { it.sides }
         return next?.let { DieValueHeuristics.expectedRoll(it.sides) } ?: 2.5
     }
+
+    private const val PETAL_D4_END_GAME_VP_POINTS = 10
+    private const val PETAL_IMMEDIATE_BATTLE_VP_POINTS = 5
 
     private fun nextSides(sides: Int): Int = when (sides) {
         4 -> 6

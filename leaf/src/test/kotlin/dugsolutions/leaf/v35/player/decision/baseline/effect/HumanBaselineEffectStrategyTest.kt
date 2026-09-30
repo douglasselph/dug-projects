@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.effect
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieRequest
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class HumanBaselineEffectStrategyTest {
 
@@ -110,6 +112,32 @@ class HumanBaselineEffectStrategyTest {
             )
 
             assertIs<PetalToDie4Choice.TrashD4AndRaiseAll>(chosen)
+        }
+
+        @Test
+        fun `Petal To Die 4 cultivation branch prices the D4 end-game VP`() {
+            val d4 = PetalToDie4Choice.TrashD4AndRaiseAll(
+                EffectDieChoice(index = 0, sides = 4, value = 4)
+            )
+            val context = context(
+                hand = listOf(
+                    DieView(index = 0, sides = 4, value = 4),
+                    DieView(index = 1, sides = 6, value = 6)
+                ),
+                graftBed = mapOf(DieSides.D4 to 1)
+            )
+
+            val gain = CardScoringHelpers.petalToDie4BranchScore(
+                context, PetalToDie4Choice.GainD4
+            )
+            val trash = CardScoringHelpers.petalToDie4BranchScore(context, d4)
+
+            assertTrue(gain.adjustments.any {
+                it.amount == 10 && it.reason.contains("end-game VP")
+            })
+            assertTrue(trash.adjustments.any {
+                it.amount == -10 && it.reason.contains("end-game VP")
+            })
         }
 
         @Test

@@ -399,7 +399,7 @@ class HumanBaselineEffectStrategy(
                 ) {
                     petalToDie4Analyzer(request.context, choice)
                         ?.let { analysis ->
-                            PriorityScore(analysis.tacticalValue.roundToInt())
+                            CardScoringHelpers.petalToDie4BattleBranchScore(request.context, analysis)
                                 .adjusted(
                                     0,
                                     "Complete immediate Battle realization for Petal To Die 4 branch"
