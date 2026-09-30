@@ -14,9 +14,22 @@ import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PurchasePriorityTest {
+    @Test
+    fun `Plant purchase tags expose Plant type to owned-card influencers`() {
+        val root = BuyItem.Plant(plant("Root_Tag", GameEffect.RAISE_ANY_DIE_PLUS_1, PlantType.ROOT))
+        val vine = BuyItem.Plant(plant("Vine_Tag", GameEffect.RAISE_ANY_DIE_PLUS_1, PlantType.VINE))
+        val flower = BuyItem.Plant(plant("Flower_Tag", GameEffect.RAISE_ANY_DIE_PLUS_1, PlantType.FLOWER))
+
+        assertEquals(setOf(dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag.ACQUIRE_ROOT), PurchasePriority.tags(root))
+        assertEquals(setOf(dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag.ACQUIRE_VINE), PurchasePriority.tags(vine))
+        assertEquals(setOf(dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag.ACQUIRE_FLOWER), PurchasePriority.tags(flower))
+        assertEquals(emptySet(), PurchasePriority.tags(BuyItem.Die(dugsolutions.leaf.v35.random.die.DieSides.D6)))
+    }
+
     @Test
     fun `card acquire value breaks a same-cost Plant tie`() {
         val awakening = plant("Root_09_01", GameEffect.UPGRADE_DIE_AND_USE_NOW)

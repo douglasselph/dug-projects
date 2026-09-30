@@ -308,7 +308,8 @@ class HumanBaselineBuyStrategy(
                         context = context,
                         item = item,
                         score = baselineScore
-                    )
+                    ),
+                    tags = PurchasePriority.tags(item)
                 )
             },
             influenceRegistry = influenceRegistry

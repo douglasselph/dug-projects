@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardScoringHelpers
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.common.GraftTopologyEvaluator
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.buy.BuyItem
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -71,6 +72,15 @@ object PurchasePriority {
             }
         }
         return score
+    }
+
+    fun tags(item: BuyItem): Set<DecisionTag> = when (item) {
+        is BuyItem.Die -> emptySet()
+        is BuyItem.Plant -> when (item.card.type) {
+            PlantType.ROOT -> setOf(DecisionTag.ACQUIRE_ROOT)
+            PlantType.VINE -> setOf(DecisionTag.ACQUIRE_VINE)
+            PlantType.FLOWER -> setOf(DecisionTag.ACQUIRE_FLOWER)
+        }
     }
 
     /** CardScoringHelpers.acquireScore currently contributes three points per projected VP. */
