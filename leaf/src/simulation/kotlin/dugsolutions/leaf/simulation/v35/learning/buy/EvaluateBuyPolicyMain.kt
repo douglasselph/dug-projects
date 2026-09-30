@@ -19,6 +19,8 @@ import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.learned.buy.*
@@ -41,6 +43,8 @@ fun main(args: Array<String>) {
         val koin = app.koin
         loadCards(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
+        val roundManager = koin.get<RoundCardManager>()
+        val wispManager = koin.get<WispCardManager>()
         val allPlants = plantManager.getAllCards().cards
         val defaultGrove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
         val raw = LearnedBuyWeights.load(o.input)
@@ -64,6 +68,9 @@ fun main(args: Array<String>) {
             println("Grove zeros are resolved independently once per matched sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; CONTROL and LEARNED share that resolved Grove")
         }
         println("CONTROL=Human Baseline; LEARNED=same role with learned Buy selection only; all other decisions=Human Baseline")
+        println("research environment=${o.researchEnvironment}; environment seeds=${o.environmentSeed}..${o.environmentSeed + o.games - 1}")
+        println("Round constraints: include=${o.roundIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.roundExcludes.sorted()}")
+        println("Wisp constraints: include=${o.wispIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.wispExcludes.sorted()}")
         println("training fitness recorded in policy=${weights.provenance.fitness?.let(::pct) ?: "unknown"}; evaluation seeds are required not to overlap its recorded training cohorts")
         println()
 
@@ -72,11 +79,17 @@ fun main(args: Array<String>) {
             val mechanicalSeed = o.seed + sample
             val strategySeed = o.strategySeed + sample
             val resolvedGrove = resolveGroveForSample(o, sample, plantManager, defaultGrove, allPlants)
+            val environment = resolveResearchEnvironmentForSample(o, sample, roundManager, wispManager)
+            if (sample == 0) {
+                println("resolved research environment sample 0 Round deck=${environment.roundCards?.joinToString { it.name } ?: "<normal game setup>"}")
+                println("resolved research environment sample 0 Wisp deck=${environment.wispCards?.joinToString { it.name } ?: "<normal game setup>"}")
+                println()
+            }
             val groveCode = GrovePlantCode.encode(resolvedGrove)
             val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(4) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
-            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel), seat, plantsByName, resolvedGrove)
-            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel), seat, plantsByName, resolvedGrove)
+            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment), seat, plantsByName, resolvedGrove)
+            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment), seat, plantsByName, resolvedGrove)
         }
         printReport(o, weights, control, learned)
     } finally { app.close() }
@@ -84,8 +97,8 @@ fun main(args: Array<String>) {
 
 internal data class CompletedEvalGame(val summary: GameSummary, val entries: List<GameEntry>)
 
-private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, groveCode: String, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String, roundSetup: GameRoundSetup, roundLabel: String): CompletedEvalGame {
-    val game = factory(GameConfig(selectedPlantCards=grove, playerDecisionFactories=decisions, roundSetup=roundSetup, seed=seed, strategySeed=strategySeed, recordDecisionReasoning=false))
+private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, groveCode: String, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String, roundSetup: GameRoundSetup, roundLabel: String, environment: ResolvedResearchEnvironment): CompletedEvalGame {
+    val game = factory(GameConfig(selectedPlantCards=grove, playerDecisionFactories=decisions, roundSetup=roundSetup, seed=seed, strategySeed=strategySeed, recordDecisionReasoning=false), exactRoundCards=environment.roundCards, exactWispCards=environment.wispCards)
     val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_buy_policy", sample, variant, affectedSeat, seed, strategySeed, groveCode, roundLabel)) { runner.run(game) }
     return CompletedEvalGame(GameSummaryExtractor.extract(game, result), game.chronicle.entries.toList())
 }
@@ -910,6 +923,98 @@ internal fun resolveGroveForSample(
     error("Could not resolve Grove pattern $pattern without excluded cards ${excluded.sorted()}; exclusions may eliminate every choice in a slot.")
 }
 
+
+internal data class ResolvedResearchEnvironment(
+    val roundCards: List<RoundCard>?,
+    val wispCards: List<WispCard>?,
+)
+
+private val DIE_DEVELOPMENT_EFFECTS = setOf(
+    GameEffect.UPGRADE_DIE_FROM_HAND,
+    GameEffect.UPGRADE_DIE_AND_USE_NOW,
+    GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
+    GameEffect.GAIN_ANY_DIE_TO_DISCARD,
+    GameEffect.GAIN_D10_TO_DISCARD,
+    GameEffect.GAIN_D12_TO_DISCARD,
+    GameEffect.GAIN_D20_TO_DISCARD,
+)
+
+private fun RoundCard.supportsNonBuyDieDevelopment(): Boolean =
+    firstEffect.effect in DIE_DEVELOPMENT_EFFECTS || secondEffect.effect in DIE_DEVELOPMENT_EFFECTS
+
+private fun WispCard.supportsNonBuyDieDevelopment(): Boolean = effect in DIE_DEVELOPMENT_EFFECTS
+
+internal fun resolveResearchEnvironmentForSample(
+    options: EvalOptions,
+    sample: Int,
+    roundManager: RoundCardManager,
+    wispManager: WispCardManager,
+): ResolvedResearchEnvironment {
+    val namedEnvironment = options.researchEnvironment != "default"
+    val roundControlled = namedEnvironment || options.roundIncludes.isNotEmpty() || options.roundExcludes.isNotEmpty()
+    val wispControlled = namedEnvironment || options.wispIncludes.isNotEmpty() || options.wispExcludes.isNotEmpty()
+    if (!roundControlled && !wispControlled) return ResolvedResearchEnvironment(null, null)
+    val roundRng = Randomizer.create(options.environmentSeed + sample)
+    val wispRng = Randomizer.create(options.environmentSeed + sample + 1_000_003L)
+    val allRounds = roundManager.getAllCards().cards
+    val allWisps = wispManager.getAllCards().cards
+    validateNames("Round", options.roundIncludes + options.roundExcludes, allRounds.map { it.name }.toSet())
+    validateNames("Wisp", options.wispIncludes + options.wispExcludes, allWisps.map { it.name }.toSet())
+
+    val roundDefinitions = allRounds.filter { card ->
+        (options.roundIncludes.isEmpty() || card.name in options.roundIncludes) && card.name !in options.roundExcludes
+    }
+    val wispDefinitions = allWisps.filter { card ->
+        (options.wispIncludes.isEmpty() || card.name in options.wispIncludes) && card.name !in options.wispExcludes
+    }
+    require(roundDefinitions.isNotEmpty()) { "Round research pool is empty after include/exclude constraints." }
+    require(wispDefinitions.isNotEmpty()) { "Wisp research pool is empty after include/exclude constraints." }
+
+    fun expandedRounds(type: RoundCardType): List<RoundCard> = roundDefinitions
+        .filter { it.type == type }
+        .flatMap { card -> List(card.quantity) { card } }
+    fun chooseRounds(type: RoundCardType, count: Int): List<RoundCard> {
+        if (count == 0) return emptyList()
+        val physical = expandedRounds(type)
+        require(physical.size >= count) {
+            "Round research pool has too few $type physical cards: required=$count available=${physical.size}. " +
+                "Relax --round-include-card/--round-exclude-card constraints."
+        }
+        val shuffled = roundRng.shuffled(physical)
+        return when (options.researchEnvironment) {
+            "upgrade-rich" -> shuffled.sortedByDescending { it.supportsNonBuyDieDevelopment() }.take(count)
+            "upgrade-poor" -> shuffled.sortedBy { it.supportsNonBuyDieDevelopment() }.take(count)
+            else -> shuffled.take(count)
+        }
+    }
+    val cCount = options.roundSetup.roundTypes.count { it == RoundCardType.CULTIVATION }
+    val bCount = options.roundSetup.roundTypes.count { it == RoundCardType.BATTLE }
+    val cultivation = if (roundControlled) chooseRounds(RoundCardType.CULTIVATION, cCount) else emptyList()
+    val battle = if (roundControlled) chooseRounds(RoundCardType.BATTLE, bCount) else emptyList()
+    var ci=0; var bi=0
+    val exactRounds = if (roundControlled) options.roundSetup.roundTypes.map { if (it == RoundCardType.CULTIVATION) cultivation[ci++] else battle[bi++] } else null
+
+    val expandedWisps = wispDefinitions.flatMap { card -> List(card.quantity) { card } }
+    val exactWisps = if (!wispControlled) null else when (options.researchEnvironment) {
+        "upgrade-rich" -> {
+            val rich = expandedWisps.filter { it.supportsNonBuyDieDevelopment() }
+            require(rich.isNotEmpty()) { "upgrade-rich Wisp pool contains no die-development Wisp. Relax Wisp constraints." }
+            wispRng.shuffled(rich)
+        }
+        "upgrade-poor" -> {
+            val poor = expandedWisps.filterNot { it.supportsNonBuyDieDevelopment() }
+            require(poor.isNotEmpty()) { "upgrade-poor Wisp pool is empty after removing die-development Wisps." }
+            wispRng.shuffled(poor)
+        }
+        else -> wispRng.shuffled(expandedWisps)
+    }
+    return ResolvedResearchEnvironment(exactRounds, exactWisps)
+}
+
+private fun validateNames(kind:String, requested:Set<String>, known:Set<String>) {
+    requested.forEach { require(it in known) { "Unknown $kind research card: $it" } }
+}
+
 private fun rejectTrainingSeedOverlap(weights:LearnedBuyWeights,o:EvalOptions) {
     val n=weights.provenance.gamesPerPolicy ?: return
     fun overlaps(a0:Long,a1:Long,b0:Long,b1:Long)=a0<=b1 && b0<=a1
@@ -945,6 +1050,12 @@ internal data class EvalOptions(
     val excludedCards: Set<String>,
     val roundSetup: GameRoundSetup,
     val roundLabel: String,
+    val researchEnvironment: String,
+    val environmentSeed: Long,
+    val roundIncludes: Set<String>,
+    val roundExcludes: Set<String>,
+    val wispIncludes: Set<String>,
+    val wispExcludes: Set<String>,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
     fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
@@ -959,6 +1070,12 @@ internal data class EvalOptions(
             var groveSeed = 181000L
             val excludedCards = linkedSetOf<String>()
             var roundLabel = "3/2/2"
+            var researchEnvironment = "default"
+            var environmentSeed = 191000L
+            val roundIncludes = linkedSetOf<String>()
+            val roundExcludes = linkedSetOf<String>()
+            val wispIncludes = linkedSetOf<String>()
+            val wispExcludes = linkedSetOf<String>()
             var positional = false
             var i = 0
 
@@ -984,6 +1101,12 @@ internal data class EvalOptions(
                     argument.startsWith("--input") || argument.startsWith("--weights") -> input = Paths.get(value(argument))
                     argument.startsWith("--grove-seed") -> groveSeed = value(argument).toLong()
                     argument.startsWith("--exclude-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { excludedCards += it.trim() }
+                    argument.startsWith("--research-environment") -> researchEnvironment = value(argument).trim().lowercase()
+                    argument.startsWith("--environment-seed") -> environmentSeed = value(argument).toLong()
+                    argument.startsWith("--round-include-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { roundIncludes += it.trim() }
+                    argument.startsWith("--round-exclude-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { roundExcludes += it.trim() }
+                    argument.startsWith("--wisp-include-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { wispIncludes += it.trim() }
+                    argument.startsWith("--wisp-exclude-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { wispExcludes += it.trim() }
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
                     argument == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
@@ -997,18 +1120,25 @@ internal data class EvalOptions(
             }
 
             require(games > 0)
+            require(researchEnvironment in setOf("default","upgrade-rich","upgrade-poor")) { "--research-environment must be default, upgrade-rich, or upgrade-poor" }
+            require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
+            require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel))
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
             println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")
             println("  --exclude-card Vine_07_04 excludes a Plant from random/zero Grove slots; repeat it or comma-separate names.")
             println("  --rounds 3/2/2 means 3C-B-2C-B-2C-B (Cultivation blocks, existing semantics).")
             println("  --rounds 95 means 9 Cultivation followed by 5 Battle; --rounds 32 means 3 Cultivation followed by 2 Battle.")
-            println("  CONTROL and LEARNED always share the same concrete Grove within a matched sample.")
+            println("  --research-environment upgrade-rich maximizes non-Buy die-development Round cards and uses only die-development Wisps within the constrained pools.")
+            println("  --research-environment upgrade-poor minimizes such Round cards (subject to physical inventory/round count) and removes die-development Wisps.")
+            println("  Round/Wisp include/exclude options accept repeated or comma-separated exact card names; invalid or insufficient pools fail explicitly.")
+            println("  Research environments use a dedicated --environment-seed (default 191000), so environment resolution does not perturb gameplay RNG.")
+            println("  CONTROL and LEARNED always share the same concrete Grove, Round deck, and Wisp deck within a matched sample.")
         }
     }
 }

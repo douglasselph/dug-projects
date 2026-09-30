@@ -14,6 +14,11 @@ import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.chronicle.domain.*
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.round.domain.RoundCard
+import dugsolutions.leaf.v35.round.domain.RoundCardEffect
+import dugsolutions.leaf.v35.round.RoundCardManager
+import dugsolutions.leaf.v35.wisp.WispCardManager
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import dugsolutions.leaf.simulation.v35.analysis.*
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.plant.domain.*
@@ -259,6 +264,68 @@ class EvaluateBuyPolicyTest {
         assertEquals(1L,a.superiorSideWins)
         assertEquals(null,a.highDieDecisive["D20"]) // removing the D20's showing 1 still leaves 6 > 5
         assertEquals(1L,a.decisiveWinnerDice["D8_OR_LOWER"])
+    }
+
+    @Test fun `research environment options parse reusable include exclude controls`() {
+        val o=EvalOptions.parse(listOf(
+            "--research-environment","upgrade-poor","--environment-seed","291000",
+            "--round-exclude-card","B1,B2","--wisp-include-card","W1,W2"
+        ))
+        assertEquals("upgrade-poor",o.researchEnvironment)
+        assertEquals(291000L,o.environmentSeed)
+        assertEquals(setOf("B1","B2"),o.roundExcludes)
+        assertEquals(setOf("W1","W2"),o.wispIncludes)
+    }
+
+    @Test fun `default research environment leaves normal Round and Wisp setup untouched`() {
+        val o=EvalOptions.parse(emptyList())
+        val resolved=resolveResearchEnvironmentForSample(o,0,RoundCardManager(),WispCardManager())
+        assertNull(resolved.roundCards)
+        assertNull(resolved.wispCards)
+    }
+
+    @Test fun `controlled environment honors constraints and is reproducible for matched sample`() {
+        fun effect(e:GameEffect)=RoundCardEffect("t","b","f","i",null,e)
+        val rounds=RoundCardManager().apply { loadCards(listOf(
+            RoundCard(3,"C_UP",RoundCardType.CULTIVATION,effect(GameEffect.UPGRADE_DIE_FROM_HAND),effect(GameEffect.GAIN_WATER_TOKEN),""),
+            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_3),""),
+            RoundCard(2,"B_HIGH",RoundCardType.BATTLE,effect(GameEffect.GAIN_D20_TO_DISCARD),effect(GameEffect.GAIN_ONE_VP),""),
+            RoundCard(2,"B_PLAIN",RoundCardType.BATTLE,effect(GameEffect.GAIN_ONE_VP),effect(GameEffect.GAIN_TWO_WORMS),"")
+        )) }
+        fun wisp(name:String,e:GameEffect)=WispCard(2,name,name,2,e,null,40,null,"")
+        val wisps=WispCardManager().apply { loadCards(listOf(wisp("W_UP",GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),wisp("W_PLAIN",GameEffect.GAIN_ANY_TWO_CRITTERS))) }
+        val poor=EvalOptions.parse(listOf("--rounds","32","--research-environment","upgrade-poor","--environment-seed","7"))
+        val a=resolveResearchEnvironmentForSample(poor,4,rounds,wisps)
+        val b=resolveResearchEnvironmentForSample(poor,4,rounds,wisps)
+        assertEquals(a,b)
+        assertEquals(listOf("C_PLAIN","C_PLAIN","C_PLAIN","B_PLAIN","B_PLAIN"),a.roundCards!!.map { it.name })
+        assertEquals(setOf("W_PLAIN"),a.wispCards!!.map { it.name }.toSet())
+
+        val constrained=EvalOptions.parse(listOf("--rounds","32","--round-include-card","C_UP,B_HIGH","--wisp-include-card","W_UP","--environment-seed","7"))
+        val c=resolveResearchEnvironmentForSample(constrained,4,rounds,wisps)
+        assertEquals(setOf("C_UP","B_HIGH"),c.roundCards!!.map { it.name }.toSet())
+        assertEquals(setOf("W_UP"),c.wispCards!!.map { it.name }.toSet())
+
+        val excluded=EvalOptions.parse(listOf("--rounds","32","--round-exclude-card","C_PLAIN,B_PLAIN","--wisp-exclude-card","W_PLAIN","--environment-seed","7"))
+        val d=resolveResearchEnvironmentForSample(excluded,4,rounds,wisps)
+        assertEquals(setOf("C_UP","B_HIGH"),d.roundCards!!.map { it.name }.toSet())
+        assertEquals(setOf("W_UP"),d.wispCards!!.map { it.name }.toSet())
+    }
+
+    @Test fun `upgrade rich environment prioritizes die development cards`() {
+        fun effect(e:GameEffect)=RoundCardEffect("t","b","f","i",null,e)
+        val rounds=RoundCardManager().apply { loadCards(listOf(
+            RoundCard(3,"C_UP",RoundCardType.CULTIVATION,effect(GameEffect.UPGRADE_DIE_FROM_HAND),effect(GameEffect.GAIN_WATER_TOKEN),""),
+            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_3),""),
+            RoundCard(2,"B_HIGH",RoundCardType.BATTLE,effect(GameEffect.GAIN_D20_TO_DISCARD),effect(GameEffect.GAIN_ONE_VP),""),
+            RoundCard(2,"B_PLAIN",RoundCardType.BATTLE,effect(GameEffect.GAIN_ONE_VP),effect(GameEffect.GAIN_TWO_WORMS),"")
+        )) }
+        fun wisp(name:String,e:GameEffect)=WispCard(2,name,name,2,e,null,40,null,"")
+        val wisps=WispCardManager().apply { loadCards(listOf(wisp("W_UP",GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW),wisp("W_PLAIN",GameEffect.GAIN_ANY_TWO_CRITTERS))) }
+        val rich=EvalOptions.parse(listOf("--rounds","32","--research-environment","upgrade-rich","--environment-seed","9"))
+        val r=resolveResearchEnvironmentForSample(rich,0,rounds,wisps)
+        assertEquals(listOf("C_UP","C_UP","C_UP","B_HIGH","B_HIGH"),r.roundCards!!.map { it.name })
+        assertEquals(setOf("W_UP"),r.wispCards!!.map { it.name }.toSet())
     }
 
 }
