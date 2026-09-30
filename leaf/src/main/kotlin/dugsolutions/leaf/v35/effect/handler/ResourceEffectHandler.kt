@@ -356,6 +356,9 @@ class ResourceEffectHandler : EffectHandler {
         request.actor.dice.addToDiscard(
             request.game.dieFactory(sides)
         )
+        request.game.chronicle.record(
+            Moment.DieGained(request.actor.id, sides)
+        )
     }
 
     private fun availableDieSizes(

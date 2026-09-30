@@ -167,4 +167,31 @@ class EvaluateBuyPolicyTest {
         assertEquals(2L,a.roundCategoryOpportunities["Wisp gain"])
     }
 
+    @Test fun `die development provenance separates buys direct gains and upgrades without double counting replacement die`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.Purchase(1,p,PurchaseKind.DIE,"D8",8,8,0),
+            GameEntry.EffectResolved(2,p,GameEffect.GAIN_D20_TO_DISCARD,EffectSourceKind.ROUND,"Battle_Swell",ChroniclePhase.BATTLE,0),
+            GameEntry.DieGained(3,p,DieSides.D20,1),
+            GameEntry.EffectResolved(4,p,GameEffect.UPGRADE_DIE_FROM_HAND,EffectSourceKind.WISP,"Wisp_Upgrade_Die",ChroniclePhase.CULTIVATION,0),
+            GameEntry.Upgrade(5,p,DieSides.D12,DieSides.D20,UpgradeDestination.DISCARD,7,1),
+            GameEntry.EffectResolved(6,p,GameEffect.UPGRADE_DIE_FROM_HAND,EffectSourceKind.ROUND,"Resource_Water_Compost",ChroniclePhase.CULTIVATION,0),
+            GameEntry.Upgrade(7,p,DieSides.D8,DieSides.D10,UpgradeDestination.DISCARD,4,1)
+        )
+        val a = EffectResourceAccumulator()
+        a.addGame(entries,p)
+
+        assertEquals(1L,a.dieGainsBySourceAndSize["BUY:D8"])
+        assertEquals(1L,a.dieGainsBySourceAndSize["ROUND:Battle_Swell:D20"])
+        assertEquals(1L,a.upgradesBySourceAndTransition["WISP:Wisp_Upgrade_Die:D12->D20"])
+        assertEquals(1L,a.upgradesBySourceAndTransition["COMPOST:Resource_Water_Compost:D8->D10"])
+        assertEquals(8L,a.dieDevelopmentPowerBySource["BUY"])
+        assertEquals(20L,a.dieDevelopmentPowerBySource["ROUND"])
+        assertEquals(8L,a.dieDevelopmentPowerBySource["WISP"])
+        assertEquals(2L,a.dieDevelopmentPowerBySource["COMPOST"])
+        // Upgrade replacement D20 is represented only by +8 incremental sides,
+        // not as an additional direct D20 gain.
+        assertEquals(null,a.dieGainsBySourceAndSize["WISP:Wisp_Upgrade_Die:D20"])
+    }
+
 }

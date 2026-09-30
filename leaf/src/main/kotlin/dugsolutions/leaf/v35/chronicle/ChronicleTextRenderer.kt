@@ -815,6 +815,9 @@ object ChronicleTextRenderer {
                     append(" -> ${entry.to} destination=${entry.destination}")
                 }
 
+            is GameEntry.DieGained ->
+                "${player(entry.playerId)} DIE GAINED ${entry.sides}"
+
             is GameEntry.MulchStored ->
                 "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +
                     "from=${if (entry.fromDiscard) "DISCARD" else "HAND"}"

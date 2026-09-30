@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -45,6 +46,9 @@ class BattleRoundResourceEffectTest {
         assertEquals(DieSides.entries.filter { it != DieSides.D4 }, strategy.seenDieSizes)
         assertEquals(20, actor.dice.discard.single().sides)
         assertEquals(8, game.grove.graftBed.count(DieSides.D20))
+        val gained = game.chronicle.entries.filterIsInstance<GameEntry.DieGained>().single()
+        assertEquals(actor.id, gained.playerId)
+        assertEquals(DieSides.D20, gained.sides)
     }
 
     @Test

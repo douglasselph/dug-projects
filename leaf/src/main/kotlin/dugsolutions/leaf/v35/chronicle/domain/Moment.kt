@@ -209,6 +209,12 @@ sealed interface Moment {
         val fromValue: Int? = null
     ) : Moment
 
+    /** A new die added to a player by a non-Buy game effect. */
+    data class DieGained(
+        val playerId: PlayerId,
+        val sides: DieSides
+    ) : Moment
+
     /** A die committed to a Mulch token by an effect. */
     data class MulchStored(
         val playerId: PlayerId,

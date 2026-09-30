@@ -266,6 +266,14 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    /** Exact size of a die newly gained by a non-Buy effect. */
+    data class DieGained(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val sides: DieSides,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class MulchStored(
         override val sequence: Long,
         val playerId: PlayerId,

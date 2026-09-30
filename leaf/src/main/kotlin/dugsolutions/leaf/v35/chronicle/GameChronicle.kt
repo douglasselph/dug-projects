@@ -255,6 +255,9 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.from, moment.to, moment.destination,
                 moment.fromValue, hierarchyDepth
             )
+            is Moment.DieGained -> GameEntry.DieGained(
+                sequence, moment.playerId, moment.sides, hierarchyDepth
+            )
             is Moment.MulchStored -> GameEntry.MulchStored(
                 sequence, moment.playerId, moment.sides, moment.value, moment.fromDiscard,
                 hierarchyDepth

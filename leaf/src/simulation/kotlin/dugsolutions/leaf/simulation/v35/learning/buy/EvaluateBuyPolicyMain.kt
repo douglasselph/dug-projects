@@ -193,6 +193,11 @@ internal class EffectResourceAccumulator {
     val supportActions = sortedMapOf<String, Long>()
     val upgrades = sortedMapOf<String, Long>()
     val upgradeSources = sortedMapOf<String, Long>()
+    // Complete die-development accounting. Purchases are derived from Purchase;
+    // non-Buy gains use typed DieGained entries; upgrades reuse typed Upgrade.
+    val dieGainsBySourceAndSize = sortedMapOf<String, Long>()
+    val upgradesBySourceAndTransition = sortedMapOf<String, Long>()
+    val dieDevelopmentPowerBySource = sortedMapOf<String, Long>()
     val wispGainTriggers = sortedMapOf<String, Long>()
     var plantRoundExposure = 0L
     var battlePlantExposure = 0L
@@ -272,11 +277,30 @@ internal class EffectResourceAccumulator {
                 else -> Unit
             }
         }
+        entries.filterIsInstance<GameEntry.Purchase>()
+            .filter { it.playerId == playerId && it.kind == PurchaseKind.DIE }
+            .forEach { purchase ->
+                val sides = dieSidesFromName(purchase.itemName)
+                dieGainsBySourceAndSize.bump("BUY:${sides.name}")
+                dieDevelopmentPowerBySource.add("BUY", sides.value.toLong())
+            }
+        entries.withIndex().filter { it.value is GameEntry.DieGained && (it.value as GameEntry.DieGained).playerId == playerId }.forEach { indexed ->
+            val gained = indexed.value as GameEntry.DieGained
+            val effect = enclosingEffect(entries, indexed.index)
+            val source = developmentSource(effect)
+            dieGainsBySourceAndSize.bump("$source:${gained.sides.name}")
+            dieDevelopmentPowerBySource.add(sourceCategory(source), gained.sides.value.toLong())
+        }
         entries.withIndex().filter { it.value is GameEntry.Upgrade && (it.value as GameEntry.Upgrade).playerId == playerId }.forEach { indexed ->
             val u = indexed.value as GameEntry.Upgrade
-            upgrades.bump("${u.from.name}->${u.to.name}")
-            val source = enclosingEffect(entries, indexed.index)
-            upgradeSources.bump(source?.let { "${it.sourceKind.name}:${it.sourceName}" } ?: "unscoped")
+            val transition = "${u.from.name}->${u.to.name}"
+            upgrades.bump(transition)
+            val effect = enclosingEffect(entries, indexed.index)
+            val legacySource = effect?.let { "${it.sourceKind.name}:${it.sourceName}" } ?: "unscoped"
+            upgradeSources.bump(legacySource)
+            val source = developmentSource(effect)
+            upgradesBySourceAndTransition.bump("$source:$transition")
+            dieDevelopmentPowerBySource.add(sourceCategory(source), (u.to.value - u.from.value).toLong())
         }
     }
 
@@ -311,6 +335,24 @@ internal class EffectResourceAccumulator {
         }
     }
 
+    private fun dieSidesFromName(name: String): DieSides =
+        DieSides.entries.singleOrNull { it.name == name }
+            ?: error("Recorded die purchase has unknown size: $name")
+
+    private fun developmentSource(effect: GameEntry.EffectResolved?): String {
+        if (effect == null) return "OTHER:unscoped"
+        // Compost is economically important enough to remain visible even when
+        // its effect is carried by a Round card rather than a separate source kind.
+        if (effect.sourceName.contains("Compost", ignoreCase = true)) return "COMPOST:${effect.sourceName}"
+        return when (effect.sourceKind) {
+            EffectSourceKind.ROUND -> "ROUND:${effect.sourceName}"
+            EffectSourceKind.WISP -> "WISP:${effect.sourceName}"
+            EffectSourceKind.PLANT -> "PLANT:${effect.sourceName}"
+        }
+    }
+
+    private fun sourceCategory(source: String): String = source.substringBefore(':')
+
     private fun enclosingEffect(entries: List<GameEntry>, index: Int): GameEntry.EffectResolved? {
         val depth = entries[index].hierarchyDepth
         for (i in index - 1 downTo 0) {
@@ -320,6 +362,7 @@ internal class EffectResourceAccumulator {
         return null
     }
     private fun MutableMap<String, Long>.bump(key: String) { this[key] = (this[key] ?: 0L) + 1L }
+    private fun MutableMap<String, Long>.add(key: String, amount: Long) { this[key] = (this[key] ?: 0L) + amount }
 }
 
 
@@ -525,6 +568,13 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
     mapLines("Support actions", c.supportActions, l.supportActions)
     mapLines("Compost/other die upgrades by step", c.upgrades, l.upgrades)
     mapLines("Upgrade source", c.upgradeSources, l.upgradeSources)
+    println("  Die development provenance (events per player-game):")
+    mapLines("Direct/new die gains by source and resulting size", c.dieGainsBySourceAndSize, l.dieGainsBySourceAndSize)
+    mapLines("Upgrades by source and transition", c.upgradesBySourceAndTransition, l.upgradesBySourceAndTransition)
+    println("  Die-side power added by development source (sides gained for new dice; incremental sides for upgrades):")
+    val powerKeys=(c.dieDevelopmentPowerBySource.keys+l.dieDevelopmentPowerBySource.keys).toSortedSet()
+    if(powerKeys.isEmpty()) println("    none recorded") else powerKeys.forEach { k -> println("    $k: control=${avg(c.dieDevelopmentPowerBySource[k]?:0,c.games)} learned=${avg(l.dieDevelopmentPowerBySource[k]?:0,l.games)} per game") }
+    println("  Note: development power is event-flow accounting, not a claim that all added sides survive to the final pool. Upgrades contribute only their incremental side increase, preventing the replacement die from being double-counted as a new gain.")
     println("  Wisps:")
     println("    roll-reward Wisps gained: control=${avg(c.rollWispsGained,c.games)} learned=${avg(l.rollWispsGained,l.games)} per game")
     println("    immediate Wisps played from roll reward: control=${avg(c.immediateWispsPlayed,c.games)} learned=${avg(l.immediateWispsPlayed,l.games)} per game")
