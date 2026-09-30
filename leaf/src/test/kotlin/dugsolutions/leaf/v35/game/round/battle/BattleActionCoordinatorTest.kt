@@ -62,8 +62,9 @@ class BattleActionCoordinatorTest {
                 error("no die placement should be requested")
         }
         val p1 = player(1, strategy)
-        val effects = RecordingEffects(canExecute = { false })
-        val fixture = fixture(p1, effects = effects)
+        val p2 = player(2, strategy)
+        val effects = RecordingEffects(canExecutePredicate = { false })
+        val fixture = fixture(p1, p2, effects = effects)
 
         val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
 
@@ -556,12 +557,12 @@ class BattleActionCoordinatorTest {
 
     private class RecordingEffects(
         private val onExecute: (GameEffectRequest) -> Unit = {},
-        private val canExecute: (GameEffectRequest) -> Boolean = { true }
+        private val canExecutePredicate: (GameEffectRequest) -> Boolean = { true }
     ) : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
         val actorDoneWhenExecuted = mutableListOf<Pair<GameEffect, Boolean>>()
 
-        override fun canExecute(request: GameEffectRequest): Boolean = canExecute(request)
+        override fun canExecute(request: GameEffectRequest): Boolean = canExecutePredicate(request)
 
         override fun execute(request: GameEffectRequest) {
             requests += request
