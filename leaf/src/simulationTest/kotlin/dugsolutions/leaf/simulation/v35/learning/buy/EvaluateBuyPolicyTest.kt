@@ -258,7 +258,7 @@ class EvaluateBuyPolicyTest {
         assertEquals(1L,a.highDieOnWinningRows["D20"])
         assertEquals(1L,a.superiorSideWins)
         assertEquals(null,a.highDieDecisive["D20"]) // removing the D20's showing 1 still leaves 6 > 5
-        assertEquals(1L,a.decisiveWinnerDice["D6"])
+        assertEquals(1L,a.decisiveWinnerDice["D8_OR_LOWER"])
     }
 
 }
