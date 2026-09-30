@@ -97,6 +97,7 @@ internal class EvalAccumulator {
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
+    val strikeResearch = StrikeRowResearchAccumulator()
     val utilization = EffectResourceAccumulator()
     val vpLedger = VpLedgerAccumulator()
     val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
@@ -109,6 +110,7 @@ internal class EvalAccumulator {
         mapOf("D4" to p.ownedDiceSignature.d4,"D6" to p.ownedDiceSignature.d6,"D8" to p.ownedDiceSignature.d8,"D10" to p.ownedDiceSignature.d10,"D12" to p.ownedDiceSignature.d12,"D20" to p.ownedDiceSignature.d20).forEach { (k,v) -> finalDiceSizes[k]=(finalDiceSizes[k]?:0)+v }
         buyShape.addGame(game.entries, p.playerId)
         battleShape.addGame(game.entries, p.playerId)
+        strikeResearch.addGame(game.entries, p.playerId, p.winShare)
         utilization.addGame(game.entries, p.playerId)
         vpLedger.addGame(p, game.entries, plantsByName)
         grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
@@ -168,6 +170,147 @@ internal class BattleShapeAccumulator {
             dice.forEach { d -> usedBySize.getOrPut(battle){mutableMapOf()}[d.sides.name]=(usedBySize.getOrPut(battle){mutableMapOf()}[d.sides.name]?:0)+1 }
         }
     }
+    private fun List<GameEntry>.indexOfFirstFrom(start:Int,p:(GameEntry)->Boolean):Int { for(i in start until size) if(p(this[i])) return i; return -1 }
+}
+
+
+internal data class StrikeQualityBucket(
+    var battles: Long = 0,
+    var battleVp: Long = 0,
+    var rowsWon: Long = 0,
+    var rowsLost: Long = 0,
+    var wounds: Long = 0,
+    var gameWinShare: Double = 0.0
+)
+
+/**
+ * Row-level Battle research for the affected role. This intentionally consumes
+ * immutable StrikeResolved/BattleResolvePreview/RoundCompleted snapshots only;
+ * it never feeds information back into gameplay or strategy decisions.
+ *
+ * "Inferior" means lower total committed die sides than the compared loser.
+ * Causal labels are deliberately conservative: only direct dice/critters can be
+ * called individually decisive because those are the sources represented by the
+ * Strike contribution ledger today. Earlier Plant/Wisp/Round actions that changed
+ * a die are not reverse-inferred from the final row snapshot.
+ */
+internal class StrikeRowResearchAccumulator {
+    var winnerLoserComparisons = 0L
+    var superiorSideWins = 0L
+    var equalSideWins = 0L
+    var inferiorSideWins = 0L
+    var inferiorSideDeficit = 0L
+    var inferiorWonWithHigherRollTotal = 0L
+    var inferiorWithDecisiveCritter = 0L
+    var inferiorWithDecisiveDie = 0L
+    var inferiorWithNoHighDie = 0L
+
+    val committedWinnerDice = sortedMapOf<String,Long>()
+    val decisiveWinnerDice = sortedMapOf<String,Long>()
+    val entryBuckets = sortedMapOf<String,StrikeQualityBucket>()
+    val highDieOwned = sortedMapOf<String,Long>()
+    val highDieAvailable = sortedMapOf<String,Long>()
+    val highDiePlaced = sortedMapOf<String,Long>()
+    val highDieOnWinningRows = sortedMapOf<String,Long>()
+    val highDieDecisive = sortedMapOf<String,Long>()
+    var battleEntries = 0L
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId, gameWinShare: Double) {
+        val reveals = entries.withIndex().filter { (it.value as? GameEntry.RoundRevealed)?.cardType == RoundCardType.BATTLE }
+        reveals.forEachIndexed { bi, indexed ->
+            val battle = bi + 1
+            val end = entries.indexOfFirstFrom(indexed.index + 1) { it is GameEntry.RoundCompleted && it.cardType == RoundCardType.BATTLE }
+                .let { if (it < 0) entries.size else it + 1 }
+            val segment = entries.subList(indexed.index, end)
+            val before = entries.subList(0, indexed.index).filterIsInstance<GameEntry.RoundCompleted>()
+                .lastOrNull()?.playerSummaries?.singleOrNull { it.playerId == playerId }
+            val available = before?.let { it.supplyDice + it.discardDice }.orEmpty()
+            val owned = before?.let { it.supplyDice + it.discardDice + it.mulchDice.filterNotNull() }.orEmpty()
+            battleEntries++
+            addThresholdCounts(highDieAvailable, available.map { it.value })
+            addThresholdCounts(highDieOwned, owned.map { it.value })
+
+            val strikes = segment.filterIsInstance<GameEntry.StrikeResolved>()
+            // Use resolved row snapshots rather than only the final preview so an
+            // early-resolved/closed row (for example Wisp's Last Word) is still
+            // represented. A die can occupy only one Strike row.
+            val placedDice = strikes.flatMap { strike ->
+                strike.rowSnapshot?.squares?.singleOrNull { it.playerId == playerId }?.dice.orEmpty()
+            }
+            addThresholdCounts(highDiePlaced, placedDice.map { it.sides.value })
+
+            val max = available.maxOfOrNull { it.value } ?: 0
+            val bucketName = when {
+                available.isEmpty() -> "NO_AVAILABLE_DICE"
+                max <= 8 -> "MAX_D8_OR_LOWER"
+                max == 10 -> "MAX_D10"
+                max == 12 -> "MAX_D12"
+                else -> "HAS_D20"
+            }
+            val bucket = entryBuckets.getOrPut(bucketName) { StrikeQualityBucket() }
+            bucket.battles++
+            bucket.battleVp += strikes.sumOf { if (playerId in it.winnerIds) it.vpPerWinner else 0 }
+            bucket.rowsWon += strikes.count { playerId in it.winnerIds }
+            bucket.rowsLost += strikes.count { sr -> playerId !in sr.winnerIds && sr.rowSnapshot?.squares?.any { it.playerId == playerId && !it.withdrawn } == true }
+            bucket.wounds += strikes.count { playerId in it.woundedPlayerIds }
+            bucket.gameWinShare += gameWinShare
+
+            strikes.forEach { observeStrike(it, playerId) }
+        }
+    }
+
+    private fun observeStrike(strike: GameEntry.StrikeResolved, affected: PlayerId) {
+        val row = strike.rowSnapshot ?: return
+        val active = row.squares.filterNot { it.withdrawn }
+        val winnerSquares = active.filter { it.playerId in strike.winnerIds }
+        val loserSquares = active.filter { it.playerId !in strike.winnerIds }
+        val ledger = strike.contributionLedger
+
+        winnerSquares.filter { it.playerId == affected }.forEach { winner ->
+            winner.dice.forEach { die ->
+                committedWinnerDice.bump(sizeBucket(die.sides.value))
+                addThresholdOne(highDieOnWinningRows, die.sides.value)
+            }
+            ledger?.contributions?.filter { it.playerId == affected && it.individuallyWinnerDecisive }?.forEach { contribution ->
+                val die = contribution.source as? dugsolutions.leaf.v35.battle.StrikeContributionSource.Die
+                if (die != null) {
+                    decisiveWinnerDice.bump(sizeBucket(die.sides))
+                    addThresholdOne(highDieDecisive, die.sides)
+                }
+            }
+            loserSquares.forEach { loser ->
+                winnerLoserComparisons++
+                val ws = winner.dice.sumOf { it.sides.value }
+                val ls = loser.dice.sumOf { it.sides.value }
+                when {
+                    ws > ls -> superiorSideWins++
+                    ws == ls -> equalSideWins++
+                    else -> {
+                        inferiorSideWins++
+                        inferiorSideDeficit += (ls - ws)
+                        val wr = winner.dice.sumOf { it.value }
+                        val lr = loser.dice.sumOf { it.value }
+                        if (wr > lr) inferiorWonWithHigherRollTotal++
+                        if (winner.dice.none { it.sides.value >= 10 }) inferiorWithNoHighDie++
+                        val decisive = ledger?.contributions?.filter { it.playerId == affected && it.individuallyWinnerDecisive }.orEmpty()
+                        if (decisive.any { it.source is dugsolutions.leaf.v35.battle.StrikeContributionSource.Critter }) inferiorWithDecisiveCritter++
+                        if (decisive.any { it.source is dugsolutions.leaf.v35.battle.StrikeContributionSource.Die }) inferiorWithDecisiveDie++
+                    }
+                }
+            }
+        }
+    }
+
+    private fun addThresholdCounts(target: MutableMap<String,Long>, sides: List<Int>) {
+        sides.forEach { addThresholdOne(target, it) }
+    }
+    private fun addThresholdOne(target: MutableMap<String,Long>, sides: Int) {
+        if (sides >= 10) target.bump("D10+")
+        if (sides >= 12) target.bump("D12+")
+        if (sides >= 20) target.bump("D20")
+    }
+    private fun sizeBucket(sides:Int) = if (sides <= 8) "D8_OR_LOWER" else "D$sides"
+    private fun <K> MutableMap<K,Long>.bump(key:K) { this[key]=(this[key]?:0L)+1L }
     private fun List<GameEntry>.indexOfFirstFrom(start:Int,p:(GameEntry)->Boolean):Int { for(i in start until size) if(p(this[i])) return i; return -1 }
 }
 
@@ -534,6 +677,43 @@ private fun printBattleShape(c:BattleShapeAccumulator,l:BattleShapeAccumulator) 
 }
 
 
+private fun printStrikeRowResearch(c: StrikeRowResearchAccumulator, l: StrikeRowResearchAccumulator) {
+    fun pctPart(x:Long,n:Long)=if(n==0L) "0.00%" else pct(x.toDouble()/n)
+    fun avg(x:Long,n:Long)=if(n==0L) "0.00" else "%.2f".format(x.toDouble()/n)
+    println("Strike-row quality, opportunity, and decisiveness (affected role)")
+    println("  Winner-vs-loser row comparisons: control=${c.winnerLoserComparisons} learned=${l.winnerLoserComparisons}")
+    println("    superior committed die-side power: control=${c.superiorSideWins} (${pctPart(c.superiorSideWins,c.winnerLoserComparisons)}) learned=${l.superiorSideWins} (${pctPart(l.superiorSideWins,l.winnerLoserComparisons)})")
+    println("    equal committed die-side power:    control=${c.equalSideWins} (${pctPart(c.equalSideWins,c.winnerLoserComparisons)}) learned=${l.equalSideWins} (${pctPart(l.equalSideWins,l.winnerLoserComparisons)})")
+    println("    inferior committed die-side power: control=${c.inferiorSideWins} (${pctPart(c.inferiorSideWins,c.winnerLoserComparisons)}) learned=${l.inferiorSideWins} (${pctPart(l.inferiorSideWins,l.winnerLoserComparisons)})")
+    println("  Inferior-side wins:")
+    println("    avg side deficit: control=${avg(c.inferiorSideDeficit,c.inferiorSideWins)} learned=${avg(l.inferiorSideDeficit,l.inferiorSideWins)}")
+    println("    winner had higher rolled die total: control=${c.inferiorWonWithHigherRollTotal} (${pctPart(c.inferiorWonWithHigherRollTotal,c.inferiorSideWins)}) learned=${l.inferiorWonWithHigherRollTotal} (${pctPart(l.inferiorWonWithHigherRollTotal,l.inferiorSideWins)})")
+    println("    individually decisive Critter present: control=${c.inferiorWithDecisiveCritter} (${pctPart(c.inferiorWithDecisiveCritter,c.inferiorSideWins)}) learned=${l.inferiorWithDecisiveCritter} (${pctPart(l.inferiorWithDecisiveCritter,l.inferiorSideWins)})")
+    println("    individually decisive die present: control=${c.inferiorWithDecisiveDie} (${pctPart(c.inferiorWithDecisiveDie,c.inferiorSideWins)}) learned=${l.inferiorWithDecisiveDie} (${pctPart(l.inferiorWithDecisiveDie,l.inferiorSideWins)})")
+    println("    winner used no D10+ on row: control=${c.inferiorWithNoHighDie} (${pctPart(c.inferiorWithNoHighDie,c.inferiorSideWins)}) learned=${l.inferiorWithNoHighDie} (${pctPart(l.inferiorWithNoHighDie,l.inferiorSideWins)})")
+    println("    Note: Plant/Wisp/Round causality is not reverse-inferred here; the current Strike ledger directly tests final dice and Critters only.")
+
+    val thresholds=listOf("D10+","D12+","D20")
+    println("  High-die opportunity/utilization (dice per Battle entry):")
+    thresholds.forEach { k ->
+        println("    $k owned incl. Mulch ${avg(c.highDieOwned[k]?:0,c.battleEntries)} -> ${avg(l.highDieOwned[k]?:0,l.battleEntries)}; available Supply+Discard ${avg(c.highDieAvailable[k]?:0,c.battleEntries)} -> ${avg(l.highDieAvailable[k]?:0,l.battleEntries)}; placed ${avg(c.highDiePlaced[k]?:0,c.battleEntries)} -> ${avg(l.highDiePlaced[k]?:0,l.battleEntries)}; on winning rows ${avg(c.highDieOnWinningRows[k]?:0,c.battleEntries)} -> ${avg(l.highDieOnWinningRows[k]?:0,l.battleEntries)}; individually decisive ${avg(c.highDieDecisive[k]?:0,c.battleEntries)} -> ${avg(l.highDieDecisive[k]?:0,l.battleEntries)}")
+    }
+    println("  Winning-row dice by exact quality:")
+    (c.committedWinnerDice.keys+l.committedWinnerDice.keys).toSortedSet().forEach { k -> println("    $k committed: control=${c.committedWinnerDice[k]?:0} learned=${l.committedWinnerDice[k]?:0}; individually decisive control=${c.decisiveWinnerDice[k]?:0} learned=${l.decisiveWinnerDice[k]?:0}") }
+
+    println("  Battle-entry maximum-die buckets:")
+    val order=listOf("NO_AVAILABLE_DICE","MAX_D8_OR_LOWER","MAX_D10","MAX_D12","HAS_D20")
+    order.forEach { k ->
+        fun line(a:StrikeRowResearchAccumulator):String {
+            val b=a.entryBuckets[k] ?: return "n=0"
+            return "n=${b.battles}, BattleVP=${avg(b.battleVp,b.battles)}, rows won=${avg(b.rowsWon,b.battles)}, rows lost=${avg(b.rowsLost,b.battles)}, wounds=${avg(b.wounds,b.battles)}, eventual game win share=${if(b.battles==0L) "0.00%" else pct(b.gameWinShare/b.battles)}"
+        }
+        println("    $k: control[${line(c)}] learned[${line(l)}]")
+    }
+    println("    Bucket 'available' uses the pre-Battle cycling pool (Supply + Discard); 'owned' additionally includes prepared Mulch dice.")
+}
+
+
 private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: EffectResourceAccumulator) {
     fun avg(v: Long, n: Long) = if (n == 0L) "0.00" else "%.2f".format(v.toDouble() / n)
     fun mapLines(title: String, cm: Map<String,Long>, lm: Map<String,Long>) {
@@ -680,6 +860,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printBuyShape(c.buyShape, l.buyShape)
     println()
     printBattleShape(c.battleShape,l.battleShape)
+    println()
+    printStrikeRowResearch(c.strikeResearch,l.strikeResearch)
     println()
     printEffectResourceUtilization(c.utilization,l.utilization)
     println()

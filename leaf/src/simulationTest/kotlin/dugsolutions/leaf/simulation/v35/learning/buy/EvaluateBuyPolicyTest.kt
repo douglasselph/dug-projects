@@ -17,6 +17,8 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.simulation.v35.analysis.*
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.plant.domain.*
+import dugsolutions.leaf.v35.battle.*
+import dugsolutions.leaf.v35.battle.domain.*
 
 class EvaluateBuyPolicyTest {
     @Test fun `evaluation accumulator starts empty and keeps four seat buckets`() {
@@ -192,6 +194,71 @@ class EvaluateBuyPolicyTest {
         // Upgrade replacement D20 is represented only by +8 incremental sides,
         // not as an additional direct D20 gain.
         assertEquals(null,a.dieGainsBySourceAndSize["WISP:Wisp_Upgrade_Die:D20"])
+    }
+
+
+    @Test fun `strike research distinguishes inferior side wins favorable rolls critters and decisive dice`() {
+        val p = PlayerId(1)
+        val q = PlayerId(2)
+        fun square(id:PlayerId, sides:Int, value:Int, critter:Int=0) = BattleGridSquareSnapshot(
+            id,
+            listOf(BattleGridDieSnapshot(DieSides.from(sides), value)),
+            if (critter == 0) emptyList() else listOf(BattleGridCritterSnapshot(dugsolutions.leaf.v35.tokens.Critter.BEE, critter))
+        )
+        fun strike(seq:Long, winner:BattleGridSquareSnapshot, loser:BattleGridSquareSnapshot) : GameEntry.StrikeResolved {
+            val row = BattleGridRowSnapshot(StrikeRow.TOP, listOf(winner, loser))
+            val totals = listOf(winner,loser).map { StrikeTotalSnapshot(it.playerId,it.dice.sumOf { d->d.value },it.critters.sumOf { c->c.value },it.total) }
+            val winners = listOf(winner.playerId)
+            val wounded = if (winner.total-loser.total>=5) listOf(loser.playerId) else emptyList()
+            val ledger = StrikeContributionAnalyzer.analyze(row,winners,wounded,2)
+            return GameEntry.StrikeResolved(seq,StrikeRow.TOP,totals,row,winners,wounded,2,ledger,0)
+        }
+        val entries = listOf(
+            GameEntry.RoundCompleted(1,1,"C",RoundCardType.CULTIVATION,listOf(PlayerRoundSummarySnapshot(p,0,emptyList(),listOf(DieSides.D8),listOf(DieSides.D6),0,0,0,emptyList(),0,emptyList())),0),
+            GameEntry.RoundRevealed(2,2,"B",RoundCardType.BATTLE,GameEffect.GAIN_ONE_VP,GameEffect.GAIN_ONE_VP,0),
+            // P1 has inferior committed sides (D8 vs D12) but rolls higher: 8 vs 5.
+            strike(3,square(p,8,8),square(q,12,5)),
+            // P1 again has inferior sides. Bee is individually decisive, while the die is not:
+            // 1 + Bee 3 beats 2; without Bee P1 loses 1-2, while without the die Bee 3 still wins 3-2.
+            strike(4,square(p,8,1,3),square(q,12,2)),
+            GameEntry.RoundCompleted(5,2,"B",RoundCardType.BATTLE,emptyList(),0)
+        )
+        val a=StrikeRowResearchAccumulator(); a.addGame(entries,p,1.0)
+        assertEquals(2L,a.inferiorSideWins)
+        assertEquals(1L,a.inferiorWonWithHigherRollTotal)
+        assertEquals(1L,a.inferiorWithDecisiveCritter)
+        assertEquals(1L,a.inferiorWithDecisiveDie) // first row's D8 is individually decisive
+        assertEquals(2L,a.inferiorWithNoHighDie)
+        assertEquals(1L,a.entryBuckets["MAX_D8_OR_LOWER"]?.battles)
+        assertEquals(2L,a.entryBuckets["MAX_D8_OR_LOWER"]?.rowsWon)
+    }
+
+    @Test fun `strike research records high die placement winning association and individual decisiveness separately`() {
+        val p=PlayerId(1); val q=PlayerId(2)
+        val winner=BattleGridSquareSnapshot(p,listOf(
+            BattleGridDieSnapshot(DieSides.D20,1),
+            BattleGridDieSnapshot(DieSides.D6,6)
+        ),emptyList())
+        val loser=BattleGridSquareSnapshot(q,listOf(BattleGridDieSnapshot(DieSides.D6,5)),emptyList())
+        val row=BattleGridRowSnapshot(StrikeRow.TOP,listOf(winner,loser))
+        val ledger=StrikeContributionAnalyzer.analyze(row,listOf(p),emptyList(),2)
+        val strike=GameEntry.StrikeResolved(3,StrikeRow.TOP,listOf(
+            StrikeTotalSnapshot(p,7,0,7),StrikeTotalSnapshot(q,5,0,5)
+        ),row,listOf(p),emptyList(),2,ledger,0)
+        val entries=listOf(
+            GameEntry.RoundCompleted(1,1,"C",RoundCardType.CULTIVATION,listOf(PlayerRoundSummarySnapshot(p,0,emptyList(),listOf(DieSides.D20,DieSides.D6),emptyList(),0,0,0,emptyList(),0,emptyList())),0),
+            GameEntry.RoundRevealed(2,2,"B",RoundCardType.BATTLE,GameEffect.GAIN_ONE_VP,GameEffect.GAIN_ONE_VP,0),
+            GameEntry.BattleResolvePreview(2,listOf(row),0),
+            strike,
+            GameEntry.RoundCompleted(4,2,"B",RoundCardType.BATTLE,emptyList(),0)
+        )
+        val a=StrikeRowResearchAccumulator(); a.addGame(entries,p,0.5)
+        assertEquals(1L,a.highDieAvailable["D20"])
+        assertEquals(1L,a.highDiePlaced["D20"])
+        assertEquals(1L,a.highDieOnWinningRows["D20"])
+        assertEquals(1L,a.superiorSideWins)
+        assertEquals(null,a.highDieDecisive["D20"]) // removing the D20's showing 1 still leaves 6 > 5
+        assertEquals(1L,a.decisiveWinnerDice["D6"])
     }
 
 }
