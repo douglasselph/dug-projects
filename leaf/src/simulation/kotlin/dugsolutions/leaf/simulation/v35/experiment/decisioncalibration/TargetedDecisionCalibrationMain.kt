@@ -65,6 +65,24 @@ private data class TransplantTulipBattleSwapOpportunity(
     val finalUtility: Int
 )
 
+private data class OEdelweissDownstreamOpportunity(
+    val game: Int,
+    val player: Int,
+    val decision: Int,
+    val choiceNumber: Int,
+    val phase: String,
+    val selected: Boolean,
+    val choice: String,
+    val branch: String,
+    val targetCard: String?,
+    val targetFaceUp: Boolean?,
+    val faceUpPlants: Int,
+    val faceDownPlants: Int,
+    val baseUtility: Int,
+    val finalUtility: Int,
+    val utilityComponents: List<String>
+)
+
 private data class BuySynergyOpportunity(
     val game: Int,
     val player: Int,
@@ -127,6 +145,7 @@ fun main(args: Array<String>) {
         val records = mutableListOf<CalibrationOpportunity>()
         val buySynergyRecords = mutableListOf<BuySynergyOpportunity>()
         val transplantTulipBattleSwaps = mutableListOf<TransplantTulipBattleSwapOpportunity>()
+        val oEdelweissDownstream = mutableListOf<OEdelweissDownstreamOpportunity>()
         repeat(options.games) { sample ->
             val game = koin.get<GameFactory>()(
                 GameConfig(
@@ -142,8 +161,9 @@ fun main(args: Array<String>) {
             records += extract(sample + 1, resolvedTarget, game.chronicle.entries, game)
             buySynergyRecords += extractBuySynergy(sample + 1, resolvedTarget, game.chronicle.entries)
             transplantTulipBattleSwaps += extractTransplantTulipBattleSwaps(sample + 1, resolvedTarget, game.chronicle.entries)
+            oEdelweissDownstream += extractOEdelweissDownstream(sample + 1, resolvedTarget, game.chronicle.entries)
         }
-        println(render(options, records, buySynergyRecords, transplantTulipBattleSwaps))
+        println(render(options, records, buySynergyRecords, transplantTulipBattleSwaps, oEdelweissDownstream))
     } finally { app.close() }
 }
 
@@ -295,11 +315,43 @@ private fun bucket(target: String, o: Map<String, String>): String = when (targe
     else -> "next=${o["nextPhase"] ?: "?"}|up=${o["faceUpPlants"] ?: "?"}|down=${o["faceDownPlants"] ?: "?"}"
 }
 
+private fun extractOEdelweissDownstream(
+    gameNumber: Int,
+    target: String,
+    entries: List<GameEntry>
+): List<OEdelweissDownstreamOpportunity> {
+    if (!target.equals("Flower_17_03", true)) return emptyList()
+    return entries.filterIsInstance<GameEntry.DecisionReasoning>().flatMapIndexed { decisionIndex, event ->
+        event.alternatives.mapNotNull { alt ->
+            val o = alt.observations
+            if (o["decisionFamily"] != "o-edelweiss-downstream") return@mapNotNull null
+            OEdelweissDownstreamOpportunity(
+                game = gameNumber,
+                player = event.playerId.value,
+                decision = decisionIndex,
+                choiceNumber = o["choiceNumber"]?.toIntOrNull() ?: -1,
+                phase = o["phase"] ?: "?",
+                selected = alt.selected,
+                choice = alt.choiceLabel,
+                branch = o["branch"] ?: "?",
+                targetCard = o["targetCard"],
+                targetFaceUp = o["targetFaceUp"]?.toBooleanStrictOrNull(),
+                faceUpPlants = o["faceUpPlants"]?.toIntOrNull() ?: -1,
+                faceDownPlants = o["faceDownPlants"]?.toIntOrNull() ?: -1,
+                baseUtility = alt.baseScore,
+                finalUtility = alt.total,
+                utilityComponents = alt.adjustments.map { "${it.amount}:${it.reason}" }
+            )
+        }
+    }
+}
+
 private fun render(
     options: Options,
     records: List<CalibrationOpportunity>,
     buySynergyRecords: List<BuySynergyOpportunity>,
-    transplantTulipBattleSwaps: List<TransplantTulipBattleSwapOpportunity>
+    transplantTulipBattleSwaps: List<TransplantTulipBattleSwapOpportunity>,
+    oEdelweissDownstream: List<OEdelweissDownstreamOpportunity>
 ): String = buildString {
     appendLine("TARGETED DECISION CALIBRATION")
     appendLine("target=${options.target} games=${options.games} opportunities=${records.size}")
@@ -335,6 +387,36 @@ private fun render(
                     appendLine("  rejected ${rejected.choice} tactical=${rejected.tacticalUtility} utility=${rejected.finalUtility} vpGain=${rejected.battleVpGain} winDelta=${rejected.winningDelta} woundRiskDelta=${rejected.woundRiskDelta}")
                 }
             }
+        }
+    }
+    if (oEdelweissDownstream.isNotEmpty()) {
+        appendLine()
+        appendLine("O EDELWEISS DOWNSTREAM CHOICES")
+        val decisions = oEdelweissDownstream.groupBy { Triple(it.game, it.player, it.decision) }
+        appendLine("candidate observations=${oEdelweissDownstream.size} downstream decisions=${decisions.size} first=${decisions.values.count { it.first().choiceNumber == 1 }} second=${decisions.values.count { it.first().choiceNumber == 2 }}")
+        appendLine("selected branches=" + oEdelweissDownstream.filter { it.selected }.groupingBy { it.branch }.eachCount().toSortedMap())
+        appendLine("DOWNSTREAM DECISIONS (first 40)")
+        decisions.entries.take(40).forEach { (_, rows) ->
+            val selected = rows.singleOrNull { it.selected }
+            if (selected != null) {
+                appendLine("g${selected.game}/p${selected.player} choice#${selected.choiceNumber} phase=${selected.phase} state=up${selected.faceUpPlants}/down${selected.faceDownPlants} selected=${selected.choice} utility=${selected.baseUtility}->${selected.finalUtility}")
+                if (selected.utilityComponents.isNotEmpty()) appendLine("  components: ${selected.utilityComponents.joinToString()}")
+                rows.filter { !it.selected }.sortedByDescending { it.finalUtility }.take(4).forEach { rejected ->
+                    appendLine("  rejected ${rejected.choice} branch=${rejected.branch} target=${rejected.targetCard ?: "-"} faceUp=${rejected.targetFaceUp ?: false} utility=${rejected.baseUtility}->${rejected.finalUtility}" +
+                        if (rejected.utilityComponents.isEmpty()) "" else " components=${rejected.utilityComponents.joinToString()}")
+                }
+            }
+        }
+        appendLine("SEQUENTIAL PAIRS (first 25 with both choices)")
+        val byGamePlayer = decisions.values.mapNotNull { rows -> rows.singleOrNull { it.selected } }
+            .groupBy { it.game to it.player }
+        byGamePlayer.values.mapNotNull { selectedRows ->
+            val ordered = selectedRows.sortedBy { it.decision }
+            val first = ordered.firstOrNull { it.choiceNumber == 1 } ?: return@mapNotNull null
+            val second = ordered.firstOrNull { it.choiceNumber == 2 && it.decision > first.decision } ?: return@mapNotNull null
+            first to second
+        }.take(25).forEach { (first, second) ->
+            appendLine("g${first.game}/p${first.player} #1 ${first.choice} (${first.finalUtility}) state=up${first.faceUpPlants}/down${first.faceDownPlants} -> #2 ${second.choice} (${second.finalUtility}) state=up${second.faceUpPlants}/down${second.faceDownPlants}")
         }
     }
     if (buySynergyRecords.isNotEmpty()) {

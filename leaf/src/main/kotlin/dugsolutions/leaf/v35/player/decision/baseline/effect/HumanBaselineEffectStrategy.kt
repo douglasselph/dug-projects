@@ -545,7 +545,32 @@ class HumanBaselineEffectStrategy(
                 } else {
                     scoreOEdelweissFallback(request.context, choice)
                 }
-                DecisionCandidate(choice, score)
+                val target = when (choice) {
+                    OEdelweissChoice.Done -> null
+                    is OEdelweissChoice.Play -> choice.card
+                    is OEdelweissChoice.Flip -> choice.card
+                }
+                DecisionCandidate(
+                    choice = choice,
+                    score = score,
+                    observations = buildMap {
+                        put("decisionFamily", "o-edelweiss-downstream")
+                        put("choiceNumber", request.choiceNumber.toString())
+                        put("phase", request.context.phase.name)
+                        put("branch", when (choice) {
+                            OEdelweissChoice.Done -> "DONE"
+                            is OEdelweissChoice.Play -> "PLAY"
+                            is OEdelweissChoice.Flip -> "FLIP"
+                        })
+                        if (target != null) {
+                            put("targetCard", target.cardName)
+                            put("targetCardId", target.cardId.value.toString())
+                            put("targetFaceUp", target.isFaceUp.toString())
+                        }
+                        put("faceUpPlants", request.context.self.board.creature.count { it.isFaceUp }.toString())
+                        put("faceDownPlants", request.context.self.board.creature.count { it.isFaceDown }.toString())
+                    }
+                )
             }
         )
     }
