@@ -125,9 +125,11 @@ class BattleActionCoordinator(
         // Step 4 — everybody's first Main Action before anybody may Support.
         battleState.playersInBattleOrder.forEach { player ->
             val legal = mainActions(game, player, roundCard, battleState)
-            stateCheck(legal.isNotEmpty(), context = "BattleActionCoordinator") {
-                "Player ${player.id.value} has no legal first Battle Main Action"
-            }
+            // In very long Battle sequences a player can legitimately exhaust every
+            // possible Main Action: no cycling die remains, all usable Plants are
+            // face down, and neither Round effect is currently executable. A human
+            // player simply has no first Main Action to take in that state.
+            if (legal.isEmpty()) return@forEach
 
             val chosen =
                 player.decisions.battle.chooseFirstMainAction(
@@ -199,9 +201,6 @@ class BattleActionCoordinator(
 
                 val finalMains =
                     mainActions(game, player, roundCard, battleState)
-                stateCheck(finalMains.isNotEmpty(), context = "BattleActionCoordinator") {
-                    "Player ${player.id.value} has no legal final Battle Main Action"
-                }
 
                 val legalChoices = buildList {
                     supportActions(game, player, battleState).mapTo(this) {
@@ -210,6 +209,15 @@ class BattleActionCoordinator(
                     finalMains.mapTo(this) {
                         BattleTurnAction.FinalMain(it)
                     }
+                }
+
+                // A player may likewise reach Step 5 with neither a Support Action
+                // nor a legal final Main Action. Treat that as being finished rather
+                // than making an impossible decision. If Supports remain, they are
+                // still offered even when no final Main is currently available.
+                if (legalChoices.isEmpty()) {
+                    battleState.markDone(player.id)
+                    return@forEach
                 }
 
                 val context = DecisionContextFactory.create(game, player, battleState)

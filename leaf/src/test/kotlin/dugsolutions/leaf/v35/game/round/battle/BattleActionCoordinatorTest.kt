@@ -49,6 +49,30 @@ import kotlin.test.assertTrue
 
 class BattleActionCoordinatorTest {
 
+    @Test
+    fun execute_noLegalMainActions_skipsFirstAndFinishesWithoutCallingStrategy() {
+        val strategy = object : BattleStrategy {
+            override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction =
+                error("strategy must not be asked to choose an impossible first Main Action")
+
+            override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction =
+                error("strategy must not be asked to choose when no Battle action is legal")
+
+            override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest) =
+                error("no die placement should be requested")
+        }
+        val p1 = player(1, strategy)
+        val effects = RecordingEffects(canExecute = { false })
+        val fixture = fixture(p1, effects = effects)
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(result.firstMainActions.isEmpty())
+        assertTrue(result.finalMainActions.isEmpty())
+        assertTrue(result.supportActions.isEmpty())
+        assertTrue(fixture.battleState.isDone(p1.id))
+    }
+
 
     @Test
     fun execute_zeroPlantsAndNoDrawableDice_humanBaselineUsesRoundMainActions() {
@@ -525,12 +549,13 @@ class BattleActionCoordinatorTest {
     }
 
     private class RecordingEffects(
-        private val onExecute: (GameEffectRequest) -> Unit = {}
+        private val onExecute: (GameEffectRequest) -> Unit = {},
+        private val canExecute: (GameEffectRequest) -> Boolean = { true }
     ) : GameEffectExecutor {
         val requests = mutableListOf<GameEffectRequest>()
         val actorDoneWhenExecuted = mutableListOf<Pair<GameEffect, Boolean>>()
 
-        override fun canExecute(request: GameEffectRequest): Boolean = true
+        override fun canExecute(request: GameEffectRequest): Boolean = canExecute(request)
 
         override fun execute(request: GameEffectRequest) {
             requests += request
