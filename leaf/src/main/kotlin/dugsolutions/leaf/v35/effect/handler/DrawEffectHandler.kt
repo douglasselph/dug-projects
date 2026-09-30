@@ -782,6 +782,14 @@ class DrawEffectHandler(
                 "Battle effect ${request.effect} requires BattleState to place die $die"
             }
 
+        if (battlePlacementResolver.legalRows(battleState, request.actor).isEmpty()) {
+            stateCheck(request.actor.dice.removeExactFromHand(die) != null) {
+                "Battle effect die with no legal Strike Square could not be removed from Hand: $die"
+            }
+            request.actor.dice.addToDiscard(die)
+            return
+        }
+
         val placement = battlePlacementResolver.placeNewHandDie(
             battleState = battleState,
             player = request.actor,

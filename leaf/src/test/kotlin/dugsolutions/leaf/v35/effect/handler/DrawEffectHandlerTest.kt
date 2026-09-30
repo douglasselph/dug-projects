@@ -660,4 +660,41 @@ class DrawEffectHandlerTest {
             return this
         }
     }
+    @Test
+    fun reapWhatYouRollInBattle_discardsSecondDrawWhenReplacementFillsLastOpenSlot() {
+        val originalDice = (1..9).map { FixedEffectDie(6, 4) }
+        val firstDraw = FixedEffectDie(10, 7)
+        val overflowDraw = FixedEffectDie(20, 8)
+        val actor = EffectTestFixture.player(1, hand = originalDice)
+        actor.dice.addAllToSupply(listOf(firstDraw, overflowDraw))
+        val other = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, other)
+        val battleState = BattleState(listOf(actor, other))
+
+        StrikeRow.entries.forEachIndexed { rowIndex, row ->
+            originalDice
+                .drop(rowIndex * 3)
+                .take(3)
+                .forEach { die -> battleState.grid.placeDie(actor, row, die) }
+        }
+
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO
+        ).copy(
+            phase = GameEffectPhase.BATTLE,
+            battleState = battleState
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertTrue(firstDraw in actor.dice.hand)
+        assertTrue(battleState.grid.locationOf(firstDraw) != null)
+        assertFalse(overflowDraw in actor.dice.hand)
+        assertTrue(overflowDraw in actor.dice.discard)
+        assertTrue(battleState.grid.locationOf(overflowDraw) == null)
+    }
+
 }
