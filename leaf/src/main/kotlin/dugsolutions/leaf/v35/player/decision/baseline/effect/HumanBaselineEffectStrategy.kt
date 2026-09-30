@@ -326,7 +326,16 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                DecisionCandidate(choice, scorePair(request.effect, request.context, choice))
+                val score = scorePair(request.effect, request.context, choice)
+                DecisionCandidate(
+                    choice = choice,
+                    score = score,
+                    observations = transplantTulipBattleSwapObservations(
+                        effect = request.effect,
+                        context = request.context,
+                        choice = choice
+                    )
+                )
             }
         )
     }
@@ -688,6 +697,54 @@ class HumanBaselineEffectStrategy(
         return PriorityScore(total)
             .adjusted(choice.selected.size, "Score the complete Wisp keep set")
     }
+
+
+    private fun transplantTulipBattleSwapObservations(
+        effect: GameEffect,
+        context: DecisionContext,
+        choice: EffectDiePairChoice
+    ): Map<String, String> {
+        if (
+            effect != GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE ||
+            context.phase != dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+        ) return emptyMap()
+
+        val analysis = ownDieSwapPairAnalyzer(context, effect, choice) ?: return emptyMap()
+        val rowSwings = analysis.swing.rowSwings
+        if (rowSwings.size != 2) return emptyMap()
+        val sourceSwing = rowSwings[0]
+        val targetSwing = rowSwings[1]
+        val raiseGain = DieValueHeuristics.actualRaiseGain(choice.source.sides, choice.source.value, 2)
+        val sourceBeforeTotal = context.battle?.row(sourceSwing.row)?.forPlayer(context.self.id)?.total
+        val targetBeforeTotal = context.battle?.row(targetSwing.row)?.forPlayer(context.self.id)?.total
+        val sourceAfterTotal = sourceBeforeTotal?.plus(choice.target.value - choice.source.value)
+        val targetAfterTotal = targetBeforeTotal?.plus(choice.source.value + raiseGain - choice.target.value)
+        return linkedMapOf(
+            "decisionFamily" to "transplant-tulip-battle-swap",
+            "sourceDie" to "D${choice.source.sides}:${choice.source.value}@${choice.source.index}",
+            "targetDie" to "D${choice.target.sides}:${choice.target.value}@${choice.target.index}",
+            "sourceRow" to sourceSwing.row.name,
+            "targetRow" to targetSwing.row.name,
+            "raisedDie" to "source-after-swap",
+            "raiseGain" to raiseGain.toString(),
+            "sourceBefore" to battleSwapRowState(sourceSwing.before, sourceBeforeTotal),
+            "sourceAfter" to battleSwapRowState(sourceSwing.after, sourceAfterTotal),
+            "targetBefore" to battleSwapRowState(targetSwing.before, targetBeforeTotal),
+            "targetAfter" to battleSwapRowState(targetSwing.after, targetAfterTotal),
+            "winningDelta" to rowSwings.sumOf { (if (it.after.currentlyWinning) 1 else 0) - (if (it.before.currentlyWinning) 1 else 0) }.toString(),
+            "woundRiskDelta" to rowSwings.sumOf { (if (it.after.woundRisk) 1 else 0) - (if (it.before.woundRisk) 1 else 0) }.toString(),
+            "battleVpBefore" to analysis.vpImpact.beforeVp.toString(),
+            "battleVpAfter" to analysis.vpImpact.afterVp.toString(),
+            "battleVpGain" to analysis.vpImpact.gain.toString(),
+            "tacticalUtility" to analysis.tacticalValue.roundToInt().toString()
+        )
+    }
+
+    private fun battleSwapRowState(
+        state: dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSwingState,
+        ownTotal: Int?
+    ): String =
+        "total=${ownTotal ?: "?"},margin=${state.scoreMargin ?: "?"},win=${state.currentlyWinning},wound=${state.woundRisk},secured=${state.securedForNow}"
 
     private fun scorePair(effect: GameEffect, context: DecisionContext, choice: EffectDiePairChoice): PriorityScore {
         return when (effect) {

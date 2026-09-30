@@ -40,6 +40,31 @@ data class CalibrationOpportunity(
     val finalVp: Int?
 )
 
+private data class TransplantTulipBattleSwapOpportunity(
+    val game: Int,
+    val player: Int,
+    val decision: Int,
+    val selected: Boolean,
+    val choice: String,
+    val sourceDie: String,
+    val targetDie: String,
+    val sourceRow: String,
+    val targetRow: String,
+    val raisedDie: String,
+    val raiseGain: Int,
+    val sourceBefore: String,
+    val sourceAfter: String,
+    val targetBefore: String,
+    val targetAfter: String,
+    val winningDelta: Int,
+    val woundRiskDelta: Int,
+    val battleVpBefore: Int,
+    val battleVpAfter: Int,
+    val battleVpGain: Int,
+    val tacticalUtility: Int,
+    val finalUtility: Int
+)
+
 private data class BuySynergyOpportunity(
     val game: Int,
     val player: Int,
@@ -101,6 +126,7 @@ fun main(args: Array<String>) {
         }
         val records = mutableListOf<CalibrationOpportunity>()
         val buySynergyRecords = mutableListOf<BuySynergyOpportunity>()
+        val transplantTulipBattleSwaps = mutableListOf<TransplantTulipBattleSwapOpportunity>()
         repeat(options.games) { sample ->
             val game = koin.get<GameFactory>()(
                 GameConfig(
@@ -115,8 +141,9 @@ fun main(args: Array<String>) {
             koin.get<GameRunner>().run(game)
             records += extract(sample + 1, resolvedTarget, game.chronicle.entries, game)
             buySynergyRecords += extractBuySynergy(sample + 1, resolvedTarget, game.chronicle.entries)
+            transplantTulipBattleSwaps += extractTransplantTulipBattleSwaps(sample + 1, resolvedTarget, game.chronicle.entries)
         }
-        println(render(options, records, buySynergyRecords))
+        println(render(options, records, buySynergyRecords, transplantTulipBattleSwaps))
     } finally { app.close() }
 }
 
@@ -214,6 +241,44 @@ private fun extractBuySynergy(
     }
 }
 
+private fun extractTransplantTulipBattleSwaps(
+    gameNumber: Int,
+    target: String,
+    entries: List<GameEntry>
+): List<TransplantTulipBattleSwapOpportunity> {
+    if (!target.equals("Flower_11_04", true)) return emptyList()
+    return entries.filterIsInstance<GameEntry.DecisionReasoning>().flatMapIndexed { decisionIndex, event ->
+        event.alternatives.mapNotNull { alt ->
+            val o = alt.observations
+            if (o["decisionFamily"] != "transplant-tulip-battle-swap") return@mapNotNull null
+            TransplantTulipBattleSwapOpportunity(
+                game = gameNumber,
+                player = event.playerId.value,
+                decision = decisionIndex,
+                selected = alt.selected,
+                choice = alt.choiceLabel,
+                sourceDie = o["sourceDie"] ?: "?",
+                targetDie = o["targetDie"] ?: "?",
+                sourceRow = o["sourceRow"] ?: "?",
+                targetRow = o["targetRow"] ?: "?",
+                raisedDie = o["raisedDie"] ?: "?",
+                raiseGain = o["raiseGain"]?.toIntOrNull() ?: 0,
+                sourceBefore = o["sourceBefore"] ?: "?",
+                sourceAfter = o["sourceAfter"] ?: "?",
+                targetBefore = o["targetBefore"] ?: "?",
+                targetAfter = o["targetAfter"] ?: "?",
+                winningDelta = o["winningDelta"]?.toIntOrNull() ?: 0,
+                woundRiskDelta = o["woundRiskDelta"]?.toIntOrNull() ?: 0,
+                battleVpBefore = o["battleVpBefore"]?.toIntOrNull() ?: 0,
+                battleVpAfter = o["battleVpAfter"]?.toIntOrNull() ?: 0,
+                battleVpGain = o["battleVpGain"]?.toIntOrNull() ?: 0,
+                tacticalUtility = o["tacticalUtility"]?.toIntOrNull() ?: 0,
+                finalUtility = alt.total
+            )
+        }
+    }
+}
+
 private fun matches(target: String, observations: Map<String, String>): Boolean = when (target.lowercase()) {
     "mulch" -> observations["effect"] == GameEffect.MULCH_DIE_FROM_HAND.name
     else -> observations["card"].equals(target, true) || observations["effect"].equals(target, true)
@@ -233,7 +298,8 @@ private fun bucket(target: String, o: Map<String, String>): String = when (targe
 private fun render(
     options: Options,
     records: List<CalibrationOpportunity>,
-    buySynergyRecords: List<BuySynergyOpportunity>
+    buySynergyRecords: List<BuySynergyOpportunity>,
+    transplantTulipBattleSwaps: List<TransplantTulipBattleSwapOpportunity>
 ): String = buildString {
     appendLine("TARGETED DECISION CALIBRATION")
     appendLine("target=${options.target} games=${options.games} opportunities=${records.size}")
@@ -250,6 +316,26 @@ private fun render(
         if (r.utilityComponents.isNotEmpty()) appendLine("  components: ${r.utilityComponents.joinToString()}")
         if (r.rejectedHighValueAlternatives.isNotEmpty()) appendLine("  close rejected: ${r.rejectedHighValueAlternatives.joinToString()}")
         appendLine("  next=${r.nearFutureDecision ?: "-"} battle=${r.battleContribution ?: "-"} finalVP=${r.finalVp ?: -1}")
+    }
+    if (transplantTulipBattleSwaps.isNotEmpty()) {
+        appendLine()
+        appendLine("TRANSPLANT TULIP BATTLE SWAP")
+        val comparisons = transplantTulipBattleSwaps.groupBy { Triple(it.game, it.player, it.decision) }
+        appendLine("candidate observations=${transplantTulipBattleSwaps.size} swap comparisons=${comparisons.size}")
+        appendLine("selected avgTactical=${"%.1f".format(transplantTulipBattleSwaps.filter { it.selected }.map { it.tacticalUtility }.averageOrZero())} avgVpGain=${"%.2f".format(transplantTulipBattleSwaps.filter { it.selected }.map { it.battleVpGain }.averageOrZero())}")
+        appendLine("SWAP COMPARISONS (first 30)")
+        comparisons.entries.take(30).forEach { (_, rows) ->
+            val selected = rows.singleOrNull { it.selected }
+            if (selected != null) {
+                appendLine("g${selected.game}/p${selected.player} selected=${selected.choice} tactical=${selected.tacticalUtility} utility=${selected.finalUtility} vp=${selected.battleVpBefore}->${selected.battleVpAfter} (${selected.battleVpGain}) winDelta=${selected.winningDelta} woundRiskDelta=${selected.woundRiskDelta}")
+                appendLine("  swap ${selected.sourceDie}[${selected.sourceRow}] <-> ${selected.targetDie}[${selected.targetRow}]; raise=${selected.raisedDie}+${selected.raiseGain}")
+                appendLine("  ${selected.sourceRow}: ${selected.sourceBefore} -> ${selected.sourceAfter}")
+                appendLine("  ${selected.targetRow}: ${selected.targetBefore} -> ${selected.targetAfter}")
+                rows.filter { !it.selected }.sortedByDescending { it.finalUtility }.take(3).forEach { rejected ->
+                    appendLine("  rejected ${rejected.choice} tactical=${rejected.tacticalUtility} utility=${rejected.finalUtility} vpGain=${rejected.battleVpGain} winDelta=${rejected.winningDelta} woundRiskDelta=${rejected.woundRiskDelta}")
+                }
+            }
+        }
     }
     if (buySynergyRecords.isNotEmpty()) {
         appendLine()
