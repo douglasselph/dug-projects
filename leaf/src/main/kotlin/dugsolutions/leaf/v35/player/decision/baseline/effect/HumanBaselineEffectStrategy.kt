@@ -392,7 +392,12 @@ class HumanBaselineEffectStrategy(
                         reservePenalty,
                         "Existing $critterLabel availability preference"
                     ),
-                    tags = setOf(if (choice.critter == Critter.BEE) DecisionTag.SPEND_BEE else DecisionTag.SPEND_WORM)
+                    tags = buildSet {
+                        add(if (choice.critter == Critter.BEE) DecisionTag.SPEND_BEE else DecisionTag.SPEND_WORM)
+                        if (request.effect == GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5) {
+                            add(DecisionTag.SPEND_CRITTER_FOR_VINE_AND_DINE)
+                        }
+                    }
                 )
             }
         )

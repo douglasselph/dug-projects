@@ -17,6 +17,7 @@ enum class DecisionTag {
     ACQUIRE_FLOWER,
     SPEND_BEE,
     SPEND_WORM,
+    SPEND_CRITTER_FOR_VINE_AND_DINE,
     SPEND_WATER,
     SPEND_MULCH,
     PLAY_WISP,
