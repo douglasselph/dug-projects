@@ -96,13 +96,11 @@ class DrawEffectHandler(
                         request.actor.dice.hand.isNotEmpty()
 
                     GameEffectPhase.BATTLE ->
-                        battleHandChoices(request).isNotEmpty() &&
-                            hasReapBattleCapacity(request)
+                        battleHandChoices(request).isNotEmpty()
                 }
 
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO ->
-                request.actor.dice.hand.isNotEmpty() &&
-                    (request.phase != GameEffectPhase.BATTLE || hasReapBattleCapacity(request))
+                request.actor.dice.hand.isNotEmpty()
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 burstingBlossomChoices(request).isNotEmpty()
