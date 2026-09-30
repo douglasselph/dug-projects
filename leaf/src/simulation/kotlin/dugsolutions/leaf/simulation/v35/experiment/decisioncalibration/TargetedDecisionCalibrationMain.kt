@@ -40,6 +40,22 @@ data class CalibrationOpportunity(
     val finalVp: Int?
 )
 
+private data class BuySynergyOpportunity(
+    val game: Int,
+    val player: Int,
+    val card: String,
+    val plantType: String,
+    val cost: Int,
+    val selected: Boolean,
+    val qualifies: Boolean,
+    val baseUtility: Int,
+    val synergyAdjustment: Int,
+    val finalUtility: Int,
+    val sameCostCompetitors: String,
+    val nearCostCandidates: String
+)
+
+
 private data class Options(
     val target: String,
     val games: Int,
@@ -84,6 +100,7 @@ fun main(args: Array<String>) {
             return
         }
         val records = mutableListOf<CalibrationOpportunity>()
+        val buySynergyRecords = mutableListOf<BuySynergyOpportunity>()
         repeat(options.games) { sample ->
             val game = koin.get<GameFactory>()(
                 GameConfig(
@@ -97,8 +114,9 @@ fun main(args: Array<String>) {
             )
             koin.get<GameRunner>().run(game)
             records += extract(sample + 1, resolvedTarget, game.chronicle.entries, game)
+            buySynergyRecords += extractBuySynergy(sample + 1, resolvedTarget, game.chronicle.entries)
         }
-        println(render(options, records))
+        println(render(options, records, buySynergyRecords))
     } finally { app.close() }
 }
 
@@ -154,6 +172,48 @@ private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, g
     }
 }
 
+private fun extractBuySynergy(
+    gameNumber: Int,
+    target: String,
+    entries: List<GameEntry>
+): List<BuySynergyOpportunity> {
+    val isSaplink = target.equals("Vine_11_02", true)
+    val isBackbone = target.equals("Flower_11_02", true)
+    if (!isSaplink && !isBackbone) return emptyList()
+
+    return entries.filterIsInstance<GameEntry.DecisionReasoning>().flatMap { event ->
+        val alternatives = event.alternatives
+        if (alternatives.isEmpty() || alternatives.first().observations["decisionFamily"] != "plant-buy-synergy") {
+            return@flatMap emptyList()
+        }
+        val ownedKey = if (isSaplink) "saplinkOwned" else "bloomBackboneOwned"
+        if ((alternatives.first().observations[ownedKey]?.toIntOrNull() ?: 0) <= 0) {
+            return@flatMap emptyList()
+        }
+        val adjustmentKey = if (isSaplink) "saplinkAdjustment" else "bloomBackboneAdjustment"
+        val qualifiesKey = if (isSaplink) "qualifiesSaplink" else "qualifiesBloomBackbone"
+        alternatives.map { alt ->
+            val o = alt.observations
+            BuySynergyOpportunity(
+                game = gameNumber,
+                player = event.playerId.value,
+                card = o["card"] ?: alt.choiceLabel,
+                plantType = o["plantType"] ?: "?",
+                cost = o["cost"]?.toIntOrNull() ?: -1,
+                selected = alt.selected,
+                qualifies = o[qualifiesKey]?.toBooleanStrictOrNull() ?: false,
+                baseUtility = o["baseBuyUtility"]?.toIntOrNull() ?: alt.baseScore,
+                synergyAdjustment = o[adjustmentKey]?.toIntOrNull() ?: 0,
+                finalUtility = o["finalBuyUtility"]?.toIntOrNull() ?: alt.total,
+                sameCostCompetitors = alternatives.filter { it !== alt }
+                    .joinToString(",") { other -> "${other.observations["card"] ?: other.choiceLabel}:${other.total}" }
+                    .ifBlank { "-" },
+                nearCostCandidates = o["nearCostCandidates"] ?: "-"
+            )
+        }
+    }
+}
+
 private fun matches(target: String, observations: Map<String, String>): Boolean = when (target.lowercase()) {
     "mulch" -> observations["effect"] == GameEffect.MULCH_DIE_FROM_HAND.name
     else -> observations["card"].equals(target, true) || observations["effect"].equals(target, true)
@@ -170,7 +230,11 @@ private fun bucket(target: String, o: Map<String, String>): String = when (targe
     else -> "next=${o["nextPhase"] ?: "?"}|up=${o["faceUpPlants"] ?: "?"}|down=${o["faceDownPlants"] ?: "?"}"
 }
 
-private fun render(options: Options, records: List<CalibrationOpportunity>): String = buildString {
+private fun render(
+    options: Options,
+    records: List<CalibrationOpportunity>,
+    buySynergyRecords: List<BuySynergyOpportunity>
+): String = buildString {
     appendLine("TARGETED DECISION CALIBRATION")
     appendLine("target=${options.target} games=${options.games} opportunities=${records.size}")
     appendLine("chosen=${records.count { it.chosen }} (${if (records.isEmpty()) "0.0" else "%.1f".format(100.0 * records.count { it.chosen } / records.size)}%)")
@@ -186,6 +250,19 @@ private fun render(options: Options, records: List<CalibrationOpportunity>): Str
         if (r.utilityComponents.isNotEmpty()) appendLine("  components: ${r.utilityComponents.joinToString()}")
         if (r.rejectedHighValueAlternatives.isNotEmpty()) appendLine("  close rejected: ${r.rejectedHighValueAlternatives.joinToString()}")
         appendLine("  next=${r.nearFutureDecision ?: "-"} battle=${r.battleContribution ?: "-"} finalVP=${r.finalVp ?: -1}")
+    }
+    if (buySynergyRecords.isNotEmpty()) {
+        appendLine()
+        appendLine("OWNERSHIP BUY SYNERGY")
+        appendLine("candidate observations=${buySynergyRecords.size} buy comparisons=${buySynergyRecords.count { it.selected }}")
+        buySynergyRecords.groupBy { it.qualifies }.toSortedMap().forEach { (qualifies, rows) ->
+            appendLine("qualifies=$qualifies n=${rows.size} selected=${rows.count { it.selected }} avgBase=${"%.1f".format(rows.map { it.baseUtility }.average())} avgSynergy=${"%.1f".format(rows.map { it.synergyAdjustment }.average())} avgFinal=${"%.1f".format(rows.map { it.finalUtility }.average())}")
+        }
+        appendLine("BUY OPPORTUNITIES (first 40 candidate rows)")
+        buySynergyRecords.take(40).forEach { r ->
+            appendLine("g${r.game}/p${r.player} ${r.card} type=${r.plantType} cost=${r.cost} qualifies=${r.qualifies} selected=${r.selected} utility=${r.baseUtility}+${r.synergyAdjustment}->${r.finalUtility}")
+            appendLine("  same-cost=${r.sameCostCompetitors} near-cost=${r.nearCostCandidates}")
+        }
     }
 }
 

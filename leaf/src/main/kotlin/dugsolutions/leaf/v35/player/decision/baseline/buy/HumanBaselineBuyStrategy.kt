@@ -5,8 +5,10 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScor
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoredChoice
 import dugsolutions.leaf.v35.player.decision.buy.*
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.tokens.Critter
@@ -99,6 +101,7 @@ class HumanBaselineBuyStrategy(
 
         val cached = plannedSteps.firstOrNull()
         if (cached != null && plannedStepStillAvailable(cached, request)) {
+            recordPlantSynergyComparison(request.context, cached.item, request.options)
             pendingPlannedStep = cached
             pendingItem = cached.item
             pendingPlan = null
@@ -111,6 +114,7 @@ class HumanBaselineBuyStrategy(
         if (projected.isNotEmpty()) {
             plannedSteps.addAll(projected)
             val first = plannedSteps.first()
+            recordPlantSynergyComparison(request.context, first.item, request.options)
             pendingPlannedStep = first
             pendingItem = first.item
             pendingPlan = null
@@ -482,4 +486,69 @@ class HumanBaselineBuyStrategy(
         val critter: BuyCritterResource? = null,
         val value: Int
     )
+
+    /** Diagnostic-only snapshot of the real same-cost Plant comparison used by
+     * the Buy plan. It does not participate in selection and consumes no RNG.
+     * Normal simulations pay no Chronicle cost because BaselineScoreEngine
+     * drops the snapshot when no reasoning sink is enabled.
+     */
+    private fun recordPlantSynergyComparison(
+        context: DecisionContext,
+        selectedItem: BuyItem,
+        options: List<BuyItem>
+    ) {
+        val selectedPlant = selectedItem as? BuyItem.Plant ?: return
+        val saplinkOwned = context.self.board.creature.count { it.name == "Vine_11_02" }
+        val bloomBackboneOwned = context.self.board.creature.count { it.name == "Flower_11_02" }
+        if (saplinkOwned == 0 && bloomBackboneOwned == 0) return
+        val sameCost = options.filterIsInstance<BuyItem.Plant>()
+            .filter { it.cost == selectedPlant.cost }
+        if (sameCost.none { it.card.name == selectedPlant.card.name }) return
+
+        val allPlants = options.filterIsInstance<BuyItem.Plant>()
+        fun scored(item: BuyItem.Plant): ScoredChoice<BuyItem.Plant> {
+            val baseline = PurchasePriority.score(context, item, cardScorers, policy)
+            val candidate = DecisionCandidate(
+                choice = item,
+                score = baseline,
+                tags = PurchasePriority.tags(item)
+            )
+            val influenceAdjustments = influenceRegistry.adjustments(context, candidate)
+            val influenced = baseline.copy(adjustments = baseline.adjustments + influenceAdjustments)
+            val final = purchaseScoreModifier.modify(context, item, influenced)
+            val saplinkAdjustment = influenceAdjustments
+                .filter { it.reason.contains("Saplink Trellis") }.sumOf { it.amount }
+            val backboneAdjustment = influenceAdjustments
+                .filter { it.reason.contains("Bloom Backbone") }.sumOf { it.amount }
+            val nearCost = allPlants
+                .filter { it.card.name != item.card.name && kotlin.math.abs(it.cost - item.cost) <= 3 }
+                .joinToString(",") { "${it.card.name}:${it.cost}" }
+                .ifBlank { "-" }
+            return ScoredChoice(
+                choice = item,
+                score = final,
+                label = "Buy ${item.card.name}",
+                observations = mapOf(
+                    "decisionFamily" to "plant-buy-synergy",
+                    "card" to item.card.name,
+                    "plantType" to item.card.type.name,
+                    "cost" to item.cost.toString(),
+                    "baseBuyUtility" to baseline.total.toString(),
+                    "saplinkAdjustment" to saplinkAdjustment.toString(),
+                    "bloomBackboneAdjustment" to backboneAdjustment.toString(),
+                    "finalBuyUtility" to final.total.toString(),
+                    "saplinkOwned" to saplinkOwned.toString(),
+                    "bloomBackboneOwned" to bloomBackboneOwned.toString(),
+                    "qualifiesSaplink" to (item.card.type == PlantType.ROOT || item.card.type == PlantType.VINE).toString(),
+                    "qualifiesBloomBackbone" to (item.card.type == PlantType.VINE || item.card.type == PlantType.FLOWER).toString(),
+                    "nearCostCandidates" to nearCost
+                )
+            )
+        }
+
+        val alternatives = sameCost.map(::scored)
+        val selected = alternatives.single { it.choice.card.name == selectedPlant.card.name }
+        scoreEngine.recordSelection(selected, alternatives)
+    }
+
 }

@@ -56,6 +56,28 @@ class BaselineScoreEngine(
         choices: List<ScoredChoice<T>>
     ): T = choose(choices).choice
 
+    /**
+     * Records an already-made deterministic comparison without making another
+     * choice or consuming strategy RNG. Used by diagnostic-only paths whose
+     * production selection is performed outside [choose].
+     */
+    fun <T> recordSelection(
+        selected: ScoredChoice<T>,
+        alternatives: List<ScoredChoice<T>>
+    ) {
+        if (reasoningSink === DecisionReasoningSink.NONE) return
+        require(alternatives.any { it.choice == selected.choice }) {
+            "Recorded Human Baseline selection must be one of its alternatives"
+        }
+        reasoningSink.record(
+            selected.toDecisionReasoning(
+                alternatives = alternatives.map { choice ->
+                    choice.toDecisionReasoningAlternative(selected = choice.choice == selected.choice)
+                }
+            )
+        )
+    }
+
     /** Score every legal candidate, including all owned-card influences. */
     fun <T> scoreCandidates(
         context: DecisionContext,
