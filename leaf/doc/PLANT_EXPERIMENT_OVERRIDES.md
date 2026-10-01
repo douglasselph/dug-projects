@@ -168,15 +168,30 @@ Availability is applied while resolving the Grove.
 
 Changing a Plant's experimental cost does **not** move it to a different Grove slot. Grove slot identity is still based on the canonical Plant type/cost classification. For example, changing `Vine_07_01` from cost 7 to cost 11 still leaves it as the V7-slot card; it merely costs 11 to acquire during the experiment.
 
-## Training caveat: FirstGameDefault
+## Training Grove selection
 
-`bin/train_buy_policy` currently trains using the existing fixed `FirstGameDefault` Grove.
+`bin/train_buy_policy` still defaults to the canonical fixed `FirstGameDefault` Grove, preserving historical training behavior when no Grove option is supplied.
 
-Therefore a cost override for a Plant in that Grove works, but excluding a Plant that is explicitly required by `FirstGameDefault` causes training setup to fail clearly. For example, excluding `Vine_07_01` currently conflicts with the fixed training Grove.
+For experiments that exclude cards from `FirstGameDefault`, train against an explicit Grove pattern or a random Grove:
 
-That failure is deliberate: the override system will not silently replace an explicitly requested card with a random alternative.
+```bash
+bin/train_buy_policy --random-grove \
+  --plant-overrides /path/to/exclude-v7-outliers.csv
+```
 
-A future training configuration can expose a different/random Grove explicitly; until then, use exclusions in evaluation only when the chosen Grove can legally satisfy them.
+or, for a partially fixed Grove:
+
+```bash
+bin/train_buy_policy --grove 000100000 \
+  --grove-seed 81000 \
+  --plant-overrides /path/to/plant-overrides.csv
+```
+
+`--random-grove` is equivalent to `--grove 000000000`. Every zero slot is resolved once per training sample using a dedicated Grove RNG. The default training Grove seed is `81000`; override it with `--grove-seed`.
+
+The complete Grove schedule is deterministic for the Grove seed and sample index, and it is resolved before candidate evaluation. Therefore every candidate in every generation sees the **same concrete Grove for the same training sample**. Grove resolution does not consume mechanical or strategy RNG.
+
+An explicitly fixed unavailable card still fails clearly. If exclusions make a random Grove slot impossible, training also fails clearly rather than silently restoring a canonical card.
 
 ## Reporting
 

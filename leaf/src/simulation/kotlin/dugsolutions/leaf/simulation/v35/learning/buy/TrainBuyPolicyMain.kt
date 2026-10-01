@@ -4,12 +4,16 @@ import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunContext
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
 import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentResearchConfig
+import dugsolutions.leaf.simulation.v35.experiment.plant.resolveResearchGroveForSample
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.*
 import dugsolutions.leaf.v35.game.di.GameFactory
+import dugsolutions.leaf.v35.plant.GrovePlantCode
 import dugsolutions.leaf.v35.plant.PlantCardManager
+import dugsolutions.leaf.v35.plant.PlantValueResolver
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuy
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
@@ -34,12 +38,11 @@ fun main(args: Array<String>) {
         loadCards(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
         val allPlants = plantManager.getAllCards().cards
-        val grove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
+        val defaultGrove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
         val plantExperiment = PlantExperimentResearchConfig.resolve(o.plantOverridesPath, allPlants)
-        val blockedFixed = grove.filterNot(plantExperiment.values::isAvailable)
-        require(blockedFixed.isEmpty()) {
-            "FirstGameDefault fixes Plant cards that are unavailable in the active Plant experiment: ${blockedFixed.map { it.name }.sorted()}"
-        }
+        val trainingGroves = resolveTrainingGroves(
+            o, plantManager, defaultGrove, allPlants, plantExperiment.values
+        )
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val initial = LearnedBuyCardCatalog.prepare(
@@ -55,7 +58,11 @@ fun main(args: Array<String>) {
         println("input=${o.input} output=${o.output}")
         println("generations=${o.generations} population=${o.population} games/policy=${o.games}")
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
-        println("affected learned role rotates across physical seats; opponents=Human Baseline; Grove=FirstGameDefault; rounds=3/2/2")
+        println("affected learned role rotates across physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=3/2/2")
+        if (o.grovePattern != null) {
+            println("Grove zeros are resolved once per training sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; every candidate sees the same Grove for the same sample")
+            println("resolved training Grove sample 0=${GrovePlantCode.encode(trainingGroves.first())}")
+        }
         println("fitness=affected-role mean win share; identical game/strategy seed cohort for every policy")
         if (plantExperiment.isActive) {
             println()
@@ -66,7 +73,7 @@ fun main(args: Array<String>) {
         repeat(o.generations) { generation ->
             val evaluated = population.mapIndexed { candidate, weights ->
                 val fitness = evaluate(
-                    weights, o, factory, runner, grove, plantExperiment.values, generation, candidate
+                    weights, o, factory, runner, trainingGroves, plantExperiment.values, generation, candidate
                 )
                 EvaluatedBuyPolicy(weights, fitness)
             }.sortedByDescending { it.fitness }
@@ -74,7 +81,7 @@ fun main(args: Array<String>) {
             if (best.fitness > allTime.fitness) {
                 allTime = best
                 allTime.weights.withProvenance(LearnedBuyProvenance(
-                    trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
+                    trainingStatus = "trained", roundPattern = "3/2/2", grove = o.groveProvenance(),
                     generations = generation + 1, gamesPerPolicy = o.games, population = o.population,
                     mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed, mechanicalSeedStart = o.seed,
                     strategySeedStart = o.strategySeed, fitness = best.fitness, cardManifest = initial.provenance.cardManifest
@@ -87,7 +94,7 @@ fun main(args: Array<String>) {
         // Rewrite the final champion with provenance for the complete training run,
         // even when the champion itself was first discovered in an earlier generation.
         allTime.weights.withProvenance(LearnedBuyProvenance(
-            trainingStatus = "trained", roundPattern = "3/2/2", grove = "FirstGameDefault",
+            trainingStatus = "trained", roundPattern = "3/2/2", grove = o.groveProvenance(),
             generations = o.generations, gamesPerPolicy = o.games, population = o.population,
             mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed,
             mechanicalSeedStart = o.seed, strategySeedStart = o.strategySeed, fitness = allTime.fitness, cardManifest = initial.provenance.cardManifest
@@ -103,8 +110,8 @@ private fun evaluate(
     o: TrainOptions,
     factory: GameFactory,
     runner: GameRunner,
-    grove: List<dugsolutions.leaf.v35.plant.domain.PlantCard>,
-    plantValues: dugsolutions.leaf.v35.plant.PlantValueResolver,
+    groves: List<List<PlantCard>>,
+    plantValues: PlantValueResolver,
     generation: Int,
     candidate: Int
 ): Double {
@@ -113,6 +120,8 @@ private fun evaluate(
         val seat = sample % 4
         val mechanicalSeed = o.seed + sample
         val strategySeed = o.strategySeed + sample
+        val grove = groves[sample]
+        val groveCode = GrovePlantCode.encode(grove)
         val learnedFactory = learnedFactory(weights)
         val decisions = List(4) { if (it == seat) learnedFactory else PlayerDecisionFactory.humanBaseline() }
         val game = factory(GameConfig(
@@ -127,11 +136,29 @@ private fun evaluate(
         val result = withSimulationFailureDiagnostics(game, SimulationRunContext(
             experiment = "train_buy_policy_g${generation + 1}_c${candidate + 1}", sample = sample,
             variant = "LEARNED_BUY", affectedSeat = seat, mechanicalSeed = mechanicalSeed,
-            strategySeed = strategySeed, grove = "FirstGameDefault", roundStructure = "3/2/2"
+            strategySeed = strategySeed, grove = groveCode, roundStructure = "3/2/2"
         )) { runner.run(game) }
         wins += GameSummaryExtractor.extract(game, result).players.single { it.seat == seat }.winShare
     }
     return wins / o.games
+}
+
+internal fun resolveTrainingGroves(
+    options: TrainOptions,
+    plantManager: PlantCardManager,
+    defaultGrove: List<PlantCard>,
+    allPlants: List<PlantCard>,
+    plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+): List<List<PlantCard>> = List(options.games) { sample ->
+    resolveResearchGroveForSample(
+        grovePattern = options.grovePattern,
+        groveSeed = options.groveSeed,
+        sample = sample,
+        plantManager = plantManager,
+        defaultGrove = defaultGrove,
+        allPlants = allPlants,
+        plantValues = plantValues,
+    )
 }
 
 private fun learnedFactory(weights: LearnedBuyWeights): PlayerDecisionFactory = object : PlayerDecisionFactory {
@@ -158,14 +185,19 @@ internal data class TrainOptions(
     val generations: Int, val population: Int, val games: Int, val elites: Int,
     val sigma: Double, val mutations: Int, val evolutionSeed: Long,
     val seed: Long, val strategySeed: Long, val input: Path, val output: Path,
-    val plantOverridesPath: Path?
+    val plantOverridesPath: Path?, val grovePattern: String?, val groveSeed: Long
 ) {
+    fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (one deterministic resolution per training sample)" } ?: "Grove=FirstGameDefault"
+    fun groveProvenance(): String = grovePattern?.let { "pattern=$it;groveSeed=$groveSeed;perSample=true" } ?: "FirstGameDefault"
+
     companion object {
         fun parse(args: List<String>): TrainOptions {
             var generations=5; var population=8; var games=20; var elites=2; var sigma=.25; var mutations=6
             var evolutionSeed=51000L; var seed=61000L; var strategySeed=71000L
             var input=Paths.get("data/ai/buy-policy-v1.weights"); var output=Paths.get("output/ai/buy-policy-v1-trained.weights")
             var plantOverridesPath: Path? = null
+            var grovePattern: String? = null
+            var groveSeed = 81000L
             var i=0
             fun value(a:String):String = if ('=' in a) a.substringAfter('=') else args[++i]
             while(i<args.size) { val a=args[i]; when {
@@ -181,12 +213,15 @@ internal data class TrainOptions(
                 a.startsWith("--input") -> input=Paths.get(value(a))
                 a.startsWith("--output") -> output=Paths.get(value(a))
                 a.startsWith("--plant-overrides") -> plantOverridesPath=Paths.get(value(a))
+                a.startsWith("--grove-seed") -> groveSeed=value(a).toLong()
+                a.startsWith("--grove") -> grovePattern=GrovePlantCode.validate(value(a))
+                a=="--random-grove" -> grovePattern=GrovePlantCode.RANDOM_PATTERN
                 a=="--help" -> { usage(); kotlin.system.exitProcess(0) }
                 else -> error("Unknown argument: $a")
             }; i++ }
             require(generations>0); require(population>=2); require(games>0); require(elites in 1 until population)
-            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath)
+            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath,grovePattern,groveSeed)
         }
-        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH]")
+        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N]")
     }
 }

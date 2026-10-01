@@ -5,6 +5,7 @@ import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunContext
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
 import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentResearchConfig
+import dugsolutions.leaf.simulation.v35.experiment.plant.resolveResearchGroveForSample
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.chronicle.domain.*
@@ -953,51 +954,16 @@ internal fun resolveGroveForSample(
     defaultGrove: List<PlantCard>,
     allPlants: List<PlantCard>,
     plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
-): List<PlantCard> {
-    val knownNames = allPlants.map { it.name }.toSet()
-    options.excludedCards.forEach { require(it in knownNames) { "Unknown --exclude-card Plant: $it" } }
-    val unavailable = allPlants.filterNot(plantValues::isAvailable).map { it.name }.toSet()
-    val excluded = options.excludedCards + unavailable
-
-    if (options.grovePattern == null) {
-        require(options.excludedCards.isEmpty()) { "--exclude-card requires --random-grove or --grove; FirstGameDefault is fixed." }
-        val blocked = defaultGrove.filterNot(plantValues::isAvailable)
-        require(blocked.isEmpty()) {
-            "FirstGameDefault fixes Plant cards that are unavailable in the active Plant experiment: ${blocked.map { it.name }.sorted()}"
-        }
-        return defaultGrove
-    }
-    val pattern = options.grovePattern
-    val fixedNames = GrovePlantCode.overrideNames(pattern)
-    val fixedNameSet = fixedNames.toSet()
-    val blockedFixed = fixedNames.filter { it in excluded }
-    require(blockedFixed.isEmpty()) {
-        "Grove pattern $pattern explicitly fixes unavailable/excluded Plant cards: ${blockedFixed.sorted()}"
-    }
-    pattern.forEachIndexed { index, digit ->
-        if (digit == '0') {
-            val candidates = ('1'..'4').map { candidateDigit ->
-                val chars = pattern.toCharArray()
-                chars[index] = candidateDigit
-                val expandedNames = GrovePlantCode.overrideNames(chars.concatToString())
-                (expandedNames.toSet() - fixedNameSet).single()
-            }
-            require(candidates.any { it !in excluded }) {
-                "No Plant cards remain available for Grove pattern slot ${index + 1}; excluded/unavailable candidates=${candidates.sorted()}"
-            }
-        }
-    }
-
-    val randomizer = Randomizer.create(options.groveSeed + sample)
-    repeat(10_000) {
-        val concreteCode = GrovePlantCode.generate(pattern, randomizer)
-        val names = GrovePlantCode.overrideNames(concreteCode)
-        if (names.none { it in excluded }) {
-            return names.map { name -> requireNotNull(plantManager.getCard(name)) }
-        }
-    }
-    error("Could not resolve Grove pattern $pattern without unavailable/excluded cards ${excluded.sorted()}; constraints may eliminate every choice in a slot.")
-}
+): List<PlantCard> = resolveResearchGroveForSample(
+    grovePattern = options.grovePattern,
+    groveSeed = options.groveSeed,
+    sample = sample,
+    plantManager = plantManager,
+    defaultGrove = defaultGrove,
+    allPlants = allPlants,
+    plantValues = plantValues,
+    excludedCards = options.excludedCards,
+)
 
 
 internal data class ResolvedResearchEnvironment(

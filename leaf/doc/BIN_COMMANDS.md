@@ -109,8 +109,12 @@ the held-out result is the independent evidence.
 
 Evolves **only the Buy-selection policy**. Every other decision remains Human
 Baseline, and Human Baseline still chooses payment for the selected purchase.
-The current trainer uses `FirstGameDefault`, `3/2/2`, rotates the learned role
-through physical seats, and gives every candidate the same seed cohort.
+The trainer defaults to `FirstGameDefault` and `3/2/2`, rotates the learned role
+through physical seats, and gives every candidate the same seed cohort. Training
+can instead use `--grove CODE` or `--random-grove`; zero slots are resolved once
+per training sample from a dedicated Grove RNG, and every candidate sees the
+same concrete Grove for that sample. The default training Grove seed is `81000`
+and can be changed with `--grove-seed`.
 
 For a small end-to-end smoke run:
 
@@ -129,6 +133,16 @@ A larger run can be requested explicitly, for example:
 ```bash
 bin/train_buy_policy --generations 20 --population 16 --games 100
 ```
+
+For random-Grove training under a Plant experiment overlay:
+
+```bash
+bin/train_buy_policy --random-grove --grove-seed 81000 \
+  --plant-overrides /path/to/v7-known-outliers-excluded.csv
+```
+
+`--random-grove` is equivalent to `--grove 000000000`. Explicitly fixed
+unavailable cards and impossible constrained slots fail clearly.
 
 Do not treat training fitness as held-out evidence and do not promote the
 output into `data/ai/` merely because its training result is good. Evaluate a

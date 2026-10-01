@@ -173,10 +173,13 @@ Then use the small default run as an end-to-end smoke test:
 bin/train_buy_policy
 ```
 
-The trainer currently uses `FirstGameDefault`, standard `3/2/2`, deterministic
-mechanical and strategy seed cohorts, and seat rotation. Every candidate in a
-generation receives the same controlled cohort. Evolution has its own RNG.
-Elites survive unchanged and children receive Gaussian mutations.
+The trainer defaults to `FirstGameDefault`, standard `3/2/2`, deterministic
+mechanical and strategy seed cohorts, and seat rotation. It can also train on
+`--grove CODE` or `--random-grove`. Zero slots are resolved once per training
+sample using a dedicated Grove RNG (default seed `81000`), and the resolved
+schedule is reused for every candidate in every generation. Thus all candidates
+receive the same controlled mechanical/strategy/Grove cohort. Evolution has its
+own RNG. Elites survive unchanged and children receive Gaussian mutations.
 
 The default run is intentionally small and should establish that the pipeline
 works, not that a policy is good. Inspect both console output and:
@@ -223,6 +226,18 @@ For a larger explicitly requested run:
 ```bash
 bin/train_buy_policy --generations 20 --population 16 --games 100
 ```
+
+To train across random Groves while applying a Plant experiment overlay:
+
+```bash
+bin/train_buy_policy --random-grove --grove-seed 81000 \
+  --plant-overrides /path/to/v7-known-outliers-excluded.csv
+```
+
+`--random-grove` is equivalent to `--grove 000000000`. A partial pattern such as
+`--grove 000100000` fixes `Vine_07_01` while resolving the other slots per sample.
+The resolved Grove schedule is deterministic and does not consume game mechanical
+or strategy RNG.
 
 Training fitness is selection data, not independent evidence. The next research
 step for a promising champion is held-out evaluation using new mechanical and
