@@ -1,5 +1,7 @@
 package dugsolutions.leaf.simulation.v35.experiment
 
+import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentConfig
+
 /**
  * Reproducibility metadata for a future simulation batch.
  *
@@ -10,7 +12,8 @@ package dugsolutions.leaf.simulation.v35.experiment
 data class ExperimentConfig(
     val games: Int,
     val baseSeed: Long? = null,
-    val strategyBaseSeed: Long? = baseSeed
+    val strategyBaseSeed: Long? = baseSeed,
+    val plantOverrides: PlantExperimentConfig = PlantExperimentConfig.EMPTY
 ) {
     init {
         require(games > 0) { "Simulation experiment must run at least one game" }
