@@ -1,5 +1,10 @@
 # Petal To Die 4 D4 valuation and realizable synergy raises
 
+## Research documentation
+
+- **[Plant Experiment Overrides](doc/PLANT_EXPERIMENT_OVERRIDES.md)** — How to create and use `--plant-overrides` CSV files for research-only Plant cost and availability experiments.
+
+
 Changes only; unzip at the leaf project root.
 
 - Petal To Die 4 Gain-D4 branch includes +1 future Petal VP represented on the existing 10 priority-points-per-projected-VP scale.
