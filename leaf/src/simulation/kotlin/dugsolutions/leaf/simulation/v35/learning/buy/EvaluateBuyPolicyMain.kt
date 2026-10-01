@@ -187,7 +187,7 @@ internal class EvalAccumulator {
     private fun <K> MutableMap<K,Long>.bump(key:K) { this[key]=(this[key]?:0L)+1L }
 }
 
-private val WATCHED_CARDS = listOf("Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Flower_11_01","Flower_14_04","Vine_09_03")
+private val WATCHED_CARDS = listOf("Root_07_03","Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Flower_11_01","Flower_14_04","Vine_09_03")
 
 private fun scoreWatchedCard(
     card: PlantCard,
