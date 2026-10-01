@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.game.scoring
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
@@ -43,6 +44,52 @@ class FinalScorerTest {
         assertEquals(14, score.totalVp)
         assertEquals(3, score.graftedPlantCount)
         assertEquals(listOf(player.id), result.winnerIds)
+    }
+
+
+    @Test
+    fun score_sixPerGraftedVineCopiesWithSevenTotalVines_scoreFortyTwo() {
+        val player = player(1)
+        val opponent = player(2)
+        val vineYield = plant("Vine Yield", PlantType.VINE, PlantScoringRule.PerGraftedVine)
+        val otherVine = plant("Other Vine", PlantType.VINE, PlantScoringRule.Fixed(0))
+
+        repeat(6) { graft(player, vineYield) }
+        graft(player, otherVine)
+
+        val result = FinalScorer().score(
+            GameEngineTestFixture.game(players = listOf(player, opponent))
+        )
+
+        val score = result.scores.first { it.playerId == player.id }
+        assertEquals(42, score.plantVp)
+    }
+
+    @Test
+    fun score_effectivePerGraftedFlowerRule_countsOnlyFlowersForEveryCopy() {
+        val player = player(1)
+        val opponent = player(2)
+        val vineYield = plant("Vine Yield", PlantType.VINE, PlantScoringRule.PerGraftedVine)
+        val flower = plant("Scoring Flower", PlantType.FLOWER, PlantScoringRule.Fixed(0))
+
+        repeat(3) { graft(player, vineYield) }
+        repeat(2) { graft(player, flower) }
+
+        val scoringResolver = object : PlantValueResolver {
+            override fun costFor(card: PlantCard): Int = card.cost
+            override fun isAvailable(card: PlantCard): Boolean = true
+            override fun scoringRuleFor(card: PlantCard): PlantScoringRule =
+                if (card.name == vineYield.name) PlantScoringRule.PerGraftedFlower else card.scoringRule
+        }
+        val result = FinalScorer().score(
+            GameEngineTestFixture.game(
+                players = listOf(player, opponent),
+                plantValues = scoringResolver
+            )
+        )
+
+        val score = result.scores.first { it.playerId == player.id }
+        assertEquals(6, score.plantVp) // 3 Vine Yield copies * 2 Flowers
     }
 
     @Test

@@ -59,7 +59,11 @@ object BuyFeatureExtractor {
                     PlantType.VINE -> BuyFeature.ACTION_IS_VINE
                     PlantType.FLOWER -> BuyFeature.ACTION_IS_FLOWER
                 }] = 1.0
-                when (val scoring = action.card.scoringRule) {
+                val scoring = context.grove.plantStacks
+                    .firstOrNull { it.name == action.card.name }
+                    ?.scoringRule
+                    ?: action.card.scoringRule
+                when (scoring) {
                     is PlantScoringRule.Fixed -> put(BuyFeature.ACTION_PLANT_FIXED_VP, scoring.points)
                     else -> put(BuyFeature.ACTION_PLANT_VARIABLE_VP, 1)
                 }

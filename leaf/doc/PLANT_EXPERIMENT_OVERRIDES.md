@@ -1,6 +1,6 @@
 # Plant Experiment Overrides
 
-Plant experiment overrides are a **research-only** way to change selected Plant acquisition economics without editing the canonical Cultivation-card CSV files.
+Plant experiment overrides are a **research-only** way to change selected Plant acquisition economics and end-game scoring rules without editing the canonical Cultivation-card CSV files.
 
 The canonical card data remains the definition of the actual game. An override file changes the effective Plant values only for a simulation/research run that explicitly loads that file.
 
@@ -26,7 +26,7 @@ or:
 bin/train_buy_policy --plant-overrides /path/to/my-plant-experiment.csv
 ```
 
-When the option is omitted, Plant cost and availability remain canonical.
+When the option is omitted, Plant cost, availability, and scoring remain canonical.
 
 ## CSV format
 
@@ -43,13 +43,23 @@ Each row identifies one Plant by its stable card ID, such as `Vine_07_01`.
 | `card_id` | Stable Plant card ID. Required for every nonblank row. | Invalid for a data row. |
 | `cost` | Experimental acquisition cost. Must be an integer `>= 0`. | Use canonical cost. |
 | `available` | Whether the Plant may appear in the Grove: `true` or `false`. | Use canonical availability (`true`). |
-| `scoring` | Reserved for typed scoring-rule overrides. | Use canonical scoring. |
+| `scoring` | Experimental typed end-game scoring rule. | Use canonical scoring. |
 
-### Important: scoring overrides are not enabled yet
+### Typed scoring expressions
 
-The `scoring` column must currently be blank. A nonblank value is rejected with an error rather than being interpreted as integer VP or silently ignored.
+The `scoring` field maps directly to the existing structured `PlantScoringRule` model. Supported expressions are:
 
-This is intentional: Plant end-game VP uses the existing typed `PlantScoringRule` architecture, including conditional rules, and scoring integration is a separate task.
+```text
+FIXED:<non-negative integer>
+PER_GRAFTED_VINE
+PER_GRAFTED_FLOWER
+PER_BUTTERFLY
+PER_OWNED_D4
+```
+
+For example, `FIXED:3` means a fixed 3 VP per copy. `PER_GRAFTED_FLOWER` means each copy scores 1 VP for each Flower grafted to that player's Creature. Unknown or malformed expressions fail clearly. A bare integer such as `3` is **not** valid scoring syntax.
+
+The canonical card CSV and its `vp_icon` translation remain authoritative when `scoring` is blank.
 
 ## Examples
 
@@ -121,6 +131,31 @@ Vine_07_01,11,true,
 
 This explicitly keeps the card available and changes its effective cost to 11.
 
+### Override Vine Yield to score per Flower
+
+```csv
+card_id,cost,available,scoring
+Vine_07_04,,,PER_GRAFTED_FLOWER
+```
+
+Run:
+
+```bash
+bin/evaluate_buy_policy --plant-overrides /path/to/vine-yield-per-flower.csv
+```
+
+This leaves Vine Yield's canonical cost and availability unchanged. Only its effective end-game scoring rule changes for that experiment. Multiple copies each score from the same grafted-Flower count. The canonical `Vine_07_04` definition remains `PER_GRAFTED_VINE`.
+
+### Combine independent dimensions
+
+```csv
+card_id,cost,available,scoring
+Vine_07_01,11,true,FIXED:3
+Vine_07_04,,,PER_GRAFTED_FLOWER
+```
+
+Cost, availability, and scoring are independent. Blank fields continue to mean canonical values.
+
 ## Grove behavior
 
 Availability is applied while resolving the Grove.
@@ -156,6 +191,7 @@ Vine_07_01
 
 Vine_07_04
   available: true -> false
+  scoring: PER_GRAFTED_VINE -> PER_GRAFTED_FLOWER
 
 All unspecified Plant properties canonical.
 ```
@@ -172,7 +208,7 @@ The loader fails rather than silently falling back when it encounters invalid ex
 - malformed `available` values;
 - missing required CSV columns;
 - malformed quoted CSV;
-- nonblank `scoring` values until typed scoring-file parsing is implemented.
+- unknown or malformed typed `scoring` expressions.
 
 Valid Boolean values are `true` and `false` (case-insensitive after trimming).
 
@@ -211,11 +247,8 @@ Implemented now:
 - research purchase-cost reporting;
 - random/fixed Grove availability filtering;
 - `--plant-overrides` in `evaluate_buy_policy` and `train_buy_policy`;
-- resolved intervention reporting.
+- typed scoring-file parsing into `PlantScoringRule`;
+- experimental `PlantScoringRule` use by `FinalScorer`;
+- resolved intervention reporting for cost, availability, and scoring.
 
-Not implemented yet:
-
-- typed scoring-file parsing;
-- experimental `PlantScoringRule` use by `FinalScorer`.
-
-Therefore an override file can currently be used for **cost experiments** and **availability/exclusion experiments**, but not end-game scoring experiments.
+Therefore the same override file can be used for **cost**, **availability/exclusion**, and **typed end-game scoring** experiments while leaving canonical card data unchanged.

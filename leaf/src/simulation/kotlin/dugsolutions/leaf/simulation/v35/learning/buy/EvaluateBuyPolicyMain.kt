@@ -101,8 +101,8 @@ fun main(args: Array<String>) {
             val groveCode = GrovePlantCode.encode(resolvedGrove)
             val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(4) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
-            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove)
-            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove)
+            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
+            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
         }
         printReport(o, weights, control, learned)
     } finally { app.close() }
@@ -151,7 +151,13 @@ internal class EvalAccumulator {
     val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
     val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
-    fun add(game: CompletedEvalGame, seat: Int, plantsByName: Map<String,PlantCard>, grove: List<PlantCard>) {
+    fun add(
+        game: CompletedEvalGame,
+        seat: Int,
+        plantsByName: Map<String,PlantCard>,
+        grove: List<PlantCard>,
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+    ) {
         val p=game.summary.players.single { it.seat==seat }
         winShare+=p.winShare; vp+=p.totalVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
         seatWins[seat]+=p.winShare; seatGames[seat]++
@@ -160,14 +166,14 @@ internal class EvalAccumulator {
         battleShape.addGame(game.entries, p.playerId)
         strikeResearch.addGame(game.entries, p.playerId, p.winShare)
         utilization.addGame(game.entries, p.playerId)
-        vpLedger.addGame(p, game.entries, plantsByName)
+        vpLedger.addGame(p, game.entries, plantsByName, plantValues)
         grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
         WATCHED_CARDS.forEach { name ->
             val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
             if(copies>0) {
                 watchedCardCopies[name]=(watchedCardCopies[name]?:0)+copies
                 val card=plantsByName[name]
-                if(card!=null) scoreWatchedCard(card,copies,p)?.let { watchedCardVp[name]=(watchedCardVp[name]?:0)+it.toLong() }
+                if(card!=null) scoreWatchedCard(card,copies,p,plantValues)?.let { watchedCardVp[name]=(watchedCardVp[name]?:0)+it.toLong() }
             }
         }
         game.entries.filterIsInstance<GameEntry.Purchase>().filter { it.playerId==p.playerId }.forEach { purchase ->
@@ -182,10 +188,16 @@ internal class EvalAccumulator {
 
 private val WATCHED_CARDS = listOf("Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Flower_11_01","Flower_14_04","Vine_09_03")
 
-private fun scoreWatchedCard(card: PlantCard, copies: Int, p: dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary): Int? {
-    val perCopy = when(val rule=card.scoringRule) {
+private fun scoreWatchedCard(
+    card: PlantCard,
+    copies: Int,
+    p: dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary,
+    plantValues: PlantValueResolver
+): Int? {
+    val perCopy = when(val rule=plantValues.scoringRuleFor(card)) {
         is PlantScoringRule.Fixed -> rule.points
         PlantScoringRule.PerGraftedVine -> p.plantCreatureSignature.cards.count { it.plantName.startsWith("Vine_") }
+        PlantScoringRule.PerGraftedFlower -> p.plantCreatureSignature.cards.count { it.plantName.startsWith("Flower_") }
         PlantScoringRule.PerButterfly -> return null // reported separately as unavailable from compact final summary
         PlantScoringRule.PerOwnedD4 -> p.ownedDiceSignature.d4
     }
@@ -573,7 +585,8 @@ internal class VpLedgerAccumulator {
     fun addGame(
         p: dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary,
         entries: List<GameEntry>,
-        plantsByName: Map<String, PlantCard>
+        plantsByName: Map<String, PlantCard>,
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
     ) {
         games++
         finalVp += p.totalVp
@@ -598,12 +611,14 @@ internal class VpLedgerAccumulator {
         otherExistingVp += other
 
         val vineCount = p.plantCreatureSignature.cards.count { it.plantName.startsWith("Vine_") }
+        val flowerCount = p.plantCreatureSignature.cards.count { it.plantName.startsWith("Flower_") }
         var attributedPlants = 0
         p.plantCreatureSignature.cards.groupingBy { it.plantName }.eachCount().forEach { (name, copies) ->
             val card = plantsByName[name] ?: return@forEach
-            val perCopy = when (val rule = card.scoringRule) {
+            val perCopy = when (val rule = plantValues.scoringRuleFor(card)) {
                 is PlantScoringRule.Fixed -> rule.points
                 PlantScoringRule.PerGraftedVine -> vineCount
+                PlantScoringRule.PerGraftedFlower -> flowerCount
                 PlantScoringRule.PerOwnedD4 -> p.ownedDiceSignature.d4
                 PlantScoringRule.PerButterfly -> return@forEach
             }

@@ -33,6 +33,14 @@ data class PlantExperimentResearchConfig(
                     override.available?.let { available ->
                         if (!available) add("  available: true -> false")
                     }
+                    override.scoringRule?.let { scoringRule ->
+                        if (scoringRule != card.scoringRule) {
+                            add(
+                                "  scoring: ${PlantScoringRuleCodec.format(card.scoringRule)} -> " +
+                                    PlantScoringRuleCodec.format(scoringRule)
+                            )
+                        }
+                    }
                 }
                 if (lines.isEmpty()) null else card.name to lines
             }
@@ -41,7 +49,7 @@ data class PlantExperimentResearchConfig(
             appendLine("PLANT EXPERIMENT OVERRIDES")
             appendLine("source: $sourcePath")
             if (interventions.isEmpty()) {
-                appendLine("(no effective cost or availability interventions)")
+                appendLine("(no effective Plant interventions)")
             } else {
                 interventions.forEachIndexed { index, (cardId, lines) ->
                     if (index > 0) appendLine()

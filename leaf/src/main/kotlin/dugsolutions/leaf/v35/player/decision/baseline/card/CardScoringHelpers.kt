@@ -407,7 +407,7 @@ object CardScoringHelpers {
         neutralPlayBase: Int
     ): PriorityScore {
         var score = PriorityScore(neutralPlayBase / 5)
-        val vp = projectedVp(context, card.scoringRule)
+        val vp = projectedVp(context, effectiveScoringRule(context, card))
         if (vp > 0) score = score.adjusted(vp * 3, "Projected end-game VP")
         if (card.effect == GameEffect.DRAW_TWO_DICE || card.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW) {
             score = score.adjusted(4, "Broadly useful effect")
@@ -436,11 +436,17 @@ object CardScoringHelpers {
         return score
     }
 
+    fun effectiveScoringRule(context: DecisionContext, card: PlantCard): PlantScoringRule =
+        context.grove.plantStacks.firstOrNull { it.name == card.name }?.scoringRule
+            ?: context.self.board.creature.firstOrNull { it.name == card.name }?.scoringRule
+            ?: card.scoringRule
+
     fun projectedVp(context: DecisionContext, rule: PlantScoringRule): Int =
         when (rule) {
             is PlantScoringRule.Fixed -> rule.points
             PlantScoringRule.PerButterfly -> context.self.board.butterflies.size
             PlantScoringRule.PerGraftedVine -> context.self.board.creature.count { it.type == PlantType.VINE }
+            PlantScoringRule.PerGraftedFlower -> context.self.board.creature.count { it.type == PlantType.FLOWER }
             PlantScoringRule.PerOwnedD4 ->
                 (context.self.board.supply + context.self.board.hand + context.self.board.discard)
                     .count { it.sides == 4 } +

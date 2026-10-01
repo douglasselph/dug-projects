@@ -180,7 +180,35 @@ class PlantExperimentConfigLoaderTest {
     }
 
     @Test
-    fun nonblankScoringSyntax_failsInsteadOfFlatteningConditionalScoringToInteger() {
+    fun typedScoringExpressions_mapToExistingPlantScoringRules() {
+        val config = loadCsv(
+            """
+            card_id,cost,available,scoring
+            Vine_07_01,,,FIXED:1
+            Vine_07_04,,,PER_GRAFTED_FLOWER
+            Vine_09_03,,,PER_BUTTERFLY
+            """.trimIndent()
+        )
+
+        assertEquals(PlantScoringRule.Fixed(1), config.overrideFor("Vine_07_01")?.scoringRule)
+        assertEquals(PlantScoringRule.PerGraftedFlower, config.overrideFor("Vine_07_04")?.scoringRule)
+        assertEquals(PlantScoringRule.PerButterfly, config.overrideFor("Vine_09_03")?.scoringRule)
+    }
+
+    @Test
+    fun perOwnedD4ScoringExpression_isSupported() {
+        val config = loadCsv(
+            """
+            card_id,cost,available,scoring
+            Vine_09_03,,,PER_OWNED_D4
+            """.trimIndent()
+        )
+
+        assertEquals(PlantScoringRule.PerOwnedD4, config.overrideFor("Vine_09_03")?.scoringRule)
+    }
+
+    @Test
+    fun bareIntegerScoring_failsInsteadOfFlatteningTypedScoringToInteger() {
         val error = assertFailsWith<IllegalArgumentException> {
             loadCsv(
                 """
@@ -190,10 +218,38 @@ class PlantExperimentConfigLoaderTest {
             )
         }
 
-        assertTrue(error.message.orEmpty().contains("Unsupported nonblank scoring override '3'"))
+        assertTrue(error.message.orEmpty().contains("Unknown Plant scoring expression '3'"))
 
         val canonical = cards.first { it.name == "Vine_07_04" }
         assertEquals(PlantScoringRule.PerGraftedVine, canonical.scoringRule)
+    }
+
+    @Test
+    fun malformedFixedScoring_failsClearly() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            loadCsv(
+                """
+                card_id,cost,available,scoring
+                Vine_07_01,,,FIXED:many
+                """.trimIndent()
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("Invalid FIXED Plant scoring expression 'FIXED:many'"))
+    }
+
+    @Test
+    fun unknownScoringExpression_failsClearly() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            loadCsv(
+                """
+                card_id,cost,available,scoring
+                Vine_07_04,,,PER_MUSHROOM
+                """.trimIndent()
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("Unknown Plant scoring expression 'PER_MUSHROOM'"))
     }
 
     @Test

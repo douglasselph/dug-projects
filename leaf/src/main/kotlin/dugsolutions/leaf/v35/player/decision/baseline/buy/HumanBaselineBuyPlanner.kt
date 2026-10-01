@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.player.decision.buy.ChoosePurchaseRequest
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DieView
+import dugsolutions.leaf.v35.player.decision.context.GroveView
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Critter
@@ -432,7 +433,7 @@ internal class HumanBaselineBuyPlanner(
             is BuyItem.Plant -> {
                 val remaining = (market.plantRemaining[item.card.name] ?: 0) - 1
                 if (remaining < 0) return null
-                val creature = graftHypothetically(board.creature, item) ?: return null
+                val creature = graftHypothetically(board.creature, item, grove) ?: return null
                 board = board.copy(creature = creature)
                 market = market.copy(plantRemaining = market.plantRemaining + (item.card.name to remaining))
                 grove = grove.copy(
@@ -464,7 +465,8 @@ internal class HumanBaselineBuyPlanner(
 
     private fun graftHypothetically(
         creature: List<CreatureCardView>,
-        item: BuyItem.Plant
+        item: BuyItem.Plant,
+        grove: GroveView
     ): List<CreatureCardView>? {
         val card = item.card
         val placements = GraftTopologyEvaluator.legalPlacements(creature, card.type)
@@ -480,7 +482,8 @@ internal class HumanBaselineBuyPlanner(
             type = card.type,
             cost = item.cost,
             effect = card.effect,
-            scoringRule = card.scoringRule,
+            scoringRule = grove.plantStacks.firstOrNull { it.name == card.name }?.scoringRule
+                ?: card.scoringRule,
             side = placement.side,
             position = placement.position,
             facing = CreatureCard.Facing.FACE_DOWN,

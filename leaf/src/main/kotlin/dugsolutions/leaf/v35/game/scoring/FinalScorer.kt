@@ -32,7 +32,7 @@ data class FinalScoringResult(
 class FinalScorer {
 
     fun score(game: Game): FinalScoringResult {
-        val scores = game.players.map(::scorePlayer)
+        val scores = game.players.map { player -> scorePlayer(game, player) }
         if (scores.isEmpty()) {
             return FinalScoringResult(
                 scores = emptyList(),
@@ -60,11 +60,12 @@ class FinalScorer {
             player.tokens.mulchTokens.count { it.sides?.value == 4 } +
             player.tokens.pendingMulchTokens.count { it.sides?.value == 4 }
 
-    private fun scorePlayer(player: Player): PlayerFinalScore {
+    private fun scorePlayer(game: Game, player: Player): PlayerFinalScore {
         val plantVp = player.creature.cards.sumOf { creatureCard ->
-            when (val rule = creatureCard.card.scoringRule) {
+            when (val rule = game.config.plantValues.scoringRuleFor(creatureCard.card)) {
                 is PlantScoringRule.Fixed -> rule.points
                 PlantScoringRule.PerGraftedVine -> player.creature.vines.size
+                PlantScoringRule.PerGraftedFlower -> player.creature.flowers.size
                 PlantScoringRule.PerButterfly -> player.butterflies.size
                 PlantScoringRule.PerOwnedD4 -> ownedD4Count(player)
             }

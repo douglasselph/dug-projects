@@ -58,7 +58,7 @@ class PlantExperimentConfig private constructor(
         overrideFor(card)?.available ?: true
 
     /** Experimental typed scoring rule when supplied; otherwise the canonical rule. */
-    fun scoringRuleFor(card: PlantCard): PlantScoringRule =
+    override fun scoringRuleFor(card: PlantCard): PlantScoringRule =
         overrideFor(card)?.scoringRule ?: card.scoringRule
 
     override fun equals(other: Any?): Boolean =

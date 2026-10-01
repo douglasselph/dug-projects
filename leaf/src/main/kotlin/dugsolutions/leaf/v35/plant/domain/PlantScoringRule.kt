@@ -20,6 +20,9 @@ sealed interface PlantScoringRule {
     /** 1 VP for each Vine grafted to this player's Plant Creature. */
     data object PerGraftedVine : PlantScoringRule
 
+    /** 1 VP for each Flower grafted to this player's Plant Creature. */
+    data object PerGraftedFlower : PlantScoringRule
+
     /** 1 VP for each Butterfly this player controls. */
     data object PerButterfly : PlantScoringRule
 

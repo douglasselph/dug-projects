@@ -54,9 +54,10 @@ internal object CardGameMetrics {
             it.card.name == targetCard.cardName
         }
         val targetPlantVp = targetCardsAtEnd.sumOf { creatureCard ->
-            when (val rule = creatureCard.card.scoringRule) {
+            when (val rule = game.config.plantValues.scoringRuleFor(creatureCard.card)) {
                 is PlantScoringRule.Fixed -> rule.points
                 PlantScoringRule.PerGraftedVine -> focusPlayer.creature.vines.size
+                PlantScoringRule.PerGraftedFlower -> focusPlayer.creature.flowers.size
                 PlantScoringRule.PerButterfly -> focusPlayer.butterflies.size
                 PlantScoringRule.PerOwnedD4 ->
                     (focusPlayer.dice.supply + focusPlayer.dice.hand + focusPlayer.dice.discard)

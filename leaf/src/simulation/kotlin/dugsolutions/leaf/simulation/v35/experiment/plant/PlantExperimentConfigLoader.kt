@@ -9,15 +9,15 @@ import java.io.File
  * The file describes interventions only. Blank fields leave the canonical card
  * definition unchanged. The returned configuration is immutable and must be
  * explicitly supplied to a research GameConfig; loading the file itself has no
- * side effects. Cost and availability can be effective game values, while final
- * scoring remains canonical until typed scoring integration is implemented.
+ * side effects. Cost, availability, and typed scoring rules are independent
+ * experiment dimensions.
  *
  * Supported columns:
  * `card_id,cost,available,scoring`
  *
- * Typed scoring syntax is intentionally deferred. A blank `scoring` field is
- * accepted, while any nonblank value fails clearly rather than being flattened
- * to an integer or silently ignored.
+ * `scoring` accepts explicit structured expressions such as `FIXED:3`,
+ * `PER_GRAFTED_VINE`, `PER_GRAFTED_FLOWER`, `PER_BUTTERFLY`, and
+ * `PER_OWNED_D4`. Blank means canonical scoring.
  */
 class PlantExperimentConfigLoader(
     canonicalCards: Collection<PlantCard>
@@ -94,20 +94,20 @@ class PlantExperimentConfigLoader(
                     rowNumber,
                     rawCardId
                 )
-                val scoring = value(row, columns, "scoring").trim()
-                require(scoring.isEmpty()) {
-                    "Unsupported nonblank scoring override '$scoring' for Plant '$rawCardId' " +
-                        "in $sourceName at row $rowNumber. Typed scoring-file parsing is not " +
-                        "implemented yet."
-                }
+                val scoringRule = parseScoringRule(
+                    value(row, columns, "scoring"),
+                    sourceName,
+                    rowNumber,
+                    rawCardId
+                )
 
                 val override = PlantExperimentOverride(
                     cost = cost,
                     available = available,
-                    scoringRule = null
+                    scoringRule = scoringRule
                 )
 
-                if (cost != null || available != null) {
+                if (cost != null || available != null || scoringRule != null) {
                     overrides[canonicalId] = override
                 }
             }
@@ -157,6 +157,24 @@ class PlantExperimentConfigLoader(
                     "at row $rowNumber; expected true, false, or blank"
             )
         }
+
+
+    private fun parseScoringRule(
+        raw: String,
+        sourceName: String,
+        rowNumber: Int,
+        cardId: String
+    ) = raw.trim().takeIf { it.isNotEmpty() }?.let { expression ->
+        try {
+            PlantScoringRuleCodec.parse(expression)
+        } catch (error: IllegalArgumentException) {
+            throw IllegalArgumentException(
+                "Invalid scoring override '$expression' for Plant '$cardId' in $sourceName " +
+                    "at row $rowNumber: ${error.message}",
+                error
+            )
+        }
+    }
 
     private fun value(
         row: List<String>,

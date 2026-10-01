@@ -116,7 +116,7 @@ class GameConfig(
     /** Experiment-only mechanical outcome replacement; fresh policy per Game. */
     val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE,
     /**
-     * Explicit per-game effective Plant acquisition values. Canonical gameplay
+     * Explicit per-game effective Plant experiment values. Canonical gameplay
      * uses [PlantValueResolver.CANONICAL]; research may supply an immutable
      * override resolver without mutating PlantCard definitions.
      */

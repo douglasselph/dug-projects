@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
+import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyCardCatalog
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
 import org.junit.jupiter.api.Test
@@ -94,7 +95,10 @@ class PlantExperimentEffectiveValuesTest {
         val yield = cards.single { it.name == "Vine_07_04" }
         val values = PlantExperimentConfig.of(
             berry.name to PlantExperimentOverride(cost = 11),
-            yield.name to PlantExperimentOverride(available = false)
+            yield.name to PlantExperimentOverride(
+                available = false,
+                scoringRule = PlantScoringRule.PerGraftedFlower
+            )
         )
         val rendered = PlantExperimentResearchConfig(
             sourcePath = java.nio.file.Paths.get("/tmp/example.csv"),
@@ -105,6 +109,7 @@ class PlantExperimentEffectiveValuesTest {
         assertTrue(rendered.contains("cost: ${berry.cost} -> 11"))
         assertTrue(rendered.contains("Vine_07_04"))
         assertTrue(rendered.contains("available: true -> false"))
+        assertTrue(rendered.contains("scoring: PER_GRAFTED_VINE -> PER_GRAFTED_FLOWER"))
         assertTrue(rendered.contains("All unspecified Plant properties canonical."))
     }
 

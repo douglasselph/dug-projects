@@ -26,7 +26,10 @@ object PurchasePriority {
             is BuyItem.Plant -> {
                 var cardValue = cardScorers.forPlant(item.card).acquireScore(context, item.card)
 
-                val projectedVp = CardScoringHelpers.projectedVp(context, item.card.scoringRule)
+                val projectedVp = CardScoringHelpers.projectedVp(
+                    context,
+                    CardScoringHelpers.effectiveScoringRule(context, item.card)
+                )
                 if (projectedVp > 0) {
                     val desiredPointsPerVp = policy.buyPlantVpPointsPerProjectedVp(context)
                     val vpAdjustmentPerPoint = desiredPointsPerVp - DEFAULT_CARD_ACQUIRE_VP_POINTS_PER_VP
