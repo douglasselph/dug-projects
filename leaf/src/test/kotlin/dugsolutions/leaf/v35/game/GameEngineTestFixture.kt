@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectConverter
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.Player
@@ -25,16 +26,18 @@ internal object GameEngineTestFixture {
         battleRounds: Int = 2,
         seed: Long = 123L,
         players: List<Player>? = null,
-        populateWispDeck: Boolean = false
+        populateWispDeck: Boolean = false,
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
     ): Game {
         val gamePlayers = players ?: listOf(player(1), player(2))
         val randomizer = Randomizer.create(seed)
         val setup = GameRoundSetup.Ordered(cultivationRounds, battleRounds)
-        val config = GameConfig.baseline(
+        val config = GameConfig(
             selectedPlantCards = selectedCards(),
-            numPlayers = gamePlayers.size,
+            playerDecisionFactories = List(gamePlayers.size) { PlayerDecisionFactory.humanBaseline() },
             roundSetup = setup,
-            seed = seed
+            seed = seed,
+            plantValues = plantValues
         )
         val roundDeck = RoundDeck(
             roundCardManager = roundManager(),

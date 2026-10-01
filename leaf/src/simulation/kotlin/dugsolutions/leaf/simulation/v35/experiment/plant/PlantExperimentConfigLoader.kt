@@ -7,9 +7,10 @@ import java.io.File
  * Loads research-only Plant experiment overrides from a human-readable CSV file.
  *
  * The file describes interventions only. Blank fields leave the canonical card
- * definition unchanged. Loading a file does not wire the resulting config into
- * Buy, Grove selection, or final scoring; callers must explicitly carry the
- * returned [PlantExperimentConfig].
+ * definition unchanged. The returned configuration is immutable and must be
+ * explicitly supplied to a research GameConfig; loading the file itself has no
+ * side effects. Cost and availability can be effective game values, while final
+ * scoring remains canonical until typed scoring integration is implemented.
  *
  * Supported columns:
  * `card_id,cost,available,scoring`

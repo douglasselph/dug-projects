@@ -15,7 +15,8 @@ class GrovePlantResolver(
 ) {
     fun resolve(
         overrides: List<PlantCard>,
-        randomizer: Randomizer
+        randomizer: Randomizer,
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
     ): List<PlantCard> {
         val bySlot = linkedMapOf<PlantSlot, PlantCard>()
 
@@ -33,6 +34,9 @@ class GrovePlantResolver(
             require(catalogCard.type == card.type && catalogCard.cost == card.cost) {
                 "Plant card override '${card.name}' does not match the loaded catalog definition"
             }
+            require(plantValues.isAvailable(catalogCard)) {
+                "Plant card '${catalogCard.name}' is unavailable in the active Plant experiment and cannot be fixed into Grove slot ${slot.label}"
+            }
             bySlot[slot] = catalogCard
         }
 
@@ -40,7 +44,10 @@ class GrovePlantResolver(
             bySlot[slot] ?: randomizer.randomOrNull(
                 plantCardManager.getCardsByType(slot.type)
                     .filter { it.cost == slot.cost }
-            ) ?: error("No Plant cards available for Grove slot ${slot.label}")
+                    .filter(plantValues::isAvailable)
+            ) ?: error(
+                "No Plant cards available for Grove slot ${slot.label} after applying Plant experiment availability"
+            )
         }
     }
 

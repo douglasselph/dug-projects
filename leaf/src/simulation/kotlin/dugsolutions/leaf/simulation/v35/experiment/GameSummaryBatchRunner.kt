@@ -33,7 +33,8 @@ class GameSummaryBatchRunner(
                 roundSetup = roundSetup,
                 seed = config.mechanicalSeedAt(sample),
                 strategySeed = config.strategySeedAt(sample),
-                recordDecisionReasoning = false
+                recordDecisionReasoning = false,
+                plantValues = config.plantOverrides
             )
             val game = gameFactory(gameConfig)
             val runResult = gameRunner.run(game)

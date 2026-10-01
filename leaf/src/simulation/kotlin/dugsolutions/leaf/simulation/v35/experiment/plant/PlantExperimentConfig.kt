@@ -1,5 +1,6 @@
 package dugsolutions.leaf.simulation.v35.experiment.plant
 
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 
@@ -31,7 +32,7 @@ data class PlantExperimentOverride(
  */
 class PlantExperimentConfig private constructor(
     overrides: Map<String, PlantExperimentOverride>
-) {
+) : PlantValueResolver {
     private val overridesByPlantId: Map<String, PlantExperimentOverride> =
         overrides.entries.associate { (plantId, override) ->
             plantId.normalizedPlantId() to override
@@ -49,11 +50,11 @@ class PlantExperimentConfig private constructor(
         overrideFor(card.name)
 
     /** Experimental cost when supplied; otherwise the canonical CSV cost. */
-    fun costFor(card: PlantCard): Int =
+    override fun costFor(card: PlantCard): Int =
         overrideFor(card)?.cost ?: card.cost
 
     /** Experimental Grove availability when supplied; otherwise canonical availability. */
-    fun isAvailable(card: PlantCard): Boolean =
+    override fun isAvailable(card: PlantCard): Boolean =
         overrideFor(card)?.available ?: true
 
     /** Experimental typed scoring rule when supplied; otherwise the canonical rule. */

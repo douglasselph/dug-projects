@@ -8,6 +8,8 @@ import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentConfig
  * [baseSeed] is the mechanical game stream seed. [strategyBaseSeed] controls
  * strategy-only equal-score tie breaking. Keeping them independent allows A/B
  * strategy changes without silently perturbing later die rolls or shuffles.
+ * [plantOverrides] is an explicit immutable game-environment intervention; when
+ * empty, Plant acquisition uses canonical cost and availability.
  */
 data class ExperimentConfig(
     val games: Int,

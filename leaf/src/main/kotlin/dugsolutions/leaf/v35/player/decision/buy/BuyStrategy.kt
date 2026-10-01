@@ -8,8 +8,13 @@ import dugsolutions.leaf.v35.tokens.Critter
 sealed interface BuyItem {
     val cost: Int
 
-    data class Plant(val card: PlantCard) : BuyItem {
-        override val cost: Int get() = card.cost
+    data class Plant(
+        val card: PlantCard,
+        override val cost: Int = card.cost
+    ) : BuyItem {
+        init {
+            require(cost >= 0) { "Plant purchase cost must be non-negative: $cost" }
+        }
     }
 
     data class Die(val sides: DieSides) : BuyItem {

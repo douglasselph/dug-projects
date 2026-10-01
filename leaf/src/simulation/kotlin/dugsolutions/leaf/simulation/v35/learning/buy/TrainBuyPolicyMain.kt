@@ -3,6 +3,7 @@ package dugsolutions.leaf.simulation.v35.learning.buy
 import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunContext
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
+import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentResearchConfig
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
@@ -32,10 +33,20 @@ fun main(args: Array<String>) {
         val koin = app.koin
         loadCards(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
         val plantManager = koin.get<PlantCardManager>()
+        val allPlants = plantManager.getAllCards().cards
         val grove = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
+        val plantExperiment = PlantExperimentResearchConfig.resolve(o.plantOverridesPath, allPlants)
+        val blockedFixed = grove.filterNot(plantExperiment.values::isAvailable)
+        require(blockedFixed.isEmpty()) {
+            "FirstGameDefault fixes Plant cards that are unavailable in the active Plant experiment: ${blockedFixed.map { it.name }.sorted()}"
+        }
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
-        val initial = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(o.input), plantManager.getAllCards().cards)
+        val initial = LearnedBuyCardCatalog.prepare(
+            LearnedBuyWeights.load(o.input),
+            allPlants,
+            additionalPlantCosts = plantExperiment.effectiveCosts(allPlants)
+        )
         val evolution = BuyPolicyEvolution(BuyEvolutionConfig(o.population, o.elites, o.sigma, o.mutations, o.evolutionSeed))
         var population = evolution.initialPopulation(initial)
         var allTime = EvaluatedBuyPolicy(initial, Double.NEGATIVE_INFINITY)
@@ -46,11 +57,17 @@ fun main(args: Array<String>) {
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
         println("affected learned role rotates across physical seats; opponents=Human Baseline; Grove=FirstGameDefault; rounds=3/2/2")
         println("fitness=affected-role mean win share; identical game/strategy seed cohort for every policy")
+        if (plantExperiment.isActive) {
+            println()
+            println(plantExperiment.render(allPlants))
+        }
         println()
 
         repeat(o.generations) { generation ->
             val evaluated = population.mapIndexed { candidate, weights ->
-                val fitness = evaluate(weights, o, factory, runner, grove, generation, candidate)
+                val fitness = evaluate(
+                    weights, o, factory, runner, grove, plantExperiment.values, generation, candidate
+                )
                 EvaluatedBuyPolicy(weights, fitness)
             }.sortedByDescending { it.fitness }
             val best = evaluated.first()
@@ -87,6 +104,7 @@ private fun evaluate(
     factory: GameFactory,
     runner: GameRunner,
     grove: List<dugsolutions.leaf.v35.plant.domain.PlantCard>,
+    plantValues: dugsolutions.leaf.v35.plant.PlantValueResolver,
     generation: Int,
     candidate: Int
 ): Double {
@@ -103,7 +121,8 @@ private fun evaluate(
             roundSetup = GameRoundSetup.standard(),
             seed = mechanicalSeed,
             strategySeed = strategySeed,
-            recordDecisionReasoning = false
+            recordDecisionReasoning = false,
+            plantValues = plantValues
         ))
         val result = withSimulationFailureDiagnostics(game, SimulationRunContext(
             experiment = "train_buy_policy_g${generation + 1}_c${candidate + 1}", sample = sample,
@@ -135,16 +154,18 @@ private fun loadCards(
 
 private fun pct(x: Double) = "%.2f%%".format(x * 100.0)
 
-private data class TrainOptions(
+internal data class TrainOptions(
     val generations: Int, val population: Int, val games: Int, val elites: Int,
     val sigma: Double, val mutations: Int, val evolutionSeed: Long,
-    val seed: Long, val strategySeed: Long, val input: Path, val output: Path
+    val seed: Long, val strategySeed: Long, val input: Path, val output: Path,
+    val plantOverridesPath: Path?
 ) {
     companion object {
         fun parse(args: List<String>): TrainOptions {
             var generations=5; var population=8; var games=20; var elites=2; var sigma=.25; var mutations=6
             var evolutionSeed=51000L; var seed=61000L; var strategySeed=71000L
             var input=Paths.get("data/ai/buy-policy-v1.weights"); var output=Paths.get("output/ai/buy-policy-v1-trained.weights")
+            var plantOverridesPath: Path? = null
             var i=0
             fun value(a:String):String = if ('=' in a) a.substringAfter('=') else args[++i]
             while(i<args.size) { val a=args[i]; when {
@@ -159,12 +180,13 @@ private data class TrainOptions(
                 a.startsWith("--strategy-seed") -> strategySeed=value(a).toLong()
                 a.startsWith("--input") -> input=Paths.get(value(a))
                 a.startsWith("--output") -> output=Paths.get(value(a))
+                a.startsWith("--plant-overrides") -> plantOverridesPath=Paths.get(value(a))
                 a=="--help" -> { usage(); kotlin.system.exitProcess(0) }
                 else -> error("Unknown argument: $a")
             }; i++ }
             require(generations>0); require(population>=2); require(games>0); require(elites in 1 until population)
-            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output)
+            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath)
         }
-        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH]")
+        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH]")
     }
 }

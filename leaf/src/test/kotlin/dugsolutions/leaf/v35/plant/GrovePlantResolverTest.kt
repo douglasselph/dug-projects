@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.plant
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.effect.GameEffectConverter
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.random.Randomizer
 import org.junit.jupiter.api.BeforeEach
@@ -70,6 +71,59 @@ class GrovePlantResolverTest {
     }
 
     @Test
+    fun unavailablePlant_isNeverChosenForRandomSlot() {
+        val blocked = requireNotNull(manager.getCard("Vine_07_01"))
+        val values = availabilityValues(setOf(blocked.name))
+
+        val cards = resolver.resolve(emptyList(), IndexedRandomizer(0), values)
+
+        assertTrue(cards.none { it.name == blocked.name })
+        assertEquals(9, cards.size)
+    }
+
+    @Test
+    fun explicitlyFixedUnavailablePlant_failsClearly() {
+        val blocked = requireNotNull(manager.getCard("Vine_07_01"))
+        val error = assertFailsWith<IllegalArgumentException> {
+            resolver.resolve(
+                listOf(blocked),
+                Randomizer.create(12000L),
+                availabilityValues(setOf(blocked.name))
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("unavailable"))
+        assertTrue(error.message.orEmpty().contains(blocked.name))
+    }
+
+    @Test
+    fun unavailableEntireRequiredSlot_failsClearly() {
+        val root5 = manager.getCardsByType(PlantType.ROOT)
+            .filter { it.cost == 5 }
+            .map { it.name }
+            .toSet()
+
+        val error = assertFailsWith<IllegalStateException> {
+            resolver.resolve(
+                emptyList(),
+                Randomizer.create(12000L),
+                availabilityValues(root5)
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("ROOT 5"))
+        assertTrue(error.message.orEmpty().contains("availability"))
+    }
+
+    @Test
+    fun sameSeedWithAvailabilityOverride_reproducesRandomGrove() {
+        val values = availabilityValues(setOf("Vine_07_01", "Vine_07_04"))
+        val first = resolver.resolve(emptyList(), Randomizer.create(12000L), values).map { it.name }
+        val second = resolver.resolve(emptyList(), Randomizer.create(12000L), values).map { it.name }
+        assertEquals(first, second)
+    }
+
+    @Test
     fun duplicateSlotOverrides_failClearly() {
         val overrides = listOf(
             requireNotNull(manager.getCard("Root_05_01")),
@@ -79,6 +133,12 @@ class GrovePlantResolverTest {
             resolver.resolve(overrides, Randomizer.create(12000L))
         }
     }
+
+    private fun availabilityValues(unavailable: Set<String>): PlantValueResolver =
+        object : PlantValueResolver {
+            override fun costFor(card: PlantCard): Int = card.cost
+            override fun isAvailable(card: PlantCard): Boolean = card.name !in unavailable
+        }
 
     private class IndexedRandomizer(private val requestedIndex: Int) : Randomizer {
         override fun nextBoolean(): Boolean = false

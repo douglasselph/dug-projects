@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
@@ -113,7 +114,13 @@ class GameConfig(
      */
     val chronicleDetail: Boolean = false,
     /** Experiment-only mechanical outcome replacement; fresh policy per Game. */
-    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
+    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE,
+    /**
+     * Explicit per-game effective Plant acquisition values. Canonical gameplay
+     * uses [PlantValueResolver.CANONICAL]; research may supply an immutable
+     * override resolver without mutating PlantCard definitions.
+     */
+    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()

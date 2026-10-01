@@ -45,7 +45,7 @@ internal object DecisionContextFactory {
             progress = progress(game, phase),
             round = round,
             self = SelfPlayerView(
-                board = boardView(actor),
+                board = boardView(game, actor),
                 wisps = actor.wisps.cards.cards.mapIndexed { index, card ->
                     WispView(
                         index = index,
@@ -62,7 +62,7 @@ internal object DecisionContextFactory {
                 .filter { it !== actor }
                 .map { player ->
                     OpponentView(
-                        board = boardView(player),
+                        board = boardView(game, player),
                         wispCount = player.wisps.size
                     )
                 },
@@ -116,7 +116,7 @@ internal object DecisionContextFactory {
         )
     }
 
-    private fun boardView(player: Player): PlayerBoardView =
+    private fun boardView(game: Game, player: Player): PlayerBoardView =
         PlayerBoardView(
             id = player.id,
             vp = player.vp,
@@ -148,7 +148,7 @@ internal object DecisionContextFactory {
                     name = creatureCard.card.name,
                     title = creatureCard.card.title,
                     type = creatureCard.card.type,
-                    cost = creatureCard.card.cost,
+                    cost = game.config.plantValues.costFor(creatureCard.card),
                     effect = creatureCard.card.effect,
                     scoringRule = creatureCard.card.scoringRule,
                     side = creatureCard.side,
@@ -171,7 +171,7 @@ internal object DecisionContextFactory {
                     name = stack.card.name,
                     title = stack.card.title,
                     type = stack.card.type,
-                    cost = stack.card.cost,
+                    cost = game.config.plantValues.costFor(stack.card),
                     effect = stack.card.effect,
                     scoringRule = stack.card.scoringRule,
                     remaining = stack.remaining

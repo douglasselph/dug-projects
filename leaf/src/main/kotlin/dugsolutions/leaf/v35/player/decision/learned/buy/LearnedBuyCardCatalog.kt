@@ -6,18 +6,32 @@ class LearnedPolicyCardManifestMismatchException(message: String) : IllegalState
 
 /** Keeps learned card identity schema aligned with the canonical parsed CardDataFiles catalog. */
 object LearnedBuyCardCatalog {
-    fun namedFeatureKeys(cards: Collection<PlantCard>): Set<String> = buildSet {
-        cards.forEach { add(LearnedBuyWeights.cardFeature(it.name)); add(LearnedBuyWeights.costFeature(it.cost)); (1..3).forEach { stage -> add("${LearnedBuyWeights.costFeature(it.cost)}_STAGE_$stage") }; add("${LearnedBuyWeights.costFeature(it.cost)}_STAGE_4_PLUS") }
+    fun namedFeatureKeys(
+        cards: Collection<PlantCard>,
+        additionalPlantCosts: Collection<Int> = emptyList()
+    ): Set<String> = buildSet {
+        cards.forEach { card ->
+            add(LearnedBuyWeights.cardFeature(card.name))
+        }
+        (cards.map { it.cost } + additionalPlantCosts).distinct().forEach { cost ->
+            add(LearnedBuyWeights.costFeature(cost))
+            (1..3).forEach { stage -> add("${LearnedBuyWeights.costFeature(cost)}_STAGE_$stage") }
+            add("${LearnedBuyWeights.costFeature(cost)}_STAGE_4_PLUS")
+        }
     }
 
-    fun prepare(weights: LearnedBuyWeights, cards: Collection<PlantCard>): LearnedBuyWeights {
+    fun prepare(
+        weights: LearnedBuyWeights,
+        cards: Collection<PlantCard>,
+        additionalPlantCosts: Collection<Int> = emptyList()
+    ): LearnedBuyWeights {
         val current=PlantCardManifest.from(cards)
         val historical=weights.provenance.cardManifest
         if (weights.provenance.trainingStatus == "trained" && historical != null && historical.catalogFingerprint != current.catalogFingerprint) {
             throw mismatch(historical,current)
         }
         var prepared=LearnedBuyWeights.fromDoubleArray(weights.toDoubleArray(), weights.provenance.copy(cardManifest=current), weights.namedWeights())
-        namedFeatureKeys(cards).forEach { key -> if (key !in prepared.namedWeights()) prepared=prepared.withNamed(key,0.0) }
+        namedFeatureKeys(cards, additionalPlantCosts).forEach { key -> if (key !in prepared.namedWeights()) prepared=prepared.withNamed(key,0.0) }
         return prepared
     }
 

@@ -68,7 +68,7 @@ internal class HumanBaselineBuyPlanner(
     )
 
     private data class Market(
-        val plantsByName: Map<String, PlantCard>,
+        val plantsByName: Map<String, BuyItem.Plant>,
         val plantRemaining: Map<String, Int>,
         val dieRemaining: Map<DieSides, Int>
     )
@@ -385,14 +385,13 @@ internal class HumanBaselineBuyPlanner(
     private fun legalPlants(state: State): List<BuyItem.Plant> =
         state.market.plantsByName.values
             .asSequence()
-            .filter { (state.market.plantRemaining[it.name] ?: 0) > 0 }
+            .filter { (state.market.plantRemaining[it.card.name] ?: 0) > 0 }
             .filter {
                 GraftTopologyEvaluator.legalPlacements(
                     state.context.self.board.creature,
-                    it.type
+                    it.card.type
                 ).isNotEmpty()
             }
-            .map { BuyItem.Plant(it) }
             .toList()
 
     private fun availableDice(state: State): List<BuyItem.Die> =
@@ -433,7 +432,7 @@ internal class HumanBaselineBuyPlanner(
             is BuyItem.Plant -> {
                 val remaining = (market.plantRemaining[item.card.name] ?: 0) - 1
                 if (remaining < 0) return null
-                val creature = graftHypothetically(board.creature, item.card) ?: return null
+                val creature = graftHypothetically(board.creature, item) ?: return null
                 board = board.copy(creature = creature)
                 market = market.copy(plantRemaining = market.plantRemaining + (item.card.name to remaining))
                 grove = grove.copy(
@@ -465,8 +464,9 @@ internal class HumanBaselineBuyPlanner(
 
     private fun graftHypothetically(
         creature: List<CreatureCardView>,
-        card: PlantCard
+        item: BuyItem.Plant
     ): List<CreatureCardView>? {
+        val card = item.card
         val placements = GraftTopologyEvaluator.legalPlacements(creature, card.type)
         if (placements.isEmpty()) return null
         val placement = placements.maxByOrNull { candidate ->
@@ -478,7 +478,7 @@ internal class HumanBaselineBuyPlanner(
             name = card.name,
             title = card.title,
             type = card.type,
-            cost = card.cost,
+            cost = item.cost,
             effect = card.effect,
             scoringRule = card.scoringRule,
             side = placement.side,
@@ -494,7 +494,7 @@ internal class HumanBaselineBuyPlanner(
         val stackCounts = request.context.grove.plantStacks.associate { it.name to it.remaining }
         val dieCounts = request.context.grove.graftBed
         return Market(
-            plantsByName = plants.associate { it.card.name to it.card },
+            plantsByName = plants.associateBy { it.card.name },
             plantRemaining = plants.associate { plant ->
                 plant.card.name to (stackCounts[plant.card.name] ?: 1)
             },

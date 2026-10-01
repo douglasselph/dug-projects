@@ -81,7 +81,8 @@ class GameFactory(
         val resolvedPlantCards =
             grovePlantResolver.resolve(
                 overrides = config.selectedPlantCards,
-                randomizer = randomizer
+                randomizer = randomizer,
+                plantValues = config.plantValues
             )
 
         val grove =

@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
 import dugsolutions.leaf.v35.game.operation.GraftResolver
 import dugsolutions.leaf.v35.player.Player
+import dugsolutions.leaf.v35.plant.PlantValueResolver
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
@@ -367,6 +369,77 @@ class BuyCoordinatorTest {
     }
 
     @Test
+    fun execute_experimentalPlantCostControlsAffordabilityPaymentAndRecordedCost() {
+        val resolver = plantValues(costs = mapOf("Root_1" to 6))
+        lateinit var offeredPlant: BuyItem.Plant
+        val buyerStrategy = purchaseOnce(
+            item = { options ->
+                options.filterIsInstance<BuyItem.Plant>()
+                    .first { it.card.name == "Root_1" }
+                    .also { offeredPlant = it }
+            },
+            payment = { request ->
+                assertEquals(6, request.cost)
+                BuyPayment(dice = listOf(request.availableDice.single()))
+            }
+        )
+        val buyer = player(1, listOf(die(6, 6)), buyerStrategy)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()), resolver)
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        assertEquals(5, offeredPlant.card.cost)
+        assertEquals(6, offeredPlant.cost)
+        assertEquals(
+            6,
+            buyerStrategy.purchaseRequests.first().context.grove.plantStacks
+                .single { it.name == "Root_1" }.cost
+        )
+        assertEquals(6, result.purchases.single().cost)
+        val purchase = fixture.game.chronicle.entries.filterIsInstance<GameEntry.Purchase>().single()
+        assertEquals(6, purchase.cost)
+    }
+
+    @Test
+    fun execute_experimentalPlantCostControlsWhetherPlantIsAffordable() {
+        val resolver = plantValues(costs = mapOf("Root_1" to 6))
+        val buyerStrategy = strategy(
+            purchase = { request ->
+                assertTrue(request.options.filterIsInstance<BuyItem.Plant>().none { it.card.name == "Root_1" })
+                BuyChoice.Done
+            }
+        )
+        val buyer = player(1, listOf(die(6, 5)), buyerStrategy)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()), resolver)
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        assertTrue(result.purchases.isEmpty())
+    }
+
+    @Test
+    fun execute_zeroExperimentalPlantCostIsAffordableWithoutPaymentAndDoesNotExclude() {
+        val resolver = plantValues(costs = mapOf("Root_1" to 0))
+        val buyerStrategy = purchaseOnce(
+            item = { options ->
+                options.filterIsInstance<BuyItem.Plant>().first { it.card.name == "Root_1" }
+            },
+            payment = { request ->
+                assertEquals(0, request.cost)
+                BuyPayment()
+            }
+        )
+        val buyer = player(1, emptyList(), buyerStrategy)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()), resolver)
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        assertEquals(0, result.purchases.single().cost)
+        assertEquals("Root_1", assertIs<BuyItem.Plant>(result.purchases.single().item).card.name)
+        assertEquals(0, result.purchases.single().paymentTotal)
+    }
+
+    @Test
     fun execute_otherPlayersResourcesRemainIsolated() {
         val first = player(1, listOf(die(20, 20)), doneStrategy())
         val secondDie = die(8, 8)
@@ -379,11 +452,16 @@ class BuyCoordinatorTest {
         assertTrue(second.dice.discard.isEmpty())
     }
 
-    private fun fixture(first: Player, second: Player): Fixture {
+    private fun fixture(
+        first: Player,
+        second: Player,
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+    ): Fixture {
         val game = GameEngineTestFixture.game(
             cultivationRounds = 1,
             battleRounds = 0,
-            players = listOf(first, second)
+            players = listOf(first, second),
+            plantValues = plantValues
         )
         return Fixture(
             game,
@@ -437,6 +515,11 @@ class BuyCoordinatorTest {
         }
     }
 
+
+    private fun plantValues(costs: Map<String, Int>): PlantValueResolver = object : PlantValueResolver {
+        override fun costFor(card: PlantCard): Int = costs[card.name] ?: card.cost
+        override fun isAvailable(card: PlantCard): Boolean = true
+    }
 
     private fun die(sides: Int, value: Int): Die = FixedDie(sides, value)
 

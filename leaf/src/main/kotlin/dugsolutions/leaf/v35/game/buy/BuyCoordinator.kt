@@ -163,7 +163,7 @@ class BuyCoordinator(
 
     private fun marketItems(game: Game): List<BuyItem> = buildList {
         game.grove.plantMarket.availableStacks
-            .mapTo(this) { BuyItem.Plant(it.card) }
+            .mapTo(this) { BuyItem.Plant(it.card, game.config.plantValues.costFor(it.card)) }
         DieSides.entries
             .filter { game.grove.graftBed.has(it) }
             .mapTo(this) { BuyItem.Die(it) }
@@ -178,7 +178,7 @@ class BuyCoordinator(
 
         return buildList {
             game.grove.plantMarket.availableStacks
-                .map { BuyItem.Plant(it.card) }
+                .map { BuyItem.Plant(it.card, game.config.plantValues.costFor(it.card)) }
                 .filterTo(this) {
                     it.cost >= 0 &&
                         it.cost <= purchasingPower &&
