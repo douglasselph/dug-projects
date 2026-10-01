@@ -1209,7 +1209,7 @@ internal data class EvalOptions(
         private fun usage() {
             println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
-            println("  --plant-overrides PATH loads research-only Plant cost/availability interventions; scoring overrides remain unsupported.")
+            println("  --plant-overrides PATH loads research-only Plant cost, availability, and typed scoring interventions.")
             println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")
             println("  --exclude-card Vine_07_04 excludes a Plant from random/zero Grove slots; repeat it or comma-separate names.")
             println("  --rounds 3/2/2 means 3C-B-2C-B-2C-B (Cultivation blocks, existing semantics).")
