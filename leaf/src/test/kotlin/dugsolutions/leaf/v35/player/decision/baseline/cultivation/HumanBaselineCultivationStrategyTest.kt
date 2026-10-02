@@ -538,14 +538,26 @@ class HumanBaselineCultivationStrategyTest {
                 CultivationAction.Main(CultivationMainAction.Draw),
                 CultivationAction.Main(CultivationMainAction.RoundEffect1)
             )
+            val firstContext = context(supply = listOf(DieView(0, 4, 1)), sunlight = 0).copy(
+                progress = DecisionContext.EMPTY.progress.copy(
+                    battleRoundsRemaining = 1,
+                    upcomingRoundTypes = listOf(RoundCardType.BATTLE)
+                )
+            )
+            val reserveContext = context(supply = listOf(DieView(0, 4, 1)), sunlight = 2).copy(
+                progress = DecisionContext.EMPTY.progress.copy(
+                    battleRoundsRemaining = 1,
+                    upcomingRoundTypes = listOf(RoundCardType.BATTLE)
+                )
+            )
             val firstToken = choose(
                 round = round,
-                context = context(supply = listOf(DieView(0, 4, 1)), sunlight = 0),
+                context = firstContext,
                 choices = choices
             )
             val healthyReserve = choose(
                 round = round,
-                context = context(supply = listOf(DieView(0, 4, 1)), sunlight = 2),
+                context = reserveContext,
                 choices = choices
             )
 

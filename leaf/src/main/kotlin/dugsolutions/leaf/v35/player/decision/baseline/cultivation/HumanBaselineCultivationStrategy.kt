@@ -492,6 +492,20 @@ class HumanBaselineCultivationStrategy(
                         common["preparedMulch"] = timing.preparedMulchCount.toString()
                     }
                 }
+                if (effect == GameEffect.GAIN_SUNLIGHT_TOKEN) {
+                    val sunlight = SunlightTokenPriority.observe(context, cardScorers)
+                    common["sunlightHeld"] = sunlight.sunlightHeld.toString()
+                    common["battlesRemaining"] = sunlight.battlesRemaining.toString()
+                    common["roundsUntilBattle"] = sunlight.roundsUntilBattle?.toString() ?: "none"
+                    common["battleNext"] = sunlight.battleIsNext.toString()
+                    common["sunlightBaseFutureAction"] = sunlight.baseFutureActionValue.toString()
+                    common["sunlightBattleProximityAdjustment"] = sunlight.battleProximityAdjustment.toString()
+                    common["sunlightBattlesRemainingAdjustment"] = sunlight.battlesRemainingAdjustment.toString()
+                    common["sunlightExistingHoldingAdjustment"] = sunlight.existingSunlightAdjustment.toString()
+                    common["sunlightVisibleBattlePlantAdjustment"] = sunlight.visibleBattlePlantAdjustment.toString()
+                    common["sunlightThirdBattlePlantBase"] = sunlight.thirdBestFaceUpBattlePlantBase?.toString() ?: "none"
+                    common["sunlightPriority"] = sunlight.finalPriority.toString()
+                }
             }
             else -> Unit
         }
@@ -539,7 +553,7 @@ class HumanBaselineCultivationStrategy(
                 normalPurchasingPower = policy.normalPurchasingPower(context)
             )
             GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
-            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context)
+            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context, cardScorers)
             GameEffect.RAISE_DIE_PLUS_3 -> SunlightPriority.score(
                 context = context,
                 normalPurchasingPower = policy.normalPurchasingPower(context)
