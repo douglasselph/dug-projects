@@ -76,6 +76,12 @@ class CultivationBuildCoordinatorTest {
             listOf(CultivationMainAction.RoundEffect2, CultivationMainAction.RoundEffect2),
             result.actions.filter { it.playerId == first.id }.map { it.action }
         )
+        val choices = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == first.id && it.selectedMainAction != null }
+        assertTrue(choices.isNotEmpty())
+        assertEquals(MainActionKind.ROUND_EFFECT_1, choices.first().humanBaselineSelectedMainAction)
+        assertEquals(MainActionKind.ROUND_EFFECT_2, choices.first().selectedMainAction)
         assertEquals(listOf(2, 1, 0), strategy.requests.map { it.mainActionsRemaining })
     }
 

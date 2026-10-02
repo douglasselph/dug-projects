@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase
 import dugsolutions.leaf.v35.chronicle.domain.EffectSourceKind
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
+import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -180,6 +181,25 @@ private fun runOne(
 }
 
 private data class RoundEffectStats(var opportunities: Long = 0, var uses: Long = 0)
+
+private data class SunlightChoiceStats(
+    var opportunities: Long = 0,
+    var uses: Long = 0,
+    var finalVpSum: Long = 0,
+    var winShareSum: Double = 0.0
+) {
+    fun add(used: Boolean, finalVp: Int, winShare: Double) {
+        opportunities++
+        if (used) uses++
+        finalVpSum += finalVp
+        winShareSum += winShare
+    }
+
+    fun rate(): Double = if (opportunities == 0L) 0.0 else uses.toDouble() / opportunities
+    fun avgVp(): Double = if (opportunities == 0L) 0.0 else finalVpSum.toDouble() / opportunities
+    fun avgWinShare(): Double = if (opportunities == 0L) 0.0 else winShareSum / opportunities
+}
+
 private data class TokenStats(
     var games: Long = 0,
     var starting: Long = 0,
@@ -203,10 +223,32 @@ private class CultivationEvalAccumulator {
     val actionsBattleNext = linkedMapOf<MainActionKind, Long>()
     val actionsBattleNotNext = linkedMapOf<MainActionKind, Long>()
     val plantActivations = sortedMapOf<String, Long>()
+    val battlePlantActivations = sortedMapOf<String, Long>()
     val roundEffects = sortedMapOf<String, RoundEffectStats>()
     val tokenEconomy = SharedTokenResource.entries.associateWith { TokenStats() }.toMutableMap()
-    var sunlightOpportunities = 0L
-    var sunlightUses = 0L
+    var plantPurchases = 0L
+    var diePurchases = 0L
+
+    val sunlightOverall = SunlightChoiceStats()
+    val sunlightAlreadyHeld = SunlightChoiceStats()
+    val sunlightBattleNext = SunlightChoiceStats()
+    val sunlightBattleDistant = SunlightChoiceStats()
+    val sunlightHumanPreferredCompetitor = SunlightChoiceStats()
+    val sunlightByBattlesRemaining = sortedMapOf<Int, SunlightChoiceStats>()
+    val sunlightDeclinedAlternatives = sortedMapOf<String, Long>()
+
+    var sunlightGained = 0L
+    var sunlightSpent = 0L
+    var sunlightRetained = 0L
+    var sunlightSupportOpportunities = 0L
+    var sunlightSupportUses = 0L
+    var sunlightExtraMains = 0L
+    var sunlightExtraPlants = 0L
+    var sunlightImmediateStrikeContributions = 0L
+    var sunlightWinningStrikeContributions = 0L
+    var sunlightWinnerDecisiveContributions = 0L
+    var sunlightWoundDecisiveContributions = 0L
+    var sunlightAssociatedBattleVp = 0L
 
     fun add(game: CompletedCultivationEvalGame, seat: Int) {
         val player = game.summary.players.single { it.seat == seat }
@@ -217,22 +259,52 @@ private class CultivationEvalAccumulator {
         wounds += player.woundsTaken
         finalDice += player.finalDiceCount
         finalDicePower += player.finalDicePower
+        sunlightGained += player.sunlightGained
+        sunlightSpent += player.sunlightSpent
+        sunlightRetained += player.finalSunlightCount
+        sunlightSupportOpportunities += player.sunlightSupportOpportunities
+        sunlightSupportUses += player.sunlightSupportUses
+        sunlightExtraMains += player.sunlightExtraMainActions
+        sunlightExtraPlants += player.sunlightExtraPlantActions
+        sunlightImmediateStrikeContributions += player.sunlightImmediateStrikeContributions
+        sunlightWinningStrikeContributions += player.sunlightWinningStrikeContributions
+        sunlightWinnerDecisiveContributions += player.sunlightWinnerDecisiveContributions
+        sunlightWoundDecisiveContributions += player.sunlightWoundDecisiveContributions
+        sunlightAssociatedBattleVp += player.sunlightAssociatedBattleVp
         val playerId = player.playerId
 
         game.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
-            .filter { it.playerId == playerId && it.phase == ChroniclePhase.CULTIVATION }
+            .filter {
+                it.playerId == playerId &&
+                    it.phase == ChroniclePhase.CULTIVATION &&
+                    it.selectedMainAction != null
+            }
             .forEach { choice ->
-                choice.selectedMainAction?.let { action ->
-                    actions.bump(action)
-                    if (choice.battleNext) actionsBattleNext.bump(action) else actionsBattleNotNext.bump(action)
-                }
-                collectRoundSlot(choice, 1, choice.firstEffect, choice.firstExecutable)
-                collectRoundSlot(choice, 2, choice.secondEffect, choice.secondExecutable)
+                val action = requireNotNull(choice.selectedMainAction)
+                actions.bump(action)
+                if (choice.battleNext) actionsBattleNext.bump(action) else actionsBattleNotNext.bump(action)
+                collectRoundSlot(choice, 1, choice.firstEffect, choice.firstExecutable, player.totalVp, player.winShare)
+                collectRoundSlot(choice, 2, choice.secondEffect, choice.secondExecutable, player.totalVp, player.winShare)
             }
 
         game.entries.filterIsInstance<GameEntry.EffectResolved>()
-            .filter { it.playerId == playerId && it.phase == ChroniclePhase.CULTIVATION && it.sourceKind == EffectSourceKind.PLANT }
-            .forEach { plantActivations.bump(it.sourceName) }
+            .filter { it.playerId == playerId && it.sourceKind == EffectSourceKind.PLANT }
+            .forEach { effect ->
+                when (effect.phase) {
+                    ChroniclePhase.CULTIVATION -> plantActivations.bump(effect.sourceName)
+                    ChroniclePhase.BATTLE -> battlePlantActivations.bump(effect.sourceName)
+                    else -> Unit
+                }
+            }
+
+        game.entries.filterIsInstance<GameEntry.Purchase>()
+            .filter { it.playerId == playerId }
+            .forEach { purchase ->
+                when (purchase.kind) {
+                    PurchaseKind.PLANT -> plantPurchases++
+                    PurchaseKind.DIE -> diePurchases++
+                }
+            }
 
         game.summary.sharedTokenEconomy.forEach { summary -> tokenEconomy.getValue(summary.resource).add(summary) }
     }
@@ -241,20 +313,45 @@ private class CultivationEvalAccumulator {
         choice: GameEntry.RoundEffectChoice,
         slot: Int,
         effect: GameEffect,
-        executable: Boolean
+        executable: Boolean,
+        finalVp: Int,
+        winShare: Double
     ) {
         if (!executable) return
         val stats = roundEffects.getOrPut(effect.name) { RoundEffectStats() }
         stats.opportunities++
-        val used = when (slot) {
-            1 -> choice.selectedMainAction == MainActionKind.ROUND_EFFECT_1
-            2 -> choice.selectedMainAction == MainActionKind.ROUND_EFFECT_2
-            else -> false
+        val sunlightAction = when (slot) {
+            1 -> MainActionKind.ROUND_EFFECT_1
+            2 -> MainActionKind.ROUND_EFFECT_2
+            else -> error("Round effect slot must be 1 or 2: $slot")
         }
+        val used = choice.selectedMainAction == sunlightAction
         if (used) stats.uses++
-        if (effect == GameEffect.GAIN_SUNLIGHT_TOKEN) {
-            sunlightOpportunities++
-            if (used) sunlightUses++
+        if (effect != GameEffect.GAIN_SUNLIGHT_TOKEN) return
+
+        sunlightOverall.add(used, finalVp, winShare)
+        if (choice.sunlightHeld > 0) sunlightAlreadyHeld.add(used, finalVp, winShare)
+        if (choice.battleNext) sunlightBattleNext.add(used, finalVp, winShare)
+        else sunlightBattleDistant.add(used, finalVp, winShare)
+        sunlightByBattlesRemaining.getOrPut(choice.battlesRemaining) { SunlightChoiceStats() }
+            .add(used, finalVp, winShare)
+
+        // Operational strong-competing-action proxy: at this exact state, the
+        // certified Human Baseline preferred another legal Main Action over
+        // Gain Sunlight before the learned Main policy was allowed to replace it.
+        val humanPreferred = choice.humanBaselineSelectedMainAction
+        if (humanPreferred != null && humanPreferred != sunlightAction) {
+            sunlightHumanPreferredCompetitor.add(used, finalVp, winShare)
+        }
+
+        if (!used) {
+            val selectedAction = choice.selectedMainAction
+            val alternative = when (selectedAction) {
+                MainActionKind.ACTIVATE_PLANT -> choice.selectedPlantCardName?.let { "PLANT:$it" } ?: "PLANT"
+                null -> "NONE"
+                else -> selectedAction.name
+            }
+            sunlightDeclinedAlternatives.bump(alternative)
         }
     }
 
@@ -287,14 +384,62 @@ private fun printCultivationEvalReport(label: String, a: CultivationEvalAccumula
     println("  PLANT ACTIVATIONS (Cultivation)")
     if (a.plantActivations.isEmpty()) println("    none")
     else a.plantActivations.entries.sortedByDescending { it.value }.forEach { println("    ${it.key}: ${it.value}") }
+    println("  PLANT ACTIVATIONS (Battle)")
+    if (a.battlePlantActivations.isEmpty()) println("    none")
+    else a.battlePlantActivations.entries.sortedByDescending { it.value }.forEach { println("    ${it.key}: ${it.value}") }
+    println("  PURCHASES (affected player)")
+    println("    Plants/game=${fmt(a.plantPurchases.toDouble()/games)} dice/game=${fmt(a.diePurchases.toDouble()/games)}")
     println("  ROUND EFFECT UTILIZATION")
     if (a.roundEffects.isEmpty()) println("    none")
     else a.roundEffects.forEach { (effect, stats) ->
         val rate = if (stats.opportunities == 0L) 0.0 else stats.uses.toDouble() / stats.opportunities
         println("    $effect: opportunities=${stats.opportunities} uses=${stats.uses} use/legal=${pct(rate)}")
     }
-    val sunlightRate = if (a.sunlightOpportunities == 0L) 0.0 else a.sunlightUses.toDouble() / a.sunlightOpportunities
-    println("  SUNLIGHT GAIN: opportunities=${a.sunlightOpportunities} uses=${a.sunlightUses} take rate=${pct(sunlightRate)}")
+    println("  SUNLIGHT GAIN: opportunities=${a.sunlightOverall.opportunities} uses=${a.sunlightOverall.uses} take rate=${pct(a.sunlightOverall.rate())}")
+    println("  SUNLIGHT BATTLE USE")
+    println(
+        "    gained/game=${fmt(a.sunlightGained.toDouble()/games)} spent/game=${fmt(a.sunlightSpent.toDouble()/games)} " +
+            "retained/game=${fmt(a.sunlightRetained.toDouble()/games)}"
+    )
+    println(
+        "    Support opportunities/game=${fmt(a.sunlightSupportOpportunities.toDouble()/games)} " +
+            "uses/game=${fmt(a.sunlightSupportUses.toDouble()/games)} extra Mains/game=${fmt(a.sunlightExtraMains.toDouble()/games)} " +
+            "extra Plant Mains/game=${fmt(a.sunlightExtraPlants.toDouble()/games)}"
+    )
+    println(
+        "    immediate Strike contributions=${a.sunlightImmediateStrikeContributions} " +
+            "winning-row=${a.sunlightWinningStrikeContributions} winner-decisive=${a.sunlightWinnerDecisiveContributions} " +
+            "Wound-decisive=${a.sunlightWoundDecisiveContributions} associated Battle VP=${a.sunlightAssociatedBattleVp}"
+    )
+    println("  SUNLIGHT MANDATORY-ACTION CHECK")
+    printSunlightChoiceBucket("all legal Main decisions", a.sunlightOverall)
+    printSunlightChoiceBucket("already holding Sunlight", a.sunlightAlreadyHeld)
+    printSunlightChoiceBucket("Battle next", a.sunlightBattleNext)
+    printSunlightChoiceBucket("Battle distant (Battle not next)", a.sunlightBattleDistant)
+    printSunlightChoiceBucket(
+        "Human Baseline preferred another Main (strong competing-action proxy)",
+        a.sunlightHumanPreferredCompetitor
+    )
+    if (a.sunlightByBattlesRemaining.isNotEmpty()) {
+        println("    by Battles remaining:")
+        a.sunlightByBattlesRemaining.forEach { (remaining, stats) ->
+            printSunlightChoiceBucket("$remaining", stats, indent = "      ")
+        }
+    }
+    println("    alternatives chosen when Sunlight declined:")
+    if (a.sunlightDeclinedAlternatives.isEmpty()) println("      none")
+    else a.sunlightDeclinedAlternatives.entries.sortedByDescending { it.value }.forEach {
+        println("      ${it.key}: ${it.value}")
+    }
+    println(
+        "SUNLIGHT_MANDATORY_METRICS label=${machineLabel(label)} " +
+            "opportunities=${a.sunlightOverall.opportunities} uses=${a.sunlightOverall.uses} " +
+            "take_rate=${fmt(a.sunlightOverall.rate())} held_opportunities=${a.sunlightAlreadyHeld.opportunities} " +
+            "held_take_rate=${fmt(a.sunlightAlreadyHeld.rate())} distant_opportunities=${a.sunlightBattleDistant.opportunities} " +
+            "distant_take_rate=${fmt(a.sunlightBattleDistant.rate())} competitor_opportunities=${a.sunlightHumanPreferredCompetitor.opportunities} " +
+            "competitor_take_rate=${fmt(a.sunlightHumanPreferredCompetitor.rate())} win_share=${fmt(a.winShare / games)} " +
+            "final_vp=${fmt(a.totalVp.toDouble()/games)}"
+    )
     println("  TOKEN ECONOMY (whole matched games)")
     SharedTokenResource.entries.forEach { resource ->
         val t = a.tokenEconomy.getValue(resource)
@@ -307,6 +452,22 @@ private fun printCultivationEvalReport(label: String, a: CultivationEvalAccumula
         )
     }
 }
+
+private fun printSunlightChoiceBucket(
+    label: String,
+    stats: SunlightChoiceStats,
+    indent: String = "    "
+) {
+    val outcomes = if (stats.opportunities == 0L) "n/a" else
+        "descriptive avgFinalVP=${fmt(stats.avgVp())} winShare=${pct(stats.avgWinShare())}"
+    println(
+        "$indent$label: opportunities=${stats.opportunities} uses=${stats.uses} " +
+            "take=${pct(stats.rate())}; $outcomes"
+    )
+}
+
+private fun machineLabel(label: String): String =
+    if (label.startsWith("CONTROL")) "CONTROL" else "LEARNED"
 
 private fun verifyHeldOutSeeds(weights: LearnedCultivationMainWeights, o: CultivationEvalOptions) {
     val n = weights.provenance.gamesPerPolicy ?: return

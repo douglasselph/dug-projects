@@ -167,11 +167,23 @@ class GameChronicle : Chronicle {
                 secondBlockedBySharedResource = moment.secondBlockedBySharedResource
             )
             is Moment.RoundEffectChoice -> GameEntry.RoundEffectChoice(
-                sequence, moment.playerId, moment.phase, moment.roundCardName,
-                moment.firstEffect, moment.secondEffect, moment.firstExecutable,
-                moment.secondExecutable, moment.legalMainActions.toList(),
-                moment.selectedMainAction, moment.sunlightHeld, moment.battlesRemaining,
-                moment.battleNext, hierarchyDepth
+                sequence = sequence,
+                playerId = moment.playerId,
+                phase = moment.phase,
+                roundCardName = moment.roundCardName,
+                firstEffect = moment.firstEffect,
+                secondEffect = moment.secondEffect,
+                firstExecutable = moment.firstExecutable,
+                secondExecutable = moment.secondExecutable,
+                legalMainActions = moment.legalMainActions.toList(),
+                selectedMainAction = moment.selectedMainAction,
+                sunlightHeld = moment.sunlightHeld,
+                battlesRemaining = moment.battlesRemaining,
+                battleNext = moment.battleNext,
+                humanBaselineSelectedMainAction = moment.humanBaselineSelectedMainAction,
+                selectedPlantCardName = moment.selectedPlantCardName,
+                humanBaselineSelectedPlantCardName = moment.humanBaselineSelectedPlantCardName,
+                hierarchyDepth = hierarchyDepth
             )
             is Moment.MainAction -> GameEntry.MainAction(
                 sequence, moment.playerId, moment.phase, moment.action,

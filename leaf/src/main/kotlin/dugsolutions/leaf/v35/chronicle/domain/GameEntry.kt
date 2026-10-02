@@ -105,7 +105,11 @@ sealed interface GameEntry {
         val sunlightHeld: Int,
         val battlesRemaining: Int,
         val battleNext: Boolean,
-        override val hierarchyDepth: Int = 0
+        override val hierarchyDepth: Int = 0,
+        /** Human Baseline's pre-policy Main preference at this same decision, when available. */
+        val humanBaselineSelectedMainAction: MainActionKind? = null,
+        val selectedPlantCardName: String? = null,
+        val humanBaselineSelectedPlantCardName: String? = null
     ) : GameEntry
 
     data class MainAction(

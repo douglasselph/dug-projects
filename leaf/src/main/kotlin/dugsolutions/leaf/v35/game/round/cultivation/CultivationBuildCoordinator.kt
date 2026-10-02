@@ -231,7 +231,7 @@ class CultivationBuildCoordinator(
                     cultivationChoice = cultivationChoice
                 )
                 if (mainActionsRemaining > 0) {
-                    recordRoundEffectChoice(game, player, roundCard, legalChoices, chosen)
+                    recordRoundEffectChoice(game, player, roundCard, legalChoices, chosen, cultivationChoice)
                 }
 
                 when (chosen) {
@@ -323,10 +323,12 @@ class CultivationBuildCoordinator(
         player: Player,
         roundCard: RoundCard,
         legalChoices: List<CultivationAction>,
-        chosen: CultivationAction
+        chosen: CultivationAction,
+        humanBaselineChoice: CultivationAction
     ) {
         val legalMains = legalChoices.filterIsInstance<CultivationAction.Main>().map { mainActionKind(it.action) }
-        val selected = (chosen as? CultivationAction.Main)?.let { mainActionKind(it.action) }
+        val selectedMain = (chosen as? CultivationAction.Main)?.action
+        val humanMain = (humanBaselineChoice as? CultivationAction.Main)?.action
         game.chronicle.record(
             Moment.RoundEffectChoice(
                 playerId = player.id,
@@ -337,10 +339,13 @@ class CultivationBuildCoordinator(
                 firstExecutable = MainActionKind.ROUND_EFFECT_1 in legalMains,
                 secondExecutable = MainActionKind.ROUND_EFFECT_2 in legalMains,
                 legalMainActions = legalMains,
-                selectedMainAction = selected,
+                selectedMainAction = selectedMain?.let(::mainActionKind),
                 sunlightHeld = player.tokens.sunlightCount,
                 battlesRemaining = battlesRemaining(game),
-                battleNext = battleIsNext(game)
+                battleNext = battleIsNext(game),
+                humanBaselineSelectedMainAction = humanMain?.let(::mainActionKind),
+                selectedPlantCardName = (selectedMain as? CultivationMainAction.ActivatePlant)?.card?.card?.name,
+                humanBaselineSelectedPlantCardName = (humanMain as? CultivationMainAction.ActivatePlant)?.card?.card?.name
             )
         )
     }

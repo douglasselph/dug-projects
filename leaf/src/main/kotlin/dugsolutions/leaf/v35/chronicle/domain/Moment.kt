@@ -92,7 +92,11 @@ sealed interface Moment {
         val selectedMainAction: MainActionKind?,
         val sunlightHeld: Int,
         val battlesRemaining: Int,
-        val battleNext: Boolean
+        val battleNext: Boolean,
+        /** Human Baseline's pre-policy Main preference at this same decision, when available. */
+        val humanBaselineSelectedMainAction: MainActionKind? = null,
+        val selectedPlantCardName: String? = null,
+        val humanBaselineSelectedPlantCardName: String? = null
     ) : Moment
 
     data class MainAction(
