@@ -2,6 +2,7 @@ package dugsolutions.leaf.simulation.v35.analysis
 
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureSide
+import dugsolutions.leaf.v35.tokens.SharedTokenResource
 
 /**
  * Compact immutable research record for one completed game.
@@ -15,7 +16,8 @@ data class GameSummary(
     val strategySeed: Long?,
     val roundsCompleted: Int,
     val winnerIds: List<PlayerId>,
-    val players: List<PlayerGameSummary>
+    val players: List<PlayerGameSummary>,
+    val sharedTokenEconomy: List<SharedTokenEconomySummary> = emptyList()
 ) {
     init {
         require(roundsCompleted >= 0) { "Completed round count cannot be negative" }
@@ -25,6 +27,47 @@ data class GameSummary(
         require(winnerIds.all { winner -> players.any { it.playerId == winner } }) {
             "Every winner must be present in the player summaries"
         }
+        require(sharedTokenEconomy.map { it.resource }.distinct().size == sharedTokenEconomy.size) {
+            "Game summary cannot contain duplicate shared-token economy resources"
+        }
+    }
+}
+
+
+/** Compact whole-game accounting for one finite shared Grove component type. */
+data class SharedTokenEconomySummary(
+    val resource: SharedTokenResource,
+    val startingGroveSupply: Int,
+    val gainAttempts: Int,
+    val successfulGains: Int,
+    val failedGainsEmptyGrove: Int,
+    /** Physical components spent/used and recycled to the Grove (including Battle cleanup). */
+    val spendsOrUses: Int,
+    /** Same physical recycle count, retained with transfer-oriented naming for supply analysis. */
+    val returnsToGrove: Int,
+    val finalGroveSupply: Int,
+    val finalHeldByPlayers: Int,
+    val minimumGroveSupply: Int,
+    val maximumOutsideGrove: Int,
+    val reachedZero: Boolean,
+    val timesReachedZero: Int,
+    val emptySupplyObservations: Int
+) {
+    init {
+        require(startingGroveSupply >= 0)
+        require(gainAttempts >= 0)
+        require(successfulGains >= 0)
+        require(failedGainsEmptyGrove >= 0)
+        require(spendsOrUses >= 0)
+        require(returnsToGrove >= 0)
+        require(spendsOrUses == returnsToGrove)
+        require(finalGroveSupply >= 0)
+        require(finalHeldByPlayers >= 0)
+        require(minimumGroveSupply >= 0)
+        require(maximumOutsideGrove >= 0)
+        require(timesReachedZero >= 0)
+        require(emptySupplyObservations >= 0)
+        require(successfulGains <= gainAttempts)
     }
 }
 

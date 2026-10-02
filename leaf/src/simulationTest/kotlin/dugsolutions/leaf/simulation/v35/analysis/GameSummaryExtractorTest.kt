@@ -14,6 +14,8 @@ import dugsolutions.leaf.v35.plant.PlantCardManager
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
+import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.tokens.SharedTokenResource
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
@@ -138,12 +140,43 @@ class GameSummaryExtractorTest {
                 )
             }
 
+            assertEquals(SharedTokenResource.entries.toSet(), summary.sharedTokenEconomy.map { it.resource }.toSet())
+            summary.sharedTokenEconomy.forEach { tokenSummary ->
+                assertEquals(
+                    when (tokenSummary.resource) {
+                        SharedTokenResource.WATER -> game.grove.tokens.waterCount
+                        SharedTokenResource.SUNLIGHT -> game.grove.tokens.sunlightCount
+                        SharedTokenResource.MULCH -> game.grove.tokens.mulchCount
+                        SharedTokenResource.BEE -> game.grove.critters.count(Critter.BEE)
+                        SharedTokenResource.WORM -> game.grove.critters.count(Critter.WORM)
+                        SharedTokenResource.BUTTERFLY -> game.grove.butterflies.size
+                    },
+                    tokenSummary.finalGroveSupply
+                )
+                assertEquals(
+                    game.players.sumOf { player ->
+                        when (tokenSummary.resource) {
+                            SharedTokenResource.WATER -> player.tokens.waterCount
+                            SharedTokenResource.SUNLIGHT -> player.tokens.sunlightCount
+                            SharedTokenResource.MULCH -> player.tokens.mulchCount + player.tokens.pendingMulchCount
+                            SharedTokenResource.BEE -> player.critters.count(Critter.BEE)
+                            SharedTokenResource.WORM -> player.critters.count(Critter.WORM)
+                            SharedTokenResource.BUTTERFLY -> player.butterflies.size
+                        }
+                    },
+                    tokenSummary.finalHeldByPlayers
+                )
+                assertTrue(tokenSummary.minimumGroveSupply <= tokenSummary.startingGroveSupply)
+                assertEquals(tokenSummary.startingGroveSupply - tokenSummary.minimumGroveSupply, tokenSummary.maximumOutsideGrove)
+            }
+
             assertEquals(1.0, summary.players.sumOf { it.winShare })
             assertTrue(summary.players.filter { it.won }.all { it.winShare > 0.0 })
             assertTrue(summary.players.filterNot { it.won }.all { it.winShare == 0.0 })
 
             val retainedTypes = GameSummary::class.java.declaredFields.map { it.type.name } +
                 PlayerGameSummary::class.java.declaredFields.map { it.type.name } +
+                SharedTokenEconomySummary::class.java.declaredFields.map { it.type.name } +
                 PlantCreatureSignature::class.java.declaredFields.map { it.type.name } +
                 PlantCreatureCardSignature::class.java.declaredFields.map { it.type.name } +
                 OwnedDiceSignature::class.java.declaredFields.map { it.type.name }

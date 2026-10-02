@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.game.GameRunResult
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.random.die.DieSides
+import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.tokens.SharedTokenResource
 
 /** Collapses one completed production Game into a compact immutable research record. */
 object GameSummaryExtractor {
@@ -68,8 +70,52 @@ object GameSummaryExtractor {
             strategySeed = game.config.strategySeed,
             roundsCompleted = runResult.roundsCompleted,
             winnerIds = winnerIds,
-            players = playerSummaries
+            players = playerSummaries,
+            sharedTokenEconomy = sharedTokenEconomy(game)
         )
+    }
+
+
+    private fun sharedTokenEconomy(game: Game): List<SharedTokenEconomySummary> =
+        game.grove.sharedTokenEconomy.snapshots().map { snapshot ->
+            val actualFinalGroveSupply = groveSupply(game, snapshot.resource)
+            require(snapshot.trackedFinalGroveSupply == actualFinalGroveSupply) {
+                "Shared-token tracker drift for ${snapshot.resource}: tracked=${snapshot.trackedFinalGroveSupply}, actual=$actualFinalGroveSupply"
+            }
+            SharedTokenEconomySummary(
+                resource = snapshot.resource,
+                startingGroveSupply = snapshot.startingSupply,
+                gainAttempts = snapshot.gainAttempts,
+                successfulGains = snapshot.successfulGains,
+                failedGainsEmptyGrove = snapshot.failedEmptyGains,
+                spendsOrUses = snapshot.returnsToGrove,
+                returnsToGrove = snapshot.returnsToGrove,
+                finalGroveSupply = actualFinalGroveSupply,
+                finalHeldByPlayers = game.players.sumOf { player ->
+                    when (snapshot.resource) {
+                        SharedTokenResource.WATER -> player.tokens.waterCount
+                        SharedTokenResource.SUNLIGHT -> player.tokens.sunlightCount
+                        SharedTokenResource.MULCH -> player.tokens.mulchCount + player.tokens.pendingMulchCount
+                        SharedTokenResource.BEE -> player.critters.count(Critter.BEE)
+                        SharedTokenResource.WORM -> player.critters.count(Critter.WORM)
+                        SharedTokenResource.BUTTERFLY -> player.butterflies.size
+                    }
+                },
+                minimumGroveSupply = snapshot.minimumGroveSupply,
+                maximumOutsideGrove = snapshot.maximumOutsideGrove,
+                reachedZero = snapshot.reachedZero,
+                timesReachedZero = snapshot.timesReachedZero,
+                emptySupplyObservations = snapshot.emptySupplyObservations
+            )
+        }
+
+    private fun groveSupply(game: Game, resource: SharedTokenResource): Int = when (resource) {
+        SharedTokenResource.WATER -> game.grove.tokens.waterCount
+        SharedTokenResource.SUNLIGHT -> game.grove.tokens.sunlightCount
+        SharedTokenResource.MULCH -> game.grove.tokens.mulchCount
+        SharedTokenResource.BEE -> game.grove.critters.count(Critter.BEE)
+        SharedTokenResource.WORM -> game.grove.critters.count(Critter.WORM)
+        SharedTokenResource.BUTTERFLY -> game.grove.butterflies.size
     }
 
     private fun battleStrikeVp(entries: List<GameEntry>, playerId: PlayerId): Int =

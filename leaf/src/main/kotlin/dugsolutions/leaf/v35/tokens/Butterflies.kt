@@ -1,7 +1,8 @@
 package dugsolutions.leaf.v35.tokens
 
 class Butterflies(
-    butterflies: List<Butterfly> = emptyList()
+    butterflies: List<Butterfly> = emptyList(),
+    private val supplyObserver: SharedTokenSupplyObserver = SharedTokenSupplyObserver.NONE
 ) : Iterable<Butterfly> {
     private val butterflies = butterflies.toMutableList()
     private val faceUp = butterflies.associateWith { true }.toMutableMap()
@@ -21,6 +22,7 @@ class Butterflies(
         get() = butterflies.isNotEmpty()
 
     fun add(butterfly: Butterfly): Butterflies {
+        supplyObserver.onReturn(SharedTokenResource.BUTTERFLY)
         butterflies.add(butterfly)
         faceUp[butterfly] = true
         return this
@@ -28,6 +30,7 @@ class Butterflies(
 
     fun remove(butterfly: Butterfly): Boolean {
         val removed = butterflies.remove(butterfly)
+        supplyObserver.onGainAttempt(SharedTokenResource.BUTTERFLY, removed)
         if (removed && !butterflies.contains(butterfly)) {
             faceUp.remove(butterfly)
         }

@@ -1,7 +1,8 @@
 package dugsolutions.leaf.v35.tokens
 
 class Critters(
-    critters: List<Critter> = emptyList()
+    critters: List<Critter> = emptyList(),
+    private val supplyObserver: SharedTokenSupplyObserver = SharedTokenSupplyObserver.NONE
 ) : Iterable<Critter> {
     private val critters = critters.toMutableList()
 
@@ -20,6 +21,7 @@ class Critters(
         get() = critters.isNotEmpty()
 
     fun add(critter: Critter): Critters {
+        supplyObserver.onReturn(critter.sharedResource())
         critters.add(critter)
         return this
     }
@@ -38,7 +40,9 @@ class Critters(
     }
 
     fun remove(critter: Critter): Boolean {
-        return critters.remove(critter)
+        val removed = critters.remove(critter)
+        supplyObserver.onGainAttempt(critter.sharedResource(), removed)
+        return removed
     }
 
     fun replace(
@@ -58,4 +62,9 @@ class Critters(
     fun clear() {
         critters.clear()
     }
+}
+
+private fun Critter.sharedResource(): SharedTokenResource = when (this) {
+    Critter.BEE -> SharedTokenResource.BEE
+    Critter.WORM -> SharedTokenResource.WORM
 }

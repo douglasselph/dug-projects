@@ -3,7 +3,8 @@ package dugsolutions.leaf.v35.tokens
 class Tokens(
     waterCount: Int = 0,
     sunlightCount: Int = 0,
-    mulchTokens: List<Token.MULCH> = emptyList()
+    mulchTokens: List<Token.MULCH> = emptyList(),
+    private val supplyObserver: SharedTokenSupplyObserver = SharedTokenSupplyObserver.NONE
 ) {
     private var _waterCount = 0
     private var _sunlightCount = 0
@@ -73,9 +74,18 @@ class Tokens(
 
     fun add(token: Token): Tokens {
         when (token) {
-            Token.WATER -> _waterCount++
-            Token.SUNLIGHT -> _sunlightCount++
-            is Token.MULCH -> _mulchTokens.add(token)
+            Token.WATER -> {
+                supplyObserver.onReturn(SharedTokenResource.WATER)
+                _waterCount++
+            }
+            Token.SUNLIGHT -> {
+                supplyObserver.onReturn(SharedTokenResource.SUNLIGHT)
+                _sunlightCount++
+            }
+            is Token.MULCH -> {
+                supplyObserver.onReturn(SharedTokenResource.MULCH)
+                _mulchTokens.add(token)
+            }
             is Token.PENDING_MULCH -> _pendingMulchTokens.add(token)
         }
         return this
@@ -117,20 +127,26 @@ class Tokens(
     }
 
     private fun pullWater(): Token? {
-        if (!hasWater) return null
+        val success = hasWater
+        supplyObserver.onGainAttempt(SharedTokenResource.WATER, success)
+        if (!success) return null
         _waterCount--
         return Token.WATER
     }
 
     private fun pullSunlight(): Token? {
-        if (!hasSunlight) return null
+        val success = hasSunlight
+        supplyObserver.onGainAttempt(SharedTokenResource.SUNLIGHT, success)
+        if (!success) return null
         _sunlightCount--
         return Token.SUNLIGHT
     }
 
     private fun pullMulch(token: Token.MULCH): Token? {
         val index = _mulchTokens.indexOfFirst { it == token }
-        if (index < 0) return null
+        val success = index >= 0
+        supplyObserver.onGainAttempt(SharedTokenResource.MULCH, success)
+        if (!success) return null
         return _mulchTokens.removeAt(index)
     }
 

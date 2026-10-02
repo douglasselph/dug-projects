@@ -2,6 +2,7 @@ package dugsolutions.leaf.simulation.v35.learning.buy
 
 import dugsolutions.leaf.simulation.v35.analysis.GameSummary
 import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
+import dugsolutions.leaf.simulation.v35.analysis.SharedTokenEconomySummary
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.SimulationRunContext
 import dugsolutions.leaf.simulation.v35.experiment.diagnostic.withSimulationFailureDiagnostics
 import dugsolutions.leaf.simulation.v35.experiment.plant.PlantExperimentResearchConfig
@@ -25,6 +26,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.wisp.domain.WispCard
+import dugsolutions.leaf.v35.tokens.SharedTokenResource
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.learned.buy.*
@@ -149,6 +151,54 @@ internal fun evaluationGameConfig(
     roundValues = roundValues
 )
 
+
+internal data class TokenEconomyTotals(
+    var games: Long = 0,
+    var startingSupply: Long = 0,
+    var gainAttempts: Long = 0,
+    var successfulGains: Long = 0,
+    var failedEmptyGains: Long = 0,
+    var spendsOrUses: Long = 0,
+    var returnsToGrove: Long = 0,
+    var finalGroveSupply: Long = 0,
+    var finalHeldByPlayers: Long = 0,
+    var minimumGroveSupplyTotal: Long = 0,
+    var maximumOutsideGroveTotal: Long = 0,
+    var gamesReachedZero: Long = 0,
+    var timesReachedZero: Long = 0,
+    var emptySupplyObservations: Long = 0,
+    var lowestGroveSupplyObserved: Int = Int.MAX_VALUE,
+    var highestOutsideGroveObserved: Int = 0
+) {
+    fun add(summary: SharedTokenEconomySummary) {
+        games++
+        startingSupply += summary.startingGroveSupply
+        gainAttempts += summary.gainAttempts
+        successfulGains += summary.successfulGains
+        failedEmptyGains += summary.failedGainsEmptyGrove
+        spendsOrUses += summary.spendsOrUses
+        returnsToGrove += summary.returnsToGrove
+        finalGroveSupply += summary.finalGroveSupply
+        finalHeldByPlayers += summary.finalHeldByPlayers
+        minimumGroveSupplyTotal += summary.minimumGroveSupply
+        maximumOutsideGroveTotal += summary.maximumOutsideGrove
+        if (summary.reachedZero) gamesReachedZero++
+        timesReachedZero += summary.timesReachedZero
+        emptySupplyObservations += summary.emptySupplyObservations
+        lowestGroveSupplyObserved = minOf(lowestGroveSupplyObserved, summary.minimumGroveSupply)
+        highestOutsideGroveObserved = maxOf(highestOutsideGroveObserved, summary.maximumOutsideGrove)
+    }
+}
+
+internal class TokenEconomyAccumulator {
+    val byResource: MutableMap<SharedTokenResource, TokenEconomyTotals> =
+        SharedTokenResource.entries.associateWith { TokenEconomyTotals() }.toMutableMap()
+
+    fun add(summaries: List<SharedTokenEconomySummary>) {
+        summaries.forEach { summary -> byResource.getValue(summary.resource).add(summary) }
+    }
+}
+
 internal class EvalAccumulator(playerCount: Int = 4) {
     var winShare=0.0; var vp=0L; var plantVp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
@@ -165,6 +215,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     val strikeResearch = StrikeRowResearchAccumulator()
     val utilization = EffectResourceAccumulator()
     val vpLedger = VpLedgerAccumulator()
+    val tokenEconomy = TokenEconomyAccumulator()
     val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
     val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
@@ -176,6 +227,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
     ) {
         val p=game.summary.players.single { it.seat==seat }
+        tokenEconomy.add(game.summary.sharedTokenEconomy)
         winShare+=p.winShare; vp+=p.totalVp; plantVp+=p.plantVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
         sunlightGained += p.sunlightGained
         sunlightSpent += p.sunlightSpent
@@ -964,6 +1016,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println()
     printSunlightBattleResearch(o, c, l)
     println()
+    printTokenEconomy(c.tokenEconomy, l.tokenEconomy)
+    println()
     println("Buy behavior (affected role; totals across ${o.games} games)")
     println("  Plant purchases: control=${c.plantPurchases} learned=${l.plantPurchases}; avg/game=${avg(c.plantPurchases)} -> ${avg(l.plantPurchases)}")
     println("  Die purchases:   control=${c.diePurchases} learned=${l.diePurchases}; avg/game=${avg(c.diePurchases)} -> ${avg(l.diePurchases)}")
@@ -992,6 +1046,38 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println()
     println("Interpretation: this is held-out evidence for this policy with ${o.groveInterpretation()} and ${o.roundLabel}, not evidence for other Grove constraints or round structures.")
     println("Note: a zero-purchase Buy phase means the player made no recorded purchase in that phase; the Chronicle does not distinguish an explicit Done choice from having no legal purchase.")
+}
+
+
+private fun printTokenEconomy(c: TokenEconomyAccumulator, l: TokenEconomyAccumulator) {
+    fun avg(value: Long, games: Long): String =
+        if (games == 0L) "0.00" else "%.2f".format(value.toDouble() / games)
+    fun pct(value: Long, games: Long): String =
+        if (games == 0L) "0.00%" else "%.2f%%".format(value.toDouble() * 100.0 / games)
+
+    println("TOKEN ECONOMY (whole matched game; finite Grove supplies)")
+    println("  Gains are successful physical withdrawals from the Grove; returns are physical components recycled to the Grove after use/spend/cleanup.")
+    println("  Failed-empty gains count actual Grove withdrawal attempts that found no component; legality checks that prevent an attempt are not counted here.")
+    SharedTokenResource.entries.forEach { resource ->
+        val ct = c.byResource.getValue(resource)
+        val lt = l.byResource.getValue(resource)
+        println("  ${resource.name}:")
+        println("    starting Grove supply/game: control=${avg(ct.startingSupply, ct.games)} learned=${avg(lt.startingSupply, lt.games)}")
+        println("    gain attempts/game:         control=${avg(ct.gainAttempts, ct.games)} learned=${avg(lt.gainAttempts, lt.games)}")
+        println("    successful gains/game:      control=${avg(ct.successfulGains, ct.games)} learned=${avg(lt.successfulGains, lt.games)}")
+        println("    spends/uses/game:           control=${avg(ct.spendsOrUses, ct.games)} learned=${avg(lt.spendsOrUses, lt.games)}")
+        println("    returns to Grove/game:      control=${avg(ct.returnsToGrove, ct.games)} learned=${avg(lt.returnsToGrove, lt.games)}")
+        println("    final Grove supply/game:    control=${avg(ct.finalGroveSupply, ct.games)} learned=${avg(lt.finalGroveSupply, lt.games)}")
+        println("    final held by players/game: control=${avg(ct.finalHeldByPlayers, ct.games)} learned=${avg(lt.finalHeldByPlayers, lt.games)}")
+        println("    avg minimum Grove supply:   control=${avg(ct.minimumGroveSupplyTotal, ct.games)} learned=${avg(lt.minimumGroveSupplyTotal, lt.games)}")
+        println("    lowest Grove supply seen:   control=${if (ct.games == 0L) 0 else ct.lowestGroveSupplyObserved} learned=${if (lt.games == 0L) 0 else lt.lowestGroveSupplyObserved}")
+        println("    avg max outside Grove:      control=${avg(ct.maximumOutsideGroveTotal, ct.games)} learned=${avg(lt.maximumOutsideGroveTotal, lt.games)}")
+        println("    max outside Grove seen:     control=${ct.highestOutsideGroveObserved} learned=${lt.highestOutsideGroveObserved}")
+        println("    games Grove reached zero:   control=${pct(ct.gamesReachedZero, ct.games)} learned=${pct(lt.gamesReachedZero, lt.games)}")
+        println("    times supply reached zero:  control=${ct.timesReachedZero} learned=${lt.timesReachedZero}")
+        println("    failed gains, empty Grove:  control=${ct.failedEmptyGains} learned=${lt.failedEmptyGains}")
+        println("    empty-supply observations:  control=${ct.emptySupplyObservations} learned=${lt.emptySupplyObservations}")
+    }
 }
 
 private fun printSunlightBattleResearch(o: EvalOptions, c: EvalAccumulator, l: EvalAccumulator) {

@@ -2,10 +2,12 @@ package dugsolutions.leaf.v35.grove
 
 import dugsolutions.leaf.v35.grove.plant.PlantMarket
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.research.token.SharedTokenEconomyTracker
 import dugsolutions.leaf.v35.tokens.Butterflies
 import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Critters
+import dugsolutions.leaf.v35.tokens.SharedTokenResource
 import dugsolutions.leaf.v35.tokens.Token
 import dugsolutions.leaf.v35.tokens.Tokens
 import dugsolutions.leaf.v35.wisp.WispDeck
@@ -42,14 +44,18 @@ class Grove(
     val graftBed =
         GraftBed()
 
+    /** Observational only; gameplay decisions never consult this tracker. */
+    val sharedTokenEconomy =
+        SharedTokenEconomyTracker()
+
     val critters =
-        Critters()
+        Critters(supplyObserver = sharedTokenEconomy)
 
     val tokens =
-        Tokens()
+        Tokens(supplyObserver = sharedTokenEconomy)
 
     val butterflies =
-        Butterflies()
+        Butterflies(supplyObserver = sharedTokenEconomy)
 
     init {
         reset()
@@ -87,5 +93,18 @@ class Grove(
         }
 
         wispDeck.reset()
+
+        // Setup mutations above are not gameplay observations.  Establish the
+        // fresh physical-supply baseline only after the Grove has been restored.
+        sharedTokenEconomy.reset(
+            mapOf(
+                SharedTokenResource.WATER to tokens.waterCount,
+                SharedTokenResource.SUNLIGHT to tokens.sunlightCount,
+                SharedTokenResource.MULCH to tokens.mulchCount,
+                SharedTokenResource.BEE to critters.count(Critter.BEE),
+                SharedTokenResource.WORM to critters.count(Critter.WORM),
+                SharedTokenResource.BUTTERFLY to butterflies.size
+            )
+        )
     }
 }
