@@ -2,6 +2,7 @@ package dugsolutions.leaf.simulation.v35.learning.buy
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertIs
 import dugsolutions.leaf.v35.game.GameRoundSetup
@@ -26,6 +27,15 @@ import dugsolutions.leaf.v35.battle.*
 import dugsolutions.leaf.v35.battle.domain.*
 
 class EvaluateBuyPolicyTest {
+    @Test
+    fun `Cultivation Main policy option defaults to Human and rejects unavailable learned mode`() {
+        assertEquals("human", EvalOptions.parse(emptyList()).cultivationMainPolicy)
+        assertEquals("human", EvalOptions.parse(listOf("--cultivation-main-policy", "human")).cultivationMainPolicy)
+        assertFailsWith<IllegalArgumentException> {
+            EvalOptions.parse(listOf("--cultivation-main-policy", "learned"))
+        }
+    }
+
     @Test fun `evaluation accumulator starts empty and keeps four seat buckets`() {
         val a=EvalAccumulator()
         assertEquals(0.0,a.winShare)

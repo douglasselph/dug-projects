@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
+import dugsolutions.leaf.v35.player.decision.cultivation.MechanicalCultivationMainPolicy
 import dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy
@@ -55,6 +56,7 @@ object MechanicalControl {
             wound = MechanicalWoundStrategy(),
             placement = MechanicalCreaturePlacementStrategy(),
             cultivation = MechanicalCultivationStrategy(),
+            cultivationMain = MechanicalCultivationMainPolicy(),
             battle = MechanicalBattleStrategy(),
             buy = MechanicalBuyStrategy(),
             support = MechanicalSupportStrategy(),

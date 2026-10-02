@@ -82,6 +82,7 @@ fun main(args: Array<String>) {
             println("Grove zeros are resolved independently once per matched sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; CONTROL and LEARNED share that resolved Grove")
         }
         println("CONTROL=Human Baseline; LEARNED=same role with learned Buy selection only; all other decisions=Human Baseline")
+        println("Cultivation Main policy=${o.cultivationMainPolicy} (independent policy seam; Human preserves current baseline behavior)")
         println("research environment=${o.researchEnvironment}; environment seeds=${o.environmentSeed}..${o.environmentSeed + o.games - 1}")
         println("Round constraints: include=${o.roundIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.roundExcludes.sorted()}")
         println("Wisp constraints: include=${o.wispIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.wispExcludes.sorted()}")
@@ -1389,6 +1390,7 @@ internal data class EvalOptions(
     val plantOverridesPath: Path?,
     val roundOverridesPath: Path?,
     val players: Int,
+    val cultivationMainPolicy: String,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
     fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
@@ -1412,6 +1414,7 @@ internal data class EvalOptions(
             var plantOverridesPath: Path? = null
             var roundOverridesPath: Path? = null
             var players = 4
+            var cultivationMainPolicy = "human"
             var positional = false
             var i = 0
 
@@ -1446,6 +1449,7 @@ internal data class EvalOptions(
                     argument.startsWith("--plant-overrides") -> plantOverridesPath = Paths.get(value(argument))
                     argument.startsWith("--round-overrides") -> roundOverridesPath = Paths.get(value(argument))
                     argument.startsWith("--players") -> players = value(argument).toInt()
+                    argument.startsWith("--cultivation-main-policy") -> cultivationMainPolicy = value(argument).trim().lowercase()
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
                     argument == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
@@ -1460,17 +1464,19 @@ internal data class EvalOptions(
 
             require(games > 0)
             require(players in 2..4) { "--players must be 2, 3, or 4" }
+            require(cultivationMainPolicy == "human") { "--cultivation-main-policy currently supports only human; learned policy is a later task" }
             require(researchEnvironment in setOf("default","upgrade-rich","upgrade-poor")) { "--research-environment must be default, upgrade-rich, or upgrade-poor" }
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
             require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--cultivation-main-policy human]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
             println("  --players 2|3|4 sets the simulated player count; default is 4.")
+            println("  --cultivation-main-policy human selects the independently pluggable Cultivation Main policy; learned support is added in a later task.")
             println("  --plant-overrides PATH loads research-only Plant cost, availability, scoring, and effect interventions.")
             println("  --round-overrides PATH loads research-only typed Round-card effect replacements.")
             println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")

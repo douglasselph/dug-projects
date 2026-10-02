@@ -69,6 +69,7 @@ fun main(args: Array<String>) {
             println("resolved training Grove sample 0=${GrovePlantCode.encode(trainingGroves.first())}")
         }
         println("fitness=affected-role mean win share; identical game/strategy seed cohort for every policy")
+        println("Cultivation Main policy=${o.cultivationMainPolicy} (independent policy seam; Human preserves current baseline behavior)")
         if (plantExperiment.isActive) {
             println()
             println(plantExperiment.render(allPlants))
@@ -196,7 +197,8 @@ internal data class TrainOptions(
     val generations: Int, val population: Int, val games: Int, val elites: Int,
     val sigma: Double, val mutations: Int, val evolutionSeed: Long,
     val seed: Long, val strategySeed: Long, val input: Path, val output: Path,
-    val plantOverridesPath: Path?, val roundOverridesPath: Path?, val grovePattern: String?, val groveSeed: Long, val players: Int
+    val plantOverridesPath: Path?, val roundOverridesPath: Path?, val grovePattern: String?, val groveSeed: Long, val players: Int,
+    val cultivationMainPolicy: String
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (one deterministic resolution per training sample)" } ?: "Grove=FirstGameDefault"
     fun groveProvenance(): String = grovePattern?.let { "pattern=$it;groveSeed=$groveSeed;perSample=true" } ?: "FirstGameDefault"
@@ -211,6 +213,7 @@ internal data class TrainOptions(
             var grovePattern: String? = null
             var groveSeed = 81000L
             var players = 4
+            var cultivationMainPolicy = "human"
             var i=0
             fun value(a:String):String = if ('=' in a) a.substringAfter('=') else args[++i]
             while(i<args.size) { val a=args[i]; when {
@@ -229,14 +232,15 @@ internal data class TrainOptions(
                 a.startsWith("--round-overrides") -> roundOverridesPath=Paths.get(value(a))
                 a.startsWith("--grove-seed") -> groveSeed=value(a).toLong()
                 a.startsWith("--players") -> players=value(a).toInt()
+                a.startsWith("--cultivation-main-policy") -> cultivationMainPolicy=value(a).trim().lowercase()
                 a.startsWith("--grove") -> grovePattern=GrovePlantCode.validate(value(a))
                 a=="--random-grove" -> grovePattern=GrovePlantCode.RANDOM_PATTERN
                 a=="--help" -> { usage(); kotlin.system.exitProcess(0) }
                 else -> error("Unknown argument: $a")
             }; i++ }
-            require(generations>0); require(population>=2); require(games>0); require(elites in 1 until population); require(players in 2..4) { "--players must be 2, 3, or 4" }
-            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath,roundOverridesPath,grovePattern,groveSeed,players)
+            require(generations>0); require(population>=2); require(games>0); require(elites in 1 until population); require(players in 2..4) { "--players must be 2, 3, or 4" }; require(cultivationMainPolicy == "human") { "--cultivation-main-policy currently supports only human; learned policy is a later task" }
+            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath,roundOverridesPath,grovePattern,groveSeed,players,cultivationMainPolicy)
         }
-        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] [--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] [--players 2|3|4]")
+        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] [--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] [--players 2|3|4] [--cultivation-main-policy human]")
     }
 }

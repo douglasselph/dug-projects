@@ -27,6 +27,8 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
+import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationMainActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainObservation
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -209,7 +211,7 @@ class CultivationBuildCoordinator(
                         "Build is not making observable progress and could loop forever"
                 }
 
-                val chosen = player.decisions.cultivation.chooseAction(
+                val cultivationChoice = player.decisions.cultivation.chooseAction(
                     ChooseCultivationActionRequest(
                         roundCard = roundCard,
                         mainActionsRemaining = mainActionsRemaining,
@@ -217,9 +219,17 @@ class CultivationBuildCoordinator(
                         context = context
                     )
                 )
-                decisionCheck(chosen in legalChoices) {
-                    "CultivationStrategy returned an action that was not offered: $chosen"
+                decisionCheck(cultivationChoice in legalChoices) {
+                    "CultivationStrategy returned an action that was not offered: $cultivationChoice"
                 }
+                val chosen = applyMainPolicy(
+                    player = player,
+                    roundCard = roundCard,
+                    mainActionsRemaining = mainActionsRemaining,
+                    legalChoices = legalChoices,
+                    context = context,
+                    cultivationChoice = cultivationChoice
+                )
                 if (mainActionsRemaining > 0) {
                     recordRoundEffectChoice(game, player, roundCard, legalChoices, chosen)
                 }
@@ -333,6 +343,47 @@ class CultivationBuildCoordinator(
                 battleNext = battleIsNext(game)
             )
         )
+    }
+
+    /**
+     * Keeps optional Cultivation Support timing with the existing Cultivation
+     * strategy while routing the high-level Main choice through its independent
+     * policy seam. Human and Mechanical policies return the reference choice,
+     * so this refactor is behavior-preserving until a learned policy is supplied.
+     */
+    private fun applyMainPolicy(
+        player: Player,
+        roundCard: RoundCard,
+        mainActionsRemaining: Int,
+        legalChoices: List<CultivationAction>,
+        context: DecisionContext,
+        cultivationChoice: CultivationAction
+    ): CultivationAction {
+        val referenceMain = cultivationChoice as? CultivationAction.Main ?: return cultivationChoice
+        val legalMains = legalChoices.filterIsInstance<CultivationAction.Main>().map { it.action }
+        val selected = player.decisions.cultivationMain.chooseMainAction(
+            ChooseCultivationMainActionRequest(
+                legalActions = legalMains,
+                referenceAction = referenceMain.action,
+                observation = CultivationMainObservation(
+                    mainActionsRemaining = mainActionsRemaining,
+                    roundCardName = roundCard.name,
+                    firstRoundEffect = roundCard.firstEffect.effect,
+                    secondRoundEffect = roundCard.secondEffect.effect,
+                    context = context
+                )
+            )
+        )
+        decisionCheck(selected in legalMains) {
+            "CultivationMainPolicy returned an action that was not offered: $selected"
+        }
+        return if (selected == referenceMain.action) {
+            referenceMain
+        } else {
+            // Probability metadata belongs to the reference Human choice and must
+            // not be transferred to a replacement policy choice.
+            CultivationAction.Main(selected)
+        }
     }
 
     private fun legalChoices(

@@ -41,6 +41,7 @@ class HumanBaselineDecisionDirectorTest {
         assertSame(wiring.wound, director.wound)
         assertSame(wiring.placement, director.placement)
         assertSame(wiring.cultivation, director.cultivation)
+        assertSame(wiring.cultivationMain, director.cultivationMain)
         assertSame(wiring.battle, director.battle)
         assertSame(wiring.buy, director.buy)
         assertSame(wiring.support, director.support)

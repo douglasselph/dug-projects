@@ -28,6 +28,7 @@ import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainPolicy
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.player.dice.PlayerDice
@@ -47,6 +48,37 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class CultivationBuildCoordinatorTest {
+
+    @Test
+    fun execute_routesHighLevelMainChoiceThroughIndependentMainPolicy() {
+        val strategy = SequenceStrategy(
+            CultivationAction.Main(CultivationMainAction.RoundEffect1),
+            CultivationAction.Main(CultivationMainAction.RoundEffect1),
+            CultivationAction.Done
+        )
+        val first = player(
+            id = 1,
+            supply = emptyList(),
+            strategy = strategy,
+            mainPolicy = CultivationMainPolicy { request ->
+                // Both Round effects are legal in this fixture. Replacing the
+                // reference choice proves the new seam controls WHICH Main is
+                // executed without taking over Cultivation Support timing.
+                assertTrue(CultivationMainAction.RoundEffect2 in request.legalActions)
+                CultivationMainAction.RoundEffect2
+            }
+        )
+        val fixture = fixture(first, player(2, emptyList(), RoundEffectStrategy()))
+
+        val result = fixture.coordinator.executeActions(fixture.game, fixture.card)
+
+        assertEquals(
+            listOf(CultivationMainAction.RoundEffect2, CultivationMainAction.RoundEffect2),
+            result.actions.filter { it.playerId == first.id }.map { it.action }
+        )
+        assertEquals(listOf(2, 1, 0), strategy.requests.map { it.mainActionsRemaining })
+    }
+
 
     @Test
     fun execute_openingDrawsThree_thenRequiresExactlyTwoMainActionsAndDone() {
@@ -491,12 +523,19 @@ class CultivationBuildCoordinatorTest {
         id: Int,
         supply: List<Die>,
         strategy: CultivationStrategy,
-        hand: List<Die> = emptyList()
-    ): Player = Player(
-        id = PlayerId(id),
-        decisions = DecisionDirector.baseline().copy(cultivation = strategy),
-        dice = PlayerDice(supply = supply, hand = hand)
-    )
+        hand: List<Die> = emptyList(),
+        mainPolicy: CultivationMainPolicy? = null
+    ): Player {
+        val baseline = DecisionDirector.baseline()
+        return Player(
+            id = PlayerId(id),
+            decisions = baseline.copy(
+                cultivation = strategy,
+                cultivationMain = mainPolicy ?: baseline.cultivationMain
+            ),
+            dice = PlayerDice(supply = supply, hand = hand)
+        )
+    }
 
     private fun dice(count: Int): List<Die> =
         List(count) { FixedDie(6, 4) }

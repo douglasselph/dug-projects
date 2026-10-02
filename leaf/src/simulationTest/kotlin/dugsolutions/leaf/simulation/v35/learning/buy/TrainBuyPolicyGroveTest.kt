@@ -14,6 +14,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TrainBuyPolicyGroveTest {
+    @Test
+    fun `Cultivation Main policy option defaults to Human`() {
+        assertEquals("human", TrainOptions.parse(emptyList()).cultivationMainPolicy)
+        assertEquals("human", TrainOptions.parse(listOf("--cultivation-main-policy=human")).cultivationMainPolicy)
+    }
+
 
     private data class Catalog(
         val manager: PlantCardManager,

@@ -27,6 +27,7 @@ class ScriptedDecisionDirector(
             wound = wound,
             placement = placement,
             cultivation = cultivation,
+            cultivationMain = fallback.cultivationMain,
             battle = battle,
             buy = buy,
             support = support,
