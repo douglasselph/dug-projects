@@ -1172,6 +1172,8 @@ class HumanBaselineEffectStrategy(
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
                 DieValueHeuristics.flipGain(choice.sides, choice.value)
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1)
+            GameEffect.RAISE_D8_PLUS_1 ->
+                if (choice.sides == 8) DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 1) else return null
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
                 DieValueHeuristics.actualRaiseGain(
                     choice.sides,

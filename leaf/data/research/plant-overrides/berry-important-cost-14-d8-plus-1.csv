@@ -1,0 +1,3 @@
+card_id,cost,available,scoring,effect
+Vine_07_01,14,,,RAISE_D8_PLUS_1
+Vine_07_04,,false,,

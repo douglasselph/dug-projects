@@ -94,6 +94,9 @@ class BattleEnabledPlantAnalyzer(
                 raiseCandidates(context, card, dice, 1)
 
 
+            GameEffect.RAISE_D8_PLUS_1 ->
+                raiseCandidates(context, card, dice.filter { it.die.sides == 8 }, 1)
+
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
                 val lowest = dice.minOf { it.die.value }
                 raiseCandidates(context, card, dice.filter { it.die.value == lowest }, 1)

@@ -126,6 +126,7 @@ class CardEffectContractTest {
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
+            GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,

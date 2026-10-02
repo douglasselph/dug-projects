@@ -283,3 +283,6 @@ Vine_07_01,11,,,RAISE_LOWEST_DIE_PLUS_1
 This changes only the research game environment. The canonical card data and `PlantCard.effect` remain
 unchanged. Runtime Plant-effect access goes through the explicit per-game `PlantValueResolver.effectFor`
 seam, just like experimental cost and scoring.
+
+
+Research-only effect constants currently include `RAISE_LOWEST_DIE_PLUS_1` and `RAISE_D8_PLUS_1`. `RAISE_D8_PLUS_1` may be used only when the player has a D8 in hand; it raises a chosen D8 by +1.

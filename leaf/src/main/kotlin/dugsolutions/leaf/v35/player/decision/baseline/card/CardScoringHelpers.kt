@@ -62,6 +62,10 @@ object CardScoringHelpers {
             )
             GameEffect.RAISE_DIE_PLUS_4 -> addBestGain(bestRaise(dice, 4), "Best +4 target")
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> addBestGain(bestRaise(dice, 1), "Best +1 target")
+            GameEffect.RAISE_D8_PLUS_1 -> addBestGain(
+                dice.filter { it.sides == 8 }.maxOfOrNull { DieValueHeuristics.actualRaiseGain(it, 1) } ?: 0,
+                "Best D8 +1 target"
+            )
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
                 val lowest = dice.minOfOrNull { it.value }
                 val gain = lowest?.let { value ->
@@ -478,6 +482,7 @@ object CardScoringHelpers {
             GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 4)
             GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 3)
             GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 1)

@@ -194,6 +194,7 @@ object GameEffectDecisionRequirements {
                 same(EffectDecisionMechanism.EFFECT_O_EDELWEISS)
 
             GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,

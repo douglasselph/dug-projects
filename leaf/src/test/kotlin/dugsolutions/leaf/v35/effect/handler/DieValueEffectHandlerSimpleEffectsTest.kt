@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.player.creature.GraftPlacement
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class DieValueEffectHandlerSimpleEffectsTest {
@@ -250,4 +251,41 @@ class DieValueEffectHandlerSimpleEffectsTest {
         cardBackgroundImage = "",
         effect = GameEffect.UNKNOWN
     )
+
+    @Test
+    fun raiseD8PlusOne_onlyAllowsD8AndRaisesD8() {
+        val d6 = FixedEffectDie(6, 2)
+        val d10 = FixedEffectDie(10, 3)
+        val d8 = FixedEffectDie(8, 4)
+        val actor = EffectTestFixture.player(
+            1,
+            hand = listOf(d6, d10, d8),
+            effectStrategy = LastEffectChoiceStrategy()
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(game, actor, GameEffect.RAISE_D8_PLUS_1)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(2, d6.value)
+        assertEquals(3, d10.value)
+        assertEquals(5, d8.value)
+    }
+
+    @Test
+    fun raiseD8PlusOne_cannotExecuteWithoutD8() {
+        val actor = EffectTestFixture.player(
+            1,
+            hand = listOf(FixedEffectDie(6, 2), FixedEffectDie(10, 3))
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        assertFalse(
+            handler.canExecute(
+                EffectTestFixture.request(game, actor, GameEffect.RAISE_D8_PLUS_1)
+            )
+        )
+    }
+
 }
