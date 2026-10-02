@@ -401,3 +401,23 @@ tasks.register<JavaExec>("runHumanBaselineGlobalCertification") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.buy.HumanBaselineGlobalCertificationMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// Evolves only high-level Cultivation Build Main Action selection.
+tasks.register<JavaExec>("runTrainCultivationMainPolicy") {
+    description = "Evolves the learned Cultivation Main policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.cultivation.TrainCultivationMainPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+// Matched held-out evaluation of one learned Cultivation Main policy.
+tasks.register<JavaExec>("runEvaluateCultivationMainPolicy") {
+    description = "Evaluates a learned Cultivation Main policy against Human Cultivation Main on matched held-out games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.cultivation.EvaluateCultivationMainPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
