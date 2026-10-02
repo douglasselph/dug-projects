@@ -3,6 +3,9 @@ package dugsolutions.leaf.v35.player.decision.context
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.RoundEffectSlot
+import dugsolutions.leaf.v35.round.RoundValueResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
@@ -57,6 +60,23 @@ class DecisionContextFactoryTest {
         assertEquals(PlayerId(2), context.opponents.single().id)
         assertEquals(RoundCardType.CULTIVATION, context.phase)
         assertFalse(context === DecisionContext.EMPTY)
+    }
+
+
+    @Test
+    fun create_exposesEffectiveRoundEffectsFromGameConfig() {
+        val resolver = object : RoundValueResolver {
+            override fun effectFor(card: dugsolutions.leaf.v35.round.domain.RoundCard, slot: RoundEffectSlot): GameEffect =
+                if (slot == RoundEffectSlot.FIRST) GameEffect.GAIN_SUNLIGHT_TOKEN
+                else RoundValueResolver.CANONICAL.effectFor(card, slot)
+        }
+        val game = GameEngineTestFixture.game(1, 0, roundValues = resolver)
+        game.roundDeck.next()
+
+        val context = DecisionContextFactory.create(game, game.players.first())
+
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, requireNotNull(context.round).firstEffect)
+        assertEquals(game.currentRound!!.secondEffect.effect, context.round!!.secondEffect)
     }
 
     @Test

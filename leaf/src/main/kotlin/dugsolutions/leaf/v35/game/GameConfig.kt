@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.round.RoundValueResolver
 
 /**
  * Creates a fresh DecisionDirector for one player each time a Game is built.
@@ -120,7 +121,13 @@ class GameConfig(
      * uses [PlantValueResolver.CANONICAL]; research may supply an immutable
      * override resolver without mutating PlantCard definitions.
      */
-    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+    /**
+     * Explicit per-game effective Round-card effect values. Canonical gameplay
+     * uses [RoundValueResolver.CANONICAL]; research may supply an immutable
+     * resolver without mutating RoundCard definitions.
+     */
+    val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()

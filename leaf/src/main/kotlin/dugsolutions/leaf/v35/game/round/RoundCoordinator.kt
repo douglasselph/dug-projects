@@ -37,6 +37,7 @@ class RoundCoordinator(
      */
     fun revealNext(game: Game): RoundReveal? {
         val card = game.roundDeck.next() ?: return null
+        val effectiveCard = game.config.roundValues.cardFor(card)
         val roundNumber = game.roundNumber
 
         game.chronicle.record(
@@ -44,8 +45,8 @@ class RoundCoordinator(
                 roundNumber = roundNumber,
                 cardName = card.name,
                 cardType = card.type,
-                firstEffect = card.firstEffect.effect,
-                secondEffect = card.secondEffect.effect
+                firstEffect = effectiveCard.firstEffect.effect,
+                secondEffect = effectiveCard.secondEffect.effect
             )
         )
 
@@ -73,9 +74,10 @@ class RoundCoordinator(
                 reveal.card.name
         }
 
-        when (reveal.card.type) {
-            RoundCardType.CULTIVATION -> cultivation.execute(game, reveal.card)
-            RoundCardType.BATTLE -> battle.execute(game, reveal.card)
+        val effectiveCard = game.config.roundValues.cardFor(reveal.card)
+        when (effectiveCard.type) {
+            RoundCardType.CULTIVATION -> cultivation.execute(game, effectiveCard)
+            RoundCardType.BATTLE -> battle.execute(game, effectiveCard)
         }
 
         game.chronicle.record(

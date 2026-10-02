@@ -4,6 +4,9 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.RoundEffectSlot
+import dugsolutions.leaf.v35.round.RoundValueResolver
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import org.junit.jupiter.api.Test
@@ -35,6 +38,32 @@ class RoundCoordinatorTest {
         assertTrue(game.currentRound === reveal.card)
         assertEquals(1, game.chronicle.entries.size)
         assertTrue(game.chronicle.entries.single() is GameEntry.RoundRevealed)
+    }
+
+
+    @Test
+    fun roundOverride_isReportedToDecisionsAndExecutedWithoutMutatingCanonicalCard() {
+        // Arrange
+        val resolver = object : RoundValueResolver {
+            override fun effectFor(card: RoundCard, slot: RoundEffectSlot): GameEffect =
+                if (slot == RoundEffectSlot.FIRST) GameEffect.GAIN_SUNLIGHT_TOKEN
+                else RoundValueResolver.CANONICAL.effectFor(card, slot)
+        }
+        val game = GameEngineTestFixture.game(1, 0, roundValues = resolver)
+        val cultivation = RecordingExecutor()
+        val coordinator = coordinator(cultivation = cultivation)
+
+        // Act
+        val reveal = coordinator.revealNext(game)!!
+        val canonicalFirst = reveal.card.firstEffect.effect
+        coordinator.executeRevealed(game, reveal)
+
+        // Assert
+        val revealed = game.chronicle.entries.first() as GameEntry.RoundRevealed
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, revealed.firstEffect)
+        assertEquals(canonicalFirst, reveal.card.firstEffect.effect)
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, cultivation.cards.single().firstEffect.effect)
+        assertEquals(reveal.card.name, cultivation.cards.single().name)
     }
 
     @Test

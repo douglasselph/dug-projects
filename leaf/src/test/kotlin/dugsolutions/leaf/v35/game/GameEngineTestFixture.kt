@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.round.RoundCardManager
+import dugsolutions.leaf.v35.round.RoundValueResolver
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.round.RoundDeck
 import dugsolutions.leaf.v35.wisp.WispCardManager
@@ -27,7 +28,8 @@ internal object GameEngineTestFixture {
         seed: Long = 123L,
         players: List<Player>? = null,
         populateWispDeck: Boolean = false,
-        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+        plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+        roundValues: RoundValueResolver = RoundValueResolver.CANONICAL
     ): Game {
         val gamePlayers = players ?: listOf(player(1), player(2))
         val randomizer = Randomizer.create(seed)
@@ -37,7 +39,8 @@ internal object GameEngineTestFixture {
             playerDecisionFactories = List(gamePlayers.size) { PlayerDecisionFactory.humanBaseline() },
             roundSetup = setup,
             seed = seed,
-            plantValues = plantValues
+            plantValues = plantValues,
+            roundValues = roundValues
         )
         val roundDeck = RoundDeck(
             roundCardManager = roundManager(),

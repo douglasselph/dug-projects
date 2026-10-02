@@ -28,7 +28,8 @@ internal object DecisionContextFactory {
             "Decision actor must belong to the supplied Game: ${actor.id.value}"
         }
 
-        val round = game.currentRound?.let { card ->
+        val round = game.currentRound?.let { canonicalCard ->
+            val card = game.config.roundValues.cardFor(canonicalCard)
             RoundView(
                 number = game.roundNumber,
                 name = card.name,
