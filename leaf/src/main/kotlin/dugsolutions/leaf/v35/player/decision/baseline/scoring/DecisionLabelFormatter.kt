@@ -120,6 +120,7 @@ object DecisionLabelFormatter {
 
     private fun battleSupport(value: BattleSupportAction): String =
         when (value) {
+            is BattleSupportAction.UseSunlight -> "UseSunlight(${battleMain(value.mainAction)})"
             is BattleSupportAction.Shared -> support(value.action)
             is BattleSupportAction.PlaceCritter -> "PlaceCritter(${value.critter} -> ${value.row})"
         }

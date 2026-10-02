@@ -44,6 +44,16 @@ object GameSummaryExtractor {
                 sunlightGained = sunlightChanges(entries, player.id, SunlightTokenChange.GAINED),
                 sunlightSpent = sunlightChanges(entries, player.id, SunlightTokenChange.SPENT),
                 finalSunlightCount = player.tokens.sunlightCount,
+                sunlightSupportOpportunities = sunlightSupportOpportunities(entries, player.id),
+                sunlightSupportUses = sunlightSupportUses(entries, player.id),
+                sunlightExtraMainActions = sunlightMainActions(entries, player.id).size,
+                sunlightExtraDrawActions = sunlightMainActions(entries, player.id).count { it.action == dugsolutions.leaf.v35.chronicle.domain.MainActionKind.DRAW },
+                sunlightExtraPlantActions = sunlightMainActions(entries, player.id).count { it.action == dugsolutions.leaf.v35.chronicle.domain.MainActionKind.ACTIVATE_PLANT },
+                sunlightExtraRoundEffectActions = sunlightMainActions(entries, player.id).count {
+                    it.action == dugsolutions.leaf.v35.chronicle.domain.MainActionKind.ROUND_EFFECT_1 ||
+                        it.action == dugsolutions.leaf.v35.chronicle.domain.MainActionKind.ROUND_EFFECT_2
+                },
+                sunlightPlantActivationIds = sunlightMainActions(entries, player.id).mapNotNull { it.plantCardId },
                 finalPlantCount = player.creature.size,
                 finalPlantPrintedCost = player.creature.cards.sumOf { it.card.cost },
                 plantCreatureSignature = plantCreatureSignature(player),
@@ -97,6 +107,19 @@ object GameSummaryExtractor {
             entry.playerId == playerId &&
             entry.change == change
     }
+
+    private fun sunlightSupportOpportunities(entries: List<GameEntry>, playerId: PlayerId): Int =
+        entries.count { it is GameEntry.SunlightSupportOpportunity && it.playerId == playerId }
+
+    private fun sunlightSupportUses(entries: List<GameEntry>, playerId: PlayerId): Int =
+        entries.count {
+            it is GameEntry.SupportAction &&
+                it.playerId == playerId &&
+                it.action == SupportActionKind.SUNLIGHT
+        }
+
+    private fun sunlightMainActions(entries: List<GameEntry>, playerId: PlayerId): List<GameEntry.SunlightMainAction> =
+        entries.filterIsInstance<GameEntry.SunlightMainAction>().filter { it.playerId == playerId }
 
     private fun plantCreatureSignature(player: Player): PlantCreatureSignature =
         PlantCreatureSignature(

@@ -261,6 +261,12 @@ class GameChronicle : Chronicle {
             is Moment.SunlightTokenChanged -> GameEntry.SunlightTokenChanged(
                 sequence, moment.playerId, moment.change, hierarchyDepth
             )
+            is Moment.SunlightSupportOpportunity -> GameEntry.SunlightSupportOpportunity(
+                sequence, moment.playerId, moment.legalExtraMainActions, hierarchyDepth
+            )
+            is Moment.SunlightMainAction -> GameEntry.SunlightMainAction(
+                sequence, moment.playerId, moment.action, moment.plantCardId, hierarchyDepth
+            )
             is Moment.MulchStored -> GameEntry.MulchStored(
                 sequence, moment.playerId, moment.sides, moment.value, moment.fromDiscard,
                 hierarchyDepth

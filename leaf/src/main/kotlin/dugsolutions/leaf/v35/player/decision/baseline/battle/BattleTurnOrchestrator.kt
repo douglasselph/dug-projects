@@ -93,6 +93,11 @@ class BattleTurnOrchestrator(
         currentFinalMains: Collection<BattleMainAction>,
         legalSupports: Collection<BattleSupportAction>
     ): Boolean {
+        if (support is BattleSupportAction.UseSunlight) {
+            val extraMain = BattleMainPriority.score(context, roundCard, support.mainAction, cardScorers)
+            return extraMain.total >= SUNLIGHT_PRESERVE_SCORE
+        }
+
         directAnalyzer(context, support)?.let { return it.individuallyWorthwhile }
 
         val enabling = (support as? BattleSupportAction.Shared)?.let {
@@ -114,6 +119,7 @@ class BattleTurnOrchestrator(
         support: BattleSupportAction
     ): PriorityScore =
         when (support) {
+            is BattleSupportAction.UseSunlight -> PriorityScore(0)
             is BattleSupportAction.PlaceCritter -> PriorityScore(0)
             is BattleSupportAction.Shared -> when (val shared = support.action) {
                 is SupportAction.PlayWisp ->
@@ -124,7 +130,13 @@ class BattleTurnOrchestrator(
 
     private fun contributesToCumulativePath(support: BattleSupportAction): Boolean =
         when (support) {
+            is BattleSupportAction.UseSunlight -> false
             is BattleSupportAction.PlaceCritter -> support.critter == Critter.BEE
             is BattleSupportAction.Shared -> support.action is SupportAction.UseButterfly
         }
+
+    private companion object {
+        /** Preserve Sunlight unless an extra Main Action has ordinary clear value. */
+        const val SUNLIGHT_PRESERVE_SCORE: Int = 55
+    }
 }

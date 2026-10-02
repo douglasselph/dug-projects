@@ -16,7 +16,8 @@ data class BattleSupportCapacity(
     val mulchMoves: Int = 0,
     val wormMoves: Int = 0,
     val beeMoves: Int = 0,
-    val butterflyMoves: Int = 0
+    val butterflyMoves: Int = 0,
+    val sunlightMoves: Int = 0
 ) {
     init {
         require(
@@ -26,7 +27,8 @@ data class BattleSupportCapacity(
                 mulchMoves,
                 wormMoves,
                 beeMoves,
-                butterflyMoves
+                butterflyMoves,
+                sunlightMoves
             ).all { it >= 0 }
         ) {
             "Battle Support move counts cannot be negative: $this"
@@ -36,7 +38,7 @@ data class BattleSupportCapacity(
     val totalMoves: Int
         get() =
             wispMoves + waterMoves + mulchMoves +
-                wormMoves + beeMoves + butterflyMoves
+                wormMoves + beeMoves + butterflyMoves + sunlightMoves
 
     companion object {
         val ZERO = BattleSupportCapacity()
@@ -164,7 +166,8 @@ class BattleSupportCapacityAssessor {
                 .map { it.butterfly }
                 .filter { it in faceUpButterflies }
                 .distinct()
-                .size
+                .size,
+            sunlightMoves = if (supports.any { it is BattleSupportAction.UseSunlight }) board.sunlight else 0
         )
     }
 
@@ -204,7 +207,8 @@ class BattleSupportCapacityAssessor {
                 board.butterflies.count { it.isFaceUp }
             } else {
                 0
-            }
+            },
+            sunlightMoves = board.sunlight
         )
     }
 }

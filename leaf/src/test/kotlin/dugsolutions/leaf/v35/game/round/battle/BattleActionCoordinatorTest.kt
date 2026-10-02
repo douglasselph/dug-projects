@@ -3,6 +3,9 @@ package dugsolutions.leaf.v35.game.round.battle
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
+import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -17,6 +20,7 @@ import dugsolutions.leaf.v35.game.GameEngineTestFixture
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
+import dugsolutions.leaf.v35.game.operation.SunlightTokenResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.Player
@@ -80,6 +84,7 @@ class BattleActionCoordinatorTest {
         val p1 = player(1, HumanBaselineBattleStrategy())
         val p2 = player(2, finishStrategy("p2"))
         val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
 
         val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
 
@@ -97,6 +102,8 @@ class BattleActionCoordinatorTest {
         val p1 = player(1, strategy)
         val p2 = player(2, finishStrategy("p2"))
         val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
 
         fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
 
@@ -111,6 +118,7 @@ class BattleActionCoordinatorTest {
         val p1 = player(1, strategy)
         val p2 = player(2, finishStrategy("p2"))
         val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
 
         fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
 
@@ -267,6 +275,180 @@ class BattleActionCoordinatorTest {
         assertTrue(plantRequest.battleState === fixture.battleState)
         assertEquals(GameEffect.GAIN_ONE_VP, plantRequest.effect)
         assertTrue(p1.creature.get(active.id)!!.isFaceDown)
+    }
+
+
+    @Test
+    fun execute_noSunlight_preservesNormalFirstSupportFinalSequence() {
+        val strategy = RecordingFinishStrategy()
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(strategy.turnRequests.single().legalChoices.none { choice ->
+            (choice as? BattleTurnAction.Support)?.action is BattleSupportAction.UseSunlight
+        })
+        assertEquals(1, result.firstMainActions.count { it.playerId == p1.id })
+        assertEquals(1, result.finalMainActions.count { it.playerId == p1.id })
+        assertEquals(0, p1.tokens.sunlightCount)
+    }
+
+    @Test
+    fun execute_oneSunlight_fundsExtraMain_supportContinues_thenRegularFinalRemains() {
+        val log = mutableListOf<String>()
+        val strategy = ScriptedStrategy("p1", log)
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        p1.critters.add(Critter.BEE)
+        strategy.first = BattleMainAction.RoundEffect1
+        strategy.turns += listOf(
+            BattleTurnAction.Support(BattleSupportAction.UseSunlight(BattleMainAction.RoundEffect2)),
+            BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.BEE, StrikeRow.TOP)),
+            BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+        )
+        val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertEquals(0, p1.tokens.sunlightCount)
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount)
+        assertEquals(1, result.firstMainActions.count { it.playerId == p1.id })
+        assertEquals(1, result.finalMainActions.count { it.playerId == p1.id })
+        assertEquals(2, result.supportActions.count { it.playerId == p1.id })
+        assertEquals(
+            listOf(BattleMainStage.FIRST, BattleMainStage.SUNLIGHT, BattleMainStage.FINAL),
+            fixture.game.chronicle.entries.filterIsInstance<GameEntry.MainAction>()
+                .filter { it.playerId == p1.id }.mapNotNull { it.battleStage }
+        )
+        assertEquals(1, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SunlightMainAction>()
+            .count { it.playerId == p1.id })
+    }
+
+    @Test
+    fun execute_playerMayKeepSunlightAndTakeRegularFinalMain() {
+        val strategy = RecordingFinishStrategy()
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(strategy.turnRequests.single().legalChoices.any { choice ->
+            (choice as? BattleTurnAction.Support)?.action is BattleSupportAction.UseSunlight
+        })
+        assertEquals(1, p1.tokens.sunlightCount)
+        assertEquals(8, fixture.game.grove.tokens.sunlightCount)
+        assertEquals(1, result.finalMainActions.count { it.playerId == p1.id })
+        assertTrue(fixture.game.chronicle.entries.none {
+            it is GameEntry.SupportAction && it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT
+        })
+    }
+
+    @Test
+    fun execute_twoSunlights_canFundTwoSeparateExtraMainActions() {
+        val strategy = ScriptedStrategy("p1", mutableListOf())
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        strategy.first = BattleMainAction.RoundEffect1
+        strategy.turns += listOf(
+            BattleTurnAction.Support(BattleSupportAction.UseSunlight(BattleMainAction.RoundEffect2)),
+            BattleTurnAction.Support(BattleSupportAction.UseSunlight(BattleMainAction.RoundEffect1)),
+            BattleTurnAction.FinalMain(BattleMainAction.RoundEffect2)
+        )
+        val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertEquals(0, p1.tokens.sunlightCount)
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount)
+        assertEquals(2, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SunlightMainAction>()
+            .count { it.playerId == p1.id })
+        assertEquals(2, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SupportAction>()
+            .count { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT })
+    }
+
+    @Test
+    fun execute_sunlightNotOfferedWhenNoLegalExtraMainActionExists() {
+        val strategy = object : BattleStrategy {
+            override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest) =
+                error("no legal first Main")
+            override fun chooseTurnAction(request: ChooseBattleTurnActionRequest) =
+                error("Sunlight must not create a choice without a legal Main")
+            override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest) = request.legalRows.first()
+        }
+        val p1 = player(1, strategy)
+        val p2 = player(2, strategy)
+        val fixture = fixture(p1, p2, effects = RecordingEffects(canExecutePredicate = { false }))
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertEquals(1, p1.tokens.sunlightCount)
+        assertTrue(fixture.game.chronicle.entries.none { it is GameEntry.SunlightSupportOpportunity })
+    }
+
+    @Test
+    fun execute_sunlightPlantActivation_usesNormalMainExecutionAndRecordsPlantId() {
+        val strategy = ScriptedStrategy("p1", mutableListOf())
+        val p1 = player(1, strategy)
+        val active = p1.creature.graft(
+            plant("Sunlit Plant"),
+            GraftPlacement(CreatureSide.LEFT, CreaturePosition(-1, -1))
+        )
+        p1.creature.faceUp(active.id)
+        strategy.first = BattleMainAction.RoundEffect1
+        strategy.turns += listOf(
+            BattleTurnAction.Support(
+                BattleSupportAction.UseSunlight(
+                    BattleMainAction.ActivatePlant(p1.creature.get(active.id)!!)
+                )
+            ),
+            BattleTurnAction.FinalMain(BattleMainAction.RoundEffect2)
+        )
+        val p2 = player(2, finishStrategy("p2"))
+        val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(p1.creature.get(active.id)!!.isFaceDown)
+        val request = fixture.effects.requests.single { it.source is GameEffectSource.Plant }
+        assertTrue(request.battleState === fixture.battleState)
+        val recorded = fixture.game.chronicle.entries.filterIsInstance<GameEntry.SunlightMainAction>()
+            .single { it.playerId == p1.id }
+        assertEquals(MainActionKind.ACTIVATE_PLANT, recorded.action)
+        assertEquals(active.id.value, recorded.plantCardId)
+    }
+
+    @Test
+    fun execute_existingSupportsCanOccurBeforeAndAfterSunlight() {
+        val strategy = ScriptedStrategy("p1", mutableListOf())
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        p1.critters.add(Critter.BEE)
+        p1.critters.add(Critter.WORM)
+        strategy.first = BattleMainAction.RoundEffect1
+        strategy.turns += listOf(
+            BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.BEE, StrikeRow.TOP)),
+            BattleTurnAction.Support(BattleSupportAction.UseSunlight(BattleMainAction.RoundEffect2)),
+            BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.WORM, StrikeRow.BOTTOM)),
+            BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+        )
+        val fixture = fixture(p1, p2)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertEquals(listOf(Critter.BEE), fixture.battleState.grid.square(p1.id, StrikeRow.TOP).critters)
+        assertEquals(listOf(Critter.WORM), fixture.battleState.grid.square(p1.id, StrikeRow.BOTTOM).critters)
+        assertEquals(1, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SupportAction>()
+            .count { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT })
     }
 
     @Test

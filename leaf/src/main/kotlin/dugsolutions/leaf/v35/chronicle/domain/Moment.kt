@@ -221,6 +221,19 @@ sealed interface Moment {
         val change: SunlightTokenChange
     ) : Moment
 
+    /** One Step-5 decision point where Sunlight could fund at least one legal extra Main Action. */
+    data class SunlightSupportOpportunity(
+        val playerId: PlayerId,
+        val legalExtraMainActions: Int
+    ) : Moment
+
+    /** The ordinary Main Action actually executed through a spent Sunlight Support. */
+    data class SunlightMainAction(
+        val playerId: PlayerId,
+        val action: MainActionKind,
+        val plantCardId: Int? = null
+    ) : Moment
+
     /** A die committed to a Mulch token by an effect. */
     data class MulchStored(
         val playerId: PlayerId,
@@ -274,7 +287,7 @@ enum class RollRewardKind {
     WISP_PLAYED_IMMEDIATELY
 }
 enum class MainActionKind { DRAW, ACTIVATE_PLANT, ROUND_EFFECT_1, ROUND_EFFECT_2 }
-enum class BattleMainStage { FIRST, FINAL }
+enum class BattleMainStage { FIRST, SUNLIGHT, FINAL }
 enum class BattleGridReportKind { AFTER_FIRST_MAIN, AFTER_PASS }
 enum class SupportActionKind {
     WISP,
@@ -284,7 +297,8 @@ enum class SupportActionKind {
     WORM_FLIP,
     BUTTERFLY,
     CRITTER_BEE,
-    CRITTER_WORM
+    CRITTER_WORM,
+    SUNLIGHT
 }
 enum class EffectSourceKind { PLANT, ROUND, WISP }
 enum class PurchaseKind { PLANT, DIE }

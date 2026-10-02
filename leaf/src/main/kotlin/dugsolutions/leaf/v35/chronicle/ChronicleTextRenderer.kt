@@ -821,6 +821,13 @@ object ChronicleTextRenderer {
             is GameEntry.SunlightTokenChanged ->
                 "${player(entry.playerId)} SUNLIGHT ${entry.change}"
 
+            is GameEntry.SunlightSupportOpportunity ->
+                "${player(entry.playerId)} SUNLIGHT SUPPORT OPPORTUNITY legalMain=${entry.legalExtraMainActions}"
+
+            is GameEntry.SunlightMainAction ->
+                "${player(entry.playerId)} SUNLIGHT MAIN ${entry.action}" +
+                    (entry.plantCardId?.let { " plantCardId=$it" } ?: "")
+
             is GameEntry.MulchStored ->
                 "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +
                     "from=${if (entry.fromDiscard) "DISCARD" else "HAND"}"

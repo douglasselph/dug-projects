@@ -281,6 +281,21 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    data class SunlightSupportOpportunity(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val legalExtraMainActions: Int,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
+    data class SunlightMainAction(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val action: MainActionKind,
+        val plantCardId: Int? = null,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class MulchStored(
         override val sequence: Long,
         val playerId: PlayerId,

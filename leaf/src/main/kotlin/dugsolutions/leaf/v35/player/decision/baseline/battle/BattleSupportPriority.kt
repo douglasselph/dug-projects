@@ -24,6 +24,7 @@ class BattleSupportPriority(
         context: DecisionContext,
         action: BattleSupportAction
     ): PriorityScore {
+        if (action is BattleSupportAction.UseSunlight) return PriorityScore(0)
         val direct = directAnalyzer(context, action)
         if (direct != null) return scoreDirect(direct)
         return scoreNonDirect(context, action)
@@ -36,6 +37,10 @@ class BattleSupportPriority(
         currentFinalMains: Collection<BattleMainAction>,
         legalSupports: Collection<BattleSupportAction>
     ): PriorityScore {
+        if (action is BattleSupportAction.UseSunlight) {
+            return BattleMainPriority.score(context, roundCard, action.mainAction, cardScorers)
+                .adjusted(-55, "Preserve banked Sunlight unless extra Main is clearly worthwhile")
+        }
         val direct = directAnalyzer(context, action)
         if (direct != null) return scoreDirect(direct)
         val enabling = (action as? BattleSupportAction.Shared)?.let {
@@ -53,6 +58,7 @@ class BattleSupportPriority(
 
     fun tags(action: BattleSupportAction): Set<DecisionTag> =
         when (action) {
+            is BattleSupportAction.UseSunlight -> emptySet()
             is BattleSupportAction.PlaceCritter -> setOf(
                 when (action.critter) {
                     Critter.BEE -> DecisionTag.SPEND_BEE
@@ -91,6 +97,7 @@ class BattleSupportPriority(
         action: BattleSupportAction
     ): PriorityScore =
         when (action) {
+            is BattleSupportAction.UseSunlight -> PriorityScore(0)
             is BattleSupportAction.PlaceCritter -> PriorityScore(0)
             is BattleSupportAction.Shared -> when (val shared = action.action) {
                 is SupportAction.PlayWisp ->

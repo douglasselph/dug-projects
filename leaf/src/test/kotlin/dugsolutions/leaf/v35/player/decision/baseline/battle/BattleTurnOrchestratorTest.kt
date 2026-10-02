@@ -74,6 +74,44 @@ class BattleTurnOrchestratorTest {
         assertEquals(BattleContinuationReason.NO_WORTHWHILE_PATH, result.continuation.reason)
     }
 
+
+    @Test
+    fun `Sunlight continues when extra Main is clearly worthwhile`() {
+        val result = orchestrator(
+            context = context(actorTotal = 4, opponentTotal = 7, bees = 0),
+            roundCard = round(),
+            legalChoices = listOf(
+                sunlight(BattleMainAction.RoundEffect1),
+                finalMain()
+            )
+        )
+
+        assertTrue(result.chooseSupport)
+        assertTrue(result.worthwhileSupports.any { it is BattleSupportAction.UseSunlight })
+    }
+
+    @Test
+    fun `Sunlight is preserved when available extra Main is weak`() {
+        val weakRound = RoundCard(
+            quantity = 1,
+            name = "Battle_Weak",
+            type = RoundCardType.BATTLE,
+            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            backImage = ""
+        )
+        val result = orchestrator(
+            context = context(actorTotal = 20, opponentTotal = 1, bees = 0),
+            roundCard = weakRound,
+            legalChoices = listOf(
+                sunlight(BattleMainAction.RoundEffect1),
+                BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+            )
+        )
+
+        assertFalse(result.chooseSupport)
+    }
+
     private fun context(
         actorTotal: Int,
         opponentTotal: Int,
@@ -88,7 +126,8 @@ class BattleTurnOrchestratorTest {
                     id = actor,
                     bees = bees,
                     worms = worms,
-                    beeValue = beeValue
+                    beeValue = beeValue,
+                    sunlight = 1
                 )
             ),
             battle = BattleView(
@@ -114,6 +153,10 @@ class BattleTurnOrchestratorTest {
 
     private fun worm(): BattleTurnAction =
         BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.WORM, StrikeRow.TOP))
+
+
+    private fun sunlight(main: BattleMainAction): BattleTurnAction =
+        BattleTurnAction.Support(BattleSupportAction.UseSunlight(main))
 
     private fun finalMain(): BattleTurnAction =
         BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)

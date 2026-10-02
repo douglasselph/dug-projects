@@ -23,6 +23,9 @@ sealed interface BattleMainAction {
 sealed interface BattleSupportAction {
     data class Shared(val action: SupportAction) : BattleSupportAction
 
+    /** Spend one Sunlight Support to execute one otherwise-normal Battle Main Action. */
+    data class UseSunlight(val mainAction: BattleMainAction) : BattleSupportAction
+
     /** Place one currently uncommitted Critter in one exact Strike Square. */
     data class PlaceCritter(
         val critter: Critter,

@@ -85,6 +85,13 @@ class GameSummaryExtractorTest {
                 assertEquals(0, playerSummary.sunlightGained)
                 assertEquals(0, playerSummary.sunlightSpent)
                 assertEquals(player.tokens.sunlightCount, playerSummary.finalSunlightCount)
+                assertEquals(0, playerSummary.sunlightSupportOpportunities)
+                assertEquals(0, playerSummary.sunlightSupportUses)
+                assertEquals(0, playerSummary.sunlightExtraMainActions)
+                assertEquals(0, playerSummary.sunlightExtraDrawActions)
+                assertEquals(0, playerSummary.sunlightExtraPlantActions)
+                assertEquals(0, playerSummary.sunlightExtraRoundEffectActions)
+                assertTrue(playerSummary.sunlightPlantActivationIds.isEmpty())
                 assertEquals(playerSummary.finalDiceCount, playerSummary.ownedDiceSignature.totalDice)
                 assertEquals(playerSummary.finalDicePower, playerSummary.ownedDiceSignature.totalPower)
                 val allOwnedDieSides =

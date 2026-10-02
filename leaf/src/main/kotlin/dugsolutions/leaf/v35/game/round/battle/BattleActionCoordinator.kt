@@ -23,6 +23,7 @@ import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
+import dugsolutions.leaf.v35.game.operation.SunlightTokenResolver
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
@@ -41,6 +42,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 
 enum class BattleMainActionStage {
     FIRST,
+    SUNLIGHT,
     FINAL
 }
 
@@ -204,12 +206,24 @@ class BattleActionCoordinator(
                     mainActions(game, player, roundCard, battleState)
 
                 val legalChoices = buildList {
-                    supportActions(game, player, battleState).mapTo(this) {
+                    supportActions(game, player, roundCard, battleState).mapTo(this) {
                         BattleTurnAction.Support(it)
                     }
                     finalMains.mapTo(this) {
                         BattleTurnAction.FinalMain(it)
                     }
+                }
+
+                val sunlightChoices = legalChoices.count { choice ->
+                    (choice as? BattleTurnAction.Support)?.action is BattleSupportAction.UseSunlight
+                }
+                if (sunlightChoices > 0) {
+                    game.chronicle.record(
+                        Moment.SunlightSupportOpportunity(
+                            playerId = player.id,
+                            legalExtraMainActions = sunlightChoices
+                        )
+                    )
                 }
 
                 recordRoundEffectOpportunity(game, player, roundCard, finalMains)
@@ -261,6 +275,7 @@ class BattleActionCoordinator(
                         executeSupportAction(
                             game = game,
                             player = player,
+                            roundCard = roundCard,
                             battleState = battleState,
                             action = chosen.action
                         )
@@ -430,6 +445,7 @@ class BattleActionCoordinator(
     private fun supportActions(
         game: Game,
         player: Player,
+        roundCard: RoundCard,
         battleState: BattleState
     ): List<BattleSupportAction> =
         buildList {
@@ -510,6 +526,12 @@ class BattleActionCoordinator(
                         )
                     }
                 }
+
+            if (player.tokens.hasSunlight) {
+                mainActions(game, player, roundCard, battleState).forEach { main ->
+                    add(BattleSupportAction.UseSunlight(main))
+                }
+            }
 
             val openRows =
                 StrikeRow.entries.filter { row ->
@@ -617,10 +639,51 @@ class BattleActionCoordinator(
     private fun executeSupportAction(
         game: Game,
         player: Player,
+        roundCard: RoundCard,
         battleState: BattleState,
         action: BattleSupportAction
     ) {
         when (action) {
+            is BattleSupportAction.UseSunlight -> {
+                val legalMains = mainActions(game, player, roundCard, battleState)
+                validateChosenMainAction(player, action.mainAction, legalMains, "Sunlight")
+                decisionCheck(player.tokens.hasSunlight, context = "BattleActionCoordinator") {
+                    "Player ${player.id.value} no longer owns Sunlight for Support"
+                }
+                stateCheck(SunlightTokenResolver.spend(game, player), context = "BattleActionCoordinator") {
+                    "Validated Sunlight token could not be spent"
+                }
+                game.chronicle.record(
+                    Moment.SupportAction(
+                        playerId = player.id,
+                        phase = ChroniclePhase.BATTLE,
+                        action = SupportActionKind.SUNLIGHT
+                    )
+                )
+                game.chronicle.scoped(
+                    mainActionMoment(
+                        player = player,
+                        stage = BattleMainActionStage.SUNLIGHT,
+                        action = action.mainAction
+                    )
+                ) {
+                    executeMainAction(
+                        game = game,
+                        player = player,
+                        roundCard = roundCard,
+                        battleState = battleState,
+                        action = action.mainAction
+                    )
+                }
+                game.chronicle.record(
+                    Moment.SunlightMainAction(
+                        playerId = player.id,
+                        action = mainActionKind(action.mainAction),
+                        plantCardId = (action.mainAction as? BattleMainAction.ActivatePlant)?.card?.id?.value
+                    )
+                )
+            }
+
             is BattleSupportAction.Shared ->
                 supportActionExecutor.executeBattle(
                     game = game,
@@ -709,6 +772,7 @@ class BattleActionCoordinator(
             action = mainActionKind(action),
             battleStage = when (stage) {
                 BattleMainActionStage.FIRST -> BattleMainStage.FIRST
+                BattleMainActionStage.SUNLIGHT -> BattleMainStage.SUNLIGHT
                 BattleMainActionStage.FINAL -> BattleMainStage.FINAL
             }
         )

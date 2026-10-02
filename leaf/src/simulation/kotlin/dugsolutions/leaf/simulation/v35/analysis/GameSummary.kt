@@ -50,6 +50,13 @@ data class PlayerGameSummary(
     val sunlightGained: Int = 0,
     val sunlightSpent: Int = 0,
     val finalSunlightCount: Int = 0,
+    val sunlightSupportOpportunities: Int = 0,
+    val sunlightSupportUses: Int = 0,
+    val sunlightExtraMainActions: Int = 0,
+    val sunlightExtraDrawActions: Int = 0,
+    val sunlightExtraPlantActions: Int = 0,
+    val sunlightExtraRoundEffectActions: Int = 0,
+    val sunlightPlantActivationIds: List<Int> = emptyList(),
     val finalPlantCount: Int,
     val finalPlantPrintedCost: Int,
     /** Canonical value-only description of the final Plant Creature. */
@@ -70,6 +77,13 @@ data class PlayerGameSummary(
         require(sunlightGained >= 0)
         require(sunlightSpent >= 0)
         require(finalSunlightCount >= 0)
+        require(sunlightSupportOpportunities >= 0)
+        require(sunlightSupportUses >= 0)
+        require(sunlightExtraMainActions >= 0)
+        require(sunlightExtraDrawActions >= 0)
+        require(sunlightExtraPlantActions >= 0)
+        require(sunlightExtraRoundEffectActions >= 0)
+        require(sunlightPlantActivationIds.all { it >= 0 })
         require(finalPlantCount >= 0)
         require(finalPlantPrintedCost >= 0)
         require(finalDiceCount >= 0)

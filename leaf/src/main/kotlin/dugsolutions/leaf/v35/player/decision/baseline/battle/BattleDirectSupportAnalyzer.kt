@@ -65,6 +65,7 @@ class BattleDirectSupportAnalyzer(
         action: BattleSupportAction
     ): BattleDirectSupportAnalysis? =
         when (action) {
+            is BattleSupportAction.UseSunlight -> null
             is BattleSupportAction.PlaceCritter -> analyzeCritter(context, action)
             is BattleSupportAction.Shared -> analyzeShared(context, action)
         }
