@@ -23,7 +23,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-/** Global credibility check for four Human Baseline players. No behavior is changed here. */
+/** Global credibility check for Human Baseline players. No behavior is changed here. */
 fun main(args: Array<String>) {
     val o = GlobalCertificationOptions.parse(args.toList())
     val app = koinApplication { modules(appModules) }
@@ -34,27 +34,27 @@ fun main(args: Array<String>) {
         val defaults=FirstGameDefault.PLANT_NAMES.map { requireNotNull(pm.getCard(it)) }
         val factory=koin.get<GameFactory>(); val runner=koin.get<GameRunner>()
         Files.createDirectories(o.outputDir)
-        runCohort("first-game-default", o.games, o.seed, o.strategySeed, null, o.groveSeed, defaults, pm, allPlants.associateBy{it.name}, factory, runner, o.outputDir)
-        runCohort("random-grove", o.games, o.seed+o.games, o.strategySeed+o.games, "000000000", o.groveSeed, defaults, pm, allPlants.associateBy{it.name}, factory, runner, o.outputDir)
+        runCohort("first-game-default", o.games, o.players, o.seed, o.strategySeed, null, o.groveSeed, defaults, pm, allPlants.associateBy{it.name}, factory, runner, o.outputDir)
+        runCohort("random-grove", o.games, o.players, o.seed+o.games, o.strategySeed+o.games, "000000000", o.groveSeed, defaults, pm, allPlants.associateBy{it.name}, factory, runner, o.outputDir)
     } finally { app.close() }
 }
 
-private fun runCohort(label:String,games:Int,seed:Long,strategySeed:Long,pattern:String?,groveSeed:Long,defaults:List<dugsolutions.leaf.v35.plant.domain.PlantCard>,pm:PlantCardManager,plantsByName:Map<String,dugsolutions.leaf.v35.plant.domain.PlantCard>,factory:GameFactory,runner:GameRunner,out:Path) {
-    val a=EvalAccumulator(); var refreshes=0L; var plantActivations=0L
+private fun runCohort(label:String,games:Int,players:Int,seed:Long,strategySeed:Long,pattern:String?,groveSeed:Long,defaults:List<dugsolutions.leaf.v35.plant.domain.PlantCard>,pm:PlantCardManager,plantsByName:Map<String,dugsolutions.leaf.v35.plant.domain.PlantCard>,factory:GameFactory,runner:GameRunner,out:Path) {
+    val a=EvalAccumulator(players); var refreshes=0L; var plantActivations=0L
     val reps=mutableListOf<Representative>()
     repeat(games) { i ->
         val grove=if(pattern==null) defaults else GrovePlantCode.overrideNames(GrovePlantCode.generate(pattern,Randomizer.create(groveSeed+i))).map { requireNotNull(pm.getCard(it)) }
         val ms=seed+i; val ss=strategySeed+i
-        val game=factory(GameConfig(selectedPlantCards=grove,playerDecisionFactories=List(4){PlayerDecisionFactory.humanBaseline()},roundSetup=GameRoundSetup.standard(),seed=ms,strategySeed=ss,recordDecisionReasoning=false))
+        val game=factory(GameConfig(selectedPlantCards=grove,playerDecisionFactories=List(players){PlayerDecisionFactory.humanBaseline()},roundSetup=GameRoundSetup.standard(),seed=ms,strategySeed=ss,recordDecisionReasoning=false))
         val result=withSimulationFailureDiagnostics(game,SimulationRunContext("human_baseline_global_certification",i,label,null,ms,ss,GrovePlantCode.encode(grove),"3/2/2")){runner.run(game)}
         val completed=CompletedEvalGame(GameSummaryExtractor.extract(game,result),game.chronicle.entries.toList())
-        for(seat in 0..3) a.add(completed,seat,plantsByName,grove)
+        for(seat in 0 until players) a.add(completed,seat,plantsByName,grove)
         refreshes += game.chronicle.entries.filterIsInstance<GameEntry.Refresh>().size
         plantActivations += game.chronicle.entries.filterIsInstance<GameEntry.EffectResolved>().count { it.sourceKind==EffectSourceKind.PLANT }
         val totalVp=completed.summary.players.sumOf{it.totalVp}; val wounds=completed.summary.players.sumOf{it.woundsTaken}; val plants=completed.summary.players.sumOf{it.finalPlantCount}
         reps += Representative(ms,ss,GrovePlantCode.encode(grove),totalVp,wounds,plants,ChronicleTextRenderer.render(game.chronicle.entries,selectedPlantCards=grove))
     }
-    val report=renderGlobal(label,games,seed,strategySeed,pattern,groveSeed,a,refreshes,plantActivations)
+    val report=renderGlobal(label,games,players,seed,strategySeed,pattern,groveSeed,a,refreshes,plantActivations)
     val reportPath=out.resolve("$label-report.txt"); Files.writeString(reportPath,report); print(report)
     val selected=(reps.sortedBy{it.totalVp}.take(1)+reps.sortedByDescending{it.totalVp}.take(1)+reps.sortedByDescending{it.wounds}.take(1)+reps.sortedBy{it.plants}.take(1)).distinctBy{it.mechanicalSeed}
     selected.forEachIndexed { n,r -> Files.writeString(out.resolve("$label-chronicle-${n+1}-seed-${r.mechanicalSeed}.txt"), "mechanicalSeed=${r.mechanicalSeed} strategySeed=${r.strategySeed} grove=${r.grove}\n${r.text}") }
@@ -63,15 +63,15 @@ private fun runCohort(label:String,games:Int,seed:Long,strategySeed:Long,pattern
 
 private data class Representative(val mechanicalSeed:Long,val strategySeed:Long,val grove:String,val totalVp:Int,val wounds:Int,val plants:Int,val text:String)
 
-private fun renderGlobal(label:String,games:Int,seed:Long,strategySeed:Long,pattern:String?,groveSeed:Long,a:EvalAccumulator,refreshes:Long,plantActivations:Long):String=buildString {
-    val playerGames=games*4L
+private fun renderGlobal(label:String,games:Int,players:Int,seed:Long,strategySeed:Long,pattern:String?,groveSeed:Long,a:EvalAccumulator,refreshes:Long,plantActivations:Long):String=buildString {
+    val playerGames=games*players.toLong()
     fun avg(v:Long)="%.2f".format(v.toDouble()/playerGames)
     fun pct(v:Double)="%.2f%%".format(v*100)
     fun map(title:String,m:Map<*,Long>,den:Long=playerGames){appendLine("  $title:"); m.entries.sortedByDescending{it.value}.forEach{appendLine("    ${it.key}: ${it.value} (${"%.2f".format(it.value.toDouble()/den)} per player-game)")}}
     appendLine("Human Baseline Global Certification — $label")
-    appendLine("games=$games player-games=$playerGames rounds=3/2/2 mechanicalSeeds=$seed..${seed+games-1} strategySeeds=$strategySeed..${strategySeed+games-1}")
+    appendLine("games=$games players=$players player-games=$playerGames rounds=3/2/2 mechanicalSeeds=$seed..${seed+games-1} strategySeeds=$strategySeed..${strategySeed+games-1}")
     appendLine(if(pattern==null) "Grove=FirstGameDefault" else "Grove=random per game pattern=$pattern groveSeeds=$groveSeed..${groveSeed+games-1}")
-    appendLine("Seat win shares:"); for(s in 0..3) appendLine("  Seat ${s+1}: ${pct(a.seatWins[s]/a.seatGames[s])} (n=${a.seatGames[s]})")
+    appendLine("Seat win shares:"); for(s in 0 until players) appendLine("  Seat ${s+1}: ${pct(a.seatWins[s]/a.seatGames[s])} (n=${a.seatGames[s]})")
     appendLine("Core outcomes per player-game: VP=${avg(a.vp)} BattleVP=${avg(a.battleVp)} Wounds=${avg(a.wounds)}")
     appendLine("Final development per player-game: Plants=${avg(a.plants)} printedCost=${avg(a.plantCost)} dice=${avg(a.dice)} diePower=${avg(a.dicePower)} avgSides=${"%.2f".format(a.dicePower.toDouble()/a.dice)}")
     map("Final dice by size",a.finalDiceSizes)
@@ -87,8 +87,10 @@ private fun renderGlobal(label:String,games:Int,seed:Long,strategySeed:Long,patt
     appendLine()
 }
 
-private data class GlobalCertificationOptions(val games:Int,val seed:Long,val strategySeed:Long,val groveSeed:Long,val outputDir:Path){companion object{fun parse(args:List<String>):GlobalCertificationOptions{fun value(name:String,default:String)=args.firstOrNull{it.startsWith("--$name=")}?.substringAfter('=')?:default;
-    return GlobalCertificationOptions(value("games","1000").toInt(),value("seed","361000").toLong(),value("strategy-seed","371000").toLong(),value("grove-seed","381000").toLong(),Paths.get(value("output","output/human-baseline-global-certification")))}}}
+private data class GlobalCertificationOptions(val games:Int,val players:Int,val seed:Long,val strategySeed:Long,val groveSeed:Long,val outputDir:Path){companion object{fun parse(args:List<String>):GlobalCertificationOptions{fun value(name:String,default:String)=args.firstOrNull{it.startsWith("--$name=")}?.substringAfter('=')?:default;
+    val players=value("players","4").toInt(); require(players in 2..4) { "--players must be 2, 3, or 4" }
+    val defaultOutput = if (players == 4) "output/human-baseline-global-certification" else "output/human-baseline-global-certification/${players}-player"
+    return GlobalCertificationOptions(value("games","1000").toInt(),players,value("seed","361000").toLong(),value("strategy-seed","371000").toLong(),value("grove-seed","381000").toLong(),Paths.get(value("output",defaultOutput)))}}}
 
 private fun loadGlobalCertificationCards(plantRegistry:PlantCardRegistry,plantManager:PlantCardManager,wispRegistry:WispCardRegistry,wispManager:WispCardManager,roundRegistry:RoundCardRegistry,roundManager:RoundCardManager){
     val root=CardDataFiles.dataDirectory()

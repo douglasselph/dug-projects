@@ -64,14 +64,14 @@ fun main(args: Array<String>) {
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val plantsByName = allPlants.associateBy { it.name }
-        val control = EvalAccumulator()
-        val learned = EvalAccumulator()
+        val control = EvalAccumulator(o.players)
+        val learned = EvalAccumulator(o.players)
 
         println("Learned Buy Policy Held-Out Evaluation")
         println("policy=${o.input}")
-        println("matched samples=${o.games}; games run=${o.games * 2}")
+        println("matched samples=${o.games}; games run=${o.games * 2}; players=${o.players}")
         println("evaluation seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
-        println("affected role rotates across physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=${o.roundLabel}")
+        println("affected role rotates across ${o.players} physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=${o.roundLabel}")
         if (o.grovePattern != null) {
             println("Grove zeros are resolved independently once per matched sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; CONTROL and LEARNED share that resolved Grove")
         }
@@ -87,7 +87,7 @@ fun main(args: Array<String>) {
         println()
 
         repeat(o.games) { sample ->
-            val seat = sample % 4
+            val seat = sample % o.players
             val mechanicalSeed = o.seed + sample
             val strategySeed = o.strategySeed + sample
             val resolvedGrove = resolveGroveForSample(
@@ -100,8 +100,8 @@ fun main(args: Array<String>) {
                 println()
             }
             val groveCode = GrovePlantCode.encode(resolvedGrove)
-            val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
-            val learnedFactories = List(4) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
+            val controlFactories = List(o.players) { PlayerDecisionFactory.humanBaseline() }
+            val learnedFactories = List(o.players) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
             control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
             learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
         }
@@ -139,10 +139,10 @@ internal fun evaluationGameConfig(
     plantValues = plantValues
 )
 
-internal class EvalAccumulator {
+internal class EvalAccumulator(playerCount: Int = 4) {
     var winShare=0.0; var vp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
-    val seatWins=DoubleArray(4); val seatGames=IntArray(4)
+    val seatWins=DoubleArray(playerCount); val seatGames=IntArray(playerCount)
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
@@ -911,7 +911,7 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     listOf("D4","D6","D8","D10","D12","D20").forEach { size -> println("    $size: control=${avg(c.finalDiceSizes[size]?:0)} learned=${avg(l.finalDiceSizes[size]?:0)}") }
     println()
     println("Affected-role win share by physical seat")
-    for(s in 0..3) { val n=c.seatGames[s]; println("  Seat ${s+1} (n=$n): control=${pct(c.seatWins[s]/n)} learned=${pct(l.seatWins[s]/n)} delta=${signedPct(l.seatWins[s]/n-c.seatWins[s]/n)}") }
+    for(s in 0 until o.players) { val n=c.seatGames[s]; println("  Seat ${s+1} (n=$n): control=${pct(c.seatWins[s]/n)} learned=${pct(l.seatWins[s]/n)} delta=${signedPct(l.seatWins[s]/n-c.seatWins[s]/n)}") }
     println()
     println("Buy behavior (affected role; totals across ${o.games} games)")
     println("  Plant purchases: control=${c.plantPurchases} learned=${l.plantPurchases}; avg/game=${avg(c.plantPurchases)} -> ${avg(l.plantPurchases)}")
@@ -934,7 +934,7 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printWatchedCards(c,l)
     println()
     println("Policy provenance")
-    println("  trained rounds=${weights.provenance.roundPattern}; Grove=${weights.provenance.grove}; generations=${weights.provenance.generations}; games/policy=${weights.provenance.gamesPerPolicy}; training fitness=${weights.provenance.fitness?.let(::pct) ?: "unknown"}")
+    println("  trained rounds=${weights.provenance.roundPattern}; Grove=${weights.provenance.grove}; players=${weights.provenance.playerCount ?: "unknown"}; generations=${weights.provenance.generations}; games/policy=${weights.provenance.gamesPerPolicy}; training fitness=${weights.provenance.fitness?.let(::pct) ?: "unknown"}")
     println("  training mechanical seed start=${weights.provenance.mechanicalSeedStart}; strategy seed start=${weights.provenance.strategySeedStart}")
     println("  evaluation mechanical seeds=${o.seed}..${o.seed+o.games-1}; strategy seeds=${o.strategySeed}..${o.strategySeed+o.games-1}")
     if (o.grovePattern != null) println("  Grove pattern=${o.grovePattern}; Grove seeds=${o.groveSeed}..${o.groveSeed+o.games-1}; zeros resolved once per matched sample")
@@ -1099,6 +1099,7 @@ internal data class EvalOptions(
     val wispIncludes: Set<String>,
     val wispExcludes: Set<String>,
     val plantOverridesPath: Path?,
+    val players: Int,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
     fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
@@ -1120,6 +1121,7 @@ internal data class EvalOptions(
             val wispIncludes = linkedSetOf<String>()
             val wispExcludes = linkedSetOf<String>()
             var plantOverridesPath: Path? = null
+            var players = 4
             var positional = false
             var i = 0
 
@@ -1152,6 +1154,7 @@ internal data class EvalOptions(
                     argument.startsWith("--wisp-include-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { wispIncludes += it.trim() }
                     argument.startsWith("--wisp-exclude-card") -> value(argument).split(',').filter { it.isNotBlank() }.forEach { wispExcludes += it.trim() }
                     argument.startsWith("--plant-overrides") -> plantOverridesPath = Paths.get(value(argument))
+                    argument.startsWith("--players") -> players = value(argument).toInt()
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
                     argument == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
@@ -1165,17 +1168,19 @@ internal data class EvalOptions(
             }
 
             require(games > 0)
+            require(players in 2..4) { "--players must be 2, 3, or 4" }
             require(researchEnvironment in setOf("default","upgrade-rich","upgrade-poor")) { "--research-environment must be default, upgrade-rich, or upgrade-poor" }
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
             require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, players)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--players 2|3|4]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
-            println("  --plant-overrides PATH loads research-only Plant cost, availability, and typed scoring interventions.")
+            println("  --players 2|3|4 sets the simulated player count; default is 4.")
+            println("  --plant-overrides PATH loads research-only Plant cost, availability, scoring, and effect interventions.")
             println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")
             println("  --exclude-card Vine_07_04 excludes a Plant from random/zero Grove slots; repeat it or comma-separate names.")
             println("  --rounds 3/2/2 means 3C-B-2C-B-2C-B (Cultivation blocks, existing semantics).")

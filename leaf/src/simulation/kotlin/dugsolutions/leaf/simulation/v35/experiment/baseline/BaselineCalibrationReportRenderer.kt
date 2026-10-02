@@ -6,7 +6,10 @@ object BaselineCalibrationReportRenderer {
         appendLine("Human Baseline calibration")
         appendLine("Grove: ${report.groveFingerprint}")
         appendLine("Games available: ${report.totalGamesAvailable}")
-        appendLine("checkpoint,seat1,seat2,seat3,seat4,max_deviation,avg_vp_1,avg_vp_2,avg_vp_3,avg_vp_4,shared_winner_rate,95pct_sampling_reference")
+        val seatCount = report.checkpoints.first().seats.size
+        val winHeaders = (1..seatCount).joinToString(",") { "seat$it" }
+        val vpHeaders = (1..seatCount).joinToString(",") { "avg_vp_$it" }
+        appendLine("checkpoint,$winHeaders,max_deviation,$vpHeaders,shared_winner_rate,95pct_sampling_reference")
         report.checkpoints.forEach { checkpoint ->
             appendLine(
                 buildList {

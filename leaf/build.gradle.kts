@@ -275,6 +275,7 @@ tasks.register<JavaExec>("runHumanBaselineSmoke") {
         args(smokeStrategySeed)
     }
     project.findProperty("grove")?.toString()?.let { args("--grove=$it") }
+    project.findProperty("players")?.toString()?.let { args("--players=$it") }
     if (project.findProperty("detail")?.toString()?.toBoolean() == true) {
         args("--detail")
     }
@@ -315,6 +316,7 @@ tasks.register<JavaExec>("runBaselineRandomnessDiagnostic") {
     project.findProperty("baseSeed")?.toString()?.let { args("--base-seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
     project.findProperty("plants")?.toString()?.let { args("--plants=$it") }
+    project.findProperty("players")?.toString()?.let { args("--players=$it") }
 }
 
 tasks.register<JavaExec>("runBaselineCalibration") {
@@ -329,6 +331,7 @@ tasks.register<JavaExec>("runBaselineCalibration") {
     project.findProperty("baseSeed")?.toString()?.let { args("--base-seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
     project.findProperty("plants")?.toString()?.let { args("--plants=$it") }
+    project.findProperty("players")?.toString()?.let { args("--players=$it") }
 }
 
 tasks.register<JavaExec>("runSixWispExperiment") {
@@ -342,6 +345,7 @@ tasks.register<JavaExec>("runSixWispExperiment") {
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
     project.findProperty("wisps")?.toString()?.let { args("--wisps=$it") }
     project.findProperty("rounds")?.toString()?.let { args("--rounds=$it") }
+    project.findProperty("players")?.toString()?.let { args("--players=$it") }
     project.findProperty("grove")?.toString()?.let { args("--grove=$it") }
     if (project.findProperty("randomGrove")?.toString()?.toBoolean() == true) {
         args("--random-grove")
@@ -357,6 +361,7 @@ tasks.register<JavaExec>("runFocusedPlantShapeExperiment") {
     project.findProperty("games")?.toString()?.let { args(it) }
     project.findProperty("baseSeed")?.toString()?.let { args("--seed=$it") }
     project.findProperty("strategySeed")?.toString()?.let { args("--strategy-seed=$it") }
+    project.findProperty("players")?.toString()?.let { args("--players=$it") }
 }
 
 //  transparent linear Buy-policy evolutionary trainer.

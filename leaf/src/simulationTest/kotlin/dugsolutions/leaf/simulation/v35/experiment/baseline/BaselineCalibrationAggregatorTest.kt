@@ -70,6 +70,42 @@ class BaselineCalibrationAggregatorTest {
         }
     }
 
+
+    @Test
+    fun aggregatesTwoPlayerCheckpointsAgainstNeutralHalfShare() {
+        val application = koinApplication { modules(appModules) }
+        try {
+            val koin = application.koin
+            loadCatalogs(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+            val plantManager = koin.get<PlantCardManager>()
+            val plants = FIRST_GAME_PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
+            val spec = BaselineCalibrationSpec(
+                selectedPlantCards = plants,
+                games = 2,
+                baseSeed = 5100L,
+                strategyBaseSeed = 9100L,
+                checkpoints = listOf(2)
+            )
+            val matchup = Matchup("Human Baseline", List(2) { StrategyProfile.humanBaseline() })
+            val batch = GameSummaryBatchRunner(
+                gameFactory = koin.get<GameFactory>(),
+                gameRunner = koin.get<GameRunner>(),
+                selectedPlantCards = plants
+            ).run(matchup, spec.experimentConfig())
+
+            val checkpoint = BaselineCalibrationAggregator.aggregate(spec, batch).checkpoints.single()
+            assertEquals(listOf(0, 1), checkpoint.seats.map { it.seat })
+            assertEquals(1.0, checkpoint.seats.sumOf { it.winShare }, absoluteTolerance = 1e-9)
+            assertEquals(
+                checkpoint.seats.maxOf { abs(it.winShare - 0.5) },
+                checkpoint.maxAbsoluteWinShareDeviation,
+                absoluteTolerance = 1e-9
+            )
+        } finally {
+            application.close()
+        }
+    }
+
     private fun loadCatalogs(
         plantRegistry: PlantCardRegistry,
         plantManager: PlantCardManager,

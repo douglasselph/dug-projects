@@ -11,6 +11,7 @@ class BaselineResearchOptionsTest {
         assertEquals(12, options.games)
         assertEquals(listOf(12), options.checkpoints)
         assertEquals(9, options.plantNames.size)
+        assertEquals(4, options.players)
     }
 
     @Test
@@ -23,6 +24,7 @@ class BaselineResearchOptionsTest {
                 "--checkpoints=100,250,500",
                 "--base-seed=123",
                 "--strategy-seed=456",
+                "--players=3",
                 "--plants=$plants"
             )
         )
@@ -30,6 +32,7 @@ class BaselineResearchOptionsTest {
         assertEquals(listOf(100, 250, 500), options.checkpoints)
         assertEquals(123L, options.baseSeed)
         assertEquals(456L, options.strategyBaseSeed)
+        assertEquals(3, options.players)
         assertEquals((1..9).map { "Plant_$it" }, options.plantNames)
     }
 }

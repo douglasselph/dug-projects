@@ -112,7 +112,7 @@ whether one Plant/dice shape occurs unusually often are separate later research.
 
 ### Human Baseline calibration
 
-`experiment.baseline.BaselineCalibrationSpec` identifies one exact nine-card Grove, deterministic seed schedule, total game count, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes only the compact `BatchRunResult` and reports physical-seat win share, deviation from the neutral 25% reference, average final VP, shared-winner frequency, and a labelled sampling-reference band. Checkpoints are cumulative prefixes of one run; no fairness tolerance is encoded yet.
+`experiment.baseline.BaselineCalibrationSpec` identifies one exact nine-card Grove, deterministic seed schedule, total game count, and cumulative checkpoints. `BaselineCalibrationAggregator` consumes only the compact `BatchRunResult` and reports physical-seat win share, deviation from the neutral 1/N reference for the configured player count, average final VP, shared-winner frequency, and a labelled sampling-reference band. Checkpoints are cumulative prefixes of one run; no fairness tolerance is encoded yet.
 
 The baseline randomness diagnostic adds `BaselineRandomnessDiagnostic` and its renderer for 4/8/12-game diagnostic cohorts. Same fixed seeds must reproduce the complete winner/development fingerprint; a different seed cohort must change that complete fingerprint. The renderer shows each game's winner plus every player's Plant and dice signatures for human inspection of gross sameness. Repeated winners or shapes are explicitly not test failures; distributional questions remain later research.
 

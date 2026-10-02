@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Runs one complete deterministic four-player Human Baseline game for human inspection.
+ * Runs one complete deterministic Human Baseline game for human inspection.
  *
  * The game uses the recommended first-game Plant set and a 3/2/2 Round cadence:
  * 3 Cultivation, Battle, 2 Cultivation, Battle, 2 Cultivation, Battle.
@@ -21,7 +21,9 @@ import java.nio.file.Path
 fun main(args: Array<String>) {
     val detail = args.any { it.equals("--detail", ignoreCase = true) }
     val groveArg = args.firstOrNull { it.startsWith("--grove=") }?.substringAfter('=')
-    val positional = args.filterNot { it.equals("--detail", ignoreCase = true) || it.startsWith("--grove=") }
+    val players = args.firstOrNull { it.startsWith("--players=") }?.substringAfter('=')?.toInt() ?: HumanBaselineSmokeScenario.NUM_PLAYERS
+    require(players in 2..4) { "--players must be 2, 3, or 4" }
+    val positional = args.filterNot { it.equals("--detail", ignoreCase = true) || it.startsWith("--grove=") || it.startsWith("--players=") }
     val seed = positional.getOrNull(0)?.toLongOrNull()
         ?: HumanBaselineSmokeScenario.DEFAULT_SEED
     val strategySeed = positional.getOrNull(1)?.toLongOrNull() ?: seed
@@ -30,7 +32,8 @@ fun main(args: Array<String>) {
         seed = seed,
         strategySeed = strategySeed,
         chronicleDetail = detail,
-        selectedPlantNames = selectedNames ?: dugsolutions.leaf.integration.v35.support.IntegrationCatalog.FIRST_GAME_PLANT_NAMES
+        selectedPlantNames = selectedNames ?: dugsolutions.leaf.integration.v35.support.IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
+        numPlayers = players
     )
 
     IntegrationGameHarness(scenario).use { harness ->
@@ -38,7 +41,7 @@ fun main(args: Array<String>) {
         val resolvedGroveCode = GrovePlantCode.encode(resolvedPlants)
         val result = harness.runGame()
         val entries = harness.chronicleEntries()
-        val outputDir = outputDirectory(seed, strategySeed)
+        val outputDir = outputDirectory(seed, strategySeed, players)
         Files.createDirectories(outputDir)
 
         val chroniclePath = outputDir.resolve("chronicle.txt")
@@ -58,6 +61,7 @@ fun main(args: Array<String>) {
                 seed = seed,
                 strategySeed = strategySeed,
                 detail = detail,
+                players = players,
                 groveCode = resolvedGroveCode,
                 plantNames = resolvedPlants.map { it.name },
                 entryCount = entries.size,
@@ -72,18 +76,19 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun outputDirectory(seed: Long, strategySeed: Long): Path =
+private fun outputDirectory(seed: Long, strategySeed: Long, players: Int): Path =
     Path.of(
         "output",
         "smoke",
         "human-baseline",
-        "mechanical-$seed-strategy-$strategySeed"
+        "${players}-player-mechanical-$seed-strategy-$strategySeed"
     )
 
 private fun buildSummary(
     seed: Long,
     strategySeed: Long,
     detail: Boolean,
+    players: Int,
     groveCode: String,
     plantNames: List<String>,
     entryCount: Int,
@@ -95,7 +100,7 @@ private fun buildSummary(
         appendLine("Mechanical seed: $seed")
         appendLine("Strategy seed: $strategySeed")
         appendLine("Chronicle detail: $detail")
-        appendLine("Players: ${HumanBaselineSmokeScenario.NUM_PLAYERS}")
+        appendLine("Players: $players")
         appendLine("Strategy: Human Baseline for every player")
         appendLine("Grove code: $groveCode")
         appendLine("Plants: ${plantNames.joinToString(", ")}")

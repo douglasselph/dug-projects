@@ -6,7 +6,7 @@ import java.nio.file.Path
 /** Research provenance travels with a saved policy but does not affect scoring. */
 data class LearnedBuyProvenance(
     val trainingStatus: String = "untrained", val roundPattern: String = "unknown", val grove: String = "unknown",
-    val generations: Int? = null, val gamesPerPolicy: Int? = null, val population: Int? = null,
+    val generations: Int? = null, val gamesPerPolicy: Int? = null, val population: Int? = null, val playerCount: Int? = null,
     val mutationSigma: Double? = null, val mutationsPerChild: Int? = null, val evolutionSeed: Long? = null,
     val mechanicalSeedStart: Long? = null, val strategySeedStart: Long? = null, val fitness: Double? = null,
     val cardManifest: PlantCardManifest? = null
@@ -40,7 +40,7 @@ class LearnedBuyWeights private constructor(
             appendLine("formatVersion=3"); appendLine("policy=buy-v1")
             appendLine("trainingStatus=${provenance.trainingStatus}"); appendLine("trainedRoundPattern=${provenance.roundPattern}"); appendLine("trainedGrove=${provenance.grove}")
             provenance.generations?.let { appendLine("trainingGenerations=$it") }; provenance.gamesPerPolicy?.let { appendLine("trainingGamesPerPolicy=$it") }
-            provenance.population?.let { appendLine("trainingPopulation=$it") }; provenance.mutationSigma?.let { appendLine("trainingMutationSigma=$it") }
+            provenance.population?.let { appendLine("trainingPopulation=$it") }; provenance.playerCount?.let { appendLine("trainingPlayerCount=$it") }; provenance.mutationSigma?.let { appendLine("trainingMutationSigma=$it") }
             provenance.mutationsPerChild?.let { appendLine("trainingMutationsPerChild=$it") }; provenance.evolutionSeed?.let { appendLine("trainingEvolutionSeed=$it") }
             provenance.mechanicalSeedStart?.let { appendLine("trainingMechanicalSeedStart=$it") }; provenance.strategySeedStart?.let { appendLine("trainingStrategySeedStart=$it") }
             provenance.fitness?.let { appendLine("trainingFitness=$it") }
@@ -59,7 +59,7 @@ class LearnedBuyWeights private constructor(
     }
 
     companion object {
-        private val metadataKeys = setOf("formatVersion","policy","trainingStatus","trainedRoundPattern","trainedGrove","trainingGenerations","trainingGamesPerPolicy","trainingPopulation","trainingMutationSigma","trainingMutationsPerChild","trainingEvolutionSeed","trainingMechanicalSeedStart","trainingStrategySeedStart","trainingFitness","cardManifestFormatVersion","cardCatalogFingerprint")
+        private val metadataKeys = setOf("formatVersion","policy","trainingStatus","trainedRoundPattern","trainedGrove","trainingGenerations","trainingGamesPerPolicy","trainingPopulation","trainingPlayerCount","trainingMutationSigma","trainingMutationsPerChild","trainingEvolutionSeed","trainingMechanicalSeedStart","trainingStrategySeedStart","trainingFitness","cardManifestFormatVersion","cardCatalogFingerprint")
         fun cardFeature(cardId: String) = "CARD_$cardId"
         fun costFeature(cost: Int) = "ACTION_COST_$cost"
         fun isNamedFeatureKey(key: String) = key.startsWith("CARD_") || key.matches(Regex("ACTION_COST_[0-9]+(?:_STAGE_(?:1|2|3|4_PLUS))?"))
@@ -89,7 +89,7 @@ class LearnedBuyWeights private constructor(
             val manifest = if (version=="3" && entries["cardManifestFormatVersion"] != null) parseManifest(entries) else null
             val provenance=if(version!="1") LearnedBuyProvenance(
                 trainingStatus=entries["trainingStatus"]?:"unknown", roundPattern=entries["trainedRoundPattern"]?:"unknown", grove=entries["trainedGrove"]?:"unknown",
-                generations=entries["trainingGenerations"]?.toInt(), gamesPerPolicy=entries["trainingGamesPerPolicy"]?.toInt(), population=entries["trainingPopulation"]?.toInt(),
+                generations=entries["trainingGenerations"]?.toInt(), gamesPerPolicy=entries["trainingGamesPerPolicy"]?.toInt(), population=entries["trainingPopulation"]?.toInt(), playerCount=entries["trainingPlayerCount"]?.toInt(),
                 mutationSigma=entries["trainingMutationSigma"]?.toDouble()?.also{require(it.isFinite())}, mutationsPerChild=entries["trainingMutationsPerChild"]?.toInt(),
                 evolutionSeed=entries["trainingEvolutionSeed"]?.toLong(), mechanicalSeedStart=entries["trainingMechanicalSeedStart"]?.toLong(), strategySeedStart=entries["trainingStrategySeedStart"]?.toLong(),
                 fitness=entries["trainingFitness"]?.toDouble()?.also{require(it.isFinite())}, cardManifest=manifest) else LearnedBuyProvenance()

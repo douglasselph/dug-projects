@@ -33,6 +33,15 @@ class EvaluateBuyPolicyTest {
         assertEquals(4,a.seatWins.size)
         assertEquals(4,a.seatGames.size)
     }
+
+    @Test fun `evaluation player count defaults to four and accepts two or three`() {
+        assertEquals(4, EvalOptions.parse(emptyList()).players)
+        assertEquals(2, EvalOptions.parse(listOf("--players", "2")).players)
+        assertEquals(3, EvalOptions.parse(listOf("--players=3")).players)
+        assertEquals(2, EvalAccumulator(2).seatWins.size)
+        assertEquals(3, EvalAccumulator(3).seatGames.size)
+    }
+
     @Test fun `buy shape groups purchases within each Buy phase and records zero purchase phases`() {
         val p = PlayerId(1)
         val entries = listOf(

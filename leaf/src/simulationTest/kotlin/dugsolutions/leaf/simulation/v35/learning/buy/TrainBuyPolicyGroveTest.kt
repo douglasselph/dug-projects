@@ -48,6 +48,14 @@ class TrainBuyPolicyGroveTest {
         assertEquals(listOf(expected, expected, expected), groves.map(GrovePlantCode::encode))
     }
 
+
+    @Test
+    fun `training player count defaults to four and accepts two or three`() {
+        assertEquals(4, TrainOptions.parse(emptyList()).players)
+        assertEquals(2, TrainOptions.parse(listOf("--players", "2")).players)
+        assertEquals(3, TrainOptions.parse(listOf("--players=3")).players)
+    }
+
     @Test
     fun `random Grove training is reproducible and respects Plant availability`() {
         val options = TrainOptions.parse(listOf("--games", "12", "--random-grove", "--grove-seed", "81234"))

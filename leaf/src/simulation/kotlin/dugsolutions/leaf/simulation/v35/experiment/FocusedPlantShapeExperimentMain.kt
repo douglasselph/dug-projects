@@ -41,16 +41,16 @@ fun main(args: Array<String>) {
         val plants = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantManager.getCard(it)) }
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
-        val control = Accumulator()
-        val lean = Accumulator()
+        val control = Accumulator(options.players)
+        val lean = Accumulator(options.players)
 
         repeat(options.games) { sample ->
             val mechanicalSeed = options.seed + sample
             val strategySeed = options.strategySeed + sample
-            val affectedSeat = sample % 4
+            val affectedSeat = sample % options.players
 
-            val controlFactories = List(4) { PlayerDecisionFactory.humanBaseline() }
-            val leanFactories = List(4) { seat ->
+            val controlFactories = List(options.players) { PlayerDecisionFactory.humanBaseline() }
+            val leanFactories = List(options.players) { seat ->
                 if (seat == affectedSeat) LeanCreatureStrategy.decisionFactory() else PlayerDecisionFactory.humanBaseline()
             }
             control.add(runOne(factory, runner, plants, controlFactories, mechanicalSeed, strategySeed, sample, affectedSeat, "CONTROL"), affectedSeat)
@@ -97,12 +97,12 @@ private fun runOne(
     return GameSummaryExtractor.extract(game, result)
 }
 
-private class Accumulator {
+private class Accumulator(playerCount: Int) {
     var winShare = 0.0; var vp = 0L; var plants = 0L; var plantCost = 0L
     var dice = 0L; var dicePower = 0L; var battleVp = 0L; var wounds = 0L
     var d4=0L; var d6=0L; var d8=0L; var d10=0L; var d12=0L; var d20=0L
     var exactShape = 0; var atLeastThreeTargets = 0; var targetCards = 0L
-    val seatWins = DoubleArray(4); val seatGames = IntArray(4)
+    val seatWins = DoubleArray(playerCount); val seatGames = IntArray(playerCount)
 
     fun add(summary: GameSummary, seat: Int) {
         val p = summary.players.single { it.seat == seat }
@@ -139,7 +139,7 @@ private fun printReport(o: Options, c: Accumulator, l: Accumulator) {
     println("Lean dice policy: below 7 dice buy D10+; at 7+ dice buy only D12/D20; prefer legal Compost while Hand contains a die below D12")
     println("All other decisions: Human Baseline")
     println("Mechanical seeds: ${o.seed}..${o.seed+o.games-1}; strategy seeds: ${o.strategySeed}..${o.strategySeed+o.games-1}")
-    println("Experimental role rotates through all four physical seats.")
+    println("Experimental role rotates through all ${o.players} physical seats.")
     println()
     val cw=c.winShare/o.games; val lw=l.winShare/o.games
     println("Affected role")
@@ -162,7 +162,7 @@ private fun printReport(o: Options, c: Accumulator, l: Accumulator) {
     println("  Avg D10+ dice:             ${avg(l.d10+l.d12+l.d20)}")
     println()
     println("Affected-role win share by physical seat")
-    for (s in 0..3) {
+    for (s in 0 until o.players) {
         val n=c.seatGames[s]
         if (n == 0) println("  Seat ${s+1} (n=0): not represented")
         else println("  Seat ${s+1} (n=$n): control=${pct(c.seatWins[s]/n)} lean=${pct(l.seatWins[s]/n)}")
@@ -171,9 +171,9 @@ private fun printReport(o: Options, c: Accumulator, l: Accumulator) {
     println("Note: this first feasibility probe uses FirstGameDefault only; Grove sensitivity should be a follow-up if the lean shape proves viable.")
 }
 
-private data class Options(val games:Int,val seed:Long,val strategySeed:Long) {
+private data class Options(val games:Int,val seed:Long,val strategySeed:Long,val players:Int) {
     companion object { fun parse(args:List<String>):Options {
-        var games=1000; var seed=31000L; var strategy=41000L; var positional=false
+        var games=1000; var seed=31000L; var strategy=41000L; var players=4; var positional=false
         var i=0
         while(i<args.size){ val a=args[i]; when {
             !positional && a.matches(Regex("[1-9][0-9]*")) -> { games=a.toInt(); positional=true; i++ }
@@ -181,8 +181,10 @@ private data class Options(val games:Int,val seed:Long,val strategySeed:Long) {
             a.startsWith("--seed=") -> { seed=a.substringAfter('=').toLong(); i++ }
             a=="--strategy-seed" -> { strategy=args[++i].toLong(); i++ }
             a.startsWith("--strategy-seed=") -> { strategy=a.substringAfter('=').toLong(); i++ }
+            a=="--players" -> { players=args[++i].toInt(); i++ }
+            a.startsWith("--players=") -> { players=a.substringAfter('=').toInt(); i++ }
             else -> error("Unknown argument: $a")
         }}
-        require(games>0); return Options(games,seed,strategy)
+        require(games>0); require(players in 2..4) { "--players must be 2, 3, or 4" }; return Options(games,seed,strategy,players)
     }}
 }

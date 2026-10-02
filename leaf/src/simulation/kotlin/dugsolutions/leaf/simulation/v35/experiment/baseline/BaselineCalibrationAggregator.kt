@@ -7,8 +7,6 @@ import kotlin.math.sqrt
 
 /** Aggregates cumulative prefixes of one compact Human Baseline batch. */
 object BaselineCalibrationAggregator {
-    private const val NEUTRAL_SEAT_SHARE = 0.25
-
     fun aggregate(
         spec: BaselineCalibrationSpec,
         batch: BatchRunResult
@@ -16,7 +14,7 @@ object BaselineCalibrationAggregator {
         require(batch.gamesCompleted >= spec.checkpoints.last()) {
             "Batch has ${batch.gamesCompleted} games but checkpoint ${spec.checkpoints.last()} was requested"
         }
-        validateFourSeatSummaries(batch.summaries.take(spec.checkpoints.last()))
+        validateSeatSummaries(batch.summaries.take(spec.checkpoints.last()))
 
         return BaselineCalibrationReport(
             groveFingerprint = spec.groveFingerprint,
@@ -28,13 +26,15 @@ object BaselineCalibrationAggregator {
     }
 
     private fun aggregateCheckpoint(summaries: List<GameSummary>): BaselineCalibrationCheckpoint {
-        val seats = (0..3).map { seat ->
+        val playerCount = summaries.first().players.size
+        val neutralSeatShare = 1.0 / playerCount
+        val seats = (0 until playerCount).map { seat ->
             val players = summaries.map { summary -> summary.players.single { it.seat == seat } }
             val winShare = players.sumOf { it.winShare } / summaries.size.toDouble()
             BaselineSeatMetrics(
                 seat = seat,
                 winShare = winShare,
-                absoluteWinShareDeviationFromQuarter = abs(winShare - NEUTRAL_SEAT_SHARE),
+                absoluteWinShareDeviationFromNeutral = abs(winShare - neutralSeatShare),
                 averageFinalVp = players.map { it.totalVp.toDouble() }.average()
             )
         }
@@ -42,18 +42,21 @@ object BaselineCalibrationAggregator {
         return BaselineCalibrationCheckpoint(
             games = summaries.size,
             seats = seats,
-            maxAbsoluteWinShareDeviation = seats.maxOf { it.absoluteWinShareDeviationFromQuarter },
+            maxAbsoluteWinShareDeviation = seats.maxOf { it.absoluteWinShareDeviationFromNeutral },
             sharedWinnerGameRate = summaries.count { it.winnerIds.size > 1 }.toDouble() / summaries.size,
             neutralSeatSamplingReference95HalfWidth =
-                1.96 * sqrt(NEUTRAL_SEAT_SHARE * (1.0 - NEUTRAL_SEAT_SHARE) / summaries.size.toDouble())
+                1.96 * sqrt(neutralSeatShare * (1.0 - neutralSeatShare) / summaries.size.toDouble())
         )
     }
 
-    private fun validateFourSeatSummaries(summaries: List<GameSummary>) {
+    private fun validateSeatSummaries(summaries: List<GameSummary>) {
         require(summaries.isNotEmpty())
+        val playerCount = summaries.first().players.size
+        require(playerCount in 2..4) { "Baseline calibration requires 2 to 4 players, got $playerCount" }
+        val expectedSeats = (0 until playerCount).toList()
         summaries.forEachIndexed { index, summary ->
-            require(summary.players.map { it.seat }.sorted() == listOf(0, 1, 2, 3)) {
-                "Baseline game ${index + 1} must contain exactly physical seats 0..3"
+            require(summary.players.map { it.seat }.sorted() == expectedSeats) {
+                "Baseline game ${index + 1} must contain exactly physical seats ${expectedSeats.joinToString()}"
             }
         }
     }

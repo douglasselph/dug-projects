@@ -104,7 +104,8 @@ private data class Options(
     val games: Int,
     val seed: Long,
     val strategySeed: Long,
-    val counterfactual: Boolean
+    val counterfactual: Boolean,
+    val players: Int
 ) {
     companion object {
         fun parse(args: Array<String>): Options {
@@ -117,7 +118,8 @@ private data class Options(
                 games = values["games"]?.toInt() ?: 200,
                 seed = values["seed"]?.toLong() ?: 312_000L,
                 strategySeed = values["strategy-seed"]?.toLong() ?: 322_000L,
-                counterfactual = values["counterfactual"]?.toBooleanStrictOrNull() ?: false
+                counterfactual = values["counterfactual"]?.toBooleanStrictOrNull() ?: false,
+                players = (values["players"]?.toInt() ?: 4).also { require(it in 2..4) { "--players must be 2, 3, or 4" } }
             )
         }
     }
@@ -150,7 +152,7 @@ fun main(args: Array<String>) {
             val game = koin.get<GameFactory>()(
                 GameConfig(
                     selectedPlantCards = plants,
-                    playerDecisionFactories = List(4) { PlayerDecisionFactory.humanBaseline() },
+                    playerDecisionFactories = List(options.players) { PlayerDecisionFactory.humanBaseline() },
                     roundSetup = GameRoundSetup.standard(),
                     seed = options.seed + sample,
                     strategySeed = options.strategySeed + sample,
@@ -465,7 +467,7 @@ private fun runCounterfactual(
     val rows = (0 until options.games).map { sample ->
         fun branch(which: CounterfactualBranch): Pair<dugsolutions.leaf.v35.game.Game, CounterfactualIntervention> {
             val intervention = CounterfactualIntervention()
-            val factories = MutableList(4) { PlayerDecisionFactory.humanBaseline() }
+            val factories = MutableList(options.players) { PlayerDecisionFactory.humanBaseline() }
             factories[0] = counterfactualHumanBaselineFactory(cardName, which, intervention)
             val game = gameFactory(
                 GameConfig(

@@ -155,3 +155,19 @@ card-identity features such as `CARD_Vine_09_01`. Trained policies also retain
 provenance and a fingerprint snapshot of the Plant catalog used for training.
 See [Learned Buy Policy](LEARNED_BUY_POLICY.md) for the model, CSV-change
 workflow, manifest compatibility rules, and future training guidance.
+
+
+## Player count
+
+Core simulation/research commands that construct games accept `--players 2`, `--players 3`, or `--players 4` where applicable. The default remains 4. Learned-policy training and held-out evaluation rotate the affected learned role across exactly the configured physical seats. Saved trained-policy provenance records the training player count for newly trained policies.
+
+Examples:
+
+```bash
+bin/train_buy_policy --players 3 --random-grove ...
+bin/evaluate_buy_policy --players 3 --weights output/ai/example.weights --random-grove ...
+bin/baseline-game --players=2
+bin/baseline-randomness --players=2
+bin/human-baseline-global-certification --players=3
+bin/experiment_card_tier_calibration Vine_07_01 screen --players 3 --direction up
+```

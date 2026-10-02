@@ -43,14 +43,14 @@ fun main(args: Array<String>) {
         }
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
-        val control = Accumulator()
-        val intervention = Accumulator()
-        val factories = List(4) { PlayerDecisionFactory.humanBaseline() }
+        val control = Accumulator(options.players)
+        val intervention = Accumulator(options.players)
+        val factories = List(options.players) { PlayerDecisionFactory.humanBaseline() }
 
         repeat(options.games) { sample ->
             val mechanicalSeed = options.baseSeed + sample
             val strategySeed = options.strategyBaseSeed + sample
-            val affectedSeat = sample % 4
+            val affectedSeat = sample % options.players
             val affectedId = PlayerId(affectedSeat + 1)
 
             val controlSummary = runOne(
@@ -103,12 +103,12 @@ private fun runOne(
     return GameSummaryExtractor.extract(game, runner.run(game))
 }
 
-private class Accumulator {
+private class Accumulator(playerCount: Int) {
     var affectedWinShare = 0.0
     var affectedVp = 0L
-    val seatWinShare = DoubleArray(4)
-    val affectedWinShareBySeat = DoubleArray(4)
-    val gamesByAffectedSeat = IntArray(4)
+    val seatWinShare = DoubleArray(playerCount)
+    val affectedWinShareBySeat = DoubleArray(playerCount)
+    val gamesByAffectedSeat = IntArray(playerCount)
 
     fun add(summary: GameSummary, affectedSeat: Int) {
         val affected = summary.players.single { it.seat == affectedSeat }
@@ -135,7 +135,7 @@ private fun printReport(options: Options, groveCode: String, plantNames: List<St
     println("Round structure: ${options.roundLabel}")
     println("Mechanical seeds: ${options.baseSeed}..${options.baseSeed + options.games - 1}")
     println("Strategy seeds:   ${options.strategyBaseSeed}..${options.strategyBaseSeed + options.games - 1}")
-    println("Affected role rotates seats 1, 2, 3, 4.")
+    println("Affected role rotates across ${options.players} physical seats.")
     println("Forced Wisps: ${options.wisps} (${options.wisps / 2} opening dice forced to 2 in each of the first two Cultivation rounds)")
     println("Intervention: selected opening dice are forced to 2 after each natural roll is consumed.")
     println()
@@ -148,7 +148,7 @@ private fun printReport(options: Options, groveCode: String, plantNames: List<St
     println("  Average VP delta:       ${if (iVp - cVp >= 0) "+" else ""}${"%.2f".format(iVp - cVp)}")
     println()
     println("Affected Player A win share by physical seat")
-    for (seat in 0..3) {
+    for (seat in 0 until options.players) {
         val n = control.gamesByAffectedSeat[seat]
         if (n == 0) {
             println("  Seat ${seat + 1} (n=0): not represented")
@@ -160,7 +160,7 @@ private fun printReport(options: Options, groveCode: String, plantNames: List<St
     }
     println()
     println("Physical-seat win share across all games")
-    for (seat in 0..3) {
+    for (seat in 0 until options.players) {
         println("  Seat ${seat + 1}: control=${pct(control.seatWinShare[seat] / options.games)}  ${options.wisps}-wisp=${pct(intervention.seatWinShare[seat] / options.games)}")
     }
 }
@@ -172,7 +172,8 @@ private data class Options(
     val wisps: Int,
     val grovePattern: String?,
     val roundSetup: GameRoundSetup,
-    val roundLabel: String
+    val roundLabel: String,
+    val players: Int
 ) {
     companion object {
         fun parse(args: List<String>): Options {
@@ -182,6 +183,7 @@ private data class Options(
             var wisps = 6
             var grovePattern: String? = null // null preserves historical FirstGameDefault
             var roundLabel = "3/2/2"
+            var players = 4
             var positionalGamesSeen = false
             for (arg in args) {
                 when {
@@ -191,6 +193,7 @@ private data class Options(
                     arg.startsWith("--grove=") -> grovePattern = GrovePlantCode.validate(arg.substringAfter('='))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg.startsWith("--rounds=") -> roundLabel = arg.substringAfter('=')
+                    arg.startsWith("--players=") -> players = arg.substringAfter('=').toInt()
                     !positionalGamesSeen -> {
                         games = arg.toInt()
                         positionalGamesSeen = true
@@ -199,12 +202,13 @@ private data class Options(
                 }
             }
             require(games > 0) { "Games must be positive" }
+            require(players in 2..4) { "--players must be 2, 3, or 4" }
             require(wisps in listOf(2, 4, 6)) {
                 "--wisps must be 2, 4, or 6 so it can be split evenly across the first two Cultivation rounds"
             }
             val blocks = roundLabel.split('/').map { it.toInt() }
             require(blocks.isNotEmpty() && blocks.all { it > 0 }) { "--rounds must be positive Cultivation blocks such as 3/2/2" }
-            return Options(games, baseSeed, strategySeed, wisps, grovePattern, GameRoundSetup.Patterned(blocks), blocks.joinToString("/"))
+            return Options(games, baseSeed, strategySeed, wisps, grovePattern, GameRoundSetup.Patterned(blocks), blocks.joinToString("/"), players)
         }
     }
 }

@@ -33,9 +33,11 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
     @Test
     fun `early Human Baseline purchases show their variety by purchasing power`() {
         val gameCount = Integer.getInteger(GAMES_PROPERTY, DEFAULT_GAMES)
+        val playerCount = Integer.getInteger(PLAYERS_PROPERTY, PLAYER_COUNT)
         val commonThreshold = Integer.getInteger(COMMON_THRESHOLD_PROPERTY, DEFAULT_COMMON_THRESHOLD)
         val detail = java.lang.Boolean.getBoolean(DETAIL_PROPERTY)
         require(gameCount > 0) { "$GAMES_PROPERTY must be positive" }
+        require(playerCount in 2..4) { "$PLAYERS_PROPERTY must be 2, 3, or 4" }
         require(commonThreshold > 0) { "$COMMON_THRESHOLD_PROPERTY must be positive" }
 
         val observations = mutableListOf<PurchaseObservation>()
@@ -44,12 +46,12 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             val mechanicalSeed = MECHANICAL_SEED_BASE + gameIndex
             val strategySeed = STRATEGY_SEED_BASE + gameIndex
             val scenario = GameScenario(
-                numPlayers = PLAYER_COUNT,
+                numPlayers = playerCount,
                 selectedPlantNames = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
                 roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 0),
                 seed = mechanicalSeed,
                 strategySeed = strategySeed,
-                decisionFactories = List(PLAYER_COUNT) { PlayerDecisionFactory.humanBaseline() }
+                decisionFactories = List(playerCount) { PlayerDecisionFactory.humanBaseline() }
             )
 
             IntegrationGameHarness(scenario).use { harness ->
@@ -69,13 +71,14 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
             }
         }
 
-        // Four players x two Buy phases must yield one observation each per game.
-        assertEquals(gameCount * PLAYER_COUNT * 2, observations.size)
+        // Every player contributes one observation in each of two Buy phases per game.
+        assertEquals(gameCount * playerCount * 2, observations.size)
         assertTrue(observations.any { it.purchasingPower > 0 })
 
         val report = PurchaseVarietyReport.render(
             observations = observations,
             gameCount = gameCount,
+            playerCount = playerCount,
             commonThreshold = commonThreshold,
             detail = detail
         )
@@ -169,12 +172,13 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         fun render(
             observations: List<PurchaseObservation>,
             gameCount: Int,
+            playerCount: Int,
             commonThreshold: Int,
             detail: Boolean
         ): String = buildString {
             appendLine("HUMAN BASELINE — EARLY PURCHASE VARIETY")
             appendLine("Games: $gameCount")
-            appendLine("Players per game: $PLAYER_COUNT")
+            appendLine("Players per game: $playerCount")
             appendLine("Cultivation rounds observed: 1-2")
             appendLine("Buy observations: ${observations.size}")
             appendLine("Detailed-report threshold: $commonThreshold observations")
@@ -283,6 +287,7 @@ class HumanBaselineEarlyPurchaseVarietyIntegrationTest {
         private const val MECHANICAL_SEED_BASE = 12000L
         private const val STRATEGY_SEED_BASE = 22000L
         private const val GAMES_PROPERTY = "leaf.purchaseVariety.games"
+        private const val PLAYERS_PROPERTY = "leaf.purchaseVariety.players"
         private const val COMMON_THRESHOLD_PROPERTY = "leaf.purchaseVariety.commonThreshold"
         private const val DETAIL_PROPERTY = "leaf.purchaseVariety.detail"
     }

@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
             gameRunner = koin.get<GameRunner>(),
             selectedPlantCards = plants
         )
-        val matchup = Matchup("Human Baseline", List(4) { StrategyProfile.humanBaseline() })
+        val matchup = Matchup("Human Baseline", List(options.players) { StrategyProfile.humanBaseline() })
         val batch = runner.run(matchup, spec.experimentConfig())
 
         when (options.mode) {
@@ -66,7 +66,8 @@ internal data class BaselineResearchOptions(
     val baseSeed: Long,
     val strategyBaseSeed: Long,
     val checkpoints: List<Int>,
-    val plantNames: List<String>
+    val plantNames: List<String>,
+    val players: Int
 ) {
     companion object {
         val DEFAULT_PLANT_NAMES = FirstGameDefault.PLANT_NAMES
@@ -90,7 +91,9 @@ internal data class BaselineResearchOptions(
                 ?: if (mode == BaselineResearchMode.DIAGNOSTIC) listOf(games)
                 else listOf(100, 250, 500, 1000, 2000).filter { it <= games }.let { if (it.lastOrNull() == games) it else it + games }
             val plantNames = values["plants"]?.csvStrings() ?: DEFAULT_PLANT_NAMES
-            return BaselineResearchOptions(mode, games, baseSeed, strategyBaseSeed, checkpoints, plantNames)
+            val players = values["players"]?.toInt() ?: 4
+            require(players in 2..4) { "--players must be 2, 3, or 4" }
+            return BaselineResearchOptions(mode, games, baseSeed, strategyBaseSeed, checkpoints, plantNames, players)
         }
 
         private fun String.csvInts(): List<Int> = csvStrings().map(String::toInt)

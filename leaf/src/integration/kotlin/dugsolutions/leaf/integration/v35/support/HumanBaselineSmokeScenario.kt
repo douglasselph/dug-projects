@@ -12,8 +12,8 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
  *
  * 3 Cultivation -> Battle -> 2 Cultivation -> Battle -> 2 Cultivation -> Battle.
  *
- * The scenario deliberately uses the recommended first-game Plant set and four
- * independent Human Baseline decision directors. It is a lifecycle/Chronicle
+ * The scenario deliberately uses the recommended first-game Plant set and
+ * independent Human Baseline decision directors for the requested player count. It is a lifecycle/Chronicle
  * smoke scenario, not a balance experiment.
  */
 object HumanBaselineSmokeScenario {
@@ -42,15 +42,16 @@ object HumanBaselineSmokeScenario {
         strategySeed: Long = seed,
         recordDecisionReasoning: Boolean = false,
         chronicleDetail: Boolean = false,
-        selectedPlantNames: List<String> = IntegrationCatalog.FIRST_GAME_PLANT_NAMES
+        selectedPlantNames: List<String> = IntegrationCatalog.FIRST_GAME_PLANT_NAMES,
+        numPlayers: Int = NUM_PLAYERS
     ): GameScenario =
         GameScenario(
-            numPlayers = NUM_PLAYERS,
+            numPlayers = numPlayers,
             selectedPlantNames = selectedPlantNames,
             roundSetup = roundSetup,
             seed = seed,
             strategySeed = strategySeed,
-            decisionFactories = List(NUM_PLAYERS) {
+            decisionFactories = List(numPlayers) {
                 PlayerDecisionFactory.humanBaseline()
             },
             recordDecisionReasoning = recordDecisionReasoning,
