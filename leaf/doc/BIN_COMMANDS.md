@@ -171,3 +171,36 @@ bin/baseline-randomness --players=2
 bin/human-baseline-global-certification --players=3
 bin/experiment_card_tier_calibration Vine_07_01 screen --players 3 --direction up
 ```
+
+### `bin/experiment_card_tier_calibration` resync baseline
+
+Current tier-calibration experiments default to the provisional Plant resync
+baseline:
+
+```text
+data/research/resync/resync-current.csv
+```
+
+The baseline is merged explicitly with the target-card intervention. Core
+`train_buy_policy` / `evaluate_buy_policy` commands do **not** auto-load it.
+
+Useful controls:
+
+```bash
+# Current provisional resync market (default)
+bin/experiment_card_tier_calibration Root_09_03 screen --tiers 9,11,14,17
+
+# Preserved resync checkpoint
+bin/experiment_card_tier_calibration Root_09_03 screen \
+  --baseline-overrides data/research/resync/resync-v01.csv \
+  --tiers 9,11,14,17
+
+# Canonical-only Plant market
+bin/experiment_card_tier_calibration Root_09_03 screen \
+  --no-baseline-overrides \
+  --tiers 9,11,14,17
+```
+
+The runner fingerprints and archives the baseline so changing
+`resync-current.csv` produces a fresh output namespace rather than reusing old
+completed runs.

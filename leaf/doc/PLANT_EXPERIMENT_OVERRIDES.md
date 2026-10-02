@@ -286,3 +286,61 @@ seam, just like experimental cost and scoring.
 
 
 Research-only effect constants currently include `RAISE_LOWEST_DIE_PLUS_1` and `RAISE_D8_PLUS_1`. `RAISE_D8_PLUS_1` may be used only when the player has a D8 in hand; it raises a chosen D8 by +1.
+
+## Provisional resync baseline
+
+Ongoing Plant-balance work maintains an explicit working baseline at:
+
+```text
+data/research/resync/resync-current.csv
+```
+
+This file is **not** discovered automatically by `train_buy_policy` or
+`evaluate_buy_policy`. Core runners still require an explicit
+`--plant-overrides` path so ad-hoc and historical runs cannot silently change
+when the resync baseline evolves.
+
+Resync-aware experiment scripts merge the current baseline with their
+experiment-specific intervention and pass one effective duplicate-free CSV to
+the core runner. The merge semantics are:
+
+- layers are applied left-to-right;
+- nonblank fields in later layers replace earlier values for the same card;
+- blank fields preserve the value already supplied by an earlier layer;
+- cards not mentioned by a later layer keep their baseline intervention.
+
+The helper is:
+
+```bash
+bin/merge_plant_overrides OUTPUT.csv BASE.csv [LAYER.csv ...]
+```
+
+The generic tier calibrator uses the provisional resync baseline by default:
+
+```bash
+bin/experiment_card_tier_calibration Root_09_03 screen --tiers 9,11,14,17
+```
+
+Use another preserved baseline explicitly:
+
+```bash
+bin/experiment_card_tier_calibration Root_09_03 screen \
+  --baseline-overrides data/research/resync/resync-v01.csv \
+  --tiers 9,11,14,17
+```
+
+Or intentionally return to canonical-only Plant data for that experiment:
+
+```bash
+bin/experiment_card_tier_calibration Root_09_03 screen \
+  --no-baseline-overrides \
+  --tiers 9,11,14,17
+```
+
+Result directories include a SHA-256-derived `resync-<hash>` component and
+archive a copy of the baseline used. This prevents `.complete` markers or
+weights from an older baseline from being silently reused after
+`resync-current.csv` changes.
+
+Before changing `resync-current.csv`, preserve an accepted checkpoint as a
+numbered file such as `resync-v01.csv`.
