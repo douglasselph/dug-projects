@@ -2,6 +2,8 @@ package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.battle.BattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.BattleSupportPolicy
+import dugsolutions.leaf.v35.player.decision.battle.HumanBattleSupportPolicy
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainPolicy
@@ -31,6 +33,7 @@ data class DecisionDirector(
     val cultivation: CultivationStrategy,
     val cultivationMain: CultivationMainPolicy,
     val battle: BattleStrategy,
+    val battleSupport: BattleSupportPolicy = HumanBattleSupportPolicy(),
     val buy: BuyStrategy,
     val support: SupportStrategy,
     val effect: EffectStrategy

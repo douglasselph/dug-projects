@@ -204,7 +204,8 @@ internal data class CultivationTrainOptions(
     val players: Int,
     val roundLabel: String,
     val buyPolicy: String,
-    val buyWeights: Path
+    val buyWeights: Path,
+    val battleSupportPolicy: String
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -249,6 +250,7 @@ internal data class CultivationTrainOptions(
             var roundLabel = "3/2/2"
             var buyPolicy = "human"
             var buyWeights = Paths.get("data/ai/frozen-buy-first-game-default-v1.weights")
+            var battleSupportPolicy = "human"
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -272,6 +274,7 @@ internal data class CultivationTrainOptions(
                     arg.startsWith("--rounds") -> roundLabel = value(arg).trim()
                     arg.startsWith("--buy-policy") -> buyPolicy = value(arg).trim().lowercase()
                     arg.startsWith("--buy-weights") -> buyWeights = Paths.get(value(arg))
+                    arg.startsWith("--battle-support-policy") -> battleSupportPolicy = value(arg).trim().lowercase()
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg == "--help" -> { usage(); kotlin.system.exitProcess(0) }
@@ -285,12 +288,13 @@ internal data class CultivationTrainOptions(
             require(elites in 1 until population)
             require(players in 2..4) { "--players must be 2, 3, or 4" }
             require(buyPolicy in setOf("human", "learned")) { "--buy-policy must be human or learned" }
+            require(battleSupportPolicy == "human") { "--battle-support-policy currently supports only human; learned policy is a later task" }
             parseRoundSetup(roundLabel)
             return CultivationTrainOptions(
                 generations, population, games, elites, sigma, mutations,
                 evolutionSeed, seed, strategySeed, input, output,
                 plantOverridesPath, roundOverridesPath, grovePattern, groveSeed,
-                players, roundLabel, buyPolicy, buyWeights
+                players, roundLabel, buyPolicy, buyWeights, battleSupportPolicy
             )
         }
 
@@ -299,7 +303,7 @@ internal data class CultivationTrainOptions(
                 "[--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] " +
                 "[--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] " +
                 "[--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] " +
-                "[--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH]"
+                "[--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH] [--battle-support-policy human]"
         )
     }
 }

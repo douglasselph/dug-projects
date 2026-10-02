@@ -20,6 +20,15 @@ class TrainBuyPolicyGroveTest {
         assertEquals("human", TrainOptions.parse(listOf("--cultivation-main-policy=human")).cultivationMainPolicy)
     }
 
+    @Test
+    fun `Battle Support policy option defaults to Human`() {
+        assertEquals("human", TrainOptions.parse(emptyList()).battleSupportPolicy)
+        assertEquals("human", TrainOptions.parse(listOf("--battle-support-policy=human")).battleSupportPolicy)
+        assertFailsWith<IllegalArgumentException> {
+            TrainOptions.parse(listOf("--battle-support-policy=learned"))
+        }
+    }
+
 
     private data class Catalog(
         val manager: PlantCardManager,

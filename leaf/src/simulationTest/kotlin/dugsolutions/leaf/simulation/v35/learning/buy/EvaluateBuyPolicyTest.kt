@@ -36,6 +36,15 @@ class EvaluateBuyPolicyTest {
         }
     }
 
+    @Test
+    fun `Battle Support policy option defaults to Human and rejects unavailable learned mode`() {
+        assertEquals("human", EvalOptions.parse(emptyList()).battleSupportPolicy)
+        assertEquals("human", EvalOptions.parse(listOf("--battle-support-policy", "human")).battleSupportPolicy)
+        assertFailsWith<IllegalArgumentException> {
+            EvalOptions.parse(listOf("--battle-support-policy", "learned"))
+        }
+    }
+
     @Test fun `evaluation accumulator starts empty and keeps four seat buckets`() {
         val a=EvalAccumulator()
         assertEquals(0.0,a.winShare)

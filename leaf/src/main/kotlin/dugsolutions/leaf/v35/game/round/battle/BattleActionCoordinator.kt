@@ -37,6 +37,8 @@ import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
+import dugsolutions.leaf.v35.player.decision.battle.BattleSupportObservation
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleSupportActionRequest
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -257,7 +259,7 @@ class BattleActionCoordinator(
                         "Battle action loop is not making observable progress and could loop forever"
                 }
 
-                val chosen =
+                val battleChoice =
                     player.decisions.battle.chooseTurnAction(
                         ChooseBattleTurnActionRequest(
                             roundCard = roundCard,
@@ -266,6 +268,19 @@ class BattleActionCoordinator(
                             context = context
                         )
                     )
+                val chosen = player.decisions.battleSupport.chooseSupport(
+                    ChooseBattleSupportActionRequest(
+                        legalActions = legalChoices,
+                        referenceAction = battleChoice,
+                        observation = BattleSupportObservation(
+                            passNumber = passNumber,
+                            roundCardName = roundCard.name,
+                            firstRoundEffect = roundCard.firstEffect.effect,
+                            secondRoundEffect = roundCard.secondEffect.effect,
+                            context = context
+                        )
+                    )
+                )
 
                 when (chosen) {
                     is BattleTurnAction.FinalMain -> validateChosenMainAction(player, chosen.action, finalMains, "final")

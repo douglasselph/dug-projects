@@ -29,6 +29,7 @@ class ScriptedDecisionDirector(
             cultivation = cultivation,
             cultivationMain = fallback.cultivationMain,
             battle = battle,
+            battleSupport = fallback.battleSupport,
             buy = buy,
             support = support,
             effect = effect

@@ -500,7 +500,8 @@ internal data class CultivationEvalOptions(
     val roundOverridesPath: Path?,
     val players: Int,
     val buyPolicy: String,
-    val buyWeights: Path
+    val buyWeights: Path,
+    val battleSupportPolicy: String
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
@@ -519,6 +520,7 @@ internal data class CultivationEvalOptions(
             var players = 4
             var buyPolicy = "human"
             var buyWeights = Paths.get("data/ai/frozen-buy-first-game-default-v1.weights")
+            var battleSupportPolicy = "human"
             var positional = false
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
@@ -537,6 +539,7 @@ internal data class CultivationEvalOptions(
                     arg.startsWith("--players") -> players = value(arg).toInt()
                     arg.startsWith("--buy-policy") -> buyPolicy = value(arg).trim().lowercase()
                     arg.startsWith("--buy-weights") -> buyWeights = Paths.get(value(arg))
+                    arg.startsWith("--battle-support-policy") -> battleSupportPolicy = value(arg).trim().lowercase()
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg == "--help" -> { usage(); kotlin.system.exitProcess(0) }
@@ -547,10 +550,11 @@ internal data class CultivationEvalOptions(
             require(games > 0)
             require(players in 2..4) { "--players must be 2, 3, or 4" }
             require(buyPolicy in setOf("human", "learned")) { "--buy-policy must be human or learned" }
+            require(battleSupportPolicy == "human") { "--battle-support-policy currently supports only human; learned policy is a later task" }
             parseRoundSetup(roundLabel)
             return CultivationEvalOptions(
                 games, seed, strategySeed, weights, grovePattern, groveSeed, roundLabel,
-                plantOverridesPath, roundOverridesPath, players, buyPolicy, buyWeights
+                plantOverridesPath, roundOverridesPath, players, buyPolicy, buyWeights, battleSupportPolicy
             )
         }
 
@@ -558,7 +562,7 @@ internal data class CultivationEvalOptions(
             "evaluate_cultivation_main_policy [N|--games N] [--seed N] [--strategy-seed N] " +
                 "[--weights PATH] [--grove CODE|--random-grove] [--grove-seed N] [--rounds PATTERN] " +
                 "[--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] " +
-                "[--buy-policy human|learned] [--buy-weights PATH]"
+                "[--buy-policy human|learned] [--buy-weights PATH] [--battle-support-policy human]"
         )
     }
 }

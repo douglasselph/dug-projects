@@ -20,13 +20,15 @@ class CultivationMainResearchTest {
             "--random-grove",
             "--plant-overrides", "data/research/resync/resync-current.csv",
             "--round-overrides", "data/research/round-overrides/sunlight-token.csv",
-            "--buy-policy", "human"
+            "--buy-policy", "human",
+            "--battle-support-policy", "human"
         ))
         assertEquals(7, o.games)
         assertEquals(3, o.players)
         assertEquals("2/2/3", o.roundLabel)
         assertEquals("000000000", o.grovePattern)
         assertEquals("human", o.buyPolicy)
+        assertEquals("human", o.battleSupportPolicy)
     }
 
     @Test
@@ -38,6 +40,7 @@ class CultivationMainResearchTest {
         assertEquals(9, o.games)
         assertEquals(2, o.players)
         assertEquals("learned", o.buyPolicy)
+        assertEquals("human", o.battleSupportPolicy)
         assertEquals("data/ai/example.weights", o.buyWeights.toString())
     }
 }

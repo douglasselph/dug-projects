@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision
 
 import dugsolutions.leaf.v35.player.decision.mechanical.battle.MechanicalBattleStrategy
+import dugsolutions.leaf.v35.player.decision.battle.MechanicalBattleSupportPolicy
 import dugsolutions.leaf.v35.player.decision.mechanical.buy.MechanicalBuyStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.cultivation.MechanicalCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.MechanicalCultivationMainPolicy
@@ -58,6 +59,7 @@ object MechanicalControl {
             cultivation = MechanicalCultivationStrategy(),
             cultivationMain = MechanicalCultivationMainPolicy(),
             battle = MechanicalBattleStrategy(),
+            battleSupport = MechanicalBattleSupportPolicy(),
             buy = MechanicalBuyStrategy(),
             support = MechanicalSupportStrategy(),
             effect = MechanicalEffectStrategy()
