@@ -10,6 +10,7 @@ import dugsolutions.leaf.v35.player.dice.PlayerDice
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.tokens.Token
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -31,6 +32,8 @@ class DecisionContextFactoryTest {
         val opponent = player(2, PlayerDice())
         actor.critters.add(Critter.BEE)
         val game = GameEngineTestFixture.game(players = listOf(actor, opponent))
+        assertTrue(game.grove.tokens.pull(Token.SUNLIGHT) != null)
+        actor.tokens.add(Token.SUNLIGHT)
 
         val context = DecisionContextFactory.create(
             game = game,
@@ -47,6 +50,8 @@ class DecisionContextFactoryTest {
         assertEquals(listOf(2), context.self.board.hand.map { it.value })
         assertEquals(listOf(20), context.self.board.hand.map { it.sides })
         assertEquals(1, context.self.board.bees)
+        assertEquals(1, context.self.board.sunlight)
+        assertEquals(8, context.grove.sunlight)
         assertEquals(0, context.self.board.vp)
         assertEquals(1, context.opponents.size)
         assertEquals(PlayerId(2), context.opponents.single().id)

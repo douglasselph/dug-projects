@@ -81,6 +81,22 @@ class DefaultGameEffectExecutorTest {
     }
 
     @Test
+    fun gainSunlight_movesOneTokenFromGroveToPlayerAndRecordsGain() {
+        val actor = player(1)
+        val game = game(actor)
+
+        executor.execute(request(game, actor, GameEffect.GAIN_SUNLIGHT_TOKEN))
+
+        assertEquals(1, actor.tokens.sunlightCount)
+        assertEquals(8, game.grove.tokens.sunlightCount)
+        val change = game.chronicle.entries
+            .filterIsInstance<GameEntry.SunlightTokenChanged>()
+            .single()
+        assertEquals(actor.id, change.playerId)
+        assertEquals(dugsolutions.leaf.v35.chronicle.domain.SunlightTokenChange.GAINED, change.change)
+    }
+
+    @Test
     fun mulchFromHand_storesChosenDieAsPendingUntilCleanup() {
         val first = FixedDie(6, 3)
         val second = FixedDie(10, 7)
@@ -225,6 +241,22 @@ class DefaultGameEffectExecutorTest {
             executor.execute(request)
         }
         assertEquals(0, actor.tokens.waterCount)
+    }
+
+    @Test
+    fun sunlightUnavailable_isRejectedWithoutChangingPlayerTokens() {
+        val actor = player(1)
+        val game = game(actor)
+        repeat(9) {
+            assertTrue(game.grove.tokens.pull(Token.SUNLIGHT) != null)
+        }
+        val request = request(game, actor, GameEffect.GAIN_SUNLIGHT_TOKEN)
+
+        assertFalse(executor.canExecute(request))
+        assertFailsWith<EffectExecutionException> {
+            executor.execute(request)
+        }
+        assertEquals(0, actor.tokens.sunlightCount)
     }
 
     private fun game(actor: Player): Game =

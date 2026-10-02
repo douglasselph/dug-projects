@@ -47,6 +47,9 @@ data class PlayerGameSummary(
     /** Normal Wisp Support Actions plus immediate-play Wisp Roll Rewards. */
     val wispsPlayed: Int,
     val finalWispCount: Int,
+    val sunlightGained: Int = 0,
+    val sunlightSpent: Int = 0,
+    val finalSunlightCount: Int = 0,
     val finalPlantCount: Int,
     val finalPlantPrintedCost: Int,
     /** Canonical value-only description of the final Plant Creature. */
@@ -64,6 +67,9 @@ data class PlayerGameSummary(
         require(rollRewardWispsGained >= 0)
         require(wispsPlayed >= 0)
         require(finalWispCount >= 0)
+        require(sunlightGained >= 0)
+        require(sunlightSpent >= 0)
+        require(finalSunlightCount >= 0)
         require(finalPlantCount >= 0)
         require(finalPlantPrintedCost >= 0)
         require(finalDiceCount >= 0)

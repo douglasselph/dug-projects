@@ -215,6 +215,12 @@ sealed interface Moment {
         val sides: DieSides
     ) : Moment
 
+    /** One Sunlight token transferred between Grove and player. */
+    data class SunlightTokenChanged(
+        val playerId: PlayerId,
+        val change: SunlightTokenChange
+    ) : Moment
+
     /** A die committed to a Mulch token by an effect. */
     data class MulchStored(
         val playerId: PlayerId,
@@ -254,6 +260,7 @@ sealed interface Moment {
 }
 
 enum class WispAcquisitionSourceKind { EFFECT_DRAW, STEAL }
+enum class SunlightTokenChange { GAINED, SPENT }
 
 enum class ChroniclePhase { CULTIVATION, BATTLE }
 enum class ChronicleRollRewardPolicy { NORMAL, IGNORE, DEFER }

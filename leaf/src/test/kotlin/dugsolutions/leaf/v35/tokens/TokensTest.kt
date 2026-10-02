@@ -150,6 +150,29 @@ class TokensTest {
     }
 
     @Test
+    fun sunlight_addPullAndReturn_tracksCount() {
+        val tokens = Tokens(sunlightCount = 2)
+
+        assertTrue(tokens.hasSunlight)
+        assertEquals(2, tokens.count(Token.SUNLIGHT))
+
+        val pulled = tokens.pull(Token.SUNLIGHT)
+        assertEquals(Token.SUNLIGHT, pulled)
+        assertEquals(1, tokens.sunlightCount)
+
+        tokens.returnToken(pulled!!)
+        assertEquals(2, tokens.sunlightCount)
+    }
+
+    @Test
+    fun pullSunlight_whenUnavailable_returnsNull() {
+        val tokens = Tokens()
+
+        assertNull(tokens.pull(Token.SUNLIGHT))
+        assertEquals(0, tokens.sunlightCount)
+    }
+
+    @Test
     fun pullMulch_whenMatchingTokenExists_removesAndReturnsIt() {
         // Arrange
         val mulch = Token.MULCH()

@@ -156,6 +156,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_OR_REFRESH_YELLOW_BUTTERFLY,
             GameEffect.GAIN_TWO_WORMS,
             GameEffect.GAIN_WATER_TOKEN,
+            GameEffect.GAIN_SUNLIGHT_TOKEN,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->

@@ -162,6 +162,7 @@ data class PlayerBoardView(
     val beeValue: Int,
     val wormValue: Int,
     val water: Int,
+    val sunlight: Int,
     val mulch: List<MulchView>,
     val pendingMulch: List<MulchView>,
     val butterflies: List<ButterflyView>,
@@ -195,6 +196,7 @@ data class SelfPlayerView(
                 beeValue = Critter.BEE.baseValue,
                 wormValue = Critter.WORM.baseValue,
                 water = 0,
+                sunlight = 0,
                 mulch = emptyList(),
                 pendingMulch = emptyList(),
                 butterflies = emptyList(),
@@ -229,6 +231,7 @@ data class GroveView(
     val bees: Int,
     val worms: Int,
     val water: Int,
+    val sunlight: Int,
     val mulch: Int,
     val butterflies: List<Butterfly>,
     val wispDeckRemaining: Int
@@ -240,6 +243,7 @@ data class GroveView(
             bees = 0,
             worms = 0,
             water = 0,
+            sunlight = 0,
             mulch = 0,
             butterflies = emptyList(),
             wispDeckRemaining = 0

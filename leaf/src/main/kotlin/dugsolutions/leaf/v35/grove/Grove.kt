@@ -75,6 +75,7 @@ class Grove(
 
         tokens.reset(
             waterCount = TOKENS_PER_TYPE,
+            sunlightCount = TOKENS_PER_TYPE,
             mulchTokens = List(TOKENS_PER_TYPE) {
                 Token.MULCH()
             }

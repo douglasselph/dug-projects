@@ -818,6 +818,9 @@ object ChronicleTextRenderer {
             is GameEntry.DieGained ->
                 "${player(entry.playerId)} DIE GAINED ${entry.sides}"
 
+            is GameEntry.SunlightTokenChanged ->
+                "${player(entry.playerId)} SUNLIGHT ${entry.change}"
+
             is GameEntry.MulchStored ->
                 "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +
                     "from=${if (entry.fromDiscard) "DISCARD" else "HAND"}"

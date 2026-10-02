@@ -2,18 +2,23 @@ package dugsolutions.leaf.v35.tokens
 
 class Tokens(
     waterCount: Int = 0,
+    sunlightCount: Int = 0,
     mulchTokens: List<Token.MULCH> = emptyList()
 ) {
     private var _waterCount = 0
+    private var _sunlightCount = 0
     private val _mulchTokens = mutableListOf<Token.MULCH>()
     private val _pendingMulchTokens = mutableListOf<Token.PENDING_MULCH>()
 
     init {
-        reset(waterCount, mulchTokens)
+        reset(waterCount, sunlightCount, mulchTokens)
     }
 
     val waterCount: Int
         get() = _waterCount
+
+    val sunlightCount: Int
+        get() = _sunlightCount
 
     val mulchCount: Int
         get() = _mulchTokens.size
@@ -30,6 +35,9 @@ class Tokens(
     val hasWater: Boolean
         get() = waterCount > 0
 
+    val hasSunlight: Boolean
+        get() = sunlightCount > 0
+
     val hasMulch: Boolean
         get() = mulchCount > 0
 
@@ -39,6 +47,7 @@ class Tokens(
     fun has(token: Token): Boolean {
         return when (token) {
             Token.WATER -> hasWater
+            Token.SUNLIGHT -> hasSunlight
             is Token.MULCH -> hasMulch
             is Token.PENDING_MULCH -> hasPendingMulch
         }
@@ -47,6 +56,7 @@ class Tokens(
     fun count(token: Token): Int {
         return when (token) {
             Token.WATER -> waterCount
+            Token.SUNLIGHT -> sunlightCount
             is Token.MULCH -> mulchCount
             is Token.PENDING_MULCH -> pendingMulchCount
         }
@@ -55,6 +65,7 @@ class Tokens(
     fun pull(token: Token): Token? {
         return when (token) {
             Token.WATER -> pullWater()
+            Token.SUNLIGHT -> pullSunlight()
             is Token.MULCH -> pullMulch(token)
             is Token.PENDING_MULCH -> pullPendingMulch(token)
         }
@@ -63,6 +74,7 @@ class Tokens(
     fun add(token: Token): Tokens {
         when (token) {
             Token.WATER -> _waterCount++
+            Token.SUNLIGHT -> _sunlightCount++
             is Token.MULCH -> _mulchTokens.add(token)
             is Token.PENDING_MULCH -> _pendingMulchTokens.add(token)
         }
@@ -77,6 +89,7 @@ class Tokens(
         require(amount >= 0) { "Token count cannot be negative: $amount" }
         when (token) {
             Token.WATER -> _waterCount = amount
+            Token.SUNLIGHT -> _sunlightCount = amount
             is Token.MULCH -> {
                 _mulchTokens.clear()
                 repeat(amount) {
@@ -90,11 +103,14 @@ class Tokens(
 
     fun reset(
         waterCount: Int = 0,
+        sunlightCount: Int = 0,
         mulchTokens: List<Token.MULCH> = emptyList()
     ) {
         require(waterCount >= 0) { "Water token count cannot be negative: $waterCount" }
+        require(sunlightCount >= 0) { "Sunlight token count cannot be negative: $sunlightCount" }
 
         _waterCount = waterCount
+        _sunlightCount = sunlightCount
         _mulchTokens.clear()
         _mulchTokens.addAll(mulchTokens)
         _pendingMulchTokens.clear()
@@ -104,6 +120,12 @@ class Tokens(
         if (!hasWater) return null
         _waterCount--
         return Token.WATER
+    }
+
+    private fun pullSunlight(): Token? {
+        if (!hasSunlight) return null
+        _sunlightCount--
+        return Token.SUNLIGHT
     }
 
     private fun pullMulch(token: Token.MULCH): Token? {

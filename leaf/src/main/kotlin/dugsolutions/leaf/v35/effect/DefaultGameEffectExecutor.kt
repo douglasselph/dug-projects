@@ -147,6 +147,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_ANY_DIE_TO_DISCARD,
             GameEffect.GAIN_ANY_TWO_CRITTERS,
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
+            GameEffect.GAIN_SUNLIGHT_TOKEN,
             GameEffect.GAIN_ONE_VP,
             GameEffect.GAIN_ONE_WISP,
             GameEffect.REFRESH_CREATURE,

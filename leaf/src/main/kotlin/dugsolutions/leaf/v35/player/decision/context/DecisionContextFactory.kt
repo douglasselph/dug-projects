@@ -128,6 +128,7 @@ internal object DecisionContextFactory {
             beeValue = player.critterValues.valueOf(Critter.BEE),
             wormValue = player.critterValues.valueOf(Critter.WORM),
             water = player.tokens.waterCount,
+            sunlight = player.tokens.sunlightCount,
             mulch = player.tokens.mulchTokens.mapIndexed { index, token ->
                 MulchView(index, token.sides, pending = false)
             },
@@ -181,6 +182,7 @@ internal object DecisionContextFactory {
             bees = game.grove.critters.count(Critter.BEE),
             worms = game.grove.critters.count(Critter.WORM),
             water = game.grove.tokens.waterCount,
+            sunlight = game.grove.tokens.sunlightCount,
             mulch = game.grove.tokens.mulchCount,
             butterflies = game.grove.butterflies.all,
             wispDeckRemaining = game.grove.wispDeck.remaining

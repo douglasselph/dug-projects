@@ -82,6 +82,9 @@ class GameSummaryExtractorTest {
                     playerSummary.plantCreatureSignature.cards
                 )
                 assertEquals(player.wisps.size, playerSummary.finalWispCount)
+                assertEquals(0, playerSummary.sunlightGained)
+                assertEquals(0, playerSummary.sunlightSpent)
+                assertEquals(player.tokens.sunlightCount, playerSummary.finalSunlightCount)
                 assertEquals(playerSummary.finalDiceCount, playerSummary.ownedDiceSignature.totalDice)
                 assertEquals(playerSummary.finalDicePower, playerSummary.ownedDiceSignature.totalPower)
                 val allOwnedDieSides =

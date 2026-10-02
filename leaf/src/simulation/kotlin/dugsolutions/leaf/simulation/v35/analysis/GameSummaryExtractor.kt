@@ -3,6 +3,7 @@ package dugsolutions.leaf.simulation.v35.analysis
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SunlightTokenChange
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameRunResult
 import dugsolutions.leaf.v35.player.Player
@@ -40,6 +41,9 @@ object GameSummaryExtractor {
                 rollRewardWispsGained = rollRewardWispsGained(entries, player.id),
                 wispsPlayed = wispsPlayed(entries, player.id),
                 finalWispCount = player.wisps.size,
+                sunlightGained = sunlightChanges(entries, player.id, SunlightTokenChange.GAINED),
+                sunlightSpent = sunlightChanges(entries, player.id, SunlightTokenChange.SPENT),
+                finalSunlightCount = player.tokens.sunlightCount,
                 finalPlantCount = player.creature.size,
                 finalPlantPrintedCost = player.creature.cards.sumOf { it.card.cost },
                 plantCreatureSignature = plantCreatureSignature(player),
@@ -83,6 +87,16 @@ object GameSummaryExtractor {
                 entry.kind == RollRewardKind.WISP_PLAYED_IMMEDIATELY
         }
 
+
+    private fun sunlightChanges(
+        entries: List<GameEntry>,
+        playerId: PlayerId,
+        change: SunlightTokenChange
+    ): Int = entries.count { entry ->
+        entry is GameEntry.SunlightTokenChanged &&
+            entry.playerId == playerId &&
+            entry.change == change
+    }
 
     private fun plantCreatureSignature(player: Player): PlantCreatureSignature =
         PlantCreatureSignature(

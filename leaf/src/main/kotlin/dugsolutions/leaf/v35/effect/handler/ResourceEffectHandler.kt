@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RefreshResolver
+import dugsolutions.leaf.v35.game.operation.SunlightTokenResolver
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDieSizeRequest
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectPlayerRequest
@@ -40,6 +41,9 @@ class ResourceEffectHandler : EffectHandler {
         when (request.effect) {
             GameEffect.GAIN_WATER_TOKEN ->
                 request.game.grove.tokens.hasWater
+
+            GameEffect.GAIN_SUNLIGHT_TOKEN ->
+                request.game.grove.tokens.hasSunlight
 
             GameEffect.MULCH_DIE_FROM_HAND ->
                 request.actor.dice.hand.isNotEmpty() &&
@@ -111,6 +115,9 @@ class ResourceEffectHandler : EffectHandler {
         when (request.effect) {
             GameEffect.GAIN_WATER_TOKEN ->
                 gainWater(request)
+
+            GameEffect.GAIN_SUNLIGHT_TOKEN ->
+                gainSunlight(request)
 
             GameEffect.MULCH_DIE_FROM_HAND ->
                 mulchFromHand(request)
@@ -185,6 +192,14 @@ class ResourceEffectHandler : EffectHandler {
             "Validated Water effect could not take Water from Grove"
         }
         request.actor.tokens.add(token)
+    }
+
+    private fun gainSunlight(
+        request: GameEffectRequest
+    ) {
+        stateCheck(SunlightTokenResolver.gain(request.game, request.actor)) {
+            "Validated Sunlight effect could not take Sunlight from Grove"
+        }
     }
 
     private fun mulchFromHand(
