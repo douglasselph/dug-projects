@@ -1,5 +1,6 @@
 package dugsolutions.leaf.simulation.v35.experiment.plant
 
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
@@ -8,13 +9,14 @@ import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
  * Research-only overrides for one canonical Plant definition.
  *
  * Null dimensions mean "leave the canonical card definition unchanged". This
- * model deliberately keeps cost, Grove availability, and structured end-game
- * scoring independent so experiments can change one dimension at a time.
+ * model deliberately keeps cost, Grove availability, structured end-game
+ * scoring, and executable effect independent so experiments can change one dimension at a time.
  */
 data class PlantExperimentOverride(
     val cost: Int? = null,
     val available: Boolean? = null,
-    val scoringRule: PlantScoringRule? = null
+    val scoringRule: PlantScoringRule? = null,
+    val effect: GameEffect? = null
 ) {
     init {
         require(cost == null || cost >= 0) {
@@ -60,6 +62,10 @@ class PlantExperimentConfig private constructor(
     /** Experimental typed scoring rule when supplied; otherwise the canonical rule. */
     override fun scoringRuleFor(card: PlantCard): PlantScoringRule =
         overrideFor(card)?.scoringRule ?: card.scoringRule
+
+    /** Experimental executable effect when supplied; otherwise the canonical effect. */
+    override fun effectFor(card: PlantCard): GameEffect =
+        overrideFor(card)?.effect ?: card.effect
 
     override fun equals(other: Any?): Boolean =
         this === other ||

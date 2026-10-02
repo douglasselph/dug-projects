@@ -113,6 +113,7 @@ class DefaultGameEffectExecutor(
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,

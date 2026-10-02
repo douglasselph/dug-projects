@@ -1,5 +1,6 @@
 package dugsolutions.leaf.simulation.v35.experiment.plant
 
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import java.io.File
 
@@ -13,7 +14,10 @@ import java.io.File
  * experiment dimensions.
  *
  * Supported columns:
- * `card_id,cost,available,scoring`
+ * `card_id,cost,available,scoring,effect`
+ *
+ * `effect` is optional for backwards compatibility and accepts an exact
+ * [GameEffect] constant name. Blank means canonical effect.
  *
  * `scoring` accepts explicit structured expressions such as `FIXED:3`,
  * `PER_GRAFTED_VINE`, `PER_GRAFTED_FLOWER`, `PER_BUTTERFLY`, and
@@ -100,14 +104,21 @@ class PlantExperimentConfigLoader(
                     rowNumber,
                     rawCardId
                 )
+                val effect = parseEffect(
+                    value(row, columns, "effect"),
+                    sourceName,
+                    rowNumber,
+                    rawCardId
+                )
 
                 val override = PlantExperimentOverride(
                     cost = cost,
                     available = available,
-                    scoringRule = scoringRule
+                    scoringRule = scoringRule,
+                    effect = effect
                 )
 
-                if (cost != null || available != null || scoringRule != null) {
+                if (cost != null || available != null || scoringRule != null || effect != null) {
                     overrides[canonicalId] = override
                 }
             }
@@ -159,6 +170,27 @@ class PlantExperimentConfigLoader(
         }
 
 
+
+    private fun parseEffect(
+        raw: String,
+        sourceName: String,
+        rowNumber: Int,
+        cardId: String
+    ): GameEffect? {
+        val expression = raw.trim()
+        if (expression.isEmpty()) return null
+
+        val effect = GameEffect.entries.firstOrNull { it.name == expression }
+            ?: throw IllegalArgumentException(
+                "Invalid effect override '$expression' for Plant '$cardId' in $sourceName " +
+                    "at row $rowNumber; expected an exact GameEffect constant name"
+            )
+        require(effect != GameEffect.UNKNOWN) {
+            "Invalid effect override 'UNKNOWN' for Plant '$cardId' in $sourceName at row $rowNumber"
+        }
+        return effect
+    }
+
     private fun parseScoringRule(
         raw: String,
         sourceName: String,
@@ -181,7 +213,7 @@ class PlantExperimentConfigLoader(
         columns: Map<String, Int>,
         columnName: String
     ): String =
-        row.getOrElse(requireNotNull(columns[columnName])) { "" }
+        columns[columnName]?.let { index -> row.getOrElse(index) { "" } } ?: ""
 
     /**
      * RFC-4180-style parsing matching the project's card-registry conventions:

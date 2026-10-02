@@ -33,6 +33,9 @@ data class PlantExperimentResearchConfig(
                     override.available?.let { available ->
                         if (!available) add("  available: true -> false")
                     }
+                    override.effect?.let { effect ->
+                        if (effect != card.effect) add("  effect: ${card.effect} -> $effect")
+                    }
                     override.scoringRule?.let { scoringRule ->
                         if (scoringRule != card.scoringRule) {
                             add(

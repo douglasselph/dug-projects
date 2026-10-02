@@ -149,7 +149,7 @@ internal object DecisionContextFactory {
                     title = creatureCard.card.title,
                     type = creatureCard.card.type,
                     cost = game.config.plantValues.costFor(creatureCard.card),
-                    effect = creatureCard.card.effect,
+                    effect = game.config.plantValues.effectFor(creatureCard.card),
                     scoringRule = game.config.plantValues.scoringRuleFor(creatureCard.card),
                     side = creatureCard.side,
                     position = creatureCard.position,
@@ -172,7 +172,7 @@ internal object DecisionContextFactory {
                     title = stack.card.title,
                     type = stack.card.type,
                     cost = game.config.plantValues.costFor(stack.card),
-                    effect = stack.card.effect,
+                    effect = game.config.plantValues.effectFor(stack.card),
                     scoringRule = game.config.plantValues.scoringRuleFor(stack.card),
                     remaining = stack.remaining
                 )

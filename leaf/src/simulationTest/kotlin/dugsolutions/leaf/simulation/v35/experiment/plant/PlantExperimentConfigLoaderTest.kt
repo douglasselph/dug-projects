@@ -108,6 +108,35 @@ class PlantExperimentConfigLoaderTest {
         assertNull(config.overrideFor("Vine_07_01"))
     }
 
+
+    @Test
+    fun effectOverride_acceptsExactGameEffectConstantAndOldHeadersRemainValid() {
+        val config = loadCsv(
+            """
+            card_id,cost,available,scoring,effect
+            Vine_07_01,11,,,RAISE_LOWEST_DIE_PLUS_1
+            """.trimIndent()
+        )
+
+        val override = requireNotNull(config.overrideFor("Vine_07_01"))
+        assertEquals(11, override.cost)
+        assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, override.effect)
+    }
+
+    @Test
+    fun invalidEffectOverride_failsClearly() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            loadCsv(
+                """
+                card_id,cost,available,scoring,effect
+                Vine_07_01,,,,NOT_A_REAL_EFFECT
+                """.trimIndent()
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("Invalid effect override 'NOT_A_REAL_EFFECT'"))
+    }
+
     @Test
     fun unknownPlantId_failsClearly() {
         val error = assertFailsWith<IllegalArgumentException> {

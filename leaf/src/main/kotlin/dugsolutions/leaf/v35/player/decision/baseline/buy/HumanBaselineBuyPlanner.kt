@@ -481,7 +481,7 @@ internal class HumanBaselineBuyPlanner(
             title = card.title,
             type = card.type,
             cost = item.cost,
-            effect = card.effect,
+            effect = grove.plantStacks.firstOrNull { it.name == card.name }?.effect ?: card.effect,
             scoringRule = grove.plantStacks.firstOrNull { it.name == card.name }?.scoringRule
                 ?: card.scoringRule,
             side = placement.side,

@@ -31,7 +31,9 @@ interface HumanBaselineCardScorer {
         CardScoringHelpers.playScore(
             context = context,
             phase = phase,
-            effect = effect,
+            effect = context.grove.plantStacks.firstOrNull { it.name == cardName }?.effect
+                ?: context.self.board.creature.firstOrNull { it.name == cardName }?.effect
+                ?: effect,
             cardName = cardName,
             base = if (phase == CardPhase.BATTLE) battlePlayBase else cultivationPlayBase,
             normalPurchasingPower = normalPurchasingPower

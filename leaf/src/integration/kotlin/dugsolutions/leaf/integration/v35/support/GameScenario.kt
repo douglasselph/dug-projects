@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.random.Randomizer
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 
 /**
@@ -39,7 +40,9 @@ data class GameScenario(
     /** Compact Chronicle text by default; true enables full diagnostic detail. */
     val chronicleDetail: Boolean = false,
     /** Optional experiment-only mechanical intervention; fresh state per Game. */
-    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE
+    val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE,
+    /** Optional explicit per-game Plant value/effect resolver for integration research scenarios. */
+    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -74,7 +77,8 @@ data class GameScenario(
             strategySeed = strategySeed,
             recordDecisionReasoning = recordDecisionReasoning,
             chronicleDetail = chronicleDetail,
-            mechanicalInterventionFactory = mechanicalInterventionFactory
+            mechanicalInterventionFactory = mechanicalInterventionFactory,
+            plantValues = plantValues
         )
     }
 }

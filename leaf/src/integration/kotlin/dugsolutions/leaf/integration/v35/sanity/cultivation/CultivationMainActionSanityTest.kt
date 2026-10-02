@@ -11,6 +11,8 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.plant.PlantValueResolver
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
@@ -87,6 +89,41 @@ class CultivationMainActionSanityTest {
             assertEquals(MainActionKind.ACTIVATE_PLANT, actions.first().action)
             first.assertExhausted()
             second.assertExhausted()
+        }
+    }
+
+
+    @Test
+    fun `Plant effect resolver can replace canonical activation without mutating card`() {
+        val first = ScriptedDecisionDirector()
+        val second = ScriptedDecisionDirector().apply { finishBuildWithWater() }
+        val effectOverride = object : PlantValueResolver {
+            override fun costFor(card: PlantCard): Int = card.cost
+            override fun isAvailable(card: PlantCard): Boolean = true
+            override fun effectFor(card: PlantCard): GameEffect =
+                if (card.name == "Root_05_02") GameEffect.RAISE_LOWEST_DIE_PLUS_1 else card.effect
+        }
+
+        cultivationHarness(first = first, second = second, plantValues = effectOverride).use { harness ->
+            harness.setPlayerDice(
+                playerId = 1,
+                hand = listOf(DieSpec(DieSides.D6, 1), DieSpec(DieSides.D8, 5))
+            )
+            val grafted = harness.graftPlant(1, "Root Four More", faceUp = true)
+            first.effect.thenDie { request -> request.legalChoices.single() }
+            first.cultivation.thenMain(CultivationMainAction.ActivatePlant(grafted))
+            first.cultivation.thenMain(CultivationMainAction.RoundEffect1)
+            first.cultivation.thenDone()
+
+            harness.revealNextRound()
+            harness.runCultivationBuildActions()
+            val snapshot = harness.snapshot()
+
+            assertEquals(listOf(2, 5), snapshot.player(1).hand.map { it.value })
+            val effect = ChronicleQueries.effectsFor(harness.chronicleEntries(), PlayerId(1))
+                .single { it.sourceKind == EffectSourceKind.PLANT }
+            assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, effect.effect)
+            assertEquals("Root_05_02", effect.sourceName)
         }
     }
 

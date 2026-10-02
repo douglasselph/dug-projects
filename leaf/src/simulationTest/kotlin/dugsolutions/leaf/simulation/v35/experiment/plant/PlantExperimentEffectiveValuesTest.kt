@@ -4,6 +4,7 @@ import dugsolutions.leaf.simulation.v35.learning.buy.EvalOptions
 import dugsolutions.leaf.simulation.v35.learning.buy.TrainOptions
 import dugsolutions.leaf.simulation.v35.learning.buy.evaluationGameConfig
 import dugsolutions.leaf.v35.common.CardDataFiles
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.plant.PlantCardRegistry
@@ -48,8 +49,8 @@ class PlantExperimentEffectiveValuesTest {
         val path = Files.createTempFile("plant-overrides-shared", ".csv")
         Files.writeString(
             path,
-            "card_id,cost,available,scoring\n" +
-                "Vine_07_01,11,true,\n" +
+            "card_id,cost,available,scoring,effect\n" +
+                "Vine_07_01,11,true,,RAISE_LOWEST_DIE_PLUS_1\n" +
                 "Vine_07_04,,false,\n"
         )
         try {
@@ -62,6 +63,7 @@ class PlantExperimentEffectiveValuesTest {
             val berry = cards.single { it.name == "Vine_07_01" }
             val yield = cards.single { it.name == "Vine_07_04" }
             assertEquals(11, evalResolved.values.costFor(berry))
+            assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, evalResolved.values.effectFor(berry))
             assertEquals(false, evalResolved.values.isAvailable(yield))
         } finally {
             Files.deleteIfExists(path)
@@ -94,7 +96,7 @@ class PlantExperimentEffectiveValuesTest {
         val berry = cards.single { it.name == "Vine_07_01" }
         val yield = cards.single { it.name == "Vine_07_04" }
         val values = PlantExperimentConfig.of(
-            berry.name to PlantExperimentOverride(cost = 11),
+            berry.name to PlantExperimentOverride(cost = 11, effect = GameEffect.RAISE_LOWEST_DIE_PLUS_1),
             yield.name to PlantExperimentOverride(
                 available = false,
                 scoringRule = PlantScoringRule.PerGraftedFlower
@@ -107,6 +109,7 @@ class PlantExperimentEffectiveValuesTest {
 
         assertTrue(rendered.contains("Vine_07_01"))
         assertTrue(rendered.contains("cost: ${berry.cost} -> 11"))
+        assertTrue(rendered.contains("effect: ${berry.effect} -> RAISE_LOWEST_DIE_PLUS_1"))
         assertTrue(rendered.contains("Vine_07_04"))
         assertTrue(rendered.contains("available: true -> false"))
         assertTrue(rendered.contains("scoring: PER_GRAFTED_VINE -> PER_GRAFTED_FLOWER"))

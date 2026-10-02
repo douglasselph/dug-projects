@@ -62,6 +62,13 @@ object CardScoringHelpers {
             )
             GameEffect.RAISE_DIE_PLUS_4 -> addBestGain(bestRaise(dice, 4), "Best +4 target")
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> addBestGain(bestRaise(dice, 1), "Best +1 target")
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
+                val lowest = dice.minOfOrNull { it.value }
+                val gain = lowest?.let { value ->
+                    dice.filter { it.value == value }.maxOfOrNull { DieValueHeuristics.actualRaiseGain(it, 1) }
+                } ?: 0
+                addBestGain(gain, "Best lowest-value +1 target")
+            }
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE -> {
                 addBestGain(bestRaise(dice, 1), "Best +1 target")
                 if (phase == CardPhase.BATTLE && context.battle != null) {
@@ -409,7 +416,8 @@ object CardScoringHelpers {
         var score = PriorityScore(neutralPlayBase / 5)
         val vp = projectedVp(context, effectiveScoringRule(context, card))
         if (vp > 0) score = score.adjusted(vp * 3, "Projected end-game VP")
-        if (card.effect == GameEffect.DRAW_TWO_DICE || card.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW) {
+        val effectiveEffect = effectiveEffect(context, card)
+        if (effectiveEffect == GameEffect.DRAW_TWO_DICE || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW) {
             score = score.adjusted(4, "Broadly useful effect")
         }
         return score
@@ -435,6 +443,11 @@ object CardScoringHelpers {
         }
         return score
     }
+
+    fun effectiveEffect(context: DecisionContext, card: PlantCard): GameEffect =
+        context.grove.plantStacks.firstOrNull { it.name == card.name }?.effect
+            ?: context.self.board.creature.firstOrNull { it.name == card.name }?.effect
+            ?: card.effect
 
     fun effectiveScoringRule(context: DecisionContext, card: PlantCard): PlantScoringRule =
         context.grove.plantStacks.firstOrNull { it.name == card.name }?.scoringRule

@@ -5,13 +5,15 @@ import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
 import dugsolutions.leaf.integration.v35.support.decision.ScriptedDecisionDirector
 import dugsolutions.leaf.integration.v35.support.random.ScriptedRandomizer
 import dugsolutions.leaf.v35.game.GameRoundSetup
+import dugsolutions.leaf.v35.plant.PlantValueResolver
 
 internal fun cultivationHarness(
     randomizer: ScriptedRandomizer = ScriptedRandomizer(),
     roundName: String = "Resource_Water_Mulch",
     wispNames: List<String> = emptyList(),
     first: ScriptedDecisionDirector = ScriptedDecisionDirector(),
-    second: ScriptedDecisionDirector = ScriptedDecisionDirector()
+    second: ScriptedDecisionDirector = ScriptedDecisionDirector(),
+    plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
 ): IntegrationGameHarness =
     IntegrationGameHarness(
         GameScenario(
@@ -23,6 +25,7 @@ internal fun cultivationHarness(
             exactRoundNames = listOf(roundName),
             exactWispNames = wispNames,
             randomizerFactory = { randomizer },
+            plantValues = plantValues,
             decisionFactories = listOf(
                 first.singleGameFactory(),
                 second.singleGameFactory()

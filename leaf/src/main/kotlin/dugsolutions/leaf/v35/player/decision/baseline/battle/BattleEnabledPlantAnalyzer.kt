@@ -93,6 +93,12 @@ class BattleEnabledPlantAnalyzer(
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 raiseCandidates(context, card, dice, 1)
 
+
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
+                val lowest = dice.minOf { it.die.value }
+                raiseCandidates(context, card, dice.filter { it.die.value == lowest }, 1)
+            }
+
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
                 raiseCandidates(
                     context,

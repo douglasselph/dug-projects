@@ -123,6 +123,27 @@ class DieValueEffectHandlerSimpleEffectsTest {
         assertEquals(5, high.value)
     }
 
+
+    @Test
+    fun raiseLowestDiePlusOneOffersOnlyLowestDice() {
+        val low = FixedEffectDie(6, 2)
+        val high = FixedEffectDie(8, 5)
+        val actor = EffectTestFixture.player(
+            1,
+            hand = listOf(low, high),
+            effectStrategy = LastEffectChoiceStrategy()
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        handler.execute(
+            EffectTestFixture.request(game, actor, GameEffect.RAISE_LOWEST_DIE_PLUS_1),
+            nested
+        )
+
+        assertEquals(3, low.value)
+        assertEquals(5, high.value)
+    }
+
     @Test
     fun setUpToD12ToMaxNeverOffersD20() {
         val d20 = FixedEffectDie(20, 3)

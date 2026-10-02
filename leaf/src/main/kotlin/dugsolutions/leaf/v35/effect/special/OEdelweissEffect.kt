@@ -282,7 +282,7 @@ class OEdelweissEffect : EffectHandler {
         GameEffectRequest(
             game = request.game,
             actor = request.actor,
-            effect = card.card.effect,
+            effect = request.game.config.plantValues.effectFor(card.card),
             source =
                 GameEffectSource.Plant(
                     card

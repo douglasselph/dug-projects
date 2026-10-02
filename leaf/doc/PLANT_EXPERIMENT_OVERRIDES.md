@@ -9,7 +9,7 @@ The canonical card data remains the definition of the actual game. An override f
 Create a CSV anywhere on your filesystem, for example:
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,11,,
 Vine_07_04,,false,
 ```
@@ -33,7 +33,7 @@ When the option is omitted, Plant cost, availability, and scoring remain canonic
 The header is:
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 ```
 
 Each row identifies one Plant by its stable card ID, such as `Vine_07_01`.
@@ -66,7 +66,7 @@ The canonical card CSV and its `vp_icon` translation remain authoritative when `
 ### Change only Berry Important's cost
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,8,,
 ```
 
@@ -83,7 +83,7 @@ You can use experimental costs that are not normal printed Plant tiers. For exam
 ### Exclude a Plant
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_04,,false,
 ```
 
@@ -99,7 +99,7 @@ Random Grove resolution will not select `Vine_07_04`.
 ### Exclude both known V7 outliers
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,,false,
 Vine_07_04,,false,
 ```
@@ -114,7 +114,7 @@ bin/evaluate_buy_policy --random-grove \
 ### Cost zero is not exclusion
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,0,,
 ```
 
@@ -125,7 +125,7 @@ Availability and cost are independent experimental dimensions.
 ### Explicit availability with a cost override
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,11,true,
 ```
 
@@ -134,7 +134,7 @@ This explicitly keeps the card available and changes its effective cost to 11.
 ### Override Vine Yield to score per Flower
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_04,,,PER_GRAFTED_FLOWER
 ```
 
@@ -149,7 +149,7 @@ This leaves Vine Yield's canonical cost and availability unchanged. Only its eff
 ### Combine independent dimensions
 
 ```csv
-card_id,cost,available,scoring
+card_id,cost,available,scoring,effect
 Vine_07_01,11,true,FIXED:3
 Vine_07_04,,,PER_GRAFTED_FLOWER
 ```
@@ -267,3 +267,19 @@ Implemented now:
 - resolved intervention reporting for cost, availability, and scoring.
 
 Therefore the same override file can be used for **cost**, **availability/exclusion**, and **typed end-game scoring** experiments while leaving canonical card data unchanged.
+
+
+## Effect overrides
+
+The optional `effect` column replaces the Plant's executable `GameEffect` for that research run.
+Use the exact `GameEffect` enum constant name; blank keeps the canonical effect. Older four-column
+override files remain valid. Example:
+
+```csv
+card_id,cost,available,scoring,effect
+Vine_07_01,11,,,RAISE_LOWEST_DIE_PLUS_1
+```
+
+This changes only the research game environment. The canonical card data and `PlantCard.effect` remain
+unchanged. Runtime Plant-effect access goes through the explicit per-game `PlantValueResolver.effectFor`
+seam, just like experimental cost and scoring.

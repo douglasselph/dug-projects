@@ -65,7 +65,7 @@ object PlantActivationPriority {
             }
         }
 
-        if (permanentlyImprovesDicePool(card.card.effect)) {
+        if (permanentlyImprovesDicePool(selectedView?.effect ?: card.card.effect)) {
             val developmentBonus = policy.cultivationDiceDevelopmentBonus(context)
             if (developmentBonus != 0) {
                 score = score.adjusted(

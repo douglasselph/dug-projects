@@ -29,6 +29,7 @@ class PlantExperimentConfigTest {
         assertEquals(7, config.costFor(card))
         assertTrue(config.isAvailable(card))
         assertSame(PlantScoringRule.PerGraftedVine, config.scoringRuleFor(card))
+        assertEquals(card.effect, config.effectFor(card))
     }
 
     @Test
@@ -55,13 +56,14 @@ class PlantExperimentConfigTest {
     }
 
     @Test
-    fun costAvailabilityAndScoringRule_areIndependentDimensions() {
+    fun costAvailabilityScoringRuleAndEffect_areIndependentDimensions() {
         val canonical = plantCard("Vine_07_01", 7, PlantScoringRule.Fixed(3))
         val config = PlantExperimentConfig.of(
             canonical.name to PlantExperimentOverride(
                 cost = 10,
                 available = false,
-                scoringRule = PlantScoringRule.Fixed(1)
+                scoringRule = PlantScoringRule.Fixed(1),
+                effect = GameEffect.RAISE_LOWEST_DIE_PLUS_1
             )
         )
 
@@ -69,9 +71,11 @@ class PlantExperimentConfigTest {
         assertEquals(10, override.cost)
         assertFalse(requireNotNull(override.available))
         assertEquals(PlantScoringRule.Fixed(1), override.scoringRule)
+        assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, override.effect)
         assertEquals(10, config.costFor(canonical))
         assertFalse(config.isAvailable(canonical))
         assertEquals(PlantScoringRule.Fixed(1), config.scoringRuleFor(canonical))
+        assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, config.effectFor(canonical))
     }
 
     @Test
