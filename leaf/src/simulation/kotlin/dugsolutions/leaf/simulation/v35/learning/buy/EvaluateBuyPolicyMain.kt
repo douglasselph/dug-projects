@@ -205,6 +205,8 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     var sunlightGained=0L; var sunlightSpent=0L; var finalSunlight=0L
     var sunlightSupportOpportunities=0L; var sunlightSupportUses=0L
     var sunlightExtraMainActions=0L; var sunlightExtraDrawActions=0L; var sunlightExtraPlantActions=0L; var sunlightExtraRoundEffectActions=0L
+    var sunlightImmediateStrikeContributions=0L; var sunlightWinningStrikeContributions=0L
+    var sunlightWinnerDecisiveContributions=0L; var sunlightWoundDecisiveContributions=0L; var sunlightAssociatedBattleVp=0L
     var battleMainActions=0L; var battleSupportActions=0L; var battlePlantMainActions=0L
     var maxSunlightExtraMainActionsPerGame=0; var maxBattleMainActionsPerGame=0; var maxBattleSupportActionsPerGame=0
     val sunlightFundedPlants=sortedMapOf<String,Long>()
@@ -238,6 +240,11 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         sunlightExtraDrawActions += p.sunlightExtraDrawActions
         sunlightExtraPlantActions += p.sunlightExtraPlantActions
         sunlightExtraRoundEffectActions += p.sunlightExtraRoundEffectActions
+        sunlightImmediateStrikeContributions += p.sunlightImmediateStrikeContributions
+        sunlightWinningStrikeContributions += p.sunlightWinningStrikeContributions
+        sunlightWinnerDecisiveContributions += p.sunlightWinnerDecisiveContributions
+        sunlightWoundDecisiveContributions += p.sunlightWoundDecisiveContributions
+        sunlightAssociatedBattleVp += p.sunlightAssociatedBattleVp
         maxSunlightExtraMainActionsPerGame = maxOf(maxSunlightExtraMainActionsPerGame, p.sunlightExtraMainActions)
         val playerBattleMains = game.entries.filterIsInstance<GameEntry.MainAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
         val playerBattleSupports = game.entries.filterIsInstance<GameEntry.SupportAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
@@ -485,8 +492,12 @@ internal class EffectResourceAccumulator {
     val roundEffects = sortedMapOf<String, Long>()
     val battleRoundEffects = sortedMapOf<String, Long>()
     val roundCardReveals = sortedMapOf<String, Long>()
+    val roundEffectExposures = sortedMapOf<String, Long>()
     val roundEffectOpportunities = sortedMapOf<String, Long>()
+    val roundEffectIllegal = sortedMapOf<String, Long>()
+    val roundEffectResourceBlocked = sortedMapOf<String, Long>()
     val roundEffectUses = sortedMapOf<String, Long>()
+    val roundEffectDeclines = sortedMapOf<String, Long>()
     val roundCategoryOpportunities = sortedMapOf<String, Long>()
     val roundCategoryUses = sortedMapOf<String, Long>()
     val plantEffects = sortedMapOf<String, Long>()
@@ -506,24 +517,99 @@ internal class EffectResourceAccumulator {
     var plantRoundExposure = 0L
     var battlePlantExposure = 0L
     var battleRounds = 0L
+    var sunlightGainChoiceOpportunities = 0L
+    var sunlightGainChoiceUses = 0L
+    var sunlightGainChoiceDeclines = 0L
+    var sunlightTakeFinalVp = 0L
+    var sunlightDeclineFinalVp = 0L
+    var sunlightTakeWinShare = 0.0
+    var sunlightDeclineWinShare = 0.0
+    val sunlightChoicesByHeld = sortedMapOf<Int, Long>()
+    val sunlightTakesByHeld = sortedMapOf<Int, Long>()
+    val sunlightChoicesByBattlesRemaining = sortedMapOf<Int, Long>()
+    val sunlightTakesByBattlesRemaining = sortedMapOf<Int, Long>()
+    val sunlightChoicesByBattleNext = sortedMapOf<Boolean, Long>()
+    val sunlightTakesByBattleNext = sortedMapOf<Boolean, Long>()
+    val sunlightDeclineSelections = sortedMapOf<String, Long>()
+    val sunlightCompetingMainSets = sortedMapOf<String, Long>()
 
     fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
         games++
         entries.filterIsInstance<GameEntry.RoundRevealed>().forEach { revealed ->
             roundCardReveals.bump(revealed.cardName)
+            roundEffectExposures.bump(roundEffectKey(revealed.cardName, 1, revealed.firstEffect))
+            roundEffectExposures.bump(roundEffectKey(revealed.cardName, 2, revealed.secondEffect))
         }
         entries.filterIsInstance<GameEntry.RoundEffectOpportunity>()
             .filter { it.playerId == playerId }
             .forEach { opportunity ->
+                val firstKey = roundEffectKey(opportunity.roundCardName, 1, opportunity.firstEffect)
+                val secondKey = roundEffectKey(opportunity.roundCardName, 2, opportunity.secondEffect)
                 if (opportunity.firstExecutable) {
-                    roundEffectOpportunities.bump(roundEffectKey(opportunity.roundCardName, 1, opportunity.firstEffect))
+                    roundEffectOpportunities.bump(firstKey)
                     roundCategories(opportunity.firstEffect).forEach { roundCategoryOpportunities.bump(it) }
+                } else {
+                    roundEffectIllegal.bump(firstKey)
+                    if (opportunity.firstBlockedBySharedResource) roundEffectResourceBlocked.bump(firstKey)
                 }
                 if (opportunity.secondExecutable) {
-                    roundEffectOpportunities.bump(roundEffectKey(opportunity.roundCardName, 2, opportunity.secondEffect))
+                    roundEffectOpportunities.bump(secondKey)
                     roundCategories(opportunity.secondEffect).forEach { roundCategoryOpportunities.bump(it) }
+                } else {
+                    roundEffectIllegal.bump(secondKey)
+                    if (opportunity.secondBlockedBySharedResource) roundEffectResourceBlocked.bump(secondKey)
                 }
             }
+        val finalVp = entries.filterIsInstance<GameEntry.FinalScore>().singleOrNull { it.playerId == playerId }?.totalVp ?: 0
+        val winners = entries.filterIsInstance<GameEntry.FinalWinners>().lastOrNull()?.winnerIds.orEmpty()
+        val gameWinShare = if (playerId in winners && winners.isNotEmpty()) 1.0 / winners.size else 0.0
+        entries.filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == playerId }
+            .forEach { choice ->
+                fun observeSlot(slot: Int, effect: GameEffect, executable: Boolean, selectedKind: MainActionKind) {
+                    if (!executable) return
+                    val key = roundEffectKey(choice.roundCardName, slot, effect)
+                    if (choice.selectedMainAction != selectedKind) roundEffectDeclines.bump(key)
+                }
+                observeSlot(1, choice.firstEffect, choice.firstExecutable, MainActionKind.ROUND_EFFECT_1)
+                observeSlot(2, choice.secondEffect, choice.secondExecutable, MainActionKind.ROUND_EFFECT_2)
+
+                val sunlightSlot = when {
+                    choice.firstEffect == GameEffect.GAIN_SUNLIGHT_TOKEN -> 1 to MainActionKind.ROUND_EFFECT_1
+                    choice.secondEffect == GameEffect.GAIN_SUNLIGHT_TOKEN -> 2 to MainActionKind.ROUND_EFFECT_2
+                    else -> null
+                }
+                if (sunlightSlot != null) {
+                    val executable = if (sunlightSlot.first == 1) choice.firstExecutable else choice.secondExecutable
+                    if (executable) {
+                        sunlightGainChoiceOpportunities++
+                        sunlightChoicesByHeld.bump(choice.sunlightHeld)
+                        sunlightChoicesByBattlesRemaining.bump(choice.battlesRemaining)
+                        sunlightChoicesByBattleNext.bump(choice.battleNext)
+                        val competing = choice.legalMainActions
+                            .filter { it != sunlightSlot.second }
+                            .distinct()
+                            .sortedBy { it.name }
+                            .joinToString("+") { it.name }
+                            .ifBlank { "<none>" }
+                        sunlightCompetingMainSets.bump(competing)
+                        if (choice.selectedMainAction == sunlightSlot.second) {
+                            sunlightGainChoiceUses++
+                            sunlightTakesByHeld.bump(choice.sunlightHeld)
+                            sunlightTakesByBattlesRemaining.bump(choice.battlesRemaining)
+                            sunlightTakesByBattleNext.bump(choice.battleNext)
+                            sunlightTakeFinalVp += finalVp
+                            sunlightTakeWinShare += gameWinShare
+                        } else {
+                            sunlightGainChoiceDeclines++
+                            sunlightDeclineSelections.bump(choice.selectedMainAction?.name ?: "SUPPORT_OR_DONE")
+                            sunlightDeclineFinalVp += finalVp
+                            sunlightDeclineWinShare += gameWinShare
+                        }
+                    }
+                }
+            }
+
         entries.filterIsInstance<GameEntry.MainAction>()
             .filter { it.playerId == playerId && (it.action == MainActionKind.ROUND_EFFECT_1 || it.action == MainActionKind.ROUND_EFFECT_2) }
             .forEach { action ->
@@ -665,7 +751,7 @@ internal class EffectResourceAccumulator {
         }
         return null
     }
-    private fun MutableMap<String, Long>.bump(key: String) { this[key] = (this[key] ?: 0L) + 1L }
+    private fun <K> MutableMap<K, Long>.bump(key: K) { this[key] = (this[key] ?: 0L) + 1L }
     private fun MutableMap<String, Long>.add(key: String, amount: Long) { this[key] = (this[key] ?: 0L) + amount }
 }
 
@@ -890,12 +976,19 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
     println("  Round card exposure and use:")
     val revealedKeys=(c.roundCardReveals.keys+l.roundCardReveals.keys).toSortedSet()
     revealedKeys.forEach { k -> println("    revealed $k: control=${avg(c.roundCardReveals[k]?:0,c.games)} learned=${avg(l.roundCardReveals[k]?:0,l.games)} per player-game") }
-    val effectKeys=(c.roundEffectOpportunities.keys+l.roundEffectOpportunities.keys+c.roundEffectUses.keys+l.roundEffectUses.keys).toSortedSet()
+    val effectKeys=(c.roundEffectExposures.keys+l.roundEffectExposures.keys+c.roundEffectOpportunities.keys+l.roundEffectOpportunities.keys+c.roundEffectUses.keys+l.roundEffectUses.keys).toSortedSet()
     effectKeys.forEach { k ->
+        val ce=c.roundEffectExposures[k]?:0; val le=l.roundEffectExposures[k]?:0
         val co=c.roundEffectOpportunities[k]?:0; val lo=l.roundEffectOpportunities[k]?:0
+        val ci=c.roundEffectIllegal[k]?:0; val li=l.roundEffectIllegal[k]?:0
+        val cb=c.roundEffectResourceBlocked[k]?:0; val lb=l.roundEffectResourceBlocked[k]?:0
         val cu=c.roundEffectUses[k]?:0; val lu=l.roundEffectUses[k]?:0
+        val cd=c.roundEffectDeclines[k]?:0; val ld=l.roundEffectDeclines[k]?:0
         fun rate(u:Long,o:Long)=if(o==0L) "n/a" else pct(u.toDouble()/o)
-        println("    $k: opportunities control=${avg(co,c.games)} learned=${avg(lo,l.games)}; used control=${avg(cu,c.games)} learned=${avg(lu,l.games)}; use/opportunity control=${rate(cu,co)} learned=${rate(lu,lo)}")
+        println("    $k:")
+        println("      exposures/player-game control=${avg(ce,c.games)} learned=${avg(le,l.games)}")
+        println("      legal opportunities control=${avg(co,c.games)} learned=${avg(lo,l.games)}; illegal decision points control=${avg(ci,c.games)} learned=${avg(li,l.games)}; shared-resource blocked control=${avg(cb,c.games)} learned=${avg(lb,l.games)}")
+        println("      uses control=${avg(cu,c.games)} learned=${avg(lu,l.games)}; declines control=${avg(cd,c.games)} learned=${avg(ld,l.games)}; use/opportunity control=${rate(cu,co)} learned=${rate(lu,lo)}")
     }
     val categoryKeys=(c.roundCategoryOpportunities.keys+l.roundCategoryOpportunities.keys+c.roundCategoryUses.keys+l.roundCategoryUses.keys).toSortedSet()
     if(categoryKeys.isNotEmpty()) {
@@ -907,6 +1000,32 @@ private fun printEffectResourceUtilization(c: EffectResourceAccumulator, l: Effe
         }
     }
     println("    Note: an opportunity is one Main-Action decision point where that Round effect was executable; the same revealed effect can create more than one opportunity if it remains legal across later decisions.")
+    println("  GAIN_SUNLIGHT_TOKEN descriptive choice observations (association only; not causal):")
+    fun sunlightChoiceLine(label:String, a:EffectResourceAccumulator) {
+        val o=a.sunlightGainChoiceOpportunities; val u=a.sunlightGainChoiceUses; val d=a.sunlightGainChoiceDeclines
+        val rate=if(o==0L) "n/a" else pct(u.toDouble()/o)
+        val takeVp=if(u==0L) "n/a" else "%.2f".format(a.sunlightTakeFinalVp.toDouble()/u)
+        val declineVp=if(d==0L) "n/a" else "%.2f".format(a.sunlightDeclineFinalVp.toDouble()/d)
+        val takeWin=if(u==0L) "n/a" else pct(a.sunlightTakeWinShare/u)
+        val declineWin=if(d==0L) "n/a" else pct(a.sunlightDeclineWinShare/d)
+        println("    $label: opportunities=$o uses=$u declines=$d take-rate=$rate; avg final VP take=$takeVp decline=$declineVp; win-share take=$takeWin decline=$declineWin")
+    }
+    sunlightChoiceLine("control", c); sunlightChoiceLine("learned", l)
+    fun choiceBuckets(title:String, cm:Map<Int,Long>, cu:Map<Int,Long>, lm:Map<Int,Long>, lu:Map<Int,Long>) {
+        val keys=(cm.keys+lm.keys).toSortedSet(); if(keys.isNotEmpty()) {
+            println("    $title (opportunities / takes):")
+            keys.forEach { k -> println("      $k: control=${cm[k]?:0}/${cu[k]?:0} learned=${lm[k]?:0}/${lu[k]?:0}") }
+        }
+    }
+    choiceBuckets("by Sunlight already held", c.sunlightChoicesByHeld,c.sunlightTakesByHeld,l.sunlightChoicesByHeld,l.sunlightTakesByHeld)
+    choiceBuckets("by Battles remaining", c.sunlightChoicesByBattlesRemaining,c.sunlightTakesByBattlesRemaining,l.sunlightChoicesByBattlesRemaining,l.sunlightTakesByBattlesRemaining)
+    val nextKeys=(c.sunlightChoicesByBattleNext.keys+l.sunlightChoicesByBattleNext.keys).toSortedSet()
+    if(nextKeys.isNotEmpty()) {
+        println("    by Battle-next (opportunities / takes):")
+        nextKeys.forEach { k -> println("      $k: control=${c.sunlightChoicesByBattleNext[k]?:0}/${c.sunlightTakesByBattleNext[k]?:0} learned=${l.sunlightChoicesByBattleNext[k]?:0}/${l.sunlightTakesByBattleNext[k]?:0}") }
+    }
+    mapLines("GAIN_SUNLIGHT_TOKEN decline selections", c.sunlightDeclineSelections, l.sunlightDeclineSelections)
+    mapLines("GAIN_SUNLIGHT_TOKEN competing legal Main-action sets", c.sunlightCompetingMainSets, l.sunlightCompetingMainSets)
     mapLines("Cultivation/Battle round effects actually resolved", c.roundEffects, l.roundEffects)
     mapLines("Battle round effects actually resolved", c.battleRoundEffects, l.battleRoundEffects)
     mapLines("Support actions", c.supportActions, l.supportActions)
@@ -1103,6 +1222,13 @@ private fun printSunlightBattleResearch(o: EvalOptions, c: EvalAccumulator, l: E
     val labels=(c.sunlightFundedPlants.keys+l.sunlightFundedPlants.keys).toSortedSet()
     if(labels.isEmpty()) println("    <none>")
     else labels.forEach { label -> println("    $label: control=${c.sunlightFundedPlants[label]?:0} learned=${l.sunlightFundedPlants[label]?:0}") }
+    println("SUNLIGHT BATTLE CONTRIBUTION (direct die-effect provenance only)")
+    println("  immediate Strike contributions/game: control=${avg(c.sunlightImmediateStrikeContributions)} learned=${avg(l.sunlightImmediateStrikeContributions)}")
+    println("  on winning Strikes/game:              control=${avg(c.sunlightWinningStrikeContributions)} learned=${avg(l.sunlightWinningStrikeContributions)}")
+    println("  individually winner-decisive/game:    control=${avg(c.sunlightWinnerDecisiveContributions)} learned=${avg(l.sunlightWinnerDecisiveContributions)}")
+    println("  individually Wound-decisive/game:     control=${avg(c.sunlightWoundDecisiveContributions)} learned=${avg(l.sunlightWoundDecisiveContributions)}")
+    println("  associated Battle VP/game:            control=${avg(c.sunlightAssociatedBattleVp)} learned=${avg(l.sunlightAssociatedBattleVp)}")
+    println("  Note: this is narrow provenance for immediate die-value effects funded by Sunlight. Sunlight -> Draw -> later die placement is intentionally not attributed here.")
 }
 
 private fun <K:Comparable<K>> printCounts(title:String,c:Map<K,Long>,l:Map<K,Long>) { println("  $title:"); (c.keys+l.keys).toSortedSet().forEach { k -> println("    $k: control=${c[k]?:0} learned=${l[k]?:0}") } }

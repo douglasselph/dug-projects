@@ -56,6 +56,21 @@ object GameSummaryExtractor {
                         it.action == dugsolutions.leaf.v35.chronicle.domain.MainActionKind.ROUND_EFFECT_2
                 },
                 sunlightPlantActivationIds = sunlightMainActions(entries, player.id).mapNotNull { it.plantCardId },
+                sunlightImmediateStrikeContributions = game.assetProvenance.immediateDieEffects.count {
+                    it.playerId == player.id && it.sunlightFunded && it.contributedToResolvedStrike
+                },
+                sunlightWinningStrikeContributions = game.assetProvenance.immediateDieEffects.count {
+                    it.playerId == player.id && it.sunlightFunded && it.contributedToWinningStrike
+                },
+                sunlightWinnerDecisiveContributions = game.assetProvenance.immediateDieEffects.count {
+                    it.playerId == player.id && it.sunlightFunded && it.individuallyWinnerDecisive
+                },
+                sunlightWoundDecisiveContributions = game.assetProvenance.immediateDieEffects.count {
+                    it.playerId == player.id && it.sunlightFunded && it.individuallyWoundDecisive
+                },
+                sunlightAssociatedBattleVp = game.assetProvenance.immediateDieEffects
+                    .filter { it.playerId == player.id && it.sunlightFunded }
+                    .sumOf { it.associatedBattleVp },
                 finalPlantCount = player.creature.size,
                 finalPlantPrintedCost = player.creature.cards.sumOf { it.card.cost },
                 plantCreatureSignature = plantCreatureSignature(player),

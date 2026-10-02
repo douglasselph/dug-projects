@@ -676,6 +676,11 @@ object ChronicleTextRenderer {
                 "${player(entry.playerId)} ${entry.phase} ROUND EFFECT OPPORTUNITY ${entry.roundCardName} " +
                     "[1=${entry.firstExecutable}:${entry.firstEffect} | 2=${entry.secondExecutable}:${entry.secondEffect}]"
 
+            is GameEntry.RoundEffectChoice ->
+                "Round effect choice: ${entry.playerId.value} selected=${entry.selectedMainAction ?: "support/done"} " +
+                    "legal=${entry.legalMainActions.joinToString(",")} Sunlight=${entry.sunlightHeld} " +
+                    "BattlesRemaining=${entry.battlesRemaining} BattleNext=${entry.battleNext}"
+
             is GameEntry.MainAction ->
                 buildString {
                     append("${player(entry.playerId)} ${entry.phase} MAIN ${entry.action}")

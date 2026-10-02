@@ -74,7 +74,25 @@ sealed interface Moment {
         val firstEffect: GameEffect,
         val secondEffect: GameEffect,
         val firstExecutable: Boolean,
-        val secondExecutable: Boolean
+        val secondExecutable: Boolean,
+        val firstBlockedBySharedResource: Boolean = false,
+        val secondBlockedBySharedResource: Boolean = false
+    ) : Moment
+
+    /** Outcome of one action decision at which the current Round effects were considered. */
+    data class RoundEffectChoice(
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val roundCardName: String,
+        val firstEffect: GameEffect,
+        val secondEffect: GameEffect,
+        val firstExecutable: Boolean,
+        val secondExecutable: Boolean,
+        val legalMainActions: List<MainActionKind>,
+        val selectedMainAction: MainActionKind?,
+        val sunlightHeld: Int,
+        val battlesRemaining: Int,
+        val battleNext: Boolean
     ) : Moment
 
     data class MainAction(

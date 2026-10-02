@@ -194,6 +194,11 @@ class BattleActionCoordinatorTest {
             .filter { it.playerId == p1.id }
         assertTrue(opportunities.isNotEmpty())
         assertTrue(opportunities.first().firstExecutable)
+        val roundChoices = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == p1.id }
+        assertTrue(roundChoices.isNotEmpty())
+        assertEquals(MainActionKind.ROUND_EFFECT_1, roundChoices.first().selectedMainAction)
 
         assertEquals(
             listOf(

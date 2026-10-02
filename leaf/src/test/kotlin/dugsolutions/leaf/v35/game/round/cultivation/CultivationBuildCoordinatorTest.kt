@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.game.round.cultivation
 import dugsolutions.leaf.v35.error.InvalidDecisionException
 import dugsolutions.leaf.v35.error.InvalidGameStateException
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -86,6 +87,13 @@ class CultivationBuildCoordinatorTest {
         assertTrue(opportunities.isNotEmpty())
         assertTrue(opportunities.first().firstExecutable)
         assertTrue(opportunities.first().secondExecutable)
+        val choices = fixture.game.chronicle.entries
+            .filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == first.id }
+        assertTrue(choices.isNotEmpty())
+        assertEquals(MainActionKind.ROUND_EFFECT_1, choices.first().selectedMainAction)
+        assertTrue(MainActionKind.ROUND_EFFECT_1 in choices.first().legalMainActions)
+        assertTrue(MainActionKind.ROUND_EFFECT_2 in choices.first().legalMainActions)
     }
 
     @Test

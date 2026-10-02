@@ -13,6 +13,9 @@ import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.effect.RoundEffectSlot
 import dugsolutions.leaf.v35.game.Game
+import dugsolutions.leaf.v35.game.round.blockedByEmptySharedResource
+import dugsolutions.leaf.v35.game.round.battlesRemaining
+import dugsolutions.leaf.v35.game.round.battleIsNext
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.RollInterventionContext
 import dugsolutions.leaf.v35.game.intervention.MechanicalRollSource
@@ -180,7 +183,9 @@ class CultivationBuildCoordinator(
                     roundCard = roundCard,
                     mainActionsRemaining = mainActionsRemaining
                 )
-                recordRoundEffectOpportunity(game, player, roundCard, legalChoices)
+                if (mainActionsRemaining > 0) {
+                    recordRoundEffectOpportunity(game, player, roundCard, legalChoices)
+                }
                 // A player can legitimately run out of legal Build actions. For example,
                 // Battle Doom can leave them with no dice anywhere, while their face-up
                 // Plants and both Round effects require a die. In that state there is no
@@ -214,6 +219,9 @@ class CultivationBuildCoordinator(
                 )
                 decisionCheck(chosen in legalChoices) {
                     "CultivationStrategy returned an action that was not offered: $chosen"
+                }
+                if (mainActionsRemaining > 0) {
+                    recordRoundEffectChoice(game, player, roundCard, legalChoices, chosen)
                 }
 
                 when (chosen) {
@@ -291,7 +299,38 @@ class CultivationBuildCoordinator(
                 firstEffect = roundCard.firstEffect.effect,
                 secondEffect = roundCard.secondEffect.effect,
                 firstExecutable = CultivationMainAction.RoundEffect1 in mains,
-                secondExecutable = CultivationMainAction.RoundEffect2 in mains
+                secondExecutable = CultivationMainAction.RoundEffect2 in mains,
+                firstBlockedBySharedResource = CultivationMainAction.RoundEffect1 !in mains &&
+                    blockedByEmptySharedResource(game, roundCard.firstEffect.effect),
+                secondBlockedBySharedResource = CultivationMainAction.RoundEffect2 !in mains &&
+                    blockedByEmptySharedResource(game, roundCard.secondEffect.effect)
+            )
+        )
+    }
+
+    private fun recordRoundEffectChoice(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        legalChoices: List<CultivationAction>,
+        chosen: CultivationAction
+    ) {
+        val legalMains = legalChoices.filterIsInstance<CultivationAction.Main>().map { mainActionKind(it.action) }
+        val selected = (chosen as? CultivationAction.Main)?.let { mainActionKind(it.action) }
+        game.chronicle.record(
+            Moment.RoundEffectChoice(
+                playerId = player.id,
+                phase = ChroniclePhase.CULTIVATION,
+                roundCardName = roundCard.name,
+                firstEffect = roundCard.firstEffect.effect,
+                secondEffect = roundCard.secondEffect.effect,
+                firstExecutable = MainActionKind.ROUND_EFFECT_1 in legalMains,
+                secondExecutable = MainActionKind.ROUND_EFFECT_2 in legalMains,
+                legalMainActions = legalMains,
+                selectedMainAction = selected,
+                sunlightHeld = player.tokens.sunlightCount,
+                battlesRemaining = battlesRemaining(game),
+                battleNext = battleIsNext(game)
             )
         )
     }

@@ -21,6 +21,9 @@ import dugsolutions.leaf.v35.error.InvalidBattleMainActionDecisionException
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.game.Game
+import dugsolutions.leaf.v35.game.round.blockedByEmptySharedResource
+import dugsolutions.leaf.v35.game.round.battlesRemaining
+import dugsolutions.leaf.v35.game.round.battleIsNext
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.game.operation.SunlightTokenResolver
@@ -144,6 +147,7 @@ class BattleActionCoordinator(
                 )
 
             validateChosenMainAction(player, chosen, legal, "first")
+            recordRoundEffectChoice(game, player, roundCard, legal, mainActionKind(chosen))
 
             game.chronicle.scoped(
                 mainActionMoment(
@@ -270,8 +274,16 @@ class BattleActionCoordinator(
                     }
                 }
 
+                val selectedRoundMain = when (chosen) {
+                    is BattleTurnAction.FinalMain -> mainActionKind(chosen.action)
+                    is BattleTurnAction.Support ->
+                        (chosen.action as? BattleSupportAction.UseSunlight)?.let { mainActionKind(it.mainAction) }
+                }
+                recordRoundEffectChoice(game, player, roundCard, finalMains, selectedRoundMain)
+
                 when (chosen) {
                     is BattleTurnAction.Support -> {
+
                         executeSupportAction(
                             game = game,
                             player = player,
@@ -371,7 +383,37 @@ class BattleActionCoordinator(
                 firstEffect = roundCard.firstEffect.effect,
                 secondEffect = roundCard.secondEffect.effect,
                 firstExecutable = BattleMainAction.RoundEffect1 in mains,
-                secondExecutable = BattleMainAction.RoundEffect2 in mains
+                secondExecutable = BattleMainAction.RoundEffect2 in mains,
+                firstBlockedBySharedResource = BattleMainAction.RoundEffect1 !in mains &&
+                    blockedByEmptySharedResource(game, roundCard.firstEffect.effect),
+                secondBlockedBySharedResource = BattleMainAction.RoundEffect2 !in mains &&
+                    blockedByEmptySharedResource(game, roundCard.secondEffect.effect)
+            )
+        )
+    }
+
+    private fun recordRoundEffectChoice(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        mains: List<BattleMainAction>,
+        selectedMainAction: MainActionKind?
+    ) {
+        val legalKinds = mains.map(::mainActionKind)
+        game.chronicle.record(
+            Moment.RoundEffectChoice(
+                playerId = player.id,
+                phase = ChroniclePhase.BATTLE,
+                roundCardName = roundCard.name,
+                firstEffect = roundCard.firstEffect.effect,
+                secondEffect = roundCard.secondEffect.effect,
+                firstExecutable = MainActionKind.ROUND_EFFECT_1 in legalKinds,
+                secondExecutable = MainActionKind.ROUND_EFFECT_2 in legalKinds,
+                legalMainActions = legalKinds,
+                selectedMainAction = selectedMainAction,
+                sunlightHeld = player.tokens.sunlightCount,
+                battlesRemaining = battlesRemaining(game),
+                battleNext = battleIsNext(game)
             )
         )
     }
@@ -667,13 +709,15 @@ class BattleActionCoordinator(
                         action = action.mainAction
                     )
                 ) {
-                    executeMainAction(
-                        game = game,
-                        player = player,
-                        roundCard = roundCard,
-                        battleState = battleState,
-                        action = action.mainAction
-                    )
+                    game.assetProvenance.withSunlightFunding(player.id) {
+                        executeMainAction(
+                            game = game,
+                            player = player,
+                            roundCard = roundCard,
+                            battleState = battleState,
+                            action = action.mainAction
+                        )
+                    }
                 }
                 val sunlightPlant = (action.mainAction as? BattleMainAction.ActivatePlant)?.card
                 game.chronicle.record(

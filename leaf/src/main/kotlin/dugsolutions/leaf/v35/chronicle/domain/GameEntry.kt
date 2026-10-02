@@ -86,6 +86,25 @@ sealed interface GameEntry {
         val secondEffect: GameEffect,
         val firstExecutable: Boolean,
         val secondExecutable: Boolean,
+        override val hierarchyDepth: Int = 0,
+        val firstBlockedBySharedResource: Boolean = false,
+        val secondBlockedBySharedResource: Boolean = false
+    ) : GameEntry
+
+    data class RoundEffectChoice(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val roundCardName: String,
+        val firstEffect: GameEffect,
+        val secondEffect: GameEffect,
+        val firstExecutable: Boolean,
+        val secondExecutable: Boolean,
+        val legalMainActions: List<MainActionKind>,
+        val selectedMainAction: MainActionKind?,
+        val sunlightHeld: Int,
+        val battlesRemaining: Int,
+        val battleNext: Boolean,
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

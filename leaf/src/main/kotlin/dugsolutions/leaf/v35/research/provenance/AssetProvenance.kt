@@ -34,7 +34,10 @@ data class ImmediateDieEffectProvenance(
     val before: Int,
     val after: Int,
     val magnitude: Int,
+    val sunlightFunded: Boolean = false,
     var placedInBattle: Boolean = false,
+    var observedInResolvedStrike: Boolean = false,
+    var contributedToResolvedStrike: Boolean = false,
     var battleRow: StrikeRow? = null,
     var contributedToWinningStrike: Boolean = false,
     var individuallyWinnerDecisive: Boolean = false,
@@ -48,6 +51,7 @@ data class ImmediateDieEffectProvenance(
  */
 class AssetProvenance {
     private val ids = IdentityHashMap<Die, Long>()
+    private var sunlightFundingPlayerId: PlayerId? = null
     private var nextId = 1L
     private fun id(die: Die): Long = ids.getOrPut(die) { nextId++ }
 
@@ -58,6 +62,16 @@ class AssetProvenance {
     val immediateDieEffects: List<ImmediateDieEffectProvenance> get() = _immediateDieEffects.toList()
 
     fun assetId(die: Die): Long? = ids[die]
+
+    fun <T> withSunlightFunding(playerId: PlayerId, block: () -> T): T {
+        val previous = sunlightFundingPlayerId
+        sunlightFundingPlayerId = playerId
+        return try {
+            block()
+        } finally {
+            sunlightFundingPlayerId = previous
+        }
+    }
 
     fun recordForgetMeNot(player: Player, die: Die, sourceCard: String) {
         // Without intervention, every remaining Supply die is drawn before Discard
@@ -90,7 +104,8 @@ class AssetProvenance {
         _immediateDieEffects += ImmediateDieEffectProvenance(
             assetId = id(die), playerId = player.id, sourceCard = sourceCard,
             effect = effect, dieSides = die.sides, before = before, after = after,
-            magnitude = after - before
+            magnitude = after - before,
+            sunlightFunded = sunlightFundingPlayerId == player.id
         )
     }
 
@@ -120,6 +135,8 @@ class AssetProvenance {
                 it.associatedBattleVp = contribution.associatedBattleVp
             }
             _immediateDieEffects.filter { it.playerId == contribution.playerId && it.assetId == assetId }.forEach {
+                it.observedInResolvedStrike = true
+                it.contributedToResolvedStrike = contribution.contributesValue
                 it.contributedToWinningStrike = contribution.associatedBattleVp > 0 && contribution.contributesValue
                 it.individuallyWinnerDecisive = contribution.individuallyWinnerDecisive
                 it.individuallyWoundDecisive = contribution.individuallyWoundDecisive

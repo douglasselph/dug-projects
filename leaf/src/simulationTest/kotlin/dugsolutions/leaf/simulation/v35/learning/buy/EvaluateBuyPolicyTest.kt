@@ -164,6 +164,76 @@ class EvaluateBuyPolicyTest {
         assertEquals("95", o.roundLabel)
     }
 
+    @Test fun `round effect choice records declines scarcity and effective Sunlight context`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.RoundRevealed(1, 1, "Resource_Sunlight_Test", RoundCardType.CULTIVATION, GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.GAIN_ONE_WISP, 0),
+            GameEntry.RoundEffectOpportunity(
+                sequence = 2, playerId = p, phase = ChroniclePhase.CULTIVATION,
+                roundCardName = "Resource_Sunlight_Test", firstEffect = GameEffect.GAIN_SUNLIGHT_TOKEN,
+                secondEffect = GameEffect.GAIN_ONE_WISP, firstExecutable = true, secondExecutable = false,
+                hierarchyDepth = 0, secondBlockedBySharedResource = true
+            ),
+            GameEntry.RoundEffectChoice(
+                sequence = 3, playerId = p, phase = ChroniclePhase.CULTIVATION,
+                roundCardName = "Resource_Sunlight_Test", firstEffect = GameEffect.GAIN_SUNLIGHT_TOKEN,
+                secondEffect = GameEffect.GAIN_ONE_WISP, firstExecutable = true, secondExecutable = false,
+                legalMainActions = listOf(MainActionKind.DRAW, MainActionKind.ROUND_EFFECT_1),
+                selectedMainAction = MainActionKind.DRAW, sunlightHeld = 1, battlesRemaining = 2, battleNext = true,
+                hierarchyDepth = 0
+            ),
+            GameEntry.FinalScore(4, p, 12, 4, 0, 16, 3, hierarchyDepth = 0),
+            GameEntry.FinalWinners(5, listOf(p), 0)
+        )
+        val a = EffectResourceAccumulator()
+
+        a.addGame(entries, p)
+
+        val sunlight = "Resource_Sunlight_Test / Effect 1 / GAIN_SUNLIGHT_TOKEN"
+        val wisp = "Resource_Sunlight_Test / Effect 2 / GAIN_ONE_WISP"
+        assertEquals(1L, a.roundEffectExposures[sunlight])
+        assertEquals(1L, a.roundEffectOpportunities[sunlight])
+        assertEquals(1L, a.roundEffectDeclines[sunlight])
+        assertEquals(1L, a.roundEffectIllegal[wisp])
+        assertEquals(1L, a.roundEffectResourceBlocked[wisp])
+        assertEquals(1L, a.sunlightGainChoiceOpportunities)
+        assertEquals(1L, a.sunlightGainChoiceDeclines)
+        assertEquals(1L, a.sunlightChoicesByHeld[1])
+        assertEquals(1L, a.sunlightChoicesByBattlesRemaining[2])
+        assertEquals(1L, a.sunlightChoicesByBattleNext[true])
+        assertEquals(1L, a.sunlightDeclineSelections[MainActionKind.DRAW.name])
+        assertEquals(16L, a.sunlightDeclineFinalVp)
+        assertEquals(1.0, a.sunlightDeclineWinShare)
+    }
+
+    @Test fun `round effect selected use remains distinct from legal declines`() {
+        val p = PlayerId(1)
+        val entries = listOf(
+            GameEntry.RoundRevealed(1, 1, "Resource_Sunlight_Test", RoundCardType.CULTIVATION, GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.GAIN_ONE_WISP, 0),
+            GameEntry.RoundEffectOpportunity(2, p, ChroniclePhase.CULTIVATION, "Resource_Sunlight_Test", GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.GAIN_ONE_WISP, true, true, 0),
+            GameEntry.RoundEffectChoice(
+                3, p, ChroniclePhase.CULTIVATION, "Resource_Sunlight_Test",
+                GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.GAIN_ONE_WISP, true, true,
+                listOf(MainActionKind.ROUND_EFFECT_1, MainActionKind.ROUND_EFFECT_2),
+                MainActionKind.ROUND_EFFECT_1, 0, 3, false, 0
+            ),
+            GameEntry.MainAction(4, p, ChroniclePhase.CULTIVATION, MainActionKind.ROUND_EFFECT_1, 1, null, null, 0),
+            GameEntry.FinalScore(5, p, 10, 4, 0, 14, 2, hierarchyDepth = 0),
+            GameEntry.FinalWinners(6, listOf(p), 0)
+        )
+        val a = EffectResourceAccumulator()
+
+        a.addGame(entries, p)
+
+        val sunlight = "Resource_Sunlight_Test / Effect 1 / GAIN_SUNLIGHT_TOKEN"
+        val other = "Resource_Sunlight_Test / Effect 2 / GAIN_ONE_WISP"
+        assertEquals(1L, a.roundEffectUses[sunlight])
+        assertEquals(null, a.roundEffectDeclines[sunlight])
+        assertEquals(1L, a.roundEffectDeclines[other])
+        assertEquals(1L, a.sunlightGainChoiceUses)
+        assertEquals(0L, a.sunlightGainChoiceDeclines)
+    }
+
     @Test fun `round exposure opportunities and use remain distinct`() {
         val p = PlayerId(1)
         val entries = listOf(
