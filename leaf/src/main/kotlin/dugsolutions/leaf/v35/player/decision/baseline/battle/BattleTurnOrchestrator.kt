@@ -94,8 +94,12 @@ class BattleTurnOrchestrator(
         legalSupports: Collection<BattleSupportAction>
     ): Boolean {
         if (support is BattleSupportAction.UseSunlight) {
-            val extraMain = BattleMainPriority.score(context, roundCard, support.mainAction, cardScorers)
-            return extraMain.total >= SUNLIGHT_PRESERVE_SCORE
+            return SunlightBattleSpendingValue.observe(
+                context = context,
+                roundCard = roundCard,
+                action = support.mainAction,
+                cardScorers = cardScorers
+            ).worthwhile
         }
 
         directAnalyzer(context, support)?.let { return it.individuallyWorthwhile }
@@ -135,8 +139,4 @@ class BattleTurnOrchestrator(
             is BattleSupportAction.Shared -> support.action is SupportAction.UseButterfly
         }
 
-    private companion object {
-        /** Preserve Sunlight unless an extra Main Action has ordinary clear value. */
-        const val SUNLIGHT_PRESERVE_SCORE: Int = 55
-    }
 }

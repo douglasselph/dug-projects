@@ -38,8 +38,12 @@ class BattleSupportPriority(
         legalSupports: Collection<BattleSupportAction>
     ): PriorityScore {
         if (action is BattleSupportAction.UseSunlight) {
-            return BattleMainPriority.score(context, roundCard, action.mainAction, cardScorers)
-                .adjusted(-55, "Preserve banked Sunlight unless extra Main is clearly worthwhile")
+            return SunlightBattleSpendingValue.score(
+                context = context,
+                roundCard = roundCard,
+                action = action.mainAction,
+                cardScorers = cardScorers
+            )
         }
         val direct = directAnalyzer(context, action)
         if (direct != null) return scoreDirect(direct)

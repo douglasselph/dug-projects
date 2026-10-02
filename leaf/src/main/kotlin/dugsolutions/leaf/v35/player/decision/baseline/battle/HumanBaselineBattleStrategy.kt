@@ -130,7 +130,19 @@ class HumanBaselineBattleStrategy(
                     is BattleTurnAction.FinalMain -> mainTags(request, choice.action)
                     is BattleTurnAction.Support -> supportPriority.tags(choice.action)
                 }
-                DecisionCandidate(choice, score, tags)
+                val observations = when (choice) {
+                    is BattleTurnAction.Support -> {
+                        val sunlight = choice.action as? BattleSupportAction.UseSunlight
+                        if (sunlight == null) emptyMap() else SunlightBattleSpendingValue.observations(
+                            context = request.context,
+                            roundCard = request.roundCard,
+                            action = sunlight.mainAction,
+                            cardScorers = cardScorers
+                        )
+                    }
+                    is BattleTurnAction.FinalMain -> emptyMap()
+                }
+                DecisionCandidate(choice, score, tags, observations = observations)
             },
             influenceRegistry = influenceRegistry
         )

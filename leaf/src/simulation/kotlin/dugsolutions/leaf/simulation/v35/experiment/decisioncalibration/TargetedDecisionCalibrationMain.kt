@@ -15,9 +15,11 @@ import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
+import dugsolutions.leaf.simulation.v35.experiment.round.RoundExperimentResearchConfig
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
+import java.nio.file.Paths
 
 data class CalibrationOpportunity(
     val game: Int,
@@ -37,7 +39,10 @@ data class CalibrationOpportunity(
     val rejectedHighValueAlternatives: List<String>,
     val nearFutureDecision: String?,
     val battleContribution: String?,
-    val finalVp: Int?
+    val finalVp: Int?,
+    val fundedMainValue: Int? = null,
+    val sunlightPreservationValue: Int? = null,
+    val sunlightNetSupportValue: Int? = null
 )
 
 private data class TransplantTulipBattleSwapOpportunity(
@@ -105,7 +110,8 @@ private data class Options(
     val seed: Long,
     val strategySeed: Long,
     val counterfactual: Boolean,
-    val players: Int
+    val players: Int,
+    val roundOverridesPath: String?
 ) {
     companion object {
         fun parse(args: Array<String>): Options {
@@ -119,7 +125,8 @@ private data class Options(
                 seed = values["seed"]?.toLong() ?: 312_000L,
                 strategySeed = values["strategy-seed"]?.toLong() ?: 322_000L,
                 counterfactual = values["counterfactual"]?.toBooleanStrictOrNull() ?: false,
-                players = (values["players"]?.toInt() ?: 4).also { require(it in 2..4) { "--players must be 2, 3, or 4" } }
+                players = (values["players"]?.toInt() ?: 4).also { require(it in 2..4) { "--players must be 2, 3, or 4" } },
+                roundOverridesPath = values["round-overrides"]
             )
         }
     }
@@ -131,6 +138,11 @@ fun main(args: Array<String>) {
     try {
         val koin = app.koin
         loadCatalogs(koin.get(), koin.get(), koin.get(), koin.get(), koin.get(), koin.get())
+        val roundManager = koin.get<RoundCardManager>()
+        val roundResearch = RoundExperimentResearchConfig.resolve(
+            options.roundOverridesPath?.let(Paths::get),
+            roundManager.getAllCards().cards
+        )
         val plantManager = koin.get<PlantCardManager>()
         val plants = FirstGameDefault.PLANT_NAMES.map { name -> requireNotNull(plantManager.getCard(name)) }.toMutableList()
         val resolvedTarget = resolveTarget(options.target)
@@ -141,6 +153,9 @@ fun main(args: Array<String>) {
             plants[slot] = requestedPlant
         }
         if (options.counterfactual) {
+            require(options.roundOverridesPath == null) {
+                "--round-overrides is not supported with targeted counterfactual mode"
+            }
             println(runCounterfactual(options, plants, koin.get(), koin.get()))
             return
         }
@@ -156,7 +171,8 @@ fun main(args: Array<String>) {
                     roundSetup = GameRoundSetup.standard(),
                     seed = options.seed + sample,
                     strategySeed = options.strategySeed + sample,
-                    recordDecisionReasoning = true
+                    recordDecisionReasoning = true,
+                    roundValues = roundResearch.values
                 )
             )
             koin.get<GameRunner>().run(game)
@@ -164,6 +180,10 @@ fun main(args: Array<String>) {
             buySynergyRecords += extractBuySynergy(sample + 1, resolvedTarget, game.chronicle.entries)
             transplantTulipBattleSwaps += extractTransplantTulipBattleSwaps(sample + 1, resolvedTarget, game.chronicle.entries)
             oEdelweissDownstream += extractOEdelweissDownstream(sample + 1, resolvedTarget, game.chronicle.entries)
+        }
+        if (roundResearch.isActive) {
+            println(roundResearch.render(roundManager.getAllCards().cards))
+            println()
         }
         println(render(options, records, buySynergyRecords, transplantTulipBattleSwaps, oEdelweissDownstream))
     } finally { app.close() }
@@ -187,7 +207,12 @@ private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, g
     val reasoning = entries.filterIsInstance<GameEntry.DecisionReasoning>()
     val finalVp = entries.filterIsInstance<GameEntry.FinalScore>().associate { it.playerId.value to it.totalVp }
     return reasoning.mapIndexedNotNull { index, event ->
-        val targetAlt = event.alternatives.firstOrNull { matches(target, it.observations) } ?: return@mapIndexedNotNull null
+        val matchingAlternatives = event.alternatives.filter { matches(target, it.observations) }
+        val targetAlt = if (target.equals("sunlight-spend", true) || target.equals("sunlight-battle-spend", true)) {
+            matchingAlternatives.maxByOrNull { it.total }
+        } else {
+            matchingAlternatives.firstOrNull()
+        } ?: return@mapIndexedNotNull null
         val selected = event.alternatives.singleOrNull { it.selected }
         val next = reasoning.drop(index + 1).firstOrNull { it.playerId == event.playerId }
         val observations = targetAlt.observations
@@ -209,14 +234,17 @@ private fun extract(gameNumber: Int, target: String, entries: List<GameEntry>, g
             utilityComponents = targetAlt.adjustments.map { "${it.amount}:${it.reason}" },
             drawUtility = event.alternatives.firstOrNull { it.choiceLabel.contains("Draw") }?.total ?: observations["drawUtility"]?.toIntOrNull(),
             refreshAdjustment = targetAlt.adjustments.filter { it.reason.contains("Refresh") }.sumOf { it.amount },
-            preservationAdjustment = targetAlt.adjustments.filter { it.reason.contains("Preservation") }.sumOf { it.amount },
+            preservationAdjustment = targetAlt.adjustments.filter { it.reason.contains("preserv", ignoreCase = true) }.sumOf { it.amount },
             recycleAdjustment = targetAlt.adjustments.filter { it.reason.contains("recycle", true) || it.reason.contains("available", true) }.sumOf { it.amount },
             targetOrBranch = targetOrBranch,
             bucket = bucket(target, observations),
             rejectedHighValueAlternatives = event.alternatives.filter { !it.selected && it.total >= targetAlt.total - 10 }.sortedByDescending { it.total }.take(3).map { "${it.choiceLabel}=${it.total}" },
             nearFutureDecision = next?.choiceLabel,
             battleContribution = provenance,
-            finalVp = finalVp[event.playerId.value]
+            finalVp = finalVp[event.playerId.value],
+            fundedMainValue = observations["fundedMainValue"]?.toIntOrNull(),
+            sunlightPreservationValue = observations["sunlightPreservationValue"]?.toIntOrNull(),
+            sunlightNetSupportValue = observations["sunlightNetSupportValue"]?.toIntOrNull()
         )
     }
 }
@@ -303,10 +331,14 @@ private fun extractTransplantTulipBattleSwaps(
 
 private fun matches(target: String, observations: Map<String, String>): Boolean = when (target.lowercase()) {
     "mulch" -> observations["effect"] == GameEffect.MULCH_DIE_FROM_HAND.name
+    "sunlight-spend", "sunlight-battle-spend" ->
+        observations["decisionFamily"] == "sunlight-battle-spend"
     else -> observations["card"].equals(target, true) || observations["effect"].equals(target, true)
 }
 
 private fun bucket(target: String, o: Map<String, String>): String = when (target.lowercase()) {
+    "sunlight-spend", "sunlight-battle-spend" ->
+        "final=${o["finalBattle"] ?: "?"}|held=${o["sunlightHeld"] ?: "?"}|battles=${o["battlesRemaining"] ?: "?"}|main=${o["fundedMainAction"] ?: "?"}"
     "mulch" -> "roll=${o["targetDieValue"] ?: "?"}|sides=${o["targetDieSides"] ?: "?"}|battle=${o["battleNext"] ?: "?"}|upcoming=${o["upcomingDiceQuality"] ?: "?"}"
     "flower_17_02" -> "discard=D${o["targetDieSides"] ?: "?"}|recycle=${o["recycleDistance"] ?: "?"}|battle=${o["battleNext"] ?: "?"}|upcoming=${o["upcomingDiceQuality"] ?: "?"}"
     "vine_11_02", "flower_11_02" -> "next=${o["nextPhase"] ?: "?"}|synergy=${o["synergyPlants"] ?: "?"}|realizable=${o["realizableRaises"] ?: "?"}|headroom=${o["dieHeadroom"] ?: "?"}"
@@ -367,6 +399,9 @@ private fun render(
     appendLine("QUALIFYING OPPORTUNITIES (first 30)")
     records.take(30).forEach { r ->
         appendLine("g${r.game}/p${r.player} ${r.bucket} chosen=${r.chosen} target=${r.targetBaseUtility}->${r.targetFinalUtility} draw=${r.drawUtility} refresh=${r.refreshAdjustment} preserve=${r.preservationAdjustment} recycle=${r.recycleAdjustment} target=${r.targetOrBranch ?: "-"} selected=${r.selectedAction}")
+        if (r.fundedMainValue != null) {
+            appendLine("  Sunlight: fundedMain=${r.fundedMainValue} preservation=${r.sunlightPreservationValue} net=${r.sunlightNetSupportValue}")
+        }
         if (r.utilityComponents.isNotEmpty()) appendLine("  components: ${r.utilityComponents.joinToString()}")
         if (r.rejectedHighValueAlternatives.isNotEmpty()) appendLine("  close rejected: ${r.rejectedHighValueAlternatives.joinToString()}")
         appendLine("  next=${r.nearFutureDecision ?: "-"} battle=${r.battleContribution ?: "-"} finalVP=${r.finalVp ?: -1}")

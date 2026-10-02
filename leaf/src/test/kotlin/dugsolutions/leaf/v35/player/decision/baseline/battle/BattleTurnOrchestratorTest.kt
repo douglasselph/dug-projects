@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.player.decision.context.BattlePlayerRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.player.decision.context.GameProgressView
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardEffect
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -112,22 +113,80 @@ class BattleTurnOrchestratorTest {
         assertFalse(result.chooseSupport)
     }
 
+
+    @Test
+    fun `early Battle keeps last Sunlight for marginal extra Main`() {
+        val result = orchestrator(
+            context = context(actorTotal = 4, opponentTotal = 7, bees = 0, sunlight = 1, battlesRemaining = 3),
+            roundCard = round(),
+            legalChoices = listOf(
+                sunlight(BattleMainAction.RoundEffect1),
+                finalMain()
+            )
+        )
+
+        assertFalse(result.chooseSupport)
+    }
+
+    @Test
+    fun `surplus Sunlight allows marginal extra Main without sacrificing last reserve`() {
+        val result = orchestrator(
+            context = context(actorTotal = 4, opponentTotal = 7, bees = 0, sunlight = 2, battlesRemaining = 3),
+            roundCard = round(),
+            legalChoices = listOf(
+                sunlight(BattleMainAction.RoundEffect1),
+                finalMain()
+            )
+        )
+
+        assertTrue(result.chooseSupport)
+    }
+
+    @Test
+    fun `final Battle spends Sunlight on otherwise modest legal extra Main`() {
+        val weakRound = RoundCard(
+            quantity = 1,
+            name = "Battle_Final_Sunlight",
+            type = RoundCardType.BATTLE,
+            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            backImage = ""
+        )
+        val result = orchestrator(
+            context = context(actorTotal = 4, opponentTotal = 7, bees = 0, sunlight = 1, battlesRemaining = 1, finalBattle = true),
+            roundCard = weakRound,
+            legalChoices = listOf(
+                sunlight(BattleMainAction.RoundEffect1),
+                BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+            )
+        )
+
+        assertTrue(result.chooseSupport)
+    }
+
     private fun context(
         actorTotal: Int,
         opponentTotal: Int,
         bees: Int,
         worms: Int = 0,
-        beeValue: Int = Critter.BEE.baseValue
+        beeValue: Int = Critter.BEE.baseValue,
+        sunlight: Int = 1,
+        battlesRemaining: Int? = null,
+        finalBattle: Boolean = false
     ): DecisionContext =
         DecisionContext.EMPTY.copy(
             phase = RoundCardType.BATTLE,
+            progress = DecisionContext.EMPTY.progress.copy(
+                battleRoundsRemaining = battlesRemaining,
+                isFinalBattleRound = finalBattle
+            ),
             self = DecisionContext.EMPTY.self.copy(
                 board = DecisionContext.EMPTY.self.board.copy(
                     id = actor,
                     bees = bees,
                     worms = worms,
                     beeValue = beeValue,
-                    sunlight = 1
+                    sunlight = sunlight
                 )
             ),
             battle = BattleView(
