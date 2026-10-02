@@ -293,6 +293,8 @@ sealed interface GameEntry {
         val playerId: PlayerId,
         val action: MainActionKind,
         val plantCardId: Int? = null,
+        val plantName: String? = null,
+        val plantEffect: GameEffect? = null,
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 

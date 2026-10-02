@@ -826,7 +826,9 @@ object ChronicleTextRenderer {
 
             is GameEntry.SunlightMainAction ->
                 "${player(entry.playerId)} SUNLIGHT MAIN ${entry.action}" +
-                    (entry.plantCardId?.let { " plantCardId=$it" } ?: "")
+                    (entry.plantCardId?.let { " plantCardId=$it" } ?: "") +
+                    (entry.plantName?.let { " plant=$it" } ?: "") +
+                    (entry.plantEffect?.let { " effect=$it" } ?: "")
 
             is GameEntry.MulchStored ->
                 "${player(entry.playerId)} MULCH STORE ${entry.sides}=${entry.value} " +

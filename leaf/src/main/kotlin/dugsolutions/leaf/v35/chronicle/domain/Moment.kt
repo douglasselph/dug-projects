@@ -231,7 +231,9 @@ sealed interface Moment {
     data class SunlightMainAction(
         val playerId: PlayerId,
         val action: MainActionKind,
-        val plantCardId: Int? = null
+        val plantCardId: Int? = null,
+        val plantName: String? = null,
+        val plantEffect: GameEffect? = null
     ) : Moment
 
     /** A die committed to a Mulch token by an effect. */

@@ -150,8 +150,14 @@ internal fun evaluationGameConfig(
 )
 
 internal class EvalAccumulator(playerCount: Int = 4) {
-    var winShare=0.0; var vp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
+    var winShare=0.0; var vp=0L; var plantVp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
+    var sunlightGained=0L; var sunlightSpent=0L; var finalSunlight=0L
+    var sunlightSupportOpportunities=0L; var sunlightSupportUses=0L
+    var sunlightExtraMainActions=0L; var sunlightExtraDrawActions=0L; var sunlightExtraPlantActions=0L; var sunlightExtraRoundEffectActions=0L
+    var battleMainActions=0L; var battleSupportActions=0L; var battlePlantMainActions=0L
+    var maxSunlightExtraMainActionsPerGame=0; var maxBattleMainActionsPerGame=0; var maxBattleSupportActionsPerGame=0
+    val sunlightFundedPlants=sortedMapOf<String,Long>()
     val seatWins=DoubleArray(playerCount); val seatGames=IntArray(playerCount)
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
     val buyShape = BuyShapeAccumulator()
@@ -170,7 +176,39 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
     ) {
         val p=game.summary.players.single { it.seat==seat }
-        winShare+=p.winShare; vp+=p.totalVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
+        winShare+=p.winShare; vp+=p.totalVp; plantVp+=p.plantVp; plants+=p.finalPlantCount; plantCost+=p.finalPlantPrintedCost; dice+=p.finalDiceCount; dicePower+=p.finalDicePower; battleVp+=p.battleStrikeVp; wounds+=p.woundsTaken
+        sunlightGained += p.sunlightGained
+        sunlightSpent += p.sunlightSpent
+        finalSunlight += p.finalSunlightCount
+        sunlightSupportOpportunities += p.sunlightSupportOpportunities
+        sunlightSupportUses += p.sunlightSupportUses
+        sunlightExtraMainActions += p.sunlightExtraMainActions
+        sunlightExtraDrawActions += p.sunlightExtraDrawActions
+        sunlightExtraPlantActions += p.sunlightExtraPlantActions
+        sunlightExtraRoundEffectActions += p.sunlightExtraRoundEffectActions
+        maxSunlightExtraMainActionsPerGame = maxOf(maxSunlightExtraMainActionsPerGame, p.sunlightExtraMainActions)
+        val playerBattleMains = game.entries.filterIsInstance<GameEntry.MainAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
+        val playerBattleSupports = game.entries.filterIsInstance<GameEntry.SupportAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
+        val playerBattlePlantMains = game.entries.filterIsInstance<GameEntry.MainAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE && it.action == MainActionKind.ACTIVATE_PLANT }
+        battleMainActions += playerBattleMains
+        battleSupportActions += playerBattleSupports
+        battlePlantMainActions += playerBattlePlantMains
+        maxBattleMainActionsPerGame = maxOf(maxBattleMainActionsPerGame, playerBattleMains)
+        maxBattleSupportActionsPerGame = maxOf(maxBattleSupportActionsPerGame, playerBattleSupports)
+        game.entries.filterIsInstance<GameEntry.SunlightMainAction>()
+            .filter { it.playerId == p.playerId && it.action == MainActionKind.ACTIVATE_PLANT }
+            .forEach { entry ->
+                val plantName = entry.plantName
+                val plantEffect = entry.plantEffect
+                val label = when {
+                    plantName != null && plantEffect != null -> "$plantName [$plantEffect]"
+                    plantName != null -> plantName
+                    plantEffect != null -> plantEffect.name
+                    entry.plantCardId != null -> "plantCardId=${entry.plantCardId}"
+                    else -> "<unknown Plant>"
+                }
+                sunlightFundedPlants[label] = (sunlightFundedPlants[label] ?: 0L) + 1L
+            }
         seatWins[seat]+=p.winShare; seatGames[seat]++
         mapOf("D4" to p.ownedDiceSignature.d4,"D6" to p.ownedDiceSignature.d6,"D8" to p.ownedDiceSignature.d8,"D10" to p.ownedDiceSignature.d10,"D12" to p.ownedDiceSignature.d12,"D20" to p.ownedDiceSignature.d20).forEach { (k,v) -> finalDiceSizes[k]=(finalDiceSizes[k]?:0)+v }
         buyShape.addGame(game.entries, p.playerId)
@@ -915,6 +953,7 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println("  Avg final dice:     control=${avg(c.dice)} learned=${avg(l.dice)}")
     println("  Avg die-side power: control=${avg(c.dicePower)} learned=${avg(l.dicePower)}")
     println("  Avg sides / die:    control=${"%.2f".format(c.dicePower.toDouble()/c.dice)} learned=${"%.2f".format(l.dicePower.toDouble()/l.dice)}")
+    println("  Avg Plant VP:       control=${avg(c.plantVp)} learned=${avg(l.plantVp)}")
     println("  Avg Battle VP:      control=${avg(c.battleVp)} learned=${avg(l.battleVp)}")
     println("  Avg Wounds:         control=${avg(c.wounds)} learned=${avg(l.wounds)}")
     println("  Avg final dice by size:")
@@ -922,6 +961,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println()
     println("Affected-role win share by physical seat")
     for(s in 0 until o.players) { val n=c.seatGames[s]; println("  Seat ${s+1} (n=$n): control=${pct(c.seatWins[s]/n)} learned=${pct(l.seatWins[s]/n)} delta=${signedPct(l.seatWins[s]/n-c.seatWins[s]/n)}") }
+    println()
+    printSunlightBattleResearch(o, c, l)
     println()
     println("Buy behavior (affected role; totals across ${o.games} games)")
     println("  Plant purchases: control=${c.plantPurchases} learned=${l.plantPurchases}; avg/game=${avg(c.plantPurchases)} -> ${avg(l.plantPurchases)}")
@@ -951,6 +992,31 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     println()
     println("Interpretation: this is held-out evidence for this policy with ${o.groveInterpretation()} and ${o.roundLabel}, not evidence for other Grove constraints or round structures.")
     println("Note: a zero-purchase Buy phase means the player made no recorded purchase in that phase; the Chronicle does not distinguish an explicit Done choice from having no legal purchase.")
+}
+
+private fun printSunlightBattleResearch(o: EvalOptions, c: EvalAccumulator, l: EvalAccumulator) {
+    fun avg(value: Long): String = "%.2f".format(value.toDouble() / o.games)
+    println("Sunlight / Battle action research (affected role)")
+    println("  Sunlight gained/game:              control=${avg(c.sunlightGained)} learned=${avg(l.sunlightGained)}")
+    println("  Sunlight spent/game:               control=${avg(c.sunlightSpent)} learned=${avg(l.sunlightSpent)}")
+    println("  Sunlight retained at game end:     control=${avg(c.finalSunlight)} learned=${avg(l.finalSunlight)}")
+    println("  Sunlight Support opportunities/game: control=${avg(c.sunlightSupportOpportunities)} learned=${avg(l.sunlightSupportOpportunities)}")
+    println("  Sunlight Support uses/game:        control=${avg(c.sunlightSupportUses)} learned=${avg(l.sunlightSupportUses)}")
+    println("  Extra Main Actions/game:           control=${avg(c.sunlightExtraMainActions)} learned=${avg(l.sunlightExtraMainActions)}")
+    println("    Draw:                            control=${avg(c.sunlightExtraDrawActions)} learned=${avg(l.sunlightExtraDrawActions)}")
+    println("    Plant:                           control=${avg(c.sunlightExtraPlantActions)} learned=${avg(l.sunlightExtraPlantActions)}")
+    println("    Round effect:                    control=${avg(c.sunlightExtraRoundEffectActions)} learned=${avg(l.sunlightExtraRoundEffectActions)}")
+    println("  Total Battle Main Actions/game:    control=${avg(c.battleMainActions)} learned=${avg(l.battleMainActions)}")
+    println("  Total Battle Support Actions/game: control=${avg(c.battleSupportActions)} learned=${avg(l.battleSupportActions)}")
+    println("  Battle Plant Main Actions/game:    control=${avg(c.battlePlantMainActions)} learned=${avg(l.battlePlantMainActions)}")
+    println("  Max in one affected-role game:")
+    println("    Sunlight extra Mains: control=${c.maxSunlightExtraMainActionsPerGame} learned=${l.maxSunlightExtraMainActionsPerGame}")
+    println("    Battle Main Actions: control=${c.maxBattleMainActionsPerGame} learned=${l.maxBattleMainActionsPerGame}")
+    println("    Battle Support Actions: control=${c.maxBattleSupportActionsPerGame} learned=${l.maxBattleSupportActionsPerGame}")
+    println("  Sunlight-funded Plant activations (totals):")
+    val labels=(c.sunlightFundedPlants.keys+l.sunlightFundedPlants.keys).toSortedSet()
+    if(labels.isEmpty()) println("    <none>")
+    else labels.forEach { label -> println("    $label: control=${c.sunlightFundedPlants[label]?:0} learned=${l.sunlightFundedPlants[label]?:0}") }
 }
 
 private fun <K:Comparable<K>> printCounts(title:String,c:Map<K,Long>,l:Map<K,Long>) { println("  $title:"); (c.keys+l.keys).toSortedSet().forEach { k -> println("    $k: control=${c[k]?:0} learned=${l[k]?:0}") } }

@@ -1,0 +1,4 @@
+round_card,effect_slot,effect
+Resource_Sunlight_Compost,1,GAIN_SUNLIGHT_TOKEN
+Resource_Sunlight_Mulch,1,GAIN_SUNLIGHT_TOKEN
+Resource_Sunlight_Water,1,GAIN_SUNLIGHT_TOKEN

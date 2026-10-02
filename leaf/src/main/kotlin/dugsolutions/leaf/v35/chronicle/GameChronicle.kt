@@ -265,7 +265,8 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.legalExtraMainActions, hierarchyDepth
             )
             is Moment.SunlightMainAction -> GameEntry.SunlightMainAction(
-                sequence, moment.playerId, moment.action, moment.plantCardId, hierarchyDepth
+                sequence, moment.playerId, moment.action, moment.plantCardId,
+                moment.plantName, moment.plantEffect, hierarchyDepth
             )
             is Moment.MulchStored -> GameEntry.MulchStored(
                 sequence, moment.playerId, moment.sides, moment.value, moment.fromDiscard,

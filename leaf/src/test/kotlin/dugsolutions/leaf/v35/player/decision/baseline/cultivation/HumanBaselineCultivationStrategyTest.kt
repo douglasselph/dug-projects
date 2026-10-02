@@ -532,6 +532,28 @@ class HumanBaselineCultivationStrategyTest {
         }
 
         @Test
+        fun `first Sunlight token can beat a weak Draw while a healthy reserve does not`() {
+            val round = roundWithEffects(GameEffect.GAIN_SUNLIGHT_TOKEN)
+            val choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            )
+            val firstToken = choose(
+                round = round,
+                context = context(supply = listOf(DieView(0, 4, 1)), sunlight = 0),
+                choices = choices
+            )
+            val healthyReserve = choose(
+                round = round,
+                context = context(supply = listOf(DieView(0, 4, 1)), sunlight = 2),
+                choices = choices
+            )
+
+            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(firstToken).action)
+            assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(healthyReserve).action)
+        }
+
+        @Test
         fun `Root Well influence can make Water acquisition beat a strong Draw`() {
             val plainContext = context(
                 supply = listOf(DieView(0, 20, 1)),
@@ -746,6 +768,7 @@ class HumanBaselineCultivationStrategyTest {
         bees: Int = 0,
         worms: Int = 0,
         water: Int = 0,
+        sunlight: Int = 0,
         creatureViews: List<CreatureCardView> = emptyList(),
         graftBed: Map<DieSides, Int> = emptyMap()
     ): DecisionContext = DecisionContext.EMPTY.copy(
@@ -758,6 +781,7 @@ class HumanBaselineCultivationStrategyTest {
                 bees = bees,
                 worms = worms,
                 water = water,
+                sunlight = sunlight,
                 creature = creatureViews
             )
         ),

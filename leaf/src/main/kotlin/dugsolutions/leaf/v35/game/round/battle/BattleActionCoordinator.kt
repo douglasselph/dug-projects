@@ -675,11 +675,14 @@ class BattleActionCoordinator(
                         action = action.mainAction
                     )
                 }
+                val sunlightPlant = (action.mainAction as? BattleMainAction.ActivatePlant)?.card
                 game.chronicle.record(
                     Moment.SunlightMainAction(
                         playerId = player.id,
                         action = mainActionKind(action.mainAction),
-                        plantCardId = (action.mainAction as? BattleMainAction.ActivatePlant)?.card?.id?.value
+                        plantCardId = sunlightPlant?.id?.value,
+                        plantName = sunlightPlant?.card?.name,
+                        plantEffect = sunlightPlant?.card?.let(game.config.plantValues::effectFor)
                     )
                 )
             }

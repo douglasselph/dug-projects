@@ -539,6 +539,7 @@ class HumanBaselineCultivationStrategy(
                 normalPurchasingPower = policy.normalPurchasingPower(context)
             )
             GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
+            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context)
             GameEffect.RAISE_DIE_PLUS_3 -> SunlightPriority.score(
                 context = context,
                 normalPurchasingPower = policy.normalPurchasingPower(context)
