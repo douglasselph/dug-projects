@@ -421,3 +421,22 @@ tasks.register<JavaExec>("runEvaluateCultivationMainPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.cultivation.EvaluateCultivationMainPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// Evolves only high-level Battle Step-5 Support/final-main selection.
+tasks.register<JavaExec>("runTrainBattleSupportPolicy") {
+    description = "Evolves the learned Battle Support policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.battle.TrainBattleSupportPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluateBattleSupportPolicy") {
+    description = "Evaluates a learned Battle Support policy against Human Battle Support on matched held-out games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.battle.EvaluateBattleSupportPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
