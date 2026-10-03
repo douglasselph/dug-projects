@@ -32,6 +32,11 @@ class HumanBaselineCardScorerRegistry(
                 put(GameEffect.GAIN_OR_REFRESH_RED_BUTTERFLY, pollinating)
                 put(GameEffect.GAIN_OR_REFRESH_YELLOW_BUTTERFLY, pollinating)
             }
+            val recall = listOfNotNull(byName["Root_07_04"]).distinct()
+            if (recall.isNotEmpty()) {
+                put(GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
+                put(GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
+            }
         }
     }
 

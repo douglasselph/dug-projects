@@ -105,8 +105,19 @@ object CardScoringHelpers {
                 val sacrifice = dice.filter { it.value >= 2 }.minOfOrNull { it.value - 1 } ?: 10
                 score = score.adjusted(ones * 8 - sacrifice * 3, "VP from existing 1s versus sacrificed die value")
             }
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> {
-                val improvement = dice.sumOf { max(0.0, DieValueHeuristics.expectedRerollGain(it)).roundToInt() }
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> {
+                val cap = when (effect) {
+                    GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> 2
+                    GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> 3
+                    else -> Int.MAX_VALUE
+                }
+                val improvement = dice
+                    .map { max(0.0, DieValueHeuristics.expectedRerollGain(it)).roundToInt() }
+                    .sortedDescending()
+                    .take(cap)
+                    .sum()
                 score = score.adjusted(improvement * 3, "Poor dice can be replaced")
             }
             GameEffect.UPGRADE_DIE_AND_USE_NOW -> {
@@ -489,6 +500,8 @@ object CardScoringHelpers {
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 2)
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS -> if (die.value <= 2) max(1, die.sides / 2) else -8
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW -> DieValueHeuristics.expectedRerollGain(die.sides, die.value).roundToInt()
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> DieValueHeuristics.flipGain(die.sides, die.value)
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> -(die.value - 1)

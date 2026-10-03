@@ -43,7 +43,9 @@ class DrawEffectHandler(
         request: GameEffectRequest
     ): Boolean =
         when (request.effect) {
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION -> true
                     GameEffectPhase.BATTLE -> request.actor.dice.hand.isNotEmpty()
@@ -126,11 +128,18 @@ class DrawEffectHandler(
         val rollResolver = rollResolver(request, executor)
 
         when (request.effect) {
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION -> rootRecallCultivation(
                         request = request,
-                        rollResolver = rollResolver
+                        rollResolver = rollResolver,
+                        maxDiscard = when (request.effect) {
+                            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> 2
+                            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> 3
+                            else -> Int.MAX_VALUE
+                        }
                     )
 
                     GameEffectPhase.BATTLE -> {
@@ -694,21 +703,23 @@ class DrawEffectHandler(
 
     private fun rootRecallCultivation(
         request: GameEffectRequest,
-        rollResolver: RollResolver
+        rollResolver: RollResolver,
+        maxDiscard: Int
     ) {
         val legalChoices = handChoices(request.actor)
+        val maxChoices = minOf(maxDiscard, legalChoices.size)
         val chosen = request.actor.decisions.effect.chooseDice(
             ChooseEffectDiceRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,
                 minChoices = 0,
-                maxChoices = legalChoices.size,
+                maxChoices = maxChoices,
                 context = request.decisionContext()
             )
         )
 
-        decisionCheck(chosen.selected.size <= legalChoices.size) {
-            "Root Recall selected too many dice: ${chosen.selected}"
+        decisionCheck(chosen.selected.size <= maxChoices) {
+            "Root Recall selected too many dice for ${request.effect}: ${chosen.selected}; max=$maxChoices"
         }
         decisionCheck(chosen.selected.all { it in legalChoices }) {
             "EffectStrategy returned illegal Root Recall dice: " +

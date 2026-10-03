@@ -74,6 +74,66 @@ class TargetedDrawEffectTest {
         assertEquals(listOf(die), actor.dice.hand)
     }
 
+
+    @Test
+    fun rootRecallCap2_exposesAtMostTwoCultivationDice() {
+        val strategy = CapturingRecallStrategy()
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(FixedEffectDie(4, 1), FixedEffectDie(6, 2), FixedEffectDie(8, 3), FixedEffectDie(10, 4)),
+            effectStrategy = strategy
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        handler.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+            ),
+            nested
+        )
+
+        assertEquals(2, strategy.maxChoices)
+        assertEquals(2, strategy.selectedCount)
+    }
+
+    @Test
+    fun rootRecallCap3_exposesAtMostThreeCultivationDice() {
+        val strategy = CapturingRecallStrategy()
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(FixedEffectDie(4, 1), FixedEffectDie(6, 2), FixedEffectDie(8, 3), FixedEffectDie(10, 4)),
+            effectStrategy = strategy
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        handler.execute(
+            EffectTestFixture.request(
+                game,
+                actor,
+                GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+            ),
+            nested
+        )
+
+        assertEquals(3, strategy.maxChoices)
+        assertEquals(3, strategy.selectedCount)
+    }
+
+    private class CapturingRecallStrategy : EffectStrategy {
+        var maxChoices: Int = -1
+        var selectedCount: Int = -1
+
+        override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice = request.legalChoices.first()
+
+        override fun chooseDice(request: ChooseEffectDiceRequest): EffectDiceChoice {
+            maxChoices = request.maxChoices
+            selectedCount = request.maxChoices
+            return EffectDiceChoice(request.legalChoices.take(request.maxChoices))
+        }
+    }
+
     private class RecallSubsetStrategy : EffectStrategy {
         var seenChoices: List<EffectDieChoice> = emptyList()
 

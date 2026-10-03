@@ -697,7 +697,9 @@ class HumanBaselineEffectStrategy(
         if (choice.selected.isEmpty()) return PriorityScore(50).adjusted(0, "Choose no dice")
 
         return when (effect) {
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> {
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE -> {
                 val expectedGain = choice.selected.sumOf {
                     DieValueHeuristics.expectedRerollGain(it.sides, it.value)
                 }
@@ -846,7 +848,9 @@ class HumanBaselineEffectStrategy(
 
         val SIMPLE_REROLL_OWN_DIE_BATTLE_EFFECTS = setOf(
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
         )
 
         val DISCARD_DRAW_SOURCE_BATTLE_EFFECTS = setOf(
@@ -965,7 +969,9 @@ class HumanBaselineEffectStrategy(
                     minimum = 3
                 )
 
-            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
                 DieValueHeuristics.expectedRerollGain(choice.sides, choice.value)
 
             else -> return null
