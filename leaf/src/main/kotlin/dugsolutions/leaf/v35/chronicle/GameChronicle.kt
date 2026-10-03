@@ -198,6 +198,13 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.effect, moment.sourceKind,
                 moment.sourceName, moment.phase, hierarchyDepth
             )
+            is Moment.RootAndScootWithdrawal -> GameEntry.RootAndScootWithdrawal(
+                sequence = sequence,
+                playerId = moment.playerId,
+                row = moment.row,
+                rowSnapshot = copyGridRow(moment.rowSnapshot),
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.DecisionReasoning -> GameEntry.DecisionReasoning(
                 sequence = sequence,
                 playerId = moment.playerId,

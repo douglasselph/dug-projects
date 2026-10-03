@@ -130,6 +130,17 @@ sealed interface Moment {
         val phase: ChroniclePhase
     ) : Moment
 
+    /**
+     * Immutable pre-withdrawal Strike snapshot for Root & Scoot research.
+     * Captured after the printed +1 raise resolves but before any dice/Critters
+     * are removed or the actor is marked withdrawn.
+     */
+    data class RootAndScootWithdrawal(
+        val playerId: PlayerId,
+        val row: StrikeRow,
+        val rowSnapshot: BattleGridRowSnapshot
+    ) : Moment
+
     /** Optional Human Baseline/debug score explanation for the selected choice. */
     data class DecisionReasoning(
         val playerId: PlayerId,

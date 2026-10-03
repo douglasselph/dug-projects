@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
 import dugsolutions.leaf.v35.chronicle.domain.Moment
+import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
@@ -268,6 +269,18 @@ class DieValueEffectHandler : EffectHandler {
             request = request,
             legalChoices = actorParticipatingStrikeRows(request)
         )
+        request.game.chronicle.record(
+            Moment.RootAndScootWithdrawal(
+                playerId = request.actor.id,
+                row = row,
+                rowSnapshot = BattleGridSnapshot.row(
+                    battleState = battleState,
+                    row = row,
+                    provenance = request.game.assetProvenance
+                )
+            )
+        )
+
         val square = battleState.grid.square(request.actor.id, row)
         val diceToDiscard = square.dice
         val crittersToReturn = square.critters

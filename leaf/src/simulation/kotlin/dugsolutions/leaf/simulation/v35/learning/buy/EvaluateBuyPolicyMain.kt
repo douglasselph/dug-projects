@@ -217,6 +217,62 @@ internal class PlantActivationByPhaseAccumulator {
     }
 }
 
+
+internal class RootAndScootResearchAccumulator {
+    var withdrawals = 0L
+    var wouldWin = 0L
+    var wouldEveryoneTie = 0L
+    var wouldLoseNoWound = 0L
+    var wouldBeWounded = 0L
+    var woundVpDeniedPerWinner = 0L
+    var diceAbandoned = 0L
+    var dieValueAbandoned = 0L
+    var crittersAbandoned = 0L
+    var critterValueAbandoned = 0L
+    var actualStrikeHadWinner = 0L
+    var actualWinnerChangedFromCounterfactual = 0L
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
+        val withdrawalsForPlayer = entries.filterIsInstance<GameEntry.RootAndScootWithdrawal>()
+            .filter { it.playerId == playerId }
+        withdrawalsForPlayer.forEach { withdrawal ->
+            withdrawals++
+            val active = withdrawal.rowSnapshot.squares.filterNot { it.withdrawn }
+            val actor = active.singleOrNull { it.playerId == playerId } ?: return@forEach
+            val high = active.maxOfOrNull { it.total } ?: 0
+            val highSquares = active.filter { it.total == high }
+            val everyoneTied = active.size > 1 && highSquares.size == active.size
+            val counterfactualWinners = if (everyoneTied) emptyList() else highSquares.map { it.playerId }
+
+            when {
+                playerId in counterfactualWinners -> wouldWin++
+                everyoneTied -> wouldEveryoneTie++
+                high - actor.total >= 5 -> {
+                    wouldBeWounded++
+                    woundVpDeniedPerWinner += counterfactualWinners.size
+                }
+                else -> wouldLoseNoWound++
+            }
+
+            diceAbandoned += actor.dice.size
+            dieValueAbandoned += actor.dice.sumOf { it.value }
+            crittersAbandoned += actor.critters.size
+            critterValueAbandoned += actor.critters.sumOf { it.value }
+
+            val actual = entries.asSequence()
+                .dropWhile { it.sequence <= withdrawal.sequence }
+                .filterIsInstance<GameEntry.StrikeResolved>()
+                .firstOrNull { it.row == withdrawal.row }
+            if (actual != null) {
+                if (actual.winnerIds.isNotEmpty()) actualStrikeHadWinner++
+                if (actual.winnerIds.toSet() != counterfactualWinners.toSet()) {
+                    actualWinnerChangedFromCounterfactual++
+                }
+            }
+        }
+    }
+}
+
 internal class EvalAccumulator(playerCount: Int = 4) {
     var winShare=0.0; var vp=0L; var plantVp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
@@ -234,6 +290,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
     val strikeResearch = StrikeRowResearchAccumulator()
+    val rootAndScootResearch = RootAndScootResearchAccumulator()
     val utilization = EffectResourceAccumulator()
     val vpLedger = VpLedgerAccumulator()
     val tokenEconomy = TokenEconomyAccumulator()
@@ -292,6 +349,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         buyShape.addGame(game.entries, p.playerId)
         battleShape.addGame(game.entries, p.playerId)
         strikeResearch.addGame(game.entries, p.playerId, p.winShare)
+        rootAndScootResearch.addGame(game.entries, p.playerId)
         utilization.addGame(game.entries, p.playerId)
         vpLedger.addGame(p, game.entries, plantsByName, plantValues)
         grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
@@ -1130,6 +1188,29 @@ private fun printWatchedCards(c:EvalAccumulator,l:EvalAccumulator) {
     println("  Attributed Plant VP follows the production scoring rule; Butterfly-based scoring is omitted from this compact attribution because final Butterfly count is not retained in GameSummary.")
 }
 
+private fun printRootAndScootResearch(c: RootAndScootResearchAccumulator, l: RootAndScootResearchAccumulator) {
+    fun pctPart(part: Long, whole: Long): String =
+        if (whole == 0L) "n/a" else "%.1f%%".format(100.0 * part / whole)
+    fun avg(total: Long, count: Long): String =
+        if (count == 0L) "0.00" else "%.2f".format(total.toDouble() / count)
+
+    println("ROOT & SCOOT WITHDRAWAL RESEARCH (affected role only; exact pre-withdrawal Strike snapshots)")
+    fun line(label: String, a: Long, b: Long) = println("  $label: control=$a learned=$b")
+    line("Withdrawals", c.withdrawals, l.withdrawals)
+    println("  Would otherwise win: control=${c.wouldWin} (${pctPart(c.wouldWin,c.withdrawals)}) learned=${l.wouldWin} (${pctPart(l.wouldWin,l.withdrawals)})")
+    println("  Would otherwise produce everyone-tied/no-winner row: control=${c.wouldEveryoneTie} (${pctPart(c.wouldEveryoneTie,c.withdrawals)}) learned=${l.wouldEveryoneTie} (${pctPart(l.wouldEveryoneTie,l.withdrawals)})")
+    println("  Would otherwise lose without Wound: control=${c.wouldLoseNoWound} (${pctPart(c.wouldLoseNoWound,c.withdrawals)}) learned=${l.wouldLoseNoWound} (${pctPart(l.wouldLoseNoWound,l.withdrawals)})")
+    println("  Would otherwise be Wounded: control=${c.wouldBeWounded} (${pctPart(c.wouldBeWounded,c.withdrawals)}) learned=${l.wouldBeWounded} (${pctPart(l.wouldBeWounded,l.withdrawals)})")
+    line("Counterfactual winner wound-VP points denied", c.woundVpDeniedPerWinner, l.woundVpDeniedPerWinner)
+    println("  Avg dice abandoned / withdrawal: control=${avg(c.diceAbandoned,c.withdrawals)} learned=${avg(l.diceAbandoned,l.withdrawals)}")
+    println("  Avg die value abandoned / withdrawal: control=${avg(c.dieValueAbandoned,c.withdrawals)} learned=${avg(l.dieValueAbandoned,l.withdrawals)}")
+    println("  Avg Critters abandoned / withdrawal: control=${avg(c.crittersAbandoned,c.withdrawals)} learned=${avg(l.crittersAbandoned,l.withdrawals)}")
+    println("  Avg Critter value abandoned / withdrawal: control=${avg(c.critterValueAbandoned,c.withdrawals)} learned=${avg(l.critterValueAbandoned,l.withdrawals)}")
+    line("Actual resolved rows with a winner", c.actualStrikeHadWinner, l.actualStrikeHadWinner)
+    line("Withdrawals where actual winner set differed from pre-withdrawal counterfactual", c.actualWinnerChangedFromCounterfactual, l.actualWinnerChangedFromCounterfactual)
+    println("  Counterfactual note: snapshot is captured after Root & Scoot's printed +1 raise and before withdrawal. It therefore answers what the Strike would do if the player stayed at that exact point, assuming no later Battle changes.")
+}
+
 private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumulator, l:EvalAccumulator) {
     fun avg(x: Long): String = "%.2f".format(x.toDouble() / o.games)
     fun delta(a: Double, b: Double): String = "%+.2f".format(b - a)
@@ -1172,6 +1253,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printBattleShape(c.battleShape,l.battleShape)
     println()
     printStrikeRowResearch(c.strikeResearch,l.strikeResearch)
+    println()
+    printRootAndScootResearch(c.rootAndScootResearch,l.rootAndScootResearch)
     println()
     printEffectResourceUtilization(c.utilization,l.utilization)
     println()

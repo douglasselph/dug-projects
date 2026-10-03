@@ -700,6 +700,13 @@ object ChronicleTextRenderer {
                 "${player(entry.playerId)} ${entry.phase} EFFECT ${entry.sourceKind} " +
                     "${entry.sourceName}: ${entry.effect}"
 
+            is GameEntry.RootAndScootWithdrawal ->
+                buildString {
+                    val actor = entry.rowSnapshot.squares.singleOrNull { it.playerId == entry.playerId }
+                    append("${player(entry.playerId)} ROOT & SCOOT pre-withdraw row=${entry.row}")
+                    actor?.let { append(" committed=${it.total} dice=${it.dice.size} critters=${it.critters.size}") }
+                }
+
             is GameEntry.DecisionReasoning ->
                 buildString {
                     append("${player(entry.playerId)} DECISION ${entry.choiceLabel} ")

@@ -149,6 +149,15 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    /** Pre-withdrawal Root & Scoot Strike snapshot, for research/reporting only. */
+    data class RootAndScootWithdrawal(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val row: StrikeRow,
+        val rowSnapshot: BattleGridRowSnapshot,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     /** Optional recorded reasoning for a strategy-selected choice. */
     data class DecisionReasoning(
         override val sequence: Long,
