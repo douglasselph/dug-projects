@@ -9,9 +9,9 @@ The canonical card data remains the definition of the actual game. An override f
 Create a CSV anywhere on your filesystem, for example:
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,11,,
-Vine_07_04,,false,
+card_id,type,cost,available,scoring,effect
+Vine_07_01,FLOWER,14,true,FIXED:3,RAISE_D8_PLUS_1
+Vine_07_04,,7,true,PER_GRAFTED_FLOWER,RAISE_ANY_DIE_PLUS_1
 ```
 
 Then pass the file to a supported research command:
@@ -33,7 +33,7 @@ When the option is omitted, Plant cost, availability, and scoring remain canonic
 The header is:
 
 ```csv
-card_id,cost,available,scoring,effect
+card_id,type,cost,available,scoring,effect
 ```
 
 Each row identifies one Plant by its stable card ID, such as `Vine_07_01`.
@@ -41,9 +41,11 @@ Each row identifies one Plant by its stable card ID, such as `Vine_07_01`.
 | Column | Meaning | Blank value |
 | --- | --- | --- |
 | `card_id` | Stable Plant card ID. Required for every nonblank row. | Invalid for a data row. |
+| `type` | Experimental Plant type: `ROOT`, `VINE`, or `FLOWER`. | Use canonical type. |
 | `cost` | Experimental acquisition cost. Must be an integer `>= 0`. | Use canonical cost. |
 | `available` | Whether the Plant may appear in the Grove: `true` or `false`. | Use canonical availability (`true`). |
 | `scoring` | Experimental typed end-game scoring rule. | Use canonical scoring. |
+| `effect` | Exact `GameEffect` constant name. | Use canonical effect. |
 
 ### Typed scoring expressions
 
@@ -66,8 +68,8 @@ The canonical card CSV and its `vp_icon` translation remain authoritative when `
 ### Change only Berry Important's cost
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,8,,
+card_id,type,cost,available,scoring,effect
+Vine_07_01,,8,,,
 ```
 
 Run:
@@ -83,8 +85,8 @@ You can use experimental costs that are not normal printed Plant tiers. For exam
 ### Exclude a Plant
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_04,,false,
+card_id,type,cost,available,scoring,effect
+Vine_07_04,,,false,,
 ```
 
 For random Grove evaluation:
@@ -99,9 +101,9 @@ Random Grove resolution will not select `Vine_07_04`.
 ### Exclude both known V7 outliers
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,,false,
-Vine_07_04,,false,
+card_id,type,cost,available,scoring,effect
+Vine_07_01,,,false,,
+Vine_07_04,,,false,,
 ```
 
 For a random-Grove held-out evaluation:
@@ -114,8 +116,8 @@ bin/evaluate_buy_policy --random-grove \
 ### Cost zero is not exclusion
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,0,,
+card_id,type,cost,available,scoring,effect
+Vine_07_01,,0,,,
 ```
 
 This makes the Plant cost 0 for that experiment. It does **not** exclude the Plant.
@@ -125,8 +127,8 @@ Availability and cost are independent experimental dimensions.
 ### Explicit availability with a cost override
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,11,true,
+card_id,type,cost,available,scoring,effect
+Vine_07_01,,11,true,,
 ```
 
 This explicitly keeps the card available and changes its effective cost to 11.
@@ -134,8 +136,8 @@ This explicitly keeps the card available and changes its effective cost to 11.
 ### Override Vine Yield to score per Flower
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_04,,,PER_GRAFTED_FLOWER
+card_id,type,cost,available,scoring,effect
+Vine_07_04,,,,PER_GRAFTED_FLOWER,
 ```
 
 Run:
@@ -149,9 +151,9 @@ This leaves Vine Yield's canonical cost and availability unchanged. Only its eff
 ### Combine independent dimensions
 
 ```csv
-card_id,cost,available,scoring,effect
-Vine_07_01,11,true,FIXED:3
-Vine_07_04,,,PER_GRAFTED_FLOWER
+card_id,type,cost,available,scoring,effect
+Vine_07_01,,11,true,FIXED:3,
+Vine_07_04,,,,PER_GRAFTED_FLOWER,
 ```
 
 Cost, availability, and scoring are independent. Blank fields continue to mean canonical values.
@@ -166,7 +168,9 @@ Availability is applied while resolving the Grove.
 - Loading an override file does not itself consume gameplay RNG.
 - Matched CONTROL/LEARNED evaluation uses the same resolved Grove and the same Plant experiment configuration within a paired sample.
 
-Changing a Plant's experimental cost does **not** move it to a different Grove slot. Grove slot identity is still based on the canonical Plant type/cost classification. For example, changing `Vine_07_01` from cost 7 to cost 11 still leaves it as the V7-slot card; it merely costs 11 to acquire during the experiment.
+Experimental `type` and `cost` together define Grove slot membership for random research setup. For example, overriding `Vine_07_01` to `FLOWER` cost `14` removes it from the V7 candidate pool and adds it to the F14 candidate pool. A fully random Grove still contains exactly one R5, R7, R9, V7, V9, V11, F11, F14, and F17 card.
+
+Non-zero digits in an explicit `--grove` pattern still identify canonical numbered card IDs. If a named card has been moved by an active type/cost override so it no longer belongs to that slot, setup fails clearly; use `0` for that slot when testing tier/type moves.
 
 ## Training Grove selection
 
@@ -227,7 +231,7 @@ The loader fails rather than silently falling back when it encounters invalid ex
 
 Valid Boolean values are `true` and `false` (case-insensitive after trimming).
 
-Blank `cost`, `available`, or `scoring` fields mean that property remains canonical.
+Blank `type`, `cost`, `available`, `scoring`, or `effect` fields mean that property remains canonical. Old override files without a `type` column remain valid.
 
 ## Suggested location for checked-in experiments
 
@@ -276,7 +280,7 @@ Use the exact `GameEffect` enum constant name; blank keeps the canonical effect.
 override files remain valid. Example:
 
 ```csv
-card_id,cost,available,scoring,effect
+card_id,type,cost,available,scoring,effect
 Vine_07_01,11,,,RAISE_LOWEST_DIE_PLUS_1
 ```
 

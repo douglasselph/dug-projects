@@ -41,6 +41,16 @@ object GrovePlantCode {
             if (digit == '0') ('1'.code + randomizer.nextInt(4)).toChar() else digit
         }.joinToString("")
 
+    /**
+     * Human-readable Grove identity. Canonical Groves keep the compact 9-digit
+     * code; research Groves containing a retyped/retiered card fall back to
+     * stable card IDs because the 1..4 canonical code cannot represent them.
+     */
+    fun describe(cards: List<PlantCard>): String =
+        runCatching { encode(cards) }.getOrElse {
+            cards.joinToString(prefix = "[", postfix = "]") { it.name }
+        }
+
     /** Encodes a resolved nine-card Grove back into its compact reference code. */
     fun encode(cards: List<PlantCard>): String {
         val byName = cards.associateBy { it.name.lowercase() }

@@ -2,6 +2,7 @@ package dugsolutions.leaf.simulation.v35.experiment.plant
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.plant.domain.PlantType
 import java.io.File
 
 /**
@@ -14,7 +15,7 @@ import java.io.File
  * experiment dimensions.
  *
  * Supported columns:
- * `card_id,cost,available,scoring,effect`
+ * `card_id,type,cost,available,scoring,effect`
  *
  * Unquoted `#` starts a comment that runs to the end of the physical line.
  * This supports both full-line notes and inline annotations in resync files.
@@ -91,6 +92,12 @@ class PlantExperimentConfigLoader(
                         "$sourceName at row $rowNumber"
                 }
 
+                val type = parseType(
+                    value(row, columns, "type"),
+                    sourceName,
+                    rowNumber,
+                    rawCardId
+                )
                 val cost = parseCost(
                     value(row, columns, "cost"),
                     sourceName,
@@ -117,13 +124,14 @@ class PlantExperimentConfigLoader(
                 )
 
                 val override = PlantExperimentOverride(
+                    type = type,
                     cost = cost,
                     available = available,
                     scoringRule = scoringRule,
                     effect = effect
                 )
 
-                if (cost != null || available != null || scoringRule != null || effect != null) {
+                if (type != null || cost != null || available != null || scoringRule != null || effect != null) {
                     overrides[canonicalId] = override
                 }
             }
@@ -138,6 +146,24 @@ class PlantExperimentConfigLoader(
             "Plant experiment override CSV is missing required columns $missing: $sourceName"
         }
     }
+
+
+    private fun parseType(
+        raw: String,
+        sourceName: String,
+        rowNumber: Int,
+        cardId: String
+    ): PlantType? =
+        when (val value = raw.trim().lowercase()) {
+            "" -> null
+            "root" -> PlantType.ROOT
+            "vine" -> PlantType.VINE
+            "flower" -> PlantType.FLOWER
+            else -> throw IllegalArgumentException(
+                "Invalid type override '$value' for Plant '$cardId' in $sourceName at row $rowNumber; " +
+                    "expected ROOT, VINE, FLOWER, or blank"
+            )
+        }
 
     private fun parseCost(
         raw: String,

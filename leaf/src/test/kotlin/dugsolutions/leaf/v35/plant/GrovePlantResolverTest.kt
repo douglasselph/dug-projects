@@ -81,6 +81,38 @@ class GrovePlantResolverTest {
         assertEquals(9, cards.size)
     }
 
+
+    @Test
+    fun effectiveTypeAndCost_moveCardBetweenRandomGrovePools() {
+        val berry = requireNotNull(manager.getCard("Vine_07_01"))
+        val values = object : PlantValueResolver {
+            override fun typeFor(card: PlantCard): PlantType =
+                if (card.name == berry.name) PlantType.FLOWER else card.type
+            override fun costFor(card: PlantCard): Int =
+                if (card.name == berry.name) 14 else card.cost
+            override fun isAvailable(card: PlantCard): Boolean = true
+        }
+
+        val groves = (0 until 5).map { index ->
+            resolver.resolve(emptyList(), IndexedRandomizer(index), values)
+        }
+
+        val vine7Cards = groves.map { cards ->
+            cards.single { it.type == PlantType.VINE && it.cost == 7 }
+        }
+        val flower14Cards = groves.map { cards ->
+            cards.single { it.type == PlantType.FLOWER && it.cost == 14 }
+        }
+
+        // Berry has left the Vine-7 pool entirely.
+        assertTrue(vine7Cards.none { it.name == berry.name })
+
+        // Berry now participates in the Flower-14 pool; it is not guaranteed to be
+        // the single random Flower-14 selected for any particular seed/index.
+        assertTrue(flower14Cards.any { it.name == berry.name })
+        assertTrue(flower14Cards.all { it.type == PlantType.FLOWER && it.cost == 14 })
+    }
+
     @Test
     fun explicitlyFixedUnavailablePlant_failsClearly() {
         val blocked = requireNotNull(manager.getCard("Vine_07_01"))

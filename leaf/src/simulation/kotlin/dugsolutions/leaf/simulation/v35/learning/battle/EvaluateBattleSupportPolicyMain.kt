@@ -77,7 +77,7 @@ fun main(args: Array<String>) {
 
 private fun runOne(factory:GameFactory, runner:GameRunner, grove:List<dugsolutions.leaf.v35.plant.domain.PlantCard>, decisions:List<PlayerDecisionFactory>, o:BattleSupportEvalOptions, sample:Int, seat:Int, variant:String, plantExp:PlantExperimentResearchConfig, roundExp:RoundExperimentResearchConfig): CompletedBattleSupportEvalGame {
     val game = factory(GameConfig(selectedPlantCards=grove, playerDecisionFactories=decisions, roundSetup=o.roundSetup, seed=o.seed+sample, strategySeed=o.strategySeed+sample, plantValues=plantExp.values, roundValues=roundExp.values))
-    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_battle_support_policy",sample,variant,seat,o.seed+sample,o.strategySeed+sample,GrovePlantCode.encode(grove),o.roundLabel)) { runner.run(game) }
+    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_battle_support_policy",sample,variant,seat,o.seed+sample,o.strategySeed+sample,GrovePlantCode.describe(grove),o.roundLabel)) { runner.run(game) }
     return CompletedBattleSupportEvalGame(GameSummaryExtractor.extract(game,result), game.chronicle.entries.toList())
 }
 

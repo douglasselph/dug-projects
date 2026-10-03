@@ -174,7 +174,7 @@ private fun evaluateCultivationCandidate(
                 affectedSeat = seat,
                 mechanicalSeed = mechanicalSeed,
                 strategySeed = strategySeed,
-                grove = GrovePlantCode.encode(grove),
+                grove = GrovePlantCode.describe(grove),
                 roundStructure = o.roundLabel
             )
         ) { runner.run(game) }

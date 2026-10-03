@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
+import dugsolutions.leaf.v35.plant.domain.PlantType
 
 /**
  * Research-only overrides for one canonical Plant definition.
@@ -16,7 +17,8 @@ data class PlantExperimentOverride(
     val cost: Int? = null,
     val available: Boolean? = null,
     val scoringRule: PlantScoringRule? = null,
-    val effect: GameEffect? = null
+    val effect: GameEffect? = null,
+    val type: PlantType? = null
 ) {
     init {
         require(cost == null || cost >= 0) {
@@ -50,6 +52,10 @@ class PlantExperimentConfig private constructor(
     /** Convenience lookup using the canonical card's stable ID. */
     fun overrideFor(card: PlantCard): PlantExperimentOverride? =
         overrideFor(card.name)
+
+    /** Experimental Plant type when supplied; otherwise the canonical CSV type. */
+    override fun typeFor(card: PlantCard): PlantType =
+        overrideFor(card)?.type ?: card.type
 
     /** Experimental cost when supplied; otherwise the canonical CSV cost. */
     override fun costFor(card: PlantCard): Int =

@@ -110,7 +110,7 @@ fun main(args: Array<String>) {
                 println("resolved research environment sample 0 Wisp deck=${environment.wispCards?.joinToString { it.name } ?: "<normal game setup>"}")
                 println()
             }
-            val groveCode = GrovePlantCode.encode(resolvedGrove)
+            val groveCode = GrovePlantCode.describe(resolvedGrove)
             val controlFactories = List(o.players) { PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(o.players) { if (it == seat) learnedFactory(weights) else PlayerDecisionFactory.humanBaseline() }
             control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)

@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
         println("affected learned role rotates across ${o.players} physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=3/2/2")
         if (o.grovePattern != null) {
             println("Grove zeros are resolved once per training sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; every candidate sees the same Grove for the same sample")
-            println("resolved training Grove sample 0=${GrovePlantCode.encode(trainingGroves.first())}")
+            println("resolved training Grove sample 0=${GrovePlantCode.describe(trainingGroves.first())}")
         }
         println("fitness=affected-role mean win share; identical game/strategy seed cohort for every policy")
         println("Cultivation Main policy=${o.cultivationMainPolicy} (independent policy seam; Human preserves current baseline behavior)")
@@ -132,7 +132,7 @@ private fun evaluate(
         val mechanicalSeed = o.seed + sample
         val strategySeed = o.strategySeed + sample
         val grove = groves[sample]
-        val groveCode = GrovePlantCode.encode(grove)
+        val groveCode = GrovePlantCode.describe(grove)
         val learnedFactory = learnedFactory(weights)
         val decisions = List(o.players) { if (it == seat) learnedFactory else PlayerDecisionFactory.humanBaseline() }
         val game = factory(GameConfig(

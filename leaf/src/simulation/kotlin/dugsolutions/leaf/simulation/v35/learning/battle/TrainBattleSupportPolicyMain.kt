@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
                     val learned = learnedBattleSupportFactory(w)
                     val decisions = List(o.players) { if (it == seat) learned else PlayerDecisionFactory.humanBaseline() }
                     val game = factory(GameConfig(selectedPlantCards = groves[sample], playerDecisionFactories = decisions, roundSetup = o.roundSetup, seed = o.seed + sample, strategySeed = o.strategySeed + sample, plantValues = plantExp.values, roundValues = roundExp.values))
-                    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("train_battle_support_g${gen+1}_c${candidate+1}", sample, "LEARNED_BATTLE_SUPPORT", seat, o.seed+sample, o.strategySeed+sample, GrovePlantCode.encode(groves[sample]), o.roundLabel)) { runner.run(game) }
+                    val result = withSimulationFailureDiagnostics(game, SimulationRunContext("train_battle_support_g${gen+1}_c${candidate+1}", sample, "LEARNED_BATTLE_SUPPORT", seat, o.seed+sample, o.strategySeed+sample, GrovePlantCode.describe(groves[sample]), o.roundLabel)) { runner.run(game) }
                     wins += GameSummaryExtractor.extract(game, result).players.single { it.seat == seat }.winShare
                 }
                 EvaluatedBattleSupportPolicy(w, wins / o.games)

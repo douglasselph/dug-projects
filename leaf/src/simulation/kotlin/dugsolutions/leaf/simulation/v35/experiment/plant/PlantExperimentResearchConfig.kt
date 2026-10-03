@@ -27,6 +27,9 @@ data class PlantExperimentResearchConfig(
             .mapNotNull { card ->
                 val override = values.overrideFor(card) ?: return@mapNotNull null
                 val lines = buildList {
+                    override.type?.let { type ->
+                        if (type != card.type) add("  type: ${card.type} -> $type")
+                    }
                     override.cost?.let { cost ->
                         if (cost != card.cost) add("  cost: ${card.cost} -> $cost")
                     }

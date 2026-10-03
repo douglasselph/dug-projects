@@ -8,7 +8,8 @@ import dugsolutions.leaf.v35.random.Randomizer
  * Resolves the nine Plant slots required by a Grove.
  *
  * Explicit cards are slot overrides. Every unfilled slot is selected from the
- * loaded Plant catalog using the game's mechanical Randomizer.
+ * loaded Plant catalog using the game's mechanical Randomizer. Research Plant
+ * type/cost overrides define effective slot membership before selection.
  */
 class GrovePlantResolver(
     private val plantCardManager: PlantCardManager
@@ -20,33 +21,36 @@ class GrovePlantResolver(
     ): List<PlantCard> {
         val bySlot = linkedMapOf<PlantSlot, PlantCard>()
 
-        overrides.forEach { card ->
-            val slot = PlantSlot.from(card)
+        overrides.forEach { suppliedCard ->
+            val catalogCard = plantCardManager.getCard(suppliedCard.name)
+            requireNotNull(catalogCard) { "Unknown Plant card override: ${suppliedCard.name}" }
+            val effectiveCard = plantValues.effectiveCardFor(catalogCard)
+            val slot = PlantSlot.from(effectiveCard)
             require(slot in REQUIRED_SLOTS) {
-                "Plant card '${card.name}' does not belong to a Grove slot: ${card.type} ${card.cost}"
+                "Plant card '${catalogCard.name}' does not belong to a Grove slot after active Plant overrides: " +
+                    "${effectiveCard.type} ${effectiveCard.cost}"
             }
             require(slot !in bySlot) {
                 "Multiple Plant cards supplied for Grove slot ${slot.label}: " +
-                    "'${bySlot.getValue(slot).name}' and '${card.name}'"
+                    "'${bySlot.getValue(slot).name}' and '${catalogCard.name}'"
             }
-            val catalogCard = plantCardManager.getCard(card.name)
-            requireNotNull(catalogCard) { "Unknown Plant card override: ${card.name}" }
-            require(catalogCard.type == card.type && catalogCard.cost == card.cost) {
-                "Plant card override '${card.name}' does not match the loaded catalog definition"
+            require(suppliedCard.type == effectiveCard.type && suppliedCard.cost == effectiveCard.cost) {
+                "Plant card override '${suppliedCard.name}' does not match its active effective definition: " +
+                    "supplied=${suppliedCard.type} ${suppliedCard.cost}, effective=${effectiveCard.type} ${effectiveCard.cost}"
             }
             require(plantValues.isAvailable(catalogCard)) {
                 "Plant card '${catalogCard.name}' is unavailable in the active Plant experiment and cannot be fixed into Grove slot ${slot.label}"
             }
-            bySlot[slot] = catalogCard
+            bySlot[slot] = effectiveCard
         }
 
         return REQUIRED_SLOTS.map { slot ->
             bySlot[slot] ?: randomizer.randomOrNull(
-                plantCardManager.getCardsByType(slot.type)
-                    .filter { it.cost == slot.cost }
+                plantCardManager.getAllCards().cards
                     .filter(plantValues::isAvailable)
-            ) ?: error(
-                "No Plant cards available for Grove slot ${slot.label} after applying Plant experiment availability"
+                    .filter { plantValues.typeFor(it) == slot.type && plantValues.costFor(it) == slot.cost }
+            )?.let(plantValues::effectiveCardFor) ?: error(
+                "No Plant cards available for Grove slot ${slot.label} after applying Plant experiment type/cost/availability overrides"
             )
         }
     }

@@ -35,6 +35,35 @@ class PlantExperimentConfigLoaderTest {
         assertTrue(config.isEmpty)
     }
 
+
+    @Test
+    fun typeOverride_acceptsFlowerAndCombinesWithCost() {
+        val config = loadCsv(
+            """
+            card_id,type,cost,available,scoring,effect
+            Vine_07_01,FLOWER,14,true,FIXED:3,RAISE_LOWEST_DIE_PLUS_1
+            """.trimIndent()
+        )
+
+        val override = requireNotNull(config.overrideFor("Vine_07_01"))
+        assertEquals(PlantType.FLOWER, override.type)
+        assertEquals(14, override.cost)
+        assertEquals(PlantType.FLOWER, config.typeFor(cards.first()))
+    }
+
+    @Test
+    fun invalidTypeOverride_failsClearly() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            loadCsv(
+                """
+                card_id,type,cost,available,scoring,effect
+                Vine_07_01,TREE,14,true,,
+                """.trimIndent()
+            )
+        }
+        assertTrue(error.message.orEmpty().contains("Invalid type override 'tree'"))
+    }
+
     @Test
     fun oneCostOverride_loadsByStablePlantId() {
         val config = loadCsv(
