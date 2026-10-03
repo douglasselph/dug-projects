@@ -37,6 +37,10 @@ class HumanBaselineCardScorerRegistry(
                 put(GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
                 put(GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
             }
+            val appreciation = listOfNotNull(byName["Root_07_02"]).distinct()
+            if (appreciation.isNotEmpty()) {
+                put(GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, appreciation)
+            }
         }
     }
 

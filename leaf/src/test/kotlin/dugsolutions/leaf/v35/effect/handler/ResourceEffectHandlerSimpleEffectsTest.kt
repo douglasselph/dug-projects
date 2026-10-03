@@ -205,6 +205,26 @@ class ResourceEffectHandlerSimpleEffectsTest {
     }
 
     @Test
+    fun rootAppreciationResearchVariantGainsWormAndStacksByOneEachTime() {
+        val actor = EffectTestFixture.player(1)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(
+            game,
+            actor,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND
+        )
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, GameEffectExecutor { })
+        assertEquals(1, actor.critters.count(Critter.WORM))
+        assertEquals(2, actor.critterValues.valueOf(Critter.WORM))
+
+        handler.execute(request, GameEffectExecutor { })
+        assertEquals(2, actor.critters.count(Critter.WORM))
+        assertEquals(3, actor.critterValues.valueOf(Critter.WORM))
+    }
+
+    @Test
     fun whisperingWingsGainsUpToTwoChosenCritters() {
         val actor = EffectTestFixture.player(1)
         val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))

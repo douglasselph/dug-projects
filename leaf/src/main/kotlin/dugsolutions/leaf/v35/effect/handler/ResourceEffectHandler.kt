@@ -64,7 +64,8 @@ class ResourceEffectHandler : EffectHandler {
             GameEffect.GAIN_TWO_WORMS ->
                 request.game.grove.critters.count(Critter.WORM) > 0
 
-            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND ->
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND ->
                 true
 
             GameEffect.GAIN_ONE_WISP ->
@@ -139,7 +140,10 @@ class ResourceEffectHandler : EffectHandler {
                 gainWorms(request, 2)
 
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND ->
-                gainWormAndBoostWorms(request)
+                gainWormAndBoostWorms(request, amount = 2)
+
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND ->
+                gainWormAndBoostWorms(request, amount = 1)
 
             GameEffect.GAIN_ONE_WISP ->
                 gainOneWisp(request, executor)
@@ -288,13 +292,13 @@ class ResourceEffectHandler : EffectHandler {
 
 
     private fun gainWormAndBoostWorms(
-        request: GameEffectRequest
+        request: GameEffectRequest,
+        amount: Int
     ) {
         /*
          * The physical Critter remains WORM. Root Appreciation says each Worm
-         * is worth 2 MORE this round, so repeated resolutions stack:
-         *
-         *   1 -> 3 -> 5 -> 7 ...
+         * gains the configured temporary round bonus. Canonical Root Appreciation
+         * uses +2; the research variant uses +1. Repeated resolutions stack.
          *
          * Because the boost is Player round state rather than a Critter
          * variant, Worms gained later in the same round use the boosted value
@@ -306,7 +310,7 @@ class ResourceEffectHandler : EffectHandler {
 
         request.actor.critterValues.boostForRound(
             critter = Critter.WORM,
-            amount = 2
+            amount = amount
         )
     }
 

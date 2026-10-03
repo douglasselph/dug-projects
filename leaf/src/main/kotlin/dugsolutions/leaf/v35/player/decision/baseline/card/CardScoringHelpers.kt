@@ -98,7 +98,10 @@ object CardScoringHelpers {
                 score = score.adjusted(reserveBonus, "Water reserve")
             }
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND -> {
-                score = score.adjusted(context.self.board.worms * 10, "Existing Worms benefit from the round boost")
+                score = score.adjusted(context.self.board.worms * 10, "Existing Worms benefit from the +2 round boost")
+            }
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND -> {
+                score = score.adjusted(context.self.board.worms * 5, "Existing Worms benefit from the +1 round boost")
             }
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> {
                 val ones = dice.count { it.value == 1 }
