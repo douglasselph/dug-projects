@@ -200,6 +200,23 @@ internal class TokenEconomyAccumulator {
     }
 }
 
+internal class PlantActivationByPhaseAccumulator {
+    val cultivation = sortedMapOf<String, Long>()
+    val battle = sortedMapOf<String, Long>()
+
+    fun addGame(entries: List<GameEntry>, playerId: PlayerId) {
+        entries.filterIsInstance<GameEntry.EffectResolved>()
+            .filter { it.playerId == playerId && it.sourceKind == EffectSourceKind.PLANT }
+            .forEach { effect ->
+                val target = when (effect.phase) {
+                    ChroniclePhase.CULTIVATION -> cultivation
+                    ChroniclePhase.BATTLE -> battle
+                }
+                target[effect.sourceName] = (target[effect.sourceName] ?: 0L) + 1L
+            }
+    }
+}
+
 internal class EvalAccumulator(playerCount: Int = 4) {
     var winShare=0.0; var vp=0L; var plantVp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
@@ -213,6 +230,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     val sunlightFundedPlants=sortedMapOf<String,Long>()
     val seatWins=DoubleArray(playerCount); val seatGames=IntArray(playerCount)
     val plantCosts=sortedMapOf<Int,Long>(); val plantTypes=sortedMapOf<String,Long>(); val plantCards=sortedMapOf<String,Long>(); val dieSizes=sortedMapOf<String,Long>(); val finalDiceSizes=sortedMapOf<String,Long>()
+    val plantActivationsByPhase = PlantActivationByPhaseAccumulator()
     val buyShape = BuyShapeAccumulator()
     val battleShape = BattleShapeAccumulator()
     val strikeResearch = StrikeRowResearchAccumulator()
@@ -285,6 +303,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
                 if(card!=null) scoreWatchedCard(card,copies,p,plantValues)?.let { watchedCardVp[name]=(watchedCardVp[name]?:0)+it.toLong() }
             }
         }
+        plantActivationsByPhase.addGame(game.entries, p.playerId)
         game.entries.filterIsInstance<GameEntry.Purchase>().filter { it.playerId==p.playerId }.forEach { purchase ->
             when(purchase.kind) {
                 PurchaseKind.PLANT -> { plantPurchases++; plantCosts.bump(purchase.cost); plantCards.bump(purchase.itemName); plantTypes.bump(plantsByName[purchase.itemName]?.type?.name ?: "UNKNOWN") }
@@ -1145,6 +1164,8 @@ private fun printReport(o:EvalOptions, weights:LearnedBuyWeights, c:EvalAccumula
     printCounts("Plant purchases by type",c.plantTypes,l.plantTypes)
     printCounts("Die purchases by size",c.dieSizes,l.dieSizes)
     printCounts("Individual Plant acquisitions",c.plantCards,l.plantCards)
+    printCounts("Plant activations in Cultivation",c.plantActivationsByPhase.cultivation,l.plantActivationsByPhase.cultivation)
+    printCounts("Plant activations in Battle",c.plantActivationsByPhase.battle,l.plantActivationsByPhase.battle)
     println()
     printBuyShape(c.buyShape, l.buyShape)
     println()

@@ -53,6 +53,24 @@ class EvaluateBuyPolicyTest {
         assertEquals(4,a.seatGames.size)
     }
 
+    @Test fun `Plant activation research separates Cultivation and Battle by card`() {
+        val player = PlayerId(1)
+        val other = PlayerId(2)
+        val entries = listOf(
+            GameEntry.EffectResolved(1, player, GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, EffectSourceKind.PLANT, "Root_07_04", ChroniclePhase.CULTIVATION, 0),
+            GameEntry.EffectResolved(2, player, GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, EffectSourceKind.PLANT, "Root_07_04", ChroniclePhase.BATTLE, 0),
+            GameEntry.EffectResolved(3, player, GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, EffectSourceKind.PLANT, "Root_07_04", ChroniclePhase.CULTIVATION, 0),
+            GameEntry.EffectResolved(4, other, GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, EffectSourceKind.PLANT, "Root_07_04", ChroniclePhase.BATTLE, 0),
+            GameEntry.EffectResolved(5, player, GameEffect.GAIN_ONE_VP, EffectSourceKind.WISP, "Wisp_01", ChroniclePhase.CULTIVATION, 0)
+        )
+        val a = PlantActivationByPhaseAccumulator()
+        a.addGame(entries, player)
+        assertEquals(2L, a.cultivation["Root_07_04"])
+        assertEquals(1L, a.battle["Root_07_04"])
+        assertEquals(1, a.cultivation.size)
+        assertEquals(1, a.battle.size)
+    }
+
     @Test fun `evaluation player count defaults to four and accepts two or three`() {
         assertEquals(4, EvalOptions.parse(emptyList()).players)
         assertEquals(2, EvalOptions.parse(listOf("--players", "2")).players)
