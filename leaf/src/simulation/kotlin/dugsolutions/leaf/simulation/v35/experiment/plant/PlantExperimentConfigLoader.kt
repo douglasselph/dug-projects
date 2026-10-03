@@ -16,6 +16,10 @@ import java.io.File
  * Supported columns:
  * `card_id,cost,available,scoring,effect`
  *
+ * Unquoted `#` starts a comment that runs to the end of the physical line.
+ * This supports both full-line notes and inline annotations in resync files.
+ * A `#` inside a quoted CSV field remains literal data.
+ *
  * `effect` is optional for backwards compatibility and accepts an exact
  * [GameEffect] constant name. Blank means canonical effect.
  *
@@ -50,12 +54,13 @@ class PlantExperimentConfigLoader(
     internal fun parse(content: String, sourceName: String = "<memory>"): PlantExperimentConfig {
         if (content.isBlank()) return PlantExperimentConfig.EMPTY
 
-        val rows = parseCsv(content)
+        val rows = parseCsv(stripComments(content))
         if (rows.isEmpty() || rows.all { row -> row.all(String::isBlank) }) {
             return PlantExperimentConfig.EMPTY
         }
+        val contentRows = rows.dropWhile { row -> row.all(String::isBlank) }
 
-        val headers = rows.first().map { it.removePrefix("\uFEFF").trim() }
+        val headers = contentRows.first().map { it.removePrefix("\uFEFF").trim() }
         require(headers.toSet().size == headers.size) {
             "Plant experiment override CSV contains duplicate column names: $sourceName"
         }
@@ -65,7 +70,7 @@ class PlantExperimentConfigLoader(
         val overrides = linkedMapOf<String, PlantExperimentOverride>()
         val seenIds = linkedSetOf<String>()
 
-        rows.drop(1)
+        contentRows.drop(1)
             .filter { row -> row.any { it.isNotBlank() } }
             .forEachIndexed { dataIndex, row ->
                 val rowNumber = dataIndex + 2
@@ -214,6 +219,53 @@ class PlantExperimentConfigLoader(
         columnName: String
     ): String =
         columns[columnName]?.let { index -> row.getOrElse(index) { "" } } ?: ""
+
+    /**
+     * Removes research-note comments before CSV parsing while preserving line
+     * boundaries for useful row numbers. An unquoted `#` comments out the rest
+     * of that physical line; quoted `#` characters remain data.
+     */
+    private fun stripComments(content: String): String {
+        val result = StringBuilder(content.length)
+        var inQuotes = false
+        var index = 0
+
+        while (index < content.length) {
+            val char = content[index]
+
+            if (inQuotes) {
+                result.append(char)
+                if (char == '"') {
+                    if (index + 1 < content.length && content[index + 1] == '"') {
+                        result.append('"')
+                        index++
+                    } else {
+                        inQuotes = false
+                    }
+                }
+            } else {
+                when (char) {
+                    '"' -> {
+                        inQuotes = true
+                        result.append(char)
+                    }
+                    '#' -> {
+                        while (index + 1 < content.length &&
+                            content[index + 1] != '\n' &&
+                            content[index + 1] != '\r'
+                        ) {
+                            index++
+                        }
+                    }
+                    else -> result.append(char)
+                }
+            }
+
+            index++
+        }
+
+        return result.toString()
+    }
 
     /**
      * RFC-4180-style parsing matching the project's card-registry conventions:

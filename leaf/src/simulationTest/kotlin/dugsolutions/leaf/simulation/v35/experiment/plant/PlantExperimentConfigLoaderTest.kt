@@ -110,6 +110,58 @@ class PlantExperimentConfigLoaderTest {
 
 
     @Test
+    fun inlineHashComment_afterEffect_isIgnored() {
+        val config = loadCsv(
+            """
+            card_id,cost,available,scoring,effect
+            Vine_07_01,14,true,FIXED:3,RAISE_LOWEST_DIE_PLUS_1   # Name: Berry Tasty, Type: Flower
+            Vine_07_04,7,true,PER_GRAFTED_FLOWER,RAISE_ANY_DIE_PLUS_1
+            """.trimIndent()
+        )
+
+        val berry = requireNotNull(config.overrideFor("Vine_07_01"))
+        assertEquals(14, berry.cost)
+        assertEquals(true, berry.available)
+        assertEquals(PlantScoringRule.Fixed(3), berry.scoringRule)
+        assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, berry.effect)
+
+        val yield = requireNotNull(config.overrideFor("Vine_07_04"))
+        assertEquals(7, yield.cost)
+        assertEquals(PlantScoringRule.PerGraftedFlower, yield.scoringRule)
+        assertEquals(GameEffect.RAISE_ANY_DIE_PLUS_1, yield.effect)
+    }
+
+    @Test
+    fun fullLineHashComments_andBlankCommentLines_areIgnored() {
+        val config = loadCsv(
+            """
+            # Current provisional Plant resync
+            card_id,cost,available,scoring,effect
+            # Berry Tasty moved to Flower theme
+            Vine_07_01,14,true,FIXED:3,RAISE_LOWEST_DIE_PLUS_1
+            #
+            Vine_07_04,7,true,PER_GRAFTED_FLOWER,RAISE_ANY_DIE_PLUS_1
+            """.trimIndent()
+        )
+
+        assertEquals(14, config.overrideFor("Vine_07_01")?.cost)
+        assertEquals(7, config.overrideFor("Vine_07_04")?.cost)
+    }
+
+    @Test
+    fun hashInsideQuotedCsvField_isNotTreatedAsComment() {
+        val config = loadCsv(
+            """
+            card_id,cost,available,scoring,effect,notes
+            Vine_07_01,14,true,FIXED:3,RAISE_LOWEST_DIE_PLUS_1,"Keep # as literal note"
+            """.trimIndent()
+        )
+
+        assertEquals(14, config.overrideFor("Vine_07_01")?.cost)
+        assertEquals(GameEffect.RAISE_LOWEST_DIE_PLUS_1, config.overrideFor("Vine_07_01")?.effect)
+    }
+
+    @Test
     fun effectOverride_acceptsExactGameEffectConstantAndOldHeadersRemainValid() {
         val config = loadCsv(
             """
