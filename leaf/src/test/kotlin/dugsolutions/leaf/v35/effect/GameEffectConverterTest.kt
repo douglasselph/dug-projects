@@ -144,6 +144,7 @@ class GameEffectConverterTest {
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
             GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
+            GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted

@@ -37,7 +37,8 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_3 ->
                 request.actor.dice.hand.isNotEmpty()
 
-            GameEffect.RAISE_D8_PLUS_1 ->
+            GameEffect.RAISE_D8_PLUS_1,
+            GameEffect.RAISE_ALL_D8S_PLUS_1 ->
                 request.actor.dice.hand.any { it.sides == 8 }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
@@ -127,6 +128,9 @@ class DieValueEffectHandler : EffectHandler {
 
             GameEffect.RAISE_D8_PLUS_1 ->
                 raiseD8One(request)
+
+            GameEffect.RAISE_ALL_D8S_PLUS_1 ->
+                raiseAllD8sOne(request)
 
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 ->
                 raiseLowestOne(request)
@@ -444,6 +448,26 @@ class DieValueEffectHandler : EffectHandler {
         }
     }
 
+
+    private fun raiseAllD8sOne(
+        request: GameEffectRequest
+    ) {
+        request.actor.dice.hand
+            .filter { it.sides == 8 }
+            .forEach { die ->
+                val before = die.value
+                die.adjustBy(1)
+                request.game.chronicle.record(
+                    Moment.DieValueChanged(
+                        playerId = request.actor.id,
+                        effect = request.effect,
+                        sides = DieSides.from(die.sides),
+                        before = before,
+                        after = die.value
+                    )
+                )
+            }
+    }
 
     private fun raiseD8One(
         request: GameEffectRequest

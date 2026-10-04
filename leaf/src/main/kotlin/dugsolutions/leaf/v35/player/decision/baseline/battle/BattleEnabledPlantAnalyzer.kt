@@ -165,6 +165,18 @@ class BattleEnabledPlantAnalyzer(
                     }
                 )
 
+            GameEffect.RAISE_ALL_D8S_PLUS_1 ->
+                listOfNotNull(
+                    analyzeGroupedChanges(
+                        context = context,
+                        card = card,
+                        dice = dice.filter { it.die.sides == 8 },
+                        mode = BattleAnalysisMode.DETERMINISTIC
+                    ) { die ->
+                        DieValueHeuristics.actualRaiseGain(die.sides, die.value, 1).toDouble()
+                    }
+                )
+
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
                 dice.mapNotNull { located ->
                     gustOfPetalsTargetAnalyzer(

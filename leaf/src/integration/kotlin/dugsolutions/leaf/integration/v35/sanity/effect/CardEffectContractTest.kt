@@ -127,6 +127,7 @@ class CardEffectContractTest {
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
             GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
+            GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant

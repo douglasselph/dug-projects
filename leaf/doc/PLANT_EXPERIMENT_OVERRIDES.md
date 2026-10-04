@@ -289,7 +289,7 @@ unchanged. Runtime Plant-effect access goes through the explicit per-game `Plant
 seam, just like experimental cost and scoring.
 
 
-Research-only effect constants currently include `RAISE_LOWEST_DIE_PLUS_1` and `RAISE_D8_PLUS_1`. `RAISE_D8_PLUS_1` may be used only when the player has a D8 in hand; it raises a chosen D8 by +1.
+Research-only effect constants currently include `RAISE_LOWEST_DIE_PLUS_1`, `RAISE_D8_PLUS_1`, and `RAISE_ALL_D8S_PLUS_1`. `RAISE_D8_PLUS_1` raises one chosen D8 by +1. `RAISE_ALL_D8S_PLUS_1` requires at least one D8 in hand and raises every D8 in hand by +1.
 
 ## Provisional resync baseline
 

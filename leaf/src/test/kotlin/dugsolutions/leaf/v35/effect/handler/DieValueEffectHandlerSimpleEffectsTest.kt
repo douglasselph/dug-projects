@@ -288,4 +288,44 @@ class DieValueEffectHandlerSimpleEffectsTest {
         )
     }
 
+
+    @Test
+    fun raiseAllD8sPlusOne_raisesEveryD8AndLeavesOtherDiceAlone() {
+        val d6 = FixedEffectDie(6, 2)
+        val d8a = FixedEffectDie(8, 4)
+        val d8b = FixedEffectDie(8, 7)
+        val d8max = FixedEffectDie(8, 8)
+        val d10 = FixedEffectDie(10, 3)
+        val actor = EffectTestFixture.player(
+            1,
+            hand = listOf(d6, d8a, d8b, d8max, d10)
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val request = EffectTestFixture.request(game, actor, GameEffect.RAISE_ALL_D8S_PLUS_1)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(2, d6.value)
+        assertEquals(5, d8a.value)
+        assertEquals(8, d8b.value)
+        assertEquals(8, d8max.value)
+        assertEquals(3, d10.value)
+    }
+
+    @Test
+    fun raiseAllD8sPlusOne_cannotExecuteWithoutD8() {
+        val actor = EffectTestFixture.player(
+            1,
+            hand = listOf(FixedEffectDie(6, 2), FixedEffectDie(10, 3))
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        assertFalse(
+            handler.canExecute(
+                EffectTestFixture.request(game, actor, GameEffect.RAISE_ALL_D8S_PLUS_1)
+            )
+        )
+    }
+
 }

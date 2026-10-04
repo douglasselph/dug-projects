@@ -372,7 +372,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     private fun <K> MutableMap<K,Long>.bump(key:K) { this[key]=(this[key]?:0L)+1L }
 }
 
-private val WATCHED_CARDS = listOf("Root_07_03","Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Flower_11_01","Flower_14_04","Vine_09_03")
+private val WATCHED_CARDS = listOf("Root_07_03","Vine_07_01","Vine_07_02","Vine_07_03","Vine_07_04","Vine_09_03","Vine_11_03","Flower_11_01","Flower_14_01","Flower_14_03","Flower_14_04")
 
 private fun scoreWatchedCard(
     card: PlantCard,
@@ -786,7 +786,7 @@ internal class EffectResourceAccumulator {
             }
             GameEffect.MULCH_DIE_FROM_DISCARD, GameEffect.MULCH_DIE_FROM_HAND,
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> add("Mulch")
-            GameEffect.RAISE_ALL_DICE_PLUS_2, GameEffect.RAISE_ANY_DIE_PLUS_1,
+            GameEffect.RAISE_ALL_DICE_PLUS_2, GameEffect.RAISE_ALL_D8S_PLUS_1, GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,

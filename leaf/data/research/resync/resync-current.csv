@@ -1,5 +1,6 @@
 card_id,type,cost,available,scoring,effect
 Vine_07_01,FLOWER,14,true,FIXED:3,RAISE_D8_PLUS_1   # Name: Berry Tasty, Type: Flower
 Vine_07_04,,7,true,PER_GRAFTED_FLOWER,RAISE_ANY_DIE_PLUS_1
-Root_07_04,,7,true,,DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
-# Root_07_02,,7,true,,GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND
+Root_07_01,,9,true,,RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE   # Root & Scoot: protected effect, provisional tier 9
+Root_07_02,,7,true,,GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND   # Root Appreciation: provisional +1 Worm boost
+Root_07_04,,7,true,,DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE   # Root Recall: provisional cap 2

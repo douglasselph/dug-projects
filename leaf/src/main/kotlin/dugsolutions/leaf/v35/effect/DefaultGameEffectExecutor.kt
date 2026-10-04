@@ -112,6 +112,7 @@ class DefaultGameEffectExecutor(
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1,

@@ -66,6 +66,10 @@ object CardScoringHelpers {
                 dice.filter { it.sides == 8 }.maxOfOrNull { DieValueHeuristics.actualRaiseGain(it, 1) } ?: 0,
                 "Best D8 +1 target"
             )
+            GameEffect.RAISE_ALL_D8S_PLUS_1 -> addBestGain(
+                dice.filter { it.sides == 8 }.sumOf { DieValueHeuristics.actualRaiseGain(it, 1) },
+                "Total +1 gain across all D8s"
+            )
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 -> {
                 val lowest = dice.minOfOrNull { it.value }
                 val gain = lowest?.let { value ->

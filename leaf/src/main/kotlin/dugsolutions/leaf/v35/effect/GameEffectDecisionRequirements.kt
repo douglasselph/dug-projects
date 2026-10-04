@@ -162,6 +162,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
             GameEffect.RAISE_ALL_DICE_PLUS_2,
+            GameEffect.RAISE_ALL_D8S_PLUS_1,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS ->
                 same()
 
