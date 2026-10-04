@@ -150,6 +150,12 @@ class GameEffectConverterTest {
             GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
+            GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW, // research-only Sapping Snapdragon variant
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
             GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
             GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,

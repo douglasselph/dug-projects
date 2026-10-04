@@ -403,6 +403,28 @@ class HumanBaselineEffectStrategy(
         )
     }
 
+    override fun choosePetalD4Source(request: ChoosePetalD4SourceRequest): PetalD4SourceChoice {
+        if (request.context == DecisionContext.EMPTY) return delegate.choosePetalD4Source(request)
+        return choose(
+            request.context,
+            request.legalChoices.map { choice ->
+                val score = when (choice) {
+                    PetalD4SourceChoice.Grove -> PriorityScore(55)
+                    is PetalD4SourceChoice.Opponent -> {
+                        val zoneBonus = when (choice.zone) {
+                            EffectOwnedDieZone.HAND -> 20
+                            EffectOwnedDieZone.SUPPLY -> 12
+                            EffectOwnedDieZone.DISCARD -> 8
+                        }
+                        PriorityScore(65 + zoneBonus)
+                            .adjusted(8, "Stealing a D4 also denies an opponent ownership")
+                    }
+                }
+                DecisionCandidate(choice, score)
+            }
+        )
+    }
+
     override fun choosePetalToDie4(request: ChoosePetalToDie4Request): PetalToDie4Choice {
         if (request.context == DecisionContext.EMPTY) return delegate.choosePetalToDie4(request)
         return choose(
@@ -706,6 +728,13 @@ class HumanBaselineEffectStrategy(
                 PriorityScore(50 + (expectedGain * 5).roundToInt())
                     .adjusted(choice.selected.size, "Evaluate the complete redraw subset")
             }
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW -> {
+                val expectedGain = choice.selected.sumOf {
+                    max(0.0, DieValueHeuristics.expectedRerollGain(it.sides, it.value))
+                }
+                PriorityScore(50 + (expectedGain * 5).roundToInt())
+                    .adjusted(choice.selected.size * 3, "Cycle selected D4s into fresh Draws without losing ownership")
+            }
             else -> {
                 val targetDelta = choice.selected.sumOf { die ->
                     CardScoringHelpers.scoreDieTarget(effect, context, die).total - 50
@@ -850,7 +879,8 @@ class HumanBaselineEffectStrategy(
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
-            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3
         )
 
         val DISCARD_DRAW_SOURCE_BATTLE_EFFECTS = setOf(
@@ -971,7 +1001,8 @@ class HumanBaselineEffectStrategy(
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
-            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 DieValueHeuristics.expectedRerollGain(choice.sides, choice.value)
 
             else -> return null

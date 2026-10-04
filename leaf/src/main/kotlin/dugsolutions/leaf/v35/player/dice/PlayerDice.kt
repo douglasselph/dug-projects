@@ -119,6 +119,17 @@ class PlayerDice(
      * Removes one matching die from Hand and returns the supplied die value
      * when successful. Equivalent dice are intentionally interchangeable.
      */
+    /** Removes one matching die from Supply. */
+    fun removeFromSupply(die: Die): Die? {
+        val exact = _supply.dice.firstOrNull { it === die }
+        if (exact != null) {
+            return if (_supply.removeExact(exact)) exact else null
+        }
+
+        val equivalent = _supply.dice.firstOrNull { it == die } ?: return null
+        return if (_supply.removeExact(equivalent)) equivalent else null
+    }
+
     fun removeFromHand(die: Die): Die? {
         val exact = _hand.dice.firstOrNull { it === die }
         if (exact != null) {

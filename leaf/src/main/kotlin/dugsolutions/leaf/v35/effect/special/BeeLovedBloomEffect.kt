@@ -29,8 +29,8 @@ class BeeLovedBloomEffect : EffectHandler {
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
-        request.effect ==
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND
+        request.effect == GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ||
+            request.effect == GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND
 
     override fun execute(
         request: GameEffectRequest,
@@ -64,14 +64,21 @@ class BeeLovedBloomEffect : EffectHandler {
             )
         }
 
-        /*
-         * "Each of your Bees is worth 4 this round" is exact, not additive.
-         * This also applies to Bees gained later in the same round.
-         */
-        request.actor.critterValues.setForRound(
-            critter = Critter.BEE,
-            value = 4
-        )
+        when (request.effect) {
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
+                request.actor.critterValues.setForRound(
+                    critter = Critter.BEE,
+                    value = 4
+                )
+
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
+                request.actor.critterValues.boostForRound(
+                    critter = Critter.BEE,
+                    amount = 2
+                )
+
+            else -> error("Unexpected Bee-loved Bloom effect: ${request.effect}")
+        }
     }
 
     private fun legalSources(

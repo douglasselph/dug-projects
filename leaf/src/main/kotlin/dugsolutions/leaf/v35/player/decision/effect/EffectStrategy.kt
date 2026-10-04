@@ -250,6 +250,35 @@ class ChooseEffectCritterDieRequest(
 }
 
 
+
+/** Die zone used when Petal To Die 4 steals a D4 from another player. */
+enum class EffectOwnedDieZone { SUPPLY, HAND, DISCARD }
+
+/** Exact source for the redesigned Petal To Die 4 D4 acquisition. */
+sealed interface PetalD4SourceChoice {
+    data object Grove : PetalD4SourceChoice
+
+    data class Opponent(
+        val playerId: PlayerId,
+        val zone: EffectOwnedDieZone,
+        val die: EffectDieChoice
+    ) : PetalD4SourceChoice
+}
+
+class ChoosePetalD4SourceRequest(
+    val effect: GameEffect,
+    legalChoices: List<PetalD4SourceChoice>,
+    val context: DecisionContext = DecisionContext.EMPTY
+) {
+    val legalChoices: List<PetalD4SourceChoice> = legalChoices.toList()
+
+    init {
+        require(this.legalChoices.isNotEmpty()) {
+            "Petal To Die 4 D4 source decision requires at least one legal source"
+        }
+    }
+}
+
 /**
  * Complete branch/target decision for Petal To Die 4.
  *
@@ -601,6 +630,12 @@ interface EffectStrategy {
     fun chooseCritterAndDie(
         request: ChooseEffectCritterDieRequest
     ): EffectCritterDieChoice = request.legalChoices.first()
+
+
+    /** Choose the Grove/opponent source for redesigned Petal To Die 4. */
+    fun choosePetalD4Source(
+        request: ChoosePetalD4SourceRequest
+    ): PetalD4SourceChoice = request.legalChoices.first()
 
     /** Choose Petal To Die 4's branch, including the D4 target when Trashing. */
     fun choosePetalToDie4(

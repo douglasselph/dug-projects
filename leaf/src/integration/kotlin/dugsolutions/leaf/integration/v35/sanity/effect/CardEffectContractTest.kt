@@ -126,6 +126,12 @@ class CardEffectContractTest {
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
+            GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW, // research-only Sapping Snapdragon variant
             GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
             GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant

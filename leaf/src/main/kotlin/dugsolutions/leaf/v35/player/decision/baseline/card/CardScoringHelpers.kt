@@ -107,6 +107,10 @@ object CardScoringHelpers {
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND -> {
                 score = score.adjusted(context.self.board.worms * 5, "Existing Worms benefit from the +1 round boost")
             }
+            GameEffect.GAIN_VP_PER_ONE_SHOWING -> {
+                val ones = dice.count { it.value == 1 }
+                score = score.adjusted(ones * 8, "VP from dice already showing 1")
+            }
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> {
                 val ones = dice.count { it.value == 1 }
                 val sacrifice = dice.filter { it.value >= 2 }.minOfOrNull { it.value - 1 } ?: 10
@@ -201,6 +205,15 @@ object CardScoringHelpers {
                 val realizable = realizableSequentialRaises(dice, count)
                 score = score.adjusted(realizable * 5, "Realizable +1 Raises from Root/Vine grafts")
             }
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> {
+                val rerollGain = dice.maxOfOrNull { DieValueHeuristics.expectedRerollGain(it) } ?: 0.0
+                score = score.adjusted((rerollGain * 3).roundToInt(), "Best reroll expectation")
+                score = score.adjusted(8, "Chance to Draw when reroll lands on 3")
+                if (phase == CardPhase.BATTLE) {
+                    score = score.adjusted(bestBattleRowNeed(context) / 2, "Can reduce an opposing Strike row by 3")
+                }
+            }
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> {
                 if (phase == CardPhase.CULTIVATION) {
                     val gain = dice.maxOfOrNull { max(0, 3 - it.value) } ?: 0
@@ -217,6 +230,10 @@ object CardScoringHelpers {
                 addBestGain(bestRaise(dice, 2), "Initial +2 Raise")
                 if (phase == CardPhase.BATTLE) score = score.adjusted(bestBattleRowNeed(context) / 2, "Row drain is strongest where help is needed")
             }
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW -> {
+                addBestGain(bestRaise(dice, 2), "Initial +2 Raise")
+                if (phase == CardPhase.BATTLE) score = score.adjusted(bestBattleRowNeed(context) / 2 + 8, "Independent anchor die makes the row drain more flexible")
+            }
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
             GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES -> {
                 val spent = context.self.board.butterflies.count { !it.isFaceUp }
@@ -228,6 +245,11 @@ object CardScoringHelpers {
                     spent * 10 + if (stealable + gainable > 0) 15 else -15,
                     "Butterfly refresh/acquisition opportunity"
                 )
+            }
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW -> {
+                val d4s = dice.count { it.sides == 4 }
+                score = score.adjusted(15, "Gain or Steal a D4")
+                score = score.adjusted(d4s * 7, "Owned Hand D4s can be cycled into fresh Draws")
             }
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 -> {
                 val bestBranch = if (phase == CardPhase.BATTLE) {
@@ -260,6 +282,9 @@ object CardScoringHelpers {
             }
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND -> {
                 score = score.adjusted(context.self.board.bees * 12, "Existing Bees benefit from the boost")
+            }
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND -> {
+                score = score.adjusted(context.self.board.bees * 10, "Existing Bees benefit from the stacking +2 boost")
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
                 val count = context.self.board.creature.count { it.type == PlantType.VINE || it.type == PlantType.FLOWER }
@@ -504,12 +529,15 @@ object CardScoringHelpers {
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 1)
-            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 2)
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 2)
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS -> if (die.value <= 2) max(1, die.sides / 2) else -8
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
-            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW -> DieValueHeuristics.expectedRerollGain(die.sides, die.value).roundToInt()
+            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> DieValueHeuristics.expectedRerollGain(die.sides, die.value).roundToInt()
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> DieValueHeuristics.flipGain(die.sides, die.value)
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> -(die.value - 1)
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,

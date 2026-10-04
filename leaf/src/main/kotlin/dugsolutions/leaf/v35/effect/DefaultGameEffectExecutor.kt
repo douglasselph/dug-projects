@@ -23,6 +23,7 @@ import dugsolutions.leaf.v35.effect.special.SnipHappensEffect
 import dugsolutions.leaf.v35.effect.special.ShiftHappensEffect
 import dugsolutions.leaf.v35.effect.special.VineAndAgainEffect
 import dugsolutions.leaf.v35.effect.special.VineAndDineEffect
+import dugsolutions.leaf.v35.effect.special.VineAndPunishmentResearchEffect
 import dugsolutions.leaf.v35.effect.special.WispReckoningEffect
 import dugsolutions.leaf.v35.effect.special.WispLastWordEffect
 import dugsolutions.leaf.v35.effect.special.WispquakeEffect
@@ -41,6 +42,7 @@ class DefaultGameEffectExecutor(
     private val crossPlayerEffects: EffectHandler = CrossPlayerEffectHandler(),
     private val upgradeEffects: EffectHandler = UpgradeEffectHandler(),
     private val vineAndDineEffect: EffectHandler = VineAndDineEffect(),
+    private val vineAndPunishmentResearchEffect: EffectHandler = VineAndPunishmentResearchEffect(),
     private val petalToDie4Effect: EffectHandler = PetalToDie4Effect(),
     private val beeLovedBloomEffect: EffectHandler = BeeLovedBloomEffect(),
     private val alluringNectarEffect: EffectHandler = AlluringNectarEffect(),
@@ -121,9 +123,11 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            GameEffect.GAIN_VP_PER_ONE_SHOWING,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
             GameEffect.SET_DIE_TO_MATCH_ANOTHER,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
@@ -180,11 +184,17 @@ class DefaultGameEffectExecutor(
             GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5 ->
                 vineAndDineEffect
 
-            GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
+            GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW ->
                 petalToDie4Effect
 
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
                 beeLovedBloomEffect
+
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
+                vineAndPunishmentResearchEffect
 
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
             GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->

@@ -23,6 +23,7 @@ enum class EffectDecisionMechanism {
     EFFECT_OPTIONAL_DIE_PAIR,
     EFFECT_CRITTER_AND_DIE,
     EFFECT_PETAL_TO_DIE_4,
+    EFFECT_PETAL_D4_SOURCE,
     EFFECT_BEE_SOURCE,
     EFFECT_BUTTERFLY_TARGET,
     EFFECT_OPTIONAL_PLANT,
@@ -151,6 +152,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_D12_TO_DISCARD,
             GameEffect.GAIN_D20_TO_DISCARD,
             GameEffect.GAIN_ONE_VP,
+            GameEffect.GAIN_VP_PER_ONE_SHOWING,
             GameEffect.GAIN_ONE_WISP,
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,
             GameEffect.GAIN_OR_REFRESH_PURPLE_BUTTERFLY,
@@ -175,12 +177,26 @@ object GameEffectDecisionRequirements {
                     )
                 )
 
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW ->
+                phased(
+                    cultivation = setOf(
+                        EffectDecisionMechanism.EFFECT_PETAL_D4_SOURCE,
+                        EffectDecisionMechanism.EFFECT_DICE_SET
+                    ),
+                    battle = setOf(
+                        EffectDecisionMechanism.EFFECT_PETAL_D4_SOURCE,
+                        EffectDecisionMechanism.EFFECT_DICE_SET,
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT
+                    )
+                )
+
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_DISCARD,
             GameEffect.MULCH_DIE_FROM_HAND ->
                 same(EffectDecisionMechanism.EFFECT_DIE)
 
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND ->
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND ->
                 same(EffectDecisionMechanism.EFFECT_BEE_SOURCE)
 
             GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES ->
@@ -204,6 +220,7 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
@@ -262,6 +279,22 @@ object GameEffectDecisionRequirements {
                     cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
                     battle = setOf(
                         EffectDecisionMechanism.EFFECT_DIE,
+                        EffectDecisionMechanism.BATTLE_DIE_PLACEMENT
+                    )
+                )
+
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
+                    battle = setOf(EffectDecisionMechanism.EFFECT_STRIKE_ROW)
+                )
+
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
+                phased(
+                    cultivation = setOf(EffectDecisionMechanism.EFFECT_DIE),
+                    battle = setOf(
+                        EffectDecisionMechanism.EFFECT_DIE,
+                        EffectDecisionMechanism.EFFECT_STRIKE_ROW,
                         EffectDecisionMechanism.BATTLE_DIE_PLACEMENT
                     )
                 )
