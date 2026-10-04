@@ -1,0 +1,358 @@
+package dugsolutions.leaf.v35.effect
+
+import dugsolutions.leaf.v35.common.CardDataFiles
+import org.junit.jupiter.api.Test
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+class GameEffectConverterTest {
+
+    private val converter = GameEffectConverter()
+
+    @Test
+    fun invoke_whenEffectKnown_returnsExpectedGameEffect() {
+        // Act
+        val result = converter("Gain 1 VP")
+
+        // Assert
+        assertEquals(GameEffect.GAIN_ONE_VP, result)
+    }
+
+    @Test
+    fun invoke_whenFormattingDiffers_stillReturnsExpectedGameEffect() {
+        // Arrange
+        val effectText = """
+
+            GAIN   1   VP
+
+        """.trimIndent()
+
+        // Act
+        val result = converter(effectText)
+
+        // Assert
+        assertEquals(GameEffect.GAIN_ONE_VP, result)
+    }
+
+    @Test
+    fun invoke_whenSmartPunctuationDiffers_stillReturnsExpectedGameEffect() {
+        // Arrange
+        val effectText = """
+            Gain 1 Water.
+            <battle/> May spend 1 Water to reroll 2 of your dice, or 1 of your opponent’s.
+        """.trimIndent()
+
+        // Act
+        val result = converter(effectText)
+
+        // Assert
+        assertEquals(
+            GameEffect.GAIN_WATER_AND_SPEND_1_TO_REROLL_TWO_OWN_OR_ONE_OPPONENT_BATTLE_DIE,
+            result
+        )
+    }
+
+    @Test
+    fun invoke_whenSnipHappensUsesCurrentWoundText_returnsExpectedGameEffect() {
+        val result = converter(
+            """
+            Wound 1 card of your choice of an opponent's.
+            You must choose a face up card first if there is one.
+            """.trimIndent()
+        )
+
+        assertEquals(
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
+            result
+        )
+    }
+
+    @Test
+    fun invoke_whenEffectUnknown_returnsUnknownAndReportsSource() {
+        // Arrange
+        var reportedSource: String? = null
+        var reportedText: String? = null
+        val converter = GameEffectConverter { sourceName, effectText ->
+            reportedSource = sourceName
+            reportedText = effectText
+        }
+
+        // Act
+        val result = converter(
+            effectText = "This is not a real Leaf & Let Die effect.",
+            sourceName = "Test_Card"
+        )
+
+        // Assert
+        assertEquals(GameEffect.UNKNOWN, result)
+        assertEquals("Test_Card", reportedSource)
+        assertEquals("This is not a real Leaf & Let Die effect.", reportedText)
+    }
+
+    /**
+     * Contract test against the v35 CSV source of truth.
+     *
+     * This deliberately reads the actual card CSV files rather than duplicating
+     * their effect strings in test code. It catches both:
+     *
+     * 1. A CSV effect whose text no longer maps to a GameEffect.
+     * 2. An active non-UNKNOWN GameEffect that is no longer represented by any CSV effect.
+     *
+     * Retired compatibility enums are intentionally excluded while older focused
+     * tests/scenarios are migrated; current CSV data never produces them.
+     */
+    @Test
+    fun csvSources_andGameEffects_areInSync() {
+        // Arrange
+        val sourceEffects = readAllSourceEffects()
+
+        // Act
+        val converted = sourceEffects.map { source ->
+            source to converter(
+                effectText = source.effectText,
+                sourceName = source.cardName
+            )
+        }
+
+        // Assert
+        val unknown = converted.filter { (_, effect) ->
+            effect == GameEffect.UNKNOWN
+        }
+
+        assertTrue(
+            unknown.isEmpty(),
+            buildString {
+                appendLine("These CSV effects are not recognized by GameEffectConverter:")
+                unknown.forEach { (source, _) ->
+                    appendLine(
+                        "  ${source.fileName} | ${source.cardName} | " +
+                            "${source.columnName}: ${source.effectText.singleLine()}"
+                    )
+                }
+            }
+        )
+
+        val representedEffects = converted
+            .map { (_, effect) -> effect }
+            .toSet()
+
+        val retiredCompatibilityEffects = setOf(
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+            GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
+            GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
+            GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
+            GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW, // research-only Sapping Snapdragon variant
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
+        )
+        val expectedEffects = GameEffect.values()
+            .filterNot { it == GameEffect.UNKNOWN }
+            .toSet() - retiredCompatibilityEffects
+
+        assertEquals(
+            expectedEffects,
+            representedEffects,
+            buildString {
+                val missing = expectedEffects - representedEffects
+                val unexpected = representedEffects - expectedEffects
+
+                if (missing.isNotEmpty()) {
+                    appendLine(
+                        "GameEffects not represented by any v35 CSV effect: " +
+                            missing.sortedBy { it.name }.joinToString()
+                    )
+                }
+                if (unexpected.isNotEmpty()) {
+                    appendLine(
+                        "Unexpected converted GameEffects: " +
+                            unexpected.sortedBy { it.name }.joinToString()
+                    )
+                }
+            }
+        )
+    }
+
+    private fun readAllSourceEffects(): List<SourceEffect> {
+        return buildList {
+            addAll(
+                readEffects(
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.ROOT_CARD_LIST)),
+                    "effect"
+                )
+            )
+            addAll(
+                readEffects(
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST)),
+                    "effect"
+                )
+            )
+            addAll(
+                readEffects(
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.WISP_LIST)),
+                    "effect"
+                )
+            )
+            addAll(
+                readEffects(
+                    Path.of(CardDataFiles.dataPath(CardDataFiles.ROUND_CARD_LIST)),
+                    "effect_1_text",
+                    "effect_2_text"
+                )
+            )
+        }
+    }
+
+    private fun readEffects(
+        file: Path,
+        vararg effectColumns: String
+    ): List<SourceEffect> {
+        assertTrue(
+            Files.isRegularFile(file),
+            "Expected CSV source file at ${file.toAbsolutePath()}"
+        )
+
+        val rows = parseCsv(Files.readString(file))
+
+        assertTrue(rows.isNotEmpty(), "CSV file is empty: $file")
+
+        val headers = rows.first()
+        val headerIndex = headers
+            .mapIndexed { index, name -> name.removePrefix("\uFEFF") to index }
+            .toMap()
+
+        val nameIndex = requireNotNull(headerIndex["name"]) {
+            "CSV has no 'name' column: $file"
+        }
+
+        val effectIndexes = effectColumns.associateWith { column ->
+            requireNotNull(headerIndex[column]) {
+                "CSV has no '$column' column: $file"
+            }
+        }
+
+        return rows
+            .drop(1)
+            .filter { row -> row.any { it.isNotBlank() } }
+            .flatMap { row ->
+                val cardName = row.getOrElse(nameIndex) { "" }
+
+                effectIndexes.mapNotNull { (columnName, index) ->
+                    val effectText = row.getOrElse(index) { "" }.trim()
+
+                    if (effectText.isEmpty()) {
+                        null
+                    } else {
+                        SourceEffect(
+                            fileName = file.fileName.toString(),
+                            cardName = cardName,
+                            columnName = columnName,
+                            effectText = effectText
+                        )
+                    }
+                }
+            }
+    }
+
+    /**
+     * Small RFC-4180-style CSV reader kept in the test so this contract test
+     * does not depend on whichever CSV library the production loaders use.
+     *
+     * It supports quoted fields, commas/newlines inside quoted fields, escaped
+     * double quotes, CRLF, and LF line endings.
+     */
+    private fun parseCsv(text: String): List<List<String>> {
+        val rows = mutableListOf<List<String>>()
+        var row = mutableListOf<String>()
+        val field = StringBuilder()
+        var inQuotes = false
+        var index = 0
+
+        fun finishField() {
+            row.add(field.toString())
+            field.setLength(0)
+        }
+
+        fun finishRow() {
+            finishField()
+            rows.add(row)
+            row = mutableListOf()
+        }
+
+        while (index < text.length) {
+            val char = text[index]
+
+            if (inQuotes) {
+                when {
+                    char == '"' &&
+                        index + 1 < text.length &&
+                        text[index + 1] == '"' -> {
+                        field.append('"')
+                        index++
+                    }
+
+                    char == '"' -> {
+                        inQuotes = false
+                    }
+
+                    else -> {
+                        field.append(char)
+                    }
+                }
+            } else {
+                when (char) {
+                    '"' -> inQuotes = true
+                    ',' -> finishField()
+
+                    '\n' -> finishRow()
+
+                    '\r' -> {
+                        if (index + 1 < text.length && text[index + 1] == '\n') {
+                            index++
+                        }
+                        finishRow()
+                    }
+
+                    else -> field.append(char)
+                }
+            }
+
+            index++
+        }
+
+        check(!inQuotes) {
+            "CSV ended while inside a quoted field"
+        }
+
+        if (field.isNotEmpty() || row.isNotEmpty()) {
+            finishRow()
+        }
+
+        return rows
+    }
+
+    private fun String.singleLine(): String =
+        replace(Regex("""\s+"""), " ").trim()
+
+    private data class SourceEffect(
+        val fileName: String,
+        val cardName: String,
+        val columnName: String,
+        val effectText: String
+    )
+}

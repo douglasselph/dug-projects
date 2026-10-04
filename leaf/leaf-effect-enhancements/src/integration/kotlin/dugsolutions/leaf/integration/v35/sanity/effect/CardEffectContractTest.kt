@@ -1,0 +1,164 @@
+package dugsolutions.leaf.integration.v35.sanity.effect
+
+import dugsolutions.leaf.integration.v35.support.IntegrationGameHarness
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.GameEffectDecisionRequirements
+import dugsolutions.leaf.v35.effect.GameEffectPhase
+import dugsolutions.leaf.v35.round.domain.RoundCardType
+import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+/**
+ * CSV-to-engine contract audit.
+ *
+ * This deliberately does not execute every effect in an enormous bespoke game
+ * state. Unit tests own individual mechanics. The integration contract instead
+ * proves that every real card definition parses to a known GameEffect, has a
+ * production dispatcher route, and has an explicit decision-surface contract
+ * for every phase in which that card can present the effect.
+ */
+class CardEffectContractTest {
+
+    @Test
+    fun `every loaded Plant Wisp and Round effect parses routes and declares decisions`() {
+        IntegrationGameHarness().use { harness ->
+            val occurrences = buildList {
+                harness.catalog.allPlants.forEach { card ->
+                    add(
+                        EffectOccurrence(
+                            source = "Plant ${card.name}",
+                            effect = card.effect,
+                            phases = setOf(
+                                GameEffectPhase.CULTIVATION,
+                                GameEffectPhase.BATTLE
+                            )
+                        )
+                    )
+                }
+
+                harness.catalog.allWisps.forEach { card ->
+                    add(
+                        EffectOccurrence(
+                            source = "Wisp ${card.name}",
+                            effect = card.effect,
+                            phases = if (card.battleOnly) {
+                                setOf(GameEffectPhase.BATTLE)
+                            } else {
+                                setOf(
+                                    GameEffectPhase.CULTIVATION,
+                                    GameEffectPhase.BATTLE
+                                )
+                            }
+                        )
+                    )
+                }
+
+                harness.catalog.allRounds.forEach { card ->
+                    val phase = when (card.type) {
+                        RoundCardType.CULTIVATION -> GameEffectPhase.CULTIVATION
+                        RoundCardType.BATTLE -> GameEffectPhase.BATTLE
+                    }
+                    add(
+                        EffectOccurrence(
+                            source = "Round ${card.name}/FIRST",
+                            effect = card.firstEffect.effect,
+                            phases = setOf(phase)
+                        )
+                    )
+                    add(
+                        EffectOccurrence(
+                            source = "Round ${card.name}/SECOND",
+                            effect = card.secondEffect.effect,
+                            phases = setOf(phase)
+                        )
+                    )
+                }
+            }
+
+            // 36 Plant definitions + 12 Wisp definitions + 12x2 Round effects.
+            assertEquals(72, occurrences.size)
+
+            occurrences.forEach { occurrence ->
+                assertNotEquals(
+                    GameEffect.UNKNOWN,
+                    occurrence.effect,
+                    "${occurrence.source} did not parse to a known GameEffect"
+                )
+                assertTrue(
+                    harness.effectExecutor.supports(occurrence.effect),
+                    "${occurrence.source} parsed as ${occurrence.effect} but has no production executor route"
+                )
+
+                val contract = GameEffectDecisionRequirements.forEffect(occurrence.effect)
+                assertNotNull(
+                    contract,
+                    "${occurrence.source} parsed as ${occurrence.effect} but has no decision contract"
+                )
+                occurrence.phases.forEach { phase ->
+                    // Calling forPhase is the contract assertion. Empty is a
+                    // valid, explicit result for deterministic effects.
+                    GameEffectDecisionRequirements.forPhase(
+                        effect = occurrence.effect,
+                        phase = phase
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `current CSV catalog represents every defined non UNKNOWN GameEffect`() {
+        IntegrationGameHarness().use { harness ->
+            val loaded = buildSet {
+                harness.catalog.allPlants.mapTo(this) { it.effect }
+                harness.catalog.allWisps.mapTo(this) { it.effect }
+                harness.catalog.allRounds.forEach { card ->
+                    add(card.firstEffect.effect)
+                    add(card.secondEffect.effect)
+                }
+            }
+            val retiredCompatibilityEffects = setOf(
+            GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
+            GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
+            GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
+            GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
+            GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW, // research-only Sapping Snapdragon variant
+            GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
+            GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
+            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
+            GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant
+            GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted
+            GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS,
+            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
+            GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE
+        )
+            val activeDefined = GameEffect.entries
+                .filterNot { it == GameEffect.UNKNOWN }
+                .toSet() - retiredCompatibilityEffects
+
+            assertEquals(
+                activeDefined,
+                loaded,
+                "Active GameEffect enum and real CSV-backed effect catalog have drifted"
+            )
+            assertEquals(60, loaded.size)
+        }
+    }
+
+    private data class EffectOccurrence(
+        val source: String,
+        val effect: GameEffect,
+        val phases: Set<GameEffectPhase>
+    )
+}
