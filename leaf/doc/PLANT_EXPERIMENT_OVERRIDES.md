@@ -348,3 +348,13 @@ weights from an older baseline from being silently reused after
 
 Before changing `resync-current.csv`, preserve an accepted checkpoint as a
 numbered file such as `resync-v01.csv`.
+
+## Automatic type selection for tier calibration
+
+Economic tier experiments move a Plant package to a legal **type/cost slot**, not merely to a numeric cost.
+`bin/select_plant_slot_type` chooses the legal type for a requested cost against the current effective Plant baseline.
+It prefers the destination that leaves the nine random-Grove candidate pools closest to four cards per slot.
+If multiple destinations are exactly tied, the deterministic preference is controlled by the single `TIE_PREFERENCE`
+constant in that helper. The current research preference is upward: `FLOWER`, then `VINE`, then `ROOT`.
+
+`bin/experiment_card_tier_calibration` uses this selector automatically and records the chosen slot for each tested tier.
