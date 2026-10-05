@@ -422,6 +422,25 @@ tasks.register<JavaExec>("runEvaluateCultivationMainPolicy") {
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
 
+// Evolves optional Cultivation Support / Helper timing independently.
+tasks.register<JavaExec>("runTrainCultivationSupportPolicy") {
+    description = "Evolves the learned Cultivation Support policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.cultivation.support.TrainCultivationSupportPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluateCultivationSupportPolicy") {
+    description = "Evaluates learned Cultivation Support against Human Cultivation Support on matched held-out games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.cultivation.support.EvaluateCultivationSupportPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
 // Evolves only high-level Battle Step-5 Support/final-main selection.
 tasks.register<JavaExec>("runTrainBattleSupportPolicy") {
     description = "Evolves the learned Battle Support policy against Human Baseline opponents."

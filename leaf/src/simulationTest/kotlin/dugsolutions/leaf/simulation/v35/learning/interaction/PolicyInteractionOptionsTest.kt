@@ -13,6 +13,7 @@ class PolicyInteractionOptionsTest {
             "--rounds", "3/2/2",
             "--buy-policy", "learned", "--buy-weights", "b.weights",
             "--cultivation-main-policy", "learned", "--cultivation-main-weights", "c.weights",
+            "--cultivation-support-policy", "learned", "--cultivation-support-weights", "cs.weights",
             "--battle-support-policy", "learned", "--battle-support-weights", "s.weights"
         ))
         assertEquals(17, o.games)
@@ -21,6 +22,8 @@ class PolicyInteractionOptionsTest {
         assertEquals("b.weights", o.buyWeights.toString())
         assertEquals("learned", o.cultivationMainPolicy)
         assertEquals("c.weights", o.cultivationMainWeights.toString())
+        assertEquals("learned", o.cultivationSupportPolicy)
+        assertEquals("cs.weights", o.cultivationSupportWeights.toString())
         assertEquals("learned", o.battleSupportPolicy)
         assertEquals("s.weights", o.battleSupportWeights.toString())
     }
@@ -29,6 +32,9 @@ class PolicyInteractionOptionsTest {
     fun `rejects invalid policy family`() {
         assertFailsWith<IllegalArgumentException> {
             PolicyInteractionOptions.parse(listOf("--battle-support-policy", "magic"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            PolicyInteractionOptions.parse(listOf("--cultivation-support-policy", "magic"))
         }
     }
 }

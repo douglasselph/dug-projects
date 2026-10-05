@@ -7,6 +7,8 @@ import dugsolutions.leaf.v35.player.decision.battle.HumanBattleSupportPolicy
 import dugsolutions.leaf.v35.player.decision.buy.BuyStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainPolicy
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportPolicy
+import dugsolutions.leaf.v35.player.decision.cultivation.HumanCultivationSupportPolicy
 import dugsolutions.leaf.v35.player.decision.effect.EffectStrategy
 import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
@@ -32,6 +34,7 @@ data class DecisionDirector(
     val placement: CreaturePlacementStrategy,
     val cultivation: CultivationStrategy,
     val cultivationMain: CultivationMainPolicy,
+    val cultivationSupport: CultivationSupportPolicy = HumanCultivationSupportPolicy(),
     val battle: BattleStrategy,
     val battleSupport: BattleSupportPolicy = HumanBattleSupportPolicy(),
     val buy: BuyStrategy,

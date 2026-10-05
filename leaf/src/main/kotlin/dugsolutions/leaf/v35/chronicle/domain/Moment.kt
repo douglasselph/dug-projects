@@ -122,6 +122,20 @@ sealed interface Moment {
         val wispUsePercentage: Int? = null
     ) : Moment
 
+    /** Research trace for one optional Cultivation Support policy decision. */
+    data class CultivationSupportDecision(
+        val playerId: PlayerId,
+        val mainActionsRemaining: Int,
+        val legalActionIds: List<String>,
+        /** Null means PASS / proceed to normal Main or Done. */
+        val selectedActionId: String?,
+        /** Human/Mechanical reference action; null means reference preferred Main/Done. */
+        val referenceActionId: String?,
+        /** Visible state captured for refresh-value research. */
+        val faceDownPlants: Int = 0,
+        val spentButterflies: Int = 0
+    ) : Moment
+
     data class EffectResolved(
         val playerId: PlayerId,
         val effect: GameEffect,

@@ -72,6 +72,7 @@ class BattleSupportPolicyTest {
         assertSame(baseline.placement, changed.placement)
         assertSame(baseline.cultivation, changed.cultivation)
         assertSame(baseline.cultivationMain, changed.cultivationMain)
+        assertSame(baseline.cultivationSupport, changed.cultivationSupport)
         assertSame(baseline.battle, changed.battle)
         assertSame(baseline.buy, changed.buy)
         assertSame(baseline.support, changed.support)

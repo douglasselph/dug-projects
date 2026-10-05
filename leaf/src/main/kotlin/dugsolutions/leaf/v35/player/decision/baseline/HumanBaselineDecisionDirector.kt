@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.buy.PurchaseScoreModifier
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.HumanBaselineCultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.HumanCultivationMainPolicy
+import dugsolutions.leaf.v35.player.decision.cultivation.HumanCultivationSupportPolicy
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.placement.HumanBaselineCreaturePlacementStrategy
@@ -65,6 +66,7 @@ class HumanBaselineDecisionDirector(
         strategyRandomizer = strategyRandomizer
     )
     internal val cultivationMain = HumanCultivationMainPolicy()
+    internal val cultivationSupport = HumanCultivationSupportPolicy()
     internal val battleSupport = HumanBattleSupportPolicy()
     internal val battle = HumanBaselineBattleStrategy(
         scoreEngine = scoreEngine,
@@ -98,6 +100,7 @@ class HumanBaselineDecisionDirector(
         placement = placement,
         cultivation = cultivation,
         cultivationMain = cultivationMain,
+        cultivationSupport = cultivationSupport,
         battle = battle,
         battleSupport = battleSupport,
         buy = buy,

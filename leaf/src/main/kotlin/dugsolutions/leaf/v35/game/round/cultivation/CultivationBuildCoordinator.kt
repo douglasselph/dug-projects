@@ -29,6 +29,10 @@ import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationMainActionRequest
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainObservation
+import dugsolutions.leaf.v35.player.decision.cultivation.ChooseCultivationSupportActionRequest
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportDecision
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportObservation
+import dugsolutions.leaf.v35.player.decision.cultivation.stableCultivationSupportId
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -222,7 +226,8 @@ class CultivationBuildCoordinator(
                 decisionCheck(cultivationChoice in legalChoices) {
                     "CultivationStrategy returned an action that was not offered: $cultivationChoice"
                 }
-                val chosen = applyMainPolicy(
+                val chosen = applySupportAndMainPolicies(
+                    game = game,
                     player = player,
                     roundCard = roundCard,
                     mainActionsRemaining = mainActionsRemaining,
@@ -348,6 +353,104 @@ class CultivationBuildCoordinator(
                 humanBaselineSelectedPlantCardName = (humanMain as? CultivationMainAction.ActivatePlant)?.card?.card?.name
             )
         )
+    }
+
+    /**
+     * Routes optional Cultivation Support timing through its own policy seam.
+     *
+     * The existing Cultivation strategy still supplies the Human/Mechanical reference
+     * choice.  Human/Mechanical support policies reproduce that choice exactly. A
+     * learned support policy may instead spend another legal Support or PASS. PASS
+     * proceeds to a Main action when one remains, or Done after both Mains are spent.
+     */
+    private fun applySupportAndMainPolicies(
+        game: Game,
+        player: Player,
+        roundCard: RoundCard,
+        mainActionsRemaining: Int,
+        legalChoices: List<CultivationAction>,
+        context: DecisionContext,
+        cultivationChoice: CultivationAction
+    ): CultivationAction {
+        val legalSupports = legalChoices.filterIsInstance<CultivationAction.Support>().map { it.action }
+        if (legalSupports.isEmpty()) {
+            return applyMainPolicy(
+                player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
+            )
+        }
+
+        val referenceSupport = (cultivationChoice as? CultivationAction.Support)?.action
+        val request = ChooseCultivationSupportActionRequest(
+            legalActions = legalSupports,
+            referenceAction = referenceSupport,
+            observation = CultivationSupportObservation(
+                mainActionsRemaining = mainActionsRemaining,
+                roundCardName = roundCard.name,
+                firstRoundEffect = roundCard.firstEffect.effect,
+                secondRoundEffect = roundCard.secondEffect.effect,
+                context = context
+            )
+        )
+        val selected = player.decisions.cultivationSupport.chooseSupport(request)
+        val selectedId = when (selected) {
+            CultivationSupportDecision.Pass -> null
+            is CultivationSupportDecision.Use -> selected.action.stableCultivationSupportId()
+        }
+        game.chronicle.record(
+            Moment.CultivationSupportDecision(
+                playerId = player.id,
+                mainActionsRemaining = mainActionsRemaining,
+                legalActionIds = legalSupports.map { it.stableCultivationSupportId() },
+                selectedActionId = selectedId,
+                referenceActionId = referenceSupport?.stableCultivationSupportId(),
+                faceDownPlants = context.self.board.creature.count { it.isFaceDown },
+                spentButterflies = context.self.board.butterflies.count { !it.isFaceUp }
+            )
+        )
+
+        return when (selected) {
+            is CultivationSupportDecision.Use -> {
+                decisionCheck(selected.action in legalSupports) {
+                    "CultivationSupportPolicy returned an action that was not offered: ${selected.action}"
+                }
+                CultivationAction.Support(selected.action)
+            }
+            CultivationSupportDecision.Pass -> {
+                if (cultivationChoice !is CultivationAction.Support) {
+                    applyMainPolicy(
+                        player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
+                    )
+                } else if (mainActionsRemaining == 0) {
+                    decisionCheck(CultivationAction.Done in legalChoices) {
+                        "Cultivation Support PASS had no legal completion action"
+                    }
+                    CultivationAction.Done
+                } else {
+                    // The reference strategy wanted Support, but the support policy declined it.
+                    // Ask the same strategy for its best Main-only fallback. This extra reference
+                    // call is never made for Human/Mechanical support policies, preserving their
+                    // historical RNG stream and exact behavior.
+                    val mainOnlyChoices = legalChoices.filterIsInstance<CultivationAction.Main>()
+                    decisionCheck(mainOnlyChoices.isNotEmpty()) {
+                        "Cultivation Support PASS requires at least one legal Main action"
+                    }
+                    val fallback = player.decisions.cultivation.chooseAction(
+                        ChooseCultivationActionRequest(
+                            roundCard = roundCard,
+                            mainActionsRemaining = mainActionsRemaining,
+                            legalChoices = mainOnlyChoices,
+                            context = context
+                        )
+                    )
+                    decisionCheck(fallback is CultivationAction.Main && fallback in mainOnlyChoices) {
+                        "Cultivation strategy did not return a legal Main-only fallback: $fallback"
+                    }
+                    applyMainPolicy(
+                        player, roundCard, mainActionsRemaining, mainOnlyChoices, context, fallback
+                    )
+                }
+            }
+        }
     }
 
     /**

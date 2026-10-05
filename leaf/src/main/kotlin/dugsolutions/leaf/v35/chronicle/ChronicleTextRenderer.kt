@@ -696,6 +696,10 @@ object ChronicleTextRenderer {
                     entry.wispUsePercentage?.let { append(" chance=$it%") }
                 }
 
+            is GameEntry.CultivationSupportDecision ->
+                "${player(entry.playerId)} CULTIVATION SUPPORT DECISION selected=${entry.selectedActionId ?: "PASS"} " +
+                    "legal=${entry.legalActionIds.joinToString(",")} mainsRemaining=${entry.mainActionsRemaining}"
+
             is GameEntry.EffectResolved ->
                 "${player(entry.playerId)} ${entry.phase} EFFECT ${entry.sourceKind} " +
                     "${entry.sourceName}: ${entry.effect}"

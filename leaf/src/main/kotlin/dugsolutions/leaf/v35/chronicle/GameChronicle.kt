@@ -194,6 +194,17 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.phase, moment.action, moment.row,
                 moment.wispUsePercentage, hierarchyDepth
             )
+            is Moment.CultivationSupportDecision -> GameEntry.CultivationSupportDecision(
+                sequence = sequence,
+                playerId = moment.playerId,
+                mainActionsRemaining = moment.mainActionsRemaining,
+                legalActionIds = moment.legalActionIds.toList(),
+                selectedActionId = moment.selectedActionId,
+                referenceActionId = moment.referenceActionId,
+                faceDownPlants = moment.faceDownPlants,
+                spentButterflies = moment.spentButterflies,
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.EffectResolved -> GameEntry.EffectResolved(
                 sequence, moment.playerId, moment.effect, moment.sourceKind,
                 moment.sourceName, moment.phase, hierarchyDepth
