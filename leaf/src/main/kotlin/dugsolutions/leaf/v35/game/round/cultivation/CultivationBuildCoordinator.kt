@@ -37,6 +37,9 @@ import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.player.decision.wisp.ChooseWispPlayRequest
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayDecision
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayObservation
 import dugsolutions.leaf.v35.tokens.Critter
 
 /** One successfully completed Main Action. */
@@ -372,14 +375,24 @@ class CultivationBuildCoordinator(
         context: DecisionContext,
         cultivationChoice: CultivationAction
     ): CultivationAction {
-        val legalSupports = legalChoices.filterIsInstance<CultivationAction.Support>().map { it.action }
+        val rawLegalSupports = legalChoices.filterIsInstance<CultivationAction.Support>().map { it.action }
+        val referenceWisp = ((cultivationChoice as? CultivationAction.Support)?.action as? SupportAction.PlayWisp)?.card
+        val legalSupports = selectCultivationWispCandidate(
+            game = game,
+            player = player,
+            raw = rawLegalSupports,
+            referenceCard = referenceWisp,
+            mainActionsRemaining = mainActionsRemaining,
+            context = context
+        )
         if (legalSupports.isEmpty()) {
             return applyMainPolicy(
                 player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
             )
         }
 
-        val referenceSupport = (cultivationChoice as? CultivationAction.Support)?.action
+        val rawReferenceSupport = (cultivationChoice as? CultivationAction.Support)?.action
+        val referenceSupport = rawReferenceSupport?.takeIf { it in legalSupports }
         val request = ChooseCultivationSupportActionRequest(
             legalActions = legalSupports,
             referenceAction = referenceSupport,
@@ -491,6 +504,45 @@ class CultivationBuildCoordinator(
             // Probability metadata belongs to the reference Human choice and must
             // not be transferred to a replacement policy choice.
             CultivationAction.Main(selected)
+        }
+    }
+
+    private fun selectCultivationWispCandidate(
+        game: Game,
+        player: Player,
+        raw: List<SupportAction>,
+        referenceCard: dugsolutions.leaf.v35.wisp.domain.WispCard?,
+        mainActionsRemaining: Int,
+        context: DecisionContext
+    ): List<SupportAction> {
+        val wisps = raw.filterIsInstance<SupportAction.PlayWisp>()
+        if (wisps.isEmpty()) return raw
+        val legalCards = wisps.map { it.card }
+        val decision = player.decisions.wispPlay.chooseWisp(
+            ChooseWispPlayRequest(
+                legalCards = legalCards,
+                referenceCard = referenceCard?.takeIf { c -> wisps.any { it.card == c } },
+                allowHold = true,
+                observation = WispPlayObservation(
+                    phase = RoundCardType.CULTIVATION,
+                    mainActionsRemaining = mainActionsRemaining,
+                    context = context
+                )
+            )
+        )
+        game.chronicle.record(
+            Moment.WispPlayDecision(
+                playerId = player.id, phase = ChroniclePhase.CULTIVATION,
+                legalWispNames = legalCards.map { it.name },
+                selectedWispName = (decision as? WispPlayDecision.Play)?.card?.name,
+                referenceWispName = referenceCard?.name,
+                mainActionsRemaining = mainActionsRemaining
+            )
+        )
+        val withoutWisps = raw.filterNot { it is SupportAction.PlayWisp }
+        return when (decision) {
+            WispPlayDecision.Hold -> withoutWisps
+            is WispPlayDecision.Play -> withoutWisps + SupportAction.PlayWisp(decision.card)
         }
     }
 

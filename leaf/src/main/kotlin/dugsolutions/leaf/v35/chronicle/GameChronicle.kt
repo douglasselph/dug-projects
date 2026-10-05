@@ -153,6 +153,12 @@ class GameChronicle : Chronicle {
                 sequence, moment.playerId, moment.wispName, moment.sourceKind,
                 moment.sourceName, moment.playedImmediately, hierarchyDepth
             )
+            is Moment.WispPlayDecision -> GameEntry.WispPlayDecision(
+                sequence = sequence, playerId = moment.playerId, phase = moment.phase,
+                legalWispNames = moment.legalWispNames.toList(), selectedWispName = moment.selectedWispName,
+                referenceWispName = moment.referenceWispName, supportPassNumber = moment.supportPassNumber,
+                mainActionsRemaining = moment.mainActionsRemaining, hierarchyDepth = hierarchyDepth
+            )
             is Moment.RoundEffectOpportunity -> GameEntry.RoundEffectOpportunity(
                 sequence = sequence,
                 playerId = moment.playerId,

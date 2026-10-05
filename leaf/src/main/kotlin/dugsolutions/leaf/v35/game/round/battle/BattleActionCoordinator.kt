@@ -43,6 +43,9 @@ import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.player.decision.wisp.ChooseWispPlayRequest
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayDecision
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayObservation
 import dugsolutions.leaf.v35.tokens.Critter
 
 enum class BattleMainActionStage {
@@ -259,7 +262,7 @@ class BattleActionCoordinator(
                         "Battle action loop is not making observable progress and could loop forever"
                 }
 
-                val battleChoice =
+                val rawBattleChoice =
                     player.decisions.battle.chooseTurnAction(
                         ChooseBattleTurnActionRequest(
                             roundCard = roundCard,
@@ -268,9 +271,26 @@ class BattleActionCoordinator(
                             context = context
                         )
                     )
+                val policyLegalChoices = selectBattleWispCandidate(
+                    game = game,
+                    player = player,
+                    raw = legalChoices,
+                    referenceAction = rawBattleChoice,
+                    passNumber = passNumber,
+                    context = context
+                )
+                val battleChoice = if (rawBattleChoice in policyLegalChoices) rawBattleChoice else
+                    player.decisions.battle.chooseTurnAction(
+                        ChooseBattleTurnActionRequest(
+                            roundCard = roundCard,
+                            passNumber = passNumber,
+                            legalChoices = policyLegalChoices,
+                            context = context
+                        )
+                    )
                 val chosen = player.decisions.battleSupport.chooseSupport(
                     ChooseBattleSupportActionRequest(
-                        legalActions = legalChoices,
+                        legalActions = policyLegalChoices,
                         referenceAction = battleChoice,
                         observation = BattleSupportObservation(
                             passNumber = passNumber,
@@ -284,8 +304,8 @@ class BattleActionCoordinator(
 
                 when (chosen) {
                     is BattleTurnAction.FinalMain -> validateChosenMainAction(player, chosen.action, finalMains, "final")
-                    is BattleTurnAction.Support -> decisionCheck(chosen in legalChoices, context = "BattleActionCoordinator") {
-                        "BattleStrategy returned a Step-5 Support Action that was not offered: $chosen; legal=$legalChoices"
+                    is BattleTurnAction.Support -> decisionCheck(chosen in policyLegalChoices, context = "BattleActionCoordinator") {
+                        "BattleStrategy returned a Step-5 Support Action that was not offered: $chosen; legal=$policyLegalChoices"
                     }
                 }
 
@@ -497,6 +517,57 @@ class BattleActionCoordinator(
             BattleMainAction.RoundEffect2 -> "BattleStrategy selected Round Effect 2 for player ${player.id.value} during $stage Main Action, but that Round effect is not executable"
         }
         throw InvalidBattleMainActionDecisionException("BattleActionCoordinator", "$reason; legal=$legal")
+    }
+
+    private fun selectBattleWispCandidate(
+        game: Game,
+        player: Player,
+        raw: List<BattleTurnAction>,
+        referenceAction: BattleTurnAction,
+        passNumber: Int,
+        context: DecisionContext
+    ): List<BattleTurnAction> {
+        val wispActions = raw.filter { action ->
+            val shared = (action as? BattleTurnAction.Support)?.action as? BattleSupportAction.Shared
+            shared?.action is SupportAction.PlayWisp
+        }
+        if (wispActions.isEmpty()) return raw
+        val cards = wispActions.mapNotNull { action ->
+            val shared = (action as? BattleTurnAction.Support)?.action as? BattleSupportAction.Shared
+            (shared?.action as? SupportAction.PlayWisp)?.card
+        }
+        val referenceCard = run {
+            val shared = (referenceAction as? BattleTurnAction.Support)?.action as? BattleSupportAction.Shared
+            (shared?.action as? SupportAction.PlayWisp)?.card
+        }
+        val decision = player.decisions.wispPlay.chooseWisp(
+            ChooseWispPlayRequest(
+                legalCards = cards,
+                referenceCard = referenceCard?.takeIf { it in cards },
+                allowHold = true,
+                observation = WispPlayObservation(
+                    phase = RoundCardType.BATTLE,
+                    supportPassNumber = passNumber,
+                    context = context
+                )
+            )
+        )
+        game.chronicle.record(
+            Moment.WispPlayDecision(
+                playerId = player.id, phase = ChroniclePhase.BATTLE,
+                legalWispNames = cards.map { it.name },
+                selectedWispName = (decision as? WispPlayDecision.Play)?.card?.name,
+                referenceWispName = referenceCard?.name,
+                supportPassNumber = passNumber
+            )
+        )
+        val withoutWisps = raw.filterNot { it in wispActions }
+        return when (decision) {
+            WispPlayDecision.Hold -> withoutWisps
+            is WispPlayDecision.Play -> withoutWisps + BattleTurnAction.Support(
+                BattleSupportAction.Shared(SupportAction.PlayWisp(decision.card))
+            )
+        }
     }
 
     private fun supportActions(

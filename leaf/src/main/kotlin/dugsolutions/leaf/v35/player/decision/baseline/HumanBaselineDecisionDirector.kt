@@ -18,6 +18,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.support.HumanBaselineSuppo
 import dugsolutions.leaf.v35.player.decision.baseline.wound.HumanBaselineWoundStrategy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
+import dugsolutions.leaf.v35.player.decision.wisp.HumanWispPlayPolicy
 
 /**
  * Canonical wiring for the Human Baseline layer.
@@ -68,6 +69,7 @@ class HumanBaselineDecisionDirector(
     internal val cultivationMain = HumanCultivationMainPolicy()
     internal val cultivationSupport = HumanCultivationSupportPolicy()
     internal val battleSupport = HumanBattleSupportPolicy()
+    internal val wispPlay = HumanWispPlayPolicy()
     internal val battle = HumanBaselineBattleStrategy(
         scoreEngine = scoreEngine,
         cardScorers = cardScorers,
@@ -103,6 +105,7 @@ class HumanBaselineDecisionDirector(
         cultivationSupport = cultivationSupport,
         battle = battle,
         battleSupport = battleSupport,
+        wispPlay = wispPlay,
         buy = buy,
         support = support,
         effect = effect

@@ -14,6 +14,7 @@ class PolicyInteractionOptionsTest {
             "--buy-policy", "learned", "--buy-weights", "b.weights",
             "--cultivation-main-policy", "learned", "--cultivation-main-weights", "c.weights",
             "--cultivation-support-policy", "learned", "--cultivation-support-weights", "cs.weights",
+            "--wisp-policy", "learned", "--wisp-weights", "w.weights",
             "--battle-support-policy", "learned", "--battle-support-weights", "s.weights"
         ))
         assertEquals(17, o.games)
@@ -24,6 +25,8 @@ class PolicyInteractionOptionsTest {
         assertEquals("c.weights", o.cultivationMainWeights.toString())
         assertEquals("learned", o.cultivationSupportPolicy)
         assertEquals("cs.weights", o.cultivationSupportWeights.toString())
+        assertEquals("learned", o.wispPolicy)
+        assertEquals("w.weights", o.wispWeights.toString())
         assertEquals("learned", o.battleSupportPolicy)
         assertEquals("s.weights", o.battleSupportWeights.toString())
     }
@@ -35,6 +38,9 @@ class PolicyInteractionOptionsTest {
         }
         assertFailsWith<IllegalArgumentException> {
             PolicyInteractionOptions.parse(listOf("--cultivation-support-policy", "magic"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            PolicyInteractionOptions.parse(listOf("--wisp-policy", "magic"))
         }
     }
 }

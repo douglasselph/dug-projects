@@ -462,6 +462,24 @@ tasks.register<JavaExec>("runEvaluateBattleSupportPolicy") {
 
 // Modular held-out evaluator for independently selectable Buy, Cultivation Main,
 // and Battle Support policies. Battle Main intentionally remains Human Baseline.
+tasks.register<JavaExec>("runTrainWispPolicy") {
+    description = "Evolves the learned Wisp Play policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.wisp.TrainWispPlayPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluateWispPolicy") {
+    description = "Evaluates a learned Wisp Play policy on held-out matched games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.wisp.EvaluateWispPlayPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
 tasks.register<JavaExec>("runEvaluatePolicyInteractions") {
     description = "Evaluates modular Buy/Cultivation Main/Battle Support policy combinations on matched schedules."
     group = "simulation research"

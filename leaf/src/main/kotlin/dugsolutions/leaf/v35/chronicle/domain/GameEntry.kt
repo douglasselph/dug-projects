@@ -77,6 +77,19 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+
+    data class WispPlayDecision(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val legalWispNames: List<String>,
+        val selectedWispName: String?,
+        val referenceWispName: String?,
+        val supportPassNumber: Int? = null,
+        val mainActionsRemaining: Int? = null,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class RoundEffectOpportunity(
         override val sequence: Long,
         val playerId: PlayerId,

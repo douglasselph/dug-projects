@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.player.decision.mechanical.placement.MechanicalCrea
 import dugsolutions.leaf.v35.player.decision.mechanical.reward.MechanicalRewardStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.support.MechanicalSupportStrategy
 import dugsolutions.leaf.v35.player.decision.mechanical.wound.MechanicalWoundStrategy
+import dugsolutions.leaf.v35.player.decision.wisp.MechanicalWispPlayPolicy
 
 /**
  * Deterministic engine-control policy.
@@ -62,6 +63,7 @@ object MechanicalControl {
             cultivationSupport = MechanicalCultivationSupportPolicy(),
             battle = MechanicalBattleStrategy(),
             battleSupport = MechanicalBattleSupportPolicy(),
+            wispPlay = MechanicalWispPlayPolicy(),
             buy = MechanicalBuyStrategy(),
             support = MechanicalSupportStrategy(),
             effect = MechanicalEffectStrategy()

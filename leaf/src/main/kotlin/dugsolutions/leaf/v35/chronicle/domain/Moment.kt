@@ -66,6 +66,18 @@ sealed interface Moment {
         val playedImmediately: Boolean = false
     ) : Moment
 
+
+    /** One Wisp-policy decision among currently executable Wisp cards. */
+    data class WispPlayDecision(
+        val playerId: PlayerId,
+        val phase: ChroniclePhase,
+        val legalWispNames: List<String>,
+        val selectedWispName: String?,
+        val referenceWispName: String?,
+        val supportPassNumber: Int? = null,
+        val mainActionsRemaining: Int? = null
+    ) : Moment
+
     /** Snapshot of which Round effects are legal at one Main-Action decision point. */
     data class RoundEffectOpportunity(
         val playerId: PlayerId,

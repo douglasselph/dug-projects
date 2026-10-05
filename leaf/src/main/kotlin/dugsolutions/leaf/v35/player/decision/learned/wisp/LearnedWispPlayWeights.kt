@@ -1,0 +1,19 @@
+package dugsolutions.leaf.v35.player.decision.learned.wisp
+
+import java.nio.file.Files
+import java.nio.file.Path
+
+data class LearnedWispPlayProvenance(val trainingStatus:String="untrained", val roundPattern:String="unknown", val grove:String="unknown", val generations:Int?=null, val gamesPerPolicy:Int?=null, val population:Int?=null, val playerCount:Int?=null, val evolutionSeed:Long?=null, val mechanicalSeedStart:Long?=null, val strategySeedStart:Long?=null, val fitness:Double?=null, val roundConfiguration:String?=null)
+
+class LearnedWispPlayWeights private constructor(private val values:DoubleArray, private val named:Map<String,Double>, val provenance:LearnedWispPlayProvenance){
+    operator fun get(f:WispPlayFeature)=values[f.ordinal]; fun named(k:String)=named[k]?:0.0; fun namedWeights()=named.toSortedMap(); fun toDoubleArray()=values.copyOf()
+    fun withProvenance(p:LearnedWispPlayProvenance)=LearnedWispPlayWeights(values.copyOf(),named,p)
+    fun withNamed(k:String,v:Double)=LearnedWispPlayWeights(values.copyOf(),named+(k to v),provenance)
+    fun save(path:Path){path.parent?.let(Files::createDirectories);Files.writeString(path,buildString{appendLine("formatVersion=1");appendLine("policy=wisp-play-v1");appendLine("trainingStatus=${provenance.trainingStatus}");appendLine("trainedRoundPattern=${provenance.roundPattern}");appendLine("trainedGrove=${provenance.grove}");provenance.generations?.let{appendLine("trainingGenerations=$it")};provenance.gamesPerPolicy?.let{appendLine("trainingGamesPerPolicy=$it")};provenance.population?.let{appendLine("trainingPopulation=$it")};provenance.playerCount?.let{appendLine("trainingPlayerCount=$it")};provenance.evolutionSeed?.let{appendLine("trainingEvolutionSeed=$it")};provenance.mechanicalSeedStart?.let{appendLine("trainingMechanicalSeedStart=$it")};provenance.strategySeedStart?.let{appendLine("trainingStrategySeedStart=$it")};provenance.fitness?.let{appendLine("trainingFitness=$it")};provenance.roundConfiguration?.let{appendLine("trainedRoundConfiguration=$it")};WispPlayFeature.entries.forEach{appendLine("${it.name}=${this@LearnedWispPlayWeights[it]}")};named.toSortedMap().forEach{(k,v)->appendLine("$k=$v")}})}
+    companion object{
+        fun wispFeature(name:String)="WISP_CARD_$name"; fun effectFeature(name:String)="WISP_EFFECT_$name"; fun isNamed(k:String)=k.startsWith("WISP_CARD_")||k.startsWith("WISP_EFFECT_")
+        fun zeros(keys:Collection<String> = emptyList())=LearnedWispPlayWeights(DoubleArray(WispPlayFeature.entries.size),keys.associateWith{0.0},LearnedWispPlayProvenance())
+        fun fromDoubleArray(v:DoubleArray,p:LearnedWispPlayProvenance=LearnedWispPlayProvenance(),n:Map<String,Double> = emptyMap()):LearnedWispPlayWeights{require(v.size==WispPlayFeature.entries.size);return LearnedWispPlayWeights(v.copyOf(),n.toMap(),p)}
+        fun load(path:Path):LearnedWispPlayWeights{val e=Files.readAllLines(path).filter{it.isNotBlank()&&!it.trimStart().startsWith("#")}.associate{val i=it.indexOf('=');require(i>0);it.substring(0,i).trim() to it.substring(i+1).trim()};require(e["policy"]=="wisp-play-v1");val std=DoubleArray(WispPlayFeature.entries.size){e.getValue(WispPlayFeature.entries[it].name).toDouble()};val n=e.filterKeys(::isNamed).mapValues{it.value.toDouble()};return LearnedWispPlayWeights(std,n,LearnedWispPlayProvenance(trainingStatus=e["trainingStatus"]?:"unknown",roundPattern=e["trainedRoundPattern"]?:"unknown",grove=e["trainedGrove"]?:"unknown",generations=e["trainingGenerations"]?.toInt(),gamesPerPolicy=e["trainingGamesPerPolicy"]?.toInt(),population=e["trainingPopulation"]?.toInt(),playerCount=e["trainingPlayerCount"]?.toInt(),evolutionSeed=e["trainingEvolutionSeed"]?.toLong(),mechanicalSeedStart=e["trainingMechanicalSeedStart"]?.toLong(),strategySeedStart=e["trainingStrategySeedStart"]?.toLong(),fitness=e["trainingFitness"]?.toDouble(),roundConfiguration=e["trainedRoundConfiguration"]))}
+    }
+}

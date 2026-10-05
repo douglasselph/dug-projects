@@ -14,6 +14,8 @@ import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
 import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayPolicy
+import dugsolutions.leaf.v35.player.decision.wisp.HumanWispPlayPolicy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 
@@ -37,6 +39,7 @@ data class DecisionDirector(
     val cultivationSupport: CultivationSupportPolicy = HumanCultivationSupportPolicy(),
     val battle: BattleStrategy,
     val battleSupport: BattleSupportPolicy = HumanBattleSupportPolicy(),
+    val wispPlay: WispPlayPolicy = HumanWispPlayPolicy(),
     val buy: BuyStrategy,
     val support: SupportStrategy,
     val effect: EffectStrategy
