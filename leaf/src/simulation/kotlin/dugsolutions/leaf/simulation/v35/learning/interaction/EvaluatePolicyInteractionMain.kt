@@ -137,7 +137,7 @@ fun main(args: Array<String>) {
         val buyWeights = if (o.buyPolicy == "learned") LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(o.buyWeights), plants, effectiveCosts) else null
         val cultivationWeights = if (o.cultivationMainPolicy == "learned") LearnedCultivationMainCatalog.prepare(LearnedCultivationMainWeights.load(o.cultivationMainWeights), plants, effectiveCosts) else null
         val supportWeights = if (o.battleSupportPolicy == "learned") LearnedBattleSupportCatalog.prepare(LearnedBattleSupportWeights.load(o.battleSupportWeights), plants) else null
-        if (buyWeights != null) LearnedBuyCardCatalog.validateCurrentSchema(buyWeights, plants, effectiveCosts)
+        if (buyWeights != null) LearnedBuyCardCatalog.validateCurrentSchema(buyWeights, plants)
         if (cultivationWeights != null) LearnedCultivationMainCatalog.validateCurrentSchema(cultivationWeights, plants, effectiveCosts)
         if (supportWeights != null) LearnedBattleSupportCatalog.validateCurrentSchema(supportWeights, plants)
 
