@@ -211,6 +211,17 @@ class GameChronicle : Chronicle {
                 spentButterflies = moment.spentButterflies,
                 hierarchyDepth = hierarchyDepth
             )
+            is Moment.PlantEffectDecision -> GameEntry.PlantEffectDecision(
+                sequence = sequence,
+                playerId = moment.playerId,
+                plantId = moment.plantId,
+                effect = moment.effect,
+                decisionKind = moment.decisionKind,
+                legalChoiceIds = moment.legalChoiceIds.toList(),
+                selectedChoiceId = moment.selectedChoiceId,
+                referenceChoiceId = moment.referenceChoiceId,
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.EffectResolved -> GameEntry.EffectResolved(
                 sequence, moment.playerId, moment.effect, moment.sourceKind,
                 moment.sourceName, moment.phase, hierarchyDepth

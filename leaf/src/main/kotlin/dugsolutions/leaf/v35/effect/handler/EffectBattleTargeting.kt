@@ -162,7 +162,7 @@ internal fun chooseRootWellBattle(
         "No legal Root Well Battle targets"
     }
 
-    val chosen = request.actor.decisions.effect.chooseRootWellBattle(
+    val chosen = request.effectDecisionStrategy().chooseRootWellBattle(
         ChooseRootWellBattleRequest(
             effect = request.effect,
             legalChoices = legalChoices,
@@ -209,7 +209,7 @@ internal fun chooseRequiredBattleDie(
         "No legal Battle die targets for effect: ${request.effect}"
     }
 
-    val chosen = request.actor.decisions.effect.chooseBattleDie(
+    val chosen = request.effectDecisionStrategy().chooseBattleDie(
         ChooseEffectBattleDieRequest(
             effect = request.effect,
             legalChoices = legalChoices,
@@ -232,7 +232,7 @@ internal fun chooseRequiredCrossPlayerDieSwap(
         "No legal cross-player die swaps for effect: ${request.effect}"
     }
 
-    val chosen = request.actor.decisions.effect.chooseCrossPlayerDieSwap(
+    val chosen = request.effectDecisionStrategy().chooseCrossPlayerDieSwap(
         ChooseEffectCrossPlayerDieSwapRequest(
             effect = request.effect,
             legalChoices = legalChoices,
@@ -291,7 +291,7 @@ internal fun chooseRequiredStrikeRow(
         "No legal Strike Row targets for effect: ${request.effect}"
     }
 
-    val chosen = request.actor.decisions.effect.chooseStrikeRow(
+    val chosen = request.effectDecisionStrategy().chooseStrikeRow(
         ChooseEffectStrikeRowRequest(
             effect = request.effect,
             legalChoices = legalChoices,

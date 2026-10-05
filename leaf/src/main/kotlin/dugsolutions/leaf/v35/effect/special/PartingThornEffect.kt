@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -73,7 +74,7 @@ class PartingThornEffect : EffectHandler {
         if (legalChoices.isEmpty()) return
 
         val chosen =
-            request.actor.decisions.effect.chooseOptionalPlant(
+            request.effectDecisionStrategy().chooseOptionalPlant(
                 ChooseOptionalEffectPlantRequest(
                     effect = request.effect,
                     legalChoices = legalChoices,
@@ -145,7 +146,7 @@ class PartingThornEffect : EffectHandler {
 
         if (legalChoices.isEmpty()) return
 
-        val chosen = request.actor.decisions.effect.chooseOpponentPlantWound(
+        val chosen = request.effectDecisionStrategy().chooseOpponentPlantWound(
             ChooseEffectOpponentPlantWoundRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,

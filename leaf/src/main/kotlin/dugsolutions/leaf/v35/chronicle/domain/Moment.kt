@@ -148,6 +148,17 @@ sealed interface Moment {
         val spentButterflies: Int = 0
     ) : Moment
 
+    /** Research trace for one effect-internal Plant targeting/branch decision. */
+    data class PlantEffectDecision(
+        val playerId: PlayerId,
+        val plantId: String,
+        val effect: GameEffect,
+        val decisionKind: String,
+        val legalChoiceIds: List<String>,
+        val selectedChoiceId: String,
+        val referenceChoiceId: String?
+    ) : Moment
+
     data class EffectResolved(
         val playerId: PlayerId,
         val effect: GameEffect,

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -84,7 +85,7 @@ class SnipHappensEffect : EffectHandler {
         }
 
         val chosen =
-            request.actor.decisions.effect
+            request.effectDecisionStrategy()
                 .chooseOpponentPlantWound(
                     ChooseEffectOpponentPlantWoundRequest(
                         effect = request.effect,

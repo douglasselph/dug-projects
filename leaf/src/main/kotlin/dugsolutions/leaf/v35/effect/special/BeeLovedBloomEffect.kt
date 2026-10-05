@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -45,7 +46,7 @@ class BeeLovedBloomEffect : EffectHandler {
 
         if (legalSources.isNotEmpty()) {
             val chosen =
-                request.actor.decisions.effect.chooseBeeSource(
+                request.effectDecisionStrategy().chooseBeeSource(
                     ChooseBeeSourceRequest(
                         effect = request.effect,
                         legalChoices = legalSources,

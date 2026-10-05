@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.battle.BattlePlacementResolver
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.error.effectCheck
@@ -66,7 +67,7 @@ class PetalToDie4Effect(
 
     private fun executePrinted(request: GameEffectRequest) {
         val legalChoices = oldLegalChoices(request)
-        val chosen = request.actor.decisions.effect.choosePetalToDie4(
+        val chosen = request.effectDecisionStrategy().choosePetalToDie4(
             ChoosePetalToDie4Request(
                 effect = request.effect,
                 legalChoices = legalChoices,
@@ -92,7 +93,7 @@ class PetalToDie4Effect(
      */
     private fun executeRedesigned(request: GameEffectRequest, executor: GameEffectExecutor) {
         val sources = redesignedSources(request)
-        val source = request.actor.decisions.effect.choosePetalD4Source(
+        val source = request.effectDecisionStrategy().choosePetalD4Source(
             ChoosePetalD4SourceRequest(
                 effect = request.effect,
                 legalChoices = sources,
@@ -108,7 +109,7 @@ class PetalToDie4Effect(
             GameEffectPhase.CULTIVATION -> handChoices(request.actor) { it.sides == 4 }
             GameEffectPhase.BATTLE -> battleHandChoices(request).filter { it.sides == 4 }
         }
-        val chosen = request.actor.decisions.effect.chooseDice(
+        val chosen = request.effectDecisionStrategy().chooseDice(
             ChooseEffectDiceRequest(
                 effect = request.effect,
                 legalChoices = d4Choices,

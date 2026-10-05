@@ -488,3 +488,21 @@ tasks.register<JavaExec>("runEvaluatePolicyInteractions") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.interaction.EvaluatePolicyInteractionMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+tasks.register<JavaExec>("runTrainPlantEffectPolicy") {
+    description = "Evolves learned Plant effect/targeting policy against Human Baseline opponents."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.plant.TrainPlantEffectPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluatePlantEffectPolicy") {
+    description = "Evaluates learned Plant effect/targeting policy on held-out matched games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.plant.EvaluatePlantEffectPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}

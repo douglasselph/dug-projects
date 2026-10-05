@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -63,7 +64,7 @@ class OEdelweissEffect : EffectHandler {
                     OEdelweissChoice.Done
 
             val chosen =
-                request.actor.decisions.effect
+                request.effectDecisionStrategy()
                     .chooseOEdelweiss(
                         ChooseOEdelweissRequest(
                             effect = request.effect,

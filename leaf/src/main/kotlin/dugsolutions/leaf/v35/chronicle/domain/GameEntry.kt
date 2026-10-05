@@ -164,6 +164,18 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0
     ) : GameEntry
 
+    data class PlantEffectDecision(
+        override val sequence: Long,
+        val playerId: PlayerId,
+        val plantId: String,
+        val effect: GameEffect,
+        val decisionKind: String,
+        val legalChoiceIds: List<String>,
+        val selectedChoiceId: String,
+        val referenceChoiceId: String?,
+        override val hierarchyDepth: Int = 0
+    ) : GameEntry
+
     data class EffectResolved(
         override val sequence: Long,
         val playerId: PlayerId,

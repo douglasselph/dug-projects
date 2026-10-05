@@ -1,0 +1,25 @@
+package dugsolutions.leaf.v35.player.decision.learned.plant
+
+enum class PlantEffectFeature {
+    BIAS,
+    PHASE_BATTLE,
+    GAME_PROGRESS,
+    BATTLES_REMAINING,
+    HAND_DICE_COUNT,
+    HAND_DICE_POWER,
+    PLANT_COUNT,
+    WATER,
+    SUNLIGHT,
+    BEES,
+    WORMS,
+    WISPS,
+    TARGET_DIE_VALUE,
+    TARGET_DIE_SIDES,
+    TARGET_DIE_HEADROOM,
+    TARGET_IS_OPPONENT,
+    TARGET_PLANT_FACE_UP,
+    TARGET_ROW_DEFICIT,
+    TARGET_ROW_LEAD,
+    OPTIONAL_DECLINE,
+    HUMAN_REFERENCE_MATCH
+}

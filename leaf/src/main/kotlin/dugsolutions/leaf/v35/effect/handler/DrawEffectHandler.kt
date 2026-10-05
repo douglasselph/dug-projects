@@ -332,7 +332,7 @@ class DrawEffectHandler(
             optionalBattleSwapPairs(request)
 
         val chosen =
-            request.actor.decisions.effect.chooseOptionalDiePair(
+            request.effectDecisionStrategy().chooseOptionalDiePair(
                 ChooseOptionalEffectDiePairRequest(
                     effect = request.effect,
                     legalChoices = legalPairs,
@@ -394,7 +394,7 @@ class DrawEffectHandler(
         }
 
         // The pair is mandatory. The source member is the die that receives +2.
-        val chosen = request.actor.decisions.effect.chooseDiePair(
+        val chosen = request.effectDecisionStrategy().chooseDiePair(
             dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiePairRequest(
                 effect = request.effect,
                 legalChoices = legalPairs,
@@ -708,7 +708,7 @@ class DrawEffectHandler(
     ) {
         val legalChoices = handChoices(request.actor)
         val maxChoices = minOf(maxDiscard, legalChoices.size)
-        val chosen = request.actor.decisions.effect.chooseDice(
+        val chosen = request.effectDecisionStrategy().chooseDice(
             ChooseEffectDiceRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,

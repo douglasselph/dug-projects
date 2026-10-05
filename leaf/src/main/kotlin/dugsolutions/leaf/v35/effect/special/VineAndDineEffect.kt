@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -37,7 +38,7 @@ class VineAndDineEffect : EffectHandler {
         }
 
         val legalChoices = legalChoices(request)
-        val chosen = request.actor.decisions.effect.chooseCritterAndDie(
+        val chosen = request.effectDecisionStrategy().chooseCritterAndDie(
             ChooseEffectCritterDieRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,

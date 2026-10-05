@@ -223,7 +223,7 @@ class DieValueEffectHandler : EffectHandler {
 
             GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
                 val legalChoices = kindredChoices(request)
-                val chosen = request.actor.decisions.effect.chooseDiePair(
+                val chosen = request.effectDecisionStrategy().chooseDiePair(
                     ChooseEffectDiePairRequest(
                         effect = request.effect,
                         legalChoices = legalChoices,

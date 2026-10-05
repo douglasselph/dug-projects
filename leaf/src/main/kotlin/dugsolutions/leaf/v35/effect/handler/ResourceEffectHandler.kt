@@ -391,7 +391,7 @@ class ResourceEffectHandler : EffectHandler {
         request: GameEffectRequest
     ) {
         val legalChoices = availableDieSizes(request)
-        val chosen = request.actor.decisions.effect.chooseDieSize(
+        val chosen = request.effectDecisionStrategy().chooseDieSize(
             ChooseEffectDieSizeRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,
@@ -416,7 +416,7 @@ class ResourceEffectHandler : EffectHandler {
         request: GameEffectRequest
     ) {
         val legalChoices = opponentsWithWisps(request)
-        val chosen = request.actor.decisions.effect.choosePlayer(
+        val chosen = request.effectDecisionStrategy().choosePlayer(
             ChooseEffectPlayerRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,

@@ -704,6 +704,11 @@ object ChronicleTextRenderer {
                 "${player(entry.playerId)} CULTIVATION SUPPORT DECISION selected=${entry.selectedActionId ?: "PASS"} " +
                     "legal=${entry.legalActionIds.joinToString(",")} mainsRemaining=${entry.mainActionsRemaining}"
 
+            is GameEntry.PlantEffectDecision ->
+                "${player(entry.playerId)} PLANT EFFECT DECISION ${entry.plantId} ${entry.effect} " +
+                    "${entry.decisionKind} selected=${entry.selectedChoiceId} " +
+                    "reference=${entry.referenceChoiceId ?: "none"}"
+
             is GameEntry.EffectResolved ->
                 "${player(entry.playerId)} ${entry.phase} EFFECT ${entry.sourceKind} " +
                     "${entry.sourceName}: ${entry.effect}"

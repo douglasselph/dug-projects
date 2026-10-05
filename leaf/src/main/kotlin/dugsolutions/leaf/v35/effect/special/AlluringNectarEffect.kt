@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.error.effectCheck
@@ -43,7 +44,7 @@ class AlluringNectarEffect : EffectHandler {
 
         if (legalChoices.isNotEmpty()) {
             val chosen =
-                request.actor.decisions.effect.chooseButterflyTarget(
+                request.effectDecisionStrategy().chooseButterflyTarget(
                     ChooseEffectButterflyTargetRequest(
                         effect = request.effect,
                         legalChoices = legalChoices,

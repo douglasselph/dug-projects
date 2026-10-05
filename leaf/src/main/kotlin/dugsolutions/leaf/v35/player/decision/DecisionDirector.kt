@@ -10,6 +10,8 @@ import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainPolicy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportPolicy
 import dugsolutions.leaf.v35.player.decision.cultivation.HumanCultivationSupportPolicy
 import dugsolutions.leaf.v35.player.decision.effect.EffectStrategy
+import dugsolutions.leaf.v35.player.decision.plant.PlantEffectPolicy
+import dugsolutions.leaf.v35.player.decision.plant.HumanPlantEffectPolicy
 import dugsolutions.leaf.v35.player.decision.placement.CreaturePlacementStrategy
 import dugsolutions.leaf.v35.player.decision.reward.RewardStrategy
 import dugsolutions.leaf.v35.player.decision.support.SupportStrategy
@@ -42,7 +44,8 @@ data class DecisionDirector(
     val wispPlay: WispPlayPolicy = HumanWispPlayPolicy(),
     val buy: BuyStrategy,
     val support: SupportStrategy,
-    val effect: EffectStrategy
+    val effect: EffectStrategy,
+    val plantEffect: PlantEffectPolicy = HumanPlantEffectPolicy()
 ) {
     companion object {
 

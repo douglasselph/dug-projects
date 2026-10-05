@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect.special
 
+import dugsolutions.leaf.v35.effect.handler.effectDecisionStrategy
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -47,7 +48,7 @@ class ShiftHappensEffect : EffectHandler {
                 isFaceUp = it.isFaceUp
             )
         }
-        val chosen = request.actor.decisions.effect.choosePlantEffect(
+        val chosen = request.effectDecisionStrategy().choosePlantEffect(
             ChooseEffectPlantRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,
@@ -73,7 +74,7 @@ class ShiftHappensEffect : EffectHandler {
 
     private fun flipOpponentRootOrVine(request: GameEffectRequest) {
         val legalChoices = legalOpponentChoices(request)
-        val chosen = request.actor.decisions.effect.chooseOpponentPlantWound(
+        val chosen = request.effectDecisionStrategy().chooseOpponentPlantWound(
             ChooseEffectOpponentPlantWoundRequest(
                 effect = request.effect,
                 legalChoices = legalChoices,

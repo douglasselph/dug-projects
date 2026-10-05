@@ -79,7 +79,7 @@ private fun chooseRequiredDie(
         "No legal die targets for effect: ${request.effect}"
     }
 
-    val chosen = request.actor.decisions.effect.chooseDie(
+    val chosen = request.effectDecisionStrategy().chooseDie(
         ChooseEffectDieRequest(
             effect = request.effect,
             legalChoices = legalChoices,
@@ -98,7 +98,7 @@ internal fun chooseOptionalHandDie(
     request: GameEffectRequest,
     legalChoices: List<EffectDieChoice>
 ): Die? {
-    val chosen = request.actor.decisions.effect.chooseOptionalDie(
+    val chosen = request.effectDecisionStrategy().chooseOptionalDie(
         ChooseOptionalEffectDieRequest(
             effect = request.effect,
             legalChoices = legalChoices,
