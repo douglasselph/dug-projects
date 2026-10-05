@@ -506,3 +506,22 @@ tasks.register<JavaExec>("runEvaluatePlantEffectPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.plant.EvaluatePlantEffectPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// Evolves ordinary Battle Main selection independently from Battle Support timing.
+tasks.register<JavaExec>("runTrainBattleMainPolicy") {
+    description = "Evolves learned Battle Main policy; other policy families are Human or explicitly frozen learned policies."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.battle.main.TrainBattleMainPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluateBattleMainPolicy") {
+    description = "Evaluates learned Battle Main against Human Battle Main on matched held-out games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.battle.main.EvaluateBattleMainPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}

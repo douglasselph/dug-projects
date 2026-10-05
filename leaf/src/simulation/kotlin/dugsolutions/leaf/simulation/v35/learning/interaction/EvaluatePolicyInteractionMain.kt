@@ -26,6 +26,9 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselineDecisionDirec
 import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportCatalog
 import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportPolicy
 import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportWeights
+import dugsolutions.leaf.v35.player.decision.learned.battle.main.LearnedBattleMainCatalog
+import dugsolutions.leaf.v35.player.decision.learned.battle.main.LearnedBattleMainPolicy
+import dugsolutions.leaf.v35.player.decision.learned.battle.main.LearnedBattleMainWeights
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyCardCatalog
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyStrategy
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
@@ -72,7 +75,9 @@ data class PolicyInteractionOptions(
     val plantEffectPolicy: String,
     val plantEffectWeights: Path,
     val battleSupportPolicy: String,
-    val battleSupportWeights: Path
+    val battleSupportWeights: Path,
+    val battleMainPolicy: String,
+    val battleMainWeights: Path
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -99,6 +104,8 @@ data class PolicyInteractionOptions(
             var plantEffectWeights = Paths.get("output/ai/plant-effect-policy-v1-trained.weights")
             var battleSupportPolicy = "human"
             var battleSupportWeights = Paths.get("output/ai/battle-support-policy-v1-trained.weights")
+            var battleMainPolicy = "human"
+            var battleMainWeights = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -124,6 +131,8 @@ data class PolicyInteractionOptions(
                     arg.startsWith("--plant-effect-weights") -> plantEffectWeights = Paths.get(value(arg))
                     arg.startsWith("--battle-support-policy") -> battleSupportPolicy = value(arg).lowercase()
                     arg.startsWith("--battle-support-weights") -> battleSupportWeights = Paths.get(value(arg))
+                    arg.startsWith("--battle-main-policy") -> battleMainPolicy = value(arg).lowercase()
+                    arg.startsWith("--battle-main-weights") -> battleMainWeights = Paths.get(value(arg))
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg == "--first-game-grove" -> grovePattern = null
@@ -140,12 +149,13 @@ data class PolicyInteractionOptions(
             require(wispPolicy in setOf("human", "learned")) { "--wisp-policy must be human or learned" }
             require(plantEffectPolicy in setOf("human", "learned")) { "--plant-effect-policy must be human or learned" }
             require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
+            require(battleMainPolicy in setOf("human", "learned")) { "--battle-main-policy must be human or learned" }
             return PolicyInteractionOptions(games, seed, strategySeed, grovePattern, groveSeed, plantOverrides, roundOverrides, players, roundLabel,
-                buyPolicy, buyWeights, cultivationMainPolicy, cultivationMainWeights, cultivationSupportPolicy, cultivationSupportWeights, wispPolicy, wispWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, battleSupportWeights)
+                buyPolicy, buyWeights, cultivationMainPolicy, cultivationMainWeights, cultivationSupportPolicy, cultivationSupportWeights, wispPolicy, wispWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, battleSupportWeights, battleMainPolicy, battleMainWeights)
         }
 
         private fun usage() {
-            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH]")
+            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH] --battle-main-policy human|learned [--battle-main-weights PATH]")
         }
     }
 }
@@ -172,20 +182,22 @@ fun main(args: Array<String>) {
         val effectivePlantEffectCatalog = effectivePlantEffectCatalogCards(plants, plantExp.values)
         val plantEffectWeights = if (o.plantEffectPolicy == "learned") LearnedPlantEffectCatalog.prepare(LearnedPlantEffectWeights.load(o.plantEffectWeights), effectivePlantEffectCatalog) else null
         val supportWeights = if (o.battleSupportPolicy == "learned") LearnedBattleSupportCatalog.prepare(LearnedBattleSupportWeights.load(o.battleSupportWeights), plants) else null
+        val battleMainWeights = if (o.battleMainPolicy == "learned") LearnedBattleMainCatalog.prepare(LearnedBattleMainWeights.load(o.battleMainWeights), effectivePlantEffectCatalogCards(plants, plantExp.values)) else null
         if (buyWeights != null) LearnedBuyCardCatalog.validateCurrentSchema(buyWeights, plants)
         if (cultivationWeights != null) LearnedCultivationMainCatalog.validateCurrentSchema(cultivationWeights, plants, effectiveCosts)
         if (cultivationSupportWeights != null) LearnedCultivationSupportCatalog.validateCurrentSchema(cultivationSupportWeights, plants)
         if (plantEffectWeights != null) LearnedPlantEffectCatalog.validateCurrentSchema(plantEffectWeights, effectivePlantEffectCatalog)
         if (supportWeights != null) LearnedBattleSupportCatalog.validateCurrentSchema(supportWeights, plants)
+        if (battleMainWeights != null) LearnedBattleMainCatalog.validateCurrentSchema(battleMainWeights, effectivePlantEffectCatalog)
 
-        val policyFactory = modularFactory(buyWeights, cultivationWeights, cultivationSupportWeights, wispWeights, plantEffectWeights, supportWeights)
+        val policyFactory = modularFactory(buyWeights, cultivationWeights, cultivationSupportWeights, wispWeights, plantEffectWeights, supportWeights, battleMainWeights)
         val gameFactory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val acc = InteractionAccumulator()
 
         println("Leaf & Let Die — Modular Policy Interaction Evaluation")
         println("samples=${o.games}; players=${o.players}; rounds=${o.roundLabel}")
-        println("Buy=${o.buyPolicy}; CultivationMain=${o.cultivationMainPolicy}; CultivationSupport=${o.cultivationSupportPolicy}; Wisp=${o.wispPolicy}; PlantEffect=${o.plantEffectPolicy}; BattleSupport=${o.battleSupportPolicy}; BattleMain=human")
+        println("Buy=${o.buyPolicy}; CultivationMain=${o.cultivationMainPolicy}; CultivationSupport=${o.cultivationSupportPolicy}; Wisp=${o.wispPolicy}; PlantEffect=${o.plantEffectPolicy}; BattleSupport=${o.battleSupportPolicy}; BattleMain=${o.battleMainPolicy}")
         println("mechanical seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}; groveSeed=${o.groveSeed}")
         println("Plant baseline=${o.plantOverrides ?: "canonical"}; Round override=${o.roundOverrides ?: "canonical"}")
         if (plantExp.isActive) { println(); println(plantExp.render(plants)) }
@@ -207,7 +219,7 @@ fun main(args: Array<String>) {
             ))
             val result = withSimulationFailureDiagnostics(
                 game,
-                SimulationRunContext("evaluate_policy_interactions", sample, "B${o.buyPolicy.first()}-C${o.cultivationMainPolicy.first()}-CS${o.cultivationSupportPolicy.first()}-W${o.wispPolicy.first()}-P${o.plantEffectPolicy.first()}-S${o.battleSupportPolicy.first()}", seat, o.seed+sample, o.strategySeed+sample, GrovePlantCode.describe(grove), o.roundLabel)
+                SimulationRunContext("evaluate_policy_interactions", sample, "B${o.buyPolicy.first()}-C${o.cultivationMainPolicy.first()}-CS${o.cultivationSupportPolicy.first()}-W${o.wispPolicy.first()}-P${o.plantEffectPolicy.first()}-S${o.battleSupportPolicy.first()}-M${o.battleMainPolicy.first()}", seat, o.seed+sample, o.strategySeed+sample, GrovePlantCode.describe(grove), o.roundLabel)
             ) { runner.run(game) }
             acc.add(CompletedInteractionGame(GameSummaryExtractor.extract(game, result), game.chronicle.entries.toList()), seat)
         }
@@ -221,7 +233,8 @@ private fun modularFactory(
     cultivationSupportWeights: LearnedCultivationSupportWeights?,
     wispWeights: LearnedWispPlayWeights?,
     plantEffectWeights: LearnedPlantEffectWeights?,
-    supportWeights: LearnedBattleSupportWeights?
+    supportWeights: LearnedBattleSupportWeights?,
+    battleMainWeights: LearnedBattleMainWeights?
 ): PlayerDecisionFactory = object : PlayerDecisionFactory {
     override fun create() = create(StrategyRandomizer.create(), DecisionReasoningSink.NONE)
     override fun create(strategyRandomizer: StrategyRandomizer) = create(strategyRandomizer, DecisionReasoningSink.NONE)
@@ -233,7 +246,8 @@ private fun modularFactory(
                 cultivationSupport = cultivationSupportWeights?.let { LearnedCultivationSupportPolicy(it) } ?: baseline.cultivationSupport,
                 wispPlay = wispWeights?.let { LearnedWispPlayPolicy(it) } ?: baseline.wispPlay,
                 plantEffect = plantEffectWeights?.let { LearnedPlantEffectPolicy(it) } ?: baseline.plantEffect,
-                battleSupport = supportWeights?.let { LearnedBattleSupportPolicy(it) } ?: baseline.battleSupport
+                battleSupport = supportWeights?.let { LearnedBattleSupportPolicy(it) } ?: baseline.battleSupport,
+                battleMain = battleMainWeights?.let { LearnedBattleMainPolicy(it) } ?: baseline.battleMain
             )
         }
 }
@@ -245,6 +259,9 @@ private class InteractionAccumulator {
     val plantPurchaseByName = sortedMapOf<String, Long>(); val diePurchaseByName = sortedMapOf<String, Long>()
     val cultivationActions = linkedMapOf<MainActionKind, Long>()
     val supportActions = linkedMapOf<SupportActionKind, Long>()
+    val battleFirstActions = linkedMapOf<MainActionKind, Long>()
+    val battleFinalActions = linkedMapOf<MainActionKind, Long>()
+    val battleSunlightActions = linkedMapOf<MainActionKind, Long>()
     val cultivationSupportActions = linkedMapOf<SupportActionKind, Long>()
     var cultivationSupportPasses = 0L
     var cultivationSupportWindows = 0L
@@ -255,7 +272,7 @@ private class InteractionAccumulator {
     var plantEffectDecisions = 0L
     var plantEffectDisagreements = 0L
     val plantEffectByCard = sortedMapOf<String, Long>()
-    var battlePlantActivations = 0L; var cultivationPlantActivations = 0L; var strikeWins = 0L
+    var battlePlantActivations = 0L; var cultivationPlantActivations = 0L; var strikeWins = 0L; var winnerDecisiveRows = 0L; var winnerDecisiveContributions = 0L; var woundDecisiveContributions = 0L
     var sunlightGainOpp = 0L; var sunlightGainUses = 0L
     var sunlightUses = 0L; var sunlightExtraMains = 0L; var sunlightImmediate = 0L; var sunlightDecisive = 0L; var sunlightWoundDecisive = 0L
     var finalDice = 0L; var finalDicePower = 0L
@@ -279,6 +296,15 @@ private class InteractionAccumulator {
             }
         }
         game.entries.filterIsInstance<GameEntry.MainAction>().filter { it.playerId == p.playerId && it.phase == ChroniclePhase.CULTIVATION }.forEach { e -> cultivationActions[e.action] = (cultivationActions[e.action] ?: 0) + 1 }
+        game.entries.filterIsInstance<GameEntry.MainAction>().filter { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }.forEach { e ->
+            val target = when (e.battleStage) {
+                BattleMainStage.FIRST -> battleFirstActions
+                BattleMainStage.FINAL -> battleFinalActions
+                BattleMainStage.SUNLIGHT -> battleSunlightActions
+                null -> null
+            }
+            if (target != null) target[e.action] = (target[e.action] ?: 0) + 1
+        }
         game.entries.filterIsInstance<GameEntry.SupportAction>().filter { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }.forEach { e -> supportActions[e.action] = (supportActions[e.action] ?: 0) + 1 }
         game.entries.filterIsInstance<GameEntry.SupportAction>().filter { it.playerId == p.playerId && it.phase == ChroniclePhase.CULTIVATION }.forEach { e -> cultivationSupportActions[e.action] = (cultivationSupportActions[e.action] ?: 0) + 1 }
         game.entries.filterIsInstance<GameEntry.CultivationSupportDecision>().filter { it.playerId == p.playerId }.forEach { e -> cultivationSupportWindows++; if (e.selectedActionId == null) cultivationSupportPasses++ }
@@ -307,7 +333,14 @@ private class InteractionAccumulator {
                 if ((firstSun && e.selectedMainAction == MainActionKind.ROUND_EFFECT_1) || (secondSun && e.selectedMainAction == MainActionKind.ROUND_EFFECT_2)) sunlightGainUses++
             }
         }
-        game.entries.filterIsInstance<GameEntry.StrikeResolved>().forEach { e -> if (p.playerId in e.winnerIds) strikeWins++ }
+        game.entries.filterIsInstance<GameEntry.StrikeResolved>().forEach { e ->
+            if (p.playerId in e.winnerIds) strikeWins++
+            val own = e.contributionLedger?.contributions.orEmpty().filter { it.playerId == p.playerId }
+            val winnerDecisive = own.count { it.individuallyWinnerDecisive }
+            winnerDecisiveContributions += winnerDecisive
+            woundDecisiveContributions += own.count { it.individuallyWoundDecisive }
+            if (winnerDecisive > 0) winnerDecisiveRows++
+        }
         game.summary.sharedTokenEconomy.forEach { e ->
             tokenUses[e.resource] = (tokenUses[e.resource] ?: 0) + e.spendsOrUses
             tokenGains[e.resource] = (tokenGains[e.resource] ?: 0) + e.successfulGains
@@ -351,10 +384,17 @@ private fun printReport(a: InteractionAccumulator, n: Int) {
     a.plantEffectByCard.forEach { (card,count) -> println("    PLANT TARGET $card: ${fmt(count.toDouble()/n)}/game") }
     println()
     println("BATTLE")
+    println("  FIRST Main distribution/game:")
+    MainActionKind.entries.forEach { k -> println("    ${k.name}: ${fmt((a.battleFirstActions[k]?:0).toDouble()/n)}") }
+    println("  FINAL Main distribution/game:")
+    MainActionKind.entries.forEach { k -> println("    ${k.name}: ${fmt((a.battleFinalActions[k]?:0).toDouble()/n)}") }
+    println("  Sunlight-funded Main distribution/game:")
+    MainActionKind.entries.forEach { k -> println("    ${k.name}: ${fmt((a.battleSunlightActions[k]?:0).toDouble()/n)}") }
     println("  Support action distribution/game:")
     SupportActionKind.entries.forEach { k -> println("    ${k.name}: ${fmt((a.supportActions[k]?:0).toDouble()/n)}") }
     println("  Sunlight uses/game=${fmt(avg(a.sunlightUses))}; extra Main Actions/game=${fmt(avg(a.sunlightExtraMains))}")
-    println("  Battle Plant activations/game=${fmt(avg(a.battlePlantActivations))}; Strike wins/game=${fmt(avg(a.strikeWins))}")
+    println("  Battle Plant activations/game=${fmt(avg(a.battlePlantActivations))}; Strike wins/game=${fmt(avg(a.strikeWins))}; winner-decisive rows/game=${fmt(avg(a.winnerDecisiveRows))}")
+    println("  Direct final-row decisiveness/game: winner=${fmt(avg(a.winnerDecisiveContributions))}; wound=${fmt(avg(a.woundDecisiveContributions))}")
     println("  Sunlight immediate contributions/game=${fmt(avg(a.sunlightImmediate))}; winner-decisive/game=${fmt(avg(a.sunlightDecisive))}; wound-decisive/game=${fmt(avg(a.sunlightWoundDecisive))}")
     println("  Battle VP/game=${fmt(avg(a.battleVp))}; wounds/game=${fmt(avg(a.wounds))}")
 }

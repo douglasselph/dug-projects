@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.baseline.battle.HumanBaselineBattleStrategy
 import dugsolutions.leaf.v35.player.decision.battle.HumanBattleSupportPolicy
+import dugsolutions.leaf.v35.player.decision.battle.HumanBattleMainPolicy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.HumanBaselineBuyStrategy
 import dugsolutions.leaf.v35.player.decision.baseline.buy.PurchaseScoreModifier
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
@@ -68,6 +69,7 @@ class HumanBaselineDecisionDirector(
     )
     internal val cultivationMain = HumanCultivationMainPolicy()
     internal val cultivationSupport = HumanCultivationSupportPolicy()
+    internal val battleMain = HumanBattleMainPolicy()
     internal val battleSupport = HumanBattleSupportPolicy()
     internal val wispPlay = HumanWispPlayPolicy()
     internal val battle = HumanBaselineBattleStrategy(
@@ -104,6 +106,7 @@ class HumanBaselineDecisionDirector(
         cultivationMain = cultivationMain,
         cultivationSupport = cultivationSupport,
         battle = battle,
+        battleMain = battleMain,
         battleSupport = battleSupport,
         wispPlay = wispPlay,
         buy = buy,

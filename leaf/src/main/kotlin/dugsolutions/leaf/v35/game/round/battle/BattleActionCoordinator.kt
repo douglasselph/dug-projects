@@ -36,6 +36,9 @@ import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
 import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleFirstMainActionRequest
+import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleMainActionRequest
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainObservation
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainPolicyStage
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleTurnActionRequest
 import dugsolutions.leaf.v35.player.decision.battle.BattleSupportObservation
 import dugsolutions.leaf.v35.player.decision.battle.ChooseBattleSupportActionRequest
@@ -142,14 +145,29 @@ class BattleActionCoordinator(
             // player simply has no first Main Action to take in that state.
             if (legal.isEmpty()) return@forEach
 
-            val chosen =
+            val context = DecisionContextFactory.create(game, player, battleState)
+            val referenceMain =
                 player.decisions.battle.chooseFirstMainAction(
                     ChooseBattleFirstMainActionRequest(
                         roundCard = roundCard,
                         legalChoices = legal,
-                        context = DecisionContextFactory.create(game, player, battleState)
+                        context = context
                     )
                 )
+            validateChosenMainAction(player, referenceMain, legal, "first-reference")
+            val chosen = player.decisions.battleMain.chooseMainAction(
+                ChooseBattleMainActionRequest(
+                    legalActions = legal,
+                    referenceAction = referenceMain,
+                    observation = BattleMainObservation(
+                        stage = BattleMainPolicyStage.FIRST,
+                        roundCardName = roundCard.name,
+                        firstRoundEffect = roundCard.firstEffect.effect,
+                        secondRoundEffect = roundCard.secondEffect.effect,
+                        context = context
+                    )
+                )
+            )
 
             validateChosenMainAction(player, chosen, legal, "first")
             recordRoundEffectChoice(game, player, roundCard, legal, mainActionKind(chosen))
@@ -302,21 +320,41 @@ class BattleActionCoordinator(
                     )
                 )
 
-                when (chosen) {
-                    is BattleTurnAction.FinalMain -> validateChosenMainAction(player, chosen.action, finalMains, "final")
-                    is BattleTurnAction.Support -> decisionCheck(chosen in policyLegalChoices, context = "BattleActionCoordinator") {
-                        "BattleStrategy returned a Step-5 Support Action that was not offered: $chosen; legal=$policyLegalChoices"
+                val policyChosen = when (chosen) {
+                    is BattleTurnAction.FinalMain -> {
+                        validateChosenMainAction(player, chosen.action, finalMains, "final-reference")
+                        val finalAction = player.decisions.battleMain.chooseMainAction(
+                            ChooseBattleMainActionRequest(
+                                legalActions = finalMains,
+                                referenceAction = chosen.action,
+                                observation = BattleMainObservation(
+                                    stage = BattleMainPolicyStage.FINAL,
+                                    roundCardName = roundCard.name,
+                                    firstRoundEffect = roundCard.firstEffect.effect,
+                                    secondRoundEffect = roundCard.secondEffect.effect,
+                                    context = context
+                                )
+                            )
+                        )
+                        validateChosenMainAction(player, finalAction, finalMains, "final")
+                        BattleTurnAction.FinalMain(finalAction)
+                    }
+                    is BattleTurnAction.Support -> {
+                        decisionCheck(chosen in policyLegalChoices, context = "BattleActionCoordinator") {
+                            "BattleStrategy returned a Step-5 Support Action that was not offered: $chosen; legal=$policyLegalChoices"
+                        }
+                        chosen
                     }
                 }
 
-                val selectedRoundMain = when (chosen) {
-                    is BattleTurnAction.FinalMain -> mainActionKind(chosen.action)
+                val selectedRoundMain = when (policyChosen) {
+                    is BattleTurnAction.FinalMain -> mainActionKind(policyChosen.action)
                     is BattleTurnAction.Support ->
-                        (chosen.action as? BattleSupportAction.UseSunlight)?.let { mainActionKind(it.mainAction) }
+                        (policyChosen.action as? BattleSupportAction.UseSunlight)?.let { mainActionKind(it.mainAction) }
                 }
                 recordRoundEffectChoice(game, player, roundCard, finalMains, selectedRoundMain)
 
-                when (chosen) {
+                when (policyChosen) {
                     is BattleTurnAction.Support -> {
 
                         executeSupportAction(
@@ -324,13 +362,13 @@ class BattleActionCoordinator(
                             player = player,
                             roundCard = roundCard,
                             battleState = battleState,
-                            action = chosen.action
+                            action = policyChosen.action
                         )
                         supportResults +=
                             BattleSupportActionResult(
                                 playerId = player.id,
                                 passNumber = passNumber,
-                                action = chosen.action
+                                action = policyChosen.action
                             )
                     }
 
@@ -339,7 +377,7 @@ class BattleActionCoordinator(
                             mainActionMoment(
                                 player = player,
                                 stage = BattleMainActionStage.FINAL,
-                                action = chosen.action
+                                action = policyChosen.action
                             )
                         ) {
                             executeMainAction(
@@ -347,14 +385,14 @@ class BattleActionCoordinator(
                                 player = player,
                                 roundCard = roundCard,
                                 battleState = battleState,
-                                action = chosen.action
+                                action = policyChosen.action
                             )
                         }
                         finalResults +=
                             BattleMainActionResult(
                                 playerId = player.id,
                                 stage = BattleMainActionStage.FINAL,
-                                action = chosen.action
+                                action = policyChosen.action
                             )
                         battleState.markDone(player.id)
                     }
