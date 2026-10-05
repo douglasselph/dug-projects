@@ -21,6 +21,10 @@ internal fun GameEffectRequest.effectDecisionStrategy(): EffectStrategy =
                     game.chronicle.record(
                         Moment.PlantEffectDecision(
                             playerId = actor.id,
+                            phase = when (phase) {
+                                dugsolutions.leaf.v35.effect.GameEffectPhase.CULTIVATION -> dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase.CULTIVATION
+                                dugsolutions.leaf.v35.effect.GameEffectPhase.BATTLE -> dugsolutions.leaf.v35.chronicle.domain.ChroniclePhase.BATTLE
+                            },
                             plantId = d.plantId,
                             effect = d.effect,
                             decisionKind = d.decisionKind,

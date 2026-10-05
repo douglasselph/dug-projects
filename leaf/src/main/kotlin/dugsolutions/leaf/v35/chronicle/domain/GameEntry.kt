@@ -167,6 +167,7 @@ sealed interface GameEntry {
     data class PlantEffectDecision(
         override val sequence: Long,
         val playerId: PlayerId,
+        val phase: ChroniclePhase,
         val plantId: String,
         val effect: GameEffect,
         val decisionKind: String,

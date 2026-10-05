@@ -214,6 +214,7 @@ class GameChronicle : Chronicle {
             is Moment.PlantEffectDecision -> GameEntry.PlantEffectDecision(
                 sequence = sequence,
                 playerId = moment.playerId,
+                phase = moment.phase,
                 plantId = moment.plantId,
                 effect = moment.effect,
                 decisionKind = moment.decisionKind,

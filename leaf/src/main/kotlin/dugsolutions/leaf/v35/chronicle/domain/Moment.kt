@@ -151,6 +151,7 @@ sealed interface Moment {
     /** Research trace for one effect-internal Plant targeting/branch decision. */
     data class PlantEffectDecision(
         val playerId: PlayerId,
+        val phase: ChroniclePhase,
         val plantId: String,
         val effect: GameEffect,
         val decisionKind: String,
