@@ -160,6 +160,31 @@ class PolicyInteractionOptionsTest {
     }
 
     @Test
+    fun `report includes per player game mulch outcome buckets and threshold views`() {
+        val acc = InteractionAccumulator()
+        acc.roundMulchOutcomeByCount[0] = MulchOutcomeBucket(
+            playerGames = 2, winShare = 0.5, totalVp = 30, battleVp = 18,
+            wounds = 8, finalDicePower = 40, unusedMulch = 0
+        )
+        acc.roundMulchOutcomeByCount[3] = MulchOutcomeBucket(
+            playerGames = 2, winShare = 1.5, totalVp = 50, battleVp = 30,
+            wounds = 4, finalDicePower = 60, unusedMulch = 2
+        )
+        acc.battleMulchOutcomeByCount[5] = MulchOutcomeBucket(
+            playerGames = 1, winShare = 1.0, totalVp = 28, battleVp = 18,
+            wounds = 1, finalDicePower = 35, unusedMulch = 0
+        )
+
+        val out = captureStdout { printReport(acc, 4) }
+        assertContains(out, "MULCH OUTCOME BY PLAYER-GAME")
+        assertContains(out, "Round-card Mulch selections")
+        assertContains(out, "Battle Mulch uses")
+        assertContains(out, "threshold views:")
+        assertContains(out, ">=3: n=2 win=75.00%")
+        assertContains(out, "5+")
+    }
+
+    @Test
     fun `rejects invalid policy family`() {
         listOf(
             "--buy-policy",

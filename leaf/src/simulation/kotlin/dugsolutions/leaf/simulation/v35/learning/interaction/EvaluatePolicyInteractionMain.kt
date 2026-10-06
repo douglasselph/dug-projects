@@ -455,6 +455,35 @@ internal fun renderMachineConfig(m: InteractionRunMetadata): String = buildStrin
     }
 }
 
+internal data class MulchOutcomeBucket(
+    var playerGames: Long = 0,
+    var winShare: Double = 0.0,
+    var totalVp: Long = 0,
+    var battleVp: Long = 0,
+    var wounds: Long = 0,
+    var finalDicePower: Long = 0,
+    var unusedMulch: Long = 0
+) {
+    fun add(
+        playerWinShare: Double,
+        playerTotalVp: Int,
+        playerBattleVp: Int,
+        playerWounds: Int,
+        playerFinalDicePower: Int,
+        playerUnusedMulch: Int
+    ) {
+        playerGames++
+        winShare += playerWinShare
+        totalVp += playerTotalVp
+        battleVp += playerBattleVp
+        wounds += playerWounds
+        finalDicePower += playerFinalDicePower
+        unusedMulch += playerUnusedMulch
+    }
+}
+
+internal fun mulchBucket(count: Int): Int = count.coerceAtMost(5)
+
 internal class InteractionAccumulator {
     var win = 0.0
     var totalVp = 0L; var plantVp = 0L; var battleVp = 0L; var wispVp = 0L; var otherVp = 0L; var wounds = 0L
@@ -518,6 +547,10 @@ internal class InteractionAccumulator {
     val tokenZeroGames = SharedTokenResource.entries.associateWith { 0L }.toMutableMap()
     var finalWater = 0L; var finalMulch = 0L; var finalWorm = 0L; var finalBee = 0L; var finalButterfly = 0L; var finalWisp = 0L
 
+    // Per-player-game Mulch telemetry. Bucket 5 represents 5+.
+    val roundMulchOutcomeByCount = sortedMapOf<Int, MulchOutcomeBucket>()
+    val battleMulchOutcomeByCount = sortedMapOf<Int, MulchOutcomeBucket>()
+
     fun add(game: CompletedInteractionGame, seat: Int) {
         val p = game.summary.players.single { it.seat == seat }
         win += p.winShare; totalVp += p.totalVp; plantVp += p.plantVp; battleVp += p.battleStrikeVp; wispVp += p.unplayedWispVp
@@ -529,6 +562,34 @@ internal class InteractionAccumulator {
         sunlightDecisive += p.sunlightWinnerDecisiveContributions; sunlightWoundDecisive += p.sunlightWoundDecisiveContributions
         finalWisp += p.finalWispCount
         wispGains += p.rollRewardWispsGained
+
+        val playerEntries = game.entries.filter { it.playerId == p.playerId }
+        val roundMulchSelections = playerEntries.filterIsInstance<GameEntry.RoundEffectChoice>().count { e ->
+            if (e.phase != ChroniclePhase.CULTIVATION) return@count false
+            when (e.selectedMainAction) {
+                MainActionKind.ROUND_EFFECT_1 -> e.firstExecutable && e.firstEffect == GameEffect.MULCH_DIE_FROM_HAND
+                MainActionKind.ROUND_EFFECT_2 -> e.secondExecutable && e.secondEffect == GameEffect.MULCH_DIE_FROM_HAND
+                else -> false
+            }
+        }
+        val battleMulchUses = playerEntries.filterIsInstance<GameEntry.SupportAction>().count { e ->
+            e.phase == ChroniclePhase.BATTLE && e.action == SupportActionKind.MULCH
+        }
+        val finalPlayerSummary = game.entries.filterIsInstance<GameEntry.RoundCompleted>()
+            .lastOrNull()?.playerSummaries?.firstOrNull { it.playerId == p.playerId }
+        val unusedMulch = finalPlayerSummary?.mulchDice?.size ?: 0
+        fun recordMulchOutcome(target: MutableMap<Int, MulchOutcomeBucket>, count: Int) {
+            target.getOrPut(mulchBucket(count)) { MulchOutcomeBucket() }.add(
+                playerWinShare = p.winShare,
+                playerTotalVp = p.totalVp,
+                playerBattleVp = p.battleStrikeVp,
+                playerWounds = p.woundsTaken,
+                playerFinalDicePower = p.finalDicePower,
+                playerUnusedMulch = unusedMulch
+            )
+        }
+        recordMulchOutcome(roundMulchOutcomeByCount, roundMulchSelections)
+        recordMulchOutcome(battleMulchOutcomeByCount, battleMulchUses)
 
         game.entries.filterIsInstance<GameEntry.RoundRevealed>().forEach { e ->
             if (e.cardType == dugsolutions.leaf.v35.round.domain.RoundCardType.CULTIVATION) cultivationRounds++ else battleRounds++
@@ -815,11 +876,57 @@ internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargetin
     println("  Strike flips: unavailable as a trustworthy aggregate in the current Chronicle; winner-decisive rows/contributions are reported instead.")
     println()
 
+    println("MULCH OUTCOME BY PLAYER-GAME")
+    fun printMulchBuckets(label: String, buckets: Map<Int, MulchOutcomeBucket>) {
+        println("  $label")
+        println("    count  player-games  win-share  total-VP  battle-VP  wounds  final-dice-power  unused-Mulch")
+        (0..5).forEach { bucket ->
+            val b = buckets[bucket] ?: MulchOutcomeBucket()
+            val denom = b.playerGames.toDouble()
+            fun bucketAvg(value: Long) = if (b.playerGames == 0L) 0.0 else value / denom
+            val name = if (bucket == 5) "5+" else bucket.toString()
+            println(
+                "    ${name.padStart(5)}  ${b.playerGames.toString().padStart(12)}  " +
+                    "${pct(if (b.playerGames == 0L) 0.0 else b.winShare / denom).padStart(9)}  " +
+                    "${fmt(bucketAvg(b.totalVp)).padStart(8)}  " +
+                    "${fmt(bucketAvg(b.battleVp)).padStart(9)}  " +
+                    "${fmt(bucketAvg(b.wounds)).padStart(6)}  " +
+                    "${fmt(bucketAvg(b.finalDicePower)).padStart(16)}  " +
+                    "${fmt(bucketAvg(b.unusedMulch)).padStart(12)}"
+            )
+        }
+        println("    threshold views:")
+        (1..4).forEach { threshold ->
+            val below = MulchOutcomeBucket()
+            val atLeast = MulchOutcomeBucket()
+            buckets.forEach { (bucket, b) ->
+                val target = if (bucket < threshold) below else atLeast
+                target.playerGames += b.playerGames
+                target.winShare += b.winShare
+                target.totalVp += b.totalVp
+                target.battleVp += b.battleVp
+                target.wounds += b.wounds
+                target.finalDicePower += b.finalDicePower
+                target.unusedMulch += b.unusedMulch
+            }
+            fun thresholdWin(b: MulchOutcomeBucket) = if (b.playerGames == 0L) 0.0 else b.winShare / b.playerGames
+            println(
+                "      <${threshold}: n=${below.playerGames} win=${pct(thresholdWin(below))}; " +
+                    ">=${threshold}: n=${atLeast.playerGames} win=${pct(thresholdWin(atLeast))}"
+            )
+        }
+    }
+    printMulchBuckets("Round-card Mulch selections", a.roundMulchOutcomeByCount)
+    printMulchBuckets("Battle Mulch uses", a.battleMulchOutcomeByCount)
+    println("  Note: these are observational buckets, not causal estimates; stronger states may both use more Mulch and win more.")
+    println()
+
     println("ROUND-EFFECT RESEARCH")
     val researchEffects = listOf(
         GameEffect.UPGRADE_DIE_FROM_HAND,
+        GameEffect.UPGRADE_DIE_AND_USE_NOW,
         GameEffect.GAIN_WATER_TOKEN,
-        GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
+        GameEffect.MULCH_DIE_FROM_HAND,
         GameEffect.GAIN_SUNLIGHT_TOKEN
     )
     researchEffects.forEach { effect ->
