@@ -563,8 +563,9 @@ internal class InteractionAccumulator {
         finalWisp += p.finalWispCount
         wispGains += p.rollRewardWispsGained
 
-        val playerEntries = game.entries.filter { it.playerId == p.playerId }
-        val roundMulchSelections = playerEntries.filterIsInstance<GameEntry.RoundEffectChoice>().count { e ->
+        val roundMulchSelections = game.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == p.playerId }
+            .count { e ->
             if (e.phase != ChroniclePhase.CULTIVATION) return@count false
             when (e.selectedMainAction) {
                 MainActionKind.ROUND_EFFECT_1 -> e.firstExecutable && e.firstEffect == GameEffect.MULCH_DIE_FROM_HAND
@@ -572,9 +573,11 @@ internal class InteractionAccumulator {
                 else -> false
             }
         }
-        val battleMulchUses = playerEntries.filterIsInstance<GameEntry.SupportAction>().count { e ->
-            e.phase == ChroniclePhase.BATTLE && e.action == SupportActionKind.MULCH
-        }
+        val battleMulchUses = game.entries.filterIsInstance<GameEntry.SupportAction>()
+            .filter { it.playerId == p.playerId }
+            .count { e ->
+                e.phase == ChroniclePhase.BATTLE && e.action == SupportActionKind.MULCH
+            }
         val finalPlayerSummary = game.entries.filterIsInstance<GameEntry.RoundCompleted>()
             .lastOrNull()?.playerSummaries?.firstOrNull { it.playerId == p.playerId }
         val unusedMulch = finalPlayerSummary?.mulchDice?.size ?: 0
