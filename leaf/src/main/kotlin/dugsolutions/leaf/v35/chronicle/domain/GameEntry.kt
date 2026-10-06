@@ -121,6 +121,8 @@ sealed interface GameEntry {
         override val hierarchyDepth: Int = 0,
         /** Human Baseline's pre-policy Main preference at this same decision, when available. */
         val humanBaselineSelectedMainAction: MainActionKind? = null,
+        /** Plant identities legally available at this Main decision, if known. */
+        val legalPlantCardNames: List<String> = emptyList(),
         val selectedPlantCardName: String? = null,
         val humanBaselineSelectedPlantCardName: String? = null,
         /** Battle decision stage; null for Cultivation. */

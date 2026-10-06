@@ -328,6 +328,10 @@ class BattleActionCoordinatorTest {
         assertTrue(plantRequest.battleState === fixture.battleState)
         assertEquals(GameEffect.GAIN_ONE_VP, plantRequest.effect)
         assertTrue(p1.creature.get(active.id)!!.isFaceDown)
+        val choice = fixture.game.chronicle.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
+            .first { it.playerId == p1.id && it.battleStage == BattleMainStage.FIRST }
+        assertTrue("Battle Plant" in choice.legalPlantCardNames)
+        assertEquals("Battle Plant", choice.selectedPlantCardName)
     }
 
 
@@ -477,6 +481,10 @@ class BattleActionCoordinatorTest {
             .single { it.playerId == p1.id }
         assertEquals(MainActionKind.ACTIVATE_PLANT, recorded.action)
         assertEquals(active.id.value, recorded.plantCardId)
+        val choice = fixture.game.chronicle.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
+            .first { it.playerId == p1.id && it.battleStage == BattleMainStage.SUNLIGHT }
+        assertTrue("Sunlit Plant" in choice.legalPlantCardNames)
+        assertEquals("Sunlit Plant", choice.selectedPlantCardName)
     }
 
     @Test

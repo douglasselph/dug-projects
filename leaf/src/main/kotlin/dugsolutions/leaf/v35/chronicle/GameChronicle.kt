@@ -187,6 +187,7 @@ class GameChronicle : Chronicle {
                 battlesRemaining = moment.battlesRemaining,
                 battleNext = moment.battleNext,
                 humanBaselineSelectedMainAction = moment.humanBaselineSelectedMainAction,
+                legalPlantCardNames = moment.legalPlantCardNames.toList(),
                 selectedPlantCardName = moment.selectedPlantCardName,
                 humanBaselineSelectedPlantCardName = moment.humanBaselineSelectedPlantCardName,
                 battleStage = moment.battleStage,

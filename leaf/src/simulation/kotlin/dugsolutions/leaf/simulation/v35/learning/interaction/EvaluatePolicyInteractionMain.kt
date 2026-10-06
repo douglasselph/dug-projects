@@ -533,6 +533,11 @@ internal class InteractionAccumulator {
     val plantEffectChoiceDistribution = sortedMapOf<String, Long>()
     val cultivationPlantActivationsByName = sortedMapOf<String, Long>()
     val battlePlantActivationsByName = sortedMapOf<String, Long>()
+    val battlePlantDecisionOpportunitiesByStage = sortedMapOf<String, Long>()
+    val battlePlantDecisionSelectionsByStage = sortedMapOf<String, Long>()
+    val battlePlantOpportunitiesByStageCard = sortedMapOf<String, Long>()
+    val battlePlantUsesByStageCard = sortedMapOf<String, Long>()
+    val battlePlantSubstitutionsByStageCard = sortedMapOf<String, Long>()
 
     var battlePlantActivations = 0L; var cultivationPlantActivations = 0L
     var strikeWins = 0L; var winnerDecisiveRows = 0L; var winnerDecisiveContributions = 0L; var woundDecisiveContributions = 0L
@@ -632,6 +637,30 @@ internal class InteractionAccumulator {
                     map[name] = (map[name] ?: 0) + 1
                 }
                 else -> Unit
+            }
+            if (e.phase == ChroniclePhase.BATTLE && e.legalPlantCardNames.isNotEmpty()) {
+                val stage = e.battleStage?.name ?: "UNKNOWN"
+                battlePlantDecisionOpportunitiesByStage[stage] = (battlePlantDecisionOpportunitiesByStage[stage] ?: 0) + 1
+                if (e.selectedMainAction == MainActionKind.ACTIVATE_PLANT) {
+                    battlePlantDecisionSelectionsByStage[stage] = (battlePlantDecisionSelectionsByStage[stage] ?: 0) + 1
+                }
+                val alternative = when (e.selectedMainAction) {
+                    MainActionKind.DRAW -> "DRAW"
+                    MainActionKind.ACTIVATE_PLANT -> "PLANT:${e.selectedPlantCardName ?: "UNKNOWN"}"
+                    MainActionKind.ROUND_EFFECT_1 -> "ROUND:SLOT_1:${e.firstEffect.name}"
+                    MainActionKind.ROUND_EFFECT_2 -> "ROUND:SLOT_2:${e.secondEffect.name}"
+                    null -> "NONE"
+                }
+                e.legalPlantCardNames.distinct().forEach { card ->
+                    val key = "$stage|$card"
+                    battlePlantOpportunitiesByStageCard[key] = (battlePlantOpportunitiesByStageCard[key] ?: 0) + 1
+                    if (e.selectedMainAction == MainActionKind.ACTIVATE_PLANT && e.selectedPlantCardName == card) {
+                        battlePlantUsesByStageCard[key] = (battlePlantUsesByStageCard[key] ?: 0) + 1
+                    } else {
+                        val subKey = "$stage|$card|$alternative"
+                        battlePlantSubstitutionsByStageCard[subKey] = (battlePlantSubstitutionsByStageCard[subKey] ?: 0) + 1
+                    }
+                }
             }
             if (e.phase == ChroniclePhase.CULTIVATION) {
                 val firstSun = e.firstEffect == GameEffect.GAIN_SUNLIGHT_TOKEN && e.firstExecutable
@@ -855,6 +884,39 @@ internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargetin
     if (a.battlePlantActivationsByName.isNotEmpty()) {
         println("  Battle Plant activations by card:")
         a.battlePlantActivationsByName.toList().sortedByDescending { it.second }.forEach { (name,count) -> println("    $name: ${fmt(count.toDouble()/n)}/game") }
+    }
+    println("  Plant-available Main decisions by stage:")
+    BattleMainStage.entries.forEach { stage ->
+        val key = stage.name
+        val o = a.battlePlantDecisionOpportunitiesByStage[key] ?: 0
+        val u = a.battlePlantDecisionSelectionsByStage[key] ?: 0
+        println("    $key: opportunities=$o Plant-selected=$u take-rate=${takeRate(u,o)}")
+    }
+    if (a.battlePlantOpportunitiesByStageCard.isNotEmpty()) {
+        println("  Battle Plant opportunity-normalized use by card and stage:")
+        val cards = a.battlePlantOpportunitiesByStageCard.keys.map { it.substringAfter('|') }.toSortedSet()
+        cards.forEach { card ->
+            var totalO = 0L
+            var totalU = 0L
+            val stageParts = BattleMainStage.entries.map { stage ->
+                val key = "${stage.name}|$card"
+                val o = a.battlePlantOpportunitiesByStageCard[key] ?: 0
+                val u = a.battlePlantUsesByStageCard[key] ?: 0
+                totalO += o; totalU += u
+                "${stage.name}=$u/$o(${takeRate(u,o)})"
+            }
+            println("    $card: uses=$totalU opportunities=$totalO rate=${takeRate(totalU,totalO)}; ${stageParts.joinToString(" ")}")
+            val substitutions = a.battlePlantSubstitutionsByStageCard
+                .filterKeys { it.substringAfter('|').substringBefore('|') == card }
+                .entries.sortedByDescending { it.value }.take(6)
+            if (substitutions.isNotEmpty()) {
+                println("      when not chosen, top alternatives:")
+                substitutions.forEach { (key,count) ->
+                    val parts = key.split('|', limit = 3)
+                    println("        ${parts[0]} -> ${parts[2]}: $count")
+                }
+            }
+        }
     }
     println("  Battle Round-effect opportunities / uses:")
     (a.battleRoundEffectOpportunities.keys + a.battleRoundEffectUses.keys).toSortedSet().forEach { effect ->

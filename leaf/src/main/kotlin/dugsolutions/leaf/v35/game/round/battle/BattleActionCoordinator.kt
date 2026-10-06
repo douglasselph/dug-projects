@@ -170,7 +170,9 @@ class BattleActionCoordinator(
             )
 
             validateChosenMainAction(player, chosen, legal, "first")
-            recordRoundEffectChoice(game, player, roundCard, legal, mainActionKind(chosen), BattleMainStage.FIRST)
+            recordRoundEffectChoice(
+                game, player, roundCard, legal, mainActionKind(chosen), BattleMainStage.FIRST, chosen
+            )
 
             game.chronicle.scoped(
                 mainActionMoment(
@@ -357,16 +359,19 @@ class BattleActionCoordinator(
                     }
                 }
 
-                val selectedRoundMain = when (policyChosen) {
-                    is BattleTurnAction.FinalMain -> mainActionKind(policyChosen.action)
+                val selectedBattleMain = when (policyChosen) {
+                    is BattleTurnAction.FinalMain -> policyChosen.action
                     is BattleTurnAction.Support ->
-                        (policyChosen.action as? BattleSupportAction.UseSunlight)?.let { mainActionKind(it.mainAction) }
+                        (policyChosen.action as? BattleSupportAction.UseSunlight)?.mainAction
                 }
+                val selectedRoundMain = selectedBattleMain?.let(::mainActionKind)
                 val selectedStage = when (policyChosen) {
                     is BattleTurnAction.FinalMain -> BattleMainStage.FINAL
                     is BattleTurnAction.Support -> BattleMainStage.SUNLIGHT
                 }
-                recordRoundEffectChoice(game, player, roundCard, finalMains, selectedRoundMain, selectedStage)
+                recordRoundEffectChoice(
+                    game, player, roundCard, finalMains, selectedRoundMain, selectedStage, selectedBattleMain
+                )
 
                 when (policyChosen) {
                     is BattleTurnAction.Support -> {
@@ -485,9 +490,15 @@ class BattleActionCoordinator(
         roundCard: RoundCard,
         mains: List<BattleMainAction>,
         selectedMainAction: MainActionKind?,
-        battleStage: BattleMainStage
+        battleStage: BattleMainStage,
+        selectedAction: BattleMainAction? = null
     ) {
         val legalKinds = mains.map(::mainActionKind)
+        val legalPlantNames = mains.filterIsInstance<BattleMainAction.ActivatePlant>()
+            .map { it.card.card.name }
+            .distinct()
+            .sorted()
+        val selectedPlantName = (selectedAction as? BattleMainAction.ActivatePlant)?.card?.card?.name
         game.chronicle.record(
             Moment.RoundEffectChoice(
                 playerId = player.id,
@@ -502,6 +513,8 @@ class BattleActionCoordinator(
                 sunlightHeld = player.tokens.sunlightCount,
                 battlesRemaining = battlesRemaining(game),
                 battleNext = battleIsNext(game),
+                legalPlantCardNames = legalPlantNames,
+                selectedPlantCardName = selectedPlantName,
                 battleStage = battleStage
             )
         )
