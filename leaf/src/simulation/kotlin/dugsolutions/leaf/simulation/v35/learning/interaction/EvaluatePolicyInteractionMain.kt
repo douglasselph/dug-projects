@@ -53,6 +53,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.security.MessageDigest
+import java.time.Duration
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 internal data class CompletedInteractionGame(val summary: GameSummary, val entries: List<GameEntry>)
 
@@ -80,7 +83,8 @@ data class PolicyInteractionOptions(
     val battleSupportWeights: Path,
     val battleMainPolicy: String,
     val battleMainWeights: Path,
-    val configOutput: Path? = null
+    val configOutput: Path? = null,
+    val verbosePlantTargeting: Boolean = false
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -127,6 +131,7 @@ data class PolicyInteractionOptions(
             var battleMainPolicy = "human"
             var battleMainWeights = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
             var configOutput: Path? = null
+            var verbosePlantTargeting = false
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -155,6 +160,7 @@ data class PolicyInteractionOptions(
                     arg.startsWith("--battle-main-policy") -> battleMainPolicy = value(arg).lowercase()
                     arg.startsWith("--battle-main-weights") -> battleMainWeights = Paths.get(value(arg))
                     arg.startsWith("--config-output") -> configOutput = Paths.get(value(arg))
+                    arg == "--verbose-plant-targeting" -> verbosePlantTargeting = true
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg == "--first-game-grove" -> grovePattern = null
@@ -179,12 +185,13 @@ data class PolicyInteractionOptions(
                 cultivationSupportPolicy = cultivationSupportPolicy, cultivationSupportWeights = cultivationSupportWeights,
                 wispPolicy = wispPolicy, wispWeights = wispWeights, plantEffectPolicy = plantEffectPolicy, plantEffectWeights = plantEffectWeights,
                 battleSupportPolicy = battleSupportPolicy, battleSupportWeights = battleSupportWeights,
-                battleMainPolicy = battleMainPolicy, battleMainWeights = battleMainWeights, configOutput = configOutput
+                battleMainPolicy = battleMainPolicy, battleMainWeights = battleMainWeights, configOutput = configOutput,
+                verbosePlantTargeting = verbosePlantTargeting
             )
         }
 
         private fun usage() {
-            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] [--config-output PATH] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH] --battle-main-policy human|learned [--battle-main-weights PATH]")
+            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] [--config-output PATH] [--verbose-plant-targeting] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH] --battle-main-policy human|learned [--battle-main-weights PATH]")
         }
     }
 }
@@ -237,6 +244,9 @@ fun main(args: Array<String>) {
         if (roundExp.isActive) { println(); println(roundExp.render(rounds)) }
         println()
 
+        val evaluationStartedNanos = System.nanoTime()
+        val progressEvery = maxOf(1, o.games / 10)
+
         repeat(o.games) { sample ->
             val seat = affectedSeat(sample, o.players)
             val grove = resolveResearchGroveForSample(o.grovePattern, o.groveSeed, sample, plantManager, defaults, plants, plantExp.values)
@@ -255,9 +265,42 @@ fun main(args: Array<String>) {
                 SimulationRunContext("evaluate_policy_interactions", sample, "B${o.buyPolicy.first()}-C${o.cultivationMainPolicy.first()}-CS${o.cultivationSupportPolicy.first()}-W${o.wispPolicy.first()}-P${o.plantEffectPolicy.first()}-S${o.battleSupportPolicy.first()}-M${o.battleMainPolicy.first()}", seat, o.seed+sample, o.strategySeed+sample, GrovePlantCode.describe(grove), o.roundLabel)
             ) { runner.run(game) }
             acc.add(CompletedInteractionGame(GameSummaryExtractor.extract(game, result), game.chronicle.entries.toList()), seat)
+
+            val completed = sample + 1
+            if (completed % progressEvery == 0 || completed == o.games) {
+                printEvaluationProgress(completed, o.games, evaluationStartedNanos)
+            }
         }
-        printReport(acc, o.games)
+        printReport(acc, o.games, o.verbosePlantTargeting)
     } finally { app.close() }
+}
+
+internal fun printEvaluationProgress(completed: Int, total: Int, startedNanos: Long) {
+    val elapsedSeconds = (System.nanoTime() - startedNanos).coerceAtLeast(0L) / 1_000_000_000.0
+    val secondsPerGame = if (completed > 0) elapsedSeconds / completed else 0.0
+    val remainingSeconds = secondsPerGame * (total - completed).coerceAtLeast(0)
+    val eta = ZonedDateTime.now().plusSeconds(remainingSeconds.toLong())
+    val percent = if (total > 0) completed * 100.0 / total else 100.0
+
+    println(
+        "Evaluation progress: $completed/$total (${String.format("%.1f", percent)}%); " +
+            "elapsed ${formatEvaluationDuration(elapsedSeconds)}; " +
+            "estimated remaining ${formatEvaluationDuration(remainingSeconds)}; " +
+            "ETA ${eta.format(DateTimeFormatter.ofPattern("EEE MMM dd hh:mm a"))}"
+    )
+}
+
+internal fun formatEvaluationDuration(seconds: Double): String {
+    val wholeSeconds = seconds.toLong().coerceAtLeast(0L)
+    val duration = Duration.ofSeconds(wholeSeconds)
+    val hours = duration.toHours()
+    val minutes = duration.minusHours(hours).toMinutes()
+    val secs = duration.minusHours(hours).minusMinutes(minutes).seconds
+    return when {
+        hours > 0 -> String.format("%dh %02dm %02ds", hours, minutes, secs)
+        minutes > 0 -> String.format("%dm %02ds", minutes, secs)
+        else -> "${secs}s"
+    }
 }
 
 internal fun modularFactory(
@@ -647,7 +690,7 @@ private fun cultivationSupportFamily(id: String): String = when {
     else -> id.substringAfter("CULT_SUPPORT:", id).substringBefore(':')
 }
 
-internal fun printReport(a: InteractionAccumulator, n: Int) {
+internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargeting: Boolean = false) {
     fun avg(v: Long) = v.toDouble()/n
     fun fmt(v: Double) = "%.3f".format(v)
     fun pct(v: Double) = "%.2f%%".format(v*100)
@@ -727,8 +770,12 @@ internal fun printReport(a: InteractionAccumulator, n: Int) {
     ChroniclePhase.entries.forEach { phase -> println("  ${phase.name} targeting decisions/game=${fmt((a.plantEffectByPhase[phase]?:0).toDouble()/n)}") }
     a.plantEffectByCard.toList().sortedByDescending { it.second }.forEach { (card,count) -> println("  $card: decisions=${count} per-game=${fmt(count.toDouble()/n)}") }
     if (a.plantEffectChoiceDistribution.isNotEmpty()) {
-        println("  target/branch distribution [phase|card|decision|selected]:")
-        a.plantEffectChoiceDistribution.toList().sortedWith(compareByDescending<Pair<String,Long>> { it.second }.thenBy { it.first }).forEach { (key,count) -> println("    $key: $count") }
+        if (verbosePlantTargeting) {
+            println("  target/branch distribution [phase|card|decision|selected]:")
+            a.plantEffectChoiceDistribution.toList().sortedWith(compareByDescending<Pair<String,Long>> { it.second }.thenBy { it.first }).forEach { (key,count) -> println("    $key: $count") }
+        } else {
+            println("  detailed target/branch distribution suppressed (${a.plantEffectChoiceDistribution.size} distinct states; use --verbose-plant-targeting to print)")
+        }
     }
     println()
 

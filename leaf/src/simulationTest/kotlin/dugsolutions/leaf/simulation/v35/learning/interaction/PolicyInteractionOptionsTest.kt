@@ -57,6 +57,16 @@ class PolicyInteractionOptionsTest {
         assertEquals("config.txt", o.configOutput.toString())
     }
 
+
+    @Test
+    fun `plant targeting detail is quiet by default and opt-in verbose`() {
+        val quiet = PolicyInteractionOptions.parse(emptyList())
+        assertEquals(false, quiet.verbosePlantTargeting)
+
+        val verbose = PolicyInteractionOptions.parse(listOf("--verbose-plant-targeting"))
+        assertEquals(true, verbose.verbosePlantTargeting)
+    }
+
     @Test
     fun `human families do not require weight files`() {
         val o = PolicyInteractionOptions.parse(emptyList())
