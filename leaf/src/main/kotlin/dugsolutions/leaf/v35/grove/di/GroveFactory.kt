@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.grove.di
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.random.Randomizer
+import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
 import dugsolutions.leaf.v35.wisp.WispCardManager
 import dugsolutions.leaf.v35.wisp.WispDeck
 import dugsolutions.leaf.v35.wisp.domain.WispCard
@@ -21,7 +22,8 @@ class GroveFactory(
     operator fun invoke(
         selectedPlantCards: List<PlantCard>,
         randomizer: Randomizer,
-        exactWispCards: List<WispCard>? = null
+        exactWispCards: List<WispCard>? = null,
+        sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL
     ): Grove =
         Grove(
             selectedPlantCards = selectedPlantCards,
@@ -29,6 +31,7 @@ class GroveFactory(
                 wispCardManager = wispCardManager,
                 randomizer = randomizer,
                 exactResetCards = exactWispCards
-            )
+            ),
+            sharedTokenStartingSupply = sharedTokenStartingSupply
         )
 }

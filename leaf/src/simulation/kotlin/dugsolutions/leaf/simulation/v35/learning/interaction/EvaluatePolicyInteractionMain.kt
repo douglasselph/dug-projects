@@ -10,6 +10,7 @@ import dugsolutions.leaf.simulation.v35.experiment.round.RoundExperimentResearch
 import dugsolutions.leaf.simulation.v35.learning.buy.parseRoundSetup
 import dugsolutions.leaf.simulation.v35.learning.cultivation.affectedSeat
 import dugsolutions.leaf.simulation.v35.learning.cultivation.loadCultivationResearchCards
+import dugsolutions.leaf.simulation.v35.learning.cultivation.MulchCapCultivationMainPolicy
 import dugsolutions.leaf.simulation.v35.learning.plant.effectivePlantEffectCatalogCards
 import dugsolutions.leaf.v35.chronicle.domain.*
 import dugsolutions.leaf.v35.common.FirstGameDefault
@@ -48,6 +49,7 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.tokens.SharedTokenResource
+import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
 import org.koin.dsl.koinApplication
 import java.nio.file.Files
 import java.nio.file.Path
@@ -84,7 +86,9 @@ data class PolicyInteractionOptions(
     val battleMainPolicy: String,
     val battleMainWeights: Path,
     val configOutput: Path? = null,
-    val verbosePlantTargeting: Boolean = false
+    val verbosePlantTargeting: Boolean = false,
+    val mulchRoundCap: Int? = null,
+    val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -132,6 +136,12 @@ data class PolicyInteractionOptions(
             var battleMainWeights = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
             var configOutput: Path? = null
             var verbosePlantTargeting = false
+            var mulchRoundCap: Int? = null
+            var waterSupply = SharedTokenStartingSupply.CANONICAL.water
+            var sunlightSupply = SharedTokenStartingSupply.CANONICAL.sunlight
+            var mulchSupply = SharedTokenStartingSupply.CANONICAL.mulch
+            var beeSupply = SharedTokenStartingSupply.CANONICAL.bee
+            var wormSupply = SharedTokenStartingSupply.CANONICAL.worm
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -160,6 +170,15 @@ data class PolicyInteractionOptions(
                     arg.startsWith("--battle-main-policy") -> battleMainPolicy = value(arg).lowercase()
                     arg.startsWith("--battle-main-weights") -> battleMainWeights = Paths.get(value(arg))
                     arg.startsWith("--config-output") -> configOutput = Paths.get(value(arg))
+                    arg.startsWith("--mulch-round-cap") -> {
+                        val raw = value(arg)
+                        mulchRoundCap = if (raw.equals("unlimited", ignoreCase = true)) null else raw.toInt()
+                    }
+                    arg.startsWith("--water-supply") -> waterSupply = value(arg).toInt()
+                    arg.startsWith("--sunlight-supply") -> sunlightSupply = value(arg).toInt()
+                    arg.startsWith("--mulch-supply") -> mulchSupply = value(arg).toInt()
+                    arg.startsWith("--bee-supply") -> beeSupply = value(arg).toInt()
+                    arg.startsWith("--worm-supply") -> wormSupply = value(arg).toInt()
                     arg == "--verbose-plant-targeting" -> verbosePlantTargeting = true
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
@@ -178,6 +197,10 @@ data class PolicyInteractionOptions(
             require(plantEffectPolicy in setOf("human", "learned")) { "--plant-effect-policy must be human or learned" }
             require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
             require(battleMainPolicy in setOf("human", "learned")) { "--battle-main-policy must be human or learned" }
+            require(mulchRoundCap == null || mulchRoundCap!! >= 0) { "--mulch-round-cap must be nonnegative or unlimited" }
+            val sharedTokenStartingSupply = SharedTokenStartingSupply(
+                water = waterSupply, sunlight = sunlightSupply, mulch = mulchSupply, bee = beeSupply, worm = wormSupply
+            )
             return PolicyInteractionOptions(
                 games = games, seed = seed, strategySeed = strategySeed, grovePattern = grovePattern, groveSeed = groveSeed,
                 plantOverrides = plantOverrides, roundOverrides = roundOverrides, players = players, roundLabel = roundLabel,
@@ -186,12 +209,13 @@ data class PolicyInteractionOptions(
                 wispPolicy = wispPolicy, wispWeights = wispWeights, plantEffectPolicy = plantEffectPolicy, plantEffectWeights = plantEffectWeights,
                 battleSupportPolicy = battleSupportPolicy, battleSupportWeights = battleSupportWeights,
                 battleMainPolicy = battleMainPolicy, battleMainWeights = battleMainWeights, configOutput = configOutput,
-                verbosePlantTargeting = verbosePlantTargeting
+                verbosePlantTargeting = verbosePlantTargeting, mulchRoundCap = mulchRoundCap,
+                sharedTokenStartingSupply = sharedTokenStartingSupply
             )
         }
 
         private fun usage() {
-            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] [--config-output PATH] [--verbose-plant-targeting] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH] --battle-main-policy human|learned [--battle-main-weights PATH]")
+            println("evaluate_policy_interactions [--samples N] [--seed N] [--strategy-seed N] [--grove-seed N] [--random-grove|--first-game-grove|--grove CODE] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--rounds PATTERN] [--mulch-round-cap N|unlimited] [--mulch-supply N] [--water-supply N] [--sunlight-supply N] [--bee-supply N] [--worm-supply N] [--config-output PATH] [--verbose-plant-targeting] --buy-policy human|learned [--buy-weights PATH] --cultivation-main-policy human|learned [--cultivation-main-weights PATH] --cultivation-support-policy human|learned [--cultivation-support-weights PATH] --wisp-policy human|learned [--wisp-weights PATH] --plant-effect-policy human|learned [--plant-effect-weights PATH] --battle-support-policy human|learned [--battle-support-weights PATH] --battle-main-policy human|learned [--battle-main-weights PATH]")
         }
     }
 }
@@ -227,7 +251,7 @@ fun main(args: Array<String>) {
         if (supportWeights != null) LearnedBattleSupportCatalog.validateCurrentSchema(supportWeights, plants)
         if (battleMainWeights != null) LearnedBattleMainCatalog.validateCurrentSchema(battleMainWeights, effectivePlantEffectCatalog)
 
-        val policyFactory = modularFactory(buyWeights, cultivationWeights, cultivationSupportWeights, wispWeights, plantEffectWeights, supportWeights, battleMainWeights)
+        val policyFactory = modularFactory(buyWeights, cultivationWeights, cultivationSupportWeights, wispWeights, plantEffectWeights, supportWeights, battleMainWeights, o.mulchRoundCap)
         val gameFactory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val acc = InteractionAccumulator()
@@ -258,7 +282,8 @@ fun main(args: Array<String>) {
                 seed = o.seed + sample,
                 strategySeed = o.strategySeed + sample,
                 plantValues = plantExp.values,
-                roundValues = roundExp.values
+                roundValues = roundExp.values,
+                sharedTokenStartingSupply = o.sharedTokenStartingSupply
             ))
             val result = withSimulationFailureDiagnostics(
                 game,
@@ -310,7 +335,8 @@ internal fun modularFactory(
     wispWeights: LearnedWispPlayWeights?,
     plantEffectWeights: LearnedPlantEffectWeights?,
     supportWeights: LearnedBattleSupportWeights?,
-    battleMainWeights: LearnedBattleMainWeights?
+    battleMainWeights: LearnedBattleMainWeights?,
+    mulchRoundCap: Int? = null
 ): PlayerDecisionFactory = object : PlayerDecisionFactory {
     override fun create() = create(StrategyRandomizer.create(), DecisionReasoningSink.NONE)
     override fun create(strategyRandomizer: StrategyRandomizer) = create(strategyRandomizer, DecisionReasoningSink.NONE)
@@ -318,7 +344,9 @@ internal fun modularFactory(
         HumanBaselineDecisionDirector(strategyRandomizer = strategyRandomizer, reasoningSink = reasoningSink).createDirector().let { baseline ->
             baseline.copy(
                 buy = buyWeights?.let { LearnedBuyStrategy(it, baseline.buy) } ?: baseline.buy,
-                cultivationMain = cultivationWeights?.let { LearnedCultivationMainPolicy(it) } ?: baseline.cultivationMain,
+                cultivationMain = (cultivationWeights?.let { LearnedCultivationMainPolicy(it) } ?: baseline.cultivationMain).let { policy ->
+                    mulchRoundCap?.let { MulchCapCultivationMainPolicy(policy, it) } ?: policy
+                },
                 cultivationSupport = cultivationSupportWeights?.let { LearnedCultivationSupportPolicy(it) } ?: baseline.cultivationSupport,
                 wispPlay = wispWeights?.let { LearnedWispPlayPolicy(it) } ?: baseline.wispPlay,
                 plantEffect = plantEffectWeights?.let { LearnedPlantEffectPolicy(it) } ?: baseline.plantEffect,
@@ -350,6 +378,8 @@ internal data class InteractionRunMetadata(
     val plantBaselineSha256: String?,
     val roundOverride: String,
     val roundOverrideSha256: String?,
+    val mulchRoundCap: Int?,
+    val sharedTokenStartingSupply: SharedTokenStartingSupply,
     val policies: List<PolicyBindingMetadata>
 )
 
@@ -372,6 +402,8 @@ internal fun interactionMetadata(o: PolicyInteractionOptions): InteractionRunMet
         plantBaselineSha256 = o.plantOverrides?.let(::sha256),
         roundOverride = o.roundOverrides?.toString() ?: "canonical",
         roundOverrideSha256 = o.roundOverrides?.let(::sha256),
+        mulchRoundCap = o.mulchRoundCap,
+        sharedTokenStartingSupply = o.sharedTokenStartingSupply,
         policies = listOf(
             binding("Buy", o.buyPolicy, o.buyWeights),
             binding("Cultivation Main", o.cultivationMainPolicy, o.cultivationMainWeights),
@@ -420,6 +452,8 @@ internal fun renderPolicyConfiguration(m: InteractionRunMetadata): String = buil
     appendLine("  strategy seeds=${m.strategySeedStart}..${m.strategySeedEnd}")
     appendLine("  Plant baseline=${m.plantBaseline}; sha256=${m.plantBaselineSha256 ?: "canonical"}")
     appendLine("  Round override=${m.roundOverride}; sha256=${m.roundOverrideSha256 ?: "canonical"}")
+    appendLine("  Mulch Round cap=${m.mulchRoundCap?.toString() ?: "unlimited"}")
+    appendLine("  Shared token start: Water=${m.sharedTokenStartingSupply.water} Sunlight=${m.sharedTokenStartingSupply.sunlight} Mulch=${m.sharedTokenStartingSupply.mulch} Bee=${m.sharedTokenStartingSupply.bee} Worm=${m.sharedTokenStartingSupply.worm}")
     appendLine("POLICY CONFIGURATION")
     m.policies.forEach { p ->
         append("  ${p.name.padEnd(21)} ${p.mode.padEnd(7)} ${p.path ?: "-"}")
@@ -533,11 +567,6 @@ internal class InteractionAccumulator {
     val plantEffectChoiceDistribution = sortedMapOf<String, Long>()
     val cultivationPlantActivationsByName = sortedMapOf<String, Long>()
     val battlePlantActivationsByName = sortedMapOf<String, Long>()
-    val battlePlantDecisionOpportunitiesByStage = sortedMapOf<String, Long>()
-    val battlePlantDecisionSelectionsByStage = sortedMapOf<String, Long>()
-    val battlePlantOpportunitiesByStageCard = sortedMapOf<String, Long>()
-    val battlePlantUsesByStageCard = sortedMapOf<String, Long>()
-    val battlePlantSubstitutionsByStageCard = sortedMapOf<String, Long>()
 
     var battlePlantActivations = 0L; var cultivationPlantActivations = 0L
     var strikeWins = 0L; var winnerDecisiveRows = 0L; var winnerDecisiveContributions = 0L; var woundDecisiveContributions = 0L
@@ -637,30 +666,6 @@ internal class InteractionAccumulator {
                     map[name] = (map[name] ?: 0) + 1
                 }
                 else -> Unit
-            }
-            if (e.phase == ChroniclePhase.BATTLE && e.legalPlantCardNames.isNotEmpty()) {
-                val stage = e.battleStage?.name ?: "UNKNOWN"
-                battlePlantDecisionOpportunitiesByStage[stage] = (battlePlantDecisionOpportunitiesByStage[stage] ?: 0) + 1
-                if (e.selectedMainAction == MainActionKind.ACTIVATE_PLANT) {
-                    battlePlantDecisionSelectionsByStage[stage] = (battlePlantDecisionSelectionsByStage[stage] ?: 0) + 1
-                }
-                val alternative = when (e.selectedMainAction) {
-                    MainActionKind.DRAW -> "DRAW"
-                    MainActionKind.ACTIVATE_PLANT -> "PLANT:${e.selectedPlantCardName ?: "UNKNOWN"}"
-                    MainActionKind.ROUND_EFFECT_1 -> "ROUND:SLOT_1:${e.firstEffect.name}"
-                    MainActionKind.ROUND_EFFECT_2 -> "ROUND:SLOT_2:${e.secondEffect.name}"
-                    null -> "NONE"
-                }
-                e.legalPlantCardNames.distinct().forEach { card ->
-                    val key = "$stage|$card"
-                    battlePlantOpportunitiesByStageCard[key] = (battlePlantOpportunitiesByStageCard[key] ?: 0) + 1
-                    if (e.selectedMainAction == MainActionKind.ACTIVATE_PLANT && e.selectedPlantCardName == card) {
-                        battlePlantUsesByStageCard[key] = (battlePlantUsesByStageCard[key] ?: 0) + 1
-                    } else {
-                        val subKey = "$stage|$card|$alternative"
-                        battlePlantSubstitutionsByStageCard[subKey] = (battlePlantSubstitutionsByStageCard[subKey] ?: 0) + 1
-                    }
-                }
             }
             if (e.phase == ChroniclePhase.CULTIVATION) {
                 val firstSun = e.firstEffect == GameEffect.GAIN_SUNLIGHT_TOKEN && e.firstExecutable
@@ -884,39 +889,6 @@ internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargetin
     if (a.battlePlantActivationsByName.isNotEmpty()) {
         println("  Battle Plant activations by card:")
         a.battlePlantActivationsByName.toList().sortedByDescending { it.second }.forEach { (name,count) -> println("    $name: ${fmt(count.toDouble()/n)}/game") }
-    }
-    println("  Plant-available Main decisions by stage:")
-    BattleMainStage.entries.forEach { stage ->
-        val key = stage.name
-        val o = a.battlePlantDecisionOpportunitiesByStage[key] ?: 0
-        val u = a.battlePlantDecisionSelectionsByStage[key] ?: 0
-        println("    $key: opportunities=$o Plant-selected=$u take-rate=${takeRate(u,o)}")
-    }
-    if (a.battlePlantOpportunitiesByStageCard.isNotEmpty()) {
-        println("  Battle Plant opportunity-normalized use by card and stage:")
-        val cards = a.battlePlantOpportunitiesByStageCard.keys.map { it.substringAfter('|') }.toSortedSet()
-        cards.forEach { card ->
-            var totalO = 0L
-            var totalU = 0L
-            val stageParts = BattleMainStage.entries.map { stage ->
-                val key = "${stage.name}|$card"
-                val o = a.battlePlantOpportunitiesByStageCard[key] ?: 0
-                val u = a.battlePlantUsesByStageCard[key] ?: 0
-                totalO += o; totalU += u
-                "${stage.name}=$u/$o(${takeRate(u,o)})"
-            }
-            println("    $card: uses=$totalU opportunities=$totalO rate=${takeRate(totalU,totalO)}; ${stageParts.joinToString(" ")}")
-            val substitutions = a.battlePlantSubstitutionsByStageCard
-                .filterKeys { it.substringAfter('|').substringBefore('|') == card }
-                .entries.sortedByDescending { it.value }.take(6)
-            if (substitutions.isNotEmpty()) {
-                println("      when not chosen, top alternatives:")
-                substitutions.forEach { (key,count) ->
-                    val parts = key.split('|', limit = 3)
-                    println("        ${parts[0]} -> ${parts[2]}: $count")
-                }
-            }
-        }
     }
     println("  Battle Round-effect opportunities / uses:")
     (a.battleRoundEffectOpportunities.keys + a.battleRoundEffectUses.keys).toSortedSet().forEach { effect ->

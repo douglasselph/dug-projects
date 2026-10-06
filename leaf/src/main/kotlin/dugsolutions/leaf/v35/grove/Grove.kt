@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.tokens.Butterfly
 import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Critters
 import dugsolutions.leaf.v35.tokens.SharedTokenResource
+import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
 import dugsolutions.leaf.v35.tokens.Token
 import dugsolutions.leaf.v35.tokens.Tokens
 import dugsolutions.leaf.v35.wisp.WispDeck
@@ -30,7 +31,8 @@ import dugsolutions.leaf.v35.wisp.WispDeck
  */
 class Grove(
     selectedPlantCards: List<PlantCard>,
-    val wispDeck: WispDeck
+    val wispDeck: WispDeck,
+    val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL
 ) {
 
     companion object {
@@ -72,17 +74,17 @@ class Grove(
         critters.clear()
         critters.set(
             Critter.BEE,
-            CRITTERS_PER_TYPE
+            sharedTokenStartingSupply.bee
         )
         critters.set(
             Critter.WORM,
-            CRITTERS_PER_TYPE
+            sharedTokenStartingSupply.worm
         )
 
         tokens.reset(
-            waterCount = TOKENS_PER_TYPE,
-            sunlightCount = TOKENS_PER_TYPE,
-            mulchTokens = List(TOKENS_PER_TYPE) {
+            waterCount = sharedTokenStartingSupply.water,
+            sunlightCount = sharedTokenStartingSupply.sunlight,
+            mulchTokens = List(sharedTokenStartingSupply.mulch) {
                 Token.MULCH()
             }
         )

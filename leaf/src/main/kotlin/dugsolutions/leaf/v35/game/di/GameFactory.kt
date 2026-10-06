@@ -92,7 +92,9 @@ class GameFactory(
                 randomizer =
                     randomizer,
                 exactWispCards =
-                    exactWispCards
+                    exactWispCards,
+                sharedTokenStartingSupply =
+                    config.sharedTokenStartingSupply
             )
 
         val roundDeck =

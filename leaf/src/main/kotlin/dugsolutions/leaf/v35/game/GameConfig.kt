@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
+
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
@@ -127,7 +129,9 @@ class GameConfig(
      * uses [RoundValueResolver.CANONICAL]; research may supply an immutable
      * resolver without mutating RoundCard definitions.
      */
-    val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL
+    val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
+    /** Experiment-friendly shared Grove token starting counts; canonical defaults remain 9 each. */
+    val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()
