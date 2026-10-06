@@ -137,6 +137,8 @@ private class Accumulator {
     var win = 0.0; var totalVp = 0.0; var plantVp = 0.0; var battleVp = 0.0; var wispVp = 0.0; var wounds = 0.0
     var plantPurchases = 0; var diePurchases = 0; var strikeWins = 0; var winnerDecisiveRows = 0; var winnerDecisiveContributions = 0; var woundDecisiveContributions = 0
     val first = linkedMapOf<MainActionKind, Int>(); val final = linkedMapOf<MainActionKind, Int>()
+    val roundEffectOpportunities = linkedMapOf<String, Int>()
+    val roundEffectUses = linkedMapOf<String, Int>()
     var sunlightMains = 0; var battlePlantActivations = 0; var battleRoundEffects = 0; var battleDraws = 0
     var supports = 0
     fun add(g: CompletedBattleMainEvalGame, seat: Int) {
@@ -156,6 +158,21 @@ private class Accumulator {
                 MainActionKind.ROUND_EFFECT_1, MainActionKind.ROUND_EFFECT_2 -> battleRoundEffects++
             }
         }
+        g.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
+            .filter { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
+            .forEach { choice ->
+                val stage = choice.battleStage?.name ?: "UNKNOWN"
+                fun observe(slot: Int, effect: dugsolutions.leaf.v35.effect.GameEffect, executable: Boolean, action: MainActionKind) {
+                    if (!executable) return
+                    val key = "$stage / SLOT_$slot / ${effect.name}"
+                    roundEffectOpportunities[key] = (roundEffectOpportunities[key] ?: 0) + 1
+                    if (choice.selectedMainAction == action) {
+                        roundEffectUses[key] = (roundEffectUses[key] ?: 0) + 1
+                    }
+                }
+                observe(1, choice.firstEffect, choice.firstExecutable, MainActionKind.ROUND_EFFECT_1)
+                observe(2, choice.secondEffect, choice.secondExecutable, MainActionKind.ROUND_EFFECT_2)
+            }
         supports += g.entries.filterIsInstance<GameEntry.SupportAction>().count { it.playerId == p.playerId && it.phase == ChroniclePhase.BATTLE }
         g.entries.filterIsInstance<GameEntry.StrikeResolved>().forEach { e ->
             if (p.playerId in e.winnerIds) strikeWins++
@@ -176,6 +193,13 @@ private fun printReport(label: String, a: Accumulator, n: Int) {
     println("  FIRST Main/game: ${MainActionKind.entries.joinToString { "${it.name}=${fmt((a.first[it] ?: 0).toDouble() / n)}" }}")
     println("  FINAL Main/game: ${MainActionKind.entries.joinToString { "${it.name}=${fmt((a.final[it] ?: 0).toDouble() / n)}" }}")
     println("  Battle interactions/game: supports=${fmt(a.supports.toDouble()/n)} sunlight-funded=${fmt(a.sunlightMains.toDouble()/n)} draws=${fmt(a.battleDraws.toDouble()/n)} Plant activations=${fmt(a.battlePlantActivations.toDouble()/n)} Round effects=${fmt(a.battleRoundEffects.toDouble()/n)} Strike wins=${fmt(a.strikeWins.toDouble()/n)} winner-decisive rows=${fmt(a.winnerDecisiveRows.toDouble()/n)} decisive contributions=${fmt(a.winnerDecisiveContributions.toDouble()/n)} wound-decisive contributions=${fmt(a.woundDecisiveContributions.toDouble()/n)}")
+    println("  Battle Round effects by ACTUAL identity (stage / slot / effect):")
+    (a.roundEffectOpportunities.keys + a.roundEffectUses.keys).toSortedSet().forEach { key ->
+        val opportunities = a.roundEffectOpportunities[key] ?: 0
+        val uses = a.roundEffectUses[key] ?: 0
+        val rate = if (opportunities == 0) 0.0 else uses.toDouble() / opportunities
+        println("    $key: opportunities=$opportunities uses=$uses take-rate=${pp(rate)} uses/game=${fmt(uses.toDouble()/n)}")
+    }
     println("  Economy/game: Plants bought=${fmt(a.plantPurchases.toDouble()/n)} dice bought=${fmt(a.diePurchases.toDouble()/n)}")
 }
 

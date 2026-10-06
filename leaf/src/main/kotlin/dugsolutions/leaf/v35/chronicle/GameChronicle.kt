@@ -189,6 +189,7 @@ class GameChronicle : Chronicle {
                 humanBaselineSelectedMainAction = moment.humanBaselineSelectedMainAction,
                 selectedPlantCardName = moment.selectedPlantCardName,
                 humanBaselineSelectedPlantCardName = moment.humanBaselineSelectedPlantCardName,
+                battleStage = moment.battleStage,
                 hierarchyDepth = hierarchyDepth
             )
             is Moment.MainAction -> GameEntry.MainAction(

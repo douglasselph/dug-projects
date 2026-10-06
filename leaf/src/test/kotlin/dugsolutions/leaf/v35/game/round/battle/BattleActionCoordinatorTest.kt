@@ -199,6 +199,7 @@ class BattleActionCoordinatorTest {
             .filter { it.playerId == p1.id }
         assertTrue(roundChoices.isNotEmpty())
         assertEquals(MainActionKind.ROUND_EFFECT_1, roundChoices.first().selectedMainAction)
+        assertEquals(BattleMainStage.FIRST, roundChoices.first().battleStage)
 
         assertEquals(
             listOf(

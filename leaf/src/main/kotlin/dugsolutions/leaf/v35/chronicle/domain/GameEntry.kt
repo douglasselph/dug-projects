@@ -122,7 +122,9 @@ sealed interface GameEntry {
         /** Human Baseline's pre-policy Main preference at this same decision, when available. */
         val humanBaselineSelectedMainAction: MainActionKind? = null,
         val selectedPlantCardName: String? = null,
-        val humanBaselineSelectedPlantCardName: String? = null
+        val humanBaselineSelectedPlantCardName: String? = null,
+        /** Battle decision stage; null for Cultivation. */
+        val battleStage: BattleMainStage? = null
     ) : GameEntry
 
     data class MainAction(

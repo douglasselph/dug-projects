@@ -682,7 +682,8 @@ object ChronicleTextRenderer {
 
             is GameEntry.RoundEffectChoice ->
                 "Round effect choice: ${entry.playerId.value} selected=${entry.selectedMainAction ?: "support/done"} " +
-                    "legal=${entry.legalMainActions.joinToString(",")} Sunlight=${entry.sunlightHeld} " +
+                    "legal=${entry.legalMainActions.joinToString(",")} stage=${entry.battleStage ?: "CULTIVATION"} " +
+                    "effects=[1=${entry.firstEffect},2=${entry.secondEffect}] Sunlight=${entry.sunlightHeld} " +
                     "BattlesRemaining=${entry.battlesRemaining} BattleNext=${entry.battleNext}"
 
             is GameEntry.MainAction ->
