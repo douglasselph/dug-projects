@@ -29,6 +29,8 @@ import dugsolutions.leaf.v35.player.decision.cultivation.CultivationAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationStrategy
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainPolicy
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportDecision
+import dugsolutions.leaf.v35.player.decision.cultivation.CultivationSupportPolicy
 import dugsolutions.leaf.v35.player.decision.support.HandDieChoice
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
 import dugsolutions.leaf.v35.player.dice.PlayerDice
@@ -175,6 +177,33 @@ class CultivationBuildCoordinatorTest {
         assertFalse(CultivationAction.Done in strategy.requests[0].legalChoices)
         assertFalse(CultivationAction.Done in strategy.requests[1].legalChoices)
         assertTrue(CultivationAction.Done in strategy.requests[2].legalChoices)
+    }
+
+    @Test
+    fun execute_supportPassFinishesWhenNoLegalMainRemainsEvenWithUnusedMainTokens() {
+        val strategy = SequenceStrategy(
+            CultivationAction.Support(SupportAction.UseMulch(Token.MULCH(DieSides.D6)))
+        )
+        val first = player(
+            id = 1,
+            supply = emptyList(),
+            strategy = strategy,
+            supportPolicy = CultivationSupportPolicy { CultivationSupportDecision.Pass }
+        )
+        first.tokens.add(Token.MULCH(DieSides.D6))
+        val effects = RecordingEffectExecutor(executable = { false })
+        val fixture = fixture(
+            first,
+            player(2, emptyList(), RoundEffectStrategy()),
+            effects
+        )
+
+        val result = fixture.coordinator.executeActions(fixture.game, fixture.card)
+
+        assertTrue(result.actions.none { it.playerId == first.id })
+        assertTrue(result.supportActions.none { it.playerId == first.id })
+        assertEquals(1, strategy.requests.size)
+        assertEquals(2, strategy.requests.single().mainActionsRemaining)
     }
 
     @Test
@@ -530,14 +559,16 @@ class CultivationBuildCoordinatorTest {
         supply: List<Die>,
         strategy: CultivationStrategy,
         hand: List<Die> = emptyList(),
-        mainPolicy: CultivationMainPolicy? = null
+        mainPolicy: CultivationMainPolicy? = null,
+        supportPolicy: CultivationSupportPolicy? = null
     ): Player {
         val baseline = DecisionDirector.baseline()
         return Player(
             id = PlayerId(id),
             decisions = baseline.copy(
                 cultivation = strategy,
-                cultivationMain = mainPolicy ?: baseline.cultivationMain
+                cultivationMain = mainPolicy ?: baseline.cultivationMain,
+                cultivationSupport = supportPolicy ?: baseline.cultivationSupport
             ),
             dice = PlayerDice(supply = supply, hand = hand)
         )
