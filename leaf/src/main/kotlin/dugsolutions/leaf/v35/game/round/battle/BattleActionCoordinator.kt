@@ -297,6 +297,16 @@ class BattleActionCoordinator(
                     passNumber = passNumber,
                     context = context
                 )
+                // WispPlayPolicy can legitimately remove every remaining Wisp choice by
+                // choosing Hold. If those Wisps were the player's only legal Step-5 actions,
+                // the policy-filtered choice set is now empty. That means the player has
+                // nothing they are willing and able to do this pass; finish them rather than
+                // constructing an impossible ChooseBattleTurnActionRequest.
+                if (policyLegalChoices.isEmpty()) {
+                    battleState.markDone(player.id)
+                    return@forEach
+                }
+
                 val battleChoice = if (rawBattleChoice in policyLegalChoices) rawBattleChoice else
                     player.decisions.battle.chooseTurnAction(
                         ChooseBattleTurnActionRequest(

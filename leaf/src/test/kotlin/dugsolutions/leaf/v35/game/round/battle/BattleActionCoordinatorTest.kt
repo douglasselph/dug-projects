@@ -45,6 +45,8 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.tokens.Token
 import dugsolutions.leaf.v35.wisp.domain.WispCard
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayDecision
+import dugsolutions.leaf.v35.player.decision.wisp.WispPlayPolicy
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -78,6 +80,51 @@ class BattleActionCoordinatorTest {
         assertTrue(fixture.battleState.isDone(p1.id))
     }
 
+
+
+    @Test
+    fun execute_wispHoldWhenWispsAreOnlyRemainingStep5Choices_finishesPlayer() {
+        val wisp = wisp("Held Wisp")
+        val strategy = object : BattleStrategy {
+            var turnCalls = 0
+
+            override fun chooseFirstMainAction(
+                request: ChooseBattleFirstMainActionRequest
+            ): BattleMainAction = BattleMainAction.Draw
+
+            override fun chooseTurnAction(
+                request: ChooseBattleTurnActionRequest
+            ): BattleTurnAction {
+                turnCalls += 1
+                return request.legalChoices.first()
+            }
+
+            override fun chooseDiePlacement(
+                request: ChooseBattleDiePlacementRequest
+            ) = request.legalRows.first()
+        }
+        val p1 = player(
+            id = 1,
+            strategy = strategy,
+            supply = listOf(fixedDie(4, 3)),
+            wispPlay = WispPlayPolicy { WispPlayDecision.Hold }
+        ).apply {
+            wisps.add(wisp)
+        }
+        val p2 = player(2, finishStrategy("p2"))
+        val effects = RecordingEffects(canExecutePredicate = { request ->
+            request.source !is GameEffectSource.Round
+        })
+        val fixture = fixture(p1, p2, effects = effects)
+
+        val result = fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(result.firstMainActions.any { it.playerId == p1.id && it.action == BattleMainAction.Draw })
+        assertTrue(result.finalMainActions.none { it.playerId == p1.id })
+        assertTrue(fixture.battleState.isDone(p1.id))
+        assertEquals(1, strategy.turnCalls)
+        assertEquals(listOf(wisp), p1.wisps.cards.cards)
+    }
 
     @Test
     fun execute_zeroPlantsAndNoDrawableDice_humanBaselineUsesRoundMainActions() {
@@ -648,11 +695,15 @@ class BattleActionCoordinatorTest {
         id: Int,
         strategy: BattleStrategy,
         hand: List<Die> = emptyList(),
-        supply: List<Die> = emptyList()
+        supply: List<Die> = emptyList(),
+        wispPlay: WispPlayPolicy? = null
     ): Player =
         Player(
             id = PlayerId(id),
-            decisions = DecisionDirector.baseline().copy(battle = strategy),
+            decisions = DecisionDirector.baseline().copy(
+                battle = strategy,
+                wispPlay = wispPlay ?: DecisionDirector.baseline().wispPlay
+            ),
             dice = PlayerDice(
                 supply = supply,
                 hand = hand
