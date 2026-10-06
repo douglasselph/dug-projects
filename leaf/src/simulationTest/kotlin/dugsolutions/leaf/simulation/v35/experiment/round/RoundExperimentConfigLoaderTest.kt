@@ -13,7 +13,9 @@ import kotlin.test.assertFailsWith
 class RoundExperimentConfigLoaderTest {
     private val sunlightCompost = card("Resource_Sunlight_Compost", GameEffect.RAISE_DIE_PLUS_3, GameEffect.UPGRADE_DIE_FROM_HAND)
     private val sunlightWater = card("Resource_Sunlight_Water", GameEffect.RAISE_DIE_PLUS_3, GameEffect.GAIN_WATER_TOKEN)
-    private val cards = listOf(sunlightCompost, sunlightWater)
+    private val compostMulch = card("Resource_Compost_Mulch", GameEffect.UPGRADE_DIE_FROM_HAND, GameEffect.MULCH_DIE_FROM_HAND)
+    private val waterCompost = card("Resource_Water_Compost", GameEffect.GAIN_WATER_TOKEN, GameEffect.UPGRADE_DIE_FROM_HAND)
+    private val cards = listOf(sunlightCompost, sunlightWater, compostMulch, waterCompost)
     private val loader = RoundExperimentConfigLoader(cards)
 
     @Test
@@ -33,6 +35,26 @@ Resource_Sunlight_Compost,1,GAIN_SUNLIGHT_TOKEN
         assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
         assertEquals(GameEffect.UPGRADE_DIE_FROM_HAND, config.effectFor(sunlightCompost, RoundEffectSlot.SECOND))
         assertEquals(GameEffect.RAISE_DIE_PLUS_3, config.effectFor(sunlightWater, RoundEffectSlot.FIRST))
+    }
+
+    @Test
+    fun compostUseNow_canRerouteEveryCanonicalCompostSlot() {
+        val config = loader.parse(
+            """round_card,effect_slot,effect
+Resource_Compost_Mulch,1,UPGRADE_DIE_AND_USE_NOW
+Resource_Sunlight_Compost,2,UPGRADE_DIE_AND_USE_NOW
+Resource_Water_Compost,2,UPGRADE_DIE_AND_USE_NOW
+"""
+        )
+
+        assertEquals(GameEffect.UPGRADE_DIE_AND_USE_NOW, config.effectFor(compostMulch, RoundEffectSlot.FIRST))
+        assertEquals(GameEffect.UPGRADE_DIE_AND_USE_NOW, config.effectFor(sunlightCompost, RoundEffectSlot.SECOND))
+        assertEquals(GameEffect.UPGRADE_DIE_AND_USE_NOW, config.effectFor(waterCompost, RoundEffectSlot.SECOND))
+
+        // Unspecified companion effects remain canonical.
+        assertEquals(GameEffect.MULCH_DIE_FROM_HAND, config.effectFor(compostMulch, RoundEffectSlot.SECOND))
+        assertEquals(GameEffect.RAISE_DIE_PLUS_3, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
+        assertEquals(GameEffect.GAIN_WATER_TOKEN, config.effectFor(waterCompost, RoundEffectSlot.FIRST))
     }
 
     @Test
