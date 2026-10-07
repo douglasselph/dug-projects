@@ -75,7 +75,7 @@ Vine_07_01,,8,,,
 Run:
 
 ```bash
-bin/evaluate_buy_policy --plant-overrides data/research/plant-overrides/berry-important-cost-8.csv
+bin/evaluate_buy_policy --plant-overrides data/research/4p/plant-overrides/berry-important-cost-8.csv
 ```
 
 The card remains available. Only its effective acquisition cost changes for that run.
@@ -238,7 +238,7 @@ Blank `type`, `cost`, `available`, `scoring`, or `effect` fields mean that prope
 For reusable experiments, a descriptive repository path is:
 
 ```text
-data/research/plant-overrides/
+data/research/4p/plant-overrides/
 ```
 
 For one-off experiments, the file may live anywhere; `--plant-overrides` accepts an arbitrary filesystem path.
@@ -296,7 +296,7 @@ Research-only effect constants currently include `RAISE_LOWEST_DIE_PLUS_1`, `RAI
 Ongoing Plant-balance work maintains an explicit working baseline at:
 
 ```text
-data/research/resync/resync-current.csv
+data/research/4p/resync/resync-current.csv
 ```
 
 This file is **not** discovered automatically by `train_buy_policy` or
@@ -329,7 +329,7 @@ Use another preserved baseline explicitly:
 
 ```bash
 bin/experiment_card_tier_calibration Root_09_03 screen \
-  --baseline-overrides data/research/resync/resync-v01.csv \
+  --baseline-overrides data/research/4p/resync/resync-v01.csv \
   --tiers 9,11,14,17
 ```
 

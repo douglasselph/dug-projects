@@ -8,7 +8,7 @@ bin/experiment_balanced_market_sweep
 
 The default run is intentionally deep: 15 complete market configurations, 5 fresh Buy learners per market, and 1,000 held-out matched samples per learner. With train + evaluation stages, that is 150 resumable stages.
 
-Before any training starts, every selected market is merged onto `data/research/resync/resync-current.csv` and checked by `bin/validate_plant_slot_market`. The run aborts unless every legal Grove slot has exactly four available candidates:
+Before any training starts, every selected market is merged onto `data/research/4p/resync/resync-current.csv` and checked by `bin/validate_plant_slot_market`. The run aborts unless every legal Grove slot has exactly four available candidates:
 
 - Root 5 / 7 / 9
 - Vine 7 / 9 / 11

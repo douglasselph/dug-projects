@@ -11,7 +11,7 @@ class LearnedBuyCardCatalogTest {
     }.getAllCards()
 
     @Test fun `checked in AI card feature schema matches current CardDataFiles`() {
-        val weights=LearnedBuyWeights.load(Path.of("data/ai/buy-policy-v1.weights"))
+        val weights=LearnedBuyWeights.load(Path.of("data/ai/4p/buy-policy-v1.weights"))
         LearnedBuyCardCatalog.validateCurrentSchema(weights,cards())
     }
 

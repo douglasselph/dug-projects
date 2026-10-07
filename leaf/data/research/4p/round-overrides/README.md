@@ -25,22 +25,22 @@ Use with research runners via:
 The proposed Compost repair is represented as a research-only Round override:
 
 ```text
-data/research/round-overrides/compost-use-now.csv
+data/research/4p/round-overrides/compost-use-now.csv
 ```
 
 Use it with any train/evaluate runner that accepts `--round-overrides`:
 
 ```text
---round-overrides data/research/round-overrides/compost-use-now.csv
+--round-overrides data/research/4p/round-overrides/compost-use-now.csv
 ```
 
 That file is intentionally self-contained. It includes the currently accepted
-Round resync interventions from `data/research/resync/round-resync-current.csv`
+Round resync interventions from `data/research/4p/resync/round-resync-current.csv`
 plus all three canonical Compost slots rerouted from `UPGRADE_DIE_FROM_HAND` to
 `UPGRADE_DIE_AND_USE_NOW`. This avoids changing the accepted current resync while
 the Compost repair is still experimental.
 
 If the repair is accepted as the new research baseline, copy the three Compost
-rows into `data/research/resync/round-resync-current.csv`. Until then, the
+rows into `data/research/4p/resync/round-resync-current.csv`. Until then, the
 current resync remains the control condition and this file is the variant.
 

@@ -18,8 +18,8 @@ class CultivationMainResearchTest {
             "--players", "3",
             "--rounds", "2/2/3",
             "--random-grove",
-            "--plant-overrides", "data/research/resync/resync-current.csv",
-            "--round-overrides", "data/research/round-overrides/sunlight-token.csv",
+            "--plant-overrides", "data/research/4p/resync/resync-current.csv",
+            "--round-overrides", "data/research/4p/round-overrides/sunlight-token.csv",
             "--buy-policy", "human",
             "--battle-support-policy", "human"
         ))
@@ -35,12 +35,12 @@ class CultivationMainResearchTest {
     fun `evaluation options support learned Buy as an independent fixed policy`() {
         val o = CultivationEvalOptions.parse(listOf(
             "--games=9", "--players=2", "--buy-policy=learned",
-            "--buy-weights=data/ai/example.weights"
+            "--buy-weights=data/ai/4p/example.weights"
         ))
         assertEquals(9, o.games)
         assertEquals(2, o.players)
         assertEquals("learned", o.buyPolicy)
         assertEquals("human", o.battleSupportPolicy)
-        assertEquals("data/ai/example.weights", o.buyWeights.toString())
+        assertEquals("data/ai/4p/example.weights", o.buyWeights.toString())
     }
 }

@@ -43,7 +43,7 @@ object LearnedBuyCardCatalog {
                 appendLine("AI CARD FEATURE CATALOG IS OUT OF DATE")
                 if(missing.isNotEmpty()) appendLine("Missing learned features: ${missing.sorted().joinToString()}")
                 if(obsolete.isNotEmpty()) appendLine("Obsolete learned features: ${obsolete.sorted().joinToString()}")
-                append("Regenerate/update data/ai/buy-policy-v1.weights from the current CardDataFiles catalog before training.")
+                append("Regenerate/update data/ai/4p/buy-policy-v1.weights from the current CardDataFiles catalog before training.")
             }
         }
     }

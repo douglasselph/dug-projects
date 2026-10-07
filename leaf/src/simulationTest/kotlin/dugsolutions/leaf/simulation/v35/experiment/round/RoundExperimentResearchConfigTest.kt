@@ -15,7 +15,7 @@ class RoundExperimentResearchConfigTest {
 
     @Test
     fun trainAndEvaluateParseSameRoundOverrideOption() {
-        val path = "data/research/round-overrides/example.csv"
+        val path = "data/research/4p/round-overrides/example.csv"
         assertEquals(path, TrainOptions.parse(listOf("--round-overrides", path)).roundOverridesPath.toString())
         assertEquals(path, EvalOptions.parse(listOf("--round-overrides", path)).roundOverridesPath.toString())
     }

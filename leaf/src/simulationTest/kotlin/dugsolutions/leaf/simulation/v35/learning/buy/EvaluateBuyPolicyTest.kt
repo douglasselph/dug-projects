@@ -181,12 +181,12 @@ class EvaluateBuyPolicyTest {
 
     @Test fun `weights alias exclusions and standard round blocks parse`() {
         val o = EvalOptions.parse(listOf(
-            "--weights", "data/ai/frozen-buy-first-game-default-v1.weights",
+            "--weights", "data/ai/4p/frozen-buy-first-game-default-v1.weights",
             "--random-grove",
             "--exclude-card", "Vine_07_04,Vine_07_01",
             "--rounds", "3/2/2"
         ))
-        assertEquals("data/ai/frozen-buy-first-game-default-v1.weights", o.input.toString())
+        assertEquals("data/ai/4p/frozen-buy-first-game-default-v1.weights", o.input.toString())
         assertEquals(setOf("Vine_07_04", "Vine_07_01"), o.excludedCards)
         val setup = assertIs<GameRoundSetup.Patterned>(o.roundSetup)
         assertEquals(listOf(3, 2, 2), setup.cultivationBlocks)

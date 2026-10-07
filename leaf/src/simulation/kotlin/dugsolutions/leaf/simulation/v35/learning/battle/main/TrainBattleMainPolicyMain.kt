@@ -145,14 +145,14 @@ internal data class BattleMainTrainOptions(
         fun parse(args: List<String>): BattleMainTrainOptions {
             var generations = 5; var population = 8; var games = 20; var elites = 2; var sigma = .25; var mutations = 8
             var evolutionSeed = 54000L; var seed = 64000L; var strategySeed = 74000L
-            var input = Paths.get("data/ai/battle-main-policy-v1.weights"); var output = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
+            var input = Paths.get("data/ai/4p/battle-main-policy-v1.weights"); var output = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
             var plant: Path? = null; var round: Path? = null; var grove: String? = null; var groveSeed = 84000L; var players = 4; var rounds = "3/2/2"
-            var buyPolicy = "human"; var buyWeights = Paths.get("data/ai/buy-policy-v1.weights")
-            var cultivationMainPolicy = "human"; var cultivationMainWeights = Paths.get("data/ai/cultivation-main-policy-v1.weights")
-            var cultivationSupportPolicy = "human"; var cultivationSupportWeights = Paths.get("data/ai/cultivation-support-policy-v1.weights")
-            var wispPolicy = "human"; var wispWeights = Paths.get("data/ai/wisp-play-policy-v1.weights")
-            var plantEffectPolicy = "human"; var plantEffectWeights = Paths.get("data/ai/plant-effect-policy-v1.weights")
-            var battleSupportPolicy = "human"; var battleSupportWeights = Paths.get("data/ai/battle-support-policy-v1.weights")
+            var buyPolicy = "human"; var buyWeights = Paths.get("data/ai/4p/buy-policy-v1.weights")
+            var cultivationMainPolicy = "human"; var cultivationMainWeights = Paths.get("data/ai/4p/cultivation-main-policy-v1.weights")
+            var cultivationSupportPolicy = "human"; var cultivationSupportWeights = Paths.get("data/ai/4p/cultivation-support-policy-v1.weights")
+            var wispPolicy = "human"; var wispWeights = Paths.get("data/ai/4p/wisp-play-policy-v1.weights")
+            var plantEffectPolicy = "human"; var plantEffectWeights = Paths.get("data/ai/4p/plant-effect-policy-v1.weights")
+            var battleSupportPolicy = "human"; var battleSupportWeights = Paths.get("data/ai/4p/battle-support-policy-v1.weights")
             var i = 0
             fun value(a: String) = if ('=' in a) a.substringAfter('=') else args[++i]
             while (i < args.size) {

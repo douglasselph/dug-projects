@@ -14,8 +14,8 @@ The experiment deliberately isolates one learned decision family:
 
 It explicitly supplies both:
 
-- `data/research/resync/resync-current.csv`
-- `data/research/round-overrides/sunlight-token.csv`
+- `data/research/4p/resync/resync-current.csv`
+- `data/research/4p/round-overrides/sunlight-token.csv`
 
 No core runner silently loads either research configuration.
 

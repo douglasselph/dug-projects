@@ -63,10 +63,10 @@ Send that archive back for final tier assessment.
 The experiment uses:
 
 ```text
-data/research/plant-overrides/root-07-03-cost-7.csv
-data/research/plant-overrides/root-07-03-cost-9.csv
-data/research/plant-overrides/root-07-03-cost-11.csv
-data/research/plant-overrides/root-07-03-cost-14.csv
+data/research/4p/plant-overrides/root-07-03-cost-7.csv
+data/research/4p/plant-overrides/root-07-03-cost-9.csv
+data/research/4p/plant-overrides/root-07-03-cost-11.csv
+data/research/4p/plant-overrides/root-07-03-cost-14.csv
 ```
 
 Each file changes only the effective acquisition cost of `Root_07_03`, while excluding `Vine_07_01` and `Vine_07_04`.

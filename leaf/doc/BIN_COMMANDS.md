@@ -124,7 +124,7 @@ bin/train_buy_policy
 
 Defaults are 5 generations, population 8, 20 games per candidate, 2 elites,
 mutation sigma 0.25, and 6 mutated weights per child. The checked-in input is
-`data/ai/buy-policy-v1.weights`; the best candidate is checkpointed to
+`data/ai/4p/buy-policy-v1.weights`; the best candidate is checkpointed to
 `output/ai/buy-policy-v1-trained.weights`. The input is never automatically
 overwritten.
 
@@ -145,7 +145,7 @@ bin/train_buy_policy --random-grove --grove-seed 81000 \
 unavailable cards and impossible constrained slots fail clearly.
 
 Do not treat training fitness as held-out evidence and do not promote the
-output into `data/ai/` merely because its training result is good. Evaluate a
+output into `data/ai/4p/` merely because its training result is good. Evaluate a
 candidate on new seeds (and, as evaluation tooling expands, other Groves/round
 patterns) before deliberate promotion.
 
@@ -178,7 +178,7 @@ Current tier-calibration experiments default to the provisional Plant resync
 baseline:
 
 ```text
-data/research/resync/resync-current.csv
+data/research/4p/resync/resync-current.csv
 ```
 
 The baseline is merged explicitly with the target-card intervention. Core
@@ -192,7 +192,7 @@ bin/experiment_card_tier_calibration Root_09_03 screen --tiers 9,11,14,17
 
 # Preserved resync checkpoint
 bin/experiment_card_tier_calibration Root_09_03 screen \
-  --baseline-overrides data/research/resync/resync-v01.csv \
+  --baseline-overrides data/research/4p/resync/resync-v01.csv \
   --tiers 9,11,14,17
 
 # Canonical-only Plant market

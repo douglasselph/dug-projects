@@ -221,12 +221,12 @@ internal data class BattleMainEvalOptions(
         fun parse(args: List<String>): BattleMainEvalOptions {
             var games = 300; var seed = 94000L; var strategy = 104000L; var weights = Paths.get("output/ai/battle-main-policy-v1-trained.weights")
             var plant: Path? = null; var round: Path? = null; var grove: String? = null; var groveSeed = 114000L; var players = 4; var rounds = "3/2/2"
-            var buyPolicy = "human"; var buyWeights = Paths.get("data/ai/buy-policy-v1.weights")
-            var cmPolicy = "human"; var cmWeights = Paths.get("data/ai/cultivation-main-policy-v1.weights")
-            var csPolicy = "human"; var csWeights = Paths.get("data/ai/cultivation-support-policy-v1.weights")
-            var wispPolicy = "human"; var wispWeights = Paths.get("data/ai/wisp-play-policy-v1.weights")
-            var pePolicy = "human"; var peWeights = Paths.get("data/ai/plant-effect-policy-v1.weights")
-            var bsPolicy = "human"; var bsWeights = Paths.get("data/ai/battle-support-policy-v1.weights")
+            var buyPolicy = "human"; var buyWeights = Paths.get("data/ai/4p/buy-policy-v1.weights")
+            var cmPolicy = "human"; var cmWeights = Paths.get("data/ai/4p/cultivation-main-policy-v1.weights")
+            var csPolicy = "human"; var csWeights = Paths.get("data/ai/4p/cultivation-support-policy-v1.weights")
+            var wispPolicy = "human"; var wispWeights = Paths.get("data/ai/4p/wisp-play-policy-v1.weights")
+            var pePolicy = "human"; var peWeights = Paths.get("data/ai/4p/plant-effect-policy-v1.weights")
+            var bsPolicy = "human"; var bsWeights = Paths.get("data/ai/4p/battle-support-policy-v1.weights")
             var i = 0; fun value(a:String)=if('=' in a)a.substringAfter('=') else args[++i]
             while(i<args.size){ val a=args[i]; when {
                 a.startsWith("--games") || a.startsWith("--samples") -> games=value(a).toInt()

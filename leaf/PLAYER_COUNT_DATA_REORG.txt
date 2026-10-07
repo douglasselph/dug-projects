@@ -1,0 +1,19 @@
+Leaf & Let Die — player-count data reorganization
+
+Installation assumption:
+  1. Delete the existing top-level data/ directory.
+  2. Unzip this archive at the project root.
+
+This archive contains the COMPLETE replacement data/ directory plus all current
+bin/, doc/, and src/ files whose hard-coded/default paths had to change.
+
+Key moves:
+  data/ai/*.weights                 -> data/ai/4p/*.weights
+  data/research/<category>/...      -> data/research/4p/<category>/...
+
+Player-count-neutral card CSVs, icons, and images remain directly under data/.
+Reserved data/ai/{2p,3p}/ and data/research/{2p,3p}/ directories are included
+with README files for future deliberately trained/validated artifacts.
+
+Existing weight metadata was preserved except path-valued provenance fields were
+rewritten to the new 4p research path where necessary.

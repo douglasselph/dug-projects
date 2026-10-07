@@ -519,7 +519,7 @@ internal data class CultivationEvalOptions(
             var roundOverridesPath: Path? = null
             var players = 4
             var buyPolicy = "human"
-            var buyWeights = Paths.get("data/ai/frozen-buy-first-game-default-v1.weights")
+            var buyWeights = Paths.get("data/ai/4p/frozen-buy-first-game-default-v1.weights")
             var battleSupportPolicy = "human"
             var positional = false
             var i = 0

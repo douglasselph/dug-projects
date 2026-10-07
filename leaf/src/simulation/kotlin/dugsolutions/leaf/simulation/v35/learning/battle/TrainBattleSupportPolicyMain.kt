@@ -81,7 +81,7 @@ internal data class BattleSupportTrainOptions(
     companion object {
         fun parse(args: List<String>): BattleSupportTrainOptions {
             var generations=5; var population=8; var games=20; var elites=2; var sigma=.25; var mutations=8; var evolutionSeed=53000L; var seed=63000L; var strategySeed=73000L
-            var input=Paths.get("data/ai/battle-support-policy-v1.weights"); var output=Paths.get("output/ai/battle-support-policy-v1-trained.weights")
+            var input=Paths.get("data/ai/4p/battle-support-policy-v1.weights"); var output=Paths.get("output/ai/battle-support-policy-v1-trained.weights")
             var plant:Path?=null; var round:Path?=null; var grove:String?=null; var groveSeed=83000L; var players=4; var rounds="3/2/2"; var i=0
             fun value(a:String)=if('=' in a)a.substringAfter('=') else args[++i]
             while(i<args.size){ val a=args[i]; when {

@@ -120,7 +120,7 @@ needed to create tokens naturally, it can be supplied explicitly, for example:
 bin/targeted-decision-calibration \
   --target=sunlight-spend \
   --games=200 \
-  --round-overrides=data/research/round-overrides/sunlight-token.csv
+  --round-overrides=data/research/4p/round-overrides/sunlight-token.csv
 ```
 
 The report selects the best Sunlight-funded candidate at each opportunity and

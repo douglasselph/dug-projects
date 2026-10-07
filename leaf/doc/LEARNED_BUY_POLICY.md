@@ -88,7 +88,7 @@ presented as validated for the new game until it has been retrained and tested.
 
 ## Weight-file provenance
 
-The checked-in `data/ai/buy-policy-v1.weights` is the deliberate input policy.
+The checked-in `data/ai/4p/buy-policy-v1.weights` is the deliberate input policy.
 The current persistence format records training status and, for trained output,
 research provenance including round pattern, Grove, generations, games per
 candidate, population/mutation settings, RNG seeds, fitness, and the Plant
@@ -190,7 +190,7 @@ output/ai/buy-policy-v1-trained.weights
 
 Confirm that weights evolved, provenance and manifest data are present, and
 card-identity/exact-cost/stage features are changing. Do **not** automatically
-copy this file over `data/ai/buy-policy-v1.weights`.
+copy this file over `data/ai/4p/buy-policy-v1.weights`.
 
 After a training smoke run produces a champion, evaluate it before promotion:
 

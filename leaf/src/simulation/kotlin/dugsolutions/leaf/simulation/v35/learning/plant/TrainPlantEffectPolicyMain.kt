@@ -77,7 +77,7 @@ internal data class PlantEffectTrainOptions(
             var evolutionSeed = 96000L
             var seed = 97000L
             var strategySeed = 98000L
-            var input = Paths.get("data/ai/plant-effect-policy-v1.weights")
+            var input = Paths.get("data/ai/4p/plant-effect-policy-v1.weights")
             var output = Paths.get("output/ai/plant-effect-policy-v1-trained.weights")
             var plantOverrides: Path? = null
             var roundOverrides: Path? = null

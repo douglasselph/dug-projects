@@ -208,7 +208,7 @@ internal data class TrainOptions(
         fun parse(args: List<String>): TrainOptions {
             var generations=5; var population=8; var games=20; var elites=2; var sigma=.25; var mutations=6
             var evolutionSeed=51000L; var seed=61000L; var strategySeed=71000L
-            var input=Paths.get("data/ai/buy-policy-v1.weights"); var output=Paths.get("output/ai/buy-policy-v1-trained.weights")
+            var input=Paths.get("data/ai/4p/buy-policy-v1.weights"); var output=Paths.get("output/ai/buy-policy-v1-trained.weights")
             var plantOverridesPath: Path? = null
             var roundOverridesPath: Path? = null
             var grovePattern: String? = null

@@ -78,7 +78,7 @@ internal data class WispTrainOptions(
             var evolutionSeed = 55000L
             var seed = 65000L
             var strategySeed = 75000L
-            var input = Paths.get("data/ai/wisp-play-policy-v1.weights")
+            var input = Paths.get("data/ai/4p/wisp-play-policy-v1.weights")
             var output = Paths.get("output/ai/wisp-play-policy-v1-trained.weights")
             var plantOverrides: Path? = null
             var roundOverrides: Path? = null

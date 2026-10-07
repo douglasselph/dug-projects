@@ -240,7 +240,7 @@ internal data class CultivationTrainOptions(
             var evolutionSeed = 52000L
             var seed = 62000L
             var strategySeed = 72000L
-            var input = Paths.get("data/ai/cultivation-main-policy-v1.weights")
+            var input = Paths.get("data/ai/4p/cultivation-main-policy-v1.weights")
             var output = Paths.get("output/ai/cultivation-main-policy-v1-trained.weights")
             var plantOverridesPath: Path? = null
             var roundOverridesPath: Path? = null
@@ -249,7 +249,7 @@ internal data class CultivationTrainOptions(
             var players = 4
             var roundLabel = "3/2/2"
             var buyPolicy = "human"
-            var buyWeights = Paths.get("data/ai/frozen-buy-first-game-default-v1.weights")
+            var buyWeights = Paths.get("data/ai/4p/frozen-buy-first-game-default-v1.weights")
             var battleSupportPolicy = "human"
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]

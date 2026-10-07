@@ -45,8 +45,8 @@ for Battle-next, Battles remaining, Sunlight held, and Main Actions remaining.
 ```bash
 bin/train_cultivation_main_policy \
   --random-grove \
-  --plant-overrides data/research/resync/resync-current.csv \
-  --round-overrides data/research/round-overrides/sunlight-token.csv \
+  --plant-overrides data/research/4p/resync/resync-current.csv \
+  --round-overrides data/research/4p/round-overrides/sunlight-token.csv \
   --generations 8 --population 10 --games 50 \
   --output output/ai/cultivation-main-sunlight-1.weights
 ```
@@ -57,7 +57,7 @@ the affected player also uses a fixed learned Buy policy:
 ```bash
 bin/train_cultivation_main_policy \
   --buy-policy learned \
-  --buy-weights data/ai/frozen-buy-first-game-default-v1.weights
+  --buy-weights data/ai/4p/frozen-buy-first-game-default-v1.weights
 ```
 
 That Buy policy is fixed; only Cultivation Main weights evolve.
@@ -73,8 +73,8 @@ provisional resync baseline.
 bin/evaluate_cultivation_main_policy \
   --weights output/ai/cultivation-main-sunlight-1.weights \
   --random-grove \
-  --plant-overrides data/research/resync/resync-current.csv \
-  --round-overrides data/research/round-overrides/sunlight-token.csv \
+  --plant-overrides data/research/4p/resync/resync-current.csv \
+  --round-overrides data/research/4p/round-overrides/sunlight-token.csv \
   --games 1000
 ```
 
