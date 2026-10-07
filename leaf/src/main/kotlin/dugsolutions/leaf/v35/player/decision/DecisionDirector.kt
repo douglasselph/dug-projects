@@ -21,6 +21,8 @@ import dugsolutions.leaf.v35.player.decision.wound.WoundStrategy
 import dugsolutions.leaf.v35.player.decision.wisp.WispPlayPolicy
 import dugsolutions.leaf.v35.player.decision.wisp.HumanWispPlayPolicy
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.mulch.MulchTargetPolicy
+import dugsolutions.leaf.v35.player.decision.mulch.HumanMulchTargetPolicy
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 
 /**
@@ -48,7 +50,8 @@ data class DecisionDirector(
     val buy: BuyStrategy,
     val support: SupportStrategy,
     val effect: EffectStrategy,
-    val plantEffect: PlantEffectPolicy = HumanPlantEffectPolicy()
+    val plantEffect: PlantEffectPolicy = HumanPlantEffectPolicy(),
+    val mulchTarget: MulchTargetPolicy = HumanMulchTargetPolicy()
 ) {
     companion object {
 

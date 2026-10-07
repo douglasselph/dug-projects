@@ -79,14 +79,18 @@ private fun chooseRequiredDie(
         "No legal die targets for effect: ${request.effect}"
     }
 
-    val chosen = request.effectDecisionStrategy().chooseDie(
-        ChooseEffectDieRequest(
-            effect = request.effect,
-            legalChoices = legalChoices,
-            context = request.decisionContext(),
-            requiredBattleRow = requiredBattleRow
-        )
+    val effectStrategy = request.effectDecisionStrategy()
+    val dieRequest = ChooseEffectDieRequest(
+        effect = request.effect,
+        legalChoices = legalChoices,
+        context = request.decisionContext(),
+        requiredBattleRow = requiredBattleRow
     )
+    val chosen = if (request.effect == dugsolutions.leaf.v35.effect.GameEffect.MULCH_DIE_FROM_HAND) {
+        request.actor.decisions.mulchTarget.chooseDie(dieRequest, effectStrategy)
+    } else {
+        effectStrategy.chooseDie(dieRequest)
+    }
     decisionCheck(chosen in legalChoices) {
         "EffectStrategy returned an illegal die choice: $chosen; legal=$legalChoices"
     }

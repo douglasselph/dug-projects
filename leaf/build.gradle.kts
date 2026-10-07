@@ -525,3 +525,22 @@ tasks.register<JavaExec>("runEvaluateBattleMainPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.battle.main.EvaluateBattleMainPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// Evolves only the die-target choice after Mulch has already been selected.
+tasks.register<JavaExec>("runTrainMulchTargetPolicy") {
+    description = "Evolves learned Mulch die targeting while all other decisions remain Human Baseline."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.mulch.TrainMulchTargetPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
+
+tasks.register<JavaExec>("runEvaluateMulchTargetPolicy") {
+    description = "Evaluates learned Mulch die targeting against Human Mulch targeting on matched held-out games."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.learning.mulch.EvaluateMulchTargetPolicyMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
