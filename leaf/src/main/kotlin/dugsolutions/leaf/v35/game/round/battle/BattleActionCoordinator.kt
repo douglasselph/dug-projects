@@ -772,6 +772,8 @@ class BattleActionCoordinator(
                     reason = BattleDiePlacementReason.MAIN_DRAW,
                     context = DecisionContextFactory.create(game, player, battleState)
                 )
+                game.assetProvenance.markSunlightFundedDraw(player.id, rolled.die)
+                game.assetProvenance.markBattlePlacement(player.id, rolled.die, placement.row)
                 game.chronicle.record(
                     Moment.BattleDieRow(
                         rollSequence = rolled.chronicleSequence,
@@ -848,6 +850,7 @@ class BattleActionCoordinator(
                 stateCheck(SunlightTokenResolver.spend(game, player), context = "BattleActionCoordinator") {
                     "Validated Sunlight token could not be spent"
                 }
+                val sunlightRoundLineageId = game.assetProvenance.consumeSunlight(player.id)
                 game.chronicle.record(
                     Moment.SupportAction(
                         playerId = player.id,
@@ -862,7 +865,7 @@ class BattleActionCoordinator(
                         action = action.mainAction
                     )
                 ) {
-                    game.assetProvenance.withSunlightFunding(player.id) {
+                    game.assetProvenance.withSunlightFunding(player.id, sunlightRoundLineageId) {
                         executeMainAction(
                             game = game,
                             player = player,
@@ -873,6 +876,11 @@ class BattleActionCoordinator(
                     }
                 }
                 val sunlightPlant = (action.mainAction as? BattleMainAction.ActivatePlant)?.card
+                game.assetProvenance.markSunlightMainAction(
+                    lineageId = sunlightRoundLineageId,
+                    action = mainActionKind(action.mainAction).name,
+                    plantName = sunlightPlant?.card?.name
+                )
                 game.chronicle.record(
                     Moment.SunlightMainAction(
                         playerId = player.id,

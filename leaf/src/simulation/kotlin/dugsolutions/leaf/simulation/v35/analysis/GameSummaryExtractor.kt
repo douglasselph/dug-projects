@@ -76,7 +76,8 @@ object GameSummaryExtractor {
                 plantCreatureSignature = plantCreatureSignature(player),
                 finalDiceCount = finalDiceCount(player),
                 finalDicePower = finalDicePower(player),
-                ownedDiceSignature = ownedDiceSignature(player)
+                ownedDiceSignature = ownedDiceSignature(player),
+                roundEffectConsequences = roundEffectConsequences(game, player.id)
             )
         }
 
@@ -90,6 +91,47 @@ object GameSummaryExtractor {
         )
     }
 
+
+
+    private fun roundEffectConsequences(game: Game, playerId: PlayerId): List<RoundEffectConsequenceSummary> =
+        game.assetProvenance.roundEffectConsequences
+            .filter { it.playerId == playerId }
+            .map { lineage ->
+                val linked = game.assetProvenance.immediateDieEffects.filter {
+                    it.playerId == playerId && it.roundEffectLineageId == lineage.lineageId
+                }
+                RoundEffectConsequenceSummary(
+                    lineageId = lineage.lineageId,
+                    effect = lineage.effect,
+                    roundCardName = lineage.roundCardName,
+                    roundSlot = lineage.roundSlot,
+                    spentOrUsed = lineage.spentOrUsed,
+                    useKind = lineage.useKind,
+                    fundedMainAction = lineage.fundedMainAction,
+                    fundedPlantName = lineage.fundedPlantName,
+                    sourceDieSides = lineage.sourceDieSides,
+                    sourceDieValue = lineage.sourceDieValue,
+                    resultDieSides = lineage.resultDieSides,
+                    resultDieValue = lineage.resultDieValue,
+                    waterRerollDelta = if (lineage.waterRerollBefore != null && lineage.waterRerollAfter != null)
+                        lineage.waterRerollAfter!! - lineage.waterRerollBefore!! else null,
+                    waterRefreshPlants = lineage.waterRefreshPlants,
+                    waterRefreshButterflies = lineage.waterRefreshButterflies,
+                    placedInBattle = lineage.placedInBattle || linked.any { it.placedInBattle },
+                    contributedToWinningStrike = lineage.contributedToWinningStrike || linked.any { it.contributedToWinningStrike },
+                    individuallyWinnerDecisive = lineage.individuallyWinnerDecisive || linked.any { it.individuallyWinnerDecisive },
+                    individuallyWoundDecisive = lineage.individuallyWoundDecisive || linked.any { it.individuallyWoundDecisive },
+                    associatedBattleVp = maxOf(
+                        lineage.associatedBattleVp,
+                        linked.sumOf { it.associatedBattleVp }
+                    ),
+                    linkedImmediateEffects = linked.size,
+                    linkedImmediateDelta = linked.sumOf { it.magnitude },
+                    linkedImmediateWinningContributions = linked.count { it.contributedToWinningStrike },
+                    linkedImmediateWinnerDecisive = linked.count { it.individuallyWinnerDecisive },
+                    linkedImmediateWoundDecisive = linked.count { it.individuallyWoundDecisive }
+                )
+            }
 
     private fun sharedTokenEconomy(game: Game): List<SharedTokenEconomySummary> =
         game.grove.sharedTokenEconomy.snapshots().map { snapshot ->

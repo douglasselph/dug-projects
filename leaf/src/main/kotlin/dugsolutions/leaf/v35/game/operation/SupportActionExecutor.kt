@@ -58,7 +58,7 @@ class SupportActionExecutor(
                 useWaterReroll(game, player, action)
 
             SupportAction.UseWaterRefresh ->
-                useWaterRefresh(game, player)
+                useWaterRefresh(game, player, GameEffectPhase.CULTIVATION)
 
             is SupportAction.UseMulch ->
                 useMulchCultivation(game, player, action)
@@ -101,7 +101,7 @@ class SupportActionExecutor(
             }
 
             SupportAction.UseWaterRefresh ->
-                useWaterRefresh(game, player)
+                useWaterRefresh(game, player, GameEffectPhase.BATTLE)
 
             is SupportAction.UseMulch ->
                 useMulchBattle(game, player, battleState, action)
@@ -175,8 +175,20 @@ class SupportActionExecutor(
         stateCheck(player.tokens.pull(Token.WATER) != null) {
             "Validated Water token could not be spent"
         }
+        val waterLineageId = game.assetProvenance.consumeWater(player.id)
+        val before = die.value
         val rolled = rollResolver.roll(player, die)
+        val phase = if (battleState == null) GameEffectPhase.CULTIVATION else GameEffectPhase.BATTLE
+        game.assetProvenance.markWaterReroll(
+            lineageId = waterLineageId,
+            player = player,
+            die = die,
+            before = before,
+            after = rolled.die.value,
+            phase = phase
+        )
         battleState?.grid?.placementOf(die)?.let { placement ->
+            game.assetProvenance.markBattlePlacement(player.id, die, placement.row)
             game.chronicle.record(
                 Moment.BattleDieRow(
                     rollSequence = rolled.chronicleSequence,
@@ -192,16 +204,26 @@ class SupportActionExecutor(
 
     private fun useWaterRefresh(
         game: Game,
-        player: Player
+        player: Player,
+        phase: GameEffectPhase
     ) {
         decisionCheck(player.tokens.hasWater) {
             "Player has no Water token"
         }
 
+        val faceDownPlants = player.creature.cards.count { it.isFaceDown }
+        val faceDownButterflies = player.butterflies.all.count { player.butterflies.isFaceDown(it) }
         stateCheck(player.tokens.pull(Token.WATER) != null) {
             "Validated Water token could not be spent"
         }
+        val waterLineageId = game.assetProvenance.consumeWater(player.id)
         refreshResolver.refresh(player)
+        game.assetProvenance.markWaterRefresh(
+            lineageId = waterLineageId,
+            phase = phase,
+            refreshedPlants = faceDownPlants,
+            refreshedButterflies = faceDownButterflies
+        )
         game.grove.tokens.add(Token.WATER)
     }
 
@@ -210,7 +232,9 @@ class SupportActionExecutor(
         player: Player,
         action: SupportAction.UseMulch
     ) {
-        val rolled = consumeMulchAndRoll(game, player, action)
+        val rolled = consumeMulchAndRoll(
+            game, player, action, GameEffectPhase.CULTIVATION
+        )
         val die = rolled.die
         // Cultivation Mulch needs no extra location beyond Dice Hand.
         stateCheck(player.dice.hand.any { it === die }) {
@@ -231,7 +255,9 @@ class SupportActionExecutor(
             "Player ${player.id.value} has no Strike Square with room for Mulch die"
         }
 
-        val rolled = consumeMulchAndRoll(game, player, action)
+        val rolled = consumeMulchAndRoll(
+            game, player, action, GameEffectPhase.BATTLE
+        )
         val die = rolled.die
         val placement = battlePlacementResolver.placeNewHandDie(
             battleState = battleState,
@@ -240,6 +266,7 @@ class SupportActionExecutor(
             reason = BattleDiePlacementReason.MULCH,
             context = DecisionContextFactory.create(game, player, battleState)
         )
+        game.assetProvenance.markBattlePlacement(player.id, die, placement.row)
         game.chronicle.record(
             Moment.BattleDieRow(
                 rollSequence = rolled.chronicleSequence,
@@ -254,7 +281,8 @@ class SupportActionExecutor(
     private fun consumeMulchAndRoll(
         game: Game,
         player: Player,
-        action: SupportAction.UseMulch
+        action: SupportAction.UseMulch,
+        phase: GameEffectPhase
     ): RollResolution {
         val sides = decisionNotNull(action.token.sides) {
             "Stored Mulch Support Action requires a stored die size"
@@ -266,10 +294,12 @@ class SupportActionExecutor(
         stateCheck(player.tokens.pull(action.token) != null) {
             "Validated Mulch token could not be spent"
         }
+        val mulchLineageId = game.assetProvenance.consumeMulch(player.id, sides.value)
 
         val die = game.dieFactory(sides)
         player.dice.addToHand(die)
         val rolled = rollResolver.roll(player, die)
+        game.assetProvenance.markMulchUsed(mulchLineageId, rolled.die, phase)
         game.grove.tokens.add(Token.MULCH())
         return rolled
     }

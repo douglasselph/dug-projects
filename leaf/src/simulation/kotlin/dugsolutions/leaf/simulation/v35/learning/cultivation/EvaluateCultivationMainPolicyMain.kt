@@ -211,6 +211,29 @@ private data class TokenStats(
     var failedEmpty: Long = 0
 )
 
+
+private data class RoundConsequenceStats(
+    var acquired: Long = 0,
+    var used: Long = 0,
+    var placed: Long = 0,
+    var winning: Long = 0,
+    var winnerDecisive: Long = 0,
+    var woundDecisive: Long = 0,
+    var associatedBattleVp: Long = 0,
+    var sourceDice: Long = 0,
+    var sourceSides: Long = 0,
+    var sourceFaces: Long = 0,
+    var resultDice: Long = 0,
+    var resultSides: Long = 0,
+    var resultFaces: Long = 0,
+    var waterRerolls: Long = 0,
+    var waterRerollDelta: Long = 0,
+    var refreshedPlants: Long = 0,
+    var refreshedButterflies: Long = 0,
+    val useKinds: MutableMap<String, Long> = sortedMapOf(),
+    val fundedMains: MutableMap<String, Long> = sortedMapOf()
+)
+
 private class CultivationEvalAccumulator {
     var winShare = 0.0
     var totalVp = 0L
@@ -225,6 +248,7 @@ private class CultivationEvalAccumulator {
     val plantActivations = sortedMapOf<String, Long>()
     val battlePlantActivations = sortedMapOf<String, Long>()
     val roundEffects = sortedMapOf<String, RoundEffectStats>()
+    val roundConsequences = sortedMapOf<String, RoundConsequenceStats>()
     val tokenEconomy = SharedTokenResource.entries.associateWith { TokenStats() }.toMutableMap()
     var plantPurchases = 0L
     var diePurchases = 0L
@@ -272,6 +296,24 @@ private class CultivationEvalAccumulator {
         sunlightWoundDecisiveContributions += player.sunlightWoundDecisiveContributions
         sunlightAssociatedBattleVp += player.sunlightAssociatedBattleVp
         val playerId = player.playerId
+
+        player.roundEffectConsequences.forEach { c ->
+            val r = roundConsequences.getOrPut(c.effect.name) { RoundConsequenceStats() }
+            r.acquired++
+            if (c.spentOrUsed) r.used++
+            if (c.placedInBattle) r.placed++
+            if (c.contributedToWinningStrike) r.winning++
+            if (c.individuallyWinnerDecisive) r.winnerDecisive++
+            if (c.individuallyWoundDecisive) r.woundDecisive++
+            r.associatedBattleVp += c.associatedBattleVp
+            c.sourceDieSides?.let { r.sourceDice++; r.sourceSides += it; r.sourceFaces += c.sourceDieValue ?: 0 }
+            c.resultDieSides?.let { r.resultDice++; r.resultSides += it; r.resultFaces += c.resultDieValue ?: 0 }
+            c.waterRerollDelta?.let { r.waterRerolls++; r.waterRerollDelta += it }
+            r.refreshedPlants += c.waterRefreshPlants
+            r.refreshedButterflies += c.waterRefreshButterflies
+            c.useKind?.let { r.useKinds[it] = (r.useKinds[it] ?: 0) + 1 }
+            c.fundedMainAction?.let { r.fundedMains[it] = (r.fundedMains[it] ?: 0) + 1 }
+        }
 
         game.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
             .filter {
@@ -394,6 +436,20 @@ private fun printCultivationEvalReport(label: String, a: CultivationEvalAccumula
     else a.roundEffects.forEach { (effect, stats) ->
         val rate = if (stats.opportunities == 0L) 0.0 else stats.uses.toDouble() / stats.opportunities
         println("    $effect: opportunities=${stats.opportunities} uses=${stats.uses} use/legal=${pct(rate)}")
+    }
+    println("  ROUND EFFECT DOWNSTREAM CONSEQUENCES")
+    if (a.roundConsequences.isEmpty()) println("    none")
+    else a.roundConsequences.forEach { (effect, r) ->
+        fun perGame(v: Long) = fmt(v.toDouble() / games)
+        fun avg(v: Long, d: Long) = fmt(if (d == 0L) 0.0 else v.toDouble() / d.toDouble())
+        println("    $effect: acquired/game=${perGame(r.acquired)} used/game=${perGame(r.used)} use/legal-acquisition=${if (r.acquired == 0L) "0.00%" else pct(r.used.toDouble()/r.acquired)}")
+        println("      Battle: placed/game=${perGame(r.placed)} winning=${perGame(r.winning)} winner-decisive=${perGame(r.winnerDecisive)} wound-decisive=${perGame(r.woundDecisive)} associated-VP=${perGame(r.associatedBattleVp)}")
+        if (r.sourceDice > 0) println("      source die avg sides=${avg(r.sourceSides,r.sourceDice)} face=${avg(r.sourceFaces,r.sourceDice)}")
+        if (r.resultDice > 0) println("      result die avg sides=${avg(r.resultSides,r.resultDice)} face=${avg(r.resultFaces,r.resultDice)}")
+        if (r.waterRerolls > 0) println("      Water reroll avg delta=${avg(r.waterRerollDelta,r.waterRerolls)}")
+        if (r.refreshedPlants > 0 || r.refreshedButterflies > 0) println("      Water refresh/game Plants=${perGame(r.refreshedPlants)} Butterflies=${perGame(r.refreshedButterflies)}")
+        if (r.useKinds.isNotEmpty()) println("      uses: " + r.useKinds.entries.joinToString { "${it.key}=${it.value}" })
+        if (r.fundedMains.isNotEmpty()) println("      Sunlight-funded Mains: " + r.fundedMains.entries.joinToString { "${it.key}=${it.value}" })
     }
     println("  SUNLIGHT GAIN: opportunities=${a.sunlightOverall.opportunities} uses=${a.sunlightOverall.uses} take rate=${pct(a.sunlightOverall.rate())}")
     println("  SUNLIGHT BATTLE USE")

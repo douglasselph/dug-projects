@@ -1,5 +1,6 @@
 package dugsolutions.leaf.simulation.v35.analysis
 
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.creature.CreatureSide
 import dugsolutions.leaf.v35.tokens.SharedTokenResource
@@ -112,7 +113,9 @@ data class PlayerGameSummary(
     val finalDiceCount: Int,
     val finalDicePower: Int,
     /** Canonical count-by-size description of all final owned dice. */
-    val ownedDiceSignature: OwnedDiceSignature
+    val ownedDiceSignature: OwnedDiceSignature,
+    /** One record per acquisition/use of a tracked Round effect for downstream consequence research. */
+    val roundEffectConsequences: List<RoundEffectConsequenceSummary> = emptyList()
 ) {
     init {
         require(seat >= 0) { "Seat cannot be negative: $seat" }
@@ -144,6 +147,39 @@ data class PlayerGameSummary(
     }
 }
 
+
+
+/**
+ * Compact, immutable downstream trace for one tracked Round-effect acquisition.
+ * These are associations/lineages, not whole-game causal claims.
+ */
+data class RoundEffectConsequenceSummary(
+    val lineageId: Long,
+    val effect: GameEffect,
+    val roundCardName: String,
+    val roundSlot: String,
+    val spentOrUsed: Boolean,
+    val useKind: String?,
+    val fundedMainAction: String?,
+    val fundedPlantName: String?,
+    val sourceDieSides: Int?,
+    val sourceDieValue: Int?,
+    val resultDieSides: Int?,
+    val resultDieValue: Int?,
+    val waterRerollDelta: Int?,
+    val waterRefreshPlants: Int,
+    val waterRefreshButterflies: Int,
+    val placedInBattle: Boolean,
+    val contributedToWinningStrike: Boolean,
+    val individuallyWinnerDecisive: Boolean,
+    val individuallyWoundDecisive: Boolean,
+    val associatedBattleVp: Int,
+    val linkedImmediateEffects: Int,
+    val linkedImmediateDelta: Int,
+    val linkedImmediateWinningContributions: Int,
+    val linkedImmediateWinnerDecisive: Int,
+    val linkedImmediateWoundDecisive: Int
+)
 
 /**
  * Canonical final Plant Creature shape for compact comparison across games.

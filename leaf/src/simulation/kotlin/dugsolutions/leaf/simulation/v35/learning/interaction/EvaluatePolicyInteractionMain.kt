@@ -518,6 +518,32 @@ internal data class MulchOutcomeBucket(
 
 internal fun mulchBucket(count: Int): Int = count.coerceAtMost(5)
 
+internal data class RoundConsequenceAggregate(
+    var acquisitions: Long = 0,
+    var used: Long = 0,
+    var placedInBattle: Long = 0,
+    var winningStrike: Long = 0,
+    var winnerDecisive: Long = 0,
+    var woundDecisive: Long = 0,
+    var associatedBattleVp: Long = 0,
+    var sourceDieCount: Long = 0,
+    var sourceDieSides: Long = 0,
+    var sourceDieValue: Long = 0,
+    var resultDieCount: Long = 0,
+    var resultDieSides: Long = 0,
+    var resultDieValue: Long = 0,
+    var waterRerollCount: Long = 0,
+    var waterRerollDelta: Long = 0,
+    var waterRefreshedPlants: Long = 0,
+    var waterRefreshedButterflies: Long = 0,
+    var linkedImmediateEffects: Long = 0,
+    var linkedImmediateDelta: Long = 0,
+    val useKinds: MutableMap<String, Long> = sortedMapOf(),
+    val fundedMainActions: MutableMap<String, Long> = sortedMapOf(),
+    val fundedPlants: MutableMap<String, Long> = sortedMapOf()
+)
+
+
 internal class InteractionAccumulator {
     var win = 0.0
     var totalVp = 0L; var plantVp = 0L; var battleVp = 0L; var wispVp = 0L; var otherVp = 0L; var wounds = 0L
@@ -546,6 +572,7 @@ internal class InteractionAccumulator {
     val cultivationRoundEffectUses = sortedMapOf<String, Long>()
     val battleRoundEffectOpportunities = sortedMapOf<String, Long>()
     val battleRoundEffectUses = sortedMapOf<String, Long>()
+    val roundEffectConsequences = sortedMapOf<String, RoundConsequenceAggregate>()
 
     var wispPolicyDecisions = 0L
     var wispPolicyHolds = 0L
@@ -596,6 +623,36 @@ internal class InteractionAccumulator {
         sunlightDecisive += p.sunlightWinnerDecisiveContributions; sunlightWoundDecisive += p.sunlightWoundDecisiveContributions
         finalWisp += p.finalWispCount
         wispGains += p.rollRewardWispsGained
+
+        p.roundEffectConsequences.forEach { consequence ->
+            val key = consequence.effect.name
+            val r = roundEffectConsequences.getOrPut(key) { RoundConsequenceAggregate() }
+            r.acquisitions++
+            if (consequence.spentOrUsed) r.used++
+            if (consequence.placedInBattle) r.placedInBattle++
+            if (consequence.contributedToWinningStrike) r.winningStrike++
+            if (consequence.individuallyWinnerDecisive) r.winnerDecisive++
+            if (consequence.individuallyWoundDecisive) r.woundDecisive++
+            r.associatedBattleVp += consequence.associatedBattleVp
+            consequence.sourceDieSides?.let { sides ->
+                r.sourceDieCount++; r.sourceDieSides += sides
+                r.sourceDieValue += consequence.sourceDieValue ?: 0
+            }
+            consequence.resultDieSides?.let { sides ->
+                r.resultDieCount++; r.resultDieSides += sides
+                r.resultDieValue += consequence.resultDieValue ?: 0
+            }
+            consequence.waterRerollDelta?.let { delta ->
+                r.waterRerollCount++; r.waterRerollDelta += delta
+            }
+            r.waterRefreshedPlants += consequence.waterRefreshPlants
+            r.waterRefreshedButterflies += consequence.waterRefreshButterflies
+            r.linkedImmediateEffects += consequence.linkedImmediateEffects
+            r.linkedImmediateDelta += consequence.linkedImmediateDelta
+            consequence.useKind?.let { r.useKinds[it] = (r.useKinds[it] ?: 0) + 1 }
+            consequence.fundedMainAction?.let { r.fundedMainActions[it] = (r.fundedMainActions[it] ?: 0) + 1 }
+            consequence.fundedPlantName?.let { r.fundedPlants[it] = (r.fundedPlants[it] ?: 0) + 1 }
+        }
 
         val roundMulchSelections = game.entries.filterIsInstance<GameEntry.RoundEffectChoice>()
             .filter { it.playerId == p.playerId }
@@ -833,6 +890,25 @@ internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargetin
         println("    $effect: opportunities=$o uses=$u take-rate=${takeRate(u,o)} uses/game=${fmt(u.toDouble()/n)}")
     }
     println("  Gain Sunlight take rate=${takeRate(a.sunlightGainUses,a.sunlightGainOpp)} (${a.sunlightGainUses}/${a.sunlightGainOpp} executable opportunities)")
+    println()
+
+    println("ROUND EFFECT DOWNSTREAM CONSEQUENCES")
+    println("  Research lineage only: associated/decisive Strike metrics are descriptive, not whole-game causal attribution.")
+    a.roundEffectConsequences.forEach { (effect, r) ->
+        fun perGame(v: Long) = fmt(v.toDouble() / n)
+        fun avgFor(v: Long, d: Long) = fmt(if (d == 0L) 0.0 else v.toDouble() / d.toDouble())
+        println("  $effect")
+        println("    acquired/game=${perGame(r.acquisitions)} used/game=${perGame(r.used)} use-rate=${takeRate(r.used,r.acquisitions)}")
+        println("    Battle lineage: placed/game=${perGame(r.placedInBattle)} winning-Strike/game=${perGame(r.winningStrike)} winner-decisive/game=${perGame(r.winnerDecisive)} wound-decisive/game=${perGame(r.woundDecisive)} associated-Battle-VP/game=${perGame(r.associatedBattleVp)}")
+        if (r.sourceDieCount > 0) println("    source die: avg-sides=${avgFor(r.sourceDieSides,r.sourceDieCount)} avg-face=${avgFor(r.sourceDieValue,r.sourceDieCount)}")
+        if (r.resultDieCount > 0) println("    resulting/tracked die: avg-sides=${avgFor(r.resultDieSides,r.resultDieCount)} avg-face=${avgFor(r.resultDieValue,r.resultDieCount)}")
+        if (r.waterRerollCount > 0) println("    Water reroll: uses=${r.waterRerollCount} avg-delta=${avgFor(r.waterRerollDelta,r.waterRerollCount)}")
+        if (r.waterRefreshedPlants > 0 || r.waterRefreshedButterflies > 0) println("    Water refresh recovered/game: Plants=${perGame(r.waterRefreshedPlants)} Butterflies=${perGame(r.waterRefreshedButterflies)}")
+        if (r.linkedImmediateEffects > 0) println("    linked immediate die effects/game=${perGame(r.linkedImmediateEffects)} net-delta/game=${perGame(r.linkedImmediateDelta)}")
+        if (r.useKinds.isNotEmpty()) println("    use kinds: " + r.useKinds.entries.joinToString { "${it.key}=${it.value}" })
+        if (r.fundedMainActions.isNotEmpty()) println("    Sunlight-funded Mains: " + r.fundedMainActions.entries.joinToString { "${it.key}=${it.value}" })
+        if (r.fundedPlants.isNotEmpty()) println("    Sunlight-funded Plants: " + r.fundedPlants.entries.sortedByDescending { it.value }.joinToString { "${it.key}=${it.value}" })
+    }
     println()
 
     println("CULTIVATION SUPPORT")

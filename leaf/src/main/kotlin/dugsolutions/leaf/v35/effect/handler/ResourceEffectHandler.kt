@@ -196,6 +196,11 @@ class ResourceEffectHandler : EffectHandler {
             "Validated Water effect could not take Water from Grove"
         }
         request.actor.tokens.add(token)
+        request.game.assetProvenance.recordWaterGain(
+            player = request.actor,
+            source = request.source,
+            phase = request.phase
+        )
     }
 
     private fun gainSunlight(
@@ -204,6 +209,11 @@ class ResourceEffectHandler : EffectHandler {
         stateCheck(SunlightTokenResolver.gain(request.game, request.actor)) {
             "Validated Sunlight effect could not take Sunlight from Grove"
         }
+        request.game.assetProvenance.recordSunlightGain(
+            player = request.actor,
+            source = request.source,
+            phase = request.phase
+        )
     }
 
     private fun mulchFromHand(
@@ -251,6 +261,12 @@ class ResourceEffectHandler : EffectHandler {
 
         request.actor.tokens.add(
             Token.PENDING_MULCH(DieSides.from(die.sides))
+        )
+        request.game.assetProvenance.recordMulchStored(
+            player = request.actor,
+            die = die,
+            source = request.source,
+            phase = request.phase
         )
 
         request.game.chronicle.record(

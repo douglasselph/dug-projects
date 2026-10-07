@@ -109,10 +109,25 @@ class UpgradeEffectHandler(
                 }
 
                 /* "Use the new die now": roll it in Hand and resolve reward. */
-                rollResolver(request, executor).roll(
+                val rolled = rollResolver(request, executor).roll(
                     request.actor,
                     upgraded.replacement
                 )
+                if (request.source is GameEffectSource.Round) {
+                    request.game.assetProvenance.recordRoundCompostUseNow(
+                        player = request.actor,
+                        source = request.source,
+                        phase = request.phase,
+                        sourceDieSides = from.value,
+                        sourceDieValue = die.value,
+                        replacement = rolled.die
+                    )
+                    battleState?.grid?.placementOf(rolled.die)?.let { placement ->
+                        request.game.assetProvenance.markBattlePlacement(
+                            request.actor.id, rolled.die, placement.row
+                        )
+                    }
+                }
             }
 
             else -> unsupportedGameEffect(
