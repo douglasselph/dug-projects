@@ -309,7 +309,7 @@ def create_zero_weight_file(template: Path, destination: Path) -> None:
 
     lines: list[str] = []
     for raw in template.read_text(encoding="utf-8").splitlines():
-        if raw.startswith(("formatVersion=", "policy=", "cardManifestFormatVersion=", "card.", "#")):
+        if raw.startswith(("formatVersion=", "policy=", "cardManifestFormatVersion=", "cardCatalogFingerprint=", "card.", "#")):
             lines.append(raw)
         elif raw.startswith(("training", "trained")):
             continue
@@ -662,4 +662,5 @@ def _sha256(path: Path) -> str:
             digest.update(chunk)
     return digest.hexdigest()
 
-
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from pathlib import Path
 import subprocess
+import sys
 import tarfile
 
 import pytest
@@ -45,6 +46,7 @@ def make_project(tmp_path: Path) -> Path:
                 "trainingStatus=trained",
                 "trainingGamesPerPolicy=50",
                 "cardManifestFormatVersion=1",
+                "cardCatalogFingerprint=fixture-catalog-fingerprint",
                 "card.Root_05_01.title=Root Double Down",
                 "card.Root_05_01.fingerprint=abc",
                 "BIAS=1.5",
@@ -124,6 +126,7 @@ def test_zero_weight_file_preserves_manifest_and_removes_training_provenance(tmp
     assert "formatVersion=3" in text
     assert "policy=buy-v1" in text
     assert "cardManifestFormatVersion=1" in text
+    assert "cardCatalogFingerprint=fixture-catalog-fingerprint" in text
     assert "card.Root_05_01.title=Root Double Down" in text
     assert "card.Root_05_01.fingerprint=abc" in text
     assert "trainingStatus" not in text
@@ -512,3 +515,16 @@ def test_sanity_profile_writes_sanity_named_config_manifest_and_archive(tmp_path
     assert "heldOutMatchedSamples=500" in experiment_text
     assert "experiment=current-market-sanity" in manifest_text
     assert outcome.archive.name == "current-market-sanity-results.tar.gz"
+
+def test_confirmation_module_entrypoint_displays_help() -> None:
+    """Regression: ``python -m ...confirmation`` must actually call main()."""
+    result = subprocess.run(
+        [sys.executable, "-m", "leaf_experiments.market.confirmation", "--help"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "usage:" in result.stdout.lower()
+    assert "current-market-confirmation" in result.stdout
+
