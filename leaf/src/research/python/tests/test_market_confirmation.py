@@ -383,3 +383,132 @@ def test_environment_defaults_and_overrides_resolve_under_project_root(tmp_path:
 def _arg(command, name: str) -> str:
     index = list(command).index(name)
     return command[index + 1]
+
+
+def test_confirmation_and_sanity_profiles_have_distinct_expected_scales(tmp_path: Path) -> None:
+    from leaf_experiments.market.confirmation import CONFIRMATION_PROFILE, SANITY_PROFILE
+
+    root = make_project(tmp_path)
+    confirmation = ConfirmationConfig.from_environment(
+        profile=CONFIRMATION_PROFILE, project_root=root, environ={}
+    )
+    sanity = ConfirmationConfig.from_environment(
+        profile=SANITY_PROFILE, project_root=root, environ={}
+    )
+
+    assert confirmation.learners == 5
+    assert confirmation.generations == 8
+    assert confirmation.population == 10
+    assert confirmation.train_games == 50
+    assert confirmation.eval_games == 2500
+    assert confirmation.output_root == (root / "output/experiments/current-market-confirmation").resolve()
+
+    assert sanity.learners == 3
+    assert sanity.generations == 5
+    assert sanity.population == 8
+    assert sanity.train_games == 35
+    assert sanity.eval_games == 500
+    assert sanity.output_root == (root / "output/experiments/current-market-sanity").resolve()
+
+
+def test_profiles_share_same_command_builders_and_runner(tmp_path: Path) -> None:
+    from leaf_experiments.market.confirmation import (
+        CONFIRMATION_PROFILE,
+        SANITY_PROFILE,
+        run_market_experiment,
+    )
+
+    root = make_project(tmp_path)
+    confirmation = ConfirmationConfig.from_environment(
+        profile=CONFIRMATION_PROFILE,
+        project_root=root,
+        environ={"PLAYERS_LIST": "2", "LEARNERS": "1"},
+    )
+    sanity = ConfirmationConfig.from_environment(
+        profile=SANITY_PROFILE,
+        project_root=root,
+        environ={"PLAYERS_LIST": "2", "LEARNERS": "1"},
+    )
+
+    confirmation_train = build_train_command(
+        confirmation, 2, 1, confirmation.output_root / "config/buy-zero-start.weights"
+    )
+    sanity_train = build_train_command(
+        sanity, 2, 1, sanity.output_root / "config/buy-zero-start.weights"
+    )
+    confirmation_eval = build_eval_command(confirmation, 2, 1)
+    sanity_eval = build_eval_command(sanity, 2, 1)
+
+    assert _arg(confirmation_train, "--generations") == "8"
+    assert _arg(sanity_train, "--generations") == "5"
+    assert _arg(confirmation_train, "--population") == "10"
+    assert _arg(sanity_train, "--population") == "8"
+    assert _arg(confirmation_train, "--games") == "50"
+    assert _arg(sanity_train, "--games") == "35"
+    assert _arg(confirmation_eval, "--games") == "2500"
+    assert _arg(sanity_eval, "--games") == "500"
+    assert run_market_experiment.__module__ == "leaf_experiments.market.confirmation"
+
+
+def test_sanity_profile_writes_sanity_named_config_manifest_and_archive(tmp_path: Path) -> None:
+    from leaf_experiments.market.confirmation import SANITY_PROFILE, run_market_experiment
+
+    root = make_project(tmp_path)
+    config = ConfirmationConfig.from_environment(
+        profile=SANITY_PROFILE,
+        project_root=root,
+        environ={"PLAYERS_LIST": "2", "LEARNERS": "1"},
+    )
+
+    class Meta:
+        players = 2
+        policy_path = "learner-1.weights"
+
+    class Raw:
+        metadata = Meta()
+        source_path = config.output_root / "2p/eval/learner-1.market.json"
+
+    raw = Raw()
+
+    def executor(command, log_path, cwd):
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_path.write_text("log\n", encoding="utf-8")
+        if command[0].endswith("train_buy_policy"):
+            output = Path(_arg(command, "--output"))
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text("trained\n", encoding="utf-8")
+        else:
+            result = Path(_arg(command, "--market-json"))
+            result.parent.mkdir(parents=True, exist_ok=True)
+            result.write_text("{}\n", encoding="utf-8")
+
+    def loader(path):
+        return raw
+
+    def reports(results, output_dir):
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "README-FIRST.txt").write_text("ok\n", encoding="utf-8")
+        return {}
+
+    def archiver(output_root, archive_path):
+        archive_path.write_bytes(b"archive")
+        return archive_path
+
+    outcome = run_market_experiment(
+        config,
+        executor=executor,
+        loader=loader,
+        report_writer=reports,
+        archiver=archiver,
+    )
+
+    experiment_text = (config.output_root / "config/experiment.txt").read_text(encoding="utf-8")
+    manifest_text = (config.output_root / "config/manifest.txt").read_text(encoding="utf-8")
+    assert "experiment=current-market-sanity" in experiment_text
+    assert "learnersPerPlayerCount=1" in experiment_text
+    assert "generations=5" in experiment_text
+    assert "population=8" in experiment_text
+    assert "trainingGamesPerPolicy=35" in experiment_text
+    assert "heldOutMatchedSamples=500" in experiment_text
+    assert "experiment=current-market-sanity" in manifest_text
+    assert outcome.archive.name == "current-market-sanity-results.tar.gz"

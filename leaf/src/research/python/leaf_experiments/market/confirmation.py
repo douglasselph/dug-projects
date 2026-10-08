@@ -33,8 +33,52 @@ DEFAULT_PLAYER_COUNTS = (2, 3, 4)
 
 
 @dataclass(frozen=True)
+class MarketExperimentProfile:
+    """Named scale/output profile for the shared current-market experiment runner."""
+
+    name: str
+    description: str
+    banner: str
+    learners: int
+    generations: int
+    population: int
+    train_games: int
+    eval_games: int
+    output_directory: str
+    archive_name: str
+
+
+CONFIRMATION_PROFILE = MarketExperimentProfile(
+    name="current-market-confirmation",
+    description="CURRENT MARKET LONG CONFIRMATION — fresh Buy-only learners across 2p/3p/4p",
+    banner="CURRENT MARKET LONG CONFIRMATION",
+    learners=5,
+    generations=8,
+    population=10,
+    train_games=50,
+    eval_games=2500,
+    output_directory="current-market-confirmation",
+    archive_name="current-market-confirmation-results.tar.gz",
+)
+
+SANITY_PROFILE = MarketExperimentProfile(
+    name="current-market-sanity",
+    description="CURRENT MARKET SANITY CHECK — fresh Buy-only learners across 2p/3p/4p",
+    banner="CURRENT MARKET SANITY CHECK",
+    learners=3,
+    generations=5,
+    population=8,
+    train_games=35,
+    eval_games=500,
+    output_directory="current-market-sanity",
+    archive_name="current-market-sanity-results.tar.gz",
+)
+
+
+@dataclass(frozen=True)
 class ConfirmationConfig:
     project_root: Path
+    profile: MarketExperimentProfile = CONFIRMATION_PROFILE
     player_counts: tuple[int, ...] = DEFAULT_PLAYER_COUNTS
     learners: int = 5
     generations: int = 8
@@ -82,7 +126,7 @@ class ConfirmationConfig:
             object.__setattr__(
                 self,
                 "output_root",
-                root / "output/experiments/current-market-confirmation",
+                root / "output/experiments" / self.profile.output_directory,
             )
         else:
             object.__setattr__(self, "output_root", _resolve_under(root, self.output_root))
@@ -102,6 +146,7 @@ class ConfirmationConfig:
     def from_environment(
         cls,
         *,
+        profile: MarketExperimentProfile = CONFIRMATION_PROFILE,
         project_root: Path | str | None = None,
         environ: Mapping[str, str] | None = None,
     ) -> "ConfirmationConfig":
@@ -117,12 +162,13 @@ class ConfirmationConfig:
         player_counts = tuple(int(part) for part in env.get("PLAYERS_LIST", "2 3 4").split())
         return cls(
             project_root=root,
+            profile=profile,
             player_counts=player_counts,
-            learners=env_int("LEARNERS", 5),
-            generations=env_int("GENERATIONS", 8),
-            population=env_int("POPULATION", 10),
-            train_games=env_int("TRAIN_GAMES", 50),
-            eval_games=env_int("EVAL_GAMES", 2500),
+            learners=env_int("LEARNERS", profile.learners),
+            generations=env_int("GENERATIONS", profile.generations),
+            population=env_int("POPULATION", profile.population),
+            train_games=env_int("TRAIN_GAMES", profile.train_games),
+            eval_games=env_int("EVAL_GAMES", profile.eval_games),
             elites=env_int("ELITES", 2),
             sigma=env_float("SIGMA", 0.25),
             mutations=env_int("MUTATIONS", 6),
@@ -131,7 +177,7 @@ class ConfirmationConfig:
             plant_overrides=Path(env.get("PLANT_OVERRIDES", "data/research/4p/resync/resync-current.csv")),
             round_overrides=Path(env.get("ROUND_OVERRIDES", "data/research/4p/resync/round-resync-current.csv")),
             buy_template=Path(env.get("BUY_TEMPLATE", "data/ai/4p/buy-policy-v1.weights")),
-            output_root=Path(env.get("OUTPUT_ROOT", "output/experiments/current-market-confirmation")),
+            output_root=Path(env.get("OUTPUT_ROOT", f"output/experiments/{profile.output_directory}")),
             train_grove_seed_base=env_int("TRAIN_GROVE_SEED", 3_810_000),
             eval_grove_seed_base=env_int("EVAL_GROVE_SEED", 3_910_000),
             eval_mechanical_seed_base=env_int("EVAL_MECHANICAL_SEED", 4_010_000),
@@ -333,8 +379,8 @@ def write_experiment_config(config: ConfirmationConfig) -> Path:
 
     config_path = config_dir / "experiment.txt"
     values = {
-        "experiment": "current-market-confirmation",
-        "description": "CURRENT MARKET LONG CONFIRMATION — fresh Buy-only learners across 2p/3p/4p",
+        "experiment": config.profile.name,
+        "description": config.profile.description,
         "players": " ".join(map(str, config.player_counts)),
         "learnersPerPlayerCount": str(config.learners),
         "generations": str(config.generations),
@@ -359,7 +405,8 @@ def write_experiment_config(config: ConfirmationConfig) -> Path:
 def write_manifest(config: ConfirmationConfig, raw_results: Sequence[MarketRawResult]) -> Path:
     manifest = config.output_root / "config" / "manifest.txt"
     lines = [
-        "schema=current-market-confirmation-manifest-v1",
+        "schema=current-market-experiment-manifest-v1",
+        f"experiment={config.profile.name}",
         f"rawResultCount={len(raw_results)}",
     ]
     for result in sorted(raw_results, key=lambda item: (item.metadata.players, item.metadata.policy_path)):
@@ -420,7 +467,7 @@ class ProgressTracker:
         )
 
 
-def run_confirmation(
+def run_market_experiment(
     config: ConfirmationConfig,
     *,
     executor: ProcessExecutor = default_process_executor,
@@ -439,7 +486,7 @@ def run_confirmation(
     raw_results: list[MarketRawResult] = []
 
     print("================================================================")
-    print("CURRENT MARKET LONG CONFIRMATION — PYTHON ORCHESTRATOR")
+    print(f"{config.profile.banner} — PYTHON ORCHESTRATOR")
     print("================================================================")
     print(f"Player counts:          {' '.join(map(str, config.player_counts))}")
     print(f"Learners/count:         {config.learners}")
@@ -493,7 +540,7 @@ def run_confirmation(
     report_writer(tuple(raw_results), reports_dir)
     write_manifest(config, raw_results)
 
-    archive = config.output_root / "current-market-confirmation-results.tar.gz"
+    archive = config.output_root / config.profile.archive_name
     archiver(config.output_root, archive)
 
     print()
@@ -509,8 +556,29 @@ def run_confirmation(
     return ConfirmationOutcome(config.output_root, archive, tuple(raw_results))
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run the current-market confirmation experiment.")
+def run_confirmation(
+    config: ConfirmationConfig,
+    *,
+    executor: ProcessExecutor = default_process_executor,
+    loader: ResultLoader = load_market_result,
+    report_writer: ReportWriter = write_market_reports,
+    archiver: Archiver = create_archive,
+) -> ConfirmationOutcome:
+    """Backward-compatible name for the confirmation-profile runner."""
+
+    return run_market_experiment(
+        config,
+        executor=executor,
+        loader=loader,
+        report_writer=report_writer,
+        archiver=archiver,
+    )
+
+
+def main_for_profile(
+    profile: MarketExperimentProfile, argv: Sequence[str] | None = None
+) -> int:
+    parser = argparse.ArgumentParser(description=f"Run the {profile.name} experiment.")
     parser.add_argument("--players", nargs="+", type=int, choices=(2, 3, 4))
     parser.add_argument("--learners", type=int)
     parser.add_argument("--generations", type=int)
@@ -521,9 +589,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-root", type=Path)
     args = parser.parse_args(argv)
 
-    base = ConfirmationConfig.from_environment()
+    base = ConfirmationConfig.from_environment(profile=profile)
     overrides = {
         "project_root": base.project_root,
+        "profile": profile,
         "player_counts": tuple(args.players) if args.players else base.player_counts,
         "learners": args.learners if args.learners is not None else base.learners,
         "generations": args.generations if args.generations is not None else base.generations,
@@ -544,8 +613,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "eval_mechanical_seed_base": base.eval_mechanical_seed_base,
         "eval_strategy_seed_base": base.eval_strategy_seed_base,
     }
-    run_confirmation(ConfirmationConfig(**overrides))
+    run_market_experiment(ConfirmationConfig(**overrides))
     return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    return main_for_profile(CONFIRMATION_PROFILE, argv)
 
 
 def _resolve_under(root: Path, path: Path) -> Path:
