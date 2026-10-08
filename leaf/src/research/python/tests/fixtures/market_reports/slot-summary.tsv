@@ -1,0 +1,10 @@
+players	type	cost	total_grove_exposures	total_learned_purchases	purchases_per_exposure	card_learner_rows
+4	ROOT	5	30	2	0.066667	8
+4	ROOT	7	32	0	0.000000	8
+4	ROOT	9	32	0	0.000000	8
+4	VINE	7	32	0	0.000000	8
+4	VINE	9	21	3	0.142857	8
+4	VINE	11	32	0	0.000000	8
+4	FLOWER	11	32	0	0.000000	8
+4	FLOWER	14	32	0	0.000000	8
+4	FLOWER	17	27	5	0.185185	8

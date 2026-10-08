@@ -1,0 +1,3 @@
+players	card	type	cost	total_grove_exposures	total_learned_purchases	purchases_per_exposure	learners_evaluated	learners_with_purchase	best_learner_win_share_pct
+4	Root_05_01	ROOT	5	8	2	0.250000	2	1	41.000
+4	Flower_17_04	FLOWER	17	3	5	1.666667	2	1	41.000
