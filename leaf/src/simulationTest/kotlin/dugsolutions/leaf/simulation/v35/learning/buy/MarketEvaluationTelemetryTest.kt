@@ -168,6 +168,10 @@ class MarketEvaluationTelemetryTest {
         assertEquals(3L, acc.plantPurchases)
         assertEquals(3L, acc.marketTelemetry.totalPlantPurchases)
         assertEquals(acc.plantPurchases, acc.marketTelemetry.cards.sumOf { it.purchaseCount })
+        assertEquals(1L, acc.marketTelemetry.sampleCount)
+        assertEquals(1.0, acc.marketTelemetry.overallWinShare)
+        assertEquals(1L, acc.marketTelemetry.cardsByName.getValue(a.name).groveExposureCount)
+        assertEquals(1L, acc.marketTelemetry.cardsByName.getValue(b.name).groveExposureCount)
         assertEquals(2L, acc.marketTelemetry.cardsByName.getValue(a.name).purchaseCount)
         assertEquals(1L, acc.marketTelemetry.cardsByName.getValue(b.name).purchaseCount)
     }

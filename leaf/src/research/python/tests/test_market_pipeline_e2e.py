@@ -86,6 +86,27 @@ def test_market_pipeline_end_to_end_from_kotlin_json_to_final_reports(tmp_path: 
         "4\tlearner-2\t25.000\t55.000",
     ]
 
+    # Filtered final reports are built from the same aggregates, not reparsed
+    # console data. Root_05_04 is never purchased; Root_05_02 and Root_05_03
+    # are each purchased by exactly one learner.
+    zero_rows = paths["zero-purchase-cards.tsv"].read_text(encoding="utf-8").splitlines()[1:]
+    zero_names = {row.split("\t")[1] for row in zero_rows}
+    assert "Root_05_04" in zero_names
+    assert "Root_05_01" not in zero_names
+
+    one_rows = paths["one-learner-only-cards.tsv"].read_text(encoding="utf-8").splitlines()[1:]
+    one_names = {row.split("\t")[1] for row in one_rows}
+    assert "Root_05_02" in one_names
+    assert "Root_05_03" in one_names
+    assert "Root_05_01" not in one_names
+
+    # Best learner identity is retained in the aggregate even though the
+    # compact card-summary report currently prints only that learner's win share.
+    best = cards["Root_05_01"].best_purchasing_learner
+    assert best is not None
+    assert best.policy_path == "output/e2e/learner-2.weights"
+    assert best.win_share == pytest.approx(0.55)
+
 
 def test_regression_console_indentation_cannot_zero_structured_purchase_data(tmp_path: Path) -> None:
     """Regression: report purchases come from JSON, never console indentation."""

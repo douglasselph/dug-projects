@@ -222,6 +222,28 @@ def _validate_report_inputs(results: Sequence[MarketRawResult]) -> None:
     if not results:
         raise MarketReportValidationError("at least one market result is required")
 
+    # A learner result is identified by its policy path within one player-count
+    # environment.  Counting the same learner twice would silently inflate
+    # learners_evaluated / learners_with_purchase and distort aggregate rates.
+    seen_learners: set[tuple[int, str]] = set()
+    seen_labels: set[tuple[int, str]] = set()
+    for result in results:
+        learner_key = (result.metadata.players, result.metadata.policy_path)
+        if learner_key in seen_learners:
+            raise MarketReportValidationError(
+                f"duplicate learner result for {result.metadata.players}p: "
+                f"{result.metadata.policy_path}"
+            )
+        seen_learners.add(learner_key)
+
+        label_key = (result.metadata.players, _learner_label(result))
+        if label_key in seen_labels:
+            raise MarketReportValidationError(
+                f"duplicate learner label for {result.metadata.players}p: "
+                f"{_learner_label(result)}"
+            )
+        seen_labels.add(label_key)
+
     expected_names = set(EXPECTED_CURRENT_MARKET)
     for result in results:
         identities = [card.identity for card in result.cards]

@@ -32,6 +32,7 @@ def test_valid_complete_result_loads_and_preserves_metadata() -> None:
     assert result.learned.role == "LEARNED"
     assert result.learned.win_share == pytest.approx(0.40)
     assert result.control.role == "CONTROL"
+    assert result.control.win_share == pytest.approx(0.25)
     assert len(result.cards) == 36
     assert result.source_path == (FIXTURE_DIR / "valid_result.json").resolve()
 

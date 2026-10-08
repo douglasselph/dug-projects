@@ -265,6 +265,22 @@ def test_per_card_purchase_total_must_reconcile_to_outcome() -> None:
         render_card_summary([broken])
 
 
+
+def test_duplicate_learner_result_is_rejected_before_aggregation() -> None:
+    result = golden_results()[0]
+    with pytest.raises(MarketReportValidationError, match="duplicate learner result for 4p"):
+        render_card_summary([result, result])
+
+
+def test_ambiguous_duplicate_learner_label_is_rejected() -> None:
+    one, two = golden_results()
+    ambiguous = replace(
+        two,
+        metadata=replace(two.metadata, policy_path="other/location/learner-1.weights"),
+    )
+    with pytest.raises(MarketReportValidationError, match="duplicate learner label for 4p: learner-1"):
+        render_learner_win_shares([one, ambiguous])
+
 def test_player_counts_are_reported_separately_and_sorted() -> None:
     two = make_result(learner=1, players=2, win_share=0.60, overrides={"Root_05_01": (3, 1)})
     four = golden_results()[0]
