@@ -38,6 +38,8 @@ import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 private data class CompletedCultivationEvalGame(
     val summary: GameSummary,
@@ -86,6 +88,10 @@ fun main(args: Array<String>) {
         if (roundExperiment.isActive) { println(); println(roundExperiment.render(allRounds)) }
         println()
 
+        val evalStartedNanos = System.nanoTime()
+        val progressEvery = maxOf(1, o.games / 20)
+        val etaFormat = DateTimeFormatter.ofPattern("EEE HH:mm:ss")
+
         repeat(o.games) { sample ->
             val seat = affectedSeat(sample, o.players)
             val grove = resolveResearchGroveForSample(
@@ -117,6 +123,21 @@ fun main(args: Array<String>) {
             )
             control.add(controlGame, seat)
             learned.add(learnedGame, seat)
+
+            val completed = sample + 1
+            if (completed == o.games || completed % progressEvery == 0) {
+                val elapsedSeconds = (System.nanoTime() - evalStartedNanos) / 1_000_000_000.0
+                val rate = completed / elapsedSeconds.coerceAtLeast(0.001)
+                val remainingSeconds = ((o.games - completed) / rate).toLong().coerceAtLeast(0L)
+                val elapsed = elapsedSeconds.toLong()
+                fun hhmmss(seconds: Long): String = String.format("%02d:%02d:%02d", seconds / 3600, (seconds % 3600) / 60, seconds % 60)
+                val pct = 100.0 * completed.toDouble() / o.games.toDouble()
+                val eta = LocalDateTime.now().plusSeconds(remainingSeconds).format(etaFormat)
+                println(
+                    "EVAL_PROGRESS samples=$completed/${o.games} (${String.format("%.1f", pct)}%) " +
+                        "elapsed=${hhmmss(elapsed)} estRemaining=${hhmmss(remainingSeconds)} ETA=$eta"
+                )
+            }
         }
 
         printCultivationEvalReport("CONTROL — Human Cultivation Main", control, o.games)
