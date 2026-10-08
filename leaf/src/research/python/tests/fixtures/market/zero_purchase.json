@@ -1,0 +1,434 @@
+{
+  "schema": "leaf.market-evaluation",
+  "schemaVersion": 1,
+  "experiment": {
+    "players": 4,
+    "samples": 20,
+    "mechanicalSeedStart": 1000,
+    "strategySeedStart": 2000,
+    "groveSeedStart": 3000,
+    "grovePattern": "RANDOM_PATTERN",
+    "roundPattern": "3/2/2",
+    "policyPath": "output/test/learner-2.weights",
+    "plantOverrides": {
+      "path": "data/research/4p/resync/resync-current.csv",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "roundOverrides": {
+      "path": "data/research/4p/resync/round-resync-current.csv",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "outcomes": {
+    "control": {
+      "role": "CONTROL",
+      "sampleCount": 20,
+      "winShare": 0.25,
+      "plantPurchases": 0
+    },
+    "learned": {
+      "role": "LEARNED",
+      "sampleCount": 20,
+      "winShare": 0.4,
+      "plantPurchases": 0
+    }
+  },
+  "cards": [
+    {
+      "identity": "Root_05_01",
+      "type": "ROOT",
+      "cost": 5,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_05_02",
+      "type": "ROOT",
+      "cost": 5,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_05_03",
+      "type": "ROOT",
+      "cost": 5,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_05_04",
+      "type": "ROOT",
+      "cost": 5,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_07_01",
+      "type": "ROOT",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_07_02",
+      "type": "ROOT",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_07_03",
+      "type": "ROOT",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_07_04",
+      "type": "ROOT",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_09_01",
+      "type": "ROOT",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_09_02",
+      "type": "ROOT",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_09_03",
+      "type": "ROOT",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Root_09_04",
+      "type": "ROOT",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_07_01",
+      "type": "VINE",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_07_02",
+      "type": "VINE",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_07_03",
+      "type": "VINE",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_07_04",
+      "type": "VINE",
+      "cost": 7,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_09_01",
+      "type": "VINE",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_09_02",
+      "type": "VINE",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_09_03",
+      "type": "VINE",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_09_04",
+      "type": "VINE",
+      "cost": 9,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_11_01",
+      "type": "VINE",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_11_02",
+      "type": "VINE",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_11_03",
+      "type": "VINE",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Vine_11_04",
+      "type": "VINE",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_11_01",
+      "type": "FLOWER",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_11_02",
+      "type": "FLOWER",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_11_03",
+      "type": "FLOWER",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_11_04",
+      "type": "FLOWER",
+      "cost": 11,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_14_01",
+      "type": "FLOWER",
+      "cost": 14,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_14_02",
+      "type": "FLOWER",
+      "cost": 14,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_14_03",
+      "type": "FLOWER",
+      "cost": 14,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_14_04",
+      "type": "FLOWER",
+      "cost": 14,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_17_01",
+      "type": "FLOWER",
+      "cost": 17,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_17_02",
+      "type": "FLOWER",
+      "cost": 17,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_17_03",
+      "type": "FLOWER",
+      "cost": 17,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    },
+    {
+      "identity": "Flower_17_04",
+      "type": "FLOWER",
+      "cost": 17,
+      "controlExposure": 4,
+      "learnedExposure": 4,
+      "controlPurchases": 0,
+      "learnedPurchases": 0,
+      "controlWinShareOnExposureSum": 1.25,
+      "learnedWinShareOnExposureSum": 1.5
+    }
+  ]
+}

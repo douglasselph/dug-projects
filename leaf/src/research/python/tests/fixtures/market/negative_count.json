@@ -1,0 +1,49 @@
+{
+  "schema": "leaf.market-evaluation",
+  "schemaVersion": 1,
+  "experiment": {
+    "players": 4,
+    "samples": 20,
+    "mechanicalSeedStart": 1000,
+    "strategySeedStart": 2000,
+    "groveSeedStart": 3000,
+    "grovePattern": "RANDOM_PATTERN",
+    "roundPattern": "3/2/2",
+    "policyPath": "output/test/learner-2.weights",
+    "plantOverrides": {
+      "path": "data/research/4p/resync/resync-current.csv",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "roundOverrides": {
+      "path": "data/research/4p/resync/round-resync-current.csv",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "outcomes": {
+    "control": {
+      "role": "CONTROL",
+      "sampleCount": 20,
+      "winShare": 0.25,
+      "plantPurchases": 0
+    },
+    "learned": {
+      "role": "LEARNED",
+      "sampleCount": 20,
+      "winShare": 0.4,
+      "plantPurchases": -1
+    }
+  },
+  "cards": [
+    {
+      "identity": "Root_05_01",
+      "type": "ROOT",
+      "cost": 5,
+      "controlExposure": 0,
+      "learnedExposure": 0,
+      "controlPurchases": 0,
+      "learnedPurchases": -1,
+      "controlWinShareOnExposureSum": 0,
+      "learnedWinShareOnExposureSum": 0
+    }
+  ]
+}
