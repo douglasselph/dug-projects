@@ -70,8 +70,18 @@ fun main(args: Array<String>) {
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val plantsByName = allPlants.associateBy { it.name }
-        val control = EvalAccumulator(o.players)
-        val learned = EvalAccumulator(o.players)
+        val control = EvalAccumulator(
+            playerCount = o.players,
+            marketRole = MarketEvaluationRole.CONTROL,
+            marketCards = allPlants,
+            plantValues = plantExperiment.values
+        )
+        val learned = EvalAccumulator(
+            playerCount = o.players,
+            marketRole = MarketEvaluationRole.LEARNED,
+            marketCards = allPlants,
+            plantValues = plantExperiment.values
+        )
 
         println("Learned Buy Policy Held-Out Evaluation")
         println("policy=${o.input}")
@@ -273,7 +283,12 @@ internal class RootAndScootResearchAccumulator {
     }
 }
 
-internal class EvalAccumulator(playerCount: Int = 4) {
+internal class EvalAccumulator(
+    playerCount: Int = 4,
+    marketRole: MarketEvaluationRole = MarketEvaluationRole.UNSPECIFIED,
+    marketCards: List<PlantCard> = emptyList(),
+    plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+) {
     var winShare=0.0; var vp=0L; var plantVp=0L; var plants=0L; var plantCost=0L; var dice=0L; var dicePower=0L; var battleVp=0L; var wounds=0L
     var plantPurchases=0L; var diePurchases=0L
     var sunlightGained=0L; var sunlightSpent=0L; var finalSunlight=0L
@@ -294,7 +309,10 @@ internal class EvalAccumulator(playerCount: Int = 4) {
     val utilization = EffectResourceAccumulator()
     val vpLedger = VpLedgerAccumulator()
     val tokenEconomy = TokenEconomyAccumulator()
-    val groveCardGames=mutableMapOf<String,Long>(); val groveCardWins=mutableMapOf<String,Double>()
+    private val marketTelemetryAccumulator = MarketEvaluationTelemetryAccumulator(playerCount, marketRole, marketCards, plantValues)
+    val marketTelemetry: MarketEvaluationTelemetry get() = marketTelemetryAccumulator.snapshot()
+    val groveCardGames: Map<String,Long> get() = marketTelemetry.cards.associate { it.cardName to it.groveExposureCount }.filterValues { it != 0L }
+    val groveCardWins: Map<String,Double> get() = marketTelemetry.cards.associate { it.cardName to it.winShareOnExposureSum }.filterValues { it != 0.0 }
     val watchedCardCopies=mutableMapOf<String,Long>(); val watchedCardVp=mutableMapOf<String,Long>()
 
     fun add(
@@ -352,7 +370,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         rootAndScootResearch.addGame(game.entries, p.playerId)
         utilization.addGame(game.entries, p.playerId)
         vpLedger.addGame(p, game.entries, plantsByName, plantValues)
-        grove.map { it.name }.distinct().forEach { name -> groveCardGames[name]=(groveCardGames[name]?:0)+1; groveCardWins[name]=(groveCardWins[name]?:0.0)+p.winShare }
+        marketTelemetryAccumulator.recordGame(grove, p.winShare)
         WATCHED_CARDS.forEach { name ->
             val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
             if(copies>0) {
@@ -364,7 +382,7 @@ internal class EvalAccumulator(playerCount: Int = 4) {
         plantActivationsByPhase.addGame(game.entries, p.playerId)
         game.entries.filterIsInstance<GameEntry.Purchase>().filter { it.playerId==p.playerId }.forEach { purchase ->
             when(purchase.kind) {
-                PurchaseKind.PLANT -> { plantPurchases++; plantCosts.bump(purchase.cost); plantCards.bump(purchase.itemName); plantTypes.bump(plantsByName[purchase.itemName]?.type?.name ?: "UNKNOWN") }
+                PurchaseKind.PLANT -> { plantPurchases++; plantCosts.bump(purchase.cost); plantCards.bump(purchase.itemName); plantTypes.bump(plantsByName[purchase.itemName]?.type?.name ?: "UNKNOWN"); marketTelemetryAccumulator.recordPlantPurchase(purchase.itemName) }
                 PurchaseKind.DIE -> { diePurchases++; dieSizes.bump(purchase.itemName) }
             }
         }

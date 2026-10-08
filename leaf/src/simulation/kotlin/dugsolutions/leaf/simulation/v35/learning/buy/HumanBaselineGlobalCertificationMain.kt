@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
 }
 
 private fun runCohort(label:String,games:Int,players:Int,seed:Long,strategySeed:Long,pattern:String?,groveSeed:Long,defaults:List<dugsolutions.leaf.v35.plant.domain.PlantCard>,pm:PlantCardManager,plantsByName:Map<String,dugsolutions.leaf.v35.plant.domain.PlantCard>,factory:GameFactory,runner:GameRunner,out:Path) {
-    val a=EvalAccumulator(players); var refreshes=0L; var plantActivations=0L
+    val a=EvalAccumulator(players, marketCards = plantsByName.values.toList()); var refreshes=0L; var plantActivations=0L
     val reps=mutableListOf<Representative>()
     repeat(games) { i ->
         val grove=if(pattern==null) defaults else GrovePlantCode.overrideNames(GrovePlantCode.generate(pattern,Randomizer.create(groveSeed+i))).map { requireNotNull(pm.getCard(it)) }
