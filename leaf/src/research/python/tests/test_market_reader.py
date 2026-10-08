@@ -125,3 +125,28 @@ def test_type_and_cost_are_preserved_in_slot_identity() -> None:
 def test_complete_market_requires_exact_current_card_identities() -> None:
     with pytest.raises(MarketResultValidationError, match="current market identity mismatch"):
         load("wrong_market_identity.json")
+
+
+def test_complete_market_accepts_legal_current_slot_moves_despite_historical_identity_tiers() -> None:
+    result = load("valid_result.json")
+    payload = __import__("json").loads((FIXTURE_DIR / "valid_result.json").read_text(encoding="utf-8"))
+
+    # Mirror current research behavior: stable card IDs can move between legal
+    # slots. Swap pairs so all nine slots still contain exactly four cards.
+    moves = {
+        "Root_07_01": ("ROOT", 9),
+        "Root_09_01": ("ROOT", 7),
+        "Vine_07_01": ("VINE", 11),
+        "Vine_11_03": ("VINE", 7),
+    }
+    for card in payload["cards"]:
+        if card["identity"] in moves:
+            card["type"], card["cost"] = moves[card["identity"]]
+
+    from leaf_experiments.market.reader import parse_market_result
+    moved = parse_market_result(payload, complete_market=True)
+
+    assert moved.cards_by_identity["Root_07_01"].slot == MarketSlotIdentity("ROOT", 9)
+    assert moved.cards_by_identity["Root_09_01"].slot == MarketSlotIdentity("ROOT", 7)
+    assert moved.cards_by_identity["Vine_07_01"].slot == MarketSlotIdentity("VINE", 11)
+    assert moved.cards_by_identity["Vine_11_03"].slot == MarketSlotIdentity("VINE", 7)

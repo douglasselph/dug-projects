@@ -247,12 +247,11 @@ def _validate_report_inputs(results: Sequence[MarketRawResult]) -> None:
         control_purchase_sum = 0
         learned_purchase_sum = 0
         for card in result.cards:
-            expected_slot = EXPECTED_CURRENT_MARKET[card.identity]
-            if card.slot != expected_slot:
-                raise MarketReportValidationError(
-                    f"{result.metadata.policy_path}: {card.identity} metadata mismatch: "
-                    f"expected {expected_slot}, got {card.slot}"
-                )
+            # Stable card identity names may contain a historical tier that no
+            # longer matches the effective current slot after a research override.
+            # The typed card.slot value is authoritative; validate legality and
+            # complete four-card slot cardinality instead of re-deriving metadata
+            # from the identity string.
             if card.slot not in LEGAL_SLOTS:
                 raise MarketReportValidationError(
                     f"{result.metadata.policy_path}: illegal slot {card.slot}"

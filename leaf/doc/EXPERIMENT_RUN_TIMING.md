@@ -27,3 +27,52 @@ The estimate is intentionally simple and transparent:
 This is an operational estimate, not a simulation statistic. Training and
 held-out evaluation can take different amounts of time, so the ETA generally
 gets more useful as more runs finish.
+
+## Python research experiments
+
+Python research runners use `leaf_experiments.timing` rather than duplicating
+timing code in each experiment.
+
+The shared Python timing layer provides two levels of feedback:
+
+1. **Experiment-run timing** — every train/evaluate step immediately prints
+   `Run X of Y`, the local clock, measured run duration, elapsed time,
+   estimated remaining work, and an estimated finish time for the **entire
+   experiment**. Resume skips are excluded from both the timing averages and
+   the remaining-work estimate. Timing samples are tracked by operation and
+   player count (for example `eval-4p`), with the broader operation type used
+   only as a fallback when no exact timing sample exists yet.
+2. **Silent-process heartbeat** — if a Gradle/Kotlin child process produces no
+   output, the parent still prints a `PROCESS_PROGRESS` heartbeat every 60
+   seconds with that process's elapsed wall-clock time. This prevents a healthy
+   but quiet process from appearing hung.
+
+Example:
+
+```text
+Run 3 of 30 starting: Train 2p learner 2/5
+Clock: 2026-10-08 12:18:03 PM
+Estimated remaining: 02:11:42; ETA Thu Oct 08 02:29 PM
+...
+PROCESS_PROGRESS command=train_buy_policy elapsed=00:01:00 clock=12:19:03 PM (child process still running)
+...
+PROCESS_COMPLETE command=train_buy_policy elapsed=00:07:41 exit=0
+RUN_COMPLETE 3/30 took 00:07:41; elapsed=00:20:35
+OVERALL_PROGRESS runs=3/30 elapsed=00:20:35 remainingWork=19; estRemaining=02:04:17; estimatedExperimentFinish=Thu Oct 08 02:32 PM
+```
+
+Output is explicitly flushed/line-buffered so it remains live when the user
+runs an experiment through `|& tee ...`.
+
+The heartbeat interval is operational only and cannot affect experiment
+results. It defaults to 60 seconds and can be changed for a run with:
+
+```bash
+LEAF_PROGRESS_HEARTBEAT_SECONDS=30 bin/research_python -m ...
+```
+
+`remainingWork` counts only operations that were unfinished when the run began.
+A train/evaluate step that already has a valid resume marker does not consume
+ETA budget merely because it still appears in the `runs=X/Y` bookkeeping. This
+prevents many instant resume skips from making the overall ETA unrealistically
+optimistic.

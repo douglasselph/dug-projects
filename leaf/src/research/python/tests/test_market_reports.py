@@ -239,7 +239,7 @@ def test_wrong_slot_metadata_fails_before_reporting() -> None:
         replace(card, cost=7) if card.identity == "Root_05_01" else card for card in result.cards
     )
     broken = replace(result, cards=broken_cards)
-    with pytest.raises(MarketReportValidationError, match="metadata mismatch"):
+    with pytest.raises(MarketReportValidationError, match="slot ROOT 5 must contain 4 cards"):
         render_card_summary([broken])
 
 
@@ -271,3 +271,26 @@ def test_player_counts_are_reported_separately_and_sorted() -> None:
     lines = render_learner_win_shares([four, two]).splitlines()
     assert lines[1].startswith("2\tlearner-1\t")
     assert lines[2].startswith("4\tlearner-1\t")
+
+
+def test_reports_accept_legal_slot_moves_even_when_identity_contains_historical_tier() -> None:
+    result = golden_results()[0]
+    moves = {
+        "Root_07_01": ("ROOT", 9),
+        "Root_09_01": ("ROOT", 7),
+        "Vine_07_01": ("VINE", 11),
+        "Vine_11_03": ("VINE", 7),
+    }
+    moved_cards = tuple(
+        replace(card, plant_type=moves[card.identity][0], cost=moves[card.identity][1])
+        if card.identity in moves else card
+        for card in result.cards
+    )
+    moved = replace(result, cards=moved_cards)
+
+    text = render_card_summary([moved])
+
+    assert "Root_07_01\tROOT\t9" in text
+    assert "Root_09_01\tROOT\t7" in text
+    assert "Vine_07_01\tVINE\t11" in text
+    assert "Vine_11_03\tVINE\t7" in text

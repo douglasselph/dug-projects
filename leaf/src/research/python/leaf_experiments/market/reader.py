@@ -23,8 +23,14 @@ LEGAL_SLOTS = frozenset(
     for cost in costs
 )
 
-# Current complete market naming convention is authoritative in the simulator:
-# four identities in each of the nine legal type/cost slots.
+# The 36 card identities are stable identifiers. Their embedded numeric tier is
+# historical naming, NOT authoritative current slot metadata: research overrides
+# may deliberately move a card to a different legal type/cost slot.
+#
+# This mapping is retained as a convenient canonical-name fixture for tests and
+# synthetic data construction. Complete-market validation must use only its keys
+# for identity membership; current type/cost comes from the typed JSON itself and
+# is validated by the legal four-cards-per-slot invariant below.
 EXPECTED_CURRENT_MARKET: dict[str, MarketSlotIdentity] = {
     f"{prefix}_{cost:02d}_{ordinal:02d}": MarketSlotIdentity(plant_type, cost)
     for plant_type, prefix in (("ROOT", "Root"), ("VINE", "Vine"), ("FLOWER", "Flower"))
@@ -224,13 +230,11 @@ def _validate_complete_current_market(cards: tuple[CardResult, ...]) -> None:
         raise MarketResultValidationError(
             f"$.cards: current market identity mismatch; missing={missing or '[]'} extra={extra or '[]'}"
         )
-    wrong_metadata = [
-        f"{name}: expected {EXPECTED_CURRENT_MARKET[name]}, got {actual[name]}"
-        for name in sorted(expected_names)
-        if actual[name] != EXPECTED_CURRENT_MARKET[name]
-    ]
-    if wrong_metadata:
-        raise MarketResultValidationError("$.cards: current market slot metadata mismatch: " + "; ".join(wrong_metadata))
+    # Do NOT compare current slot metadata to the tier embedded in the stable
+    # identity (for example Root_07_01). Current research overrides may legally
+    # move that card to Root 9. _validate_slots() above is the authoritative
+    # structural check: every card must occupy a legal slot and a complete
+    # market must have exactly four cards in each of the nine slots.
 
 
 def _override_path(experiment: Mapping[str, Any], key: str) -> str | None:

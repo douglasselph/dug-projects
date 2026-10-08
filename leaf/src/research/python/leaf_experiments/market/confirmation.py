@@ -11,18 +11,17 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 import hashlib
 import os
 from pathlib import Path
 import shutil
-import subprocess
+import sys
 import tarfile
 import tempfile
-import time
 from typing import Callable, Iterable, Mapping, Sequence
 
 from leaf_experiments.paths import find_project_root
+from leaf_experiments.timing import ExperimentTimer, RepeatedConsoleSetupFilter, run_streaming_process
 
 from .models import MarketRawResult
 from .reader import load_market_result
@@ -322,27 +321,20 @@ def create_zero_weight_file(template: Path, destination: Path) -> None:
     destination.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+_DEFAULT_CONSOLE_FILTER = RepeatedConsoleSetupFilter()
+
+
 def default_process_executor(command: Sequence[str], log_path: Path, cwd: Path) -> None:
-    """Run one Kotlin wrapper, streaming combined stdout/stderr to console and log."""
+    """Run one Kotlin wrapper with concise live output and a complete per-run log."""
 
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(
-            list(command),
+        run_streaming_process(
+            command,
             cwd=cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
+            log=log,
+            console_filter=_DEFAULT_CONSOLE_FILTER,
         )
-        assert process.stdout is not None
-        for line in process.stdout:
-            print(line, end="", flush=True)
-            log.write(line)
-            log.flush()
-        return_code = process.wait()
-    if return_code != 0:
-        raise subprocess.CalledProcessError(return_code, list(command))
 
 
 def train_is_complete(config: ConfirmationConfig, paths: LearnerPaths) -> bool:
@@ -441,30 +433,28 @@ def create_archive(output_root: Path, archive_path: Path) -> Path:
     return archive_path
 
 
-class ProgressTracker:
-    def __init__(self, total_steps: int) -> None:
-        self.total_steps = total_steps
-        self.completed_steps = 0
-        self.started = time.monotonic()
-
-    def start(self, label: str) -> None:
-        print()
-        print("================================================================")
-        print(label)
-        print(f"Clock: {datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')}")
-        print("================================================================")
-
-    def complete(self) -> None:
-        self.completed_steps += 1
-        elapsed = max(0.0, time.monotonic() - self.started)
-        average = elapsed / self.completed_steps if self.completed_steps else 0.0
-        remaining = average * max(0, self.total_steps - self.completed_steps)
-        eta = datetime.now() + timedelta(seconds=remaining)
+def _print_run_context(config: ConfirmationConfig, players: int, learner: int, phase: str) -> None:
+    seeds = seed_plan(config, players, learner)
+    if phase == "train":
         print(
-            f"OVERALL_PROGRESS runs={self.completed_steps}/{self.total_steps} "
-            f"elapsed={_duration(elapsed)} estRemaining={_duration(remaining)} "
-            f"ETA={eta.strftime('%a %I:%M %p')}"
+            "RUN_CONTEXT "
+            f"phase=train players={players} learner={learner}/{config.learners} "
+            f"generations={config.generations} population={config.population} gamesPerPolicy={config.train_games} "
+            f"evolutionSeed={seeds.evolution_seed} mechanicalSeed={seeds.train_mechanical_seed} "
+            f"strategySeed={seeds.train_strategy_seed} groveSeed={seeds.train_grove_seed}",
+            flush=True,
         )
+    elif phase == "evaluate":
+        paths = learner_paths(config, players, learner)
+        print(
+            "RUN_CONTEXT "
+            f"phase=evaluate players={players} learner={learner}/{config.learners} samples={config.eval_games} "
+            f"mechanicalSeed={seeds.eval_mechanical_seed} strategySeed={seeds.eval_strategy_seed} "
+            f"groveSeed={seeds.eval_grove_seed} marketJson={paths.market_json}",
+            flush=True,
+        )
+    else:
+        raise ValueError(f"unsupported phase: {phase}")
 
 
 def run_market_experiment(
@@ -482,24 +472,42 @@ def run_market_experiment(
     zero_weights = config.output_root / "config" / "buy-zero-start.weights"
     create_zero_weight_file(config.buy_template, zero_weights)
 
-    progress = ProgressTracker(len(config.player_counts) * config.learners * 2)
+    planned_steps = [
+        (
+            f"train-{players}p",
+            train_is_complete(config, learner_paths(config, players, learner)),
+        )
+        if phase == "train"
+        else (
+            f"eval-{players}p",
+            eval_is_complete(config, learner_paths(config, players, learner)),
+        )
+        for players in config.player_counts
+        for learner in range(1, config.learners + 1)
+        for phase in ("train", "eval")
+    ]
+    progress = ExperimentTimer(
+        tuple(category for category, _skip in planned_steps),
+        planned_skips=tuple(skip for _category, skip in planned_steps),
+    )
     raw_results: list[MarketRawResult] = []
 
-    print("================================================================")
-    print(f"{config.profile.banner} — PYTHON ORCHESTRATOR")
-    print("================================================================")
-    print(f"Player counts:          {' '.join(map(str, config.player_counts))}")
-    print(f"Learners/count:         {config.learners}")
+    print("================================================================", flush=True)
+    print(f"{config.profile.banner} — PYTHON ORCHESTRATOR", flush=True)
+    print("================================================================", flush=True)
+    print(f"Player counts:          {' '.join(map(str, config.player_counts))}", flush=True)
+    print(f"Learners/count:         {config.learners}", flush=True)
     print(
         "Training:               "
         f"generations={config.generations} population={config.population} games/policy={config.train_games}"
     )
-    print(f"Held-out samples:       {config.eval_games} per learner")
-    print("Buy initialization:     ZERO weights")
-    print("Other decision hooks:   Human Baseline")
-    print("Grove:                  random legal market")
-    print("Reporting:              typed Kotlin JSON -> validated/tested Python")
-    print("================================================================")
+    print(f"Held-out samples:       {config.eval_games} per learner", flush=True)
+    print("Buy initialization:     ZERO weights", flush=True)
+    print("Other decision hooks:   Human Baseline", flush=True)
+    print("Grove:                  random legal market", flush=True)
+    print("Reporting:              typed Kotlin JSON -> validated/tested Python", flush=True)
+    print("Timing:                 per-run duration/ETA + 60s silence heartbeat", flush=True)
+    print("================================================================", flush=True)
 
     for players in config.player_counts:
         for learner in range(1, config.learners + 1):
@@ -507,20 +515,24 @@ def run_market_experiment(
             for directory in (paths.weights.parent, paths.train_log.parent, paths.eval_log.parent):
                 directory.mkdir(parents=True, exist_ok=True)
 
-            progress.start(f"Train {players}p learner {learner}/{config.learners}")
-            if train_is_complete(config, paths):
-                print("Already complete; resume marker and weights are present.")
+            progress.start(f"Train {players}p learner {learner}/{config.learners}", f"train-{players}p")
+            _print_run_context(config, players, learner, "train")
+            train_skipped = train_is_complete(config, paths)
+            if train_skipped:
+                print("Already complete; resume marker and weights are present.", flush=True)
             else:
                 paths.train_complete.unlink(missing_ok=True)
                 executor(build_train_command(config, players, learner, zero_weights), paths.train_log, config.project_root)
                 if not paths.weights.is_file():
                     raise RuntimeError(f"training completed without expected weights: {paths.weights}")
                 paths.train_complete.touch()
-            progress.complete()
+            progress.complete(skipped=train_skipped)
 
-            progress.start(f"Evaluate {players}p learner {learner}/{config.learners}")
-            if eval_is_complete(config, paths):
-                print("Already complete; resume marker, log, and structured JSON are present.")
+            progress.start(f"Evaluate {players}p learner {learner}/{config.learners}", f"eval-{players}p")
+            _print_run_context(config, players, learner, "evaluate")
+            eval_skipped = eval_is_complete(config, paths)
+            if eval_skipped:
+                print("Already complete; resume marker, log, and structured JSON are present.", flush=True)
             else:
                 paths.eval_complete.unlink(missing_ok=True)
                 paths.market_json.unlink(missing_ok=True)
@@ -530,7 +542,7 @@ def run_market_experiment(
                 # Validation is part of successful completion. Never mark a malformed result complete.
                 loader(paths.market_json)
                 paths.eval_complete.touch()
-            progress.complete()
+            progress.complete(skipped=eval_skipped)
 
             # Always load again after resume or fresh completion so downstream reporting
             # consumes only validated structured results from disk.
@@ -543,8 +555,10 @@ def run_market_experiment(
     archive = config.output_root / config.profile.archive_name
     archiver(config.output_root, archive)
 
-    print()
-    print("DONE")
+    progress.finish(f"{config.profile.banner} complete")
+
+    print(flush=True)
+    print("DONE", flush=True)
     print(f"Read first:            {reports_dir / 'README-FIRST.txt'}")
     print(f"Card summary:          {reports_dir / 'card-summary.tsv'}")
     print(f"Slot summary:          {reports_dir / 'slot-summary.tsv'}")
@@ -578,6 +592,12 @@ def run_confirmation(
 def main_for_profile(
     profile: MarketExperimentProfile, argv: Sequence[str] | None = None
 ) -> int:
+    # When piped through tee, normal Python stdout becomes block buffered.
+    # Force line buffering so progress/timing appears immediately.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(line_buffering=True)
     parser = argparse.ArgumentParser(description=f"Run the {profile.name} experiment.")
     parser.add_argument("--players", nargs="+", type=int, choices=(2, 3, 4))
     parser.add_argument("--learners", type=int)
@@ -642,12 +662,3 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _duration(seconds: float) -> str:
-    total = int(max(0.0, seconds))
-    hours, remainder = divmod(total, 3600)
-    minutes, secs = divmod(remainder, 60)
-    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
