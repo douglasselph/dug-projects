@@ -216,6 +216,37 @@ tasks.register<Test>("simulationTest") {
     }
 }
 
+// Runs the Python research-tooling unit tests. Prefer the repository-local
+// virtual environment when present so pytest does not need to be installed
+// into Ubuntu's externally managed system Python.
+tasks.register<Exec>("pythonTest") {
+    description = "Runs Python research-tooling unit tests with pytest."
+    group = "verification"
+
+    val venvPython = layout.projectDirectory.file(".venv/bin/python").asFile
+    val pythonExecutable = if (venvPython.isFile) {
+        venvPython.absolutePath
+    } else {
+        "python3"
+    }
+
+    environment(
+        "PYTHONPATH",
+        listOf(
+            layout.projectDirectory.dir("src/research/python").asFile.absolutePath,
+            System.getenv("PYTHONPATH").orEmpty()
+        ).filter { it.isNotBlank() }.joinToString(File.pathSeparator)
+    )
+
+    commandLine(
+        pythonExecutable,
+        "-m",
+        "pytest",
+        "-c",
+        "src/research/python/pytest.ini"
+    )
+}
+
 // Lightweight architecture + unit check for the research source set.
 tasks.register("simulationCheck") {
     description = "Compiles and tests the v35 simulation/research source set."

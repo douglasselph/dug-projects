@@ -27,3 +27,29 @@ __all__ = [
     "load_market_result",
     "parse_market_result",
 ]
+
+from .aggregation import (
+    CardAggregate,
+    LearnerPerformance,
+    MarketAggregates,
+    PlayerCountMarketAggregate,
+    SlotAggregate,
+    aggregate_market_results,
+    aggregate_player_count,
+    one_learner_only_cards,
+    safe_rate,
+    zero_purchase_cards,
+)
+
+__all__ += [
+    "CardAggregate",
+    "LearnerPerformance",
+    "MarketAggregates",
+    "PlayerCountMarketAggregate",
+    "SlotAggregate",
+    "aggregate_market_results",
+    "aggregate_player_count",
+    "one_learner_only_cards",
+    "safe_rate",
+    "zero_purchase_cards",
+]
