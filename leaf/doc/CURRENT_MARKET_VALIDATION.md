@@ -2,6 +2,25 @@
 
 This patch adds two experiments for validating the **exact current Plant market** rather than searching alternate market configurations.
 
+## Reporting architecture
+
+The current-market sanity and confirmation experiments use structured
+machine-readable telemetry emitted by Kotlin and consumed by the Python
+market package.
+
+**Rule: Human-readable evaluator output is for people. Research reports
+must consume structured machine-readable telemetry.**
+
+The public commands remain:
+
+```bash
+bin/experiment_current_market_sanity
+bin/experiment_current_market_confirmation
+```
+
+Both are thin launchers into the shared Python market-experiment runner.
+They do not parse evaluator console output.
+
 ## Design
 
 Both experiments intentionally isolate Buy strategy:
@@ -52,11 +71,17 @@ Purpose: confirmation-scale current-market validation after the sanity screen.
 
 Each experiment creates:
 
-- `reports/card-purchases.tsv` — learner-by-card purchase totals
-- `reports/card-summary.tsv` — aggregate card demand and number of learners buying each card
-- `reports/slot-summary.tsv` — aggregate demand by Root/Vine/Flower cost slot
+- `reports/card-purchases.tsv` — learner-by-card exposure and purchase detail
+- `reports/card-summary.tsv` — aggregate card demand, exposure, rates, and learner participation
+- `reports/slot-summary.tsv` — aggregate demand and exposure by Root/Vine/Flower cost slot
 - `reports/zero-purchase-cards.tsv` — cards purchased zero times by every learner for that player count
-- `reports/README-FIRST.txt`
+- `reports/one-learner-only-cards.tsv` — cards purchased by exactly one learner
+- `reports/vine-9-summary.tsv` — focused Vine-9 view
+- `reports/learner-win-shares.tsv` — held-out control and learner win shares
+- `reports/README-FIRST.txt` — interpretation and provenance guidance
+
+These reports are produced from validated `leaf.market-evaluation` JSON,
+not from evaluator console text.
 
 A zero from one learner is not a problem. Repeated zero purchase across successful independent learners, especially an entire legal slot such as Vine 9, is a meaningful balance signal.
 

@@ -2,6 +2,23 @@
 
 Date: 2026-10-08
 
+> **Historical audit status**
+>
+> This document records the pre-migration Bash reporting pipeline and the
+> defects that led to its replacement.
+>
+> The current-market sanity and confirmation experiments no longer use
+> `bin/lib/current_market_validation.sh`; that helper has been retired.
+> Current market reports consume structured Kotlin JSON through the tested
+> Python market package.
+>
+> **Rule: Human-readable evaluator output is for people. Research reports
+> must consume structured machine-readable telemetry.**
+>
+> References below to Bash parsing, `awk`, `sed`, or
+> `bin/lib/current_market_validation.sh` describe the historical pipeline
+> being audited, not the current implementation.
+
 ## Purpose
 
 This document audits the **current** Plant-market analysis/reporting pipeline after two concrete reporting failures were discovered:

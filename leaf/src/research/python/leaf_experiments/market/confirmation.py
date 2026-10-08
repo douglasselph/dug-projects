@@ -4,7 +4,8 @@ This module owns experiment configuration, deterministic seed allocation,
 training/evaluation subprocess invocation, resume markers, structured JSON
 loading/validation, tested report generation, timing/progress, and archival.
 It intentionally never parses human-readable Kotlin console output for market
-research data.
+research data. Human-readable evaluator output is for people. Research reports
+must consume structured machine-readable telemetry.
 """
 
 from __future__ import annotations

@@ -19,6 +19,14 @@ game state / typed Chronicle event
 
 Human-readable evaluator console output is **not** part of the research-data path. It remains useful for diagnostics only.
 
+### Reporting rule
+
+**Human-readable evaluator output is for people. Research reports must
+consume structured machine-readable telemetry.**
+
+For current-market analysis, adding a parser for evaluator prose, indentation,
+headers, or diagnostic text is considered an architectural regression.
+
 ## Current authoritative pipeline
 
 ### Kotlin boundary
