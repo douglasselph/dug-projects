@@ -3,6 +3,9 @@ package dugsolutions.leaf.simulation.v35.learning.buy
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantType
+import dugsolutions.leaf.v35.chronicle.domain.BuyDecisionOutcome
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 
 /** Identifies which side of a matched Buy-policy evaluation produced telemetry. */
 internal enum class MarketEvaluationRole {
@@ -12,13 +15,33 @@ internal enum class MarketEvaluationRole {
 }
 
 /** Immutable per-card market telemetry. Raw counts only; no derived rate is stored here. */
+internal data class MarketCardOpportunityTelemetry(
+    val marketDecisionCount: Long,
+    val affordableDecisionCount: Long,
+    val graftableDecisionCount: Long,
+    val legalDecisionCount: Long,
+    val selectedDecisionCount: Long,
+    val playerDoneWhileLegalCount: Long,
+    val noLegalItemsWhileMarketCount: Long,
+    val firstDecisionLegalCount: Long,
+    val postPurchaseLegalCount: Long,
+    val legalWithHigherCostPlantCount: Long,
+    val purchasingPowerOnMarketDecisionSum: Long,
+    val marketByCultivationRound: Map<Int, Long>,
+    val affordableByCultivationRound: Map<Int, Long>,
+    val legalByCultivationRound: Map<Int, Long>,
+    val selectedByCultivationRound: Map<Int, Long>
+)
+
+/** Immutable per-card market telemetry. Raw counts only; no derived rate is stored here. */
 internal data class MarketCardTelemetry(
     val cardName: String,
     val type: PlantType,
     val cost: Int,
     val groveExposureCount: Long,
     val purchaseCount: Long,
-    val winShareOnExposureSum: Double
+    val winShareOnExposureSum: Double,
+    val opportunity: MarketCardOpportunityTelemetry
 )
 
 /** Immutable typed result for one role in a market evaluation. */
@@ -53,7 +76,9 @@ internal data class MarketComparisonCardTelemetry(
     val controlPurchaseCount: Long,
     val learnedPurchaseCount: Long,
     val controlWinShareOnExposureSum: Double,
-    val learnedWinShareOnExposureSum: Double
+    val learnedWinShareOnExposureSum: Double,
+    val controlOpportunity: MarketCardOpportunityTelemetry,
+    val learnedOpportunity: MarketCardOpportunityTelemetry
 )
 
 internal data class MarketComparisonTelemetry(
@@ -84,7 +109,9 @@ internal data class MarketComparisonTelemetry(
             controlPurchaseCount = controlCard.purchaseCount,
             learnedPurchaseCount = learnedCard.purchaseCount,
             controlWinShareOnExposureSum = controlCard.winShareOnExposureSum,
-            learnedWinShareOnExposureSum = learnedCard.winShareOnExposureSum
+            learnedWinShareOnExposureSum = learnedCard.winShareOnExposureSum,
+            controlOpportunity = controlCard.opportunity,
+            learnedOpportunity = learnedCard.opportunity
         )
     }
 }
@@ -108,7 +135,22 @@ internal class MarketEvaluationTelemetryAccumulator(
         val cost: Int,
         var groveExposureCount: Long = 0,
         var purchaseCount: Long = 0,
-        var winShareOnExposureSum: Double = 0.0
+        var winShareOnExposureSum: Double = 0.0,
+        var marketDecisionCount: Long = 0,
+        var affordableDecisionCount: Long = 0,
+        var graftableDecisionCount: Long = 0,
+        var legalDecisionCount: Long = 0,
+        var selectedDecisionCount: Long = 0,
+        var playerDoneWhileLegalCount: Long = 0,
+        var noLegalItemsWhileMarketCount: Long = 0,
+        var firstDecisionLegalCount: Long = 0,
+        var postPurchaseLegalCount: Long = 0,
+        var legalWithHigherCostPlantCount: Long = 0,
+        var purchasingPowerOnMarketDecisionSum: Long = 0,
+        val marketByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
+        val affordableByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
+        val legalByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
+        val selectedByCultivationRound: MutableMap<Int, Long> = sortedMapOf()
     )
 
     private val cardsByName = linkedMapOf<String, MutableCardTelemetry>()
@@ -143,6 +185,36 @@ internal class MarketEvaluationTelemetryAccumulator(
         card.purchaseCount++
     }
 
+    fun recordBuyDecision(entry: GameEntry.BuyDecision) {
+        val higherLegalCosts = entry.plants.asSequence().filter { it.legal }.map { it.cost }.toList()
+        entry.plants.forEach { plant ->
+            val card = cardsByName[plant.cardName]
+                ?: error("Buy decision references Plant not present in market telemetry catalog: ${plant.cardName}")
+            card.marketDecisionCount++
+            card.purchasingPowerOnMarketDecisionSum += entry.purchasingPower.toLong()
+            entry.cultivationRoundNumber?.let { round -> card.marketByCultivationRound.bump(round) }
+            if (plant.affordable) {
+                card.affordableDecisionCount++
+                entry.cultivationRoundNumber?.let { round -> card.affordableByCultivationRound.bump(round) }
+            }
+            if (plant.graftable) card.graftableDecisionCount++
+            if (plant.legal) {
+                card.legalDecisionCount++
+                if (entry.purchasesMadeThisBuy == 0) card.firstDecisionLegalCount++ else card.postPurchaseLegalCount++
+                if (higherLegalCosts.any { it > plant.cost }) card.legalWithHigherCostPlantCount++
+                if (entry.outcome == BuyDecisionOutcome.PLAYER_DONE) card.playerDoneWhileLegalCount++
+                entry.cultivationRoundNumber?.let { round -> card.legalByCultivationRound.bump(round) }
+            }
+            if (entry.outcome == BuyDecisionOutcome.NO_LEGAL_ITEMS) card.noLegalItemsWhileMarketCount++
+            if (entry.selectedKind == PurchaseKind.PLANT && entry.selectedItemName == plant.cardName) {
+                card.selectedDecisionCount++
+                entry.cultivationRoundNumber?.let { round -> card.selectedByCultivationRound.bump(round) }
+            }
+        }
+    }
+
+    private fun MutableMap<Int, Long>.bump(key: Int) { this[key] = (this[key] ?: 0L) + 1L }
+
     fun snapshot(): MarketEvaluationTelemetry = MarketEvaluationTelemetry(
         playerCount = playerCount,
         sampleCount = samples,
@@ -155,7 +227,24 @@ internal class MarketEvaluationTelemetryAccumulator(
                 cost = card.cost,
                 groveExposureCount = card.groveExposureCount,
                 purchaseCount = card.purchaseCount,
-                winShareOnExposureSum = card.winShareOnExposureSum
+                winShareOnExposureSum = card.winShareOnExposureSum,
+                opportunity = MarketCardOpportunityTelemetry(
+                    marketDecisionCount = card.marketDecisionCount,
+                    affordableDecisionCount = card.affordableDecisionCount,
+                    graftableDecisionCount = card.graftableDecisionCount,
+                    legalDecisionCount = card.legalDecisionCount,
+                    selectedDecisionCount = card.selectedDecisionCount,
+                    playerDoneWhileLegalCount = card.playerDoneWhileLegalCount,
+                    noLegalItemsWhileMarketCount = card.noLegalItemsWhileMarketCount,
+                    firstDecisionLegalCount = card.firstDecisionLegalCount,
+                    postPurchaseLegalCount = card.postPurchaseLegalCount,
+                    legalWithHigherCostPlantCount = card.legalWithHigherCostPlantCount,
+                    purchasingPowerOnMarketDecisionSum = card.purchasingPowerOnMarketDecisionSum,
+                    marketByCultivationRound = card.marketByCultivationRound.toMap(),
+                    affordableByCultivationRound = card.affordableByCultivationRound.toMap(),
+                    legalByCultivationRound = card.legalByCultivationRound.toMap(),
+                    selectedByCultivationRound = card.selectedByCultivationRound.toMap()
+                )
             )
         }
     )

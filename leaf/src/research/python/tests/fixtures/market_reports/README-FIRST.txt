@@ -20,6 +20,13 @@ Primary reports:
       Card-summary rows for the VINE / cost-9 slot.
   learner-win-shares.tsv
       CONTROL and LEARNED held-out win shares directly from structured results.
+  card-opportunity-summary.tsv
+      Buy-decision opportunity diagnostics: market availability, affordability,
+      graftability, legality, actual selection, and explicit pass/Done behavior.
+  slot-opportunity-summary.tsv
+      The same opportunity diagnostics aggregated by Plant type/cost slot.
+  card-opportunity-by-round.tsv
+      Market/affordable/legal/selected opportunity counts by Cultivation round.
 
 Semantics:
   - grove_exposures and total_grove_exposures use LEARNED-side direct Grove
@@ -29,6 +36,11 @@ Semantics:
   - best_learner_win_share_pct means the best held-out win share among learners
     that actually purchased the card.  It is NA when no learner purchased it.
   - raw purchase and exposure counts are retained in every aggregate report.
+  - opportunity reports distinguish "in the market" from "affordable",
+    "graftable", "legal now", and "actually selected". This is specifically
+    intended to separate tier-access/economic problems from card-preference problems.
+  - player_done_while_legal counts a strong rejection signal: the player ended
+    its Buy turn while that Plant was a legal purchase.
 
 Before any report is written, the writer validates complete 36-card market
 membership, unique identities, legal four-card slots, purchase/exposure

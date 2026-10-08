@@ -750,6 +750,11 @@ object ChronicleTextRenderer {
                     }
                 }
 
+            is GameEntry.BuyDecision ->
+                "${player(entry.playerId)} BUY DECISION round=${entry.roundNumber} cult=${entry.cultivationRoundNumber ?: "?"} " +
+                    "stage=${entry.purchasesMadeThisBuy} power=${entry.purchasingPower} outcome=${entry.outcome} " +
+                    "selected=${entry.selectedItemName ?: "none"}"
+
             is GameEntry.Purchase ->
                 "${player(entry.playerId)} PURCHASE ${entry.kind} ${entry.itemName} " +
                     "cost=${entry.cost} paid=${entry.paymentTotal} overpay=${entry.overpayment}"

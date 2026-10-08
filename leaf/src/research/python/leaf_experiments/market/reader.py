@@ -7,10 +7,11 @@ import math
 from pathlib import Path
 from typing import Any, Mapping
 
-from .models import CardResult, ExperimentMetadata, LearnerResult, MarketRawResult, MarketSlotIdentity
+from .models import BuyOpportunityStats, CardResult, ExperimentMetadata, LearnerResult, MarketRawResult, MarketSlotIdentity
 
 MARKET_SCHEMA = "leaf.market-evaluation"
-MARKET_SCHEMA_VERSION = 1
+MARKET_SCHEMA_VERSION = 2
+SUPPORTED_MARKET_SCHEMA_VERSIONS = frozenset({1, 2})
 
 LEGAL_SLOT_COSTS: dict[str, tuple[int, ...]] = {
     "ROOT": (5, 7, 9),
@@ -71,9 +72,9 @@ def parse_market_result(payload: Any, *, complete_market: bool = True) -> Market
     version = _integer(_required(root, "schemaVersion", "$"), "$.schemaVersion")
     if schema != MARKET_SCHEMA:
         raise MarketResultValidationError(f"$.schema: expected {MARKET_SCHEMA!r}, got {schema!r}")
-    if version != MARKET_SCHEMA_VERSION:
+    if version not in SUPPORTED_MARKET_SCHEMA_VERSIONS:
         raise MarketResultValidationError(
-            f"$.schemaVersion: unsupported version {version}; supported={MARKET_SCHEMA_VERSION}"
+            f"$.schemaVersion: unsupported version {version}; supported={sorted(SUPPORTED_MARKET_SCHEMA_VERSIONS)}"
         )
 
     experiment = _object(_required(root, "experiment", "$"), "$.experiment")
@@ -112,7 +113,7 @@ def parse_market_result(payload: Any, *, complete_market: bool = True) -> Market
     raw_cards = _required(root, "cards", "$")
     if not isinstance(raw_cards, list):
         raise MarketResultValidationError("$.cards: expected array")
-    cards = tuple(_parse_card(item, f"$.cards[{index}]") for index, item in enumerate(raw_cards))
+    cards = tuple(_parse_card(item, f"$.cards[{index}]", version) for index, item in enumerate(raw_cards))
 
     identities = [card.identity for card in cards]
     duplicates = sorted({name for name in identities if identities.count(name) > 1})
@@ -159,7 +160,7 @@ def _parse_outcome(value: Any, path: str, expected_role: str) -> LearnerResult:
     )
 
 
-def _parse_card(value: Any, path: str) -> CardResult:
+def _parse_card(value: Any, path: str, schema_version: int) -> CardResult:
     obj = _object(value, path)
     identity = _string(_required(obj, "identity", path), f"{path}.identity")
     plant_type = _string(_required(obj, "type", path), f"{path}.type")
@@ -196,7 +197,90 @@ def _parse_card(value: Any, path: str) -> CardResult:
             _required(obj, "learnedWinShareOnExposureSum", path),
             f"{path}.learnedWinShareOnExposureSum",
         ),
+        control_opportunity=_parse_opportunity(obj.get("controlOpportunity"), f"{path}.controlOpportunity", schema_version, control_purchases),
+        learned_opportunity=_parse_opportunity(obj.get("learnedOpportunity"), f"{path}.learnedOpportunity", schema_version, learned_purchases),
     )
+
+
+def _parse_opportunity(value: Any, path: str, schema_version: int, purchases: int) -> BuyOpportunityStats:
+    if schema_version == 1:
+        if value is not None:
+            raise MarketResultValidationError(f"{path}: schema v1 must not contain Buy opportunity telemetry")
+        return BuyOpportunityStats()
+    obj = _object(_required({"value": value}, "value", path), path) if value is not None else None
+    if obj is None:
+        raise MarketResultValidationError(f"{path}: schema v2 requires Buy opportunity telemetry")
+
+    def count(name: str) -> int:
+        return _nonnegative_int(_required(obj, name, path), f"{path}.{name}")
+
+    market = count("marketDecisionCount")
+    affordable = count("affordableDecisionCount")
+    graftable = count("graftableDecisionCount")
+    legal = count("legalDecisionCount")
+    selected = count("selectedDecisionCount")
+    done = count("playerDoneWhileLegalCount")
+    no_legal = count("noLegalItemsWhileMarketCount")
+    first = count("firstDecisionLegalCount")
+    post = count("postPurchaseLegalCount")
+    higher = count("legalWithHigherCostPlantCount")
+    power_sum = count("purchasingPowerOnMarketDecisionSum")
+
+    if affordable > market or graftable > market or legal > affordable or legal > graftable:
+        raise MarketResultValidationError(f"{path}: inconsistent market/affordable/graftable/legal opportunity counts")
+    if selected > legal or done > legal or higher > legal:
+        raise MarketResultValidationError(f"{path}: selected/done/higher-cost counts cannot exceed legal decisions")
+    if first + post != legal:
+        raise MarketResultValidationError(f"{path}: firstDecisionLegalCount + postPurchaseLegalCount must equal legalDecisionCount")
+    if no_legal > market:
+        raise MarketResultValidationError(f"{path}: noLegalItemsWhileMarketCount cannot exceed marketDecisionCount")
+    if selected != purchases:
+        raise MarketResultValidationError(f"{path}: selectedDecisionCount={selected} must equal Plant purchases={purchases}")
+
+    market_by = _parse_round_counts(_required(obj, "marketByCultivationRound", path), f"{path}.marketByCultivationRound")
+    affordable_by = _parse_round_counts(_required(obj, "affordableByCultivationRound", path), f"{path}.affordableByCultivationRound")
+    legal_by = _parse_round_counts(_required(obj, "legalByCultivationRound", path), f"{path}.legalByCultivationRound")
+    selected_by = _parse_round_counts(_required(obj, "selectedByCultivationRound", path), f"{path}.selectedByCultivationRound")
+    for label, rows, expected in (
+        ("marketByCultivationRound", market_by, market),
+        ("affordableByCultivationRound", affordable_by, affordable),
+        ("legalByCultivationRound", legal_by, legal),
+        ("selectedByCultivationRound", selected_by, selected),
+    ):
+        if sum(v for _, v in rows) != expected:
+            raise MarketResultValidationError(f"{path}.{label}: round counts do not reconcile to total {expected}")
+
+    return BuyOpportunityStats(
+        market_decisions=market,
+        affordable_decisions=affordable,
+        graftable_decisions=graftable,
+        legal_decisions=legal,
+        selected_decisions=selected,
+        player_done_while_legal=done,
+        no_legal_items_while_market=no_legal,
+        first_decision_legal=first,
+        post_purchase_legal=post,
+        legal_with_higher_cost_plant=higher,
+        purchasing_power_on_market_sum=power_sum,
+        market_by_cultivation_round=market_by,
+        affordable_by_cultivation_round=affordable_by,
+        legal_by_cultivation_round=legal_by,
+        selected_by_cultivation_round=selected_by,
+    )
+
+
+def _parse_round_counts(value: Any, path: str) -> tuple[tuple[int, int], ...]:
+    obj = _object(value, path)
+    parsed: list[tuple[int, int]] = []
+    for key, raw_count in obj.items():
+        try:
+            round_number = int(key)
+        except (TypeError, ValueError) as exc:
+            raise MarketResultValidationError(f"{path}: round key must be a positive integer, got {key!r}") from exc
+        if round_number <= 0 or str(round_number) != str(key):
+            raise MarketResultValidationError(f"{path}: round key must be a canonical positive integer, got {key!r}")
+        parsed.append((round_number, _nonnegative_int(raw_count, f"{path}.{key}")))
+    return tuple(sorted(parsed))
 
 
 def _validate_slots(cards: tuple[CardResult, ...]) -> None:

@@ -199,6 +199,19 @@ sealed interface Moment {
         val resources: List<BuyOrderResourceSnapshot> = emptyList()
     ) : Moment
 
+    data class BuyDecision(
+        val playerId: PlayerId,
+        val roundNumber: Int,
+        val cultivationRoundNumber: Int?,
+        val purchasesMadeThisBuy: Int,
+        val purchasingPower: Int,
+        val plants: List<BuyPlantOpportunitySnapshot>,
+        val outcome: BuyDecisionOutcome,
+        val selectedKind: PurchaseKind? = null,
+        val selectedItemName: String? = null,
+        val selectedCost: Int? = null
+    ) : Moment
+
     data class Purchase(
         val playerId: PlayerId,
         val kind: PurchaseKind,
@@ -379,6 +392,16 @@ enum class SupportActionKind {
 }
 enum class EffectSourceKind { PLANT, ROUND, WISP }
 enum class PurchaseKind { PLANT, DIE }
+enum class BuyDecisionOutcome { PURCHASE, PLAYER_DONE, NO_LEGAL_ITEMS }
+
+data class BuyPlantOpportunitySnapshot(
+    val cardName: String,
+    val cost: Int,
+    val remainingSupply: Int,
+    val affordable: Boolean,
+    val graftable: Boolean,
+    val legal: Boolean
+)
 enum class WoundKind { FLIPPED, SNIPPED }
 enum class UpgradeDestination { HAND, DISCARD }
 enum class TrashDestination { OUT_OF_GAME }

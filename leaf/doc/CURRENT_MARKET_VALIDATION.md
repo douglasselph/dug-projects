@@ -78,6 +78,9 @@ Each experiment creates:
 - `reports/one-learner-only-cards.tsv` — cards purchased by exactly one learner
 - `reports/vine-9-summary.tsv` — focused Vine-9 view
 - `reports/learner-win-shares.tsv` — held-out control and learner win shares
+- `reports/card-opportunity-summary.tsv` — per-card affordability, graftability, legality, selection, and pass/Done diagnostics
+- `reports/slot-opportunity-summary.tsv` — the same diagnostics aggregated by type/cost slot
+- `reports/card-opportunity-by-round.tsv` — opportunity and selection timing by Cultivation round
 - `reports/README-FIRST.txt` — interpretation and provenance guidance
 
 These reports are produced from validated `leaf.market-evaluation` JSON,

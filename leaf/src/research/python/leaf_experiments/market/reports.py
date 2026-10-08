@@ -14,6 +14,7 @@ from .aggregation import (
     MarketAggregates,
     PlayerCountMarketAggregate,
     aggregate_market_results,
+    aggregate_market_opportunities,
 )
 from .models import CardResult, MarketRawResult, MarketSlotIdentity
 from .reader import EXPECTED_CURRENT_MARKET, LEGAL_SLOTS
@@ -25,6 +26,9 @@ ZERO_PURCHASE_CARDS = "zero-purchase-cards.tsv"
 ONE_LEARNER_ONLY_CARDS = "one-learner-only-cards.tsv"
 VINE_9_SUMMARY = "vine-9-summary.tsv"
 LEARNER_WIN_SHARES = "learner-win-shares.tsv"
+CARD_OPPORTUNITY_SUMMARY = "card-opportunity-summary.tsv"
+SLOT_OPPORTUNITY_SUMMARY = "slot-opportunity-summary.tsv"
+CARD_OPPORTUNITY_BY_ROUND = "card-opportunity-by-round.tsv"
 README_FIRST = "README-FIRST.txt"
 
 REPORT_FILENAMES = (
@@ -35,6 +39,9 @@ REPORT_FILENAMES = (
     ONE_LEARNER_ONLY_CARDS,
     VINE_9_SUMMARY,
     LEARNER_WIN_SHARES,
+    CARD_OPPORTUNITY_SUMMARY,
+    SLOT_OPPORTUNITY_SUMMARY,
+    CARD_OPPORTUNITY_BY_ROUND,
     README_FIRST,
 )
 
@@ -79,6 +86,28 @@ _LEARNER_WIN_HEADER = (
     "held_out_win_share_pct",
 )
 
+
+_OPPORTUNITY_HEADER = (
+    "players", "role", "card", "type", "cost", "learners_evaluated",
+    "market_card_opportunities", "affordable_opportunities", "affordable_rate",
+    "graftable_opportunities", "graftable_rate", "legal_opportunities", "legal_rate",
+    "selected_purchases", "selection_per_legal", "player_done_while_legal",
+    "done_while_legal_rate", "no_legal_items_while_market", "first_decision_legal",
+    "post_purchase_legal", "legal_with_higher_cost_plant", "avg_purchasing_power_when_market",
+)
+_SLOT_OPPORTUNITY_HEADER = (
+    "players", "role", "type", "cost", "card_rows", "market_card_opportunities",
+    "affordable_opportunities", "affordable_rate", "graftable_opportunities",
+    "graftable_rate", "legal_opportunities", "legal_rate", "selected_purchases",
+    "selection_per_legal", "player_done_while_legal", "done_while_legal_rate",
+    "legal_with_higher_cost_plant", "avg_purchasing_power_when_market",
+)
+_ROUND_OPPORTUNITY_HEADER = (
+    "players", "role", "card", "type", "cost", "cultivation_round",
+    "market_card_opportunities", "affordable_opportunities", "legal_opportunities",
+    "selected_purchases",
+)
+
 _TYPE_ORDER = {"ROOT": 0, "VINE": 1, "FLOWER": 2}
 
 
@@ -113,6 +142,9 @@ def write_market_reports(
             aggregates, lambda card: card.plant_type == "VINE" and card.cost == 9
         ),
         LEARNER_WIN_SHARES: _render_learner_win_shares_validated(materialized),
+        CARD_OPPORTUNITY_SUMMARY: _render_card_opportunity_summary(materialized),
+        SLOT_OPPORTUNITY_SUMMARY: _render_slot_opportunity_summary(materialized),
+        CARD_OPPORTUNITY_BY_ROUND: _render_card_opportunity_by_round(materialized),
         README_FIRST: render_readme_first(),
     }
 
@@ -169,6 +201,24 @@ def render_learner_win_shares(results: Iterable[MarketRawResult]) -> str:
     return _render_learner_win_shares_validated(materialized)
 
 
+def render_card_opportunity_summary(results: Iterable[MarketRawResult]) -> str:
+    materialized = tuple(results)
+    _validate_report_inputs(materialized)
+    return _render_card_opportunity_summary(materialized)
+
+
+def render_slot_opportunity_summary(results: Iterable[MarketRawResult]) -> str:
+    materialized = tuple(results)
+    _validate_report_inputs(materialized)
+    return _render_slot_opportunity_summary(materialized)
+
+
+def render_card_opportunity_by_round(results: Iterable[MarketRawResult]) -> str:
+    materialized = tuple(results)
+    _validate_report_inputs(materialized)
+    return _render_card_opportunity_by_round(materialized)
+
+
 def render_readme_first() -> str:
     return """CURRENT MARKET REPORTS — READ FIRST
 
@@ -192,6 +242,13 @@ Primary reports:
       Card-summary rows for the VINE / cost-9 slot.
   learner-win-shares.tsv
       CONTROL and LEARNED held-out win shares directly from structured results.
+  card-opportunity-summary.tsv
+      Buy-decision opportunity diagnostics: market availability, affordability,
+      graftability, legality, actual selection, and explicit pass/Done behavior.
+  slot-opportunity-summary.tsv
+      The same opportunity diagnostics aggregated by Plant type/cost slot.
+  card-opportunity-by-round.tsv
+      Market/affordable/legal/selected opportunity counts by Cultivation round.
 
 Semantics:
   - grove_exposures and total_grove_exposures use LEARNED-side direct Grove
@@ -201,6 +258,11 @@ Semantics:
   - best_learner_win_share_pct means the best held-out win share among learners
     that actually purchased the card.  It is NA when no learner purchased it.
   - raw purchase and exposure counts are retained in every aggregate report.
+  - opportunity reports distinguish "in the market" from "affordable",
+    "graftable", "legal now", and "actually selected". This is specifically
+    intended to separate tier-access/economic problems from card-preference problems.
+  - player_done_while_legal counts a strong rejection signal: the player ended
+    its Buy turn while that Plant was a legal purchase.
 
 Before any report is written, the writer validates complete 36-card market
 membership, unique identities, legal four-card slots, purchase/exposure
@@ -208,6 +270,81 @@ consistency, per-card purchase reconciliation, slot reconciliation, and
 whole-market reconciliation.  Invalid inputs fail loudly instead of producing
 plausible-looking TSV output.
 """
+
+
+def _opportunity_rows(results: Sequence[MarketRawResult]):
+    if not results or any(result.schema_version < 2 for result in results):
+        return ()
+    return aggregate_market_opportunities(results)
+
+
+def _rate_text(numerator: int, denominator: int) -> str:
+    return "NA" if denominator == 0 else f"{numerator / denominator:.6f}"
+
+
+def _avg_text(total: int, count: int) -> str:
+    return "NA" if count == 0 else f"{total / count:.3f}"
+
+
+def _render_card_opportunity_summary(results: Sequence[MarketRawResult]) -> str:
+    lines = ["\t".join(_OPPORTUNITY_HEADER)]
+    for row in _opportunity_rows(results):
+        lines.append("\t".join((
+            str(row.player_count), row.role, row.identity, row.plant_type, str(row.cost),
+            str(row.learners_evaluated), str(row.market_decisions), str(row.affordable_decisions),
+            _rate_text(row.affordable_decisions, row.market_decisions),
+            str(row.graftable_decisions), _rate_text(row.graftable_decisions, row.market_decisions),
+            str(row.legal_decisions), _rate_text(row.legal_decisions, row.market_decisions),
+            str(row.selected_decisions), _rate_text(row.selected_decisions, row.legal_decisions),
+            str(row.player_done_while_legal), _rate_text(row.player_done_while_legal, row.legal_decisions),
+            str(row.no_legal_items_while_market), str(row.first_decision_legal),
+            str(row.post_purchase_legal), str(row.legal_with_higher_cost_plant),
+            _avg_text(row.purchasing_power_on_market_sum, row.market_decisions),
+        )))
+    return "\n".join(lines) + "\n"
+
+
+def _render_slot_opportunity_summary(results: Sequence[MarketRawResult]) -> str:
+    rows = _opportunity_rows(results)
+    lines = ["\t".join(_SLOT_OPPORTUNITY_HEADER)]
+    grouped = {}
+    for row in rows:
+        grouped.setdefault((row.player_count, row.role, row.plant_type, row.cost), []).append(row)
+    for key in sorted(grouped, key=lambda k: (k[0], 0 if k[1] == "CONTROL" else 1, _TYPE_ORDER[k[2]], k[3])):
+        members = grouped[key]
+        players, role, plant_type, cost = key
+        market = sum(r.market_decisions for r in members)
+        affordable = sum(r.affordable_decisions for r in members)
+        graftable = sum(r.graftable_decisions for r in members)
+        legal = sum(r.legal_decisions for r in members)
+        selected = sum(r.selected_decisions for r in members)
+        done = sum(r.player_done_while_legal for r in members)
+        higher = sum(r.legal_with_higher_cost_plant for r in members)
+        power = sum(r.purchasing_power_on_market_sum for r in members)
+        lines.append("\t".join((
+            str(players), role, plant_type, str(cost), str(len(members)), str(market),
+            str(affordable), _rate_text(affordable, market), str(graftable), _rate_text(graftable, market),
+            str(legal), _rate_text(legal, market), str(selected), _rate_text(selected, legal),
+            str(done), _rate_text(done, legal), str(higher), _avg_text(power, market),
+        )))
+    return "\n".join(lines) + "\n"
+
+
+def _render_card_opportunity_by_round(results: Sequence[MarketRawResult]) -> str:
+    lines = ["\t".join(_ROUND_OPPORTUNITY_HEADER)]
+    for row in _opportunity_rows(results):
+        market = dict(row.market_by_cultivation_round)
+        affordable = dict(row.affordable_by_cultivation_round)
+        legal = dict(row.legal_by_cultivation_round)
+        selected = dict(row.selected_by_cultivation_round)
+        rounds = sorted(set(market) | set(affordable) | set(legal) | set(selected))
+        for round_number in rounds:
+            lines.append("\t".join((
+                str(row.player_count), row.role, row.identity, row.plant_type, str(row.cost), str(round_number),
+                str(market.get(round_number, 0)), str(affordable.get(round_number, 0)),
+                str(legal.get(round_number, 0)), str(selected.get(round_number, 0)),
+            )))
+    return "\n".join(lines) + "\n"
 
 
 def _validated_aggregates(results: Iterable[MarketRawResult]) -> MarketAggregates:

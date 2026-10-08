@@ -46,6 +46,34 @@ class LearnerResult:
     plant_purchases: int
 
 
+
+
+@dataclass(frozen=True)
+class BuyOpportunityStats:
+    """Raw per-card Buy-decision opportunity telemetry for one evaluation role."""
+
+    market_decisions: int = 0
+    affordable_decisions: int = 0
+    graftable_decisions: int = 0
+    legal_decisions: int = 0
+    selected_decisions: int = 0
+    player_done_while_legal: int = 0
+    no_legal_items_while_market: int = 0
+    first_decision_legal: int = 0
+    post_purchase_legal: int = 0
+    legal_with_higher_cost_plant: int = 0
+    purchasing_power_on_market_sum: int = 0
+    market_by_cultivation_round: tuple[tuple[int, int], ...] = ()
+    affordable_by_cultivation_round: tuple[tuple[int, int], ...] = ()
+    legal_by_cultivation_round: tuple[tuple[int, int], ...] = ()
+    selected_by_cultivation_round: tuple[tuple[int, int], ...] = ()
+
+    @property
+    def average_purchasing_power_when_market(self) -> float | None:
+        if self.market_decisions == 0:
+            return None
+        return self.purchasing_power_on_market_sum / self.market_decisions
+
 @dataclass(frozen=True)
 class CardResult:
     """Raw per-card market facts. No purchase/exposure rate is derived here."""
@@ -59,6 +87,8 @@ class CardResult:
     learned_purchases: int
     control_win_share_on_exposure_sum: float
     learned_win_share_on_exposure_sum: float
+    control_opportunity: BuyOpportunityStats = BuyOpportunityStats()
+    learned_opportunity: BuyOpportunityStats = BuyOpportunityStats()
 
     @property
     def slot(self) -> MarketSlotIdentity:

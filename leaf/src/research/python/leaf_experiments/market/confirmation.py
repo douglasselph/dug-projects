@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -25,7 +26,7 @@ from leaf_experiments.paths import find_project_root
 from leaf_experiments.timing import ExperimentTimer, RepeatedConsoleSetupFilter, run_streaming_process
 
 from .models import MarketRawResult
-from .reader import load_market_result
+from .reader import MARKET_SCHEMA_VERSION, load_market_result
 from .reports import write_market_reports
 
 
@@ -343,12 +344,21 @@ def train_is_complete(config: ConfirmationConfig, paths: LearnerPaths) -> bool:
 
 
 def eval_is_complete(config: ConfirmationConfig, paths: LearnerPaths) -> bool:
-    return (
+    if not (
         config.resume
         and paths.eval_complete.is_file()
         and paths.eval_log.is_file()
         and paths.market_json.is_file()
-    )
+    ):
+        return False
+    try:
+        payload = json.loads(paths.market_json.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    # A completed evaluation from an older telemetry schema is intentionally
+    # stale. Re-evaluate with the existing learner weights so new diagnostics
+    # are measured without unnecessarily retraining the policy.
+    return payload.get("schemaVersion") == MARKET_SCHEMA_VERSION
 
 
 def validate_preflight(config: ConfirmationConfig) -> None:

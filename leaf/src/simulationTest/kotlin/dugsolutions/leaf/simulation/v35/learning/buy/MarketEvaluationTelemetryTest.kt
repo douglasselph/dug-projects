@@ -5,6 +5,8 @@ import dugsolutions.leaf.simulation.v35.analysis.GameSummary
 import dugsolutions.leaf.simulation.v35.analysis.OwnedDiceSignature
 import dugsolutions.leaf.simulation.v35.analysis.PlantCreatureSignature
 import dugsolutions.leaf.simulation.v35.analysis.PlayerGameSummary
+import dugsolutions.leaf.v35.chronicle.domain.BuyDecisionOutcome
+import dugsolutions.leaf.v35.chronicle.domain.BuyPlantOpportunitySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.player.PlayerId
@@ -174,6 +176,70 @@ class MarketEvaluationTelemetryTest {
         assertEquals(1L, acc.marketTelemetry.cardsByName.getValue(b.name).groveExposureCount)
         assertEquals(2L, acc.marketTelemetry.cardsByName.getValue(a.name).purchaseCount)
         assertEquals(1L, acc.marketTelemetry.cardsByName.getValue(b.name).purchaseCount)
+    }
+
+
+    @Test
+    fun `records Buy opportunity access affordability legality selection and round timing`() {
+        val a = card("Flower_17_04", PlantType.FLOWER, 17)
+        val b = card("Flower_14_01", PlantType.FLOWER, 14)
+        val acc = MarketEvaluationTelemetryAccumulator(2, MarketEvaluationRole.LEARNED, listOf(a, b))
+        val player = PlayerId(1)
+
+        acc.recordBuyDecision(
+            GameEntry.BuyDecision(
+                sequence = 1,
+                playerId = player,
+                roundNumber = 4,
+                cultivationRoundNumber = 3,
+                purchasesMadeThisBuy = 0,
+                purchasingPower = 15,
+                plants = listOf(
+                    BuyPlantOpportunitySnapshot(a.name, 17, 1, affordable = false, graftable = true, legal = false),
+                    BuyPlantOpportunitySnapshot(b.name, 14, 1, affordable = true, graftable = true, legal = true)
+                ),
+                outcome = BuyDecisionOutcome.PLAYER_DONE
+            )
+        )
+        acc.recordBuyDecision(
+            GameEntry.BuyDecision(
+                sequence = 2,
+                playerId = player,
+                roundNumber = 7,
+                cultivationRoundNumber = 5,
+                purchasesMadeThisBuy = 1,
+                purchasingPower = 19,
+                plants = listOf(
+                    BuyPlantOpportunitySnapshot(a.name, 17, 1, affordable = true, graftable = true, legal = true),
+                    BuyPlantOpportunitySnapshot(b.name, 14, 1, affordable = true, graftable = true, legal = true)
+                ),
+                outcome = BuyDecisionOutcome.PURCHASE,
+                selectedKind = PurchaseKind.PLANT,
+                selectedItemName = a.name,
+                selectedCost = 17
+            )
+        )
+
+        val flower17 = acc.snapshot().cardsByName.getValue(a.name).opportunity
+        assertEquals(2L, flower17.marketDecisionCount)
+        assertEquals(1L, flower17.affordableDecisionCount)
+        assertEquals(2L, flower17.graftableDecisionCount)
+        assertEquals(1L, flower17.legalDecisionCount)
+        assertEquals(1L, flower17.selectedDecisionCount)
+        assertEquals(0L, flower17.playerDoneWhileLegalCount)
+        assertEquals(0L, flower17.firstDecisionLegalCount)
+        assertEquals(1L, flower17.postPurchaseLegalCount)
+        assertEquals(34L, flower17.purchasingPowerOnMarketDecisionSum)
+        assertEquals(mapOf(3 to 1L, 5 to 1L), flower17.marketByCultivationRound)
+        assertEquals(mapOf(5 to 1L), flower17.legalByCultivationRound)
+        assertEquals(mapOf(5 to 1L), flower17.selectedByCultivationRound)
+
+        val flower14 = acc.snapshot().cardsByName.getValue(b.name).opportunity
+        assertEquals(2L, flower14.legalDecisionCount)
+        assertEquals(1L, flower14.playerDoneWhileLegalCount)
+        assertEquals(1L, flower14.firstDecisionLegalCount)
+        assertEquals(1L, flower14.postPurchaseLegalCount)
+        assertEquals(1L, flower14.legalWithHigherCostPlantCount)
     }
 
     private fun card(name: String, type: PlantType, cost: Int): PlantCard = PlantCard(

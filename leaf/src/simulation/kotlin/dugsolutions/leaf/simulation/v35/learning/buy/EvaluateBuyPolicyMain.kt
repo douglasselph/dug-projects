@@ -393,6 +393,9 @@ internal class EvalAccumulator(
         utilization.addGame(game.entries, p.playerId)
         vpLedger.addGame(p, game.entries, plantsByName, plantValues)
         marketTelemetryAccumulator.recordGame(grove, p.winShare)
+        game.entries.filterIsInstance<GameEntry.BuyDecision>()
+            .filter { it.playerId == p.playerId }
+            .forEach(marketTelemetryAccumulator::recordBuyDecision)
         WATCHED_CARDS.forEach { name ->
             val copies=p.plantCreatureSignature.cards.count { it.plantName==name }
             if(copies>0) {

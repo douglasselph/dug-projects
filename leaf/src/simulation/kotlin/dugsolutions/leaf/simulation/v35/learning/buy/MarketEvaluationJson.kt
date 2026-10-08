@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 internal const val MARKET_EVALUATION_JSON_SCHEMA = "leaf.market-evaluation"
-internal const val MARKET_EVALUATION_JSON_VERSION = 1
+internal const val MARKET_EVALUATION_JSON_VERSION = 2
 
 internal data class MarketEvaluationJsonMetadata(
     val players: Int,
@@ -36,6 +36,16 @@ internal data class MarketEvaluationJsonDocument(
     init {
         require(metadata.players == comparison.playerCount) { "JSON metadata player count does not match telemetry" }
         require(metadata.samples.toLong() == comparison.sampleCount) { "JSON metadata sample count does not match telemetry" }
+        comparison.control.cards.forEach { card ->
+            require(card.opportunity.selectedDecisionCount == card.purchaseCount) {
+                "CONTROL selected Buy decisions do not reconcile with Plant purchases for ${card.cardName}"
+            }
+        }
+        comparison.learned.cards.forEach { card ->
+            require(card.opportunity.selectedDecisionCount == card.purchaseCount) {
+                "LEARNED selected Buy decisions do not reconcile with Plant purchases for ${card.cardName}"
+            }
+        }
     }
 }
 
@@ -86,12 +96,45 @@ internal object MarketEvaluationJsonWriter {
             append(", \"learnedPurchases\": ").append(card.learnedPurchaseCount)
             append(", \"controlWinShareOnExposureSum\": ").append(jsonDouble(card.controlWinShareOnExposureSum))
             append(", \"learnedWinShareOnExposureSum\": ").append(jsonDouble(card.learnedWinShareOnExposureSum))
+            append(", \"controlOpportunity\": ")
+            appendOpportunity(card.controlOpportunity)
+            append(", \"learnedOpportunity\": ")
+            appendOpportunity(card.learnedOpportunity)
             append("}")
             if (index != document.comparison.cards.lastIndex) append(',')
             append('\n')
         }
         append("  ]\n")
         append("}\n")
+    }
+
+    private fun StringBuilder.appendOpportunity(value: MarketCardOpportunityTelemetry) {
+        append('{')
+        append("\"marketDecisionCount\": ").append(value.marketDecisionCount)
+        append(", \"affordableDecisionCount\": ").append(value.affordableDecisionCount)
+        append(", \"graftableDecisionCount\": ").append(value.graftableDecisionCount)
+        append(", \"legalDecisionCount\": ").append(value.legalDecisionCount)
+        append(", \"selectedDecisionCount\": ").append(value.selectedDecisionCount)
+        append(", \"playerDoneWhileLegalCount\": ").append(value.playerDoneWhileLegalCount)
+        append(", \"noLegalItemsWhileMarketCount\": ").append(value.noLegalItemsWhileMarketCount)
+        append(", \"firstDecisionLegalCount\": ").append(value.firstDecisionLegalCount)
+        append(", \"postPurchaseLegalCount\": ").append(value.postPurchaseLegalCount)
+        append(", \"legalWithHigherCostPlantCount\": ").append(value.legalWithHigherCostPlantCount)
+        append(", \"purchasingPowerOnMarketDecisionSum\": ").append(value.purchasingPowerOnMarketDecisionSum)
+        append(", \"marketByCultivationRound\": ").appendRoundMap(value.marketByCultivationRound)
+        append(", \"affordableByCultivationRound\": ").appendRoundMap(value.affordableByCultivationRound)
+        append(", \"legalByCultivationRound\": ").appendRoundMap(value.legalByCultivationRound)
+        append(", \"selectedByCultivationRound\": ").appendRoundMap(value.selectedByCultivationRound)
+        append('}')
+    }
+
+    private fun StringBuilder.appendRoundMap(values: Map<Int, Long>) {
+        append('{')
+        values.toSortedMap().entries.forEachIndexed { index, (round, count) ->
+            if (index > 0) append(", ")
+            append(jsonString(round.toString())).append(": ").append(count)
+        }
+        append('}')
     }
 
     private fun StringBuilder.appendOverrideObject(path: String?, sha256: String?) {

@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.game.buy
 
 import dugsolutions.leaf.v35.error.InvalidDecisionException
+import dugsolutions.leaf.v35.chronicle.domain.BuyDecisionOutcome
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
@@ -62,6 +63,13 @@ class BuyCoordinatorTest {
             listOf(DieSides.D20 to 15),
             buyOrder.resources.first { it.playerId == PlayerId(1) }.dice.map { it.sides to it.value }
         )
+        val decisions = fixture.game.chronicle.entries.filterIsInstance<GameEntry.BuyDecision>()
+        assertEquals(2, decisions.size)
+        assertEquals(listOf(PlayerId(2), PlayerId(1)), decisions.map { it.playerId })
+        assertTrue(decisions.all { it.outcome == BuyDecisionOutcome.PLAYER_DONE })
+        assertEquals(20, decisions.first { it.playerId == PlayerId(2) }.purchasingPower)
+        assertTrue(decisions.all { it.plants.isNotEmpty() })
+        assertTrue(decisions.flatMap { it.plants }.all { it.remainingSupply > 0 })
     }
 
     @Test

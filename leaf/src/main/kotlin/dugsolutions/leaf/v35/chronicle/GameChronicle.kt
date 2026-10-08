@@ -258,6 +258,20 @@ class GameChronicle : Chronicle {
                 },
                 hierarchyDepth = hierarchyDepth
             )
+            is Moment.BuyDecision -> GameEntry.BuyDecision(
+                sequence = sequence,
+                playerId = moment.playerId,
+                roundNumber = moment.roundNumber,
+                cultivationRoundNumber = moment.cultivationRoundNumber,
+                purchasesMadeThisBuy = moment.purchasesMadeThisBuy,
+                purchasingPower = moment.purchasingPower,
+                plants = moment.plants.toList(),
+                outcome = moment.outcome,
+                selectedKind = moment.selectedKind,
+                selectedItemName = moment.selectedItemName,
+                selectedCost = moment.selectedCost,
+                hierarchyDepth = hierarchyDepth
+            )
             is Moment.Purchase -> GameEntry.Purchase(
                 sequence, moment.playerId, moment.kind, moment.itemName,
                 moment.cost, moment.paymentTotal, hierarchyDepth

@@ -149,7 +149,7 @@ def test_resume_requires_expected_artifacts(tmp_path: Path) -> None:
     paths.eval_complete.touch()
     paths.eval_log.touch()
     assert not eval_is_complete(config, paths)
-    paths.market_json.touch()
+    paths.market_json.write_text('{"schemaVersion": 2}', encoding="utf-8")
     assert eval_is_complete(config, paths)
 
 
@@ -246,6 +246,7 @@ def test_resume_skips_processes_but_still_loads_json_and_regenerates_reports(tmp
     for path in (paths.weights, paths.train_complete, paths.eval_log, paths.eval_complete, paths.market_json):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("ready\n", encoding="utf-8")
+    paths.market_json.write_text('{"schemaVersion": 2}', encoding="utf-8")
 
     process_calls: list[object] = []
     loaded: list[Path] = []
@@ -528,3 +529,26 @@ def test_confirmation_module_entrypoint_displays_help() -> None:
     assert "usage:" in result.stdout.lower()
     assert "current-market-confirmation" in result.stdout
 
+
+
+def test_resume_treats_older_market_schema_as_stale_but_keeps_training_reusable(tmp_path: Path) -> None:
+    import json
+    from dataclasses import replace
+    from leaf_experiments.market.confirmation import eval_is_complete, learner_paths, train_is_complete
+
+    config = replace(make_config(tmp_path), resume=True)
+    paths = learner_paths(config, 2, 1)
+    paths.weights.parent.mkdir(parents=True, exist_ok=True)
+    paths.train_complete.parent.mkdir(parents=True, exist_ok=True)
+    paths.eval_log.parent.mkdir(parents=True, exist_ok=True)
+    paths.weights.write_text("weights", encoding="utf-8")
+    paths.train_complete.touch()
+    paths.eval_log.write_text("log", encoding="utf-8")
+    paths.eval_complete.touch()
+    paths.market_json.write_text(json.dumps({"schemaVersion": 1}), encoding="utf-8")
+
+    assert train_is_complete(config, paths) is True
+    assert eval_is_complete(config, paths) is False
+
+    paths.market_json.write_text(json.dumps({"schemaVersion": 2}), encoding="utf-8")
+    assert eval_is_complete(config, paths) is True

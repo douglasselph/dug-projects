@@ -25,7 +25,8 @@ def test_valid_complete_result_loads_and_preserves_metadata() -> None:
     result = load("valid_result.json")
 
     assert result.schema == MARKET_SCHEMA
-    assert result.schema_version == MARKET_SCHEMA_VERSION
+    assert result.schema_version == 1
+    assert MARKET_SCHEMA_VERSION == 2
     assert result.metadata.players == 4
     assert result.metadata.samples == 20
     assert result.metadata.policy_path == "output/test/learner-2.weights"
@@ -151,3 +152,72 @@ def test_complete_market_accepts_legal_current_slot_moves_despite_historical_ide
     assert moved.cards_by_identity["Root_09_01"].slot == MarketSlotIdentity("ROOT", 7)
     assert moved.cards_by_identity["Vine_07_01"].slot == MarketSlotIdentity("VINE", 11)
     assert moved.cards_by_identity["Vine_11_03"].slot == MarketSlotIdentity("VINE", 7)
+
+
+def test_v2_buy_opportunity_telemetry_is_validated_and_loaded() -> None:
+    import json
+    from leaf_experiments.market.reader import parse_market_result
+
+    payload = json.loads((FIXTURE_DIR / "valid_result.json").read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 2
+    for card in payload["cards"]:
+        for role, purchase_key in (("controlOpportunity", "controlPurchases"), ("learnedOpportunity", "learnedPurchases")):
+            selected = card[purchase_key]
+            total = max(3, selected)
+            card[role] = {
+                "marketDecisionCount": total,
+                "affordableDecisionCount": total,
+                "graftableDecisionCount": total,
+                "legalDecisionCount": total,
+                "selectedDecisionCount": selected,
+                "playerDoneWhileLegalCount": 0,
+                "noLegalItemsWhileMarketCount": 0,
+                "firstDecisionLegalCount": total,
+                "postPurchaseLegalCount": 0,
+                "legalWithHigherCostPlantCount": 0,
+                "purchasingPowerOnMarketDecisionSum": total * 9,
+                "marketByCultivationRound": {"1": total},
+                "affordableByCultivationRound": {"1": total},
+                "legalByCultivationRound": {"1": total},
+                "selectedByCultivationRound": ({"1": selected} if selected else {}),
+            }
+
+    result = parse_market_result(payload)
+    card = result.cards_by_identity["Root_05_01"]
+    assert card.learned_opportunity.market_decisions == 3
+    assert card.learned_opportunity.average_purchasing_power_when_market == 9.0
+
+
+def test_v2_buy_opportunity_selected_count_must_reconcile_to_purchases() -> None:
+    import json
+    from leaf_experiments.market.reader import parse_market_result
+
+    payload = json.loads((FIXTURE_DIR / "valid_result.json").read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 2
+    for card in payload["cards"]:
+        for role, purchase_key in (("controlOpportunity", "controlPurchases"), ("learnedOpportunity", "learnedPurchases")):
+            selected = card[purchase_key]
+            total = max(3, selected)
+            card[role] = {
+                "marketDecisionCount": total,
+                "affordableDecisionCount": total,
+                "graftableDecisionCount": total,
+                "legalDecisionCount": total,
+                "selectedDecisionCount": selected,
+                "playerDoneWhileLegalCount": 0,
+                "noLegalItemsWhileMarketCount": 0,
+                "firstDecisionLegalCount": total,
+                "postPurchaseLegalCount": 0,
+                "legalWithHigherCostPlantCount": 0,
+                "purchasingPowerOnMarketDecisionSum": total * 9,
+                "marketByCultivationRound": {"1": total},
+                "affordableByCultivationRound": {"1": total},
+                "legalByCultivationRound": {"1": total},
+                "selectedByCultivationRound": ({"1": selected} if selected else {}),
+            }
+    target = next(c for c in payload["cards"] if c["identity"] == "Root_05_01")
+    target["learnedOpportunity"]["selectedDecisionCount"] = target["learnedPurchases"] + 1
+    target["learnedOpportunity"]["selectedByCultivationRound"] = {"1": target["learnedPurchases"] + 1}
+
+    with pytest.raises(MarketResultValidationError, match="must equal Plant purchases"):
+        parse_market_result(payload)

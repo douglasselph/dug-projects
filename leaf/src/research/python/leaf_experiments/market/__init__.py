@@ -1,6 +1,7 @@
 """Typed market-evaluation result models and strict JSON loading."""
 
 from .models import (
+    BuyOpportunityStats,
     CardResult,
     ExperimentMetadata,
     LearnerResult,
@@ -16,6 +17,7 @@ from .reader import (
 )
 
 __all__ = [
+    "BuyOpportunityStats",
     "CardResult",
     "ExperimentMetadata",
     "LearnerResult",
@@ -30,11 +32,13 @@ __all__ = [
 
 from .aggregation import (
     CardAggregate,
+    CardOpportunityAggregate,
     LearnerPerformance,
     MarketAggregates,
     PlayerCountMarketAggregate,
     SlotAggregate,
     aggregate_market_results,
+    aggregate_market_opportunities,
     aggregate_player_count,
     one_learner_only_cards,
     safe_rate,
@@ -43,11 +47,13 @@ from .aggregation import (
 
 __all__ += [
     "CardAggregate",
+    "CardOpportunityAggregate",
     "LearnerPerformance",
     "MarketAggregates",
     "PlayerCountMarketAggregate",
     "SlotAggregate",
     "aggregate_market_results",
+    "aggregate_market_opportunities",
     "aggregate_player_count",
     "one_learner_only_cards",
     "safe_rate",
@@ -63,6 +69,9 @@ from .reports import (
     render_one_learner_only_cards,
     render_vine_9_summary,
     render_learner_win_shares,
+    render_card_opportunity_summary,
+    render_slot_opportunity_summary,
+    render_card_opportunity_by_round,
     render_readme_first,
     write_market_reports,
 )
@@ -76,6 +85,9 @@ __all__ += [
     "render_one_learner_only_cards",
     "render_vine_9_summary",
     "render_learner_win_shares",
+    "render_card_opportunity_summary",
+    "render_slot_opportunity_summary",
+    "render_card_opportunity_by_round",
     "render_readme_first",
     "write_market_reports",
 ]

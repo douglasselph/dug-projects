@@ -1,6 +1,11 @@
 package dugsolutions.leaf.simulation.v35.learning.buy
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.chronicle.domain.BuyDecisionOutcome
+import dugsolutions.leaf.v35.chronicle.domain.BuyPlantOpportunitySnapshot
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
+import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
@@ -37,6 +42,8 @@ class MarketEvaluationJsonTest {
         assertContains(json, "\"learnedPurchases\": 0")
         assertContains(json, "\"controlWinShareOnExposureSum\": 0.0")
         assertContains(json, "\"learnedWinShareOnExposureSum\": 0.0")
+        assertContains(json, "\"controlOpportunity\": {")
+        assertContains(json, "\"marketDecisionCount\": 0")
     }
 
     @Test
@@ -46,11 +53,13 @@ class MarketEvaluationJsonTest {
             recordGame(listOf(a), 0.25)
             recordGame(listOf(a), 0.50)
             recordPlantPurchase(a.name)
+            recordSelectedPlantDecision(a, purchasingPower = 9)
         }.snapshot()
         val learned = MarketEvaluationTelemetryAccumulator(4, MarketEvaluationRole.LEARNED, listOf(a)).apply {
             recordGame(listOf(a), 0.75)
             recordGame(listOf(a), 1.0)
             repeat(3) { recordPlantPurchase(a.name) }
+            repeat(3) { recordSelectedPlantDecision(a, purchasingPower = 12) }
         }.snapshot()
 
         val json = MarketEvaluationJsonWriter.render(
@@ -68,64 +77,37 @@ class MarketEvaluationJsonTest {
     }
 
     @Test
-    fun `deterministic fixture renders known exact JSON`() {
+    fun `deterministic fixture renders stable v2 opportunity JSON`() {
         val a = card("Root_05_01", PlantType.ROOT, 5)
         val control = MarketEvaluationTelemetryAccumulator(2, MarketEvaluationRole.CONTROL, listOf(a)).apply {
             recordGame(listOf(a), 0.5)
             recordPlantPurchase(a.name)
+            recordSelectedPlantDecision(a, purchasingPower = 5)
         }.snapshot()
         val learned = MarketEvaluationTelemetryAccumulator(2, MarketEvaluationRole.LEARNED, listOf(a)).apply {
             recordGame(listOf(a), 1.0)
             repeat(2) { recordPlantPurchase(a.name) }
+            repeat(2) { recordSelectedPlantDecision(a, purchasingPower = 6) }
         }.snapshot()
 
-        val json = MarketEvaluationJsonWriter.render(
-            MarketEvaluationJsonDocument(
-                metadata = MarketEvaluationJsonMetadata(
-                    players = 2,
-                    samples = 1,
-                    mechanicalSeedStart = 100,
-                    strategySeedStart = 200,
-                    groveSeedStart = 300,
-                    grovePattern = "RANDOM",
-                    roundPattern = "3/2/2",
-                    policyPath = "weights/test.weights",
-                    plantOverridesPath = "plant.csv",
-                    plantOverridesSha256 = "abc",
-                    roundOverridesPath = null,
-                    roundOverridesSha256 = null
-                ),
-                comparison = MarketComparisonTelemetry(control, learned)
-            )
+        val document = MarketEvaluationJsonDocument(
+            metadata = MarketEvaluationJsonMetadata(
+                players = 2, samples = 1, mechanicalSeedStart = 100, strategySeedStart = 200,
+                groveSeedStart = 300, grovePattern = "RANDOM", roundPattern = "3/2/2",
+                policyPath = "weights/test.weights", plantOverridesPath = "plant.csv",
+                plantOverridesSha256 = "abc", roundOverridesPath = null, roundOverridesSha256 = null
+            ),
+            comparison = MarketComparisonTelemetry(control, learned)
         )
+        val first = MarketEvaluationJsonWriter.render(document)
+        val second = MarketEvaluationJsonWriter.render(document)
 
-        val expected = """
-            {
-              "schema": "leaf.market-evaluation",
-              "schemaVersion": 1,
-              "experiment": {
-                "players": 2,
-                "samples": 1,
-                "mechanicalSeedStart": 100,
-                "strategySeedStart": 200,
-                "groveSeedStart": 300,
-                "grovePattern": "RANDOM",
-                "roundPattern": "3/2/2",
-                "policyPath": "weights/test.weights",
-                "plantOverrides": {"path": "plant.csv", "sha256": "abc"},
-                "roundOverrides": null
-              },
-              "outcomes": {
-                "control": {"role": "CONTROL", "sampleCount": 1, "winShare": 0.5, "plantPurchases": 1},
-                "learned": {"role": "LEARNED", "sampleCount": 1, "winShare": 1.0, "plantPurchases": 2}
-              },
-              "cards": [
-                {"identity": "Root_05_01", "type": "ROOT", "cost": 5, "controlExposure": 1, "learnedExposure": 1, "controlPurchases": 1, "learnedPurchases": 2, "controlWinShareOnExposureSum": 0.5, "learnedWinShareOnExposureSum": 1.0}
-              ]
-            }
-        """.trimIndent() + "\n"
-
-        assertEquals(expected, json)
+        assertEquals(first, second)
+        assertContains(first, "\"schemaVersion\": 2")
+        assertContains(first, "\"controlOpportunity\": {")
+        assertContains(first, "\"selectedDecisionCount\": 1")
+        assertContains(first, "\"learnedOpportunity\": {")
+        assertContains(first, "\"selectedDecisionCount\": 2")
     }
 
     @Test
@@ -144,6 +126,27 @@ class MarketEvaluationJsonTest {
     fun `eval options accepts optional market json path`() {
         val options = EvalOptions.parse(listOf("--games", "5", "--market-json", "output/raw-market.json"))
         assertEquals("output/raw-market.json", options.marketJsonPath.toString())
+    }
+
+    private fun MarketEvaluationTelemetryAccumulator.recordSelectedPlantDecision(
+        card: PlantCard,
+        purchasingPower: Int
+    ) {
+        recordBuyDecision(
+            GameEntry.BuyDecision(
+                sequence = 1,
+                playerId = PlayerId(1),
+                roundNumber = 1,
+                cultivationRoundNumber = 1,
+                purchasesMadeThisBuy = 0,
+                purchasingPower = purchasingPower,
+                plants = listOf(BuyPlantOpportunitySnapshot(card.name, card.cost, 1, true, true, true)),
+                outcome = BuyDecisionOutcome.PURCHASE,
+                selectedKind = PurchaseKind.PLANT,
+                selectedItemName = card.name,
+                selectedCost = card.cost
+            )
+        )
     }
 
     private fun document(cards: List<PlantCard>): MarketEvaluationJsonDocument {

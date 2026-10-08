@@ -250,3 +250,126 @@ def _aggregate_player_count(
         cards=tuple(card_aggregates),
         slots=slot_aggregates,
     )
+
+@dataclass(frozen=True)
+class CardOpportunityAggregate:
+    """Aggregated Buy-decision opportunity telemetry for one card and role."""
+
+    player_count: int
+    role: str
+    identity: str
+    plant_type: str
+    cost: int
+    learners_evaluated: int
+    market_decisions: int
+    affordable_decisions: int
+    graftable_decisions: int
+    legal_decisions: int
+    selected_decisions: int
+    player_done_while_legal: int
+    no_legal_items_while_market: int
+    first_decision_legal: int
+    post_purchase_legal: int
+    legal_with_higher_cost_plant: int
+    purchasing_power_on_market_sum: int
+    market_by_cultivation_round: tuple[tuple[int, int], ...]
+    affordable_by_cultivation_round: tuple[tuple[int, int], ...]
+    legal_by_cultivation_round: tuple[tuple[int, int], ...]
+    selected_by_cultivation_round: tuple[tuple[int, int], ...]
+
+    @property
+    def slot(self) -> MarketSlotIdentity:
+        return MarketSlotIdentity(self.plant_type, self.cost)
+
+    @property
+    def affordability_rate(self) -> float | None:
+        return safe_rate(self.affordable_decisions, self.market_decisions)
+
+    @property
+    def graftability_rate(self) -> float | None:
+        return safe_rate(self.graftable_decisions, self.market_decisions)
+
+    @property
+    def legal_rate(self) -> float | None:
+        return safe_rate(self.legal_decisions, self.market_decisions)
+
+    @property
+    def selection_per_legal(self) -> float | None:
+        return safe_rate(self.selected_decisions, self.legal_decisions)
+
+    @property
+    def done_while_legal_rate(self) -> float | None:
+        return safe_rate(self.player_done_while_legal, self.legal_decisions)
+
+    @property
+    def average_purchasing_power_when_market(self) -> float | None:
+        return safe_rate(self.purchasing_power_on_market_sum, self.market_decisions)
+
+
+def aggregate_market_opportunities(results: Iterable[MarketRawResult]) -> tuple[CardOpportunityAggregate, ...]:
+    """Aggregate v2 Buy-opportunity telemetry by player count, role, and card.
+
+    Schema-v1 inputs are accepted by the reader for historical reports, but they
+    carry no opportunity telemetry and are rejected here so a diagnostic report
+    can never silently present historical zeros as measured opportunity data.
+    """
+
+    materialized = list(results)
+    if not materialized:
+        raise ValueError("at least one market result is required")
+    if any(result.schema_version < 2 for result in materialized):
+        raise ValueError("Buy-opportunity aggregation requires market schema v2 telemetry")
+
+    grouped: dict[int, list[MarketRawResult]] = {}
+    for result in materialized:
+        grouped.setdefault(result.metadata.players, []).append(result)
+
+    rows: list[CardOpportunityAggregate] = []
+    for players in sorted(grouped):
+        player_results = grouped[players]
+        canonical = player_results[0].cards_by_identity
+        for result in player_results[1:]:
+            if set(result.cards_by_identity) != set(canonical):
+                raise ValueError(f"market identities differ within {players}p opportunity aggregation")
+        for role in ("CONTROL", "LEARNED"):
+            for identity in sorted(canonical):
+                meta = canonical[identity]
+                stats = [
+                    (r.cards_by_identity[identity].control_opportunity if role == "CONTROL"
+                     else r.cards_by_identity[identity].learned_opportunity)
+                    for r in player_results
+                ]
+                rows.append(
+                    CardOpportunityAggregate(
+                        player_count=players,
+                        role=role,
+                        identity=identity,
+                        plant_type=meta.plant_type,
+                        cost=meta.cost,
+                        learners_evaluated=len(player_results),
+                        market_decisions=sum(s.market_decisions for s in stats),
+                        affordable_decisions=sum(s.affordable_decisions for s in stats),
+                        graftable_decisions=sum(s.graftable_decisions for s in stats),
+                        legal_decisions=sum(s.legal_decisions for s in stats),
+                        selected_decisions=sum(s.selected_decisions for s in stats),
+                        player_done_while_legal=sum(s.player_done_while_legal for s in stats),
+                        no_legal_items_while_market=sum(s.no_legal_items_while_market for s in stats),
+                        first_decision_legal=sum(s.first_decision_legal for s in stats),
+                        post_purchase_legal=sum(s.post_purchase_legal for s in stats),
+                        legal_with_higher_cost_plant=sum(s.legal_with_higher_cost_plant for s in stats),
+                        purchasing_power_on_market_sum=sum(s.purchasing_power_on_market_sum for s in stats),
+                        market_by_cultivation_round=_sum_round_maps(s.market_by_cultivation_round for s in stats),
+                        affordable_by_cultivation_round=_sum_round_maps(s.affordable_by_cultivation_round for s in stats),
+                        legal_by_cultivation_round=_sum_round_maps(s.legal_by_cultivation_round for s in stats),
+                        selected_by_cultivation_round=_sum_round_maps(s.selected_by_cultivation_round for s in stats),
+                    )
+                )
+    return tuple(rows)
+
+
+def _sum_round_maps(values: Iterable[tuple[tuple[int, int], ...]]) -> tuple[tuple[int, int], ...]:
+    totals: dict[int, int] = {}
+    for mapping in values:
+        for round_number, count in mapping:
+            totals[round_number] = totals.get(round_number, 0) + count
+    return tuple(sorted(totals.items()))

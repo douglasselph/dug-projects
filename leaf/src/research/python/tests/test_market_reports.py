@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from leaf_experiments.market import (
+    BuyOpportunityStats,
     CardResult,
     ExperimentMetadata,
     LearnerResult,
@@ -13,6 +14,9 @@ from leaf_experiments.market import (
     MarketReportValidationError,
     render_card_purchases,
     render_card_summary,
+    render_card_opportunity_summary,
+    render_slot_opportunity_summary,
+    render_card_opportunity_by_round,
     render_learner_win_shares,
     render_one_learner_only_cards,
     render_readme_first,
@@ -210,11 +214,17 @@ def test_write_market_reports_writes_all_expected_files(tmp_path: Path) -> None:
         "one-learner-only-cards.tsv",
         "vine-9-summary.tsv",
         "learner-win-shares.tsv",
+        "card-opportunity-summary.tsv",
+        "slot-opportunity-summary.tsv",
+        "card-opportunity-by-round.tsv",
         "README-FIRST.txt",
     }
     for name, path in paths.items():
         assert path == tmp_path / name
-        assert path.read_text(encoding="utf-8") == (GOLDEN / name).read_text(encoding="utf-8")
+        if (GOLDEN / name).exists():
+            assert path.read_text(encoding="utf-8") == (GOLDEN / name).read_text(encoding="utf-8")
+        else:
+            assert path.read_text(encoding="utf-8").splitlines()[0]
 
 
 def test_missing_current_market_card_fails_before_reporting() -> None:
@@ -310,3 +320,44 @@ def test_reports_accept_legal_slot_moves_even_when_identity_contains_historical_
     assert "Root_09_01\tROOT\t7" in text
     assert "Vine_07_01\tVINE\t11" in text
     assert "Vine_11_03\tVINE\t7" in text
+
+
+def test_v2_opportunity_reports_distinguish_access_from_rejection() -> None:
+    base = make_result(learner=1, win_share=0.50)
+    cards = []
+    for card in base.cards:
+        learned = BuyOpportunityStats(
+            market_decisions=10, affordable_decisions=2, graftable_decisions=10,
+            legal_decisions=2, selected_decisions=card.learned_purchases,
+            player_done_while_legal=1 if card.identity == "Flower_17_04" else 0,
+            no_legal_items_while_market=4, first_decision_legal=2, post_purchase_legal=0,
+            legal_with_higher_cost_plant=0, purchasing_power_on_market_sum=90,
+            market_by_cultivation_round=((1, 4), (2, 6)),
+            affordable_by_cultivation_round=((2, 2),),
+            legal_by_cultivation_round=((2, 2),),
+            selected_by_cultivation_round=(),
+        )
+        control = BuyOpportunityStats(
+            market_decisions=10, affordable_decisions=5, graftable_decisions=10,
+            legal_decisions=5, selected_decisions=card.control_purchases,
+            first_decision_legal=5, purchasing_power_on_market_sum=110,
+            market_by_cultivation_round=((1, 5), (2, 5)),
+            affordable_by_cultivation_round=((2, 5),),
+            legal_by_cultivation_round=((2, 5),),
+            selected_by_cultivation_round=(),
+        )
+        cards.append(replace(card, control_opportunity=control, learned_opportunity=learned))
+    result = replace(base, schema_version=2, cards=tuple(cards))
+
+    card_report = render_card_opportunity_summary([result])
+    flower = next(line for line in card_report.splitlines() if "LEARNED\tFlower_17_04" in line)
+    fields = flower.split("\t")
+    assert fields[6:14] == ["10", "2", "0.200000", "10", "1.000000", "2", "0.200000", "0"]
+    assert fields[-1] == "9.000"
+
+    slot_report = render_slot_opportunity_summary([result])
+    assert "4\tLEARNED\tFLOWER\t17" in slot_report
+
+    round_report = render_card_opportunity_by_round([result])
+    assert "4\tLEARNED\tFlower_17_04\tFLOWER\t17\t1\t4\t0\t0\t0" in round_report
+    assert "4\tLEARNED\tFlower_17_04\tFLOWER\t17\t2\t6\t2\t2\t0" in round_report

@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderCritterSnapshot
+import dugsolutions.leaf.v35.chronicle.domain.BuyDecisionOutcome
+import dugsolutions.leaf.v35.chronicle.domain.BuyPlantOpportunitySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderDieSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.BuyOrderResourceSnapshot
 import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
@@ -73,23 +75,61 @@ class BuyCoordinator(
         order.forEach { player ->
             var purchasesMadeThisBuy = 0
             while (true) {
+                val context = DecisionContextFactory.create(game, player)
                 val legalItems = legalItems(game, player)
-                if (legalItems.isEmpty()) break
+                val purchasingPower =
+                    player.dice.hand.sumOf { it.value } +
+                        player.critters.all.sumOf { player.critterValues.valueOf(it) }
+                val plantOpportunities = plantOpportunitySnapshots(game, player, legalItems, purchasingPower)
+
+                if (legalItems.isEmpty()) {
+                    recordBuyDecision(
+                        game = game,
+                        player = player,
+                        context = context,
+                        purchasesMadeThisBuy = purchasesMadeThisBuy,
+                        purchasingPower = purchasingPower,
+                        plants = plantOpportunities,
+                        outcome = BuyDecisionOutcome.NO_LEGAL_ITEMS
+                    )
+                    break
+                }
 
                 val choice = player.decisions.buy.choosePurchase(
                     ChoosePurchaseRequest(
                         options = legalItems,
-                        context = DecisionContextFactory.create(game, player),
+                        context = context,
                         purchasesMadeThisBuy = purchasesMadeThisBuy,
                         marketOptions = marketItems(game)
                     )
                 )
-                if (choice == BuyChoice.Done) break
+                if (choice == BuyChoice.Done) {
+                    recordBuyDecision(
+                        game = game,
+                        player = player,
+                        context = context,
+                        purchasesMadeThisBuy = purchasesMadeThisBuy,
+                        purchasingPower = purchasingPower,
+                        plants = plantOpportunities,
+                        outcome = BuyDecisionOutcome.PLAYER_DONE
+                    )
+                    break
+                }
                 decisionCheck(choice is BuyChoice.Purchase && choice.item in legalItems) {
                     "BuyStrategy returned a purchase that was not offered: $choice"
                 }
 
                 val item = choice.item
+                recordBuyDecision(
+                    game = game,
+                    player = player,
+                    context = context,
+                    purchasesMadeThisBuy = purchasesMadeThisBuy,
+                    purchasingPower = purchasingPower,
+                    plants = plantOpportunities,
+                    outcome = BuyDecisionOutcome.PURCHASE,
+                    selectedItem = item
+                )
                 val payment = player.decisions.buy.choosePayment(
                     ChoosePaymentRequest(
                         item = item,
@@ -160,6 +200,57 @@ class BuyCoordinator(
         )
     }
 
+
+    private fun plantOpportunitySnapshots(
+        game: Game,
+        player: Player,
+        legalItems: List<BuyItem>,
+        purchasingPower: Int
+    ): List<BuyPlantOpportunitySnapshot> {
+        val legalPlantNames = legalItems.filterIsInstance<BuyItem.Plant>().map { it.card.name }.toSet()
+        return game.grove.plantMarket.availableStacks.map { stack ->
+            val cost = game.config.plantValues.costFor(stack.card)
+            val graftable = player.creature.legalPlacements(stack.card).isNotEmpty()
+            BuyPlantOpportunitySnapshot(
+                cardName = stack.card.name,
+                cost = cost,
+                remainingSupply = stack.remaining,
+                affordable = cost >= 0 && cost <= purchasingPower,
+                graftable = graftable,
+                legal = stack.card.name in legalPlantNames
+            )
+        }
+    }
+
+    private fun recordBuyDecision(
+        game: Game,
+        player: Player,
+        context: dugsolutions.leaf.v35.player.decision.context.DecisionContext,
+        purchasesMadeThisBuy: Int,
+        purchasingPower: Int,
+        plants: List<BuyPlantOpportunitySnapshot>,
+        outcome: BuyDecisionOutcome,
+        selectedItem: BuyItem? = null
+    ) {
+        game.chronicle.record(
+            Moment.BuyDecision(
+                playerId = player.id,
+                roundNumber = context.progress.roundNumber,
+                cultivationRoundNumber = context.progress.currentCultivationRoundNumber,
+                purchasesMadeThisBuy = purchasesMadeThisBuy,
+                purchasingPower = purchasingPower,
+                plants = plants,
+                outcome = outcome,
+                selectedKind = when (selectedItem) {
+                    is BuyItem.Plant -> PurchaseKind.PLANT
+                    is BuyItem.Die -> PurchaseKind.DIE
+                    null -> null
+                },
+                selectedItemName = selectedItem?.let(::itemName),
+                selectedCost = selectedItem?.cost
+            )
+        )
+    }
 
     private fun marketItems(game: Game): List<BuyItem> = buildList {
         game.grove.plantMarket.availableStacks
