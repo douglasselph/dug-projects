@@ -127,6 +127,28 @@ fun main(args: Array<String>) {
             learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
         }
         printReport(o, weights, control, learned)
+        o.marketJsonPath?.let { path ->
+            MarketEvaluationJsonWriter.write(
+                path,
+                MarketEvaluationJsonDocument(
+                    metadata = MarketEvaluationJsonMetadata(
+                        players = o.players,
+                        samples = o.games,
+                        mechanicalSeedStart = o.seed,
+                        strategySeedStart = o.strategySeed,
+                        groveSeedStart = if (o.grovePattern != null) o.groveSeed else null,
+                        grovePattern = o.grovePattern,
+                        roundPattern = o.roundLabel,
+                        policyPath = o.input.toString(),
+                        plantOverridesPath = o.plantOverridesPath?.toString(),
+                        plantOverridesSha256 = sha256IfRegularFile(o.plantOverridesPath),
+                        roundOverridesPath = o.roundOverridesPath?.toString(),
+                        roundOverridesSha256 = sha256IfRegularFile(o.roundOverridesPath)
+                    ),
+                    comparison = MarketComparisonTelemetry(control.marketTelemetry, learned.marketTelemetry)
+                )
+            )
+        }
     } finally { app.close() }
 }
 
@@ -1514,6 +1536,7 @@ internal data class EvalOptions(
     val players: Int,
     val cultivationMainPolicy: String,
     val battleSupportPolicy: String,
+    val marketJsonPath: Path?,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
     fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
@@ -1539,6 +1562,7 @@ internal data class EvalOptions(
             var players = 4
             var cultivationMainPolicy = "human"
             var battleSupportPolicy = "human"
+            var marketJsonPath: Path? = null
             var positional = false
             var i = 0
 
@@ -1575,6 +1599,7 @@ internal data class EvalOptions(
                     argument.startsWith("--players") -> players = value(argument).toInt()
                     argument.startsWith("--cultivation-main-policy") -> cultivationMainPolicy = value(argument).trim().lowercase()
                     argument.startsWith("--battle-support-policy") -> battleSupportPolicy = value(argument).trim().lowercase()
+                    argument.startsWith("--market-json") -> marketJsonPath = Paths.get(value(argument))
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
                     argument == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
@@ -1595,13 +1620,14 @@ internal data class EvalOptions(
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
             require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, battleSupportPolicy)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, battleSupportPolicy, marketJsonPath)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--cultivation-main-policy human] [--battle-support-policy human]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--cultivation-main-policy human] [--battle-support-policy human] [--market-json PATH]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
             println("  --players 2|3|4 sets the simulated player count; default is 4.")
+            println("  --market-json PATH writes typed machine-readable market telemetry directly from the evaluator.")
             println("  --cultivation-main-policy human selects the independently pluggable Cultivation Main policy.")
             println("  --battle-support-policy human selects the independently pluggable Battle Support policy; learned support is a later task.")
             println("  --plant-overrides PATH loads research-only Plant cost, availability, scoring, and effect interventions.")
