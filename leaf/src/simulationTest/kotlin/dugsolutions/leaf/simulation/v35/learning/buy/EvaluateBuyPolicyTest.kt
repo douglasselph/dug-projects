@@ -476,4 +476,14 @@ class EvaluateBuyPolicyTest {
         assertEquals(setOf("W_UP"),r.wispCards!!.map { it.name }.toSet())
     }
 
+
+    @Test fun `evaluation accepts learned Battle Support context`() {
+        val o = EvalOptions.parse(listOf(
+            "--battle-support-policy", "learned",
+            "--battle-support-weights", "output/battle.weights"
+        ))
+        assertEquals("learned", o.battleSupportPolicy)
+        assertEquals("output/battle.weights", o.battleSupportWeights?.toString())
+    }
+
 }

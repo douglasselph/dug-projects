@@ -34,8 +34,11 @@ import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivat
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainWeights
 import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectCatalog
 import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectWeights
+import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportCatalog
+import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportWeights
 import dugsolutions.leaf.simulation.v35.learning.plant.effectivePlantEffectCatalogCards
 import dugsolutions.leaf.simulation.v35.learning.plant.learnedPlantEffectFactory
+import dugsolutions.leaf.simulation.v35.learning.battle.learnedBattleSupportFactory
 import dugsolutions.leaf.simulation.v35.learning.cultivation.humanCultivationFactory
 import dugsolutions.leaf.simulation.v35.learning.cultivation.learnedCultivationFactory
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
@@ -106,6 +109,23 @@ fun main(args: Array<String>) {
             }
             else -> error("Unsupported Plant Effect policy ${o.plantEffectPolicy}")
         }
+        val battleSupportWeights = when (o.battleSupportPolicy) {
+            "human" -> null
+            "learned" -> {
+                val path = requireNotNull(o.battleSupportWeights) {
+                    "--battle-support-weights PATH is required when --battle-support-policy learned"
+                }
+                LearnedBattleSupportCatalog.prepare(
+                    LearnedBattleSupportWeights.load(path),
+                    effectivePlantEffectCatalogCards(allPlants, plantExperiment.values)
+                ).also { prepared ->
+                    LearnedBattleSupportCatalog.validateCurrentSchema(
+                        prepared, effectivePlantEffectCatalogCards(allPlants, plantExperiment.values)
+                    )
+                }
+            }
+            else -> error("Unsupported Battle Support policy ${o.battleSupportPolicy}")
+        }
         val factory = koin.get<GameFactory>()
         val runner = koin.get<GameRunner>()
         val plantsByName = allPlants.associateBy { it.name }
@@ -133,6 +153,7 @@ fun main(args: Array<String>) {
         println("CONTROL and LEARNED share the same surrounding policy context; only Buy differs for the affected role")
         println("Cultivation Main policy=${o.cultivationMainPolicy}" + (o.cultivationMainWeights?.let { "; weights=$it" } ?: ""))
         println("Plant Effect policy=${o.plantEffectPolicy}" + (o.plantEffectWeights?.let { "; weights=$it" } ?: ""))
+        println("Battle Support policy=${o.battleSupportPolicy}" + (o.battleSupportWeights?.let { "; weights=$it" } ?: ""))
         println("research environment=${o.researchEnvironment}; environment seeds=${o.environmentSeed}..${o.environmentSeed + o.games - 1}")
         println("Round constraints: include=${o.roundIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.roundExcludes.sorted()}")
         println("Wisp constraints: include=${o.wispIncludes.ifEmpty { setOf("<all>") }.sorted()} exclude=${o.wispExcludes.sorted()}")
@@ -164,11 +185,13 @@ fun main(args: Array<String>) {
             val controlAffected = when {
                 cultivationWeights != null -> learnedCultivationFactory(cultivationWeights, buyWeights = null)
                 plantEffectWeights != null -> learnedPlantEffectFactory(plantEffectWeights, buyWeights = null)
+                battleSupportWeights != null -> learnedBattleSupportFactory(battleSupportWeights, buyWeights = null)
                 else -> PlayerDecisionFactory.humanBaseline()
             }
             val learnedAffected = when {
                 cultivationWeights != null -> learnedCultivationFactory(cultivationWeights, buyWeights = weights)
                 plantEffectWeights != null -> learnedPlantEffectFactory(plantEffectWeights, buyWeights = weights)
+                battleSupportWeights != null -> learnedBattleSupportFactory(battleSupportWeights, buyWeights = weights)
                 else -> learnedFactory(weights)
             }
             val controlFactories = List(o.players) { if (it == seat) controlAffected else PlayerDecisionFactory.humanBaseline() }
@@ -1592,6 +1615,7 @@ internal data class EvalOptions(
     val plantEffectPolicy: String,
     val plantEffectWeights: Path?,
     val battleSupportPolicy: String,
+    val battleSupportWeights: Path?,
     val marketJsonPath: Path?,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
@@ -1621,6 +1645,7 @@ internal data class EvalOptions(
             var plantEffectPolicy = "human"
             var plantEffectWeights: Path? = null
             var battleSupportPolicy = "human"
+            var battleSupportWeights: Path? = null
             var marketJsonPath: Path? = null
             var positional = false
             var i = 0
@@ -1661,6 +1686,7 @@ internal data class EvalOptions(
                     argument.startsWith("--plant-effect-policy") -> plantEffectPolicy = value(argument).trim().lowercase()
                     argument.startsWith("--plant-effect-weights") -> plantEffectWeights = Paths.get(value(argument))
                     argument.startsWith("--battle-support-policy") -> battleSupportPolicy = value(argument).trim().lowercase()
+                    argument.startsWith("--battle-support-weights") -> battleSupportWeights = Paths.get(value(argument))
                     argument.startsWith("--market-json") -> marketJsonPath = Paths.get(value(argument))
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
@@ -1684,25 +1710,29 @@ internal data class EvalOptions(
             if (plantEffectPolicy == "learned") {
                 require(plantEffectWeights != null) { "--plant-effect-weights PATH is required with --plant-effect-policy learned" }
             }
-            require(!(cultivationMainPolicy == "learned" && plantEffectPolicy == "learned")) {
+            require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
+            if (battleSupportPolicy == "learned") {
+                require(battleSupportWeights != null) { "--battle-support-weights PATH is required with --battle-support-policy learned" }
+            }
+            val learnedContextCount = listOf(cultivationMainPolicy, plantEffectPolicy, battleSupportPolicy).count { it == "learned" }
+            require(learnedContextCount <= 1) {
                 "evaluate_buy_policy currently supports one learned surrounding policy family at a time"
             }
-            require(battleSupportPolicy == "human") { "--battle-support-policy currently supports only human; learned policy is a later task" }
             require(researchEnvironment in setOf("default","upgrade-rich","upgrade-poor")) { "--research-environment must be default, upgrade-rich, or upgrade-poor" }
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
             require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, cultivationMainWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, marketJsonPath)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, cultivationMainWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, battleSupportWeights, marketJsonPath)
         }
 
         private fun usage() {
-            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--cultivation-main-policy human|learned] [--cultivation-main-weights PATH] [--plant-effect-policy human|learned] [--plant-effect-weights PATH] [--battle-support-policy human] [--market-json PATH]")
+            println("evaluate_buy_policy [N|--games N] [--seed N] [--strategy-seed N] [--weights PATH|--input PATH] [--grove CODE|--random-grove] [--exclude-card NAME] [--grove-seed N] [--rounds PATTERN] [--research-environment default|upgrade-rich|upgrade-poor] [--environment-seed N] [--round-include-card NAME] [--round-exclude-card NAME] [--wisp-include-card NAME] [--wisp-exclude-card NAME] [--plant-overrides PATH] [--round-overrides PATH] [--players 2|3|4] [--cultivation-main-policy human|learned] [--cultivation-main-weights PATH] [--plant-effect-policy human|learned] [--plant-effect-weights PATH] [--battle-support-policy human|learned] [--battle-support-weights PATH] [--market-json PATH]")
             println("  --weights PATH selects the frozen learned policy; --input remains a backward-compatible alias.")
             println("  --players 2|3|4 sets the simulated player count; default is 4.")
             println("  --market-json PATH writes typed machine-readable market telemetry directly from the evaluator.")
             println("  --cultivation-main-policy human|learned selects the affected player Cultivation Main context; learned requires --cultivation-main-weights PATH.")
             println("  --plant-effect-policy human|learned selects the affected player Plant Effect/Targeting context; learned requires --plant-effect-weights PATH.")
-            println("  --battle-support-policy human selects the independently pluggable Battle Support policy; learned support is a later task.")
+            println("  --battle-support-policy human|learned selects the affected player Battle Support context; learned requires --battle-support-weights PATH.")
             println("  --plant-overrides PATH loads research-only Plant cost, availability, scoring, and effect interventions.")
             println("  --round-overrides PATH loads research-only typed Round-card effect replacements.")
             println("  --grove 000100000 keeps Vine_07_01 fixed and resolves all zero slots anew for each matched sample.")
