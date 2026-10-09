@@ -27,6 +27,11 @@ Primary reports:
       The same opportunity diagnostics aggregated by Plant type/cost slot.
   card-opportunity-by-round.tsv
       Market/affordable/legal/selected opportunity counts by Cultivation round.
+  card-substitution-summary.tsv
+      When a Plant was legal but rejected, what was selected instead, aggregated
+      across learners. Includes exact Plant identity or die identity/cost.
+  card-substitutions-by-learner.tsv
+      The same rejected-legal substitution evidence separated by learner.
 
 Semantics:
   - grove_exposures and total_grove_exposures use LEARNED-side direct Grove
@@ -41,6 +46,8 @@ Semantics:
     intended to separate tier-access/economic problems from card-preference problems.
   - player_done_while_legal counts a strong rejection signal: the player ended
     its Buy turn while that Plant was a legal purchase.
+  - substitution reports condition on the target Plant being legal and not
+    selected, then report the actual alternative purchase (or PLAYER_DONE).
 
 Before any report is written, the writer validates complete 36-card market
 membership, unique identities, legal four-card slots, purchase/exposure

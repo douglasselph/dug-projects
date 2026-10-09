@@ -7,11 +7,14 @@ import math
 from pathlib import Path
 from typing import Any, Mapping
 
-from .models import BuyOpportunityStats, CardResult, ExperimentMetadata, LearnerResult, MarketRawResult, MarketSlotIdentity
+from .models import (
+    BuyOpportunityStats, CardResult, ExperimentMetadata, LearnerResult,
+    MarketRawResult, MarketSlotIdentity, RejectedLegalAlternative,
+)
 
 MARKET_SCHEMA = "leaf.market-evaluation"
-MARKET_SCHEMA_VERSION = 2
-SUPPORTED_MARKET_SCHEMA_VERSIONS = frozenset({1, 2})
+MARKET_SCHEMA_VERSION = 3
+SUPPORTED_MARKET_SCHEMA_VERSIONS = frozenset({1, 2, 3})
 
 LEGAL_SLOT_COSTS: dict[str, tuple[int, ...]] = {
     "ROOT": (5, 7, 9),
@@ -209,7 +212,7 @@ def _parse_opportunity(value: Any, path: str, schema_version: int, purchases: in
         return BuyOpportunityStats()
     obj = _object(_required({"value": value}, "value", path), path) if value is not None else None
     if obj is None:
-        raise MarketResultValidationError(f"{path}: schema v2 requires Buy opportunity telemetry")
+        raise MarketResultValidationError(f"{path}: schema v{schema_version} requires Buy opportunity telemetry")
 
     def count(name: str) -> int:
         return _nonnegative_int(_required(obj, name, path), f"{path}.{name}")
@@ -241,6 +244,13 @@ def _parse_opportunity(value: Any, path: str, schema_version: int, purchases: in
     affordable_by = _parse_round_counts(_required(obj, "affordableByCultivationRound", path), f"{path}.affordableByCultivationRound")
     legal_by = _parse_round_counts(_required(obj, "legalByCultivationRound", path), f"{path}.legalByCultivationRound")
     selected_by = _parse_round_counts(_required(obj, "selectedByCultivationRound", path), f"{path}.selectedByCultivationRound")
+    alternatives = (
+        _parse_rejected_legal_alternatives(
+            _required(obj, "rejectedLegalAlternatives", path),
+            f"{path}.rejectedLegalAlternatives",
+        )
+        if schema_version >= 3 else ()
+    )
     for label, rows, expected in (
         ("marketByCultivationRound", market_by, market),
         ("affordableByCultivationRound", affordable_by, affordable),
@@ -249,6 +259,12 @@ def _parse_opportunity(value: Any, path: str, schema_version: int, purchases: in
     ):
         if sum(v for _, v in rows) != expected:
             raise MarketResultValidationError(f"{path}.{label}: round counts do not reconcile to total {expected}")
+    if schema_version >= 3:
+        rejected = sum(a.count for a in alternatives)
+        if rejected != legal - selected:
+            raise MarketResultValidationError(
+                f"{path}.rejectedLegalAlternatives: counts={rejected} must equal legal-selected={legal-selected}"
+            )
 
     return BuyOpportunityStats(
         market_decisions=market,
@@ -266,7 +282,41 @@ def _parse_opportunity(value: Any, path: str, schema_version: int, purchases: in
         affordable_by_cultivation_round=affordable_by,
         legal_by_cultivation_round=legal_by,
         selected_by_cultivation_round=selected_by,
+        rejected_legal_alternatives=alternatives,
     )
+
+
+def _parse_rejected_legal_alternatives(value: Any, path: str) -> tuple[RejectedLegalAlternative, ...]:
+    if not isinstance(value, list):
+        raise MarketResultValidationError(f"{path}: expected array")
+    rows: list[RejectedLegalAlternative] = []
+    seen: set[tuple[str, str | None, str | None, int | None]] = set()
+    for index, raw in enumerate(value):
+        item_path = f"{path}[{index}]"
+        obj = _object(raw, item_path)
+        outcome = _string(_required(obj, "outcome", item_path), f"{item_path}.outcome")
+        if outcome not in {"PURCHASE", "PLAYER_DONE"}:
+            raise MarketResultValidationError(f"{item_path}.outcome: unsupported rejected-legal outcome {outcome!r}")
+        kind = _optional_string(obj.get("kind"), f"{item_path}.kind")
+        item_name = _optional_string(obj.get("itemName"), f"{item_path}.itemName")
+        cost = _optional_integer(obj.get("cost"), f"{item_path}.cost")
+        count = _positive_int(_required(obj, "count", item_path), f"{item_path}.count")
+        if outcome == "PURCHASE":
+            if kind not in {"PLANT", "DIE"} or item_name is None or cost is None:
+                raise MarketResultValidationError(
+                    f"{item_path}: PURCHASE alternative requires kind, itemName, and cost"
+                )
+        else:
+            if kind is not None or item_name is not None or cost is not None:
+                raise MarketResultValidationError(
+                    f"{item_path}: PLAYER_DONE alternative must not contain purchase metadata"
+                )
+        key = (outcome, kind, item_name, cost)
+        if key in seen:
+            raise MarketResultValidationError(f"{item_path}: duplicate rejected-legal alternative {key}")
+        seen.add(key)
+        rows.append(RejectedLegalAlternative(outcome, kind, item_name, cost, count))
+    return tuple(rows)
 
 
 def _parse_round_counts(value: Any, path: str) -> tuple[tuple[int, int], ...]:

@@ -28,12 +28,18 @@ import dugsolutions.leaf.v35.battle.domain.*
 
 class EvaluateBuyPolicyTest {
     @Test
-    fun `Cultivation Main policy option defaults to Human and rejects unavailable learned mode`() {
+    fun `Cultivation Main policy defaults to Human and learned mode requires weights`() {
         assertEquals("human", EvalOptions.parse(emptyList()).cultivationMainPolicy)
         assertEquals("human", EvalOptions.parse(listOf("--cultivation-main-policy", "human")).cultivationMainPolicy)
         assertFailsWith<IllegalArgumentException> {
             EvalOptions.parse(listOf("--cultivation-main-policy", "learned"))
         }
+        val learned = EvalOptions.parse(listOf(
+            "--cultivation-main-policy", "learned",
+            "--cultivation-main-weights", "output/cult.weights"
+        ))
+        assertEquals("learned", learned.cultivationMainPolicy)
+        assertEquals("output/cult.weights", learned.cultivationMainWeights.toString())
     }
 
     @Test

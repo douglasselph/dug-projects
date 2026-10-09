@@ -77,7 +77,7 @@ class MarketEvaluationJsonTest {
     }
 
     @Test
-    fun `deterministic fixture renders stable v2 opportunity JSON`() {
+    fun `deterministic fixture renders stable v3 opportunity JSON`() {
         val a = card("Root_05_01", PlantType.ROOT, 5)
         val control = MarketEvaluationTelemetryAccumulator(2, MarketEvaluationRole.CONTROL, listOf(a)).apply {
             recordGame(listOf(a), 0.5)
@@ -103,7 +103,7 @@ class MarketEvaluationJsonTest {
         val second = MarketEvaluationJsonWriter.render(document)
 
         assertEquals(first, second)
-        assertContains(first, "\"schemaVersion\": 2")
+        assertContains(first, "\"schemaVersion\": 3")
         assertContains(first, "\"controlOpportunity\": {")
         assertContains(first, "\"selectedDecisionCount\": 1")
         assertContains(first, "\"learnedOpportunity\": {")

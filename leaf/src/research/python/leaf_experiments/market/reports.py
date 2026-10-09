@@ -29,6 +29,8 @@ LEARNER_WIN_SHARES = "learner-win-shares.tsv"
 CARD_OPPORTUNITY_SUMMARY = "card-opportunity-summary.tsv"
 SLOT_OPPORTUNITY_SUMMARY = "slot-opportunity-summary.tsv"
 CARD_OPPORTUNITY_BY_ROUND = "card-opportunity-by-round.tsv"
+CARD_SUBSTITUTION_SUMMARY = "card-substitution-summary.tsv"
+CARD_SUBSTITUTIONS_BY_LEARNER = "card-substitutions-by-learner.tsv"
 README_FIRST = "README-FIRST.txt"
 
 REPORT_FILENAMES = (
@@ -42,6 +44,8 @@ REPORT_FILENAMES = (
     CARD_OPPORTUNITY_SUMMARY,
     SLOT_OPPORTUNITY_SUMMARY,
     CARD_OPPORTUNITY_BY_ROUND,
+    CARD_SUBSTITUTION_SUMMARY,
+    CARD_SUBSTITUTIONS_BY_LEARNER,
     README_FIRST,
 )
 
@@ -107,6 +111,18 @@ _ROUND_OPPORTUNITY_HEADER = (
     "market_card_opportunities", "affordable_opportunities", "legal_opportunities",
     "selected_purchases",
 )
+_SUBSTITUTION_SUMMARY_HEADER = (
+    "players", "role", "target_card", "target_type", "target_cost",
+    "legal_rejections", "alternative_outcome", "alternative_kind",
+    "alternative_item", "alternative_type", "alternative_cost",
+    "alternative_count", "share_of_target_rejections", "learners_using_alternative",
+)
+_SUBSTITUTION_BY_LEARNER_HEADER = (
+    "players", "learner", "role", "target_card", "target_type", "target_cost",
+    "legal_rejections", "alternative_outcome", "alternative_kind",
+    "alternative_item", "alternative_type", "alternative_cost",
+    "alternative_count", "share_of_target_rejections",
+)
 
 _TYPE_ORDER = {"ROOT": 0, "VINE": 1, "FLOWER": 2}
 
@@ -145,6 +161,8 @@ def write_market_reports(
         CARD_OPPORTUNITY_SUMMARY: _render_card_opportunity_summary(materialized),
         SLOT_OPPORTUNITY_SUMMARY: _render_slot_opportunity_summary(materialized),
         CARD_OPPORTUNITY_BY_ROUND: _render_card_opportunity_by_round(materialized),
+        CARD_SUBSTITUTION_SUMMARY: _render_card_substitution_summary(materialized),
+        CARD_SUBSTITUTIONS_BY_LEARNER: _render_card_substitutions_by_learner(materialized),
         README_FIRST: render_readme_first(),
     }
 
@@ -219,6 +237,18 @@ def render_card_opportunity_by_round(results: Iterable[MarketRawResult]) -> str:
     return _render_card_opportunity_by_round(materialized)
 
 
+def render_card_substitution_summary(results: Iterable[MarketRawResult]) -> str:
+    materialized = tuple(results)
+    _validate_report_inputs(materialized)
+    return _render_card_substitution_summary(materialized)
+
+
+def render_card_substitutions_by_learner(results: Iterable[MarketRawResult]) -> str:
+    materialized = tuple(results)
+    _validate_report_inputs(materialized)
+    return _render_card_substitutions_by_learner(materialized)
+
+
 def render_readme_first() -> str:
     return """CURRENT MARKET REPORTS — READ FIRST
 
@@ -249,6 +279,11 @@ Primary reports:
       The same opportunity diagnostics aggregated by Plant type/cost slot.
   card-opportunity-by-round.tsv
       Market/affordable/legal/selected opportunity counts by Cultivation round.
+  card-substitution-summary.tsv
+      When a Plant was legal but rejected, what was selected instead, aggregated
+      across learners. Includes exact Plant identity or die identity/cost.
+  card-substitutions-by-learner.tsv
+      The same rejected-legal substitution evidence separated by learner.
 
 Semantics:
   - grove_exposures and total_grove_exposures use LEARNED-side direct Grove
@@ -263,6 +298,8 @@ Semantics:
     intended to separate tier-access/economic problems from card-preference problems.
   - player_done_while_legal counts a strong rejection signal: the player ended
     its Buy turn while that Plant was a legal purchase.
+  - substitution reports condition on the target Plant being legal and not
+    selected, then report the actual alternative purchase (or PLAYER_DONE).
 
 Before any report is written, the writer validates complete 36-card market
 membership, unique identities, legal four-card slots, purchase/exposure
@@ -346,6 +383,77 @@ def _render_card_opportunity_by_round(results: Sequence[MarketRawResult]) -> str
             )))
     return "\n".join(lines) + "\n"
 
+
+
+def _role_opportunity(card: CardResult, role: str):
+    return card.control_opportunity if role == "CONTROL" else card.learned_opportunity
+
+
+def _alternative_metadata(result: MarketRawResult, kind: str | None, item_name: str | None, cost: int | None):
+    if kind == "PLANT" and item_name in result.cards_by_identity:
+        card = result.cards_by_identity[item_name]
+        return card.plant_type, card.cost
+    return ("NA", cost if cost is not None else None)
+
+
+def _render_card_substitutions_by_learner(results: Sequence[MarketRawResult]) -> str:
+    lines = ["\t".join(_SUBSTITUTION_BY_LEARNER_HEADER)]
+    if not results or any(result.schema_version < 3 for result in results):
+        return "\n".join(lines) + "\n"
+    for result in sorted(results, key=_result_sort_key):
+        learner = _learner_label(result)
+        for role in ("CONTROL", "LEARNED"):
+            for card in sorted(result.cards, key=_card_sort_key):
+                stats = _role_opportunity(card, role)
+                rejected = stats.legal_decisions - stats.selected_decisions
+                for alt in stats.rejected_legal_alternatives:
+                    alt_type, alt_cost = _alternative_metadata(result, alt.kind, alt.item_name, alt.cost)
+                    lines.append("\t".join((
+                        str(result.metadata.players), learner, role, card.identity, card.plant_type, str(card.cost),
+                        str(rejected), alt.outcome, alt.kind or "NA", alt.item_name or "NA", alt_type,
+                        "NA" if alt_cost is None else str(alt_cost), str(alt.count), _rate(alt.count, rejected),
+                    )))
+    return "\n".join(lines) + "\n"
+
+
+def _render_card_substitution_summary(results: Sequence[MarketRawResult]) -> str:
+    lines = ["\t".join(_SUBSTITUTION_SUMMARY_HEADER)]
+    if not results or any(result.schema_version < 3 for result in results):
+        return "\n".join(lines) + "\n"
+    grouped: dict[tuple, dict[str, object]] = {}
+    for result in sorted(results, key=_result_sort_key):
+        learner = _learner_label(result)
+        for role in ("CONTROL", "LEARNED"):
+            for card in result.cards:
+                stats = _role_opportunity(card, role)
+                rejected = stats.legal_decisions - stats.selected_decisions
+                for alt in stats.rejected_legal_alternatives:
+                    alt_type, alt_cost = _alternative_metadata(result, alt.kind, alt.item_name, alt.cost)
+                    key = (result.metadata.players, role, card.identity, card.plant_type, card.cost,
+                           alt.outcome, alt.kind, alt.item_name, alt_type, alt_cost)
+                    row = grouped.setdefault(key, {"count": 0, "rejected": 0, "learners": set()})
+                    row["count"] += alt.count
+                    row["learners"].add(learner)
+    # Recompute target denominators independently to avoid alternative-count fanout.
+    denominators: dict[tuple[int, str, str], int] = {}
+    for result in results:
+        for role in ("CONTROL", "LEARNED"):
+            for card in result.cards:
+                stats = _role_opportunity(card, role)
+                denominators[(result.metadata.players, role, card.identity)] = (
+                    denominators.get((result.metadata.players, role, card.identity), 0)
+                    + stats.legal_decisions - stats.selected_decisions
+                )
+    for key in sorted(grouped, key=lambda k: (k[0], 0 if k[1] == "CONTROL" else 1, _TYPE_ORDER.get(k[3], 999), k[4], k[2], str(k[5:]))) :
+        players, role, target, target_type, target_cost, outcome, kind, item_name, alt_type, alt_cost = key
+        row = grouped[key]
+        rejected = denominators[(players, role, target)]
+        lines.append("\t".join((
+            str(players), role, target, target_type, str(target_cost), str(rejected), outcome, kind or "NA",
+            item_name or "NA", alt_type, "NA" if alt_cost is None else str(alt_cost), str(row["count"]),
+            _rate(row["count"], rejected), str(len(row["learners"])),
+        )))
+    return "\n".join(lines) + "\n"
 
 def _validated_aggregates(results: Iterable[MarketRawResult]) -> MarketAggregates:
     materialized = tuple(results)

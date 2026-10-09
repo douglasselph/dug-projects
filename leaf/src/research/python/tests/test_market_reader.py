@@ -26,7 +26,7 @@ def test_valid_complete_result_loads_and_preserves_metadata() -> None:
 
     assert result.schema == MARKET_SCHEMA
     assert result.schema_version == 1
-    assert MARKET_SCHEMA_VERSION == 2
+    assert MARKET_SCHEMA_VERSION == 3
     assert result.metadata.players == 4
     assert result.metadata.samples == 20
     assert result.metadata.policy_path == "output/test/learner-2.weights"
@@ -220,4 +220,87 @@ def test_v2_buy_opportunity_selected_count_must_reconcile_to_purchases() -> None
     target["learnedOpportunity"]["selectedByCultivationRound"] = {"1": target["learnedPurchases"] + 1}
 
     with pytest.raises(MarketResultValidationError, match="must equal Plant purchases"):
+        parse_market_result(payload)
+
+
+def test_v3_rejected_legal_alternatives_are_loaded_and_reconcile() -> None:
+    import json
+    from leaf_experiments.market.reader import parse_market_result
+
+    payload = json.loads((FIXTURE_DIR / "valid_result.json").read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 3
+    for card in payload["cards"]:
+        for role, purchase_key in (("controlOpportunity", "controlPurchases"), ("learnedOpportunity", "learnedPurchases")):
+            selected = card[purchase_key]
+            total = max(3, selected)
+            rejected = total - selected
+            card[role] = {
+                "marketDecisionCount": total,
+                "affordableDecisionCount": total,
+                "graftableDecisionCount": total,
+                "legalDecisionCount": total,
+                "selectedDecisionCount": selected,
+                "playerDoneWhileLegalCount": rejected,
+                "noLegalItemsWhileMarketCount": 0,
+                "firstDecisionLegalCount": total,
+                "postPurchaseLegalCount": 0,
+                "legalWithHigherCostPlantCount": 0,
+                "purchasingPowerOnMarketDecisionSum": total * 20,
+                "marketByCultivationRound": {"1": total},
+                "affordableByCultivationRound": {"1": total},
+                "legalByCultivationRound": {"1": total},
+                "selectedByCultivationRound": ({"1": selected} if selected else {}),
+                "rejectedLegalAlternatives": ([{
+                    "outcome": "PLAYER_DONE", "kind": None, "itemName": None, "cost": None, "count": rejected
+                }] if rejected else []),
+            }
+
+    target = next(c for c in payload["cards"] if c["identity"] == "Flower_14_01")
+    target["learnedOpportunity"]["rejectedLegalAlternatives"] = [
+        {"outcome": "PURCHASE", "kind": "PLANT", "itemName": "Flower_17_04", "cost": 17, "count": 2},
+        {"outcome": "PLAYER_DONE", "kind": None, "itemName": None, "cost": None, "count": 1},
+    ]
+    target["learnedOpportunity"]["playerDoneWhileLegalCount"] = 1
+
+    result = parse_market_result(payload)
+    alternatives = result.cards_by_identity["Flower_14_01"].learned_opportunity.rejected_legal_alternatives
+    assert sum(a.count for a in alternatives) == 3
+    assert next(a for a in alternatives if a.kind == "PLANT").item_name == "Flower_17_04"
+
+
+def test_v3_rejected_legal_alternative_counts_must_equal_legal_minus_selected() -> None:
+    import json
+    from leaf_experiments.market.reader import parse_market_result
+
+    payload = json.loads((FIXTURE_DIR / "valid_result.json").read_text(encoding="utf-8"))
+    payload["schemaVersion"] = 3
+    for card in payload["cards"]:
+        for role, purchase_key in (("controlOpportunity", "controlPurchases"), ("learnedOpportunity", "learnedPurchases")):
+            selected = card[purchase_key]
+            total = max(3, selected)
+            rejected = total - selected
+            card[role] = {
+                "marketDecisionCount": total,
+                "affordableDecisionCount": total,
+                "graftableDecisionCount": total,
+                "legalDecisionCount": total,
+                "selectedDecisionCount": selected,
+                "playerDoneWhileLegalCount": rejected,
+                "noLegalItemsWhileMarketCount": 0,
+                "firstDecisionLegalCount": total,
+                "postPurchaseLegalCount": 0,
+                "legalWithHigherCostPlantCount": 0,
+                "purchasingPowerOnMarketDecisionSum": total * 20,
+                "marketByCultivationRound": {"1": total},
+                "affordableByCultivationRound": {"1": total},
+                "legalByCultivationRound": {"1": total},
+                "selectedByCultivationRound": ({"1": selected} if selected else {}),
+                "rejectedLegalAlternatives": ([{
+                    "outcome": "PLAYER_DONE", "kind": None, "itemName": None, "cost": None, "count": rejected
+                }] if rejected else []),
+            }
+    target = next(c for c in payload["cards"] if c["identity"] == "Root_05_02")
+    target["learnedOpportunity"]["rejectedLegalAlternatives"][0]["count"] -= 1
+
+    with pytest.raises(MarketResultValidationError, match="must equal legal-selected"):
         parse_market_result(payload)

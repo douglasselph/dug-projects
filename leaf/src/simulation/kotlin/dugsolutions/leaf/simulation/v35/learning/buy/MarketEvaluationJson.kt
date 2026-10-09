@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 internal const val MARKET_EVALUATION_JSON_SCHEMA = "leaf.market-evaluation"
-internal const val MARKET_EVALUATION_JSON_VERSION = 2
+internal const val MARKET_EVALUATION_JSON_VERSION = 3
 
 internal data class MarketEvaluationJsonMetadata(
     val players: Int,
@@ -125,7 +125,23 @@ internal object MarketEvaluationJsonWriter {
         append(", \"affordableByCultivationRound\": ").appendRoundMap(value.affordableByCultivationRound)
         append(", \"legalByCultivationRound\": ").appendRoundMap(value.legalByCultivationRound)
         append(", \"selectedByCultivationRound\": ").appendRoundMap(value.selectedByCultivationRound)
+        append(", \"rejectedLegalAlternatives\": ").appendAlternatives(value.rejectedLegalAlternatives)
         append('}')
+    }
+
+    private fun StringBuilder.appendAlternatives(values: List<MarketAlternativeTelemetry>) {
+        append('[')
+        values.forEachIndexed { index, value ->
+            if (index > 0) append(", ")
+            append('{')
+            append("\"outcome\": ").append(jsonString(value.outcome.name))
+            append(", \"kind\": ").append(jsonStringOrNull(value.kind?.name))
+            append(", \"itemName\": ").append(jsonStringOrNull(value.itemName))
+            append(", \"cost\": ").append(value.cost?.toString() ?: "null")
+            append(", \"count\": ").append(value.count)
+            append('}')
+        }
+        append(']')
     }
 
     private fun StringBuilder.appendRoundMap(values: Map<Int, Long>) {

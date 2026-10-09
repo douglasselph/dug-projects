@@ -15,6 +15,14 @@ internal enum class MarketEvaluationRole {
 }
 
 /** Immutable per-card market telemetry. Raw counts only; no derived rate is stored here. */
+internal data class MarketAlternativeTelemetry(
+    val kind: PurchaseKind?,
+    val itemName: String?,
+    val cost: Int?,
+    val outcome: BuyDecisionOutcome,
+    val count: Long
+)
+
 internal data class MarketCardOpportunityTelemetry(
     val marketDecisionCount: Long,
     val affordableDecisionCount: Long,
@@ -30,7 +38,8 @@ internal data class MarketCardOpportunityTelemetry(
     val marketByCultivationRound: Map<Int, Long>,
     val affordableByCultivationRound: Map<Int, Long>,
     val legalByCultivationRound: Map<Int, Long>,
-    val selectedByCultivationRound: Map<Int, Long>
+    val selectedByCultivationRound: Map<Int, Long>,
+    val rejectedLegalAlternatives: List<MarketAlternativeTelemetry>
 )
 
 /** Immutable per-card market telemetry. Raw counts only; no derived rate is stored here. */
@@ -150,7 +159,15 @@ internal class MarketEvaluationTelemetryAccumulator(
         val marketByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
         val affordableByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
         val legalByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
-        val selectedByCultivationRound: MutableMap<Int, Long> = sortedMapOf()
+        val selectedByCultivationRound: MutableMap<Int, Long> = sortedMapOf(),
+        val rejectedLegalAlternatives: MutableMap<AlternativeKey, Long> = linkedMapOf()
+    )
+
+    private data class AlternativeKey(
+        val kind: PurchaseKind?,
+        val itemName: String?,
+        val cost: Int?,
+        val outcome: BuyDecisionOutcome
     )
 
     private val cardsByName = linkedMapOf<String, MutableCardTelemetry>()
@@ -204,6 +221,21 @@ internal class MarketEvaluationTelemetryAccumulator(
                 if (higherLegalCosts.any { it > plant.cost }) card.legalWithHigherCostPlantCount++
                 if (entry.outcome == BuyDecisionOutcome.PLAYER_DONE) card.playerDoneWhileLegalCount++
                 entry.cultivationRoundNumber?.let { round -> card.legalByCultivationRound.bump(round) }
+
+                val selectedThisPlant = entry.selectedKind == PurchaseKind.PLANT && entry.selectedItemName == plant.cardName
+                if (!selectedThisPlant) {
+                    val key = when (entry.outcome) {
+                        BuyDecisionOutcome.PURCHASE -> AlternativeKey(
+                            kind = requireNotNull(entry.selectedKind) { "PURCHASE Buy decision missing selectedKind" },
+                            itemName = requireNotNull(entry.selectedItemName) { "PURCHASE Buy decision missing selectedItemName" },
+                            cost = requireNotNull(entry.selectedCost) { "PURCHASE Buy decision missing selectedCost" },
+                            outcome = entry.outcome
+                        )
+                        BuyDecisionOutcome.PLAYER_DONE -> AlternativeKey(null, null, null, entry.outcome)
+                        BuyDecisionOutcome.NO_LEGAL_ITEMS -> error("Plant ${plant.cardName} cannot be legal in a NO_LEGAL_ITEMS Buy decision")
+                    }
+                    card.rejectedLegalAlternatives[key] = (card.rejectedLegalAlternatives[key] ?: 0L) + 1L
+                }
             }
             if (entry.outcome == BuyDecisionOutcome.NO_LEGAL_ITEMS) card.noLegalItemsWhileMarketCount++
             if (entry.selectedKind == PurchaseKind.PLANT && entry.selectedItemName == plant.cardName) {
@@ -243,7 +275,12 @@ internal class MarketEvaluationTelemetryAccumulator(
                     marketByCultivationRound = card.marketByCultivationRound.toMap(),
                     affordableByCultivationRound = card.affordableByCultivationRound.toMap(),
                     legalByCultivationRound = card.legalByCultivationRound.toMap(),
-                    selectedByCultivationRound = card.selectedByCultivationRound.toMap()
+                    selectedByCultivationRound = card.selectedByCultivationRound.toMap(),
+                    rejectedLegalAlternatives = card.rejectedLegalAlternatives.entries
+                        .sortedWith(compareBy({ it.key.outcome.name }, { it.key.kind?.name ?: "" }, { it.key.itemName ?: "" }, { it.key.cost ?: -1 }))
+                        .map { (key, count) ->
+                            MarketAlternativeTelemetry(key.kind, key.itemName, key.cost, key.outcome, count)
+                        }
                 )
             )
         }

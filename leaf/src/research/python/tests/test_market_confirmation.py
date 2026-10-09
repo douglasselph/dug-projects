@@ -149,7 +149,7 @@ def test_resume_requires_expected_artifacts(tmp_path: Path) -> None:
     paths.eval_complete.touch()
     paths.eval_log.touch()
     assert not eval_is_complete(config, paths)
-    paths.market_json.write_text('{"schemaVersion": 2}', encoding="utf-8")
+    paths.market_json.write_text('{"schemaVersion": 3}', encoding="utf-8")
     assert eval_is_complete(config, paths)
 
 
@@ -246,7 +246,7 @@ def test_resume_skips_processes_but_still_loads_json_and_regenerates_reports(tmp
     for path in (paths.weights, paths.train_complete, paths.eval_log, paths.eval_complete, paths.market_json):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("ready\n", encoding="utf-8")
-    paths.market_json.write_text('{"schemaVersion": 2}', encoding="utf-8")
+    paths.market_json.write_text('{"schemaVersion": 3}', encoding="utf-8")
 
     process_calls: list[object] = []
     loaded: list[Path] = []
@@ -550,5 +550,5 @@ def test_resume_treats_older_market_schema_as_stale_but_keeps_training_reusable(
     assert train_is_complete(config, paths) is True
     assert eval_is_complete(config, paths) is False
 
-    paths.market_json.write_text(json.dumps({"schemaVersion": 2}), encoding="utf-8")
+    paths.market_json.write_text(json.dumps({"schemaVersion": 3}), encoding="utf-8")
     assert eval_is_complete(config, paths) is True

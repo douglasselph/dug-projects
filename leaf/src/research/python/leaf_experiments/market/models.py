@@ -48,6 +48,18 @@ class LearnerResult:
 
 
 
+
+
+@dataclass(frozen=True)
+class RejectedLegalAlternative:
+    """What the player chose instead while this Plant was legal."""
+
+    outcome: str
+    kind: str | None
+    item_name: str | None
+    cost: int | None
+    count: int
+
 @dataclass(frozen=True)
 class BuyOpportunityStats:
     """Raw per-card Buy-decision opportunity telemetry for one evaluation role."""
@@ -67,6 +79,7 @@ class BuyOpportunityStats:
     affordable_by_cultivation_round: tuple[tuple[int, int], ...] = ()
     legal_by_cultivation_round: tuple[tuple[int, int], ...] = ()
     selected_by_cultivation_round: tuple[tuple[int, int], ...] = ()
+    rejected_legal_alternatives: tuple[RejectedLegalAlternative, ...] = ()
 
     @property
     def average_purchasing_power_when_market(self) -> float | None:

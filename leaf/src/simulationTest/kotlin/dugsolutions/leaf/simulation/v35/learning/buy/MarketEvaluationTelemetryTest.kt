@@ -242,6 +242,44 @@ class MarketEvaluationTelemetryTest {
         assertEquals(1L, flower14.legalWithHigherCostPlantCount)
     }
 
+
+    @Test
+    fun `records exact alternative selected when a legal Plant is rejected`() {
+        val target = card("Flower_14_01", PlantType.FLOWER, 14)
+        val alternative = card("Flower_17_04", PlantType.FLOWER, 17)
+        val acc = MarketEvaluationTelemetryAccumulator(4, MarketEvaluationRole.LEARNED, listOf(target, alternative))
+        val player = PlayerId(1)
+
+        acc.recordBuyDecision(
+            GameEntry.BuyDecision(
+                sequence = 1, playerId = player, roundNumber = 6, cultivationRoundNumber = 5,
+                purchasesMadeThisBuy = 0, purchasingPower = 18,
+                plants = listOf(
+                    BuyPlantOpportunitySnapshot(target.name, 14, 1, true, true, true),
+                    BuyPlantOpportunitySnapshot(alternative.name, 17, 1, true, true, true)
+                ),
+                outcome = BuyDecisionOutcome.PURCHASE,
+                selectedKind = PurchaseKind.PLANT, selectedItemName = alternative.name, selectedCost = 17
+            )
+        )
+        acc.recordBuyDecision(
+            GameEntry.BuyDecision(
+                sequence = 2, playerId = player, roundNumber = 7, cultivationRoundNumber = 6,
+                purchasesMadeThisBuy = 0, purchasingPower = 16,
+                plants = listOf(BuyPlantOpportunitySnapshot(target.name, 14, 1, true, true, true)),
+                outcome = BuyDecisionOutcome.PLAYER_DONE
+            )
+        )
+
+        val stats = acc.snapshot().cardsByName.getValue(target.name).opportunity
+        assertEquals(2L, stats.legalDecisionCount)
+        assertEquals(0L, stats.selectedDecisionCount)
+        assertEquals(2L, stats.rejectedLegalAlternatives.sumOf { it.count })
+        assertEquals(1L, stats.rejectedLegalAlternatives.single { it.outcome == BuyDecisionOutcome.PURCHASE }.count)
+        assertEquals(alternative.name, stats.rejectedLegalAlternatives.single { it.outcome == BuyDecisionOutcome.PURCHASE }.itemName)
+        assertEquals(1L, stats.rejectedLegalAlternatives.single { it.outcome == BuyDecisionOutcome.PLAYER_DONE }.count)
+    }
+
     private fun card(name: String, type: PlantType, cost: Int): PlantCard = PlantCard(
         quantity = 1,
         name = name,

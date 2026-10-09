@@ -7,6 +7,7 @@ from .models import (
     LearnerResult,
     MarketRawResult,
     MarketSlotIdentity,
+    RejectedLegalAlternative,
 )
 from .reader import (
     MARKET_SCHEMA,
@@ -23,6 +24,7 @@ __all__ = [
     "LearnerResult",
     "MarketRawResult",
     "MarketSlotIdentity",
+    "RejectedLegalAlternative",
     "MARKET_SCHEMA",
     "MARKET_SCHEMA_VERSION",
     "MarketResultValidationError",
@@ -72,7 +74,10 @@ from .reports import (
     render_card_opportunity_summary,
     render_slot_opportunity_summary,
     render_card_opportunity_by_round,
+    render_card_substitution_summary,
+    render_card_substitutions_by_learner,
     render_readme_first,
+
     write_market_reports,
 )
 
@@ -88,6 +93,8 @@ __all__ += [
     "render_card_opportunity_summary",
     "render_slot_opportunity_summary",
     "render_card_opportunity_by_round",
+    "render_card_substitution_summary",
+    "render_card_substitutions_by_learner",
     "render_readme_first",
     "write_market_reports",
 ]

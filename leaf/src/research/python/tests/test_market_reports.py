@@ -217,6 +217,8 @@ def test_write_market_reports_writes_all_expected_files(tmp_path: Path) -> None:
         "card-opportunity-summary.tsv",
         "slot-opportunity-summary.tsv",
         "card-opportunity-by-round.tsv",
+        "card-substitution-summary.tsv",
+        "card-substitutions-by-learner.tsv",
         "README-FIRST.txt",
     }
     for name, path in paths.items():
@@ -361,3 +363,37 @@ def test_v2_opportunity_reports_distinguish_access_from_rejection() -> None:
     round_report = render_card_opportunity_by_round([result])
     assert "4\tLEARNED\tFlower_17_04\tFLOWER\t17\t1\t4\t0\t0\t0" in round_report
     assert "4\tLEARNED\tFlower_17_04\tFLOWER\t17\t2\t6\t2\t2\t0" in round_report
+
+
+def test_substitution_reports_show_exact_alternative_selected() -> None:
+    from leaf_experiments.market import RejectedLegalAlternative, render_card_substitution_summary, render_card_substitutions_by_learner
+
+    base = golden_results()[0]
+    cards = []
+    for card in base.cards:
+        if card.identity == "Flower_14_01":
+            learned = BuyOpportunityStats(
+                market_decisions=10,
+                affordable_decisions=10,
+                graftable_decisions=10,
+                legal_decisions=10,
+                selected_decisions=2,
+                first_decision_legal=10,
+                rejected_legal_alternatives=(
+                    RejectedLegalAlternative("PURCHASE", "PLANT", "Flower_17_04", 17, 5),
+                    RejectedLegalAlternative("PURCHASE", "DIE", "D20", 12, 2),
+                    RejectedLegalAlternative("PLAYER_DONE", None, None, None, 1),
+                ),
+            )
+            cards.append(replace(card, learned_opportunity=learned))
+        else:
+            cards.append(card)
+    result = replace(base, schema_version=3, cards=tuple(cards))
+
+    summary = render_card_substitution_summary([result]).splitlines()
+    flower17 = next(row for row in summary if "\tFlower_14_01\t" in row and "\tFlower_17_04\t" in row)
+    assert flower17.endswith("\t5\t0.625000\t1")
+
+    by_learner = render_card_substitutions_by_learner([result]).splitlines()
+    die = next(row for row in by_learner if "\tFlower_14_01\t" in row and "\tD20\t" in row)
+    assert die.endswith("\t2\t0.250000")
