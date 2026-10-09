@@ -76,3 +76,27 @@ A train/evaluate step that already has a valid resume marker does not consume
 ETA budget merely because it still appears in the `runs=X/Y` bookkeeping. This
 prevents many instant resume skips from making the overall ETA unrealistically
 optimistic.
+
+## Mandatory orchestration timing for new research experiments
+
+New Python research orchestrators should define their long-running operations as
+`ExperimentStep` values and execute them through
+`leaf_experiments.timing.ExperimentPlanRunner`.
+
+This is the highest common layer that can correctly own experiment ETA.  The
+single-game engine is too low-level: it knows how to run one game, but it does
+not know how many training/evaluation operations remain or which categories
+have different runtimes.  Conversely, individual experiment scripts are too
+high-level if they hand-roll their own timers, because timing can be forgotten.
+
+`ExperimentPlanRunner` therefore makes timing part of orchestration itself:
+
+- every declared long-running step gets `Run X of Y`, elapsed time and ETA;
+- training/evaluation categories retain separate duration estimates;
+- resume skips are excluded from ETA work;
+- child-process heartbeat remains supplied by `run_streaming_process`;
+- experiment scripts should not implement their own timing loops.
+
+Legacy Bash experiments may still use `bin/lib/experiment_run_timing.sh`; they
+have not all been migrated.  New research experiments should use the Python
+plan runner so timing is not optional.

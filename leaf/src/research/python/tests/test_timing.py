@@ -193,3 +193,43 @@ def test_overall_eta_ignores_future_resume_skips_and_prefers_matching_category()
 def test_planned_skips_length_must_match_categories() -> None:
     with pytest.raises(ValueError, match="planned_skips"):
         ExperimentTimer(("train", "eval"), planned_skips=(True,))
+
+
+def test_experiment_plan_runner_makes_timing_mandatory() -> None:
+    from leaf_experiments.timing import ExperimentPlanRunner, ExperimentStep
+
+    current = [0.0]
+    output: list[str] = []
+    ran: list[str] = []
+
+    def mono() -> float:
+        return current[0]
+
+    def printer(message="", **kwargs) -> None:
+        output.append(str(message))
+
+    def first() -> None:
+        ran.append("first")
+        current[0] = 5.0
+
+    def second() -> None:
+        ran.append("second")
+        current[0] = 12.0
+
+    runner = ExperimentPlanRunner(
+        (
+            ExperimentStep("Train", "train-2p", first),
+            ExperimentStep("Eval", "eval-2p", second),
+        ),
+        printer=printer,
+        now_monotonic=mono,
+        now_datetime=lambda: datetime(2026, 10, 9, 12, 0, 0),
+    )
+    runner.run(description="Done")
+
+    assert ran == ["first", "second"]
+    joined = "\n".join(output)
+    assert "Run 1 of 2 starting: Train" in joined
+    assert "OVERALL_PROGRESS runs=1/2" in joined
+    assert "OVERALL_PROGRESS runs=2/2" in joined
+    assert "Done; elapsed=00:00:12" in joined

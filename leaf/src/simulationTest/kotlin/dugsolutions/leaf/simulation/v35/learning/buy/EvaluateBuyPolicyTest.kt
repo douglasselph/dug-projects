@@ -43,6 +43,32 @@ class EvaluateBuyPolicyTest {
     }
 
     @Test
+    fun `Plant Effect policy defaults to Human and learned mode requires weights`() {
+        assertEquals("human", EvalOptions.parse(emptyList()).plantEffectPolicy)
+        assertFailsWith<IllegalArgumentException> {
+            EvalOptions.parse(listOf("--plant-effect-policy", "learned"))
+        }
+        val learned = EvalOptions.parse(listOf(
+            "--plant-effect-policy", "learned",
+            "--plant-effect-weights", "output/plant-effect.weights"
+        ))
+        assertEquals("learned", learned.plantEffectPolicy)
+        assertEquals("output/plant-effect.weights", learned.plantEffectWeights.toString())
+    }
+
+    @Test
+    fun `Buy evaluator allows only one learned surrounding context at a time`() {
+        assertFailsWith<IllegalArgumentException> {
+            EvalOptions.parse(listOf(
+                "--cultivation-main-policy", "learned",
+                "--cultivation-main-weights", "output/cult.weights",
+                "--plant-effect-policy", "learned",
+                "--plant-effect-weights", "output/plant.weights"
+            ))
+        }
+    }
+
+    @Test
     fun `Battle Support policy option defaults to Human and rejects unavailable learned mode`() {
         assertEquals("human", EvalOptions.parse(emptyList()).battleSupportPolicy)
         assertEquals("human", EvalOptions.parse(listOf("--battle-support-policy", "human")).battleSupportPolicy)

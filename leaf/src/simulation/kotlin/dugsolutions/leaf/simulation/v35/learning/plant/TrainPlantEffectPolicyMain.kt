@@ -17,6 +17,8 @@ import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.di.GameFactory
 import dugsolutions.leaf.v35.plant.GrovePlantCode
 import dugsolutions.leaf.v35.plant.PlantCardManager
+import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyCardCatalog
+import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
 import dugsolutions.leaf.v35.player.decision.learned.plant.*
 import dugsolutions.leaf.v35.round.RoundCardManager
 import org.koin.dsl.koinApplication
@@ -32,13 +34,22 @@ fun main(args:Array<String>){
         val defaults=FirstGameDefault.PLANT_NAMES.map{requireNotNull(pm.getCard(it))};val pe=PlantExperimentResearchConfig.resolve(o.plantOverrides,plants);val re=RoundExperimentResearchConfig.resolve(o.roundOverrides,rounds)
         val groves=List(o.games){s->resolveResearchGroveForSample(o.grovePattern,o.groveSeed,s,pm,defaults,plants,pe.values)}
         val raw=if(Files.exists(o.input))LearnedPlantEffectWeights.load(o.input) else LearnedPlantEffectWeights.zeros();val seed=LearnedPlantEffectCatalog.prepare(raw,effectivePlantEffectCatalogCards(plants,pe.values))
+        val buyWeights = when (o.buyPolicy) {
+            "human" -> null
+            "learned" -> LearnedBuyCardCatalog.prepare(
+                LearnedBuyWeights.load(o.buyWeights),
+                plants,
+                pe.effectiveCosts(plants)
+            )
+            else -> error("Unsupported Buy policy ${o.buyPolicy}")
+        }
         val evolution=PlantEffectPolicyEvolution(PlantEffectEvolutionConfig(o.population,o.elites,o.sigma,o.mutations,o.evolutionSeed));var pop=evolution.initialPopulation(seed);var best=EvaluatedPlantEffectPolicy(seed,Double.NEGATIVE_INFINITY)
         val factory=k.get<GameFactory>();val runner=k.get<GameRunner>()
         println("Leaf & Let Die — Learned Plant Effect Policy Evolution")
-        println("Only Plant effect execution/targeting is learned; Buy/Cultivation Main/Cultivation Support/Wisp/Battle Support/Battle Main = Human Baseline")
+        println("Only Plant effect execution/targeting is trained; Buy=${o.buyPolicy}; Cultivation Main/Cultivation Support/Wisp/Battle Support/Battle Main = Human Baseline")
         println("generations=${o.generations} population=${o.population} games/policy=${o.games} players=${o.players}; rounds=${o.roundLabel}")
         repeat(o.generations){g->
-            val eval=pop.mapIndexed{ci,w->var wins=0.0;repeat(o.games){s->val seat=affectedSeat(s,o.players);val lf=learnedPlantEffectFactory(w);val ds=List(o.players){if(it==seat)lf else PlayerDecisionFactory.humanBaseline()};val game=factory(GameConfig(selectedPlantCards=groves[s],playerDecisionFactories=ds,roundSetup=o.roundSetup,seed=o.seed+s,strategySeed=o.strategySeed+s,plantValues=pe.values,roundValues=re.values));val result=withSimulationFailureDiagnostics(game,SimulationRunContext("train_plant_effect_g${g+1}_c${ci+1}",s,"LEARNED_PLANT_EFFECT",seat,o.seed+s,o.strategySeed+s,GrovePlantCode.describe(groves[s]),o.roundLabel)){runner.run(game)};wins+=GameSummaryExtractor.extract(game,result).players.single{it.seat==seat}.winShare};EvaluatedPlantEffectPolicy(w,wins/o.games)}.sortedByDescending{it.fitness};if(eval.first().fitness>best.fitness)best=eval.first();println("generation=${g+1}/${o.generations} best=${pct(eval.first().fitness)} mean=${pct(eval.map{it.fitness}.average())}");pop=evolution.nextPopulation(eval)
+            val eval=pop.mapIndexed{ci,w->var wins=0.0;repeat(o.games){s->val seat=affectedSeat(s,o.players);val lf=learnedPlantEffectFactory(w, buyWeights);val ds=List(o.players){if(it==seat)lf else PlayerDecisionFactory.humanBaseline()};val game=factory(GameConfig(selectedPlantCards=groves[s],playerDecisionFactories=ds,roundSetup=o.roundSetup,seed=o.seed+s,strategySeed=o.strategySeed+s,plantValues=pe.values,roundValues=re.values));val result=withSimulationFailureDiagnostics(game,SimulationRunContext("train_plant_effect_g${g+1}_c${ci+1}",s,"LEARNED_PLANT_EFFECT",seat,o.seed+s,o.strategySeed+s,GrovePlantCode.describe(groves[s]),o.roundLabel)){runner.run(game)};wins+=GameSummaryExtractor.extract(game,result).players.single{it.seat==seat}.winShare};EvaluatedPlantEffectPolicy(w,wins/o.games)}.sortedByDescending{it.fitness};if(eval.first().fitness>best.fitness)best=eval.first();println("generation=${g+1}/${o.generations} best=${pct(eval.first().fitness)} mean=${pct(eval.map{it.fitness}.average())}");pop=evolution.nextPopulation(eval)
         }
         best.weights.withProvenance(best.weights.provenance.copy(trainingStatus="trained",roundPattern=o.roundLabel,grove=o.grovePattern?:"FirstGameDefault",generations=o.generations,gamesPerPolicy=o.games,population=o.population,playerCount=o.players,evolutionSeed=o.evolutionSeed,mechanicalSeedStart=o.seed,strategySeedStart=o.strategySeed,fitness=best.fitness,roundConfiguration=o.roundOverrides?.toString()?:"canonical")).save(o.output)
         println("Training complete. best=${pct(best.fitness)} output=${o.output}")
@@ -62,7 +73,9 @@ internal data class PlantEffectTrainOptions(
     val grovePattern: String?,
     val groveSeed: Long,
     val players: Int,
-    val roundLabel: String
+    val roundLabel: String,
+    val buyPolicy: String,
+    val buyWeights: Path
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -85,6 +98,8 @@ internal data class PlantEffectTrainOptions(
             var groveSeed = 99000L
             var players = 4
             var rounds = "3/2/2"
+            var buyPolicy = "human"
+            var buyWeights = Paths.get("data/ai/4p/buy-policy-v1.weights")
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -109,6 +124,8 @@ internal data class PlantEffectTrainOptions(
                     arg.startsWith("--grove-seed") -> groveSeed = value(arg).toLong()
                     arg.startsWith("--players") -> players = value(arg).toInt()
                     arg.startsWith("--rounds") -> rounds = value(arg)
+                    arg.startsWith("--buy-policy") -> buyPolicy = value(arg).trim().lowercase()
+                    arg.startsWith("--buy-weights") -> buyWeights = Paths.get(value(arg))
                     else -> error("Unknown option: $arg")
                 }
                 i++
@@ -118,7 +135,8 @@ internal data class PlantEffectTrainOptions(
             require(games > 0)
             require(elites in 1 until population)
             require(players in 2..4)
-            return PlantEffectTrainOptions(generations, population, games, elites, sigma, mutations, evolutionSeed, seed, strategySeed, input, output, plantOverrides, roundOverrides, grovePattern, groveSeed, players, rounds)
+            require(buyPolicy in setOf("human", "learned")) { "--buy-policy must be human or learned" }
+            return PlantEffectTrainOptions(generations, population, games, elites, sigma, mutations, evolutionSeed, seed, strategySeed, input, output, plantOverrides, roundOverrides, grovePattern, groveSeed, players, rounds, buyPolicy, buyWeights)
         }
     }
 }

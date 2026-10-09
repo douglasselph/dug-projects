@@ -390,3 +390,58 @@ def run_streaming_process(
     )
     if return_code != 0:
         raise subprocess.CalledProcessError(return_code, list(command))
+
+@dataclass(frozen=True)
+class ExperimentStep:
+    """One orchestration-level unit of work with a timing category.
+
+    New research orchestrators should execute their train/evaluate/archive work
+    through :class:`ExperimentPlanRunner` rather than hand-rolling timing.
+    This makes wall-clock progress/ETA an automatic property of the common
+    orchestration layer rather than an optional feature of individual scripts.
+    """
+
+    label: str
+    category: str
+    action: Callable[[], None]
+    skip: bool = False
+
+
+class ExperimentPlanRunner:
+    """Execute an experiment plan with mandatory shared timing/progress output.
+
+    This is intentionally above the game engine.  The game engine knows how to
+    run one game but cannot know how many training/evaluation operations remain,
+    so it cannot estimate an experiment ETA.  This runner is the highest common
+    layer that owns the full sequence of long-running operations.
+    """
+
+    def __init__(
+        self,
+        steps: Sequence[ExperimentStep],
+        *,
+        printer: Callable[..., None] = print,
+        now_monotonic: Callable[[], float] = time.monotonic,
+        now_datetime: Callable[[], datetime] = datetime.now,
+    ) -> None:
+        if not steps:
+            raise ValueError("steps must not be empty")
+        self.steps = tuple(steps)
+        self.printer = printer
+        self.timer = ExperimentTimer(
+            tuple(step.category for step in self.steps),
+            planned_skips=tuple(step.skip for step in self.steps),
+            printer=printer,
+            now_monotonic=now_monotonic,
+            now_datetime=now_datetime,
+        )
+
+    def run(self, *, description: str = "Experiment complete") -> None:
+        for step in self.steps:
+            self.timer.start(step.label, step.category)
+            if step.skip:
+                self.printer("Already complete; resume marker is present.", flush=True)
+            else:
+                step.action()
+            self.timer.complete(skipped=step.skip)
+        self.timer.finish(description)
