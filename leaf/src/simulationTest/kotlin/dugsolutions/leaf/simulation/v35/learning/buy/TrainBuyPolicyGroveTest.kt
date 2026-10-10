@@ -21,12 +21,18 @@ class TrainBuyPolicyGroveTest {
     }
 
     @Test
-    fun `Battle Support policy option defaults to Human`() {
+    fun `Battle Support policy option defaults to Human and accepts learned mode`() {
         assertEquals("human", TrainOptions.parse(emptyList()).battleSupportPolicy)
         assertEquals("human", TrainOptions.parse(listOf("--battle-support-policy=human")).battleSupportPolicy)
-        assertFailsWith<IllegalArgumentException> {
-            TrainOptions.parse(listOf("--battle-support-policy=learned"))
-        }
+
+        val learned = TrainOptions.parse(
+            listOf(
+                "--battle-support-policy=learned",
+                "--battle-support-weights=output/battle-support.weights",
+            )
+        )
+        assertEquals("learned", learned.battleSupportPolicy)
+        assertEquals("output/battle-support.weights", learned.battleSupportWeights.toString())
     }
 
 
