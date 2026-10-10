@@ -509,6 +509,7 @@ class CultivationBuildCoordinator(
             playerId = player.id,
             mainActionsRemaining = mainActionsRemaining,
             roundCard = roundCard,
+            roundValues = game.config.roundValues,
             legalActions = legalMains,
             chosen = selected
         ) ?: selected

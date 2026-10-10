@@ -575,3 +575,13 @@ tasks.register<JavaExec>("runEvaluateMulchTargetPolicy") {
     mainClass.set("dugsolutions.leaf.simulation.v35.learning.mulch.EvaluateMulchTargetPolicyMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// Compost narrative paired-game study; uses the existing simulation research classpath.
+tasks.register<JavaExec>("runCompostNarrativeExperiment") {
+    description = "Records actual seeded Compost games and one-action counterfactual continuations"
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostNarrativeExperimentMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}

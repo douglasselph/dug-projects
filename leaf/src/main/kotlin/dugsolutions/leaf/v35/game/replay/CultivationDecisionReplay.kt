@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.game.replay
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.RoundEffectSlot
+import dugsolutions.leaf.v35.round.RoundValueResolver
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.cultivation.CultivationMainAction
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -71,6 +73,7 @@ class CultivationDecisionReplay(val fork: CultivationReplayFork? = null) {
         playerId: PlayerId,
         mainActionsRemaining: Int,
         roundCard: RoundCard,
+        roundValues: RoundValueResolver,
         legalActions: List<CultivationMainAction>,
         chosen: CultivationMainAction
     ): CultivationMainAction {
@@ -93,8 +96,8 @@ class CultivationDecisionReplay(val fork: CultivationReplayFork? = null) {
             consultationIndex = index,
             mainActionsRemaining = mainActionsRemaining,
             roundCardName = roundCard.name,
-            firstEffect = roundCard.firstEffect.effect,
-            secondEffect = roundCard.secondEffect.effect,
+            firstEffect = roundValues.effectFor(roundCard, RoundEffectSlot.FIRST),
+            secondEffect = roundValues.effectFor(roundCard, RoundEffectSlot.SECOND),
             legal = legalActions.map { it.replayKind() },
             policyChoice = chosen.replayKind(),
             actualChoice = effective.replayKind(),

@@ -14,6 +14,12 @@ import dugsolutions.leaf.v35.game.replay.CultivationReplayDecision
 import dugsolutions.leaf.v35.game.replay.CultivationReplayFork
 import dugsolutions.leaf.v35.game.replay.ReplayMainAction
 import dugsolutions.leaf.v35.plant.domain.PlantCard
+import dugsolutions.leaf.v35.round.RoundValueResolver
+import dugsolutions.leaf.v35.plant.PlantValueResolver
+
+private fun isCompost(effect: GameEffect) = effect == GameEffect.UPGRADE_DIE_FROM_HAND ||
+    effect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS ||
+    effect == GameEffect.UPGRADE_DIE_AND_USE_NOW
 
 /** One completed game, with the historical Chronicle retained only by explicit request. */
 data class RecordedReplayGame(
@@ -56,7 +62,9 @@ class CompostCounterfactualRunner(
     private val runner: GameRunner,
     private val plants: List<PlantCard>,
     private val players: List<PlayerDecisionFactory>,
-    private val rounds: GameRoundSetup = GameRoundSetup.standard()
+    private val rounds: GameRoundSetup = GameRoundSetup.standard(),
+    private val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
+    private val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
 ) {
     fun run(
         mechanicalSeed: Long,
@@ -71,7 +79,9 @@ class CompostCounterfactualRunner(
             roundSetup = rounds,
             seed = mechanicalSeed,
             strategySeed = strategySeed,
-            cultivationDecisionReplay = tracker
+            cultivationDecisionReplay = tracker,
+            roundValues = roundValues,
+            plantValues = plantValues
         ))
         val result = runner.run(game)
         if (fork != null) require(tracker.forkApplied) { "Requested replay fork was never reached: $fork" }
@@ -86,8 +96,8 @@ class CompostCounterfactualRunner(
     /** Locate real Original-Compost selections in the baseline decision trace. */
     fun compostOpportunities(game: RecordedReplayGame): List<CultivationReplayDecision> =
         game.decisions.filter { d ->
-            (d.actualChoice == ReplayMainAction.ROUND_EFFECT_1 && d.firstEffect == GameEffect.UPGRADE_DIE_FROM_HAND) ||
-                (d.actualChoice == ReplayMainAction.ROUND_EFFECT_2 && d.secondEffect == GameEffect.UPGRADE_DIE_FROM_HAND)
+            (d.actualChoice == ReplayMainAction.ROUND_EFFECT_1 && isCompost(d.firstEffect)) ||
+                (d.actualChoice == ReplayMainAction.ROUND_EFFECT_2 && isCompost(d.secondEffect))
         }
 
     fun compare(
@@ -102,8 +112,8 @@ class CompostCounterfactualRunner(
             d.roundNumber == fork.roundNumber && d.playerId == fork.playerId.value &&
                 d.consultationIndex == fork.consultationIndex
         } ?: error("Original trace has no matching decision: $fork")
-        check(decision.actualChoice == ReplayMainAction.ROUND_EFFECT_1 && decision.firstEffect == GameEffect.UPGRADE_DIE_FROM_HAND ||
-            decision.actualChoice == ReplayMainAction.ROUND_EFFECT_2 && decision.secondEffect == GameEffect.UPGRADE_DIE_FROM_HAND) {
+        check(decision.actualChoice == ReplayMainAction.ROUND_EFFECT_1 && isCompost(decision.firstEffect) ||
+            decision.actualChoice == ReplayMainAction.ROUND_EFFECT_2 && isCompost(decision.secondEffect)) {
             "Original choice was not original-rule Compost: $decision"
         }
         check(fork.replacement in decision.legal) {
