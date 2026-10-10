@@ -65,7 +65,6 @@ fun main(args: Array<String>) {
             )
             else -> error("Unsupported Cultivation Main policy ${o.cultivationMainPolicy}")
         }
-        val effectivePlants = effectivePlantEffectCatalogCards(plants, plantExp.values)
         val plantEffectWeights = when (o.plantEffectPolicy) {
             "human" -> null
             "learned" -> LearnedPlantEffectCatalog.prepare(
