@@ -228,6 +228,7 @@ object GameEffectDecisionRequirements {
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
             GameEffect.UPGRADE_DIE_FROM_HAND,
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW ->
                 same(EffectDecisionMechanism.EFFECT_DIE)

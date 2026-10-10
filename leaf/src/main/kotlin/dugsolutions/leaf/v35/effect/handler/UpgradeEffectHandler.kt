@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.GameEffectSource
+import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.UpgradeResolver
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
@@ -32,7 +33,8 @@ class UpgradeEffectHandler(
             GameEffect.UPGRADE_DIE_FROM_HAND ->
                 upgradeChoices(request).isNotEmpty()
 
-            GameEffect.UPGRADE_DIE_AND_USE_NOW ->
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS ->
                 rootAwakeningChoices(request).isNotEmpty()
 
             else -> false
@@ -60,7 +62,8 @@ class UpgradeEffectHandler(
                 )
             }
 
-            GameEffect.UPGRADE_DIE_AND_USE_NOW -> {
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> {
                 val die = chooseRequiredHandDie(
                     request = request,
                     legalChoices = rootAwakeningChoices(request)
@@ -111,9 +114,12 @@ class UpgradeEffectHandler(
                 /* "Use the new die now": roll it in Hand and resolve reward. */
                 val rolled = rollResolver(request, executor).roll(
                     request.actor,
-                    upgraded.replacement
+                    upgraded.replacement,
+                    if (request.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS)
+                        RollRewardPolicy.IGNORE else RollRewardPolicy.NORMAL
                 )
-                if (request.source is GameEffectSource.Round) {
+                if (request.source is GameEffectSource.Round &&
+                    request.effect == GameEffect.UPGRADE_DIE_AND_USE_NOW) {
                     request.game.assetProvenance.recordRoundCompostUseNow(
                         player = request.actor,
                         source = request.source,

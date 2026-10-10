@@ -131,7 +131,8 @@ object CardScoringHelpers {
                     .sum()
                 score = score.adjusted(improvement * 3, "Poor dice can be replaced")
             }
-            GameEffect.UPGRADE_DIE_AND_USE_NOW -> {
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> {
                 val smallest = dice.minByOrNull { it.sides }
                 if (smallest != null) score = score.adjusted((nextSides(smallest.sides) - smallest.sides) * 2, "Persistent die upgrade")
                 val rounds = context.progress.cultivationRoundsRemaining ?: 0
@@ -464,7 +465,7 @@ object CardScoringHelpers {
         val vp = projectedVp(context, effectiveScoringRule(context, card))
         if (vp > 0) score = score.adjusted(vp * 3, "Projected end-game VP")
         val effectiveEffect = effectiveEffect(context, card)
-        if (effectiveEffect == GameEffect.DRAW_TWO_DICE || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW) {
+        if (effectiveEffect == GameEffect.DRAW_TWO_DICE || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS) {
             score = score.adjusted(4, "Broadly useful effect")
         }
         return score
@@ -543,7 +544,8 @@ object CardScoringHelpers {
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX -> DieValueHeuristics.setToMaximumGain(die.sides, die.value)
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 -> 3 - die.value
-            GameEffect.UPGRADE_DIE_AND_USE_NOW -> nextSides(die.sides) - die.sides
+            GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> nextSides(die.sides) - die.sides
             else -> 0
         }
         var score = PriorityScore(50).adjusted(gain * 4, "Target value swing")

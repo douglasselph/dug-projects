@@ -893,7 +893,7 @@ internal class EffectResourceAccumulator {
 
     private fun roundCategories(effect: GameEffect): List<String> = buildList {
         when (effect) {
-            GameEffect.UPGRADE_DIE_AND_USE_NOW, GameEffect.UPGRADE_DIE_FROM_HAND,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW, GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS, GameEffect.UPGRADE_DIE_FROM_HAND,
             GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW -> add("Die upgrade")
             GameEffect.GAIN_ANY_DIE_TO_DISCARD, GameEffect.GAIN_D10_TO_DISCARD,
             GameEffect.GAIN_D12_TO_DISCARD, GameEffect.GAIN_D20_TO_DISCARD -> {
@@ -1482,7 +1482,7 @@ internal data class ResolvedResearchEnvironment(
 
 private val DIE_DEVELOPMENT_EFFECTS = setOf(
     GameEffect.UPGRADE_DIE_FROM_HAND,
-    GameEffect.UPGRADE_DIE_AND_USE_NOW,
+    GameEffect.UPGRADE_DIE_AND_USE_NOW, GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
     GameEffect.UPGRADE_DIE_TWO_STEPS_SKIP_MISSING_AND_USE_NOW,
     GameEffect.GAIN_ANY_DIE_TO_DISCARD,
     GameEffect.GAIN_D10_TO_DISCARD,

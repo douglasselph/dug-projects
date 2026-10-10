@@ -178,6 +178,7 @@ class DefaultGameEffectExecutor(
                 crossPlayerEffects
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
             GameEffect.UPGRADE_DIE_FROM_HAND ->
                 upgradeEffects
 

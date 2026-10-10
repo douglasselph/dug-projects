@@ -1037,7 +1037,7 @@ internal fun printReport(a: InteractionAccumulator, n: Int, verbosePlantTargetin
     println("ROUND-EFFECT RESEARCH")
     val researchEffects = listOf(
         GameEffect.UPGRADE_DIE_FROM_HAND,
-        GameEffect.UPGRADE_DIE_AND_USE_NOW,
+        GameEffect.UPGRADE_DIE_AND_USE_NOW, GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
         GameEffect.GAIN_WATER_TOKEN,
         GameEffect.MULCH_DIE_FROM_HAND,
         GameEffect.GAIN_SUNLIGHT_TOKEN
