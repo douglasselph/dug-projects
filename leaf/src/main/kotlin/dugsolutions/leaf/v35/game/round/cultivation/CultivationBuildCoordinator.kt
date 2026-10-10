@@ -388,7 +388,7 @@ class CultivationBuildCoordinator(
         )
         if (legalSupports.isEmpty()) {
             return applyMainPolicy(
-                player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
+                game, player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
             )
         }
 
@@ -432,7 +432,7 @@ class CultivationBuildCoordinator(
             CultivationSupportDecision.Pass -> {
                 if (cultivationChoice !is CultivationAction.Support) {
                     applyMainPolicy(
-                        player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
+                        game, player, roundCard, mainActionsRemaining, legalChoices, context, cultivationChoice
                     )
                 } else if (mainActionsRemaining == 0) {
                     decisionCheck(CultivationAction.Done in legalChoices) {
@@ -463,7 +463,7 @@ class CultivationBuildCoordinator(
                             "Cultivation strategy did not return a legal Main-only fallback: $fallback"
                         }
                         applyMainPolicy(
-                            player, roundCard, mainActionsRemaining, mainOnlyChoices, context, fallback
+                            game, player, roundCard, mainActionsRemaining, mainOnlyChoices, context, fallback
                         )
                     }
                 }
@@ -478,6 +478,7 @@ class CultivationBuildCoordinator(
      * so this refactor is behavior-preserving until a learned policy is supplied.
      */
     private fun applyMainPolicy(
+        game: Game,
         player: Player,
         roundCard: RoundCard,
         mainActionsRemaining: Int,
@@ -503,12 +504,20 @@ class CultivationBuildCoordinator(
         decisionCheck(selected in legalMains) {
             "CultivationMainPolicy returned an action that was not offered: $selected"
         }
-        return if (selected == referenceMain.action) {
+        val effective = game.config.cultivationDecisionReplay?.observe(
+            roundNumber = game.roundNumber,
+            playerId = player.id,
+            mainActionsRemaining = mainActionsRemaining,
+            roundCard = roundCard,
+            legalActions = legalMains,
+            chosen = selected
+        ) ?: selected
+        return if (effective == referenceMain.action) {
             referenceMain
         } else {
             // Probability metadata belongs to the reference Human choice and must
             // not be transferred to a replacement policy choice.
-            CultivationAction.Main(selected)
+            CultivationAction.Main(effective)
         }
     }
 

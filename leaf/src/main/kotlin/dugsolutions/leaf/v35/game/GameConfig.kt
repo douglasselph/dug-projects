@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.game
 
 import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
+import dugsolutions.leaf.v35.game.replay.CultivationDecisionReplay
 
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
@@ -131,7 +132,9 @@ class GameConfig(
      */
     val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
     /** Experiment-friendly shared Grove token starting counts; canonical defaults remain 9 each. */
-    val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL
+    val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL,
+    /** Optional, game-local decision ledger / one-choice intervention for seeded replays. */
+    val cultivationDecisionReplay: CultivationDecisionReplay? = null
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()
