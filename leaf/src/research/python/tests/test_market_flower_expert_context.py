@@ -26,3 +26,17 @@ def test_eval_uses_all_three_learned_companions_and_final_sample_size(tmp_path):
     assert cmd[cmd.index('--games')+1] == '4000'
     assert cmd.count('learned') == 3
     assert '--market-json' in cmd
+
+
+def test_buy_training_command_passes_explicit_round_pattern(tmp_path):
+    c=cfg(tmp_path)
+    cmd=train_cmd(c,2,1,1,'buy')
+    assert '--rounds' in cmd
+    assert cmd[cmd.index('--rounds')+1] == '3/2/2'
+
+
+def test_all_overnight_training_commands_use_same_round_pattern(tmp_path):
+    c=cfg(tmp_path)
+    for family in ('cultivation-main','plant-effect','battle-support','buy'):
+        cmd=train_cmd(c,4,1,1,family)
+        assert cmd[cmd.index('--rounds')+1] == c.rounds

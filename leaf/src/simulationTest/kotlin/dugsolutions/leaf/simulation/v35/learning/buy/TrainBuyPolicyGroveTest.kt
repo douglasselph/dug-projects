@@ -78,6 +78,35 @@ class TrainBuyPolicyGroveTest {
     }
 
     @Test
+    fun `Buy training accepts canonical rounds option used by research orchestration`() {
+        val options = TrainOptions.parse(
+            listOf(
+                "--players", "2",
+                "--rounds", "3/2/2",
+                "--cultivation-main-policy", "learned",
+                "--cultivation-main-weights", "output/cultivation-main.weights",
+                "--plant-effect-policy", "learned",
+                "--plant-effect-weights", "output/plant-effect.weights",
+                "--battle-support-policy", "learned",
+                "--battle-support-weights", "output/battle-support.weights",
+            )
+        )
+
+        assertEquals("3/2/2", options.roundLabel)
+        assertEquals(2, options.players)
+        assertEquals("learned", options.cultivationMainPolicy)
+        assertEquals("learned", options.plantEffectPolicy)
+        assertEquals("learned", options.battleSupportPolicy)
+    }
+
+    @Test
+    fun `Buy training rejects malformed rounds option`() {
+        assertFailsWith<IllegalArgumentException> {
+            TrainOptions.parse(listOf("--rounds", "not-a-round-pattern"))
+        }
+    }
+
+    @Test
     fun `random Grove training is reproducible and respects Plant availability`() {
         val options = TrainOptions.parse(listOf("--games", "12", "--random-grove", "--grove-seed", "81234"))
         val c = catalog()

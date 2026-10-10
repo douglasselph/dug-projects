@@ -99,7 +99,7 @@ fun main(args: Array<String>) {
         println("input=${o.input} output=${o.output}")
         println("generations=${o.generations} population=${o.population} games/policy=${o.games} players=${o.players}")
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
-        println("affected learned role rotates across ${o.players} physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=3/2/2")
+        println("affected learned role rotates across ${o.players} physical seats; opponents=Human Baseline; ${o.groveDescription()}; rounds=${o.roundLabel}")
         if (o.grovePattern != null) {
             println("Grove zeros are resolved once per training sample using grove seeds=${o.groveSeed}..${o.groveSeed + o.games - 1}; every candidate sees the same Grove for the same sample")
             println("resolved training Grove sample 0=${GrovePlantCode.describe(trainingGroves.first())}")
@@ -128,7 +128,7 @@ fun main(args: Array<String>) {
             if (best.fitness > allTime.fitness) {
                 allTime = best
                 allTime.weights.withProvenance(LearnedBuyProvenance(
-                    trainingStatus = "trained", roundPattern = "3/2/2", grove = o.groveProvenance(),
+                    trainingStatus = "trained", roundPattern = o.roundLabel, grove = o.groveProvenance(),
                     generations = generation + 1, gamesPerPolicy = o.games, population = o.population, playerCount = o.players,
                     mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed, mechanicalSeedStart = o.seed,
                     strategySeedStart = o.strategySeed, fitness = best.fitness, cardManifest = initial.provenance.cardManifest
@@ -141,7 +141,7 @@ fun main(args: Array<String>) {
         // Rewrite the final champion with provenance for the complete training run,
         // even when the champion itself was first discovered in an earlier generation.
         allTime.weights.withProvenance(LearnedBuyProvenance(
-            trainingStatus = "trained", roundPattern = "3/2/2", grove = o.groveProvenance(),
+            trainingStatus = "trained", roundPattern = o.roundLabel, grove = o.groveProvenance(),
             generations = o.generations, gamesPerPolicy = o.games, population = o.population, playerCount = o.players,
             mutationSigma = o.sigma, mutationsPerChild = o.mutations, evolutionSeed = o.evolutionSeed,
             mechanicalSeedStart = o.seed, strategySeedStart = o.strategySeed, fitness = allTime.fitness, cardManifest = initial.provenance.cardManifest
@@ -186,7 +186,7 @@ private fun evaluate(
         val game = factory(GameConfig(
             selectedPlantCards = grove,
             playerDecisionFactories = decisions,
-            roundSetup = GameRoundSetup.standard(),
+            roundSetup = parseRoundSetup(o.roundLabel),
             seed = mechanicalSeed,
             strategySeed = strategySeed,
             recordDecisionReasoning = false,
@@ -196,7 +196,7 @@ private fun evaluate(
         val result = withSimulationFailureDiagnostics(game, SimulationRunContext(
             experiment = "train_buy_policy_g${generation + 1}_c${candidate + 1}", sample = sample,
             variant = "LEARNED_BUY", affectedSeat = seat, mechanicalSeed = mechanicalSeed,
-            strategySeed = strategySeed, grove = groveCode, roundStructure = "3/2/2"
+            strategySeed = strategySeed, grove = groveCode, roundStructure = o.roundLabel
         )) { runner.run(game) }
         wins += GameSummaryExtractor.extract(game, result).players.single { it.seat == seat }.winShare
     }
@@ -246,6 +246,7 @@ internal data class TrainOptions(
     val sigma: Double, val mutations: Int, val evolutionSeed: Long,
     val seed: Long, val strategySeed: Long, val input: Path, val output: Path,
     val plantOverridesPath: Path?, val roundOverridesPath: Path?, val grovePattern: String?, val groveSeed: Long, val players: Int,
+    val roundLabel: String,
     val cultivationMainPolicy: String,
     val cultivationMainWeights: Path,
     val plantEffectPolicy: String,
@@ -266,6 +267,7 @@ internal data class TrainOptions(
             var grovePattern: String? = null
             var groveSeed = 81000L
             var players = 4
+            var roundLabel = "3/2/2"
             var cultivationMainPolicy = "human"
             var cultivationMainWeights = Paths.get("data/ai/4p/cultivation-main-policy-v1.weights")
             var plantEffectPolicy = "human"
@@ -290,6 +292,7 @@ internal data class TrainOptions(
                 a.startsWith("--round-overrides") -> roundOverridesPath=Paths.get(value(a))
                 a.startsWith("--grove-seed") -> groveSeed=value(a).toLong()
                 a.startsWith("--players") -> players=value(a).toInt()
+                a.startsWith("--rounds") -> roundLabel=value(a).trim()
                 a.startsWith("--cultivation-main-policy") -> cultivationMainPolicy=value(a).trim().lowercase()
                 a.startsWith("--cultivation-main-weights") -> cultivationMainWeights=Paths.get(value(a))
                 a.startsWith("--plant-effect-policy") -> plantEffectPolicy=value(a).trim().lowercase()
@@ -302,11 +305,12 @@ internal data class TrainOptions(
                 else -> error("Unknown argument: $a")
             }; i++ }
             require(generations>0); require(population>=2); require(games>0); require(elites in 1 until population); require(players in 2..4) { "--players must be 2, 3, or 4" }
+            parseRoundSetup(roundLabel)
             require(cultivationMainPolicy in setOf("human", "learned")) { "--cultivation-main-policy must be human or learned" }
             require(plantEffectPolicy in setOf("human", "learned")) { "--plant-effect-policy must be human or learned" }
             require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
-            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath,roundOverridesPath,grovePattern,groveSeed,players,cultivationMainPolicy,cultivationMainWeights,plantEffectPolicy,plantEffectWeights,battleSupportPolicy,battleSupportWeights)
+            return TrainOptions(generations,population,games,elites,sigma,mutations,evolutionSeed,seed,strategySeed,input,output,plantOverridesPath,roundOverridesPath,grovePattern,groveSeed,players,roundLabel,cultivationMainPolicy,cultivationMainWeights,plantEffectPolicy,plantEffectWeights,battleSupportPolicy,battleSupportWeights)
         }
-        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] [--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] [--players 2|3|4] [--cultivation-main-policy human|learned --cultivation-main-weights PATH] [--plant-effect-policy human|learned --plant-effect-weights PATH] [--battle-support-policy human|learned --battle-support-weights PATH]")
+        private fun usage() = println("train_buy_policy [--generations N] [--population N] [--games N] [--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] [--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] [--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] [--players 2|3|4] [--rounds PATTERN] [--cultivation-main-policy human|learned --cultivation-main-weights PATH] [--plant-effect-policy human|learned --plant-effect-weights PATH] [--battle-support-policy human|learned --battle-support-weights PATH]")
     }
 }
