@@ -148,6 +148,7 @@ class GameEffectConverterTest {
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
             GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS, // research-only Compost decision-dominance variant
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
             GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
