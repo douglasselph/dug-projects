@@ -41,6 +41,7 @@ import dugsolutions.leaf.simulation.v35.learning.plant.learnedPlantEffectFactory
 import dugsolutions.leaf.simulation.v35.learning.battle.learnedBattleSupportFactory
 import dugsolutions.leaf.simulation.v35.learning.cultivation.humanCultivationFactory
 import dugsolutions.leaf.simulation.v35.learning.cultivation.learnedCultivationFactory
+import dugsolutions.leaf.simulation.v35.learning.interaction.modularFactory
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.Randomizer
@@ -182,18 +183,24 @@ fun main(args: Array<String>) {
                 println()
             }
             val groveCode = GrovePlantCode.describe(resolvedGrove)
-            val controlAffected = when {
-                cultivationWeights != null -> learnedCultivationFactory(cultivationWeights, buyWeights = null)
-                plantEffectWeights != null -> learnedPlantEffectFactory(plantEffectWeights, buyWeights = null)
-                battleSupportWeights != null -> learnedBattleSupportFactory(battleSupportWeights, buyWeights = null)
-                else -> PlayerDecisionFactory.humanBaseline()
-            }
-            val learnedAffected = when {
-                cultivationWeights != null -> learnedCultivationFactory(cultivationWeights, buyWeights = weights)
-                plantEffectWeights != null -> learnedPlantEffectFactory(plantEffectWeights, buyWeights = weights)
-                battleSupportWeights != null -> learnedBattleSupportFactory(battleSupportWeights, buyWeights = weights)
-                else -> learnedFactory(weights)
-            }
+            val controlAffected = modularFactory(
+                buyWeights = null,
+                cultivationWeights = cultivationWeights,
+                cultivationSupportWeights = null,
+                wispWeights = null,
+                plantEffectWeights = plantEffectWeights,
+                supportWeights = battleSupportWeights,
+                battleMainWeights = null
+            )
+            val learnedAffected = modularFactory(
+                buyWeights = weights,
+                cultivationWeights = cultivationWeights,
+                cultivationSupportWeights = null,
+                wispWeights = null,
+                plantEffectWeights = plantEffectWeights,
+                supportWeights = battleSupportWeights,
+                battleMainWeights = null
+            )
             val controlFactories = List(o.players) { if (it == seat) controlAffected else PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(o.players) { if (it == seat) learnedAffected else PlayerDecisionFactory.humanBaseline() }
             control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
@@ -1713,10 +1720,6 @@ internal data class EvalOptions(
             require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
             if (battleSupportPolicy == "learned") {
                 require(battleSupportWeights != null) { "--battle-support-weights PATH is required with --battle-support-policy learned" }
-            }
-            val learnedContextCount = listOf(cultivationMainPolicy, plantEffectPolicy, battleSupportPolicy).count { it == "learned" }
-            require(learnedContextCount <= 1) {
-                "evaluate_buy_policy currently supports one learned surrounding policy family at a time"
             }
             require(researchEnvironment in setOf("default","upgrade-rich","upgrade-poor")) { "--research-environment must be default, upgrade-rich, or upgrade-poor" }
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }

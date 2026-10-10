@@ -57,15 +57,18 @@ class EvaluateBuyPolicyTest {
     }
 
     @Test
-    fun `Buy evaluator allows only one learned surrounding context at a time`() {
-        assertFailsWith<IllegalArgumentException> {
-            EvalOptions.parse(listOf(
-                "--cultivation-main-policy", "learned",
-                "--cultivation-main-weights", "output/cult.weights",
-                "--plant-effect-policy", "learned",
-                "--plant-effect-weights", "output/plant.weights"
-            ))
-        }
+    fun `Buy evaluator accepts coordinated learned surrounding context`() {
+        val o = EvalOptions.parse(listOf(
+            "--cultivation-main-policy", "learned",
+            "--cultivation-main-weights", "output/cult.weights",
+            "--plant-effect-policy", "learned",
+            "--plant-effect-weights", "output/plant.weights",
+            "--battle-support-policy", "learned",
+            "--battle-support-weights", "output/battle.weights"
+        ))
+        assertEquals("learned", o.cultivationMainPolicy)
+        assertEquals("learned", o.plantEffectPolicy)
+        assertEquals("learned", o.battleSupportPolicy)
     }
 
     @Test

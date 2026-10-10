@@ -22,6 +22,12 @@ import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainCatalog
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainProvenance
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainWeights
+import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectCatalog
+import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectWeights
+import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportCatalog
+import dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportWeights
+import dugsolutions.leaf.simulation.v35.learning.plant.effectivePlantEffectCatalogCards
+import dugsolutions.leaf.simulation.v35.learning.interaction.modularFactory
 import dugsolutions.leaf.v35.round.RoundCardManager
 import dugsolutions.leaf.v35.round.RoundCardRegistry
 import dugsolutions.leaf.v35.wisp.WispCardManager
@@ -75,6 +81,21 @@ fun main(args: Array<String>) {
             )
             else -> error("Unsupported Buy policy ${o.buyPolicy}")
         }
+        val effectivePlants = effectivePlantEffectCatalogCards(allPlants, plantExperiment.values)
+        val plantEffectWeights = when (o.plantEffectPolicy) {
+            "human" -> null
+            "learned" -> LearnedPlantEffectCatalog.prepare(
+                LearnedPlantEffectWeights.load(o.plantEffectWeights), effectivePlants
+            )
+            else -> error("Unsupported Plant Effect policy ${o.plantEffectPolicy}")
+        }
+        val battleSupportWeights = when (o.battleSupportPolicy) {
+            "human" -> null
+            "learned" -> LearnedBattleSupportCatalog.prepare(
+                LearnedBattleSupportWeights.load(o.battleSupportWeights), effectivePlants
+            )
+            else -> error("Unsupported Battle Support policy ${o.battleSupportPolicy}")
+        }
         val evolution = CultivationMainPolicyEvolution(
             CultivationMainEvolutionConfig(o.population, o.elites, o.sigma, o.mutations, o.evolutionSeed)
         )
@@ -86,7 +107,7 @@ fun main(args: Array<String>) {
         println("Leaf & Let Die — Learned Cultivation Main Policy Evolution")
         println("input=${o.input} output=${o.output}")
         println("generations=${o.generations} population=${o.population} games/policy=${o.games} players=${o.players}")
-        println("rounds=${o.roundLabel}; ${o.groveDescription()}; Buy=${o.buyPolicy}; Battle Main/Support=Human Baseline")
+        println("rounds=${o.roundLabel}; ${o.groveDescription()}; Buy=${o.buyPolicy}; Plant Effect=${o.plantEffectPolicy}; Battle Support=${o.battleSupportPolicy}; other policies=Human Baseline")
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
         println("affected learned role rotates across ${o.players} seats; lower-level effect targets remain Human Baseline")
         if (plantExperiment.isActive) { println(); println(plantExperiment.render(allPlants)) }
@@ -100,6 +121,8 @@ fun main(args: Array<String>) {
                     evaluateCultivationCandidate(
                         weights = weights,
                         buyWeights = buyWeights,
+                        plantEffectWeights = plantEffectWeights,
+                        battleSupportWeights = battleSupportWeights,
                         o = o,
                         factory = factory,
                         runner = runner,
@@ -134,6 +157,8 @@ fun main(args: Array<String>) {
 private fun evaluateCultivationCandidate(
     weights: LearnedCultivationMainWeights,
     buyWeights: LearnedBuyWeights?,
+    plantEffectWeights: dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectWeights?,
+    battleSupportWeights: dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportWeights?,
     o: CultivationTrainOptions,
     factory: GameFactory,
     runner: GameRunner,
@@ -149,7 +174,15 @@ private fun evaluateCultivationCandidate(
         val mechanicalSeed = o.seed + sample
         val strategySeed = o.strategySeed + sample
         val grove = groves[sample]
-        val learnedFactory = learnedCultivationFactory(weights, buyWeights)
+        val learnedFactory = modularFactory(
+            buyWeights = buyWeights,
+            cultivationWeights = weights,
+            cultivationSupportWeights = null,
+            wispWeights = null,
+            plantEffectWeights = plantEffectWeights,
+            supportWeights = battleSupportWeights,
+            battleMainWeights = null
+        )
         val decisions: List<PlayerDecisionFactory> = List(o.players) { index ->
             if (index == seat) learnedFactory else PlayerDecisionFactory.humanBaseline()
         }
@@ -205,7 +238,10 @@ internal data class CultivationTrainOptions(
     val roundLabel: String,
     val buyPolicy: String,
     val buyWeights: Path,
-    val battleSupportPolicy: String
+    val plantEffectPolicy: String,
+    val plantEffectWeights: Path,
+    val battleSupportPolicy: String,
+    val battleSupportWeights: Path
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -250,7 +286,10 @@ internal data class CultivationTrainOptions(
             var roundLabel = "3/2/2"
             var buyPolicy = "human"
             var buyWeights = Paths.get("data/ai/4p/frozen-buy-first-game-default-v1.weights")
+            var plantEffectPolicy = "human"
+            var plantEffectWeights = Paths.get("data/ai/4p/plant-effect-policy-v1.weights")
             var battleSupportPolicy = "human"
+            var battleSupportWeights = Paths.get("data/ai/4p/battle-support-policy-v1.weights")
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
@@ -274,7 +313,10 @@ internal data class CultivationTrainOptions(
                     arg.startsWith("--rounds") -> roundLabel = value(arg).trim()
                     arg.startsWith("--buy-policy") -> buyPolicy = value(arg).trim().lowercase()
                     arg.startsWith("--buy-weights") -> buyWeights = Paths.get(value(arg))
+                    arg.startsWith("--plant-effect-policy") -> plantEffectPolicy = value(arg).trim().lowercase()
+                    arg.startsWith("--plant-effect-weights") -> plantEffectWeights = Paths.get(value(arg))
                     arg.startsWith("--battle-support-policy") -> battleSupportPolicy = value(arg).trim().lowercase()
+                    arg.startsWith("--battle-support-weights") -> battleSupportWeights = Paths.get(value(arg))
                     arg.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(arg))
                     arg == "--random-grove" -> grovePattern = GrovePlantCode.RANDOM_PATTERN
                     arg == "--help" -> { usage(); kotlin.system.exitProcess(0) }
@@ -288,13 +330,15 @@ internal data class CultivationTrainOptions(
             require(elites in 1 until population)
             require(players in 2..4) { "--players must be 2, 3, or 4" }
             require(buyPolicy in setOf("human", "learned")) { "--buy-policy must be human or learned" }
-            require(battleSupportPolicy == "human") { "--battle-support-policy currently supports only human; learned policy is a later task" }
+            require(plantEffectPolicy in setOf("human", "learned")) { "--plant-effect-policy must be human or learned" }
+            require(battleSupportPolicy in setOf("human", "learned")) { "--battle-support-policy must be human or learned" }
             parseRoundSetup(roundLabel)
             return CultivationTrainOptions(
                 generations, population, games, elites, sigma, mutations,
                 evolutionSeed, seed, strategySeed, input, output,
                 plantOverridesPath, roundOverridesPath, grovePattern, groveSeed,
-                players, roundLabel, buyPolicy, buyWeights, battleSupportPolicy
+                players, roundLabel, buyPolicy, buyWeights, plantEffectPolicy, plantEffectWeights,
+                battleSupportPolicy, battleSupportWeights
             )
         }
 
@@ -303,7 +347,7 @@ internal data class CultivationTrainOptions(
                 "[--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] " +
                 "[--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] " +
                 "[--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] " +
-                "[--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH] [--battle-support-policy human]"
+                "[--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH] [--plant-effect-policy human|learned --plant-effect-weights PATH] [--battle-support-policy human|learned --battle-support-weights PATH]"
         )
     }
 }

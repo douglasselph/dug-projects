@@ -9,10 +9,16 @@ class BattleSupportContextOptionsTest {
         val o = BattleSupportTrainOptions.parse(listOf(
             "--buy-policy", "learned",
             "--buy-weights", "output/buy.weights",
+            "--cultivation-main-policy", "learned",
+            "--cultivation-main-weights", "output/cult.weights",
+            "--plant-effect-policy", "learned",
+            "--plant-effect-weights", "output/plant.weights",
             "--random-grove"
         ))
         assertEquals("learned", o.buyPolicy)
         assertEquals("output/buy.weights", o.buyWeights.toString())
+        assertEquals("learned", o.cultivationMainPolicy)
+        assertEquals("learned", o.plantEffectPolicy)
         assertEquals("000000000", o.grovePattern)
     }
 }
