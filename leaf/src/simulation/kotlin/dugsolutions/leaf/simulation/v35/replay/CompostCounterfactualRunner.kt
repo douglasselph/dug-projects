@@ -26,7 +26,8 @@ data class RecordedReplayGame(
     val summary: GameSummary,
     val decisions: List<CultivationReplayDecision>,
     val chronicle: List<GameEntry>,
-    val forkApplied: Boolean
+    val forkApplied: Boolean,
+    val forcedCompostCount: Int
 )
 
 data class CompostPairedOutcome(
@@ -70,9 +71,11 @@ class CompostCounterfactualRunner(
         mechanicalSeed: Long,
         strategySeed: Long = mechanicalSeed,
         fork: CultivationReplayFork? = null,
-        retainChronicle: Boolean = true
+        retainChronicle: Boolean = true,
+        forceCompostPlayerId: dugsolutions.leaf.v35.player.PlayerId? = null,
+        forceCompostLimit: Int = 0
     ): RecordedReplayGame {
-        val tracker = CultivationDecisionReplay(fork)
+        val tracker = CultivationDecisionReplay(fork, forceCompostPlayerId, forceCompostLimit)
         val game = factory(GameConfig(
             selectedPlantCards = plants,
             playerDecisionFactories = players,
@@ -89,7 +92,7 @@ class CompostCounterfactualRunner(
             GameSummaryExtractor.extract(game, result),
             tracker.decisions,
             if (retainChronicle) game.chronicle.entries else emptyList(),
-            tracker.forkApplied
+            tracker.forkApplied, tracker.forcedCompostCount
         )
     }
 

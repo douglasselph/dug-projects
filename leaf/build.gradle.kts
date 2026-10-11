@@ -585,3 +585,12 @@ tasks.register<JavaExec>("runCompostNarrativeExperiment") {
     mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostNarrativeExperimentMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+tasks.register<JavaExec>("runExpertForcedCompostExperiment") {
+    description = "Expert-versus-expert paired forced original Compost evaluation"
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.ExpertForcedCompostExperimentMainKt")
+    if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
+}
