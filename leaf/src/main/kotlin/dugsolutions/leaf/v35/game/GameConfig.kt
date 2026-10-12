@@ -10,6 +10,7 @@ import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
 import dugsolutions.leaf.v35.player.decision.DecisionDirector
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.random.StrategySeedStreams
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.die.di.DieFactory
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -160,17 +161,20 @@ class GameConfig(
      * Each player gets an independent deterministic strategy stream so one
      * player's equal-score choices do not advance another player's stream.
      */
-    internal fun strategySeedForPlayer(playerIndex: Int): Long? {
+    internal fun strategySeedForPlayer(playerIndex: Int): Long? =
+        strategySeedForPlayer(playerIndex, StrategySeedStreams.Purpose.DECISIONS)
+
+    internal fun strategySeedForPlayer(
+        playerIndex: Int,
+        purpose: StrategySeedStreams.Purpose
+    ): Long? {
         require(playerIndex in playerDecisionFactories.indices) {
             "Strategy player index out of range: $playerIndex"
         }
-        return strategySeed?.let { base ->
-            base xor (PLAYER_STRATEGY_SEED_STEP * (playerIndex + 1L))
-        }
+        return StrategySeedStreams.seed(strategySeed, playerIndex, purpose)
     }
 
     companion object {
-        private const val PLAYER_STRATEGY_SEED_STEP: Long = 0x5DEECE66DL
 
         /** Every player receives the deterministic Mechanical Control policy. */
         fun mechanicalControl(

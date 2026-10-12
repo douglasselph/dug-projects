@@ -10,6 +10,7 @@ import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.plant.GrovePlantResolver
 import dugsolutions.leaf.v35.player.di.PlayerFactory
 import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
+import dugsolutions.leaf.v35.player.decision.random.StrategySeedStreams
 import dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
@@ -79,7 +80,9 @@ class GameFactory(
                         learned = originalDecisions.cultivationMain,
                         scoring = config.humanScoring,
                         experiment = experiment,
-                        randomizer = StrategyRandomizer.create(config.strategySeedForPlayer(index)?.xor(0x5A17BEEFL)),
+                        randomizer = StrategyRandomizer.create(
+                            config.strategySeedForPlayer(index, StrategySeedStreams.Purpose.SCORE_RANGES)
+                        ),
                         reasoningSink = reasoningSink
                     )
                 )
