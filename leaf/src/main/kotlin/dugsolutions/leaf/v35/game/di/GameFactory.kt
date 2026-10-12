@@ -74,7 +74,9 @@ class GameFactory(
                     strategyRandomizer = strategyRandomizer,
                     reasoningSink = reasoningSink
                 )
-                val experiment = config.decisionExperiment
+                val experiment = config.decisionExperiment?.takeIf {
+                    config.decisionExperimentSeats == null || index in config.decisionExperimentSeats
+                }
                 val decisions = if (experiment == null) originalDecisions else originalDecisions.copy(
                     cultivationMain = dugsolutions.leaf.v35.player.decision.cultivation.ConfiguredCultivationMainPolicy(
                         learned = originalDecisions.cultivationMain,

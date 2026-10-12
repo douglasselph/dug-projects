@@ -5,6 +5,8 @@ import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.random.ReplayRollEvent
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
@@ -69,7 +71,10 @@ class CompostCounterfactualRunner(
     private val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
     private val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
     private val eventBasedDieRolls: Boolean = false,
-    private val sharedPercentileDieRolls: Boolean = false
+    private val sharedPercentileDieRolls: Boolean = false,
+    private val decisionExperiment: DecisionExperimentConfiguration? = null,
+    private val humanScoring: HumanScoringConfiguration = HumanScoringConfiguration.empty(),
+    private val decisionExperimentSeats: Set<Int>? = null
 ) {
     fun run(
         mechanicalSeed: Long,
@@ -82,6 +87,9 @@ class CompostCounterfactualRunner(
         val tracker = CultivationDecisionReplay(fork, forceCompostPlayerId, forceCompostLimit)
         val game = factory(GameConfig(
             selectedPlantCards = plants,
+            decisionExperiment = decisionExperiment,
+            humanScoring = humanScoring,
+            decisionExperimentSeats = decisionExperimentSeats,
             playerDecisionFactories = players,
             roundSetup = rounds,
             seed = mechanicalSeed,

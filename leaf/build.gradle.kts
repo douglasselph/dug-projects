@@ -604,3 +604,23 @@ tasks.register<JavaExec>("runReplayEquivalenceC5") {
     mainClass.set("dugsolutions.leaf.simulation.v35.replay.ReplayEquivalenceValidationMainKt")
     args((project.findProperty("c5Args") as String? ?: "games=10").split(" ").filter { it.isNotBlank() })
 }
+
+// Expert-versus-expert hybrid Compost weight sweep, with event-matched rolls.
+tasks.register<JavaExec>("runCompostWeightSweep") {
+    group = "simulation research"
+    description = "Compare scored-Human Compost preferences against a learned expert under matched RNG"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostWeightSweepMainKt")
+    args((project.findProperty("sweepArgs") as String? ?: "games=10").split(" ").filter { it.isNotBlank() })
+}
+
+// Compost-only preference sweep: original learned action rankings stay intact.
+tasks.register<JavaExec>("runCompostOnlyPreference") {
+    group = "simulation research"
+    description = "Compare learned expert policies with only Compost's score adjusted"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostOnlyPreferenceMainKt")
+    args((project.findProperty("sweepArgs") as String? ?: "games=10").split(" ").filter { it.isNotBlank() })
+}

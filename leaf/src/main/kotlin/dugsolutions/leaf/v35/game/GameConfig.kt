@@ -144,7 +144,9 @@ class GameConfig(
     val cultivationDecisionReplay: CultivationDecisionReplay? = null,
     /** Opt-in Phase B policy routing. Null preserves existing behavior. */
     val decisionExperiment: DecisionExperimentConfiguration? = null,
-    val humanScoring: HumanScoringConfiguration = HumanScoringConfiguration.empty()
+    val humanScoring: HumanScoringConfiguration = HumanScoringConfiguration.empty(),
+    /** Zero-based seats whose Cultivation Main policy is subject to decisionExperiment. Null = all seats (legacy behavior). */
+    val decisionExperimentSeats: Set<Int>? = null
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()
@@ -153,6 +155,9 @@ class GameConfig(
         playerDecisionFactories.toList()
 
     init {
+        require(decisionExperimentSeats == null || decisionExperimentSeats.all { it in playerDecisionFactories.indices }) {
+            "Experiment seat outside player range: $decisionExperimentSeats"
+        }
         require(this.playerDecisionFactories.size in 2..4) {
             "Game requires 2 to 4 players: ${this.playerDecisionFactories.size}"
         }
