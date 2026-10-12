@@ -35,6 +35,20 @@ class PlayerDice(
     fun stableDieId(die: Die): Long =
         stableDieIds.getOrPut(die) { nextStableDieId++ }
 
+    /** Transfer the event identity when an Upgrade exchanges the physical die.
+     * This changes only replay identity, never actual die ownership or rules.
+     */
+    fun inheritStableDieId(source: Die, replacement: Die) {
+        val identity = stableDieId(source)
+        val previous = stableDieIds[replacement]
+        require(previous == null || previous == identity) {
+            "Replacement die already has a different event identity"
+        }
+        stableDieIds[replacement] = identity
+        stableDieIds.remove(source)
+    }
+
+
 
     /**
      * Structural snapshots of each zone.

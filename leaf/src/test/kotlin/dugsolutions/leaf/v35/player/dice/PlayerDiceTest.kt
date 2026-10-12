@@ -499,4 +499,15 @@ class PlayerDiceTest {
         assertTrue(dice.hand.single() === first)
     }
 
+
+    @Test
+    fun upgradeReplacementInheritsPhysicalEventIdentity() {
+        val source = dice.d4
+        val replacement = dice.d6
+        val playerDice = PlayerDice(hand = listOf(source))
+        val oldId = playerDice.stableDieId(source)
+        playerDice.inheritStableDieId(source, replacement)
+        assertEquals(oldId, playerDice.stableDieId(replacement))
+    }
+
 }

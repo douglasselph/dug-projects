@@ -26,4 +26,35 @@ class EventRollRandomnessTest {
             }
         }
     }
+
+    @Test fun percentileIsIdenticalAcrossDieSizes() {
+        val u = EventRollRandomness.percentileFor(720002, 4, 1, 17, 2)
+        assertTrue(u >= 0.0 && u < 1.0)
+        for (sides in listOf(4, 6, 8, 10, 12, 20)) {
+            assertEquals((u * sides).toInt() + 1,
+                EventRollRandomness.percentileFaceFor(720002, 4, 1, 17, 2, sides))
+        }
+    }
+
+    @Test fun crossSizeCouplingIsMonotoneAndUniformInDistribution() {
+        val samples = 20000
+        val counts4 = IntArray(4)
+        val counts6 = IntArray(6)
+        repeat(samples) { i ->
+            val f4 = EventRollRandomness.percentileFaceFor(9988, 3, 1, 17, i + 1, 4)
+            val f6 = EventRollRandomness.percentileFaceFor(9988, 3, 1, 17, i + 1, 6)
+            counts4[f4 - 1]++
+            counts6[f6 - 1]++
+            assertTrue(f6 >= f4)
+        }
+        assertTrue(counts4.all { it in 4400..5600 })
+        assertTrue(counts6.all { it in 2900..3800 })
+    }
+
+    @Test fun unrelatedEventsDoNotChangeSharedPercentile() {
+        val chosen = EventRollRandomness.percentileFaceFor(22, 4, 1, 17, 2, 6)
+        repeat(1000) { i -> EventRollRandomness.percentileFaceFor(22, 4, 2, 9, i + 1, 4) }
+        assertEquals(chosen, EventRollRandomness.percentileFaceFor(22, 4, 1, 17, 2, 6))
+    }
+
 }

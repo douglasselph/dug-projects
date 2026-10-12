@@ -104,6 +104,8 @@ class GameConfig(
     val seed: Long? = null,
     /** Opt-in event-keyed player die rolls for seed-matched counterfactual games. */
     val eventBasedDieRolls: Boolean = false,
+    /** Opt-in C3 coupling: one stable percentile per matching roll event across die sizes. */
+    val sharedPercentileDieRolls: Boolean = false,
     val dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
     /**
      * Base seed for strategy-only tie breaking. By default it follows [seed]

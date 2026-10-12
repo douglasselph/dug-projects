@@ -168,6 +168,9 @@ class UpgradeResolver {
         }
 
         val replacement = game.dieFactory(to)
+        if (game.config.eventBasedDieRolls) {
+            player.dice.inheritStableDieId(current, replacement)
+        }
         when (destination) {
             Destination.HAND -> player.dice.addToHand(replacement)
             Destination.DISCARD -> player.dice.addToDiscard(replacement)

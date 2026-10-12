@@ -38,9 +38,18 @@ class Game(
     val assetProvenance: AssetProvenance = AssetProvenance()
 ) {
     val eventRollRandomness: EventRollRandomness? =
-        if (config.eventBasedDieRolls) EventRollRandomness(requireNotNull(config.seed) {
-            "eventBasedDieRolls requires an explicit mechanical seed"
-        }) else null
+        if (config.eventBasedDieRolls) EventRollRandomness(
+            masterSeed = requireNotNull(config.seed) {
+                "eventBasedDieRolls requires an explicit mechanical seed"
+            },
+            sharedPercentile = config.sharedPercentileDieRolls
+        ) else null
+
+    init {
+        require(!config.sharedPercentileDieRolls || config.eventBasedDieRolls) {
+            "sharedPercentileDieRolls requires eventBasedDieRolls=true"
+        }
+    }
 
     var status: GameStatus = GameStatus.READY
         private set
