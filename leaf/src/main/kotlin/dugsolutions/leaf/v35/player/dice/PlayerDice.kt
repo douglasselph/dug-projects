@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.dice
 
 import dugsolutions.leaf.v35.random.die.Dice
 import dugsolutions.leaf.v35.random.die.Die
+import java.util.IdentityHashMap
 
 /**
  * Owns the three normal dice zones for one player:
@@ -21,6 +22,19 @@ class PlayerDice(
     private val _supply = Dice(supply)
     private val _hand = Dice(hand)
     private val _discard = Dice(discard)
+
+    // Game-local physical identity, independent of the die's mutable face value.
+    // Starting dice receive slot identities before any decisions are made.
+    private val stableDieIds = IdentityHashMap<Die, Long>()
+    private var nextStableDieId = 1L
+
+    init {
+        (supply + hand + discard).forEach { stableDieId(it) }
+    }
+
+    fun stableDieId(die: Die): Long =
+        stableDieIds.getOrPut(die) { nextStableDieId++ }
+
 
     /**
      * Structural snapshots of each zone.
@@ -59,6 +73,7 @@ class PlayerDice(
      * Setup/special-rule entry into the Player Dice Supply.
      */
     fun addToSupply(die: Die): PlayerDice {
+        stableDieId(die)
         _supply.add(die)
         return this
     }
@@ -74,6 +89,7 @@ class PlayerDice(
      * Normal Draw should use [draw].
      */
     fun addToHand(die: Die): PlayerDice {
+        stableDieId(die)
         _hand.add(die)
         return this
     }
@@ -82,6 +98,7 @@ class PlayerDice(
      * Normal destination for bought/gained dice.
      */
     fun addToDiscard(die: Die): PlayerDice {
+        stableDieId(die)
         _discard.add(die)
         return this
     }
@@ -104,13 +121,13 @@ class PlayerDice(
      * Roll Rewards are intentionally NOT handled here. The caller is
      * responsible for resolving them after the returned die is rolled.
      */
-    fun draw(): Die? {
+    fun draw(rollDie: (Die) -> Unit = { it.roll() }): Die? {
         if (_supply.dice.isEmpty()) {
             refillSupply()
         }
 
         val die = _supply.drawLowest() ?: return null
-        die.roll()
+        rollDie(die)
         _hand.add(die)
         return die
     }

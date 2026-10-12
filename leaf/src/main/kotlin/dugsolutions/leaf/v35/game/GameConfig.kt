@@ -102,6 +102,8 @@ class GameConfig(
     val roundSetup: GameRoundSetup = GameRoundSetup.standard(),
     /** Mechanical game RNG seed: dice, decks, random game effects, etc. */
     val seed: Long? = null,
+    /** Opt-in event-keyed player die rolls for seed-matched counterfactual games. */
+    val eventBasedDieRolls: Boolean = false,
     val dieConfig: DieFactory.Config = DieFactory.Config.RANDOM,
     /**
      * Base seed for strategy-only tie breaking. By default it follows [seed]

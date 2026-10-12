@@ -235,6 +235,8 @@ class BattleRound(
             grove = game.grove,
             chronicle = game.chronicle,
             mechanicalIntervention = game.mechanicalIntervention,
+            eventRolls = game.eventRollRandomness,
+            currentRoundNumber = { game.roundNumber },
             immediateWispHandler = { player, card ->
                 effectExecutor.execute(
                     GameEffectRequest(

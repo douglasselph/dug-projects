@@ -108,6 +108,8 @@ class VineAndPunishmentResearchEffect(
             grove = request.game.grove,
             chronicle = request.game.chronicle,
             mechanicalIntervention = request.game.mechanicalIntervention,
+            eventRolls = request.game.eventRollRandomness,
+            currentRoundNumber = { request.game.roundNumber },
             immediateWispHandler = { player, card ->
                 executor.execute(
                     GameEffectRequest(

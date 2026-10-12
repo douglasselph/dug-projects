@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.RollReason
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.game.random.EventRollRandomness
 import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
 import dugsolutions.leaf.v35.game.intervention.MechanicalRollInterventionRequest
 import dugsolutions.leaf.v35.game.intervention.MechanicalRollSource
@@ -97,7 +98,9 @@ class RollResolver(
     private val chronicle: Chronicle,
     private val immediateWispHandler: ((Player, WispCard) -> Unit)? = null,
     private val mechanicalIntervention: MechanicalIntervention = MechanicalIntervention.NONE,
-    private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY }
+    private val decisionContext: (Player) -> DecisionContext = { DecisionContext.EMPTY },
+    private val eventRolls: EventRollRandomness? = null,
+    private val currentRoundNumber: () -> Int = { 0 }
 ) {
 
     /**
@@ -112,7 +115,10 @@ class RollResolver(
         interventionContext: RollInterventionContext? = null
     ): RollResolution? {
         val die =
-            player.dice.draw()
+            player.dice.draw { die ->
+                if (eventRolls == null) die.roll()
+                else die.adjustTo(eventRolls.roll(player, die, currentRoundNumber()))
+            }
                 ?: return null
 
         applyIntervention(player, die, interventionContext)
@@ -138,7 +144,8 @@ class RollResolver(
         rewardPolicy: RollRewardPolicy =
             RollRewardPolicy.NORMAL
     ): RollResolution {
-        die.roll()
+        if (eventRolls == null) die.roll()
+        else die.adjustTo(eventRolls.roll(player, die, currentRoundNumber()))
         applyIntervention(player, die, null)
 
         return resolveCompletedRoll(

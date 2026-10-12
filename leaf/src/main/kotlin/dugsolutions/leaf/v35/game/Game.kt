@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.error.lifecycleCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.grove.Grove
+import dugsolutions.leaf.v35.game.random.EventRollRandomness
 import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.Randomizer
@@ -36,6 +37,11 @@ class Game(
     /** Narrow game-local research provenance; never consulted by gameplay decisions. */
     val assetProvenance: AssetProvenance = AssetProvenance()
 ) {
+    val eventRollRandomness: EventRollRandomness? =
+        if (config.eventBasedDieRolls) EventRollRandomness(requireNotNull(config.seed) {
+            "eventBasedDieRolls requires an explicit mechanical seed"
+        }) else null
+
     var status: GameStatus = GameStatus.READY
         private set
 
