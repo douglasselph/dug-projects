@@ -9,6 +9,10 @@ class HumanScoringConfiguration private constructor(private val values: Map<Stri
     fun value(id: String, fallback: ScoreValue): ScoreValue = values[id] ?: fallback
     fun influence(id: String, description: String, fallback: ScoreValue): ScoreInfluence =
         ScoreInfluence(id, description, value(id, fallback))
+
+    /** Override a calibrated score without adding a second external-weight system. */
+    fun withValue(id: String, value: ScoreValue): HumanScoringConfiguration =
+        HumanScoringConfiguration(values + (id to value))
     companion object {
         fun empty(): HumanScoringConfiguration = HumanScoringConfiguration(emptyMap())
         fun load(path: Path): HumanScoringConfiguration {
@@ -32,15 +36,10 @@ enum class CultivationMainPolicyMode {
     LEARNED, HUMAN_BASELINE, HUMAN_WHEN_COMPOST_AVAILABLE, LEGACY_HUMAN_BASELINE
 }
 
-/** External weights are added to Human Baseline scores, not to learned model logits. */
+/** Configures policy routing only; score values belong in HumanScoringConfiguration. */
 class DecisionExperimentConfiguration private constructor(
-    val cultivationMainPolicy: CultivationMainPolicyMode,
-    private val externalWeights: Map<String, Int>
+    val cultivationMainPolicy: CultivationMainPolicyMode
 ) {
-    fun externalWeight(actionId: String): Int = externalWeights[actionId] ?: 0
-    fun externalInfluence(actionId: String): ScoreInfluence = ScoreInfluence(
-        "external.$actionId", "Experiment preference for $actionId", ScoreValue.Fixed(externalWeight(actionId))
-    )
     companion object {
         fun load(path: Path): DecisionExperimentConfiguration {
             val props = Properties()
@@ -51,14 +50,10 @@ class DecisionExperimentConfiguration private constructor(
             val mode = CultivationMainPolicyMode.valueOf(
                 props.getProperty("cultivation.main.policy", "LEARNED").trim()
             )
-            val weights = props.stringPropertyNames().filter { it.startsWith("external.") }
-                .associate { key ->
-                    val action = key.removePrefix("external.")
-                    require(action.isNotBlank()) { "External action name missing: $key" }
-                    action to (props.getProperty(key).trim().toIntOrNull()
-                        ?: throw IllegalArgumentException("External weight must be an integer: $key"))
-                }
-            return DecisionExperimentConfiguration(mode, weights)
+            require(props.stringPropertyNames().none { it.startsWith("external.") }) {
+                "external.* preferences have been removed; edit data/ai/human-scoring.properties instead (e.g. compost.base=85)"
+            }
+            return DecisionExperimentConfiguration(mode)
         }
     }
 }

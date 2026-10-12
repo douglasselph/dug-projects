@@ -26,7 +26,7 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  * The rules engine owns legality and repeatedly supplies the currently legal
  * choices. This strategy ranks those choices on one common [PriorityScore]
  * scale; [BaselineScoreEngine] applies semantic card influences. Strategy RNG
- * breaks genuine ties and models the explicitly probabilistic Compost tendency.
+ * breaks genuine ties. Legacy mode separately retains historical willingness gates.
  *
  * Target design, at a high level:
  *
@@ -88,8 +88,7 @@ class HumanBaselineCultivationStrategy(
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
     private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
-    private val modernScoring: HumanScoringConfiguration? = null,
-    private val experiment: DecisionExperimentConfiguration? = null
+    private val modernScoring: HumanScoringConfiguration? = null
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
@@ -189,9 +188,6 @@ class HumanBaselineCultivationStrategy(
             if (actionId == "compost") {
                 addCompostInfluences(builder, request)
             }
-            val external = experiment?.externalInfluence(actionId)
-                ?: ScoreInfluence("external.$actionId", "External weight", ScoreValue.Fixed(0))
-            builder.add(external)
             DecisionCandidate(
                 choice = choice,
                 score = builder.build().toPriorityScore(),

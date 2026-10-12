@@ -27,14 +27,24 @@ class DecisionScoreTest {
         assertThrows(IllegalArgumentException::class.java) { ScoreValue.Range(3, 2) }
     }
 
-    @Test fun `experiment weights default to zero and modes parse`() {
+    @Test fun `experiment configuration selects only the policy mode`() {
         val props = Properties().apply {
             setProperty("cultivation.main.policy", "HUMAN_WHEN_COMPOST_AVAILABLE")
-            setProperty("external.compost", "20")
         }
         val config = DecisionExperimentConfiguration.fromProperties(props)
         assertEquals(CultivationMainPolicyMode.HUMAN_WHEN_COMPOST_AVAILABLE, config.cultivationMainPolicy)
-        assertEquals(20, config.externalWeight("compost"))
-        assertEquals(0, config.externalWeight("draw"))
+        props.setProperty("external.compost", "20")
+        assertThrows(IllegalArgumentException::class.java) {
+            DecisionExperimentConfiguration.fromProperties(props)
+        }
+    }
+
+    @Test fun `baseline score comes from config and is overridable`() {
+        val config = HumanScoringConfiguration.fromProperties(Properties().apply {
+            setProperty("compost.base", "85")
+        })
+        assertEquals(ScoreValue.Fixed(85), config.value("compost.base", ScoreValue.Fixed(75)))
+        assertEquals(ScoreValue.Fixed(95), config.withValue("compost.base", ScoreValue.Fixed(95))
+            .value("compost.base", ScoreValue.Fixed(75)))
     }
 }

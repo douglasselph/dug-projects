@@ -26,6 +26,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.APPEND
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoreValue
 import java.util.Properties
 
 /** Within-rule expert-vs-expert comparisons, switching only one seat to scored Human when Compost is legal. */
@@ -59,15 +60,17 @@ fun main(args: Array<String>) {
         val factories = List(2) { expert }
         val gameFactory = k.get<GameFactory>()
         val gameRunner = k.get<GameRunner>()
+        val compostBase = (humanScoring.value("compost.base", ScoreValue.Fixed(75)) as? ScoreValue.Fixed)?.amount
+            ?: error("compost.base must be a fixed integer for the historical sweep")
         fun engine(seat: Int?, weight: Int): CompostCounterfactualRunner {
             val experiment = if (seat == null) null else Properties().apply {
                 setProperty("cultivation.main.policy", "HUMAN_WHEN_COMPOST_AVAILABLE")
-                setProperty("external.compost", weight.toString())
             }.let(DecisionExperimentConfiguration::fromProperties)
             return CompostCounterfactualRunner(gameFactory, gameRunner, grove, factories,
                 parseRoundSetup("3/2/2"), roundValues, eventBasedDieRolls=true,
                 sharedPercentileDieRolls=true, decisionExperiment=experiment,
-                humanScoring=humanScoring, decisionExperimentSeats=seat?.let { setOf(it) })
+                humanScoring=if (seat == null) humanScoring else humanScoring.withValue("compost.base", ScoreValue.Fixed(compostBase + weight)),
+                decisionExperimentSeats=seat?.let { setOf(it) })
         }
         val reference = engine(null, 0)
         val outputFile = out.resolve("pairs.tsv")
@@ -124,7 +127,7 @@ fun main(args: Array<String>) {
             "variant=$variant\ngames=$games\nseed=$seedStart\nweights=${weights.joinToString(",")}\n"+
             "mainWeights=$mainWeights\nbuyWeights=$buyWeights\nroundBase=$baseRounds\nroundOverrides=$effectiveCsv\n"+
             "humanScoring=$scoringPath\neventBasedDieRolls=true\nsharedPercentileDieRolls=true\n"+
-            "treatment=one rotating seat uses HUMAN_WHEN_COMPOST_AVAILABLE with external Compost score weight; opponent is always learned\n"+
+            "treatment=one rotating seat uses HUMAN_WHEN_COMPOST_AVAILABLE with compost.base adjustment; opponent is always learned\n"+
             "control=two identical learned policies; same seeds and configuration for matched rule arm\n"+
             "NOTE: trained weights MUST match this variant for valid expert inference; initial baseline scores are provisional.\n")
         println("Completed $variant: ${games*weights.size} comparisons, results=$out")

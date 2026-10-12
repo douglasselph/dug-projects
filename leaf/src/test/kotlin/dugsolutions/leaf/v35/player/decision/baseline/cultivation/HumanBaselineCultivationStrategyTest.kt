@@ -766,10 +766,9 @@ class HumanBaselineCultivationStrategyTest {
             graftBed = mapOf(DieSides.D6 to 2, DieSides.D8 to 2)
         )
         val props = java.util.Properties().apply {
-            setProperty("cultivation.main.policy", "HUMAN_BASELINE")
-            setProperty("external.compost", "300")
+            setProperty("compost.base", "375")
         }
-        val experiment = dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration.fromProperties(props)
+        val scoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.fromProperties(props)
         for (variant in listOf(
             GameEffect.UPGRADE_DIE_FROM_HAND,
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
@@ -777,8 +776,7 @@ class HumanBaselineCultivationStrategyTest {
         )) {
             val modern = HumanBaselineCultivationStrategy(
                 strategyRandomizer = FixedRandomizer(0),
-                modernScoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.empty(),
-                experiment = experiment
+                modernScoring = scoring
             )
             val chosen = choose(
                 context = context,
@@ -794,20 +792,18 @@ class HumanBaselineCultivationStrategyTest {
     }
 
     @Test
-    fun `zero external Compost weight can be overridden to prefer Draw`() {
+    fun `configurable Draw base can override Compost preference`() {
         val context = context(
             supply = listOf(DieView(7, 20, 1)),
             hand = listOf(DieView(1, 4, 1), DieView(2, 6, 5)),
             graftBed = mapOf(DieSides.D6 to 2)
         )
         val props = java.util.Properties().apply {
-            setProperty("cultivation.main.policy", "HUMAN_BASELINE")
-            setProperty("external.draw", "500")
+            setProperty("draw.base", "500")
         }
         val modern = HumanBaselineCultivationStrategy(
             strategyRandomizer = FixedRandomizer(0),
-            modernScoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.empty(),
-            experiment = dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration.fromProperties(props)
+            modernScoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.fromProperties(props)
         )
         val selected = choose(
             context = context,

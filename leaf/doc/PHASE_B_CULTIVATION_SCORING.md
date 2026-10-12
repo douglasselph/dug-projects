@@ -31,7 +31,7 @@ val config = GameConfig(
 )
 ```
 
-Set `cultivation.main.policy=HUMAN_WHEN_COMPOST_AVAILABLE` to compare an otherwise learned expert with a scored Human Main policy only at Compost opportunities. `external.compost=20` adds +20 to *that candidate's* Human score; `external.draw=...` etc. are additive preferences, not probabilities. Set `external.*=0` for an unbiased baseline.
+Set `cultivation.main.policy=HUMAN_WHEN_COMPOST_AVAILABLE` to compare an otherwise learned expert with a scored Human Main policy only at Compost opportunities. Tune `compost.base` in `data/ai/human-scoring.properties` to increase or decrease Compost preference. There is no separate `external.*` preference layer.
 
 ## Calibration
 

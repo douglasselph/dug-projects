@@ -41,14 +41,13 @@ val builder = DecisionScoreBuilder("compost", strategyRandomizer)
 val score = builder
     .add(ScoreInfluence("compost.base", "Original baseline", ScoreValue.Fixed(75)))
     .add(ScoreInfluence("compost.low_roll", "Low showing target", ScoreValue.Range(0, 15)))
-    .add(experimentConfig.externalInfluence("compost"))
+    // Edit compost.base in human-scoring.properties instead of external weights.
     .build()
 println(score.explanation()) // Actual sampled values retained, no re-roll
 val legacyComparableScore = score.toPriorityScore()
 ```
 
-Configuration files: `data/ai/human-scoring.properties` (original constant
-catalog) and `data/ai/decision-experiment.properties` (policy mode plus external
-weights). Phase B will wire loaders into the `DecisionDirector` and migrate all
-Cultivation Main candidates together. Do not assume new file settings currently
-change gameplay; that would invalidate current comparison experiments.
+Configuration files: `data/ai/human-scoring.properties` (Human score overrides)
+and `data/ai/decision-experiment.properties` (policy mode only). The scored
+Human Cultivation policy reads these named values when explicitly selected.
+Learned-mode weights and legacy Human scoring are unchanged.

@@ -17,8 +17,7 @@ class ConfiguredCultivationMainPolicy(
     private val human = HumanBaselineCultivationStrategy(
         strategyRandomizer = randomizer,
         scoreEngine = BaselineScoreEngine(randomizer, reasoningSink),
-        modernScoring = scoring,
-        experiment = experiment
+        modernScoring = scoring
     )
 
     override fun chooseMainAction(request: ChooseCultivationMainActionRequest): CultivationMainAction {
