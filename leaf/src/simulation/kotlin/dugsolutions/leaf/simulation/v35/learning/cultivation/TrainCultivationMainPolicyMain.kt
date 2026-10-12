@@ -21,6 +21,7 @@ import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyCardCatalog
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainCatalog
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainProvenance
+import dugsolutions.leaf.v35.player.decision.learned.cultivation.FixedCompostBonusPolicy
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainWeights
 import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectCatalog
 import dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectWeights
@@ -72,6 +73,9 @@ fun main(args: Array<String>) {
             allPlants,
             plantExperiment.effectiveCosts(allPlants)
         )
+        val opponentWeights = o.opponentMainWeights?.let {
+            LearnedCultivationMainCatalog.prepare(LearnedCultivationMainWeights.load(it), allPlants, plantExperiment.effectiveCosts(allPlants))
+        }
         val buyWeights = when (o.buyPolicy) {
             "human" -> null
             "learned" -> LearnedBuyCardCatalog.prepare(
@@ -110,16 +114,21 @@ fun main(args: Array<String>) {
         println("rounds=${o.roundLabel}; ${o.groveDescription()}; Buy=${o.buyPolicy}; Plant Effect=${o.plantEffectPolicy}; Battle Support=${o.battleSupportPolicy}; other policies=Human Baseline")
         println("training seeds=${o.seed}..${o.seed + o.games - 1}; strategy seeds=${o.strategySeed}..${o.strategySeed + o.games - 1}")
         println("affected learned role rotates across ${o.players} seats; lower-level effect targets remain Human Baseline")
+        println("fixedCompostBonus=${o.compostBonus} (native learned-score units; ACTIVE during training); eventMatchedDice=${o.eventMatchedDice}")
+        println("opponentMainWeights=${o.opponentMainWeights ?: "Human Baseline"}")
+        val progress = dugsolutions.leaf.simulation.v35.replay.ResearchProgressReporter("Cultivation Main evolutionary training", o.generations, o.population * o.games, reportEvery=1)
         if (plantExperiment.isActive) { println(); println(plantExperiment.render(allPlants)) }
         if (roundExperiment.isActive) { println(); println(roundExperiment.render(allRounds)) }
         println()
 
         repeat(o.generations) { generation ->
+            progress.start(generation+1, "bonus=${o.compostBonus}; population=${o.population}; games/policy=${o.games}")
             val evaluated = population.mapIndexed { candidate, weights ->
                 EvaluatedCultivationMainPolicy(
                     weights,
                     evaluateCultivationCandidate(
                         weights = weights,
+                        opponentWeights = opponentWeights,
                         buyWeights = buyWeights,
                         plantEffectWeights = plantEffectWeights,
                         battleSupportWeights = battleSupportWeights,
@@ -145,9 +154,11 @@ fun main(args: Array<String>) {
                     "allTime=${pct(allTime.fitness)} saved=${o.output}"
             )
             if (generation + 1 < o.generations) population = evolution.nextPopulation(evaluated)
+            progress.complete(generation + 1)
         }
         allTime.weights.withProvenance(o.provenance(allTime.fitness, initial)).save(o.output)
         println()
+        progress.finish()
         println("Training complete. Best policy written to ${o.output}")
     } finally {
         app.close()
@@ -156,6 +167,7 @@ fun main(args: Array<String>) {
 
 private fun evaluateCultivationCandidate(
     weights: LearnedCultivationMainWeights,
+    opponentWeights: LearnedCultivationMainWeights?,
     buyWeights: LearnedBuyWeights?,
     plantEffectWeights: dugsolutions.leaf.v35.player.decision.learned.plant.LearnedPlantEffectWeights?,
     battleSupportWeights: dugsolutions.leaf.v35.player.decision.learned.battle.LearnedBattleSupportWeights?,
@@ -182,9 +194,18 @@ private fun evaluateCultivationCandidate(
             plantEffectWeights = plantEffectWeights,
             supportWeights = battleSupportWeights,
             battleMainWeights = null
-        )
+        ).let { base ->
+            if (o.compostBonus == 0.0) base else object : PlayerDecisionFactory {
+                override fun create() = create(dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer.create())
+                override fun create(randomizer: dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer) =
+                    create(randomizer, dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink.NONE)
+                override fun create(randomizer: dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer, sink: dugsolutions.leaf.v35.player.decision.trace.DecisionReasoningSink) =
+                    base.create(randomizer, sink).let { it.copy(cultivationMain = FixedCompostBonusPolicy(weights, o.compostBonus)) }
+            }
+        }
+        val opponents = opponentWeights?.let { learnedCultivationFactory(it, buyWeights) }
         val decisions: List<PlayerDecisionFactory> = List(o.players) { index ->
-            if (index == seat) learnedFactory else PlayerDecisionFactory.humanBaseline()
+            if (index == seat) learnedFactory else opponents ?: PlayerDecisionFactory.humanBaseline()
         }
         val game = factory(
             GameConfig(
@@ -193,6 +214,8 @@ private fun evaluateCultivationCandidate(
                 roundSetup = o.roundSetup,
                 seed = mechanicalSeed,
                 strategySeed = strategySeed,
+                eventBasedDieRolls = o.eventMatchedDice,
+                sharedPercentileDieRolls = o.eventMatchedDice,
                 recordDecisionReasoning = false,
                 plantValues = plantValues,
                 roundValues = roundValues
@@ -241,7 +264,10 @@ internal data class CultivationTrainOptions(
     val plantEffectPolicy: String,
     val plantEffectWeights: Path,
     val battleSupportPolicy: String,
-    val battleSupportWeights: Path
+    val battleSupportWeights: Path,
+    val compostBonus: Double,
+    val eventMatchedDice: Boolean,
+    val opponentMainWeights: Path?
 ) {
     val roundSetup = parseRoundSetup(roundLabel)
 
@@ -290,11 +316,17 @@ internal data class CultivationTrainOptions(
             var plantEffectWeights = Paths.get("data/ai/4p/plant-effect-policy-v1.weights")
             var battleSupportPolicy = "human"
             var battleSupportWeights = Paths.get("data/ai/4p/battle-support-policy-v1.weights")
+            var compostBonus = 0.0
+            var eventMatchedDice = false
+            var opponentMainWeights: Path? = null
             var i = 0
             fun value(arg: String): String = if ('=' in arg) arg.substringAfter('=') else args[++i]
             while (i < args.size) {
                 val arg = args[i]
                 when {
+                    arg.startsWith("--opponent-main-weights") -> opponentMainWeights = Paths.get(value(arg))
+                    arg == "--event-matched-dice" -> eventMatchedDice = true
+                    arg.startsWith("--compost-bonus") -> compostBonus = value(arg).toDouble()
                     arg.startsWith("--generations") -> generations = value(arg).toInt()
                     arg.startsWith("--population") -> population = value(arg).toInt()
                     arg.startsWith("--games") -> games = value(arg).toInt()
@@ -324,6 +356,7 @@ internal data class CultivationTrainOptions(
                 }
                 i++
             }
+            require(compostBonus.isFinite())
             require(generations > 0)
             require(population >= 2)
             require(games > 0)
@@ -338,7 +371,7 @@ internal data class CultivationTrainOptions(
                 evolutionSeed, seed, strategySeed, input, output,
                 plantOverridesPath, roundOverridesPath, grovePattern, groveSeed,
                 players, roundLabel, buyPolicy, buyWeights, plantEffectPolicy, plantEffectWeights,
-                battleSupportPolicy, battleSupportWeights
+                battleSupportPolicy, battleSupportWeights, compostBonus, eventMatchedDice, opponentMainWeights
             )
         }
 
@@ -347,7 +380,7 @@ internal data class CultivationTrainOptions(
                 "[--elites N] [--sigma X] [--mutations N] [--evolution-seed N] [--seed N] " +
                 "[--strategy-seed N] [--input PATH] [--output PATH] [--plant-overrides PATH] " +
                 "[--round-overrides PATH] [--grove CODE|--random-grove] [--grove-seed N] " +
-                "[--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH] [--plant-effect-policy human|learned --plant-effect-weights PATH] [--battle-support-policy human|learned --battle-support-weights PATH]"
+                "[--compost-bonus DOUBLE] [--event-matched-dice] [--opponent-main-weights PATH] [--players 2|3|4] [--rounds PATTERN] [--buy-policy human|learned] [--buy-weights PATH] [--plant-effect-policy human|learned --plant-effect-weights PATH] [--battle-support-policy human|learned --battle-support-weights PATH]"
         )
     }
 }

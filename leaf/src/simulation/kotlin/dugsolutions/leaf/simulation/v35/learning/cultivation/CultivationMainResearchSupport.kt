@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.plant.PlantCardRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselineDecisionDirector
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyStrategy
 import dugsolutions.leaf.v35.player.decision.learned.buy.LearnedBuyWeights
+import dugsolutions.leaf.v35.player.decision.learned.cultivation.FixedCompostBonusPolicy
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.CompostPreferenceCultivationPolicy
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainPolicy
 import dugsolutions.leaf.v35.player.decision.learned.cultivation.LearnedCultivationMainWeights
@@ -20,8 +21,10 @@ import dugsolutions.leaf.v35.wisp.WispCardRegistry
 internal fun learnedCultivationFactory(
     cultivationWeights: LearnedCultivationMainWeights,
     buyWeights: LearnedBuyWeights? = null,
-    compostPreference: Double? = null
+    compostPreference: Double? = null,
+    fixedCompostBonus: Double? = null
 ): PlayerDecisionFactory = object : PlayerDecisionFactory {
+    init { require(compostPreference == null || fixedCompostBonus == null) }
     override fun create() = create(StrategyRandomizer.create())
 
     override fun create(strategyRandomizer: StrategyRandomizer) =
@@ -35,8 +38,11 @@ internal fun learnedCultivationFactory(
         reasoningSink = reasoningSink
     ).createDirector().let { baseline ->
         var director = baseline.copy(
-            cultivationMain = if (compostPreference == null) LearnedCultivationMainPolicy(cultivationWeights)
-            else CompostPreferenceCultivationPolicy(cultivationWeights, compostPreference)
+            cultivationMain = when {
+                fixedCompostBonus != null -> FixedCompostBonusPolicy(cultivationWeights, fixedCompostBonus)
+                compostPreference != null -> CompostPreferenceCultivationPolicy(cultivationWeights, compostPreference)
+                else -> LearnedCultivationMainPolicy(cultivationWeights)
+            }
         )
         if (buyWeights != null) {
             director = director.copy(buy = LearnedBuyStrategy(buyWeights, baseline.buy))

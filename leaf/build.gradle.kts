@@ -624,3 +624,14 @@ tasks.register<JavaExec>("runCompostOnlyPreference") {
     mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostOnlyPreferenceMainKt")
     args((project.findProperty("sweepArgs") as String? ?: "games=10").split(" ").filter { it.isNotBlank() })
 }
+
+
+// Fixed-bonus adaptive Compost crossplay evaluation (learner trained with identical fixed bonus).
+tasks.register<JavaExec>("runCompostAdaptiveEvaluation") {
+    group = "simulation research"
+    description = "Paired evaluation of independently adapted fixed-bonus Compost expert"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostAdaptiveEvaluationMainKt")
+    args((project.findProperty("adaptiveArgs") as String? ?: "--games=10").split(" ").filter { it.isNotBlank() })
+}
