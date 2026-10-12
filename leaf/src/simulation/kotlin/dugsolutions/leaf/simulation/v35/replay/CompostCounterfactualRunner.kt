@@ -4,6 +4,7 @@ import dugsolutions.leaf.simulation.v35.analysis.GameSummary
 import dugsolutions.leaf.simulation.v35.analysis.GameSummaryExtractor
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.game.random.ReplayRollEvent
 import dugsolutions.leaf.v35.game.GameConfig
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
@@ -27,7 +28,8 @@ data class RecordedReplayGame(
     val decisions: List<CultivationReplayDecision>,
     val chronicle: List<GameEntry>,
     val forkApplied: Boolean,
-    val forcedCompostCount: Int
+    val forcedCompostCount: Int,
+    val rollEvents: List<ReplayRollEvent> = emptyList()
 )
 
 data class CompostPairedOutcome(
@@ -65,7 +67,9 @@ class CompostCounterfactualRunner(
     private val players: List<PlayerDecisionFactory>,
     private val rounds: GameRoundSetup = GameRoundSetup.standard(),
     private val roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
-    private val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+    private val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+    private val eventBasedDieRolls: Boolean = false,
+    private val sharedPercentileDieRolls: Boolean = false
 ) {
     fun run(
         mechanicalSeed: Long,
@@ -81,6 +85,8 @@ class CompostCounterfactualRunner(
             playerDecisionFactories = players,
             roundSetup = rounds,
             seed = mechanicalSeed,
+            eventBasedDieRolls = eventBasedDieRolls,
+            sharedPercentileDieRolls = sharedPercentileDieRolls,
             strategySeed = strategySeed,
             cultivationDecisionReplay = tracker,
             roundValues = roundValues,
@@ -92,7 +98,8 @@ class CompostCounterfactualRunner(
             GameSummaryExtractor.extract(game, result),
             tracker.decisions,
             if (retainChronicle) game.chronicle.entries else emptyList(),
-            tracker.forkApplied, tracker.forcedCompostCount
+            tracker.forkApplied, tracker.forcedCompostCount,
+            game.eventRollRandomness?.events.orEmpty()
         )
     }
 

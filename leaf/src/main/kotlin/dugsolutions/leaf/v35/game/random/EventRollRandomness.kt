@@ -18,16 +18,21 @@ class EventRollRandomness(
 ) {
     private data class Key(val round: Int, val player: Int, val dieId: Long)
     private val occurrences = mutableMapOf<Key, Int>()
+    private val recordedEvents = mutableListOf<ReplayRollEvent>()
+    val events: List<ReplayRollEvent> get() = recordedEvents.toList()
 
     fun roll(player: Player, die: Die, roundNumber: Int): Int {
         val key = Key(roundNumber, player.id.value, player.dice.stableDieId(die))
         val occurrence = (occurrences[key] ?: 0) + 1
         occurrences[key] = occurrence
-        return if (sharedPercentile) {
-            percentileFaceFor(masterSeed, roundNumber, key.player, key.dieId, occurrence, die.sides)
-        } else {
-            faceFor(masterSeed, roundNumber, key.player, key.dieId, occurrence, die.sides)
-        }
+        val percentile = if (sharedPercentile) {
+            percentileFor(masterSeed, roundNumber, key.player, key.dieId, occurrence)
+        } else null
+        val face = if (percentile != null) (percentile * die.sides).toInt() + 1
+            else faceFor(masterSeed, roundNumber, key.player, key.dieId, occurrence, die.sides)
+        recordedEvents += ReplayRollEvent(recordedEvents.size + 1, roundNumber,
+            key.player, key.dieId, occurrence, die.sides, face, percentile)
+        return face
     }
 
     companion object {

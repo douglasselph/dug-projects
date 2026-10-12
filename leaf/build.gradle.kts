@@ -594,3 +594,13 @@ tasks.register<JavaExec>("runExpertForcedCompostExperiment") {
     mainClass.set("dugsolutions.leaf.simulation.v35.replay.ExpertForcedCompostExperimentMainKt")
     if (project.hasProperty("args")) args(project.property("args").toString().split(" ").filter { it.isNotBlank() })
 }
+
+// C5 exact replay and event-matched whole-game validation.
+tasks.register<JavaExec>("runReplayEquivalenceC5") {
+    group = "verification"
+    description = "Validate exact replay and forked event-matched die-roll invariants"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.replay.ReplayEquivalenceValidationMainKt")
+    args((project.findProperty("c5Args") as String? ?: "games=10").split(" ").filter { it.isNotBlank() })
+}
