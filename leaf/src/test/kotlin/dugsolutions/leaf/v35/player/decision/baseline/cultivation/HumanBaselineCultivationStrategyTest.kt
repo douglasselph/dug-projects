@@ -758,6 +758,69 @@ class HumanBaselineCultivationStrategyTest {
         }
     }
 
+    @Test
+    fun `new scoring considers each Compost variant without willingness gates`() {
+        val context = context(
+            supply = listOf(DieView(7, 4, 1)),
+            hand = listOf(DieView(1, 4, 1), DieView(2, 6, 5)),
+            graftBed = mapOf(DieSides.D6 to 2, DieSides.D8 to 2)
+        )
+        val props = java.util.Properties().apply {
+            setProperty("cultivation.main.policy", "HUMAN_BASELINE")
+            setProperty("external.compost", "300")
+        }
+        val experiment = dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration.fromProperties(props)
+        for (variant in listOf(
+            GameEffect.UPGRADE_DIE_FROM_HAND,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
+            GameEffect.UPGRADE_DIE_AND_USE_NOW
+        )) {
+            val modern = HumanBaselineCultivationStrategy(
+                strategyRandomizer = FixedRandomizer(0),
+                modernScoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.empty(),
+                experiment = experiment
+            )
+            val chosen = choose(
+                context = context,
+                round = roundWithEffects(variant),
+                choices = listOf(
+                    CultivationAction.Main(CultivationMainAction.Draw),
+                    CultivationAction.Main(CultivationMainAction.RoundEffect1)
+                ),
+                strategy = modern
+            )
+            assertEquals(CultivationMainAction.RoundEffect1, assertIs<CultivationAction.Main>(chosen).action)
+        }
+    }
+
+    @Test
+    fun `zero external Compost weight can be overridden to prefer Draw`() {
+        val context = context(
+            supply = listOf(DieView(7, 20, 1)),
+            hand = listOf(DieView(1, 4, 1), DieView(2, 6, 5)),
+            graftBed = mapOf(DieSides.D6 to 2)
+        )
+        val props = java.util.Properties().apply {
+            setProperty("cultivation.main.policy", "HUMAN_BASELINE")
+            setProperty("external.draw", "500")
+        }
+        val modern = HumanBaselineCultivationStrategy(
+            strategyRandomizer = FixedRandomizer(0),
+            modernScoring = dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration.empty(),
+            experiment = dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration.fromProperties(props)
+        )
+        val selected = choose(
+            context = context,
+            round = roundWithEffects(GameEffect.UPGRADE_DIE_FROM_HAND),
+            choices = listOf(
+                CultivationAction.Main(CultivationMainAction.Draw),
+                CultivationAction.Main(CultivationMainAction.RoundEffect1)
+            ),
+            strategy = modern
+        )
+        assertEquals(CultivationMainAction.Draw, assertIs<CultivationAction.Main>(selected).action)
+    }
+
     private fun choose(
         context: DecisionContext,
         choices: List<CultivationAction>,

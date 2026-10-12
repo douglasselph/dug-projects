@@ -497,7 +497,8 @@ class CultivationBuildCoordinator(
                     roundCardName = roundCard.name,
                     firstRoundEffect = roundCard.firstEffect.effect,
                     secondRoundEffect = roundCard.secondEffect.effect,
-                    context = context
+                    context = context,
+                    roundCard = roundCard
                 )
             )
         )

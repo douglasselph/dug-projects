@@ -69,13 +69,21 @@ class GameFactory(
                         DecisionReasoningSink.NONE
                     }
 
-                playerFactory(
-                    id = playerId,
-                    decisions = decisionFactory.create(
-                        strategyRandomizer = strategyRandomizer,
+                val originalDecisions = decisionFactory.create(
+                    strategyRandomizer = strategyRandomizer,
+                    reasoningSink = reasoningSink
+                )
+                val experiment = config.decisionExperiment
+                val decisions = if (experiment == null) originalDecisions else originalDecisions.copy(
+                    cultivationMain = dugsolutions.leaf.v35.player.decision.cultivation.ConfiguredCultivationMainPolicy(
+                        learned = originalDecisions.cultivationMain,
+                        scoring = config.humanScoring,
+                        experiment = experiment,
+                        randomizer = StrategyRandomizer.create(config.strategySeedForPlayer(index)?.xor(0x5A17BEEFL)),
                         reasoningSink = reasoningSink
                     )
                 )
+                playerFactory(id = playerId, decisions = decisions)
             }
 
         val resolvedPlantCards =

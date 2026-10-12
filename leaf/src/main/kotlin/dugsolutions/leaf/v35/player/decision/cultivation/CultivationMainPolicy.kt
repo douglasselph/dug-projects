@@ -49,7 +49,8 @@ data class CultivationMainObservation(
     val roundCardName: String,
     val firstRoundEffect: GameEffect,
     val secondRoundEffect: GameEffect,
-    val context: DecisionContext
+    val context: DecisionContext,
+    val roundCard: dugsolutions.leaf.v35.round.domain.RoundCard? = null
 )
 
 /** One policy decision among already-legal Cultivation Main Actions. */

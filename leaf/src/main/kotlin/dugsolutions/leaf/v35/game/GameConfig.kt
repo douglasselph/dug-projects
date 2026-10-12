@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.game
 
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.HumanScoringConfiguration
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperimentConfiguration
 import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
 import dugsolutions.leaf.v35.game.replay.CultivationDecisionReplay
 
@@ -134,7 +136,10 @@ class GameConfig(
     /** Experiment-friendly shared Grove token starting counts; canonical defaults remain 9 each. */
     val sharedTokenStartingSupply: SharedTokenStartingSupply = SharedTokenStartingSupply.CANONICAL,
     /** Optional, game-local decision ledger / one-choice intervention for seeded replays. */
-    val cultivationDecisionReplay: CultivationDecisionReplay? = null
+    val cultivationDecisionReplay: CultivationDecisionReplay? = null,
+    /** Opt-in Phase B policy routing. Null preserves existing behavior. */
+    val decisionExperiment: DecisionExperimentConfiguration? = null,
+    val humanScoring: HumanScoringConfiguration = HumanScoringConfiguration.empty()
 ) {
     val selectedPlantCards: List<PlantCard> =
         selectedPlantCards.toList()

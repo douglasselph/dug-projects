@@ -10,7 +10,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailabi
 import dugsolutions.leaf.v35.player.decision.baseline.context.PhaseProximity
 import dugsolutions.leaf.v35.player.decision.baseline.context.DicePoolQuality
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
-import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.*
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
@@ -87,10 +87,13 @@ class HumanBaselineCultivationStrategy(
     internal val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     internal val influenceRegistry: BaselineInfluenceRegistry = BaselineInfluenceRegistry(cardScorers),
     internal val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
-    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create()
+    private val strategyRandomizer: StrategyRandomizer = StrategyRandomizer.create(),
+    private val modernScoring: HumanScoringConfiguration? = null,
+    private val experiment: DecisionExperimentConfiguration? = null
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
+        if (modernScoring != null) return chooseModernAction(request)
 
         // Willingness gates are intentionally independent and ordered before scoring.
         // In particular, Compost is sampled before Sunlight. A declined Compost does
@@ -144,6 +147,126 @@ class HumanBaselineCultivationStrategy(
             request = request,
             gate = sunlight
         )
+    }
+
+    /** Phase B: one score for every legal candidate; no stochastic willingness gates. */
+    private fun chooseModernAction(request: ChooseCultivationActionRequest): CultivationAction {
+        val configuration = requireNotNull(modernScoring)
+        val candidates = request.legalChoices.map { choice ->
+            val original = score(request, choice, CultivationCompostGate(request.legalChoices))
+            val actionId = actionScoreId(request, choice)
+            val builder = DecisionScoreBuilder(actionId, strategyRandomizer)
+            builder.add(configuration.influence(
+                "$actionId.base", "Calibrated base", ScoreValue.Fixed(original.base)
+            ))
+            original.adjustments.forEachIndexed { index, adjustment ->
+                val key = if (actionId == "compost") when {
+                    adjustment.reason.startsWith("Permanent D") -> "compost.upgrade"
+                    adjustment.reason == "Current-round Buy threshold impact" -> "compost.buy_threshold"
+                    adjustment.reason.startsWith("Preserve at least") -> "compost.low_buy_power"
+                    adjustment.reason == "Future rounds benefit from upgrade" -> "compost.future_round_bonus"
+                    adjustment.reason == "Dice development is behind target" -> "compost.development_bonus"
+                    else -> "compost.legacy.$index"
+                } else "$actionId.legacy.$index"
+                val fallback = ScoreValue.Fixed(adjustment.amount)
+                val resolved = if (actionId == "compost") calibratedCompostAdjustment(
+                    key, adjustment.amount
+                ) else fallback
+                builder.add(configuration.influence(key, adjustment.reason, resolved))
+            }
+            when (actionId) {
+                "mulch" -> builder.add(configuration.influence("mulch.variability", "Mulch preference variability", ScoreValue.Range(-12, 12)))
+                "sunlight" -> {
+                    val effect = (choice as? CultivationAction.Main)?.let { effectForMain(request, it.action) }
+                    if (effect == GameEffect.RAISE_DIE_PLUS_3) {
+                        builder.add(configuration.influence("sunlight.variability", "Sunlight preference variability", ScoreValue.Range(-18, 12)))
+                        if (!SunlightPriority.isWorthConsidering(request.context)) {
+                            builder.add(configuration.influence("sunlight.weak", "Weak Sunlight relative to Draw", ScoreValue.Fixed(-30)))
+                        }
+                    }
+                }
+            }
+            if (actionId == "compost") {
+                addCompostInfluences(builder, request)
+            }
+            val external = experiment?.externalInfluence(actionId)
+                ?: ScoreInfluence("external.$actionId", "External weight", ScoreValue.Fixed(0))
+            builder.add(external)
+            DecisionCandidate(
+                choice = choice,
+                score = builder.build().toPriorityScore(),
+                tags = tags(request, choice),
+                observations = calibrationObservations(request, choice)
+            )
+        }
+        return scoreEngine.chooseValue(request.context, candidates, influenceRegistry)
+    }
+
+    /** Reuse existing score arithmetic, but expose its calibrated numeric coefficients. */
+    private fun calibratedCompostAdjustment(
+        key: String, legacyAmount: Int
+    ): ScoreValue {
+        val config = modernScoring ?: return ScoreValue.Fixed(legacyAmount)
+        fun coefficient(name: String, old: Int): Int =
+            (config.value(name, ScoreValue.Fixed(old)) as? ScoreValue.Fixed)?.amount ?: old
+        return when (key) {
+            "compost.upgrade" -> ScoreValue.Fixed(
+                legacyAmount / 2 * coefficient("compost.upgrade_side", 2)
+            )
+            "compost.future_round_bonus" -> ScoreValue.Fixed(
+                legacyAmount / 2 * coefficient("compost.future_round", 2)
+            )
+            "compost.buy_threshold" -> ScoreValue.Fixed(
+                legacyAmount / -10 * coefficient("compost.buy_tier_penalty", -10)
+            )
+            "compost.low_buy_power" -> config.value("compost.low_buy_power", ScoreValue.Fixed(-40))
+            else -> ScoreValue.Fixed(legacyAmount)
+        }
+    }
+
+    private fun actionScoreId(request: ChooseCultivationActionRequest, choice: CultivationAction): String =
+        when (choice) {
+            CultivationAction.Done -> "done"
+            is CultivationAction.Support -> "support"
+            is CultivationAction.Main -> when (choice.action) {
+                CultivationMainAction.Draw -> "draw"
+                is CultivationMainAction.ActivatePlant -> "plant"
+                else -> when (effectForMain(request, choice.action)) {
+                    GameEffect.UPGRADE_DIE_FROM_HAND,
+                    GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS,
+                    GameEffect.UPGRADE_DIE_AND_USE_NOW -> "compost"
+                    GameEffect.MULCH_DIE_FROM_HAND -> "mulch"
+                    GameEffect.GAIN_WATER_TOKEN -> "water"
+                    GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.RAISE_DIE_PLUS_3 -> "sunlight"
+                    else -> "round_other"
+                }
+            }
+        }
+
+    private fun addCompostInfluences(
+        builder: DecisionScoreBuilder,
+        request: ChooseCultivationActionRequest
+    ) {
+        val config = modernScoring ?: return
+        val target = CompostPriority.bestTarget(request.context, policy.normalPurchasingPower(request.context))
+            ?: return
+        fun influence(id: String, label: String, fallback: ScoreValue) {
+            builder.add(config.influence(id, label, fallback))
+        }
+        // Historical willingness percentages are *not* reinterpreted as score probabilities.
+        // Defaults preserve the legacy deterministic score, with ranges starting neutral.
+        if (target.die.value <= 2) {
+            influence("compost.low_roll", "Low showing die preference", ScoreValue.Range(-10, 20))
+        }
+        else {
+            influence("compost.ordinary_roll", "Ordinary showing die preference", ScoreValue.Range(-25, 10))
+        }
+        if (target.handDicePowerAfter < CompostPriority.MIN_HAND_DICE_BUY_POWER_AFTER_COMPOST) {
+            influence("compost.low_power_variation", "Low hand power uncertainty", ScoreValue.Range(-20, 0))
+        }
+        if (request.mainActionsRemaining == 1 && request.context.self.board.hand.size <= 2) {
+            influence("compost.repeat_commitment", "Second commitment", ScoreValue.Range(-12, 0))
+        }
     }
 
     private fun applyOvergrowthWillingness(
@@ -548,6 +671,8 @@ class HumanBaselineCultivationStrategy(
     ): PriorityScore =
         when (effect) {
             GameEffect.UPGRADE_DIE_FROM_HAND -> scoreCompost(context, compostGate)
+            GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> scoreCompostKeep(context, withRewards = false)
+            GameEffect.UPGRADE_DIE_AND_USE_NOW -> scoreCompostKeep(context, withRewards = true)
             GameEffect.MULCH_DIE_FROM_HAND -> MulchPriority.score(
                 context = context,
                 normalPurchasingPower = policy.normalPurchasingPower(context)
@@ -560,6 +685,34 @@ class HumanBaselineCultivationStrategy(
             )
             else -> PriorityScore(45)
         }
+
+    /** Keep variants retain an immediate rolled replacement instead of losing the die.
+     *  This is an expected-value heuristic; no game RNG or future roll is sampled here.
+     */
+    private fun scoreCompostKeep(context: DecisionContext, withRewards: Boolean): PriorityScore {
+        val base = CompostPriority.score(
+            context, policy.normalPurchasingPower(context), policy.cultivationDiceDevelopmentBonus(context)
+        )
+        val target = CompostPriority.bestTarget(context, policy.normalPurchasingPower(context))
+            ?: return base
+        val current = target.die.sides
+        val newSides = when (current) {
+            4 -> 6; 6 -> 8; 8 -> 10; 10 -> 12; 12 -> 20; else -> current
+        }
+        // Restore purchasing thresholds sacrificed by the Discard variant and
+        // estimate value of a freshly rolled upgrade relative to losing the old roll.
+        val discardTarget = target.score
+        val purchasePenalty = discardTarget.adjustments
+            .firstOrNull { it.reason == "Current-round Buy threshold impact" }?.amount ?: 0
+        val lowPowerPenalty = discardTarget.adjustments
+            .firstOrNull { it.reason.startsWith("Preserve at least") }?.amount ?: 0
+        val expectedNewRoll = (newSides + 1) / 2
+        val priorCurrentRoll = target.die.value
+        return base
+            .adjusted(-purchasePenalty - lowPowerPenalty, "Keeping replacement avoids discarding current die")
+            .adjusted((expectedNewRoll - priorCurrentRoll) * 2, "Expected immediate upgraded roll versus current face")
+            .adjusted(if (withRewards) 5 else 0, "Expected Roll Rewards for keep-with-rewards")
+    }
 
     private fun scoreCompost(
         context: DecisionContext,

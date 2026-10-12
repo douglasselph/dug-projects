@@ -10,6 +10,7 @@ class HumanScoringConfiguration private constructor(private val values: Map<Stri
     fun influence(id: String, description: String, fallback: ScoreValue): ScoreInfluence =
         ScoreInfluence(id, description, value(id, fallback))
     companion object {
+        fun empty(): HumanScoringConfiguration = HumanScoringConfiguration(emptyMap())
         fun load(path: Path): HumanScoringConfiguration {
             val props = Properties()
             Files.newInputStream(path).use(props::load)

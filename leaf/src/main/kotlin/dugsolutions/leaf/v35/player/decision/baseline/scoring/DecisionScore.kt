@@ -68,7 +68,10 @@ data class DecisionScore(
     }
     fun toPriorityScore(): PriorityScore = PriorityScore(
         base = 0,
-        adjustments = contributions.map { ScoreAdjustment(it.amount, "${it.id}: ${it.description}") }
+        adjustments = contributions.map {
+            val range = (it.configuredValue as? ScoreValue.Range)?.let { v -> " [range: ${v.minimum}..${v.maximum}]" } ?: ""
+            ScoreAdjustment(it.amount, "${it.id}: ${it.description}$range")
+        }
     )
 }
 
