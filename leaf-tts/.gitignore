@@ -1,8 +1,20 @@
-# Generated TTS save files
+# Generated TTS save files and reports
 output/*
 
-# Keep the directory in Git
+# Keep the output directory in Git
 !output/.gitkeep
+
+# Exported artwork: kept locally, sourced from Component Studio or Google Drive.
+# The README and other text files under assets/ remain tracked.
+assets/**/*.png
+assets/**/*.jpg
+assets/**/*.jpeg
+assets/**/*.PNG
+assets/**/*.JPG
+assets/**/*.JPEG
+assets/doc
+source/
+docs/
 
 # Python temporary files
 __pycache__/
