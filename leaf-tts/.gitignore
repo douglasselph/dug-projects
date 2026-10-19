@@ -1,0 +1,13 @@
+# Generated TTS save files
+output/*
+
+# Keep the directory in Git
+!output/.gitkeep
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Temporary files
+*.tmp
+*.bak
