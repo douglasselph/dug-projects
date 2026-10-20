@@ -1,0 +1,3 @@
+newmtl Tray
+Kd 1.0 1.0 1.0
+map_Kd VP_Tray_Texture.png

@@ -332,33 +332,6 @@ def make_flat_piece(project, stem, directory, nickname, guid, mode, hosted_urls,
     return o
 
 
-def make_cutout_model(project, name, guid, mode, hosted_urls, size_in):
-    """Water/Mulch: real two-sided cutout mesh, not TTS's mirrored token.
-
-    The model's two faces have independently mapped UVs, so text reads
-    correctly when flipped. Generate OBJ and atlas with make_token_models.py.
-    Hosted mode needs explicit URL entries for *both* model assets.
-    """
-    stem = name.lower()
-    obj_rel = f'models/token_shapes/{stem}.obj'
-    diffuse_rel = f'models/token_shapes/{stem}_two_sided.png'
-    model = base_object('Custom_Model', guid, name,
-                        'Two-sided shaped token; front/back each display upright artwork.')
-    model['Transform'] = transform()
-    # Model OBJ uses a normalized 1x1 footprint, so no Custom_Tile scaling.
-    model['Transform'].update(scaleX=round(size_in[0] * UNITS_PER_INCH, 6),
-                              scaleY=1.0,
-                              scaleZ=round(size_in[1] * UNITS_PER_INCH, 6))
-    model['CustomMesh'] = {
-        'MeshURL': artwork_url(project, obj_rel, mode, hosted_urls),
-        'DiffuseURL': artwork_url(project, diffuse_rel, mode, hosted_urls),
-        'NormalURL': '', 'ColliderURL': '', 'Convex': True,
-        'MaterialIndex': 3, 'TypeIndex': 5, 'CastShadows': True,
-    }
-    return model
-
-
-
 def make_vp_stack(project, stem, nickname, qty, make_guid, mode, hosted_urls):
     """Create a small square card stack for VP-1 or VP-5."""
     front = pick_art(project, 'assets/tokens', 'Token_ ' + stem)
@@ -393,17 +366,13 @@ def build_tokens(project, make_guid, mode, hosted_urls):
     token_tray_items = []
     for name in nutrient_and_critter_names:
         for _ in range(TOKEN_COUNTS[name]):
-            if name in ('Water', 'Mulch'):
-                token_tray_items.append(make_cutout_model(
-                    project, name, make_guid(), mode, hosted_urls,
-                    size_in=TILE_SIZES_IN[name]))
-            else:
-                token_tray_items.append(make_flat_piece(
-                    project, 'Token_ ' + name, 'assets/tokens', name,
-                    make_guid(), mode, hosted_urls, size_in=TILE_SIZES_IN[name],
-                    thickness=0.10, stackable=True,
-                    tile_shape=(2 if name in ('Bee', 'Worm') else
-                                3 if name == 'Sunlight' else 0)))
+            token_tray_items.append(make_flat_piece(
+                project, 'Token_ ' + name, 'assets/tokens', name,
+                make_guid(), mode, hosted_urls, size_in=TILE_SIZES_IN[name],
+                thickness=0.10, stackable=True,
+                transparency_cutout=name in ('Water', 'Mulch'),
+                tile_shape=(2 if name in ('Bee', 'Worm') else
+                            3 if name == 'Sunlight' else 0)))
 
     vp_items = [
         make_vp_stack(project, 'Victory', 'VP-1 Cards', TOKEN_COUNTS['Victory'],
@@ -637,7 +606,7 @@ def main():
             'Grove Setup: 8.25 inches wide, with natural 24.56:10.65 source aspect ratio.',
             'Wisp count remains 32 from manifest, not 36 in manufacturing outline.',
             'Supply 3.4x4.68 and Discard 3.25x5.0 inches are tabletop proxy sizes, not unfolded manufacturing dielines.',
-            'Water and Mulch use two-sided OBJ models, avoiding Custom_Token backside mirroring. Regenerate models after changing artwork.',
+            'Water and Mulch use PNG alpha-cutout Custom_Token objects. Their reverse may appear mirrored; front artwork is prioritized.',
             'Gameplay Battle Glade is enlarged 1.5x beyond its physical 6.5 x 8.375-inch dimensions.',
             'Gnome is a flat proxy with silhouette dimensions, not the final 3D meeple.',
             'Card/tile baseline unit calibration should be confirmed via getBoundsNormalized() in TTS.',
@@ -652,7 +621,7 @@ def main():
     print('5 temporary tray bags: 2 Dice Trays, Token Tray, Wisp and Butterfly Tray, VP Tray.')
     print('Reference materials: Battle Glade + 2 Round Order helpers + 2 Common Rules/Helpers & Tokens helpers + 1 Grove Setup reference.')
     print('All 18 Round Cards are a single mixed-design physical deck inside the Game Box.')
-    print('Relative dimensions corrected for source-image aspect ratios; Water/Mulch use two-sided OBJ models.')
+    print('Relative dimensions corrected for source-image aspect ratios; Water/Mulch use PNG transparency cutouts.')
     print('NOTE: Grove Setup is 8.25 in wide with artwork aspect ratio; Wisp count remains 32 (outline says 36).')
     print('Custom 3D trays and game box model are not included yet.')
 
