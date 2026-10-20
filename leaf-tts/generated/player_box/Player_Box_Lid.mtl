@@ -1,0 +1,3 @@
+newmtl Tray
+Kd 1 1 1
+map_Kd Player_Box_Lid_Texture.png

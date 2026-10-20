@@ -15,7 +15,7 @@ case "${1:-}" in
    if [[ -d assets ]]; then find assets -type f | LC_ALL=C sort > "$tmp/leaf-tts/assets/files.txt"; fi
    # Include the small tray source-art subset so revisions remain reproducible.
    [[ ! -d assets/trays ]] || cp -a assets/trays "$tmp/leaf-tts/assets/"
-   for dir in scripts tools config generated/vp_tray; do
+   for dir in scripts tools config generated/vp_tray generated/wisp_butterfly_tray generated/token_tray generated/dice_trays generated/player_box generated/game_box; do
      if [[ -d "$dir" ]]; then mkdir -p "$tmp/leaf-tts/$(dirname "$dir")"; cp -a "$dir" "$tmp/leaf-tts/$dir"; fi
    done
    # The live working TTS save has precedence, then local output fallback.

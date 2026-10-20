@@ -1,0 +1,3 @@
+newmtl Tray
+Kd 1.0 1.0 1.0
+map_Kd Token_Tray_Texture.png
