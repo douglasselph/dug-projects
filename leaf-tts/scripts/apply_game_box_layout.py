@@ -116,7 +116,7 @@ def decorate_plant(obj, parent_id=None, parent_label='Plant Card Catalog'):
     """Validate and label every Plant stack and card; never skip missing IDs."""
     key = source_card_id(obj, 'plants', parent_id, parent_label)
     info = card_info['plants'][key]
-    obj['Nickname'] = f"[{info['cost']}] {info['title']}"
+    obj['Nickname'] = f"{info['cost']} - {info['title']}"
     obj['Description'] = clean_effect(info['effect'])
     for child in obj.get('ContainedObjects', []):
         if child.get('Name') not in ('Card', 'DeckCustom'):

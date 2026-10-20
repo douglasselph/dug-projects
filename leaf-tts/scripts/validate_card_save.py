@@ -90,7 +90,7 @@ def validate_save(data, catalog, save_label='<in-memory>'):
                         if parent_design and parent_design != raw_note:
                             err(obj, 'Stack contains wrong card design', parent_design, raw_note, path)
                         if category == 'plants':
-                            title = f"[{info['cost']}] {info['title']}"
+                            title = f"{info['cost']} - {info['title']}"
                             desc = clean_effect(info['effect'])
                             if typ == 'DeckCustom':
                                 plant_stacks[raw_note] = plant_stacks.get(raw_note, 0) + 1

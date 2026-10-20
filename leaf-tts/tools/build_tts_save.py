@@ -189,7 +189,7 @@ def display_info(card, catalog):
         if int(card['quantity']) != info['quantity']:
             raise ValueError(f'CARD DATA ERROR: {ident}: manifest quantity {card["quantity"]} '
                              f'!= CSV quantity {info["quantity"]}')
-        return f"[{info['cost']}] {info['title']}", clean_effect(info['effect'])
+        return f"{info['cost']} - {info['title']}", clean_effect(info['effect'])
     if int(card['quantity']) != info['quantity']:
         raise ValueError(f'CARD DATA ERROR: {ident}: manifest quantity {card["quantity"]} '
                          f'!= CSV quantity {info["quantity"]}')
