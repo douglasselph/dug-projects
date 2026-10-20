@@ -20,10 +20,12 @@ if args.tts_root is None:
     args.tts_root = 'Z:' + str(Path.cwd().resolve())
 args.output.mkdir(parents=True, exist_ok=True)
 
-UPI = 3.06 / 3.5 * 1.67
+UPI = 3.06 / 3.5 * 2.67
 BOARD_W = 8.5 * UPI
 BOARD_H = 11.0 * UPI
 BOARD_THICK = 0.10 * UPI
+# TTS Custom PDF native dimensions depend on the PDF object; fine-tune in TTS.
+PDF_SCALE = 4.0
 BOX_X = -18.0
 BOX_Y = 1.05
 BOX_Z = 0.0
@@ -150,7 +152,7 @@ def game_box_object():
     return {
         'GUID': BOX_GUID, 'Name': 'Custom_Model',
         'Transform': {'posX': BOX_X, 'posY': BOX_Y, 'posZ': BOX_Z,
-                      'rotX': 0, 'rotY': 0, 'rotZ': 0,
+                      'rotX': 0, 'rotY': 180, 'rotZ': 0,
                       'scaleX': 1, 'scaleY': 1, 'scaleZ': 1},
         'Nickname': 'Leaf & Let Die — Game Box Simulation',
         'Description': BOX_DESC,
@@ -172,7 +174,7 @@ def pdf_item():
         'GUID': PDF_GUID, 'Name': 'Custom_PDF',
         'Transform': {'posX': 0, 'posY': 1.2, 'posZ': 0,
                       'rotX': 0, 'rotY': 180, 'rotZ': 0,
-                      'scaleX': 1, 'scaleY': 1, 'scaleZ': 1},
+                      'scaleX': PDF_SCALE, 'scaleY': 1, 'scaleZ': PDF_SCALE},
         'Nickname': 'Leaf & Let Die — Rulebook v37.01',
         'Description': 'Full rulebook PDF. Take this object out of the Game Box bag to read and turn pages.',
         'GMNotes': 'Local PDF; use a hosted public HTTPS PDF URL to share with other computers.',
@@ -198,17 +200,30 @@ main = next((o for o in data.get('ObjectStates', []) if o.get('Nickname', '').st
 if main is None:
     raise ValueError('Game Box bag missing in input save')
 old_contents = main.get('ContainedObjects', [])
-from collections import Counter
-counts = Counter(o.get('Nickname') for o in old_contents if o.get('Nickname') in REMAINING_NAMES)
-if counts != Counter(EXPECTED_COUNTS):
-    raise ValueError(f'Unexpected remaining Game Box contents: expected {EXPECTED_COUNTS}, found {dict(counts)}')
+# The Catalog now lives on the placard, not in the Game Box Sack.  Handle
+# fresh saves and saves already converted by rebuild_layout.sh alike.
+CATALOG_GUID = 'b000fc'
+CATALOG_POS = {'posX': -20.2, 'posY': 1.05, 'posZ': -6.83,
+               'rotX': 0, 'rotY': 180, 'rotZ': 0,
+               'scaleX': 1, 'scaleY': 1, 'scaleZ': 1}
+external_catalog = next((o for o in data['ObjectStates'] if o.get('GUID') == CATALOG_GUID), None)
+internal_catalog = next((o for o in old_contents if o.get('GUID') == CATALOG_GUID), None)
+if external_catalog is None and internal_catalog is not None:
+    external_catalog = copy.deepcopy(internal_catalog)
+    external_catalog['Transform'] = dict(CATALOG_POS)
+    data['ObjectStates'].append(external_catalog)
 
-main['ContainedObjects'] = [copy.deepcopy(o) for o in old_contents if o.get('Nickname') in REMAINING_NAMES]
+# Keep the Sack's real contents and replace only the generated PDF.
+# Don't reinsert the catalog after rebuild_layout.sh has moved it out.
+main['ContainedObjects'] = [copy.deepcopy(o) for o in old_contents
+    if (o.get('Nickname') in REMAINING_NAMES or o.get('GUID') == 'b0010f')
+    and o.get('GUID') not in (CATALOG_GUID, PDF_GUID)]
 main['ContainedObjects'].append(pdf_item())
 main['Description'] = (
-    'Contents: Plant Card Catalog, Round Cards, Battle Glade, 4 round/common helper cards, '
-    'Grove Setup Reference, and the rulebook PDF. Game component trays and player boxes '
-    'are already staged on the table.'
+    'Store components not currently needed on the table here. '
+    'Take out and read the Rulebook first. The other materials in this Sack '
+    'are also part of the physical game box; the items on the placard '
+    'represent components unpacked onto the table.'
 )
 
 # Safe and repeatable: replace existing generated placard only.
@@ -218,6 +233,7 @@ data['ObjectStates'].append(game_box_object())
 path = args.output / 'Game_Box_Test_Save.json'
 path.write_text(json.dumps(data, indent=2) + '\n')
 print('Written', path)
-print('Removed', sum(o.get('Nickname') not in REMAINING_NAMES and o.get('GUID') != PDF_GUID for o in old_contents), 'already-staged component containers from Game Box bag')
+print('Game Box Sack items:', len(main['ContainedObjects']))
+print('Catalog on placard:', external_catalog is not None)
 print('Board size: %.3f x %.3f TTS units' % (BOARD_W, BOARD_H))
 print('Rulebook:', args.rules_pdf)

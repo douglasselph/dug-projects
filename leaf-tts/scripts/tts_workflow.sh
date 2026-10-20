@@ -15,6 +15,8 @@ case "${1:-}" in
    if [[ -d assets ]]; then find assets -type f | LC_ALL=C sort > "$tmp/leaf-tts/assets/files.txt"; fi
    # Include the small tray source-art subset so revisions remain reproducible.
    [[ ! -d assets/trays ]] || cp -a assets/trays "$tmp/leaf-tts/assets/"
+   [[ ! -d assets/card_data ]] || cp -a assets/card_data "$tmp/leaf-tts/assets/"
+   [[ ! -f README.md ]] || cp README.md "$tmp/leaf-tts/README.md"
    for dir in scripts tools config generated/vp_tray generated/wisp_butterfly_tray generated/token_tray generated/dice_trays generated/player_box generated/game_box; do
      if [[ -d "$dir" ]]; then mkdir -p "$tmp/leaf-tts/$(dirname "$dir")"; cp -a "$dir" "$tmp/leaf-tts/$dir"; fi
    done
@@ -55,6 +57,7 @@ case "${1:-}" in
    target="$TTS_SAVES_DIR/$TTS_SAVE_NAME"
    now="$(date +%Y%m%d-%H%M%S)"
    if [[ -f "$target" ]]; then cp "$target" "$BACKUP_DIR/TS_Save_pre_publish_${now}.json"; fi
+   python3 "$ROOT/scripts/validate_card_save.py" "$candidate" --config "$ROOT/config/card_catalog_effects.json"
    cp "$candidate" "$target"
    echo "Published: $target"
    echo "Old working save (if any) backed up in: $BACKUP_DIR"

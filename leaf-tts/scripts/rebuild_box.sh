@@ -12,4 +12,6 @@ else echo "Missing save: $STAGED or $ACTIVE" >&2; exit 2
 fi
 python3 scripts/build_game_box.py --save "$SAVE"
 cp generated/game_box/Game_Box_Test_Save.json "$STAGED"
+python3 scripts/generate_card_config.py
+python3 scripts/apply_game_box_layout.py --save "$STAGED"
 echo "Game Box board and contents staged in $STAGED. Run ./scripts/publish.sh."

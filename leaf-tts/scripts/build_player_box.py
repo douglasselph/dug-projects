@@ -38,6 +38,7 @@ OBJECTS_PER_PLAYER = 12
 
 BASE_STEM = 'Player Box Supply'
 LID_STEM = 'Placard_ Discard Bin'
+LID_COVER = 'Discard Bin Cover'
 
 
 def artwork_path(root, stem):
@@ -179,11 +180,25 @@ def clone_component(template, guid):
     return obj
 
 
-def add_player_box(data, main, color, player_index):
+def add_player_box(data, main, color, player_index, existing_objects):
     bag_name = f'{color} Player Components'
     bag = next((o for o in main.get('ContainedObjects', []) if o.get('Nickname') == bag_name), None)
+    # The Game Box cleanup removes these bags after placing their contents on the
+    # table. For later rebuilds, use the previously generated table objects as
+    # templates. Capture them BEFORE removing their GUIDs from ObjectStates.
     if bag is None:
-        raise ValueError(f'Missing bag: {bag_name}')
+        guid_base = BASE_GUID_START + player_index * 0x100
+        component_guids = [f'{guid_base + n:06x}' for n in range(2, OBJECTS_PER_PLAYER)]
+        missing = [guid for guid in component_guids if guid not in existing_objects]
+        if missing:
+            raise ValueError(
+                f'Missing bag: {bag_name}; and missing existing table components: '
+                + ', '.join(missing)
+                + '. Rebuild from a save that still contains either the player bag or all ten table components.'
+            )
+        contained = [existing_objects[guid] for guid in component_guids]
+    else:
+        contained = bag.get('ContainedObjects', [])
 
     dx = player_index * PLAYER_BOX_X_SPACING
     guid_base = BASE_GUID_START + player_index * 0x100
@@ -211,7 +226,6 @@ def add_player_box(data, main, color, player_index):
     lid_obj['Transform'].update(shifted_pose('f0c002', dx))
     data['ObjectStates'].extend([base_obj, lid_obj])
 
-    contained = bag.get('ContainedObjects', [])
     by_name = {}
     for o in contained:
         by_name.setdefault(o.get('Nickname'), []).append(o)
@@ -262,10 +276,11 @@ def add_player_box(data, main, color, player_index):
 # Build textures/meshes once.
 base_art = artwork_path(args.assets_player, BASE_STEM)
 lid_art = artwork_path(args.assets_player, LID_STEM)
+lid_cover = artwork_path(args.assets_player, LID_COVER)
 base_tex = out / 'Player_Box_Base_Texture.png'
 lid_tex = out / 'Player_Box_Lid_Texture.png'
 build_atlas(base_art, base_tex, args.assets_trays / 'grassy_field.png')
-build_atlas(lid_art, lid_tex, lid_art)
+build_atlas(lid_art, lid_tex, lid_cover)
 build_open_box('Player_Box_Base', BASE_LONG, BASE_WIDE, base_tex)
 build_open_box('Player_Box_Lid', LID_LONG, LID_WIDE, lid_tex)
 
@@ -275,6 +290,10 @@ data = json.loads(args.save.read_text())
 main = next((o for o in data.get('ObjectStates', []) if o.get('Nickname', '').startswith('Game Box')), None)
 if main is None:
     raise ValueError('No Game Box found in input TTS save')
+
+# Save the existing table templates BEFORE removing them. After Game Box v19,
+# the player bags are intentionally absent from the Game Box.
+existing_objects = {o.get('GUID'): o for o in data['ObjectStates']}
 
 # Remove any previously generated player-box objects for all 4 players.
 remove_guids = set()
@@ -286,7 +305,7 @@ data['ObjectStates'] = [o for o in data['ObjectStates'] if o.get('GUID') not in 
 
 # Generate the 4 player boxes.
 for player_index, color in enumerate(PLAYER_COLORS):
-    add_player_box(data, main, color, player_index)
+    add_player_box(data, main, color, player_index, existing_objects)
 
 (out / 'Player_Box_Test_Save.json').write_text(json.dumps(data, indent=2) + '\n')
 print('Written', out / 'Player_Box_Test_Save.json')

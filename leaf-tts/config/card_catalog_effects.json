@@ -1,0 +1,416 @@
+{
+  "plants": {
+    "Root_05_01": {
+      "title": "Root Double Down",
+      "effect": "🎲 Raise ×2 one die",
+      "cost": 5,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_05_02": {
+      "title": "Root Four More",
+      "effect": "🎲 Raise a die +4",
+      "cost": 5,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_05_03": {
+      "title": "Root on a Roll",
+      "effect": "Reroll a die until it rolls 3+.\nIgnore Roll Rewards.",
+      "cost": 5,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_05_04": {
+      "title": "Root Well",
+      "effect": "Gain 1 Water.\n<battle/> May spend 1 Water to reroll 2 of your dice, or 1 of your opponent's.",
+      "cost": 5,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_07_01": {
+      "title": "Root Awakening",
+      "effect": "Upgrade a die; \nuse it now.",
+      "cost": 7,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_07_02": {
+      "title": "Root Appreciation",
+      "effect": "Gain 1 worm.\nEach worm <worm/> is worth \n1 more this round.",
+      "cost": 7,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_07_03": {
+      "title": "Root Down Payment",
+      "effect": "Gain 1 VP per 1 showing",
+      "cost": 7,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_07_04": {
+      "title": "Root Loot",
+      "effect": "Mulch any die\nfrom Dice Discard Bin",
+      "cost": 7,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_09_01": {
+      "title": "Root & Scoot",
+      "effect": "🎲 Raise any die +1.\n<battle/> Remove all your dice from one Strike Square, you no longer participate in that strike.",
+      "cost": 9,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_09_02": {
+      "title": "Root Cause",
+      "effect": "Flip one of your dice\nto its opposite face",
+      "cost": 9,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_09_03": {
+      "title": "Root Kindred",
+      "effect": "Set a die to match\nthe value of another",
+      "cost": 9,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Root_09_04": {
+      "title": "Root Recall",
+      "effect": "<cultivation/> Discard up to 2 dice dice; \ndraw that many.\n<battle/>  Reroll 1 die.",
+      "cost": 9,
+      "type": "Root",
+      "quantity": 6
+    },
+    "Vine_07_01": {
+      "title": "Shift Happens",
+      "effect": "<cultivation/> Flip one of your cards.\n<battle/> Flip 1 opponent’s Root or Vine card.",
+      "cost": 7,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_07_02": {
+      "title": "Vine and Again",
+      "effect": "Use the effect of another spent Root or Vine",
+      "cost": 7,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_07_03": {
+      "title": "Vine and Punishment",
+      "effect": "<cultivation/> Reroll 1 die. \nOn a 3, draw a die.\n<battle/> Choose 1 Strike row. Reduce all opponent dice there by 3.",
+      "cost": 7,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_07_04": {
+      "title": "Vine Yield",
+      "effect": "🎲 Raise any die +1",
+      "cost": 7,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_09_01": {
+      "title": "Low & Behold",
+      "effect": "Set a die showing your lowest value to its maximum",
+      "cost": 9,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_09_02": {
+      "title": "Parting Thorn",
+      "effect": "<cultivation/> May flip 1 of your Plant cards.\n<battle/> Choose 1 opponent. \nThey suffer 1 Wound; \nyou choose the card.",
+      "cost": 9,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_09_03": {
+      "title": "Rise and Vine",
+      "effect": "🎲 Raise all your dice +2",
+      "cost": 9,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_09_04": {
+      "title": "Vine and Dine",
+      "effect": "Trash a worm or bee \nto 🎲 Raise any die by 5",
+      "cost": 9,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_11_01": {
+      "title": "Reap What You Roll",
+      "effect": "Discard 1 die; draw 2",
+      "cost": 11,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_11_02": {
+      "title": "Berry Tasty",
+      "effect": "🎲 Raise all your D8s +1",
+      "cost": 11,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_11_03": {
+      "title": "Saplink Trellis",
+      "effect": "For each Root or Vine,\n🎲 Raise any die +1",
+      "cost": 11,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "Vine_11_04": {
+      "title": "Vine's the Limit",
+      "effect": "Set a die up to a D12 \nto its maximum value",
+      "cost": 11,
+      "type": "Vine",
+      "quantity": 6
+    },
+    "zFlower_11_01": {
+      "title": "Alluring Nectar",
+      "effect": "Gain or steal a Butterfly.\nTurn all your Butterflies face up.",
+      "cost": 11,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_11_02": {
+      "title": "Bloom Backbone",
+      "effect": "For each grafted\nVine or Flower, \n🎲 Raise any die +1",
+      "cost": 11,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_11_03": {
+      "title": "Sapping Snapdragon",
+      "effect": "🎲 Raise any die +2.\n<battle/> Choose another die, in its Strike Row, reduce all opposing dice by 2; Raise it by the total reduced.",
+      "cost": 11,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_11_04": {
+      "title": "Transplant Tulip",
+      "effect": "Draw 1 die.\n<battle/> You must swap 2 of your dice; 🎲 Raise 1 of them +2.",
+      "cost": 11,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_14_01": {
+      "title": "Bee-loved Bloom",
+      "effect": "Gain or Steal a Bee <bee/>.\nEach of your bees is worth 2 more this round.",
+      "cost": 14,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_14_02": {
+      "title": "Bloom Backflip",
+      "effect": "🎲 Raise a die +1.\n<battle/> Flip each opposing die higher than it in its Strike Row.",
+      "cost": 14,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_14_03": {
+      "title": "Gust of Petals",
+      "effect": "Reroll one of your dice.\n<battle/> In one Strike Row, all opponent dice higher than one die you choose must reroll",
+      "cost": 14,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_14_04": {
+      "title": "Petal To Die 4",
+      "effect": "Gain or Steal a D4.\nDiscard any number of D4's.\nDraw a die for each D4 discarded.",
+      "cost": 14,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_17_01": {
+      "title": "Bursting Blossom",
+      "effect": "🎲 Raise any die +1\nthen for each die showing its maximum value, \ndraw 1 die",
+      "cost": 17,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_17_02": {
+      "title": "Forget-Me-Not",
+      "effect": "Choose any 1 die from your Discard. \nRoll it into your Hand.",
+      "cost": 17,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_17_03": {
+      "title": "O Edelweiss",
+      "effect": "Twice you may play another card \nor flip another card",
+      "cost": 17,
+      "type": "Flower",
+      "quantity": 6
+    },
+    "zFlower_17_04": {
+      "title": "Queen’s Blossom",
+      "effect": "Draw 2 dice",
+      "cost": 17,
+      "type": "Flower",
+      "quantity": 6
+    }
+  },
+  "rounds": {
+    "Battle_Barkskin_Flow": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Barkskin",
+      "effect_1_text": "You suffer a Wound from a Strike only if you lose by 10+",
+      "effect_2_title": "Flow",
+      "effect_2_text": "Gain any die.\nPlace in Discard."
+    },
+    "Battle_Bloom_Burrow": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Bloom",
+      "effect_1_text": "Gain 1 VP",
+      "effect_2_title": "Burrow",
+      "effect_2_text": "Gain 2 Worms"
+    },
+    "Battle_Bloom_Surge": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Bloom",
+      "effect_1_text": "Gain 1 VP",
+      "effect_2_title": "Surge",
+      "effect_2_text": "Gain D12. \nPlace in Discard."
+    },
+    "Battle_Scatter_Swell": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Scatter",
+      "effect_1_text": "Each opponent with wisps must choose 1 Wisp to trash",
+      "effect_2_title": "Swell",
+      "effect_2_text": "Gain D10.\nPlace in Discard."
+    },
+    "Battle_Sprawl_Bath": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Sprawl",
+      "effect_1_text": "Gain any Root or Vine",
+      "effect_2_title": "Bath",
+      "effect_2_text": "Refresh"
+    },
+    "Battle_Whisper_Burst": {
+      "title": "Battle",
+      "quantity": 1,
+      "effect_1_title": "Whisper",
+      "effect_1_text": "Gain 1 Wisp",
+      "effect_2_title": "Burst",
+      "effect_2_text": "Gain D20. \nPlace in Discard."
+    },
+    "Resource_Compost_Mulch": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Compost",
+      "effect_1_text": "Upgrade a die \nfrom your hand.",
+      "effect_2_title": "Mulch",
+      "effect_2_text": "Mulch a die\nfrom your hand"
+    },
+    "Resource_Sunlight_Compost": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Sunlight",
+      "effect_1_text": "Gain Sunlight token",
+      "effect_2_title": "Compost",
+      "effect_2_text": "Upgrade a die\nfrom your hand."
+    },
+    "Resource_Sunlight_Mulch": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Sunlight",
+      "effect_1_text": "Gain Sunlight token",
+      "effect_2_title": "Mulch",
+      "effect_2_text": "Mulch a die\nfrom your hand"
+    },
+    "Resource_Sunlight_Water": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Sunlight",
+      "effect_1_text": "Gain Sunlight token",
+      "effect_2_title": "Water",
+      "effect_2_text": "Gain Water token"
+    },
+    "Resource_Water_Compost": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Water",
+      "effect_1_text": "Gain Water token",
+      "effect_2_title": "Compost",
+      "effect_2_text": "Upgrade a die\nfrom your hand."
+    },
+    "Resource_Water_Mulch": {
+      "title": "Cultivation",
+      "quantity": 2,
+      "effect_1_title": "Water",
+      "effect_1_text": "Gain Water token",
+      "effect_2_title": "Mulch",
+      "effect_2_text": "Mulch a die\nfrom your hand"
+    }
+  },
+  "wisps": {
+    "Wisp_Award_VP": {
+      "title": "Wisp of Honor",
+      "effect": "Gain 1 VP",
+      "quantity": 2
+    },
+    "Wisp_Award_VP2": {
+      "title": "Berry Patient",
+      "effect": "Gain 1 VP",
+      "quantity": 1
+    },
+    "Wisp_Gain_Critters": {
+      "title": "Whispering Wings",
+      "effect": "Gain any 2 critters\n(🪱/🐝)",
+      "quantity": 3
+    },
+    "Wisp_Gain_Green": {
+      "title": "Pollinating Wisp",
+      "effect": "Gain or Refresh\nGreen Butterfly",
+      "quantity": 4
+    },
+    "Wisp_Gain_Purple": {
+      "title": "Pollinating Wisp",
+      "effect": "Gain or Refresh \nPurple Butterfly",
+      "quantity": 2
+    },
+    "Wisp_Gain_Red": {
+      "title": "Pollinating Wisp",
+      "effect": "Gain or Refresh \nRed Butterfly",
+      "quantity": 4
+    },
+    "Wisp_Gain_Yellow": {
+      "title": "Pollinating Wisp",
+      "effect": "Gain or Refresh \nYellow Butterfly",
+      "quantity": 3
+    },
+    "Wisp_Mulch_Die": {
+      "title": "Pocketed Spark",
+      "effect": "Gain Mulch;\nStore 1 die from your discard on it.",
+      "quantity": 4
+    },
+    "Wisp_Quake": {
+      "title": "Wispquake",
+      "effect": "All players must reroll all their dice. The player that pulled the last wisp may  keep one of theirs.",
+      "quantity": 0
+    },
+    "Wisp_Swap_Die": {
+      "title": "Pollen Theft",
+      "effect": "<battle/> Swap one of your dice\nwith an opponent’s \nsame-size die\n(no re-rolls)",
+      "quantity": 3
+    },
+    "Wisp_Upgrade_Die": {
+      "title": "Overgrowth",
+      "effect": "Upgrade +2 steps — \nskip missing sizes; \nuse gained die now",
+      "quantity": 4
+    },
+    "Wisps_Resolve": {
+      "title": "Wisp's Resolve",
+      "effect": "<battle/> Battle:\nResolve a Strike immediately.\nThen return all dice & critters\nfrom that row.",
+      "quantity": 2
+    }
+  }
+}

@@ -8,7 +8,8 @@ root = root.resolve()
 allowed = (
     'scripts/', 'tools/', 'config/',
     'generated/vp_tray/', 'generated/wisp_butterfly_tray/', 'generated/token_tray/', 'generated/dice_trays/', 'generated/player_box/', 'generated/game_box/',
-    'assets/trays/', 'assets/files.txt',
+    'assets/trays/', 'assets/card_data/', 'assets/files.txt',
+    'docs/', 'README.md',
     'source/TS_Save_latest.json', 'output/TS_Save_latest.json',
     'README-VP-TRAY-WORKFLOW.md', 'example/'
 )

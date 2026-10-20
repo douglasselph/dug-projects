@@ -162,7 +162,45 @@ def image_url(card, side, project, mode):
     return 'Z:' + full.as_posix()
 
 
-def make_deck(card, deck_num, make_guid, project, mode):
+def clean_effect(value):
+    """Render source CSV timing tags as readable labels; keep effect wording."""
+    value = re.sub(r'<cultivation\s*/>', 'Cultivation:', value, flags=re.I)
+    value = re.sub(r'<battle\s*/>', 'Battle:', value, flags=re.I)
+    value = re.sub(r'<[^>]*>', '', value)
+    value = re.sub(r'Battle:\s*Battle:', 'Battle:', value)
+    return '\n'.join(line.strip() for line in value.strip().splitlines()).strip()
+
+
+def display_info(card, catalog):
+    """Lookup by immutable manifest design ID, never current displayed title."""
+    category = card['category']
+    section = 'plants' if category in ('root', 'vine', 'flower') else (
+        'wisps' if category == 'wisp' else 'rounds')
+    ident = card['id']
+    info = catalog[section].get(ident)
+    if info is None:
+        raise ValueError(f'CARD DATA ERROR: no CSV row for manifest ID {ident!r} '
+                         f'(category={category!r}); expected config section {section!r}; '
+                         f'found {len(catalog[section])} entries')
+    if section == 'plants':
+        if info['type'].lower() != category:
+            raise ValueError(f'CARD DATA ERROR: {ident}: CSV type {info["type"]!r} '
+                             f'conflicts with manifest category {category!r}')
+        if int(card['quantity']) != info['quantity']:
+            raise ValueError(f'CARD DATA ERROR: {ident}: manifest quantity {card["quantity"]} '
+                             f'!= CSV quantity {info["quantity"]}')
+        return f"[{info['cost']}] {info['title']}", clean_effect(info['effect'])
+    if int(card['quantity']) != info['quantity']:
+        raise ValueError(f'CARD DATA ERROR: {ident}: manifest quantity {card["quantity"]} '
+                         f'!= CSV quantity {info["quantity"]}')
+    if section == 'wisps':
+        return info['title'], clean_effect(info['effect'])
+    first, second = info['effect_1_title'], info['effect_2_title']
+    return f'{first} / {second}', (f'{first}: {clean_effect(info["effect_1_text"])}\n'
+                                  f'{second}: {clean_effect(info["effect_2_text"])}')
+
+
+def make_deck(card, deck_num, make_guid, project, mode, catalog):
     qty = int(card['quantity'])
     if qty < 2:
         raise ValueError('make_deck requires at least 2 cards')
@@ -172,25 +210,27 @@ def make_deck(card, deck_num, make_guid, project, mode):
                               'NumWidth': 1, 'NumHeight': 1,
                               'BackIsHidden': True, 'UniqueBack': False, 'Type': 0}}
     card_id = deck_num * 100
-    cost = card.get('cost')
     category = card['category']
-    title = card['id']
-    description = f'{category.title()} card' + (f' • Cost {cost}' if cost is not None else '')
+    title, description = display_info(card, catalog)
+    if not title.strip() or not description.strip():
+        raise ValueError(f'CARD DATA ERROR: {card["id"]}: blank generated title/effect: {title!r}, {description!r}')
     cards = []
     for _ in range(qty):
         c = base_object('Card', make_guid(), title, description)
+        c['GMNotes'] = card['id']  # permanent design ID, independent of player-facing title
         c.update(CardID=card_id, SidewaysCard=False, CustomDeck=copy.deepcopy(custom), Hands=True)
         c['Transform'] = transform()
         scale_card_object(c, CARD_SIZES_IN[category][1])
         cards.append(c)
     deck = base_object('DeckCustom', make_guid(), title, description)
+    deck['GMNotes'] = card['id']
     scale_card_object(deck, CARD_SIZES_IN[category][1])
     deck.update(DeckIDs=[card_id] * qty, CustomDeck=custom,
                 ContainedObjects=cards, Hands=True, SidewaysCard=False)
     return deck
 
 
-def make_multi_deck(cards, next_num, make_guid, project, mode, title):
+def make_multi_deck(cards, next_num, make_guid, project, mode, title, catalog):
     all_cards = []
     custom = {}
     ids = []
@@ -204,14 +244,19 @@ def make_multi_deck(cards, next_num, make_guid, project, mode, title):
         custom[str(key)] = definition
         ident = key * 100
         for _ in range(int(item['quantity'])):
-            c = base_object('Card', make_guid(), item['id'], item['category'].title() + ' card')
+            card_title, description = display_info(item, catalog)
+            if not card_title.strip() or not description.strip():
+                raise ValueError(f'CARD DATA ERROR: {item["id"]}: blank generated title/effect: {card_title!r}, {description!r}')
+            c = base_object('Card', make_guid(), card_title, description)
+            c['GMNotes'] = item['id']  # each card in a mixed Round/Wisp deck keeps its own ID
             c.update(CardID=ident, SidewaysCard=False, CustomDeck={str(key): definition}, Hands=True)
             scale_card_object(c, CARD_SIZES_IN[item['category']][1])
             ids.append(ident)
             all_cards.append(c)
     if len(all_cards) < 2:
         raise ValueError(f'{title}: not enough cards')
-    d = base_object('DeckCustom', make_guid(), title)
+    d = base_object('DeckCustom', make_guid(), title,
+                    'Mixed card stack: take cards out to read their individual effects.')
     # Each grouped deck contains identical physical sizes.
     physical_sizes = {CARD_SIZES_IN[item['category']] for item in cards}
     if len(physical_sizes) != 1:
@@ -528,12 +573,22 @@ def parse_args():
 def main():
     a = parse_args()
     project = a.project.expanduser().resolve()
+    # CSV files are the editable source of truth. Always refresh derived config.
+    import subprocess
+    subprocess.run([sys.executable, str(project / 'scripts/generate_card_config.py')],
+                   check=True, cwd=project)
     manifest_path = project / 'output/preparation/tts_asset_manifest.json'
     source = project / 'source/TS_Save_8.json'
     if not manifest_path.is_file() or not source.is_file():
         sys.exit(f'Missing {manifest_path if not manifest_path.is_file() else source}')
     cards = json.loads(manifest_path.read_text(encoding='utf-8'))['cards']
+    catalog_file = project / 'config/card_catalog_effects.json'
+    if not catalog_file.is_file():
+        raise ValueError(f'Missing generated card data: {catalog_file}. Run scripts/update_card_data.sh')
+    catalog = json.loads(catalog_file.read_text(encoding='utf-8'))
     validate(cards)
+    for card in cards:
+        display_info(card, catalog)  # fail before creating any objects
     game = json.loads(source.read_text(encoding='utf-8'))
     mk_guid = guid_factory(set(all_guids(game)))
     preserved = [copy.deepcopy(o) for o in game['ObjectStates'] if o['Name'] in ('HandTrigger', 'LayoutZone')]
@@ -544,11 +599,11 @@ def main():
     plants = []
     for cat in ('root', 'vine', 'flower'):
         for card in sorted((c for c in cards if c['category'] == cat), key=lambda c: c['id']):
-            plants.append(make_deck(card, deck_num, mk_guid, project, a.mode))
+            plants.append(make_deck(card, deck_num, mk_guid, project, a.mode, catalog))
             deck_num += 1
-    catalog = bag(mk_guid(), 'Plant Card Catalog', plants,
-                  '36 stacks: 12 Roots, 12 Vines, 12 Flowers. Six copies of each design.')
-    items.append(catalog)
+    plant_catalog_bag = bag(mk_guid(), 'Plant Card Catalog', plants,
+                            '36 stacks: 12 Roots, 12 Vines, 12 Flowers. Six copies of each design.')
+    items.append(plant_catalog_bag)
 
     # Retail packaging: all 12 Cultivation and 6 Battle Round Cards are
     # one physical stack, not separate decks or bags. Their setup order is
@@ -557,13 +612,13 @@ def main():
         (c for c in cards if c['category'] in ('cultivation', 'battle')),
         key=lambda c: (c['category'] != 'cultivation', c['id']))
     round_deck, deck_num = make_multi_deck(
-        round_cards, deck_num, mk_guid, project, a.mode, 'Round Cards - All 18')
+        round_cards, deck_num, mk_guid, project, a.mode, 'Round Cards - All 18', catalog)
     items.append(round_deck)
 
     wisps = sorted((c for c in cards if c['category'] == 'wisp'),
                    key=lambda c: c['id'])
     wisp_deck, deck_num = make_multi_deck(
-        wisps, deck_num, mk_guid, project, a.mode, 'Wisp Deck')
+        wisps, deck_num, mk_guid, project, a.mode, 'Wisp Deck', catalog)
     items.extend(build_reference_materials(
         project, mk_guid, a.mode, hosted_urls, deck_num))
     deck_num += 2
@@ -596,6 +651,9 @@ def main():
     output_dir = project / 'output'
     output_dir.mkdir(parents=True, exist_ok=True)
     output = output_dir / f'Leaf_and_Let_Die_cards_dice_tokens_players_glade_helpers_{a.mode}.json'
+    sys.path.insert(0, str(project / 'scripts'))
+    from validate_card_save import validate_save
+    validate_save(game, json.loads(catalog_file.read_text(encoding='utf-8')), str(output))
     output.write_text(json.dumps(game, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     sizing_report = {
         'source': 'Manufacturing Outline v8.2',
