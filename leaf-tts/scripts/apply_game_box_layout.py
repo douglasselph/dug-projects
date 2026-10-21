@@ -9,6 +9,7 @@ import copy
 import json
 import re
 from pathlib import Path
+from box_illustrations import add_box_illustrations, PDF_GUID as ILLUSTRATIONS_GUID
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--save', type=Path, default=Path('output/TS_Save_latest.json'))
@@ -69,7 +70,7 @@ def source_card_id(obj, expected_category=None, parent_id=None, parent_label=Non
     note = (obj.get('GMNotes') or '').strip()
     urls = image_design_ids(obj)
     known_urls = urls & CARD_EFFECTS.keys()
-    is_card = obj.get('Name') in ('Card', 'DeckCustom')
+    is_card = obj.get('Name') in ('Card', 'DeckCustom', 'Deck')
     known_note = note in CARD_EFFECTS
     # A mixed Round deck has multiple face URLs, so it isn't a single card.
     if not is_card:
@@ -96,7 +97,7 @@ def source_card_id(obj, expected_category=None, parent_id=None, parent_label=Non
         key = parent_id
     elif obj.get('Nickname') in CARD_EFFECTS and not urls:
         key = obj['Nickname']
-    elif expected_category is None and len(urls) > 1 and obj.get('Name') == 'DeckCustom':
+    elif expected_category is None and len(urls) > 1 and obj.get('Name') in ('DeckCustom', 'Deck'):
         # A mixed Round/Wisp deck; its individual cards still require IDs.
         return ''
     else:
@@ -170,6 +171,11 @@ def clean_effect(value):
     return '\n'.join(line.strip() for line in value.strip().splitlines()).strip()
 
 
+# Place the two hand-arranged Round card stacks outside the Sack.
+from round_stack_layout import arrange_round_stacks
+round_positions = json.loads(Path('config/round_stack_layout.json').read_text())
+arrange_round_stacks(data, round_positions)
+
 # Move every identifiable existing object to its exact manually approved pose.
 # This includes dice, four player-box assemblies, VP/Wisp trays, sack and placard.
 updated = 0
@@ -208,8 +214,10 @@ if sack:
         'placard are the pieces intended to come out onto the table during setup.'
     )
     for item in sack.get('ContainedObjects', []):
-        if item.get('Nickname','').startswith('Leaf & Let Die') and item.get('Name') == 'Custom_PDF':
+        if item.get('GUID') == 'f0d002' and item.get('Name') == 'Custom_PDF':
             item['Description'] = 'START HERE: Take out and read this rulebook to set up and learn Leaf & Let Die.'
+
+    add_box_illustrations(sack)
 
 
 # Catalog is a separate bag on the placard, beside the Game Box Sack.
@@ -244,7 +252,7 @@ if external_catalog is None:
 apply_plant_catalog(external_catalog)
 catalog_card_guids = {item.get('GUID') for item in walk(external_catalog.get('ContainedObjects', []))}
 for obj in walk(objs):
-    if obj.get('Name') in ('Card', 'DeckCustom') and obj.get('GUID') not in catalog_card_guids:
+    if obj.get('Name') in ('Card', 'DeckCustom', 'Deck') and obj.get('GUID') not in catalog_card_guids:
         if image_design_ids(obj) & card_info['plants'].keys() or obj.get('GMNotes') in card_info['plants']:
             decorate_plant(obj, parent_label='outside Plant Card Catalog')
 
@@ -252,7 +260,7 @@ for obj in walk(objs):
 # Recursing over the full tree also covers a card removed from its deck.
 def rename_effect_cards(obj, parent_label='<top level>', expected_category=None):
     """Validate every card in known Round/Wisp decks, including mixed decks."""
-    if obj.get('Name') in ('Card', 'DeckCustom'):
+    if obj.get('Name') in ('Card', 'DeckCustom', 'Deck'):
         imgs = image_design_ids(obj)
         note = obj.get('GMNotes', '')
         cat = ('wisps' if note in card_info['wisps'] or imgs & card_info['wisps'].keys()
@@ -260,7 +268,7 @@ def rename_effect_cards(obj, parent_label='<top level>', expected_category=None)
                else expected_category)
         if cat:
             # Multiple image IDs = a mixed deck, not an individual card ID.
-            if len(imgs) > 1 and obj.get('Name') == 'DeckCustom':
+            if len(imgs) > 1 and obj.get('Name') in ('DeckCustom', 'Deck'):
                 if not all(name in card_info[cat] for name in imgs):
                     card_failure(obj, 'Unknown design in a mixed deck',
                                  expected=cat, found=sorted(imgs), parent=parent_label)

@@ -8,6 +8,7 @@ import copy
 import json
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
+from box_illustrations import add_box_illustrations, PDF_GUID as ILLUSTRATIONS_GUID
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--save', type=Path, default=Path('output/TS_Save_latest.json'))
@@ -215,10 +216,12 @@ if external_catalog is None and internal_catalog is not None:
 
 # Keep the Sack's real contents and replace only the generated PDF.
 # Don't reinsert the catalog after rebuild_layout.sh has moved it out.
+PDF_GUID_ILLUSTRATIONS = ILLUSTRATIONS_GUID
 main['ContainedObjects'] = [copy.deepcopy(o) for o in old_contents
     if (o.get('Nickname') in REMAINING_NAMES or o.get('GUID') == 'b0010f')
-    and o.get('GUID') not in (CATALOG_GUID, PDF_GUID)]
+    and o.get('GUID') not in (CATALOG_GUID, PDF_GUID, PDF_GUID_ILLUSTRATIONS)]
 main['ContainedObjects'].append(pdf_item())
+add_box_illustrations(main, tts_root=args.tts_root)
 main['Description'] = (
     'Store components not currently needed on the table here. '
     'Take out and read the Rulebook first. The other materials in this Sack '
@@ -230,6 +233,11 @@ main['Description'] = (
 data['ObjectStates'] = [o for o in data['ObjectStates'] if o.get('GUID') != BOX_GUID]
 data['ObjectStates'].append(game_box_object())
 
+# Preserve both externally arranged Round stacks even on a standalone box rebuild.
+from round_stack_layout import arrange_round_stacks
+round_positions = json.loads(Path('config/round_stack_layout.json').read_text())
+arrange_round_stacks(data, round_positions)
+
 path = args.output / 'Game_Box_Test_Save.json'
 path.write_text(json.dumps(data, indent=2) + '\n')
 print('Written', path)
@@ -237,3 +245,4 @@ print('Game Box Sack items:', len(main['ContainedObjects']))
 print('Catalog on placard:', external_catalog is not None)
 print('Board size: %.3f x %.3f TTS units' % (BOARD_W, BOARD_H))
 print('Rulebook:', args.rules_pdf)
+print('Prototype photographs: docs/Box Illustrations.pdf')

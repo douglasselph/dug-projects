@@ -59,12 +59,12 @@ def validate_save(data, catalog, save_label='<in-memory>'):
             typ = obj.get('Name')
             path = f'{location}/{obj.get("Nickname", "<unnamed>")} [{obj.get("GUID", "?")}]'
             next_parent = parent_design
-            if typ in ('Card', 'DeckCustom'):
+            if typ in ('Card', 'DeckCustom', 'Deck'):
                 images = image_ids(obj)
                 raw_note = (obj.get('GMNotes') or '').strip()
                 # Mixed decks may legitimately hold many designs, but MUST contain
                 # individual cards; they cannot be silently accepted as an empty stack.
-                mixed = typ == 'DeckCustom' and len(images) > 1
+                mixed = typ in ('DeckCustom', 'Deck') and len(images) > 1
                 is_catalog_card = bool((images & all_info.keys()) or raw_note or parent_design or 'Plant Card Catalog' in location or 'Round Cards' in location or 'Wisp Deck' in location)
                 if not is_catalog_card:
                     # VP tokens and printed helper/reference cards are not CSV designs.

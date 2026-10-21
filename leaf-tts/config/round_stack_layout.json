@@ -1,0 +1,31 @@
+{
+  "source": "TS_Save_8(4).json hand-arranged Round card stacks",
+  "cultivation": {
+    "guid": "b0010f",
+    "pose": {
+      "posX": -25.205946,
+      "posY": 1.24502969,
+      "posZ": -4.68704653,
+      "rotX": 359.9811,
+      "rotY": 179.999756,
+      "rotZ": 359.891144,
+      "scaleX": 1.431429,
+      "scaleY": 1.0,
+      "scaleZ": 1.431429
+    }
+  },
+  "battle": {
+    "guid": "f62782",
+    "pose": {
+      "posX": -19.3095913,
+      "posY": 1.22257411,
+      "posZ": -4.737687,
+      "rotX": 359.9503,
+      "rotY": 180.006577,
+      "rotZ": 359.9034,
+      "scaleX": 1.431429,
+      "scaleY": 1.0,
+      "scaleZ": 1.431429
+    }
+  }
+}

@@ -1,13 +1,13 @@
 {
-  "source": "User-arranged TS_Save_8(3).json, October 20 2026",
+  "source": "TS_Save_8(4).json - hand-arranged placements; Round stack placement separately in round_stack_layout.json",
   "poses": {
     "b001f3": {
-      "posX": -22.6924667,
-      "posY": 0.986474335,
-      "posZ": -6.82993269,
-      "rotX": 0.015564749,
-      "rotY": -0.00211547851,
-      "rotZ": 0.0943309,
+      "posX": -23.4930782,
+      "posY": 0.9831264,
+      "posZ": -9.497037,
+      "rotX": 0.012640222,
+      "rotY": -0.005388272,
+      "rotZ": 0.08085756,
       "scaleX": 1.0,
       "scaleY": 1.0,
       "scaleZ": 1.0
@@ -1232,6 +1232,17 @@
       "scaleX": 0.904802,
       "scaleY": 1.0,
       "scaleZ": 0.912536
+    },
+    "b000fc": {
+      "posX": -20.5197372,
+      "posY": 0.990736246,
+      "posZ": -9.368464,
+      "rotX": 359.990631,
+      "rotY": 180.000519,
+      "rotZ": 359.883423,
+      "scaleX": 1.0,
+      "scaleY": 1.0,
+      "scaleZ": 1.0
     }
   },
   "native_token_stacks": [

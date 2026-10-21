@@ -1,6 +1,6 @@
 # Leaf & Let Die — Tabletop Simulator build system
 
-> **Project handoff / context for ChatGPT and human maintainers.** This repository creates and updates a **Tabletop Simulator (TTS) simulation of the physical retail game**, including cards, dice, trays, four player boxes, a Game Box placard and a readable PDF rulebook. The current purpose is a **blind-playtest setup**, not an automated implementation of game rules. TTS users manipulate the pieces themselves.
+> **Project handoff / context for ChatGPT and human maintainers.** This repository creates and updates a **Tabletop Simulator (TTS) simulation of the physical retail game**, including cards, dice, trays, four player boxes, a Game Box placard and a readable PDF rulebook and a prototype-photo PDF. The current purpose is a **blind-playtest setup**, not an automated implementation of game rules. TTS users manipulate the pieces themselves.
 >
 > **Read this file before changing the scripts.** It describes the workflow as it exists in the October 20, 2026 project pack **plus the v27 CSV-driven card patch**. Some older builder docstrings still describe an earlier, pre-tray version of the simulation.
 
@@ -42,7 +42,7 @@ A typical physical-component edit is:
 
 ## Mental model: three layers
 
-1. **Editable source data and images:** `assets/` contains card artwork, box/tray textures, and **the four canonical card CSVs**. `docs/Leaf_and_Let_Die_v37-01.pdf` is the readable rulebook used by the Game Box builder.
+1. **Editable source data and images:** `assets/` contains card artwork, box/tray textures, and **the four canonical card CSVs**. `docs/Leaf_and_Let_Die_v37-01.pdf` is the readable rulebook; `docs/Box Illustrations.pdf` is a visual photo guide to the physical prototype, especially the Player Supply and Discard boxes. Both are kept inside the Game Box Sack.
 2. **Generated definitions and geometry:** `config/card_catalog_effects.json` is generated from the CSVs. The `scripts/build_*.py` programs create OBJ meshes, MTL files, texture atlases, and updated TTS JSON saves under `generated/`.
 3. **Staged and published save:** The working candidate is `output/TS_Save_latest.json`. `publish.sh` copies it to the TTS save directory specified in `config/tts_workflow.conf`. The game is then reloaded in TTS.
 
@@ -115,7 +115,7 @@ Some of these directories/files, particularly complete artwork and the PDF, may 
 | --- | --- |
 | `generate_card_config.py` | Validates the four CSVs and emits `config/card_catalog_effects.json`. Supports `--csv-dir` and `--output`. |
 | `apply_game_box_layout.py` | Applies approved TTS object transforms and friendly descriptions, adjusts Catalog placement, and updates Plant/Wisp/Round card titles and effects from the generated config. Supports `--save`, `--layout`, `--card-effects`. |
-| `build_game_box.py` | Creates a flat Game Box display board using `assets/box/cover_main`; adds a TTS Custom PDF rulebook; adjusts bag/catalog arrangement. Supports `--save`, `--assets-box`, `--rules-pdf`, `--output`, `--tts-root`. |
+| `build_game_box.py` | Creates a flat Game Box display board using `assets/box/cover_main`; adds the TTS Custom PDF rulebook and prototype-photo guide; adjusts bag/catalog arrangement. Supports `--save`, `--assets-box`, `--rules-pdf`, `--output`, `--tts-root`. |
 | `build_player_box.py` | Creates Blue, Green, Red, Yellow player supply trays and Discard Bin pieces with the components laid out. Reads artwork from `assets/player/`; uses `assets/trays/grassy_field.png` for supply walls and `Discard Bin Cover` art for Discard Bin walls. |
 | `build_dice_trays.py` | Generates the low/high dice tray meshes, textures and staged-save objects. |
 | `build_token_tray.py` | Generates the shared Critter/nutrient tray and token placements/stacks. |
@@ -226,3 +226,23 @@ When given this README and a current project archive:
 ---
 
 *Documented from `leaf-tts-pack-20261020-165204.tgz` with `Leaf_TTS_CSV_Driven_Cards_v27.zip` overlaid. Update this README when script names, staging behavior, data sources, or pack contents change.*
+
+### Round card stacks on the Game Box placard
+
+The 18 Round cards are unpacked as two separate stacks: **12 Cultivation** and **6 Battle**. Their exact hand-arranged TTS positions are saved in `config/round_stack_layout.json` (from `TS_Save_8(4).json`). The Game Box Sack and Plant Card Catalog positions are in `config/game_box_layout.json`. Both `scripts/build_game_box.py` and `scripts/apply_game_box_layout.py` move Round cards out of the Game Box Sack, splitting legacy 18-card decks automatically. The scripts reuse each card's original GUID, artwork, permanent `GMNotes` ID, and CSV-generated name/effect. Run `./scripts/rebuild_layout.sh` or `./scripts/rebuild_box.sh` then `./scripts/publish.sh`. The operation is repeatable, and an unexpected card count or unidentified Round card halts the rebuild.
+
+### Prototype photos inside Game Box Sack
+
+Keep `docs/Box Illustrations.pdf` in the local project. The scripts `scripts/box_illustrations.py`, `scripts/apply_game_box_layout.py`, and `scripts/build_game_box.py` ensure one `Leaf & Let Die — Prototype Box Photos` Custom PDF (permanent GUID `f0d003`) resides inside the Game Box Sack. Run `./scripts/rebuild_layout.sh` and `./scripts/publish.sh` to add it to an existing save, or `./scripts/rebuild_box.sh` when regenerating the box. Both fail if the PDF is absent and never duplicate the object. It supplements rather than replaces the Rulebook and explains real physical packaging details that TTS cannot simulate exactly. The PDF uses a local `Z:/...` path and requires an HTTPS-hosted URL for remote players. Diagnostic packs may omit the actual PDF.
+
+
+## Cloud release publishing (Steam Workshop candidate)
+
+Keep local development and cloud release saves separate:
+
+- `./scripts/publish.sh` copies the staged `output/TS_Save_latest.json` to **Leaf and Let Die - Generated**, using local `Z:/...` URLs. Use this for editing and rebuilding.
+- `./scripts/cloud_publish.sh` validates the staged local save, substitutes the 163 verified hosted URLs from `config/cloud_asset_urls.json`, and creates **both** `output/cloud/Leaf_and_Let_Die_Blind_Playtest_Cloud.json` and the separate **Save & Load → Active** copy. It does **not** modify `output/TS_Save_latest.json` or Generated.
+- To convert a different local source: `./scripts/cloud_publish.sh /path/to/local-save.json`.
+- It **fails closed** if any asset URL is not known or is not secure HTTPS. New images/PDFs/models must first be uploaded to Steam Cloud, and their paths/URLs added to `config/cloud_asset_urls.json`; this script does not upload assets. Do not run the normal local `publish.sh` on the cloud release.
+- Backups of previous Active cloud files are made under `output/backups/`. The release is a **local TTS save**, not a Steam Workshop upload; use TTS Workshop Upload separately.
+- Card validation occurs **before** rewriting URLs because the validator currently uses original artwork filenames.
