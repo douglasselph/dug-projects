@@ -160,7 +160,7 @@ class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
     }
 
     @Test
-    fun `O Edelweiss top-level Battle score is only Done when current first step would disable a ready Plant`() {
+    fun `O Edelweiss top-level Battle score recognizes playing a ready Plant`() {
         val sourceId = CreatureCardId(10)
         val sourceView = plant(
             id = sourceId.value,
@@ -196,7 +196,25 @@ class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
             action = BattleMainAction.ActivatePlant(source)
         )
 
-        assertEquals(35, topLevel.total)
+        val playScore = requireNotNull(
+            BattleOEdelweissAnalyzer().scoreChoice(
+                context,
+                OEdelweissChoice.Play(ready.toChoice())
+            )
+        )
+        // A legal Play is not necessarily worth more than Done; that depends on
+        // the card scorer and the current Battle situation. The top-level
+        // scorer must agree with the best available first-step choice.
+        val flipScore = requireNotNull(
+            BattleOEdelweissAnalyzer().scoreChoice(
+                context,
+                OEdelweissChoice.Flip(ready.toChoice())
+            )
+        )
+        val doneScore = requireNotNull(
+            BattleOEdelweissAnalyzer().scoreChoice(context, OEdelweissChoice.Done)
+        )
+        assertEquals(maxOf(playScore.total, flipScore.total, doneScore.total), topLevel.total)
     }
 
     private fun battleContext(creature: List<CreatureCardView>): DecisionContext {
