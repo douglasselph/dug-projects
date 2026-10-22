@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
                     is GameEntry.DecisionReasoning -> {
                         recorded++
                         labels.bump(entry.choiceLabel)
-                        families.bump(family(entry.choiceLabel))
+                        MainActionFamily.classify(entry.choiceLabel)?.let { families.bump(it) }
                         val other = entry.alternatives.filterNot { it.selected }
                         scoredAlternatives += entry.alternatives.size
                         val margin = if (other.isEmpty()) null else entry.total - other.maxOf { it.total }
@@ -103,6 +103,8 @@ fun main(args: Array<String>) {
             }
         }
         File(output, "selected-choices.tsv").writeCounts(labels)
+        // Percentages here are relative to recognized Main/FinalMain choices only.
+        // Subordinate scored decisions never enter this denominator.
         File(output, "action-families.tsv").writeCounts(families)
         File(output, "score-margins.tsv").writeCounts(marginBuckets)
         File(output, "score-adjustments.tsv").writeCounts(reasons)
@@ -116,12 +118,17 @@ recordedScoredDecisions=$recorded
 recordedAlternatives=$scoredAlternatives
 buyDecisionEvents=$buyDecisions
 note=These are scored Chronicle decisions, not an exhaustive count of every executed Main Action.
-note=Action families are derived from score labels; review selected-choices.tsv for ambiguous labels.
+recordedMainAndFinalMain=${families.values.sum()}
+recognizedMainAndFinalMain=${families.filterKeys { it != "Unrecognized Main" }.values.sum()}
+unrecognizedMainAndFinalMain=${families["Unrecognized Main"] ?: 0}
+note=action-families.tsv percentages use only scored Main(...) and FinalMain(...) selections as their denominator.
+note=Bare first-Battle-Main choice labels are not safely identifiable as Main actions and are excluded; this is not an exhaustive executed-action census.
+note=Unrecognized Main labels are included in the denominator and identified explicitly, rather than silently discarded.
 note=Buy decisions are Chronicle events and should not be added to the scored-choice denominator.
 """)
         println("Human Baseline 5B.12A diagnostics: ${output.absolutePath}")
         println("Scored decisions: $recorded; Buy decision events: $buyDecisions")
-        println("Main/other label-derived categories: $families")
+        println("Scored Main/FinalMain action categories (not all executed Main actions): $families")
     } finally {
         koinApp.close()
     }
@@ -129,14 +136,3 @@ note=Buy decisions are Chronicle events and should not be added to the scored-ch
 
 private fun MutableMap<String, Int>.bump(key: String) { this[key] = (this[key] ?: 0) + 1 }
 
-private fun family(label: String): String {
-    val s = label.lowercase()
-    return when {
-        s.startsWith("draw") -> "draw"
-        s.contains("round effect") || s.startsWith("round") -> "round-effect"
-        s.contains("plant") || s.contains("activate") -> "plant-or-activation"
-        s.contains("buy") || s.contains("purchase") -> "buy-scored"
-        s.contains("done") -> "done"
-        else -> "other-or-subordinate"
-    }
-}

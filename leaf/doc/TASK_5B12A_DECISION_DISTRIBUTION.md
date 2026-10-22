@@ -10,3 +10,20 @@ Run `bin/human_baseline_5b12a_decisions [output-directory]` from any directory. 
 - `buy-decisions.tsv` counts `GameEntry.BuyDecision` events separately; it does not infer every purchase from its labels and does not claim full Buy opportunity auditing. Buy outcomes and selected kind are recorded directly.
 - The recording uses production `GameConfig(recordDecisionReasoning=true)` and existing typed Chronicle entries. Scoring/RNG/decisions are not modified. Chronicle traces are opt-in; no new score-affecting logic is introduced.
 - Approval requires human inspection of action mix and sample explanations, alongside earlier 5B.12 correctness/reproducibility calibration. No automatic policy freeze or approval is asserted.
+
+## Action-family denominator correction
+
+`action-families.tsv` now categorizes **only** recorded `Main(...)` and
+`FinalMain(...)` selected-score labels into `Plant`, `Round effect`, `Draw`, or
+`Unrecognized Main`. Its percentages use the sum of these four categories;
+subordinate choices, Buy decisions, and other scored choices are excluded.
+`summary.txt` reports that denominator, its recognized portion, and unknowns.
+The raw `selected-choices.tsv` remains unchanged and counts *all* scored choices.
+
+**Limitation:** The scorer sometimes records Battle First Main actions as bare
+`Draw`, `RoundEffect1`, or `ActivatePlant(...)` labels. These cannot reliably be
+distinguished from other subordinate decisions from a label alone, so they are
+excluded. Consequently this is a valid distribution of **recognized scored
+Main/FinalMain labels**, not an exhaustive census of all executed Main Actions.
+No gameplay or scoring is changed. Regression coverage in `MainActionFamilyTest`
+checks classification and denominator isolation.
