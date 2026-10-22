@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 
+import kotlin.math.roundToInt
+
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
@@ -702,11 +704,11 @@ class HumanBaselineCultivationStrategy(
             .firstOrNull { it.reason == "Current-round Buy threshold impact" }?.amount ?: 0
         val lowPowerPenalty = discardTarget.adjustments
             .firstOrNull { it.reason.startsWith("Preserve at least") }?.amount ?: 0
-        val expectedNewRoll = (newSides + 1) / 2
+        val expectedNewRoll = (newSides + 1) / 2.0
         val priorCurrentRoll = target.die.value
         return base
             .adjusted(-purchasePenalty - lowPowerPenalty, "Keeping replacement avoids discarding current die")
-            .adjusted((expectedNewRoll - priorCurrentRoll) * 2, "Expected immediate upgraded roll versus current face")
+            .adjusted(((expectedNewRoll - priorCurrentRoll) * 2).roundToInt(), "Expected immediate upgraded roll versus current face")
             .adjusted(if (withRewards) 5 else 0, "Expected Roll Rewards for keep-with-rewards")
     }
 

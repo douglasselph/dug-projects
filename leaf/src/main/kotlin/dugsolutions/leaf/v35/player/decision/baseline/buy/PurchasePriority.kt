@@ -26,6 +26,19 @@ object PurchasePriority {
             is BuyItem.Plant -> {
                 var cardValue = cardScorers.forPlant(item.card).acquireScore(context, item.card)
 
+                // Buy-only usability: a face-down purchase cannot be assumed to
+                // provide its full immediate PLAY value. Keep this adjustment
+                // separate from the VP estimate and Main Action scoring.
+                val usability = PlantAcquisitionUsability.estimate(
+                    context, item.card, cardScorers.forPlant(item.card)
+                )
+                if (usability.adjustment != 0) {
+                    cardValue = cardValue.adjusted(
+                        usability.adjustment,
+                        "Expected Plant usability after grafting (Buy only)"
+                    )
+                }
+
                 val projectedVp = CardScoringHelpers.projectedVp(
                     context,
                     CardScoringHelpers.effectiveScoringRule(context, item.card)
