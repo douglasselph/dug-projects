@@ -29,7 +29,12 @@ class HumanBaselineEffectStrategyResourceChoiceTest {
                     EffectBeeSourceChoice.Opponent(opponent)
                 ),
                 context = DecisionContext.EMPTY.copy(
-                    opponents = listOf(opponent(opponent))
+                    grove = DecisionContext.EMPTY.grove.copy(bees = 1),
+                    opponents = listOf(
+                        opponent(opponent).copy(
+                            board = opponent(opponent).board.copy(bees = 1)
+                        )
+                    )
                 )
             )
         )
