@@ -16,13 +16,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class OEdelweissVariantsTest {
-    private val spent = GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE
-    private val any = GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
+    private val spent = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
+    private val any = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
 
     @Test
-    fun spentOnlyNeverOffersFaceUpPlayAndCanFlipThenPlay() {
+    fun spentPlantCannotPlayUntilFlippedUp() {
         val strategy = ChooseTarget(OEdelweissChoiceType.FLIP_THEN_PLAY)
-        val (actor, game, target, source, die) = setup(spent, strategy, faceUp = true)
+        val (actor, game, target, source, die) = setup(spent, strategy, faceUp = false)
         run(spent, actor, game, source)
         assertEquals(5, die.value)
         assertFalse(strategy.offered[0].any { it is OEdelweissChoice.Play && it.card.cardId == target })
@@ -31,44 +31,31 @@ class OEdelweissVariantsTest {
     }
 
     @Test
-    fun anyFacingCanPlayFaceUpTwiceAndPreservesFacing() {
-        val strategy = ChooseTarget(OEdelweissChoiceType.PLAY_TWICE)
+    fun playingFaceUpPlantSpendsItAndCannotPlayItTwice() {
+        val strategy = ChooseTarget(OEdelweissChoiceType.PLAY_THEN_DONE)
         val (actor, game, target, source, die) = setup(any, strategy, faceUp = true)
         run(any, actor, game, source)
-        assertEquals(8, die.value) // +4, then +4 capped at D8 max
-        assertEquals(2, strategy.offered.size)
-        assertTrue(strategy.offered.all { choices -> choices.any { it is OEdelweissChoice.Play && it.card.cardId == target && it.card.isFaceUp } })
+        assertEquals(5, die.value)
+        assertTrue(strategy.offered[0].any { it is OEdelweissChoice.Play && it.card.cardId == target })
+        assertFalse(strategy.offered[1].any { it is OEdelweissChoice.Play && it.card.cardId == target })
+        assertTrue(actor.creature.get(target)!!.isFaceDown)
+    }
+
+    @Test
+    fun doneStopsEarlyAndSourceIsNeverOffered() {
+        val strategy = ChooseTarget(OEdelweissChoiceType.DONE)
+        val (actor, game, target, source, die) = setup(spent, strategy, faceUp = true)
+        run(spent, actor, game, source)
+        assertEquals(1, strategy.offered.size)
+        assertEquals(1, die.value)
         assertTrue(actor.creature.get(target)!!.isFaceUp)
-    }
-
-    @Test
-    fun bothVariantsCanReplaySpentPlantTwiceWithoutRefreshingIt() {
-        for (effect in listOf(spent, any)) {
-            val strategy = ChooseTarget(OEdelweissChoiceType.PLAY_TWICE)
-            val (actor, game, target, source, die) = setup(effect, strategy, faceUp = false)
-            run(effect, actor, game, source)
-            assertEquals(8, die.value)
-            assertTrue(actor.creature.get(target)!!.isFaceDown)
-        }
-    }
-
-    @Test
-    fun doneStopsBeforeSecondChoiceAndActiveSourceIsNeverOffered() {
-        for (effect in listOf(spent, any)) {
-            val strategy = ChooseTarget(OEdelweissChoiceType.DONE)
-            val (actor, game, target, source, die) = setup(effect, strategy, faceUp = true)
-            run(effect, actor, game, source)
-            assertEquals(1, strategy.offered.size)
-            assertEquals(1, die.value)
-            assertTrue(actor.creature.get(target)!!.isFaceUp)
-            assertTrue(strategy.offered.single().none {
-                when (it) {
-                    is OEdelweissChoice.Play -> it.card.cardId == source.id
-                    is OEdelweissChoice.Flip -> it.card.cardId == source.id
-                    OEdelweissChoice.Done -> false
-                }
-            })
-        }
+        assertTrue(strategy.offered.single().none {
+            when (it) {
+                is OEdelweissChoice.Play -> it.card.cardId == source.id
+                is OEdelweissChoice.Flip -> it.card.cardId == source.id
+                OEdelweissChoice.Done -> false
+            }
+        })
     }
 
     private fun setup(effect: GameEffect, strategy: ChooseTarget, faceUp: Boolean): Setup {
@@ -96,13 +83,13 @@ class OEdelweissVariantsTest {
         val source: dugsolutions.leaf.v35.player.creature.CreatureCard,
         val die: FixedEffectDie)
 
-    private enum class OEdelweissChoiceType { FLIP_THEN_PLAY, PLAY_TWICE, DONE }
+    private enum class OEdelweissChoiceType { FLIP_THEN_PLAY, PLAY_THEN_DONE, DONE }
     private class ChooseTarget(val mode: OEdelweissChoiceType): FirstEffectChoiceStrategy() {
         var target: CreatureCardId? = null
         val offered = mutableListOf<List<OEdelweissChoice>>()
         override fun chooseOEdelweiss(request: ChooseOEdelweissRequest): OEdelweissChoice {
             offered += request.legalChoices
-            if (mode == OEdelweissChoiceType.DONE) return OEdelweissChoice.Done
+            if (mode == OEdelweissChoiceType.DONE || (mode == OEdelweissChoiceType.PLAY_THEN_DONE && request.choiceNumber == 2)) return OEdelweissChoice.Done
             val targetId = requireNotNull(target) { "ChooseTarget.target must be initialized before selecting" }
             val flip = mode == OEdelweissChoiceType.FLIP_THEN_PLAY && request.choiceNumber == 1
             return if (flip) request.legalChoices.filterIsInstance<OEdelweissChoice.Flip>().first { it.card.cardId == targetId }

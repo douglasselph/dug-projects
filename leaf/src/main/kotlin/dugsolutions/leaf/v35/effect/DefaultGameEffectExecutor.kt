@@ -218,9 +218,7 @@ class DefaultGameEffectExecutor(
             GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT ->
                 vineAndAgainEffect
 
-            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
-            GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
-            GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE ->
+            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE ->
                 oEdelweissEffect
 
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->

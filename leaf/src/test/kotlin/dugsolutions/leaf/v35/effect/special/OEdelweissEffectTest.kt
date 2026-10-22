@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
 class OEdelweissEffectTest {
 
     @Test
-    fun firstChoiceCanFlipFaceUpCard_thenSecondChoiceCanPlayThatNowSpentCard() {
+    fun firstChoiceCanFlipSpentCardUp_thenSecondChoiceCanPlayIt() {
         val strategy =
             FlipThenPlayStrategy()
 
@@ -70,12 +70,6 @@ class OEdelweissEffectTest {
                         )
                 )
 
-        val currentTarget =
-            RecursivePlantEffectTestFixture
-                .faceUp(
-                    actor,
-                    target
-                )
         val currentSource =
             RecursivePlantEffectTestFixture
                 .faceUp(
@@ -84,7 +78,7 @@ class OEdelweissEffectTest {
                 )
 
         strategy.target =
-            currentTarget.id
+            target.id
         strategy.source =
             currentSource.id
 
@@ -117,7 +111,7 @@ class OEdelweissEffectTest {
             strategy.requests.size
         )
         assertEquals(
-            listOf<Boolean?>(true, false),
+            listOf<Boolean?>(false, true),
             strategy.targetFacingInContext
         )
 
@@ -239,6 +233,7 @@ class OEdelweissEffectTest {
                             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
                         )
                 )
+        RecursivePlantEffectTestFixture.faceUp(actor, target)
         val currentSource =
             RecursivePlantEffectTestFixture
                 .faceUp(
@@ -287,7 +282,7 @@ class OEdelweissEffectTest {
     }
 
     @Test
-    fun strategyCannotPlayFaceUpPlant() {
+    fun strategyCannotPlayWithStaleFacing() {
         val strategy =
             IllegalPlayFaceUpStrategy()
 
@@ -353,7 +348,7 @@ class OEdelweissEffectTest {
                         currentTarget.id,
                     cardName =
                         currentTarget.card.name,
-                    isFaceUp = true
+                    isFaceUp = false
                 )
             )
 

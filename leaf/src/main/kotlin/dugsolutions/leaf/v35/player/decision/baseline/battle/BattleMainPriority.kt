@@ -28,8 +28,6 @@ object BattleMainPriority {
                     ?: action.card.card.effect
                 if (effectiveEffect in setOf(
                         GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
-                        GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
-                        GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
                     )) {
                     BattleOEdelweissAnalyzer(cardScorers)
                         .topLevelPriority(context, action.card.id)

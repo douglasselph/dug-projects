@@ -15,10 +15,6 @@ class HumanBaselineCardScorerRegistryTest {
                 dugsolutions.leaf.v35.effect.GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
                 dugsolutions.leaf.v35.effect.GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S
             ),
-            "Flower_17_03" to listOf(
-                dugsolutions.leaf.v35.effect.GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
-                dugsolutions.leaf.v35.effect.GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
-            ),
             "Flower_11_03" to listOf(
                 dugsolutions.leaf.v35.effect.GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW
             )

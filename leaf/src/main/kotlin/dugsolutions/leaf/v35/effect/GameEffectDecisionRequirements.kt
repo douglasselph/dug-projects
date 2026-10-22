@@ -215,9 +215,7 @@ object GameEffectDecisionRequirements {
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS ->
                 same(EffectDecisionMechanism.EFFECT_WISPS_TO_KEEP)
 
-            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
-            GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
-            GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE ->
+            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE ->
                 same(EffectDecisionMechanism.EFFECT_O_EDELWEISS)
 
             GameEffect.RAISE_ANY_DIE_PLUS_1,

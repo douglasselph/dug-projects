@@ -17,27 +17,16 @@ import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
 
 /**
- * O Edelweiss:
+ * O Edelweiss: twice, optionally play another FACE-UP grafted Plant (spending
+ * it normally), or flip another grafted Plant in either direction.
  *
- * Twice, you may play another grafted Plant card or flip another card.
- *
- * The two decisions are made sequentially and legal choices are rebuilt after
- * the first resolves. The spent-only variant can first flip a face-up Plant
- * down and then replay it; the any-facing variant permits replay directly.
- *
- * Play resolves another Plant effect without consuming its facing. For an
- * already-spent Plant, the spent state is preserved. Flip toggles facing.
+ * Rebuild legal choices between steps. Nested effects cannot target an active
+ * effect source along the recursion path.
  */
 class OEdelweissEffect : EffectHandler {
 
-    private fun accepts(effect: GameEffect) = effect in setOf(
-        GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
-        GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
-        GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
-    )
-
-    private fun allowsFaceUp(effect: GameEffect) =
-        effect == GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
+    private fun accepts(effect: GameEffect) =
+        effect == GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
 
     override fun canExecute(
         request: GameEffectRequest
@@ -125,8 +114,8 @@ class OEdelweissEffect : EffectHandler {
                         activePath
                 }
                 .forEach { card ->
-                    // The experimental any-facing variant also offers face-up cards.
-                    if (card.isFaceDown || allowsFaceUp(request.effect)) {
+                    // Only face-up, executable Plants can be played.
+                    if (card.isFaceUp) {
                         val nested =
                             nestedRequest(
                                 request = request,
@@ -211,7 +200,7 @@ class OEdelweissEffect : EffectHandler {
                 current.card.name ==
                     choice.card.cardName &&
                 current.isFaceUp == choice.card.isFaceUp &&
-                (current.isFaceDown || allowsFaceUp(request.effect)) &&
+                current.isFaceUp &&
                 current.id !in activePath
         ) {
             "O Edelweiss Play target is stale or not eligible: ${choice.card}"
@@ -232,19 +221,14 @@ class OEdelweissEffect : EffectHandler {
             "Chosen O Edelweiss Plant effect is no longer executable: ${choice.card}"
         }
 
-        val originallySpent = current.isFaceDown
-        executor.execute(
-            nested
-        )
-
-        // Replaying a spent card uses its effect; it does not refresh that
-        // card. Enforce the spent state even if the nested effect itself could
-        // otherwise manipulate its source card.
-        if (originallySpent) {
-            stateCheck(request.actor.creature.faceDown(current.id)) {
-                "O Edelweiss could not preserve replayed Plant as spent: ${choice.card}"
-            }
+        // Spending is normal for a nested Plant activation, even if the
+        // nested handler did not change its facing. Do not flip: force down.
+        request.actor.creature.faceDown(current.id)
+        executor.execute(nested)
+        stateCheck(request.actor.creature.faceDown(current.id)) {
+            "O Edelweiss could not spend played Plant: ${choice.card}"
         }
+
     }
 
     private fun flippableCards(
