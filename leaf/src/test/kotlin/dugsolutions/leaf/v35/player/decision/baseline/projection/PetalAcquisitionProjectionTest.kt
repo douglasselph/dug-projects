@@ -73,6 +73,16 @@ class PetalAcquisitionProjectionTest {
             PetalAcquisitionProjection.scoreSource(context, p3, discard).total)
     }
 
+    @Test fun `activation uses exactly the best source sequence score`() {
+        val state = context()
+        listOf(p1, p2, p3, p4).forEach { effect ->
+            val scores = PetalAcquisitionProjection.legalSources(state, effect).map { source ->
+                PetalAcquisitionProjection.scoreAcquisitionSequence(state, effect, source).total
+            }
+            assertEquals(scores.maxOrNull(), PetalAcquisitionProjection.activationScore(state, effect).total)
+        }
+    }
+
     @Test fun `activation projection does not mutate observed dice or opponent zones`() {
         val context = context()
         val snapshot = context.toString()

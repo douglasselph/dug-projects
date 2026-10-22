@@ -144,16 +144,21 @@ object PetalAcquisitionProjection {
         return score
     }
 
-    /** Best legal acquisition plus optional same-effect cycling. The two components are not scored twice. */
-    fun activationScore(context: DecisionContext, effect: GameEffect): PriorityScore {
-        val candidates = legalSources(context, effect)
-        if (candidates.isEmpty()) return PriorityScore(10).adjusted(0, "No legal D4 acquisition")
-        val best = candidates.maxBy { scoreSource(context, effect, it).total }
-        val acquisition = scoreSource(context, effect, best)
+    /**
+     * Score one complete acquisition choice, including its best optional cycling
+     * continuation. Activation and the actual source callback must rank the same
+     * sources with this function. This method does not consume RNG or mutate state.
+     */
+    fun scoreAcquisitionSequence(
+        context: DecisionContext,
+        effect: GameEffect,
+        source: PetalD4SourceChoice
+    ): PriorityScore {
+        val acquisition = scoreSource(context, effect, source)
         val handD4 = context.self.board.hand.filter { it.sides == 4 }
-        val newD4Value = if (toHand(effect)) when (best) {
+        val newD4Value = if (toHand(effect)) when (source) {
             PetalD4SourceChoice.Grove -> DieValueHeuristics.expectedRoll(4)
-            is PetalD4SourceChoice.Opponent -> best.die.value.toDouble()
+            is PetalD4SourceChoice.Opponent -> source.die.value.toDouble()
         } else null
         val nextValue = nextDrawMean(context)
         val ordinaryCycling = handD4.sumOf { max(0.0, nextValue - it.value) }
@@ -166,11 +171,16 @@ object PetalAcquisitionProjection {
                 max(0.0, replacementPlacement - currentPlacement) / EXPECTED_VALUE_POINTS
             } else max(0.0, nextValue - newD4Value)
         }
-        // A newly gained Hand D4 can be cycled, but only the improvement over
-        // KEEPING that D4 is scored. The acquisition is never counted twice.
         return acquisition.adjusted(((ordinaryCycling + newDieCycling) * EXPECTED_VALUE_POINTS).roundToInt(),
             "Net optional D4 cycling (arithmetic-mean Draws)")
     }
+
+    /** Top-level value of the same legal acquisition sequences used by source selection. */
+    fun activationScore(context: DecisionContext, effect: GameEffect): PriorityScore =
+        legalSources(context, effect).maxByOrNull { source ->
+            scoreAcquisitionSequence(context, effect, source).total
+        }?.let { source -> scoreAcquisitionSequence(context, effect, source) }
+            ?: PriorityScore(10).adjusted(0, "No legal D4 acquisition")
 
     private fun nextDrawMean(context: DecisionContext): Double {
         val sides = context.self.board.supply.minOfOrNull { it.sides }

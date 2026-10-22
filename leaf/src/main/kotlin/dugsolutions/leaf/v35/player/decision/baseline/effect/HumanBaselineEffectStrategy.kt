@@ -421,7 +421,7 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val score = PetalAcquisitionProjection.scoreSource(request.context, request.effect, choice)
+                val score = PetalAcquisitionProjection.scoreAcquisitionSequence(request.context, request.effect, choice)
                 DecisionCandidate(choice, score)
             }
         )

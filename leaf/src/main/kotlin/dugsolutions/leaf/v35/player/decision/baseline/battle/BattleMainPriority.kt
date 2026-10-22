@@ -26,7 +26,13 @@ object BattleMainPriority {
                 )
                 val effectiveEffect = context.self.board.creature.firstOrNull { it.id == action.card.id }?.effect
                     ?: action.card.card.effect
-                if (effectiveEffect in setOf(
+                val sapping = BattleSappingActivationPriority()
+                if (sapping.isSapping(effectiveEffect)) {
+                    // Top-level action and downstream target selection use the
+                    // same complete deterministic projector, not a second
+                    // initial-Raise/row-need bonus from CardScoringHelpers.
+                    sapping.score(context, effectiveEffect, intrinsic.base) ?: intrinsic
+                } else if (effectiveEffect in setOf(
                         GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
                     )) {
                     BattleOEdelweissAnalyzer(cardScorers)

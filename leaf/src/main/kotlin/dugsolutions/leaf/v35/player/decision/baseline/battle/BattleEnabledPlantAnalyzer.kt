@@ -60,14 +60,16 @@ class BattleEnabledPlantAnalyzer(
             cardName = card.name
         )
         val tactical = bestTacticalAnalysis(context, card)
-        val priority = tactical?.tacticalValue?.roundToInt()?.takeIf { it != 0 }
-            ?.let { adjustment ->
-                intrinsic.adjusted(
-                    adjustment,
-                    "Best immediate Battle use unlocked by ${card.title}"
-                )
-            }
-            ?: intrinsic
+        val sapping = BattleSappingActivationPriority()
+        val unifiedSappingScore = if (sapping.isSapping(card.effect)) {
+            sapping.score(context, card.effect, intrinsic.base)
+        } else null
+        val priority = unifiedSappingScore ?: (
+            tactical?.tacticalValue?.roundToInt()?.takeIf { it != 0 }
+                ?.let { adjustment ->
+                    intrinsic.adjusted(adjustment, "Best immediate Battle use unlocked by ${card.title}")
+                } ?: intrinsic
+        )
         return BattleEnabledPlantOpportunity(card, priority, tactical)
     }
 

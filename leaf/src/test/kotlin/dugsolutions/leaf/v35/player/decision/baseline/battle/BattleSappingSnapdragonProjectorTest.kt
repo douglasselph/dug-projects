@@ -10,6 +10,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.math.roundToInt
 
 class BattleSappingSnapdragonProjectorTest {
     private val self = PlayerId(1)
@@ -17,6 +18,23 @@ class BattleSappingSnapdragonProjectorTest {
     private val s1 = GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW
     private val s2 = GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW
     private val projector = BattleSappingSnapdragonProjector()
+
+    @Test fun `shared activation score equals best projected target plus one base`() {
+        val context = context(
+            row(StrikeRow.TOP, own(StrikeRow.TOP, die(0, 20, 3)), other(StrikeRow.TOP, die(0, 8, 5))),
+            row(StrikeRow.MIDDLE, own(StrikeRow.MIDDLE, die(1, 12, 3)), other(StrikeRow.MIDDLE, die(1, 8, 7)))
+        )
+        val common = BattleSappingActivationPriority()
+        for (effect in listOf(s1, s2)) {
+            val scores = projector.ownIndices(context).mapNotNull { index ->
+                projector.bestForFirst(context, effect, index, index)?.tacticalValue
+            }
+            val best = scores.maxOrNull()
+            assertNotNull(best)
+            assertEquals(best, common.bestTacticalValue(context, effect))
+            assertEquals(82 + best.roundToInt(), common.score(context, effect, 82)?.total)
+        }
+    }
 
     @Test fun `S1 applies capped raise and actual reductions in same row`() {
         val context = context(
