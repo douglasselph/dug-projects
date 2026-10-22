@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.effect.*
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.decision.baseline.effect.HumanBaselineEffectStrategy
 import dugsolutions.leaf.v35.player.decision.effect.*
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.random.die.DieSides
 import org.junit.jupiter.api.Test
 import kotlin.test.*
@@ -114,11 +115,115 @@ class HumanBaselineChooseThenExecuteTest {
         assertNotNull(actor.creature.get(source.id))
     }
 
-    private class RecordingHuman : EffectStrategy by HumanBaselineEffectStrategy() {
+    @Test
+    fun `Petal cycling selection executes exact discard and replacement draws for P1 through P4`() {
+        val variants = listOf(
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S
+        )
+        variants.forEach { effect ->
+            val chooser = RecordingHuman(useBaselineCycling = true)
+            val originalD4 = FixedEffectDie(4, 1)
+            val replacement = FixedEffectDie(8, 5)
+            val secondReplacement = FixedEffectDie(10, 6)
+            val actor = EffectTestFixture.player(1, listOf(originalD4), chooser)
+            actor.dice.addToSupply(replacement)
+            actor.dice.addToSupply(secondReplacement)
+            val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+            game.grove.graftBed.returnD4()
+            val request = EffectTestFixture.request(game, actor, effect)
+            assertTrue(executor.canExecute(request), "$effect should be executable")
+            executor.execute(request)
+
+            assertEquals(1, chooser.cycleChoices.size, "$effect must ask the real Human Baseline about cycling")
+            val (offered, selected) = chooser.cycleChoices.single()
+            assertTrue(selected.isNotEmpty(), "$effect: a D4 showing 1 should be worth cycling with D8/D10 available")
+            assertTrue(selected.all { it in offered }, "$effect must select only available Hand D4s")
+            assertEquals(selected.size, selected.map { it.index }.distinct().size)
+            assertEquals(1, chooser.sources.size)
+            assertEquals(PetalD4SourceChoice.Grove, chooser.sources.single())
+            assertEquals(0, game.grove.graftBed.count(DieSides.D4))
+
+            // Exactly one die must be drawn per selected Hand D4. These
+            // fixed dice suppress random outcome variance and Roll Rewards.
+            val drawn = listOf(replacement, secondReplacement).count { die ->
+                actor.dice.hand.any { it === die }
+            }
+            assertEquals(selected.size, drawn, "$effect: drawn replacements must match cycled count")
+            assertTrue(selected.all { it.sides == 4 }, "$effect: only D4s may be cycled")
+            assertEquals(2 - selected.size, actor.dice.supplySize)
+            assertEquals(1 + (if (effect.name.contains("TO_HAND")) 1 else 0) - selected.size + drawn,
+                actor.dice.handSize, "$effect: acquisition and cycling must conserve Hand count")
+            assertTrue(actor.dice.discard.count { it.sides == 4 } >= selected.size,
+                "$effect: selected D4s must enter Dice Discard")
+        }
+    }
+
+    @Test
+    fun `O Edelweiss second Baseline choice observes die Raise and spent first Plant`() {
+        val chooser = RecordingHuman(scriptFirstEdelweissPlay = true)
+        val die = FixedEffectDie(8, 1)
+        val actor = EffectTestFixture.player(1, listOf(die), chooser)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val vine = RecursivePlantEffectTestFixture.graft(actor,
+            RecursivePlantEffectTestFixture.plant("Vine_07_01", PlantType.VINE, GameEffect.RAISE_ANY_DIE_PLUS_1))
+        RecursivePlantEffectTestFixture.faceUp(actor, vine)
+        val flower = RecursivePlantEffectTestFixture.graft(actor,
+            RecursivePlantEffectTestFixture.plant("Flower_17_03", PlantType.FLOWER,
+                GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE))
+        val source = RecursivePlantEffectTestFixture.faceUp(actor, flower)
+        val request = EffectTestFixture.request(game, actor, GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+            GameEffectSource.Plant(source))
+        executor.execute(request)
+
+        assertEquals(2, chooser.edelweissChoices.size, "Both decision callbacks must execute")
+        assertTrue(chooser.edelweissChoices.first().first is OEdelweissChoice.Play)
+        val second = chooser.edelweissContexts[1]
+        assertEquals(2, second.self.board.hand.single().value,
+            "Second decision must observe the actual first Plant's Raise, not the original die")
+        assertTrue(second.self.board.creature.single { it.id == vine.id }.isFaceDown,
+            "Played Plant must be spent before the next decision")
+        assertEquals(2, die.value)
+        assertTrue(chooser.edelweissChoices[1].first in chooser.edelweissChoices[1].second)
+    }
+
+    @Test
+    fun `O Edelweiss second Baseline choice sees Plant flipped face up by first choice`() {
+        val chooser = RecordingHuman(scriptFirstEdelweissFlip = true)
+        val die = FixedEffectDie(8, 1)
+        val actor = EffectTestFixture.player(1, listOf(die), chooser)
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val vine = RecursivePlantEffectTestFixture.graft(actor,
+            RecursivePlantEffectTestFixture.plant("Vine_07_01", PlantType.VINE, GameEffect.RAISE_ANY_DIE_PLUS_1))
+        val flower = RecursivePlantEffectTestFixture.graft(actor,
+            RecursivePlantEffectTestFixture.plant("Flower_17_03", PlantType.FLOWER,
+                GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE))
+        val source = RecursivePlantEffectTestFixture.faceUp(actor, flower)
+        executor.execute(EffectTestFixture.request(game, actor, GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+            GameEffectSource.Plant(source)))
+
+        assertEquals(2, chooser.edelweissChoices.size)
+        assertTrue(chooser.edelweissChoices.first().first is OEdelweissChoice.Flip)
+        val secondChoices = chooser.edelweissChoices[1].second
+        assertTrue(chooser.edelweissContexts[1].self.board.creature.single { it.id == vine.id }.isFaceUp)
+        assertTrue(secondChoices.any { it is OEdelweissChoice.Play && it.card.cardId == vine.id },
+            "Flip-then-Play must be legal at step two")
+        assertTrue(chooser.edelweissChoices[1].first in secondChoices)
+    }
+
+    private class RecordingHuman(
+        private val useBaselineCycling: Boolean = false,
+        private val scriptFirstEdelweissPlay: Boolean = false,
+        private val scriptFirstEdelweissFlip: Boolean = false
+    ) : EffectStrategy by HumanBaselineEffectStrategy() {
         private val baseline = HumanBaselineEffectStrategy()
         val dieChoices = mutableListOf<EffectDieChoice>()
         val sources = mutableListOf<PetalD4SourceChoice>()
         val edelweissChoices = mutableListOf<Pair<OEdelweissChoice, List<OEdelweissChoice>>>()
+        val edelweissContexts = mutableListOf<DecisionContext>()
+        val cycleChoices = mutableListOf<Pair<List<EffectDieChoice>, List<EffectDieChoice>>>()
 
         override fun chooseDie(request: ChooseEffectDieRequest): EffectDieChoice =
             baseline.chooseDie(request).also { choice ->
@@ -132,14 +237,28 @@ class HumanBaselineChooseThenExecuteTest {
                 sources += choice
             }
 
-        override fun chooseOEdelweiss(request: ChooseOEdelweissRequest): OEdelweissChoice =
-            baseline.chooseOEdelweiss(request).also { choice ->
-                assertTrue(choice in request.legalChoices)
-                edelweissChoices += choice to request.legalChoices
+        override fun chooseOEdelweiss(request: ChooseOEdelweissRequest): OEdelweissChoice {
+            val choice = when {
+                request.choiceNumber == 1 && scriptFirstEdelweissPlay ->
+                    request.legalChoices.filterIsInstance<OEdelweissChoice.Play>().first()
+                request.choiceNumber == 1 && scriptFirstEdelweissFlip ->
+                    request.legalChoices.filterIsInstance<OEdelweissChoice.Flip>()
+                        .first { !it.card.isFaceUp }
+                else -> baseline.chooseOEdelweiss(request)
             }
+            assertTrue(choice in request.legalChoices)
+            edelweissContexts += request.context
+            edelweissChoices += choice to request.legalChoices
+            return choice
+        }
 
         // Make optional cycling deterministic; source selection still uses the real Baseline.
-        override fun chooseDice(request: ChooseEffectDiceRequest): EffectDiceChoice =
-            EffectDiceChoice(emptyList())
+        override fun chooseDice(request: ChooseEffectDiceRequest): EffectDiceChoice {
+            val result = if (useBaselineCycling) baseline.chooseDice(request)
+                else EffectDiceChoice(emptyList())
+            assertTrue(result.selected.all { it in request.legalChoices })
+            cycleChoices += request.legalChoices to result.selected
+            return result
+        }
     }
 }
