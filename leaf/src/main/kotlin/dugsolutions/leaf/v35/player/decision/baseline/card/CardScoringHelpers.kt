@@ -15,6 +15,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
 import dugsolutions.leaf.v35.player.decision.baseline.projection.ExpectedDrawProjection
+import dugsolutions.leaf.v35.player.decision.baseline.projection.PlantResourceProjection
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -172,35 +173,36 @@ object CardScoringHelpers {
             }
             GameEffect.WOUND_OPPONENT_PLANT_OF_YOUR_CHOICE,
             GameEffect.FLIP_OWN_PLANT_OR_FLIP_OPPONENT_ROOT_OR_VINE_IN_BATTLE -> {
-                if (phase == CardPhase.BATTLE) {
-                    val targets = context.opponents.sumOf { opponent ->
-                        opponent.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }
-                    }
-                    if (targets > 0) score = score.adjusted(15, "Opponent has a Root or Vine that can be flipped")
-                } else {
-                    val spent = context.self.board.creature.count { it.isFaceDown }
-                    if (spent > 0) score = score.adjusted(spent * 5, "Can refresh a spent Plant")
-                }
+                val registry = HumanBaselineCardScorerRegistry()
+                val value = if (phase == CardPhase.BATTLE) {
+                    PlantResourceProjection.bestOpponentDenial(context, registry, rootsAndVinesOnly = true)
+                } else PlantResourceProjection.bestRefresh(context, registry)
+                score = score.adjusted(value, "Best eligible Plant facing consequence")
             }
             GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT -> {
-                val spent = context.self.board.creature.count { it.isFaceDown && (it.type == PlantType.ROOT || it.type == PlantType.VINE) }
-                score = score.adjusted(spent * 6, "Spent Root/Vine effects are available to reuse")
+                score = score.adjusted(
+                    PlantResourceProjection.bestReuse(context, HumanBaselineCardScorerRegistry()),
+                    "Best spent Root or Vine effect available to replay"
+                )
             }
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX -> addBestGain(
                 bestLowestToMax(dice),
                 "Best lowest-value die can be set to maximum"
             )
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE -> {
-                if (phase == CardPhase.BATTLE) score = score.adjusted(context.opponents.size * 20, "Wounds every opponent")
-                else score = score.adjusted(context.self.board.creature.count { it.isFaceDown } * 5, "Can refresh a spent Plant")
+                if (phase == CardPhase.BATTLE) {
+                    score = score.adjusted(context.opponents.size * 20, "Affects every opponent")
+                } else score = score.adjusted(
+                    PlantResourceProjection.bestRefresh(context, HumanBaselineCardScorerRegistry()),
+                    "Best spent Plant available to refresh"
+                )
             }
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE -> {
-                if (phase == CardPhase.BATTLE) {
-                    val targets = context.opponents.maxOfOrNull { it.board.creature.size } ?: 0
-                    if (targets > 0) score = score.adjusted(22, "Can choose an opponent and their affected Plant")
-                } else {
-                    score = score.adjusted(context.self.board.creature.count { it.isFaceDown } * 5, "Can refresh a spent Plant")
-                }
+                val registry = HumanBaselineCardScorerRegistry()
+                val value = if (phase == CardPhase.BATTLE) {
+                    PlantResourceProjection.bestOpponentDenial(context, registry, rootsAndVinesOnly = false)
+                } else PlantResourceProjection.bestRefresh(context, registry)
+                score = score.adjusted(value, "Best legal Plant facing or denial option")
             }
             GameEffect.RAISE_ALL_DICE_PLUS_2 -> addBestGain(
                 dice.sumOf { DieValueHeuristics.actualRaiseGain(it, 2) },
@@ -256,14 +258,9 @@ object CardScoringHelpers {
             }
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,
             GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES -> {
-                val spent = context.self.board.butterflies.count { !it.isFaceUp }
-                val stealable = context.opponents.sumOf { it.board.butterflies.size }
-                val gainable = if (effect == GameEffect.GAIN_OR_STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES) {
-                    context.grove.butterflies.size
-                } else 0
                 score = score.adjusted(
-                    spent * 10 + if (stealable + gainable > 0) 15 else -15,
-                    "Butterfly refresh/acquisition opportunity"
+                    PlantResourceProjection.butterflySequence(context, effect),
+                    "Projected Butterfly acquisition, refresh and opponent denial"
                 )
             }
             GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
@@ -303,11 +300,12 @@ object CardScoringHelpers {
                 score = score.adjusted(expectedNextDraw(context).roundToInt() * 3, "Adds an extra die")
                 if (phase == CardPhase.BATTLE) score = score.adjusted(16, "Mandatory swap also raises one swapped die +2")
             }
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND -> {
-                score = score.adjusted(context.self.board.bees * 12, "Existing Bees benefit from the boost")
-            }
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND -> {
-                score = score.adjusted(context.self.board.bees * 10, "Existing Bees benefit from the stacking +2 boost")
+                score = score.adjusted(
+                    PlantResourceProjection.beeSequence(context, effect),
+                    "Projected Bee acquisition, round value and opponent denial"
+                )
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
                 val count = context.self.board.creature.count { it.type == PlantType.VINE || it.type == PlantType.FLOWER }

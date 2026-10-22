@@ -38,6 +38,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegalChoiceCombinations
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
+import dugsolutions.leaf.v35.player.decision.baseline.projection.PlantResourceProjection
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.effect.*
 import dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy
@@ -458,9 +459,9 @@ class HumanBaselineEffectStrategy(
             request.context,
             request.legalChoices.map { choice ->
                 val score = when (choice) {
-                    EffectBeeSourceChoice.Grove -> PriorityScore(50)
+                    EffectBeeSourceChoice.Grove -> PriorityScore(PlantResourceProjection.beeSource(request.context, null) ?: 0)
                     is EffectBeeSourceChoice.Opponent -> {
-                        var score = PriorityScore(62).adjusted(8, "Steal also denies an opponent a Bee")
+                        var score = PriorityScore(PlantResourceProjection.beeSource(request.context, choice.playerId) ?: 0)
                         if (request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE) {
                             val denial = beeSourceAnalyzer(request.context, choice.playerId).roundToInt()
                             if (denial > 0) {
@@ -483,15 +484,14 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                if (choice.ownerId == null) {
-                    DecisionCandidate(choice, PriorityScore(58))
-                } else {
-                    val owner = request.context.opponents.firstOrNull { it.id == choice.ownerId }
-                    val faceUp = owner?.board?.butterflies
-                        ?.firstOrNull { it.butterfly == choice.butterfly }
-                        ?.isFaceUp == true
-                    DecisionCandidate(choice, PriorityScore(if (faceUp) 70 else 62))
-                }
+                DecisionCandidate(
+                    choice,
+                    PriorityScore(
+                        PlantResourceProjection.butterflySource(
+                            request.context, choice.ownerId, choice.butterfly
+                        ) ?: 0
+                    )
+                )
             }
         )
     }
