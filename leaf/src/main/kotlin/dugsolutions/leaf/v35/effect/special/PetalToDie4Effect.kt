@@ -43,7 +43,11 @@ class PetalToDie4Effect(
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
                 oldLegalChoices(request).isNotEmpty()
 
-            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW ->
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S ->
                 redesignedSources(request).isNotEmpty()
 
             else -> false
@@ -58,7 +62,11 @@ class PetalToDie4Effect(
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 ->
                 executePrinted(request)
 
-            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW ->
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S ->
                 executeRedesigned(request, executor)
 
             else -> error("Unexpected Petal To Die 4 effect: ${request.effect}")
@@ -103,7 +111,7 @@ class PetalToDie4Effect(
         decisionCheck(source in sources) {
             "EffectStrategy returned illegal Petal To Die 4 D4 source: $source; legal=$sources"
         }
-        acquireD4ToDiscard(request, source)
+        acquireD4(request, source)
 
         val d4Choices = when (request.phase) {
             GameEffectPhase.CULTIVATION -> handChoices(request.actor) { it.sides == 4 }
@@ -164,11 +172,28 @@ class PetalToDie4Effect(
         }
     }
 
+    private data class ResearchVariant(val toHand: Boolean, val stealDiscard: Boolean)
+
+    private fun variant(effect: GameEffect): ResearchVariant = when (effect) {
+        GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S -> ResearchVariant(true, false)
+        GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S -> ResearchVariant(true, true)
+        GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S -> ResearchVariant(false, true)
+        else -> ResearchVariant(false, false) // Historical code and P1
+    }
+
     private fun redesignedSources(request: GameEffectRequest): List<PetalD4SourceChoice> =
         buildList {
+            val rules = variant(request.effect)
+            if (rules.toHand && request.phase == GameEffectPhase.BATTLE &&
+                (request.battleState == null ||
+                    battlePlacementResolver.availableSlots(request.battleState, request.actor) == 0)
+            ) return@buildList
             if (request.game.grove.graftBed.has(DieSides.D4)) add(PetalD4SourceChoice.Grove)
             request.game.players.filter { it !== request.actor }.forEach { opponent ->
                 addZoneSources(opponent, EffectOwnedDieZone.HAND, opponent.dice.hand)
+                if (rules.stealDiscard) {
+                    addZoneSources(opponent, EffectOwnedDieZone.DISCARD, opponent.dice.discard)
+                }
             }
         }
 
@@ -190,7 +215,7 @@ class PetalToDie4Effect(
         }
     }
 
-    private fun acquireD4ToDiscard(request: GameEffectRequest, source: PetalD4SourceChoice) {
+    private fun acquireD4(request: GameEffectRequest, source: PetalD4SourceChoice) {
         val die = when (source) {
             PetalD4SourceChoice.Grove -> {
                 stateCheck(request.game.grove.graftBed.take(DieSides.D4)) {
@@ -208,26 +233,45 @@ class PetalToDie4Effect(
                 stateCheck(opponent != null) {
                     "Chosen Petal To Die 4 opponent is not part of this game: ${source.playerId}"
                 }
-                stateCheck(source.zone == EffectOwnedDieZone.HAND) {
-                    "Petal To Die 4 may steal a D4 only from an opponent Hand: $source"
+                stateCheck(source.zone == EffectOwnedDieZone.HAND ||
+                    (variant(request.effect).stealDiscard && source.zone == EffectOwnedDieZone.DISCARD)) {
+                    "Petal To Die 4 may not steal from this zone: $source"
                 }
-                val live = opponent.dice.hand.getOrNull(source.die.index)
+                val live = (if (source.zone == EffectOwnedDieZone.HAND) opponent.dice.hand
+                            else opponent.dice.discard).getOrNull(source.die.index)
                 stateCheck(
                     live != null && live.sides == 4 && live.value == source.die.value
                 ) {
                     "Chosen opponent D4 source is no longer available: $source"
                 }
-                if (request.phase == GameEffectPhase.BATTLE) {
-                    request.battleState?.grid?.removeDie(live)
+                if (source.zone == EffectOwnedDieZone.HAND && request.phase == GameEffectPhase.BATTLE) {
+                    val battle = battleStateForEffect(request, "PetalToDie4Steal")
+                    stateCheck(battle.grid.removeDie(live) != null) {
+                        "Stolen Battle D4 has no Strike Square: $source"
+                    }
                 }
-                val removed = opponent.dice.removeExactFromHand(live)
+                val removed = if (source.zone == EffectOwnedDieZone.HAND)
+                    opponent.dice.removeExactFromHand(live)
+                else opponent.dice.removeFromDiscard(live)
                 stateCheck(removed != null) {
                     "Chosen opponent D4 could not be removed: $source"
                 }
                 removed
             }
         }
-        request.actor.dice.addToDiscard(die)
+        if (variant(request.effect).toHand) {
+            request.actor.dice.addToHand(die)
+            if (request.phase == GameEffectPhase.BATTLE) {
+                val battle = battleStateForEffect(request, "PetalToDie4Acquire")
+                battlePlacementResolver.placeNewHandDie(
+                    battleState = battle,
+                    player = request.actor,
+                    die = die,
+                    reason = BattleDiePlacementReason.EFFECT,
+                    context = request.decisionContext()
+                )
+            }
+        } else request.actor.dice.addToDiscard(die)
     }
 
     private fun oldLegalChoices(request: GameEffectRequest): List<PetalToDie4Choice> =

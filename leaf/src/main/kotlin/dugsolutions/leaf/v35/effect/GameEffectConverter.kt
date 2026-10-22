@@ -681,6 +681,34 @@ Gain or Steal 1 D4. Then discard any number of your D4s; Draw that many dice.
 
             register(
                 """
+Gain or Steal 1 D4 to your Discard (steal from an opponent's Hand). Then discard any number of your Hand D4s; Draw that many dice.
+                """,
+                GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S
+            )
+
+            register(
+                """
+Gain or Steal 1 D4 to your Hand (steal from an opponent's Hand). Then discard any number of your Hand D4s; Draw that many dice.
+                """,
+                GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S
+            )
+
+            register(
+                """
+Gain or Steal 1 D4 to your Discard (steal from an opponent's Hand or Discard). Then discard any number of your Hand D4s; Draw that many dice.
+                """,
+                GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S
+            )
+
+            register(
+                """
+Gain or Steal 1 D4 to your Hand (steal from an opponent's Hand or Discard). Then discard any number of your Hand D4s; Draw that many dice.
+                """,
+                GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S
+            )
+
+            register(
+                """
 <cultivation/> Reroll 1 die. On a 3, Draw 1 die.
 <battle/> Choose 1 Strike row. Reduce all opponent dice there by 3.
                 """,

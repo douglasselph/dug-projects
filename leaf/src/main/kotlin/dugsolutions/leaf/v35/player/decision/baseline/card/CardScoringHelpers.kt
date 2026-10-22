@@ -247,7 +247,11 @@ object CardScoringHelpers {
                     "Butterfly refresh/acquisition opportunity"
                 )
             }
-            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW -> {
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S -> {
                 val d4s = dice.count { it.sides == 4 }
                 score = score.adjusted(15, "Gain or Steal a D4")
                 score = score.adjusted(d4s * 7, "Owned Hand D4s can be cycled into fresh Draws")

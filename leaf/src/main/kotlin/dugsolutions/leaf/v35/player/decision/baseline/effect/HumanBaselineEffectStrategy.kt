@@ -728,7 +728,11 @@ class HumanBaselineEffectStrategy(
                 PriorityScore(50 + (expectedGain * 5).roundToInt())
                     .adjusted(choice.selected.size, "Evaluate the complete redraw subset")
             }
-            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW -> {
+            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S -> {
                 val expectedGain = choice.selected.sumOf {
                     max(0.0, DieValueHeuristics.expectedRerollGain(it.sides, it.value))
                 }

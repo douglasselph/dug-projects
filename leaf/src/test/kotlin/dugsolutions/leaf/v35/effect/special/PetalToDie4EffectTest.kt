@@ -363,6 +363,99 @@ class PetalToDie4EffectTest {
         )
     }
 
+    private class ChooseResearchSource(
+        private val requestedZone: dugsolutions.leaf.v35.player.decision.effect.EffectOwnedDieZone? = null,
+        private val discardAcquired: Boolean = false
+    ) : PetalStrategy() {
+        override fun choosePetalD4Source(
+            request: dugsolutions.leaf.v35.player.decision.effect.ChoosePetalD4SourceRequest
+        ): dugsolutions.leaf.v35.player.decision.effect.PetalD4SourceChoice =
+            if (requestedZone == null) request.legalChoices.first { it == dugsolutions.leaf.v35.player.decision.effect.PetalD4SourceChoice.Grove }
+            else request.legalChoices.first {
+                it is dugsolutions.leaf.v35.player.decision.effect.PetalD4SourceChoice.Opponent && it.zone == requestedZone
+            }
+
+        override fun chooseDice(
+            request: dugsolutions.leaf.v35.player.decision.effect.ChooseEffectDiceRequest
+        ): dugsolutions.leaf.v35.player.decision.effect.EffectDiceChoice =
+            dugsolutions.leaf.v35.player.decision.effect.EffectDiceChoice(
+                if (discardAcquired) request.legalChoices.filter { it.sides == 4 } else emptyList()
+            )
+    }
+
+    @Test
+    fun researchVariantsGainIntoCorrectZoneInCultivationAndBattle() {
+        val variants = listOf(
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S to false,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S to true,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S to false,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S to true
+        )
+        for ((code, toHand) in variants) for (battle in listOf(false, true)) {
+            val actor = EffectTestFixture.player(1, effectStrategy = ChooseResearchSource())
+            val opponent = EffectTestFixture.player(2)
+            val game = EffectTestFixture.game(actor, opponent)
+            game.grove.graftBed.returnD4()
+            val state = if (battle) BattleState(listOf(actor, opponent)) else null
+            val request = EffectTestFixture.request(game, actor, code).let {
+                if (state == null) it else it.copy(phase = GameEffectPhase.BATTLE, battleState = state)
+            }
+            assertTrue(effect.canExecute(request), "$code battle=$battle")
+            effect.execute(request, nested)
+            assertEquals(if (toHand) 1 else 0, actor.dice.handSize, "$code battle=$battle")
+            assertEquals(if (toHand) 0 else 1, actor.dice.discardSize, "$code battle=$battle")
+            if (battle && toHand) assertTrue(state!!.grid.locationOf(actor.dice.hand.single()) != null)
+            assertEquals(0, game.grove.graftBed.count(DieSides.D4))
+        }
+    }
+
+    @Test
+    fun researchVariantsStealFromAllowedZonesInBothPhases() {
+        val variants = listOf(
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S to false,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S to true,
+            GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S to false,
+            GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S to true
+        )
+        val zoneHand = dugsolutions.leaf.v35.player.decision.effect.EffectOwnedDieZone.HAND
+        val zoneDiscard = dugsolutions.leaf.v35.player.decision.effect.EffectOwnedDieZone.DISCARD
+        for ((code, toHand) in variants) for (battle in listOf(false, true)) {
+            for (zone in listOf(zoneHand, zoneDiscard)) {
+                val die = FixedEffectDie(4, 3)
+                val actor = EffectTestFixture.player(1, effectStrategy = ChooseResearchSource(zone))
+                val opponent = EffectTestFixture.player(2, hand = if (zone == zoneHand) listOf(die) else emptyList())
+                if (zone == zoneDiscard) opponent.dice.addToDiscard(die)
+                val game = EffectTestFixture.game(actor, opponent)
+                val state = if (battle) BattleState(listOf(actor, opponent)) else null
+                if (battle && zone == zoneHand) state!!.grid.placeDie(opponent, StrikeRow.TOP, die)
+                val request = EffectTestFixture.request(game, actor, code).let {
+                    if (state == null) it else it.copy(phase = GameEffectPhase.BATTLE, battleState = state)
+                }
+                val permitted = zone == zoneHand || code.name.contains("HAND_OR_DISCARD")
+                assertEquals(permitted, effect.canExecute(request), "$code $zone battle=$battle")
+                if (!permitted) continue
+                effect.execute(request, nested)
+                assertEquals(0, opponent.dice.handSize)
+                assertEquals(0, opponent.dice.discardSize)
+                assertEquals(if (toHand) listOf(die) else emptyList(), actor.dice.hand)
+                assertEquals(if (toHand) emptyList() else listOf(die), actor.dice.discard)
+                if (battle && zone == zoneHand) assertEquals(null, state!!.grid.locationOf(die).takeIf { !toHand })
+            }
+        }
+    }
+
+    @Test
+    fun acquiredHandD4MayBeCycledAndBattleHandAcquisitionRequiresSpace() {
+        val code = GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S
+        val actor = EffectTestFixture.player(1, effectStrategy = ChooseResearchSource(discardAcquired = true))
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        game.grove.graftBed.returnD4()
+        val request = EffectTestFixture.request(game, actor, code)
+        effect.execute(request, nested)
+        assertEquals(1, actor.dice.handSize) // draw from refreshed Discard after cycling
+        assertEquals(4, actor.dice.hand.single().sides)
+    }
+
     private class FreshGainPlacementStrategy : BattleStrategy {
         var sawGainedD4InContext: Boolean = false
 
