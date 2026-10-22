@@ -635,3 +635,22 @@ tasks.register<JavaExec>("runCompostAdaptiveEvaluation") {
     mainClass.set("dugsolutions.leaf.simulation.v35.replay.CompostAdaptiveEvaluationMainKt")
     args((project.findProperty("adaptiveArgs") as String? ?: "--games=10").split(" ").filter { it.isNotBlank() })
 }
+
+// Opt-in 5B.12A decision distribution diagnostics (policy unchanged).
+tasks.register<JavaExec>("runBaselineDecisionDistribution") {
+    description = "Export fixed-seed scored decisions, alternatives, margins and Buy events."
+    group = "simulation research"
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineDecisionDistributionMainKt")
+    listOf("games", "players", "baseSeed", "strategySeed", "output").forEach { key ->
+        project.findProperty(key)?.toString()?.let { value ->
+            val flag = when (key) {
+                "baseSeed" -> "base-seed"
+                "strategySeed" -> "strategy-seed"
+                else -> key
+            }
+            args("--$flag=$value")
+        }
+    }
+}

@@ -101,7 +101,7 @@ internal data class BaselineResearchOptions(
     }
 }
 
-private fun loadCatalogs(
+internal fun loadCatalogs(
     plantRegistry: PlantCardRegistry,
     plantManager: PlantCardManager,
     wispRegistry: WispCardRegistry,
