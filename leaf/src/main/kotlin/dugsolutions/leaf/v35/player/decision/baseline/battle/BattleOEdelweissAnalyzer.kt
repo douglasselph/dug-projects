@@ -10,6 +10,11 @@ import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.creature.CreatureCard
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
+import dugsolutions.leaf.v35.player.decision.context.DieView
+import kotlin.math.roundToInt
 
 /**
  * Shared bounded two-choice O Edelweiss estimate for Cultivation and Battle.
@@ -103,7 +108,8 @@ class BattleOEdelweissAnalyzer(
         if (choice == OEdelweissChoice.Done) return PriorityScore(DONE_SCORE)
         val first = scoreChoice(context, choice) ?: return null
         if (remainingChoices <= 1) return first
-        val next = projectedContext(context, choice) ?: return null
+        val projected = projectedContext(context, choice) ?: return null
+        val next = projected.context
         val allowedIds = legalChoices.mapNotNull {
             when (it) {
                 is OEdelweissChoice.Play -> it.card.cardId
@@ -118,7 +124,7 @@ class BattleOEdelweissAnalyzer(
                 else -> false
             } }
         val bestSecond = nextCandidates.mapNotNull { candidate ->
-            scoreChoice(next, candidate)?.let { candidate to it }
+            projectedChoiceScore(projected, candidate)?.let { candidate to it }
         }.maxByOrNull { it.second.total }
         val second = bestSecond?.second ?: PriorityScore(DONE_SCORE)
         // A Flip-up immediately followed by Play of that same card does not
@@ -136,11 +142,52 @@ class BattleOEdelweissAnalyzer(
         )
     }
 
-    private fun projectedContext(context: DecisionContext, choice: OEdelweissChoice): DecisionContext? {
+    /** A prediction-only overlay: expected rolls remain doubles, never physical DieViews. */
+    private data class Prediction(
+        val context: DecisionContext,
+        val expectedDice: List<ExpectedDie> = emptyList()
+    )
+
+    private data class ExpectedDie(val sides: Int, val mean: Double)
+
+    /**
+     * Evaluate the next effect against the updated deterministic state. For unrolled dice,
+     * add only the marginal value missed by the legacy integer-valued card scorer.
+     */
+    private fun projectedChoiceScore(prediction: Prediction, choice: OEdelweissChoice): PriorityScore? {
+        val ordinary = scoreChoice(prediction.context, choice) ?: return null
+        if (choice !is OEdelweissChoice.Play || prediction.expectedDice.isEmpty()) return ordinary
+        val card = currentCard(prediction.context, choice.card) ?: return ordinary
+        val raiseAmount = when (card.effect) {
+            GameEffect.RAISE_DIE_PLUS_4 -> 4
+            GameEffect.RAISE_ANY_DIE_PLUS_1 -> 1
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW -> 2
+            else -> null
+        } ?: return ordinary
+        val realGain = prediction.context.self.board.hand.maxOfOrNull {
+            DieValueHeuristics.actualRaiseGain(it, raiseAmount).toDouble()
+        } ?: 0.0
+        val predictedGain = prediction.expectedDice.maxOfOrNull {
+            minOf(it.sides.toDouble(), it.mean + raiseAmount) - it.mean
+        } ?: 0.0
+        val extra = (predictedGain - realGain).coerceAtLeast(0.0)
+        if (extra == 0.0) return ordinary
+        val powerBefore = PurchaseThresholdHeuristics.purchasingPower(prediction.context.self.board).toDouble() +
+            prediction.expectedDice.sumOf { it.mean }
+        val costs = PurchaseThresholdHeuristics.availableCostTiers(prediction.context.grove)
+        val tiers = if (prediction.context.phase == RoundCardType.CULTIVATION) {
+            costs.count { it > powerBefore + realGain && it <= powerBefore + predictedGain } * 10
+        } else 0
+        return ordinary.adjusted((extra * 3).roundToInt() + tiers,
+            "Projected mean-valued dice available to second Plant (without simulated rolls)")
+    }
+
+    private fun projectedContext(context: DecisionContext, choice: OEdelweissChoice): Prediction? {
         val id = when (choice) {
             is OEdelweissChoice.Play -> choice.card.cardId
             is OEdelweissChoice.Flip -> choice.card.cardId
-            OEdelweissChoice.Done -> return context
+            OEdelweissChoice.Done -> return Prediction(context)
         }
         if (context.self.board.creature.none { it.id == id }) return null
         val updated = context.self.board.creature.map { card ->
@@ -150,7 +197,66 @@ class BattleOEdelweissAnalyzer(
                 else -> card
             }
         }
-        return context.copy(self = context.self.copy(board = context.self.board.copy(creature = updated)))
+        val facingContext = context.copy(self = context.self.copy(board = context.self.board.copy(creature = updated)))
+        if (choice !is OEdelweissChoice.Play) return Prediction(facingContext)
+        val source = currentCard(context, choice.card) ?: return null
+        return projectFirstEffect(facingContext, source.effect)
+    }
+
+    /**
+     * Project deterministic outcomes that can be determined without resolving choices or RNG.
+     * The unknown Draw result is recorded only as a fractional expectation.
+     * Unsupported targeted effects retain the prior state rather than guessing a target.
+     */
+    private fun projectFirstEffect(context: DecisionContext, effect: GameEffect): Prediction {
+        val board = context.self.board
+        fun withBoard(updated: dugsolutions.leaf.v35.player.decision.context.PlayerBoardView) =
+            Prediction(context.copy(self = context.self.copy(board = updated)))
+        return when (effect) {
+            GameEffect.GAIN_WATER_TOKEN ->
+                if (context.grove.water > 0) withBoard(board.copy(water = board.water + 1)) else Prediction(context)
+            GameEffect.GAIN_ANY_TWO_CRITTERS -> {
+                val bees = minOf(2, context.grove.bees)
+                val worms = minOf(2 - bees, context.grove.worms)
+                withBoard(board.copy(bees = board.bees + bees, worms = board.worms + worms))
+            }
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RAISE_ANY_DIE_PLUS_1 -> {
+                val amount = if (effect == GameEffect.RAISE_DIE_PLUS_4) 4 else 1
+                val target = board.hand.maxByOrNull { DieValueHeuristics.actualRaiseGain(it, amount) }
+                    ?: return Prediction(context)
+                val gain = DieValueHeuristics.actualRaiseGain(target, amount)
+                if (gain <= 0) return Prediction(context)
+                val raised = board.hand.map { if (it.index == target.index) it.copy(value = it.value + gain) else it }
+                val updated = board.copy(hand = raised)
+                val battle = context.battle?.copy(rows = context.battle.rows.map { row ->
+                    row.copy(players = row.players.map { player ->
+                        if (player.playerId != context.self.id || player.dice.none { it.handIndex == target.index }) player
+                        else player.copy(
+                            dice = player.dice.map { if (it.handIndex == target.index) it.copy(value = it.value + gain) else it },
+                            dieTotal = player.dieTotal + gain,
+                            total = player.total + gain
+                        )
+                    })
+                })
+                Prediction(context.copy(self = context.self.copy(board = updated), battle = battle))
+            }
+            GameEffect.DRAW_TWO_DICE -> {
+                var supply = board.supply
+                var discard = board.discard
+                val expected = mutableListOf<ExpectedDie>()
+                repeat(2) {
+                    if (supply.isEmpty()) { supply = discard; discard = emptyList() }
+                    val next = supply.minByOrNull { it.sides } ?: return@repeat
+                    expected += ExpectedDie(next.sides, DieValueHeuristics.expectedRoll(next.sides))
+                    val selectedIndex = supply.indexOf(next)
+                    supply = supply.filterIndexed { index, _ -> index != selectedIndex }
+                }
+                val updated = board.copy(supply = supply, discard = discard)
+                Prediction(context.copy(self = context.self.copy(board = updated)), expected)
+            }
+            else -> Prediction(context)
+        }
     }
 
     private fun choices(
