@@ -326,12 +326,10 @@ object CardScoringHelpers {
                     }
                 }
             }
-            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> {
-                if (phase == CardPhase.CULTIVATION) {
-                    val useful = context.self.board.creature.count { it.isFaceDown }
-                    score = score.adjusted(minOf(35, useful * 10), "Can reuse/refresh useful cards twice")
-                }
-            }
+            // O Edelweiss receives its complete two-choice projected score from
+            // BattleOEdelweissAnalyzer, including in Cultivation. Do not add
+            // the obsolete spent-Plant bonus here.
+            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> Unit
             GameEffect.DRAW_TWO_DICE -> {
                 score = score.adjusted((expectedNextDraw(context) * 5).roundToInt(), "Two additional dice")
             }

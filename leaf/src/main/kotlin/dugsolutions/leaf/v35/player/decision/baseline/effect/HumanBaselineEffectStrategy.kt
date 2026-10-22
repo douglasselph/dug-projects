@@ -566,14 +566,9 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val score = if (
-                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
-                ) {
-                    oEdelweissAnalyzer.scoreChoice(request.context, choice)
-                        ?: scoreOEdelweissFallback(request.context, choice)
-                } else {
-                    scoreOEdelweissFallback(request.context, choice)
-                }
+                val score = oEdelweissAnalyzer.bestChoicePriority(
+                    request.context, choice, 3 - request.choiceNumber, request.legalChoices
+                ) ?: scoreOEdelweissFallback(request.context, choice)
                 val target = when (choice) {
                     OEdelweissChoice.Done -> null
                     is OEdelweissChoice.Play -> choice.card

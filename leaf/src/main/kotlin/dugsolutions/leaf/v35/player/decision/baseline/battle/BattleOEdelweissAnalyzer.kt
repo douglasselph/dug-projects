@@ -8,23 +8,18 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.effect.EffectPlantChoice
 import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
 import dugsolutions.leaf.v35.round.domain.RoundCardType
+import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
+import dugsolutions.leaf.v35.player.creature.CreatureCard
 
 /**
- * Bounded one-step Battle valuation for O Edelweiss's current choice.
- *
- * Each real [OEdelweissChoice] is scored only from the current Battle snapshot:
- * playing a face-up Plant uses the same immediate enabled-Plant reasoning used
- * elsewhere in Human Baseline, while Flip values only the Main that toggling the
- * card immediately enables or disables. It deliberately does not search the
- * second O Edelweiss choice.
- *
- * Top-level activation uses the same scoring model over the current Creature,
- * excluding the active O Edelweiss source. Actual execution still rebuilds the
- * legal choices and DecisionContext after the first resolution; no second choice
- * is precommitted here.
+ * Shared bounded two-choice O Edelweiss estimate for Cultivation and Battle.
+ * Facing transitions are exact and side-effect free; nested effects reuse the
+ * existing phase-specific card scorers (not a mechanical engine execution).
+ * The second choice is scored on the projected facing state, then execution
+ * independently recomputes legal choices against actual state.
  */
 class BattleOEdelweissAnalyzer(
-    cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+    private val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     private val enabledPlantAnalyzer: BattleEnabledPlantAnalyzer =
         BattleEnabledPlantAnalyzer(cardScorers)
 ) {
@@ -32,7 +27,7 @@ class BattleOEdelweissAnalyzer(
         context: DecisionContext,
         choice: OEdelweissChoice
     ): PriorityScore? {
-        if (context.phase != RoundCardType.BATTLE) return null
+        if (context.phase == null) return null
 
         return when (choice) {
             OEdelweissChoice.Done -> PriorityScore(DONE_SCORE)
@@ -41,9 +36,9 @@ class BattleOEdelweissAnalyzer(
                 val card = currentCard(context, choice.card) ?: return null
                 if (card.isFaceUp != choice.card.isFaceUp || !card.isFaceUp) return null
 
-                enabledPlantAnalyzer(context, card).priority.adjusted(
+                plantValue(context, card).adjusted(
                     0,
-                    "Play face-up Plant for its best immediate Battle value"
+                    "Play face-up Plant for its current projected value"
                 )
             }
 
@@ -51,11 +46,11 @@ class BattleOEdelweissAnalyzer(
                 val card = currentCard(context, choice.card) ?: return null
                 if (card.isFaceUp != choice.card.isFaceUp) return null
 
-                val opportunity = enabledPlantAnalyzer(context, card).priority
+                val opportunity = plantValue(context, card)
                 if (card.isFaceDown) {
-                    opportunity.adjusted(
-                        -FLIP_ENABLE_DELAY,
-                        "Flip spent Plant face up to enable its immediate Battle Main"
+                    PriorityScore(DONE_SCORE).adjusted(
+                        maxOf(0, (opportunity.total - DONE_SCORE) / 4),
+                        "Future option created by flipping spent Plant face up"
                     )
                 } else {
                     val lostValue = maxOf(0, opportunity.total - DONE_SCORE)
@@ -69,45 +64,115 @@ class BattleOEdelweissAnalyzer(
         }
     }
 
-    /**
-     * Values the top-level O Edelweiss activation from the best CURRENT first
-     * choice only. Returning that same choice score, rather than adding it to
-     * O Edelweiss's generic card base, keeps the action from looking attractive
-     * when its only sensible current choice is Done and avoids double-counting
-     * the replayed/enabled Plant's own value.
-     */
-    fun topLevelPriority(
-        context: DecisionContext,
-        sourceCardId: CreatureCardId
-    ): PriorityScore? {
-        if (context.phase != RoundCardType.BATTLE) return null
-
-        return topLevelChoices(context, sourceCardId)
-            .mapNotNull { scoreChoice(context, it) }
-            .maxByOrNull { it.total }
-            ?.adjusted(0, "Best current one-step O Edelweiss Battle choice")
-            ?: PriorityScore(DONE_SCORE)
+    /** Bounded two-choice plan using immutable projected Plant facings. */
+    fun topLevelPriority(context: DecisionContext, sourceCardId: CreatureCardId): PriorityScore? {
+        if (context.phase == null) return null
+        return bestSequence(context, 2, sourceCardId = sourceCardId).second
     }
 
-    private fun topLevelChoices(
+    /** Shared at decision time: rank first choices by their best legal continuation. */
+    fun bestChoicePriority(
         context: DecisionContext,
-        sourceCardId: CreatureCardId
-    ): List<OEdelweissChoice> =
-        buildList {
-            context.self.board.creature
-                .filter { it.id != sourceCardId }
-                .forEach { card ->
-                    val choice = card.toChoice()
-                    if (card.isFaceUp) {
-                        // Whether a nested effect is executable remains an engine
-                        // legality question. This bounded projection deliberately
-                        // does not execute or pre-resolve it.
-                        add(OEdelweissChoice.Play(choice))
-                    }
-                    add(OEdelweissChoice.Flip(choice))
-                }
-            add(OEdelweissChoice.Done)
+        choice: OEdelweissChoice,
+        remainingChoices: Int,
+        legalChoices: List<OEdelweissChoice>
+    ): PriorityScore? {
+        if (context.phase == null) return null
+        return sequenceValue(context, choice, remainingChoices, legalChoices, emptySet())
+    }
+
+    private fun bestSequence(
+        context: DecisionContext,
+        remainingChoices: Int,
+        sourceCardId: CreatureCardId? = null,
+        excluded: Set<CreatureCardId> = emptySet()
+    ): Pair<OEdelweissChoice, PriorityScore> {
+        val candidates = choices(context, sourceCardId, excluded)
+        return candidates.mapNotNull { choice ->
+            sequenceValue(context, choice, remainingChoices, candidates, excluded)?.let { choice to it }
+        }.maxByOrNull { it.second.total } ?: (OEdelweissChoice.Done to PriorityScore(DONE_SCORE))
+    }
+
+    private fun sequenceValue(
+        context: DecisionContext,
+        choice: OEdelweissChoice,
+        remainingChoices: Int,
+        legalChoices: List<OEdelweissChoice>,
+        excluded: Set<CreatureCardId>
+    ): PriorityScore? {
+        if (choice == OEdelweissChoice.Done) return PriorityScore(DONE_SCORE)
+        val first = scoreChoice(context, choice) ?: return null
+        if (remainingChoices <= 1) return first
+        val next = projectedContext(context, choice) ?: return null
+        val allowedIds = legalChoices.mapNotNull {
+            when (it) {
+                is OEdelweissChoice.Play -> it.card.cardId
+                is OEdelweissChoice.Flip -> it.card.cardId
+                OEdelweissChoice.Done -> null
+            }
+        }.toSet()
+        val nextCandidates = choices(next, excluded = excluded)
+            .filter { it == OEdelweissChoice.Done || when (it) {
+                is OEdelweissChoice.Play -> it.card.cardId in allowedIds
+                is OEdelweissChoice.Flip -> it.card.cardId in allowedIds
+                else -> false
+            } }
+        val bestSecond = nextCandidates.mapNotNull { candidate ->
+            scoreChoice(next, candidate)?.let { candidate to it }
+        }.maxByOrNull { it.second.total }
+        val second = bestSecond?.second ?: PriorityScore(DONE_SCORE)
+        // A Flip-up immediately followed by Play of that same card does not
+        // retain the earlier future-option value; that option was consumed.
+        val consumedSetup = if (choice is OEdelweissChoice.Flip &&
+            !choice.card.isFaceUp &&
+            bestSecond?.first is OEdelweissChoice.Play &&
+            (bestSecond.first as OEdelweissChoice.Play).card.cardId == choice.card.cardId
+        ) first.total - DONE_SCORE else 0
+        // Each ordinary card priority includes the common Done baseline.
+        // Only the incremental value of the second choice is added.
+        return first.adjusted(
+            second.total - DONE_SCORE - consumedSetup,
+            "Best projected second O Edelweiss choice (no duplicate base or consumed Flip setup)"
+        )
+    }
+
+    private fun projectedContext(context: DecisionContext, choice: OEdelweissChoice): DecisionContext? {
+        val id = when (choice) {
+            is OEdelweissChoice.Play -> choice.card.cardId
+            is OEdelweissChoice.Flip -> choice.card.cardId
+            OEdelweissChoice.Done -> return context
         }
+        if (context.self.board.creature.none { it.id == id }) return null
+        val updated = context.self.board.creature.map { card ->
+            if (card.id != id) card else when (choice) {
+                is OEdelweissChoice.Play -> card.copy(facing = CreatureCard.Facing.FACE_DOWN)
+                is OEdelweissChoice.Flip -> card.copy(facing = if (card.isFaceUp) CreatureCard.Facing.FACE_DOWN else CreatureCard.Facing.FACE_UP)
+                else -> card
+            }
+        }
+        return context.copy(self = context.self.copy(board = context.self.board.copy(creature = updated)))
+    }
+
+    private fun choices(
+        context: DecisionContext,
+        sourceCardId: CreatureCardId? = null,
+        excluded: Set<CreatureCardId> = emptySet()
+    ): List<OEdelweissChoice> = buildList {
+        context.self.board.creature.filter { it.id != sourceCardId && it.id !in excluded }
+            .forEach { card ->
+                if (card.isFaceUp) {
+                    add(OEdelweissChoice.Play(card.toChoice()))
+                }
+                add(OEdelweissChoice.Flip(card.toChoice()))
+            }
+        add(OEdelweissChoice.Done)
+    }
+
+    private fun plantValue(context: DecisionContext, card: CreatureCardView): PriorityScore =
+        if (context.phase == RoundCardType.BATTLE) enabledPlantAnalyzer(context, card).priority
+        else cardScorers.forPlant(card).playScore(
+            context, CardPhase.CULTIVATION, card.name
+        )
 
     private fun currentCard(
         context: DecisionContext,
@@ -126,7 +191,6 @@ class BattleOEdelweissAnalyzer(
 
     private companion object {
         const val DONE_SCORE = 35
-        const val FLIP_ENABLE_DELAY = 1
         const val FACE_UP_FLIP_PENALTY = 1
     }
 }

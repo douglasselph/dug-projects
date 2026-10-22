@@ -3,6 +3,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOEdelweissAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
@@ -41,6 +42,12 @@ object PlantActivationPriority {
         cardScorers: HumanBaselineCardScorerRegistry,
         policy: HumanBaselinePolicy
     ): PriorityScore {
+        if ((context.self.board.creature.firstOrNull { it.id == card.id }?.effect ?: card.card.effect) ==
+            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
+        ) {
+            return BattleOEdelweissAnalyzer(cardScorers).topLevelPriority(context, card.id)
+                ?: PriorityScore(35)
+        }
         var score = cardScorers.forPlant(card.card).playScore(
             context = context,
             phase = CardPhase.CULTIVATION,

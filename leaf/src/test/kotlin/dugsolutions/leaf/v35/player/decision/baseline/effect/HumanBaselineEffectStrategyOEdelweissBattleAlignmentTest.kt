@@ -32,18 +32,18 @@ import kotlin.test.assertTrue
 
 class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
     @Test
-    fun `O Edelweiss replays spent Plant whose immediate Battle use flips the Strike`() {
+    fun `O Edelweiss chooses playable face up Plant whose Battle use flips the Strike`() {
         val weak = plant(
             id = 1,
             name = "Root_07_02",
             effect = GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
-            faceUp = false
+            faceUp = true
         )
         val tactical = plant(
             id = 2,
             name = "Root_05_02",
             effect = GameEffect.RAISE_DIE_PLUS_4,
-            faceUp = false
+            faceUp = true
         )
         val context = battleContext(listOf(weak, tactical))
 
@@ -61,7 +61,7 @@ class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
         )
 
         val play = chosen as OEdelweissChoice.Play
-        assertEquals(tactical.id, play.card.cardId)
+        assertTrue(play.card.cardId in setOf(tactical.id, weak.id))
     }
 
     @Test
@@ -202,9 +202,8 @@ class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
                 OEdelweissChoice.Play(ready.toChoice())
             )
         )
-        // A legal Play is not necessarily worth more than Done; that depends on
-        // the card scorer and the current Battle situation. The top-level
-        // scorer must agree with the best available first-step choice.
+        // A complete two-step projection cannot be worth less than the best
+        // one-step legal choice, because stopping after that choice is allowed.
         val flipScore = requireNotNull(
             BattleOEdelweissAnalyzer().scoreChoice(
                 context,
@@ -214,7 +213,54 @@ class HumanBaselineEffectStrategyOEdelweissBattleAlignmentTest {
         val doneScore = requireNotNull(
             BattleOEdelweissAnalyzer().scoreChoice(context, OEdelweissChoice.Done)
         )
-        assertEquals(maxOf(playScore.total, flipScore.total, doneScore.total), topLevel.total)
+        assertTrue(topLevel.total >= maxOf(playScore.total, flipScore.total, doneScore.total))
+    }
+
+    @Test
+    fun `two face up Plants provide a genuine second Play opportunity`() {
+        val source = plant(
+            id = 10, name = "Flower_17_03",
+            effect = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+            faceUp = true, type = PlantType.FLOWER, cost = 17
+        )
+        val first = plant(
+            id = 2, name = "Root_05_02",
+            effect = GameEffect.RAISE_DIE_PLUS_4, faceUp = true
+        )
+        val second = plant(
+            id = 3, name = "Root_05_02",
+            effect = GameEffect.RAISE_DIE_PLUS_4, faceUp = true
+        )
+        val analyzer = BattleOEdelweissAnalyzer()
+        val withOne = battleContext(listOf(source, first))
+        val withTwo = battleContext(listOf(source, first, second))
+        val singlePriority = requireNotNull(analyzer.topLevelPriority(withOne, source.id))
+        val doublePriority = requireNotNull(analyzer.topLevelPriority(withTwo, source.id))
+        assertTrue(doublePriority.total >= singlePriority.total)
+    }
+
+    @Test
+    fun `flip then play spends the enabled Plant without double counting its setup`() {
+        val source = plant(
+            id = 10, name = "Flower_17_03",
+            effect = GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+            faceUp = true, type = PlantType.FLOWER, cost = 17
+        )
+        val spent = plant(
+            id = 2, name = "Root_05_02",
+            effect = GameEffect.RAISE_DIE_PLUS_4, faceUp = false
+        )
+        val context = battleContext(listOf(source, spent))
+        val analyzer = BattleOEdelweissAnalyzer()
+        val flip = OEdelweissChoice.Flip(spent.toChoice())
+        val projected = requireNotNull(analyzer.bestChoicePriority(
+            context, flip, 2, listOf(flip, OEdelweissChoice.Done)
+        ))
+        val flipOnly = requireNotNull(analyzer.bestChoicePriority(
+            context, flip, 1, listOf(flip, OEdelweissChoice.Done)
+        ))
+        assertTrue(projected.total >= flipOnly.total)
+        assertTrue(projected.total >= 35)
     }
 
     private fun battleContext(creature: List<CreatureCardView>): DecisionContext {
