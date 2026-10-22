@@ -2,6 +2,8 @@ package dugsolutions.leaf.v35.player.decision.baseline.projection
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleBeeSourceAnalyzer
+import kotlin.math.roundToInt
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
@@ -56,7 +58,8 @@ object PlantResourceProjection {
         } else if (context.opponents.none { it.id == ownerId && it.board.bees > 0 }) return null
         val denial = if (ownerId == null) 0 else {
             val board = context.opponents.first { it.id == ownerId }.board
-            BEE_FUTURE + (if (context.battle == null) 0 else board.beeValue * 2)
+            BEE_FUTURE + if (context.battle == null) 0 else
+                BattleBeeSourceAnalyzer()(context, ownerId).roundToInt().coerceAtLeast(0)
         }
         return BEE_FUTURE + denial
     }
@@ -94,7 +97,8 @@ object PlantResourceProjection {
             .map { card -> facingValue(context, card, registry) }
             .maxOrNull() ?: 0
 
-    private fun facingValue(
+    /** Single future-opportunity proxy shared by activation and legal target ranking. */
+    fun facingValue(
         context: DecisionContext,
         card: CreatureCardView,
         registry: HumanBaselineCardScorerRegistry

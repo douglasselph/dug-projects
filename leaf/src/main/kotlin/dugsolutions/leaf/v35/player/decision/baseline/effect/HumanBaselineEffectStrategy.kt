@@ -460,19 +460,9 @@ class HumanBaselineEffectStrategy(
             request.legalChoices.map { choice ->
                 val score = when (choice) {
                     EffectBeeSourceChoice.Grove -> PriorityScore(PlantResourceProjection.beeSource(request.context, null) ?: 0)
-                    is EffectBeeSourceChoice.Opponent -> {
-                        var score = PriorityScore(PlantResourceProjection.beeSource(request.context, choice.playerId) ?: 0)
-                        if (request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE) {
-                            val denial = beeSourceAnalyzer(request.context, choice.playerId).roundToInt()
-                            if (denial > 0) {
-                                score = score.adjusted(
-                                    denial,
-                                    "Steal the Bee whose remaining Battle Support is most tactically dangerous"
-                                )
-                            }
-                        }
-                        score
-                    }
+                    is EffectBeeSourceChoice.Opponent -> PriorityScore(
+                        PlantResourceProjection.beeSource(request.context, choice.playerId) ?: 0
+                    )
                 }
                 DecisionCandidate(choice, score, setOf(DecisionTag.ACQUIRE_BEE))
             }
@@ -502,13 +492,15 @@ class HumanBaselineEffectStrategy(
             val view = request.context.self.board.creature.firstOrNull { it.id == choice.cardId }
             val score = when {
                 view == null -> PriorityScore(0)
-                !choice.isFaceUp -> cardScorers.forPlant(view)
-                    .playScore(request.context, CardPhase.from(request.context.phase), view.name)
-                    .adjusted(50, "Flip a spent Plant face up for immediate current-phase use")
-                else -> PriorityScore(50 - plantPreservationEvaluator(request.context, view))
+                !choice.isFaceUp -> PriorityScore(
+                    PlantResourceProjection.facingValue(request.context, view, cardScorers)
+                )
+                else -> PriorityScore(
+                    -PlantResourceProjection.facingValue(request.context, view, cardScorers)
+                )
             }
             DecisionCandidate<EffectPlantChoice?>(choice, score)
-        } + DecisionCandidate<EffectPlantChoice?>(null, PriorityScore(50))
+        } + DecisionCandidate<EffectPlantChoice?>(null, PriorityScore(0))
         return choose(request.context, candidates)
     }
 
@@ -550,6 +542,8 @@ class HumanBaselineEffectStrategy(
                     view != null
                 ) {
                     enabledPlantAnalyzer(request.context, view).priority
+                } else if (view != null && request.effect == GameEffect.REUSE_SPENT_ROOT_OR_VINE_EFFECT) {
+                    PriorityScore(PlantResourceProjection.facingValue(request.context, view, cardScorers))
                 } else if (view != null && choice.isFaceUp) {
                     PriorityScore(-plantPreservationEvaluator(request.context, view))
                 } else {

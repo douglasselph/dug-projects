@@ -128,6 +128,29 @@ class HumanBaselineEffectStrategyPlantAlignmentTest {
 
 
     @Test
+    fun `optional flip target follows the same facing value used by activation`() {
+        val low = plant(30, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false, cost = 7)
+        val high = plant(31, "Vine_11_01", GameEffect.DISCARD_ONE_DIE_DRAW_TWO, faceUp = false, cost = 14)
+        val context = cultivationContext(selfCreature = listOf(low, high))
+        val registry = dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry()
+        val projection = dugsolutions.leaf.v35.player.decision.baseline.projection.PlantResourceProjection
+        val expected = listOf(low, high).maxBy { projection.facingValue(context, it, registry) }
+        val activation = projection.bestRefresh(context, registry)
+        assertEquals(projection.facingValue(context, expected, registry), activation)
+        val chosen = HumanBaselineEffectStrategy().chooseOptionalPlant(
+            ChooseOptionalEffectPlantRequest(
+                effect = GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE,
+                legalChoices = listOf(
+                    EffectPlantChoice(low.id, low.name, isFaceUp = false),
+                    EffectPlantChoice(high.id, high.name, isFaceUp = false)
+                ),
+                context = context
+            )
+        )
+        assertEquals(expected.id, chosen?.cardId)
+    }
+
+    @Test
     fun `optional Cultivation Plant flip wakes the more useful spent Plant`() {
         val modest = plant(10, "Vine_07_04", GameEffect.RAISE_ANY_DIE_PLUS_1, faceUp = false)
         val useful = plant(11, "Vine_11_01", GameEffect.DISCARD_ONE_DIE_DRAW_TWO, faceUp = false)
