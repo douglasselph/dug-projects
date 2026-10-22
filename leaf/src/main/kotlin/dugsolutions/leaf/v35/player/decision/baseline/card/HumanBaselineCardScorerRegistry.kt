@@ -37,6 +37,30 @@ class HumanBaselineCardScorerRegistry(
                 put(GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
                 put(GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, recall)
             }
+            // Research effect identities must resolve to the same card-specific scorer
+            // as their printed identity. Buying/activating a renamed effect must not
+            // silently lose the scorer registration merely because its enum differs.
+            fun mapResearchVariants(name: String, vararg effects: GameEffect) {
+                val scorer = listOfNotNull(byName[name]).distinct()
+                if (scorer.isNotEmpty()) effects.forEach { put(it, scorer) }
+            }
+            mapResearchVariants(
+                "Flower_14_04",
+                GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW,
+                GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+                GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
+                GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
+                GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S
+            )
+            mapResearchVariants(
+                "Flower_17_03",
+                GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
+                GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
+            )
+            mapResearchVariants(
+                "Flower_11_03",
+                GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW
+            )
             val appreciation = listOfNotNull(byName["Root_07_02"]).distinct()
             if (appreciation.isNotEmpty()) {
                 put(GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, appreciation)
