@@ -36,6 +36,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionTag
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegalChoiceCombinations
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
+import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.effect.*
 import dugsolutions.leaf.v35.player.decision.mechanical.effect.MechanicalEffectStrategy
@@ -408,18 +409,7 @@ class HumanBaselineEffectStrategy(
         return choose(
             request.context,
             request.legalChoices.map { choice ->
-                val score = when (choice) {
-                    PetalD4SourceChoice.Grove -> PriorityScore(55)
-                    is PetalD4SourceChoice.Opponent -> {
-                        val zoneBonus = when (choice.zone) {
-                            EffectOwnedDieZone.HAND -> 20
-                            EffectOwnedDieZone.SUPPLY -> 12
-                            EffectOwnedDieZone.DISCARD -> 8
-                        }
-                        PriorityScore(65 + zoneBonus)
-                            .adjusted(8, "Stealing a D4 also denies an opponent ownership")
-                    }
-                }
+                val score = PetalAcquisitionProjection.scoreSource(request.context, request.effect, choice)
                 DecisionCandidate(choice, score)
             }
         )

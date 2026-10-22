@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
+import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -252,9 +253,8 @@ object CardScoringHelpers {
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S,
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S,
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S -> {
-                val d4s = dice.count { it.sides == 4 }
-                score = score.adjusted(15, "Gain or Steal a D4")
-                score = score.adjusted(d4s * 7, "Owned Hand D4s can be cycled into fresh Draws")
+                val projected = PetalAcquisitionProjection.activationScore(context, effect)
+                score = score.adjusted(projected.total - 50, "Projected Petal acquisition and optional cycling")
             }
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4 -> {
                 val bestBranch = if (phase == CardPhase.BATTLE) {
