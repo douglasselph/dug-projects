@@ -13,6 +13,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStri
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDeterministicStrikeRowTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieCollateralAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSappingSnapdragonProjector
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnDieSwapPairAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleOwnTotalChangeAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleEnabledPlantAnalyzer
@@ -72,6 +73,7 @@ class HumanBaselineEffectStrategy(
     internal val twoStepUpgradeEvaluator: BattleTwoStepUpgradeEvaluator = BattleTwoStepUpgradeEvaluator(policy),
     internal val ownTotalChangeAnalyzer: BattleOwnTotalChangeAnalyzer = BattleOwnTotalChangeAnalyzer(policy),
     internal val ownDieCollateralAnalyzer: BattleOwnDieCollateralAnalyzer = BattleOwnDieCollateralAnalyzer(policy),
+    internal val sappingProjector: BattleSappingSnapdragonProjector = BattleSappingSnapdragonProjector(policy),
     internal val ownDieSwapPairAnalyzer: BattleOwnDieSwapPairAnalyzer = BattleOwnDieSwapPairAnalyzer(policy),
     internal val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
         BattleGustOfPetalsTargetAnalyzer(policy),
@@ -134,6 +136,16 @@ class HumanBaselineEffectStrategy(
                             die = choice,
                             normalPurchasingPower = normalPower
                         )
+
+                    request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+                        request.effect == GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW ->
+                        battleEnhancedSappingTargetScore(request.context, request.legalChoices, choice)
+                            ?: CardScoringHelpers.scoreDieTarget(
+                                effect = request.effect,
+                                context = request.context,
+                                die = choice,
+                                normalPurchasingPower = normalPower
+                            )
 
                     request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
                         request.effect in COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS ->
@@ -912,6 +924,36 @@ class HumanBaselineEffectStrategy(
      * opposing dice. The dedicated analyzer mirrors the complete engine
      * realization so target choice sees both the actor raise and collateral.
      */
+    /** First choice considers every possible anchor; after the engine raises that die,
+     * the second callback excludes the first index and compares actual anchor outcomes.
+     * The first +2 is not projected a second time at that later callback.
+     */
+    private fun battleEnhancedSappingTargetScore(
+        context: DecisionContext,
+        legalChoices: List<EffectDieChoice>,
+        choice: EffectDieChoice
+    ): PriorityScore? {
+        val allIndices = sappingProjector.ownIndices(context)
+        val legalIndices = legalChoices.map { it.index }.toSet()
+        val excluded = allIndices.filterNot { it in legalIndices }
+        val analysis = if (excluded.size == 1) {
+            sappingProjector.project(
+                context,
+                GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
+                excluded.single(), choice.index, choice,
+                initialRaisePending = false
+            )
+        } else {
+            sappingProjector.bestForFirst(
+                context,
+                GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
+                choice.index, choice
+            )
+        } ?: return null
+        return PriorityScore(analysis.tacticalValue.roundToInt())
+            .adjusted(0, "Complete two-row Sapping Battle projection")
+    }
+
     private fun battleCollateralOwnDieTargetScore(
         context: DecisionContext,
         effect: GameEffect,

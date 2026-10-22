@@ -22,12 +22,17 @@ class BattleOwnDieCollateralAnalyzer(
         swingEvaluator = BattleSwingEvaluator(policy)
     )
 ) {
+    private val sappingProjector = BattleSappingSnapdragonProjector(policy)
+
     operator fun <T> invoke(
         context: DecisionContext,
         effect: GameEffect,
         handIndex: Int,
         realization: T
     ): BattleActionAnalysis<T>? {
+        if (effect == GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW) {
+            return sappingProjector.project(context, effect, handIndex, handIndex, realization)
+        }
         val battle = context.battle ?: return null
         val actorId = context.self.id
         val rowView = battle.rows.firstOrNull { row ->

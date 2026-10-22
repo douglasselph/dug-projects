@@ -46,6 +46,7 @@ class BattleEnabledPlantAnalyzer(
         BattleOwnDieCollateralAnalyzer(policy),
     private val gustOfPetalsTargetAnalyzer: BattleGustOfPetalsTargetAnalyzer =
         BattleGustOfPetalsTargetAnalyzer(policy),
+    private val sappingProjector: BattleSappingSnapdragonProjector = BattleSappingSnapdragonProjector(policy),
     private val setDieToMatchAnalyzer: BattleSetDieToMatchAnalyzer =
         BattleSetDieToMatchAnalyzer(policy)
 ) {
@@ -84,6 +85,11 @@ class BattleEnabledPlantAnalyzer(
 
             GameEffect.RAISE_DIE_PLUS_4 -> raiseCandidates(context, card, dice, 4)
             GameEffect.RAISE_DIE_PLUS_3 -> raiseCandidates(context, card, dice, 3)
+            GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW ->
+                dice.mapNotNull { located ->
+                    sappingProjector.bestForFirst(context, card.effect, located.die.handIndex, card.id)
+                }
+
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
                 collateralCandidates(context, card, dice)
