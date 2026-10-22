@@ -153,6 +153,8 @@ class GameEffectConverterTest {
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
             GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
+            GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE, // research-only O Edelweiss variant
+            GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE, // research-only O Edelweiss variant
             GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant

@@ -22,20 +22,27 @@ import dugsolutions.leaf.v35.player.decision.effect.OEdelweissChoice
  * Twice, you may play another grafted Plant card or flip another card.
  *
  * The two decisions are made sequentially and legal choices are rebuilt after
- * the first resolves. This is important: a face-up Plant cannot be "played
- * again", but it may first be Flipped face down and then be a legal Play choice
- * for the second decision.
+ * the first resolves. The spent-only variant can first flip a face-up Plant
+ * down and then replay it; the any-facing variant permits replay directly.
  *
- * Play resolves the effect of a spent (face-down) Plant and leaves that Plant
- * face down. Flip simply toggles the chosen Plant's facing.
+ * Play resolves another Plant effect without consuming its facing. For an
+ * already-spent Plant, the spent state is preserved. Flip toggles facing.
  */
 class OEdelweissEffect : EffectHandler {
+
+    private fun accepts(effect: GameEffect) = effect in setOf(
+        GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+        GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
+        GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
+    )
+
+    private fun allowsFaceUp(effect: GameEffect) =
+        effect == GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
 
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
-        request.effect ==
-            GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE &&
+        accepts(request.effect) &&
             flippableCards(request).isNotEmpty()
 
     override fun execute(
@@ -43,8 +50,7 @@ class OEdelweissEffect : EffectHandler {
         executor: GameEffectExecutor
     ) {
         effectCheck(
-            request.effect ==
-                GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE
+            accepts(request.effect)
         ) {
             "O Edelweiss received wrong effect: ${request.effect}"
         }
@@ -119,8 +125,8 @@ class OEdelweissEffect : EffectHandler {
                         activePath
                 }
                 .forEach { card ->
-                    // Only an already-spent card can be played again.
-                    if (card.isFaceDown) {
+                    // The experimental any-facing variant also offers face-up cards.
+                    if (card.isFaceDown || allowsFaceUp(request.effect)) {
                         val nested =
                             nestedRequest(
                                 request = request,
@@ -204,11 +210,11 @@ class OEdelweissEffect : EffectHandler {
             current != null &&
                 current.card.name ==
                     choice.card.cardName &&
-                current.isFaceDown &&
-                !choice.card.isFaceUp &&
+                current.isFaceUp == choice.card.isFaceUp &&
+                (current.isFaceDown || allowsFaceUp(request.effect)) &&
                 current.id !in activePath
         ) {
-            "O Edelweiss can only replay another currently spent Plant: ${choice.card}"
+            "O Edelweiss Play target is stale or not eligible: ${choice.card}"
         }
 
         val nested =
@@ -226,6 +232,7 @@ class OEdelweissEffect : EffectHandler {
             "Chosen O Edelweiss Plant effect is no longer executable: ${choice.card}"
         }
 
+        val originallySpent = current.isFaceDown
         executor.execute(
             nested
         )
@@ -233,12 +240,10 @@ class OEdelweissEffect : EffectHandler {
         // Replaying a spent card uses its effect; it does not refresh that
         // card. Enforce the spent state even if the nested effect itself could
         // otherwise manipulate its source card.
-        stateCheck(
-            request.actor.creature.faceDown(
-                current.id
-            )
-        ) {
-            "O Edelweiss could not preserve replayed Plant as spent: ${choice.card}"
+        if (originallySpent) {
+            stateCheck(request.actor.creature.faceDown(current.id)) {
+                "O Edelweiss could not preserve replayed Plant as spent: ${choice.card}"
+            }
         }
     }
 

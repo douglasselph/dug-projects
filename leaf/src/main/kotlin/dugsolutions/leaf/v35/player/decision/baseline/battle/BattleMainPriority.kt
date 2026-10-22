@@ -26,7 +26,11 @@ object BattleMainPriority {
                 )
                 val effectiveEffect = context.self.board.creature.firstOrNull { it.id == action.card.id }?.effect
                     ?: action.card.card.effect
-                if (effectiveEffect == GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE) {
+                if (effectiveEffect in setOf(
+                        GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
+                        GameEffect.PLAY_SPENT_OR_FLIP_ANOTHER_CARD_TWICE,
+                        GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE
+                    )) {
                     BattleOEdelweissAnalyzer(cardScorers)
                         .topLevelPriority(context, action.card.id)
                         ?: intrinsic

@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
@@ -39,7 +40,7 @@ class BattleOEdelweissAnalyzer(
 
             is OEdelweissChoice.Play -> {
                 val card = currentCard(context, choice.card) ?: return null
-                if (!card.isFaceDown || choice.card.isFaceUp) return null
+                if (card.isFaceUp != choice.card.isFaceUp) return null
 
                 enabledPlantAnalyzer(context, card).priority.adjusted(
                     0,
@@ -82,7 +83,8 @@ class BattleOEdelweissAnalyzer(
     ): PriorityScore? {
         if (context.phase != RoundCardType.BATTLE) return null
 
-        return topLevelChoices(context, sourceCardId)
+        val effect = context.self.board.creature.firstOrNull { it.id == sourceCardId }?.effect
+        return topLevelChoices(context, sourceCardId, effect)
             .mapNotNull { scoreChoice(context, it) }
             .maxByOrNull { it.total }
             ?.adjusted(0, "Best current one-step O Edelweiss Battle choice")
@@ -91,14 +93,15 @@ class BattleOEdelweissAnalyzer(
 
     private fun topLevelChoices(
         context: DecisionContext,
-        sourceCardId: CreatureCardId
+        sourceCardId: CreatureCardId,
+        effect: GameEffect?
     ): List<OEdelweissChoice> =
         buildList {
             context.self.board.creature
                 .filter { it.id != sourceCardId }
                 .forEach { card ->
                     val choice = card.toChoice()
-                    if (card.isFaceDown) {
+                    if (card.isFaceDown || effect == GameEffect.PLAY_ANY_OR_FLIP_ANOTHER_CARD_TWICE) {
                         // Whether a nested effect is executable remains an engine
                         // legality question. This bounded projection deliberately
                         // does not execute or pre-resolve it.
