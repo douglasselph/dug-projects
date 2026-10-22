@@ -14,6 +14,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHe
 import dugsolutions.leaf.v35.player.decision.baseline.common.RowNeedHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailability
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
+import dugsolutions.leaf.v35.player.decision.baseline.projection.ExpectedDrawProjection
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -134,8 +135,21 @@ object CardScoringHelpers {
             }
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS -> {
-                val smallest = dice.minByOrNull { it.sides }
-                if (smallest != null) score = score.adjusted((nextSides(smallest.sides) - smallest.sides) * 2, "Persistent die upgrade")
+                val upgrades = dice.mapNotNull { die ->
+                    val upgradedSides = nextSides(die.sides)
+                    if (upgradedSides <= die.sides) null
+                    else ExpectedDrawProjection.upgradeDelta(die.sides, die.value, upgradedSides)
+                }
+                val bestUpgrade = upgrades.maxOrNull()
+                if (bestUpgrade != null) {
+                    score = score.adjusted((bestUpgrade * POINTS_PER_VALUE).roundToInt(),
+                        "Projected upgraded die's mean roll versus current die")
+                    if (phase == CardPhase.CULTIVATION && bestUpgrade > 0) {
+                        val crossing = PurchaseThresholdHeuristics.availableCostTiers(context.grove)
+                            .count { it > buyPower && it <= buyPower + bestUpgrade }
+                        score = score.adjusted(crossing * 10, "Projected upgrade Buy tiers")
+                    }
+                }
                 val rounds = context.progress.cultivationRoundsRemaining ?: 0
                 score = score.adjusted(minOf(20, rounds * 3), "Upgrade remains useful in later rounds")
             }
@@ -198,9 +212,13 @@ object CardScoringHelpers {
             }
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO -> {
-                val weakest = dice.minByOrNull { it.value }
-                val nextExpected = expectedNextDraw(context)
-                if (weakest != null) score = score.adjusted(((nextExpected * 2) - weakest.value).roundToInt() * 2, "Two expected draws replace the weakest die")
+                val candidates = dice.map { die ->
+                    ExpectedDrawProjection.forecast(context, count = 2, removeHandDieIndex = die.index)
+                }
+                val best = candidates.maxOfOrNull {
+                    ExpectedDrawProjection.scoreAdjustment(it, phase == CardPhase.BATTLE)
+                }
+                if (best != null) score = score.adjusted(best, "Projected discard-and-draw outcome")
             }
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE -> {
                 val count = context.self.board.creature.count { it.type == PlantType.ROOT || it.type == PlantType.VINE }
@@ -306,9 +324,17 @@ object CardScoringHelpers {
                 if (phase == CardPhase.BATTLE) score = score.adjusted(bestBattleRowNeed(context) / 3, "Can disturb higher opposing dice")
             }
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE -> {
-                val maxNow = dice.count { it.value >= it.sides }
-                val canCreate = dice.any { it.value == it.sides - 1 }
-                score = score.adjusted(maxNow * 15 + if (canCreate) 18 else 0, "Maximum dice create extra Draws")
+                val targets = dice.ifEmpty { emptyList() }
+                val best = targets.maxOfOrNull { target ->
+                    val maxAfter = dice.count { die ->
+                        val result = if (die.index == target.index) minOf(die.sides, die.value + 1) else die.value
+                        result == die.sides
+                    }
+                    val draws = ExpectedDrawProjection.forecast(context, maxAfter)
+                    val raise = minOf(1, target.sides - target.value)
+                    raise * POINTS_PER_VALUE + ExpectedDrawProjection.scoreAdjustment(draws, phase == CardPhase.BATTLE)
+                }
+                if (best != null) score = score.adjusted(best, "Projected capped Raise and resulting Draws")
             }
             GameEffect.ROLL_DIE_FROM_DISCARD_INTO_HAND -> {
                 val candidates = context.self.board.discard.map { die ->
@@ -331,7 +357,11 @@ object CardScoringHelpers {
             // the obsolete spent-Plant bonus here.
             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> Unit
             GameEffect.DRAW_TWO_DICE -> {
-                score = score.adjusted((expectedNextDraw(context) * 5).roundToInt(), "Two additional dice")
+                val forecast = ExpectedDrawProjection.forecast(context, 2)
+                score = score.adjusted(
+                    ExpectedDrawProjection.scoreAdjustment(forecast, phase == CardPhase.BATTLE),
+                    "Projected two Draws (mean values, capacity and purchase tiers)"
+                )
             }
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> {
                 val best = context.self.board.discard.maxOfOrNull { it.sides } ?: 0
