@@ -60,7 +60,7 @@ internal data class MulchTargetTrainOptions(val generations:Int,val population:I
     companion object{fun parse(args:List<String>):MulchTargetTrainOptions{
         var generations=5;var population=8;var games=30;var elites=2;var sigma=.25;var mutations=8;var evolutionSeed=109000L;var seed=119000L;var strategySeed=129000L
         var input=Paths.get("data/ai/4p/mulch-target-policy-v1.weights");var output=Paths.get("output/ai/mulch-target-policy-v1-trained.weights")
-        var plantOverrides:Path?=Paths.get("data/research/4p/resync/resync-current.csv");var roundOverrides:Path?=Paths.get("data/research/4p/resync/round-resync-current.csv")
+        var plantOverrides:Path?=Paths.get("data/research/resync/resync-current.csv");var roundOverrides:Path?=Paths.get("data/research/resync/round-resync-current.csv")
         var grovePattern:String?=GrovePlantCode.RANDOM_PATTERN;var groveSeed=139000L;var players=4;var rounds="3/2/2";var i=0
         fun value(a:String)=if('=' in a)a.substringAfter('=') else args[++i]
         while(i<args.size){val a=args[i];when{

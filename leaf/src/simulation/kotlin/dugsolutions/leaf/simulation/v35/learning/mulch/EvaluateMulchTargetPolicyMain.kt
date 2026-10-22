@@ -392,8 +392,8 @@ private data class EvalOptions(
             var seed = 219000L
             var strategySeed = 229000L
             var weights = Paths.get("output/ai/mulch-target-policy-v1-trained.weights")
-            var plantOverrides: Path? = Paths.get("data/research/4p/resync/resync-current.csv")
-            var roundOverrides: Path? = Paths.get("data/research/4p/resync/round-resync-current.csv")
+            var plantOverrides: Path? = Paths.get("data/research/resync/resync-current.csv")
+            var roundOverrides: Path? = Paths.get("data/research/resync/round-resync-current.csv")
             var grovePattern: String? = GrovePlantCode.RANDOM_PATTERN
             var groveSeed = 239000L
             var players = 4

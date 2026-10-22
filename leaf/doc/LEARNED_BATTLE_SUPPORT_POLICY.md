@@ -21,8 +21,8 @@ The Human-reference-match feature is advisory only. The learner may disagree wit
 ```bash
 bin/train_battle_support_policy \
   --grove-pattern random \
-  --plant-overrides data/research/4p/resync/resync-current.csv \
-  --round-overrides data/research/4p/resync/round-resync-current.csv \
+  --plant-overrides data/research/resync/resync-current.csv \
+  --round-overrides data/research/resync/round-resync-current.csv \
   --players 4 \
   --rounds 3/2/2 \
   --generations 8 \
@@ -42,8 +42,8 @@ Only the affected seat's Battle Support policy is learned. The affected seat rot
 bin/evaluate_battle_support_policy \
   --weights output/ai/battle-support-policy-v1-trained.weights \
   --grove-pattern random \
-  --plant-overrides data/research/4p/resync/resync-current.csv \
-  --round-overrides data/research/4p/resync/round-resync-current.csv \
+  --plant-overrides data/research/resync/resync-current.csv \
+  --round-overrides data/research/resync/round-resync-current.csv \
   --games 300
 ```
 

@@ -11,11 +11,11 @@
     "roundPattern": "3/2/2",
     "policyPath": "output/e2e/learner-1.weights",
     "plantOverrides": {
-      "path": "data/research/4p/resync/resync-current.csv",
+      "path": "data/research/resync/resync-current.csv",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "roundOverrides": {
-      "path": "data/research/4p/resync/round-resync-current.csv",
+      "path": "data/research/resync/round-resync-current.csv",
       "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     }
   },

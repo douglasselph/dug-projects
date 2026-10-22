@@ -35,7 +35,7 @@ fun mainAdaptiveEvaluation(args: Array<String>) {
     val seedStart = option("seed", "950000").toLong()
     val bonuses = listOf(option("bonus", "0.0").toDouble().also { require(it.isFinite()) })
     val out = Paths.get(option("output", "output/experiments/compost-adaptive/evaluation"))
-    val baseRounds = Paths.get(option("round-base", "data/research/4p/resync/round-resync-current.csv"))
+    val baseRounds = Paths.get(option("round-base", "data/research/resync/round-resync-current.csv"))
     val variant = option("variant", "original").lowercase()
     require(variant in setOf("original", "keep-no-rewards"))
     val mainWeights = Paths.get(option("main-weights", "data/ai/2p/cultivation-main-original-compost.weights"))

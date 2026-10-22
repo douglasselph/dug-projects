@@ -178,7 +178,7 @@ Current tier-calibration experiments default to the provisional Plant resync
 baseline:
 
 ```text
-data/research/4p/resync/resync-current.csv
+data/research/resync/resync-current.csv
 ```
 
 The baseline is merged explicitly with the target-card intervention. Core
@@ -192,7 +192,7 @@ bin/experiment_card_tier_calibration Root_09_03 screen --tiers 9,11,14,17
 
 # Preserved resync checkpoint
 bin/experiment_card_tier_calibration Root_09_03 screen \
-  --baseline-overrides data/research/4p/resync/resync-v01.csv \
+  --baseline-overrides data/research/resync/resync-v01.csv \
   --tiers 9,11,14,17
 
 # Canonical-only Plant market

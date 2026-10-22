@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
     val weights = option("weights", "-20,0,10,20,40,60").split(',').map { it.trim().toInt() }.distinct()
     val out = Paths.get(option("output", "output/experiments/compost-weight-sweep"))
     val scoringPath = Paths.get(option("human-scoring", "data/ai/human-scoring.properties"))
-    val baseRounds = Paths.get(option("round-base", "data/research/4p/resync/round-resync-current.csv"))
+    val baseRounds = Paths.get(option("round-base", "data/research/resync/round-resync-current.csv"))
     val variant = option("variant", "original").lowercase()
     require(variant in setOf("original", "keep-no-rewards"))
     val mainWeights = Paths.get(option("main-weights", "data/ai/2p/cultivation-main-original-compost.weights"))

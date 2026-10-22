@@ -45,8 +45,8 @@ class Config:
         r=self.project_root.resolve(); object.__setattr__(self,"project_root",r)
         for f in ("certified_root","output_root"):
             v=getattr(self,f); object.__setattr__(self,f,v if v.is_absolute() else r/v)
-        object.__setattr__(self,"plant_overrides", self.plant_overrides or r/"data/research/4p/resync/resync-current.csv")
-        object.__setattr__(self,"round_overrides", self.round_overrides or r/"data/research/4p/resync/round-resync-current.csv")
+        object.__setattr__(self,"plant_overrides", self.plant_overrides or r/"data/research/resync/resync-current.csv")
+        object.__setattr__(self,"round_overrides", self.round_overrides or r/"data/research/resync/round-resync-current.csv")
 
 def cert_buy(c,p,r): return c.certified_root/f"{p}p/weights/learner-{r}.weights"
 def base(c,p,r): return c.output_root/f"{p}p/replicate-{r}"

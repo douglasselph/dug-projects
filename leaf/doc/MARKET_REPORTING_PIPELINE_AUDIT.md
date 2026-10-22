@@ -167,7 +167,7 @@ Each `PlantCard` is a typed Kotlin object containing identity, type, cost, effec
 The market experiments currently default to:
 
 ```text
-data/research/4p/resync/resync-current.csv
+data/research/resync/resync-current.csv
 ```
 
 `PlantExperimentResearchConfig` / `PlantValueResolver` provide effective research values without modifying canonical data.
@@ -920,9 +920,9 @@ Suggested logical schema:
     "mechanicalSeedStart": 4410000,
     "strategySeedStart": 4510000,
     "groveSeedStart": 4610000,
-    "plantOverrides": "data/research/4p/resync/resync-current.csv",
+    "plantOverrides": "data/research/resync/resync-current.csv",
     "plantFingerprint": "...",
-    "roundOverrides": "data/research/4p/resync/round-resync-current.csv",
+    "roundOverrides": "data/research/resync/round-resync-current.csv",
     "roundFingerprint": "..."
   },
   "policy": {

@@ -107,7 +107,7 @@ class ConfirmationConfig:
             object.__setattr__(
                 self,
                 "plant_overrides",
-                root / "data/research/4p/resync/resync-current.csv",
+                root / "data/research/resync/resync-current.csv",
             )
         else:
             object.__setattr__(self, "plant_overrides", _resolve_under(root, self.plant_overrides))
@@ -115,7 +115,7 @@ class ConfirmationConfig:
             object.__setattr__(
                 self,
                 "round_overrides",
-                root / "data/research/4p/resync/round-resync-current.csv",
+                root / "data/research/resync/round-resync-current.csv",
             )
         else:
             object.__setattr__(self, "round_overrides", _resolve_under(root, self.round_overrides))
@@ -175,8 +175,8 @@ class ConfirmationConfig:
             mutations=env_int("MUTATIONS", 6),
             resume=env.get("RESUME", "1") not in {"0", "false", "False", "no", "NO"},
             rounds=env.get("ROUNDS", "3/2/2"),
-            plant_overrides=Path(env.get("PLANT_OVERRIDES", "data/research/4p/resync/resync-current.csv")),
-            round_overrides=Path(env.get("ROUND_OVERRIDES", "data/research/4p/resync/round-resync-current.csv")),
+            plant_overrides=Path(env.get("PLANT_OVERRIDES", "data/research/resync/resync-current.csv")),
+            round_overrides=Path(env.get("ROUND_OVERRIDES", "data/research/resync/round-resync-current.csv")),
             buy_template=Path(env.get("BUY_TEMPLATE", "data/ai/4p/buy-policy-v1.weights")),
             output_root=Path(env.get("OUTPUT_ROOT", f"output/experiments/{profile.output_directory}")),
             train_grove_seed_base=env_int("TRAIN_GROVE_SEED", 3_810_000),

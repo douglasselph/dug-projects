@@ -17,8 +17,8 @@ def make_config(tmp_path: Path) -> SubstitutionConfig:
     evaluator = root / "bin/evaluate_buy_policy"
     evaluator.write_text("#!/bin/sh\n", encoding="utf-8")
     evaluator.chmod(0o755)
-    plant = root / "data/research/4p/resync/resync-current.csv"
-    round_ = root / "data/research/4p/resync/round-resync-current.csv"
+    plant = root / "data/research/resync/resync-current.csv"
+    round_ = root / "data/research/resync/round-resync-current.csv"
     plant.parent.mkdir(parents=True)
     plant.write_text("plant\n", encoding="utf-8")
     round_.write_text("round\n", encoding="utf-8")

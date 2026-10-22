@@ -34,7 +34,7 @@ fun main(args: Array<String>) {
     val numPlayers = opt("players", "2").toInt().also { require(it in 2..4) }
     val mainPath = Paths.get(requireNotNull(opts["main-weights"]) { "--main-weights=PATH required" })
     val buyPath = Paths.get(requireNotNull(opts["buy-weights"]) { "--buy-weights=PATH required" })
-    val roundPath = Paths.get(opt("round-overrides", "data/research/4p/resync/round-resync-current.csv"))
+    val roundPath = Paths.get(opt("round-overrides", "data/research/resync/round-resync-current.csv"))
     val output = Paths.get(opt("output", "output/experiments/expert-forced-compost"))
     Files.createDirectories(output)
     val app = koinApplication { modules(appModules) }

@@ -25,7 +25,7 @@ from leaf_experiments.market.confirmation import (
 def make_project(tmp_path: Path) -> Path:
     root = tmp_path / "leaf"
     (root / "bin").mkdir(parents=True)
-    (root / "data/research/4p/resync").mkdir(parents=True)
+    (root / "data/research/resync").mkdir(parents=True)
     (root / "data/ai/4p").mkdir(parents=True)
     (root / "output").mkdir(parents=True)
     (root / "settings.gradle.kts").write_text("", encoding="utf-8")
@@ -36,8 +36,8 @@ def make_project(tmp_path: Path) -> Path:
         path.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
         path.chmod(0o755)
 
-    (root / "data/research/4p/resync/resync-current.csv").write_text("plant\n", encoding="utf-8")
-    (root / "data/research/4p/resync/round-resync-current.csv").write_text("round\n", encoding="utf-8")
+    (root / "data/research/resync/resync-current.csv").write_text("plant\n", encoding="utf-8")
+    (root / "data/research/resync/round-resync-current.csv").write_text("round\n", encoding="utf-8")
     (root / "data/ai/4p/buy-policy-v1.weights").write_text(
         "\n".join(
             [

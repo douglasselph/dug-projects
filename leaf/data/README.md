@@ -28,21 +28,26 @@ player count explicit in its path even if a policy later proves portable.
 
 ## Research data
 
-Research baselines, overrides, and historical market configurations likewise
-live under the player-count stream that produced/validated them:
+Game definitions and experiments that change the game rules or shared card
+market are player-count-neutral, regardless of which player count first tested
+them:
 
-- `research/2p/` — reserved for 2-player research artifacts
-- `research/3p/` — reserved for 3-player research artifacts
-- `research/4p/` — existing historical research artifacts
+- `research/resync/resync-current.csv` — current Plant-card research baseline
+- `research/resync/round-resync-current.csv` — current Round-card research baseline
+- `research/resync/resync-v01.csv` — historical Plant baseline snapshot
+- `research/plant-overrides/` — experimental Plant-card variants
+- `research/round-overrides/` — experimental Round-card variants
+- `research/market-configurations/` — proposed shared-market configurations
 
-The current accepted working Plant and Round research baselines therefore live
-at:
+The canonical data CSVs above remain separate from these opt-in research
+overrides. Scripts must explicitly request research overrides; this refactor
+does not promote them to canonical defaults.
 
-- `research/4p/resync/resync-current.csv`
-- `research/4p/resync/round-resync-current.csv`
+Player-count-specific research results and learned policies may remain under
+`research/2p/`, `research/3p/`, or `research/4p/` when appropriate. A game-rule
+CSV must not be copied between those trees: one shared definition applies to
+all supported player counts.
 
-This directory organization records provenance. It does **not** imply that a
-4-player-derived game rule is intended only for four-player games. Cross-player
-validation can later justify copying/promoting an equivalent baseline into a
-2p/3p research stream or replacing this organization with a deliberately shared
-validated baseline.
+Previously trained policy weight files are deliberately left unchanged,
+including provenance fields that mention the historical `4p` baseline path.
+Those fields document training history, not a live game-definition path.

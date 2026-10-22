@@ -49,11 +49,11 @@ class Config:
             value = getattr(self, field)
             object.__setattr__(self, field, value if value.is_absolute() else root / value)
         if self.plant_overrides is None:
-            object.__setattr__(self, "plant_overrides", root / "data/research/4p/resync/resync-current.csv")
+            object.__setattr__(self, "plant_overrides", root / "data/research/resync/resync-current.csv")
         elif not self.plant_overrides.is_absolute():
             object.__setattr__(self, "plant_overrides", root / self.plant_overrides)
         if self.round_overrides is None:
-            object.__setattr__(self, "round_overrides", root / "data/research/4p/resync/round-resync-current.csv")
+            object.__setattr__(self, "round_overrides", root / "data/research/resync/round-resync-current.csv")
         elif not self.round_overrides.is_absolute():
             object.__setattr__(self, "round_overrides", root / self.round_overrides)
         if not self.player_counts or any(p not in (2, 3, 4) for p in self.player_counts):

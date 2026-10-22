@@ -18,8 +18,8 @@ class CultivationMainResearchTest {
             "--players", "3",
             "--rounds", "2/2/3",
             "--random-grove",
-            "--plant-overrides", "data/research/4p/resync/resync-current.csv",
-            "--round-overrides", "data/research/4p/round-overrides/sunlight-token.csv",
+            "--plant-overrides", "data/research/resync/resync-current.csv",
+            "--round-overrides", "data/research/round-overrides/sunlight-token.csv",
             "--buy-policy", "human",
             "--battle-support-policy", "human"
         ))
