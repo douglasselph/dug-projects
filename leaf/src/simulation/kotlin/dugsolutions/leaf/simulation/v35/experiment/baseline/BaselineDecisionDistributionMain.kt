@@ -95,7 +95,7 @@ fun main(args: Array<String>) {
                 }
             }
         }
-        fun File.writeCounts(map: Map<String, Int>) = printWriter { writer ->
+        fun File.writeCounts(map: Map<String, Int>) = printWriter().use { writer ->
             writer.println("label\tcount\tpercent")
             val total = map.values.sum().coerceAtLeast(1)
             map.entries.sortedWith(compareByDescending<Map.Entry<String,Int>> { it.value }.thenBy { it.key }).forEach {
