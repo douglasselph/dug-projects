@@ -272,7 +272,9 @@ private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCa
     val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_buy_policy", sample, variant, affectedSeat, seed, strategySeed, groveCode, roundLabel)) { runner.run(game) }
     val summary = GameSummaryExtractor.extract(game, result)
     if (diagnostics != null) {
-        diagnostics.addEvents(variant, comparisonEvents)
+        if (variant == "LEARNED") {
+            diagnostics.addEvents(variant, comparisonEvents)
+        }
         game.players.forEachIndexed { index, player ->
             val stats = summary.players.first { it.playerId == player.id }
             diagnostics.addDevelopment(PlayerDevelopmentResult(
