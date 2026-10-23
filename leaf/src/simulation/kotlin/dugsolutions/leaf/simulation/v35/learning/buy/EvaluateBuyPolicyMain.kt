@@ -53,6 +53,10 @@ import dugsolutions.leaf.v35.wisp.WispCardRegistry
 import org.koin.dsl.koinApplication
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.Files
+import dugsolutions.leaf.v35.player.decision.buy.diagnostics.*
+import dugsolutions.leaf.v35.player.development.*
+
 
 /** Matched held-out evaluation of one trained Buy policy against Human Baseline control. */
 fun main(args: Array<String>) {
@@ -169,6 +173,8 @@ fun main(args: Array<String>) {
         }
         println()
 
+        val diagnostics = o.diagnosticsDir?.let { EvaluationDiagnostics(it, allPlants) }
+        val startedAt = System.nanoTime()
         repeat(o.games) { sample ->
             val seat = sample % o.players
             val mechanicalSeed = o.seed + sample
@@ -203,9 +209,15 @@ fun main(args: Array<String>) {
             )
             val controlFactories = List(o.players) { if (it == seat) controlAffected else PlayerDecisionFactory.humanBaseline() }
             val learnedFactories = List(o.players) { if (it == seat) learnedAffected else PlayerDecisionFactory.humanBaseline() }
-            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
-            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values), seat, plantsByName, resolvedGrove, plantExperiment.values)
+            control.add(runOne(factory, runner, resolvedGrove, groveCode, controlFactories, mechanicalSeed, strategySeed, sample, seat, "CONTROL", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values, diagnostics = diagnostics), seat, plantsByName, resolvedGrove, plantExperiment.values)
+            learned.add(runOne(factory, runner, resolvedGrove, groveCode, learnedFactories, mechanicalSeed, strategySeed, sample, seat, "LEARNED", o.roundSetup, o.roundLabel, environment, plantExperiment.values, roundExperiment.values, diagnostics = diagnostics), seat, plantsByName, resolvedGrove, plantExperiment.values)
+            if (diagnostics != null && ((sample + 1) % 10 == 0 || sample + 1 == o.games)) {
+                val elapsed = (System.nanoTime() - startedAt) / 1_000_000_000.0
+                val remaining = elapsed * (o.games - sample - 1) / (sample + 1)
+                println("diagnostics progress=${sample + 1}/${o.games} elapsed=${"%.0f".format(elapsed)}s ETA=${"%.0f".format(remaining)}s")
+            }
         }
+        diagnostics?.finish()
         printReport(o, weights, control, learned)
         o.marketJsonPath?.let { path ->
             MarketEvaluationJsonWriter.write(
@@ -234,14 +246,47 @@ fun main(args: Array<String>) {
 
 internal data class CompletedEvalGame(val summary: GameSummary, val entries: List<GameEntry>)
 
-private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, groveCode: String, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String, roundSetup: GameRoundSetup, roundLabel: String, environment: ResolvedResearchEnvironment, plantValues: PlantValueResolver, roundValues: RoundValueResolver): CompletedEvalGame {
+private fun runOne(factory: GameFactory, runner: GameRunner, grove: List<PlantCard>, groveCode: String, decisions: List<PlayerDecisionFactory>, seed: Long, strategySeed: Long, sample: Int, affectedSeat: Int, variant: String, roundSetup: GameRoundSetup, roundLabel: String, environment: ResolvedResearchEnvironment, plantValues: PlantValueResolver, roundValues: RoundValueResolver, diagnostics: EvaluationDiagnostics? = null): CompletedEvalGame {
+    val comparisonEvents = mutableListOf<BuyDecisionEvent>()
+    val instrumentedDecisions = if (diagnostics != null && variant == "LEARNED") decisions.mapIndexed { index, original ->
+        if (index != affectedSeat) original else object : PlayerDecisionFactory {
+            override fun create() = create(StrategyRandomizer.create(strategySeed))
+            override fun create(strategyRandomizer: StrategyRandomizer) = create(strategyRandomizer, DecisionReasoningSink.NONE)
+            override fun create(strategyRandomizer: StrategyRandomizer, reasoningSink: DecisionReasoningSink) =
+                original.create(strategyRandomizer, reasoningSink).let { director ->
+                    director.copy(buy = ShadowBuyStrategy.humanBaseline(
+                        actual = director.buy,
+                        shadowSeed = strategySeed xor 0x4D395A231BE8L,
+                        onComparison = {},
+                        onEvent = { comparisonEvents.add(it) }
+                    ))
+                }
+        }
+    } else decisions
     val game = factory(
-        evaluationGameConfig(grove, decisions, roundSetup, seed, strategySeed, plantValues, roundValues),
+        evaluationGameConfig(grove, instrumentedDecisions, roundSetup, seed, strategySeed, plantValues, roundValues),
         exactRoundCards=environment.roundCards,
         exactWispCards=environment.wispCards
     )
+    val trackers = if (diagnostics != null) game.players.map(PlayerDevelopmentTracker::attach) else emptyList()
     val result = withSimulationFailureDiagnostics(game, SimulationRunContext("evaluate_buy_policy", sample, variant, affectedSeat, seed, strategySeed, groveCode, roundLabel)) { runner.run(game) }
-    return CompletedEvalGame(GameSummaryExtractor.extract(game, result), game.chronicle.entries.toList())
+    val summary = GameSummaryExtractor.extract(game, result)
+    if (diagnostics != null) {
+        diagnostics.addEvents(variant, comparisonEvents)
+        game.players.forEachIndexed { index, player ->
+            val stats = summary.players.first { it.playerId == player.id }
+            diagnostics.addDevelopment(PlayerDevelopmentResult(
+                gameId = "${sample}-${variant}", playerId = player.id.value.toString(),
+                playerCount = game.players.size,
+                policy = if (index == affectedSeat) variant else "OPPONENT_HUMAN",
+                learner = if (index == affectedSeat) variant else "BASELINE",
+                won = stats.won, finalVp = stats.totalVp,
+                strikeWins = stats.battleStrikeVp / 2,
+                snapshot = trackers[index].snapshot()
+            ))
+        }
+    }
+    return CompletedEvalGame(summary, game.chronicle.entries.toList())
 }
 
 
@@ -1624,6 +1669,7 @@ internal data class EvalOptions(
     val battleSupportPolicy: String,
     val battleSupportWeights: Path?,
     val marketJsonPath: Path?,
+    val diagnosticsDir: Path? = null,
 ) {
     fun groveDescription(): String = grovePattern?.let { "Grove pattern=$it (new resolution per matched sample)" } ?: "Grove=FirstGameDefault"
     fun groveInterpretation(): String = grovePattern?.let { "Grove pattern $it resolved independently per matched sample" } ?: "FirstGameDefault"
@@ -1654,6 +1700,7 @@ internal data class EvalOptions(
             var battleSupportPolicy = "human"
             var battleSupportWeights: Path? = null
             var marketJsonPath: Path? = null
+            var diagnosticsDir: Path? = null
             var positional = false
             var i = 0
 
@@ -1694,6 +1741,7 @@ internal data class EvalOptions(
                     argument.startsWith("--plant-effect-weights") -> plantEffectWeights = Paths.get(value(argument))
                     argument.startsWith("--battle-support-policy") -> battleSupportPolicy = value(argument).trim().lowercase()
                     argument.startsWith("--battle-support-weights") -> battleSupportWeights = Paths.get(value(argument))
+                    argument.startsWith("--diagnostics-dir") -> diagnosticsDir = Paths.get(value(argument))
                     argument.startsWith("--market-json") -> marketJsonPath = Paths.get(value(argument))
                     argument.startsWith("--rounds") -> roundLabel = value(argument).trim()
                     argument.startsWith("--grove") -> grovePattern = GrovePlantCode.validate(value(argument))
@@ -1725,7 +1773,7 @@ internal data class EvalOptions(
             require(roundIncludes.intersect(roundExcludes).isEmpty()) { "A Round card cannot be both included and excluded: ${roundIncludes.intersect(roundExcludes)}" }
             require(wispIncludes.intersect(wispExcludes).isEmpty()) { "A Wisp card cannot be both included and excluded: ${wispIncludes.intersect(wispExcludes)}" }
             val roundSetup = parseRoundSetup(roundLabel)
-            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, cultivationMainWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, battleSupportWeights, marketJsonPath)
+            return EvalOptions(games, seed, strategy, input, grovePattern, groveSeed, excludedCards, roundSetup, normalizedRoundLabel(roundLabel), researchEnvironment, environmentSeed, roundIncludes, roundExcludes, wispIncludes, wispExcludes, plantOverridesPath, roundOverridesPath, players, cultivationMainPolicy, cultivationMainWeights, plantEffectPolicy, plantEffectWeights, battleSupportPolicy, battleSupportWeights, marketJsonPath, diagnosticsDir)
         }
 
         private fun usage() {
