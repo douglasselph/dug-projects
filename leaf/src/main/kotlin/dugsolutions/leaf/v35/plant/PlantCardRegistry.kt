@@ -65,7 +65,7 @@ class PlantCardRegistry(
     }
 
     fun getCard(name: String): PlantCard? =
-        cardsByName[name.normalizedName()]
+        cardsByName[canonicalCardName(name).normalizedName()]
 
     fun getAllCards(): List<PlantCard> =
         cardsByName.values.toList()
@@ -79,7 +79,7 @@ class PlantCardRegistry(
         columns: Map<String, Int>,
         filePath: String
     ): PlantCard {
-        val name = required(row, columns, "name", filePath)
+        val name = canonicalCardName(required(row, columns, "name", filePath))
         val effectText = required(row, columns, "effect", filePath)
         val vpIcon = required(row, columns, "vp_icon", filePath)
 
@@ -121,6 +121,9 @@ class PlantCardRegistry(
         when (vpIcon.trim()) {
             "{{ images.victory_per_vine.url }}" ->
                 PlantScoringRule.PerGraftedVine
+
+            "{{ images.victory_per_flower.url }}" ->
+                PlantScoringRule.PerGraftedFlower
 
             "{{ images.victory_per_butterfly.url }}" ->
                 PlantScoringRule.PerButterfly
@@ -313,6 +316,10 @@ class PlantCardRegistry(
 
         return rows
     }
+
+    /** Component Studio / Tabletop Simulator sorting prefix is not a game identity. */
+    private fun canonicalCardName(name: String): String =
+        if (name.startsWith("zFlower_", ignoreCase = true)) name.drop(1) else name
 
     private fun String.normalizedName(): String =
         trim().lowercase()

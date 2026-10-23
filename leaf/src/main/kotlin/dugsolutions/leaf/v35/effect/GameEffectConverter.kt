@@ -52,6 +52,20 @@ class GameEffectConverter(
                 .lowercase()
 
         private val effectsByText: Map<String, GameEffect> = buildMap {
+            // Explicit aliases for the official October 2026 card files.
+            // Do not replace these with approximate/fuzzy text matching.
+            register("""Gain 1 worm. Each worm <worm/> is worth 1 more this round.""", GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND)
+            register("""Gain 1 VP per 1 showing""", GameEffect.GAIN_VP_PER_ONE_SHOWING)
+            register("""<cultivation/> Discard up to 2 dice dice; draw that many. <battle/> Reroll 1 die.""", GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE)
+            register("""<cultivation/> Reroll 1 die. On a 3, draw a die. <battle/> Choose 1 Strike row. Reduce all opponent dice there by 3.""", GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3)
+            register("""🎲 Raise all your D8s +1""", GameEffect.RAISE_ALL_D8S_PLUS_1)
+            register("""Gain or Steal a Bee <bee/>. Each of your bees is worth 2 more this round.""", GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND)
+            register("""Reroll one of your dice. <battle/> In one Strike Row, all opponent dice higher than one die you choose must reroll""", GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW)
+            register("""Gain or Steal a D4. Discard any number of D4's. Draw a die for each D4 discarded.""", GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW)
+            register("""Twice you may play another face-up card or flip another card""", GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE)
+            register("""Upgrade a die from your hand.""", GameEffect.UPGRADE_DIE_FROM_HAND)
+            register("""Gain Sunlight token""", GameEffect.GAIN_SUNLIGHT_TOKEN)
+
             register(
                 """
 🎲 Raise ×2 one die

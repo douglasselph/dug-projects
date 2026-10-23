@@ -139,26 +139,31 @@ class GameEffectConverterTest {
             .toSet()
 
         val retiredCompatibilityEffects = setOf(
+            GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
+            GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
+            GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+            GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
+            GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            GameEffect.RAISE_DIE_PLUS_3,
+
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE,
             GameEffect.LIMIT_WISPS_AND_TRASH_EXCESS,
             GameEffect.RAISE_D8_PLUS_1, // research-only experimental effect
-            GameEffect.RAISE_ALL_D8S_PLUS_1, // research-only Berry Tasty experimental effect
-            GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
+
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE, // research-only Root Recall variant
-            GameEffect.GAIN_SUNLIGHT_TOKEN, // research-only until Round override is promoted
+
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS, // research-only Compost decision-dominance variant
-            GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND, // research-only Root Appreciation variant
+
             GameEffect.RAISE_LOWEST_DIE_PLUS_1, // research-only experimental effect
-            GameEffect.GAIN_VP_PER_ONE_SHOWING, // research-only Root Down Payment variant
-            GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND, // research-only Bee-loved Bloom variant
-            GameEffect.GAIN_OR_STEAL_D4_THEN_DISCARD_D4S_AND_DRAW, // research-only Petal To Die 4 variant
+
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_ONLY_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant
             GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant
             GameEffect.GAIN_OR_STEAL_D4_TO_HAND_FROM_HAND_OR_DISCARD_THEN_CYCLE_D4S, // research-only Petal To Die 4 variant
-            GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
+
             GameEffect.REROLL_DIE_ON_3_DRAW_ONE_AND_REDUCE_OPPOSING_STRIKE_ROW_BY_3, // research-only Vine and Punishment variant
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW, // research-only Sapping Snapdragon variant
             GameEffect.STEAL_BUTTERFLY_AND_REFRESH_ALL_BUTTERFLIES,

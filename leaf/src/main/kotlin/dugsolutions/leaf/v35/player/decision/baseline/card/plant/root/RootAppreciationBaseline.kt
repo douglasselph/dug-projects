@@ -11,7 +11,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 
 object RootAppreciationBaseline : ConfiguredCardScorer(
     cardNames = setOf("Root_07_02"),
-    effect = GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
+    effect = GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND,
     cultivationPlayBase = 60,
     battlePlayBase = 60
 ), BaselineInfluencer {

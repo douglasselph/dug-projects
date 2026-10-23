@@ -498,7 +498,7 @@ class HumanBaselineBuyStrategy(
         options: List<BuyItem>
     ) {
         val selectedPlant = selectedItem as? BuyItem.Plant ?: return
-        val saplinkOwned = context.self.board.creature.count { it.name == "Vine_11_02" }
+        val saplinkOwned = context.self.board.creature.count { it.name == "Vine_11_03" }
         val bloomBackboneOwned = context.self.board.creature.count { it.name == "Flower_11_02" }
         if (saplinkOwned == 0 && bloomBackboneOwned == 0) return
         val sameCost = options.filterIsInstance<BuyItem.Plant>()

@@ -540,7 +540,7 @@ class HumanBaselineCultivationStrategy(
             is CultivationMainAction.ActivatePlant -> {
                 common["card"] = main.card.card.name
                 when (main.card.card.name) {
-                    "Vine_11_02" -> {
+                    "Vine_11_03" -> {
                         val raises = context.self.board.creature.count { it.type.name == "ROOT" || it.type.name == "VINE" }
                         val headroom = context.self.board.hand.sumOf { (it.sides - it.value).coerceAtLeast(0) }
                         common["synergyPlants"] = raises.toString()

@@ -11,7 +11,7 @@ import dugsolutions.leaf.v35.tokens.Critter
 
 object BeeLovedBloomBaseline : ConfiguredCardScorer(
     cardNames = setOf("Flower_14_01"),
-    effect = GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
+    effect = GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_PLUS_2_THIS_ROUND,
     cultivationPlayBase = 68,
     battlePlayBase = 68
 ), BaselineInfluencer {

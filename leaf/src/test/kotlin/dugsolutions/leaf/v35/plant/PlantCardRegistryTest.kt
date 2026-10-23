@@ -50,7 +50,7 @@ class PlantCardRegistryTest {
         registry.loadFromCsv(CardDataFiles.dataPath(CardDataFiles.VF_CARD_LIST))
 
         assertEquals(
-            PlantScoringRule.Fixed(3),
+            PlantScoringRule.Fixed(1),
             assertNotNull(registry.getCard("Vine_07_01")).scoringRule
         )
         assertEquals(
@@ -58,7 +58,7 @@ class PlantCardRegistryTest {
             assertNotNull(registry.getCard("Vine_09_03")).scoringRule
         )
         assertEquals(
-            PlantScoringRule.PerGraftedVine,
+            PlantScoringRule.PerGraftedFlower,
             assertNotNull(registry.getCard("Vine_07_04")).scoringRule
         )
         assertEquals(

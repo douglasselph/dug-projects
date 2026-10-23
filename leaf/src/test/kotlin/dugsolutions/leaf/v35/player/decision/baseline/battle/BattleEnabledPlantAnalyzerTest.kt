@@ -78,7 +78,7 @@ class BattleEnabledPlantAnalyzerTest {
                 graftBed = mapOf(DieSides.D6 to 1)
             ),
             plant(
-                name = "Root_09_01",
+                name = "Root_07_01",
                 effect = GameEffect.UPGRADE_DIE_AND_USE_NOW,
                 type = PlantType.ROOT
             )

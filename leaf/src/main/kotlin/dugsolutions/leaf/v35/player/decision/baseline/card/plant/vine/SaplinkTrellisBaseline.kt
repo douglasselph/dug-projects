@@ -9,7 +9,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.ScoreAdjustment
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 object SaplinkTrellisBaseline : ConfiguredCardScorer(
-    cardNames = setOf("Vine_11_02"),
+    cardNames = setOf("Vine_11_03"),
     effect = GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
     cultivationPlayBase = 65,
     battlePlayBase = 65

@@ -32,7 +32,7 @@ class PurchasePriorityTest {
 
     @Test
     fun `card acquire value breaks a same-cost Plant tie`() {
-        val awakening = plant("Root_09_01", GameEffect.UPGRADE_DIE_AND_USE_NOW)
+        val awakening = plant("Root_07_01", GameEffect.UPGRADE_DIE_AND_USE_NOW)
         val cause = plant("Root_09_02", GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE)
 
         val strong = PurchasePriority.score(DecisionContext.EMPTY, BuyItem.Plant(awakening)).total
@@ -107,16 +107,16 @@ class PurchasePriorityTest {
     }
 
     private fun berryImportant() = plant(
-        name = "Vine_07_01",
-        effect = GameEffect.RAISE_ANY_DIE_PLUS_1,
+        name = "Vine_11_02",
+        effect = GameEffect.RAISE_ALL_D8S_PLUS_1,
         type = PlantType.VINE,
         cost = 7,
         vp = 3
     )
 
     private fun rootRecall() = plant(
-        name = "Root_07_04",
-        effect = GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+        name = "Root_09_04",
+        effect = GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
         type = PlantType.ROOT,
         cost = 7,
         vp = 1
