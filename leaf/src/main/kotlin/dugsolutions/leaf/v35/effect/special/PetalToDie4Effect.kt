@@ -256,6 +256,7 @@ class PetalToDie4Effect(
                 stateCheck(removed != null) {
                     "Chosen opponent D4 could not be removed: $source"
                 }
+                opponent.dice.recordTransferOut(removed, "STOLEN")
                 removed
             }
         }

@@ -32,6 +32,17 @@ class PlayerDice(
         onAcquired?.invoke(stableDieId(die), die.sides)
     }
 
+    /** A die is leaving this player's ownership, rather than changing zones. */
+    fun recordTransferOut(die: Die, reason: String) {
+        recordRemoval(die, reason)
+        stableDieIds.remove(die)
+    }
+
+    /** A die received from another player becomes a new acquisition for this owner. */
+    fun recordTransferIn(die: Die) {
+        recordAcquired(die)
+    }
+
     private val _supply = Dice(supply)
     private val _hand = Dice(hand)
     private val _discard = Dice(discard)
@@ -229,6 +240,13 @@ class PlayerDice(
         otherHand[otherIndex] = ownDie
         _hand.set(ownHand)
         other._hand.set(otherHand)
+        // Record actual ownership changes only after both Hands are updated.
+        // The two players' local die IDs are independent; a transferred die
+        // receives a new ID in its destination ledger.
+        recordTransferOut(ownDie, "SWAPPED_OUT")
+        other.recordTransferOut(otherDie, "SWAPPED_OUT")
+        recordTransferIn(otherDie)
+        other.recordTransferIn(ownDie)
         return true
     }
 

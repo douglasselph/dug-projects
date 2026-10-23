@@ -255,6 +255,7 @@ class ResourceEffectHandler : EffectHandler {
         stateCheck(removed != null) {
             "Validated Mulch die could not be removed from player dice: $die"
         }
+        request.actor.dice.recordRemoval(removed, "MULCH_STORED")
         stateCheck(request.game.grove.tokens.pull(emptyMulch) != null) {
             "Validated empty Mulch token could not be removed from Grove"
         }

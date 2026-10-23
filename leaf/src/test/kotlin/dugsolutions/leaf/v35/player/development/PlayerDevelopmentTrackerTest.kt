@@ -52,6 +52,54 @@ class PlayerDevelopmentTrackerTest {
     }
 
     @Test
+    fun crossPlayerSwapRecordsBothDeparturesAndBothArrivals() {
+        val a = player()
+        val b = Player(PlayerId(1), mockk<DecisionDirector>())
+        val aDie = SampleDie().d4
+        val bDie = SampleDie().d4
+        a.dice.addToHand(aDie)
+        b.dice.addToHand(bDie)
+        val aTracker = PlayerDevelopmentTracker.attach(a)
+        val bTracker = PlayerDevelopmentTracker.attach(b)
+
+        assertEquals(true, a.dice.swapExactHandDieWith(b.dice, aDie, bDie))
+        assertEquals(1, aTracker.snapshot().countDice(4, "SWAPPED_OUT"))
+        assertEquals(1, bTracker.snapshot().countDice(4, "SWAPPED_OUT"))
+        assertEquals(1, aTracker.snapshot().countDice(4, "OWNED"))
+        assertEquals(1, bTracker.snapshot().countDice(4, "OWNED"))
+        assertEquals(2, aTracker.snapshot().dice.size)
+        assertEquals(2, bTracker.snapshot().dice.size)
+    }
+
+    @Test
+    fun stolenDieRetainsHistoryForFormerAndNewOwner() {
+        val former = player()
+        val thief = Player(PlayerId(1), mockk<DecisionDirector>())
+        val die = SampleDie().d4
+        former.dice.addToHand(die)
+        val formerTracker = PlayerDevelopmentTracker.attach(former)
+        val thiefTracker = PlayerDevelopmentTracker.attach(thief)
+        val taken = former.dice.removeExactFromHand(die)!!
+        former.dice.recordTransferOut(taken, "STOLEN")
+        thief.dice.addToDiscard(taken)
+
+        assertEquals(1, formerTracker.snapshot().countDice(4, "STOLEN"))
+        assertEquals(1, thiefTracker.snapshot().countDice(4, "OWNED"))
+    }
+
+    @Test
+    fun mulchStorageIsRecordedAsRemovalNotUpgrade() {
+        val owner = player()
+        val die = SampleDie().d8
+        owner.dice.addToHand(die)
+        val tracker = PlayerDevelopmentTracker.attach(owner)
+        val removed = owner.dice.removeExactFromHand(die)!!
+        owner.dice.recordRemoval(removed, "MULCH_STORED")
+        assertEquals(1, tracker.snapshot().countDice(8, "MULCH_STORED"))
+        assertEquals(0, tracker.snapshot().upgradeCount)
+    }
+
+    @Test
     fun snapshotsAreIndependentOfLaterChanges() {
         val player = player()
         val tracker = PlayerDevelopmentTracker.attach(player)
