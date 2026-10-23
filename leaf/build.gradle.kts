@@ -654,3 +654,16 @@ tasks.register<JavaExec>("runBaselineDecisionDistribution") {
         }
     }
 }
+
+/** Pure Human Baseline research on resync-current market; no learned weights. */
+tasks.register<JavaExec>("runBaselineResyncCards") {
+    group = "simulation research"
+    description = "Emit per-card baseline-only resync market exposure, purchase, activation and VP metrics."
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineResyncCardBalanceMainKt")
+    listOf("start", "games", "players", "seed", "strategy-seed", "grove-seed",
+        "plant-overrides", "round-overrides", "output").forEach { key ->
+        project.findProperty(key)?.toString()?.let { args("--$key=$it") }
+    }
+}
