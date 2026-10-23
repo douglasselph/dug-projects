@@ -24,7 +24,6 @@ class CompleteCultivationRoundSanityTest {
             cultivation.thenMain(CultivationMainAction.Draw)
             cultivation.thenMain(CultivationMainAction.RoundEffect1)
             cultivation.thenDone()
-            effect.thenDie { request -> request.legalChoices.first { it.value == 3 } }
             buy.thenPurchasePlant("Root_05_02")
             buy.thenPayment { request ->
                 BuyPayment(dice = listOf(request.availableDice.single { it.sides == 6 && it.value == 6 }))
@@ -61,7 +60,7 @@ class CompleteCultivationRoundSanityTest {
             assertEquals(2, p1.supply.size)
             assertTrue(p1.supply.all { it.dieSides == DieSides.D6 })
             assertTrue(p1.hand.isEmpty())
-            assertEquals(listOf(4, 4, 4, 6), p1.discard.map { it.value }.sorted())
+            assertEquals(listOf(3, 4, 4, 6), p1.discard.map { it.value }.sorted())
             assertEquals(listOf("Root_05_02"), p1.plants.map { it.name })
             assertTrue(p1.plants.single().faceUp, "new graft should refresh at Cleanup when all grafts are face down")
 
@@ -93,7 +92,7 @@ class CompleteCultivationRoundSanityTest {
                 listOf(MainActionKind.ROUND_EFFECT_2, MainActionKind.ROUND_EFFECT_2),
                 ChronicleQueries.mainActionsFor(entries, PlayerId(2)).map { it.action }
             )
-            assertTrue(ChronicleQueries.effectsFor(entries, PlayerId(1)).any { it.effect == GameEffect.RAISE_DIE_PLUS_3 })
+            assertTrue(ChronicleQueries.effectsFor(entries, PlayerId(1)).any { it.effect == GameEffect.GAIN_SUNLIGHT_TOKEN })
             assertEquals(1, ChronicleQueries.purchasesFor(entries, PlayerId(1)).size)
             assertTrue(entries.any { it is GameEntry.Graft && it.playerId == PlayerId(1) })
             assertTrue(entries.any { it is GameEntry.Refresh && it.playerId == PlayerId(1) })

@@ -3,6 +3,8 @@ package dugsolutions.leaf.simulation.v35.analysis
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.RollRewardKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SunlightTokenChange
+import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
@@ -84,16 +86,49 @@ class GameSummaryExtractorTest {
                     playerSummary.plantCreatureSignature.cards
                 )
                 assertEquals(player.wisps.size, playerSummary.finalWispCount)
-                assertEquals(0, playerSummary.sunlightGained)
-                assertEquals(0, playerSummary.sunlightSpent)
+                // Official Round effects can now grant and use Sunlight. Derive the
+                // expected counts from actual events rather than assuming all zero.
+                val sunlightMain = entries.filterIsInstance<GameEntry.SunlightMainAction>()
+                    .filter { it.playerId == player.id }
+                assertEquals(
+                    entries.count {
+                        it is GameEntry.SunlightTokenChanged &&
+                            it.playerId == player.id && it.change == SunlightTokenChange.GAINED
+                    },
+                    playerSummary.sunlightGained
+                )
+                assertEquals(
+                    entries.count {
+                        it is GameEntry.SunlightTokenChanged &&
+                            it.playerId == player.id && it.change == SunlightTokenChange.SPENT
+                    },
+                    playerSummary.sunlightSpent
+                )
                 assertEquals(player.tokens.sunlightCount, playerSummary.finalSunlightCount)
-                assertEquals(0, playerSummary.sunlightSupportOpportunities)
-                assertEquals(0, playerSummary.sunlightSupportUses)
-                assertEquals(0, playerSummary.sunlightExtraMainActions)
-                assertEquals(0, playerSummary.sunlightExtraDrawActions)
-                assertEquals(0, playerSummary.sunlightExtraPlantActions)
-                assertEquals(0, playerSummary.sunlightExtraRoundEffectActions)
-                assertTrue(playerSummary.sunlightPlantActivationIds.isEmpty())
+                assertEquals(
+                    entries.count {
+                        it is GameEntry.SunlightSupportOpportunity && it.playerId == player.id
+                    },
+                    playerSummary.sunlightSupportOpportunities
+                )
+                assertEquals(
+                    entries.count {
+                        it is GameEntry.SupportAction &&
+                            it.playerId == player.id && it.action == SupportActionKind.SUNLIGHT
+                    },
+                    playerSummary.sunlightSupportUses
+                )
+                assertEquals(sunlightMain.size, playerSummary.sunlightExtraMainActions)
+                assertEquals(sunlightMain.count { it.action == MainActionKind.DRAW }, playerSummary.sunlightExtraDrawActions)
+                assertEquals(sunlightMain.count { it.action == MainActionKind.ACTIVATE_PLANT }, playerSummary.sunlightExtraPlantActions)
+                assertEquals(
+                    sunlightMain.count {
+                        it.action == MainActionKind.ROUND_EFFECT_1 ||
+                            it.action == MainActionKind.ROUND_EFFECT_2
+                    },
+                    playerSummary.sunlightExtraRoundEffectActions
+                )
+                assertEquals(sunlightMain.mapNotNull { it.plantCardId }, playerSummary.sunlightPlantActivationIds)
                 assertEquals(playerSummary.finalDiceCount, playerSummary.ownedDiceSignature.totalDice)
                 assertEquals(playerSummary.finalDicePower, playerSummary.ownedDiceSignature.totalPower)
                 val allOwnedDieSides =

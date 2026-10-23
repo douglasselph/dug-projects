@@ -36,10 +36,11 @@ class FinalScoringSanityTest {
         ).use { harness ->
             // P1 exact state.
             harness.player(1).addVp(4)
-            harness.graftPlant(1, "Berry Important")  // fixed 3 VP
-            harness.graftPlant(1, "Vine Yield")      // 1 VP per grafted Vine
-            harness.graftPlant(1, "Low & Behold")    // fixed 1 VP
-            harness.graftPlant(1, "Alluring Nectar") // 1 VP per controlled Butterfly
+            harness.graftPlant(1, "Root Four More") // legal Root anchor; fixed 1 VP
+            harness.graftPlant(1, "Berry Tasty")    // fixed 3 VP Vine
+            harness.graftPlant(1, "Vine Yield")     // 1 VP per grafted Flower
+            harness.graftPlant(1, "Low & Behold")   // fixed 1 VP Vine
+            harness.graftPlant(1, "Alluring Nectar") // 1 VP per Butterfly; also a Flower
             harness.giveButterfly(1, Butterfly.GREEN)
             harness.giveButterfly(1, Butterfly.PURPLE)
             assertEquals("Wisp of Honor", harness.giveNextWisp(1).title)
@@ -54,10 +55,10 @@ class FinalScoringSanityTest {
             // from the real CSV definitions rather than synthetic test cards.
             assertEquals(
                 PlantScoringRule.Fixed(3),
-                harness.catalog.requirePlant("Berry Important").scoringRule
+                harness.catalog.requirePlant("Berry Tasty").scoringRule
             )
             assertEquals(
-                PlantScoringRule.PerGraftedVine,
+                PlantScoringRule.PerGraftedFlower,
                 harness.catalog.requirePlant("Vine Yield").scoringRule
             )
             assertEquals(
@@ -69,20 +70,18 @@ class FinalScoringSanityTest {
 
             val result = harness.scoreFinalState()
 
-            // P1 Plant VP = Berry Important 3
-            //             + Vine Yield 3 (three grafted Vines)
-            //             + Low & Behold 1
-            //             + Alluring Nectar 2 (two Butterflies)
-            //             = 9.
-            // Wisp VP = 2 + 3 = 5. Total = 4 + 9 + 5 = 18.
+            // P1 Plant VP = Root Four More 1 + Berry Tasty 3
+            //             + Vine Yield 1 (one grafted Flower)
+            //             + Low & Behold 1 + Alluring Nectar 2 = 8.
+            // Wisp VP = 2 + 3 = 5. Total = 4 + 8 + 5 = 17.
             FinalScoringAssertions.assertScore(
                 result = result,
                 playerId = 1,
                 existingVp = 4,
-                plantVp = 9,
+                plantVp = 8,
                 unplayedWispVp = 5,
-                totalVp = 18,
-                graftedPlantCount = 4
+                totalVp = 17,
+                graftedPlantCount = 5
             )
 
             // P2 = 6 existing + 1 Root + 2 Wisp = 9.
@@ -114,11 +113,11 @@ class FinalScoringSanityTest {
             // P1: 10 total, zero Plants.
             harness.player(1).addVp(10)
 
-            // P2: 6 existing + Berry Important 3 + Root Four More 1 = 10,
+            // P2: 6 existing + Berry Tasty 3 + Root Four More 1 = 10,
             // but with two grafted Plants, so P2 wins the tiebreaker.
             harness.player(2).addVp(6)
-            harness.graftPlant(2, "Berry Important")
             harness.graftPlant(2, "Root Four More")
+            harness.graftPlant(2, "Berry Tasty")
 
             val result = harness.scoreFinalState()
 
@@ -133,35 +132,41 @@ class FinalScoringSanityTest {
     fun `equal total VP and equal Plant count produces shared victory`() {
         val randomizer = ScriptedRandomizer()
         scoringHarness(randomizer = randomizer).use { harness ->
-            // Both finish on 10 VP and both have exactly one grafted Plant.
-            harness.player(1).addVp(7)
-            harness.graftPlant(1, "Berry Important") // +3
+            // Both finish on 10 VP with two grafted Plants.
+            // Each starts with a Root, then legally attaches a Vine.
+            harness.player(1).addVp(6)
+            harness.graftPlant(1, "Root Four More") // +1
+            harness.graftPlant(1, "Berry Tasty")     // +3
 
-            harness.player(2).addVp(9)
+            harness.player(2).addVp(8)
             harness.graftPlant(2, "Root Four More") // +1
+            harness.graftPlant(2, "Low & Behold")   // +1
 
             val result = harness.scoreFinalState()
 
-            FinalScoringAssertions.assertScore(result, 1, 7, 3, 0, 10, 1)
-            FinalScoringAssertions.assertScore(result, 2, 9, 1, 0, 10, 1)
+            FinalScoringAssertions.assertScore(result, 1, 6, 4, 0, 10, 2)
+            FinalScoringAssertions.assertScore(result, 2, 8, 2, 0, 10, 2)
             FinalScoringAssertions.assertWinners(result, 1, 2)
             randomizer.assertExhausted()
         }
     }
 
     @Test
-    fun `variable Vine Yield counts every grafted Vine including itself`() {
+    fun `variable Vine Yield counts grafted Flowers rather than Vines`() {
         scoringHarness().use { harness ->
-            harness.graftPlant(1, "Berry Important")
+            harness.graftPlant(1, "Root Four More")
+            harness.graftPlant(1, "Berry Tasty")
             harness.graftPlant(1, "Vine Yield")
             harness.graftPlant(1, "Low & Behold")
+            harness.graftPlant(1, "Bloom Backbone") // one Flower
 
             val result = harness.scoreFinalState()
             val score = FinalScoringAssertions.scoreFor(result, 1)
 
-            // 3 fixed + 3 from Vine Yield + 1 fixed.
+            // Root Four More 1 + Berry Tasty 3 + Vine Yield 1
+            // (one Flower) + Low & Behold 1 + Bloom Backbone 1.
             assertEquals(7, score.plantVp)
-            assertEquals(3, score.graftedPlantCount)
+            assertEquals(5, score.graftedPlantCount)
         }
     }
 

@@ -99,7 +99,7 @@ class PlantExperimentEffectiveValuesTest {
             berry.name to PlantExperimentOverride(cost = 11, effect = GameEffect.RAISE_LOWEST_DIE_PLUS_1),
             yield.name to PlantExperimentOverride(
                 available = false,
-                scoringRule = PlantScoringRule.PerGraftedFlower
+                scoringRule = PlantScoringRule.PerGraftedVine
             )
         )
         val rendered = PlantExperimentResearchConfig(
@@ -112,7 +112,7 @@ class PlantExperimentEffectiveValuesTest {
         assertTrue(rendered.contains("effect: ${berry.effect} -> RAISE_LOWEST_DIE_PLUS_1"))
         assertTrue(rendered.contains("Vine_07_04"))
         assertTrue(rendered.contains("available: true -> false"))
-        assertTrue(rendered.contains("scoring: PER_GRAFTED_VINE -> PER_GRAFTED_FLOWER"))
+        assertTrue(rendered.contains("scoring: PER_GRAFTED_FLOWER -> PER_GRAFTED_VINE"))
         assertTrue(rendered.contains("All unspecified Plant properties canonical."))
     }
 

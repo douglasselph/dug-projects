@@ -83,7 +83,7 @@ class EffectFamilySanityTest {
                 supply = listOf(DieSpec(DieSides.D8)),
                 hand = listOf(DieSpec(DieSides.D6, 5))
             )
-            harness.graftPlant(1, "Berry Important")
+            harness.graftPlant(1, "Berry Tasty")
             val tulip = harness.graftPlant(1, "Transplant Tulip", faceUp = true)
 
             p1.cultivation.thenMain(CultivationMainAction.ActivatePlant(tulip))
@@ -164,7 +164,7 @@ class EffectFamilySanityTest {
             BattleAssertions.assertDieValues(battle, 2, StrikeRow.MIDDLE, 4)
             BattleAssertions.assertDieValues(battle, 2, StrikeRow.BOTTOM, 3)
             assertEquals(
-                GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+                GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
                 plantEffectsFor(harness, 1).single().effect
             )
             p1.assertExhausted()
