@@ -102,7 +102,8 @@ class DoomResolver(
                 val trash = trashResolver.trashDieFromHand(
                     game = game,
                     player = player,
-                    die = placement.die
+                    die = placement.die,
+                    reason = "DOOM"
                 )
 
                 DoomedDie(

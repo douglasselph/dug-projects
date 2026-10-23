@@ -18,6 +18,10 @@ import dugsolutions.leaf.v35.plant.domain.PlantType
  * initial Root/Vine branch from the Supply/Core.
  */
 class Creature {
+    /** Optional read-only research hooks; no callbacks unless a recorder is attached. */
+    var onGraft: ((CreatureCard) -> Unit)? = null
+    var onSnip: ((CreatureCard) -> Unit)? = null
+
 
     companion object {
         val PLANT_CORE_POSITION = CreaturePosition(0, 0)
@@ -96,6 +100,7 @@ class Creature {
         )
 
         cardsById[grafted.id] = grafted
+        onGraft?.invoke(grafted)
         return grafted
     }
 
@@ -132,7 +137,9 @@ class Creature {
      */
     fun snip(id: CreatureCardId): CreatureCard? {
         if (!canSnip(id)) return null
-        return cardsById.remove(id)
+        val removed = cardsById.remove(id)
+        if (removed != null) onSnip?.invoke(removed)
+        return removed
     }
 
     fun clear() {

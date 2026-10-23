@@ -29,7 +29,8 @@ class TrashResolver {
     fun trashDieFromHand(
         game: Game,
         player: Player,
-        die: Die
+        die: Die,
+        reason: String = "TRASH"
     ): TrashDieResolution {
         val current =
             player.dice.hand.firstOrNull {
@@ -50,6 +51,8 @@ class TrashResolver {
         ) {
             "Validated Trash die could not be removed from Hand: $current"
         }
+
+        player.dice.recordRemoval(current, reason)
 
         game.chronicle.record(
             Moment.TrashDie(

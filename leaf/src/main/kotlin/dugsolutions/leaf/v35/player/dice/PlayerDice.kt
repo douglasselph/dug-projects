@@ -19,6 +19,19 @@ class PlayerDice(
     hand: List<Die> = emptyList(),
     discard: List<Die> = emptyList()
 ) {
+    /** Optional research hooks; fire only for ownership changes, not zone moves. */
+    var onAcquired: ((Long, Int) -> Unit)? = null
+    var onRemoved: ((Long, Int, String) -> Unit)? = null
+    var onUpgrade: ((Long, Int, Int) -> Unit)? = null
+
+    fun recordRemoval(die: Die, reason: String) {
+        onRemoved?.invoke(stableDieId(die), die.sides, reason)
+    }
+
+    private fun recordAcquired(die: Die) {
+        onAcquired?.invoke(stableDieId(die), die.sides)
+    }
+
     private val _supply = Dice(supply)
     private val _hand = Dice(hand)
     private val _discard = Dice(discard)
@@ -46,6 +59,7 @@ class PlayerDice(
         }
         stableDieIds[replacement] = identity
         stableDieIds.remove(source)
+        onUpgrade?.invoke(identity, source.sides, replacement.sides)
     }
 
 
@@ -87,13 +101,15 @@ class PlayerDice(
      * Setup/special-rule entry into the Player Dice Supply.
      */
     fun addToSupply(die: Die): PlayerDice {
-        stableDieId(die)
+        recordAcquired(die)
         _supply.add(die)
         return this
     }
 
     fun addAllToSupply(dice: Iterable<Die>): PlayerDice {
-        _supply.addAll(dice.toList())
+        val newDice = dice.toList()
+        newDice.forEach(::recordAcquired)
+        _supply.addAll(newDice)
         return this
     }
 
@@ -103,7 +119,7 @@ class PlayerDice(
      * Normal Draw should use [draw].
      */
     fun addToHand(die: Die): PlayerDice {
-        stableDieId(die)
+        recordAcquired(die)
         _hand.add(die)
         return this
     }
@@ -112,13 +128,15 @@ class PlayerDice(
      * Normal destination for bought/gained dice.
      */
     fun addToDiscard(die: Die): PlayerDice {
-        stableDieId(die)
+        recordAcquired(die)
         _discard.add(die)
         return this
     }
 
     fun addAllToDiscard(dice: Iterable<Die>): PlayerDice {
-        _discard.addAll(dice.toList())
+        val newDice = dice.toList()
+        newDice.forEach(::recordAcquired)
+        _discard.addAll(newDice)
         return this
     }
 
