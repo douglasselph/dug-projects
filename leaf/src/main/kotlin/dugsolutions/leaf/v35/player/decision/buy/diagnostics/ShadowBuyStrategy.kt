@@ -19,12 +19,14 @@ import dugsolutions.leaf.v35.player.decision.random.StrategyRandomizer
 class ShadowBuyStrategy(
     private val actual: BuyStrategy,
     private val shadowFactory: () -> BuyStrategy,
-    private val onComparison: (BuyRecommendationComparison) -> Unit
+    private val onComparison: (BuyRecommendationComparison) -> Unit,
+    private val onEvent: (BuyDecisionEvent) -> Unit = {}
 ) : BuyStrategy {
     private var shadow: BuyStrategy? = null
     private var lastSelectedSameItem = false
     private var lastPurchaseCount: Int? = null
     private var awaitingPayment = false
+    private var eventSequence = 0L
 
     override fun choosePurchase(request: ChoosePurchaseRequest): BuyChoice {
         // A fresh Buy phase begins at zero. A skipped payment, repeated decision,
@@ -37,6 +39,7 @@ class ShadowBuyStrategy(
         val expert = actual.choosePurchase(request)
         val comparison = BuyDisagreement.compare(baseline, expert)
         onComparison(comparison)
+        onEvent(BuyDecisionEvent.capture(++eventSequence, request, baseline, expert))
         lastSelectedSameItem = comparison.kind == BuyDisagreementKind.SAME_ITEM &&
             expert is BuyChoice.Purchase
         awaitingPayment = expert is BuyChoice.Purchase
@@ -77,13 +80,15 @@ class ShadowBuyStrategy(
         fun humanBaseline(
             actual: BuyStrategy,
             shadowSeed: Long,
-            onComparison: (BuyRecommendationComparison) -> Unit
+            onComparison: (BuyRecommendationComparison) -> Unit,
+            onEvent: (BuyDecisionEvent) -> Unit = {}
         ): ShadowBuyStrategy = ShadowBuyStrategy(
             actual = actual,
             shadowFactory = {
                 HumanBaselineBuyStrategy(strategyRandomizer = StrategyRandomizer.create(shadowSeed))
             },
-            onComparison = onComparison
+            onComparison = onComparison,
+            onEvent = onEvent
         )
     }
 }
