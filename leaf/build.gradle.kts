@@ -120,6 +120,7 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+
 dependencies {
     "integrationImplementation"("org.junit.jupiter:junit-jupiter:5.8.2")
     "integrationImplementation"("org.junit.vintage:junit-vintage-engine:5.8.2")
@@ -194,6 +195,7 @@ tasks.register<Test>("v35IntegrationTest") {
 // strategies are intentionally scaffolding for now; this task proves that the
 // simulation boundary compiles without pulling code into integration tests.
 tasks.register<Test>("simulationTest") {
+    System.getProperty("leaf.stress.games")?.let { systemProperty("leaf.stress.games", it) }
     description = "Runs v35 simulation-layer unit tests."
     group = "verification"
 
