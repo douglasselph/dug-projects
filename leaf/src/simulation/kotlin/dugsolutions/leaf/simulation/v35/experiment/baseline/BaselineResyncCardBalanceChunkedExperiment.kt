@@ -2,8 +2,11 @@ package dugsolutions.leaf.simulation.v35.experiment.baseline
 
 import dugsolutions.leaf.simulation.v35.experiment.orchestration.*
 import java.io.File
+import java.nio.channels.FileChannel
+import java.nio.file.StandardOpenOption
+import java.io.PrintWriter
 
-/** Persistent-JVM entry point: preserves globally indexed per-sample semantics and TSV schema. */
+/** Persistent JVM, resume-safe chunk execution with unchanged per-game semantics. */
 class BaselineResyncCardBalanceChunkedExperiment {
     fun execute(args: Array<String>) {
         val extra = args.associate { arg ->
@@ -12,40 +15,56 @@ class BaselineResyncCardBalanceChunkedExperiment {
             pair[0] to pair[1]
         }
         val legacyArgs = args.filterNot {
-            it.startsWith("--chunk=") || it.startsWith("--output-dir=")
+            it.startsWith("--chunk=") || it.startsWith("--output-dir=") ||
+                it.startsWith("--source-identity=")
         }.toTypedArray()
         val options = BaselineResyncCardBalanceOptions.parse(legacyArgs)
-        val chunkSize = extra["chunk"]?.toInt() ?: 100
-        val outputDir = File(extra["output-dir"] ?: "build/reports/baseline-resync-chunks")
-        execute(options, chunkSize, outputDir)
+        execute(options, extra["chunk"]?.toInt() ?: 100,
+            File(extra["output-dir"] ?: "build/reports/baseline-resync-chunks"),
+            extra["source-identity"] ?: "unversioned")
     }
 
-    fun execute(options: BaselineResyncCardBalanceOptions, chunkSize: Int, outputDir: File) {
+    fun execute(options: BaselineResyncCardBalanceOptions, chunkSize: Int, outputDir: File,
+                sourceIdentity: String = "unversioned") {
+        require(sourceIdentity.isNotBlank())
         val config = ExperimentConfig(options.start, options.games, chunkSize)
-        outputDir.mkdirs()
-        require(outputDir.isDirectory) { "Could not create output directory: $outputDir" }
+        require(outputDir.isDirectory || outputDir.mkdirs()) { "Cannot create $outputDir" }
+        // The fingerprint binds checkpoints to source identity, all seeds, player count,
+        // exact input bytes, and sample/chunk boundaries. Bash should supply its Git/source ID.
+        val fingerprint = BaselineChunkCheckpoint.fingerprint(options, chunkSize, sourceIdentity)
+        FileChannel.open(File(outputDir, ".lock").toPath(),
+            StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { channel ->
+            val lock = try { channel.tryLock() } catch (_: java.nio.channels.OverlappingFileLockException) { null }
+            requireNotNull(lock) { "Another experiment holds the output directory lock: $outputDir" }
+            lock.use {
         BaselineResyncCardBalanceSession(options).use { session ->
-            var writer: java.io.PrintWriter? = null
-            var temp: File? = null
-            var target: File? = null
+            val checkpoint = BaselineChunkCheckpoint(outputDir, fingerprint, session.plantCount)
+            var writer: PrintWriter? = null
+            var current: ExperimentChunk? = null
             var completed = 0
             try {
                 val summary = ExperimentRunner(config).run(
-                    // Task 7 will add resume validation and atomic publication.
+                    isComplete = { chunk ->
+                        val skip = checkpoint.isComplete(chunk)
+                        if (skip) checkpoint.logLine(chunk, "SKIP validated complete checkpoint")
+                        skip
+                    },
                     beginChunk = { chunk ->
-                        val stem = stem(chunk)
-                        target = File(outputDir, "$stem.tsv")
-                        temp = File(outputDir, "$stem.tsv.tmp")
-                        writer = temp!!.printWriter()
-                        writer!!.println(BaselineResyncCardBalanceSession.HEADER)
+                        current = chunk
+                        checkpoint.marker(chunk).delete() // Invalidate any stale marker before rerun.
+                        checkpoint.temporary(chunk).delete()
+                        checkpoint.log(chunk).writeText("")
+                        checkpoint.logLine(chunk, "BEGIN ${checkpoint.stem(chunk)} (${chunk.games} games), fingerprint=$fingerprint")
+                        writer = checkpoint.temporary(chunk).printWriter()
+                        checkNotNull(writer).println(BaselineResyncCardBalanceSession.HEADER)
                     },
                     runSample = { sample ->
                         session.runSample(checkNotNull(writer), sample)
                         completed++
                         if (completed % 25 == 0) {
-                            writer!!.flush()
-                            check(!writer!!.checkError()) { "Error writing sample=$sample" }
-                            println("Baseline resync completed $completed/${options.games} games; sample=$sample")
+                            checkNotNull(writer).flush()
+                            check(!checkNotNull(writer).checkError()) { "Error writing sample=$sample" }
+                            println("Baseline resync completed $completed/${options.games} new games; sample=$sample")
                         }
                     },
                     commitChunk = { chunk ->
@@ -54,18 +73,28 @@ class BaselineResyncCardBalanceChunkedExperiment {
                         check(!active.checkError()) { "Error writing chunk ${chunk.number}" }
                         active.close()
                         writer = null
-                        val staging = checkNotNull(temp)
-                        check(staging.isFile && staging.length() > 0L) { "Missing chunk output $staging" }
-                        java.nio.file.Files.move(staging.toPath(), checkNotNull(target).toPath(),
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                        temp = null
-                        println("DONE ${stem(chunk)}")
+                        checkpoint.commit(chunk)
+                        checkpoint.logLine(chunk, "DONE ${checkpoint.stem(chunk)} sha256=${BaselineChunkCheckpoint.sha256(checkpoint.tsv(chunk))}")
+                        current = null
+                        println("DONE ${checkpoint.stem(chunk)}")
                     }
                 )
-                println("Wrote ${summary.completedGames} games / ${session.plantCount} Plant identities to ${outputDir.absolutePath}")
+                println("Wrote ${summary.completedGames} new games; skipped ${summary.skippedChunks} chunks / " +
+                    "${session.plantCount} Plant identities to ${outputDir.absolutePath}")
+            } catch (failure: Throwable) {
+                writer?.flush()
+                writer?.close()
+                writer = null
+                current?.let { chunk ->
+                    checkpoint.marker(chunk).delete()
+                    checkpoint.log(chunk).appendText("FAILED: ${failure.stackTraceToString()}\n")
+                    System.err.println("FAILED ${checkpoint.stem(chunk)} — see ${checkpoint.log(chunk)}")
+                }
+                throw failure
             } finally {
                 writer?.close()
-                // A failed chunk stays uncommitted and can be inspected at .tmp.
+            }
+        }
             }
         }
     }

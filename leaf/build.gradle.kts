@@ -676,7 +676,7 @@ tasks.register<JavaExec>("runBaselineResyncCardsChunked") {
     classpath = sourceSets["simulation"].runtimeClasspath
     mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineResyncCardBalanceChunkedMainKt")
     listOf("start", "games", "players", "seed", "strategy-seed", "grove-seed",
-        "plant-overrides", "round-overrides", "chunk", "output-dir").forEach { key ->
+        "plant-overrides", "round-overrides", "chunk", "output-dir", "source-identity").forEach { key ->
         project.findProperty(key)?.toString()?.let { args("--$key=$it") }
     }
 }
