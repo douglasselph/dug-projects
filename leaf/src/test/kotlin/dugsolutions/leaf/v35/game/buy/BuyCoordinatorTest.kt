@@ -272,6 +272,55 @@ class BuyCoordinatorTest {
         )
     }
 
+    /** R0: Buy power is the aggregate of dice and Critters, not a per-die cap. */
+    @Test
+    fun r0_twoDice12And9CanTogetherBuyCost17FlowerWhenGraftIsLegal() {
+        val resolver = plantValues(costs = mapOf("Flower_1" to 17))
+        val buyerStrategy = purchaseOnce(
+            item = { options ->
+                options.filterIsInstance<BuyItem.Plant>()
+                    .single { it.card.name == "Flower_1" }
+            },
+            payment = { request ->
+                assertEquals(17, request.cost)
+                BuyPayment(dice = request.availableDice)
+            }
+        )
+        val buyer = player(1, listOf(die(20, 12), die(20, 9)), buyerStrategy)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()), resolver)
+        val vine = fixture.game.grove.plantMarket.availableStacks
+            .first { it.card.type == dugsolutions.leaf.v35.plant.domain.PlantType.VINE }.card
+        buyer.creature.graft(vine, buyer.creature.legalPlacements(vine).first())
+
+        val result = fixture.coordinator.execute(fixture.game)
+
+        assertEquals(1, result.purchases.size)
+        assertEquals(17, result.purchases.single().cost)
+        assertEquals(21, result.purchases.single().paymentTotal)
+        assertEquals(4, result.purchases.single().overpayment)
+        assertEquals(0, buyer.dice.handSize)
+        assertEquals(2, buyer.dice.discardSize)
+        assertEquals(1, buyer.creature.flowers.size)
+        assertEquals("Flower_1", buyer.creature.flowers.single().card.name)
+    }
+
+    /** The same affordable Flower is NOT legal without a Vine to support it. */
+    @Test
+    fun r0_affordableCost17FlowerWithoutVineIsNotOffered() {
+        val resolver = plantValues(costs = mapOf("Flower_1" to 17))
+        val observer = doneStrategy()
+        val buyer = player(1, listOf(die(20, 12), die(20, 9)), observer)
+        val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()), resolver)
+
+        fixture.coordinator.execute(fixture.game)
+
+        assertTrue(observer.purchaseRequests.single().options.none {
+            it is BuyItem.Plant && it.card.name == "Flower_1"
+        })
+        assertEquals(21, fixture.game.chronicle.entries.filterIsInstance<GameEntry.BuyDecision>()
+            .first { it.playerId == buyer.id }.purchasingPower)
+    }
+
     @Test
     fun execute_flowerWithoutLegalPlacementIsNotOffered() {
         val observing = doneStrategy()
