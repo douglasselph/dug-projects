@@ -680,3 +680,16 @@ tasks.register<JavaExec>("runBaselineResyncCardsChunked") {
         project.findProperty(key)?.toString()?.let { args("--$key=$it") }
     }
 }
+
+/** Task 9: compile the simulation and export its complete runtime classpath. */
+tasks.register("writeSimulationRuntimeClasspath") {
+    group = "simulation research"
+    description = "Compile simulation classes and write the runtime classpath for direct Java launch."
+    dependsOn("simulationClasses")
+    doLast {
+        val destination = layout.buildDirectory.file("simulation-runtime-classpath.txt").get().asFile
+        destination.parentFile.mkdirs()
+        destination.writeText(sourceSets["simulation"].runtimeClasspath.asPath + "\n")
+        println("Simulation runtime classpath: ${destination.absolutePath}")
+    }
+}
