@@ -16,16 +16,20 @@ class BaselineResyncCardBalanceChunkedExperiment {
         }
         val legacyArgs = args.filterNot {
             it.startsWith("--chunk=") || it.startsWith("--output-dir=") ||
-                it.startsWith("--source-identity=")
+                it.startsWith("--source-identity=") || it.startsWith("--memory-sample-every=") ||
+                it.startsWith("--memory-retained-every=")
         }.toTypedArray()
         val options = BaselineResyncCardBalanceOptions.parse(legacyArgs)
         execute(options, extra["chunk"]?.toInt() ?: 100,
             File(extra["output-dir"] ?: "build/reports/baseline-resync-chunks"),
-            extra["source-identity"] ?: "unversioned")
+            extra["source-identity"] ?: "unversioned",
+            ExperimentMemoryConfig(extra["memory-sample-every"]?.toInt() ?: 0,
+                extra["memory-retained-every"]?.toInt() ?: 0))
     }
 
     fun execute(options: BaselineResyncCardBalanceOptions, chunkSize: Int, outputDir: File,
-                sourceIdentity: String = "unversioned") {
+                sourceIdentity: String = "unversioned",
+                memoryConfig: ExperimentMemoryConfig = ExperimentMemoryConfig()) {
         require(sourceIdentity.isNotBlank())
         val config = ExperimentConfig(options.start, options.games, chunkSize)
         require(outputDir.isDirectory || outputDir.mkdirs()) { "Cannot create $outputDir" }
@@ -39,6 +43,19 @@ class BaselineResyncCardBalanceChunkedExperiment {
             lock.use {
         BaselineResyncCardBalanceSession(options).use { session ->
             val checkpoint = BaselineChunkCheckpoint(outputDir, fingerprint, session.plantCount)
+            // A single bounded stream; never retain measurements or game graphs in memory.
+            val memoryWriter = if (memoryConfig.sampleEveryGames > 0) {
+                File(outputDir, "memory-diagnostics.tsv").printWriter().also {
+                    it.println("completed_games\tsample\theap_used_bytes\theap_committed_bytes\theap_max_bytes\tretained_heap_bytes")
+                }
+            } else null
+            val memory = ExperimentMemory(memoryConfig) { snapshot ->
+                memoryWriter?.println(listOf(snapshot.completedGames, snapshot.sampleIndex,
+                    snapshot.heapUsedBytes, snapshot.heapCommittedBytes, snapshot.heapMaxBytes,
+                    snapshot.retainedHeapBytes?.toString() ?: "").joinToString("\t"))
+                memoryWriter?.flush()
+                check(memoryWriter?.checkError() != true) { "Memory diagnostic output failed" }
+            }
             var writer: PrintWriter? = null
             var current: ExperimentChunk? = null
             var completed = 0
@@ -61,6 +78,7 @@ class BaselineResyncCardBalanceChunkedExperiment {
                     runSample = { sample ->
                         session.runSample(checkNotNull(writer), sample)
                         completed++
+                        memory.afterSample(completed, sample)
                         if (completed % 25 == 0) {
                             checkNotNull(writer).flush()
                             check(!checkNotNull(writer).checkError()) { "Error writing sample=$sample" }
@@ -92,6 +110,7 @@ class BaselineResyncCardBalanceChunkedExperiment {
                 }
                 throw failure
             } finally {
+                memoryWriter?.close()
                 writer?.close()
             }
         }
