@@ -667,3 +667,16 @@ tasks.register<JavaExec>("runBaselineResyncCards") {
         project.findProperty(key)?.toString()?.let { args("--$key=$it") }
     }
 }
+
+/** Task 5 pilot: one JVM for all baseline chunks, legacy task remains available. */
+tasks.register<JavaExec>("runBaselineResyncCardsChunked") {
+    group = "simulation research"
+    description = "Run baseline resync chunks in a single JVM, sharing catalogs and research inputs."
+    dependsOn("simulationClasses")
+    classpath = sourceSets["simulation"].runtimeClasspath
+    mainClass.set("dugsolutions.leaf.simulation.v35.experiment.baseline.BaselineResyncCardBalanceChunkedMainKt")
+    listOf("start", "games", "players", "seed", "strategy-seed", "grove-seed",
+        "plant-overrides", "round-overrides", "chunk", "output-dir").forEach { key ->
+        project.findProperty(key)?.toString()?.let { args("--$key=$it") }
+    }
+}
