@@ -53,13 +53,28 @@ object GrovePlantCode {
 
     /** Encodes a resolved nine-card Grove back into its compact reference code. */
     fun encode(cards: List<PlantCard>): String {
+        require(cards.size == prefixes.size) {
+            "Cannot encode a Grove with ${cards.size} cards; expected ${prefixes.size}"
+        }
         val byName = cards.associateBy { it.name.lowercase() }
-        return prefixes.joinToString("") { prefix ->
+        require(byName.size == cards.size) { "Cannot encode duplicate Grove Plant IDs" }
+        return prefixes.mapIndexed { index, prefix ->
             val matches = byName.values.filter { it.name.startsWith(prefix, ignoreCase = true) }
             require(matches.size == 1) { "Cannot encode Grove slot $prefix from ${cards.map { it.name }}" }
-            val suffix = matches.single().name.substringAfterLast('_').toIntOrNull()
-            require(suffix in 1..4) { "Plant card is not a numbered Grove alternative: ${matches.single().name}" }
+            val card = matches.single()
+            val expectedType = when (index) {
+                in 0..2 -> dugsolutions.leaf.v35.plant.domain.PlantType.ROOT
+                in 3..5 -> dugsolutions.leaf.v35.plant.domain.PlantType.VINE
+                else -> dugsolutions.leaf.v35.plant.domain.PlantType.FLOWER
+            }
+            val expectedCost = listOf(5, 7, 9, 7, 9, 11, 11, 14, 17)[index]
+            require(card.type == expectedType && card.cost == expectedCost) {
+                "Cannot encode research-retiered/retyped Grove card ${card.name}: " +
+                    "effective=${card.type} ${card.cost}, canonical=$expectedType $expectedCost"
+            }
+            val suffix = card.name.substringAfterLast('_').toIntOrNull()
+            require(suffix in 1..4) { "Plant card is not a numbered Grove alternative: ${card.name}" }
             suffix.toString()
-        }
+        }.joinToString("")
     }
 }

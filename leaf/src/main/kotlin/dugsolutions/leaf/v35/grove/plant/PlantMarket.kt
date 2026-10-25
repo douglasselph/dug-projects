@@ -93,5 +93,18 @@ class PlantMarket(
         require(normalizedNames.toSet().size == normalizedNames.size) {
             "Plant Market cannot contain duplicate selected card names"
         }
+
+        // A legal game market is one selected Plant per cost/type slot, not
+        // merely three cards of each type. Research may move a Plant between
+        // slots; validate its *effective* cost and type rather than its ID.
+        val requiredSlots = setOf(
+            PlantType.ROOT to 5, PlantType.ROOT to 7, PlantType.ROOT to 9,
+            PlantType.VINE to 7, PlantType.VINE to 9, PlantType.VINE to 11,
+            PlantType.FLOWER to 11, PlantType.FLOWER to 14, PlantType.FLOWER to 17
+        )
+        val actualSlots = selectedCards.map { it.type to it.cost }
+        require(actualSlots.toSet() == requiredSlots && actualSlots.size == actualSlots.toSet().size) {
+            "Plant Market requires exactly one card for each legal type/cost slot: $actualSlots"
+        }
     }
 }

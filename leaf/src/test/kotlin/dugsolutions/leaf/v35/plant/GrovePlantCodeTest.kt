@@ -29,6 +29,34 @@ class GrovePlantCodeTest {
     }
 
     @Test
+    fun `encode rejects extra cards rather than silently dropping them`() {
+        val cards = legalCards()
+        assertThrows(IllegalArgumentException::class.java) {
+            GrovePlantCode.encode(cards + cards.first().copy(name = "Root_05_04"))
+        }
+    }
+
+    @Test
+    fun `canonical encoder refuses shifted research tiers`() {
+        val cards = legalCards().toMutableList()
+        cards[0] = cards[0].copy(cost = 7)
+        cards[1] = cards[1].copy(cost = 5)
+        assertThrows(IllegalArgumentException::class.java) { GrovePlantCode.encode(cards) }
+        // The research display is still supported through the explicit-ID fallback.
+        assert(GrovePlantCode.describe(cards).startsWith("["))
+    }
+
+    private fun legalCards(): List<dugsolutions.leaf.v35.plant.domain.PlantCard> {
+        val registry = PlantCardRegistry()
+        registry.loadFromCsv(
+            dugsolutions.leaf.v35.common.CardDataFiles.dataPath(dugsolutions.leaf.v35.common.CardDataFiles.ROOT_CARD_LIST),
+            dugsolutions.leaf.v35.common.CardDataFiles.dataPath(dugsolutions.leaf.v35.common.CardDataFiles.VF_CARD_LIST)
+        )
+        return listOf("Root_05_01", "Root_07_01", "Root_09_01", "Vine_07_01", "Vine_09_01", "Vine_11_01", "Flower_11_01", "Flower_14_01", "Flower_17_01")
+            .map { requireNotNull(registry.getCard(it)) }
+    }
+
+    @Test
     fun `invalid code is rejected`() {
         assertThrows(IllegalArgumentException::class.java) { GrovePlantCode.validate("123") }
         assertThrows(IllegalArgumentException::class.java) { GrovePlantCode.validate("123456789") }

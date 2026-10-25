@@ -52,6 +52,21 @@ class PlantMarketTest {
     }
 
     @Test
+    fun constructor_rejectsMissingTierEvenWithThreeCardsPerType() {
+        val cards = selectedCards().toMutableList()
+        // Nine distinct cards, three of each type, but two Root 5 and no Root 7.
+        cards[1] = plantCard("Root_05_02", PlantType.ROOT, 5)
+        assertFailsWith<IllegalArgumentException> { PlantMarket(cards) }
+    }
+
+    @Test
+    fun constructor_rejectsIllegalCostEvenWithCorrectTypeCounts() {
+        val cards = selectedCards().toMutableList()
+        cards[1] = plantCard("Root_06_01", PlantType.ROOT, 6)
+        assertFailsWith<IllegalArgumentException> { PlantMarket(cards) }
+    }
+
+    @Test
     fun constructor_rejectsDuplicateNamesIgnoringCaseAndWhitespace() {
         val cards =
             selectedCards().toMutableList()
