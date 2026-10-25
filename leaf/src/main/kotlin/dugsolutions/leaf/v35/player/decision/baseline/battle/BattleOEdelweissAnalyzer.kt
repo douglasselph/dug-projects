@@ -11,6 +11,7 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.creature.CreatureCard
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.context.DieView
@@ -159,7 +160,8 @@ class BattleOEdelweissAnalyzer(
         if (choice !is OEdelweissChoice.Play || prediction.expectedDice.isEmpty()) return ordinary
         val card = currentCard(prediction.context, choice.card) ?: return ordinary
         val raiseAmount = when (card.effect) {
-            GameEffect.RAISE_DIE_PLUS_4 -> 4
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> requireNotNull(SimpleEffectMagnitude.raiseAmount(card.effect))
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> 1
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW -> 2
@@ -221,8 +223,9 @@ class BattleOEdelweissAnalyzer(
                 withBoard(board.copy(bees = board.bees + bees, worms = board.worms + worms))
             }
             GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> {
-                val amount = if (effect == GameEffect.RAISE_DIE_PLUS_4) 4 else 1
+                val amount = SimpleEffectMagnitude.raiseAmount(effect) ?: 1
                 val target = board.hand.maxByOrNull { DieValueHeuristics.actualRaiseGain(it, amount) }
                     ?: return Prediction(context)
                 val gain = DieValueHeuristics.actualRaiseGain(target, amount)
@@ -241,11 +244,12 @@ class BattleOEdelweissAnalyzer(
                 })
                 Prediction(context.copy(self = context.self.copy(board = updated), battle = battle))
             }
-            GameEffect.DRAW_TWO_DICE -> {
+            GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE -> {
                 var supply = board.supply
                 var discard = board.discard
                 val expected = mutableListOf<ExpectedDie>()
-                repeat(2) {
+                repeat(requireNotNull(SimpleEffectMagnitude.drawCount(effect))) {
                     if (supply.isEmpty()) { supply = discard; discard = emptyList() }
                     val next = supply.minByOrNull { it.sides } ?: return@repeat
                     expected += ExpectedDie(next.sides, DieValueHeuristics.expectedRoll(next.sides))

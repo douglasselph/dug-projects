@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.error.unsupportedGameEffect
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
@@ -128,11 +129,9 @@ class ResourceEffectHandler : EffectHandler {
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD ->
                 mulchFromDiscard(request)
 
-            GameEffect.GAIN_ONE_VP ->
-                request.actor.addVp(1)
-
+            GameEffect.GAIN_ONE_VP,
             GameEffect.RESEARCH_GAIN_TWENTY_VP ->
-                request.actor.addVp(20)
+                request.actor.addVp(requireNotNull(SimpleEffectMagnitude.immediateVp(request.effect)))
 
             GameEffect.REFRESH_CREATURE ->
                 RefreshResolver(request.game.chronicle).refresh(request.actor)

@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.card
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.plant.domain.PlantScoringRule
 import dugsolutions.leaf.v35.plant.domain.PlantType
@@ -39,6 +40,18 @@ object CardScoringHelpers {
         base: Int,
         normalPurchasingPower: Int? = null
     ): PriorityScore {
+        // Experimental calibration affects the evaluated action, not its printed
+        // VP, cost, or its card-specific base. No-op must not retain the normal
+        // activation's high base, and +20 VP must count when weighing Main actions.
+        if (SimpleEffectMagnitude.isResearchNoOp(effect)) {
+            return PriorityScore(-10_000).adjusted(0, "Effect resolves but changes no game state")
+        }
+        val directVp = SimpleEffectMagnitude.immediateVp(effect)
+        if (effect == GameEffect.RESEARCH_GAIN_TWENTY_VP && directVp != null) {
+            return PriorityScore(base).adjusted(
+                directVp * 30, "${directVp} immediate VP from the effective experimental effect"
+            )
+        }
         var score = PriorityScore(base)
         val dice = context.self.board.hand
         val buyPower = normalPurchasingPower
@@ -63,7 +76,11 @@ object CardScoringHelpers {
                 dice.maxOfOrNull { minOf(it.sides, it.value * 2) - it.value } ?: 0,
                 "Best available doubling gain"
             )
-            GameEffect.RAISE_DIE_PLUS_4 -> addBestGain(bestRaise(dice, 4), "Best +4 target")
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> {
+                val amount = requireNotNull(SimpleEffectMagnitude.raiseAmount(effect))
+                addBestGain(bestRaise(dice, amount), "Best +$amount target (capped by die size)")
+            }
             GameEffect.RAISE_ANY_DIE_PLUS_1 -> addBestGain(bestRaise(dice, 1), "Best +1 target")
             GameEffect.RAISE_D8_PLUS_1 -> addBestGain(
                 dice.filter { it.sides == 8 }.maxOfOrNull { DieValueHeuristics.actualRaiseGain(it, 1) } ?: 0,
@@ -354,11 +371,13 @@ object CardScoringHelpers {
             // BattleOEdelweissAnalyzer, including in Cultivation. Do not add
             // the obsolete spent-Plant bonus here.
             GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE -> Unit
-            GameEffect.DRAW_TWO_DICE -> {
-                val forecast = ExpectedDrawProjection.forecast(context, 2)
+            GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE -> {
+                val requested = requireNotNull(SimpleEffectMagnitude.drawCount(effect))
+                val forecast = ExpectedDrawProjection.forecast(context, requested)
                 score = score.adjusted(
                     ExpectedDrawProjection.scoreAdjustment(forecast, phase == CardPhase.BATTLE),
-                    "Projected two Draws (mean values, capacity and purchase tiers)"
+                    "Projected $requested Draws (${forecast.projectedPlacementCount} placeable; mean values and tiers)"
                 )
             }
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD -> {
@@ -495,7 +514,7 @@ object CardScoringHelpers {
         val vp = projectedVp(context, effectiveScoringRule(context, card))
         if (vp > 0) score = score.adjusted(vp * 3, "Projected end-game VP")
         val effectiveEffect = effectiveEffect(context, card)
-        if (effectiveEffect == GameEffect.DRAW_TWO_DICE || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS) {
+        if (SimpleEffectMagnitude.drawCount(effectiveEffect) != null || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW || effectiveEffect == GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS) {
             score = score.adjusted(4, "Broadly useful effect")
         }
         return score
@@ -553,7 +572,10 @@ object CardScoringHelpers {
     ): PriorityScore {
         val gain = when (effect) {
             GameEffect.DOUBLE_ONE_DIE -> minOf(die.sides, die.value * 2) - die.value
-            GameEffect.RAISE_DIE_PLUS_4 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 4)
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> DieValueHeuristics.actualRaiseGain(
+                die.sides, die.value, requireNotNull(SimpleEffectMagnitude.raiseAmount(effect))
+            )
             GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 3)
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_D8_PLUS_1,

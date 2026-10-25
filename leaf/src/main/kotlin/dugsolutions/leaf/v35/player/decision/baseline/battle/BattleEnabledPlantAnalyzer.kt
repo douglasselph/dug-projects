@@ -2,6 +2,7 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.plant.domain.PlantType
 import dugsolutions.leaf.v35.player.creature.CreatureCardId
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
@@ -89,7 +90,10 @@ class BattleEnabledPlantAnalyzer(
                 minOf(die.sides, die.value * 2) - die.value
             }
 
-            GameEffect.RAISE_DIE_PLUS_4 -> raiseCandidates(context, card, dice, 4)
+            GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> raiseCandidates(
+                context, card, dice, requireNotNull(SimpleEffectMagnitude.raiseAmount(card.effect))
+            )
             GameEffect.RAISE_DIE_PLUS_3 -> raiseCandidates(context, card, dice, 3)
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW ->
                 dice.mapNotNull { located ->

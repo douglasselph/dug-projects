@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateNotNull
 import dugsolutions.leaf.v35.error.stateCheck
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -127,11 +128,9 @@ class DieValueEffectHandler : EffectHandler {
                 die.adjustBy(die.value)
             }
 
-            GameEffect.RAISE_DIE_PLUS_4 ->
-                raiseOne(request, 4)
-
+            GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 ->
-                raiseOne(request, 20)
+                raiseOne(request, requireNotNull(SimpleEffectMagnitude.raiseAmount(request.effect)))
 
             GameEffect.RAISE_ANY_DIE_PLUS_1 ->
                 raiseOne(request, 1)

@@ -7,6 +7,7 @@ import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.error.stateNotNull
+import dugsolutions.leaf.v35.effect.SimpleEffectMagnitude
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectPhase
@@ -70,7 +71,7 @@ class DrawEffectHandler(
                     hasBattlePlacementCapacity(
                         request = request,
                         diceToAdd = minOf(
-                            if (request.effect == GameEffect.RESEARCH_DRAW_FOUR_DICE) 4 else 2,
+                            requireNotNull(SimpleEffectMagnitude.drawCount(request.effect)),
                             drawableDieCount(request)
                         )
                     )
@@ -190,7 +191,7 @@ class DrawEffectHandler(
 
             GameEffect.DRAW_TWO_DICE,
             GameEffect.RESEARCH_DRAW_FOUR_DICE ->
-                repeat(if (request.effect == GameEffect.RESEARCH_DRAW_FOUR_DICE) 4 else 2) {
+                repeat(requireNotNull(SimpleEffectMagnitude.drawCount(request.effect))) {
                     drawAndPlaceIfBattle(
                         request = request,
                         rollResolver = rollResolver
