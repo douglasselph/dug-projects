@@ -32,6 +32,7 @@ class DieValueEffectHandler : EffectHandler {
         when (request.effect) {
             GameEffect.DOUBLE_ONE_DIE,
             GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_3 ->
@@ -128,6 +129,9 @@ class DieValueEffectHandler : EffectHandler {
 
             GameEffect.RAISE_DIE_PLUS_4 ->
                 raiseOne(request, 4)
+
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20 ->
+                raiseOne(request, 20)
 
             GameEffect.RAISE_ANY_DIE_PLUS_1 ->
                 raiseOne(request, 1)

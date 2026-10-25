@@ -64,12 +64,13 @@ class DrawEffectHandler(
                             openStrikeRows(request).isNotEmpty()
                 }
 
-            GameEffect.DRAW_TWO_DICE ->
+            GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE ->
                 hasDrawableDie(request) &&
                     hasBattlePlacementCapacity(
                         request = request,
                         diceToAdd = minOf(
-                            2,
+                            if (request.effect == GameEffect.RESEARCH_DRAW_FOUR_DICE) 4 else 2,
                             drawableDieCount(request)
                         )
                     )
@@ -187,8 +188,9 @@ class DrawEffectHandler(
                         )
                 }
 
-            GameEffect.DRAW_TWO_DICE ->
-                repeat(2) {
+            GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE ->
+                repeat(if (request.effect == GameEffect.RESEARCH_DRAW_FOUR_DICE) 4 else 2) {
                     drawAndPlaceIfBattle(
                         request = request,
                         rollResolver = rollResolver

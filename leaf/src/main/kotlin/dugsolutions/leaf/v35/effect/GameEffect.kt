@@ -2,6 +2,10 @@ package dugsolutions.leaf.v35.effect
 
 enum class GameEffect {
     UNKNOWN,
+    // Research calibration only. Never referenced from canonical card CSVs.
+    RESEARCH_NO_EFFECT,
+    RESEARCH_RAISE_DIE_PLUS_20,
+    RESEARCH_DRAW_FOUR_DICE,
     DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
     DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
     DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,

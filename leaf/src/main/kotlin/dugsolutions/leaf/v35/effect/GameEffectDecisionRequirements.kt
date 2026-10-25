@@ -65,6 +65,7 @@ object GameEffectDecisionRequirements {
     fun forEffect(effect: GameEffect): GameEffectDecisionRequirement? =
         when (effect) {
             GameEffect.UNKNOWN -> null
+            GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
@@ -112,7 +113,8 @@ object GameEffectDecisionRequirements {
 
             GameEffect.DOUBLE_ONE_DIE -> same(EffectDecisionMechanism.EFFECT_DIE)
 
-            GameEffect.DRAW_TWO_DICE ->
+            GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE ->
                 phased(
                     cultivation = emptySet(),
                     battle = setOf(EffectDecisionMechanism.BATTLE_DIE_PLACEMENT)
@@ -227,6 +229,7 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX,

@@ -60,12 +60,15 @@ object R3APlantScreenMain {
         val sigma: Double, val mutations: Int, val evolutionSeed: Long,
         val seed: Long, val strategySeed: Long, val holdoutGames: Int,
         val targetBoost: Double, val targetMinPurchaseRate: Double, val targetPurchaseBonus: Double,
-        val flowerEnablerBoost: Double,
+        val flowerEnablerBoost: Double, val effectVariant: String,
         val grove: List<String>, val outputDir: File, val fingerprint: String,
         val targeted: File?, val unrestricted: File?
     ) {
         init {
             require(phase in setOf("train", "evaluate"))
+            require(effectVariant in setOf("official", "disabled", "root-raise20", "queen-draw4"))
+            require(effectVariant != "root-raise20" || targetId == "Root_05_02")
+            require(effectVariant != "queen-draw4" || targetId == "Flower_17_04")
             require(objective in setOf("targeted", "unrestricted"))
             require(targetId.matches(Regex("(?:Root|Vine|Flower)_[0-9]{2}_[0-9]{2}")))
             require(generations > 0 && population >= 3 && elites in 1 until population && games > 0 && holdoutGames > 0)
@@ -88,9 +91,9 @@ object R3APlantScreenMain {
                 }
                 val names = setOf("phase", "objective", "target-id", "generations", "population", "elites", "games",
                     "sigma", "mutations", "evolution-seed", "seed", "strategy-seed", "holdout-games",
-                    "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "grove", "output-dir", "fingerprint")
+                    "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "effect-variant", "grove", "output-dir", "fingerprint")
                 require(fields.keys - names - setOf("targeted", "unrestricted") == emptySet<String>())
-                require(names.all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
+                require((names - "effect-variant").all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
                 return Options(
                     fields.getValue("phase"), fields.getValue("objective"), fields.getValue("target-id"),
                     fields.getValue("generations").toInt(), fields.getValue("population").toInt(),
@@ -99,7 +102,8 @@ object R3APlantScreenMain {
                     fields.getValue("seed").toLong(), fields.getValue("strategy-seed").toLong(),
                     fields.getValue("holdout-games").toInt(), fields.getValue("target-boost").toDouble(),
                     fields.getValue("target-min-purchase-rate").toDouble(), fields.getValue("target-purchase-bonus").toDouble(),
-                    fields.getValue("flower-enabler-boost").toDouble(), fields.getValue("grove").split(','),
+                    fields.getValue("flower-enabler-boost").toDouble(),
+                    fields["effect-variant"] ?: "official", fields.getValue("grove").split(','),
                     File(fields.getValue("output-dir")), fields.getValue("fingerprint"),
                     fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File)
                 )
@@ -124,10 +128,19 @@ object R3APlantScreenMain {
             }
             val target = grove.singleOrNull { it.name == o.targetId }
             requireNotNull(target) { "Target ${o.targetId} is not present in the supplied Grove" }
-            val values = PlantExperimentConfig.EMPTY // Always official rules; no research override in R3A.
+            // R3B calibration modes are strictly research-only: price, VP, and Grove stay canonical.
+            val calibratedEffect = when (o.effectVariant) {
+                "official" -> null
+                "disabled" -> GameEffect.RESEARCH_NO_EFFECT
+                "root-raise20" -> GameEffect.RESEARCH_RAISE_DIE_PLUS_20
+                "queen-draw4" -> GameEffect.RESEARCH_DRAW_FOUR_DICE
+                else -> error("Unsupported calibration effect: ${o.effectVariant}")
+            }
+            val values = if (calibratedEffect == null) PlantExperimentConfig.EMPTY else
+                PlantExperimentConfig.of(o.targetId to PlantExperimentOverride(effect = calibratedEffect))
             require(o.outputDir.isDirectory || o.outputDir.mkdirs())
             val initial = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.zeros(), all)
-            println("R3A ${o.phase}: ${o.targetId} / ${target.title} / ${o.objective} / nine official cards")
+            println("R3A ${o.phase}: ${o.targetId} / ${target.title} / ${o.objective} / effect=${o.effectVariant} / nine official cards")
             println("Grove: " + grove.joinToString("; ") { it.title })
             if (o.phase == "train") train(o, initial, grove, values, koin.get(), koin.get())
             else evaluate(o, all, grove, values, koin.get(), koin.get())

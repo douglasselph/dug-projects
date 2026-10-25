@@ -55,7 +55,11 @@ class DefaultGameEffectExecutor(
     private val wispLastWordEffect: EffectHandler = WispLastWordEffect(),
     private val overgrowthEffect: EffectHandler = OvergrowthEffect(),
     private val wispquakeEffect: EffectHandler = WispquakeEffect(),
-    private val deferredRoundEffects: EffectHandler = DeferredRoundEffectHandler()
+    private val deferredRoundEffects: EffectHandler = DeferredRoundEffectHandler(),
+    private val researchNoEffect: EffectHandler = object : EffectHandler {
+        override fun canExecute(request: GameEffectRequest): Boolean = true
+        override fun execute(request: GameEffectRequest, executor: GameEffectExecutor) = Unit
+    }
 ) : GameEffectExecutor {
 
     override fun supports(effect: GameEffect): Boolean =
@@ -126,6 +130,7 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
             GameEffect.GAIN_VP_PER_ONE_SHOWING,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
@@ -142,6 +147,7 @@ class DefaultGameEffectExecutor(
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO,
             GameEffect.DRAW_TWO_DICE,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE,
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
@@ -232,6 +238,8 @@ class DefaultGameEffectExecutor(
 
             GameEffect.REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN ->
                 wispquakeEffect
+
+            GameEffect.RESEARCH_NO_EFFECT -> researchNoEffect
 
             GameEffect.BARKSKIN_WOUND_ONLY_IF_LOSE_BY_10_PLUS,
             GameEffect.GAIN_ANY_ROOT_OR_VINE ->
