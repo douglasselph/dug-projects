@@ -6,6 +6,8 @@ import dugsolutions.leaf.v35.chronicle.Chronicle
 import dugsolutions.leaf.v35.grove.Grove
 import dugsolutions.leaf.v35.game.random.EventRollRandomness
 import dugsolutions.leaf.v35.game.intervention.MechanicalIntervention
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.Randomizer
 import dugsolutions.leaf.v35.random.die.di.DieFactory
@@ -63,6 +65,16 @@ class Game(
      */
     val players: List<Player> =
         players.toList()
+
+    /** Read-only after the game: calibrated effect output, not an estimate of caused final VP. */
+    val researchEffectOutputs: MutableList<ResearchEffectOutput> = mutableListOf()
+
+    fun effectFor(player: Player, card: PlantCard): GameEffect {
+        val seat = players.indexOfFirst { it === player }
+        require(seat >= 0) { "Effect actor must belong to this game" }
+        return config.researchPlantEffectsBySeat[seat]?.get(card.name)
+            ?: config.plantValues.effectFor(card)
+    }
 
     /**
      * RoundDeck remains the single source of truth for the revealed card.

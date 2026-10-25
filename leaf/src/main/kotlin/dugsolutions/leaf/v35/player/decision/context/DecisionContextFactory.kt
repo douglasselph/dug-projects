@@ -67,7 +67,7 @@ internal object DecisionContextFactory {
                         wispCount = player.wisps.size
                     )
                 },
-            grove = groveView(game),
+            grove = groveView(game, actor),
             battle = battleState?.let(::battleView)
         )
     }
@@ -151,7 +151,7 @@ internal object DecisionContextFactory {
                     title = creatureCard.card.title,
                     type = creatureCard.card.type,
                     cost = game.config.plantValues.costFor(creatureCard.card),
-                    effect = game.config.plantValues.effectFor(creatureCard.card),
+                    effect = game.effectFor(player, creatureCard.card),
                     scoringRule = game.config.plantValues.scoringRuleFor(creatureCard.card),
                     side = creatureCard.side,
                     position = creatureCard.position,
@@ -166,7 +166,7 @@ internal object DecisionContextFactory {
             DieView(index, die.sides, die.value)
         }
 
-    private fun groveView(game: Game): GroveView =
+    private fun groveView(game: Game, actor: Player): GroveView =
         GroveView(
             plantStacks = game.grove.plantMarket.stacks.map { stack ->
                 PlantStackView(
@@ -174,7 +174,7 @@ internal object DecisionContextFactory {
                     title = stack.card.title,
                     type = stack.card.type,
                     cost = game.config.plantValues.costFor(stack.card),
-                    effect = game.config.plantValues.effectFor(stack.card),
+                    effect = game.effectFor(actor, stack.card),
                     scoringRule = game.config.plantValues.scoringRuleFor(stack.card),
                     remaining = stack.remaining
                 )

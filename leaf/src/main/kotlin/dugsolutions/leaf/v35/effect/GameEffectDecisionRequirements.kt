@@ -154,6 +154,7 @@ object GameEffectDecisionRequirements {
             GameEffect.GAIN_D12_TO_DISCARD,
             GameEffect.GAIN_D20_TO_DISCARD,
             GameEffect.GAIN_ONE_VP,
+            GameEffect.RESEARCH_GAIN_TWENTY_VP,
             GameEffect.GAIN_VP_PER_ONE_SHOWING,
             GameEffect.GAIN_ONE_WISP,
             GameEffect.GAIN_OR_REFRESH_GREEN_BUTTERFLY,

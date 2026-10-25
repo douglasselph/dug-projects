@@ -1,5 +1,6 @@
 package dugsolutions.leaf.v35.effect
 
+import dugsolutions.leaf.v35.game.ResearchEffectOutput
 import dugsolutions.leaf.v35.error.effectNotNull
 import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.stateCheck
@@ -68,39 +69,61 @@ class DefaultGameEffectExecutor(
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
-        handlerFor(request.effect)
-            ?.canExecute(request)
-            ?: false
+        effectiveRequest(request).let { effective ->
+            handlerFor(effective.effect)?.canExecute(effective) ?: false
+        }
+
+    private fun effectiveRequest(request: GameEffectRequest): GameEffectRequest =
+        when (val source = request.source) {
+            is GameEffectSource.Plant -> request.copy(
+                effect = request.game.effectFor(request.actor, source.card.card)
+            )
+            else -> request
+        }
 
     override fun execute(
         request: GameEffectRequest
     ) {
-        val handler = effectNotNull(
-            handlerFor(request.effect)
-        ) {
-            "GameEffect is not currently supported: ${request.effect}"
+        val effective = effectiveRequest(request)
+        val handler = effectNotNull(handlerFor(effective.effect)) {
+            "GameEffect is not currently supported: ${effective.effect}"
         }
-
-        effectCheck(handler.canExecute(request)) {
-            "GameEffect is not currently executable: ${request.effect}"
+        effectCheck(handler.canExecute(effective)) {
+            "GameEffect is not currently executable: ${effective.effect}"
         }
-
-        request.game.chronicle.scoped(
+        val source = effective.source
+        val recordOutput = effective.game.config.recordResearchEffectOutputs && source is GameEffectSource.Plant
+        val beforeHand = if (recordOutput) effective.actor.dice.hand.map { it to it.value } else emptyList()
+        val beforeVp = effective.actor.vp
+        val phase = when (effective.phase) {
+            GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
+            GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
+        }
+        effective.game.chronicle.scoped(
             Moment.EffectResolved(
-                playerId = request.actor.id,
-                effect = request.effect,
-                sourceKind = sourceKind(request.source),
-                sourceName = sourceName(request.source),
-                phase = when (request.phase) {
-                    GameEffectPhase.CULTIVATION -> ChroniclePhase.CULTIVATION
-                    GameEffectPhase.BATTLE -> ChroniclePhase.BATTLE
-                }
+                playerId = effective.actor.id,
+                effect = effective.effect,
+                sourceKind = sourceKind(source),
+                sourceName = sourceName(source),
+                phase = phase
             )
         ) {
-            handler.execute(
-                request = request,
-                executor = this
-            )
+            handler.execute(request = effective, executor = this)
+        }
+        if (recordOutput && source is GameEffectSource.Plant) {
+            val after = effective.actor.dice.hand
+            val retained = beforeHand.filter { (die, _) -> after.any { it === die } }
+            val newlyDrawn = after.filter { die -> beforeHand.none { it.first === die } }
+            effective.game.researchEffectOutputs.add(ResearchEffectOutput(
+                playerSeat = effective.game.players.indexOfFirst { it === effective.actor },
+                plantId = source.card.card.name,
+                phase = phase,
+                effect = effective.effect,
+                immediateVpDelta = effective.actor.vp - beforeVp,
+                existingHandDieValueDelta = retained.sumOf { (die, value) -> die.value - value },
+                newHandDice = newlyDrawn.size,
+                newHandDicePips = newlyDrawn.sumOf { it.value }
+            ))
         }
     }
 
@@ -162,6 +185,7 @@ class DefaultGameEffectExecutor(
             GameEffect.GAIN_MULCH_AND_STORE_DIE_FROM_DISCARD,
             GameEffect.GAIN_SUNLIGHT_TOKEN,
             GameEffect.GAIN_ONE_VP,
+            GameEffect.RESEARCH_GAIN_TWENTY_VP,
             GameEffect.GAIN_ONE_WISP,
             GameEffect.REFRESH_CREATURE,
             GameEffect.GAIN_TWO_WORMS,

@@ -55,6 +55,7 @@ class ResourceEffectHandler : EffectHandler {
                     hasEmptyMulch(request)
 
             GameEffect.GAIN_ONE_VP,
+            GameEffect.RESEARCH_GAIN_TWENTY_VP,
             GameEffect.REFRESH_CREATURE ->
                 true
 
@@ -129,6 +130,9 @@ class ResourceEffectHandler : EffectHandler {
 
             GameEffect.GAIN_ONE_VP ->
                 request.actor.addVp(1)
+
+            GameEffect.RESEARCH_GAIN_TWENTY_VP ->
+                request.actor.addVp(20)
 
             GameEffect.REFRESH_CREATURE ->
                 RefreshResolver(request.game.chronicle).refresh(request.actor)

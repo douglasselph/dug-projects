@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionExperiment
 import dugsolutions.leaf.v35.tokens.SharedTokenStartingSupply
 import dugsolutions.leaf.v35.game.replay.CultivationDecisionReplay
 
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.plant.PlantValueResolver
 import dugsolutions.leaf.v35.plant.domain.PlantCard
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
@@ -132,6 +133,11 @@ class GameConfig(
      * override resolver without mutating PlantCard definitions.
      */
     val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+    /** Research only: effects substituted for particular seats, keyed by canonical Plant ID.
+     * This does NOT modify Grove cards, costs, VP or opponents' effects. */
+    val researchPlantEffectsBySeat: Map<Int, Map<String, GameEffect>> = emptyMap(),
+    /** Opt-in immutable per-resolution mechanical deltas for effect calibration. */
+    val recordResearchEffectOutputs: Boolean = false,
     /**
      * Explicit per-game effective Round-card effect values. Canonical gameplay
      * uses [RoundValueResolver.CANONICAL]; research may supply an immutable
@@ -155,6 +161,10 @@ class GameConfig(
         playerDecisionFactories.toList()
 
     init {
+        require(researchPlantEffectsBySeat.keys.all { it in playerDecisionFactories.indices }) {
+            "Research effect override seat outside player range"
+        }
+        require(researchPlantEffectsBySeat.values.all { effects -> effects.keys.all { it.isNotBlank() } })
         require(decisionExperimentSeats == null || decisionExperimentSeats.all { it in playerDecisionFactories.indices }) {
             "Experiment seat outside player range: $decisionExperimentSeats"
         }

@@ -52,7 +52,7 @@ object R3APlantScreenMain {
         PlantType.FLOWER to 11, PlantType.FLOWER to 14, PlantType.FLOWER to 17
     )
     private const val SCORES = "generation\tcandidate\twin_share\tpurchaser_game_rate\tbattle_activations_per_game\ttraining_fitness"
-    private const val EVAL = "matchup\tsample\trole\tseat\twin_share\tfinal_vp\tstrike_vp\tplant_vp\ttarget_purchases\ttarget_cultivation_resolutions\ttarget_battle_resolutions\ttarget_other_resolutions\ttarget_grafted\tnamed_plant_purchases\tfinal_named_plants\tfinal_dice\tstored_mulch_dice"
+    private const val EVAL = "matchup\tsample\trole\tseat\twin_share\tfinal_vp\tstrike_vp\tplant_vp\ttarget_purchases\ttarget_cultivation_resolutions\ttarget_battle_resolutions\ttarget_other_resolutions\ttarget_grafted\tnamed_plant_purchases\tfinal_named_plants\tfinal_dice\tstored_mulch_dice\toutput_immediate_vp\toutput_die_raise_pips\toutput_drawn_dice\toutput_drawn_pips\toutput_resolutions"
 
     data class Options(
         val phase: String, val objective: String, val targetId: String,
@@ -60,13 +60,14 @@ object R3APlantScreenMain {
         val sigma: Double, val mutations: Int, val evolutionSeed: Long,
         val seed: Long, val strategySeed: Long, val holdoutGames: Int,
         val targetBoost: Double, val targetMinPurchaseRate: Double, val targetPurchaseBonus: Double,
-        val flowerEnablerBoost: Double, val effectVariant: String,
+        val flowerEnablerBoost: Double, val effectVariant: String, val effectAudience: String,
         val grove: List<String>, val outputDir: File, val fingerprint: String,
         val targeted: File?, val unrestricted: File?
     ) {
         init {
             require(phase in setOf("train", "evaluate"))
-            require(effectVariant in setOf("official", "disabled", "root-raise20", "queen-draw4"))
+            require(effectVariant in setOf("official", "disabled", "root-raise20", "queen-draw4", "research-vp20"))
+            require(effectAudience in setOf("all", "targeted"))
             require(effectVariant != "root-raise20" || targetId == "Root_05_02")
             require(effectVariant != "queen-draw4" || targetId == "Flower_17_04")
             require(objective in setOf("targeted", "unrestricted"))
@@ -91,9 +92,9 @@ object R3APlantScreenMain {
                 }
                 val names = setOf("phase", "objective", "target-id", "generations", "population", "elites", "games",
                     "sigma", "mutations", "evolution-seed", "seed", "strategy-seed", "holdout-games",
-                    "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "effect-variant", "grove", "output-dir", "fingerprint")
+                    "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "effect-variant", "effect-audience", "grove", "output-dir", "fingerprint")
                 require(fields.keys - names - setOf("targeted", "unrestricted") == emptySet<String>())
-                require((names - "effect-variant").all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
+                require((names - setOf("effect-variant", "effect-audience")).all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
                 return Options(
                     fields.getValue("phase"), fields.getValue("objective"), fields.getValue("target-id"),
                     fields.getValue("generations").toInt(), fields.getValue("population").toInt(),
@@ -103,7 +104,7 @@ object R3APlantScreenMain {
                     fields.getValue("holdout-games").toInt(), fields.getValue("target-boost").toDouble(),
                     fields.getValue("target-min-purchase-rate").toDouble(), fields.getValue("target-purchase-bonus").toDouble(),
                     fields.getValue("flower-enabler-boost").toDouble(),
-                    fields["effect-variant"] ?: "official", fields.getValue("grove").split(','),
+                    fields["effect-variant"] ?: "official", fields["effect-audience"] ?: "all", fields.getValue("grove").split(','),
                     File(fields.getValue("output-dir")), fields.getValue("fingerprint"),
                     fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File)
                 )
@@ -134,20 +135,21 @@ object R3APlantScreenMain {
                 "disabled" -> GameEffect.RESEARCH_NO_EFFECT
                 "root-raise20" -> GameEffect.RESEARCH_RAISE_DIE_PLUS_20
                 "queen-draw4" -> GameEffect.RESEARCH_DRAW_FOUR_DICE
+                "research-vp20" -> GameEffect.RESEARCH_GAIN_TWENTY_VP
                 else -> error("Unsupported calibration effect: ${o.effectVariant}")
             }
-            val values = if (calibratedEffect == null) PlantExperimentConfig.EMPTY else
+            val values = if (calibratedEffect == null || o.effectAudience == "targeted") PlantExperimentConfig.EMPTY else
                 PlantExperimentConfig.of(o.targetId to PlantExperimentOverride(effect = calibratedEffect))
             require(o.outputDir.isDirectory || o.outputDir.mkdirs())
             val initial = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.zeros(), all)
             println("R3A ${o.phase}: ${o.targetId} / ${target.title} / ${o.objective} / effect=${o.effectVariant} / nine official cards")
             println("Grove: " + grove.joinToString("; ") { it.title })
-            if (o.phase == "train") train(o, initial, grove, values, koin.get(), koin.get())
-            else evaluate(o, all, grove, values, koin.get(), koin.get())
+            if (o.phase == "train") train(o, initial, grove, values, calibratedEffect, koin.get(), koin.get())
+            else evaluate(o, all, grove, values, calibratedEffect, koin.get(), koin.get())
         } finally { app.close() }
     }
 
-    private fun train(o: Options, initial: LearnedBuyWeights, grove: List<PlantCard>, values: PlantExperimentConfig,
+    private fun train(o: Options, initial: LearnedBuyWeights, grove: List<PlantCard>, values: PlantExperimentConfig, calibratedEffect: GameEffect?,
                       factory: GameFactory, runner: GameRunner) {
         val initialTarget = if (o.objective == "targeted") {
             val key = LearnedBuyWeights.cardFeature(o.targetId)
@@ -197,7 +199,9 @@ object R3APlantScreenMain {
                         val game = factory(GameConfig(
                             selectedPlantCards = grove, playerDecisionFactories = policies,
                             seed = o.seed + sample, strategySeed = o.strategySeed + sample,
-                            plantValues = values
+                            plantValues = values,
+                            researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null)
+                                mapOf(targetSeat to mapOf(o.targetId to calibratedEffect)) else emptyMap()
                         ))
                         val result = runner.run(game)
                         val player = game.players[targetSeat]
@@ -243,7 +247,7 @@ object R3APlantScreenMain {
         println("R3A_TRAIN_COMPLETE ${o.targetId} ${o.objective} champion=${File(o.outputDir, "champion.weights").absolutePath}")
     }
 
-    private fun evaluate(o: Options, all: List<PlantCard>, grove: List<PlantCard>, values: PlantExperimentConfig,
+    private fun evaluate(o: Options, all: List<PlantCard>, grove: List<PlantCard>, values: PlantExperimentConfig, calibratedEffect: GameEffect?,
                          factory: GameFactory, runner: GameRunner) {
         val targeted = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(requireNotNull(o.targeted).toPath()), all)
         val unrestricted = LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(requireNotNull(o.unrestricted).toPath()), all)
@@ -279,7 +283,10 @@ object R3APlantScreenMain {
                         playerDecisionFactories = roleAt.map { role -> getWeights(role)?.let(::buyFactory) ?: PlayerDecisionFactory.humanBaseline() },
                         seed = o.seed + 1000000L + mi * o.holdoutGames + sample,
                         strategySeed = o.strategySeed + 1000000L + mi * o.holdoutGames + sample,
-                        plantValues = values
+                        plantValues = values,
+                        recordResearchEffectOutputs = true,
+                        researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null && "targeted" in roleAt)
+                            mapOf(roleAt.indexOf("targeted") to mapOf(o.targetId to calibratedEffect)) else emptyMap()
                     ))
                     val result = runner.run(game)
                     val summaries = GameSummaryExtractor.extract(game, result)
@@ -302,11 +309,14 @@ object R3APlantScreenMain {
                         }
                         val named = purchased.map { p -> grove.firstOrNull { it.name == p.itemName }?.title ?: p.itemName }
                         val summary = summaries.players[seat]
+                        val outputs = game.researchEffectOutputs.filter { it.playerSeat == seat && it.plantId == o.targetId }
                         out.println(listOf(name, sample, roleAt[seat], seat, summary.winShare,
                             summary.totalVp, summary.battleStrikeVp, summary.plantVp,
                             purchased.count { it.itemName == o.targetId }, cultivation, battle, other,
                             player.creature.cards.count { it.card.name == o.targetId },
-                            copies(named), copies(player.creature.cards.map { it.card.title }), diceShape, mulchShape
+                            copies(named), copies(player.creature.cards.map { it.card.title }), diceShape, mulchShape,
+                            outputs.sumOf { it.immediateVpDelta }, outputs.sumOf { it.existingHandDieValueDelta },
+                            outputs.sumOf { it.newHandDice }, outputs.sumOf { it.newHandDicePips }, outputs.size
                         ).joinToString("\t"))
                     }
                 }

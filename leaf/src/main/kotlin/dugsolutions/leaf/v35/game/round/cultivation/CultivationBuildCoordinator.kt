@@ -601,7 +601,7 @@ class CultivationBuildCoordinator(
                         GameEffectRequest(
                             game = game,
                             actor = player,
-                            effect = game.config.plantValues.effectFor(card.card),
+                            effect = game.effectFor(player, card.card),
                             source = GameEffectSource.Plant(card),
                             phase = GameEffectPhase.CULTIVATION
                         )
@@ -717,12 +717,12 @@ class CultivationBuildCoordinator(
                 val request = GameEffectRequest(
                     game = game,
                     actor = player,
-                    effect = game.config.plantValues.effectFor(current.card),
+                    effect = game.effectFor(player, current.card),
                     source = GameEffectSource.Plant(current),
                     phase = GameEffectPhase.CULTIVATION
                 )
                 effectCheck(effectExecutor.canExecute(request)) {
-                    "Plant effect is no longer executable: ${game.config.plantValues.effectFor(current.card)}"
+                    "Plant effect is no longer executable: ${game.effectFor(player, current.card)}"
                 }
                 effectExecutor.execute(request)
                 stateCheck(player.creature.faceDown(current.id)) {
