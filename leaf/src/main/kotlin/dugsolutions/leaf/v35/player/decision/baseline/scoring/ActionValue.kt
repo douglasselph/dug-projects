@@ -24,7 +24,8 @@ data class ActionValue<T>(
     val contextualCosts: Double = 0.0,
     val uncertainty: Double = 0.0,
     val variability: Double = 0.0,
-    val notes: List<String> = emptyList()
+    val notes: List<String> = emptyList(),
+    val unit: PreferenceUnit = PreferenceUnit.LEGACY_PRIORITY_POINTS
 ) {
     init {
         require(listOf(calculatedBenefit, contextualBonuses, contextualCosts, uncertainty, variability)
@@ -32,12 +33,21 @@ data class ActionValue<T>(
         require(contextualBonuses >= 0.0) { "Bonuses must be nonnegative" }
         require(contextualCosts >= 0.0) { "Costs must be nonnegative" }
         require(target == null || target.isNotBlank()) { "Target must not be blank" }
+        PhasePreference(phase, unit, calculatedBenefit)
         require(notes.all { it.isNotBlank() }) { "Notes must not contain blank entries" }
     }
 
     val finalPreference: Double
         get() = if (legal) calculatedBenefit + contextualBonuses - contextualCosts + uncertainty + variability
                 else Double.NEGATIVE_INFINITY
+
+    /** Compare only values already expressed in the same phase and unit. */
+    fun <U> comparePreference(other: ActionValue<U>): Int {
+        require(phase == other.phase && unit == other.unit) {
+            "Cannot compare $phase/$unit against ${other.phase}/${other.unit}"
+        }
+        return finalPreference.compareTo(other.finalPreference)
+    }
 
     /** Illegal candidates must never be compared or converted into selectable choices. */
     fun requireLegal(): ActionValue<T> = apply {

@@ -7,7 +7,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
-import kotlin.math.roundToInt
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegacyPreferenceBridge
 
 /**
  * Scores Step-4 First Main actions under the approved Human Baseline contract.
@@ -62,7 +62,7 @@ class BattleFirstMainPriority(
             mode = BattleAnalysisMode.EXPECTED
         ).maxByOrNull { it.tacticalPreference }
             ?: return intrinsic
-        val adjustment = best.tacticalPreference.roundToInt()
+        val adjustment = LegacyPreferenceBridge.battleTacticalAdjustment(best.tacticalPreference)
         if (adjustment == 0) return intrinsic
 
         val transition = best.transitions.singleOrNull()

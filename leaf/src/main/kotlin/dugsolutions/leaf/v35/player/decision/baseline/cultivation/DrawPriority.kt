@@ -5,7 +5,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.projection.CultivationPipO
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
-import kotlin.math.roundToInt
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegacyPreferenceBridge
 
 /**
  * Stable opportunity-cost reference for drawing the next die.
@@ -18,16 +18,12 @@ import kotlin.math.roundToInt
  */
 object DrawPriority {
     private const val NO_DIE_SCORE = 20
-    private const val BASE_SCORE = 35
-    private const val POINTS_PER_EXPECTED_VALUE = 4
 
     fun score(context: DecisionContext): PriorityScore {
         val observation = observe(context)
         val nextSides = observation.nextDieSides ?: return PriorityScore(NO_DIE_SCORE)
             .adjusted(0, "No die is available to draw")
-        val expectedContribution = (POINTS_PER_EXPECTED_VALUE * observation.expectedRoll!!).roundToInt()
-        return PriorityScore(BASE_SCORE)
-            .adjusted(expectedContribution, "Expected D$nextSides roll value")
+        return LegacyPreferenceBridge.cultivationDraw(observation.expectedRoll!!, nextSides)
             .adjusted(0, "Draw reference: ${observation.summary()}")
     }
 
