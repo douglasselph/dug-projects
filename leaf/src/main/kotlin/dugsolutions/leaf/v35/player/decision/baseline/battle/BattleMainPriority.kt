@@ -50,22 +50,17 @@ object BattleMainPriority {
         }
 
     /**
-     * Legacy Step-5 Main score retained until B14 replaces the flat Support/Final-Main
-     * orchestration. First Main uses [BattleFirstMainPriority] from B7 instead.
+     * All ordinary Battle Main call sites (First Main, Final Main, Sunlight-funded
+     * Main, enabling-Support preview) must use the same consequence-aware scorer.
+     * In particular, Final Main Draw must not get an unconditional +10 unrelated
+     * to legal placement or projected Strike consequences.
      */
     fun score(
         context: DecisionContext,
         roundCard: RoundCard,
         action: BattleMainAction,
         cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
-    ): PriorityScore {
-        val intrinsic = intrinsicScore(context, roundCard, action, cardScorers)
-        return if (action == BattleMainAction.Draw) {
-            intrinsic.adjusted(10, "An extra Battle die can reinforce a needy row")
-        } else {
-            intrinsic
-        }
-    }
+    ): PriorityScore = BattleFirstMainPriority(cardScorers)(context, roundCard, action)
 
     private fun scoreRoundEffect(effect: GameEffect): PriorityScore =
         when (effect) {

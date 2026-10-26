@@ -91,7 +91,7 @@ class SunlightBattleSpendingValueTest {
     }
 
     @Test
-    fun `high value Draw can justify Sunlight before final Battle`() {
+    fun `D20 Draw justifies Sunlight without a phantom final Main bonus`() {
         val observed = SunlightBattleSpendingValue.observe(
             context = context(
                 sunlight = 1,
@@ -102,7 +102,10 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.Draw
         )
 
-        assertEquals(87, observed.fundedMainValue)
+        // No Battle rows are supplied by this fixture, so there is no projected
+        // Strike-row bonus: 35 legacy Draw base + round(10.5 * 4) = 77.
+        // The previous expected 87 included an unconditional Final Main +10.
+        assertEquals(77, observed.fundedMainValue)
         assertTrue(observed.worthwhile)
     }
 
