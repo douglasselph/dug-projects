@@ -707,6 +707,25 @@ class HumanBaselineEffectStrategy(
             }
             if (analyzed.isEmpty()) delegate.chooseStrikeRow(request)
             else choose(request.context, analyzed)
+        } else if (request.effect == GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 &&
+            request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE
+        ) {
+            // C04: activation and downstream legal row selection share the exact
+            // complete collateral projections, with no second tactical formula.
+            val projections = BattleCollateralActivationPriority().targetProjections(
+                request.context, request.effect
+            ).filter { it.strikeRow in request.legalChoices }.associateBy { it.strikeRow }
+            val candidates = request.legalChoices.mapNotNull { row ->
+                projections[row]?.let { projected ->
+                    DecisionCandidate(
+                        row,
+                        PriorityScore(projected.tacticalValue.roundToInt())
+                            .adjusted(0, "Same complete row projection used for Plant activation")
+                    )
+                }
+            }
+            if (candidates.isEmpty()) delegate.chooseStrikeRow(request)
+            else choose(request.context, candidates)
         } else if (request.effect in DETERMINISTIC_STRIKE_ROW_BATTLE_EFFECTS) {
             val analyzed = request.legalChoices.mapNotNull { row ->
                 deterministicStrikeRowTargetAnalyzer(request.context, request.effect, row)?.let { analysis ->

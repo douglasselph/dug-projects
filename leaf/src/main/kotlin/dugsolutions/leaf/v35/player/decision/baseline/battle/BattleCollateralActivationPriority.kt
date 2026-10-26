@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -25,7 +26,11 @@ class BattleCollateralActivationPriority(
     fun supports(effect: GameEffect): Boolean = effect in EFFECTS
 
     /** A target's full tactical projection, including opposing-row collateral effects. */
-    data class TargetProjection(val handIndex: Int?, val tacticalValue: Double)
+    data class TargetProjection(
+        val handIndex: Int?,
+        val tacticalValue: Double,
+        val strikeRow: StrikeRow? = null
+    )
 
     /**
      * Action valuation and own-die target valuation share these projections.
@@ -56,7 +61,7 @@ class BattleCollateralActivationPriority(
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 battle.rows.filterNot { it.closed }.mapNotNull { row ->
                     strikeRow(context, effect, row.row)?.tacticalValue
-                        ?.let { TargetProjection(null, it) }
+                        ?.let { TargetProjection(null, it, row.row) }
                 }
             else -> emptyList()
         }
