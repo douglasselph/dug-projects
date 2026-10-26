@@ -6,6 +6,7 @@ import dugsolutions.leaf.v35.chronicle.domain.BattleGridReportKind
 import dugsolutions.leaf.v35.chronicle.domain.BattleMainStage
 import dugsolutions.leaf.v35.chronicle.domain.MainActionKind
 import dugsolutions.leaf.v35.chronicle.domain.SupportActionKind
+import dugsolutions.leaf.v35.chronicle.domain.SunlightTokenChange
 import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
@@ -382,6 +383,27 @@ class BattleActionCoordinatorTest {
         )
         assertEquals(1, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SunlightMainAction>()
             .count { it.playerId == p1.id })
+        val events = fixture.game.chronicle.entries
+        val first = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.FIRST }
+        val sunlit = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.SUNLIGHT }
+        val final = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.FINAL }
+        val sunlightSupport = events.filterIsInstance<GameEntry.SupportAction>()
+            .single { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT }
+        val critterSupport = events.filterIsInstance<GameEntry.SupportAction>()
+            .single { it.playerId == p1.id && it.action == SupportActionKind.CRITTER_BEE }
+        assertTrue(first.sequence < sunlightSupport.sequence)
+        assertTrue(sunlightSupport.sequence < sunlit.sequence)
+        assertTrue(sunlit.sequence < critterSupport.sequence)
+        assertTrue(critterSupport.sequence < final.sequence)
+        assertEquals(
+            listOf(SunlightTokenChange.GAINED, SunlightTokenChange.SPENT),
+            events.filterIsInstance<GameEntry.SunlightTokenChanged>()
+                .filter { it.playerId == p1.id }.map { it.change }
+        )
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount + p1.tokens.sunlightCount)
     }
 
     @Test
@@ -428,6 +450,17 @@ class BattleActionCoordinatorTest {
             .count { it.playerId == p1.id })
         assertEquals(2, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SupportAction>()
             .count { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT })
+        assertEquals(
+            listOf(BattleMainStage.FIRST, BattleMainStage.SUNLIGHT, BattleMainStage.SUNLIGHT, BattleMainStage.FINAL),
+            fixture.game.chronicle.entries.filterIsInstance<GameEntry.MainAction>()
+                .filter { it.playerId == p1.id }.mapNotNull { it.battleStage }
+        )
+        assertEquals(
+            listOf(SunlightTokenChange.GAINED, SunlightTokenChange.GAINED,
+                SunlightTokenChange.SPENT, SunlightTokenChange.SPENT),
+            fixture.game.chronicle.entries.filterIsInstance<GameEntry.SunlightTokenChanged>()
+                .filter { it.playerId == p1.id }.map { it.change }
+        )
     }
 
     @Test
@@ -510,6 +543,20 @@ class BattleActionCoordinatorTest {
         assertEquals(listOf(Critter.WORM), fixture.battleState.grid.square(p1.id, StrikeRow.BOTTOM).critters)
         assertEquals(1, fixture.game.chronicle.entries.filterIsInstance<GameEntry.SupportAction>()
             .count { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT })
+        val events = fixture.game.chronicle.entries
+        val bee = events.filterIsInstance<GameEntry.SupportAction>()
+            .single { it.playerId == p1.id && it.action == SupportActionKind.CRITTER_BEE && it.row == StrikeRow.TOP }
+        val sunlight = events.filterIsInstance<GameEntry.SupportAction>()
+            .single { it.playerId == p1.id && it.action == SupportActionKind.SUNLIGHT }
+        val worm = events.filterIsInstance<GameEntry.SupportAction>()
+            .single { it.playerId == p1.id && it.action == SupportActionKind.CRITTER_WORM && it.row == StrikeRow.BOTTOM }
+        val final = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.FINAL }
+        assertTrue(bee.sequence < sunlight.sequence)
+        assertTrue(sunlight.sequence < worm.sequence)
+        assertTrue(worm.sequence < final.sequence)
+        assertEquals(0, p1.tokens.sunlightCount)
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount)
     }
 
     @Test
