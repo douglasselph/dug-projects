@@ -18,133 +18,49 @@ import kotlin.test.assertTrue
 
 class SunlightTokenPriorityTest {
     @Test
-    fun `no future Battle makes a new Sunlight worthless`() {
-        val context = context(battlesRemaining = 0, upcoming = emptyList())
-
-        val observation = SunlightTokenPriority.observe(context)
-
-        assertEquals(0, observation.finalPriority)
-        assertEquals(0, SunlightTokenPriority.score(context).total)
+    fun `no remaining Battle makes new Sunlight worthless`() {
+        val state = context(battlesRemaining = 0, upcoming = emptyList())
+        assertEquals(0, SunlightTokenPriority.score(state).total)
+        assertEquals(0.0, SunlightTokenPriority.observe(state).estimatedPipValue)
     }
 
     @Test
-    fun `Battle next with three strong face-up Battle Plants values extra capacity`() {
-        val context = context(
+    fun `token valuation is calibrated against Draw rather than arbitrary Plant bases`() {
+        val state = context(battlesRemaining = 1, upcoming = listOf(RoundCardType.BATTLE))
+        assertEquals(4.5, SunlightTokenPriority.observe(state).estimatedPipValue)
+        assertEquals(53, SunlightTokenPriority.score(state).total)
+    }
+
+    @Test
+    fun `existing tokens lower the marginal acquisition value`() {
+        val initial = context(battlesRemaining = 2, upcoming = listOf(RoundCardType.BATTLE))
+        val stocked = context(battlesRemaining = 2, upcoming = listOf(RoundCardType.BATTLE), sunlight = 1)
+        assertTrue(SunlightTokenPriority.score(initial).total > SunlightTokenPriority.score(stocked).total)
+    }
+
+    @Test
+    fun `surplus token remains low priority`() {
+        val state = context(battlesRemaining = 1, upcoming = listOf(RoundCardType.BATTLE), sunlight = 2)
+        assertEquals(1.0, SunlightTokenPriority.observe(state).estimatedPipValue)
+        assertEquals(39, SunlightTokenPriority.score(state).total)
+    }
+
+    @Test
+    fun `visible Battle Plant base scores do not change Sunlight acquisition value`() {
+        val empty = context(battlesRemaining = 1, upcoming = listOf(RoundCardType.BATTLE))
+        val planted = context(battlesRemaining = 1, upcoming = listOf(RoundCardType.BATTLE), creature = strongBattlePlants())
+        assertEquals(SunlightTokenPriority.score(empty).total, SunlightTokenPriority.score(planted).total)
+    }
+
+    @Test
+    fun `Sunlight competes with Draw by ordinary score comparison`() {
+        val state = context(
             battlesRemaining = 1,
             upcoming = listOf(RoundCardType.BATTLE),
-            creature = listOf(
-                plant(1, "Root_07_01"),
-                plant(2, "Root_09_02"),
-                plant(3, "Flower_11_03")
-            )
+            supply = listOf(DieView(index = 0, sides = 4, value = 2))
         )
-
-        val observation = SunlightTokenPriority.observe(context)
-
-        assertEquals(75, observation.thirdBestFaceUpBattlePlantBase)
-        assertTrue(observation.visibleBattlePlantAdjustment > 0)
-        assertTrue(observation.finalPriority >= 60)
-    }
-
-    @Test
-    fun `several stored Sunlights sharply reduce value with one Battle left`() {
-        val empty = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.BATTLE),
-            sunlight = 0,
-            creature = strongBattlePlants()
-        )
-        val stocked = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.BATTLE),
-            sunlight = 3,
-            creature = strongBattlePlants()
-        )
-
-        val emptyScore = SunlightTokenPriority.score(empty).total
-        val stockedObservation = SunlightTokenPriority.observe(stocked)
-
-        assertTrue(emptyScore - stockedObservation.finalPriority >= 40)
-        assertTrue(stockedObservation.finalPriority < 30)
-    }
-
-    @Test
-    fun `distant Battle without obvious extra Plant action has only modest prospective value`() {
-        val context = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.CULTIVATION, RoundCardType.CULTIVATION, RoundCardType.BATTLE)
-        )
-
-        val observation = SunlightTokenPriority.observe(context)
-
-        assertEquals(0, observation.battleProximityAdjustment)
-        assertEquals(0, observation.visibleBattlePlantAdjustment)
-        assertEquals(46, observation.finalPriority)
-    }
-
-    @Test
-    fun `weak Draw can lose to Sunlight when Battle is next and extra Plant capacity is visible`() {
-        val context = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.BATTLE),
-            supply = listOf(DieView(index = 0, sides = 4, value = 2)),
-            creature = strongBattlePlants()
-        )
-
-        assertEquals(45, DrawPriority.score(context).total)
-        assertTrue(SunlightTokenPriority.score(context).total > DrawPriority.score(context).total)
-    }
-
-    @Test
-    fun `excellent immediate Main Action can outrank generic Sunlight without visible third-action pressure`() {
-        val context = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.BATTLE)
-        )
-
-        val sunlight = SunlightTokenPriority.score(context).total
-
-        // 54 is deliberately well below the 70-80 range already used by the
-        // Human Baseline for excellent current Plant actions.  The ordinary
-        // Cultivation chooser performs the actual cross-action comparison.
-        assertEquals(54, sunlight)
-        assertTrue(sunlight < 70)
-    }
-
-    @Test
-    fun `one remaining Battle already covered by stored Sunlight normally discourages another`() {
-        val context = context(
-            battlesRemaining = 1,
-            upcoming = listOf(RoundCardType.BATTLE),
-            sunlight = 1
-        )
-
-        val observation = SunlightTokenPriority.observe(context)
-
-        assertEquals(-20, observation.existingSunlightAdjustment)
-        assertEquals(34, observation.finalPriority)
-    }
-
-    @Test
-    fun `three Battles and no stored Sunlight retain useful general option value`() {
-        val context = context(
-            battlesRemaining = 3,
-            upcoming = listOf(
-                RoundCardType.CULTIVATION,
-                RoundCardType.BATTLE,
-                RoundCardType.CULTIVATION,
-                RoundCardType.BATTLE,
-                RoundCardType.CULTIVATION,
-                RoundCardType.BATTLE
-            )
-        )
-
-        val observation = SunlightTokenPriority.observe(context)
-
-        assertEquals(12, observation.battlesRemainingAdjustment)
-        assertEquals(4, observation.battleProximityAdjustment)
-        assertEquals(58, observation.finalPriority)
-        assertEquals(observation.finalPriority, SunlightTokenPriority.score(context).total)
+        assertEquals(45, DrawPriority.score(state).total)
+        assertTrue(SunlightTokenPriority.score(state).total > DrawPriority.score(state).total)
     }
 
     private fun strongBattlePlants(): List<CreatureCardView> = listOf(

@@ -567,17 +567,11 @@ class HumanBaselineCultivationStrategy(
                     }
                 }
                 if (effect == GameEffect.GAIN_SUNLIGHT_TOKEN) {
-                    val sunlight = SunlightTokenPriority.observe(context, cardScorers)
+                    val sunlight = SunlightTokenPriority.observe(context)
                     common["sunlightHeld"] = sunlight.sunlightHeld.toString()
                     common["battlesRemaining"] = sunlight.battlesRemaining.toString()
                     common["roundsUntilBattle"] = sunlight.roundsUntilBattle?.toString() ?: "none"
-                    common["battleNext"] = sunlight.battleIsNext.toString()
-                    common["sunlightBaseFutureAction"] = sunlight.baseFutureActionValue.toString()
-                    common["sunlightBattleProximityAdjustment"] = sunlight.battleProximityAdjustment.toString()
-                    common["sunlightBattlesRemainingAdjustment"] = sunlight.battlesRemainingAdjustment.toString()
-                    common["sunlightExistingHoldingAdjustment"] = sunlight.existingSunlightAdjustment.toString()
-                    common["sunlightVisibleBattlePlantAdjustment"] = sunlight.visibleBattlePlantAdjustment.toString()
-                    common["sunlightThirdBattlePlantBase"] = sunlight.thirdBestFaceUpBattlePlantBase?.toString() ?: "none"
+                    common["sunlightEstimatedPipValue"] = sunlight.estimatedPipValue.toString()
                     common["sunlightPriority"] = sunlight.finalPriority.toString()
                 }
             }
@@ -629,7 +623,7 @@ class HumanBaselineCultivationStrategy(
                 normalPurchasingPower = policy.normalPurchasingPower(context)
             )
             GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
-            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context, cardScorers)
+            GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context)
             else -> PriorityScore(45)
         }
 

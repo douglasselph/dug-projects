@@ -102,15 +102,15 @@ class PlantExperimentScoringIntegrationTest {
 
     private fun marketCards(): List<PlantCard> =
         listOf(
-            plant("Root_A", PlantType.ROOT, PlantScoringRule.Fixed(0)),
-            plant("Root_B", PlantType.ROOT, PlantScoringRule.Fixed(0)),
-            plant("Root_C", PlantType.ROOT, PlantScoringRule.Fixed(0)),
-            plant("Vine_A", PlantType.VINE, PlantScoringRule.Fixed(0)),
-            plant("Vine_B", PlantType.VINE, PlantScoringRule.Fixed(0)),
-            plant("Vine_C", PlantType.VINE, PlantScoringRule.Fixed(0)),
-            plant("Flower_A", PlantType.FLOWER, PlantScoringRule.Fixed(0)),
-            plant("Flower_B", PlantType.FLOWER, PlantScoringRule.Fixed(0)),
-            plant("Flower_C", PlantType.FLOWER, PlantScoringRule.Fixed(0))
+            plant("Root_A", PlantType.ROOT, PlantScoringRule.Fixed(0), cost = 5),
+            plant("Root_B", PlantType.ROOT, PlantScoringRule.Fixed(0), cost = 7),
+            plant("Root_C", PlantType.ROOT, PlantScoringRule.Fixed(0), cost = 9),
+            plant("Vine_A", PlantType.VINE, PlantScoringRule.Fixed(0), cost = 7),
+            plant("Vine_B", PlantType.VINE, PlantScoringRule.Fixed(0), cost = 9),
+            plant("Vine_C", PlantType.VINE, PlantScoringRule.Fixed(0), cost = 11),
+            plant("Flower_A", PlantType.FLOWER, PlantScoringRule.Fixed(0), cost = 11),
+            plant("Flower_B", PlantType.FLOWER, PlantScoringRule.Fixed(0), cost = 14),
+            plant("Flower_C", PlantType.FLOWER, PlantScoringRule.Fixed(0), cost = 17)
         )
 
     private fun player(id: Int): Player =
@@ -123,14 +123,15 @@ class PlantExperimentScoringIntegrationTest {
     private fun plant(
         name: String,
         type: PlantType,
-        scoringRule: PlantScoringRule
+        scoringRule: PlantScoringRule,
+        cost: Int = 7
     ): PlantCard =
         PlantCard(
             quantity = 10,
             name = name,
             title = name,
             type = type,
-            cost = 7,
+            cost = cost,
             lineIcon = null,
             vpIcon = "",
             typeIcon = "",
