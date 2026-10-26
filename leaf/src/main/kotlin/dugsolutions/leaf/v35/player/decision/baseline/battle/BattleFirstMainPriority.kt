@@ -26,8 +26,8 @@ import kotlin.math.roundToInt
 class BattleFirstMainPriority(
     private val cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
     private val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
-    private val diePlacementAnalyzer: BattleDiePlacementAnalyzer =
-        BattleDiePlacementAnalyzer(policy)
+    private val consequenceEvaluator: BattleConsequenceEvaluator =
+        BattleConsequenceEvaluator(placementAnalyzer = BattleDiePlacementAnalyzer(policy))
 ) {
     operator fun invoke(
         context: DecisionContext,
@@ -56,22 +56,22 @@ class BattleFirstMainPriority(
             ?: context.self.board.discard.minOfOrNull { it.sides }
             ?: return intrinsic
         val expected = DieValueHeuristics.expectedRoll(nextSides)
-        val best = diePlacementAnalyzer(
+        val best = consequenceEvaluator.placedDie(
             context = context,
-            dieValue = expected,
+            faceValue = expected,
             mode = BattleAnalysisMode.EXPECTED
-        ).maxByOrNull { it.tacticalValue }
+        ).maxByOrNull { it.tacticalPreference }
             ?: return intrinsic
-        val adjustment = best.tacticalValue.roundToInt()
+        val adjustment = best.tacticalPreference.roundToInt()
         if (adjustment == 0) return intrinsic
 
-        val transition = best.swing.rowSwings.singleOrNull()?.transition
+        val transition = best.transitions.singleOrNull()
         val transitionText = transition?.takeIf { it != BattleTransition.NONE }
             ?.let { " ${it.name}" }
             .orEmpty()
         return intrinsic.adjusted(
             adjustment,
-            "Expected D$nextSides best Battle placement ${best.realization}:$transitionText swing ${format(best.tacticalValue)}"
+            "Expected D$nextSides best Battle placement ${best.target}:$transitionText swing ${format(best.tacticalPreference)}"
         )
     }
 
