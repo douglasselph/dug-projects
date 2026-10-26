@@ -29,6 +29,7 @@ object BattleMainPriority {
                 val sapping = BattleSappingActivationPriority()
                 val collateral = BattleCollateralActivationPriority()
                 val directDie = BattleDirectDieActivationPriority()
+                val reroll = BattleRerollActivationPriority()
                 if (sapping.isSapping(effectiveEffect)) {
                     // Top-level action and downstream target selection use the
                     // same complete deterministic projector, not a second
@@ -36,6 +37,8 @@ object BattleMainPriority {
                     sapping.score(context, effectiveEffect, intrinsic.base) ?: intrinsic
                  } else if (collateral.supports(effectiveEffect)) {
                     collateral.score(context, effectiveEffect, intrinsic.base) ?: intrinsic
+                } else if (effectiveEffect == GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS) {
+                    reroll.score(context, effectiveEffect, intrinsic) ?: intrinsic
                 } else if (effectiveEffect in BattleDirectDieActivationPriority.DIRECT_EFFECTS) {
                     directDie.score(context, effectiveEffect, intrinsic) ?: intrinsic
                 } else if (effectiveEffect in setOf(
