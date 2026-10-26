@@ -153,38 +153,7 @@ class CultivationMainPriorityTest {
         assertEquals(legacyAllCrittersSpendable.total + 10, reserveAware.total)
     }
 
-    @Test
-    fun `Sunlight threshold scoring respects policy purchasing power instead of protected Critters`() {
-        val context = context(
-            supply = listOf(DieView(index = 0, sides = 4, value = 1)),
-            hand = listOf(DieView(index = 0, sides = 10, value = 7)),
-            bees = 2,
-            worms = 1,
-            grove = DecisionContext.EMPTY.grove.copy(
-                graftBed = mapOf(DieSides.D10 to 1)
-            )
-        )
-        val reserveAwarePower = HumanBaselinePolicy().normalPurchasingPower(context)
 
-        val reserveAware = SunlightPriority.score(
-            context = context,
-            normalPurchasingPower = reserveAwarePower
-        )
-        val hypotheticalAllCrittersSpendable = SunlightPriority.score(
-            context = context,
-            normalPurchasingPower = 12
-        )
-
-        // Reserve-aware power is 7, so the full +3 reaches the available D10
-        // Buy tier and earns the +10 threshold bonus. Treating the protected
-        // 2 Bees + 1 Worm as ordinary purchasing power starts at 12, so that
-        // threshold gain disappears. Sunlight's separate D4-only/50% willingness
-        // behavior is verified in HumanBaselineCultivationStrategyTest.
-        assertEquals(
-            hypotheticalAllCrittersSpendable.total + 10,
-            reserveAware.total
-        )
-    }
 
     @Test
     fun `Compost target scoring does not skip a missing normal Upgrade size`() {
@@ -215,22 +184,7 @@ class CultivationMainPriorityTest {
         )
     }
 
-    @Test
-    fun `Sunlight action and target use the same target-specific value`() {
-        val context = context(
-            hand = listOf(
-                DieView(index = 0, sides = 6, value = 5),
-                DieView(index = 1, sides = 10, value = 7)
-            )
-        )
 
-        val first = SunlightPriority.targetScore(context, context.self.board.hand[0], 12)
-        val second = SunlightPriority.targetScore(context, context.self.board.hand[1], 12)
-        val action = SunlightPriority.score(context, 12)
-
-        assertTrue(second.total > first.total)
-        assertEquals(35 + second.total, action.total)
-    }
 
     private fun context(
         supply: List<DieView> = emptyList(),

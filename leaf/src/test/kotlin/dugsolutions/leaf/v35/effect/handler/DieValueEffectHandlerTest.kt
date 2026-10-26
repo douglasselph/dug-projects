@@ -16,13 +16,13 @@ class DieValueEffectHandlerTest {
     private val nestedExecutor = GameEffectExecutor { }
 
     @Test
-    fun raisePlus3_requiresAtLeastOneHandDie() {
+    fun raisePlus4_requiresAtLeastOneHandDie() {
         val actor = EffectTestFixture.player(1)
         val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.RAISE_DIE_PLUS_3
+            GameEffect.RAISE_DIE_PLUS_4
         )
 
         assertFalse(handler.canExecute(request))
@@ -33,7 +33,7 @@ class DieValueEffectHandlerTest {
     }
 
     @Test
-    fun raisePlus3_usesChosenLegalHandDie() {
+    fun raisePlus4_usesChosenLegalHandDie() {
         val first = FixedEffectDie(6, 2)
         val second = FixedEffectDie(8, 4)
         val actor = EffectTestFixture.player(
@@ -45,13 +45,13 @@ class DieValueEffectHandlerTest {
         val request = EffectTestFixture.request(
             game,
             actor,
-            GameEffect.RAISE_DIE_PLUS_3
+            GameEffect.RAISE_DIE_PLUS_4
         )
 
         handler.execute(request, nestedExecutor)
 
         assertEquals(2, first.value)
-        assertEquals(7, second.value)
+        assertEquals(8, second.value)
     }
 
     @Test

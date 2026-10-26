@@ -141,7 +141,7 @@ class SunlightBattleSpendingValueTest {
             )
         )
 
-    private fun weakRound() = round(GameEffect.RAISE_DIE_PLUS_3)
+    private fun weakRound() = round(GameEffect.RAISE_DIE_PLUS_4)
     private fun usefulRound() = round(GameEffect.GAIN_ANY_DIE_TO_DISCARD)
     private fun strongRound() = round(GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS)
 

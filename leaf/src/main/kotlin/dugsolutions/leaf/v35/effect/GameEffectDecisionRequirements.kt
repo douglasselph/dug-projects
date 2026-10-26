@@ -64,7 +64,8 @@ object GameEffectDecisionRequirements {
 
     fun forEffect(effect: GameEffect): GameEffectDecisionRequirement? =
         when (effect) {
-            GameEffect.UNKNOWN -> null
+            GameEffect.UNKNOWN,
+            GameEffect.RAISE_DIE_PLUS_3 -> null // Retired; never a legal decision request
             GameEffect.RESEARCH_NO_EFFECT -> same()
 
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
@@ -228,7 +229,6 @@ object GameEffectDecisionRequirements {
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
-            GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS,

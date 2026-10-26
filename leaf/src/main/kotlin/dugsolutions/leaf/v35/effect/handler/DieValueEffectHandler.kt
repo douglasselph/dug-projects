@@ -35,8 +35,7 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
-            GameEffect.RAISE_LOWEST_DIE_PLUS_1,
-            GameEffect.RAISE_DIE_PLUS_3 ->
+            GameEffect.RAISE_LOWEST_DIE_PLUS_1 ->
                 request.actor.dice.hand.isNotEmpty()
 
             GameEffect.RAISE_D8_PLUS_1,
@@ -173,9 +172,6 @@ class DieValueEffectHandler : EffectHandler {
                     GameEffectPhase.CULTIVATION -> raiseOne(request, 2)
                     GameEffectPhase.BATTLE -> sappingSnapdragonEnhancedBattle(request)
                 }
-
-            GameEffect.RAISE_DIE_PLUS_3 ->
-                raiseOne(request, 3)
 
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> {
                 chooseRequiredHandDie(

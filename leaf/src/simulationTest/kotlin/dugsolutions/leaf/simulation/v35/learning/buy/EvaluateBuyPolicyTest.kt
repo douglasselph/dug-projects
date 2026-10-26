@@ -445,7 +445,7 @@ class EvaluateBuyPolicyTest {
         fun effect(e:GameEffect)=RoundCardEffect("t","b","f","i",null,e)
         val rounds=RoundCardManager().apply { loadCards(listOf(
             RoundCard(3,"C_UP",RoundCardType.CULTIVATION,effect(GameEffect.UPGRADE_DIE_FROM_HAND),effect(GameEffect.GAIN_WATER_TOKEN),""),
-            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_3),""),
+            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_4),""),
             RoundCard(2,"B_HIGH",RoundCardType.BATTLE,effect(GameEffect.GAIN_D20_TO_DISCARD),effect(GameEffect.GAIN_ONE_VP),""),
             RoundCard(2,"B_PLAIN",RoundCardType.BATTLE,effect(GameEffect.GAIN_ONE_VP),effect(GameEffect.GAIN_TWO_WORMS),"")
         )) }
@@ -473,7 +473,7 @@ class EvaluateBuyPolicyTest {
         fun effect(e:GameEffect)=RoundCardEffect("t","b","f","i",null,e)
         val rounds=RoundCardManager().apply { loadCards(listOf(
             RoundCard(3,"C_UP",RoundCardType.CULTIVATION,effect(GameEffect.UPGRADE_DIE_FROM_HAND),effect(GameEffect.GAIN_WATER_TOKEN),""),
-            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_3),""),
+            RoundCard(3,"C_PLAIN",RoundCardType.CULTIVATION,effect(GameEffect.GAIN_WATER_TOKEN),effect(GameEffect.RAISE_DIE_PLUS_4),""),
             RoundCard(2,"B_HIGH",RoundCardType.BATTLE,effect(GameEffect.GAIN_D20_TO_DISCARD),effect(GameEffect.GAIN_ONE_VP),""),
             RoundCard(2,"B_PLAIN",RoundCardType.BATTLE,effect(GameEffect.GAIN_ONE_VP),effect(GameEffect.GAIN_TWO_WORMS),"")
         )) }

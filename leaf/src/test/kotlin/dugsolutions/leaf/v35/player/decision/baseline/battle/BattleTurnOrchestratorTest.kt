@@ -97,8 +97,8 @@ class BattleTurnOrchestratorTest {
             quantity = 1,
             name = "Battle_Weak",
             type = RoundCardType.BATTLE,
-            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
-            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_4),
+            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_4),
             backImage = ""
         )
         val result = orchestrator(
@@ -148,8 +148,8 @@ class BattleTurnOrchestratorTest {
             quantity = 1,
             name = "Battle_Final_Sunlight",
             type = RoundCardType.BATTLE,
-            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
-            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_3),
+            firstEffect = RoundCardEffect("Weak", "", "", "", null, GameEffect.RAISE_DIE_PLUS_4),
+            secondEffect = RoundCardEffect("Weak2", "", "", "", null, GameEffect.RAISE_DIE_PLUS_4),
             backImage = ""
         )
         val result = orchestrator(

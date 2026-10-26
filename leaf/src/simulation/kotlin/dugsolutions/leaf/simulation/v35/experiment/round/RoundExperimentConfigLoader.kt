@@ -102,6 +102,10 @@ class RoundExperimentConfigLoader(
                 "Unknown GameEffect '$expression' for Round card '$cardName' in $sourceName " +
                     "at row $rowNumber; expected an exact GameEffect constant name"
             )
+        require(effect != GameEffect.RAISE_DIE_PLUS_3) {
+            "Obsolete Sunlight Raise +3 ('RAISE_DIE_PLUS_3') for Round card '$cardName' " +
+                "in $sourceName at row $rowNumber; official Sunlight is GAIN_SUNLIGHT_TOKEN"
+        }
         require(effect != GameEffect.UNKNOWN) {
             "Invalid Round effect override 'UNKNOWN' for '$cardName' in $sourceName at row $rowNumber"
         }

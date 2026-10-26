@@ -29,7 +29,17 @@ class GameEffectConverter(
         effectText: String,
         sourceName: String? = null
     ): GameEffect {
-        val effect = effectsByText[normalize(effectText)]
+        val normalized = normalize(effectText)
+        // A known obsolete effect is an input error, not an alias for the modern token.
+        // Also catch the constant name if it was mistakenly supplied as printed text.
+        if (normalized in retiredSunlightTexts) {
+            throw IllegalArgumentException(
+                "Obsolete Sunlight Raise +3 effect for ${sourceName ?: "CSV input"}: " +
+                    "'$effectText'. Use the official 'Gain Sunlight token' card data; " +
+                    "do not silently convert historical Raise +3 rules."
+            )
+        }
+        val effect = effectsByText[normalized]
         if (effect != null) return effect
 
         onUnknownEffect(sourceName, effectText)
@@ -38,6 +48,11 @@ class GameEffectConverter(
 
     companion object {
         private val whitespace = Regex("""\s+""")
+        private val retiredSunlightTexts = setOf(
+            "🎲 raise a die +3", "raise a die +3", "raise any die +3",
+            "🎲 raise any die +3", "raise die +3", "raise a die +3.",
+            "raise any die +3.", "raise_die_plus_3"
+        )
 
         private fun normalize(value: String): String =
             Normalizer.normalize(value, Normalizer.Form.NFKC)
@@ -534,13 +549,6 @@ Mulch a die
 from your hand
                 """,
                 GameEffect.MULCH_DIE_FROM_HAND
-            )
-
-            register(
-                """
-🎲 Raise a die +3
-                """,
-                GameEffect.RAISE_DIE_PLUS_3
             )
 
             register(

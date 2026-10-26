@@ -66,6 +66,8 @@ enum class GameEffect {
     RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
     RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
     RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
+    // Retained solely to decode historical chronicles/feature names; NEVER executable.
+    @Deprecated("Obsolete Sunlight Raise +3. Official Sunlight gains a token; legacy input is rejected.")
     RAISE_DIE_PLUS_3,
     RAISE_DIE_PLUS_4,
     REROLL_ALL_PLAYERS_DICE_KEEP_ONE_OWN,

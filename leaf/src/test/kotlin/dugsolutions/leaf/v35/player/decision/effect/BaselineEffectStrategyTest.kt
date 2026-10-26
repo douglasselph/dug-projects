@@ -20,7 +20,7 @@ class BaselineEffectStrategyTest {
 
         val chosen = BaselineEffectStrategy().chooseDie(
             ChooseEffectDieRequest(
-                effect = GameEffect.RAISE_DIE_PLUS_3,
+                effect = GameEffect.RAISE_DIE_PLUS_4,
                 legalChoices = listOf(first, second)
             )
         )
@@ -259,7 +259,7 @@ class BaselineEffectStrategyTest {
             EffectDieChoice(0, 6, 3)
         )
         val required = ChooseEffectDieRequest(
-            effect = GameEffect.RAISE_DIE_PLUS_3,
+            effect = GameEffect.RAISE_DIE_PLUS_4,
             legalChoices = mutable
         )
         val optional = ChooseOptionalEffectDieRequest(

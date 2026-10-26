@@ -241,7 +241,12 @@ class BuyCoordinatorTest {
     @Test
     fun execute_filtersIllegalUnavailableUnaffordableAndD4Items() {
         val observing = doneStrategy()
-        val buyer = player(1, listOf(die(20, 6)), observing)
+        // A02: a legal nine-slot Grove has only one cost-5 Root. Once it and
+        // the D6 supply are exhausted, a 6-pip buyer has no legal purchase,
+        // so the Buy coordinator correctly skips the strategy entirely.
+        // Give the observer 7 pips so the cost-7 Root remains available while
+        // we verify that depleted, illegal, and unaffordable items are filtered.
+        val buyer = player(1, listOf(die(20, 7)), observing)
         val fixture = fixture(buyer, player(2, emptyList(), doneStrategy()))
         val unavailable = fixture.game.grove.plantMarket.stacks.first()
         repeat(unavailable.card.quantity) { fixture.game.grove.plantMarket.take(unavailable.card) }
@@ -250,11 +255,13 @@ class BuyCoordinatorTest {
         fixture.coordinator.execute(fixture.game)
 
         val options = observing.purchaseRequests.single().options
+        assertTrue(options.any { it is BuyItem.Plant && it.cost == 7 },
+            "Control: a legal cost-7 Plant must remain so the Buy strategy is consulted")
         assertFalse(options.any { it is BuyItem.Plant && it.card == unavailable.card })
-        assertFalse(options.any { it is BuyItem.Plant && it.cost > 6 })
+        assertFalse(options.any { it is BuyItem.Plant && it.cost > 7 })
         assertFalse(options.any { it is BuyItem.Die && it.sides == DieSides.D4 })
         assertFalse(options.any { it is BuyItem.Die && it.sides == DieSides.D6 })
-        assertFalse(options.any { it.cost > 6 })
+        assertFalse(options.any { it.cost > 7 })
     }
 
     @Test

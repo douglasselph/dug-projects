@@ -82,7 +82,7 @@ class HumanBaselineEffectStrategyBattleOwnDieAlignmentTest {
 
         val chosen = HumanBaselineEffectStrategy().chooseDie(
             request(
-                GameEffect.RAISE_DIE_PLUS_3,
+                GameEffect.RAISE_DIE_PLUS_4,
                 context,
                 EffectDieChoice(1, 20, 1), // raw +3, but remains a loss
                 EffectDieChoice(0, 6, 5)   // capped raw +1, but wins the Strike

@@ -11,8 +11,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class RoundExperimentConfigLoaderTest {
-    private val sunlightCompost = card("Resource_Sunlight_Compost", GameEffect.RAISE_DIE_PLUS_3, GameEffect.UPGRADE_DIE_FROM_HAND)
-    private val sunlightWater = card("Resource_Sunlight_Water", GameEffect.RAISE_DIE_PLUS_3, GameEffect.GAIN_WATER_TOKEN)
+    private val sunlightCompost = card("Resource_Sunlight_Compost", GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.UPGRADE_DIE_FROM_HAND)
+    private val sunlightWater = card("Resource_Sunlight_Water", GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.GAIN_WATER_TOKEN)
     private val compostMulch = card("Resource_Compost_Mulch", GameEffect.UPGRADE_DIE_FROM_HAND, GameEffect.MULCH_DIE_FROM_HAND)
     private val waterCompost = card("Resource_Water_Compost", GameEffect.GAIN_WATER_TOKEN, GameEffect.UPGRADE_DIE_FROM_HAND)
     private val cards = listOf(sunlightCompost, sunlightWater, compostMulch, waterCompost)
@@ -21,7 +21,7 @@ class RoundExperimentConfigLoaderTest {
     @Test
     fun emptyContent_preservesCanonicalEffects() {
         val config = loader.parse("")
-        assertEquals(GameEffect.RAISE_DIE_PLUS_3, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
         assertEquals(GameEffect.UPGRADE_DIE_FROM_HAND, config.effectFor(sunlightCompost, RoundEffectSlot.SECOND))
     }
 
@@ -34,7 +34,7 @@ Resource_Sunlight_Compost,1,GAIN_SUNLIGHT_TOKEN
         )
         assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
         assertEquals(GameEffect.UPGRADE_DIE_FROM_HAND, config.effectFor(sunlightCompost, RoundEffectSlot.SECOND))
-        assertEquals(GameEffect.RAISE_DIE_PLUS_3, config.effectFor(sunlightWater, RoundEffectSlot.FIRST))
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, config.effectFor(sunlightWater, RoundEffectSlot.FIRST))
     }
 
     @Test
@@ -53,7 +53,7 @@ Resource_Water_Compost,2,UPGRADE_DIE_AND_USE_NOW
 
         // Unspecified companion effects remain canonical.
         assertEquals(GameEffect.MULCH_DIE_FROM_HAND, config.effectFor(compostMulch, RoundEffectSlot.SECOND))
-        assertEquals(GameEffect.RAISE_DIE_PLUS_3, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
+        assertEquals(GameEffect.GAIN_SUNLIGHT_TOKEN, config.effectFor(sunlightCompost, RoundEffectSlot.FIRST))
         assertEquals(GameEffect.GAIN_WATER_TOKEN, config.effectFor(waterCompost, RoundEffectSlot.FIRST))
     }
 
@@ -89,6 +89,18 @@ Resource_Sunlight_Water,1,GAIN_SUNLIGHT_TOKEN
         assertFailsWith<IllegalArgumentException> {
             loader.parse("round_card,effect_slot,effect\nResource_Sunlight_Compost,1,NOT_REAL\n")
         }
+    }
+
+    @Test
+    fun retiredRaise3ResearchOverrideIsRejectedWithSourceAndRow() {
+        val error = assertFailsWith<IllegalArgumentException> {
+            loader.parse(
+                "round_card,effect_slot,effect\nResource_Sunlight_Compost,1,RAISE_DIE_PLUS_3\n",
+                "legacy-sunlight.csv"
+            )
+        }
+        assert(error.message.orEmpty().contains("Obsolete Sunlight Raise +3"))
+        assert(error.message.orEmpty().contains("legacy-sunlight.csv at row 2"))
     }
 
     @Test

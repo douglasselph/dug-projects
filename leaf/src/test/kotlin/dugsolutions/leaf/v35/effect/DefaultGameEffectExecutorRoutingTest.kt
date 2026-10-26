@@ -53,7 +53,7 @@ class DefaultGameEffectExecutorRoutingTest {
             EffectTestFixture.request(
                 game,
                 actor,
-                GameEffect.RAISE_DIE_PLUS_3
+                GameEffect.RAISE_DIE_PLUS_4
             )
         )
         executor.execute(
@@ -205,7 +205,7 @@ class DefaultGameEffectExecutorRoutingTest {
         )
 
         assertEquals(
-            listOf(GameEffect.RAISE_DIE_PLUS_3),
+            listOf(GameEffect.RAISE_DIE_PLUS_4),
             dieValue.effects
         )
         assertEquals(
@@ -288,13 +288,25 @@ class DefaultGameEffectExecutorRoutingTest {
         val executor = DefaultGameEffectExecutor()
 
         GameEffect.values()
-            .filterNot { it == GameEffect.UNKNOWN }
+            .filterNot {
+                it == GameEffect.UNKNOWN ||
+                    it == GameEffect.RAISE_DIE_PLUS_3
+            }
             .forEach { effect ->
                 assertTrue(
                     executor.supports(effect),
                     "GameEffect has no DefaultGameEffectExecutor route: $effect"
                 )
             }
+    }
+
+    @Test
+    fun obsoleteSunlightRaise3_hasNoHandler() {
+        val executor = DefaultGameEffectExecutor()
+        @Suppress("DEPRECATION")
+        val obsolete = GameEffect.RAISE_DIE_PLUS_3
+
+        assertFalse(executor.supports(obsolete))
     }
 
     @Test

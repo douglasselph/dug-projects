@@ -362,24 +362,24 @@ class WoundResolverTest {
 
     private fun selectedCards(): List<PlantCard> =
         listOf(
-            card("Root_1", PlantType.ROOT),
-            card("Root_2", PlantType.ROOT),
-            card("Root_3", PlantType.ROOT),
-            card("Vine_1", PlantType.VINE),
-            card("Vine_2", PlantType.VINE),
-            card("Vine_3", PlantType.VINE),
-            card("Flower_1", PlantType.FLOWER),
-            card("Flower_2", PlantType.FLOWER),
-            card("Flower_3", PlantType.FLOWER)
+            card("Root_1", PlantType.ROOT, 5),
+            card("Root_2", PlantType.ROOT, 7),
+            card("Root_3", PlantType.ROOT, 9),
+            card("Vine_1", PlantType.VINE, 7),
+            card("Vine_2", PlantType.VINE, 9),
+            card("Vine_3", PlantType.VINE, 11),
+            card("Flower_1", PlantType.FLOWER, 11),
+            card("Flower_2", PlantType.FLOWER, 14),
+            card("Flower_3", PlantType.FLOWER, 17)
         )
 
-    private fun card(name: String, type: PlantType): PlantCard =
+    private fun card(name: String, type: PlantType, cost: Int): PlantCard =
         PlantCard(
             quantity = 4,
             name = name,
             title = name,
             type = type,
-            cost = 5,
+            cost = cost,
             lineIcon = null,
             vpIcon = "",
             typeIcon = "",

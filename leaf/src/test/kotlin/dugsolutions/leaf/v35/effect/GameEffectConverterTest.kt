@@ -139,13 +139,17 @@ class GameEffectConverterTest {
             .toSet()
 
         val retiredCompatibilityEffects = setOf(
+            GameEffect.RESEARCH_NO_EFFECT, // calibration-only, never canonical CSV
+            GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
+            GameEffect.RESEARCH_DRAW_FOUR_DICE,
+            GameEffect.RESEARCH_GAIN_TWENTY_VP,
             GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
             GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
             GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4,
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
-            GameEffect.RAISE_DIE_PLUS_3,
+            GameEffect.RAISE_DIE_PLUS_3, // retired Sunlight tombstone: historical metadata only
 
             GameEffect.DISCARD_ONE_DIE_DRAW_ONE_AND_SWAP_TWO_OWN_DICE_IN_BATTLE,
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO_AND_PLACE_DRAWN_DIE_IN_STRIKE_SQUARE,

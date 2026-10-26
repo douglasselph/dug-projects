@@ -34,20 +34,20 @@ class DefaultGameEffectExecutorTest {
         val actor = player(1)
         val game = game(actor)
 
-        assertFalse(executor.canExecute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3)))
+        assertFalse(executor.canExecute(request(game, actor, GameEffect.RAISE_DIE_PLUS_4)))
         assertFalse(executor.canExecute(request(game, actor, GameEffect.MULCH_DIE_FROM_HAND)))
         assertFalse(executor.canExecute(request(game, actor, GameEffect.UPGRADE_DIE_FROM_HAND)))
         assertTrue(executor.canExecute(request(game, actor, GameEffect.GAIN_WATER_TOKEN)))
 
         actor.dice.addToHand(FixedDie(4, 3))
 
-        assertTrue(executor.canExecute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3)))
+        assertTrue(executor.canExecute(request(game, actor, GameEffect.RAISE_DIE_PLUS_4)))
         assertTrue(executor.canExecute(request(game, actor, GameEffect.MULCH_DIE_FROM_HAND)))
         assertTrue(executor.canExecute(request(game, actor, GameEffect.UPGRADE_DIE_FROM_HAND)))
     }
 
     @Test
-    fun raisePlus3_usesChosenLegalHandDie() {
+    fun raisePlus4_usesChosenLegalHandDie() {
         val first = FixedDie(6, 2)
         val second = FixedDie(8, 4)
         val actor = player(
@@ -57,16 +57,29 @@ class DefaultGameEffectExecutorTest {
         )
         val game = game(actor)
 
-        executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3))
+        executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_4))
 
         assertEquals(2, first.value)
-        assertEquals(7, second.value)
+        assertEquals(8, second.value)
         val change = game.chronicle.entries.filterIsInstance<GameEntry.DieValueChanged>().single()
         assertEquals(PlayerId(1), change.playerId)
-        assertEquals(GameEffect.RAISE_DIE_PLUS_3, change.effect)
+        assertEquals(GameEffect.RAISE_DIE_PLUS_4, change.effect)
         assertEquals(DieSides.D8, change.sides)
         assertEquals(4, change.before)
-        assertEquals(7, change.after)
+        assertEquals(8, change.after)
+    }
+
+    @Test
+    fun retiredSunlightRaise3CannotExecuteEvenWhenHandHasDice() {
+        val die = FixedDie(8, 2)
+        val actor = player(1, hand = listOf(die))
+        val game = game(actor)
+        val request = request(game, actor, GameEffect.RAISE_DIE_PLUS_3)
+        assertFalse(executor.supports(GameEffect.RAISE_DIE_PLUS_3))
+        assertFalse(executor.canExecute(request))
+        val error = assertFailsWith<IllegalArgumentException> { executor.execute(request) }
+        assertTrue(error.message.orEmpty().contains("Obsolete Sunlight Raise +3"))
+        assertEquals(2, die.value)
     }
 
     @Test
@@ -195,7 +208,7 @@ class DefaultGameEffectExecutorTest {
         val game = game(actor)
 
         assertFailsWith<InvalidDecisionException> {
-            executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3))
+            executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_4))
         }
 
         assertEquals(2, die.value)
@@ -218,13 +231,13 @@ class DefaultGameEffectExecutorTest {
         val actor = player(1, hand = listOf(FixedDie(6, 2)))
         val game = game(actor)
 
-        executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_3))
+        executor.execute(request(game, actor, GameEffect.RAISE_DIE_PLUS_4))
 
         val entries = game.chronicle.entries
             .filterIsInstance<GameEntry.EffectResolved>()
 
         assertEquals(1, entries.size)
-        assertEquals(GameEffect.RAISE_DIE_PLUS_3, entries.single().effect)
+        assertEquals(GameEffect.RAISE_DIE_PLUS_4, entries.single().effect)
     }
 
     @Test

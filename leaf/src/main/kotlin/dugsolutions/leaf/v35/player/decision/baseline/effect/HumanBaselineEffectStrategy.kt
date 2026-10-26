@@ -31,7 +31,6 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.PlantPreservationEval
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.CompostPriority
 import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.MulchPriority
-import dugsolutions.leaf.v35.player.decision.baseline.cultivation.resource.SunlightPriority
 import dugsolutions.leaf.v35.player.decision.baseline.influence.BaselineInfluenceRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.BaselineScoreEngine
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.DecisionCandidate
@@ -235,9 +234,6 @@ class HumanBaselineEffectStrategy(
 
                     request.effect == GameEffect.MULCH_DIE_FROM_HAND ->
                         MulchPriority.targetScore(request.context, die, normalPower)
-
-                    request.effect == GameEffect.RAISE_DIE_PLUS_3 ->
-                        SunlightPriority.targetScore(request.context, die, normalPower)
 
                     else ->
                         CardScoringHelpers.scoreDieTarget(
@@ -901,7 +897,6 @@ class HumanBaselineEffectStrategy(
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
-            GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE,
@@ -1254,7 +1249,6 @@ class HumanBaselineEffectStrategy(
                         it.type == PlantType.ROOT || it.type == PlantType.VINE
                     }
                 )
-            GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(choice.sides, choice.value, 3)
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> DieValueHeuristics.actualRaiseGain(
                 choice.sides, choice.value, requireNotNull(SimpleEffectMagnitude.raiseAmount(effect))

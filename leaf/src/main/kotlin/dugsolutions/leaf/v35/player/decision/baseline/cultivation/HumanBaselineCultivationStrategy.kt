@@ -93,13 +93,16 @@ class HumanBaselineCultivationStrategy(
     private val modernScoring: HumanScoringConfiguration? = null
 ) : CultivationStrategy {
     override fun chooseAction(request: ChooseCultivationActionRequest): CultivationAction {
+        require(request.roundCard.firstEffect.effect != GameEffect.RAISE_DIE_PLUS_3 &&
+            request.roundCard.secondEffect.effect != GameEffect.RAISE_DIE_PLUS_3) {
+            "Obsolete Sunlight Raise +3 in Round card '${request.roundCard.name}'; " +
+                "official Sunlight is GAIN_SUNLIGHT_TOKEN"
+        }
         if (request.context == DecisionContext.EMPTY) return delegate.chooseAction(request)
         if (modernScoring != null) return chooseModernAction(request)
 
-        // Willingness gates are intentionally independent and ordered before scoring.
-        // In particular, Compost is sampled before Sunlight. A declined Compost does
-        // not imply Sunlight is accepted; Sunlight receives its own separate sample.
-        // If both are accepted they remain legal and the normal score comparison wins.
+        // Compost and Mulch retain their historical willingness gates. Official
+        // Sunlight is a token resource and uses the ordinary score comparison.
         val overgrowth = applyOvergrowthWillingness(
             context = request.context,
             legalChoices = request.legalChoices
@@ -116,13 +119,9 @@ class HumanBaselineCultivationStrategy(
             request = request,
             legalChoices = compost.legalChoices
         )
-        val sunlight = applySunlightWillingness(
-            request = request,
-            legalChoices = mulch.legalChoices
-        )
         val selected = scoreEngine.chooseValue(
             context = request.context,
-            candidates = sunlight.legalChoices.map { choice ->
+            candidates = mulch.legalChoices.map { choice ->
                 DecisionCandidate(
                     choice = choice,
                     score = score(request, choice, compost),
@@ -132,8 +131,7 @@ class HumanBaselineCultivationStrategy(
             },
             influenceRegistry = influenceRegistry
         )
-        return attachSunlightProbability(
-            selected = attachMulchProbability(
+        return attachMulchProbability(
                 selected = attachCompostProbability(
                     selected = attachPocketedSparkProbability(
                         selected = attachOvergrowthProbability(selected, overgrowth),
@@ -144,10 +142,7 @@ class HumanBaselineCultivationStrategy(
                 ),
                 request = request,
                 gate = mulch
-            ),
-            request = request,
-            gate = sunlight
-        )
+            )
     }
 
     /** Phase B: one score for every legal candidate; no stochastic willingness gates. */
@@ -177,15 +172,6 @@ class HumanBaselineCultivationStrategy(
             }
             when (actionId) {
                 "mulch" -> builder.add(configuration.influence("mulch.variability", "Mulch preference variability", ScoreValue.Range(-12, 12)))
-                "sunlight" -> {
-                    val effect = (choice as? CultivationAction.Main)?.let { effectForMain(request, it.action) }
-                    if (effect == GameEffect.RAISE_DIE_PLUS_3) {
-                        builder.add(configuration.influence("sunlight.variability", "Sunlight preference variability", ScoreValue.Range(-18, 12)))
-                        if (!SunlightPriority.isWorthConsidering(request.context)) {
-                            builder.add(configuration.influence("sunlight.weak", "Weak Sunlight relative to Draw", ScoreValue.Fixed(-30)))
-                        }
-                    }
-                }
             }
             if (actionId == "compost") {
                 addCompostInfluences(builder, request)
@@ -235,7 +221,7 @@ class HumanBaselineCultivationStrategy(
                     GameEffect.UPGRADE_DIE_AND_USE_NOW -> "compost"
                     GameEffect.MULCH_DIE_FROM_HAND -> "mulch"
                     GameEffect.GAIN_WATER_TOKEN -> "water"
-                    GameEffect.GAIN_SUNLIGHT_TOKEN, GameEffect.RAISE_DIE_PLUS_3 -> "sunlight"
+                    GameEffect.GAIN_SUNLIGHT_TOKEN -> "sunlight"
                     else -> "round_other"
                 }
             }
@@ -422,39 +408,6 @@ class HumanBaselineCultivationStrategy(
             request = request,
             gate = gate,
             effect = GameEffect.MULCH_DIE_FROM_HAND
-        )
-
-    private fun applySunlightWillingness(
-        request: ChooseCultivationActionRequest,
-        legalChoices: List<CultivationAction>
-    ): CultivationRoundEffectGate {
-        val sunlightChoices = legalChoices.filter { choice ->
-            val main = choice as? CultivationAction.Main ?: return@filter false
-            effectForMain(request, main.action) == GameEffect.RAISE_DIE_PLUS_3
-        }
-        if (sunlightChoices.isEmpty()) return CultivationRoundEffectGate(legalChoices)
-        if (!SunlightPriority.isWorthConsidering(request.context)) {
-            return CultivationRoundEffectGate(removeChoices(legalChoices, sunlightChoices))
-        }
-
-        val percentage = policy.sunlightUsePercentage(request.context)
-        val accepted = percentage > 0 && strategyRandomizer.nextInt(100) < percentage
-        return CultivationRoundEffectGate(
-            legalChoices = if (accepted) legalChoices else removeChoices(legalChoices, sunlightChoices),
-            acceptedPercentage = if (accepted) percentage else null
-        )
-    }
-
-    private fun attachSunlightProbability(
-        selected: CultivationAction,
-        request: ChooseCultivationActionRequest,
-        gate: CultivationRoundEffectGate
-    ): CultivationAction =
-        attachRoundEffectProbability(
-            selected = selected,
-            request = request,
-            gate = gate,
-            effect = GameEffect.RAISE_DIE_PLUS_3
         )
 
     private fun attachRoundEffectProbability(
@@ -677,10 +630,6 @@ class HumanBaselineCultivationStrategy(
             )
             GameEffect.GAIN_WATER_TOKEN -> WaterPriority.score(context)
             GameEffect.GAIN_SUNLIGHT_TOKEN -> SunlightTokenPriority.score(context, cardScorers)
-            GameEffect.RAISE_DIE_PLUS_3 -> SunlightPriority.score(
-                context = context,
-                normalPurchasingPower = policy.normalPurchasingPower(context)
-            )
             else -> PriorityScore(45)
         }
 

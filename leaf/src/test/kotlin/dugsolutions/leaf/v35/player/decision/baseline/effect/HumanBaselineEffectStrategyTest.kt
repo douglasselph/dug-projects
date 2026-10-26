@@ -33,7 +33,7 @@ class HumanBaselineEffectStrategyTest {
 
             val chosen = HumanBaselineEffectStrategy().chooseDie(
                 ChooseEffectDieRequest(
-                    effect = GameEffect.RAISE_DIE_PLUS_3,
+                    effect = GameEffect.RAISE_DIE_PLUS_4,
                     legalChoices = effectChoices(context),
                     context = context
                 )

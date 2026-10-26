@@ -576,7 +576,6 @@ object CardScoringHelpers {
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> DieValueHeuristics.actualRaiseGain(
                 die.sides, die.value, requireNotNull(SimpleEffectMagnitude.raiseAmount(effect))
             )
-            GameEffect.RAISE_DIE_PLUS_3 -> DieValueHeuristics.actualRaiseGain(die.sides, die.value, 3)
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,

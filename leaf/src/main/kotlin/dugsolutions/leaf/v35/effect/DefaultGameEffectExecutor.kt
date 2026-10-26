@@ -85,6 +85,10 @@ class DefaultGameEffectExecutor(
         request: GameEffectRequest
     ) {
         val effective = effectiveRequest(request)
+        require(effective.effect != GameEffect.RAISE_DIE_PLUS_3) {
+            "Obsolete Sunlight Raise +3 cannot execute; official Sunlight gains a token. " +
+                "Replace outdated Round/research input explicitly."
+        }
         val handler = effectNotNull(handlerFor(effective.effect)) {
             "GameEffect is not currently supported: ${effective.effect}"
         }
@@ -151,7 +155,6 @@ class DefaultGameEffectExecutor(
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW,
-            GameEffect.RAISE_DIE_PLUS_3,
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,

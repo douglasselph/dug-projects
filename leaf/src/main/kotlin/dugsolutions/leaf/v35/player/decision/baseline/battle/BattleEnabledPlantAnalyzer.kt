@@ -94,7 +94,6 @@ class BattleEnabledPlantAnalyzer(
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> raiseCandidates(
                 context, card, dice, requireNotNull(SimpleEffectMagnitude.raiseAmount(card.effect))
             )
-            GameEffect.RAISE_DIE_PLUS_3 -> raiseCandidates(context, card, dice, 3)
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW ->
                 dice.mapNotNull { located ->
                     sappingProjector.bestForFirst(context, card.effect, located.die.handIndex, card.id)

@@ -963,7 +963,7 @@ internal class EffectResourceAccumulator {
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
-            GameEffect.RAISE_DIE_PLUS_3, GameEffect.RAISE_DIE_PLUS_4 -> add("Raise")
+            GameEffect.RAISE_DIE_PLUS_4 -> add("Raise")
             GameEffect.GAIN_ANY_TWO_CRITTERS, GameEffect.GAIN_OR_STEAL_BEE_AND_BOOST_BEES_THIS_ROUND,
             GameEffect.GAIN_TWO_WORMS, GameEffect.GAIN_WORM_AND_BOOST_WORMS_THIS_ROUND, GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND -> add("Critter gain")
             GameEffect.GAIN_ONE_WISP, GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
