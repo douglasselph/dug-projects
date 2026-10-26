@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 
 /**
  * Conservative, observable opportunity bounds for Battle recovery resources.
@@ -9,6 +11,24 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
  */
 internal object BattleRecoveryResourceUtility {
     data class Opportunity(val available: Boolean, val increment: Int, val explanation: String)
+
+    /**
+     * Actual Step-5 Final Main: no Support follows the action in this Battle.
+     * Existing stock/destinations alone cannot justify an immediate recovery premium.
+     * Future Battle utility is deliberately zero until future access is projected.
+     */
+    fun finalMain(context: DecisionContext, effect: GameEffect): PriorityScore? {
+        if (effect != GameEffect.GAIN_TWO_WORMS && effect != GameEffect.REFRESH_CREATURE) return null
+        val futureBattles = context.progress.battleRoundsRemaining
+            ?: context.progress.upcomingRoundTypes.count { it.name == "BATTLE" }
+        if (futureBattles <= 0) return PriorityScore(0).adjusted(0,
+            "Final Main closes Battle Support; no future Battle recovery opportunity")
+        val opportunity = if (effect == GameEffect.GAIN_TWO_WORMS) worms(context) else refresh(context)
+        if (!opportunity.available) return PriorityScore(0).adjusted(0, opportunity.explanation)
+        // Conservative future option; no imaginary immediate Strike or Support.
+        return PriorityScore(BattleResourceUtility.ORIGIN).adjusted(opportunity.increment,
+            "Recovery reserved for future Battle; Support closes after Final Main")
+    }
 
     fun worms(context: DecisionContext): Opportunity {
         val board = context.self.board

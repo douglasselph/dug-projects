@@ -107,7 +107,7 @@ class HumanBaselineBattleStrategy(
             candidates = candidates.map { choice ->
                 val score = when (choice) {
                     is BattleTurnAction.FinalMain ->
-                        BattleMainPriority.score(request.context, request.roundCard, choice.action, cardScorers)
+                        BattleMainPriority.finalMainScore(request.context, request.roundCard, choice.action, cardScorers)
                     is BattleTurnAction.Support -> {
                         val base = supportPriority.score(
                             context = request.context,

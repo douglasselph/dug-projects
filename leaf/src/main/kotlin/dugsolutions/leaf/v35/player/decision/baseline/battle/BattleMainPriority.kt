@@ -54,6 +54,24 @@ object BattleMainPriority {
             BattleMainAction.RoundEffect2 -> BattleRoundEffectPriority.score(context, roundCard.secondEffect.effect)
         }
 
+    /** Score actual Step-5 Final Main without credit for subsequent Support. */
+    fun finalMainScore(
+        context: DecisionContext,
+        roundCard: RoundCard,
+        action: BattleMainAction,
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+    ): PriorityScore {
+        val effect = when (action) {
+            BattleMainAction.RoundEffect1 -> roundCard.firstEffect.effect
+            BattleMainAction.RoundEffect2 -> roundCard.secondEffect.effect
+            else -> null
+        }
+        if (effect != null) {
+            BattleRecoveryResourceUtility.finalMain(context, effect)?.let { return it }
+        }
+        return score(context, roundCard, action, cardScorers)
+    }
+
     /**
      * All ordinary Battle Main call sites (First Main, Final Main, Sunlight-funded
      * Main, enabling-Support preview) must use the same consequence-aware scorer.
