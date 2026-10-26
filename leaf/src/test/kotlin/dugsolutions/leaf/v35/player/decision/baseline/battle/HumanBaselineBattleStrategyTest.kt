@@ -57,7 +57,7 @@ class HumanBaselineBattleStrategyTest {
     @Nested
     inner class `Human Baseline Behavior Contract` {
     @Test
-    fun `strong Battle Plant can beat Draw`() {
+    fun `Parting Thorn without a legal target does not beat an available Draw`() {
         val thorn = CreatureCard(
             id = CreatureCardId(2),
             card = PlantCard(6, "Vine_09_02", "Parting Thorn", PlantType.VINE, 9, null, "", "", "", "", "", "", "", GameEffect.FLIP_OWN_PLANT_OR_WOUND_CHOSEN_OPPONENT_CHOOSE_CARD_IN_BATTLE, PlantScoringRule.Fixed(1)),
@@ -78,7 +78,7 @@ class HumanBaselineBattleStrategyTest {
                 context = context
             )
         )
-        assertIs<BattleMainAction.ActivatePlant>(chosen)
+        assertEquals(BattleMainAction.Draw, chosen)
     }
 
 
@@ -113,7 +113,7 @@ class HumanBaselineBattleStrategyTest {
     }
 
     @Test
-    fun `strong Plant still beats Draw when expected placement only pads a secure row`() {
+    fun `Parting Thorn without a target does not beat Draw even on a secure row`() {
         val actorId = PlayerId(0)
         val opponentId = PlayerId(1)
         val thorn = CreatureCard(
@@ -139,7 +139,7 @@ class HumanBaselineBattleStrategyTest {
             )
         )
 
-        assertIs<BattleMainAction.ActivatePlant>(chosen)
+        assertEquals(BattleMainAction.Draw, chosen)
     }
 
     @Test

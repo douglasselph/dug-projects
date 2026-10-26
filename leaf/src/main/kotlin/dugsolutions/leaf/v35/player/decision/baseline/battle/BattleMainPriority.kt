@@ -34,21 +34,21 @@ object BattleMainPriority {
                     // Top-level action and downstream target selection use the
                     // same complete deterministic projector, not a second
                     // initial-Raise/row-need bonus from CardScoringHelpers.
-                    sapping.score(context, effectiveEffect, intrinsic.base) ?: intrinsic
+                    sapping.score(context, effectiveEffect, intrinsic.base) ?: BattlePlantFallbackScore.normalize(intrinsic)
                  } else if (collateral.supports(effectiveEffect)) {
-                    collateral.score(context, effectiveEffect, intrinsic.base) ?: intrinsic
+                    collateral.score(context, effectiveEffect, intrinsic.base) ?: BattlePlantFallbackScore.normalize(intrinsic)
                 } else if (effectiveEffect == GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS) {
-                    reroll.score(context, effectiveEffect, intrinsic) ?: intrinsic
+                    reroll.score(context, effectiveEffect, intrinsic) ?: BattlePlantFallbackScore.normalize(intrinsic)
                 } else if (effectiveEffect in BattleDirectDieActivationPriority.DIRECT_EFFECTS) {
-                    directDie.score(context, effectiveEffect, intrinsic) ?: intrinsic
+                    directDie.score(context, effectiveEffect, intrinsic) ?: BattlePlantFallbackScore.normalize(intrinsic)
                 } else if (effectiveEffect in setOf(
                         GameEffect.PLAY_OR_FLIP_ANOTHER_CARD_TWICE,
                     )) {
                     BattleOEdelweissAnalyzer(cardScorers)
                         .topLevelPriority(context, action.card.id)
-                        ?: intrinsic
+                        ?: BattlePlantFallbackScore.normalize(intrinsic)
                 } else {
-                    intrinsic
+                    BattlePlantFallbackScore.normalize(intrinsic)
                 }
             }
             BattleMainAction.RoundEffect1 -> BattleRoundEffectPriority.score(context, roundCard.firstEffect.effect)
