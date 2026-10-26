@@ -24,9 +24,9 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(45, observed.fundedMainValue)
+        assertEquals(35, observed.fundedMainValue)
         assertEquals(62, observed.preservationValue)
-        assertEquals(-17, observed.netSupportValue)
+        assertEquals(-27, observed.netSupportValue)
         assertFalse(observed.worthwhile)
     }
 

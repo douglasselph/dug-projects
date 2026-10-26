@@ -143,7 +143,7 @@ class HumanBaselineBattleStrategyTest {
     }
 
     @Test
-    fun `non-grid Round Effect keeps intrinsic value against tactically weak Draw`() {
+    fun `immediate one VP uses calibrated score against a drawable D4`() {
         val actorId = PlayerId(0)
         val opponentId = PlayerId(1)
         val context = battleContext(
@@ -162,7 +162,7 @@ class HumanBaselineBattleStrategyTest {
             )
         )
 
-        assertEquals(BattleMainAction.RoundEffect1, chosen)
+        assertEquals(BattleMainAction.Draw, chosen)
     }
 
     @Test

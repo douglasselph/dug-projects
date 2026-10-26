@@ -36,11 +36,19 @@ object BattleRoundEffectPriority {
         GameEffect.GAIN_D12_TO_DISCARD -> futureDie(context, 12)
         GameEffect.GAIN_D10_TO_DISCARD -> futureDie(context, 10)
         GameEffect.GAIN_ANY_DIE_TO_DISCARD -> futureDie(context, 20)
-        // Other Round effects retain their existing provisional legacy priorities.
-        GameEffect.GAIN_ONE_VP -> PriorityScore(60)
-        GameEffect.REFRESH_CREATURE -> PriorityScore(55)
-        GameEffect.GAIN_TWO_WORMS -> PriorityScore(55)
-        else -> PriorityScore(45)
+        // Non-Strike immediate VP is a separate benefit: do not invent a
+        // Strike-row transition or add the Strike award a second time.
+        GameEffect.GAIN_ONE_VP -> PriorityScore(ORIGIN).adjusted(3,
+            "One immediate VP (non-Strike); 3 decision points per VP")
+        // The complete refresh/worm effect depends on board resources and
+        // later Support opportunities. Avoid inventing a universal +20 bonus.
+        // Their contextual calibration remains an explicit C04/C05 task.
+        GameEffect.REFRESH_CREATURE -> PriorityScore(ORIGIN).adjusted(0,
+            "Refresh benefit not yet projected; no fixed +20 premium")
+        GameEffect.GAIN_TWO_WORMS -> PriorityScore(ORIGIN).adjusted(0,
+            "Worm Support benefit not yet projected; no fixed +20 premium")
+        else -> PriorityScore(ORIGIN).adjusted(0,
+            "Unsupported Round outcome: unprojected, no arbitrary +10 premium")
     }
 
     private fun futureDie(context: DecisionContext, sides: Int): PriorityScore {

@@ -8,6 +8,7 @@ import dugsolutions.leaf.v35.player.decision.battle.BattleTurnAction
 import dugsolutions.leaf.v35.player.decision.context.BattlePlayerRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleRowView
 import dugsolutions.leaf.v35.player.decision.context.BattleView
+import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.GameProgressView
 import dugsolutions.leaf.v35.round.domain.RoundCard
@@ -79,10 +80,10 @@ class BattleTurnOrchestratorTest {
     @Test
     fun `Sunlight continues when extra Main is clearly worthwhile`() {
         val result = orchestrator(
-            context = context(actorTotal = 4, opponentTotal = 7, bees = 0),
+            context = context(actorTotal = 4, opponentTotal = 7, bees = 0, supplySides = 20),
             roundCard = round(),
             legalChoices = listOf(
-                sunlight(BattleMainAction.RoundEffect1),
+                sunlight(BattleMainAction.Draw),
                 finalMain()
             )
         )
@@ -118,7 +119,7 @@ class BattleTurnOrchestratorTest {
     fun `early Battle keeps last Sunlight for marginal extra Main`() {
         val result = orchestrator(
             context = context(actorTotal = 4, opponentTotal = 7, bees = 0, sunlight = 1, battlesRemaining = 3),
-            roundCard = round(),
+            roundCard = futureDieRound(),
             legalChoices = listOf(
                 sunlight(BattleMainAction.RoundEffect1),
                 finalMain()
@@ -132,7 +133,7 @@ class BattleTurnOrchestratorTest {
     fun `surplus Sunlight allows marginal extra Main without sacrificing last reserve`() {
         val result = orchestrator(
             context = context(actorTotal = 4, opponentTotal = 7, bees = 0, sunlight = 2, battlesRemaining = 3),
-            roundCard = round(),
+            roundCard = futureDieRound(),
             legalChoices = listOf(
                 sunlight(BattleMainAction.RoundEffect1),
                 finalMain()
@@ -172,13 +173,15 @@ class BattleTurnOrchestratorTest {
         beeValue: Int = Critter.BEE.baseValue,
         sunlight: Int = 1,
         battlesRemaining: Int? = null,
-        finalBattle: Boolean = false
+        finalBattle: Boolean = false,
+        supplySides: Int? = null
     ): DecisionContext =
         DecisionContext.EMPTY.copy(
             phase = RoundCardType.BATTLE,
             progress = DecisionContext.EMPTY.progress.copy(
                 battleRoundsRemaining = battlesRemaining,
-                isFinalBattleRound = finalBattle
+                isFinalBattleRound = finalBattle,
+                roundsRemainingToReveal = if (finalBattle) 0 else 2
             ),
             self = DecisionContext.EMPTY.self.copy(
                 board = DecisionContext.EMPTY.self.board.copy(
@@ -186,7 +189,8 @@ class BattleTurnOrchestratorTest {
                     bees = bees,
                     worms = worms,
                     beeValue = beeValue,
-                    sunlight = sunlight
+                    sunlight = sunlight,
+                    supply = supplySides?.let { listOf(DieView(0, it, 1)) } ?: emptyList()
                 )
             ),
             battle = BattleView(
@@ -219,6 +223,16 @@ class BattleTurnOrchestratorTest {
 
     private fun finalMain(): BattleTurnAction =
         BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
+
+    /** Marginal but drawable on a later round: origin 35 + D20 future value 21 = 56. */
+    private fun futureDieRound() = RoundCard(
+        quantity = 1,
+        name = "Battle_Future_Die",
+        type = RoundCardType.BATTLE,
+        firstEffect = RoundCardEffect("Future D20", "", "", "", null, GameEffect.GAIN_D20_TO_DISCARD),
+        secondEffect = RoundCardEffect("Burrow", "", "", "", null, GameEffect.GAIN_TWO_WORMS),
+        backImage = ""
+    )
 
     private fun round() = RoundCard(
         quantity = 1,
