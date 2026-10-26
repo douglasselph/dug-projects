@@ -32,7 +32,7 @@ class BattleSappingSnapdragonProjectorTest {
             val best = scores.maxOrNull()
             assertNotNull(best)
             assertEquals(best, common.bestTacticalValue(context, effect))
-            assertEquals(82 + best.roundToInt(), common.score(context, effect, 82)?.total)
+            assertEquals(35 + best.roundToInt(), common.score(context, effect, 82)?.total)
         }
     }
 

@@ -5,7 +5,6 @@ import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
-import kotlin.math.roundToInt
 
 /**
  * Shares the already existing target-level Battle projection with top-level
@@ -58,9 +57,8 @@ class BattleCollateralActivationPriority(
 
     fun score(context: DecisionContext, effect: GameEffect, base: Int): PriorityScore? =
         bestTacticalValue(context, effect)?.let { projected ->
-            PriorityScore(base).adjusted(
-                projected.roundToInt(),
-                "Best projected complete Battle collateral outcome for $effect"
+            BattleProjectedActionScore.fromCompleteProjection(
+                projected, "Best projected complete Battle collateral outcome for $effect"
             )
         }
 

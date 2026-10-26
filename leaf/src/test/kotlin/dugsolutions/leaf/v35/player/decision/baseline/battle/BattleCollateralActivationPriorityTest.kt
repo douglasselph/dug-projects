@@ -25,7 +25,7 @@ class BattleCollateralActivationPriorityTest {
             target(ctx, effect, index, index)?.tacticalValue
         }.maxOrNull()
         assertEquals(expected, priority.bestTacticalValue(ctx, effect))
-        assertEquals(50 + assertNotNull(expected).roundToInt(), priority.score(ctx, effect, 50)?.total)
+        assertEquals(35 + assertNotNull(expected).roundToInt(), priority.score(ctx, effect, 50)?.total)
         assertEquals(ctx.battle, ctx.battle)
     }
 

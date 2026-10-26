@@ -4,7 +4,6 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
-import kotlin.math.roundToInt
 
 /**
  * The common factual tactical portion of both Sapping activation scoring and
@@ -28,7 +27,7 @@ class BattleSappingActivationPriority(
 
     fun score(context: DecisionContext, effect: GameEffect, base: Int): PriorityScore? =
         bestTacticalValue(context, effect)?.let { tactical ->
-            PriorityScore(base).adjusted(tactical.roundToInt(),
-                "Best complete Sapping Battle realization (same projection as die targeting)")
+            BattleProjectedActionScore.fromCompleteProjection(
+                tactical, "Best complete Sapping Battle realization (same projection as die targeting)")
         }
 }
