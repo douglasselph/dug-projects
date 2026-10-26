@@ -98,7 +98,9 @@ class BattleTurnOrchestrator(
                 context = context,
                 roundCard = roundCard,
                 action = support.mainAction,
-                cardScorers = cardScorers
+                cardScorers = cardScorers,
+                legalSupports = legalSupports,
+                legalFinalMains = currentFinalMains
             ).worthwhile
         }
 

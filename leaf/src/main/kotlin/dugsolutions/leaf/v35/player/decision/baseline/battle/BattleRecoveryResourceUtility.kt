@@ -2,6 +2,10 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.player.decision.support.SupportAction
+import dugsolutions.leaf.v35.tokens.Critter
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 
 /**
@@ -28,6 +32,38 @@ internal object BattleRecoveryResourceUtility {
         // Conservative future option; no imaginary immediate Strike or Support.
         return PriorityScore(BattleResourceUtility.ORIGIN).adjusted(opportunity.increment,
             "Recovery reserved for future Battle; Support closes after Final Main")
+    }
+
+    /**
+     * Only credit a same-Battle continuation after a Sunlight-funded Main when
+     * the caller provides evidence of a *currently legal* follow-up.
+     *
+     * The pre-Main legal list cannot predict newly unlocked Support/Plant actions.
+     * In that case we conservatively withhold immediate credit. This is a
+     * valuation bound, not a change to legal-action generation.
+     */
+    fun sunlightFundedMain(
+        context: DecisionContext,
+        effect: GameEffect,
+        legalSupports: Collection<BattleSupportAction>,
+        legalFinalMains: Collection<BattleMainAction>
+    ): PriorityScore? {
+        if (effect != GameEffect.GAIN_TWO_WORMS && effect != GameEffect.REFRESH_CREATURE) return null
+        val opportunity = when (effect) {
+            GameEffect.GAIN_TWO_WORMS -> worms(context)
+            else -> refresh(context)
+        }
+        val confirmed = when (effect) {
+            GameEffect.GAIN_TWO_WORMS -> legalSupports.any {
+                (it is BattleSupportAction.PlaceCritter && it.critter == Critter.WORM) ||
+                    (it is BattleSupportAction.Shared && it.action is SupportAction.UseWormFlip)
+            }
+            else -> legalFinalMains.any { it is BattleMainAction.ActivatePlant }
+        }
+        if (!confirmed || !opportunity.available) return PriorityScore(0).adjusted(0,
+            "No currently legal follow-up for Sunlight-funded recovery; newly unlocked actions unconfirmed")
+        return PriorityScore(BattleResourceUtility.ORIGIN).adjusted(opportunity.increment,
+            "Sunlight-funded recovery with observable legal follow-up")
     }
 
     fun worms(context: DecisionContext): Opportunity {

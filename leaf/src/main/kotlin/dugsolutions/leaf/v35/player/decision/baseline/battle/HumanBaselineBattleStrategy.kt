@@ -137,7 +137,9 @@ class HumanBaselineBattleStrategy(
                             context = request.context,
                             roundCard = request.roundCard,
                             action = sunlight.mainAction,
-                            cardScorers = cardScorers
+                            cardScorers = cardScorers,
+                            legalSupports = legalSupports,
+                            legalFinalMains = currentFinalMains
                         )
                     }
                     is BattleTurnAction.FinalMain -> emptyMap()

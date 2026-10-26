@@ -3,6 +3,8 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.player.decision.battle.BattleSupportAction
+import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import kotlin.math.max
@@ -38,9 +40,22 @@ object SunlightBattleSpendingValue {
         context: DecisionContext,
         roundCard: RoundCard,
         action: BattleMainAction,
-        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+        legalSupports: Collection<BattleSupportAction>? = null,
+        legalFinalMains: Collection<BattleMainAction> = emptyList()
     ): Observation {
-        val fundedMainValue = BattleMainPriority.score(context, roundCard, action, cardScorers).total
+        val recoveryEffect = when (action) {
+            BattleMainAction.RoundEffect1 -> roundCard.firstEffect.effect
+            BattleMainAction.RoundEffect2 -> roundCard.secondEffect.effect
+            else -> null
+        }
+        val confirmedRecovery = if (legalSupports != null && recoveryEffect != null) {
+            BattleRecoveryResourceUtility.sunlightFundedMain(
+                context, recoveryEffect, legalSupports, legalFinalMains
+            )
+        } else null
+        val fundedMainValue = confirmedRecovery?.total
+            ?: BattleMainPriority.score(context, roundCard, action, cardScorers).total
         val sunlightHeld = context.self.board.sunlight
         val reportedBattlesRemaining = context.progress.battleRoundsRemaining
         val battlesRemaining = reportedBattlesRemaining ?: 2
@@ -74,10 +89,13 @@ object SunlightBattleSpendingValue {
         context: DecisionContext,
         roundCard: RoundCard,
         action: BattleMainAction,
-        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+        legalSupports: Collection<BattleSupportAction>? = null,
+        legalFinalMains: Collection<BattleMainAction> = emptyList()
     ): PriorityScore {
-        val observation = observe(context, roundCard, action, cardScorers)
-        return BattleMainPriority.score(context, roundCard, action, cardScorers)
+        val observation = observe(context, roundCard, action, cardScorers, legalSupports, legalFinalMains)
+        val projected = PriorityScore(observation.fundedMainValue)
+        return projected
             .adjusted(
                 -observation.basePreservationValue,
                 "Preserve one banked Sunlight for a future extra Battle Main"
@@ -104,9 +122,11 @@ object SunlightBattleSpendingValue {
         context: DecisionContext,
         roundCard: RoundCard,
         action: BattleMainAction,
-        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
+        cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry(),
+        legalSupports: Collection<BattleSupportAction>? = null,
+        legalFinalMains: Collection<BattleMainAction> = emptyList()
     ): Map<String, String> {
-        val observed = observe(context, roundCard, action, cardScorers)
+        val observed = observe(context, roundCard, action, cardScorers, legalSupports, legalFinalMains)
         return linkedMapOf(
             "decisionFamily" to "sunlight-battle-spend",
             "fundedMainAction" to action.toString(),

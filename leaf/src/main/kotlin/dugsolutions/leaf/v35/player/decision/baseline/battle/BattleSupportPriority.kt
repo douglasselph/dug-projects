@@ -42,7 +42,9 @@ class BattleSupportPriority(
                 context = context,
                 roundCard = roundCard,
                 action = action.mainAction,
-                cardScorers = cardScorers
+                cardScorers = cardScorers,
+                legalSupports = legalSupports,
+                legalFinalMains = currentFinalMains
             )
         }
         val direct = directAnalyzer(context, action)
