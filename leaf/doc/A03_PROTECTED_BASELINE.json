@@ -1,9 +1,17 @@
 {
+  "approved_protected_paths": [
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/DefaultGameEffectExecutor.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffect.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectConverter.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectDecisionRequirements.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt"
+  ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
+  "previous_baseline_digest": "2b3e406ed32976e7e9634c7b6ef38d8193659328f1534bba36c23dd4c3519fa3",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -251,16 +259,16 @@
     "src/main/kotlin/dugsolutions/leaf/v35/common/FirstGameDefault.kt": "11e71a9a57c8f24ac1320eb1f56db0cac531138dc8c1c2e99562bd1e07f98b24",
     "src/main/kotlin/dugsolutions/leaf/v35/common/VictoryPointIconParser.kt": "cd7855842bdef03a1b86bd2497883b16424d7fc33e95bf3e76f9b4cf74976eda",
     "src/main/kotlin/dugsolutions/leaf/v35/di/AppModule.kt": "b1643f4ed9246902b637cbe884206a3a4ce816ccb993ed3181955be8fcb82ed6",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/DefaultGameEffectExecutor.kt": "a2cf8003463fd0d152173fb43de0b27e56175267faaf41f8fef72cdad30cf274",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffect.kt": "16a8af96c7dbd4e2932f52408aa7a4bb995bb4161e14ff25ad769062cd945e77",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectConverter.kt": "da511e5237f8447016335fdcca9ce44859cdf3d6fd1adc4c97e3c5c1332abec3",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectDecisionRequirements.kt": "afb752942008460d34b4b14060aef7bab10a2a1e1a25b59b7a57d005be48224d",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/DefaultGameEffectExecutor.kt": "f711f91f92990d594480f8b7890a28eddeb1fa53e31a4546e59b68134de4a51d",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffect.kt": "e74bede81b445c3c8e614f7c6ab1b1a7bd58c17490adba499cdb0b2fbf60a66b",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectConverter.kt": "6a4204dbad2283c3a860a0516a26b7a5456f65e559c82805bcd0e6a20bcbb297",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectDecisionRequirements.kt": "361f3fb173360574c3f4e5248b09d45da881fb9e8e5465cce09e7c132d0c3a7e",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectExecutor.kt": "e97cd55a13b4354aa15575bfcb4428cc8e1e58fea802a7c663037433d57978dd",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/SimpleEffectMagnitude.kt": "b9af2be29e2eaeeea6c138e629b27ffdffcdc13f53b2a51e090c7c3f40442e9e",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/di/EffectModule.kt": "6088d6806082268755bc3e116db7818b6af577cccc619158f59df205fda05f04",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/CrossPlayerEffectHandler.kt": "73292021023ab8a5f4b5b48ab8d1cb832705749a52a0c5a52c0335f1fe02414a",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DeferredRoundEffectHandler.kt": "16ab4780911d3bb7b9d5fb27c725b4ca66148926d020de269370ad17bd0e7d55",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt": "ea23be80488602de1c8056d653b9889fcfd498bf90a6fb347360861e035d4c22",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt": "a0381fdb379bac2b00cbb305aa2fce6b5f2bbba3aa2a9081607a7bd4085fcce4",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DrawEffectHandler.kt": "96069fcc03df68db19230d677b6d1eb292e99e1995784cd1b72ff633741078fe",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectBattleTargeting.kt": "ebc331f4288264a240cc64d9e615be024b0020978461fe21d0ac740a0b79c6fa",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectDecisionContext.kt": "6fe5893e5ab823d509116f1452f3b4091c88c13960c283752249a13b8453f907",
@@ -485,5 +493,6 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCard.kt": "d8f085cb8f40a26f201536f748b11823a09d6d0f3a70305d7271a8883ae5dbd9",
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
-  "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies"
+  "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
+  "review_reason": "B03 explicitly retires obsolete non-canonical Sunlight Raise plus three mechanic and its input mappings"
 }
