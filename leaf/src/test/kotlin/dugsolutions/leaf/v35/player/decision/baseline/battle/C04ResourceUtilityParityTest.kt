@@ -34,6 +34,6 @@ class C04ResourceUtilityParityTest {
 
     @Test fun `immediate VP and zero value Round effects do not pretend to be Strike transitions`() {
         assertEquals(38, BattleRoundEffectPriority.score(empty, GameEffect.GAIN_ONE_VP).total)
-        assertEquals(35, BattleRoundEffectPriority.score(empty, GameEffect.GAIN_TWO_WORMS).total)
+        assertEquals(0, BattleRoundEffectPriority.score(empty, GameEffect.GAIN_TWO_WORMS).total)
     }
 }

@@ -36,13 +36,15 @@ object BattleRoundEffectPriority {
         GameEffect.GAIN_ANY_DIE_TO_DISCARD -> futureDie(context, 20)
         GameEffect.GAIN_ONE_VP -> PriorityScore(ORIGIN).adjusted(
             BattleResourceUtility.immediateVp(1), "Immediate non-Strike VP")
-        GameEffect.REFRESH_CREATURE -> PriorityScore(ORIGIN).adjusted(0,
-            "Refresh benefit requires a projected future Plant activation")
-        GameEffect.GAIN_TWO_WORMS -> PriorityScore(ORIGIN).adjusted(0,
-            "Worm benefit requires a projected legal Support opportunity")
+        GameEffect.REFRESH_CREATURE -> recovery(BattleRecoveryResourceUtility.refresh(context))
+        GameEffect.GAIN_TWO_WORMS -> recovery(BattleRecoveryResourceUtility.worms(context))
         else -> PriorityScore(ORIGIN).adjusted(0,
             "Unsupported Round outcome: unprojected, no arbitrary priority premium")
     }
+
+    private fun recovery(opportunity: BattleRecoveryResourceUtility.Opportunity): PriorityScore =
+        if (!opportunity.available) PriorityScore(0).adjusted(0, opportunity.explanation)
+        else PriorityScore(ORIGIN).adjusted(opportunity.increment, opportunity.explanation)
 
     private fun futureDie(context: DecisionContext, sides: Int): PriorityScore {
         val gain = BattleResourceUtility.futureDiscardDie(context, sides)

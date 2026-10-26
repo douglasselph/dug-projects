@@ -43,8 +43,8 @@ class C04RoundScaleMixedSelectionTest {
     @Test fun `refresh and worms are not assigned unsupported fixed 55 premiums`() {
         for (effect in listOf(GameEffect.REFRESH_CREATURE, GameEffect.GAIN_TWO_WORMS)) {
             val value = BattleMainPriority.score(context, round(effect), BattleMainAction.RoundEffect1)
-            assertEquals(35, value.total)
-            assertTrue(value.adjustments.any { "requires a projected" in it.reason || "unprojected" in it.reason })
+            assertEquals(0, value.total)
+            assertTrue(value.adjustments.any { "No active" in it.reason || "No available" in it.reason })
         }
     }
 
