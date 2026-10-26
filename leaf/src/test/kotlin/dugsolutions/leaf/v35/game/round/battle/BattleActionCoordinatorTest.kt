@@ -447,6 +447,54 @@ class BattleActionCoordinatorTest {
     }
 
     @Test
+    fun execute_sunlightFundedWormFlipsTiedStrike_beforeOrdinaryFinalMain() {
+        // TOP ties at 3-3, while the opponent holds MIDDLE at 2-0 and BOTTOM at 1-0.
+        // One Worm flips only TOP to a win; on MIDDLE it still loses, and on BOTTOM
+        // it can at most tie. Do not leave other rows empty (where Worm also wins).
+        // The real Human Baseline must recognize this after the coordinator
+        // regenerates legal Support choices following the funded Main.
+        val strategy = SunlightThenBaselineStrategy()
+        val p1 = player(1, strategy, hand = listOf(fixedDie(4, 3)))
+        val p2 = player(2, finishStrategy("p2"), hand = listOf(fixedDie(4, 3), fixedDie(4, 2), fixedDie(4, 1)))
+        val effects = RecordingEffects(onExecute = { request ->
+            if (request.effect == GameEffect.GAIN_TWO_WORMS) {
+                request.actor.critters.add(Critter.WORM)
+                request.actor.critters.add(Critter.WORM)
+            }
+        })
+        val fixture = fixture(p1, p2, effects = effects)
+        fixture.battleState.placeInitialHands()
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        val selectedWorm = strategy.baselineSelections.firstOrNull { selection ->
+            val support = (selection as? BattleTurnAction.Support)?.action
+            support is BattleSupportAction.PlaceCritter && support.critter == Critter.WORM
+        }
+        assertEquals(
+            BattleTurnAction.Support(BattleSupportAction.PlaceCritter(Critter.WORM, StrikeRow.TOP)),
+            selectedWorm,
+            "Human Baseline should spend the newly earned Worm to flip the tied top Strike"
+        )
+        assertEquals(
+            listOf(Critter.WORM),
+            fixture.battleState.grid.square(p1.id, StrikeRow.TOP).critters
+        )
+        val events = fixture.game.chronicle.entries
+        val fundedMain = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.SUNLIGHT }
+        val wormSupport = events.filterIsInstance<GameEntry.SupportAction>()
+            .first { it.playerId == p1.id && it.action == SupportActionKind.CRITTER_WORM }
+        val finalMain = events.filterIsInstance<GameEntry.MainAction>()
+            .single { it.playerId == p1.id && it.battleStage == BattleMainStage.FINAL }
+        assertTrue(fundedMain.sequence < wormSupport.sequence)
+        assertTrue(wormSupport.sequence < finalMain.sequence)
+        assertEquals(0, p1.tokens.sunlightCount)
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount)
+    }
+
+    @Test
     fun execute_playerMayKeepSunlightAndTakeRegularFinalMain() {
         val strategy = RecordingFinishStrategy()
         val p1 = player(1, strategy)
