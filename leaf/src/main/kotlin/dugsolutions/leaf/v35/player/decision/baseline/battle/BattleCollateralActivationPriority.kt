@@ -24,36 +24,46 @@ class BattleCollateralActivationPriority(
 ) {
     fun supports(effect: GameEffect): Boolean = effect in EFFECTS
 
-    fun bestTacticalValue(context: DecisionContext, effect: GameEffect): Double? {
-        if (!supports(effect)) return null
-        val battle = context.battle ?: return null
+    /** A target's full tactical projection, including opposing-row collateral effects. */
+    data class TargetProjection(val handIndex: Int?, val tacticalValue: Double)
+
+    /**
+     * Action valuation and own-die target valuation share these projections.
+     * The supplied indices may be restricted to currently legal target choices;
+     * an empty set means no legal own-die targets, NOT all targets.
+     */
+    fun targetProjections(
+        context: DecisionContext,
+        effect: GameEffect,
+        legalHandIndices: Set<Int>? = null
+    ): List<TargetProjection> {
+        if (!supports(effect)) return emptyList()
+        val battle = context.battle ?: return emptyList()
+        val ownDice = battle.rows.filterNot { it.closed }.flatMap { row ->
+            row.forPlayer(context.self.id)?.takeUnless { it.withdrawn }?.dice.orEmpty()
+        }.filter { legalHandIndices == null || it.handIndex in legalHandIndices }
         return when (effect) {
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
-                battle.rows.flatMap { row ->
-                    row.forPlayer(context.self.id)?.dice.orEmpty()
-                }.mapNotNull { die ->
+                ownDice.mapNotNull { die ->
                     ownDie(context, effect, die.handIndex, die.handIndex)?.tacticalValue
-                }.maxOrNull()
-
+                        ?.let { TargetProjection(die.handIndex, it) }
+                }
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
-                battle.rows.flatMap { row ->
-                    row.forPlayer(context.self.id)?.dice.orEmpty()
-                }.mapNotNull { die ->
-                    gust(
-                        context,
-                        EffectDieChoice(die.handIndex, die.sides, die.value),
-                        die.handIndex
-                    )?.tacticalValue
-                }.maxOrNull()
-
+                ownDice.mapNotNull { die ->
+                    gust(context, EffectDieChoice(die.handIndex, die.sides, die.value), die.handIndex)
+                        ?.tacticalValue?.let { TargetProjection(die.handIndex, it) }
+                }
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 battle.rows.filterNot { it.closed }.mapNotNull { row ->
                     strikeRow(context, effect, row.row)?.tacticalValue
-                }.maxOrNull()
-
-            else -> null
+                        ?.let { TargetProjection(null, it) }
+                }
+            else -> emptyList()
         }
     }
+
+    fun bestTacticalValue(context: DecisionContext, effect: GameEffect): Double? =
+        targetProjections(context, effect).maxOfOrNull { it.tacticalValue }
 
     fun score(context: DecisionContext, effect: GameEffect, base: Int): PriorityScore? =
         bestTacticalValue(context, effect)?.let { projected ->
