@@ -1,17 +1,13 @@
 {
   "approved_protected_paths": [
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/DefaultGameEffectExecutor.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffect.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectConverter.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/GameEffectDecisionRequirements.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt"
+    "bin/check_sunlight_rule_parity.py"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "2b3e406ed32976e7e9634c7b6ef38d8193659328f1534bba36c23dd4c3519fa3",
+  "previous_baseline_digest": "94c00887b549eeff79a647d77577d4eeebbda96af11716279fe3d4c5729700f3",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -20,6 +16,7 @@
     "bin/benchmark_human_baseline_runtime": "20c32a72b9edb2f320ef4c4ee0dcfdadcd98f9b8e3b1eccc93e59dd773e3c276",
     "bin/benchmark_persistent_jvm_comparison.py": "6ebe4b6bab3c896b2eba7f4f27f30cff8092daf30be5af5997d9c1c7280ac05d",
     "bin/check_buy_diagnostics_noninterference.py": "73f813ad8eee6e87c10a9cc4c02c4cb7c61de3f6a4fbda4f4867a9b22bccc2fa",
+    "bin/check_sunlight_rule_parity.py": "a06e54346c59003a67aadf5eeafafe1e871e4639e512a4eeda6970c6c792afb5",
     "bin/evaluate_battle_main_policy": "efa011c044ea2aac9cdd73664d8e646d6f27062d6f7a95428e863a926df5f5f2",
     "bin/evaluate_battle_support_policy": "59107fd78eb1a7396f6af7d28766143f4d1d34edaea96e89e9252a8a0027ea1a",
     "bin/evaluate_buy_disagreements": "db9305c1328920d95c2796fb8fa1381d50ff706251000e3dc20f4e9e9374ce7c",
@@ -494,5 +491,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "B03 explicitly retires obsolete non-canonical Sunlight Raise plus three mechanic and its input mappings"
+  "review_reason": "B08 reviewed Sunlight parity audit checker"
 }

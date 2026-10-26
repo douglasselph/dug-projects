@@ -17,6 +17,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.context.FutureDiceAvailabi
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitionProjection
 import dugsolutions.leaf.v35.player.decision.baseline.projection.ExpectedDrawProjection
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PlantResourceProjection
+import dugsolutions.leaf.v35.player.decision.baseline.projection.SharedDieEffectOutcome
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -73,17 +74,17 @@ object CardScoringHelpers {
 
         when (effect) {
             GameEffect.DOUBLE_ONE_DIE -> addBestGain(
-                dice.maxOfOrNull { minOf(it.sides, it.value * 2) - it.value } ?: 0,
+                SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0,
                 "Best available doubling gain"
             )
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> {
                 val amount = requireNotNull(SimpleEffectMagnitude.raiseAmount(effect))
-                addBestGain(bestRaise(dice, amount), "Best +$amount target (capped by die size)")
+                addBestGain(SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0, "Best +$amount target (capped by die size)")
             }
-            GameEffect.RAISE_ANY_DIE_PLUS_1 -> addBestGain(bestRaise(dice, 1), "Best +1 target")
+            GameEffect.RAISE_ANY_DIE_PLUS_1 -> addBestGain(SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0, "Best +1 target")
             GameEffect.RAISE_D8_PLUS_1 -> addBestGain(
-                dice.filter { it.sides == 8 }.maxOfOrNull { DieValueHeuristics.actualRaiseGain(it, 1) } ?: 0,
+                SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0,
                 "Best D8 +1 target"
             )
             GameEffect.RAISE_ALL_D8S_PLUS_1 -> addBestGain(
@@ -172,7 +173,7 @@ object CardScoringHelpers {
                 score = score.adjusted(minOf(20, rounds * 3), "Upgrade remains useful in later rounds")
             }
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> addBestGain(
-                dice.maxOfOrNull { DieValueHeuristics.flipGain(it) } ?: 0,
+                SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0,
                 "Best opposite-face gain"
             )
             GameEffect.SET_DIE_TO_MATCH_ANOTHER -> {
@@ -203,7 +204,7 @@ object CardScoringHelpers {
                 )
             }
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX -> addBestGain(
-                bestLowestToMax(dice),
+                SharedDieEffectOutcome.bestProjectedPips(effect, dice) ?: 0,
                 "Best lowest-value die can be set to maximum"
             )
             GameEffect.FLIP_OWN_PLANT_OR_WOUND_EACH_OPPONENT_IN_BATTLE -> {
@@ -570,7 +571,7 @@ object CardScoringHelpers {
         die: EffectDieChoice,
         normalPurchasingPower: Int? = null
     ): PriorityScore {
-        val gain = when (effect) {
+        val gain = SharedDieEffectOutcome.projectedPips(effect, die.sides, die.value) ?: when (effect) {
             GameEffect.DOUBLE_ONE_DIE -> minOf(die.sides, die.value * 2) - die.value
             GameEffect.RAISE_DIE_PLUS_4,
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20 -> DieValueHeuristics.actualRaiseGain(
