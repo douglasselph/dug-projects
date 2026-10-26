@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleBeeSourceAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsStrikeRowAnalyzer
+import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleCollateralActivationPriority
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleGustOfPetalsTargetAnalyzer
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleImmediateStrikeResolveEvaluator
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
@@ -113,6 +114,32 @@ class HumanBaselineEffectStrategy(
                     }
                 )
             }
+        }
+        // C04: For compound collateral effects the activation and downstream
+        // own-die target MUST use the same complete tactical projections.
+        // Do not fall back to an independent die heuristic when a legal target
+        // has no supported projection: that would silently break parity.
+        if (request.context.phase == dugsolutions.leaf.v35.round.domain.RoundCardType.BATTLE &&
+            request.effect in SHARED_COLLATERAL_TARGET_EFFECTS
+        ) {
+            val projected = BattleCollateralActivationPriority().targetProjections(
+                context = request.context,
+                effect = request.effect,
+                legalHandIndices = request.legalChoices.map { it.index }.toSet()
+            ).associateBy { it.handIndex }
+            val candidates = request.legalChoices.mapNotNull { choice ->
+                projected[choice.index]?.let { projection ->
+                    DecisionCandidate(
+                        choice,
+                        PriorityScore(projection.tacticalValue.roundToInt())
+                            .adjusted(0, "Same complete compound projection used for Plant activation")
+                    )
+                }
+            }
+            if (candidates.isNotEmpty()) return choose(request.context, candidates)
+            // No viable projected target: preserve the mechanical legal choice
+            // rather than invent a positive projected advantage.
+            return delegate.chooseDie(request)
         }
         val normalPower = policy.normalPurchasingPower(request.context)
         return choose(
@@ -862,6 +889,10 @@ class HumanBaselineEffectStrategy(
     }
 
     private companion object {
+        val SHARED_COLLATERAL_TARGET_EFFECTS = setOf(
+            GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+            GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
+        )
         val COLLATERAL_OWN_DIE_BATTLE_TRANSFORMS = setOf(
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW
