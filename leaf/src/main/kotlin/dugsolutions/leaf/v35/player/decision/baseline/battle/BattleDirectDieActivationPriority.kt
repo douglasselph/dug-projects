@@ -2,7 +2,6 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.projection.SharedDieEffectOutcome
-import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegacyPreferenceBridge
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
@@ -38,8 +37,8 @@ class BattleDirectDieActivationPriority(
 
     fun score(context: DecisionContext, effect: GameEffect, intrinsic: PriorityScore): PriorityScore? =
         bestTacticalValue(context, effect)?.let { tactical ->
-            intrinsic.adjusted(
-                LegacyPreferenceBridge.battleTacticalAdjustment(tactical),
+            BattleProjectedActionScore.fromCompleteProjection(
+                tactical,
                 "Best legal single-die Battle Strike consequence for $effect (no duplicate Strike VP)"
             )
         }
