@@ -25,8 +25,8 @@ class SunlightBattleSpendingValueTest {
         )
 
         assertEquals(35, observed.fundedMainValue)
-        assertEquals(62, observed.preservationValue)
-        assertEquals(-27, observed.netSupportValue)
+        assertEquals(44, observed.preservationValue)
+        assertEquals(-9, observed.netSupportValue)
         assertFalse(observed.worthwhile)
     }
 
@@ -38,8 +38,8 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(71, observed.fundedMainValue)
-        assertEquals(62, observed.preservationValue)
+        assertEquals(56, observed.fundedMainValue)
+        assertEquals(44, observed.preservationValue)
         assertTrue(observed.worthwhile)
     }
 
@@ -56,7 +56,7 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(56, early.fundedMainValue)
+        assertEquals(43, early.fundedMainValue)
         assertFalse(early.worthwhile)
         assertTrue(middle.worthwhile)
     }
@@ -74,9 +74,9 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(52, withTwo.preservationValue)
+        assertEquals(40, withTwo.preservationValue)
         assertTrue(withTwo.worthwhile)
-        assertEquals(62, afterFirstSpend.preservationValue)
+        assertEquals(44, afterFirstSpend.preservationValue)
         assertFalse(afterFirstSpend.worthwhile)
     }
 
@@ -105,9 +105,9 @@ class SunlightBattleSpendingValueTest {
         )
 
         // No Battle rows are supplied by this fixture, so there is no projected
-        // Strike-row bonus: 35 legacy Draw base + round(10.5 * 4) = 77.
-        // The previous expected 87 included an unconditional Final Main +10.
-        assertEquals(77, observed.fundedMainValue)
+        // Strike-row bonus: 35 Battle Draw origin + round(10.5) = 46.
+        // The old 77 also used Cultivation x4; Battle uses one point per pip.
+        assertEquals(46, observed.fundedMainValue)
         assertTrue(observed.worthwhile)
     }
 
@@ -120,9 +120,11 @@ class SunlightBattleSpendingValueTest {
         )
 
         assertEquals("sunlight-battle-spend", observations["decisionFamily"])
-        assertEquals("56", observations["fundedMainValue"])
-        assertEquals("45", observations["sunlightPreservationValue"])
-        assertEquals("11", observations["sunlightNetSupportValue"])
+        assertEquals("43", observations["fundedMainValue"])
+        // Two held Sunlight tokens lower the marginal preservation value by four.
+        // 39 base - 4 surplus = 35; funded action 43 - 35 = +8 net.
+        assertEquals("35", observations["sunlightPreservationValue"])
+        assertEquals("8", observations["sunlightNetSupportValue"])
     }
 
     private fun context(

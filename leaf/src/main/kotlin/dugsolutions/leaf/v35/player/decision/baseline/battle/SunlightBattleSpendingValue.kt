@@ -122,9 +122,9 @@ object SunlightBattleSpendingValue {
         )
     }
 
-    private const val BASE_PRESERVATION_VALUE = 55
-    private const val EARLY_BATTLE_PRESERVATION_BONUS = 7
-    private const val FINAL_BATTLE_DISCOUNT = -40
-    private const val ADDITIONAL_SUNLIGHT_DISCOUNT = 10
+    private const val BASE_PRESERVATION_VALUE = 39
+    private const val EARLY_BATTLE_PRESERVATION_BONUS = 5
+    private const val FINAL_BATTLE_DISCOUNT = -24
+    private const val ADDITIONAL_SUNLIGHT_DISCOUNT = 4
     private const val MINIMUM_PRESERVATION_VALUE = 5
 }

@@ -24,8 +24,8 @@ class C04MixedCandidateSelectionTest {
         val draw = BattleMainPriority.score(available, round, BattleMainAction.Draw)
         val gain = BattleMainPriority.score(available, round, BattleMainAction.RoundEffect1)
         val blocked = BattleMainPriority.score(exhausted, round, BattleMainAction.RoundEffect1)
-        assertEquals(45, draw.total) // D4 = 2.5 expected pips, legacy bridge 35 + 10
-        assertEquals(50, gain.total)
+        assertEquals(38, draw.total) // Battle D4 = 35 + round(2.5), not Cultivation x4
+        assertEquals(40, gain.total)
         assertEquals(0, blocked.total)
         assertTrue(gain.total > draw.total)
         assertTrue(draw.total > blocked.total)
@@ -52,7 +52,7 @@ class C04MixedCandidateSelectionTest {
         ))
         val withoutRow = BattleMainPriority.score(bare, round, BattleMainAction.Draw)
         val withRow = BattleMainPriority.score(contested, round, BattleMainAction.Draw)
-        assertEquals(77, withoutRow.total)
+        assertEquals(46, withoutRow.total)
         assertTrue(withRow.total > withoutRow.total)
         assertEquals(withRow.total,
             BattleFirstMainPriority()(contested, round, BattleMainAction.Draw).total)

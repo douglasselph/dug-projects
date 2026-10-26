@@ -12,53 +12,43 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
  * These values are not represented as BattleConsequenceValue or Strike VP.
  */
 object BattleRoundEffectPriority {
-    private const val WISP_CAP = 5
-    private const val ORIGIN = 35
+    private const val ORIGIN = BattleResourceUtility.ORIGIN
 
     fun score(context: DecisionContext, effect: GameEffect): PriorityScore = when (effect) {
         GameEffect.GAIN_ONE_WISP -> {
-            val available = context.grove.wispDeckRemaining > 0 && context.self.wispCount < WISP_CAP
-            PriorityScore(ORIGIN).adjusted(if (available) 15 else -35,
-                if (available) "Available Wisp from Grove" else "No Wisp can be acquired")
+            val available = BattleResourceUtility.availableWispGain(context)
+            if (available == 0) PriorityScore(0).adjusted(0, "No Wisp can be acquired")
+            else PriorityScore(ORIGIN).adjusted(BattleResourceUtility.wisps(available),
+                "One available Wisp: future effect/VP option, not a Strike award")
         }
         GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT,
         GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS -> {
-            val eligible = context.opponents.count { it.wispCount > 0 }
-            val gainCapacity = (WISP_CAP - context.self.wispCount).coerceAtLeast(0)
-            val possible = if (effect == GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT)
-                minOf(1, eligible, gainCapacity) else minOf(eligible, gainCapacity)
-            PriorityScore(ORIGIN).adjusted(
-                if (possible == 0) -35 else possible * 12,
-                "Wisp transfer: $possible available opponent Wisps, self capacity $gainCapacity"
-            )
+            val count = BattleResourceUtility.opponentWispTransfers(context,
+                effect == GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS)
+            if (count == 0) PriorityScore(0).adjusted(0, "No transferable opponent Wisps")
+            else PriorityScore(ORIGIN).adjusted(
+                BattleResourceUtility.wisps(count) + BattleResourceUtility.deniedWisps(count),
+                "Transfer $count Wisps: future option plus opponent denial, not Strike VP")
         }
         GameEffect.GAIN_D20_TO_DISCARD -> futureDie(context, 20)
         GameEffect.GAIN_D12_TO_DISCARD -> futureDie(context, 12)
         GameEffect.GAIN_D10_TO_DISCARD -> futureDie(context, 10)
         GameEffect.GAIN_ANY_DIE_TO_DISCARD -> futureDie(context, 20)
-        // Non-Strike immediate VP is a separate benefit: do not invent a
-        // Strike-row transition or add the Strike award a second time.
-        GameEffect.GAIN_ONE_VP -> PriorityScore(ORIGIN).adjusted(3,
-            "One immediate VP (non-Strike); 3 decision points per VP")
-        // The complete refresh/worm effect depends on board resources and
-        // later Support opportunities. Avoid inventing a universal +20 bonus.
-        // Their contextual calibration remains an explicit C04/C05 task.
+        GameEffect.GAIN_ONE_VP -> PriorityScore(ORIGIN).adjusted(
+            BattleResourceUtility.immediateVp(1), "Immediate non-Strike VP")
         GameEffect.REFRESH_CREATURE -> PriorityScore(ORIGIN).adjusted(0,
-            "Refresh benefit not yet projected; no fixed +20 premium")
+            "Refresh benefit requires a projected future Plant activation")
         GameEffect.GAIN_TWO_WORMS -> PriorityScore(ORIGIN).adjusted(0,
-            "Worm Support benefit not yet projected; no fixed +20 premium")
+            "Worm benefit requires a projected legal Support opportunity")
         else -> PriorityScore(ORIGIN).adjusted(0,
-            "Unsupported Round outcome: unprojected, no arbitrary +10 premium")
+            "Unsupported Round outcome: unprojected, no arbitrary priority premium")
     }
 
     private fun futureDie(context: DecisionContext, sides: Int): PriorityScore {
-        // A die deposited in discard cannot change a Strike on the current turn.
-        // No future rounds means no projected spending benefit from this acquisition.
-        val rounds = context.progress.roundsRemainingToReveal
-        if (rounds <= 0) return PriorityScore(ORIGIN).adjusted(-35,
-            "Die to discard has no remaining rounds to be redrawn")
-        val expectation = (sides + 1) / 2.0
-        return PriorityScore(ORIGIN).adjusted((expectation * 2).toInt(),
-            "Future draw value for D$sides; no immediate Battle Strike benefit")
+        val gain = BattleResourceUtility.futureDiscardDie(context, sides)
+        if (gain == 0) return PriorityScore(0).adjusted(0,
+            "Die to Discard cannot contribute without another Battle round")
+        return PriorityScore(ORIGIN).adjusted(gain,
+            "Discounted future Battle draw D$sides; no immediate Strike benefit")
     }
 }

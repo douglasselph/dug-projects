@@ -35,8 +35,8 @@ class C04RoundScaleMixedSelectionTest {
         val vp = BattleMainPriority.score(context, card, BattleMainAction.RoundEffect1)
         val draw = BattleMainPriority.score(context, card, BattleMainAction.Draw)
         assertEquals(38, vp.total)
-        assertEquals(45, draw.total)
-        assertTrue(draw.total > vp.total)
+        assertEquals(38, draw.total)
+        assertEquals(draw.total, vp.total)
         assertTrue(vp.adjustments.any { "non-Strike" in it.reason })
     }
 
@@ -44,7 +44,7 @@ class C04RoundScaleMixedSelectionTest {
         for (effect in listOf(GameEffect.REFRESH_CREATURE, GameEffect.GAIN_TWO_WORMS)) {
             val value = BattleMainPriority.score(context, round(effect), BattleMainAction.RoundEffect1)
             assertEquals(35, value.total)
-            assertTrue(value.adjustments.any { "not yet projected" in it.reason })
+            assertTrue(value.adjustments.any { "requires a projected" in it.reason || "unprojected" in it.reason })
         }
     }
 

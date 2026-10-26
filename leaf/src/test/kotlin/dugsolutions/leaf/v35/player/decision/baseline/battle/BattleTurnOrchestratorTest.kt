@@ -224,7 +224,7 @@ class BattleTurnOrchestratorTest {
     private fun finalMain(): BattleTurnAction =
         BattleTurnAction.FinalMain(BattleMainAction.RoundEffect1)
 
-    /** Marginal but drawable on a later round: origin 35 + D20 future value 21 = 56. */
+    /** Marginal but drawable on a later round: origin 35 + discounted D20 future value 8 = 43. */
     private fun futureDieRound() = RoundCard(
         quantity = 1,
         name = "Battle_Future_Die",

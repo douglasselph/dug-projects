@@ -32,7 +32,7 @@ class C04RoundEffectContextTest {
         val context = DecisionContext.EMPTY
         assertEquals(0, BattleRoundEffectPriority.score(
             context, GameEffect.GAIN_D20_TO_DISCARD).total)
-        val earlier = context.copy(progress = context.progress.copy(roundsRemainingToReveal = 2))
+        val earlier = context.copy(progress = context.progress.copy(battleRoundsRemaining = 2))
         assertTrue(BattleRoundEffectPriority.score(
             earlier, GameEffect.GAIN_D20_TO_DISCARD).total > 0)
     }

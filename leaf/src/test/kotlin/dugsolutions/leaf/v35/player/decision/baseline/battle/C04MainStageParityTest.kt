@@ -25,7 +25,7 @@ class C04MainStageParityTest {
         val final = BattleMainPriority.score(context, round, BattleMainAction.Draw)
         assertEquals(first.total, final.total)
         assertEquals(first.adjustments, final.adjustments)
-        assertTrue(first.total > BattleMainPriority.intrinsicScore(context, round, BattleMainAction.Draw).total)
+        assertEquals(first.total, BattleMainPriority.intrinsicScore(context, round, BattleMainAction.Draw).total)
     }
 
     @Test
