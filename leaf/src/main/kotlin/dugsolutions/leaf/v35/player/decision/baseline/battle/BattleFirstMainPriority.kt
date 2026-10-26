@@ -2,12 +2,10 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.player.decision.baseline.HumanBaselinePolicy
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
-import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.round.domain.RoundCard
-import dugsolutions.leaf.v35.player.decision.baseline.scoring.LegacyPreferenceBridge
 
 /**
  * Scores Step-4 First Main actions under the approved Human Baseline contract.
@@ -34,47 +32,20 @@ class BattleFirstMainPriority(
         roundCard: RoundCard,
         action: BattleMainAction
     ): PriorityScore {
-        val intrinsic = BattleMainPriority.intrinsicScore(
+        val intrinsic = if (action == BattleMainAction.Draw) {
+            BattleDrawUtility.score(context, consequenceEvaluator)
+        } else BattleMainPriority.intrinsicScore(
             context = context,
             roundCard = roundCard,
             action = action,
             cardScorers = cardScorers
         )
         return when (action) {
-            BattleMainAction.Draw -> scoreExpectedDraw(context, intrinsic)
+            BattleMainAction.Draw -> intrinsic
             is BattleMainAction.ActivatePlant,
             BattleMainAction.RoundEffect1,
             BattleMainAction.RoundEffect2 -> intrinsic
         }
     }
 
-    private fun scoreExpectedDraw(
-        context: DecisionContext,
-        intrinsic: PriorityScore
-    ): PriorityScore {
-        val nextSides = context.self.board.supply.minOfOrNull { it.sides }
-            ?: context.self.board.discard.minOfOrNull { it.sides }
-            ?: return intrinsic
-        val expected = DieValueHeuristics.expectedRoll(nextSides)
-        val best = consequenceEvaluator.placedDie(
-            context = context,
-            faceValue = expected,
-            mode = BattleAnalysisMode.EXPECTED
-        ).maxByOrNull { it.tacticalPreference }
-            ?: return intrinsic
-        val adjustment = LegacyPreferenceBridge.battleTacticalAdjustment(best.tacticalPreference)
-        if (adjustment == 0) return intrinsic
-
-        val transition = best.transitions.singleOrNull()
-        val transitionText = transition?.takeIf { it != BattleTransition.NONE }
-            ?.let { " ${it.name}" }
-            .orEmpty()
-        return intrinsic.adjusted(
-            adjustment,
-            "Expected D$nextSides best Battle placement ${best.target}:$transitionText swing ${format(best.tacticalPreference)}"
-        )
-    }
-
-    private fun format(value: Double): String =
-        if (value % 1.0 == 0.0) value.toInt().toString() else "%.1f".format(value)
 }

@@ -3,7 +3,6 @@ package dugsolutions.leaf.v35.player.decision.baseline.battle
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.player.decision.baseline.card.CardPhase
 import dugsolutions.leaf.v35.player.decision.baseline.card.HumanBaselineCardScorerRegistry
-import dugsolutions.leaf.v35.player.decision.baseline.cultivation.DrawPriority
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -17,7 +16,7 @@ object BattleMainPriority {
         cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
     ): PriorityScore =
         when (action) {
-            BattleMainAction.Draw -> DrawPriority.score(context)
+            BattleMainAction.Draw -> BattleDrawUtility.score(context)
             is BattleMainAction.ActivatePlant -> {
                 val intrinsic = cardScorers.forPlant(action.card.card).playScore(
                     context = context,
