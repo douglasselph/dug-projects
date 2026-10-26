@@ -1,6 +1,7 @@
 package dugsolutions.leaf.v35.player.decision.baseline.cultivation
 
 import dugsolutions.leaf.v35.player.decision.baseline.common.DieValueHeuristics
+import dugsolutions.leaf.v35.player.decision.baseline.projection.CultivationPipOutcome
 import dugsolutions.leaf.v35.player.decision.baseline.common.PurchaseThresholdHeuristics
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -40,7 +41,7 @@ object DrawPriority {
         val tiers = PurchaseThresholdHeuristics.availableCostTiers(context.grove)
         return DrawReferenceObservation(
             nextDieSides = nextSides,
-            expectedRoll = nextSides?.let(DieValueHeuristics::expectedRoll),
+            expectedRoll = CultivationPipOutcome.nextDraw(board.supply.map { it.sides }, board.discard.map { it.sides }),
             rollRewardChance = nextSides?.let { minOf(2, it).toDouble() / it.toDouble() },
             ownedDiceCount = owned.size + board.mulch.count { it.storedDieSides != null } +
                 board.pendingMulch.count { it.storedDieSides != null },

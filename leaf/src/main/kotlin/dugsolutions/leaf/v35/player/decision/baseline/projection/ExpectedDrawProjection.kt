@@ -48,7 +48,7 @@ object ExpectedDrawProjection {
     fun forecast(context: DecisionContext, count: Int, removeHandDieIndex: Int? = null): Forecast {
         val board = context.self.board
         val sides = drawSides(board.supply.map { it.sides }, board.discard.map { it.sides }, count)
-        val means = sides.map(DieValueHeuristics::expectedRoll)
+        val means = sides.map(CultivationPipOutcome::expectedNewDie)
         val removed = board.hand.firstOrNull { it.index == removeHandDieIndex }
         val delta = means.sum() - (removed?.value ?: 0)
         val battle = context.battle

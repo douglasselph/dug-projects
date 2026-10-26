@@ -18,6 +18,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.projection.PetalAcquisitio
 import dugsolutions.leaf.v35.player.decision.baseline.projection.ExpectedDrawProjection
 import dugsolutions.leaf.v35.player.decision.baseline.projection.PlantResourceProjection
 import dugsolutions.leaf.v35.player.decision.baseline.projection.SharedDieEffectOutcome
+import dugsolutions.leaf.v35.player.decision.baseline.projection.CultivationPipOutcome
 import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
 import dugsolutions.leaf.v35.player.decision.context.CreatureCardView
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
@@ -729,7 +730,7 @@ object CardScoringHelpers {
     private fun expectedNextDraw(context: DecisionContext): Double {
         val next = context.self.board.supply.minByOrNull { it.sides }
             ?: context.self.board.discard.minByOrNull { it.sides }
-        return next?.let { DieValueHeuristics.expectedRoll(it.sides) } ?: 2.5
+        return next?.let { CultivationPipOutcome.expectedNewDie(it.sides) } ?: 0.0
     }
 
     private const val PETAL_D4_END_GAME_VP_POINTS = 10
