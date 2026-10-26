@@ -57,6 +57,36 @@ class C04RealPlantMixedSelectionTest {
         )
     )
 
+    @Test fun `Battle Main families share exactly one declared origin`() {
+        val ctx = state(2, 4)
+        val draw = BattleMainPriority.score(ctx, round, BattleMainAction.Draw)
+        val projected = BattleMainPriority.score(ctx, round, BattleMainAction.ActivatePlant(plant))
+        val vp = BattleMainPriority.score(ctx, round, BattleMainAction.RoundEffect1)
+        assertEquals(BattleUtilityPolicy.ORIGIN, draw.base)
+        assertEquals(BattleUtilityPolicy.ORIGIN, projected.base)
+        assertEquals(BattleUtilityPolicy.ORIGIN, vp.base)
+        assertEquals(BattleUtilityPolicy.IMMEDIATE_NON_STRIKE_VP,
+            vp.total - BattleUtilityPolicy.ORIGIN)
+    }
+
+    @Test fun `Battle matrix responds to useful and capped Plant while Round VP is invariant`() {
+        val useful = state(2, 4)
+        val capped = state(6, 8)
+        val candidates = listOf(
+            BattleMainAction.ActivatePlant(plant),
+            BattleMainAction.Draw,
+            BattleMainAction.RoundEffect1,
+            BattleMainAction.RoundEffect2
+        )
+        val usefulScores = candidates.associateWith { BattleMainPriority.score(useful, round, it).total }
+        val cappedScores = candidates.associateWith { BattleMainPriority.score(capped, round, it).total }
+        assertTrue(usefulScores.getValue(candidates[0]) > cappedScores.getValue(candidates[0]))
+        assertEquals(usefulScores.getValue(candidates[2]), cappedScores.getValue(candidates[2]))
+        assertEquals(0, usefulScores.getValue(candidates[3]))
+        assertEquals(0, cappedScores.getValue(candidates[3]))
+        assertTrue(usefulScores.getValue(candidates[0]) > usefulScores.getValue(candidates[3]))
+    }
+
     @Test fun `real Plant projection uses exactly the row consequence in mixed scoring`() {
         val context = state(2, 4)
         val projected = assertNotNull(BattleDirectDieActivationPriority()

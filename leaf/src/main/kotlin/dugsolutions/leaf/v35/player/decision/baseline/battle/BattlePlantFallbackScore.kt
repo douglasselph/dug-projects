@@ -9,7 +9,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
  * their underlying formulas rather than treating this compatibility bridge as calibration.
  */
 internal object BattlePlantFallbackScore {
-    private const val ORIGIN = 35
+    private const val ORIGIN = BattleUtilityPolicy.ORIGIN
 
     fun normalize(intrinsic: PriorityScore): PriorityScore {
         // Research no-ops and other deliberately disqualified actions must never

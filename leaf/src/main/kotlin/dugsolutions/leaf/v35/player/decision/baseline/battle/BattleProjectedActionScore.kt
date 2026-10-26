@@ -10,7 +10,7 @@ import dugsolutions.leaf.v35.player.decision.baseline.scoring.PriorityScore
  * bridge until non-tactical Battle actions are calibrated.
  */
 internal object BattleProjectedActionScore {
-    private const val SHARED_BATTLE_ORIGIN = 35
+    private const val SHARED_BATTLE_ORIGIN = BattleUtilityPolicy.ORIGIN
 
     fun fromCompleteProjection(tacticalValue: Double, description: String): PriorityScore =
         PriorityScore(SHARED_BATTLE_ORIGIN).adjusted(

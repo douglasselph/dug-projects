@@ -14,8 +14,8 @@ import kotlin.math.roundToInt
  * factor instead of treating the die like an immediate hand draw.
  */
 internal object BattleResourceUtility {
-    const val ORIGIN = 35
-    const val NON_STRIKE_VP = 3
+    const val ORIGIN = BattleUtilityPolicy.ORIGIN
+    const val NON_STRIKE_VP = BattleUtilityPolicy.IMMEDIATE_NON_STRIKE_VP
     private const val WISP_CAP = 5
 
     fun immediateVp(vp: Int): Int = vp.coerceAtLeast(0) * NON_STRIKE_VP
@@ -27,7 +27,7 @@ internal object BattleResourceUtility {
         if (futureBattles <= 0) return 0
         // Acquiring a die now has an opportunity cost and it may not cycle into
         // hand: never value it more highly than an immediately drawn die.
-        val futureAccess = if (futureBattles >= 2) 0.75 else 0.5
+        val futureAccess = if (futureBattles >= 2) BattleUtilityPolicy.FUTURE_DIE_ACCESS_MULTIPLE_BATTLES else BattleUtilityPolicy.FUTURE_DIE_ACCESS_ONE_BATTLE
         return ((sides + 1) / 2.0 * futureAccess).roundToInt()
     }
 
@@ -41,8 +41,8 @@ internal object BattleResourceUtility {
     }
 
     /** Wisp acquisition is option value for future effect/VP, NOT Strike VP. */
-    fun wisps(count: Int): Int = count.coerceAtLeast(0) * 5
+    fun wisps(count: Int): Int = count.coerceAtLeast(0) * BattleUtilityPolicy.WISP_OPTION
 
     /** Denying a Wisp to an opponent has value separate from acquiring it. */
-    fun deniedWisps(count: Int): Int = count.coerceAtLeast(0) * 2
+    fun deniedWisps(count: Int): Int = count.coerceAtLeast(0) * BattleUtilityPolicy.OPPONENT_WISP_DENIAL
 }

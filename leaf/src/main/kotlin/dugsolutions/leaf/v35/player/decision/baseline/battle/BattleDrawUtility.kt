@@ -14,7 +14,7 @@ import kotlin.math.roundToInt
  * tactical win/tie/wound benefit once (including Strike VP, never twice).
  */
 internal object BattleDrawUtility {
-    private const val ORIGIN = 35
+    private const val ORIGIN = BattleUtilityPolicy.ORIGIN
 
     fun score(
         context: DecisionContext,
