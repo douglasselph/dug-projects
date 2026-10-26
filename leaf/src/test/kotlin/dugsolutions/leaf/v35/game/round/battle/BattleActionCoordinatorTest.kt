@@ -407,6 +407,46 @@ class BattleActionCoordinatorTest {
     }
 
     @Test
+    fun execute_sunlightFundedWormGain_regeneratesLegalSupportAndConsultsHumanBaseline() {
+        // The funded Main creates Worms that are absent from the preceding legal request.
+        // Do not precompute that later legal list from the pre-Main state.
+        val strategy = SunlightThenBaselineStrategy()
+        val p1 = player(1, strategy)
+        val p2 = player(2, finishStrategy("p2"))
+        val effects = RecordingEffects(onExecute = { request ->
+            if (request.effect == GameEffect.GAIN_TWO_WORMS) {
+                request.actor.critters.add(Critter.WORM)
+                request.actor.critters.add(Critter.WORM)
+            }
+        })
+        val fixture = fixture(p1, p2, effects = effects)
+        assertTrue(SunlightTokenResolver.gain(fixture.game, p1))
+
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+
+        assertTrue(strategy.beforeFunding.none { choice ->
+            val support = (choice as? BattleTurnAction.Support)?.action
+            support is BattleSupportAction.PlaceCritter && support.critter == Critter.WORM
+        })
+        assertTrue(strategy.afterFunding.isNotEmpty())
+        assertTrue(strategy.afterFunding.first().any { choice ->
+            val support = (choice as? BattleTurnAction.Support)?.action
+            support is BattleSupportAction.PlaceCritter && support.critter == Critter.WORM
+        })
+        assertTrue(strategy.baselineSelections.isNotEmpty())
+        assertTrue(strategy.baselineSelections.indices.all { index ->
+            strategy.baselineSelections[index] in strategy.afterFunding[index]
+        })
+        assertEquals(0, p1.tokens.sunlightCount)
+        assertEquals(9, fixture.game.grove.tokens.sunlightCount)
+        assertEquals(
+            listOf(BattleMainStage.FIRST, BattleMainStage.SUNLIGHT, BattleMainStage.FINAL),
+            fixture.game.chronicle.entries.filterIsInstance<GameEntry.MainAction>()
+                .filter { it.playerId == p1.id }.mapNotNull { it.battleStage }
+        )
+    }
+
+    @Test
     fun execute_playerMayKeepSunlightAndTakeRegularFinalMain() {
         val strategy = RecordingFinishStrategy()
         val p1 = player(1, strategy)
@@ -802,6 +842,38 @@ class BattleActionCoordinatorTest {
             placementRequests += request
             return placementRow
         }
+    }
+
+    /** Forces only the funding event; all subsequent decisions use the real baseline. */
+    private class SunlightThenBaselineStrategy : BattleStrategy {
+        private val baseline = HumanBaselineBattleStrategy()
+        private var funded = false
+        val beforeFunding = mutableListOf<BattleTurnAction>()
+        val afterFunding = mutableListOf<List<BattleTurnAction>>()
+        val baselineSelections = mutableListOf<BattleTurnAction>()
+
+        override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction =
+            BattleMainAction.RoundEffect1
+
+        override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction {
+            if (!funded) {
+                beforeFunding.addAll(request.legalChoices)
+                val sunlit = request.legalChoices.filterIsInstance<BattleTurnAction.Support>()
+                    .firstOrNull { (it.action as? BattleSupportAction.UseSunlight)?.mainAction ==
+                        BattleMainAction.RoundEffect2 }
+                if (sunlit != null) {
+                    funded = true
+                    return sunlit
+                }
+            }
+            afterFunding += request.legalChoices.toList()
+            val selected = baseline.chooseTurnAction(request)
+            baselineSelections += selected
+            return selected
+        }
+
+        override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest): StrikeRow =
+            request.legalRows.first()
     }
 
     private class AlwaysWispSupportStrategy : BattleStrategy {
