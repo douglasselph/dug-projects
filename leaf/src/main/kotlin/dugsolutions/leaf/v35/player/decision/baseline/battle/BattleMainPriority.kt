@@ -51,8 +51,8 @@ object BattleMainPriority {
                     intrinsic
                 }
             }
-            BattleMainAction.RoundEffect1 -> scoreRoundEffect(roundCard.firstEffect.effect)
-            BattleMainAction.RoundEffect2 -> scoreRoundEffect(roundCard.secondEffect.effect)
+            BattleMainAction.RoundEffect1 -> BattleRoundEffectPriority.score(context, roundCard.firstEffect.effect)
+            BattleMainAction.RoundEffect2 -> BattleRoundEffectPriority.score(context, roundCard.secondEffect.effect)
         }
 
     /**
@@ -68,18 +68,4 @@ object BattleMainPriority {
         cardScorers: HumanBaselineCardScorerRegistry = HumanBaselineCardScorerRegistry()
     ): PriorityScore = BattleFirstMainPriority(cardScorers)(context, roundCard, action)
 
-    private fun scoreRoundEffect(effect: GameEffect): PriorityScore =
-        when (effect) {
-            GameEffect.GAIN_ONE_VP -> PriorityScore(60)
-            GameEffect.GAIN_D20_TO_DISCARD -> PriorityScore(65)
-            GameEffect.GAIN_D12_TO_DISCARD -> PriorityScore(58)
-            GameEffect.GAIN_D10_TO_DISCARD -> PriorityScore(54)
-            GameEffect.GAIN_ONE_WISP -> PriorityScore(50)
-            GameEffect.GAIN_ANY_DIE_TO_DISCARD -> PriorityScore(60)
-            GameEffect.REFRESH_CREATURE -> PriorityScore(55)
-            GameEffect.GAIN_TWO_WORMS -> PriorityScore(55)
-            GameEffect.STEAL_RANDOM_WISP_FROM_ONE_OPPONENT -> PriorityScore(58)
-            GameEffect.STEAL_RANDOM_WISP_FROM_ALL_OPPONENTS -> PriorityScore(70)
-            else -> PriorityScore(45)
-        }
 }

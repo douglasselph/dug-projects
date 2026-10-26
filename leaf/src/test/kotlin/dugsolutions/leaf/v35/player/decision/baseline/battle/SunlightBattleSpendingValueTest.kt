@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.player.decision.baseline.battle
 
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.context.OpponentView
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.GameProgressView
@@ -36,7 +38,7 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(70, observed.fundedMainValue)
+        assertEquals(71, observed.fundedMainValue)
         assertEquals(62, observed.preservationValue)
         assertTrue(observed.worthwhile)
     }
@@ -54,7 +56,7 @@ class SunlightBattleSpendingValueTest {
             action = BattleMainAction.RoundEffect1
         )
 
-        assertEquals(60, early.fundedMainValue)
+        assertEquals(56, early.fundedMainValue)
         assertFalse(early.worthwhile)
         assertTrue(middle.worthwhile)
     }
@@ -118,9 +120,9 @@ class SunlightBattleSpendingValueTest {
         )
 
         assertEquals("sunlight-battle-spend", observations["decisionFamily"])
-        assertEquals("60", observations["fundedMainValue"])
+        assertEquals("56", observations["fundedMainValue"])
         assertEquals("45", observations["sunlightPreservationValue"])
-        assertEquals("15", observations["sunlightNetSupportValue"])
+        assertEquals("11", observations["sunlightNetSupportValue"])
     }
 
     private fun context(
@@ -134,8 +136,16 @@ class SunlightBattleSpendingValueTest {
             progress = GameProgressView.EMPTY.copy(
                 battleRoundsRemaining = battlesRemaining,
                 totalBattleRounds = 3,
-                isFinalBattleRound = finalBattle
+                isFinalBattleRound = finalBattle,
+                // A die gained to Discard has value only if it can be drawn later.
+                roundsRemainingToReveal = if (finalBattle) 0 else 2
             ),
+            opponents = (1..3).map { id ->
+                OpponentView(
+                    DecisionContext.EMPTY.self.board.copy(id = PlayerId(id)),
+                    wispCount = 1
+                )
+            },
             self = DecisionContext.EMPTY.self.copy(
                 board = DecisionContext.EMPTY.self.board.copy(
                     sunlight = sunlight,
