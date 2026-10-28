@@ -42,7 +42,7 @@ A typical physical-component edit is:
 
 ## Mental model: three layers
 
-1. **Editable source data and images:** `assets/` contains card artwork, box/tray textures, and **the four canonical card CSVs**. `docs/Leaf_and_Let_Die_v37-01.pdf` is the readable rulebook; `docs/Box Illustrations.pdf` is a visual photo guide to the physical prototype, especially the Player Supply and Discard boxes. Both are kept inside the Game Box Sack.
+1. **Editable source data and images:** `assets/` contains card artwork, box/tray textures, and **the four canonical card CSVs**. the newest `docs/Leaf_and_Let_Die_vNN-NN.pdf` is the readable rulebook; `docs/Box Illustrations.pdf` is a visual photo guide to the physical prototype, especially the Player Supply and Discard boxes. Both are kept inside the Game Box Sack.
 2. **Generated definitions and geometry:** `config/card_catalog_effects.json` is generated from the CSVs. The `scripts/build_*.py` programs create OBJ meshes, MTL files, texture atlases, and updated TTS JSON saves under `generated/`.
 3. **Staged and published save:** The working candidate is `output/TS_Save_latest.json`. `publish.sh` copies it to the TTS save directory specified in `config/tts_workflow.conf`. The game is then reloaded in TTS.
 
@@ -75,7 +75,7 @@ leaf-tts/
 │   ├── game_box_layout.json      # Approved positions, rotations and scales
 │   └── plant_card_names.json     # Older naming artifact; prefer CSV-driven data
 ├── docs/
-│   ├── Leaf_and_Let_Die_v37-01.pdf # Used by game box if present
+│   ├── Leaf_and_Let_Die_vNN-NN.pdf # Highest numeric revision used by game box
 │   └── card_csv_workflow.md      # Additional CSV notes
 ├── tools/                      # First-build / asset tools
 ├── scripts/                    # Incremental builders and shell entry points
@@ -187,7 +187,7 @@ The Game Box placard is a **flat simulation of the retail box**, not a true cont
 
 The **Game Box Sack** is a standard TTS Bag. Its description should tell the user it holds the remaining boxed material and is a convenient place to put **off-table or unwanted components**. The current intended workflow is: take out the readable PDF rulebook; use the setup instructions to arrange components; use the Sack for storage. Do not expose development-only labels such as `Physical Test` or raw filenames to playtesters.
 
-The PDF rules are supplied by `docs/Leaf_and_Let_Die_v37-01.pdf` to `build_game_box.py`. The generated Custom PDF currently points to a **local Proton/Windows `Z:/...` file path** unless hosted differently; that works on the author's machine but not necessarily for remote playtesters. For remote distribution, assets and the PDF need accessible hosted URLs. Check this before sending a TTS save to a blind tester.
+The PDF rules are selected from the highest numeric `docs/Leaf_and_Let_Die_vNN-NN.pdf` revision. The generated Custom PDF currently points to a **local Proton/Windows `Z:/...` file path** unless hosted differently; that works on the author's machine but not necessarily for remote playtesters. For remote distribution, assets and the PDF need accessible hosted URLs. Check this before sending a TTS save to a blind tester.
 
 ## Safe workflow and troubleshooting
 
@@ -230,6 +230,19 @@ When given this README and a current project archive:
 ### Round card stacks on the Game Box placard
 
 The 18 Round cards are unpacked as two separate stacks: **12 Cultivation** and **6 Battle**. Their exact hand-arranged TTS positions are saved in `config/round_stack_layout.json` (from `TS_Save_8(4).json`). The Game Box Sack and Plant Card Catalog positions are in `config/game_box_layout.json`. Both `scripts/build_game_box.py` and `scripts/apply_game_box_layout.py` move Round cards out of the Game Box Sack, splitting legacy 18-card decks automatically. The scripts reuse each card's original GUID, artwork, permanent `GMNotes` ID, and CSV-generated name/effect. Run `./scripts/rebuild_layout.sh` or `./scripts/rebuild_box.sh` then `./scripts/publish.sh`. The operation is repeatable, and an unexpected card count or unidentified Round card halts the rebuild.
+
+### Updating the rulebook without rebuilding the game
+
+Put the new versioned PDF under `docs/`, for example `docs/Leaf_and_Let_Die_v37-03.pdf`, then run:
+
+```bash
+./scripts/rebuild_rulebook.sh
+./scripts/publish.sh
+```
+
+`rebuild_rulebook.sh` chooses the **highest numeric version** matching `Leaf_and_Let_Die_vNN-NN.pdf` (so v37-10 sorts after v37-09), first using the existing staged save, otherwise the published save. It changes **only** the rulebook inside the Game Box Sack: its URL, displayed version, and short tooltip. The existing PDF GUID (`f0d002`), transform, page state, other sack contents, every other game object and approved layout remain untouched. The script stages the save and does not publish automatically. It fails without altering staging if the PDF, Sack, or unique rulebook object is missing. To select a specific revision, run `./scripts/rebuild_rulebook.sh --rules-pdf docs/Leaf_and_Let_Die_v37-03.pdf`.
+
+Both `rebuild_layout.sh` and `rebuild_box.sh` now select the latest versioned PDF as well; they do *more* work, so prefer `rebuild_rulebook.sh` for rules-only updates. The rulebook currently uses a local `Z:/...` path, suitable for this host's Proton setup, **not a portable URL**. Before sharing a save with remote playtesters, upload and configure an accessible HTTPS PDF URL through the cloud-asset workflow. Reload the generated save in TTS to check that the PDF opens.
 
 ### Prototype photos inside Game Box Sack
 

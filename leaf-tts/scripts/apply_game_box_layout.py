@@ -10,6 +10,7 @@ import json
 import re
 from pathlib import Path
 from box_illustrations import add_box_illustrations, PDF_GUID as ILLUSTRATIONS_GUID
+from rulebook import update_rulebook
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--save', type=Path, default=Path('output/TS_Save_latest.json'))
@@ -213,9 +214,7 @@ if sack:
         'back into this bag to keep the table clear. Items laid out on the Game Box '
         'placard are the pieces intended to come out onto the table during setup.'
     )
-    for item in sack.get('ContainedObjects', []):
-        if item.get('GUID') == 'f0d002' and item.get('Name') == 'Custom_PDF':
-            item['Description'] = 'START HERE: Take out and read this rulebook to set up and learn Leaf & Let Die.'
+    update_rulebook(sack)
 
     add_box_illustrations(sack)
 

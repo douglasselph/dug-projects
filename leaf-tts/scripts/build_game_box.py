@@ -9,14 +9,17 @@ import json
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from box_illustrations import add_box_illustrations, PDF_GUID as ILLUSTRATIONS_GUID
+from rulebook import latest_rulebook
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--save', type=Path, default=Path('output/TS_Save_latest.json'))
 parser.add_argument('--assets-box', type=Path, default=Path('assets/box'))
-parser.add_argument('--rules-pdf', type=Path, default=Path('docs/Leaf_and_Let_Die_v37-01.pdf'))
+parser.add_argument('--rules-pdf', type=Path, default=None)
 parser.add_argument('--output', type=Path, default=Path('generated/game_box'))
 parser.add_argument('--tts-root', default=None)
 args = parser.parse_args()
+if args.rules_pdf is None:
+    args.rules_pdf = latest_rulebook()
 if args.tts_root is None:
     args.tts_root = 'Z:' + str(Path.cwd().resolve())
 args.output.mkdir(parents=True, exist_ok=True)
@@ -171,12 +174,13 @@ def game_box_object():
 
 
 def pdf_item():
+    version = args.rules_pdf.stem.split('_v')[-1].replace('-', '.')
     return {
         'GUID': PDF_GUID, 'Name': 'Custom_PDF',
         'Transform': {'posX': 0, 'posY': 1.2, 'posZ': 0,
                       'rotX': 0, 'rotY': 180, 'rotZ': 0,
                       'scaleX': PDF_SCALE, 'scaleY': 1, 'scaleZ': PDF_SCALE},
-        'Nickname': 'Leaf & Let Die — Rulebook v37.01',
+        'Nickname': f'Leaf & Let Die — Rulebook v{version}',
         'Description': 'Full rulebook PDF. Take this object out of the Game Box bag to read and turn pages.',
         'GMNotes': 'Local PDF; use a hosted public HTTPS PDF URL to share with other computers.',
         'ColorDiffuse': {'r': 1, 'g': 1, 'b': 1},
