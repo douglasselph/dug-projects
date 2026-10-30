@@ -1,0 +1,198 @@
+[
+  {
+    "scenario_id": "C04-H01",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Worm Support TOP",
+    "proposed_rationale": "one Worm converts tie to leading row",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H02",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Final Main Draw",
+    "proposed_rationale": "already secure row; spending Worm adds no Strike swing",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H03",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Raise own TOP +4",
+    "proposed_rationale": "reduce five-point deficit, mitigate Wound threshold",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H04",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Draw D8",
+    "proposed_rationale": "raise is capped at D6 maximum",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H05",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Root Four More on TOP D6",
+    "proposed_rationale": "raise crosses losing to winning",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H06",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Round gain Wisp (1 left)",
+    "proposed_rationale": "token likely future tactical optionality; provisional",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H07",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Draw D4",
+    "proposed_rationale": "impossible shared supply",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H08",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Steal opponent Wisp (opponent holds 2)",
+    "proposed_rationale": "simultaneous acquisition and denial",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H09",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Draw D4",
+    "proposed_rationale": "no valid Wisp source",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H10",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Gain D20 to Discard; 2 future Battles",
+    "proposed_rationale": "future access to high-value die, uncertain draw timing",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H11",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Immediate +1 VP",
+    "proposed_rationale": "discarded die cannot influence completed game",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H12",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Round +1 VP",
+    "proposed_rationale": "non-Strike VP certain while Draw cannot be placed",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H13",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Immediate +1 VP",
+    "proposed_rationale": "no Strike Square capacity; verify other draw uses before approval",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H14",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Preserve Sunlight and take next ordinary Main",
+    "proposed_rationale": "scarce token has future option value",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H15",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Spend Sunlight for Draw D20; final Battle",
+    "proposed_rationale": "large tactical opportunity, no future rounds",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H16",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Spend 1 of 3 Sunlight to fund Draw D8",
+    "proposed_rationale": "lower marginal reserve cost with surplus",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H17",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Draw D4",
+    "proposed_rationale": "unavailable tokens",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H18",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Round gain 2 Worms; Support window open",
+    "proposed_rationale": "resource enables top row winning Support; subject to timing",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H19",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Immediate +1 VP",
+    "proposed_rationale": "Worm gain cannot be spent after final Main",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H20",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Draw D6",
+    "proposed_rationale": "no eligible Plant to refresh",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H21",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Refresh spent Root Four More; Main remains",
+    "proposed_rationale": "usable die modification could become available again",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H22",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Immediate +1 VP",
+    "proposed_rationale": "no future Main to spend refresh",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H23",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Reduce opposing TOP row by 3",
+    "proposed_rationale": "opponent impact flips tied/lost Strike to lead",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H24",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Draw D4",
+    "proposed_rationale": "invalid opponent target",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H25",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Gust of Petals on own D12; opposing TOP D12 eligible",
+    "proposed_rationale": "expected joint own/opponent tactical gain; probability sensitive",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H26",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Bloom Backflip on own D8=3; opposing TOP D12=9",
+    "proposed_rationale": "compound own gain plus opponent denial",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H27",
+    "partition": "HELD_OUT",
+    "proposed_preference": "Set-to-3/row-reduction targeting TOP",
+    "proposed_rationale": "top reduction converts tie to lead; check wound avoidance on middle",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  },
+  {
+    "scenario_id": "C04-H28",
+    "partition": "DEVELOPMENT",
+    "proposed_preference": "Final Main immediate VP",
+    "proposed_rationale": "no legal Support after ordinary Final Main",
+    "proposed_author": "AI_DRAFT_NOT_HUMAN"
+  }
+]

@@ -24,8 +24,12 @@ internal object BattleDrawUtility {
             ?: context.self.board.discard.minOfOrNull { it.sides }
             ?: return PriorityScore(0).adjusted(0, "No drawable Battle die")
         val expected = (sides + 1) / 2.0
+        // NORMAL Battle Draw resolves roll rewards before its new die is placed.
+        // The resource option is independent of Strike VP; count it exactly once.
+        val rewardOption = BattleDrawRollRewardUtility.expected(context, sides)
         val intrinsic = PriorityScore(ORIGIN).adjusted(
-            expected.roundToInt(), "Battle D$sides expected die contribution (not Cultivation x4)"
+            (expected + rewardOption).roundToInt(),
+            "Battle D$sides expected pips and available roll rewards (not Cultivation x4)"
         )
         val best = evaluator.placedDie(context, expected, BattleAnalysisMode.EXPECTED)
             .filter { it.legal }.maxByOrNull { it.tacticalPreference }

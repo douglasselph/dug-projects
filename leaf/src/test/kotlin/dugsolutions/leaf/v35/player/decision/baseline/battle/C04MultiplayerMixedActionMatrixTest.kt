@@ -68,13 +68,17 @@ class C04MultiplayerMixedActionMatrixTest {
     @Test fun `Wisp availability reverses preference against the same legal Draw in three-row Battle`() {
         val available = context(wisps = 2, face = 6, rivalTop = 8)
         val exhausted = context(wisps = 0, face = 6, rivalTop = 8)
-        val draw = score(available, BattleMainAction.Draw)
+        val drawWithWisps = score(available, BattleMainAction.Draw)
+        val drawWithoutWisps = score(exhausted, BattleMainAction.Draw)
         val availableWisp = score(available, BattleMainAction.RoundEffect1)
         val exhaustedWisp = score(exhausted, BattleMainAction.RoundEffect1)
         assertEquals(0, exhaustedWisp)
         assertTrue(availableWisp > exhaustedWisp)
-        assertEquals(draw, score(exhausted, BattleMainAction.Draw))
-        assertTrue(draw > exhaustedWisp)
+        // Draw can roll a 2 in Battle and gain a Wisp. Exhausting the shared
+        // deck therefore lowers Draw's expected option value as well.
+        assertTrue(drawWithWisps > drawWithoutWisps,
+            "A D4 Draw should credit the roll-2 Wisp reward when available")
+        assertTrue(drawWithoutWisps > exhaustedWisp)
     }
 
     @Test fun `positive capped die effect changes Plant valuation while Round immediate VP remains stable`() {
