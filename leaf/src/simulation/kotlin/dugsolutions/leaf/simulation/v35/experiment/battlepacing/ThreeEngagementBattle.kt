@@ -3,6 +3,7 @@ package dugsolutions.leaf.simulation.v35.experiment.battlepacing
 import dugsolutions.leaf.v35.battle.BattleState
 import dugsolutions.leaf.v35.battle.StrikeResolution
 import dugsolutions.leaf.v35.battle.StrikeResolver
+import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
 import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.Game
@@ -100,10 +101,23 @@ data class EngagementActionRecord(
     val supportsUsedInThisTurn: Int
 )
 
+/** One real player opportunity, even if the player elects to pass. */
+data class EngagementOpportunity(
+    val playerId: PlayerId,
+    val actingPosition: Int,
+    val beforeTotals: Map<PlayerId, Int>,
+    val afterTotals: Map<PlayerId, Int>,
+    val actions: List<EngagementChoice>,
+    val maxLegalMains: Int,
+    val maxLegalSupports: Int
+)
+
 data class EngagementResult(
     val order: EngagementOrder,
     val actions: List<EngagementActionRecord>,
-    val resolution: StrikeResolution
+    val resolution: StrikeResolution,
+    val initialTotals: Map<PlayerId, Int>,
+    val opportunities: List<EngagementOpportunity>
 )
 
 data class ThreeEngagementBattleResult(
@@ -139,12 +153,22 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
         val normalUsed = game.players.associate { it.id to 0 }.toMutableMap()
         val locked = mutableListOf<LockedStrikeEvidence>()
         val trace = mutableListOf<String>()
+        fun currentTotals(row: StrikeRow): Map<PlayerId, Int> =
+            BattleGridSnapshot.row(battle, row).squares
+                .filterNot { it.withdrawn }
+                .associate { it.playerId to it.total }
         val engagements = StrikeRow.entries.map { row ->
             locked.forEach { it.verify(battle) }
             val order = EngagementOrderSelector.select(battle, game.players.map { it.id }, row)
             trace += order.traceLines()
             val records = mutableListOf<EngagementActionRecord>()
-            for (id in order.clockwiseActors) {
+            val initialTotals = currentTotals(row)
+            val opportunities = mutableListOf<EngagementOpportunity>()
+            for ((position, id) in order.clockwiseActors.withIndex()) {
+                val before = currentTotals(row)
+                val startIndex = records.size
+                var maxMains = 0
+                var maxSupports = 0
                 val player = battle.player(id)
                 var normalThisTurn = false
                 var supportsThisTurn = 0
@@ -157,6 +181,8 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     val supports = if (supportsThisTurn < 2) {
                         actions.researchLegalSupports(game, player, card, battle)
                     } else emptyList()
+                    maxMains = maxOf(maxMains, mains.size)
+                    maxSupports = maxOf(maxSupports, supports.size)
                     if (mains.isEmpty() && supports.isEmpty()) break
                     val next = policy.choose(
                         EngagementDecision(row, id, actionCount, remaining, mains, supports,
@@ -183,6 +209,12 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     trace += "ENGAGEMENT_ACTION,row=$row,player=${id.value},choice=$next,normalUsed=${normalUsed.getValue(id)},supportsThisRow=$supportsThisTurn"
                     check(actionCount <= 3) { "Engagement exceeded its one-normal/two-Support allowance" }
                 }
+                opportunities += EngagementOpportunity(
+                    playerId = id, actingPosition = position + 1,
+                    beforeTotals = before, afterTotals = currentTotals(row),
+                    actions = records.drop(startIndex).map { it.choice },
+                    maxLegalMains = maxMains, maxLegalSupports = maxSupports
+                )
             }
             val resolution = StrikeResolver(WoundResolver(
                 grove = game.grove, chronicle = game.chronicle,
@@ -191,7 +223,7 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
             battle.lockResolvedRow(row, game.assetProvenance)
             locked += LockedStrikeEvidence(battle, row)
             trace += "ENGAGEMENT_RESOLVE,row=$row,winners=${resolution.winnerIds.joinToString("|") { it.value.toString() }},wounds=${resolution.wounds.size},vpEach=${resolution.vpPerWinner}"
-            EngagementResult(order, records.toList(), resolution)
+            EngagementResult(order, records.toList(), resolution, initialTotals, opportunities.toList())
         }
         locked.forEach { it.verify(battle) }
         // Post-resolution removal permits Doom and Cleanup, never another action.
