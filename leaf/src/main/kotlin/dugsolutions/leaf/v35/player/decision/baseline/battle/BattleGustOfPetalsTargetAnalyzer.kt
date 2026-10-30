@@ -14,9 +14,9 @@ import kotlin.math.abs
  *
  * The actor chooses which die to reroll before RNG. The Strike Row for the
  * forced opposing rerolls is chosen only after that actor reroll resolves.
- * Target valuation therefore uses honest expectation for the actor reroll and
- * the best currently visible expected later row branch, without consuming RNG
- * or committing the later row choice.
+ * Enumerates each possible actor die face and optimizes the subsequent legal
+ * Strike-row choice for that face. Opposing rerolls retain a fair-face expectation.
+ * This consumes no RNG and commits no future row choice.
  */
 class BattleGustOfPetalsTargetAnalyzer(
     private val policy: HumanBaselinePolicy = HumanBaselinePolicy(),
@@ -37,25 +37,44 @@ class BattleGustOfPetalsTargetAnalyzer(
         } ?: return null
         if (targetRow.closed) return null
 
-        val ownExpectedChange = DieValueHeuristics.expectedRerollGain(
-            sides = choice.sides,
-            value = choice.value
-        )
         val openRows = battle.rows.filterNot { it.closed }
-        if (openRows.isEmpty()) return null
+        if (openRows.isEmpty() || choice.sides <= 0) return null
 
-        return openRows.mapNotNull { collateralRow ->
-            analyzeBranch(
-                context = context,
-                realization = realization,
-                targetRow = targetRow,
-                targetChoice = choice,
-                ownExpectedChange = ownExpectedChange,
-                collateralRow = collateralRow
-            )
-        }.maxWithOrNull(
-            compareBy<BattleActionAnalysis<T>> { it.tacticalValue }
-                .thenBy { it.improvementStepCount }
+        // Gust's row decision happens AFTER the actor's first reroll. For each
+        // possible face, use that actual face both for own Strike totals and
+        // the lowest-own-die eligibility threshold, then choose the best row.
+        // This is E[max(row value | first face)], not max(E[row value]).
+        val outcomes = (1..choice.sides).mapNotNull { face ->
+            openRows.mapNotNull { collateralRow ->
+                analyzeBranch(
+                    context = context,
+                    realization = realization,
+                    targetRow = targetRow,
+                    targetChoice = choice,
+                    ownExpectedChange = (face - choice.value).toDouble(),
+                    collateralRow = collateralRow
+                )
+            }.maxWithOrNull(compareBy<BattleActionAnalysis<T>> { it.tacticalValue }
+                .thenBy { it.improvementStepCount })
+        }
+        if (outcomes.size != choice.sides) return null
+        val probability = 1.0 / choice.sides
+        val weightedSwings = outcomes.flatMap { outcome ->
+            outcome.swing.rowSwings.map { swing ->
+                swing.copy(
+                    transitionBase = swing.transitionBase * probability,
+                    rawSwing = swing.rawSwing * probability,
+                    totalValue = swing.totalValue * probability
+                )
+            }
+        }
+        // VP impact is integral by design and is not used to score the Gust
+        // Main/target candidate. Preserve a representative realized branch for
+        // that diagnostic while exposing the correct expected tactical value.
+        val representative = outcomes.first()
+        return representative.copy(
+            swing = BattleActionSwing(weightedSwings),
+            improvementStepCount = (outcomes.sumOf { it.improvementStepCount } * probability).toInt()
         )
     }
 
@@ -107,7 +126,7 @@ class BattleGustOfPetalsTargetAnalyzer(
     }
 
     /**
-     * Mirrors Gust of Petals' forced-target rule using the expected actor reroll.
+     * Mirrors Gust of Petals' forced-target rule for each possible actor reroll.
      * The executor compares each opposing die with the actor's lowest die in the
      * chosen row before any opposing reroll resolves.
      */

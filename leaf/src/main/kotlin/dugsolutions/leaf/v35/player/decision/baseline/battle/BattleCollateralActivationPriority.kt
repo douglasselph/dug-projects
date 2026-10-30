@@ -12,9 +12,9 @@ import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
  * Plant activation decisions. Only the BEST legal complete realization is
  * credited; a fixed intrinsic effect bonus is not added to that projection.
  *
- * Gust's row branch is evaluated before the actor's unknown reroll, using
- * arithmetic-mean die expectations. Actual resolution and later row choice
- * remain the engine's responsibility.
+ * Gust enumerates the actor's possible first rerolls and chooses the best
+ * subsequent row for each outcome. Actual rolls and row choices remain the
+ * engine's responsibility.
  */
 class BattleCollateralActivationPriority(
     policy: HumanBaselinePolicy = HumanBaselinePolicy(),

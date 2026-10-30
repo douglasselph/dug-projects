@@ -153,8 +153,17 @@ class BattleEnabledPlantAnalyzerTest {
 
         val tactical = requireNotNull(opportunity.tacticalAnalysis)
         assertEquals(BattleAnalysisMode.EXPECTED, tactical.mode)
-        assertEquals(BattleTransition.WIN_FLIPPED, tactical.swing.rowSwings.single().transition)
-        assertEquals(1.0, tactical.swing.rowSwings.single().rawSwing)
+        // Gust enumerates all 20 possible first-reroll faces, weighting each
+        // selected continuation by 1/20. There is no longer a single swing.
+        assertEquals(20, tactical.swing.rowSwings.size)
+        assertTrue(tactical.swing.rowSwings.all { it.row == StrikeRow.TOP })
+        assertTrue(tactical.swing.rowSwings.all { it.totalValue.isFinite() })
+        assertTrue(tactical.swing.rowSwings.any { it.transition == BattleTransition.WIN_FLIPPED })
+        assertEquals(
+            tactical.swing.rowSwings.sumOf { it.totalValue },
+            tactical.tacticalValue,
+            1e-8
+        )
     }
 
     @Test
