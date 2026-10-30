@@ -1,13 +1,15 @@
 {
   "approved_protected_paths": [
-    "bin/check_sunlight_rule_parity.py"
+    "src/main/kotlin/dugsolutions/leaf/v35/battle/DoomResolver.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/Moment.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/operation/TrashResolver.kt"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "94c00887b549eeff79a647d77577d4eeebbda96af11716279fe3d4c5729700f3",
+  "previous_baseline_digest": "35f0aa40ce200bc0e951668c80fb1dd12c54048b35ad9926340c35dc6adcd142",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -234,7 +236,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/battle/BattleOrder.kt": "2f79905854e0dd5770ed5c772d5b0745cfbb539d250a9bb396b172895e0878ec",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/BattlePlacementResolver.kt": "4bfe1602e9c607cfa0bc948d5d3128d474f9c01ceb28e79b948e93048ed7156f",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/BattleState.kt": "f2dd246dbc0d383b9887d3edea310cb39da4b90f075320b2febf3d746f0d285f",
-    "src/main/kotlin/dugsolutions/leaf/v35/battle/DoomResolver.kt": "a97959ee66a4a251160dc9012f831f48255805bce97400b7f2a981b1fabfb9ee",
+    "src/main/kotlin/dugsolutions/leaf/v35/battle/DoomResolver.kt": "8506241788e90d7dc188124d201a71e058f87006d657c5310a02a96d3a226271",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/StrikeContributionLedger.kt": "b3fa5cb042cb047264a947db8c9d09967680045dfe8624ab37d92b3add11fdd2",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/StrikeResolver.kt": "578d6660904c2fb54f106cd1e3f820bbc880dab16bfa3ba9e01a8bfa8a0343a3",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleColumn.kt": "ac10fcd092a37489bb327347f4cf0261e91f59f4c4b76adfb1a125ec6bf9cc9c",
@@ -250,7 +252,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/chronicle/GameChronicle.kt": "877575bd696a0c739ebb4d90d60c472b46d06c7505d92e3262043d5aad9f8bae",
     "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/ButterflyStateSnapshot.kt": "abbfd1fb3ba4b344af41cbdb99c15db42400c6445214cc4f136a9acad07cd3ec",
     "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/GameEntry.kt": "725f0af81752101086020429af574796c08a6cd0fc3883ba5c2d3fde57867bf7",
-    "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/Moment.kt": "e3343bda765bb19771d99e94b76d65892354cc2ec65f33b092a24b63e7373cd5",
+    "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/Moment.kt": "51e90c04bc61ae1268b36f557ef22d30df56f33b42b3306f4d6c4469be9f62cf",
     "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/PlayerRoundSummarySnapshot.kt": "395b3083066f81643c2fdc420fce8cdc0480f97177e6efa542cff9712f3987ba",
     "src/main/kotlin/dugsolutions/leaf/v35/common/CardDataFiles.kt": "c942a913a7f7dd9943ecb26910cd329963254b1659faf920f27ca0f566ebfb07",
     "src/main/kotlin/dugsolutions/leaf/v35/common/FirstGameDefault.kt": "11e71a9a57c8f24ac1320eb1f56db0cac531138dc8c1c2e99562bd1e07f98b24",
@@ -305,7 +307,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/game/operation/RollResolver.kt": "8c02506ee6cd6cf281016c718dd0c6747a7fb433206dc6815bd80b9915eab746",
     "src/main/kotlin/dugsolutions/leaf/v35/game/operation/SunlightTokenResolver.kt": "7bc5eb5e409b91445847794b4af6fb794883656d2bbacf9e368cb129bf0b9b21",
     "src/main/kotlin/dugsolutions/leaf/v35/game/operation/SupportActionExecutor.kt": "0ed379f2bea1e2778b49e6dc15f0a680494f6de17ebec8afb0e713d9c0e91c0f",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/operation/TrashResolver.kt": "aa45b2353208a4f9b712d8d34dc18d4681d6dab79b101227bcd7a7e0c17e3a10",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/operation/TrashResolver.kt": "1d81d6397a8f8a90c397aa1794b9a284957a55de4cfdfb3bbcb0102b3788ba4c",
     "src/main/kotlin/dugsolutions/leaf/v35/game/operation/UpgradeResolver.kt": "beaf7df4067c69220a73ba52c74e861d89df54dbd5b782bfb09d58acd74c2282",
     "src/main/kotlin/dugsolutions/leaf/v35/game/operation/WoundResolver.kt": "d70f54367f5725718cb29fd9e466e264bfa00ffc6e5ec88759f63fa243d36882",
     "src/main/kotlin/dugsolutions/leaf/v35/game/random/EventRollRandomness.kt": "96a7f51a09273688bcf2d06da2ac32f35569eb6bc2c6ff870c60cab1dd64a49f",
@@ -491,5 +493,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "B08 reviewed Sunlight parity audit checker"
+  "review_reason": "Explicitly requested v37.03 D4 die-trash rules fidelity correction"
 }

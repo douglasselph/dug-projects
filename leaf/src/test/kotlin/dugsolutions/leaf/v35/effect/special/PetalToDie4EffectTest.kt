@@ -115,13 +115,8 @@ class PetalToDie4EffectTest {
         assertEquals(4, firstD4.value)
         assertEquals(6, d8.value)
 
-        // Trash removes the D4 from the game; only Upgrade replacement returns D4s.
-        assertEquals(
-            0,
-            game.grove.graftBed.count(
-                DieSides.D4
-            )
-        )
+        // Trashed D4s return to the Graft Bed under the v37.03 universal rule.
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
 
         assertTrue(
             strategy.seen.any {
@@ -310,7 +305,7 @@ class PetalToDie4EffectTest {
         effect.execute(request, nested)
 
         assertEquals(null, battleState.grid.locationOf(d4))
-        assertEquals(0, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
         assertEquals(listOf(d8), actor.dice.hand)
         assertEquals(7, d8.value)
         assertEquals(

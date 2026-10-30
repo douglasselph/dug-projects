@@ -1,6 +1,8 @@
 package dugsolutions.leaf.v35.game.operation
 
 import dugsolutions.leaf.v35.error.InvalidGameStateException
+import dugsolutions.leaf.v35.chronicle.domain.GameEntry
+import dugsolutions.leaf.v35.chronicle.domain.TrashDestination
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.random.die.DieSides
@@ -34,7 +36,7 @@ class TrashResolverTest {
     }
 
     @Test
-    fun trashD4_removesItFromHandAndLeavesGame() {
+    fun trashD4_removesItFromHandAndReturnsItToGraftBed() {
         val d4 =
             FixedEffectDie(4, 3)
         val actor =
@@ -57,7 +59,7 @@ class TrashResolverTest {
 
         assertTrue(actor.dice.hand.isEmpty())
         assertEquals(
-            0,
+            1,
             game.grove.graftBed.count(
                 DieSides.D4
             )
@@ -66,9 +68,12 @@ class TrashResolverTest {
             DieSides.D4,
             result.sides
         )
-        assertFalse(
-            result.returnedToGraftBed
-        )
+        assertTrue(result.returnedToGraftBed)
+        val event = game.chronicle.entries.filterIsInstance<GameEntry.TrashDie>().single()
+        assertEquals(TrashDestination.GRAFT_BED, event.destination)
+        // The returned die is available to a later Grove acquisition.
+        assertTrue(game.grove.graftBed.take(DieSides.D4))
+        assertEquals(0, game.grove.graftBed.count(DieSides.D4))
     }
 
     @Test
@@ -111,13 +116,10 @@ class TrashResolverTest {
                 DieSides.D4
             )
         )
-        assertEquals(
-            DieSides.D6,
-            result.sides
-        )
-        assertFalse(
-            result.returnedToGraftBed
-        )
+        assertEquals(DieSides.D6, result.sides)
+        assertFalse(result.returnedToGraftBed)
+        val event = game.chronicle.entries.filterIsInstance<GameEntry.TrashDie>().single()
+        assertEquals(TrashDestination.OUT_OF_GAME, event.destination)
     }
 
     @Test
@@ -147,6 +149,42 @@ class TrashResolverTest {
         assertEquals(
             before,
             game.grove.graftBed.counts
+        )
+    }
+
+    @Test
+    fun everyLargerDieSizeLeavesGameWithoutChangingGraftBed() {
+        for (sides in listOf(6, 8, 10, 12, 20)) {
+            val die = FixedEffectDie(sides, 1)
+            val actor = EffectTestFixture.player(id = 1, hand = listOf(die))
+            val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+            val before = game.grove.graftBed.counts
+
+            val result = resolver.trashDieFromHand(game, actor, die)
+
+            assertTrue(actor.dice.hand.isEmpty(), "D$sides")
+            assertFalse(result.returnedToGraftBed, "D$sides")
+            assertEquals(before, game.grove.graftBed.counts, "D$sides")
+            val event = game.chronicle.entries.filterIsInstance<GameEntry.TrashDie>().single()
+            assertEquals(TrashDestination.OUT_OF_GAME, event.destination, "D$sides")
+        }
+    }
+
+    @Test
+    fun trashingTwoD4sReturnsBothToGraftBed() {
+        val first = FixedEffectDie(4, 1)
+        val second = FixedEffectDie(4, 2)
+        val actor = EffectTestFixture.player(id = 1, hand = listOf(first, second))
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+
+        resolver.trashDieFromHand(game, actor, first)
+        resolver.trashDieFromHand(game, actor, second)
+
+        assertTrue(actor.dice.hand.isEmpty())
+        assertEquals(2, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(
+            listOf(TrashDestination.GRAFT_BED, TrashDestination.GRAFT_BED),
+            game.chronicle.entries.filterIsInstance<GameEntry.TrashDie>().map { it.destination }
         )
     }
 

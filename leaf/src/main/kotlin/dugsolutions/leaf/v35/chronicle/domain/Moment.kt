@@ -404,7 +404,7 @@ data class BuyPlantOpportunitySnapshot(
 )
 enum class WoundKind { FLIPPED, SNIPPED }
 enum class UpgradeDestination { HAND, DISCARD }
-enum class TrashDestination { OUT_OF_GAME }
+enum class TrashDestination { OUT_OF_GAME, GRAFT_BED }
 
 data class BuyOrderDieSnapshot(
     val sides: DieSides,

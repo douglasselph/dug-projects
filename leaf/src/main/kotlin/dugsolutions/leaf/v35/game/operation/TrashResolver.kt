@@ -10,16 +10,15 @@ import dugsolutions.leaf.v35.random.die.DieSides
 
 data class TrashDieResolution(
     val sides: DieSides,
-    /** Compatibility/result flag; v35 Trash never returns a die to the Graft Bed. */
+    /** True if the Trashed die was a D4 returned to the Graft Bed. */
     val returnedToGraftBed: Boolean
 )
 
 /**
- * Universal v35 rule for Trashing a player-owned die from the Dice Hand.
+ * Universal v37.03 rule for Trashing a player-owned die from the Dice Hand.
  *
- * Trash removes the die from the game regardless of size. In particular, a
- * Trashed D4 does NOT return to the Graft Bed. Returning a replaced D4 is an
- * Upgrade-specific rule owned by UpgradeResolver.
+ * A Trashed D4 returns to the Graft Bed; all larger Trashed dice leave the
+ * game. Upgrade replacement has its own distinct, non-Trash rule.
  *
  * Battle Grid dice are still logically in PlayerDice.hand, so Battle/Doom can
  * reuse this same rule after separately removing the die's Grid placement.
@@ -54,17 +53,26 @@ class TrashResolver {
 
         player.dice.recordRemoval(current, reason)
 
+        val returnedToGraftBed = sides == DieSides.D4
+        if (returnedToGraftBed) {
+            game.grove.graftBed.returnD4()
+        }
+
         game.chronicle.record(
             Moment.TrashDie(
                 playerId = player.id,
                 sides = sides,
-                destination = TrashDestination.OUT_OF_GAME
+                destination = if (returnedToGraftBed) {
+                    TrashDestination.GRAFT_BED
+                } else {
+                    TrashDestination.OUT_OF_GAME
+                }
             )
         )
 
         return TrashDieResolution(
             sides = sides,
-            returnedToGraftBed = false
+            returnedToGraftBed = returnedToGraftBed
         )
     }
 }

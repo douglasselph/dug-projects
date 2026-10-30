@@ -36,8 +36,8 @@ data class DoomResult(
  * complete value group. When fewer than two dice exist, it Trashes everything
  * available and stops.
  *
- * The universal v35 Trash rule applies: every Doomed die leaves the game.
- * D4 return is specific to Upgrade replacement, not Trash.
+ * The universal v37.03 Trash rule applies: Doomed D4s return to the Graft
+ * Bed; larger Doomed dice leave the game.
  */
 class DoomResolver(
     private val trashResolver: TrashResolver = TrashResolver()
