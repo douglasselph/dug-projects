@@ -93,6 +93,22 @@ class SunlightBattleSpendingValueTest {
     }
 
     @Test
+    fun `decision score equals observed net continuation value even with many tokens in final Battle`() {
+        val context = context(sunlight = 8, battlesRemaining = 1, finalBattle = true)
+        val observed = SunlightBattleSpendingValue.observe(
+            context, weakRound(), BattleMainAction.RoundEffect1
+        )
+        val decision = SunlightBattleSpendingValue.score(
+            context, weakRound(), BattleMainAction.RoundEffect1
+        )
+
+        // The raw base + final timing + surplus reductions fall below five.
+        // Both the displayed diagnostic and real strategy must use the floor.
+        assertEquals(5, observed.preservationValue)
+        assertEquals(observed.netSupportValue, decision.total)
+    }
+
+    @Test
     fun `D20 Draw justifies Sunlight without a phantom final Main bonus`() {
         val observed = SunlightBattleSpendingValue.observe(
             context = context(

@@ -433,6 +433,9 @@ class BattleActionCoordinatorTest {
             val support = (choice as? BattleTurnAction.Support)?.action
             support is BattleSupportAction.PlaceCritter && support.critter == Critter.WORM
         })
+        // The extra Main must not consume the ordinary Final Main; both
+        // newly granted Support and the regular Final remain legal afterward.
+        assertTrue(strategy.afterFunding.first().any { it is BattleTurnAction.FinalMain })
         assertTrue(strategy.baselineSelections.isNotEmpty())
         assertTrue(strategy.baselineSelections.indices.all { index ->
             strategy.baselineSelections[index] in strategy.afterFunding[index]

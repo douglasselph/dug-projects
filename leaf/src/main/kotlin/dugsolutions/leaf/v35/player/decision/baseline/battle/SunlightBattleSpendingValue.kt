@@ -94,28 +94,14 @@ object SunlightBattleSpendingValue {
         legalFinalMains: Collection<BattleMainAction> = emptyList()
     ): PriorityScore {
         val observation = observe(context, roundCard, action, cardScorers, legalSupports, legalFinalMains)
-        val projected = PriorityScore(observation.fundedMainValue)
-        return projected
-            .adjusted(
-                -observation.basePreservationValue,
-                "Preserve one banked Sunlight for a future extra Battle Main"
-            )
-            .adjusted(
-                -observation.battleTimingAdjustment,
-                when {
-                    observation.finalBattle -> "Final Battle removes most future Sunlight preservation value"
-                    observation.battleTimingAdjustment > 0 -> "Early Battle preserves the last Sunlight for later tactical opportunity"
-                    else -> "Current Battle timing adds no Sunlight preservation adjustment"
-                }
-            )
-            .adjusted(
-                -observation.additionalHoldingAdjustment,
-                if (observation.additionalHoldingAdjustment < 0) {
-                    "Additional banked Sunlight lowers the marginal preservation cost"
-                } else {
-                    "No surplus Sunlight preservation adjustment"
-                }
-            )
+        // Use the same clamped preservation cost reported by observe(). Applying
+        // the raw individual adjustments can go below the minimum when several
+        // Sunlight tokens are held in the final Battle, producing an artificial
+        // bonus that cannot be justified by the funded Main's continuation.
+        return PriorityScore(observation.fundedMainValue).adjusted(
+            -observation.preservationValue,
+            "Spend one Sunlight: contextual, minimum-clamped preservation cost"
+        )
     }
 
     fun observations(
