@@ -849,6 +849,54 @@ class BattleActionCoordinatorTest {
         println("C04_ENGINE_LEGAL|no-draw-control|legal=${request.legalChoices}|draw=false")
     }
 
+    /**
+     * Original V3-18 four-player snapshot (rather than the earlier two-player
+     * adaptation). The unequal TOP/MIDDLE/BOTTOM faces cannot all arise from
+     * one initial Rank-and-Place; the additional dice are positioned directly
+     * as a mid-Battle snapshot. The coordinator still generates legal Mains.
+     * The *history* leading to this snapshot is not certified by this test.
+     */
+    @Test
+    fun c04_reviewedV3_18_originalFourPlayerSnapshot_reportsCoordinatorLegalRanking() {
+        val observer = C04AcceptanceRecordingStrategy()
+        val actor = player(1, observer,
+            hand = listOf(fixedDie(12, 4), fixedDie(8, 3), fixedDie(10, 7), fixedDie(6, 6)),
+            supply = listOf(fixedDie(8, 5)))
+        val b = player(2, finishStrategy("B"),
+            hand = listOf(fixedDie(6, 2), fixedDie(10, 5), fixedDie(8, 4)))
+        val c = player(3, finishStrategy("C"),
+            hand = listOf(fixedDie(10, 7), fixedDie(6, 4), fixedDie(6, 4), fixedDie(12, 9)))
+        val d = player(4, finishStrategy("D"),
+            hand = listOf(fixedDie(12, 4), fixedDie(8, 5), fixedDie(8, 3), fixedDie(10, 7), fixedDie(6, 6)))
+        val fixture = fixture(actor, b, c, d)
+        fun place(p: Player, row: StrikeRow, vararg indices: Int) {
+            indices.forEach { fixture.battleState.grid.placeDie(p, row, p.dice.hand[it]) }
+        }
+        place(actor, StrikeRow.TOP, 0)
+        place(actor, StrikeRow.MIDDLE, 1)
+        place(actor, StrikeRow.BOTTOM, 2, 3)
+        place(b, StrikeRow.TOP, 0)
+        place(b, StrikeRow.MIDDLE, 1)
+        place(b, StrikeRow.BOTTOM, 2)
+        place(c, StrikeRow.TOP, 0)
+        place(c, StrikeRow.MIDDLE, 1, 2)
+        place(c, StrikeRow.BOTTOM, 3)
+        place(d, StrikeRow.TOP, 0, 1)
+        place(d, StrikeRow.MIDDLE, 2)
+        place(d, StrikeRow.BOTTOM, 3, 4)
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        val request = observer.firstRequest ?: error("V3-18: first Main was not offered")
+        val vp = BattleMainAction.RoundEffect1
+        val draw = BattleMainAction.Draw
+        assertTrue(vp in request.legalChoices, "Original V3-18: Round VP must be legal")
+        assertTrue(draw in request.legalChoices, "Original V3-18: Draw must be legal")
+        val scorer = dugsolutions.leaf.v35.player.decision.baseline.battle.BattleMainPriority
+        val scoreA = scorer.score(request.context, request.roundCard, vp).total
+        val scoreB = scorer.score(request.context, request.roundCard, draw).total
+        val ranking = when { scoreA > scoreB -> "A"; scoreB > scoreA -> "B"; else -> "TIE" }
+        println("C04_ENGINE_LEGAL|V3-18-four-player|human=B|confidence=4|baseline=$ranking|A=$scoreA|B=$scoreB|agree=${ranking == "B"}|snapshotLegal=true|historyVerified=false|legal=${request.legalChoices}")
+    }
+
     private class C04AcceptanceRecordingStrategy : BattleStrategy {
         var firstRequest: ChooseBattleFirstMainActionRequest? = null
         override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
