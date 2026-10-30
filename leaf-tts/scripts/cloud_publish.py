@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
+from save_release import name_cloud, revision
 
 ASSET_KEYS = {'FaceURL','BackURL','ImageURL','ImageSecondaryURL','MeshURL',
               'DiffuseURL','NormalURL','ColliderURL','PDFUrl'}
@@ -53,12 +54,13 @@ def main():
     p.add_argument('source',type=Path)
     p.add_argument('output',type=Path)
     p.add_argument('--manifest',type=Path,required=True)
-    p.add_argument('--name',default='Leaf & Let Die - Blind Playtest (Cloud)')
+    p.add_argument('--name',default=None)
     args=p.parse_args()
     if args.source.resolve()==args.output.resolve():p.error('Input and output must be different files')
     data=json.loads(args.source.read_text(encoding='utf-8'))
     manifest=json.loads(args.manifest.read_text(encoding='utf-8'))
     mapping=manifest['assets']
+    release_name = args.name if args.name else name_cloud(data)
     counters,unresolved,used=convert(data,mapping)
     if unresolved:
         print(f'FAILED: {len(unresolved)} unhosted/invalid asset references:',file=__import__('sys').stderr)
@@ -77,7 +79,7 @@ def main():
             leftovers.append(f'{path}: {obj[:160]}')
     # GMNotes is informational metadata and sometimes intentionally describes a local file;
     # its text is not used by TTS to fetch assets. Scan only actual asset fields above.
-    data['SaveName']=args.name
+    data['SaveName']=release_name
     args.output.parent.mkdir(parents=True,exist_ok=True)
     temp=args.output.with_name(args.output.name+'.tmp')
     try:

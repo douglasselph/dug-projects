@@ -58,7 +58,10 @@ case "${1:-}" in
    now="$(date +%Y%m%d-%H%M%S)"
    if [[ -f "$target" ]]; then cp "$target" "$BACKUP_DIR/TS_Save_pre_publish_${now}.json"; fi
    python3 "$ROOT/scripts/validate_card_save.py" "$candidate" --config "$ROOT/config/card_catalog_effects.json"
-   cp "$candidate" "$target"
+   tmp="$(mktemp "$TTS_SAVES_DIR/.publish-XXXXXX.json")"
+   trap 'rm -f "$tmp"' EXIT
+   python3 "$ROOT/scripts/name_local_save.py" "$candidate" "$tmp"
+   mv "$tmp" "$target"
    echo "Published: $target"
    echo "Old working save (if any) backed up in: $BACKUP_DIR"
    echo "Open TTS and load '$TTS_SAVE_NAME' from your Generated saves folder."
