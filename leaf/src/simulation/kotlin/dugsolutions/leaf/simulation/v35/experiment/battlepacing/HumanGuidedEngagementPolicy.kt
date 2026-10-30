@@ -16,6 +16,10 @@ import dugsolutions.leaf.v35.round.domain.RoundCardType
  */
 class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy {
     private val supportPriority = BattleSupportPriority()
+    private val mainTiming = EngagementMainTimingPlanner()
+    // The row decision is fixed for the actor's opportunity; recompute at the
+    // beginning of the next Engagement, never after each Support within a turn.
+    private val rowCommitments = mutableMapOf<Pair<dugsolutions.leaf.v35.player.PlayerId, dugsolutions.leaf.v35.battle.domain.StrikeRow>, Boolean>()
 
     override fun choose(request: EngagementDecision): EngagementChoice {
         val player = game.players.first { it.id == request.playerId }
@@ -50,20 +54,29 @@ class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy {
             wisp == null || wisp == allowedWisp
         }
 
-        // There is no 'final Main ends Support' contract in Candidate B.
-        // On entering the first opportunity, preserve the production first-Main
-        // tactical choice, but subsequent Supports remain possible.
-        if (request.actionsAlreadyTaken == 0 && request.normalMainsRemaining == 2 &&
-            request.legalMains.isNotEmpty()) {
-            val choice = player.decisions.battle.chooseFirstMainAction(
-                ChooseBattleFirstMainActionRequest(card, request.legalMains, request.context)
+        // Main timing is a separate Candidate B choice. The canonical Main
+        // selector still evaluates the full unresolved Battle grid; Main
+        // timing may defer a token so it can be used in a later Engagement.
+        val commitMain = rowCommitments.getOrPut(request.playerId to request.row) {
+            request.legalMains.isNotEmpty() && mainTiming.shouldUseMain(
+                request.context, request.row, request.normalMainsRemaining
             )
-            check(choice in request.legalMains)
+        }
+        val offeredMains = if (commitMain) request.legalMains else emptyList()
+
+        // The first normal Main remains the v37 First Main decision even if
+        // it is delayed to Middle or preceded by a Support in this turn.
+        // A normal Main never ends this Candidate B Support opportunity.
+        if (request.normalMainsRemaining == 2 && offeredMains.isNotEmpty()) {
+            val choice = player.decisions.battle.chooseFirstMainAction(
+                ChooseBattleFirstMainActionRequest(card, offeredMains, request.context)
+            )
+            check(choice in offeredMains)
             return EngagementChoice.Main(choice)
         }
 
-        if (request.legalMains.isNotEmpty()) {
-            val legal = request.legalMains.map { BattleTurnAction.FinalMain(it) } +
+        if (offeredMains.isNotEmpty()) {
+            val legal = offeredMains.map { BattleTurnAction.FinalMain(it) } +
                 valuableSupports.map { BattleTurnAction.Support(it.first) }
             val chosen = player.decisions.battle.chooseTurnAction(
                 ChooseBattleTurnActionRequest(card, 1 + request.actionsAlreadyTaken, legal, request.context)
