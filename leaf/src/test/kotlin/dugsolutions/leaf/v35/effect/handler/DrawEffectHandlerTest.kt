@@ -64,6 +64,79 @@ class DrawEffectHandlerTest {
     }
 
     @Test
+    fun rootOnARollBattle_ignoresLockedStrikeDiceEvenWhenStrategyPrefersLastDie() {
+        val openDie = SequenceRollDie(8, initial = 2, rolls = listOf(3))
+        val lockedDie = SequenceRollDie(4, initial = 3, rolls = listOf(1))
+        val actor = EffectTestFixture.player(
+            id = 1,
+            hand = listOf(openDie, lockedDie),
+            effectStrategy = LastEffectChoiceStrategy()
+        )
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, lockedDie)
+        battle.grid.placeDie(actor, StrikeRow.MIDDLE, openDie)
+        battle.lockResolvedRow(StrikeRow.TOP)
+
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+
+        assertEquals(3, openDie.value)
+        assertEquals(3, lockedDie.value)
+    }
+
+    @Test
+    fun rootOnARollBattle_isUnavailableWhenEveryDieIsLocked() {
+        val lockedDie = SequenceRollDie(4, initial = 3, rolls = listOf(1))
+        val actor = EffectTestFixture.player(1, hand = listOf(lockedDie))
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, lockedDie)
+        battle.lockResolvedRow(StrikeRow.TOP)
+
+        val rootOnARoll = EffectTestFixture.request(
+            game, actor, GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+        val rootRecall = rootOnARoll.copy(
+            effect = GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+        )
+
+        assertFalse(handler.canExecute(rootOnARoll))
+        assertFalse(handler.canExecute(rootRecall))
+        assertEquals(3, lockedDie.value)
+    }
+
+    @Test
+    fun rootRecallBattle_choosesOnlyDiceInUnresolvedRows() {
+        val openDie = SequenceRollDie(8, initial = 5, rolls = listOf(3))
+        val lockedDie = SequenceRollDie(4, initial = 3, rolls = listOf(1))
+        val actor = EffectTestFixture.player(
+            1, hand = listOf(openDie, lockedDie), effectStrategy = LastEffectChoiceStrategy()
+        )
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, lockedDie)
+        battle.grid.placeDie(actor, StrikeRow.MIDDLE, openDie)
+        battle.lockResolvedRow(StrikeRow.TOP)
+
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+        assertEquals(3, openDie.value)
+        assertEquals(3, lockedDie.value)
+    }
+
+    @Test
     fun simpleRerollResolvesNormalRollReward() {
         val die = SequenceRollDie(6, initial = 5, rolls = listOf(1))
         val actor = EffectTestFixture.player(1, hand = listOf(die))
@@ -315,6 +388,32 @@ class DrawEffectHandlerTest {
                 battleState.grid.locationOf(it) != null
             }
         )
+    }
+
+    @Test
+    fun burstingBlossomBattle_onlyRaisesAnOpenStrikeDie() {
+        val openDie = FixedEffectDie(6, 5)
+        val lockedDie = FixedEffectDie(4, 4)
+        val actor = EffectTestFixture.player(
+            1, hand = listOf(openDie, lockedDie), effectStrategy = LastEffectChoiceStrategy()
+        )
+        actor.dice.addAllToSupply(listOf(FixedEffectDie(8, 3), FixedEffectDie(10, 7)))
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, lockedDie)
+        battle.grid.placeDie(actor, StrikeRow.MIDDLE, openDie)
+        battle.lockResolvedRow(StrikeRow.TOP)
+
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        assertTrue(handler.canExecute(request))
+        handler.execute(request, nested)
+        assertEquals(6, openDie.value)
+        assertEquals(4, lockedDie.value)
+        assertEquals(4, actor.dice.handSize)
     }
 
     @Test

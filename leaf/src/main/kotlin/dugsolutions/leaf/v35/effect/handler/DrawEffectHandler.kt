@@ -49,11 +49,11 @@ class DrawEffectHandler(
             GameEffect.DISCARD_UP_TO_3_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION -> true
-                    GameEffectPhase.BATTLE -> request.actor.dice.hand.isNotEmpty()
+                    GameEffectPhase.BATTLE -> mutableBattleHandChoices(request).isNotEmpty()
                 }
 
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS ->
-                request.actor.dice.hand.isNotEmpty()
+                mutableBattleHandChoices(request).isNotEmpty()
 
             GameEffect.REROLL_ONE_DIE_AND_REROLL_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
                 when (request.phase) {
@@ -104,7 +104,7 @@ class DrawEffectHandler(
                 }
 
             GameEffect.DISCARD_ONE_DIE_DRAW_TWO ->
-                request.actor.dice.hand.isNotEmpty()
+                mutableBattleHandChoices(request).isNotEmpty()
 
             GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE ->
                 burstingBlossomChoices(request).isNotEmpty()
@@ -147,7 +147,7 @@ class DrawEffectHandler(
                     GameEffectPhase.BATTLE -> {
                         val die = chooseRequiredHandDie(
                             request,
-                            handChoices(request.actor)
+                            mutableBattleHandChoices(request)
                         )
                         /* Reroll retains the live die in its Battle location. */
                         rollResolver.roll(request.actor, die)
@@ -157,7 +157,7 @@ class DrawEffectHandler(
             GameEffect.REROLL_DIE_UNTIL_3_PLUS_IGNORE_ROLL_REWARDS -> {
                 val die = chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor)
+                    mutableBattleHandChoices(request)
                 )
                 var attempts = 0
                 do {
@@ -839,7 +839,7 @@ class DrawEffectHandler(
     private fun burstingBlossomChoices(
         request: GameEffectRequest
     ): List<EffectDieChoice> {
-        val choices = handChoices(request.actor)
+        val choices = mutableBattleHandChoices(request)
 
         if (request.phase != GameEffectPhase.BATTLE) {
             return choices
@@ -880,6 +880,15 @@ class DrawEffectHandler(
             ) <= availableSlots
         }
     }
+
+    /**
+     * During Candidate B, the Hand still contains dice committed to locked
+     * Strikes. Reroll/Raise effects may only select dice in open Strikes.
+     * Cultivation has no Strike locks and retains its normal Hand choices.
+     */
+    private fun mutableBattleHandChoices(request: GameEffectRequest): List<EffectDieChoice> =
+        if (request.phase == GameEffectPhase.BATTLE) battleHandChoices(request)
+        else handChoices(request.actor)
 
     private fun hasBattlePlacementCapacity(
         request: GameEffectRequest,

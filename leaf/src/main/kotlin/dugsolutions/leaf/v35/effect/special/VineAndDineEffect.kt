@@ -5,10 +5,12 @@ import dugsolutions.leaf.v35.error.effectCheck
 import dugsolutions.leaf.v35.error.decisionCheck
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.effect.GameEffect
+import dugsolutions.leaf.v35.effect.GameEffectPhase
 import dugsolutions.leaf.v35.effect.GameEffectExecutor
 import dugsolutions.leaf.v35.effect.GameEffectRequest
 import dugsolutions.leaf.v35.effect.handler.EffectHandler
 import dugsolutions.leaf.v35.effect.handler.decisionContext
+import dugsolutions.leaf.v35.effect.handler.battleHandChoices
 import dugsolutions.leaf.v35.effect.handler.handChoices
 import dugsolutions.leaf.v35.effect.handler.resolveHandDie
 import dugsolutions.leaf.v35.player.decision.effect.ChooseEffectCritterDieRequest
@@ -66,7 +68,13 @@ class VineAndDineEffect : EffectHandler {
     private fun legalChoices(
         request: GameEffectRequest
     ): List<EffectCritterDieChoice> {
-        val dice = handChoices(request.actor)
+        // In Candidate B, Hand still includes dice from resolved/locked Strikes.
+        // Such dice must not be offered for value changes. Canonical Battles
+        // have no locked rows during actions, so their targeting is unchanged.
+        val dice = when (request.phase) {
+            GameEffectPhase.BATTLE -> battleHandChoices(request)
+            GameEffectPhase.CULTIVATION -> handChoices(request.actor)
+        }
         if (dice.isEmpty()) return emptyList()
 
         val critters = request.actor.critters.all

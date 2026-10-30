@@ -1,13 +1,13 @@
 {
   "approved_protected_paths": [
-    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt"
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndDineEffect.kt"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "7b74b521d5470e1ea12b92a6de81c42dfdc18134e08b5d32213128f01a77ef13",
+  "previous_baseline_digest": "f74bbce60548eefd0543e8a0fd5cfab39129ce04f0cf62ae3e88898cc8542719",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -266,7 +266,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/CrossPlayerEffectHandler.kt": "73292021023ab8a5f4b5b48ab8d1cb832705749a52a0c5a52c0335f1fe02414a",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DeferredRoundEffectHandler.kt": "16ab4780911d3bb7b9d5fb27c725b4ca66148926d020de269370ad17bd0e7d55",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt": "5d0a47d586edec85ca0fd353323d4fa78533406c8d42a045704e26adbacdbe77",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DrawEffectHandler.kt": "96069fcc03df68db19230d677b6d1eb292e99e1995784cd1b72ff633741078fe",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DrawEffectHandler.kt": "2033acef7c04782fdc3721d90f557c20a7aad6ff79f4fa1d39c62e5144ac7385",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectBattleTargeting.kt": "ebc331f4288264a240cc64d9e615be024b0020978461fe21d0ac740a0b79c6fa",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectDecisionContext.kt": "6fe5893e5ab823d509116f1452f3b4091c88c13960c283752249a13b8453f907",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectDieTargeting.kt": "ddfbdd9b5fd08b7e35f622fcbfcfad3f3448e16f8e954e16d1b28413e7572a03",
@@ -283,7 +283,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/ShiftHappensEffect.kt": "76e1cbe30360ea0884f57958d7e21b621988afc8e5228356f90dae297299751d",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/SnipHappensEffect.kt": "48f5ba507b510726a1026a4bdd068f9affa4e2d6475102f7e0d9131cdd877db2",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndAgainEffect.kt": "9b9937009a974b426f9c855d19749364d6d93beaf2b4a5763a587dc7046f8b4e",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndDineEffect.kt": "92b2d4e2fa25fdbdae9c528eee5d2b538b361e5e8008d71b8b067d3aabee1552",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndDineEffect.kt": "1aad08d271c3164686e7c04cafd7f56261c79f1946e6a053381513d8d43a8a38",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndPunishmentResearchEffect.kt": "b55fc21fed743ceb3e903af7a23b81329166c33fa5e238ca705d3071f5014eb4",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispLastWordEffect.kt": "1ad8586fa2784c9f853bd63683e6244b04ad1c58b9b0b2666c2d491358f3e695",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispReckoningEffect.kt": "5d4511c17ddb53dcaa9993938f418b4ba950e0d9a01edcf2d6542bce8cfdd0a1",
@@ -491,5 +491,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "Expose the existing immutable Battle decision observation for simulation research without changing mechanics"
+  "review_reason": "Candidate B locked-row Battle target validity: Vine and Dine may not raise resolved dice"
 }
