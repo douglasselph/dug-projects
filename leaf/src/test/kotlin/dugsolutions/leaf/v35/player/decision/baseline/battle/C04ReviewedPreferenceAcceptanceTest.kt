@@ -66,10 +66,11 @@ class C04ReviewedPreferenceAcceptanceTest {
         val positions = listOf(top, middle, bottom)
         require(positions.all { row -> row.size == players.size && row.all { it.size <= 3 } })
         require(players.indices.all { i -> positions.sumOf { row -> row[i].size } >= 3 })
+        require(positions.flatten().flatten().all { die -> die.side in listOf(4, 6, 8, 10, 12, 20) && die.face in 1..die.side })
         val rows = listOf(StrikeRow.TOP, StrikeRow.MIDDLE, StrikeRow.BOTTOM).mapIndexed { index, strike ->
             BattleRowView(strike, false, players.mapIndexed { playerIndex, player ->
                 val dice = positions[index][playerIndex].mapIndexed { dieIndex, value ->
-                    BattleDieView(index * 3 + dieIndex, value.side, value.face)
+                    BattleDieView(index * 100 + playerIndex * 10 + dieIndex, value.side, value.face)
                 }
                 val total = dice.sumOf { it.value }
                 BattlePlayerRowView(player, strike, dice, emptyList(), total, 0, total, false)
@@ -140,6 +141,98 @@ class C04ReviewedPreferenceAcceptanceTest {
             drawSides = 8)
         compare("V3-18", s, BattleMainAction.RoundEffect1, BattleMainAction.Draw,
             human = "B", confidence = 4, enforce = false)
+    }
+
+    /**
+     * Target-constrained comparison. This is NOT a main-action preference:
+     * the unrestricted Plant scorer may select a different die. The selected
+     * hand index is checked against the actual actor row, and only the
+     * stipulated die's consequence is compared with Draw.
+     */
+    private fun compareForcedRaise(
+        id: String, context: DecisionContext, row: StrikeRow, dieIndex: Int,
+        human: String, confidence: Int
+    ) {
+        val board = requireNotNull(context.battle)
+        val target = requireNotNull(board.row(row).forPlayer(a)).dice.single { it.handIndex == dieIndex }
+        val delta = (target.sides - target.value).coerceAtMost(4)
+        val projected = requireNotNull(BattleOwnTotalChangeAnalyzer()(
+            context, dieIndex, row, delta.toDouble(), BattleAnalysisMode.DETERMINISTIC
+        ))
+        val forcedPlant = BattleProjectedActionScore.fromCompleteProjection(
+            projected.tacticalValue, "Forced reviewed target"
+        ).total
+        val draw = BattleMainPriority.score(context, round, BattleMainAction.Draw).total
+        val baseline = when {
+            forcedPlant > draw -> "A"
+            forcedPlant < draw -> "B"
+            else -> "TIE"
+        }
+        println("C04_FORCED_TARGET|$id|row=$row|die=$dieIndex|delta=$delta|human=$human|confidence=$confidence|baseline=$baseline|A=$forcedPlant|B=$draw|agree=${human == baseline}")
+    }
+
+    @Test fun `V3-05 exact top target is distinguished from best available Plant target`() {
+        val context = state(listOf(a,b),
+            top = listOf(listOf(die(8,7)), listOf(die(8,4),die(8,6))),
+            middle = listOf(listOf(die(12,7),die(6,5)), listOf(die(8,5))),
+            bottom = listOf(listOf(die(10,4)), listOf(die(10,7),die(6,1))),
+            drawSides = 4)
+        compareForcedRaise("V3-05", context, StrikeRow.TOP, 0, "B", 5)
+    }
+
+    @Test fun `V3-01 exact top target versus D6 is measured`() {
+        val context = state(listOf(a,b),
+            top = listOf(listOf(die(8,4)), listOf(die(12,8))),
+            middle = listOf(listOf(die(8,4),die(8,1)), listOf(die(8,6),die(6,3))),
+            bottom = listOf(listOf(die(10,6)), listOf(die(8,3))),
+            drawSides = 6)
+        compareForcedRaise("V3-01", context, StrikeRow.TOP, 0, "UNCLEAR", 2)
+    }
+
+    @Test fun `V3-04 last Main direct Raise versus D12 Draw`() {
+        val context = state(listOf(a,b,c),
+            top = listOf(listOf(die(10,6)), listOf(die(12,3)), listOf(die(6,4),die(8,6))),
+            middle = listOf(listOf(die(6,3)), listOf(die(8,2),die(6,6)), listOf(die(10,7))),
+            bottom = listOf(listOf(die(12,8)), listOf(die(10,6)), listOf(die(8,6),die(6,2))),
+            drawSides = 12)
+        // Two-pip raise on MIDDLE cannot be substituted with Root Four More;
+        // report Draw score and the explicit target's +2 projection separately.
+        val forced = requireNotNull(BattleOwnTotalChangeAnalyzer()(
+            context, 100, StrikeRow.MIDDLE, 2.0, BattleAnalysisMode.DETERMINISTIC
+        ))
+        val draw = BattleMainPriority.finalMainScore(context, round, BattleMainAction.Draw).total
+        println("C04_EXPLORATORY|V3-04|human=B|confidence=4|targetPlus2Tactical=${forced.tacticalValue}|finalDraw=$draw|notComparableUntilPlantCardIsSpecified=true")
+    }
+
+    @Test fun `V3-31 Root top versus D6 with an ordinary later Main`() {
+        val context = state(listOf(a,b),
+            top = listOf(listOf(die(8,4)), listOf(die(8,4))),
+            middle = listOf(listOf(die(8,6),die(8,7)), listOf(die(8,5),die(6,3))),
+            bottom = listOf(listOf(die(10,8)), listOf(die(8,2))),
+            drawSides = 6)
+        compareForcedRaise("V3-31", context, StrikeRow.TOP, 0, "A", 3)
+        compare("V3-31-unrestricted", context, BattleMainAction.ActivatePlant(root), BattleMainAction.Draw,
+            human = "A", confidence = 3, enforce = false)
+    }
+
+    @Test fun `V3-33 exhausted resource draw versus VP`() {
+        val context = state(listOf(a,b,c,d),
+            top = listOf(listOf(die(12,9)), listOf(die(8,5)), listOf(die(8,4)), listOf(die(12,9),die(8,4))),
+            middle = listOf(listOf(die(8,7)), listOf(die(12,7)), listOf(die(8,5),die(6,1)), listOf(die(8,7))),
+            bottom = listOf(listOf(die(8,4),die(6,3)), listOf(die(10,4)), listOf(die(10,7)), listOf(die(8,4),die(6,3))),
+            drawSides = 4, wisps = 0, bees = 0, worms = 0)
+        compare("V3-33", context, BattleMainAction.Draw, BattleMainAction.RoundEffect1,
+            human = "A", confidence = 3, enforce = false)
+    }
+
+    @Test fun `V3-34 abundant resource draw versus VP`() {
+        val context = state(listOf(a,b,c),
+            top = listOf(listOf(die(10,8)), listOf(die(12,2)), listOf(die(6,3),die(8,4))),
+            middle = listOf(listOf(die(6,5)), listOf(die(8,1),die(6,6)), listOf(die(10,6))),
+            bottom = listOf(listOf(die(12,10)), listOf(die(10,5)), listOf(die(8,5),die(6,2))),
+            drawSides = 4, wisps = 6, bees = 6, worms = 6)
+        compare("V3-34", context, BattleMainAction.Draw, BattleMainAction.RoundEffect1,
+            human = "A", confidence = 3, enforce = false)
     }
 
 }
