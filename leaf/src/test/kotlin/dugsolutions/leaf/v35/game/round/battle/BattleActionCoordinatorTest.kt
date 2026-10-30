@@ -800,6 +800,67 @@ class BattleActionCoordinatorTest {
         assertEquals(100, p1.vp)
     }
 
+    /**
+     * C04 acceptance measurements at the actual coordinator boundary.
+     * Unlike the older DecisionContext-only questionnaire projections, these
+     * record actions generated from a live Game and placed BattleState.
+     * Preference mismatches are reported, not disguised as fixture failures.
+     */
+    @Test
+    fun c04_reviewedV3_18_realGameLegalDrawVersusRoundVp_reportsActualRanking() {
+        val observer = C04AcceptanceRecordingStrategy()
+        val actor = player(1, observer,
+            hand = listOf(fixedDie(12, 4), fixedDie(8, 3), fixedDie(10, 7)),
+            supply = listOf(fixedDie(8, 5)))
+        val opponent = player(2, finishStrategy("opponent"),
+            hand = listOf(fixedDie(10, 7), fixedDie(8, 4), fixedDie(6, 2)))
+        val fixture = fixture(actor, opponent)
+        fixture.battleState.placeInitialHands()
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        val request = observer.firstRequest ?: error("C04: first Main was not offered")
+        val a = BattleMainAction.RoundEffect1 // +1 VP in this actual Round card
+        val b = BattleMainAction.Draw
+        assertTrue(a in request.legalChoices, "V3-18: VP must be coordinator-legal")
+        assertTrue(b in request.legalChoices, "V3-18: Draw must be coordinator-legal")
+        val scoreA = dugsolutions.leaf.v35.player.decision.baseline.battle.BattleMainPriority
+            .score(request.context, request.roundCard, a).total
+        val scoreB = dugsolutions.leaf.v35.player.decision.baseline.battle.BattleMainPriority
+            .score(request.context, request.roundCard, b).total
+        val ranking = when { scoreA > scoreB -> "A"; scoreB > scoreA -> "B"; else -> "TIE" }
+        println("C04_ENGINE_LEGAL|V3-18-adapted|human=B|confidence=4|baseline=$ranking|A=$scoreA|B=$scoreB|agree=${ranking == "B"}|legal=${request.legalChoices}")
+        // This adapted 2-player state is not the author's original 4-player board.
+        // It is an engine-legal measurement, NOT a certified V3-18 preference match.
+    }
+
+    @Test
+    fun c04_reviewedLegalChoice_absentDrawIsExcludedByRealCoordinator() {
+        val observer = C04AcceptanceRecordingStrategy()
+        val actor = player(1, observer,
+            hand = listOf(fixedDie(12, 8), fixedDie(8, 5), fixedDie(6, 2)))
+        val opponent = player(2, finishStrategy("opponent"),
+            hand = listOf(fixedDie(10, 6), fixedDie(8, 5), fixedDie(6, 3)))
+        val fixture = fixture(actor, opponent)
+        fixture.battleState.placeInitialHands()
+        fixture.coordinator.execute(fixture.game, fixture.roundCard, fixture.battleState)
+        val request = observer.firstRequest ?: error("C04: first Main was not offered")
+        assertTrue(BattleMainAction.Draw !in request.legalChoices,
+            "A questionnaire Draw is not legal if no die is drawable")
+        assertTrue(BattleMainAction.RoundEffect1 in request.legalChoices)
+        println("C04_ENGINE_LEGAL|no-draw-control|legal=${request.legalChoices}|draw=false")
+    }
+
+    private class C04AcceptanceRecordingStrategy : BattleStrategy {
+        var firstRequest: ChooseBattleFirstMainActionRequest? = null
+        override fun chooseFirstMainAction(request: ChooseBattleFirstMainActionRequest): BattleMainAction {
+            firstRequest = request
+            return BattleMainAction.RoundEffect1
+        }
+        override fun chooseTurnAction(request: ChooseBattleTurnActionRequest): BattleTurnAction =
+            request.legalChoices.filterIsInstance<BattleTurnAction.FinalMain>().first()
+        override fun chooseDiePlacement(request: ChooseBattleDiePlacementRequest): StrikeRow =
+            request.legalRows.first()
+    }
+
     private data class Fixture(
         val game: Game,
         val roundCard: RoundCard,
