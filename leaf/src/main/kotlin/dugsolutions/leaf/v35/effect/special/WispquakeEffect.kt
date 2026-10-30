@@ -38,7 +38,11 @@ class WispquakeEffect : EffectHandler {
 
         val keptDie = chooseOptionalHandDie(
             request = request,
-            legalChoices = handChoices(request.actor)
+            legalChoices = handChoices(request.actor) { die ->
+                request.battleState?.grid?.locationOf(die)?.row?.let { row ->
+                    request.battleState?.grid?.isRowClosed(row) != true
+                } ?: true
+            }
         )
 
         val rollResolver = RollResolver(
@@ -69,7 +73,11 @@ class WispquakeEffect : EffectHandler {
          * but a reroll itself does not move these dice out of Hand.
          */
         val diceToReroll = request.game.players.flatMap { player ->
-            player.dice.hand.map { die -> player to die }
+            player.dice.hand.filter { die ->
+                val battle = request.battleState
+                val row = battle?.grid?.locationOf(die)?.row
+                row == null || battle?.grid?.isRowClosed(row) != true
+            }.map { die -> player to die }
         }
 
         diceToReroll.forEach { (player, die) ->

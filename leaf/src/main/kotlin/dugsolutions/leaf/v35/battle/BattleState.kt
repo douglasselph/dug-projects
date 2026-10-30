@@ -1,6 +1,10 @@
 package dugsolutions.leaf.v35.battle
 
 import dugsolutions.leaf.v35.battle.domain.BattleDiePlacement
+import dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot
+import dugsolutions.leaf.v35.battle.domain.BattleGridSnapshot
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
+import dugsolutions.leaf.v35.research.provenance.AssetProvenance
 import dugsolutions.leaf.v35.battle.domain.BattleGrid
 import dugsolutions.leaf.v35.error.stateCheck
 import dugsolutions.leaf.v35.error.stateNotNull
@@ -70,6 +74,20 @@ class BattleState(
 
     val grid: BattleGrid =
         BattleGrid(playerIdsInBattleOrder)
+
+    private val frozenResolvedRows = mutableMapOf<StrikeRow, BattleGridRowSnapshot>()
+
+    /** The immutable decision/reporting total of a previously settled Strike. */
+    fun frozenResolvedRow(row: StrikeRow): BattleGridRowSnapshot? = frozenResolvedRows[row]
+
+    /** Candidate B only: capture effective Critter values before closing the row. */
+    fun lockResolvedRow(row: StrikeRow, provenance: AssetProvenance? = null) {
+        stateCheck(!grid.isRowClosed(row) && !frozenResolvedRows.containsKey(row), context = "BattleState") {
+            "Strike is already locked: $row"
+        }
+        frozenResolvedRows[row] = BattleGridSnapshot.row(this, row, provenance)
+        grid.closeRow(row)
+    }
 
     fun player(playerId: PlayerId): Player =
         stateNotNull(

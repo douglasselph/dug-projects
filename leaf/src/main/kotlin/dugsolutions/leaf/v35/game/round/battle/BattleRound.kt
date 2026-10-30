@@ -19,7 +19,9 @@ import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.SupportActionExecutor
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 import dugsolutions.leaf.v35.game.round.RoundExecutor
+import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 import dugsolutions.leaf.v35.player.decision.context.DecisionContextFactory
 import dugsolutions.leaf.v35.round.domain.RoundCard
 import dugsolutions.leaf.v35.round.domain.RoundCardType
@@ -186,6 +188,34 @@ class BattleRound(
             battleState = battleState
         )
     }
+
+    /**
+     * Research-only reuse of the canonical legal action/execution infrastructure.
+     * This factory does not schedule actions or change the production Battle path.
+     */
+    fun researchActionCoordinator(game: Game, battleState: BattleState): BattleActionCoordinator {
+        val roll = createRollResolver(game, battleState)
+        return BattleActionCoordinator(
+            rollResolver = roll,
+            effectExecutor = effectExecutor,
+            supportActionExecutor = SupportActionExecutor(
+                rollResolver = roll,
+                refreshResolver = RefreshResolver(game.chronicle),
+                effectExecutor = effectExecutor
+            )
+        )
+    }
+
+    /**
+     * Research-only read-only observation, built by the same internal factory
+     * used by the production Battle policies. This deliberately does not make
+     * DecisionContextFactory public or expose mutable game state to policies.
+     */
+    fun researchDecisionContext(
+        game: Game,
+        player: Player,
+        battleState: BattleState
+    ): DecisionContext = DecisionContextFactory.create(game, player, battleState)
 
     /** Battle Step 6 — resolve every currently open Strike top-to-bottom. */
     fun executeStrikes(

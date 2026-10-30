@@ -9,6 +9,7 @@ import dugsolutions.leaf.v35.game.round.RoundCoordinator
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 import dugsolutions.leaf.v35.tokens.Critter
+import dugsolutions.leaf.v35.wisp.domain.WispCard
 import java.security.MessageDigest
 
 /** Immutable human-readable snapshot. No live Game/Die references are retained. */
@@ -82,14 +83,14 @@ class PairedBattleOpeningReplay(
     private val roundCoordinator: RoundCoordinator,
     private val battleRound: BattleRound
 ) {
-    fun create(config: GameConfig, battleOrdinal: Int = 1): PairedBattleOpening {
+    fun create(config: GameConfig, battleOrdinal: Int = 1, exactWispCards: List<WispCard>? = null): PairedBattleOpening {
         require(config.seed != null) { "Paired replay requires an explicit mechanical seed" }
         require(config.strategySeed != null) { "Paired replay requires an explicit strategy seed" }
         require(battleOrdinal in 1..config.roundSetup.battleRounds) {
             "Requested Battle ordinal $battleOrdinal not in game"
         }
         fun one(): Pair<Game, BattleState> {
-            val game = gameFactory(config)
+            val game = gameFactory(config, exactWispCards = exactWispCards)
             var battleCount = 0
             while (true) {
                 val reveal = checkNotNull(roundCoordinator.revealNext(game)) {

@@ -1,15 +1,13 @@
 {
   "approved_protected_paths": [
-    "src/main/kotlin/dugsolutions/leaf/v35/battle/DoomResolver.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/chronicle/domain/Moment.kt",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/operation/TrashResolver.kt"
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "35f0aa40ce200bc0e951668c80fb1dd12c54048b35ad9926340c35dc6adcd142",
+  "previous_baseline_digest": "7b74b521d5470e1ea12b92a6de81c42dfdc18134e08b5d32213128f01a77ef13",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -235,13 +233,13 @@
     "settings.gradle.kts": "98e42143e7ed64126339746d397db8f9210498103879e7a7e2de2c56eb106fc1",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/BattleOrder.kt": "2f79905854e0dd5770ed5c772d5b0745cfbb539d250a9bb396b172895e0878ec",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/BattlePlacementResolver.kt": "4bfe1602e9c607cfa0bc948d5d3128d474f9c01ceb28e79b948e93048ed7156f",
-    "src/main/kotlin/dugsolutions/leaf/v35/battle/BattleState.kt": "f2dd246dbc0d383b9887d3edea310cb39da4b90f075320b2febf3d746f0d285f",
+    "src/main/kotlin/dugsolutions/leaf/v35/battle/BattleState.kt": "65a1e6d475bf31d13ef4e653733a77a30c82a9763257e4294aa5e611de8f8479",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/DoomResolver.kt": "8506241788e90d7dc188124d201a71e058f87006d657c5310a02a96d3a226271",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/StrikeContributionLedger.kt": "b3fa5cb042cb047264a947db8c9d09967680045dfe8624ab37d92b3add11fdd2",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/StrikeResolver.kt": "578d6660904c2fb54f106cd1e3f820bbc880dab16bfa3ba9e01a8bfa8a0343a3",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleColumn.kt": "ac10fcd092a37489bb327347f4cf0261e91f59f4c4b76adfb1a125ec6bf9cc9c",
-    "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleGrid.kt": "1e23fb47b659a620b92974e181482c1d98ea77df0ddf4a2a3a538101a52e4bec",
-    "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleGridSnapshot.kt": "5ba755b1a6f34bba38495c15a3a524d1e0611c2489cf8012a22407cddb675fc5",
+    "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleGrid.kt": "40fd2ea6044cd803b400a96b170c80e30ef3e448b9d3e06b0a20ada75ef1357d",
+    "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleGridSnapshot.kt": "3c4d3b15f501d0f284df6e852c809f39b70d42e9ff29068ca8ef68b5c4df0f0a",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattlePlacement.kt": "f8a021c63ca3d456272faaa72ceec1296f1fd9b1eb4d4363a574c5a47e486edd",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/BattleSquare.kt": "bd6f69cc68b061bfeb9389aad6e9d45710f0d256d8e772e65284a9027ec9fe07",
     "src/main/kotlin/dugsolutions/leaf/v35/battle/domain/StrikeRow.kt": "7d964a10f8ca1910f2c5426985962699c00b973a0b3435f2a128d16bd9f0fc3f",
@@ -267,7 +265,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/effect/di/EffectModule.kt": "6088d6806082268755bc3e116db7818b6af577cccc619158f59df205fda05f04",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/CrossPlayerEffectHandler.kt": "73292021023ab8a5f4b5b48ab8d1cb832705749a52a0c5a52c0335f1fe02414a",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DeferredRoundEffectHandler.kt": "16ab4780911d3bb7b9d5fb27c725b4ca66148926d020de269370ad17bd0e7d55",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt": "a0381fdb379bac2b00cbb305aa2fce6b5f2bbba3aa2a9081607a7bd4085fcce4",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DieValueEffectHandler.kt": "5d0a47d586edec85ca0fd353323d4fa78533406c8d42a045704e26adbacdbe77",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/DrawEffectHandler.kt": "96069fcc03df68db19230d677b6d1eb292e99e1995784cd1b72ff633741078fe",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectBattleTargeting.kt": "ebc331f4288264a240cc64d9e615be024b0020978461fe21d0ac740a0b79c6fa",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/handler/EffectDecisionContext.kt": "6fe5893e5ab823d509116f1452f3b4091c88c13960c283752249a13b8453f907",
@@ -289,7 +287,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndPunishmentResearchEffect.kt": "b55fc21fed743ceb3e903af7a23b81329166c33fa5e238ca705d3071f5014eb4",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispLastWordEffect.kt": "1ad8586fa2784c9f853bd63683e6244b04ad1c58b9b0b2666c2d491358f3e695",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispReckoningEffect.kt": "5d4511c17ddb53dcaa9993938f418b4ba950e0d9a01edcf2d6542bce8cfdd0a1",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispquakeEffect.kt": "06b8b6778703c74f7841e07c7f94c59f67079cab0413e0662bf23cd002d2988d",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/WispquakeEffect.kt": "74acc8b6b3ce076fed76631bf94bf79cfe69aca23a4043d125593eaac5b57776",
     "src/main/kotlin/dugsolutions/leaf/v35/error/GameExceptions.kt": "77a9efe78dbbf263870f59ca534d31678c3e240f13d8faa07bf0edc475ba32f9",
     "src/main/kotlin/dugsolutions/leaf/v35/game/Game.kt": "6285b9de5bb8d523e69a64e044a16402c3ba02745ae2a65e78777db91e27b73d",
     "src/main/kotlin/dugsolutions/leaf/v35/game/GameConfig.kt": "746f6c4bff686ce4331bc0eb947463da5d50c8295b2ca2cc807e162020a7d679",
@@ -316,9 +314,9 @@
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundCoordinator.kt": "462606c330786ca749eb939702dd36a818e16c40a67730a7ae2d7e80150f48b5",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundEffectResearch.kt": "74b791f2036e2017f6f71fe6dd18abdccd8cc2b92df90ca3e02904fc690b1500",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundExecutor.kt": "a74e9cb113c1a682a2e1f6543c43b0efe9eae861a8c3ad95b27c3e17b20da013",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt": "3ed6c57818698b12f9fc2510d8ca4888715a1673ceb3cefe102dffacd754b2f4",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt": "70652981858273141c4cd10bad17c313a9ffd4b30845f296f94c1fb602328aa6",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleCleanupCoordinator.kt": "47457cd3a8053170bbe0408a0e74495ff2bceb9c6a4469f336d5c1c8ab084ad0",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt": "0dfa53baa180cb78379157c765c18e8a91522b498485ec08375fcc386526e671",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt": "667be5fa3c841cf89d24f30109d98238e08d777303ef3b141df48b545f7afea3",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationBuildCoordinator.kt": "01d113cf2c19402ce0a6eaa1d2711ab91c6b8079f58568be6e990135668810af",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationCleanupCoordinator.kt": "8a5cd0b9bd75403fd481deb93a978fb57c1b2a491dde2003ddb659152b73b0e7",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationRound.kt": "a5b37a5c49133468cf5f9dba0cfb9361754493f482006577b11e8b4ed5b1869b",
@@ -454,7 +452,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/random/Randomizer.kt": "36e2b2433e39efaf91a83462e2f547e5b9c88f581253752989c447e03f40e2cc",
     "src/main/kotlin/dugsolutions/leaf/v35/random/RandomizerDefault.kt": "3ff34383fbbc618dbae884bb4167049e0dcb34e0cb8401fbe6ddb93c10654e4d",
     "src/main/kotlin/dugsolutions/leaf/v35/random/die/Dice.kt": "7970e799cf0cf1466e8e40d177c1411cfc9e1c7a7ec6a55e36eae83c8c4088de",
-    "src/main/kotlin/dugsolutions/leaf/v35/random/die/Die.kt": "3be32c6588c947cda30df9614431f750158948be2940128d95de2c6160e7ef23",
+    "src/main/kotlin/dugsolutions/leaf/v35/random/die/Die.kt": "89c2678daed1a9938b7b179e27dca4c3ab041e28aebcc50acd8655d0e7258bc6",
     "src/main/kotlin/dugsolutions/leaf/v35/random/die/DieBase.kt": "06c0e22873f34cc7e92276af8ad7eee02686b30bc68647a3e96dfa9197981b58",
     "src/main/kotlin/dugsolutions/leaf/v35/random/die/DieCost.kt": "8882ddc0507cc12bc5dff7f4a58f4300ac285751de677aabbf5a943104f0e627",
     "src/main/kotlin/dugsolutions/leaf/v35/random/die/DieRandom.kt": "934f9878b96a5ef63226835df1ff8e13957228514d163d9e70979cecaaa78f4c",
@@ -493,5 +491,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "Explicitly requested v37.03 D4 die-trash rules fidelity correction"
+  "review_reason": "Expose the existing immutable Battle decision observation for simulation research without changing mechanics"
 }

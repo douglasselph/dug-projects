@@ -8,7 +8,23 @@ abstract class Die(
         require(sides > 0) { "Die must have at least 1 side" }
     }
 
+    /** Locked Strike dice cannot ever be changed by later Battle actions. */
+    private var resolvedStrikeLocked: Boolean = false
+
+    fun lockResolvedStrike() { resolvedStrikeLocked = true }
+
+    /** Only Battle post-resolution reclaim/Doom may unlock a die for future rounds. */
+    fun unlockAfterBattle() { resolvedStrikeLocked = false }
+
+    protected fun requireMutableDie() {
+        check(!resolvedStrikeLocked) { "Cannot modify die in resolved Strike: $this" }
+    }
+
     protected var _value: Int = 1
+        set(value) {
+            requireMutableDie()
+            field = value
+        }
 
     override val value: Int get() = _value
 

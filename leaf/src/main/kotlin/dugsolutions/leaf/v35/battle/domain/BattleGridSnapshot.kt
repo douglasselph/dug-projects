@@ -50,8 +50,11 @@ object BattleGridSnapshot {
         battleState: BattleState,
         row: StrikeRow,
         provenance: AssetProvenance? = null
-    ): BattleGridRowSnapshot =
-        BattleGridRowSnapshot(
+    ): BattleGridRowSnapshot {
+        if (!battleState.grid.isPostBattleRemoval) {
+            battleState.frozenResolvedRow(row)?.let { return it }
+        }
+        return BattleGridRowSnapshot(
             row = row,
             squares = battleState.playersInBattleOrder.map { player ->
                 val square = battleState.grid.square(player.id, row)
@@ -74,4 +77,5 @@ object BattleGridSnapshot {
                 )
             }
         )
+    }
 }

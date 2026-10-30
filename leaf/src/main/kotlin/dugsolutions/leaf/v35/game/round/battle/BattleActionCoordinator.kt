@@ -120,6 +120,47 @@ class BattleActionCoordinator(
         BattlePlacementResolver()
 ) {
 
+    /**
+     * Strict research seam: return production legal actions without changing
+     * canonical Battle scheduling. The caller owns per-Engagement allowances.
+     */
+    fun researchLegalMains(game: Game, player: Player, card: RoundCard, state: BattleState): List<BattleMainAction> =
+        mainActions(game, player, card, state)
+
+    fun researchLegalSupports(game: Game, player: Player, card: RoundCard, state: BattleState): List<BattleSupportAction> =
+        supportActions(game, player, card, state).filter { support ->
+            val shared = (support as? BattleSupportAction.Shared)?.action
+            // Never permit the early-resolve Wisp in Candidate B.
+            if ((shared as? SupportAction.PlayWisp)?.card?.effect ==
+                dugsolutions.leaf.v35.effect.GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW) return@filter false
+            val selectedDie = when (shared) {
+                is SupportAction.UseWaterReroll -> shared.die
+                is SupportAction.UseButterfly -> shared.die
+                else -> null
+            }
+            val die = selectedDie?.let { player.dice.hand.getOrNull(it.index) }
+            val row = die?.let { state.grid.locationOf(it)?.row }
+            row == null || !state.grid.isRowClosed(row)
+        }
+
+    /** Revalidate immediately before committing. Counts/token allowances live in research scheduler. */
+    fun researchTakeMain(game: Game, player: Player, card: RoundCard, state: BattleState,
+                         action: BattleMainAction, stage: BattleMainActionStage) {
+        require(action in mainActions(game, player, card, state)) { "Illegal experimental Main: $action" }
+        game.chronicle.scoped(mainActionMoment(player, stage, action)) {
+            executeMainAction(game, player, card, state, action)
+        }
+    }
+
+    /** Actual production Support executor including Sunlight-funded Main, Wisp, and Critters. */
+    fun researchTakeSupport(game: Game, player: Player, card: RoundCard, state: BattleState,
+                            action: BattleSupportAction) {
+        require(action in researchLegalSupports(game, player, card, state)) {
+            "Illegal experimental Support: $action"
+        }
+        executeSupportAction(game, player, card, state, action)
+    }
+
     fun execute(
         game: Game,
         roundCard: RoundCard,

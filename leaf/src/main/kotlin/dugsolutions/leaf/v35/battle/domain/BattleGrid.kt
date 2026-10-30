@@ -44,6 +44,22 @@ class BattleGrid(
         }
 
     private val closedRows = mutableSetOf<StrikeRow>()
+    private var postBattleRemoval = false
+    val isPostBattleRemoval: Boolean get() = postBattleRemoval
+
+    /** Only call once ALL Strikes have resolved, before Doom and Cleanup. */
+    fun beginPostBattleRemoval() {
+        stateCheck(StrikeRow.entries.all { isRowClosed(it) }, context = "BattleGrid") {
+            "Cannot finalize Battle while a Strike is unresolved"
+        }
+        postBattleRemoval = true
+    }
+
+    private fun ensureNotLocked(row: StrikeRow) {
+        stateCheck(!isRowClosed(row) || postBattleRemoval, context = "BattleGrid") {
+            "Cannot change resolved Strike Row $row"
+        }
+    }
 
     /**
      * Player-specific Strike withdrawals for this Battle Round.
@@ -134,7 +150,12 @@ class BattleGrid(
      * rejected.
      */
     fun closeRow(row: StrikeRow) {
-        closedRows.add(row)
+        stateCheck(closedRows.add(row), context = "BattleGrid") {
+            "Strike Row $row was already closed"
+        }
+        orderedPlayerIds.forEach { playerId ->
+            square(playerId, row).dice.forEach { it.lockResolvedStrike() }
+        }
     }
 
     /**
@@ -253,6 +274,8 @@ class BattleGrid(
      */
     fun removeDie(die: Die): BattleDiePlacement? {
         val placement = placementOf(die) ?: return null
+        ensureNotLocked(placement.row)
+        if (postBattleRemoval) die.unlockAfterBattle()
         val removed =
             square(placement.playerId, placement.row)
                 .removeDieIdentity(die)
@@ -287,6 +310,7 @@ class BattleGrid(
             "Replacement die is already placed on the Battle Grid: $newDie"
         }
 
+        ensureNotLocked(placement.row)
         val target =
             square(
                 placement.playerId,
@@ -337,6 +361,8 @@ class BattleGrid(
             "Second swap die is not placed on the Battle Grid: $second"
         }
 
+        ensureNotLocked(firstPlacement.row)
+        ensureNotLocked(secondPlacement.row)
         if (
             firstPlacement.playerId == secondPlacement.playerId &&
             firstPlacement.row == secondPlacement.row
@@ -400,6 +426,7 @@ class BattleGrid(
             "Cannot move an unplaced Battle die: $die"
         }
 
+        ensureNotLocked(from.row)
         if (from.row == toRow) return from
         ensurePlayerCanUseRow(from.playerId, toRow)
 
@@ -449,6 +476,7 @@ class BattleGrid(
         row: StrikeRow,
         critter: Critter
     ): BattleCritterPlacement? {
+        ensureNotLocked(row)
         return if (square(playerId, row).removeCritter(critter)) {
             BattleCritterPlacement(playerId, row, critter)
         } else {
@@ -461,6 +489,7 @@ class BattleGrid(
         buildList {
             orderedPlayerIds.forEach { playerId ->
                 StrikeRow.entries.forEach { row ->
+                    ensureNotLocked(row)
                     square(playerId, row).drainCritters().forEach { critter ->
                         add(BattleCritterPlacement(playerId, row, critter))
                     }
@@ -476,7 +505,9 @@ class BattleGrid(
         buildList {
             orderedPlayerIds.forEach { playerId ->
                 StrikeRow.entries.forEach { row ->
+                    ensureNotLocked(row)
                     square(playerId, row).drainDice().forEach { die ->
+                        if (postBattleRemoval) die.unlockAfterBattle()
                         add(BattleDiePlacement(playerId, row, die))
                     }
                 }

@@ -27,6 +27,21 @@ import dugsolutions.leaf.v35.random.die.DieSides
  */
 class DieValueEffectHandler : EffectHandler {
 
+    private fun modifiableDice(request: GameEffectRequest): List<dugsolutions.leaf.v35.random.die.Die> =
+        request.actor.dice.hand.filter { die ->
+            val state = request.battleState
+            val row = if (request.phase == GameEffectPhase.BATTLE) state?.grid?.locationOf(die)?.row else null
+            row == null || state?.grid?.isRowClosed(row) != true
+        }
+
+    private fun modifiableChoices(
+        request: GameEffectRequest,
+        predicate: (dugsolutions.leaf.v35.random.die.Die) -> Boolean = { true }
+    ): List<dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice> {
+        val eligible = modifiableDice(request)
+        return handChoices(request.actor) { die -> eligible.any { it === die } && predicate(die) }
+    }
+
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
@@ -36,16 +51,16 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RESEARCH_RAISE_DIE_PLUS_20,
             GameEffect.RAISE_ANY_DIE_PLUS_1,
             GameEffect.RAISE_LOWEST_DIE_PLUS_1 ->
-                request.actor.dice.hand.isNotEmpty()
+                modifiableDice(request).isNotEmpty()
 
             GameEffect.RAISE_D8_PLUS_1,
             GameEffect.RAISE_ALL_D8S_PLUS_1 ->
-                request.actor.dice.hand.any { it.sides == 8 }
+                modifiableDice(request).any { it.sides == 8 }
 
             GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION ->
-                        request.actor.dice.hand.isNotEmpty()
+                        modifiableDice(request).isNotEmpty()
 
                     GameEffectPhase.BATTLE ->
                         battleHandChoices(request).isNotEmpty() &&
@@ -55,28 +70,28 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
             GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW ->
                 when (request.phase) {
-                    GameEffectPhase.CULTIVATION -> request.actor.dice.hand.isNotEmpty()
+                    GameEffectPhase.CULTIVATION -> modifiableDice(request).isNotEmpty()
                     GameEffectPhase.BATTLE -> battleHandChoices(request).isNotEmpty()
                 }
 
             GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_AROUND_ANOTHER_DIE_IN_STRIKE_ROW ->
                 when (request.phase) {
-                    GameEffectPhase.CULTIVATION -> request.actor.dice.hand.isNotEmpty()
+                    GameEffectPhase.CULTIVATION -> modifiableDice(request).isNotEmpty()
                     GameEffectPhase.BATTLE -> battleHandChoices(request).size >= 2
                 }
 
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE ->
-                request.actor.dice.hand.any { it.sides > 4 }
+                modifiableDice(request).any { it.sides > 4 }
 
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE ->
-                request.actor.dice.hand.any { it.value >= 2 }
+                modifiableDice(request).any { it.value >= 2 }
 
             GameEffect.GAIN_VP_PER_ONE_SHOWING ->
-                request.actor.dice.hand.any { it.value == 1 }
+                modifiableDice(request).any { it.value == 1 }
 
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX,
             GameEffect.RAISE_ALL_DICE_PLUS_2 ->
-                request.actor.dice.hand.isNotEmpty()
+                modifiableDice(request).isNotEmpty()
 
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 when (request.phase) {
@@ -91,17 +106,17 @@ class DieValueEffectHandler : EffectHandler {
                 kindredChoices(request).isNotEmpty()
 
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX ->
-                request.actor.dice.hand.any { it.sides <= 12 }
+                modifiableDice(request).any { it.sides <= 12 }
 
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER ->
-                request.actor.dice.hand.isNotEmpty() &&
+                modifiableDice(request).isNotEmpty() &&
                     request.actor.creature.cards.any {
                         it.card.type == PlantType.VINE ||
                             it.card.type == PlantType.FLOWER
                     }
 
             GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE ->
-                request.actor.dice.hand.isNotEmpty() &&
+                modifiableDice(request).isNotEmpty() &&
                     request.actor.creature.cards.any {
                         it.card.type == PlantType.ROOT ||
                             it.card.type == PlantType.VINE
@@ -122,7 +137,7 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.DOUBLE_ONE_DIE -> {
                 val die = chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor)
+                    modifiableChoices(request)
                 )
                 die.adjustBy(die.value)
             }
@@ -176,7 +191,7 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.FLIP_OWN_DIE_TO_OPPOSITE_FACE -> {
                 chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor) { it.sides > 4 }
+                    modifiableChoices(request) { it.sides > 4 }
                 ).flip()
             }
 
@@ -188,7 +203,7 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.SET_DIE_SHOWING_2_PLUS_TO_1_AND_GAIN_VP_PER_ONE -> {
                 chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor) { it.value >= 2 }
+                    modifiableChoices(request) { it.value >= 2 }
                 ).adjustTo(1)
 
                 val ones = request.actor.dice.hand.count { it.value == 1 }
@@ -198,22 +213,22 @@ class DieValueEffectHandler : EffectHandler {
             }
 
             GameEffect.SET_LOWEST_VALUE_DIE_TO_MAX -> {
-                val lowest = request.actor.dice.hand.minOf { it.value }
+                val lowest = modifiableDice(request).minOf { it.value }
                 chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor) { it.value == lowest }
+                    modifiableChoices(request) { it.value == lowest }
                 ).adjustToMax()
             }
 
             GameEffect.RAISE_ALL_DICE_PLUS_2 ->
-                request.actor.dice.hand.forEach { it.adjustBy(2) }
+                modifiableDice(request).forEach { it.adjustBy(2) }
 
             GameEffect.SET_ANY_DIE_TO_3_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3 ->
                 when (request.phase) {
                     GameEffectPhase.CULTIVATION ->
                         chooseOptionalHandDie(
                             request,
-                            handChoices(request.actor)
+                            modifiableChoices(request)
                         )?.adjustTo(3)
 
                     GameEffectPhase.BATTLE ->
@@ -243,7 +258,7 @@ class DieValueEffectHandler : EffectHandler {
             GameEffect.SET_DIE_UP_TO_D12_TO_MAX ->
                 chooseRequiredHandDie(
                     request,
-                    handChoices(request.actor) { it.sides <= 12 }
+                    modifiableChoices(request) { it.sides <= 12 }
                 ).adjustToMax()
 
             GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER -> {
@@ -475,7 +490,7 @@ class DieValueEffectHandler : EffectHandler {
     private fun kindredChoices(
         request: GameEffectRequest
     ): List<EffectDiePairChoice> {
-        val dice = handChoices(request.actor)
+        val dice = modifiableChoices(request)
         return dice.flatMap { source ->
             dice.mapNotNull { target ->
                 if (
@@ -497,7 +512,7 @@ class DieValueEffectHandler : EffectHandler {
     private fun raiseAllD8sOne(
         request: GameEffectRequest
     ) {
-        request.actor.dice.hand
+        modifiableDice(request)
             .filter { it.sides == 8 }
             .forEach { die ->
                 val before = die.value
@@ -519,7 +534,7 @@ class DieValueEffectHandler : EffectHandler {
     ) {
         val die = chooseRequiredHandDie(
             request = request,
-            legalChoices = handChoices(request.actor) { it.sides == 8 }
+            legalChoices = modifiableChoices(request) { it.sides == 8 }
         )
         val before = die.value
         die.adjustBy(1)
@@ -537,10 +552,10 @@ class DieValueEffectHandler : EffectHandler {
     private fun raiseLowestOne(
         request: GameEffectRequest
     ) {
-        val lowest = request.actor.dice.hand.minOf { it.value }
+        val lowest = modifiableDice(request).minOf { it.value }
         val die = chooseRequiredHandDie(
             request = request,
-            legalChoices = handChoices(request.actor) { it.value == lowest }
+            legalChoices = modifiableChoices(request) { it.value == lowest }
         )
         val before = die.value
         die.adjustBy(1)
@@ -561,7 +576,7 @@ class DieValueEffectHandler : EffectHandler {
     ) {
         val die = chooseRequiredHandDie(
             request = request,
-            legalChoices = handChoices(request.actor)
+            legalChoices = modifiableChoices(request)
         )
         val before = die.value
         die.adjustBy(amount)
@@ -590,7 +605,7 @@ class DieValueEffectHandler : EffectHandler {
             /* Rebuild choices each time so the strategy sees current values. */
             chooseRequiredHandDie(
                 request = request,
-                legalChoices = handChoices(request.actor)
+                legalChoices = modifiableChoices(request)
             ).adjustBy(1)
         }
     }
