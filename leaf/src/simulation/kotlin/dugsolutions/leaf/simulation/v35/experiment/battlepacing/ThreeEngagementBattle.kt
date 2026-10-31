@@ -209,6 +209,11 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     trace += "ENGAGEMENT_ACTION,row=$row,player=${id.value},choice=$next,normalUsed=${normalUsed.getValue(id)},supportsThisRow=$supportsThisTurn"
                     check(actionCount <= 3) { "Engagement exceeded its one-normal/two-Support allowance" }
                 }
+                if (policy is EngagementMainPlanSource) {
+                    val plan = policy.mainPlan(id, row)
+                    trace += plan?.trace(id.value)
+                        ?: "ENGAGEMENT_MAIN_PLAN,player=${id.value},row=$row,spend=false,reason=NO_MAIN_DECISION"
+                }
                 opportunities += EngagementOpportunity(
                     playerId = id, actingPosition = position + 1,
                     beforeTotals = before, afterTotals = currentTotals(row),

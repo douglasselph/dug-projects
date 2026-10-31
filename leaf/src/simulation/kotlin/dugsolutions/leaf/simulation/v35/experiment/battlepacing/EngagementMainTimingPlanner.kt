@@ -6,60 +6,100 @@ import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementA
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
 
 /**
- * Experimental timing adaptation, not a replacement for the canonical v37 Main chooser.
- * A Main's identity and all later effect targets still come from the player's production
- * Human Baseline policies. This layer only decides WHICH Engagement may spend a token.
+ * An auditable timing decision, separate from the v37 choice of WHICH Main
+ * action to execute. Scores are expected-Draw row-impact projections, not
+ * a claim that Plant / Round-effect outcomes have been simulated.
+ */
+internal data class EngagementMainTimingDecision(
+    val row: StrikeRow,
+    val mainsRemaining: Int,
+    val openRows: List<StrikeRow>,
+    val projectedDrawScores: Map<StrikeRow, Double>,
+    val plannedRows: List<StrikeRow>,
+    val spendNow: Boolean,
+    val reason: Reason
+) {
+    enum class Reason { ROW_UNAVAILABLE, MUST_SPEND_TO_USE_BOTH, EXPECTED_DRAW_PROJECTION, NO_DRAW_PROJECTION }
+
+    fun trace(playerId: Int): String = buildString {
+        append("ENGAGEMENT_MAIN_PLAN,player=$playerId,row=$row,mainsRemaining=$mainsRemaining")
+        append(",open=${openRows.joinToString("|")},planned=${plannedRows.joinToString("|")}")
+        append(",spend=$spendNow,reason=$reason")
+        append(",drawScores=${projectedDrawScores.entries.joinToString("|") { "${it.key}:${it.value}" }}")
+    }
+}
+
+/**
+ * Checkpoint P1: pin down the two-token / three-Engagement scheduling contract.
+ * The actual v37 Main chooser and target-choice machinery are not replaced.
  *
- * For this pilot the row timing forecast is the approved B7 expected-Draw placement
- * analysis. This is a shared tactical proxy, NOT a complete action-specific preview
- * for Plants and Round effects. Do not use as an expert-play balance benchmark.
+ * IMPORTANT: The expected Draw forecast below is still only a *temporary*
+ * row-allocation proxy. A later task must forecast the actual Plant / Round /
+ * Draw candidates with the canonical consequence-based scorers, across ALL
+ * open rows, before using these cohorts for competitive balance claims.
  */
 internal class EngagementMainTimingPlanner(
     private val placement: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer()
 ) {
-    fun shouldUseMain(
-        context: DecisionContext,
-        row: StrikeRow,
-        mainsRemaining: Int
-    ): Boolean {
+    fun shouldUseMain(context: DecisionContext, row: StrikeRow, mainsRemaining: Int): Boolean =
+        plan(context, row, mainsRemaining).spendNow
+
+    fun plan(context: DecisionContext, row: StrikeRow, mainsRemaining: Int): EngagementMainTimingDecision {
         require(mainsRemaining in 1..2)
         val open = StrikeRow.entries.filter { candidate ->
             candidate.ordinal >= row.ordinal &&
                 context.battle?.rows?.firstOrNull { it.row == candidate }?.closed == false
         }
-        if (row !in open) return false
-        // Never lose the last opportunity through a heuristic deferral.
-        if (open.size <= mainsRemaining) return true
-
+        // No hypothetical roll or mechanical RNG consumption in the forecast.
         val nextSides = context.self.board.supply.minOfOrNull { it.sides }
             ?: context.self.board.discard.minOfOrNull { it.sides }
-        val scoreByRow = if (nextSides != null) {
-            placement(context, (nextSides + 1) / 2.0, BattleAnalysisMode.EXPECTED)
+        val values = if (nextSides != null && row in open) {
+            placement(context, (nextSides + 1) / 2.0, BattleAnalysisMode.EXPECTED, open)
                 .associate { it.realization to it.tacticalValue }
         } else emptyMap()
-
-        // If no row can be projected, don't fabricate a future advantage.
-        // This may still be an important Plant/Round-effect opportunity.
-        if (scoreByRow.isEmpty()) return true
-        return shouldSpendInRow(row, mainsRemaining, open, scoreByRow)
+        return planFromScores(row, mainsRemaining, open, values)
     }
 
     companion object {
-        /** Pure scheduling rule; keeps the first two best projected rows, ties earlier. */
+        /** Deterministic and directly testable; no strategy or mechanical RNG. */
+        internal fun planFromScores(
+            row: StrikeRow,
+            mainsRemaining: Int,
+            openRows: List<StrikeRow>,
+            scores: Map<StrikeRow, Double>
+        ): EngagementMainTimingDecision {
+            require(mainsRemaining in 1..2)
+            val open = StrikeRow.entries.filter { it in openRows && it.ordinal >= row.ordinal }
+            if (row !in open) return EngagementMainTimingDecision(
+                row, mainsRemaining, open, scores, emptyList(), false,
+                EngagementMainTimingDecision.Reason.ROW_UNAVAILABLE
+            )
+            // With two normal Mains and two remaining Engagements, passing is
+            // not allowed to accidentally strand a token; similarly at Low.
+            val forced = open.size <= mainsRemaining
+            val projected = scores.isNotEmpty()
+            val ranked = if (projected) {
+                open.sortedWith(compareByDescending<StrikeRow> { scores[it] ?: Double.NEGATIVE_INFINITY }
+                    .thenBy { it.ordinal })
+            } else open
+            val planned = ranked.take(mainsRemaining)
+            val reason = when {
+                forced -> EngagementMainTimingDecision.Reason.MUST_SPEND_TO_USE_BOTH
+                projected -> EngagementMainTimingDecision.Reason.EXPECTED_DRAW_PROJECTION
+                else -> EngagementMainTimingDecision.Reason.NO_DRAW_PROJECTION
+            }
+            return EngagementMainTimingDecision(
+                row, mainsRemaining, open, scores, planned,
+                forced || !projected || row in planned, reason
+            )
+        }
+
+        /** Backward-compatible pure entry point used by existing timing tests. */
         internal fun shouldSpendInRow(
             row: StrikeRow,
             mainsRemaining: Int,
             openRows: List<StrikeRow>,
             scores: Map<StrikeRow, Double>
-        ): Boolean {
-            require(mainsRemaining in 1..2)
-            if (row !in openRows) return false
-            if (openRows.size <= mainsRemaining) return true
-            val ranked = openRows.sortedWith(
-                compareByDescending<StrikeRow> { scores[it] ?: Double.NEGATIVE_INFINITY }
-                    .thenBy { it.ordinal }
-            )
-            return row in ranked.take(mainsRemaining)
-        }
+        ): Boolean = planFromScores(row, mainsRemaining, openRows, scores).spendNow
     }
 }

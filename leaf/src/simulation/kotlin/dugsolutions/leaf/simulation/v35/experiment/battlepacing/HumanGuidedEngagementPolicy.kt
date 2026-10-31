@@ -1,6 +1,8 @@
 package dugsolutions.leaf.simulation.v35.experiment.battlepacing
 
 import dugsolutions.leaf.v35.game.Game
+import dugsolutions.leaf.v35.player.PlayerId
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleSupportPriority
 import dugsolutions.leaf.v35.player.decision.battle.*
 import dugsolutions.leaf.v35.player.decision.support.SupportAction
@@ -9,17 +11,25 @@ import dugsolutions.leaf.v35.player.decision.wisp.WispPlayObservation
 import dugsolutions.leaf.v35.player.decision.wisp.WispPlayDecision
 import dugsolutions.leaf.v35.round.domain.RoundCardType
 
+/** Exposes one frozen timing plan for each actor/Engagement, for research traces. */
+internal interface EngagementMainPlanSource {
+    fun mainPlan(playerId: PlayerId, row: StrikeRow): EngagementMainTimingDecision?
+}
+
 /**
- * Exploratory B adapter: uses the existing Human Baseline Main/Step-5 policies
- * and B11/B12 Support priority, without changing C04 or production policies.
- * NOT a calibrated, equivalently skilled policy for a new action economy.
+ * Exploratory B adapter: delegates actual Main choices to v37 Human Baseline.
+ * Timing is provisional expected-Draw, and Supports still need B10-B12 parity.
+ * No changes to canonical Battle or C04 calibration.
  */
-class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy {
+internal class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, EngagementMainPlanSource {
     private val supportPriority = BattleSupportPriority()
     private val mainTiming = EngagementMainTimingPlanner()
     // The row decision is fixed for the actor's opportunity; recompute at the
     // beginning of the next Engagement, never after each Support within a turn.
-    private val rowCommitments = mutableMapOf<Pair<dugsolutions.leaf.v35.player.PlayerId, dugsolutions.leaf.v35.battle.domain.StrikeRow>, Boolean>()
+    private val rowCommitments = mutableMapOf<Pair<PlayerId, StrikeRow>, EngagementMainTimingDecision>()
+
+    override fun mainPlan(playerId: PlayerId, row: StrikeRow): EngagementMainTimingDecision? =
+        rowCommitments[playerId to row]
 
     override fun choose(request: EngagementDecision): EngagementChoice {
         val player = game.players.first { it.id == request.playerId }
@@ -57,12 +67,15 @@ class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy {
         // Main timing is a separate Candidate B choice. The canonical Main
         // selector still evaluates the full unresolved Battle grid; Main
         // timing may defer a token so it can be used in a later Engagement.
-        val commitMain = rowCommitments.getOrPut(request.playerId to request.row) {
-            request.legalMains.isNotEmpty() && mainTiming.shouldUseMain(
-                request.context, request.row, request.normalMainsRemaining
-            )
-        }
-        val offeredMains = if (commitMain) request.legalMains else emptyList()
+        // Compute once, *before* taking any action in this Engagement. Recompute
+        // from the new Battle context for the next row, after its predecessor
+        // has resolved and locked. No policy forecasting is allowed to roll RNG.
+        val plan = if (request.normalMainsRemaining > 0 && request.legalMains.isNotEmpty()) {
+            rowCommitments.getOrPut(request.playerId to request.row) {
+                mainTiming.plan(request.context, request.row, request.normalMainsRemaining)
+            }
+        } else rowCommitments[request.playerId to request.row]
+        val offeredMains = if (plan?.spendNow == true) request.legalMains else emptyList()
 
         // The first normal Main remains the v37 First Main decision even if
         // it is delayed to Middle or preceded by a Support in this turn.

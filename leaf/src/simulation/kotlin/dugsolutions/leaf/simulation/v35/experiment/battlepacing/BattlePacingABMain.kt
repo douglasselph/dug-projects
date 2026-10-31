@@ -151,6 +151,7 @@ fun main(args: Array<String>) {
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/PairedBattleComparison.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/ThreeEngagementBattle.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/HumanGuidedEngagementPolicy.kt",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementMainTimingPlanner.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingStatistics.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingABMain.kt",
                 "doc/run_battle_pacing_ab.sh"
@@ -161,6 +162,9 @@ fun main(args: Array<String>) {
         }
         Files.writeString(options.output.resolve("manifest.txt"), manifest)
         val startNanos = System.nanoTime()
+        // Additive research output: do not change or break the existing CSV contracts.
+        CsvFile(options.output.resolve("main_plans.csv"),
+            "players,battle,policy,sample,openingSha,planTrace").use { mainPlans ->
         CsvFile(options.output.resolve("pairs.csv"),
             "players,battle,policy,sample,seed,strategySeed,wispSeed,openingSha,player,initialVP,baselineFinalVP,candidateFinalVP,baselineBattleVP,candidateBattleVP,deltaBattleVP,initialSupports,baselineRemainingSupports,candidateRemainingSupports,baselineTotalIfGameEndedNow,candidateTotalIfGameEndedNow,baselinePlantVP,candidatePlantVP,baselineWispVP,candidateWispVP,baselineWouldWin,candidateWouldWin").use { pairs ->
             CsvFile(options.output.resolve("strikes.csv"),
@@ -215,6 +219,12 @@ fun main(args: Array<String>) {
                                             aScore.unplayedWispVp, bScore.unplayedWispVp,
                                             aScore.playerId in aFinal.winnerIds, bScore.playerId in bFinal.winnerIds)
                                     }
+                                    result.candidate.trace.asSequence()
+                                        .filter { it.startsWith("ENGAGEMENT_MAIN_PLAN,") }
+                                        .forEach { planLine ->
+                                            mainPlans.row(players, ordinal, options.policy, sample,
+                                                result.openingSha256, planLine)
+                                        }
                                     result.candidate.engagements.forEachIndexed { index, engagement ->
                                         val baseline = result.baselineStrikes.strikes.first { it.row == engagement.order.row }
                                         val last = engagement.opportunities.last()
@@ -273,6 +283,7 @@ fun main(args: Array<String>) {
                 }
             }
         }
+        } // main_plans.csv
         println("COMPLETE ${options.output} timeSeconds=${fmt((System.nanoTime() - startNanos) / 1e9)}")
     } finally {
         app.close()

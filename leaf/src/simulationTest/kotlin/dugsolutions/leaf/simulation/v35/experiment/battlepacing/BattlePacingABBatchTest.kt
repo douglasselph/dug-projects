@@ -66,4 +66,22 @@ class BattlePacingABBatchTest {
         assertTrue(Files.exists(output.resolve("summary.csv")))
         assertTrue(Files.notExists(output.resolve("FAILURE.txt")))
     }
+
+    @Test fun `human guided pilot records per-row timing plans with two normal Mains`() {
+        val parent = Files.createTempDirectory("leaf-battle-pacing-main-plans-")
+        val output = parent.resolve("run")
+        // Sample zero of the already completed four-player final Battle pilot.
+        main(arrayOf("--samples", "1", "--players", "4", "--battles", "3",
+            "--policy", "human-guided", "--out", output.toString()))
+        val planRows = Files.readAllLines(output.resolve("main_plans.csv"))
+        val opportunities = Files.readAllLines(output.resolve("opportunities.csv"))
+        assertEquals(13, planRows.size) // header + four players x three Engagements
+        assertEquals(13, opportunities.size)
+        assertTrue(planRows.drop(1).all { it.contains("ENGAGEMENT_MAIN_PLAN") })
+        assertTrue(planRows.any { it.contains("reason=MUST_SPEND_TO_USE_BOTH") })
+        assertTrue(planRows.any { it.contains("row=MIDDLE") && it.contains("open=MIDDLE|BOTTOM") })
+        assertTrue(planRows.any { it.contains("row=BOTTOM") && it.contains("open=BOTTOM") })
+        val summary = Files.readAllLines(output.resolve("summary.csv"))[1].split(",")
+        assertEquals("8", summary[13]) // candidate normal Main Actions
+    }
 }
