@@ -53,7 +53,7 @@ of balance or human duration.
 produces 12 plan observations, executes eight normal Main actions, and
 recomputes the available rows after each lock.
 
-### Task 2 — v37 tactical Main valuation with action-specific previews
+### Task 2 — v37 tactical Main valuation with action-specific previews (IMPLEMENTED AS RESEARCH HEURISTIC; full parity NOT YET VERIFIED)
 
 - Reuse `HumanBaselineBattleStrategy`, `BattleMainPriority` and actual v37
   target/action analyzers to rank legal Draw, Plant and Round-effect actions
@@ -125,3 +125,31 @@ bash doc/run_battle_pacing_ab.sh --samples 1 --players 4 --battles 3 \
 
 Inspect `main_plans.csv`, `opportunities.csv` and `summary.csv`. Do not merge
 these traces with the previous policy-version results.
+
+## Task 2 implementation note (October 31, 2026)
+
+Task 2 replaces the pilot's expected-Draw-only *timing* input in the
+`human-guided` Candidate B policy with `BaselineMainActionForecaster`.
+For each legal Draw / Plant / Round-effect Main, it evaluates the existing v37
+First/Final Main score, including owned-card influences, on the actual immutable
+context; it also calculates per-row sensitivity using an immutable
+counterfactual in which just that row is open. Unmodeled/non-row contributions
+remain explicitly separate (`noOpenRowScore`) and are not treated as Strike VP.
+The per-row max across legal actions allocates the two normal Main opportunities.
+
+**What this does NOT claim:** hypothetical rows are not full future game states;
+projecting already-legal actions against hypothetically locked rows is a timing
+approximation, not a legality oracle or a perfect multi-effect lookahead.
+If the canonical scorer treats an effect only through an intrinsic/fallback
+priority, its per-row sensitivity will be zero and this is visible in
+`main_plans.csv`. Actual action execution/targeting still use the canonical v37
+policy on the actual *current* open-row context. Existing First-vs-Final Main
+ordering remains in place. The eventual parity acceptance requires seeded
+traces of Plant/Round choices and multi-row interactions against v37. The
+separate B10–B14 Support parity analysis is Task 3, not addressed here.
+
+A/B statistics generated before this Task 2 patch belong to a different B
+policy version and must not be aggregated with the new policy results.
+
+Task 3 follows immediately: v37 Support continuation under up to two Supports
+per Engagement, including enabling chains and Sunlight.

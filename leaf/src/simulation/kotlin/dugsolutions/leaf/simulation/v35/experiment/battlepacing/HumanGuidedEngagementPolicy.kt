@@ -18,7 +18,7 @@ internal interface EngagementMainPlanSource {
 
 /**
  * Exploratory B adapter: delegates actual Main choices to v37 Human Baseline.
- * Timing is provisional expected-Draw, and Supports still need B10-B12 parity.
+ * Timing uses action-specific v37 Main valuations; Supports still need B10-B12 parity.
  * No changes to canonical Battle or C04 calibration.
  */
 internal class HumanGuidedEngagementPolicy(private val game: Game) : EngagementPolicy, EngagementMainPlanSource {
@@ -72,7 +72,7 @@ internal class HumanGuidedEngagementPolicy(private val game: Game) : EngagementP
         // has resolved and locked. No policy forecasting is allowed to roll RNG.
         val plan = if (request.normalMainsRemaining > 0 && request.legalMains.isNotEmpty()) {
             rowCommitments.getOrPut(request.playerId to request.row) {
-                mainTiming.plan(request.context, request.row, request.normalMainsRemaining)
+                mainTiming.plan(request.context, request.row, request.normalMainsRemaining, card, request.legalMains)
             }
         } else rowCommitments[request.playerId to request.row]
         val offeredMains = if (plan?.spendNow == true) request.legalMains else emptyList()

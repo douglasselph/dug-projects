@@ -4,42 +4,45 @@ import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleAnalysisMode
 import dugsolutions.leaf.v35.player.decision.baseline.battle.BattleDiePlacementAnalyzer
 import dugsolutions.leaf.v35.player.decision.context.DecisionContext
+import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
+import dugsolutions.leaf.v35.round.domain.RoundCard
 
 /**
  * An auditable timing decision, separate from the v37 choice of WHICH Main
- * action to execute. Scores are expected-Draw row-impact projections, not
- * a claim that Plant / Round-effect outcomes have been simulated.
+ * action to execute. Task 2 uses action-specific v37 tactical score sensitivity
+ * across unresolved rows; these heuristic points are NOT objective VP.
  */
 internal data class EngagementMainTimingDecision(
     val row: StrikeRow,
     val mainsRemaining: Int,
     val openRows: List<StrikeRow>,
+    /** Kept for Task 1 source compatibility; Task 2 fills it with action-specific row scores. */
     val projectedDrawScores: Map<StrikeRow, Double>,
     val plannedRows: List<StrikeRow>,
     val spendNow: Boolean,
-    val reason: Reason
+    val reason: Reason,
+    val actionPreviews: List<BaselineMainActionForecast> = emptyList()
 ) {
-    enum class Reason { ROW_UNAVAILABLE, MUST_SPEND_TO_USE_BOTH, EXPECTED_DRAW_PROJECTION, NO_DRAW_PROJECTION }
+    val projectedActionRowScores: Map<StrikeRow, Double> get() = projectedDrawScores
+
+    enum class Reason { ROW_UNAVAILABLE, MUST_SPEND_TO_USE_BOTH, EXPECTED_DRAW_PROJECTION, NO_DRAW_PROJECTION, ACTION_SPECIFIC_PROJECTION, UNATTRIBUTED_ACTIONS }
 
     fun trace(playerId: Int): String = buildString {
         append("ENGAGEMENT_MAIN_PLAN,player=$playerId,row=$row,mainsRemaining=$mainsRemaining")
         append(",open=${openRows.joinToString("|")},planned=${plannedRows.joinToString("|")}")
         append(",spend=$spendNow,reason=$reason")
-        append(",drawScores=${projectedDrawScores.entries.joinToString("|") { "${it.key}:${it.value}" }}")
+        append(",rowScores=${projectedDrawScores.entries.joinToString("|") { "${it.key}:${it.value}" }}")
+        append(",actionPreviews=${actionPreviews.joinToString("|") { it.trace() }}")
     }
 }
 
 /**
- * Checkpoint P1: pin down the two-token / three-Engagement scheduling contract.
- * The actual v37 Main chooser and target-choice machinery are not replaced.
- *
- * IMPORTANT: The expected Draw forecast below is still only a *temporary*
- * row-allocation proxy. A later task must forecast the actual Plant / Round /
- * Draw candidates with the canonical consequence-based scorers, across ALL
- * open rows, before using these cohorts for competitive balance claims.
+ * Task 2: forecast real v37 Main candidates across open rows without consuming
+ * mechanical or strategy RNG. Preserve the Task 1 pure scheduling seam/tests.
  */
 internal class EngagementMainTimingPlanner(
-    private val placement: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer()
+    private val placement: BattleDiePlacementAnalyzer = BattleDiePlacementAnalyzer(),
+    private val forecaster: BaselineMainActionForecaster = BaselineMainActionForecaster()
 ) {
     fun shouldUseMain(context: DecisionContext, row: StrikeRow, mainsRemaining: Int): Boolean =
         plan(context, row, mainsRemaining).spendNow
@@ -58,6 +61,47 @@ internal class EngagementMainTimingPlanner(
                 .associate { it.realization to it.tacticalValue }
         } else emptyMap()
         return planFromScores(row, mainsRemaining, open, values)
+    }
+
+    /**
+     * Production research entry point. Inspect *every legal* Draw, Plant and
+     * Round-effect candidate with the same v37 First/Final Main scoring as the
+     * actual chooser, but on immutable one-open-row projections. This schedules
+     * the opportunity; v37 still chooses the actual action/targets when taken.
+     */
+    fun plan(
+        context: DecisionContext,
+        row: StrikeRow,
+        mainsRemaining: Int,
+        roundCard: RoundCard,
+        legalMains: List<BattleMainAction>
+    ): EngagementMainTimingDecision {
+        require(mainsRemaining in 1..2)
+        val open = StrikeRow.entries.filter { candidate ->
+            candidate.ordinal >= row.ordinal &&
+                context.battle?.rows?.firstOrNull { it.row == candidate }?.closed == false
+        }
+        if (row !in open) return planFromScores(row, mainsRemaining, open, emptyMap())
+        val previews = forecaster.forecast(context, roundCard, legalMains, mainsRemaining, open)
+        val rowScores = open.associateWith { strike ->
+            previews.maxOfOrNull { it.rowOpportunity[strike] ?: 0.0 } ?: 0.0
+        }
+        val attributed = rowScores.values.any { it > 0.0 }
+        // A non-row action (e.g. Bloom VP) has no target-row forecast; do
+        // not make up one. Without modeled tactical row benefit, use the
+        // earliest Engagement to preserve later options, unless forced.
+        val rankedPlan = planFromScores(row, mainsRemaining, open,
+            if (attributed) rowScores else emptyMap())
+        return rankedPlan.copy(
+            projectedDrawScores = rowScores,
+            actionPreviews = previews,
+            reason = when {
+                rankedPlan.reason == EngagementMainTimingDecision.Reason.MUST_SPEND_TO_USE_BOTH ->
+                    EngagementMainTimingDecision.Reason.MUST_SPEND_TO_USE_BOTH
+                attributed -> EngagementMainTimingDecision.Reason.ACTION_SPECIFIC_PROJECTION
+                else -> EngagementMainTimingDecision.Reason.UNATTRIBUTED_ACTIONS
+            }
+        )
     }
 
     companion object {

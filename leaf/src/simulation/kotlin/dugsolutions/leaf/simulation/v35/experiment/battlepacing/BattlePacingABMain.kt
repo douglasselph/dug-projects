@@ -152,6 +152,7 @@ fun main(args: Array<String>) {
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/ThreeEngagementBattle.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/HumanGuidedEngagementPolicy.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementMainTimingPlanner.kt",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BaselineMainActionForecast.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingStatistics.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingABMain.kt",
                 "doc/run_battle_pacing_ab.sh"

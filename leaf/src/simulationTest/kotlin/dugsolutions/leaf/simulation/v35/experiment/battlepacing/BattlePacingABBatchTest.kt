@@ -78,6 +78,9 @@ class BattlePacingABBatchTest {
         assertEquals(13, planRows.size) // header + four players x three Engagements
         assertEquals(13, opportunities.size)
         assertTrue(planRows.drop(1).all { it.contains("ENGAGEMENT_MAIN_PLAN") })
+        // Task 2: timing plans must expose actual legal v37 action-score previews.
+        assertTrue(planRows.any { it.contains("actionPreviews=") && it.contains("full=") })
+        assertTrue(planRows.any { it.contains("RoundEffect") || it.contains("ActivatePlant") || it.contains("Draw") })
         assertTrue(planRows.any { it.contains("reason=MUST_SPEND_TO_USE_BOTH") })
         assertTrue(planRows.any { it.contains("row=MIDDLE") && it.contains("open=MIDDLE|BOTTOM") })
         assertTrue(planRows.any { it.contains("row=BOTTOM") && it.contains("open=BOTTOM") })
