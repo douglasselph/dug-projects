@@ -190,7 +190,22 @@ class PetalToDie4Effect(
             ) return@buildList
             if (request.game.grove.graftBed.has(DieSides.D4)) add(PetalD4SourceChoice.Grove)
             request.game.players.filter { it !== request.actor }.forEach { opponent ->
-                addZoneSources(opponent, EffectOwnedDieZone.HAND, opponent.dice.hand)
+                // During Candidate B, a resolved Strike is immutable. A D4
+                // in that row is not a legal theft target, even though it
+                // remains in its owner's Hand until post-Battle Cleanup.
+                // In canonical v37 all rows are open during action selection.
+                val stealableHand = opponent.dice.hand.filter { die ->
+                    if (request.phase != GameEffectPhase.BATTLE) true else {
+                        val grid = request.battleState?.grid
+                        val location = grid?.locationOf(die)
+                        location != null && location.playerId == opponent.id &&
+                            !grid.isRowClosed(location.row)
+                    }
+                }
+                // Preserve original Hand indices in immutable effect choices.
+                addZoneSources(opponent, EffectOwnedDieZone.HAND, opponent.dice.hand) { die ->
+                    stealableHand.any { it === die }
+                }
                 if (rules.stealDiscard) {
                     addZoneSources(opponent, EffectOwnedDieZone.DISCARD, opponent.dice.discard)
                 }
@@ -200,10 +215,11 @@ class PetalToDie4Effect(
     private fun MutableList<PetalD4SourceChoice>.addZoneSources(
         opponent: Player,
         zone: EffectOwnedDieZone,
-        dice: List<Die>
+        dice: List<Die>,
+        eligible: (Die) -> Boolean = { true }
     ) {
         dice.forEachIndexed { index, die ->
-            if (die.sides == 4) {
+            if (die.sides == 4 && eligible(die)) {
                 add(
                     PetalD4SourceChoice.Opponent(
                         playerId = opponent.id,
@@ -246,6 +262,11 @@ class PetalToDie4Effect(
                 }
                 if (source.zone == EffectOwnedDieZone.HAND && request.phase == GameEffectPhase.BATTLE) {
                     val battle = battleStateForEffect(request, "PetalToDie4Steal")
+                    val location = battle.grid.locationOf(live)
+                    stateCheck(location != null && location.playerId == opponent.id &&
+                        !battle.grid.isRowClosed(location.row)) {
+                        "Cannot steal a D4 from a resolved Strike: $source"
+                    }
                     stateCheck(battle.grid.removeDie(live) != null) {
                         "Stolen Battle D4 has no Strike Square: $source"
                     }
@@ -319,7 +340,15 @@ class PetalToDie4Effect(
             }
         }
         trashResolver.trashDieFromHand(request.game, request.actor, die)
-        request.actor.dice.hand.forEach { it.adjustBy(4) }
+        // Printed variant: "Raise all" means all dice that can still be
+        // changed. Locked Strikes remain scored exactly as resolved.
+        if (request.phase == GameEffectPhase.BATTLE) {
+            battleHandChoices(request).forEach { choice ->
+                request.actor.dice.hand[choice.index].adjustBy(4)
+            }
+        } else {
+            request.actor.dice.hand.forEach { it.adjustBy(4) }
+        }
     }
 
     private fun rollResolver(request: GameEffectRequest, executor: GameEffectExecutor): RollResolver =

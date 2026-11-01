@@ -451,6 +451,81 @@ class PetalToDie4EffectTest {
         assertEquals(4, actor.dice.hand.single().sides)
     }
 
+    @Test
+    fun battleResearchPetalCannotStealD4FromLockedStrike() {
+        val locked = FixedEffectDie(4, 3)
+        val actor = EffectTestFixture.player(1, effectStrategy = ChooseResearchSource(
+            dugsolutions.leaf.v35.player.decision.effect.EffectOwnedDieZone.HAND
+        ))
+        val opponent = EffectTestFixture.player(2, hand = listOf(locked))
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(opponent, StrikeRow.TOP, locked)
+        battle.lockResolvedRow(StrikeRow.TOP)
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        assertFalse(effect.canExecute(request))
+        assertEquals(3, locked.value)
+        assertEquals(StrikeRow.TOP, battle.grid.locationOf(locked)?.row)
+        assertTrue(opponent.dice.hand.any { it === locked })
+    }
+
+    @Test
+    fun battleResearchPetalMayStealOpenD4WhileAnotherD4IsLocked() {
+        val locked = FixedEffectDie(4, 4)
+        val open = FixedEffectDie(4, 2)
+        val strategy = ChooseResearchSource(
+            dugsolutions.leaf.v35.player.decision.effect.EffectOwnedDieZone.HAND
+        )
+        val actor = EffectTestFixture.player(1, effectStrategy = strategy)
+        val opponent = EffectTestFixture.player(2, hand = listOf(locked, open))
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(opponent, StrikeRow.TOP, locked)
+        battle.grid.placeDie(opponent, StrikeRow.MIDDLE, open)
+        battle.lockResolvedRow(StrikeRow.TOP)
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.GAIN_OR_STEAL_D4_TO_DISCARD_FROM_HAND_ONLY_THEN_CYCLE_D4S
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        assertTrue(effect.canExecute(request))
+        effect.execute(request, nested)
+        assertEquals(StrikeRow.TOP, battle.grid.locationOf(locked)?.row)
+        assertEquals(4, locked.value)
+        assertTrue(opponent.dice.hand.any { it === locked })
+        assertFalse(opponent.dice.hand.any { it === open })
+        assertTrue(actor.dice.discard.any { it === open })
+    }
+
+    @Test
+    fun printedPetalRaiseAllLeavesLockedStrikeDiceUnchanged() {
+        val locked = FixedEffectDie(8, 2)
+        val openD4 = FixedEffectDie(4, 3)
+        val openD8 = FixedEffectDie(8, 2)
+        val actor = EffectTestFixture.player(
+            1, hand = listOf(locked, openD4, openD8),
+            effectStrategy = ChooseFirstTrashStrategy()
+        )
+        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val battle = BattleState(listOf(actor, game.players[1]))
+        battle.grid.placeDie(actor, StrikeRow.TOP, locked)
+        battle.grid.placeDie(actor, StrikeRow.MIDDLE, openD4)
+        battle.grid.placeDie(actor, StrikeRow.BOTTOM, openD8)
+        battle.lockResolvedRow(StrikeRow.TOP)
+        val request = EffectTestFixture.request(
+            game, actor, GameEffect.GAIN_D4_SET_TO_4_OR_TRASH_D4_RAISE_ALL_DICE_PLUS_4
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
+
+        effect.execute(request, nested)
+        assertEquals(2, locked.value)
+        assertEquals(6, openD8.value)
+        assertEquals(1, game.grove.graftBed.count(DieSides.D4))
+        assertEquals(StrikeRow.TOP, battle.grid.locationOf(locked)?.row)
+        assertEquals(null, battle.grid.locationOf(openD4))
+    }
+
     private class FreshGainPlacementStrategy : BattleStrategy {
         var sawGainedD4InContext: Boolean = false
 

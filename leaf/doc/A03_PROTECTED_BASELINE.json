@@ -1,13 +1,13 @@
 {
   "approved_protected_paths": [
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndDineEffect.kt"
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "f74bbce60548eefd0543e8a0fd5cfab39129ce04f0cf62ae3e88898cc8542719",
+  "previous_baseline_digest": "2f4cbe2a36ef4e37fbad7b68f81b1d6614900195e42aac49e986cd2e373147ab",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -279,7 +279,7 @@
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/OEdelweissEffect.kt": "6fea3374a802e8e5242ebd28633e3a19ef5512548769454c87b7087704a33dac",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/OvergrowthEffect.kt": "6cbc208625c1af965f53ce6577d63bf945168af1e7d20dc9e2ebb129074da36c",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PartingThornEffect.kt": "9b638a052153508a6fcca2a5b18e7c06f7671d9401f68b9905e72247366a5705",
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt": "ef23c478aabcf8818ae83bd4539ff4934ea549d8ff788fd55e19485482f4be87",
+    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt": "378ed7f1eda675b9d8cf7402ae882007ae0abccd7d753895a665b589694714d9",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/ShiftHappensEffect.kt": "76e1cbe30360ea0884f57958d7e21b621988afc8e5228356f90dae297299751d",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/SnipHappensEffect.kt": "48f5ba507b510726a1026a4bdd068f9affa4e2d6475102f7e0d9131cdd877db2",
     "src/main/kotlin/dugsolutions/leaf/v35/effect/special/VineAndAgainEffect.kt": "9b9937009a974b426f9c855d19749364d6d93beaf2b4a5763a587dc7046f8b4e",
@@ -491,5 +491,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "Candidate B locked-row Battle target validity: Vine and Dine may not raise resolved dice"
+  "review_reason": "Reviewed Battle candidate lock fidelity: Petal D4 theft and raise all exclude previously resolved rows"
 }
