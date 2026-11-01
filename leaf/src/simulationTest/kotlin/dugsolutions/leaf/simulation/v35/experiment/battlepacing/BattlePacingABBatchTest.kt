@@ -67,6 +67,24 @@ class BattlePacingABBatchTest {
         assertTrue(Files.notExists(output.resolve("FAILURE.txt")))
     }
 
+    @Test fun `targeted selection records attempts without changing paired output contract`() {
+        val parent = Files.createTempDirectory("leaf-battle-pacing-selection-")
+        val output = parent.resolve("run")
+        main(arrayOf("--samples", "1", "--players", "2", "--battles", "1",
+            "--policy", "mechanical", "--scenario", "resource-rich", "--max-attempts", "100",
+            "--out", output.toString()))
+        val accepted = Files.readAllLines(output.resolve("opening_selection.csv"))
+        val selectionSummary = Files.readAllLines(output.resolve("selection_summary.csv"))
+        assertTrue(accepted.size >= 2)
+        assertEquals(2, selectionSummary.size)
+        val acceptedRows = accepted.drop(1).filter { it.split(",")[6] == "true" }
+        assertEquals(1, acceptedRows.size)
+        assertTrue(acceptedRows.single().split(",")[12].toInt() >= 8)
+        assertEquals(3, Files.readAllLines(output.resolve("pairs.csv")).size)
+        assertEquals(4, Files.readAllLines(output.resolve("strikes.csv")).size)
+        assertTrue(Files.notExists(output.resolve("FAILURE.txt")))
+    }
+
     @Test fun `human guided pilot records per-row timing plans with two normal Mains`() {
         val parent = Files.createTempDirectory("leaf-battle-pacing-main-plans-")
         val output = parent.resolve("run")

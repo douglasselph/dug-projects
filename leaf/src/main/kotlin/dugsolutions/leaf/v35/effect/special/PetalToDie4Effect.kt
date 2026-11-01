@@ -32,6 +32,15 @@ import dugsolutions.leaf.v35.player.decision.effect.PetalToDie4Choice
 import dugsolutions.leaf.v35.random.die.Die
 import dugsolutions.leaf.v35.random.die.DieSides
 
+/**
+ * Experimental rules decision, currently OFF: whether Petal To Die 4 may steal
+ * a D4 from an already resolved Strike. The canonical experiment keeps closed
+ * rows immutable. Turning this ON also requires a deliberate exception to
+ * BattleGrid/LockedStrikeEvidence and Doom semantics: it is intentionally NOT
+ * an independently supported toggle until those semantics are designed/tested.
+ */
+internal const val PETAL_TO_DIE_4_ALLOW_RESOLVED_STRIKE_THEFT = false
+
 /** Implements both the printed and research-redesigned Petal To Die 4 packages. */
 class PetalToDie4Effect(
     private val trashResolver: TrashResolver = TrashResolver(),
@@ -199,7 +208,7 @@ class PetalToDie4Effect(
                         val grid = request.battleState?.grid
                         val location = grid?.locationOf(die)
                         location != null && location.playerId == opponent.id &&
-                            !grid.isRowClosed(location.row)
+                            (!grid.isRowClosed(location.row) || PETAL_TO_DIE_4_ALLOW_RESOLVED_STRIKE_THEFT)
                     }
                 }
                 // Preserve original Hand indices in immutable effect choices.
@@ -264,7 +273,7 @@ class PetalToDie4Effect(
                     val battle = battleStateForEffect(request, "PetalToDie4Steal")
                     val location = battle.grid.locationOf(live)
                     stateCheck(location != null && location.playerId == opponent.id &&
-                        !battle.grid.isRowClosed(location.row)) {
+                        (!battle.grid.isRowClosed(location.row) || PETAL_TO_DIE_4_ALLOW_RESOLVED_STRIKE_THEFT)) {
                         "Cannot steal a D4 from a resolved Strike: $source"
                     }
                     stateCheck(battle.grid.removeDie(live) != null) {

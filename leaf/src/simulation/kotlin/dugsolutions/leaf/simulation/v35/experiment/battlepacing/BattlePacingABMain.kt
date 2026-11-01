@@ -30,6 +30,8 @@ private data class BatchOptions(
     val players: List<Int> = listOf(2, 3, 4),
     val battles: List<Int> = listOf(1, 2, 3),
     val policy: String = "mechanical",
+    val scenario: BattlePacingScenario = BattlePacingScenario.NATURAL,
+    val maxAttempts: Int? = null,
     val seed: Long = 2026103000L,
     val strategySeed: Long = 2026104000L,
     val wispSeed: Long = 2026105000L,
@@ -43,7 +45,7 @@ private data class BatchOptions(
                 key to value
             }
             require(values.keys.all { it in setOf(
-                "--samples", "--players", "--battles", "--policy", "--seed", "--strategy-seed", "--wisp-seed", "--out"
+                "--samples", "--players", "--battles", "--policy", "--scenario", "--max-attempts", "--seed", "--strategy-seed", "--wisp-seed", "--out"
             ) }) { "Unknown option(s): ${values.keys}" }
             fun csv(key: String, default: List<Int>): List<Int> = values[key]
                 ?.split(",")?.map { it.trim().toInt() } ?: default
@@ -52,12 +54,16 @@ private data class BatchOptions(
                 players = csv("--players", listOf(2, 3, 4)),
                 battles = csv("--battles", listOf(1, 2, 3)),
                 policy = values["--policy"] ?: "mechanical",
+                scenario = BattlePacingScenario.parse(values["--scenario"] ?: "natural"),
+                maxAttempts = values["--max-attempts"]?.toInt(),
                 seed = values["--seed"]?.toLong() ?: 2026103000L,
                 strategySeed = values["--strategy-seed"]?.toLong() ?: 2026104000L,
                 wispSeed = values["--wisp-seed"]?.toLong() ?: 2026105000L,
                 output = Paths.get(values["--out"] ?: "output/experiments/battle-pacing/checkpoint3")
             )
             require(options.samples > 0)
+            require(options.maxAttempts == null || options.maxAttempts >= options.samples) { "--max-attempts must be >= --samples" }
+            require(options.samples <= Int.MAX_VALUE / 40) { "--samples too large for default max attempts" }
             require(options.players.isNotEmpty() && options.players.distinct().size == options.players.size &&
                 options.players.all { it in 2..4 })
             require(options.battles.isNotEmpty() && options.battles.distinct().size == options.battles.size &&
@@ -137,6 +143,10 @@ fun main(args: Array<String>) {
             appendLine("players=${options.players.joinToString(",")}")
             appendLine("battle_ordinals=${options.battles.joinToString(",")}")
             appendLine("policy=${options.policy}")
+            appendLine("scenario=${options.scenario.cliName}")
+            appendLine("scenarioEligibility=pre-Battle Support inventory only; all games legal; rejected openings excluded before execution")
+            appendLine("max_attempts_per_cohort=${options.maxAttempts ?: if (options.scenario == BattlePacingScenario.NATURAL) options.samples else options.samples * 40}")
+            appendLine("selectionSeedIndex=attemptIndex; accepted sample index retained in existing CSV contracts")
             appendLine("base_seed=${options.seed}")
             appendLine("base_strategy_seed=${options.strategySeed}")
             appendLine("base_wisp_seed=${options.wispSeed}")
@@ -146,6 +156,8 @@ fun main(args: Array<String>) {
             listOf(
                 "data/Cultivation_Cards - Root.csv", "data/Cultivation_Cards - VF.csv",
                 "data/Wisp_Cards.csv", "data/Turn_Cards.csv",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingScenario.kt",
+                "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementOrderSelector.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/PairedBattleOpeningReplay.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/PairedBattleComparison.kt",
@@ -164,6 +176,12 @@ fun main(args: Array<String>) {
         }
         Files.writeString(options.output.resolve("manifest.txt"), manifest)
         val startNanos = System.nanoTime()
+        // Additive selection audit (including rejected LEGAL openings). The existing
+        // pairs/strikes/opportunities/summary CSV headers remain unchanged.
+        CsvFile(options.output.resolve("opening_selection.csv"),
+            "players,battle,policy,scenario,attemptIndex,acceptedSample,accepted,seed,strategySeed,wispSeed,openingSha,initialSupports,minSupports,maxSupports,supportGap,initialVP,vpGap").use { selection ->
+        CsvFile(options.output.resolve("selection_summary.csv"),
+            "players,battle,policy,scenario,acceptedPairs,attemptedOpenings,rejectedOpenings,acceptanceRate,maxAttempts").use { selectionSummaries ->
         // Additive research output: do not change or break the existing CSV contracts.
         CsvFile(options.output.resolve("main_plans.csv"),
             "players,battle,policy,sample,openingSha,planTrace").use { mainPlans ->
@@ -178,10 +196,24 @@ fun main(args: Array<String>) {
                         options.players.forEach { players -> options.battles.forEach { ordinal ->
                             val summary = BattlePacingCohortSummary()
                             val cohortStart = System.nanoTime()
-                            repeat(options.samples) { sample ->
-                                val mechanicalSeed = options.seed + sample * 1009L + players * 100003L + ordinal * 1000003L
-                                val strategySeed = options.strategySeed + sample * 1013L + players * 100019L + ordinal * 1000033L
-                                val deckSeed = options.wispSeed + sample * 1021L + players * 100043L + ordinal * 1000037L
+                            var accepted = 0
+                            var attempted = 0
+                            val maxAttempts = options.maxAttempts ?: if (options.scenario == BattlePacingScenario.NATURAL)
+                                options.samples else options.samples * 40
+                            while (accepted < options.samples) {
+                                if (attempted >= maxAttempts) {
+                                    val failure = "INCOMPLETE scenario=${options.scenario.cliName} " +
+                                        "players=$players battle=$ordinal accepted=$accepted/${options.samples} " +
+                                        "attempts=$attempted maxAttempts=$maxAttempts. " +
+                                        "Increase --max-attempts or relax scenario. Never use partial results as a complete cohort."
+                                    Files.writeString(options.output.resolve("FAILURE.txt"), failure)
+                                    error(failure)
+                                }
+                                val attemptIndex = attempted++
+                                val sample = accepted // existing output's per-cohort accepted index
+                                val mechanicalSeed = options.seed + attemptIndex * 1009L + players * 100003L + ordinal * 1000003L
+                                val strategySeed = options.strategySeed + attemptIndex * 1013L + players * 100019L + ordinal * 1000033L
+                                val deckSeed = options.wispSeed + attemptIndex * 1021L + players * 100043L + ordinal * 1000037L
                                 try {
                                     val config = GameConfig(
                                         playerDecisionFactories = List(players) {
@@ -196,6 +228,15 @@ fun main(args: Array<String>) {
                                     val paired = replay.create(config, ordinal, exactWispCards = deck)
                                     val initialVP = paired.controlGame.players.map { it.vp }
                                     val initialSupports = paired.controlGame.players.map(::supportInventory)
+                                    val opening = BattlePacingSelection(initialSupports, initialVP)
+                                    val eligible = options.scenario.accepts(initialSupports)
+                                    selection.row(players, ordinal, options.policy, options.scenario.cliName,
+                                        attemptIndex, if (eligible) sample else "", eligible,
+                                        mechanicalSeed, strategySeed, deckSeed, paired.fingerprint.sha256,
+                                        initialSupports.joinToString("|"), opening.minimumSupports,
+                                        opening.maximumSupports, opening.supportGap,
+                                        initialVP.joinToString("|"), opening.vpGap)
+                                    if (!eligible) continue
                                     val result = compare.run(paired,
                                         if (options.policy == "mechanical") MechanicalEngagementPolicy
                                         else HumanGuidedEngagementPolicy(paired.candidateGame)
@@ -227,7 +268,7 @@ fun main(args: Array<String>) {
                                             mainPlans.row(players, ordinal, options.policy, sample,
                                                 result.openingSha256, planLine)
                                         }
-                                    result.candidate.engagements.forEachIndexed { index, engagement ->
+                                    result.candidate.engagements.forEach { engagement ->
                                         val baseline = result.baselineStrikes.strikes.first { it.row == engagement.order.row }
                                         val last = engagement.opportunities.last()
                                         val lastObs = lastActorObservation(engagement)
@@ -251,16 +292,19 @@ fun main(args: Array<String>) {
                                                 totals(turn.beforeTotals), totals(turn.afterTotals))
                                         }
                                     }
+                                    accepted++
                                 } catch (failure: Throwable) {
                                     val message = "FAIL players=$players battle=$ordinal policy=${options.policy} " +
-                                        "sample=$sample seed=$mechanicalSeed strategySeed=$strategySeed wispSeed=$deckSeed " +
+                                        "sample=$sample attemptIndex=$attemptIndex seed=$mechanicalSeed strategySeed=$strategySeed wispSeed=$deckSeed " +
                                         "reason=${failure.stackTraceToString()}"
                                     Files.writeString(options.output.resolve("FAILURE.txt"), message)
                                     System.err.println(message)
                                     throw failure
                                 }
-                                if ((sample + 1) % 100 == 0) println("COMPLETE $players-player Battle=$ordinal ${sample + 1}/${options.samples}")
+                                if (accepted % 100 == 0 && accepted > 0) println("COMPLETE $players-player Battle=$ordinal $accepted/${options.samples}; openings=$attempted")
                             }
+                            selectionSummaries.row(players, ordinal, options.policy, options.scenario.cliName,
+                                accepted, attempted, attempted - accepted, fmt(accepted.toDouble() / attempted), maxAttempts)
                             val ci = summary.pairedVpPerPlayer.interval95()
                             val uniqueCI = summary.lastUniqueSharePerBattle.interval95()
                             val seconds = (System.nanoTime() - cohortStart) / 1e9
@@ -286,6 +330,8 @@ fun main(args: Array<String>) {
             }
         }
         } // main_plans.csv
+        } // selection_summary.csv
+        } // opening_selection.csv
         println("COMPLETE ${options.output} timeSeconds=${fmt((System.nanoTime() - startNanos) / 1e9)}")
     } finally {
         app.close()
