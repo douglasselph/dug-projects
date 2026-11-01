@@ -35,6 +35,7 @@ private data class BatchOptions(
     val seed: Long = 2026103000L,
     val strategySeed: Long = 2026104000L,
     val wispSeed: Long = 2026105000L,
+    val timingModel: Path? = null,
     val output: Path = Paths.get("output/experiments/battle-pacing/checkpoint3")
 ) {
     companion object {
@@ -45,7 +46,7 @@ private data class BatchOptions(
                 key to value
             }
             require(values.keys.all { it in setOf(
-                "--samples", "--players", "--battles", "--policy", "--scenario", "--max-attempts", "--seed", "--strategy-seed", "--wisp-seed", "--out"
+                "--samples", "--players", "--battles", "--policy", "--scenario", "--max-attempts", "--seed", "--strategy-seed", "--wisp-seed", "--timing-model", "--out"
             ) }) { "Unknown option(s): ${values.keys}" }
             fun csv(key: String, default: List<Int>): List<Int> = values[key]
                 ?.split(",")?.map { it.trim().toInt() } ?: default
@@ -59,6 +60,7 @@ private data class BatchOptions(
                 seed = values["--seed"]?.toLong() ?: 2026103000L,
                 strategySeed = values["--strategy-seed"]?.toLong() ?: 2026104000L,
                 wispSeed = values["--wisp-seed"]?.toLong() ?: 2026105000L,
+                timingModel = values["--timing-model"]?.let(Paths::get),
                 output = Paths.get(values["--out"] ?: "output/experiments/battle-pacing/checkpoint3")
             )
             require(options.samples > 0)
@@ -135,7 +137,7 @@ fun main(args: Array<String>) {
         val replay = PairedBattleOpeningReplay(k.get<GameFactory>(), k.get<RoundCoordinator>(), round)
         val compare = PairedBattleComparison(round)
         val manifest = buildString {
-            appendLine("experiment=battle-pacing-AB-checkpoint3")
+            appendLine("experiment=battle-pacing-task6-duration-downtime")
             appendLine("status=exploratory; runtime failures ABORT; no significance claim for mismatched tactical policies")
             appendLine("rounds=3/2/2; pre-target Battles canonical A in BOTH arms")
             appendLine("resolveWisp=excluded identically in A and B")
@@ -153,10 +155,16 @@ fun main(args: Array<String>) {
             appendLine("eventBasedDieRolls=true; sharedPercentileDieRolls=true")
             appendLine("candidateHumanGuided=v37 Main choice; v37 B10-B14 Support continuation and chooser constrained to two Supports per Engagement; exploratory, NOT calibrated to new timing")
             appendLine("CI=normal paired-mean/within-battle sample; B last actor mean has cluster-by-Battle CI; descriptive, not causal")
+            appendLine("task6Timing=model-based estimates only; simulator CPU time is not human play time")
+            appendLine("task6TimingModel=${options.timingModel ?: "built-in-fast-typical-analysis-heavy"}")
+            appendLine("task6DecisionComplexity=log2(1+legalChoices)+0.5*(unresolvedStrikes-1), capped at 10")
+            appendLine("task6Reassessment=changed rows + leader/margin changes + capped dice/Plant changes, capped at 10")
             listOf(
                 "data/Cultivation_Cards - Root.csv", "data/Cultivation_Cards - VF.csv",
                 "data/Wisp_Cards.csv", "data/Turn_Cards.csv",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingScenario.kt",
+                "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt",
+                "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt",
                 "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementOrderSelector.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/PairedBattleOpeningReplay.kt",
@@ -167,7 +175,10 @@ fun main(args: Array<String>) {
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementMainTimingPlanner.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BaselineMainActionForecast.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingStatistics.kt",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingTimingModel.kt",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingTask6Summary.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingABMain.kt",
+                "doc/battle_pacing_task6_report.py",
                 "doc/run_battle_pacing_ab.sh"
             ).forEach { relative ->
                 val path = Paths.get(relative)
@@ -176,6 +187,21 @@ fun main(args: Array<String>) {
         }
         Files.writeString(options.output.resolve("manifest.txt"), manifest)
         val startNanos = System.nanoTime()
+        val timingProfiles = BattleTimingProfiles.load(options.timingModel)
+        CsvFile(options.output.resolve("timing_model.csv"), BattleTimingProfiles.csvHeader.joinToString(",")).use { modelCsv ->
+            timingProfiles.forEach { modelCsv.row(*BattleTimingProfiles.row(it).toTypedArray()) }
+        }
+        val pacingWindows = CsvFile(options.output.resolve("pacing_windows.csv"),
+            "players,battle,policy,scenario,sample,openingSha,ruleSet,window,actor,stage,row,unresolvedStrikes,legalChoices,meaningfulWindow,actionCount,passes,emptyOpportunity,normalMains,sunlightMains,supports,diceRolled,diceRerolled,dicePlaced,diceMoved,diceValueChanges,cardsActivated,plantFacingTransitions,refreshes,resourcesSpent,resourcesGained,changedRows,leaderChanges,marginChanges,reassessmentUnits,complexityUnits,laterStrikeUnits,actionKinds")
+        val pacingBattles = CsvFile(options.output.resolve("pacing_battles.csv"),
+            "players,battle,policy,scenario,sample,openingSha,ruleSet,profile,estimatedSeconds,decisionSeconds,executionSeconds,handoffSeconds,reassessmentSeconds,decisionWindows,meaningfulDecisionWindows,handoffs,normalMains,sunlightMains,supports,passes,emptyOpportunities,diceRolled,diceRerolled,dicePlaced,diceMoved,diceValueChanges,cardsActivated,plantFacingTransitions,refreshes,reassessmentWindows,complexityUnits,reassessmentUnits,resourcesSpent,resourcesGained,strikes,wounds,doomDice,cleanupDice,returnedCritters,unusedSupportsPerPlayer,candidateLaterStrikeUnits")
+        val pacingPlayers = CsvFile(options.output.resolve("pacing_players.csv"),
+            "players,battle,policy,scenario,sample,openingSha,ruleSet,profile,player,totalWaitingSeconds,longestWaitingSeconds,terminalWaitingSeconds,consequentialWatchingSeconds,noMeaningfulLegalActionSeconds,unusedSupports")
+        val pacingSensitivity = CsvFile(options.output.resolve("pacing_sensitivity.csv"),
+            "players,battle,policy,scenario,sample,openingSha,profile,baselineSeconds,candidateSeconds,savingsSeconds,savingsPercent,candidateLaterStrikeUnits,additionalCandidatePlanningSecondsPerLaterStrikeUnitToBreakEven")
+        val pacingSummary = CsvFile(options.output.resolve("pacing_summary.csv"),
+            "players,battle,policy,scenario,profile,completedPairs,AmeanSeconds,AmedianSeconds,AP90Seconds,AP95Seconds,BmeanSeconds,BmedianSeconds,BP90Seconds,BP95Seconds,meanSavingsSeconds,meanSavingsPercent,deltaSecondsCI95Low,deltaSecondsCI95High,AmeanPlayerWait,BmeanPlayerWait,AmedianPlayerWait,BmedianPlayerWait,AP95PlayerWait,BP95PlayerWait,AmeanLongestWait,BmeanLongestWait,AmedianLongestWait,BmedianLongestWait,AP95LongestWait,BP95LongestWait,AmeanTerminalWait,BmeanTerminalWait,AmedianTerminalWait,BmedianTerminalWait,AP95TerminalWait,BP95TerminalWait,AmeanNoLegalWait,BmeanNoLegalWait,AmeanConsequentialWatching,BmeanConsequentialWatching,AmeanDecisionWindows,BmeanDecisionWindows,AmeanMeaningfulWindows,BmeanMeaningfulWindows,AmeanHandoffs,BmeanHandoffs,AmeanSupports,BmeanSupports,AmeanUnusedSupportsPerPlayer,BmeanUnusedSupportsPerPlayer,meanBreakEvenExtraCandidatePlanningSecondsPerLaterStrikeUnit")
+        try {
         // Additive selection audit (including rejected LEGAL openings). The existing
         // pairs/strikes/opportunities/summary CSV headers remain unchanged.
         CsvFile(options.output.resolve("opening_selection.csv"),
@@ -195,6 +221,7 @@ fun main(args: Array<String>) {
                         "players,battle,policy,completedPairs,pairedDeltaBattleVPPerPlayer,deltaVP_CI95Low,deltaVP_CI95High,baselineBattleVPPerPlayer,candidateBattleVPPerPlayer,deltaStrikeVPPerPlayer,deltaWoundsPerPlayer,baselineMainActions,baselineSupportActions,candidateMainActions,candidateSupportActions,candidateNoActionOpportunities,candidateTotalOpportunities,Bstrikes,lastUniqueWins,lastSharedWins,lastActorSwings,lastActorActs,lastUniqueRate,lastUniqueClusterCILow,lastUniqueClusterCIHigh,seconds").use { summaries ->
                         options.players.forEach { players -> options.battles.forEach { ordinal ->
                             val summary = BattlePacingCohortSummary()
+                            val task6ByProfile = timingProfiles.associate { it.name to Task6CohortSummary() }
                             val cohortStart = System.nanoTime()
                             var accepted = 0
                             var attempted = 0
@@ -247,6 +274,60 @@ fun main(args: Array<String>) {
                                     val aFinal = FinalScorer().score(paired.controlGame)
                                     val bFinal = FinalScorer().score(paired.candidateGame)
                                     summary.add(result, initialVP)
+                                    val aRemainingSupports = paired.controlGame.players.associate { it.id to supportInventory(it) }
+                                    val bRemainingSupports = paired.candidateGame.players.associate { it.id to supportInventory(it) }
+                                    val aPacing = baselinePacingObserved(paired.controlGame, result.baselineActions, result.baselineStrikes,
+                                        result.baselineDoom, result.baselineCleanup, aRemainingSupports)
+                                    val bPacing = candidatePacingObserved(paired.candidateGame, result.candidate, bRemainingSupports)
+                                    fun writeWindows(observed: BattlePacingObserved) {
+                                        observed.windows.forEach { w ->
+                                            val complexity = w.steps.sumOf { it.complexityUnits }
+                                            val laterUnits = w.steps.sumOf { kotlin.math.max(0, it.unresolvedStrikes - 1) }
+                                            pacingWindows.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                result.openingSha256, observed.ruleSet.name, w.index, w.playerId.value, w.stage,
+                                                w.row?.name ?: "", w.unresolvedStrikes, w.legalChoiceCount, w.meaningfulDecisionWindows > 0,
+                                                w.actionCount, w.passCount, w.emptyOpportunity, w.normalMainActions, w.sunlightMainActions,
+                                                w.supportActions, w.diceRolled, w.diceRerolled, w.dicePlaced, w.diceMoved, w.diceValueChanges,
+                                                w.cardsActivated, w.plantFacingTransitions, w.refreshes, w.resourcesSpent, w.resourcesGained,
+                                                w.reassessment.changedRows, w.reassessment.leaderChanges, w.reassessment.marginChanges,
+                                                w.reassessment.reassessmentUnits, fmt(complexity), laterUnits,
+                                                w.steps.mapNotNull { it.actionKind ?: if (it.pass) "PASS" else null }.joinToString("|"))
+                                        }
+                                    }
+                                    writeWindows(aPacing); writeWindows(bPacing)
+                                    timingProfiles.forEach { timing ->
+                                        val ae = estimateBattleTime(aPacing, timing); val be = estimateBattleTime(bPacing, timing)
+                                        task6ByProfile.getValue(timing.name).add(aPacing, bPacing, ae, be)
+                                        fun writeBattle(observed: BattlePacingObserved, estimate: BattleTimeEstimate) {
+                                            pacingBattles.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                result.openingSha256, observed.ruleSet.name, timing.name, fmt(estimate.totalSeconds),
+                                                fmt(estimate.totalDecisionSeconds), fmt(estimate.totalExecutionSeconds),
+                                                fmt(estimate.totalHandoffSeconds), fmt(estimate.totalReassessmentSeconds),
+                                                observed.decisionWindows, observed.meaningfulDecisionWindows, observed.handoffs,
+                                                observed.normalMainActions, observed.sunlightMainActions, observed.supportActions,
+                                                observed.passes, observed.emptyOpportunities, observed.diceRolled, observed.diceRerolled,
+                                                observed.dicePlaced, observed.diceMoved, observed.diceValueChanges, observed.cardsActivated,
+                                                observed.plantFacingTransitions, observed.refreshesDuringActions, observed.reassessmentWindows,
+                                                fmt(observed.complexityUnits), observed.reassessmentUnits,
+                                                observed.resourcesSpent, observed.resourcesGained, observed.strikeCount, observed.woundCount,
+                                                observed.doomDiceCount, observed.cleanupDiceCount, observed.returnedCritters,
+                                                fmt(observed.remainingSupportInventory.values.average()), estimate.candidateLaterStrikeUnits)
+                                            estimate.playerDowntime.forEach { d ->
+                                                pacingPlayers.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                    result.openingSha256, observed.ruleSet.name, timing.name, d.playerId.value,
+                                                    fmt(d.totalWaitingSeconds), fmt(d.longestWaitingSeconds), fmt(d.terminalWaitingSeconds),
+                                                    fmt(d.consequentialWatchingSeconds), fmt(d.noMeaningfulLegalActionSeconds),
+                                                    observed.remainingSupportInventory.getValue(d.playerId))
+                                            }
+                                        }
+                                        writeBattle(aPacing, ae); writeBattle(bPacing, be)
+                                        val saving = ae.totalSeconds - be.totalSeconds
+                                        val pct = if (ae.totalSeconds == 0.0) 0.0 else saving * 100.0 / ae.totalSeconds
+                                        val breakEven = if (be.candidateLaterStrikeUnits == 0) Double.NaN else saving / be.candidateLaterStrikeUnits
+                                        pacingSensitivity.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                            result.openingSha256, timing.name, fmt(ae.totalSeconds), fmt(be.totalSeconds), fmt(saving),
+                                            fmt(pct), be.candidateLaterStrikeUnits, fmt(breakEven))
+                                    }
                                     result.baselineFinalVP.indices.forEach { seat ->
                                         val aGain = result.baselineFinalVP[seat] - initialVP[seat]
                                         val bGain = result.candidateFinalVP[seat] - initialVP[seat]
@@ -319,6 +400,24 @@ fun main(args: Array<String>) {
                                 summary.lastActorSwings, summary.lastActorActs,
                                 fmt(summary.lastUniqueWins.toDouble() / summary.strikes),
                                 fmt(uniqueCI.first), fmt(uniqueCI.second), fmt(seconds))
+                            timingProfiles.forEach { timing ->
+                                val t6 = task6ByProfile.getValue(timing.name)
+                                val durationCI = t6.pairedDurationDelta.interval95()
+                                pacingSummary.row(players, ordinal, options.policy, options.scenario.cliName, timing.name,
+                                    t6.aDuration.size, fmt(mean(t6.aDuration)), fmt(median(t6.aDuration)),
+                                    fmt(percentile(t6.aDuration, .90)), fmt(percentile(t6.aDuration, .95)),
+                                    fmt(mean(t6.bDuration)), fmt(median(t6.bDuration)),
+                                    fmt(percentile(t6.bDuration, .90)), fmt(percentile(t6.bDuration, .95)),
+                                    fmt(mean(t6.savings)), fmt(mean(t6.savingsPct)), fmt(durationCI.first), fmt(durationCI.second),
+                                    fmt(mean(t6.aWait)), fmt(mean(t6.bWait)), fmt(median(t6.aWait)), fmt(median(t6.bWait)), fmt(percentile(t6.aWait,.95)), fmt(percentile(t6.bWait,.95)),
+                                    fmt(mean(t6.aLongest)), fmt(mean(t6.bLongest)), fmt(median(t6.aLongest)), fmt(median(t6.bLongest)), fmt(percentile(t6.aLongest,.95)), fmt(percentile(t6.bLongest,.95)),
+                                    fmt(mean(t6.aTerminal)), fmt(mean(t6.bTerminal)), fmt(median(t6.aTerminal)), fmt(median(t6.bTerminal)), fmt(percentile(t6.aTerminal,.95)), fmt(percentile(t6.bTerminal,.95)),
+                                    fmt(mean(t6.aNoLegal)), fmt(mean(t6.bNoLegal)), fmt(mean(t6.aWatching)), fmt(mean(t6.bWatching)),
+                                    fmt(mean(t6.aDecisionWindows)), fmt(mean(t6.bDecisionWindows)),
+                                    fmt(mean(t6.aMeaningfulWindows)), fmt(mean(t6.bMeaningfulWindows)),
+                                    fmt(mean(t6.aHandoffs)), fmt(mean(t6.bHandoffs)), fmt(mean(t6.aSupports)), fmt(mean(t6.bSupports)),
+                                    fmt(mean(t6.aUnused)), fmt(mean(t6.bUnused)), fmt(mean(t6.breakEvenPlanning)))
+                            }
                             println("COHORT players=$players battle=$ordinal n=${summary.pairedVpPerPlayer.count} " +
                                 "B-A mean VP/player=${fmt(summary.pairedVpPerPlayer.mean)} " +
                                 "CI95=[${fmt(ci.first)},${fmt(ci.second)}] " +
@@ -333,6 +432,9 @@ fun main(args: Array<String>) {
         } // selection_summary.csv
         } // opening_selection.csv
         println("COMPLETE ${options.output} timeSeconds=${fmt((System.nanoTime() - startNanos) / 1e9)}")
+        } finally {
+            pacingWindows.close(); pacingBattles.close(); pacingPlayers.close(); pacingSensitivity.close(); pacingSummary.close()
+        }
     } finally {
         app.close()
     }

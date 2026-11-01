@@ -9,6 +9,8 @@ import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.operation.WoundResolver
 import dugsolutions.leaf.v35.game.round.battle.BattleMainActionStage
+import dugsolutions.leaf.v35.game.round.battle.BattleDecisionPlantSnapshot
+import dugsolutions.leaf.v35.game.round.battle.BattleDecisionResourceSnapshot
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.player.PlayerId
 import dugsolutions.leaf.v35.player.decision.battle.BattleMainAction
@@ -102,6 +104,20 @@ data class EngagementActionRecord(
     val supportsUsedInThisTurn: Int
 )
 
+data class EngagementDecisionStep(
+    val choice: EngagementChoice,
+    val legalMainCount: Int,
+    val legalSupportCount: Int,
+    val beforeRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot>,
+    val afterRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot>,
+    val beforePlants: List<BattleDecisionPlantSnapshot>,
+    val afterPlants: List<BattleDecisionPlantSnapshot>,
+    val beforeResources: List<BattleDecisionResourceSnapshot>,
+    val afterResources: List<BattleDecisionResourceSnapshot>,
+    val beforeChronicleSequence: Long,
+    val afterChronicleSequence: Long
+)
+
 /** One real player opportunity, even if the player elects to pass. */
 data class EngagementOpportunity(
     val playerId: PlayerId,
@@ -110,7 +126,20 @@ data class EngagementOpportunity(
     val afterTotals: Map<PlayerId, Int>,
     val actions: List<EngagementChoice>,
     val maxLegalMains: Int,
-    val maxLegalSupports: Int
+    val maxLegalSupports: Int,
+    val initialLegalMains: Int = 0,
+    val initialLegalSupports: Int = 0,
+    val endedByPass: Boolean = false,
+    val endedByNoLegalChoices: Boolean = false,
+    val beforeRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot> = emptyList(),
+    val afterRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot> = emptyList(),
+    val beforePlants: List<BattleDecisionPlantSnapshot> = emptyList(),
+    val afterPlants: List<BattleDecisionPlantSnapshot> = emptyList(),
+    val beforeResources: List<BattleDecisionResourceSnapshot> = emptyList(),
+    val afterResources: List<BattleDecisionResourceSnapshot> = emptyList(),
+    val beforeChronicleSequence: Long = 0L,
+    val afterChronicleSequence: Long = 0L,
+    val decisionSteps: List<EngagementDecisionStep> = emptyList()
 )
 
 data class EngagementResult(
@@ -158,6 +187,25 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
             BattleGridSnapshot.row(battle, row).squares
                 .filterNot { it.withdrawn }
                 .associate { it.playerId to it.total }
+        fun chronicleSequence(): Long = game.chronicle.entries.lastOrNull()?.sequence ?: 0L
+        fun gridSnapshot() = StrikeRow.entries.map { snapshotRow ->
+            BattleGridSnapshot.row(battle, snapshotRow, game.assetProvenance)
+        }
+        fun plantSnapshot() = game.players.map { observed ->
+            BattleDecisionPlantSnapshot(observed.id,
+                observed.creature.cards.count { it.isFaceUp },
+                observed.creature.cards.count { it.isFaceDown })
+        }
+        fun resourceSnapshot() = game.players.map { observed ->
+            BattleDecisionResourceSnapshot(
+                playerId = observed.id,
+                bees = observed.critters.count(dugsolutions.leaf.v35.tokens.Critter.BEE),
+                worms = observed.critters.count(dugsolutions.leaf.v35.tokens.Critter.WORM),
+                water = observed.tokens.waterCount, sunlight = observed.tokens.sunlightCount,
+                mulch = observed.tokens.mulchTokens.size, wisps = observed.wisps.cards.cards.size,
+                readyButterflies = observed.butterflies.all.count { observed.butterflies.isFaceUp(it) }
+            )
+        }
         val engagements = StrikeRow.entries.map { row ->
             locked.forEach { it.verify(battle) }
             val order = EngagementOrderSelector.select(battle, game.players.map { it.id }, row)
@@ -167,9 +215,18 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
             val opportunities = mutableListOf<EngagementOpportunity>()
             for ((position, id) in order.clockwiseActors.withIndex()) {
                 val before = currentTotals(row)
+                val opportunityBeforeRows = gridSnapshot()
+                val opportunityBeforePlants = plantSnapshot()
+                val opportunityBeforeResources = resourceSnapshot()
+                val opportunityBeforeSequence = chronicleSequence()
                 val startIndex = records.size
                 var maxMains = 0
                 var maxSupports = 0
+                var initialMains = 0
+                var initialSupports = 0
+                var endedByPass = false
+                var endedByNoLegal = false
+                val steps = mutableListOf<EngagementDecisionStep>()
                 val player = battle.player(id)
                 var normalThisTurn = false
                 var supportsThisTurn = 0
@@ -182,16 +239,31 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     val supports = if (supportsThisTurn < 2) {
                         actions.researchLegalSupports(game, player, card, battle)
                     } else emptyList()
+                    if (actionCount == 0) { initialMains = mains.size; initialSupports = supports.size }
                     maxMains = maxOf(maxMains, mains.size)
                     maxSupports = maxOf(maxSupports, supports.size)
-                    if (mains.isEmpty() && supports.isEmpty()) break
+                    if (mains.isEmpty() && supports.isEmpty()) { endedByNoLegal = true; break }
+                    val stepBeforeRows = gridSnapshot()
+                    val stepBeforePlants = plantSnapshot()
+                    val stepBeforeResources = resourceSnapshot()
+                    val stepBeforeSequence = chronicleSequence()
                     val next = policy.choose(
                         EngagementDecision(row, id, actionCount, remaining, mains, supports,
                             battleRound.researchDecisionContext(game, player, battle),
                             supportSlotsRemaining = 2 - supportsThisTurn)
                     )
                     when (next) {
-                        EngagementChoice.Pass -> break
+                        EngagementChoice.Pass -> {
+                            endedByPass = true
+                            steps += EngagementDecisionStep(
+                                choice = next, legalMainCount = mains.size, legalSupportCount = supports.size,
+                                beforeRows = stepBeforeRows, afterRows = gridSnapshot(),
+                                beforePlants = stepBeforePlants, afterPlants = plantSnapshot(),
+                                beforeResources = stepBeforeResources, afterResources = resourceSnapshot(),
+                                beforeChronicleSequence = stepBeforeSequence, afterChronicleSequence = chronicleSequence()
+                            )
+                            break
+                        }
                         is EngagementChoice.Main -> {
                             require(next.action in mains) { "Illegal or extra normal Main in $row: $next" }
                             actions.researchTakeMain(game, player, card, battle, next.action,
@@ -206,6 +278,13 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                         }
                     }
                     locked.forEach { it.verify(battle) }
+                    steps += EngagementDecisionStep(
+                        choice = next, legalMainCount = mains.size, legalSupportCount = supports.size,
+                        beforeRows = stepBeforeRows, afterRows = gridSnapshot(),
+                        beforePlants = stepBeforePlants, afterPlants = plantSnapshot(),
+                        beforeResources = stepBeforeResources, afterResources = resourceSnapshot(),
+                        beforeChronicleSequence = stepBeforeSequence, afterChronicleSequence = chronicleSequence()
+                    )
                     actionCount++
                     records += EngagementActionRecord(row, id, next, 2 - normalUsed.getValue(id), supportsThisTurn)
                     trace += "ENGAGEMENT_ACTION,row=$row,player=${id.value},choice=$next,normalUsed=${normalUsed.getValue(id)},supportsThisRow=$supportsThisTurn"
@@ -220,7 +299,14 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     playerId = id, actingPosition = position + 1,
                     beforeTotals = before, afterTotals = currentTotals(row),
                     actions = records.drop(startIndex).map { it.choice },
-                    maxLegalMains = maxMains, maxLegalSupports = maxSupports
+                    maxLegalMains = maxMains, maxLegalSupports = maxSupports,
+                    initialLegalMains = initialMains, initialLegalSupports = initialSupports,
+                    endedByPass = endedByPass, endedByNoLegalChoices = endedByNoLegal,
+                    beforeRows = opportunityBeforeRows, afterRows = gridSnapshot(),
+                    beforePlants = opportunityBeforePlants, afterPlants = plantSnapshot(),
+                    beforeResources = opportunityBeforeResources, afterResources = resourceSnapshot(),
+                    beforeChronicleSequence = opportunityBeforeSequence, afterChronicleSequence = chronicleSequence(),
+                    decisionSteps = steps.toList()
                 )
             }
             val resolution = StrikeResolver(WoundResolver(

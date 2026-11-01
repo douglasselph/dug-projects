@@ -21,7 +21,7 @@ import kotlin.test.assertTrue
 import java.nio.file.Files
 
 class BattlePacingABBatchTest {
-    @Test fun `two independent canonical A copies replay outcomes exactly`() {
+    @Test fun `Task 6 canonical pacing telemetry is read only and sequence complete`() {
         val app = koinApplication { modules(appModules) }
         try {
             val k = app.koin
@@ -37,16 +37,29 @@ class BattlePacingABBatchTest {
             )
             val deck = BattlePacingWispDeck.withoutResolve(k.get<WispCardManager>(), 81821L)
             val pair = replay.create(config, 2, deck)
-            fun runA(game: dugsolutions.leaf.v35.game.Game, state: dugsolutions.leaf.v35.battle.BattleState): String {
+            data class Run(val outcome: String, val windows: List<dugsolutions.leaf.v35.game.round.battle.BattleDecisionWindowResult>,
+                           val actionCount: Int)
+            fun runA(game: dugsolutions.leaf.v35.game.Game, state: dugsolutions.leaf.v35.battle.BattleState,
+                     collect: Boolean): Run {
                 val card = game.config.roundValues.cardFor(requireNotNull(game.currentRound))
-                val actions = round.executeActions(game, card, state)
+                val actions = round.executeActions(game, card, state, collectResearchPacing = collect)
                 val strikes = round.executeStrikes(game, state)
                 val doom = round.executeDoom(game, state)
                 round.executeCleanup(game, state)
-                return "${actions.firstMainActions.map { it.action }}|${actions.supportActions.map { it.action }}|" +
+                val outcome = "${actions.firstMainActions.map { it.action }}|${actions.supportActions.map { it.action }}|" +
                     "${strikes.strikes.map { it.totals to it.winnerIds }}|${doom.count}|${game.players.map { it.vp }}"
+                return Run(outcome, actions.decisionWindows,
+                    actions.firstMainActions.size + actions.supportActions.size + actions.finalMainActions.size)
             }
-            assertEquals(runA(pair.controlGame, pair.controlBattle), runA(pair.candidateGame, pair.candidateBattle))
+            val plain = runA(pair.controlGame, pair.controlBattle, collect = false)
+            val instrumented = runA(pair.candidateGame, pair.candidateBattle, collect = true)
+            assertEquals(plain.outcome, instrumented.outcome)
+            assertTrue(plain.windows.isEmpty())
+            assertTrue(instrumented.windows.isNotEmpty())
+            assertEquals(instrumented.actionCount,
+                instrumented.windows.count { it.chosenMain != null || it.chosenSupport != null })
+            assertTrue(instrumented.windows.all { it.beforeChronicleSequence <= it.afterChronicleSequence })
+            assertTrue(instrumented.windows.zipWithNext().all { (a, b) -> a.afterChronicleSequence <= b.beforeChronicleSequence })
         } finally { app.close() }
     }
 
@@ -64,6 +77,24 @@ class BattlePacingABBatchTest {
         assertEquals(4, strikes.size) // header + 3 Strikes
         assertEquals(7, turns.size) // header + 3 x 2 opportunities
         assertTrue(Files.exists(output.resolve("summary.csv")))
+        assertEquals(4, Files.readAllLines(output.resolve("timing_model.csv")).size) // header + 3 assumption profiles
+        assertEquals(7, Files.readAllLines(output.resolve("pacing_battles.csv")).size) // A/B x 3 profiles
+        assertEquals(13, Files.readAllLines(output.resolve("pacing_players.csv")).size) // A/B x 3 profiles x 2 players
+        assertEquals(4, Files.readAllLines(output.resolve("pacing_sensitivity.csv")).size)
+        assertEquals(4, Files.readAllLines(output.resolve("pacing_summary.csv")).size)
+        val pacingWindows = Files.readAllLines(output.resolve("pacing_windows.csv"))
+        assertTrue(pacingWindows.any { it.contains(",A_BASELINE,") })
+        assertTrue(pacingWindows.any { it.contains(",B_CANDIDATE,") })
+        val battleRows = Files.readAllLines(output.resolve("pacing_battles.csv"))
+        val header = battleRows.first().split(',')
+        fun value(row: String, name: String) = row.split(',')[header.indexOf(name)]
+        val typical = battleRows.drop(1).filter { value(it, "profile") == "typical" }
+        assertEquals(2, typical.size)
+        val summaryRow = Files.readAllLines(output.resolve("summary.csv"))[1].split(',')
+        val a = typical.single { value(it, "ruleSet") == "A_BASELINE" }
+        val b = typical.single { value(it, "ruleSet") == "B_CANDIDATE" }
+        assertEquals(summaryRow[12], value(a, "supports"))
+        assertEquals(summaryRow[14], value(b, "supports"))
         assertTrue(Files.notExists(output.resolve("FAILURE.txt")))
     }
 

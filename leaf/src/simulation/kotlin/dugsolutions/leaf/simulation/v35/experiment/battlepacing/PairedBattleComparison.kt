@@ -27,7 +27,7 @@ class PairedBattleComparison(private val battleRound: BattleRound) {
         check(BattleOpeningFingerprint.capture(paired.candidateGame, paired.candidateBattle) == paired.fingerprint)
         val a = paired.controlGame
         val card = a.config.roundValues.cardFor(requireNotNull(a.currentRound))
-        val actions = battleRound.executeActions(a, card, paired.controlBattle)
+        val actions = battleRound.executeActions(a, card, paired.controlBattle, collectResearchPacing = true)
         val strikes = battleRound.executeStrikes(a, paired.controlBattle)
         val doom = battleRound.executeDoom(a, paired.controlBattle)
         val cleanup = battleRound.executeCleanup(a, paired.controlBattle)

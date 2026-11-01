@@ -166,7 +166,8 @@ class BattleRound(
     fun executeActions(
         game: Game,
         roundCard: RoundCard,
-        battleState: BattleState
+        battleState: BattleState,
+        collectResearchPacing: Boolean = false
     ): BattleActionLoopResult {
         requireBattleCard(roundCard)
 
@@ -185,7 +186,8 @@ class BattleRound(
         ).execute(
             game = game,
             roundCard = roundCard,
-            battleState = battleState
+            battleState = battleState,
+            collectResearchPacing = collectResearchPacing
         )
     }
 

@@ -69,10 +69,53 @@ data class BattleSupportActionResult(
     val action: BattleSupportAction
 )
 
+enum class BattleDecisionWindowStage { FIRST_MAIN, SUPPORT_OR_FINAL }
+
+enum class BattleAutomaticDoneReason { NO_LEGAL_CHOICES, POLICY_FILTERED_CHOICES }
+
+data class BattleDecisionPlantSnapshot(
+    val playerId: PlayerId,
+    val faceUp: Int,
+    val faceDown: Int
+)
+
+data class BattleDecisionResourceSnapshot(
+    val playerId: PlayerId,
+    val bees: Int,
+    val worms: Int,
+    val water: Int,
+    val sunlight: Int,
+    val mulch: Int,
+    val wisps: Int,
+    val readyButterflies: Int
+)
+
+data class BattleDecisionWindowResult(
+    val playerId: PlayerId,
+    val stage: BattleDecisionWindowStage,
+    val passNumber: Int?,
+    val legalMainCount: Int,
+    val legalSupportCount: Int,
+    val chosenMain: BattleMainAction? = null,
+    val chosenSupport: BattleSupportAction? = null,
+    val automaticDoneReason: BattleAutomaticDoneReason? = null,
+    val finishedAfter: Boolean = false,
+    val beforeRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot>,
+    val afterRows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot>,
+    val beforePlants: List<BattleDecisionPlantSnapshot>,
+    val afterPlants: List<BattleDecisionPlantSnapshot>,
+    val beforeResources: List<BattleDecisionResourceSnapshot>,
+    val afterResources: List<BattleDecisionResourceSnapshot>,
+    val beforeChronicleSequence: Long,
+    val afterChronicleSequence: Long
+)
+
 data class BattleActionLoopResult(
     val firstMainActions: List<BattleMainActionResult>,
     val supportActions: List<BattleSupportActionResult>,
-    val finalMainActions: List<BattleMainActionResult>
+    val finalMainActions: List<BattleMainActionResult>,
+    /** Optional read-only research telemetry; empty on the production path. */
+    val decisionWindows: List<BattleDecisionWindowResult> = emptyList()
 )
 
 /**
@@ -164,7 +207,8 @@ class BattleActionCoordinator(
     fun execute(
         game: Game,
         roundCard: RoundCard,
-        battleState: BattleState
+        battleState: BattleState,
+        collectResearchPacing: Boolean = false
     ): BattleActionLoopResult {
         require(roundCard.type == RoundCardType.BATTLE) {
             "BattleActionCoordinator requires a Battle Round card: ${roundCard.type}"
@@ -175,16 +219,70 @@ class BattleActionCoordinator(
         val firstResults = mutableListOf<BattleMainActionResult>()
         val supportResults = mutableListOf<BattleSupportActionResult>()
         val finalResults = mutableListOf<BattleMainActionResult>()
+        val pacingWindows = mutableListOf<BattleDecisionWindowResult>()
+
+        fun chronicleSequence(): Long = game.chronicle.entries.lastOrNull()?.sequence ?: 0L
+        fun gridSnapshot() = StrikeRow.entries.map { row ->
+            BattleGridSnapshot.row(battleState, row, game.assetProvenance)
+        }
+        fun plantSnapshot() = game.players.map { observed ->
+            BattleDecisionPlantSnapshot(
+                playerId = observed.id,
+                faceUp = observed.creature.cards.count { it.isFaceUp },
+                faceDown = observed.creature.cards.count { it.isFaceDown }
+            )
+        }
+        fun resourceSnapshot() = game.players.map { observed ->
+            BattleDecisionResourceSnapshot(
+                playerId = observed.id,
+                bees = observed.critters.count(Critter.BEE),
+                worms = observed.critters.count(Critter.WORM),
+                water = observed.tokens.waterCount,
+                sunlight = observed.tokens.sunlightCount,
+                mulch = observed.tokens.mulchTokens.size,
+                wisps = observed.wisps.cards.cards.size,
+                readyButterflies = observed.butterflies.all.count { observed.butterflies.isFaceUp(it) }
+            )
+        }
+        data class WindowStart(
+            val rows: List<dugsolutions.leaf.v35.battle.domain.BattleGridRowSnapshot>,
+            val plants: List<BattleDecisionPlantSnapshot>,
+            val resources: List<BattleDecisionResourceSnapshot>,
+            val sequence: Long
+        )
+        fun startWindow(): WindowStart = WindowStart(gridSnapshot(), plantSnapshot(), resourceSnapshot(), chronicleSequence())
+        fun recordWindow(
+            start: WindowStart?, player: Player, stage: BattleDecisionWindowStage, passNumber: Int?,
+            legalMainCount: Int, legalSupportCount: Int, chosenMain: BattleMainAction? = null,
+            chosenSupport: BattleSupportAction? = null, automaticDoneReason: BattleAutomaticDoneReason? = null
+        ) {
+            if (start == null) return
+            pacingWindows += BattleDecisionWindowResult(
+                playerId = player.id, stage = stage, passNumber = passNumber,
+                legalMainCount = legalMainCount, legalSupportCount = legalSupportCount,
+                chosenMain = chosenMain, chosenSupport = chosenSupport,
+                automaticDoneReason = automaticDoneReason, finishedAfter = battleState.isDone(player.id),
+                beforeRows = start.rows, afterRows = gridSnapshot(),
+                beforePlants = start.plants, afterPlants = plantSnapshot(),
+                beforeResources = start.resources, afterResources = resourceSnapshot(),
+                beforeChronicleSequence = start.sequence, afterChronicleSequence = chronicleSequence()
+            )
+        }
 
         // Step 4 — everybody's first Main Action before anybody may Support.
         battleState.playersInBattleOrder.forEach { player ->
+            val windowStart = if (collectResearchPacing) startWindow() else null
             val legal = mainActions(game, player, roundCard, battleState)
             recordRoundEffectOpportunity(game, player, roundCard, legal)
             // In very long Battle sequences a player can legitimately exhaust every
             // possible Main Action: no cycling die remains, all usable Plants are
             // face down, and neither Round effect is currently executable. A human
             // player simply has no first Main Action to take in that state.
-            if (legal.isEmpty()) return@forEach
+            if (legal.isEmpty()) {
+                recordWindow(windowStart, player, BattleDecisionWindowStage.FIRST_MAIN, null, 0, 0,
+                    automaticDoneReason = BattleAutomaticDoneReason.NO_LEGAL_CHOICES)
+                return@forEach
+            }
 
             val context = DecisionContextFactory.create(game, player, battleState)
             val referenceMain =
@@ -237,6 +335,8 @@ class BattleActionCoordinator(
                     stage = BattleMainActionStage.FIRST,
                     action = chosen
                 )
+            recordWindow(windowStart, player, BattleDecisionWindowStage.FIRST_MAIN, null, legal.size, 0,
+                chosenMain = chosen)
         }
 
         game.chronicle.record(
@@ -272,16 +372,14 @@ class BattleActionCoordinator(
                         "without taking Final Main; Battle action loop may be cycling"
                 }
 
+                val windowStart = if (collectResearchPacing) startWindow() else null
                 val finalMains =
                     mainActions(game, player, roundCard, battleState)
+                val legalSupports = supportActions(game, player, roundCard, battleState)
 
                 val legalChoices = buildList {
-                    supportActions(game, player, roundCard, battleState).mapTo(this) {
-                        BattleTurnAction.Support(it)
-                    }
-                    finalMains.mapTo(this) {
-                        BattleTurnAction.FinalMain(it)
-                    }
+                    legalSupports.mapTo(this) { BattleTurnAction.Support(it) }
+                    finalMains.mapTo(this) { BattleTurnAction.FinalMain(it) }
                 }
 
                 val sunlightChoices = legalChoices.count { choice ->
@@ -304,6 +402,9 @@ class BattleActionCoordinator(
                 // still offered even when no final Main is currently available.
                 if (legalChoices.isEmpty()) {
                     battleState.markDone(player.id)
+                    recordWindow(windowStart, player, BattleDecisionWindowStage.SUPPORT_OR_FINAL, passNumber,
+                        finalMains.size, legalSupports.size,
+                        automaticDoneReason = BattleAutomaticDoneReason.NO_LEGAL_CHOICES)
                     return@forEach
                 }
 
@@ -347,6 +448,9 @@ class BattleActionCoordinator(
                 // constructing an impossible ChooseBattleTurnActionRequest.
                 if (policyLegalChoices.isEmpty()) {
                     battleState.markDone(player.id)
+                    recordWindow(windowStart, player, BattleDecisionWindowStage.SUPPORT_OR_FINAL, passNumber,
+                        finalMains.size, legalSupports.size,
+                        automaticDoneReason = BattleAutomaticDoneReason.POLICY_FILTERED_CHOICES)
                     return@forEach
                 }
 
@@ -457,6 +561,16 @@ class BattleActionCoordinator(
                         battleState.markDone(player.id)
                     }
                 }
+                when (policyChosen) {
+                    is BattleTurnAction.FinalMain -> recordWindow(
+                        windowStart, player, BattleDecisionWindowStage.SUPPORT_OR_FINAL, passNumber,
+                        finalMains.size, legalSupports.size, chosenMain = policyChosen.action
+                    )
+                    is BattleTurnAction.Support -> recordWindow(
+                        windowStart, player, BattleDecisionWindowStage.SUPPORT_OR_FINAL, passNumber,
+                        finalMains.size, legalSupports.size, chosenSupport = policyChosen.action
+                    )
+                }
             }
 
             game.chronicle.record(
@@ -472,7 +586,8 @@ class BattleActionCoordinator(
         return BattleActionLoopResult(
             firstMainActions = firstResults.toList(),
             supportActions = supportResults.toList(),
-            finalMainActions = finalResults.toList()
+            finalMainActions = finalResults.toList(),
+            decisionWindows = pacingWindows.toList()
         )
     }
 

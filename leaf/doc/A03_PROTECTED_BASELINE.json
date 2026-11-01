@@ -1,13 +1,14 @@
 {
   "approved_protected_paths": [
-    "src/main/kotlin/dugsolutions/leaf/v35/effect/special/PetalToDie4Effect.kt"
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt"
   ],
   "basis_archive": "leaf(20261025-203429).tgz",
   "basis_archive_sha256": "d31ebee05fed71dd890568d73fd91fd7256b49286fab48f47675f7e64323f62b",
   "basis_note": "Archive includes A02. Neither .git nor a verified checkout SHA was supplied in this archive; latest previously verified HEAD was 104c7b6104c9dd2f36bf025aacd064e13e3632b7 before A02.",
   "format": "leaf-a03-protected-files-v1",
   "intended_mutable_scoring_prefix": "src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/",
-  "previous_baseline_digest": "9891903e76eda5cb49aec4d534e1973eb80da297ae868c54bed79a970ea516ff",
+  "previous_baseline_digest": "d56375eea72b830ad2cc72b38a6c8910cc5a23ac9580b1401753cb75e5ae2baa",
   "protected_files": {
     "bin/a03_verify_boundaries.py": "85ddd81927d4a7800205124107c6725df47d4d0ffa29d4ac8295a819eb9c2f01",
     "bin/aggregate_human_resync_cards.py": "68cef4a8759ecb02c70cc4677c33ad119d80ce723d8200d281766f3bc32e2a64",
@@ -314,9 +315,9 @@
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundCoordinator.kt": "462606c330786ca749eb939702dd36a818e16c40a67730a7ae2d7e80150f48b5",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundEffectResearch.kt": "74b791f2036e2017f6f71fe6dd18abdccd8cc2b92df90ca3e02904fc690b1500",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/RoundExecutor.kt": "a74e9cb113c1a682a2e1f6543c43b0efe9eae861a8c3ad95b27c3e17b20da013",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt": "70652981858273141c4cd10bad17c313a9ffd4b30845f296f94c1fb602328aa6",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleActionCoordinator.kt": "28bda7d3fd08c3f15c5f65bddd99dde6406d1b38317fa3a17d76818f14ee3932",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleCleanupCoordinator.kt": "47457cd3a8053170bbe0408a0e74495ff2bceb9c6a4469f336d5c1c8ab084ad0",
-    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt": "667be5fa3c841cf89d24f30109d98238e08d777303ef3b141df48b545f7afea3",
+    "src/main/kotlin/dugsolutions/leaf/v35/game/round/battle/BattleRound.kt": "182b4cfa31fdc5ce3a42d0140411b5a0d0fb7b26a7aeffdaa00ea7c3f37fdeaf",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationBuildCoordinator.kt": "01d113cf2c19402ce0a6eaa1d2711ab91c6b8079f58568be6e990135668810af",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationCleanupCoordinator.kt": "8a5cd0b9bd75403fd481deb93a978fb57c1b2a491dde2003ddb659152b73b0e7",
     "src/main/kotlin/dugsolutions/leaf/v35/game/round/cultivation/CultivationRound.kt": "a5b37a5c49133468cf5f9dba0cfb9361754493f482006577b11e8b4ed5b1869b",
@@ -491,5 +492,5 @@
     "src/main/kotlin/dugsolutions/leaf/v35/wisp/domain/WispCards.kt": "369cc476ef455de4a47c72b763fc41bc925aaf7346b0274ba585b43aaafdaf76"
   },
   "purpose": "A03: detect unintended alterations outside Human Baseline valuation, especially canonical rules, costs, effects, frozen weights and learned policies",
-  "review_reason": "Reviewed Petal To Die 4 experimental resolved-row theft toggle, disabled by default; retain canonical locked-row enforcement"
+  "review_reason": "Task 6 reviewed read-only pacing instrumentation seam; production default remains false and paired canonical-A equivalence test passes"
 }
