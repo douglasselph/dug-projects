@@ -86,5 +86,6 @@ class BattlePacingABBatchTest {
         assertTrue(planRows.any { it.contains("row=BOTTOM") && it.contains("open=BOTTOM") })
         val summary = Files.readAllLines(output.resolve("summary.csv"))[1].split(",")
         assertEquals("8", summary[13]) // candidate normal Main Actions
+        assertTrue(summary[14].toInt() > 0) // real v37 tactical Supports, not Mechanical fallback
     }
 }

@@ -141,7 +141,7 @@ fun main(args: Array<String>) {
             appendLine("base_strategy_seed=${options.strategySeed}")
             appendLine("base_wisp_seed=${options.wispSeed}")
             appendLine("eventBasedDieRolls=true; sharedPercentileDieRolls=true")
-            appendLine("candidateHumanGuided=existing Human Main and B11/B12 Support scoring, NOT calibrated to new timing")
+            appendLine("candidateHumanGuided=v37 Main choice; v37 B10-B14 Support continuation and chooser constrained to two Supports per Engagement; exploratory, NOT calibrated to new timing")
             appendLine("CI=normal paired-mean/within-battle sample; B last actor mean has cluster-by-Battle CI; descriptive, not causal")
             listOf(
                 "data/Cultivation_Cards - Root.csv", "data/Cultivation_Cards - VF.csv",
@@ -151,6 +151,7 @@ fun main(args: Array<String>) {
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/PairedBattleComparison.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/ThreeEngagementBattle.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/HumanGuidedEngagementPolicy.kt",
+                "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementSupportContinuation.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/EngagementMainTimingPlanner.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BaselineMainActionForecast.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingStatistics.kt",

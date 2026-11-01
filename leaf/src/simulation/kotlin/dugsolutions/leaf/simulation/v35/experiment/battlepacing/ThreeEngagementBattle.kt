@@ -33,7 +33,8 @@ data class EngagementDecision(
     val normalMainsRemaining: Int,
     val legalMains: List<BattleMainAction>,
     val legalSupports: List<BattleSupportAction>,
-    val context: DecisionContext
+    val context: DecisionContext,
+    val supportSlotsRemaining: Int = 2
 )
 
 fun interface EngagementPolicy {
@@ -186,7 +187,8 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
                     if (mains.isEmpty() && supports.isEmpty()) break
                     val next = policy.choose(
                         EngagementDecision(row, id, actionCount, remaining, mains, supports,
-                            battleRound.researchDecisionContext(game, player, battle))
+                            battleRound.researchDecisionContext(game, player, battle),
+                            supportSlotsRemaining = 2 - supportsThisTurn)
                     )
                     when (next) {
                         EngagementChoice.Pass -> break
