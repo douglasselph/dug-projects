@@ -193,6 +193,8 @@ fun main(args: Array<String>) {
         }
         val pacingWindows = CsvFile(options.output.resolve("pacing_windows.csv"),
             "players,battle,policy,scenario,sample,openingSha,ruleSet,window,actor,stage,row,unresolvedStrikes,legalChoices,meaningfulWindow,actionCount,passes,emptyOpportunity,normalMains,sunlightMains,supports,diceRolled,diceRerolled,dicePlaced,diceMoved,diceValueChanges,cardsActivated,plantFacingTransitions,refreshes,resourcesSpent,resourcesGained,changedRows,leaderChanges,marginChanges,reassessmentUnits,complexityUnits,laterStrikeUnits,actionKinds")
+        val actorRows = CsvFile(options.output.resolve("task7_row_actors.csv"),
+            "players,battle,policy,scenario,sample,openingSha,ruleSet,row,lastMeaningfulActor,lastWindow,rowChanges,swungIntoWinningStatus,beforeMargin,afterMargin,finalWinners,finalWounds,finalVPPerWinner")
         val pacingBattles = CsvFile(options.output.resolve("pacing_battles.csv"),
             "players,battle,policy,scenario,sample,openingSha,ruleSet,profile,estimatedSeconds,decisionSeconds,executionSeconds,handoffSeconds,reassessmentSeconds,decisionWindows,meaningfulDecisionWindows,handoffs,normalMains,sunlightMains,supports,passes,emptyOpportunities,diceRolled,diceRerolled,dicePlaced,diceMoved,diceValueChanges,cardsActivated,plantFacingTransitions,refreshes,reassessmentWindows,complexityUnits,reassessmentUnits,resourcesSpent,resourcesGained,strikes,wounds,doomDice,cleanupDice,returnedCritters,unusedSupportsPerPlayer,candidateLaterStrikeUnits")
         val pacingPlayers = CsvFile(options.output.resolve("pacing_players.csv"),
@@ -295,6 +297,17 @@ fun main(args: Array<String>) {
                                         }
                                     }
                                     writeWindows(aPacing); writeWindows(bPacing)
+                                    listOf(aPacing to result.baselineStrikes.strikes,
+                                        bPacing to result.candidate.engagements.map { it.resolution }).forEach { (pacing, resolutions) ->
+                                        resolutions.forEach { strike ->
+                                            val e = rowActorEvidence(pacing, strike.row)
+                                            actorRows.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                result.openingSha256, pacing.ruleSet.name, strike.row.name,
+                                                e.lastActor?.value ?: "", e.lastWindow ?: "", e.rowChanges,
+                                                e.actorChangedWinningStatus, e.beforeLeadMargin ?: "", e.afterLeadMargin ?: "",
+                                                listIds(strike.winnerIds), listIds(strike.woundedPlayerIds), strike.vpPerWinner)
+                                        }
+                                    }
                                     timingProfiles.forEach { timing ->
                                         val ae = estimateBattleTime(aPacing, timing); val be = estimateBattleTime(bPacing, timing)
                                         task6ByProfile.getValue(timing.name).add(aPacing, bPacing, ae, be)
@@ -433,7 +446,7 @@ fun main(args: Array<String>) {
         } // opening_selection.csv
         println("COMPLETE ${options.output} timeSeconds=${fmt((System.nanoTime() - startNanos) / 1e9)}")
         } finally {
-            pacingWindows.close(); pacingBattles.close(); pacingPlayers.close(); pacingSensitivity.close(); pacingSummary.close()
+            actorRows.close(); pacingWindows.close(); pacingBattles.close(); pacingPlayers.close(); pacingSensitivity.close(); pacingSummary.close()
         }
     } finally {
         app.close()
