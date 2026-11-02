@@ -2,7 +2,7 @@
 
 ## Purpose and boundary
 
-The JSON question file is a **validated declaration**, not executable experiment instructions. Run `python3 bin/plant_question_spec.py <path-to-question.json>` at the top of the `leaf` repository to print a deterministic, expanded JSON record of the exact official card identity, nine-card Grove, rule inputs, effect conditions, policies, and seeds. Optional `--output /path/to/resolved.json` saves that record. Validation never starts Gradle, changes game data, trains a policy, or runs a game. A1.3 will implement generic condition resolution; A1.4 will consume a validated specification to plan execution.
+The JSON question file is a **validated declaration**, not executable experiment instructions. Run `python3 bin/plant_question_spec.py <path-to-question.json>` at the top of the `leaf` repository to print a deterministic, expanded JSON record of the exact official card identity, nine-card Grove, rule inputs, effect conditions, policies, and seeds. Optional `--output /path/to/resolved.json` saves that record. Validation never starts Gradle, changes game data, trains a policy, or runs a game. The generic A1.3 resolver is `bin/plant_question_conditions.py`; A1.4 will consume a validated specification to plan execution.
 
 Examples: `questions/root-four-more.json` and `questions/sapping-snapdragon.json`. Both deliberately use current official definitions and the explicit standard 3/2/2 research configuration. Example budgets are *small illustrative placeholders*, not sufficient for balance claims.
 
@@ -27,7 +27,7 @@ All top-level keys are required. Unknown keys and unexpected condition fields fa
 
 The resolver fingerprints all four source CSVs, the current Wisp and research input files, the Kotlin GameEffect declaration, and any referenced weights. It prints all nine current canonical card definitions and per-card fingerprints. The JSON `status` explicitly says `VALIDATED_INPUT_ONLY_NOT_EXECUTED`.
 
-**Important limitations:** A named `effect_override` proves a Kotlin enum exists, not that a particular override is mechanically supported by every target. A1.3 must check executable target/effect compatibility, seat isolation and intervention semantics. A `plant_override` CSV is checked for known IDs, duplicates, recognized columns, known effect/scoring names and basic value syntax; v1 does *not* yet apply it to derive effective market legality. Changing card type/cost requires A1.3's effective-Grove validator before execution. No first-run manifest should be called evidence of card balance. No canonical or frozen-weight file is modified by validation.
+**Important limitations:** A named `effect_override` proves a Kotlin enum exists, not that a particular override is mechanically supported by every target. The condition resolver verifies the declared effect constant and expresses target-role isolation; execution-level effect/target compatibility remains a required A1.4 gate. A `plant_override` CSV is checked for known IDs, duplicates, recognized columns, known effect/scoring names and basic value syntax; A1.3 now derives the effective Grove and rejects invalid nine-slot markets. Seat-scoped cost, type, scoring and availability interventions remain unsupported and are explicitly rejected. No first-run manifest should be called evidence of card balance. No canonical or frozen-weight file is modified by validation.
 
 ## Generate or update a target fingerprint
 
