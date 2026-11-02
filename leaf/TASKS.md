@@ -17,7 +17,7 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** OPEN - highest-priority engineering capability. **A1.1 completed; A1.2 is next.**
+**Status:** OPEN - highest-priority engineering capability. **A1.1 and A1.2 completed; A1.3 is next.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
@@ -47,7 +47,7 @@ Required work:
 
 #### A1.2 - Add a declarative Plant question specification and strict validator
 
-**Status:** NEXT — A1.1 inventory complete.
+**Status:** COMPLETE — schema v1 validator, two example questions, and negative tests; see [`PLANT_QUESTION_SPECIFICATION.md`](doc/research/experiments/card-balance/PLANT_QUESTION_SPECIFICATION.md). Execution deliberately remains for A1.3–A1.4.
 
 Introduce one human-readable question definition that is data, not a new launcher script. Keep the format deliberately small; do not invent a large experiment DSL.
 
@@ -67,7 +67,7 @@ Validation must fail clearly for stale/unknown card IDs, target cards absent fro
 
 #### A1.3 - Generalize experiment conditions and effect/price override resolution
 
-**Status:** BLOCKED on A1.2.
+**Status:** NEXT — A1.2 input contract complete.
 
 Replace the current generic-path dependence on card-specific condition names with a reusable condition model.
 

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "question_id": "sapping-snapdragon-effect-check",
+  "question": "Does Sapping Snapdragon provide meaningful competitive effect value?",
+  "hypothesis": "Compare unchanged play with a suppressed effect; do not infer card weakness from unused effects.",
+  "target": {
+    "id": "Flower_11_03",
+    "title": "Sapping Snapdragon",
+    "fingerprint": "05b421e400b9800377165cd5851e354f0591ce6c07bc774797f55dc44d07159b"
+  },
+  "grove": [
+    "Root_05_02",
+    "Root_07_04",
+    "Root_09_03",
+    "Vine_07_01",
+    "Vine_09_01",
+    "Vine_11_04",
+    "Flower_11_03",
+    "Flower_14_02",
+    "Flower_17_04"
+  ],
+  "player_counts": [
+    2,
+    3,
+    4
+  ],
+  "rules": {
+    "round_pattern": [
+      3,
+      2,
+      2
+    ],
+    "battle_structure": "CANONICAL",
+    "plant_data": "data/research/resync/resync-current.csv",
+    "round_data": "data/research/resync/round-resync-current.csv",
+    "wisp_data": "data/Wisp_Cards.csv"
+  },
+  "conditions": [
+    {
+      "name": "official",
+      "kind": "official",
+      "scope": "all_players"
+    },
+    {
+      "name": "suppressed",
+      "kind": "suppressed",
+      "scope": "target_seat"
+    }
+  ],
+  "stages": [
+    "targeted_discovery",
+    "unrestricted_discovery",
+    "frozen_comparison",
+    "adapted_comparison",
+    "heldout_evaluation",
+    "countersearch"
+  ],
+  "policies": {
+    "search_family": "buy",
+    "companion": "human_baseline",
+    "frozen_weights": [],
+    "seat_rotation": "all"
+  },
+  "seeds": {
+    "market": 11,
+    "mechanical": 101,
+    "strategy": 202,
+    "holdout": 303
+  },
+  "budgets": {
+    "generations": 2,
+    "population": 4,
+    "elites": 1,
+    "train_games": 8,
+    "holdout_games": 40
+  },
+  "thresholds": {
+    "attention_pp": 5,
+    "serious_pp": 10
+  }
+}
