@@ -9,9 +9,9 @@ Before proposing code changes or experiments:
 1. Read this `README.md`.
 2. Read [`TASKS.md`](TASKS.md) for the **current active backlog and deferred work**.
 3. Read [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) for the governing research philosophy and evidence standards.
-4. Read [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md) before changing launchers, runners, training/evaluation scripts, checkpointing, or long-running experiments.
-5. Read [`doc/SIMULATION_OPERATIONAL_READINESS.md`](doc/SIMULATION_OPERATIONAL_READINESS.md) before making claims about the current simulator's operational readiness.
-6. For Battle pacing / Candidate B work, read [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md) and [`doc/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/BATTLE_STRUCTURE_CONFIGURATION.md).
+4. Read [`doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md) before changing launchers, runners, training/evaluation scripts, checkpointing, or long-running experiments.
+5. Read [`doc/engineering/SIMULATION_OPERATIONAL_READINESS.md`](doc/engineering/SIMULATION_OPERATIONAL_READINESS.md) before making claims about the current simulator's operational readiness.
+6. For Battle pacing / Candidate B work, read [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) and [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md).
 7. Inspect the **current source and data files themselves** before claiming a mechanic, policy, effect, task, or experiment is implemented or current.
 
 Do **not** treat every older task/checkpoint document under `doc/` as an active task. Many are retained implementation or research records. [`doc/README.md`](doc/README.md) distinguishes current governing documents from historical detail.
@@ -120,7 +120,7 @@ data/research/resync/game-rules-current.properties
 
 The default is `CANONICAL`. The explicit Battle pacing A/B runner intentionally selects A and B directly and does not depend on that file.
 
-The Battle pacing implementation progressed well beyond the original experiment brief: scheduling/execution, paired statistics, Human-guided policy parity work, rules-fidelity repairs, tactical cohorts, and modeled pacing/downtime instrumentation exist. Task 6 has documented executed acceptance. The Task 7 fairness/counterfactual extension exists but its own status document says it is **not yet a validated acceptance package**. See [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md).
+The Battle pacing implementation progressed well beyond the original experiment brief: scheduling/execution, paired statistics, Human-guided policy parity work, rules-fidelity repairs, tactical cohorts, and modeled pacing/downtime instrumentation exist. Task 6 has documented executed acceptance. The Task 7 fairness/counterfactual extension exists but its own status document says it is **not yet a validated acceptance package**. See [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md).
 
 ---
 
@@ -157,7 +157,7 @@ The intended current research/game structure is **3/2/2**:
 
 ### Rulebook
 
-For rules questions where code/data and old notes disagree, [`doc/Leaf_and_Let_Die_v37-03.pdf`](doc/Leaf_and_Let_Die_v37-03.pdf) is the authoritative tabletop rules reference unless a newer approved rule source is explicitly supplied. The repository's older `doc/Leaf_and_Let_Die_v36-01.pdf` is historical and must not silently override v37-03.
+For rules questions where code/data and old notes disagree, [`doc/rules/Leaf_and_Let_Die_v37-03.pdf`](doc/rules/Leaf_and_Let_Die_v37-03.pdf) is the authoritative tabletop rules reference unless a newer approved rule source is explicitly supplied. The repository's older `doc/legacy/Leaf_and_Let_Die_v36-01.pdf` is historical and must not silently override v37-03.
 
 ---
 
@@ -182,7 +182,7 @@ Current strategic roles include:
 
 Keep mechanical randomness separate from strategy randomness. Preserve deterministic seeds and provenance.
 
-For deeper architecture, see [`doc/CODE_ARCHITECTURE.md`](doc/CODE_ARCHITECTURE.md) and [`doc/USING_THE_SIMULATOR.md`](doc/USING_THE_SIMULATOR.md).
+For deeper architecture, see [`doc/engineering/CODE_ARCHITECTURE.md`](doc/engineering/CODE_ARCHITECTURE.md) and [`doc/engineering/USING_THE_SIMULATOR.md`](doc/engineering/USING_THE_SIMULATOR.md).
 
 ---
 
@@ -211,7 +211,7 @@ unzip -o ~/Downloads/<changed-files.zip>
 
 For long-running research runs, preserve the compile-once/direct-Java and persistent-JVM architecture where appropriate, while retaining process isolation where policy/condition state requires it. Runs should be resumable, visibly report current stage plus whole-batch progress, elapsed time, ETA and projected finish time, use `|& tee`, and produce **one verified upload-ready archive copied to `~/Downloads`** with an obvious `UPLOAD THIS FILE:` path.
 
-See [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md).
+See [`doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md).
 
 ---
 
@@ -255,12 +255,12 @@ For current work, use these as the front door:
 - [`TASKS.md`](TASKS.md) - active and deferred backlog.
 - [`doc/README.md`](doc/README.md) - documentation map and current-vs-historical guidance.
 - [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) - research mission, evidence standards, card assessment method, strategy-diversity goals.
-- [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md) - execution architecture and operational constraints.
-- [`doc/SIMULATION_OPERATIONAL_READINESS.md`](doc/SIMULATION_OPERATIONAL_READINESS.md) - stop-and-use-it gate.
-- [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md) - current Battle pacing experiment state.
-- [`doc/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/BATTLE_STRUCTURE_CONFIGURATION.md) - current simulation Battle-selection configuration.
-- [`doc/CODE_ARCHITECTURE.md`](doc/CODE_ARCHITECTURE.md) - programming architecture.
-- [`doc/USING_THE_SIMULATOR.md`](doc/USING_THE_SIMULATOR.md) - practical simulator workflow.
-- [`doc/TESTING_AND_VERIFICATION.md`](doc/TESTING_AND_VERIFICATION.md) - verification boundaries and commands.
+- [`doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md) - execution architecture and operational constraints.
+- [`doc/engineering/SIMULATION_OPERATIONAL_READINESS.md`](doc/engineering/SIMULATION_OPERATIONAL_READINESS.md) - stop-and-use-it gate.
+- [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) - current Battle pacing experiment state.
+- [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md) - current simulation Battle-selection configuration.
+- [`doc/engineering/CODE_ARCHITECTURE.md`](doc/engineering/CODE_ARCHITECTURE.md) - programming architecture.
+- [`doc/engineering/USING_THE_SIMULATOR.md`](doc/engineering/USING_THE_SIMULATOR.md) - practical simulator workflow.
+- [`doc/engineering/TESTING_AND_VERIFICATION.md`](doc/engineering/TESTING_AND_VERIFICATION.md) - verification boundaries and commands.
 
 The repository is the handoff. A fresh conversation should not require a separate stand-alone Codex/status prompt if it has the current source tree and reads the files above.

@@ -1,0 +1,309 @@
+{
+  "schema": 1,
+  "moves": [
+    {
+      "from": "doc/B01_RAISE3_INVENTORY.md",
+      "to": "doc/archive/sunlight-migration/B01_RAISE3_INVENTORY.md"
+    },
+    {
+      "from": "doc/B02_SUNLIGHT_RUNTIME_TRACE.md",
+      "to": "doc/archive/sunlight-migration/B02_SUNLIGHT_RUNTIME_TRACE.md"
+    },
+    {
+      "from": "doc/B03_GRADLE_TEST_SUITE_RECOVERY.md",
+      "to": "doc/archive/sunlight-migration/B03_GRADLE_TEST_SUITE_RECOVERY.md"
+    },
+    {
+      "from": "doc/B03_R0_KOIN_LIFECYCLE_TEST_FIX.md",
+      "to": "doc/archive/sunlight-migration/B03_R0_KOIN_LIFECYCLE_TEST_FIX.md"
+    },
+    {
+      "from": "doc/B03_RETIRE_LEGACY_SUNLIGHT_RAISE3.md",
+      "to": "doc/archive/sunlight-migration/B03_RETIRE_LEGACY_SUNLIGHT_RAISE3.md"
+    },
+    {
+      "from": "doc/B03_TWO_REMAINING_TESTS.md",
+      "to": "doc/archive/sunlight-migration/B03_TWO_REMAINING_TESTS.md"
+    },
+    {
+      "from": "doc/B04_SUNLIGHT_TOKEN_VALUATION.md",
+      "to": "doc/archive/sunlight-migration/B04_SUNLIGHT_TOKEN_VALUATION.md"
+    },
+    {
+      "from": "doc/B05_HISTORICAL_SUNLIGHT_PROVENANCE.md",
+      "to": "doc/archive/sunlight-migration/B05_HISTORICAL_SUNLIGHT_PROVENANCE.md"
+    },
+    {
+      "from": "doc/B06_SUNLIGHT_REGRESSION_COVERAGE.md",
+      "to": "doc/archive/sunlight-migration/B06_SUNLIGHT_REGRESSION_COVERAGE.md"
+    },
+    {
+      "from": "doc/B07_BATTLE_SUNLIGHT_REGRESSION.md",
+      "to": "doc/archive/sunlight-migration/B07_BATTLE_SUNLIGHT_REGRESSION.md"
+    },
+    {
+      "from": "doc/B08_SUNLIGHT_RULE_PARITY.md",
+      "to": "doc/archive/sunlight-migration/B08_SUNLIGHT_RULE_PARITY.md"
+    },
+    {
+      "from": "doc/C04_BATTLE_CONSEQUENCE_INCREMENT.md",
+      "to": "doc/archive/c04/C04_BATTLE_CONSEQUENCE_INCREMENT.md"
+    },
+    {
+      "from": "doc/C04_BATTLE_DRAW_REWARD_AUDIT.md",
+      "to": "doc/archive/c04/C04_BATTLE_DRAW_REWARD_AUDIT.md"
+    },
+    {
+      "from": "doc/C04_BATTLE_DRAW_UNIT_MIGRATION.md",
+      "to": "doc/archive/c04/C04_BATTLE_DRAW_UNIT_MIGRATION.md"
+    },
+    {
+      "from": "doc/C04_BATTLE_POLICY_ACCEPTANCE.md",
+      "to": "doc/archive/c04/C04_BATTLE_POLICY_ACCEPTANCE.md"
+    },
+    {
+      "from": "doc/C04_COMPLETE_OPPONENT_PROJECTION_SCALE.md",
+      "to": "doc/archive/c04/C04_COMPLETE_OPPONENT_PROJECTION_SCALE.md"
+    },
+    {
+      "from": "doc/C04_COMPOUND_ELIGIBILITY_AUDIT.md",
+      "to": "doc/archive/c04/C04_COMPOUND_ELIGIBILITY_AUDIT.md"
+    },
+    {
+      "from": "doc/C04_COMPOUND_TARGET_PARITY.md",
+      "to": "doc/archive/c04/C04_COMPOUND_TARGET_PARITY.md"
+    },
+    {
+      "from": "doc/C04_COORDINATOR_LEGAL_ACCEPTANCE.md",
+      "to": "doc/archive/c04/C04_COORDINATOR_LEGAL_ACCEPTANCE.md"
+    },
+    {
+      "from": "doc/C04_DIRECT_DIE_FOLLOWUP.md",
+      "to": "doc/archive/c04/C04_DIRECT_DIE_FOLLOWUP.md"
+    },
+    {
+      "from": "doc/C04_END_TO_END_COLLATERAL_TARGET_PARITY.md",
+      "to": "doc/archive/c04/C04_END_TO_END_COLLATERAL_TARGET_PARITY.md"
+    },
+    {
+      "from": "doc/C04_FINAL_MAIN_RECOVERY_TIMING.md",
+      "to": "doc/archive/c04/C04_FINAL_MAIN_RECOVERY_TIMING.md"
+    },
+    {
+      "from": "doc/C04_FOUR_PLAYER_ACCEPTANCE.md",
+      "to": "doc/archive/c04/C04_FOUR_PLAYER_ACCEPTANCE.md"
+    },
+    {
+      "from": "doc/C04_FUNDED_WORM_POSITIVE_STRIKE_TEST.md",
+      "to": "doc/archive/c04/C04_FUNDED_WORM_POSITIVE_STRIKE_TEST.md"
+    },
+    {
+      "from": "doc/C04_GUST_FIRST_ROLL_ENUMERATION.md",
+      "to": "doc/archive/c04/C04_GUST_FIRST_ROLL_ENUMERATION.md"
+    },
+    {
+      "from": "doc/C04_GUST_LEGACY_EXPECTATION_FIX.md",
+      "to": "doc/archive/c04/C04_GUST_LEGACY_EXPECTATION_FIX.md"
+    },
+    {
+      "from": "doc/C04_MAIN_STAGE_PARITY_FOLLOWUP.md",
+      "to": "doc/archive/c04/C04_MAIN_STAGE_PARITY_FOLLOWUP.md"
+    },
+    {
+      "from": "doc/C04_MIXED_CANDIDATE_SELECTION.md",
+      "to": "doc/archive/c04/C04_MIXED_CANDIDATE_SELECTION.md"
+    },
+    {
+      "from": "doc/C04_MULTIPLAYER_DRAW_WISP_ASSERTION_FIX.md",
+      "to": "doc/archive/c04/C04_MULTIPLAYER_DRAW_WISP_ASSERTION_FIX.md"
+    },
+    {
+      "from": "doc/C04_MULTIPLAYER_MIXED_ACTION_MATRIX.md",
+      "to": "doc/archive/c04/C04_MULTIPLAYER_MIXED_ACTION_MATRIX.md"
+    },
+    {
+      "from": "doc/C04_MULTIPLAYER_ROW_TARGET_PARITY.md",
+      "to": "doc/archive/c04/C04_MULTIPLAYER_ROW_TARGET_PARITY.md"
+    },
+    {
+      "from": "doc/C04_PARTING_THORN_BEHAVIOR_FIX.md",
+      "to": "doc/archive/c04/C04_PARTING_THORN_BEHAVIOR_FIX.md"
+    },
+    {
+      "from": "doc/C04_PLANT_FALLBACK_NORMALIZATION.md",
+      "to": "doc/archive/c04/C04_PLANT_FALLBACK_NORMALIZATION.md"
+    },
+    {
+      "from": "doc/C04_PROJECTED_PLANT_SCALE_PARITY.md",
+      "to": "doc/archive/c04/C04_PROJECTED_PLANT_SCALE_PARITY.md"
+    },
+    {
+      "from": "doc/C04_REAL_PLANT_MIXED_SELECTION.md",
+      "to": "doc/archive/c04/C04_REAL_PLANT_MIXED_SELECTION.md"
+    },
+    {
+      "from": "doc/C04_RECOVERY_OPPORTUNITY_MATRIX.md",
+      "to": "doc/archive/c04/C04_RECOVERY_OPPORTUNITY_MATRIX.md"
+    },
+    {
+      "from": "doc/C04_REROLL_CONSEQUENCE_FOLLOWUP.md",
+      "to": "doc/archive/c04/C04_REROLL_CONSEQUENCE_FOLLOWUP.md"
+    },
+    {
+      "from": "doc/C04_RESOURCE_REGRESSION_FOLLOWUP.md",
+      "to": "doc/archive/c04/C04_RESOURCE_REGRESSION_FOLLOWUP.md"
+    },
+    {
+      "from": "doc/C04_RESOURCE_UTILITY_CALIBRATION.md",
+      "to": "doc/archive/c04/C04_RESOURCE_UTILITY_CALIBRATION.md"
+    },
+    {
+      "from": "doc/C04_REVIEWED_ACCEPTANCE_EXPANSION.md",
+      "to": "doc/archive/c04/C04_REVIEWED_ACCEPTANCE_EXPANSION.md"
+    },
+    {
+      "from": "doc/C04_ROUND_CONTEXT_FOLLOWUP.md",
+      "to": "doc/archive/c04/C04_ROUND_CONTEXT_FOLLOWUP.md"
+    },
+    {
+      "from": "doc/C04_ROUND_SCALE_MIXED_CANDIDATES.md",
+      "to": "doc/archive/c04/C04_ROUND_SCALE_MIXED_CANDIDATES.md"
+    },
+    {
+      "from": "doc/C04_SUNLIGHT_CONTEXT_TEST_FIX.md",
+      "to": "doc/archive/c04/C04_SUNLIGHT_CONTEXT_TEST_FIX.md"
+    },
+    {
+      "from": "doc/C04_SUNLIGHT_CONTINUATION_INTEGRATION.md",
+      "to": "doc/archive/c04/C04_SUNLIGHT_CONTINUATION_INTEGRATION.md"
+    },
+    {
+      "from": "doc/C04_SUNLIGHT_DIAGNOSTIC_ASSERTION_FIX.md",
+      "to": "doc/archive/c04/C04_SUNLIGHT_DIAGNOSTIC_ASSERTION_FIX.md"
+    },
+    {
+      "from": "doc/C04_SUNLIGHT_LEGAL_RECOVERY_WINDOW.md",
+      "to": "doc/archive/c04/C04_SUNLIGHT_LEGAL_RECOVERY_WINDOW.md"
+    },
+    {
+      "from": "doc/C04_SUNLIGHT_SUPPORT_CONTINUATION_AUDIT.md",
+      "to": "doc/archive/c04/C04_SUNLIGHT_SUPPORT_CONTINUATION_AUDIT.md"
+    },
+    {
+      "from": "doc/C04_WORM_UNIQUE_TARGET_FIX.md",
+      "to": "doc/archive/c04/C04_WORM_UNIQUE_TARGET_FIX.md"
+    },
+    {
+      "from": "doc/PHASE_C1_STRATEGY_RANDOM_STREAMS.md",
+      "to": "doc/archive/research-infrastructure/PHASE_C1_STRATEGY_RANDOM_STREAMS.md"
+    },
+    {
+      "from": "doc/PHASE_C2_EVENT_ROLL_RANDOMNESS.md",
+      "to": "doc/archive/research-infrastructure/PHASE_C2_EVENT_ROLL_RANDOMNESS.md"
+    },
+    {
+      "from": "doc/PHASE_C3_SHARED_PERCENTILE_DIE_ROLLS.md",
+      "to": "doc/archive/research-infrastructure/PHASE_C3_SHARED_PERCENTILE_DIE_ROLLS.md"
+    },
+    {
+      "from": "doc/PHASE_C4_REPLAY_EQUIVALENCE_SPEC.md",
+      "to": "doc/archive/research-infrastructure/PHASE_C4_REPLAY_EQUIVALENCE_SPEC.md"
+    },
+    {
+      "from": "doc/PHASE_C5_REPLAY_VALIDATION.md",
+      "to": "doc/archive/research-infrastructure/PHASE_C5_REPLAY_VALIDATION.md"
+    },
+    {
+      "from": "doc/TASK4_SAPPING_AND_EFFECT_REGISTRY_AUDIT.md",
+      "to": "doc/archive/implementation/TASK4_SAPPING_AND_EFFECT_REGISTRY_AUDIT.md"
+    },
+    {
+      "from": "doc/TASK5_HUMAN_BASELINE_VARIANT_AUDIT.md",
+      "to": "doc/archive/implementation/TASK5_HUMAN_BASELINE_VARIANT_AUDIT.md"
+    },
+    {
+      "from": "doc/TASK_5B10_BUY_MAIN_OPPORTUNITY_COST.md",
+      "to": "doc/archive/implementation/TASK_5B10_BUY_MAIN_OPPORTUNITY_COST.md"
+    },
+    {
+      "from": "doc/TASK_5B11_CHOOSE_THEN_EXECUTE.md",
+      "to": "doc/archive/implementation/TASK_5B11_CHOOSE_THEN_EXECUTE.md"
+    },
+    {
+      "from": "doc/TASK_5B11_DECISION_REGRESSION_DIAGNOSTICS.md",
+      "to": "doc/archive/implementation/TASK_5B11_DECISION_REGRESSION_DIAGNOSTICS.md"
+    },
+    {
+      "from": "doc/TASK_5B11_FINAL_EXECUTION_REGRESSIONS.md",
+      "to": "doc/archive/implementation/TASK_5B11_FINAL_EXECUTION_REGRESSIONS.md"
+    },
+    {
+      "from": "doc/TASK_5B12A_DECISION_DISTRIBUTION.md",
+      "to": "doc/archive/implementation/TASK_5B12A_DECISION_DISTRIBUTION.md"
+    },
+    {
+      "from": "doc/TASK_5B12_FREEZE_AND_REFRESH_BATCH.md",
+      "to": "doc/archive/implementation/TASK_5B12_FREEZE_AND_REFRESH_BATCH.md"
+    },
+    {
+      "from": "doc/TASK_5B12_HUMAN_BASELINE_APPROVAL.md",
+      "to": "doc/archive/implementation/TASK_5B12_HUMAN_BASELINE_APPROVAL.md"
+    },
+    {
+      "from": "doc/TASK_5B1_HUMAN_BASELINE_SCORING_CONTRACT.md",
+      "to": "doc/archive/implementation/TASK_5B1_HUMAN_BASELINE_SCORING_CONTRACT.md"
+    },
+    {
+      "from": "doc/TASK_5B2_O_EDELWEISS_FACE_UP_RULE.md",
+      "to": "doc/archive/implementation/TASK_5B2_O_EDELWEISS_FACE_UP_RULE.md"
+    },
+    {
+      "from": "doc/TASK_5B3_STATE_PROJECTION.md",
+      "to": "doc/archive/implementation/TASK_5B3_STATE_PROJECTION.md"
+    },
+    {
+      "from": "doc/TASK_5B4_PETAL_ACQUISITION_PROJECTION.md",
+      "to": "doc/archive/implementation/TASK_5B4_PETAL_ACQUISITION_PROJECTION.md"
+    },
+    {
+      "from": "doc/TASK_5B5_O_EDELWEISS_TWO_CHOICE.md",
+      "to": "doc/archive/implementation/TASK_5B5_O_EDELWEISS_TWO_CHOICE.md"
+    },
+    {
+      "from": "doc/TASK_5B5_SEQUENTIAL_STATE_PROJECTION.md",
+      "to": "doc/archive/implementation/TASK_5B5_SEQUENTIAL_STATE_PROJECTION.md"
+    },
+    {
+      "from": "doc/TASK_5B6_SAPPING_PROJECTION.md",
+      "to": "doc/archive/implementation/TASK_5B6_SAPPING_PROJECTION.md"
+    },
+    {
+      "from": "doc/TASK_5B7_ACTIVATION_TARGET_ALIGNMENT.md",
+      "to": "doc/archive/implementation/TASK_5B7_ACTIVATION_TARGET_ALIGNMENT.md"
+    },
+    {
+      "from": "doc/TASK_5B8_EFFECT_COVERAGE_AUDIT.md",
+      "to": "doc/archive/implementation/TASK_5B8_EFFECT_COVERAGE_AUDIT.md"
+    },
+    {
+      "from": "doc/TASK_5B9A_BATTLE_COLLATERAL.md",
+      "to": "doc/archive/implementation/TASK_5B9A_BATTLE_COLLATERAL.md"
+    },
+    {
+      "from": "doc/TASK_5B9B_DRAW_REPLACEMENT_UPGRADE.md",
+      "to": "doc/archive/implementation/TASK_5B9B_DRAW_REPLACEMENT_UPGRADE.md"
+    },
+    {
+      "from": "doc/TASK_5B9C_PLANT_RESOURCE_PROJECTIONS.md",
+      "to": "doc/archive/implementation/TASK_5B9C_PLANT_RESOURCE_PROJECTIONS.md"
+    },
+    {
+      "from": "doc/TASK_5B9D_SCORING_ALIGNMENT.md",
+      "to": "doc/archive/implementation/TASK_5B9D_SCORING_ALIGNMENT.md"
+    },
+    {
+      "from": "doc/TASK_5B9_SCORING_GAP_RECOMMENDATIONS.md",
+      "to": "doc/archive/implementation/TASK_5B9_SCORING_GAP_RECOMMENDATIONS.md"
+    }
+  ]
+}

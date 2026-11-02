@@ -25,7 +25,7 @@ The ONLY canonical Sunlight Round effect is **GAIN_SUNLIGHT_TOKEN**. The old pri
 
 ```bash
 unzip -o ~/Downloads/leaf-B03-retire-obsolete-sunlight-raise3-changed-files.zip
-bash doc/B03_REMOVE_OBSOLETE_SUNLIGHT.sh
+bash doc/research/provenance/B03_REMOVE_OBSOLETE_SUNLIGHT.sh
 bash doc/B03_VERIFY_A03_BOUNDARIES.sh
 ./gradlew test --tests '*B03RetiredSunlightRejectionTest' --tests '*DefaultGameEffectExecutorTest' --tests '*GameEffectConverterTest'
 ./gradlew simulationTest --tests '*RoundExperimentConfigLoaderTest' --tests '*B02SunlightRoundRuntimeTest'
@@ -47,12 +47,12 @@ These tests are distinct from full unit/integration/simulation regression; run `
 
 ## Reviewed baseline acceptance (optional, after inspecting patch)
 
-The archive contains `doc/B03_PROPOSED_A03_PROTECTED_BASELINE.json`, generated with the B03 five-file exception list. The checked-in `doc/A03_PROTECTED_BASELINE.json` is deliberately NOT silently overwritten.
+The archive contains `doc/legacy/B03_PROPOSED_A03_PROTECTED_BASELINE.json`, generated with the B03 five-file exception list. The checked-in `doc/A03_PROTECTED_BASELINE.json` is deliberately NOT silently overwritten.
 
 Once you have inspected/accepted the five protected Kotlin changes, optionally run:
 
 ```bash
-cp doc/B03_PROPOSED_A03_PROTECTED_BASELINE.json doc/A03_PROTECTED_BASELINE.json
+cp doc/legacy/B03_PROPOSED_A03_PROTECTED_BASELINE.json doc/A03_PROTECTED_BASELINE.json
 python3 bin/a03_verify_boundaries.py
 ```
 
@@ -70,4 +70,4 @@ Commit the resulting manifest update as part of your reviewed B03 commit. Withou
 
 ## Test migration
 
-Old fixtures that used Raise +3 as a neutral placeholder now use the supported Raise +4 where suitable. Historical expectation tests for the retired 50% chance / +3 threshold are removed; they no longer describe the current token rules. Historical *chronicle rendering* tests still retain old enum strings to validate reading old logs. The old `SunlightPriority.kt` scorer must be deleted using `doc/B03_REMOVE_OBSOLETE_SUNLIGHT.sh` after extraction.
+Old fixtures that used Raise +3 as a neutral placeholder now use the supported Raise +4 where suitable. Historical expectation tests for the retired 50% chance / +3 threshold are removed; they no longer describe the current token rules. Historical *chronicle rendering* tests still retain old enum strings to validate reading old logs. The old `SunlightPriority.kt` scorer must be deleted using `doc/research/provenance/B03_REMOVE_OBSOLETE_SUNLIGHT.sh` after extraction.

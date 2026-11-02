@@ -181,8 +181,8 @@ fun main(args: Array<String>) {
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingTimingModel.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingTask6Summary.kt",
                 "src/simulation/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/BattlePacingABMain.kt",
-                "doc/battle_pacing_task6_report.py",
-                "doc/run_battle_pacing_ab.sh"
+                "doc/tools/battle/battle_pacing_task6_report.py",
+                "doc/battle/run_battle_pacing_ab.sh"
             ).forEach { relative ->
                 val path = Paths.get(relative)
                 if (Files.isRegularFile(path)) appendLine("sha256:$relative=${sha(path)}")

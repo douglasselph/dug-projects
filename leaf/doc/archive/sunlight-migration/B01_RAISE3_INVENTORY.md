@@ -4,7 +4,7 @@
 
 **Source archive:** `leaf(20261026-012547).tgz` · SHA-256 `500556e827cce0778d716dcb4a5ee55222d13f1fbe67b45ee11c66c61698cdd5` · 1662 filesystem entries extracted. Git metadata is not part of this archive.
 
-**Exact matches:** 88 textual occurrences across 38 files. **Indirect old-path matches recorded:** 57 additional line occurrences across 13 files. CSV: `doc/B01_RAISE3_REFERENCES.csv` has **145** line-level records with source excerpts. Indirect list is deliberately targeted; incidental uses of the generic number 3 are not all part of obsolete Sunlight.
+**Exact matches:** 88 textual occurrences across 38 files. **Indirect old-path matches recorded:** 57 additional line occurrences across 13 files. CSV: `doc/research/provenance/B01_RAISE3_REFERENCES.csv` has **145** line-level records with source excerpts. Indirect list is deliberately targeted; incidental uses of the generic number 3 are not all part of obsolete Sunlight.
 
 ## Source-of-truth determination
 
@@ -77,7 +77,7 @@ Tests fall into these groups:
 - **Research seed configs:** no exact occurrences in `data/research/` CSVs; the dated resync record references token gain, not a raise.
 - **Persisted learned features:** 21 exact references across 6 `data/ai/**/*.weights` files. Most coefficients are zero; at least `data/ai/4p/cultivation-support-policy-v1.weights:671` has **nonzero 0.16269350899404136** on `ACTION_WORM_FLIP__EFFECT_RAISE_DIE_PLUS_3`. **Do not strip or rewrite these frozen weights as part of B02.** Their old feature keys can be retained as read-only compatibility artifacts.
 - **Historical sanity launcher:** `bin/legacy/experiment_sunlight_token_sanity:7,70,103` calls Raise +3 “canonical” and compares it against token-gain override. This description is historical and **factually obsolete for current play**. The launcher is in `bin/legacy/`, but future users could still run it. Deprecate or relabel it without rewriting historic findings.
-- **Historical documentation:** `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md:59,303,428` describes Sunlight-as-raise, and `doc/HUMAN_BASELINE_CULTIVATION.md`, `doc/HUMAN_BASELINE_BATTLE.md`, `doc/HUMAN_BASELINE_BATTLE_PLAN.md`, and `doc/HUMAN_BASELINE_DECISION_INVENTORY.md` preserve old scoring/analysis. Mark as historical rather than silently rewriting their timeline.
+- **Historical documentation:** `doc/policies/human-baseline/HUMAN_BASELINE_CULTIVATION_PLAN.md:59,303,428` describes Sunlight-as-raise, and `doc/policies/human-baseline/HUMAN_BASELINE_CULTIVATION.md`, `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md`, `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE_PLAN.md`, and `doc/policies/human-baseline/HUMAN_BASELINE_DECISION_INVENTORY.md` preserve old scoring/analysis. Mark as historical rather than silently rewriting their timeline.
 - **R3B.1 uploaded result archive:** `d15de559a9fdd297f662.tgz` and its `r3b1-effect-aware.log` have **zero** exact or “Raise +3” text matches in the accessible archive/log. This does not mean their old policy weights lack any legacy feature definitions.
 - **Scope caveat:** the latest source archive contains no `output/experiments/` directory and no earlier experiment `.tgz` outputs. The historical user-machine experiment results that have **not** been uploaded cannot be audited from this source snapshot. Before B02, optionally search local `output/experiments` archives/logs for `RAISE_DIE_PLUS_3`, `Raise +3`, `SunlightPriority` and historical manifest labeling.
 

@@ -102,7 +102,7 @@ That runner uses integration infrastructure because its purpose is deterministic
 
 See:
 
-- [Testing and Verification](../../../../../../../doc/TESTING_AND_VERIFICATION.md)
-- [Human Baseline Specification](../../../../../../../doc/HUMAN_BASELINE.md)
-- [Code Architecture](../../../../../../../doc/CODE_ARCHITECTURE.md)
-- [Chronicle and Output](../../../../../../../doc/CHRONICLE_AND_OUTPUT.md)
+- [Testing and Verification](../../../../../../../doc/engineering/TESTING_AND_VERIFICATION.md)
+- [Human Baseline Specification](../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE.md)
+- [Code Architecture](../../../../../../../doc/engineering/CODE_ARCHITECTURE.md)
+- [Chronicle and Output](../../../../../../../doc/engineering/CHRONICLE_AND_OUTPUT.md)

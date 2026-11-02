@@ -90,7 +90,7 @@ data class BattleActionSwing(
 
 /**
  * Converts immediate before/after Battle-row facts into the shared Human Baseline
- * tactical value described in `doc/HUMAN_BASELINE_BATTLE.md`.
+ * tactical value described in `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md`.
  *
  * Rules implemented here:
  * - named positive transitions rank WIN_FLIPPED > TIE_ACHIEVED > WOUND_PREVENTED >

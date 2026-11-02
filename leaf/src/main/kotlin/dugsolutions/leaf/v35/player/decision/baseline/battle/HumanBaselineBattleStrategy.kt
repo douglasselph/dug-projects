@@ -33,11 +33,11 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * Durable behavior contract:
  *
- * `doc/HUMAN_BASELINE_BATTLE.md`
+ * `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md`
  *
  * Incremental implementation/certification plan:
  *
- * `doc/HUMAN_BASELINE_BATTLE_PLAN.md`
+ * `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE_PLAN.md`
  *
  * Cross-cutting Battle tuning belongs in [HumanBaselinePolicy]. Card/effect-specific
  * intrinsic values remain beside their scorers. Strategy RNG remains reserved for

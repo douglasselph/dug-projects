@@ -18,7 +18,7 @@ import dugsolutions.leaf.v35.player.decision.context.DecisionContext
  * [securedForNow] and [potentiallyHopeless] are strategy assessments derived
  * fresh from the supplied context. They are never persistent row state.
  *
- * See `doc/HUMAN_BASELINE_BATTLE.md`, "Row facts: Strike reality versus future
+ * See `doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md`, "Row facts: Strike reality versus future
  * response".
  */
 data class BattleRowAssessment(

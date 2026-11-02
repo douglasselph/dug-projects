@@ -59,7 +59,7 @@ import kotlin.math.roundToInt
  *
  * This prevents the strategy from choosing an action because one target or
  * branch makes it attractive and then realizing a different, weaker result.
- * See `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`, section 6.
+ * See `doc/policies/human-baseline/HUMAN_BASELINE_CULTIVATION_PLAN.md`, section 6.
  */
 class HumanBaselineEffectStrategy(
     private val delegate: EffectStrategy = MechanicalEffectStrategy(),

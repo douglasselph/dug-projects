@@ -26,7 +26,7 @@ import kotlin.math.roundToInt
  * Keep this class limited to cross-cutting assumptions. Card-specific and
  * action-specific valuation constants belong beside the scorer they describe.
  *
- * See `doc/HUMAN_BASELINE_POLICY.md` for the score scale, current defaults,
+ * See `doc/policies/human-baseline/HUMAN_BASELINE_POLICY.md` for the score scale, current defaults,
  * extension examples, the Cultivation decisions that introduced this layer, and
  * the Battle Stage-A thresholds added during Battle B1.
  */

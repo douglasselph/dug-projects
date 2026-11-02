@@ -11,7 +11,7 @@ The Human Baseline implementation lives in `src/main` intentionally. It is a reu
 
 ## Start here
 
-The authoritative Milestone-2 navigation/specification document is [Human Baseline Specification](../../../../../../../../../doc/HUMAN_BASELINE.md).
+The authoritative Milestone-2 navigation/specification document is [Human Baseline Specification](../../../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE.md).
 
 It explains:
 
@@ -39,9 +39,9 @@ support/      Butterfly original-vs-reroll choice
 wound/        Flip/Snip target choice
 ```
 
-`HumanBaselineDecisionDirector` wires these areas into the eight `DecisionDirector` strategy dimensions and supplies one shared `HumanBaselinePolicy` to decision areas that need cross-cutting tuning. See [`doc/HUMAN_BASELINE_POLICY.md`](../../../../../../../../../doc/HUMAN_BASELINE_POLICY.md).
+`HumanBaselineDecisionDirector` wires these areas into the eight `DecisionDirector` strategy dimensions and supplies one shared `HumanBaselinePolicy` to decision areas that need cross-cutting tuning. See [`doc/policies/human-baseline/HUMAN_BASELINE_POLICY.md`](../../../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE_POLICY.md).
 
-Battle Stage-A behavior and the implementation sequence are documented in [`doc/HUMAN_BASELINE_BATTLE.md`](../../../../../../../../../doc/HUMAN_BASELINE_BATTLE.md) and [`doc/HUMAN_BASELINE_BATTLE_PLAN.md`](../../../../../../../../../doc/HUMAN_BASELINE_BATTLE_PLAN.md).
+Battle Stage-A behavior and the implementation sequence are documented in [`doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md`](../../../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE_BATTLE.md) and [`doc/policies/human-baseline/HUMAN_BASELINE_BATTLE_PLAN.md`](../../../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE_BATTLE_PLAN.md).
 
 ## Test location
 
@@ -55,7 +55,7 @@ During Milestone 2, each major strategy file should gain a concise class-level b
 
 ## Certification progress
 
-Milestone 2 is certified one decision area at a time. The authoritative checklist and accepted plain-English contracts live in [`doc/HUMAN_BASELINE.md`](../../../../../../../../../doc/HUMAN_BASELINE.md).
+Milestone 2 is certified one decision area at a time. The authoritative checklist and accepted plain-English contracts live in [`doc/policies/human-baseline/HUMAN_BASELINE.md`](../../../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE.md).
 
 Current status:
 
@@ -70,4 +70,4 @@ Butterfly Result     CERTIFIED
 Effect Choices       20/20 audited; pending full regression + certification
 ```
 
-For a certified area, the class KDoc, implementation, behavior-contract tests, and the corresponding section of `doc/HUMAN_BASELINE.md` should all describe the same policy.
+For a certified area, the class KDoc, implementation, behavior-contract tests, and the corresponding section of `doc/policies/human-baseline/HUMAN_BASELINE.md` should all describe the same policy.

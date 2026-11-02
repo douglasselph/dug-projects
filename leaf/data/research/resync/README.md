@@ -45,7 +45,7 @@ battle.structure=CANONICAL
 # or THREE_ENGAGEMENTS
 ```
 
-See `doc/BATTLE_STRUCTURE_CONFIGURATION.md` and `doc/BATTLE_PACING_RESEARCH_STATUS.md`.
+See `doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md` and `doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`.
 
 ## Loading discipline
 

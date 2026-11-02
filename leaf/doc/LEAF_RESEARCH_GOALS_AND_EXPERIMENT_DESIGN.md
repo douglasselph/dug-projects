@@ -246,7 +246,7 @@ The all-36-card audit should not begin as a blind giant overnight run merely bec
 
 Human Baseline fine calibration (including detailed C04 follow-up) is **not** the current project goal. Reopen it only when a specific research question is blocked by a concrete decision-quality problem.
 
-Battle pacing / Three Engagements is a parallel research stream; its current state is summarized in [`BATTLE_PACING_RESEARCH_STATUS.md`](BATTLE_PACING_RESEARCH_STATUS.md).
+Battle pacing / Three Engagements is a parallel research stream; its current state is summarized in [`BATTLE_PACING_RESEARCH_STATUS.md`](battle/BATTLE_PACING_RESEARCH_STATUS.md).
 
 ---
 

@@ -14,7 +14,7 @@ src/main/kotlin/dugsolutions/leaf/v35/player/decision/baseline/
 
 This simulation layer consumes Human Baseline through `StrategyProfile.humanBaseline()` and adds research-specific strategies, modifiers, experiment runners, aggregation, and future learning infrastructure.
 
-See [Human Baseline Specification](../../../../../../../doc/HUMAN_BASELINE.md) for the eight-area Milestone-2 certification map and [Testing and Verification](../../../../../../../doc/TESTING_AND_VERIFICATION.md) for the Unit → Integration → Simulation distinction.
+See [Human Baseline Specification](../../../../../../../doc/policies/human-baseline/HUMAN_BASELINE.md) for the eight-area Milestone-2 certification map and [Testing and Verification](../../../../../../../doc/engineering/TESTING_AND_VERIFICATION.md) for the Unit → Integration → Simulation distinction.
 
 The v35 decision/simulation architecture has distinct purposes:
 

@@ -64,16 +64,16 @@ import dugsolutions.leaf.v35.player.decision.support.SupportAction
  *
  * Current implementation details and A1/A2 findings are documented in:
  *
- * `doc/HUMAN_BASELINE_CULTIVATION.md`
+ * `doc/policies/human-baseline/HUMAN_BASELINE_CULTIVATION.md`
  *
  * The design rationale, approved target architecture, and completed certification
  * sequence are documented in:
  *
- * `doc/HUMAN_BASELINE_CULTIVATION_PLAN.md`
+ * `doc/policies/human-baseline/HUMAN_BASELINE_CULTIVATION_PLAN.md`
  *
  * Cross-cutting tuning knobs and their overridable policy layer are documented in:
  *
- * `doc/HUMAN_BASELINE_POLICY.md`
+ * `doc/policies/human-baseline/HUMAN_BASELINE_POLICY.md`
  *
  * The executable ordinary-human behavior contract is kept in:
  *
