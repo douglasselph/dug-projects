@@ -83,7 +83,7 @@ Required work:
 
 #### A1.4 - Introduce one reusable question execution plan and launcher
 
-**Status:** NEXT — A1.2–A1.3 contracts available.
+**Status:** PARTIAL — declarative multi-condition/multi-stage planning implemented; strict official two-player R3A execution adapter added. Generalized stage/condition execution remains blocked on A1.5; do not mark complete yet.
 
 Create one top-level entry point (name is implementation choice, e.g. `bin/plant_question`) that reads a validated question specification and expands it into an explicit stage/condition plan.
 

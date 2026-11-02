@@ -2,7 +2,7 @@
 
 ## Purpose and boundary
 
-The JSON question file is a **validated declaration**, not executable experiment instructions. Run `python3 bin/plant_question_spec.py <path-to-question.json>` at the top of the `leaf` repository to print a deterministic, expanded JSON record of the exact official card identity, nine-card Grove, rule inputs, effect conditions, policies, and seeds. Optional `--output /path/to/resolved.json` saves that record. Validation never starts Gradle, changes game data, trains a policy, or runs a game. The generic A1.3 resolver is `bin/plant_question_conditions.py`; A1.4 will consume a validated specification to plan execution.
+The JSON question file is a **validated declaration**, not executable experiment instructions. Run `python3 bin/plant_question_spec.py <path-to-question.json>` at the top of the `leaf` repository to print a deterministic, expanded JSON record of the exact official card identity, nine-card Grove, rule inputs, effect conditions, policies, and seeds. Optional `--output /path/to/resolved.json` saves that record. Validation never starts Gradle, changes game data, trains a policy, or runs a game. The generic A1.3 resolver is `bin/plant_question_conditions.py`; The reusable `bin/plant_question --plan` command now consumes a validated specification to plan execution; see `PLANT_QUESTION_LAUNCHER.md` for execution restrictions.
 
 Examples: `questions/root-four-more.json` and `questions/sapping-snapdragon.json`. Both deliberately use current official definitions and the explicit standard 3/2/2 research configuration. Example budgets are *small illustrative placeholders*, not sufficient for balance claims.
 
