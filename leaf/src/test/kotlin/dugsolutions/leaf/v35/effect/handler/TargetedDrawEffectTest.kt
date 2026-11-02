@@ -1,5 +1,7 @@
 package dugsolutions.leaf.v35.effect.handler
 
+import dugsolutions.leaf.v35.battle.BattleState
+import dugsolutions.leaf.v35.battle.domain.StrikeRow
 import dugsolutions.leaf.v35.effect.EffectTestFixture
 import dugsolutions.leaf.v35.effect.FixedEffectDie
 import dugsolutions.leaf.v35.effect.GameEffect
@@ -60,18 +62,22 @@ class TargetedDrawEffectTest {
     fun rootRecallBattle_usesOneDieTargetAndRerollsWithoutMovingIt() {
         val die = SequenceDie(8, initial = 7, rerolled = 3)
         val actor = EffectTestFixture.player(1, hand = listOf(die))
-        val game = EffectTestFixture.game(actor, EffectTestFixture.player(2))
+        val opponent = EffectTestFixture.player(2)
+        val game = EffectTestFixture.game(actor, opponent)
+        val battle = BattleState(listOf(actor, opponent))
+        battle.grid.placeDie(actor, StrikeRow.TOP, die)
         val request = EffectTestFixture.request(
             game,
             actor,
             GameEffect.DISCARD_ANY_NUMBER_OF_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE
-        ).copy(phase = GameEffectPhase.BATTLE)
+        ).copy(phase = GameEffectPhase.BATTLE, battleState = battle)
 
         assertTrue(handler.canExecute(request))
         handler.execute(request, nested)
 
         assertEquals(3, die.value)
         assertEquals(listOf(die), actor.dice.hand)
+        assertEquals(StrikeRow.TOP, battle.grid.locationOf(die)?.row)
     }
 
 
