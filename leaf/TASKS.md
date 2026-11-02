@@ -17,7 +17,7 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** OPEN - highest-priority engineering capability. **A1.1 is the next implementation task.**
+**Status:** OPEN - highest-priority engineering capability. **A1.1 completed; A1.2 is next.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
@@ -31,7 +31,7 @@ This is the correct next step for the current repository. The source already con
 
 #### A1.1 - Inventory and freeze the reusable question-runner boundaries
 
-**Status:** NEXT.
+**Status:** COMPLETE — source inventory and frozen-boundary note: [`doc/research/experiments/card-balance/REUSABLE_QUESTION_RUNNER_ARCHITECTURE.md`](doc/research/experiments/card-balance/REUSABLE_QUESTION_RUNNER_ARCHITECTURE.md). No runtime behavior changed.
 
 Before changing code, map the current implementation into reusable responsibilities and explicitly decide what the generalized runner will reuse rather than rewrite.
 
@@ -47,7 +47,7 @@ Required work:
 
 #### A1.2 - Add a declarative Plant question specification and strict validator
 
-**Status:** BLOCKED on A1.1.
+**Status:** NEXT — A1.1 inventory complete.
 
 Introduce one human-readable question definition that is data, not a new launcher script. Keep the format deliberately small; do not invent a large experiment DSL.
 
