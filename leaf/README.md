@@ -264,3 +264,8 @@ For current work, use these as the front door:
 - [`doc/engineering/TESTING_AND_VERIFICATION.md`](doc/engineering/TESTING_AND_VERIFICATION.md) - verification boundaries and commands.
 
 The repository is the handoff. A fresh conversation should not require a separate stand-alone Codex/status prompt if it has the current source tree and reads the files above.
+
+
+## Repository-root file conventions
+
+The root keeps `README.md` (orientation), `TASKS.md` (active backlog), and `AGENTS.md` (coding-agent Kotlin style rules). Gradle configuration and wrapper entry points stay at the root. Subject-specific historical notes live under `doc/`; see [documentation index](doc/README.md).

@@ -36,3 +36,10 @@ The repository [README](../README.md) explains the purpose and working agreement
 Old implementation IDs within file names are retained to preserve provenance. **The subject folder, not the ID, defines the navigation hierarchy.** New documents should use descriptive names without milestone prefixes.
 
 Executable shell acceptance/verification scripts with existing callers remain at their established paths until their invocation contracts are separately migrated. Python reporting utilities are organized in `tools/` and callers have been updated.
+
+
+## Additional subject guides
+
+- [Compost experiment records](research/studies/compost/README.md)
+- [Cursor IDE setup and troubleshooting](engineering/cursor/README.md)
+- [Historical player-count data reorganization](legacy/PLAYER_COUNT_DATA_REORGANIZATION.txt) (archived; do not execute its delete-and-replace instructions)
