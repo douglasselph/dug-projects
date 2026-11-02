@@ -10,7 +10,7 @@ A03 is a structural change detector, not a mechanical proof or a substitute for 
 
 ## Verified input
 
-- Basis: `leaf(20261025-203429).tgz`, SHA-256 is recorded in `doc/A03_PROTECTED_BASELINE.json`.
+- Basis: `leaf(20261025-203429).tgz`, SHA-256 is recorded in `doc/research/provenance/protected-baseline/PROTECTED_BASELINE.json`.
 - The upload includes the eight A02 changes. The preceding `leaf(20261025-201731).tgz` differs from the latest archive by precisely those eight paths (including tests and documentation).
 - Neither archive has `.git`, so **this upload cannot establish the user's current Git HEAD**. The earlier A01 local report recorded `104c7b6104c9dd2f36bf025aacd064e13e3632b7` **before A02**; do not assert it is still current.
 - All 478 protected **source/data files** were SHA-256 fingerprinted from the latest uploaded archive. Python bytecode (`__pycache__`, `.pyc`) is intentionally excluded.
@@ -66,7 +66,7 @@ python3 bin/a03_verify_boundaries.py \
   --propose-baseline /tmp/A03_proposed.json
 ```
 
-4. Review `git diff` and the proposed manifest. Commit the reviewed changes, including the updated `doc/A03_PROTECTED_BASELINE.json` if deliberately accepted. An exception alone does not change the recorded baseline, so unreviewed changes still fail next time.
+4. Review `git diff` and the proposed manifest. Commit the reviewed changes, including the updated `doc/research/provenance/protected-baseline/PROTECTED_BASELINE.json` if deliberately accepted. An exception alone does not change the recorded baseline, so unreviewed changes still fail next time.
 
 ## Required next steps and explicit non-goals
 

@@ -2,8 +2,8 @@
   "schema": 1,
   "moves": [
     {
-      "from": "doc/B01_RAISE3_INVENTORY.md",
-      "to": "doc/archive/sunlight-migration/B01_RAISE3_INVENTORY.md"
+      "from": "doc/RAISE3_INVENTORY.md",
+      "to": "doc/legacy/sunlight/RAISE3_INVENTORY.md"
     },
     {
       "from": "doc/B02_SUNLIGHT_RUNTIME_TRACE.md",
@@ -14,12 +14,12 @@
       "to": "doc/archive/sunlight-migration/B03_GRADLE_TEST_SUITE_RECOVERY.md"
     },
     {
-      "from": "doc/B03_R0_KOIN_LIFECYCLE_TEST_FIX.md",
-      "to": "doc/archive/sunlight-migration/B03_R0_KOIN_LIFECYCLE_TEST_FIX.md"
+      "from": "doc/R0_KOIN_LIFECYCLE_TEST_FIX.md",
+      "to": "doc/legacy/sunlight/R0_KOIN_LIFECYCLE_TEST_FIX.md"
     },
     {
-      "from": "doc/B03_RETIRE_LEGACY_SUNLIGHT_RAISE3.md",
-      "to": "doc/archive/sunlight-migration/B03_RETIRE_LEGACY_SUNLIGHT_RAISE3.md"
+      "from": "doc/RETIRE_LEGACY_SUNLIGHT_RAISE3.md",
+      "to": "doc/legacy/sunlight/RETIRE_LEGACY_SUNLIGHT_RAISE3.md"
     },
     {
       "from": "doc/B03_TWO_REMAINING_TESTS.md",

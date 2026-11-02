@@ -105,7 +105,7 @@ def main() -> int:
                 raise RuntimeError('A03 verification failed after installation; original manifest restored')
             print('A03 BASELINE ACCEPTED: exact reviewed paths only.')
             print('Backup:', backup.relative_to(root))
-            print('Commit: git add doc/A03_PROTECTED_BASELINE.json')
+            print('Commit: git add doc/research/provenance/protected-baseline/PROTECTED_BASELINE.json')
             return 0
     except (ValueError, OSError, RuntimeError, json.JSONDecodeError) as exc:
         print('A03 ACCEPT FAIL:', exc, file=sys.stderr)

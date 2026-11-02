@@ -11,7 +11,7 @@ The official `data/Turn_Cards.csv` and current research resync use Sunlight toke
 
 ## Provenance snapshot
 
-Original byte-exact launcher saved as `doc/historical/B05_experiment_sunlight_token_sanity_original.sh`.
+Original byte-exact launcher saved as `doc/legacy/sunlight/experiment_sunlight_token_sanity_original.sh`.
 
 Original SHA-256: `734c2290eec9c4cc4e453fff1a28b10a637c1578932ce2bdf22b7961c2578b0a`.
 
@@ -25,7 +25,7 @@ Other `bin/legacy` scripts, canonical mechanics, current Round CSV, research ove
 
 ## Verification
 
-- Compare `sha256sum doc/historical/B05_experiment_sunlight_token_sanity_original.sh` with `734c2290eec9c4cc4e453fff1a28b10a637c1578932ce2bdf22b7961c2578b0a`.
+- Compare `sha256sum doc/legacy/sunlight/experiment_sunlight_token_sanity_original.sh` with `734c2290eec9c4cc4e453fff1a28b10a637c1578932ce2bdf22b7961c2578b0a`.
 - `bash bin/legacy/experiment_sunlight_token_sanity` must exit 2 with an explicit retirement explanation and create no output.
 - `python3 bin/a03_verify_boundaries.py --approve-path bin/legacy/experiment_sunlight_token_sanity --reason 'B05 retire misleading obsolete Sunlight comparison and preserve original snapshot'`.
 - After review, the normal A03 check requires a separately approved baseline refresh, not silent rebasing.

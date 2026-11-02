@@ -8,7 +8,7 @@ Added real-Main mixed-candidate assertions for projected Plant versus capped Pla
 
 ## Run
 
-`bash doc/C04_RUN_ACCEPTANCE.sh`
+`bash doc/policies/human-baseline/action-valuation/RUN_ACCEPTANCE.sh`
 
 This deliberately fails on any failing Kotlin test, simulation test or A03 boundary change. It does **not** automatically approve protected modifications. No mechanics or trained policies are changed.
 

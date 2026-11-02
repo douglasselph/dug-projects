@@ -43,4 +43,4 @@ If it fails, send `build/test-results/test/TEST-dugsolutions.leaf.v35.research.R
 ./gradlew test simulationTest
 ```
 
-This follow-up has made no production, canonical rules, market data, policy, or learned weight changes. The A03 check with `doc/B03_VERIFY_A03_BOUNDARIES.sh` passed, recognizing B03's previously documented five protected changes.
+This follow-up has made no production, canonical rules, market data, policy, or learned weight changes. The A03 check with `doc/research/provenance/protected-baseline/VERIFY_BOUNDARIES.sh` passed, recognizing B03's previously documented five protected changes.

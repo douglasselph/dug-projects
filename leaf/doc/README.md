@@ -31,7 +31,7 @@ The repository [README](../README.md) explains the purpose and working agreement
 - [Battle research status](battle/BATTLE_PACING_RESEARCH_STATUS.md) and [Battle rules configuration](battle/BATTLE_STRUCTURE_CONFIGURATION.md)
 - [Human Baseline](policies/human-baseline/HUMAN_BASELINE.md) and [Battle baseline](policies/human-baseline/HUMAN_BASELINE_BATTLE.md)
 - [Effect sanity gate](research/experiments/R3B_EFFECT_SANITY_GATE.md) and [effect-aware decisions](research/experiments/R3B1A_EFFECT_AWARE_DECISIONS.md)
-- [Protected baseline](A03_PROTECTED_BASELINE.json) — deliberately remains at its established path because verification tools consume it
+- [Protected baseline](research/provenance/protected-baseline/PROTECTED_BASELINE.json) — deliberately remains at its established path because verification tools consume it
 
 Old implementation IDs within file names are retained to preserve provenance. **The subject folder, not the ID, defines the navigation hierarchy.** New documents should use descriptive names without milestone prefixes.
 

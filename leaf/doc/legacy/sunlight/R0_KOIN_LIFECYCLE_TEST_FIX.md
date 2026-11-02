@@ -36,7 +36,7 @@ No changes to `R0CorrectnessAuditTest`, production classes, Plant market legalit
 - Direct Kotlin demonstration reproduced shared registry identity and duplicate-name failure.
 - Compiled and executed four Kotlin test methods consecutively using real production classes and Koin runtime, with a minimal local `@Test` annotation stub and Kotlin's assertion library: **4/4 pass**.
 - Python suite: **47/47 pass**.
-- A03 boundary check with `doc/legacy/B03_PROPOSED_A03_PROTECTED_BASELINE.json`: **479/479 protected files unchanged**.
+- A03 boundary check with `doc/legacy/protected-baseline/PROPOSED_PROTECTED_BASELINE.json`: **479/479 protected files unchanged**.
 - Full Gradle `test`/`simulationTest` could not be executed here: the offline test dependency cache lacks several dependencies. Run them on Ubuntu.
 
 ## Ubuntu verification commands
@@ -48,4 +48,4 @@ No changes to `R0CorrectnessAuditTest`, production classes, Plant market legalit
 
 ## A03 manifest note
 
-The current archive still contains the original pre-B03 `doc/A03_PROTECTED_BASELINE.json` and the reviewed post-B03 `doc/legacy/B03_PROPOSED_A03_PROTECTED_BASELINE.json`. Running `python3 bin/a03_verify_boundaries.py` against the original manifest reports B03's five already-documented mechanical changes. Use the approved B03 procedure or the reviewed proposed manifest for that check; this test-only patch introduces **no additional protected changes**.
+The current archive still contains the original pre-B03 `doc/research/provenance/protected-baseline/PROTECTED_BASELINE.json` and the reviewed post-B03 `doc/legacy/protected-baseline/PROPOSED_PROTECTED_BASELINE.json`. Running `python3 bin/a03_verify_boundaries.py` against the original manifest reports B03's five already-documented mechanical changes. Use the approved B03 procedure or the reviewed proposed manifest for that check; this test-only patch introduces **no additional protected changes**.

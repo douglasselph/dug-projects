@@ -58,7 +58,7 @@ Do not conflate `Human Baseline makes a reasonable move`, `Buy learner buys card
 
 ## A04 tests and tracker
 
-- `doc/research/telemetry/A04_CARD_BALANCE_EVIDENCE_TRACKER.csv` lists **36 cards** with all A04 balance-evidence dimensions explicitly pending; it is a scope and progress checklist, **not** a simulated conclusion or a new canonical card dataset. `Not run` in this tracker means **the complete A04 evidence review has not been run**, not that no exploratory experiment involving the card has ever been executed. In particular, Root Four More and Queen's Blossom have prior R3B.1 instrument-calibration evidence, but neither has a completed expert-counterplay balance review.
+- `doc/research/telemetry/balance-evidence/CARD_BALANCE_EVIDENCE_TRACKER.csv` lists **36 cards** with all A04 balance-evidence dimensions explicitly pending; it is a scope and progress checklist, **not** a simulated conclusion or a new canonical card dataset. `Not run` in this tracker means **the complete A04 evidence review has not been run**, not that no exploratory experiment involving the card has ever been executed. In particular, Root Four More and Queen's Blossom have prior R3B.1 instrument-calibration evidence, but neither has a completed expert-counterplay balance review.
 - `bin/tests/test_a04_research_evidence_boundary.py` executes synthetic R3A reporting scenarios, including a specialist that wins **100%** of held-out games and one with **no purchases or resolutions**. Neither is automatically marked balanced or dead. It also verifies the catalog tracker has nine legal slots × four cards each, and that R3B's deliberate extreme-card controls remain clearly separated.
 
 From the project root:

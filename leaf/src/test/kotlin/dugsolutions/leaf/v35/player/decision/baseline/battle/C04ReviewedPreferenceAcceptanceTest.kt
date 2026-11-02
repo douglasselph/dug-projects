@@ -24,7 +24,7 @@ import kotlin.test.assertTrue
  * These are REAL, explicitly populated three-row decision views: every player
  * has >= 3 placed dice, with no invented enemy row totals. The Main scoring
  * entry point is production BattleMainPriority. Legality through the complete
- * game coordinator has NOT been proven; see doc/policies/human-baseline/C04_REVIEWED_ACCEPTANCE.md.
+ * game coordinator has NOT been proven; see doc/policies/human-baseline/action-valuation/REVIEWED_ACCEPTANCE.md.
  *
  * Preferences are diagnostic until the actual legal-choice generator confirms
  * the described candidate AND target; otherwise a Plant may choose another die.

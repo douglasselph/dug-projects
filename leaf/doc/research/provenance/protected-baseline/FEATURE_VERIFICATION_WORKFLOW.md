@@ -12,7 +12,7 @@ Run `python3 bin/a03_verify_boundaries.py` after installing each changes-only ZI
     --reason 'B08 reviewed Sunlight parity audit checker' \
     --accept
   python3 bin/a03_verify_boundaries.py
-  git add doc/A03_PROTECTED_BASELINE.json
+  git add doc/research/provenance/protected-baseline/PROTECTED_BASELINE.json
   ```
 
 The helper first refuses any unapproved changes, calls A03's own `--propose-baseline`, verifies the proposal changes only approved entries, keeps a backup and installs the proposal atomically. It reruns the unqualified A03 checker; on verification failure, it restores the previous manifest. Omit `--accept` for a dry-run preview. Do **not** approve unexpected data, mechanics, policy, or tool changes merely to get a green test.

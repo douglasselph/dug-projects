@@ -8,7 +8,7 @@ Status: experiment design / source inspection, 2026-10-30. Candidate B is **not 
 - `Battle Pacing & Balance Experiment.docx`, Candidate A / B specification.
 - Source archive `leaf(20261030-184541).tgz`, including `doc/` and the source under `src/`.
 - `doc/engineering/SIMULATION_OPERATIONAL_READINESS.md`: operational gate, not a balance certificate.
-- `doc/research/provenance/A03_SCOPE_BOUNDARIES.md` and `doc/research/provenance/A03_FEATURE_VERIFICATION_WORKFLOW.md`: protected-source review requirements.
+- `doc/research/provenance/protected-baseline/SCOPE_BOUNDARIES.md` and `doc/research/provenance/protected-baseline/FEATURE_VERIFICATION_WORKFLOW.md`: protected-source review requirements.
 
 ## Candidate comparison
 
@@ -84,7 +84,7 @@ Contract:
 
 Unit tests (2/3/4 players): highest row die, equal highest but different second die, leftmost column tiebreak, non-Grid seat order, empty squares, future-row die changed between engagements, order frozen after selection, invalid/duplicate seats and closed row. Build cases using `BattleTestFixture` / legal `BattleState` placements, not arbitrary off-board dice.
 
-**A03:** new production/simulation source is protected by default. Run `python3 bin/a03_verify_boundaries.py` and follow `doc/research/provenance/A03_FEATURE_VERIFICATION_WORKFLOW.md` for explicit path-by-path review; do not silently rewrite the protected manifest. Doc and test-only modifications can precede protected-source approval.
+**A03:** new production/simulation source is protected by default. Run `python3 bin/a03_verify_boundaries.py` and follow `doc/research/provenance/protected-baseline/FEATURE_VERIFICATION_WORKFLOW.md` for explicit path-by-path review; do not silently rewrite the protected manifest. Doc and test-only modifications can precede protected-source approval.
 
 ## Next: first actual paired A/B battle
 

@@ -4,7 +4,7 @@
 
 **Source archive:** `leaf(20261026-012547).tgz` · SHA-256 `500556e827cce0778d716dcb4a5ee55222d13f1fbe67b45ee11c66c61698cdd5` · 1662 filesystem entries extracted. Git metadata is not part of this archive.
 
-**Exact matches:** 88 textual occurrences across 38 files. **Indirect old-path matches recorded:** 57 additional line occurrences across 13 files. CSV: `doc/research/provenance/B01_RAISE3_REFERENCES.csv` has **145** line-level records with source excerpts. Indirect list is deliberately targeted; incidental uses of the generic number 3 are not all part of obsolete Sunlight.
+**Exact matches:** 88 textual occurrences across 38 files. **Indirect old-path matches recorded:** 57 additional line occurrences across 13 files. CSV: `doc/research/provenance/sunlight/RAISE3_REFERENCES.csv` has **145** line-level records with source excerpts. Indirect list is deliberately targeted; incidental uses of the generic number 3 are not all part of obsolete Sunlight.
 
 ## Source-of-truth determination
 
