@@ -17,20 +17,165 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** OPEN - highest-priority engineering capability.
+**Status:** OPEN - highest-priority engineering capability. **A1.1 is the next implementation task.**
 
-The R0-R3/Sapping-era framework and R3B/R3B.1 infrastructure demonstrate much of the needed machinery, but the project still needs a clean reusable definition for an arbitrary current Plant question.
+This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
-Acceptance target:
+- `R3APlantScreenMain` already accepts an arbitrary current Plant target and legal nine-card Grove, and can run targeted versus unrestricted Buy-policy searches;
+- `PlantExperimentConfig` / `PlantExperimentConfigLoader` already provide generic research-only Plant overrides without mutating canonical card data;
+- R3B/R3B.1 already provide disabled/positive controls, seat-scoped effect isolation, actual mechanical-output telemetry, fixed-policy comparisons, resumability and provenance safeguards;
+- R1/R2 remain Sapping-specific, while R3B/R3B.1 orchestration and the R3A `effect-variant` path still contain card-specific control names/guards for Root Four More and Queen's Blossom;
+- there is not yet one declarative question definition that can drive the whole research path for an arbitrary Plant without adding another bespoke launcher.
 
-- one declarative/specifiable question identifies card by current name/ID/fingerprint;
-- exact Grove, player count, Round/Wisp/game-rule configuration are recorded;
-- official effect, suppressed effect, candidate effect and/or cost comparison are explicit;
-- targeted discovery, unrestricted search, frozen comparison, adapted comparison, held-out evaluation, and countersearch can be selected without a new one-off launcher for every card;
-- report records actual acquisitions, activations, mechanical outputs, substitutes, development, Strike/VP outcomes, uncertainty, and provenance;
-- a **second unrelated Plant** can run through the same path without bespoke program rewrites.
+**A1 definition of done:** a second, structurally unrelated Plant question can be run through the same declarative question file and the same runner, with no Kotlin/Python source edits between questions. The generic path must preserve existing launch/checkpoint/provenance contracts and produce a standard evidence bundle. This is an **engineering reuse gate**, not proof that arbitrary effects are already strategically understood; that remains A2.
 
-This corresponds to the governing research document's **R4 - Reusable questions** direction.
+#### A1.1 - Inventory and freeze the reusable question-runner boundaries
+
+**Status:** NEXT.
+
+Before changing code, map the current implementation into reusable responsibilities and explicitly decide what the generalized runner will reuse rather than rewrite.
+
+Required work:
+
+- inventory R1, R2, R3A, R3B and R3B.1 launchers/runners and identify which pieces provide question definition, search, evaluation, effect override, telemetry, reporting, checkpointing and archiving;
+- inventory the current `PlantExperimentConfig`/loader, seat-scoped research-effect mechanism, R3A target/Grove validation, D1-D10 development telemetry and R3B.1 mechanical-output telemetry;
+- identify all currently card-specific assumptions in the generic-looking path, especially `effect-variant` names, target-ID guards, hard-coded card lists, result labels and launcher control matrices;
+- record which existing output/checkpoint/manifests must remain backward-compatible or receive an explicit new schema/version;
+- define the smallest generic ownership boundary: **question specification -> validated conditions/stages -> existing search/evaluation engines -> common evidence/reporting**.
+
+**Acceptance gate:** a short implementation note or code-level design map identifies the exact classes/scripts to retain, wrap, generalize or leave historical. No game rule, policy or experiment behavior changes in A1.1.
+
+#### A1.2 - Add a declarative Plant question specification and strict validator
+
+**Status:** BLOCKED on A1.1.
+
+Introduce one human-readable question definition that is data, not a new launcher script. Keep the format deliberately small; do not invent a large experiment DSL.
+
+The specification must be able to identify/record:
+
+- stable `question_id`, human question/hypothesis and target Plant title plus current ID/fingerprint;
+- exact legal nine-card Grove and player count(s);
+- Round/Wisp/game-rule configuration, including the current 3/2/2 setup and canonical versus explicitly selected experimental game rules;
+- named comparison conditions such as official, suppressed/no-effect, candidate effect, and later price/cost alternatives;
+- whether an intervention applies to all players or only a target seat/role;
+- requested research stages: targeted discovery, unrestricted discovery, frozen-policy comparison, adapted/reoptimized comparison, held-out evaluation and countersearch;
+- policy/weight inputs, seeds, seat rotation, search/evaluation budgets and practical-effect thresholds needed for reproducibility.
+
+Validation must fail clearly for stale/unknown card IDs, target cards absent from the Grove, illegal type/cost slots, duplicate Grove cards, unknown effects/overrides, invalid player counts, missing referenced weights/files, incompatible stage settings or a question whose stated target fingerprint no longer matches current data.
+
+**Acceptance gate:** deterministic parser/validator tests cover at least two unrelated Plant specifications plus invalid/stale cases. Merely parsing a file is not enough; the resolved spec must print the exact effective card/Grove/rules/policy inputs that will be tested.
+
+#### A1.3 - Generalize experiment conditions and effect/price override resolution
+
+**Status:** BLOCKED on A1.2.
+
+Replace the current generic-path dependence on card-specific condition names with a reusable condition model.
+
+Required work:
+
+- represent canonical, suppressed, candidate-effect and explicit cost/scoring/type interventions through the existing `PlantExperimentConfig` machinery wherever possible;
+- preserve seat-scoped interventions for one-sided fixed-policy comparisons without leaking the experimental effect to control opponents;
+- remove Root Four More / Queen's Blossom target-ID conditionals from the generalized path; a condition should resolve from the question specification plus an executable effect/override, not from a special launcher branch;
+- keep canonical CSV/card definitions immutable; candidate mechanics that do not yet exist still require a deliberately implemented/tested executable `GameEffect` or equivalent before a spec may reference them;
+- preserve legal Grove resolution when type/cost changes are explicitly being studied; do not silently create an illegal 4x9 market.
+
+**Acceptance gate:** the same condition resolver can express existing no-op, +20 VP, Root Four More Raise +20, Queen's Blossom Draw 4 and Sapping's alternate effect without target-specific runner code. Existing isolation/leakage tests remain valid or are replaced by equivalent generic tests.
+
+#### A1.4 - Introduce one reusable question execution plan and launcher
+
+**Status:** BLOCKED on A1.2-A1.3.
+
+Create one top-level entry point (name is implementation choice, e.g. `bin/plant_question`) that reads a validated question specification and expands it into an explicit stage/condition plan.
+
+Required behavior:
+
+- `--plan` prints every condition, Grove, role/policy, seed block, seat treatment, game budget and expected output location without running games;
+- selected stages can be enabled/disabled from the question specification rather than by creating another one-off script;
+- reuse existing R3A/R3B/R3B.1 engines/adapters initially instead of rewriting learning, game execution or telemetry;
+- compile once, then use direct-Java/persistent JVMs or isolated JVMs according to the existing launch architecture and state-isolation requirements;
+- preserve deterministic seeds, locks, resumable checkpoints, whole-batch progress/ETA, manifest validation and one verified upload-ready archive copied to `~/Downloads`;
+- a failed cohort/stage is retained as a failure and blocks a misleading aggregate assessment; it is never silently dropped.
+
+**Acceptance gate:** `--plan` for two unrelated questions is generated by the same launcher and contains no card-specific Python/Kotlin branches beyond the data in the question files and executable effect registry.
+
+#### A1.5 - Generalize stage adapters for discovery, comparison and countersearch
+
+**Status:** BLOCKED on A1.4.
+
+Make the reusable launcher able to invoke the existing research operations by role rather than by historical experiment name.
+
+Minimum stage adapters:
+
+1. **Targeted discovery** - search for a strategy that actually acquires/uses the target; exploration incentives are training-only.
+2. **Unrestricted discovery** - search for competitive play without target-use incentives.
+3. **Frozen-policy comparison** - hold policy parameters fixed while changing only the declared research condition where meaningful.
+4. **Adapted/reoptimized comparison** - independently search under each condition when the changed effect/price can alter strategy.
+5. **Held-out evaluation** - no training bonuses; fair seats and independent held-out seed blocks.
+6. **Countersearch** - freeze a strong target-using strategy and search/evaluate an unrestricted challenger against it, then confirm with held-out crossplay.
+
+Keep each stage's policy scope explicit. If only Buy is learned and all other decisions are Human Baseline, the manifest/report must say so. The generalized countersearch adapter being executable is an A1 requirement; proving that it is strategically strong enough for arbitrary effects is an A2 requirement.
+
+**Acceptance gate:** each requested stage can be selected for an arbitrary Plant question without adding a card-specific launcher. Training-only incentives cannot leak into held-out evaluation scores.
+
+#### A1.6 - Standardize the per-question evidence bundle and report contract
+
+**Status:** BLOCKED on A1.4-A1.5.
+
+Create one generic result layout and schema so later A2-A5 work can consume results without knowing whether the historical origin was R2, R3A or R3B.
+
+At minimum retain/report, when available:
+
+- exact question/condition/Grove/source/data/policy fingerprints and seeds;
+- target legal exposure, acquisitions, grafted copies and activations/resolutions;
+- actual effect-output telemetry already supported by R3B.1, plus explicit indication when an effect family lacks adequate output attribution;
+- named Plant development, dice development, substitutions/competing purchases where current telemetry supports them, Strike/VP/Wound outcomes and final results;
+- search success/failure, policy scope, held-out sample counts, seat allocation and uncertainty;
+- fixed-policy versus adapted comparisons as distinct estimands;
+- countersearch status and best challenger evidence;
+- an evidence-sufficiency section that can say **Investigate** rather than manufacture a reassuring verdict.
+
+Do not make A1 invent missing causal measurements just to fill columns. Missing effect-family telemetry should be explicit and flow into A2.
+
+**Acceptance gate:** two unrelated questions emit the same schema/layout and can be summarized by one report reader/aggregator. Card names are primary labels; IDs/fingerprints remain trace keys.
+
+#### A1.7 - Prove the generalized path with two unrelated Plant questions
+
+**Status:** BLOCKED on A1.2-A1.6.
+
+Run a deliberately small engineering/functional vertical slice, not a balance study.
+
+Use at least:
+
+- one simple/direct Plant effect already covered by calibration infrastructure (for example Root Four More or Queen's Blossom); and
+- one structurally different Plant question (preferably Sapping Snapdragon because its alternate effect and older R1/R2 path provide a strong reuse/parity check).
+
+For each, run at least official versus suppressed/no-effect plus whatever existing candidate effect is already executable and useful for parity. The **only** per-question change should be the question specification and referenced override/effect; no source edits between the two runs.
+
+Verify:
+
+- legal Grove and exact target identity;
+- targeted and unrestricted search can both execute;
+- frozen and adapted/held-out stages produce generic outputs;
+- one-sided interventions do not leak to control opponents;
+- mechanical output is zero for suppressed effects where that instrumentation applies;
+- checkpoints/resume and archive generation work;
+- comparable legacy cohorts reproduce or any intentional schema/seed differences are documented rather than hand-waved.
+
+**Acceptance gate:** the second unrelated Plant completes through the same path with no bespoke runner changes. This is the concrete R4 reusable-question milestone.
+
+#### A1.8 - Documentation, compatibility and handoff cleanup
+
+**Status:** BLOCKED on A1.7.
+
+After the vertical slice passes:
+
+- document the new question-file format, runner, stage meanings, output schema and minimal commands;
+- update `README.md`, `TASKS.md` and the documentation index to point new work to the reusable runner;
+- preserve R1/R2/R3A/R3B/R3B.1 scripts/results for provenance. Convert them to thin compatibility wrappers or mark them historical only after parity/dependency review; do not delete them merely because the generic runner exists;
+- record any known unsupported effect families or telemetry gaps as A2 work;
+- provide the normal changes-only ZIP, exact tests run/not run and a Git commit message.
+
+**A1 exit gate:** a new Plant-effect or pricing question can normally be added by writing one validated question specification and, only when the mechanic itself is genuinely new, one tested executable effect override. No new experiment architecture or bespoke card launcher is required.
 
 ### A2 - Make the balance gate trustworthy for strategically understood effects
 
