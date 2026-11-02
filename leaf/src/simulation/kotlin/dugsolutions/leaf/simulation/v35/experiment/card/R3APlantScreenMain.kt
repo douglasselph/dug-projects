@@ -62,7 +62,7 @@ object R3APlantScreenMain {
         val targetBoost: Double, val targetMinPurchaseRate: Double, val targetPurchaseBonus: Double,
         val flowerEnablerBoost: Double, val effectVariant: String, val effectAudience: String,
         val grove: List<String>, val outputDir: File, val fingerprint: String,
-        val targeted: File?, val unrestricted: File?
+        val targeted: File?, val unrestricted: File?, val fixedOpponent: File?
     ) {
         init {
             require(phase in setOf("train", "evaluate"))
@@ -87,6 +87,7 @@ object R3APlantScreenMain {
             require(grove.size == 9 && grove.distinct().size == 9)
             require(fingerprint.length >= 16)
             if (phase == "evaluate") require(targeted?.isFile == true && unrestricted?.isFile == true)
+            if (fixedOpponent != null) require(phase == "train" && objective == "unrestricted" && fixedOpponent.isFile)
         }
 
         companion object {
@@ -98,7 +99,7 @@ object R3APlantScreenMain {
                 val names = setOf("phase", "objective", "target-id", "generations", "population", "elites", "games",
                     "sigma", "mutations", "evolution-seed", "seed", "strategy-seed", "holdout-games",
                     "target-boost", "target-min-purchase-rate", "target-purchase-bonus", "flower-enabler-boost", "effect-variant", "effect-audience", "grove", "output-dir", "fingerprint")
-                require(fields.keys - names - setOf("targeted", "unrestricted") == emptySet<String>())
+                require(fields.keys - names - setOf("targeted", "unrestricted", "fixed-opponent") == emptySet<String>())
                 require((names - setOf("effect-variant", "effect-audience")).all(fields::containsKey)) { "Missing options: ${names - fields.keys}" }
                 return Options(
                     fields.getValue("phase"), fields.getValue("objective"), fields.getValue("target-id"),
@@ -111,7 +112,7 @@ object R3APlantScreenMain {
                     fields.getValue("flower-enabler-boost").toDouble(),
                     fields["effect-variant"] ?: "official", fields["effect-audience"] ?: "all", fields.getValue("grove").split(','),
                     File(fields.getValue("output-dir")), fields.getValue("fingerprint"),
-                    fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File)
+                    fields["targeted"]?.let(::File), fields["unrestricted"]?.let(::File), fields["fixed-opponent"]?.let(::File)
                 )
             }
         }
@@ -158,6 +159,7 @@ object R3APlantScreenMain {
 
     private fun train(o: Options, initial: LearnedBuyWeights, grove: List<PlantCard>, values: PlantExperimentConfig, calibratedEffect: GameEffect?,
                       factory: GameFactory, runner: GameRunner) {
+        val fixedOpponent = o.fixedOpponent?.let { LearnedBuyCardCatalog.prepare(LearnedBuyWeights.load(it.toPath()), grove) }
         val initialTarget = if (o.objective == "targeted") {
             val key = LearnedBuyWeights.cardFeature(o.targetId)
             val boosted = initial.withNamed(key, initial.named(key) + o.targetBoost)
@@ -192,7 +194,7 @@ object R3APlantScreenMain {
                     var purchased = 0
                     var activations = 0
                     repeat(o.games) { sample ->
-                        val opponent = when (sample % 3) {
+                        val opponent = if (fixedOpponent != null) fixedOpponent else when (sample % 3) {
                             0 -> null
                             1 -> population[(ci + 1 + (sample / 3) % (o.population - 1)) % o.population]
                             else -> previousChampion ?: population[(ci + 1) % o.population]

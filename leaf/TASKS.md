@@ -83,7 +83,7 @@ Required work:
 
 #### A1.4 - Introduce one reusable question execution plan and launcher
 
-**Status:** PARTIAL — declarative planning and strict official R3A adapter, plus generic two-player official/suppressed target-seat frozen comparison slice. Full staged execution remains A1.5; no end-to-end JVM verification yet.
+**Status:** PARTIAL — declarative planning, strict official R3A adapter and a verified-in-upload two-player official/suppressed target-seat frozen comparison. Expanded Buy-only adapted/countersearch stages are implemented but await JVM verification; remaining stages and player counts still require A1.5.
 
 Create one top-level entry point (name is implementation choice, e.g. `bin/plant_question`) that reads a validated question specification and expands it into an explicit stage/condition plan.
 
@@ -100,7 +100,7 @@ Required behavior:
 
 #### A1.5 - Generalize stage adapters for discovery, comparison and countersearch
 
-**Status:** IN PROGRESS — official discovery and a generic target-seat suppressed frozen comparison slice are implemented, but countersearch, reoptimization, broader conditions, and multiplayer execution remain open.
+**Status:** IN PROGRESS — generic target-seat suppressed frozen comparison is verified by uploaded pilot integrity checks; an adapted Buy training/evaluation and frozen-specialist countersearch pilot is implemented but requires Ubuntu JVM verification. Stronger opponent portfolios, additional effect conditions and multiplayer remain open.
 
 Make the reusable launcher able to invoke the existing research operations by role rather than by historical experiment name.
 

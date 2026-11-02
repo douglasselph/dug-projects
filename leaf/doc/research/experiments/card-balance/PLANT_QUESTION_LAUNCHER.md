@@ -56,3 +56,47 @@ aliases remain unchanged; canonical card data is not modified. **Execution
 has not been exercised with a Kotlin JVM in the packaging environment** because
 the Gradle wrapper distribution could not be downloaded. The Ubuntu run is the
 required integration acceptance check, not a claim of completed A1.5.
+
+## Adapted Buy evaluation and fixed-specialist countersearch (research pilot)
+
+After a successful `--run-paired-frozen`, the new `--run-adapted-countersearch`
+uses the existing verified official R3A champions. The pilot:
+
+1. Reoptimizes a target-seeking **Buy-only** policy with the target-seat effect
+   suppressed, while all opponents retain official effects.
+2. Evaluates the newly learned specialist against the unchanged official
+   unrestricted champion under the suppressed target-seat condition, with
+   training bonuses disabled and fresh held-out game seeds.
+3. Trains an unrestricted Buy challenger directly against the frozen *official*
+   targeted champion, rather than the original generic training mixture.
+4. Evaluates specialist versus challenger in a held-out official-rules matchup.
+
+The Kotlin R3A training CLI gains optional `--fixed-opponent=PATH`, allowed only
+for unrestricted training. The fixed opponent weights are read once into the
+current training JVM, and the training fingerprint includes their checksum.
+Other objectives and historical launchers retain their default opponent behavior.
+
+From inside `leaf/`:
+
+```bash
+./gradlew test
+./gradlew writeSimulationRuntimeClasspath
+python3 bin/plant_question doc/research/experiments/card-balance/questions/root-four-more.json --run-adapted-countersearch --no-build |& tee ~/Downloads/plant-question-adapted.log
+```
+
+The stage wrapper uses separate **direct-Java JVMs** for independent training
+and held-out evaluation, validates checkpoint markers, and copies a verified
+stage archive to `~/Downloads`. It never modifies `data/ai/` or canonical CSVs.
+Existing paired-frozen results must already be present locally under the
+question's output directory; uploading an archive to ChatGPT does not install
+those results in the user's local repository.
+
+**Research limits:** The adapted and countersearch policies only learn Buy;
+Cultivation/Battle/Support remain Human Baseline. Each search is a limited
+single-population pilot, not independent multi-seed adversarial search.
+No cross-condition balance verdict or statistically adjusted effect interval
+is produced. Countersearch in this slice tests the strongest available
+*official* specialist, not every adapted variant. Additional repetitions,
+policy diversity, countersearch against the adapted specialist, full
+condition coverage, and 3-/4-player cohorts remain for later A1.5/A2.
+The new Kotlin execution path has not been run in this packaging environment.
