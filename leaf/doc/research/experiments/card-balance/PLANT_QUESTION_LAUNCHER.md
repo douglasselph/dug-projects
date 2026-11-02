@@ -23,3 +23,36 @@ Potential research interpretation issue: the R3A training and evaluation seed de
 ## Safety
 
 Do not edit canonical CSVs or frozen weights. Never silently omit a failed cohort or unsupported condition. Do not run all stages or player counts from a full question spec through the narrow official R3A adapter. Historical launchers and their output schemas remain unchanged.
+
+## Generic one-sided effect suppression slice (A1.4/A1.5)
+
+`bin/plant_question --run-paired-frozen QUESTION.json` invokes `bin/plant_question_pair.py`.
+The adapter runs the existing R3A targeted/unrestricted **official Buy discovery** and
+held-out evaluation, then evaluates its frozen Buy champions a second time with
+`RESEARCH_NO_EFFECT` applied **only to the targeted seat**. This is not full execution
+of all declared research stages: multiplayer, adapted comparisons, countersearch,
+price/scoring overrides and other candidate conditions remain pending. The adapter
+explicitly requires the question to declare official/all-players and
+suppressed/target-seat conditions, a two-player cohort, discovery and frozen
+held-out stages, and a Grove exactly reproduced by legacy R3A's market seed.
+
+The frozen comparison reuses the same held-out seed schedule, seats and policy
+weights. The independent unrestricted-versus-baseline matchup must be identical,
+and the suppressed target must produce zero direct mechanical effect telemetry.
+It records the observed paired difference in win share and VP, but **cannot yet
+issue a balance verdict**. The source is compiled once by R3A; evaluation uses a
+separate direct-Java process; checkpoints validate outputs and inputs. A full
+archive containing manifest, question plan, frozen weights and both held-out TSVs
+is copied to `~/Downloads` and printed as `UPLOAD THIS FILE:` after success.
+
+```bash
+python3 bin/plant_question doc/research/experiments/card-balance/questions/root-four-more.json --run-paired-frozen
+python3 bin/plant_question doc/research/experiments/card-balance/questions/sapping-snapdragon.json --run-paired-frozen
+```
+
+The generic `effect:RESEARCH_*` executable selection in R3A is deliberately
+restricted to research-only enum names. The historical `--effect-variant`
+aliases remain unchanged; canonical card data is not modified. **Execution
+has not been exercised with a Kotlin JVM in the packaging environment** because
+the Gradle wrapper distribution could not be downloaded. The Ubuntu run is the
+required integration acceptance check, not a claim of completed A1.5.

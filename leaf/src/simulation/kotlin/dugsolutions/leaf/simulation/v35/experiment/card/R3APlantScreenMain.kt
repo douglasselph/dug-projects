@@ -66,7 +66,12 @@ object R3APlantScreenMain {
     ) {
         init {
             require(phase in setOf("train", "evaluate"))
-            require(effectVariant in setOf("official", "disabled", "root-raise20", "queen-draw4", "research-vp20"))
+            require(effectVariant in setOf("official", "disabled", "root-raise20", "queen-draw4", "research-vp20") || effectVariant.startsWith("effect:"))
+            if (effectVariant.startsWith("effect:")) {
+                val name = effectVariant.removePrefix("effect:")
+                require(name.startsWith("RESEARCH_")) { "Generic effect selection is restricted to research-only effects" }
+                require(GameEffect.values().any { it.name == name }) { "Unknown research effect: $name" }
+            }
             require(effectAudience in setOf("all", "targeted"))
             require(effectVariant != "root-raise20" || targetId == "Root_05_02")
             require(effectVariant != "queen-draw4" || targetId == "Flower_17_04")
@@ -136,7 +141,9 @@ object R3APlantScreenMain {
                 "root-raise20" -> GameEffect.RESEARCH_RAISE_DIE_PLUS_20
                 "queen-draw4" -> GameEffect.RESEARCH_DRAW_FOUR_DICE
                 "research-vp20" -> GameEffect.RESEARCH_GAIN_TWENTY_VP
-                else -> error("Unsupported calibration effect: ${o.effectVariant}")
+                else -> if (o.effectVariant.startsWith("effect:")) {
+                    GameEffect.valueOf(o.effectVariant.removePrefix("effect:"))
+                } else error("Unsupported calibration effect: ${o.effectVariant}")
             }
             val values = if (calibratedEffect == null || o.effectAudience == "targeted") PlantExperimentConfig.EMPTY else
                 PlantExperimentConfig.of(o.targetId to PlantExperimentOverride(effect = calibratedEffect))
