@@ -164,7 +164,11 @@ data class ThreeEngagementBattleResult(
  * All chosen actions run through the canonical legal generator and executors;
  * violations of locked-row invariants fail the experiment rather than emit invalid outcomes.
  */
-class ThreeEngagementBattle(private val battleRound: BattleRound) {
+class ThreeEngagementBattle(
+    private val battleRound: BattleRound,
+    private val starterRotation: Int = 0
+) {
+    init { require(starterRotation >= 0) }
     fun execute(
         game: Game,
         battle: BattleState,
@@ -208,7 +212,12 @@ class ThreeEngagementBattle(private val battleRound: BattleRound) {
         }
         val engagements = StrikeRow.entries.map { row ->
             locked.forEach { it.verify(battle) }
-            val order = EngagementOrderSelector.select(battle, game.players.map { it.id }, row)
+            val selected = EngagementOrderSelector.select(battle, game.players.map { it.id }, row)
+            val shifted = starterRotation % selected.clockwiseActors.size
+            val rotated = selected.clockwiseActors.drop(shifted) + selected.clockwiseActors.take(shifted)
+            val order = if (shifted == 0) selected else selected.copy(
+                starter = rotated.first(), clockwiseActors = rotated
+            )
             trace += order.traceLines()
             val records = mutableListOf<EngagementActionRecord>()
             val initialTotals = currentTotals(row)

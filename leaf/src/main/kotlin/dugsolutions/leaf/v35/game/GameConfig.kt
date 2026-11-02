@@ -101,6 +101,9 @@ class GameConfig(
     selectedPlantCards: List<PlantCard> = emptyList(),
     playerDecisionFactories: List<PlayerDecisionFactory>,
     val roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+    val battleStructure: BattleStructure = BattleStructureSettings.load(
+        java.nio.file.Paths.get("data/research/resync/game-rules-current.properties")
+    ),
     /** Mechanical game RNG seed: dice, decks, random game effects, etc. */
     val seed: Long? = null,
     /** Opt-in event-keyed player die rolls for seed-matched counterfactual games. */

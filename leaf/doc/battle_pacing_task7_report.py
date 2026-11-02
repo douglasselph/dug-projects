@@ -1,56 +1,86 @@
 #!/usr/bin/env python3
-"""Task 7 descriptive audit: observational associations, NOT turn-order causal effects.
+"""Task 7 paired balance, observed actual last actor and B starter-rotation counterfactual.
 
-Usage: python3 doc/battle_pacing_task7_report.py EXPERIMENT_DIRECTORY
-Works on Task 6 outputs; newer runs also supply task7_row_actors.csv.
+Input: Task 7 paired experiment directory. Reports per-sample cluster bootstrap intervals.
+An observational last-actor correlation is never labeled causal.
 """
-import csv, sys, math, statistics
-from collections import defaultdict
+import csv, math, statistics, sys, random
 from pathlib import Path
+from collections import defaultdict
 
-def rows(p):
+def read(p):
     with p.open(newline='') as f: return list(csv.DictReader(f))
-
-def mean(v): return statistics.mean(v) if v else float('nan')
-def fmt(x): return 'NA' if math.isnan(x) else f'{x:.3f}'
-def report(folder):
-    p=Path(folder); pairs=rows(p/'pairs.csv'); strikes=rows(p/'strikes.csv')
-    bycohort=defaultdict(list)
-    for r in pairs: bycohort[(int(r['players']),int(r['battle']))].append(r)
-    lines=['# Task 7 — observational balance audit', '',
-        'All paired differences below use the same sampled opening; no intervention randomizes actor order.',
-        'The legacy Task 6 strikes file has B-only last actor: it CANNOT establish excess last-mover advantage.',
-        'B actor correlations are confounded by opportunity order, pre-action row strength and resources.', '']
-    lines += ['## Paired outcome/resource changes','',
-        '| Players / Battle | Pairs | Δ Battle VP/player B−A | Δ Supports remaining/player | Δ win-share B−A |',
-        '|---|---:|---:|---:|---:|']
-    for key,rr in sorted(bycohort.items()):
-        n=len({r['sample'] for r in rr}); d=lambda a,b: mean([float(x[a])-float(x[b]) for x in rr]);
-        wins=mean([(x['candidateWouldWin']=='true')-(x['baselineWouldWin']=='true') for x in rr])
-        lines.append(f'| {key[0]} / {key[1]} | {n} | {fmt(d("candidateBattleVP","baselineBattleVP"))} | {fmt(d("candidateRemainingSupports","baselineRemainingSupports"))} | {fmt(wins)} |')
-    lines += ['', '## B-only last-offered-actor diagnostics (legacy, not actual last consequential actor)', '']
-    for key in sorted(bycohort):
-        rr=[r for r in strikes if (int(r['players']),int(r['battle']))==key]
-        exposed=[r for r in rr if r['lastHadAction']=='true']
-        lines.append(f'- {key[0]} players, Battle {key[1]}: {len(exposed)}/{len(rr)} last offered actor had action; {sum(r["lastSwing"]=="true" for r in exposed)} recorded swings. These are not causal estimates.')
-    actor=p/'task7_row_actors.csv'
-    if actor.exists():
-        rec=rows(actor)
-        lines += ['', '## Task 7 matched row actor telemetry', '',
-            '| Cohort | Rule | Rows | Consequential row-actor found | Actor moved from non-winner to winner | Mean changed windows |',
-            '|---|---|---:|---:|---:|---:|']
-        groups=defaultdict(list)
-        for r in rec: groups[(int(r['players']),int(r['battle']),r['ruleSet'])].append(r)
-        for (n,b,rule),rr in sorted(groups.items()):
-            lines.append(f'| {n}p/B{b} | {rule} | {len(rr)} | {sum(bool(x["lastMeaningfulActor"]) for x in rr)} | {sum(x["swungIntoWinningStatus"]=="true" for x in rr)} | {fmt(mean([int(x["rowChanges"]) for x in rr]))} |')
-        lines += ['', 'Caution: row-total status changes are not the same as a *causal* action effect on strike VP or Wounds.']
-    else: lines += ['', '## Missing equivalent actor telemetry', '',
-        '`task7_row_actors.csv` is absent. Re-run the instrumented Task 7 runner to compare A and B actor associations.']
-    lines += ['', '## Still required before adoption', '',
-        'Controlled actor-order replays on identical legal openings, baseline row-margin/resource conditioning,',
-        'per-row wound/VP attribution and high-to-middle-to-low causal cascade analysis are not established by this file.',
-        'Do not adopt or reject Candidate B on the basis of these associations alone.']
-    output=p/'task7_observational_audit.md';output.write_text('\n'.join(lines)+'\n');print(output); print('\n'.join(lines[:15]))
+def mean(x): return sum(x)/len(x) if x else float('nan')
+def interval(x):
+    if len(x)<2: return (float('nan'),float('nan'))
+    rng=random.Random(7107); n=len(x)
+    y=sorted(mean([x[rng.randrange(n)] for _ in range(n)]) for _ in range(1200))
+    return (y[30],y[1169])
+def fmt(x): return f'{x:.3f}' if math.isfinite(x) else 'NA'
+def summarize(p):
+    pair=read(p/'pairs.csv'); actors=read(p/'task7_row_actors.csv')
+    initial=read(p/'task7_initial_rows.csv') if (p/'task7_initial_rows.csv').exists() else []
+    cf=read(p/'task7_counterfactual.csv') if (p/'task7_counterfactual.csv').exists() else []
+    groups=defaultdict(list)
+    for r in pair: groups[(r['players'],r['battle'])].append(r)
+    out=['# Task 7 — Battle fairness and balance', '',
+         'Paired starting states; confidence intervals resample **whole Battles**, not player rows.',
+         'Observational actor comparisons are confounded; counterfactual rotates Candidate B starter',
+         'by one seat per Engagement while replaying the same legal opening and decision policy.', '',
+         '## Paired outcomes and stranded Supports','',
+         '| Cohort | Battles | B−A VP/player [95% CI] | B−A unused Supports/player [95% CI] |',
+         '|---|---:|---:|---:|']
+    for cohort, rows in sorted(groups.items(), key=lambda x:tuple(map(int,x[0]))):
+        by=defaultdict(list)
+        for r in rows: by[r['sample']].append(r)
+        vp=[mean([float(r['candidateBattleVP'])-float(r['baselineBattleVP']) for r in rr]) for rr in by.values()]
+        unused=[mean([float(r['candidateRemainingSupports'])-float(r['baselineRemainingSupports']) for r in rr]) for rr in by.values()]
+        a,b=interval(vp); c,d=interval(unused)
+        out.append(f'| {cohort[0]}p / B{cohort[1]} | {len(by)} | {fmt(mean(vp))} [{fmt(a)}, {fmt(b)}] | {fmt(mean(unused))} [{fmt(c)}, {fmt(d)}] |')
+    out+=['','## Actual last consequential actor (descriptive only)','',
+        '| Cohort | Rule | Rows | Has consequential actor | Last actor changes nonwin to win |',
+        '|---|---|---:|---:|---:|']
+    ac=defaultdict(list)
+    for r in actors: ac[(r['players'],r['battle'],r['ruleSet'])].append(r)
+    for key,rr in sorted(ac.items(),key=lambda x:(int(x[0][0]),int(x[0][1]),x[0][2])):
+        has=sum(bool(r['lastMeaningfulActor']) for r in rr)
+        flipped=sum(r['swungIntoWinningStatus']=='true' for r in rr)
+        out.append(f'| {key[0]}p/B{key[1]} | {key[2]} | {len(rr)} | {has} | {flipped} |')
+    if initial:
+        inp={(r['players'],r['battle'],r['sample'],r['row'],r['player']):r for r in initial}
+        out+=['','## Last-actor context — opening strength and resources','',
+             '| Rule | Opening row margin (mean) | Opening Supports (mean) | Ready Plants (mean) |',
+             '|---|---:|---:|---:|']
+        for rule in ['A_BASELINE','B_CANDIDATE']:
+            rr=[]
+            for a in actors:
+                if a['ruleSet'] != rule or not a['lastMeaningfulActor']: continue
+                x=inp.get((a['players'],a['battle'],a['sample'],a['row'],a['lastMeaningfulActor']))
+                if x: rr.append(x)
+            out.append(f'| {rule} | {fmt(mean([float(x["openingMargin"]) for x in rr]))} | {fmt(mean([float(x["initialSupports"]) for x in rr]))} | {fmt(mean([float(x["initialReadyPlants"]) for x in rr]))} |')
+        out+=['','These are covariate descriptions, not adjusted last-actor effect estimates.']
+    if cf:
+        out+=['','## Controlled B starter-rotation replay','',
+             '| Cohort | Battles | Rotated−ordinary B VP/player [95% CI] | Δ stranded Supports/player | Δ Wounds/player |',
+             '|---|---:|---:|---:|---:|']
+        bycohort=defaultdict(lambda:defaultdict(list))
+        for x in cf: bycohort[(x['players'],x['battle'])][x['sample']].append(x)
+        for key, by in sorted(bycohort.items(),key=lambda x:tuple(map(int,x[0]))):
+            v=[mean([float(r['deltaBattleVP']) for r in rr]) for rr in by.values()]
+            u=[mean([float(r['rotatedUnusedSupports'])-float(r['referenceUnusedSupports']) for r in rr]) for rr in by.values()]
+            w=[mean([float(r['rotatedWounds'])-float(r['referenceWounds']) for r in rr]) for rr in by.values()]
+            lo,hi=interval(v)
+            out.append(f'| {key[0]}p/B{key[1]} | {len(by)} | {fmt(mean(v))} [{fmt(lo)}, {fmt(hi)}] | {fmt(mean(u))} | {fmt(mean(w))} |')
+        out+=['','A one-seat starter rotation tests whether the **specified** B starter rule is sensitive to order. It does NOT isolate the advantage of being the final actor, and it is not an equivalent A-order intervention.']
+    else: out+=['','No counterfactual file. Rerun with `--task7-counterfactual true`.']
+    out+=['','## Limits and adoption decision','',
+          'No credible adjusted A-versus-B excess last-actor causal estimate is available here.',
+          'The snapshot-based last-actor flag identifies consequential row changes but does not attribute',
+          'VP or Wounds causally to the final actor; indirect earlier-row changes are not fully isolated.',
+          'High-Strike Wound cascades likewise require targeted intervention or state-level trace attribution.',
+          'Do not adopt B unchanged solely from the pacing result until these ambiguities are resolved.']
+    path=p/'task7_fairness_report.md'; path.write_text('\n'.join(out)+'\n')
+    print(path)
 if __name__=='__main__':
-    if len(sys.argv)!=2: raise SystemExit('Usage: battle_pacing_task7_report.py EXPERIMENT_DIRECTORY')
-    report(sys.argv[1])
+    if len(sys.argv)!=2: raise SystemExit('usage: battle_pacing_task7_report.py RESULTS_DIR')
+    summarize(Path(sys.argv[1]))

@@ -36,6 +36,7 @@ private data class BatchOptions(
     val strategySeed: Long = 2026104000L,
     val wispSeed: Long = 2026105000L,
     val timingModel: Path? = null,
+    val task7Counterfactual: Boolean = false,
     val output: Path = Paths.get("output/experiments/battle-pacing/checkpoint3")
 ) {
     companion object {
@@ -46,7 +47,7 @@ private data class BatchOptions(
                 key to value
             }
             require(values.keys.all { it in setOf(
-                "--samples", "--players", "--battles", "--policy", "--scenario", "--max-attempts", "--seed", "--strategy-seed", "--wisp-seed", "--timing-model", "--out"
+                "--samples", "--players", "--battles", "--policy", "--scenario", "--max-attempts", "--seed", "--strategy-seed", "--wisp-seed", "--timing-model", "--task7-counterfactual", "--out"
             ) }) { "Unknown option(s): ${values.keys}" }
             fun csv(key: String, default: List<Int>): List<Int> = values[key]
                 ?.split(",")?.map { it.trim().toInt() } ?: default
@@ -61,6 +62,7 @@ private data class BatchOptions(
                 strategySeed = values["--strategy-seed"]?.toLong() ?: 2026104000L,
                 wispSeed = values["--wisp-seed"]?.toLong() ?: 2026105000L,
                 timingModel = values["--timing-model"]?.let(Paths::get),
+                task7Counterfactual = values["--task7-counterfactual"]?.toBooleanStrict() ?: false,
                 output = Paths.get(values["--out"] ?: "output/experiments/battle-pacing/checkpoint3")
             )
             require(options.samples > 0)
@@ -137,7 +139,8 @@ fun main(args: Array<String>) {
         val replay = PairedBattleOpeningReplay(k.get<GameFactory>(), k.get<RoundCoordinator>(), round)
         val compare = PairedBattleComparison(round)
         val manifest = buildString {
-            appendLine("experiment=battle-pacing-task6-duration-downtime")
+            appendLine("experiment=battle-pacing-task7-fairness; task6 outputs retained")
+            appendLine("task7Counterfactual=${options.task7Counterfactual}; rotation=one seat clockwise from rule B selected starter per Engagement")
             appendLine("status=exploratory; runtime failures ABORT; no significance claim for mismatched tactical policies")
             appendLine("rounds=3/2/2; pre-target Battles canonical A in BOTH arms")
             appendLine("resolveWisp=excluded identically in A and B")
@@ -193,6 +196,10 @@ fun main(args: Array<String>) {
         }
         val pacingWindows = CsvFile(options.output.resolve("pacing_windows.csv"),
             "players,battle,policy,scenario,sample,openingSha,ruleSet,window,actor,stage,row,unresolvedStrikes,legalChoices,meaningfulWindow,actionCount,passes,emptyOpportunity,normalMains,sunlightMains,supports,diceRolled,diceRerolled,dicePlaced,diceMoved,diceValueChanges,cardsActivated,plantFacingTransitions,refreshes,resourcesSpent,resourcesGained,changedRows,leaderChanges,marginChanges,reassessmentUnits,complexityUnits,laterStrikeUnits,actionKinds")
+        val counterRows = CsvFile(options.output.resolve("task7_counterfactual.csv"),
+            "players,battle,policy,scenario,sample,openingSha,rotation,player,referenceBattleVP,rotatedBattleVP,deltaBattleVP,referenceUnusedSupports,rotatedUnusedSupports,referenceWounds,rotatedWounds")
+        val initialRows = CsvFile(options.output.resolve("task7_initial_rows.csv"),
+            "players,battle,policy,scenario,sample,openingSha,row,player,openingTotal,openingMargin,initialSupports,initialReadyPlants,initialVP,gridColumn")
         val actorRows = CsvFile(options.output.resolve("task7_row_actors.csv"),
             "players,battle,policy,scenario,sample,openingSha,ruleSet,row,lastMeaningfulActor,lastWindow,rowChanges,swungIntoWinningStatus,beforeMargin,afterMargin,finalWinners,finalWounds,finalVPPerWinner")
         val pacingBattles = CsvFile(options.output.resolve("pacing_battles.csv"),
@@ -266,6 +273,20 @@ fun main(args: Array<String>) {
                                         opening.maximumSupports, opening.supportGap,
                                         initialVP.joinToString("|"), opening.vpGap)
                                     if (!eligible) continue
+                                    dugsolutions.leaf.v35.battle.domain.StrikeRow.entries.forEach { strike ->
+                                        val rowTotals = paired.controlGame.players.associate { player ->
+                                            player.id to paired.controlBattle.grid.square(player.id, strike).let { square ->
+                                                square.dice.sumOf { it.value } + square.critters.sumOf { player.critterValues.valueOf(it) }
+                                            }
+                                        }
+                                        paired.controlGame.players.forEach { player ->
+                                            initialRows.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                paired.fingerprint.sha256, strike.name, player.id.value, rowTotals.getValue(player.id),
+                                                rowTotals.getValue(player.id) - rowTotals.filterKeys { it != player.id }.values.max(),
+                                                supportInventory(player), player.creature.cards.count { it.isFaceUp }, player.vp,
+                                                paired.controlBattle.grid.playerIdsInGridOrder.indexOf(player.id))
+                                        }
+                                    }
                                     val result = compare.run(paired,
                                         if (options.policy == "mechanical") MechanicalEngagementPolicy
                                         else HumanGuidedEngagementPolicy(paired.candidateGame)
@@ -273,6 +294,31 @@ fun main(args: Array<String>) {
                                     check(result.openingSha256 == paired.fingerprint.sha256)
                                     // Pure scoring projections; for Battle 3 they are actual
                                     // end-game totals, for Battles 1/2 merely snapshots.
+                                    if (options.task7Counterfactual) {
+                                        // Fresh independently replayed legal opening. The only intervention is
+                                        // a one-seat shift of each B Engagement starter; rules and policies are identical.
+                                        val cf = replay.create(config, ordinal, exactWispCards = deck)
+                                        check(cf.fingerprint == paired.fingerprint) { "Counterfactual opening mismatch" }
+                                        val rotated = ThreeEngagementBattle(round, starterRotation = 1).execute(
+                                            cf.candidateGame, cf.candidateBattle,
+                                            if (options.policy == "mechanical") MechanicalEngagementPolicy
+                                            else HumanGuidedEngagementPolicy(cf.candidateGame))
+                                        check(rotated.engagements.size == 3)
+                                        cf.candidateGame.players.forEachIndexed { index, player ->
+                                            val source = paired.candidateGame.players[index]
+                                            val referenceWounds = result.candidate.engagements.sumOf { e ->
+                                                e.resolution.woundedPlayerIds.count { it == source.id }
+                                            }
+                                            val rotatedWounds = rotated.engagements.sumOf { e ->
+                                                e.resolution.woundedPlayerIds.count { it == player.id }
+                                            }
+                                            counterRows.row(players, ordinal, options.policy, options.scenario.cliName, sample,
+                                                paired.fingerprint.sha256, 1, player.id.value,
+                                                source.vp - initialVP[index], player.vp - initialVP[index],
+                                                player.vp - source.vp, supportInventory(source), supportInventory(player),
+                                                referenceWounds, rotatedWounds)
+                                        }
+                                    }
                                     val aFinal = FinalScorer().score(paired.controlGame)
                                     val bFinal = FinalScorer().score(paired.candidateGame)
                                     summary.add(result, initialVP)
@@ -441,6 +487,7 @@ fun main(args: Array<String>) {
                 }
             }
         }
+        counterRows.close(); initialRows.close()
         } // main_plans.csv
         } // selection_summary.csv
         } // opening_selection.csv

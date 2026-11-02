@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.chronicle.domain.PlayerRoundSummarySnapshot
 import dugsolutions.leaf.v35.chronicle.domain.stateSnapshot
 import dugsolutions.leaf.v35.game.Game
+import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.player.Player
 import dugsolutions.leaf.v35.random.die.DieSides
 import dugsolutions.leaf.v35.tokens.Critter
@@ -24,7 +25,8 @@ data class RoundExecution(
 /** Coordinates reveal, type dispatch, and completion for one Round. */
 class RoundCoordinator(
     private val cultivation: RoundExecutor,
-    private val battle: RoundExecutor
+    private val battle: RoundExecutor,
+    private val threeEngagements: RoundExecutor? = null
 ) {
 
     /**
@@ -77,7 +79,17 @@ class RoundCoordinator(
         val effectiveCard = game.config.roundValues.cardFor(reveal.card)
         when (effectiveCard.type) {
             RoundCardType.CULTIVATION -> cultivation.execute(game, effectiveCard)
-            RoundCardType.BATTLE -> battle.execute(game, effectiveCard)
+            RoundCardType.BATTLE -> when (game.config.battleStructure) {
+                BattleStructure.CANONICAL -> battle.execute(game, effectiveCard)
+                BattleStructure.THREE_ENGAGEMENTS -> {
+                    val candidate = threeEngagements ?: java.util.ServiceLoader.load(
+                        BattleStructureProvider::class.java
+                    ).firstOrNull()?.create(battle)
+                    requireNotNull(candidate) {
+                        "THREE_ENGAGEMENTS requires the simulation runtime on the classpath"
+                    }.execute(game, effectiveCard)
+                }
+            }
         }
 
         game.chronicle.record(
