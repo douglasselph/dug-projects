@@ -1,5 +1,8 @@
 # Leaf & Let Die — research and simulation handoff
 
+> **Historical handoff notice (November 2026):** The repository itself is now the active handoff. Start with `../README.md`, `../TASKS.md`, and `LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`. The detailed material below is retained for provenance and may describe older priorities or snapshots.
+
+
 **Purpose:** Portable context for a new ChatGPT conversation. Supply this Markdown file along with the latest `leaf(YYYYMMDD-HHMMSS).tgz` source archive and whatever experiment-result `.tar.gz`/`.tgz` archives the next task requires. **Source archive and canonical CSV files supersede this historical note** if they differ.
 
 ## Game and canonical data

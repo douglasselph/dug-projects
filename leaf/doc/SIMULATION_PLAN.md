@@ -1,5 +1,8 @@
 # Simulation Plan
 
+> **Historical roadmap notice (November 2026):** This document preserves an earlier Milestone-3/Six-Wisp-era plan. Current priorities are in `../TASKS.md`; current governing research principles are in `LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`. Use this file for historical context unless a current task explicitly references it.
+
+
 ## 1. Purpose
 
 The Leaf & Let Die simulator is a **game-design experiment harness**.

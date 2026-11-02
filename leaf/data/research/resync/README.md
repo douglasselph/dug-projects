@@ -1,27 +1,63 @@
-# Provisional Resync Baseline
+# Current research resync inputs
 
-`resync-current.csv` is the explicit working Plant-market baseline for ongoing
-resynchronization experiments. It is **not** loaded automatically by the core
-simulator. Research scripts that opt into the resync baseline merge this file
-with their experiment-specific Plant overrides and pass the resulting effective
-CSV explicitly through `--plant-overrides`.
+This directory contains **opt-in research configuration**, separated by concern.
 
-Current provisional interventions:
+## Plant overrides
 
-- `Vine_07_01` represents the working **Berry Tasty** package for research:
-  cost 14, Fixed 3 VP, `RAISE_D8_PLUS_1`.
-- `Vine_07_04` remains unavailable until a provisional replacement for
-  canonical Vine Yield is established.
+`resync-current.csv` is the current Plant override layer.
 
-Important limitation: `Vine_07_01` still retains its canonical simulator card
-identity/type/Grove slot. The current Plant override system changes cost,
-availability, scoring, and effect, but not Plant type. Therefore the current
-Berry Tasty baseline is an economic/effect proxy for the proposed Flower, not a
-full simulation of Flower grafting/type/slot behavior.
+In the November 2, 2026 source snapshot it is intentionally **header-only** after the October official-card migration:
 
-For a preserved research checkpoint, copy `resync-current.csv` to a numbered
-snapshot such as `resync-v01.csv` before changing the current baseline.
+```text
+card_id,type,cost,available,scoring,effect
+```
 
-Core commands such as `bin/train_buy_policy` and `bin/evaluate_buy_policy` do
-not discover this file implicitly. Pass an override explicitly for ad-hoc runs,
-or use the resync-aware experiment scripts.
+That means the canonical official Plant CSVs currently supply the effective card definitions unless an experiment explicitly passes another Plant override.
+
+Historical resync snapshots remain in this directory for provenance. Do not assume an old intervention is still active merely because a historical CSV exists.
+
+## Round overrides
+
+`round-resync-current.csv` is the current Round-card override layer.
+
+It is likewise currently **header-only**:
+
+```text
+round_card,effect_slot,effect
+```
+
+Experiments that need a Round variation should pass the intended override explicitly and record its fingerprint.
+
+## Game-level rules
+
+Game-level experimental rules do **not** belong in the Plant or Round CSVs.
+
+Current Battle-structure selection lives in:
+
+```text
+game-rules-current.properties
+```
+
+with:
+
+```properties
+battle.structure=CANONICAL
+# or THREE_ENGAGEMENTS
+```
+
+See `doc/BATTLE_STRUCTURE_CONFIGURATION.md` and `doc/BATTLE_PACING_RESEARCH_STATUS.md`.
+
+## Loading discipline
+
+The Plant/Round resync CSVs are research inputs, not a second canonical card database. Core commands do not silently merge arbitrary historical overrides.
+
+Before serious research, record:
+
+- source revision / clean-dirty state;
+- canonical card fingerprints;
+- effective Plant and Round override fingerprints;
+- `game-rules-current.properties` contents when relevant;
+- selected Grove;
+- policy/weight provenance and seeds.
+
+Canonical mechanics/data remain unchanged unless an experiment explicitly opts into a research variation.

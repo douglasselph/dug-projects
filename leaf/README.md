@@ -1,236 +1,266 @@
-# Leaf & Let Die --- Simulation and Balance Research
+# Leaf & Let Die - Simulation Research Repository
 
-This repository contains the Kotlin rules engine and research tooling
-used to simulate **Leaf & Let Die** for design analysis. Its purpose is
-not to build a playable UI or to prove that the game has no exploits.
-Its purpose is to run controlled, reproducible experiments that can
-expose balance problems such as dominant strategies, forced purchases,
-trap cards, runaway advantages, order bias, excessive luck, and simple
-policies that outperform richer play.
+This repository contains the **analysis-only Kotlin rules engine and research tooling** for the board game **Leaf & Let Die**. It is not a player-facing implementation. Its purpose is to make concrete game-design questions **testable, reproducible, and interpretable**.
 
-The central design question is:
+## Start here - especially for a new ChatGPT/coding conversation
 
-> **Do better decisions matter enough to overcome ordinary game
-> randomness?**
+Before proposing code changes or experiments:
 
-The project separates three different questions:
+1. Read this `README.md`.
+2. Read [`TASKS.md`](TASKS.md) for the **current active backlog and deferred work**.
+3. Read [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) for the governing research philosophy and evidence standards.
+4. Read [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md) before changing launchers, runners, training/evaluation scripts, checkpointing, or long-running experiments.
+5. Read [`doc/SIMULATION_OPERATIONAL_READINESS.md`](doc/SIMULATION_OPERATIONAL_READINESS.md) before making claims about the current simulator's operational readiness.
+6. For Battle pacing / Candidate B work, read [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md) and [`doc/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/BATTLE_STRUCTURE_CONFIGURATION.md).
+7. Inspect the **current source and data files themselves** before claiming a mechanic, policy, effect, task, or experiment is implemented or current.
 
--   **Unit testing** asks whether an individual rule, helper, or
-    decision policy behaves as intended.
--   **Integration testing** asks whether the real rules engine behaves
-    correctly in a deliberately constructed scenario.
--   **Simulation research** asks what happens statistically when
-    complete games are repeated under different strategies, seeds,
-    cards, seats, and experimental conditions.
+Do **not** treat every older task/checkpoint document under `doc/` as an active task. Many are retained implementation or research records. [`doc/README.md`](doc/README.md) distinguishes current governing documents from historical detail.
 
-The current simulation architecture separates **mechanical randomness**
-(dice, decks, random game effects) from **strategy tie-breaking
-randomness**, making controlled A/B experiments and deterministic replay
-possible.
+---
 
-## Research Mission --- use the simulator to challenge the game
+## What this code is for
 
-The simulator now has a certified Human Baseline control strategy. The
-next major milestone is **not smarter AI for its own sake**. It is to
-use complete-game experiments to challenge Leaf & Let Die's design and
-look for conditions, cards, or simple strategies that make the game
-collapse into something less interesting.
+The simulator is a scientific instrument for answering design questions such as:
 
-The immediate questions are practical design questions:
+- Is a Plant effect meaningfully useful, effectively dead, or dangerously dominant?
+- Is a card reasonably priced at its actual cost, printed VP, grafting constraints, activation opportunity cost, and alternatives?
+- Do Wisps or Round effects create excessive random advantage or crowd out strategic choices?
+- Are multiple genuinely different development paths viable?
+- Can expert play collapse into a simple generally applicable recipe such as "always take X" or "ignore Y"?
+- Does better decision-making materially improve outcomes despite substantial dice luck?
+- Do rules such as Battle sequencing create order bias, runaway effects, or excessive passive downtime?
+- Can a rule, option, or subsystem be simplified or removed without sacrificing meaningful strategy?
 
--   Can an extreme but legal early luck event create a persistent,
-    disproportionate advantage?
--   Can a very simple development plan outperform richer play often
-    enough that it becomes dominant?
--   Can a particular card, resource, or combo become effectively
-    mandatory?
--   Do any rules need hard limits because an uncapped resource can
-    snowball?
--   Are multiple development paths viable, or does one low-complexity
-    strategy win too often?
+The desired output is **not** merely a stronger AI, a trained weights file, or a win rate against Human Baseline. The desired output is a **defensible, actionable answer to a specific game-design question**, with evidence, uncertainty, limitations, and a sensible next experiment.
 
-Before interpreting an intervention, Milestone 3 first **calibrates the ordinary
-four-player Human Baseline** for the exact selected nine-card Grove. A small
-fixed-seed sanity cohort checks reproducibility and outcome/development
-variation; a larger manual calibration reports cumulative seat win share at
-increasing sample sizes so we can discover how many games are needed before the
-four symmetric seats settle acceptably near the 25% reference. The calibration
-is parameterized by both game count/checkpoints and selected Plant-card setup.
+## Governing design goal: strategic irreducibility
 
-The first concrete intervention experiment is the **Six-Wisp Opening Stress
-Test**. In a four-player Human Baseline game, one designated player has the
-three dice from the opening Draw 3 forced to **2** in each of the first two
-Cultivation rounds. This creates six early Wisp-producing rolls through the
-normal Roll Reward path. The intervention will be compared with matched
-ordinary Human Baseline controls using the calibrated Grove, seed schedule, and
-sample-size evidence rather than assuming in advance that 2,000 is a magic
-number.
+A strong strategy is not automatically a design problem. A learned policy beating Human Baseline is expected.
 
-The experiment architecture must keep one game's detailed typed
-Chronicle only long enough to produce a compact per-game **summary
-record**. High-volume runs retain those summaries, not thousands of full
-Chronicles. Experiment-specific reports are then generated from the
-summary records. Full Chronicles are reserved for selected diagnostic
-reruns.
+The serious failure is **strategic collapse**: after strong play and counterplay develop, winning can still be summarized by a short, low-context prescription that remains superior across ordinary game states and adaptive opponents.
 
-Start with [Simulation Plan](doc/SIMULATION_PLAN.md) for the research
-questions and Milestone-3 roadmap, then [Experiment
-Cookbook](doc/EXPERIMENT_COOKBOOK.md) for experiment patterns.
+Healthy expert play should continue to branch. Different strong approaches may emphasize Plants, dice, Mulch, Water, Sunlight, Compost, particular synergies, or Battle tactics, provided their success depends on context, timing, combinations, opportunity cost, and opponent response.
 
-## Documentation
+Healthy design does **not** require equal purchase rates or equal action frequencies. A niche card or action can be healthy. A frequently used option can also be healthy if its correct use is genuinely contextual and counterable.
 
--   [Documentation Map](doc/README.md) --- index of cross-project and
-    source-local documentation.
--   [Human Baseline Specification](doc/HUMAN_BASELINE.md) ---
-    Milestone-2 certification map for the eight major decision areas and
-    30 strategy hooks.
--   [Using the Simulator](doc/USING_THE_SIMULATOR.md) --- how to choose
-    between unit, integration, and simulation work; how to run existing
-    experiments; how to add new scenarios and experiments.
--   [Testing and Verification](doc/TESTING_AND_VERIFICATION.md) ---
-    Gradle commands, test source sets, sanity checks, deterministic
-    integration tests, and how to browse the existing suites.
--   [Code Architecture](doc/CODE_ARCHITECTURE.md) --- a deeper
-    programming-oriented tour of the repository, important packages,
-    decision architecture, randomness, Chronicle, and source-set
-    boundaries.
--   [Chronicle and Output](doc/CHRONICLE_AND_OUTPUT.md) --- how to run
-    one complete Mechanical Control game, read what happened, and how
-    generated run artifacts are organized under `output/`.
--   [Simulation Plan](doc/SIMULATION_PLAN.md) --- the long-term research
-    plan: exploit testing, luck resistance, strategy diversity, card
-    studies, Wounds, Battle order, comeback behavior, and staged
-    development.
--   [Experiment Cookbook](doc/EXPERIMENT_COOKBOOK.md) --- practical
-    templates for adding controlled experiments, including the proposed
-    **early-Wisp windfall** stress test.
--   [`bin/` Command Reference](doc/BIN_COMMANDS.md) --- designer-facing
-    wrappers for replay, diagnostics, experiments, and Buy-policy training.
--   [Learned Buy Policy](doc/LEARNED_BUY_POLICY.md) --- current learned-Buy
-    architecture, card identity/cost/stage features, manifest provenance,
-    CSV-change workflow, training, compatibility checks, and future usage.
--   [Plant Experiment Overrides](doc/PLANT_EXPERIMENT_OVERRIDES.md) ---
-    how to create and use `--plant-overrides` CSV files for research-only
-    Plant cost, availability, and typed end-game scoring experiments.
+See [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md).
 
-## Quick Start
+---
 
-Run the normal v35 unit tests:
+## Card balance: keep effect utility and purchase utility separate
 
-``` bash
+Every Plant-card investigation should distinguish at least these two questions:
+
+**Effect utility** - Does resolving the effect meaningfully improve competitive outcomes compared with an otherwise equivalent suppressed/alternative effect?
+
+**Purchase utility / pricing** - Is acquiring the card at its actual cost strategically worthwhile compared with the legal alternatives, after considering printed VP, grafting, timing, payment/overpayment, activation opportunity cost, and what the player gives up instead?
+
+A card can therefore have:
+
+- a useful effect but be overpriced;
+- a weak effect but still be purchasable for printed VP or positional reasons;
+- a strong effect that is sufficiently costly/contextual to remain healthy;
+- a good price and a dominant effect, which is a different problem.
+
+Purchase frequency is evidence, not a verdict. A card is not automatically weak because one limited policy rarely buys it, and not automatically dominant because one learner buys it often.
+
+The current high-priority research direction is an **all-card sanity and pricing audit** that can reliably find both dead/underpowered effects and dominant effects while separately identifying suspicious card pricing. See [`TASKS.md`](TASKS.md).
+
+---
+
+## Evidence discipline
+
+The project separates three different kinds of work:
+
+- **Unit tests**: does an individual rule/helper/scorer behave as intended?
+- **Integration tests**: does the real engine produce the correct result in a fully specified legal situation?
+- **Simulation research**: what tendencies emerge over repeated complete games or paired states under controlled strategies, seeds, seats, cards, and experimental conditions?
+
+Important rules for interpreting evidence:
+
+- Human Baseline is a **control, diagnostic, and opponent**, not the objective function defining good play.
+- Mechanical Control is deliberately naive and exists for deterministic correctness/smoke work.
+- Learned-policy behavior is not automatically strategic truth; verify held-out success, policy expressiveness, actual effect use, and counterplay.
+- An effect that was not adequately exercised cannot receive a reassuring balance verdict.
+- Missing search coverage, missing countersearch, weak policy capability, or wide uncertainty means **Investigate**, not "balanced".
+- Distinguish observed correlation, policy preference, causal intervention, and human-time estimates.
+- For matched experiments, preserve seeds/seats and report the real independence unit; repeated decisions inside one game are not independent trials.
+- Do not silently combine historical results across changed card definitions, data fingerprints, rules, or policy weights.
+
+---
+
+## Current state - November 2, 2026
+
+### Operational simulator
+
+The October 30 operational readiness gate passed in the supplied project history: Kotlin regressions, Mechanical Control and Human Baseline complete-game smoke tests, A03 protected-boundary verification, and a small experimental-control probe. That establishes **operational usability**, not a 36-card balance certificate or perfect Human Baseline calibration.
+
+Human Baseline Battle behavior is usable for exploratory research. Detailed C04 human-preference fitting remains intentionally deferred unless a concrete experiment exposes a pathological choice or a research blocker.
+
+The source contains the C01-C05 calibration increments. C04 remains diagnostic/partial, and C05 explicitly states that broad phase-wide preference unification is not complete. Do not restart the entire calibration backlog merely because those historical phases exist.
+
+### Card-effect research infrastructure
+
+The source contains R0/R1/R2/R3-era research infrastructure, including targeted/unrestricted searches, effect overrides, R3B/R3B.1 controls, one-sided effect isolation, effect-output telemetry, deterministic/provenance safeguards, and existing Buy/development reporting. The latest governing research document treats the initial Sapping-oriented R0-R3 path as completed enough to move toward reusable questions rather than continuing to build one bespoke study at a time.
+
+R3B.1a added effect-aware Human Baseline handling for the simple research controls (no-op, +20 VP, Raise +20 and Draw 4), closing an important calibration defect. The remaining limitation is broader: **mechanical execution and local effect-aware scoring are still not the same as discovering the strongest strategy built around an arbitrary effect**. An evaluation must establish that the tested policies can recognize and exploit the relevant effect/combination well enough before making strong underpowered/dominant claims.
+
+### Battle pacing experiment
+
+The row-by-row **Three Engagements** Battle system remains a research candidate, not an adopted game rule. Current source supports both:
+
+- `CANONICAL`
+- `THREE_ENGAGEMENTS`
+
+for newly constructed simulation games through:
+
+```text
+data/research/resync/game-rules-current.properties
+```
+
+The default is `CANONICAL`. The explicit Battle pacing A/B runner intentionally selects A and B directly and does not depend on that file.
+
+The Battle pacing implementation progressed well beyond the original experiment brief: scheduling/execution, paired statistics, Human-guided policy parity work, rules-fidelity repairs, tactical cohorts, and modeled pacing/downtime instrumentation exist. Task 6 has documented executed acceptance. The Task 7 fairness/counterfactual extension exists but its own status document says it is **not yet a validated acceptance package**. See [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md).
+
+---
+
+## Rules and data sources of truth
+
+Before a serious experiment, record and verify the exact sources actually loaded.
+
+### Canonical card data
+
+The official data files are the primary simulator sources for current card definitions:
+
+```text
+data/Cultivation_Cards - Root.csv
+data/Cultivation_Cards - VF.csv
+data/Wisp_Cards.csv
+data/Turn_Cards.csv
+```
+
+Card **names** are preferred human-facing identifiers. IDs are trace keys and can change as catalogs are reorganized. Preserve fingerprints/checksums when comparing historical results.
+
+### Research resync files
+
+`data/research/resync/resync-current.csv` and `round-resync-current.csv` are opt-in research overlays. In the current source snapshot they are header-only after the October official-data migration. Do not assume old resync interventions are still active.
+
+Game-level experimental rules belong separately in `data/research/resync/game-rules-current.properties`; do not put Battle-structure selection into Plant-card override CSVs.
+
+### Round structure
+
+The intended current research/game structure is **3/2/2**:
+
+```text
+3 Cultivation -> Battle -> 2 Cultivation -> Battle -> 2 Cultivation -> Battle
+```
+
+### Rulebook
+
+For rules questions where code/data and old notes disagree, [`doc/Leaf_and_Let_Die_v37-03.pdf`](doc/Leaf_and_Let_Die_v37-03.pdf) is the authoritative tabletop rules reference unless a newer approved rule source is explicitly supplied. The repository's older `doc/Leaf_and_Let_Die_v36-01.pdf` is historical and must not silently override v37-03.
+
+---
+
+## Architecture and policy roles
+
+Important source sets:
+
+```text
+src/main/          production rules engine
+src/test/          unit tests
+src/integration/   deterministic real-engine scenario tests
+src/simulation/    research, training, evaluation, experiments
+src/simulationTest/ simulation-layer tests
+```
+
+Current strategic roles include:
+
+- **Mechanical Control** - deterministic/legal/naive correctness control.
+- **Human Baseline** - hand-authored approximation of reasonable experienced play; control, not strategic truth.
+- **Learned/frozen policy families** - modular decision-family policies used for stronger or isolated experiments.
+- **Targeted/research policies** - experiment-specific exploration and countersearch where needed.
+
+Keep mechanical randomness separate from strategy randomness. Preserve deterministic seeds and provenance.
+
+For deeper architecture, see [`doc/CODE_ARCHITECTURE.md`](doc/CODE_ARCHITECTURE.md) and [`doc/USING_THE_SIMULATOR.md`](doc/USING_THE_SIMULATOR.md).
+
+---
+
+## Operational and developer workflow requirements
+
+The user is an experienced programmer working on Ubuntu. Prefer small, reviewable, reproducible changes.
+
+When changing source or research tooling:
+
+- inspect the **current source first**;
+- preserve canonical mechanics unless a rule change is explicitly requested;
+- respect A03 protected boundaries and existing research/provenance contracts;
+- prefer focused legal-state tests and the smallest credible experiment;
+- keep strategy RNG separate from mechanical RNG;
+- do not silently replace frozen policies, canonical data, or approved effects;
+- say exactly which tests/commands actually ran and which did not;
+- never claim a test passed merely because code compiled or a script parsed.
+
+When delivering changes, prefer a **changes-only ZIP rooted at the repository root**. ZIP entries should begin with paths such as `src/`, `bin/`, `data/`, `doc/`, `README.md`, or `TASKS.md` - not an extra enclosing `leaf/` directory. Exclude `build/`, `.gradle/`, `output/`, caches, and temporary files. Provide a suggested Git commit message.
+
+Installation commands should assume the ZIP is in `~/Downloads`, for example:
+
+```bash
+unzip -o ~/Downloads/<changed-files.zip>
+```
+
+For long-running research runs, preserve the compile-once/direct-Java and persistent-JVM architecture where appropriate, while retaining process isolation where policy/condition state requires it. Runs should be resumable, visibly report current stage plus whole-batch progress, elapsed time, ETA and projected finish time, use `|& tee`, and produce **one verified upload-ready archive copied to `~/Downloads`** with an obvious `UPLOAD THIS FILE:` path.
+
+See [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md).
+
+---
+
+## Quick verification
+
+Operational gate:
+
+```bash
+bash doc/SIMULATION_OPERATIONAL_READINESS.sh
+cat output/readiness/latest/summary.txt
+```
+
+Optional small experimental-control probe:
+
+```bash
+bash doc/SIMULATION_OPERATIONAL_READINESS.sh --extremes
+```
+
+Standard source-set regression commands:
+
+```bash
 ./gradlew test
-```
-
-Run deterministic real-engine integration tests:
-
-``` bash
 ./gradlew integrationTest
+./gradlew simulationTest
 ```
 
-To **watch one complete game happen**, run the Mechanical Control smoke
-game:
+A convenient combined regression is:
 
-``` bash
-./gradlew runMechanicalGameSmoke
+```bash
+./gradlew test integrationTest simulationTest
 ```
 
-This runs four deliberately naive Mechanical Control players through a
-complete game and writes a readable Chronicle plus a short score summary
-under:
+Do not treat an operational PASS as proof of balance, statistical power, policy optimality, or human pacing.
 
-``` text
-output/smoke/mechanical-control/seed-13579/
-  summary.txt
-  chronicle.txt
-```
+---
 
-Use another reproducible seed with, for example:
+## Documentation map
 
-``` bash
-./gradlew runMechanicalGameSmoke -PsmokeSeed=24680
-```
+For current work, use these as the front door:
 
-This is the quickest visual sanity check that the complete rules engine
-ran to completion and that the players actually took actions. It is
-**not** a balance test and the Mechanical Control choices are
-intentionally unsophisticated. See [Chronicle and
-Output](doc/CHRONICLE_AND_OUTPUT.md).
+- [`TASKS.md`](TASKS.md) - active and deferred backlog.
+- [`doc/README.md`](doc/README.md) - documentation map and current-vs-historical guidance.
+- [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) - research mission, evidence standards, card assessment method, strategy-diversity goals.
+- [`doc/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/SIMULATION_LAUNCH_ARCHITECTURE.md) - execution architecture and operational constraints.
+- [`doc/SIMULATION_OPERATIONAL_READINESS.md`](doc/SIMULATION_OPERATIONAL_READINESS.md) - stop-and-use-it gate.
+- [`doc/BATTLE_PACING_RESEARCH_STATUS.md`](doc/BATTLE_PACING_RESEARCH_STATUS.md) - current Battle pacing experiment state.
+- [`doc/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/BATTLE_STRUCTURE_CONFIGURATION.md) - current simulation Battle-selection configuration.
+- [`doc/CODE_ARCHITECTURE.md`](doc/CODE_ARCHITECTURE.md) - programming architecture.
+- [`doc/USING_THE_SIMULATOR.md`](doc/USING_THE_SIMULATOR.md) - practical simulator workflow.
+- [`doc/TESTING_AND_VERIFICATION.md`](doc/TESTING_AND_VERIFICATION.md) - verification boundaries and commands.
 
-Compile and test the simulation/research layer:
-
-``` bash
-./gradlew simulationCheck
-```
-
-For a full local verification pass of the three current layers:
-
-``` bash
-./gradlew test integrationTest simulationCheck
-```
-
-Milestone 2 established Human Baseline as the control strategy for
-research; the full regression gate is green and the remaining work is
-formal closeout/status bookkeeping. Milestone 3 begins the actual
-design-research program. Start with [Simulation
-Plan](doc/SIMULATION_PLAN.md), especially the Six-Wisp Opening Stress
-Test and the summary/reporting architecture. For implementation
-workflow, use [Experiment Cookbook](doc/EXPERIMENT_COOKBOOK.md). If you
-instead need to understand how the engine is wired together, start with
-[Code Architecture](doc/CODE_ARCHITECTURE.md).
-
-## Current Research Model
-
-The decision system currently distinguishes these roles:
-
-  -----------------------------------------------------------------------
-  Role                                Purpose
-  ----------------------------------- -----------------------------------
-  **Mechanical Control (Level 0)**    Deterministic, legal, deliberately
-                                      naive engine/test control.
-
-  **Human Baseline (Level 1)**        Canonical simulation control group
-                                      intended to approximate simple,
-                                      reasonable experienced-human play.
-
-  **Planned Baseline**                Human Baseline plus a specific
-                                      Plant-acquisition plan; useful for
-                                      focused strategy/card experiments.
-
-  **Tactical (Level 2)**              Short-horizon improved play;
-                                      architecture exists for continued
-                                      development.
-
-  **Strategic (Level 3)**             Broader planning/opponent-aware
-                                      play; architecture exists for
-                                      continued development.
-
-  **Learned/Adaptive (Level 4)**      Buy-only learning is implemented:
-                                      linear named features, persisted weights,
-                                      evolutionary training, provenance, and
-                                      Plant-catalog compatibility checks.
-  -----------------------------------------------------------------------
-
-A key principle is to keep **engine correctness** and **game-design
-conclusions** separate. Integration tests should be exact and
-deterministic. Simulation experiments should run many complete games,
-rotate or control confounding factors, and report aggregates rather than
-treating one game as evidence.
-
-
-## Learned Buy research
-
-Milestone 3 now includes a deliberately narrow learned strategy: only Buy
-selection is evolved while every other decision remains Human Baseline. The
-linear model uses inspectable general action/type features, exact Plant costs,
-Cultivation-stage interactions, and stable per-card identity features. Training
-output records the round/Grove/seed/evolution provenance and a generated
-fingerprint snapshot of the Plant catalog.
-
-The Plant CSV files loaded through `common/CardDataFiles` remain authoritative.
-The manifest is generated from the canonical parsed cards; it is not a second
-card database. After changing a Plant CSV, run the regression suite before
-research. Tests detect card-feature schema drift, and trained policies reject
-strategically incompatible card manifests instead of silently reusing stale
-card-specific knowledge. See [Learned Buy Policy](doc/LEARNED_BUY_POLICY.md)
-for the exact workflow and [the `bin/` command reference](doc/BIN_COMMANDS.md)
-for the training and experiment commands.
+The repository is the handoff. A fresh conversation should not require a separate stand-alone Codex/status prompt if it has the current source tree and reads the files above.

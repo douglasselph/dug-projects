@@ -1,202 +1,289 @@
-# Leaf & Let Die — Research Goals and Experiment Design
+# Leaf & Let Die - Research Goals and Experiment Design
 
-**Status:** Proposed governing specification, 24 October 2026  
-**Priority:** Build a reliable answer to **“Is this card effect okay?”** before investing in generalized AI strength.  
-**Audience:** The game designer, future coding collaborators, and new ChatGPT conversations.  
-**Scope:** Simulation-based design research for *Leaf & Let Die*; **not** a specification to change any current game rule.
+**Status:** Governing research specification, consolidated November 2, 2026  
+**Audience:** Game designer, coding collaborators, and new ChatGPT conversations  
+**Scope:** Simulation-based design research for *Leaf & Let Die*. This document does **not** itself adopt or change any game rule.
 
-> **Mission:** Discover whether particular Plant, Wisp, and Round effects are too weak, too powerful, or appropriately useful—and whether the game supports multiple meaningful ways to win. The simulator is a scientific instrument for testing design questions, **not** principally a machine for beating the Human Baseline.
+> **Mission:** Use the simulator as a scientific instrument to discover whether important game elements are meaningfully useful, excessively powerful, badly priced, overly random, or strategically simplifying - and whether the game continues to support multiple credible ways to win under strong play and counterplay.
 
-## 1. What the designer needs to know
+The primary output is not a trained weights file or a win rate against Human Baseline. It is a **defensible, actionable assessment of a concrete design question**, with traceable evidence, limitations, uncertainty, and the next sensible experiment.
 
-The primary output is not a trained weights file or a win rate against the Human Baseline. It is a **defensible, actionable assessment of a concrete design question**, with traceable evidence, limits, and a sensible next experiment.
+Current active work and deferred items are tracked in [`../TASKS.md`](../TASKS.md). Historical phase/checkpoint documents do not override that task list.
 
-The game deliberately contains considerable dice luck. It should nevertheless reward skill. Players should have real choices about the *shape* of their Plant Creature and dice collection: a card-oriented build, a dice-oriented build, an effect synergy, or a hybrid should have circumstances in which it is worth pursuing. **Not every strategy needs to win**, and no individual card must be attractive in every Grove. But the game should not systematically collapse into “always buy D20s,” “ignore Plants,” or “everyone must buy this one card.”
+---
 
-The Human Baseline embodies the designer's evolving interpretation of competent play. It is useful as a benchmark, diagnostic, and participant in the opponent pool. It is **not the objective function** defining good strategies. A policy that beats it may have exploited a weakness in the reference rather than found the strongest or most general way to play.
+## 1. Overall design success condition
 
-### Research goals, in priority order
+*Leaf & Let Die* deliberately contains substantial dice luck. It should nevertheless reward good decisions and preserve meaningful strategic branching.
+
+Players should have real reasons to pursue different combinations of:
+
+- Plant cards and Plant shape;
+- dice development;
+- card synergies;
+- resources such as Mulch, Water, Sunlight, Bees and Worms;
+- Wisp timing;
+- Battle tactics;
+- hybrid development paths.
+
+Not every card must be purchased equally. Not every strategy must win equally often. Niche and context-sensitive options are healthy when they have legitimate situations where strong play values them.
+
+### Strategic irreducibility
+
+The overarching failure to avoid is **strategic collapse**: after experienced/learned play and counterplay are allowed to develop, success can still be compressed into a short generally applicable prescription such as:
+
+- always take one resource whenever legal;
+- always pursue one Plant shape;
+- always buy one narrow family;
+- ignore a major game subsystem;
+- always use one helper in one way;
+- or follow some other low-context recipe that remains superior after opponents adapt.
+
+A **strong strategy is not the same as a simplified exploit**. Strong strategies are desirable when their success depends on conditions, sacrifices, opponent response, combinations, and timing.
+
+Evidence of healthy depth includes independent strong strategies making meaningfully different choices, counters emerging against strong approaches, and expert play becoming more conditional rather than collapsing toward one universal rule.
+
+### Simplification is also a goal
+
+Complexity is not valuable merely because the simulator can model it. If an option, rule, or subsystem contributes little strategic or experiential value, investigate whether it can be removed or merged without damaging meaningful choice.
+
+---
+
+## 2. Research goals, in priority order
 
 | ID | Research objective | Core question | Main output |
 |---|---|---|---|
-| **A — Card-effect adequacy** | Test a particular Plant effect or proposed change | **Is this card effect okay?** Is it worth acquiring and using in some competitive strategy? Is it too broadly advantageous? | Per-effect evidence and one of three assessment states |
-| **B — Random-effect balance** | Test Wisps and Round Cards | Do accidental rewards or shared Round effects overwhelm strategic decisions or unfairly favor an approach? | Controlled effect-impact and luck-sensitivity analyses |
-| **C — Strategic diversity** | Explore one specified nine-card Grove | Are there several genuinely distinct, competitive Plant/dice development paths? | Strategy profiles, tournament matchups, diversity assessment |
-| **D — Degenerate / dominant approaches** | Deliberately seek exploits | Can a dice-only, Plants-only, Bee-hoarding, repeated-cheap-Root, or other extreme approach beat competent alternatives reliably? | Strongest constrained strategies and available counters |
-| **E — Skill versus luck** | Quantify payoff to good decisions | Does superior strategic and tactical play materially improve win probability across chance and opponents? | Strength gaps, matched win rates, uncertainty, seat/seed sensitivity |
+| **A - Card effect and pricing sanity** | Test a Plant's effect and its actual acquisition economics | Is the effect useful without being dominant? Is the card reasonably priced relative to alternatives? | Per-card effect assessment + purchase/pricing assessment |
+| **B - Random/shared effect balance** | Test Wisps and Round Cards | Do accidental rewards or shared effects overwhelm strategic decisions or unfairly favor an approach? | Controlled effect-impact and luck-sensitivity analyses |
+| **C - Strategic diversity** | Explore specified nine-card Groves | Are there several genuinely distinct competitive Plant/dice development paths? | Strategy profiles, matchup matrices, diversity assessment |
+| **D - Degenerate/dominant approaches** | Deliberately seek exploits | Can dice-only, Plants-only, Bee/Mulch/cheap-Root or other extreme approaches remain broadly superior after counterplay? | Strongest constrained strategies and counters |
+| **E - Skill versus luck** | Quantify payoff to good decisions | Does superior strategic/tactical play materially improve outcomes across chance and opponents? | Strength gaps, matched win rates, uncertainty, seat/seed sensitivity |
+| **F - Rules/pacing quality** | Test structural rules such as Battle sequencing | Does a rule reduce downtime or complexity without creating order bias, snowballing or strategy damage? | Paired rule comparisons + human-calibrated pacing evidence |
 
-These objectives share a simulator, policy interfaces, and reporting infrastructure, but **they do not all need the same training loop**. Answer the posed question with the smallest credible experiment.
+These objectives share one engine and reusable research machinery. They do **not** all require the same learner or experiment design. Answer the question with the **smallest credible experiment**.
 
-## 2. What “Is this card effect okay?” means
+---
 
-For every Plant effect, separate at least four questions:
+## 3. The central card-balance distinction: effect utility vs purchase utility
 
-1. **Opportunity:** Did the card appear in a usable market and could a player reasonably acquire, graft, and activate it in time? This is a screening condition, not proof of value.
-2. **Discoverability:** Can a deliberate search find a coherent strategy that makes meaningful use of the card? Merely giving the card a positive score is not enough; track actual acquisition and use.
-3. **Competitive value:** Does that strategy hold up against a **varied opponent pool** and against opponents deliberately trained to counter it? How much is lost when the card's effect changes or a different same-tier option is available?
-4. **Dominance:** Do unrestricted competitive strategies converge on the card in many contexts? Does using or possessing it create an advantage that other good strategies cannot reasonably contest?
+Every Plant investigation must distinguish the card's **effect** from the card's **purchase economics**.
 
-A situational card can be well balanced while rarely purchased. A universally purchased card can be appropriately desirable in some markets. **Purchase frequency is a clue, not a verdict.** In particular, zero purchases by a limited-policy learner means that *learner avoided it*, not that no winning strategy with the card exists.
+### Effect utility
 
-The evaluation should also recognize the card's **printed VP, acquisition cost, graft prerequisites, timing, activation opportunity cost, and interaction with other cards**. The card effect should not be judged as though acquisition and activation were free.
+Does using/resolving the effect improve competitive outcomes compared with an otherwise equivalent suppressed or alternative effect?
 
-### Required answer format: a Card Effect Assessment
+A useful method is an effect-suppression comparison that leaves the card's cost, printed VP, grafting and identity unchanged. This helps isolate the special ability from the rest of the card.
 
-Every completed card question should produce a concise report with:
+### Purchase utility / pricing
 
-1. **Question and alternatives.** Card title, current ID, printed cost/VP, exact current wording, exact candidate wording, and fingerprints of each definition.
-2. **Scope.** All nine Grove titles and quantities; 2/3/4 players; Round/Wisp configurations; game revision; number of independent seeds and learners.
-3. **Search coverage.** What kinds of strategies were sought, how many independent searches, which alternative and counterstrategies were included, and evidence that the searched card was actually acquired/used.
-4. **Development evidence.** Exact named cards and copy counts acquired and retained, Snips, Doom/Trash, dice acquired and remaining, upgrades, relevant activations, and timing, for winners and losers.
-5. **Competitive evidence.** Head-to-head and opponent-portfolio win shares, total VP, Battle Strike wins/VP, direct end-game VP where attributable, and uncertainty; distinguish **evaluation without artificial incentives** from training.
-6. **Effect-specific causal evidence.** Matched A/B comparisons (current versus proposed wording, or current versus a sensible same-cost comparison), including the opportunity costs and what players buy/do instead.
-7. **Robustness.** Fresh held-out seeds, seat rotations, independently learned policies, favorable and unfavorable Groves, counterstrategy searches, and observed failures.
-8. **Decision.** **No concern demonstrated**, **Investigate**, or **Strong balance concern**, with **too weak / too strong / context-specific / insufficient evidence** direction, and the next small actionable test.
+At the actual cost and under actual purchase rules, is buying the card strategically worthwhile compared with legal alternatives?
 
-An experiment cannot honestly conclude **No concern demonstrated** merely because its sample was small or its optimizer did not find an exploit. Missing evidence is reported as **Investigate — insufficient evidence**, not as a clean bill of health.
+Pricing analysis must account for:
 
-## 3. Three assessment states: concrete, provisional criteria
+- exact payment feasibility: dice are not one pooled total;
+- overpayment and Critter use;
+- other simultaneously legal purchases/actions;
+- printed VP;
+- grafting requirements and layout constraints;
+- remaining time to exploit the card;
+- activation opportunity cost;
+- duplicate-copy pressure;
+- what development path is forgone.
 
-These are **decision rules for research triage, not mathematical truths about balance**. The designer should be able to configure practical-effect thresholds before examining results. Start with a **5-percentage-point (pp) attention band** and a **10-pp serious-effect band** for *matched two-player win-share differences*; recalibrate after pilot studies and never directly transfer these cutoffs to raw three-/four-player shares. A meaningful effect could also appear primarily in VP or strategy diversity.
+A card can therefore have a good effect and still be overpriced, or have a weak effect and still be purchased because its price/VP/context makes the card worthwhile.
 
-| Assessment | Operational evidence | What to do |
-|---|---|---|
-| **No concern demonstrated** | Adequate search and held-out precision; at least one genuinely competitive card-using strategy in favorable markets; no replicated practically large A/B win advantage or disadvantage; counters and alternative strategies remain viable | Retain effect; record boundaries and revisit if market/rules change |
-| **Investigate** | Zero purchases or uses; conflicting learners; apparent win/VP differences with wide uncertainty; advantages strongly dependent on one market/opponent; card-using strategy has not been adequately searched; or an interesting result without countersearch | Run the smallest targeted experiment resolving the ambiguity |
-| **Strong balance concern** | A *replicated, meaningful* advantage or disadvantage after targeted exploration, held-out evaluation, and countersearch. For triage, a matched **≥10 pp** win-share difference whose uncertainty excludes zero, replicated on independent conditions, is a strong quantitative signal—not automatic proof. Alternatively, nearly all robust competitive strategies depend on the card, or substantial targeted search finds no viable use across several favorable contexts | Test a candidate modification; retain counterexamples and uncertainties |
+**Purchase frequency is a clue, not a verdict.** Zero purchases by a limited policy means that policy avoided it; it does not prove no winning strategy exists. Very frequent purchase by one learner does not prove dominance.
 
-**Direction matters:** “too weak” and “too strong” are separate hypotheses. Different markets may yield different conclusions. A variant can be valuable and situational without being dominant.
+---
 
-**Statistical reporting:** Always show counts, effect-size differences (in **percentage points**, not percent relative change), uncertainty intervals, and the independence unit (game seed/match set, not repeated decisions). Use paired/blocked inference for matched seeds and seats, or cluster/bootstrap appropriately across learner and game blocks; control the risk of cherry-picking across many variants. Do not make the confidence interval narrower by treating repeated buy opportunities within one game as independent data.
+## 4. What "Is this card/effect okay?" means
 
-**Sample budgets:** Start with a small correctness pilot and an exploratory screen. Increase games *only if the resulting uncertainty could change the assessment*. For a claimed <5-pp equivalence, many more held-out matches may be necessary than for identifying a large ≥10-pp problem. Use power/precision estimates based on observed variance instead of prescribing a giant game count for every question.
+For every Plant, separate at least these questions:
 
-**What would not justify a strong conclusion:** One of five experts avoiding a card; zero purchases under a policy that lacks the ability to model its synergy; unpaired winner-versus-loser inventory comparisons; a single favorable seed; a card being acquired in 90% of legal opportunities; or a variant winning against only Human Baseline.
+1. **Opportunity** - Did the card appear in a legal usable market, and could a player reasonably acquire, graft and activate it in time?
+2. **Discoverability** - Can deliberate search find a coherent strategy that meaningfully uses it? Track actual acquisition and effect use, not merely a positive model score.
+3. **Effect contribution** - Compared with a suppressed/alternative effect, what competitive value did the effect actually add?
+4. **Purchase value** - At its actual price, was the card worth acquiring compared with legal alternatives?
+5. **Dominance** - Do unrestricted strong strategies converge on it broadly, and can credible counterstrategies compete?
+6. **Context dependence** - Is the card healthy but specialized to particular Groves, builds, stages, player counts, or opponents?
 
-## 4. First reference investigation: Sapping Snapdragon
+A situational card can be well balanced while rarely purchased. A card can be widely attractive without being broken if its value is conditional and counterable.
 
-**Official reference (from the current official Vine/Flower CSV):** **Sapping Snapdragon**, `Flower_11_03`, **cost 11**. Cultivation text: “Raise any die +2.” Its Battle text reduces opposing dice in its Strike Row by 2 and raises a die by the total reduced. **The full canonical wording is authoritative; do not rewrite its targeting rules from memory.**
+### Per-card report requirements
 
-**Design question:** If the designer changes the effect to say **“Raise one die +2. Choose another die. …”**, requiring distinct dice for the indicated actions, does that improve the card's competitive usefulness or make it too powerful? The ellipsis must be replaced by **the full proposed effect text**, including which phase, which die receives the reduction/raise, valid targets, and whether different dice are mandatory. No simulation begins with ambiguous variant semantics.
+A completed Plant report should contain:
 
-### Four linked tests, in order
+1. **Identity and question** - card name, current ID, type/slot, cost, printed VP, exact current effect wording, compared variant/suppression, definition fingerprints.
+2. **Scope** - exact nine-card Grove(s), 2/3/4-player scope, Round/Wisp/game-rule settings, source revision, independent seeds/learners.
+3. **Search coverage** - targeted card-centered search, unrestricted alternatives, countersearch, actual acquisition/use evidence.
+4. **Development evidence** - named cards/copy counts, graft survival/Snips, dice by size, upgrades/trash/Doom, resources, timing and activations.
+5. **Effect evidence** - legal opportunities, actual resolutions, actual mechanical outputs, caps/supply/row constraints, Strike/VP/Wound changes where attributable.
+6. **Purchase/pricing evidence** - simultaneous legal alternatives, actual payment resources/overpayment, alternatives forgone, duplicate pressure and opportunity cost.
+7. **Competitive evidence** - matchup/opponent-portfolio win share, total VP, Strike/Battle VP, end-game VP where attributable, uncertainty.
+8. **Causal comparison** - matched official-vs-suppressed/variant comparisons, frozen and adapted strategies when appropriate.
+9. **Robustness** - fresh held-out seeds, seat rotations, independently learned policies, favorable/unfavorable Groves and counterstrategies.
+10. **Decision** - **No concern demonstrated**, **Investigate**, or **Strong balance concern**, plus direction such as weak effect, overpriced, dominant, context-specific, or insufficient evidence.
 
-**S0 — Verify rules and availability.** Lock one nine-card Grove with Sapping Snapdragon, and its exact costs, quantities, Round/Wisp context, graft conditions, and effect implementation. Confirm actual execution with deterministic tests: one die available, multiple dice, different/same targets, no legal second target, Battle Strike Row interactions, and no silent fallback to the original effect. Verify the full intended nine-card Grove rather than accidentally using `FirstGameDefault`.
+An experiment cannot conclude **No concern demonstrated** merely because its sample was small or its optimizer failed to find an exploit.
 
-**S1 — Find whether current Sapping has a viable use.** For the unchanged official effect, independently search both (a) unrestricted policies and (b) policies deliberately exploring Sapping-centered development. Encourage/require exploration **only during search**. Record whether acquired, grafted and activated; what other cards/dice were combined with it; and when it mattered. Evaluate the promising policies **without any bonus for acquisition** against a diverse pool, Human Baseline as one reference, and explicit counters. A negative result warrants checking model expressiveness and search coverage before labeling the card weak.
+---
 
-**S2 — Compare effect wordings.** Implement S1 (canonical) and S2 (precise proposed “another die” variant) as explicit, fingerprinted rules, keeping cost, printed VP, card identity and the other eight Grove slots identical. Run both **frozen-policy tests** (isolates immediate mechanical effect under matched decisions where possible) and **reoptimized-policy tests** (allows different strategies to emerge around the variant). Report win share, VP, Strike effects, actual use, and whether the variant changes the number of viable alternative strategies. Distinguish the effect's strength from merely convincing more policies to buy it.
+## 5. Assessment states and statistical discipline
 
-**S3 — Countersearch and replication.** Train/find opponents that specifically challenge the strongest Sapping-centered approach. Repeat with independent seeds, learners, seat rotations, and at least a few Groves deliberately favorable and unfavorable to Sapping. If a +10-pp-or-larger practical advantage persists and competitors cannot counter it after adequate search, flag a strong *overpower* concern. If neither effect supports competitive use even in favorable settings, flag a possible *underpower* concern—while reporting the search limitations.
+These are research triage rules, not mathematical definitions of balance.
 
-### Example of the result the designer should be able to read
+### No concern demonstrated
 
-> **Question:** Does requiring a *different die* make Sapping Snapdragon too strong?  
-> **Assessment:** **Investigate** *(illustrative, not an actual result).*  
-> **Matched two-player win-share change, S2 − S1:** +7 pp (95% interval +2 to +12).  
-> **Competitive builds:** Two distinct Sapping-using builds discovered, plus two non-Sapping counters.  
-> **Why not “Strong”:** The interval includes effects below the serious threshold, and one counter was only tested in one Grove.  
-> **Next action:** Run a focused held-out counterstrategy comparison; do not change the official card yet.
+Requires adequate search/exercise and held-out precision, at least one genuinely competitive use in appropriate contexts, and no replicated practically large problem after alternatives/counters are considered.
 
-The exact result is hypothetical. The actual system must report raw game counts and preserve enough detail to reproduce the figure.
+### Investigate
 
-## 5. Beyond Plants: Wisps and Round Cards
+Use when evidence is incomplete or ambiguous, including:
 
-### Wisps — rewards from rolling 2s
+- no/rare actual acquisition or activation;
+- policies that cannot competently use the effect;
+- conflicting learners;
+- wide uncertainty;
+- effect heavily constrained by capacity/supply;
+- one favorable Grove/opponent only;
+- missing countersearch;
+- suspicious pricing without a legal-market comparison.
 
-The primary design question is **not** “Does a player choose to acquire Wisps?” Players receive Wisps through dice rolls and can decide when/how to use them. Test whether fortunate rolls produce disproportionate game-winning advantages.
+### Strong balance concern
 
-- Record the **number of 2s relative to the number/type/timing of dice rolled**, Wisp gains actually awarded (respecting limits and Wispquake), Wisps spent, Wisp effects, and final outcome.
-- Descriptive warning: a player with unusually many 2s winning **≥75%** of games is worth investigating, *but cannot by itself establish that Wisps are overpowered*. More dice, different die types, round timing, strategy, and already-strong boards confound the association. Compare with the appropriate 1/N baseline and to similarly developed players.
-- Causal test: hold starting context/policies and dice RNG as comparable as the engine permits; compare official Wisp reward/use rules against a reduced or alternative Wisp treatment using matched games, tracking downstream state divergence. Evaluate both frozen strategies and adapted strategies. Measure outcome *effect size* and how much the random reward reduces the value of good choices.
-- A problem exists when **Wisp benefit itself**, rather than simply having many dice, repeatedly creates an excessive or effectively uncounterable advantage.
+Use only after replicated meaningful evidence and countersearch. Examples include:
 
-### Round Cards — shared event effects
+- targeted search repeatedly fails to find viable effect use in favorable contexts;
+- an effect/purchase creates a large held-out advantage that survives alternative strong strategies and counterplay;
+- nearly all robust strategies depend on the same card or compact route;
+- the card's actual cost makes an otherwise useful effect consistently uneconomic.
 
-Test a specific Round effect against a precisely specified alternative or neutral reference with otherwise matched rules. Compare the way it shifts VP, strategy matchups, card usefulness, and seat/turn-order outcomes; allow policies to adapt when effect differences are substantial. An effect is not automatically problematic merely because it benefits an already-strong build or raises everyone's average score.
+For preliminary two-player matched win-share differences, a 5 percentage-point attention band and 10-point serious-effect band can be useful triage defaults, but they are not universal thresholds and must not be copied directly onto raw 3/4-player shares.
 
-**Scope control:** Bees, Worms, and dice mechanics are not separate balance programs at this time; investigate them only insofar as they help explain a Plant/Wisp/Round effect, an abusive strategy, or the skill-versus-luck question.
+Always report counts, effect-size differences in percentage points, uncertainty, and the actual independence unit. Do not make intervals artificially narrow by treating repeated decisions from one game as independent samples.
 
-## 6. Strategy-discovery and game-quality experiments
+---
 
-### C — Strategic diversity, one fixed Grove
+## 6. Controls before trusting an all-card screen
 
-Train/search a *population* of flexible strategies against varied opponents, including one another—not only against Human Baseline. Preserve **quality and diversity**: a strategy's recognizable profile should come from actual named-card copies, graft layout, dice collection, timing, and action behavior, not solely a manually assigned “Bee” or “dice” label. Identify duplicate approaches so five nearly identical learners do not count as five distinct strategies.
+A balance instrument should prove that it can recognize deliberately broken conditions before issuing reassuring results.
 
-Evaluate finalists in a common held-out **matchup matrix** with rotated seats. Distinguish robust alternatives, matchup specialists, and strategies that are strictly outperformed by others. Determine whether a plausible mixture of strategies is stable against newly trained counterstrategies. No fixed number of viable strategies is guaranteed; **finding several** would be positive evidence, not an absolute certification of game quality.
+Useful controls include:
 
-### D — Degenerate or mandatory strategies
+- **negative/no-effect control** - preserve cost/VP/card identity but suppress the effect;
+- **obvious direct positive control** - e.g. a deliberately absurd immediate VP reward;
+- **mechanically meaningful non-VP positive control** - a deliberately stronger effect that is demonstrably exercised rather than merely stronger on paper.
 
-Intentionally search for the strongest versions of hypotheses such as **mostly-dice/no-Plants**, **mostly-Plants**, **cheapest-Roots-for-VP**, **Bee-loved Bloom / Bee accumulation**, **Compost-heavy**, and unrestricted hybrid development. Relax search-time constraints for fair held-out assessment where appropriate, while verifying that the alleged exploit was actually attempted. If an extreme build appears universally superior, **search for counters** before declaring it dominant.
+For every control verify:
 
-### E — Skill versus luck
+- the effect actually executed as intended;
+- the targeted seat/condition received it and controls did not;
+- actual realized output was measured;
+- policies had an opportunity and ability to exploit it;
+- untreated matched conditions remain equivalent where they should;
+- a failed or under-exercised control produces **Investigate**, not a false pass.
 
-Compare independent, demonstrably stronger and weaker *decision policies* across identical available rules and a portfolio of opponents. Randomize seats and use paired seeds; measure how reliably strategy selection and tactical execution separately improve wins. Repeated victory of a stronger policy establishes meaningful skill influence even when luck allows frequent upsets. A near-50/50 matchup between **equally strong** self-playing policies says nothing by itself about the game's skill ceiling.
+R3B/R3B.1 established important parts of this machinery, and R3B.1a added effect-aware Human Baseline scoring/targeting for the simple calibration controls. The remaining concern is broader strategic exploitation: local effect-aware scoring does not prove that the search can discover the strongest multi-turn or combinational strategy around an arbitrary effect.
 
-## 7. Architecture: question-driven experiments on shared machinery
+---
 
-Avoid five different simulator forks or an AlphaZero reimplementation by default. Use **one rules engine and a reusable question/experiment framework**:
+## 7. Beyond Plants
 
-1. **Question specification:** Exact card/effect question, hypothesis (too weak/strong), current and proposed wordings, Grove, player count, Round/Wisp configuration, search restrictions, comparison controls, and a declared meaningful-effect margin.
-2. **Immutable scenario & rules manifest:** Fingerprint official CSVs, effect overrides, all nine specific Grove cards/quantities, runtime code, scoring rules, AI implementation, learner seeds, evaluation seeds, and policy weights. Reject incompatible or stale weights explicitly. Display the actual loaded Grove at startup.
-3. **Policy adapters:** Human Baseline, existing frozen Buy experts, contextual/search-capable agents, targeted card explorers, and unconstrained population/self-play agents under common legal-action interfaces. The *policy must be expressive enough* to use situational cards and combinations; otherwise a negative discovery result is invalid as a card judgment.
-4. **Search harness:** Reusable candidate policy search, opponent portfolio, diversity preservation, card-targeted exploration, seat rotation, and counterstrategy search. Prefer improving only the decision scopes necessary for the hypothesis, but document which other decisions remain Human Baseline.
-5. **Controlled evaluation harness:** Frozen and adapted comparisons, paired starting conditions, independent held-out randomness, fair seat allocation, repeated evaluation, and data integrity/coverage checks.
-6. **Shared telemetry:** D1–D10 Buy disagreement events; exact per-player named Plant acquisition, surviving grafts, Snips, dice by size, Doom/Trash, upgrades; relevant activations, Strike wins/VP, direct end-game VP and totals; per-game strategy profiles and outcome. Separate purchase choice from card-effect utility.
-7. **Question-specific reporting:** One short verdict first, then evidence tables, effect sizes/intervals, strategy profiles, counterexamples, market-specific and general conclusions, and a reproducibility manifest.
+### Wisps
 
-A future question definition could look **conceptually** like this (not an implemented executable format):
+The central question is not whether players choose to acquire Wisps; many are received from rolls. Measure whether Wisp benefit itself, rather than simply having more/better dice or more rolls, creates excessive random advantage.
 
-```yaml
-question_id: sapping-different-die-v1
-kind: plant-effect-variant
-card_title: Sapping Snapdragon
-baseline: canonical-official-effect
-candidate: exact-full-text-of-different-die-effect
-player_counts: [2]
-grove: [nine-explicit-plant-titles-and-definition-fingerprints]
-research:
-  searches: [unrestricted, card-focused, counterstrategy]
-  evaluations: [frozen-policy, adapted-policy, held-out-matchups]
-  primary_metric: paired-win-share-difference-pp
-  attention_margin_pp: 5
-  serious_margin_pp: 10
-outputs: [assessment, strategy-profiles, matchups, card-development, raw-evidence]
-```
+Track 2-results relative to dice rolled, Wisp gains, actual Wisp identities/effects, held versus played behavior, timing, final VP and matched causal comparisons where feasible.
 
-A developer should be able to implement a new design question primarily by **writing a scenario specification and, if needed, one effect variation**—not by constructing a new experiment program each time.
+### Round Cards
 
-## 8. Execution roadmap and stop/go gates
+Test a specific Round effect against a precise alternative/neutral reference while keeping the rest of the rules matched. Measure tactical/economic consequences, strategy substitution, VP and player/seat effects. Preserve the **actual effect identity**, not merely `ROUND_EFFECT_1`/`ROUND_EFFECT_2`.
 
-The first priority is a **minimal end-to-end card-effect study**, not a giant generic learner.
+### Strategy diversity
 
-| Step | Work | Acceptance gate |
-|---|---|---|
-| **R0 — Correctness audit** | Confirm Buy aggregation/payment rules, legal grafting, current card wording, effect execution, actual nine-card Grove, RNG isolation and noninterference; verify source/weight fingerprints | Tiny deterministic tests and diagnostics ON/OFF games match wherever they should |
-| **R1 — Question runner MVP** | Read a locked Sapping scenario, run current/variant effects, capture named development and outcomes, emit one assessment-format report | One Sapping A/B experiment reproducible end to end |
-| **R2 — Targeted & unrestricted search** | Introduce enough contextual capacity and diversified opponents to discover coherent card-using and card-free approaches; preserve a small varied population | Demonstrate actual card use and at least two meaningfully different tested strategies, **or honestly document failure of search** |
-| **R3 — Competitive verification** | Held-out matchup matrices, forced exploration versus unrestricted deployment, counters, matched frozen/adapted effect comparisons, uncertainty | An assessable Sapping verdict, with raw evidence and explicit limits |
-| **R4 — Reusable questions** | Generalize specification/runner for other Plants; then Wisp and Round effects | A second named-card question runs through the same framework without bespoke script rewrites |
-| **R5 — Wider landscape** | Extend to strategy diversity, degeneracy, multiplayer, skill/luck studies | Results answer Goals C–E without returning to fixed-Human-Baseline-only optimization |
+For a fixed Grove, search a population of genuinely different strategies and evaluate finalists in a common held-out matchup matrix with rotated seats. Distinguish robust alternatives, specialists and strictly dominated strategies. Five nearly identical learners are not five distinct strategic paths.
 
-**Avoid premature large runs:** R0 and R1 pilot first, verify that changed effects are truly being exercised, and inspect sample decisions and named-card build histories. Then calibrate search and evaluation budget based on observed information, not the urge to simulate a huge fixed number.
+### Degenerate strategies
 
-## 9. Research integrity and operations (requirements, not optional extras)
+Intentionally search strong versions of hypotheses such as mostly-dice/no-Plants, mostly-Plants, cheap-Root VP, Bee accumulation, Compost-heavy, Mulch-heavy and unrestricted hybrids. If an extreme looks superior, search for counters before calling it dominant.
 
-- **Names first:** Use card titles as primary labels and current Component Studio IDs only as trace keys. Join historical results only after matching effect-definition identity/fingerprints. Never silently combine old and current card meanings.
-- **No fake precision:** A learner's zero purchases, a failure to find a strategy, and a causal negative effect are different findings. Report each literally. Separate exploratory findings from confirmatory held-out tests.
-- **Record what was actually tested:** Source revision; canonical and variant CSV checksums; exact Grove and full wordings; policies and weights; seeds; opponents; counts of successful acquisitions/activations; evaluation design; and excluded/incomplete chunks. Incomplete studies remain explicitly incomplete.
-- **Preserve existing assets:** Reuse the Kotlin rules engine, Human Baseline, D1–D10 telemetry, prior weights as seeds/opponents, and archived studies as context—not as definitive balance outcomes. Do not change approved policies or effects silently during a run.
-- **Developer workflow:** Ubuntu Kotlin/Gradle repository. For code changes, deliver **changed-files ZIP** rooted at `leaf/`, precise tests run/not run, and a Git commit message. Keep source changes small and reproducible.
-- **Long-running study operations:** Resumable chunks, clear current-stage and **whole-batch** progress, elapsed time, ETA **and projected clock finish time**, logs with `|& tee`, checksums, explicit failure conditions, and **one verified upload-ready `.tgz`** at completion. Never require the designer to manually gather dozens of output directories.
-- **Handoff:** Keep this specification and a brief run-state manifest in `doc/` for new conversations. The governing goal is *answering design questions*, not endlessly escalating expert-versus-expert training.
+### Skill versus luck
 
-## 10. The project's definition of success
+Compare demonstrably stronger/weaker decision policies under matched rules, seeds and opponents. Better policies winning more often demonstrates skill influence even though luck can still produce frequent upsets. Equal-strength self-play near 50/50 says nothing about skill ceiling by itself.
 
-The first successful milestone is **not** “a Buy expert wins 60% against Human Baseline.” It is:
+---
 
-> **Given a precise question about Sapping Snapdragon, the program can search for strong ways to use it, compare that card or effect variant against real alternatives, explore opponents and counters, and issue a well-supported assessment—No concern demonstrated, Investigate, or Strong balance concern—with exact named Plant/dice builds and reproducible evidence.**
+## 8. Shared research architecture
 
-After that, the same workflow should answer **“Is Bee-loved Bloom too strong?”**, **“Is Queen's Blossom desirable at its cost?”**, **“Does this Compost interaction actually pay off?”**, **“Are Wisp rewards from rolling 2s overpowering strategy?”**, and **“Does this Round effect distort the Grove?”** without reinventing the simulation research process.
+Avoid separate simulator forks or a bespoke program for every question. Prefer one rules engine and reusable question-driven machinery:
 
-**Principle:** *Discover viable strategic uses; test competitive consequences; actively seek counterexamples; report uncertainty; change the game only when evidence justifies it.*
+1. **Question specification** - exact hypothesis, effect/cost alternatives, Grove, players, rules, policies and practical effect margin.
+2. **Immutable scenario/rules manifest** - source revision, canonical and variant data fingerprints, exact Grove, game rules, scoring config, AI code/weights and seeds.
+3. **Policy adapters** - Human Baseline, Mechanical Control, frozen experts, contextual/search agents, targeted explorers and counterstrategies under common legal interfaces.
+4. **Search harness** - targeted and unrestricted discovery, opponent portfolio, diversity preservation, seat rotation and countersearch.
+5. **Controlled evaluation** - frozen/adapted comparisons, matched initial conditions where meaningful, held-out randomness and fair seats.
+6. **Shared telemetry** - named acquisition/development, payment/substitution data, effect opportunities/outputs, activations, Strikes/Wounds/VP, strategy profile and outcome.
+7. **Question-specific reporting** - verdict first, then evidence, effect/pricing separation, uncertainty, counterexamples and complete reproducibility manifest.
+
+A new card question should ideally require a new scenario/question specification and perhaps one effect override - **not a new experiment architecture**.
+
+---
+
+## 9. Current roadmap
+
+The initial focused card-effect path established substantial reusable machinery:
+
+| Step | Current interpretation |
+|---|---|
+| **R0 - Correctness audit** | Completed enough for current research; preserve audits/fingerprints |
+| **R1 - Question runner MVP** | Completed for initial focused question |
+| **R2 - Targeted and unrestricted search** | Implemented for focused studies; generalization still matters |
+| **R3 - Competitive verification** | Implemented enough for focused studies, with known policy/effect-awareness limitations |
+| **R4 - Reusable questions** | **Current active engineering direction** - generalize to arbitrary Plants, then Wisp/Round questions |
+| **R5 - Wider landscape** | Later - strategic diversity, degeneracy, multiplayer, skill/luck |
+
+The all-36-card audit should not begin as a blind giant overnight run merely because these components exist. First prove the generalized path on multiple representative cards and confirm that positive/negative controls are actually exercised and understood.
+
+Human Baseline fine calibration (including detailed C04 follow-up) is **not** the current project goal. Reopen it only when a specific research question is blocked by a concrete decision-quality problem.
+
+Battle pacing / Three Engagements is a parallel research stream; its current state is summarized in [`BATTLE_PACING_RESEARCH_STATUS.md`](BATTLE_PACING_RESEARCH_STATUS.md).
+
+---
+
+## 10. Research integrity and operations
+
+- **Names first:** use card titles as primary labels and current IDs as trace keys. Use fingerprints to join historical results.
+- **No fake precision:** zero purchases, failed strategy discovery and causal evidence of a weak effect are different findings.
+- **Record what was actually tested:** source revision; data/override hashes; exact Grove/effect wording; policies/weights; seeds; opponents; actual acquisition/activation counts; excluded/incomplete cohorts.
+- **Preserve canonical boundaries:** experimental overrides must not silently become official rules/data.
+- **Use actual legal states:** never infer card/rule quality from an impossible fixture.
+- **No dropped failures:** a failed cohort is not a smaller successful sample.
+- **Smallest credible experiment:** correctness pilot first, then increase samples only when more precision can change the decision.
+- **Long-run operations:** compile once where appropriate, preserve process isolation when needed, checkpoint/resume, visible whole-batch progress, elapsed/ETA/projected finish, `|& tee`, provenance, and one verified upload-ready archive in `~/Downloads`.
+- **Developer delivery:** changes-only ZIP rooted at repository root, exact tests run/not run, and a Git commit message.
+
+---
+
+## 11. Definition of success
+
+The simulator succeeds when, given a concrete design question, it can:
+
+- discover credible ways to use the relevant game element;
+- compare it with real alternatives at real opportunity cost;
+- separate effect contribution from purchase/pricing contribution;
+- search for both failure extremes and counterexamples;
+- evaluate under held-out conditions with adequate provenance;
+- report uncertainty and limitations honestly;
+- and give the designer a clear next action.
+
+Examples include:
+
+- Is Sapping Snapdragon's effect useful at its price?
+- Is Queen's Blossom desirable enough for its cost without becoming mandatory?
+- Is Bee-loved Bloom dominant only in a specific Bee build or broadly dominant?
+- Does Compost provide enough strategic value for its action/tempo cost?
+- Are Wisp rewards from rolling 2s overpowering strategy?
+- Does one Round effect crowd out Plant activations?
+- Does Three Engagements improve Battle pacing without creating last-actor advantage or early-Wound snowballing?
+
+**Principle:** *Discover viable strategic uses; measure real opportunity cost; seek both dead and dominant extremes; actively search for counters; report uncertainty; change the game only when the evidence justifies it.*

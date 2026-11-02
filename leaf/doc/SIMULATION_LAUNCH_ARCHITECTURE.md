@@ -1,6 +1,8 @@
 # Leaf & Let Die — simulation launch architecture and cleanup guide
 
-**As inspected:** source archive `leaf(20261024-132719).tgz` (October 24, 2026).  This is the handoff document for a new coding conversation. Read the **current source** before editing; this guide does not supersede live implementation.
+**As inspected originally:** source archive `leaf(20261024-132719).tgz` (October 24, 2026). Read the **current source** before editing; this guide does not supersede live implementation. The repository `README.md` and top-level `TASKS.md` are now the front door for a new coding conversation; this document governs launch/execution architecture.
+
+**User-facing operating requirements:** preserve direct-Java/persistent-JVM behavior where documented, preserve separate processes where mutable policy/condition isolation requires them, and do not reintroduce repeated Gradle launches casually. Completed long-running studies should create/verify one upload-ready archive, copy it to `~/Downloads`, and print `UPLOAD THIS FILE:` with that path. When providing changed-files ZIPs, installation commands should assume the ZIP is in `~/Downloads`.
 
 ## 1. Critical distinction: process scope
 
@@ -131,10 +133,11 @@ If any file is untracked, Git cannot remove it; use `rm -- <verified-path>` expl
 
 ## 7. Instructions to a new coding conversation
 
-1. Read this document, `doc/USING_THE_SIMULATOR.md`, `doc/task12-experiment-family-migration.md` and the **current** `bin/`/`build.gradle.kts` code.
+1. Read repository `README.md` and `TASKS.md`, then this document, `doc/USING_THE_SIMULATOR.md`, the relevant task-specific docs, and the **current** `bin/`/`build.gradle.kts` code.
 2. Identify whether the target is one persistent baseline batch, one training/evaluation process, or a deliberately isolated multi-condition study.
 3. Compile once explicitly before direct Java; never confuse classpath existence with source freshness.
 4. Keep CLI, deterministic seeds, output format, hashes, manifest, logging, timing, resume markers and archive contract unchanged unless explicitly requested.
-5. Make changes-only ZIPs rooted at the project root. Do not include build/, .gradle/ or output/.
+   Long-running studies should leave resumable working output in place while copying the final verified upload archive to `~/Downloads` and printing the exact upload path.
+5. Make changes-only ZIPs rooted at the project root. Do not include build/, .gradle/ or output/. Give install commands using `~/Downloads/<zip-name>`.
 6. Run real tests/benchmarks and say exactly what passed or failed. A syntactically valid Bash script is not proof of equivalent results.
 7. Do not delete historical scripts, weight files or canonical inputs without explicit approval. Provide candidate paths and exact cleanup commands, not destructive actions concealed in a patch.

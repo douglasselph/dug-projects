@@ -22,8 +22,8 @@ The script records moves in `doc/archive/doc-moves-manifest.json`. Commit that m
 ## Why the other documents stay
 
 - Keep launch scripts, authoritative specs, research provenance, generated data and A03 protected files in their original paths unless their callers are updated together.
-- Keep the current operational docs (`SIMULATION_OPERATIONAL_READINESS.md`, `SIMULATION_LAUNCH_ARCHITECTURE.md`, `R3B_EFFECT_SANITY_GATE.md`, `USING_THE_SIMULATOR.md`, `LEAF_RESEARCH_HANDOFF.md`) easy to find.
-- `doc/README.md` in the source snapshot has pointers to names that may not currently exist. Do not assume it is a verified directory map. Review its links separately before rewriting.
+- Keep the current front-door/operational docs (`../README.md`, `../TASKS.md`, `LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`, `SIMULATION_OPERATIONAL_READINESS.md`, `SIMULATION_LAUNCH_ARCHITECTURE.md`, `BATTLE_PACING_RESEARCH_STATUS.md`, `USING_THE_SIMULATOR.md`) easy to find. `LEAF_RESEARCH_HANDOFF.md` is retained as historical provenance rather than the active handoff.
+- `doc/README.md` is the maintained documentation map. When adding/moving current documentation, update it and verify its relative links. Historical files may remain in place for provenance even when they are no longer listed as front-door documents.
 - Do not delete older rulebook PDFs or research notes automatically; they may be important for reproducibility.
 - Passing a tiny experimental probe is not proof of statistical sensitivity or 36-card balance.
 
