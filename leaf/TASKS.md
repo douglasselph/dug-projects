@@ -17,7 +17,7 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** OPEN - highest-priority engineering capability. **A1.1–A1.3 completed; A1.4 is next.**
+**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 partial; A1.6 exploratory 36-card foundation available. Next: run the small catalog pilot, then the all-36 first pass.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
@@ -119,7 +119,7 @@ Keep each stage's policy scope explicit. If only Buy is learned and all other de
 
 #### A1.6 - Standardize the per-question evidence bundle and report contract
 
-**Status:** BLOCKED on A1.4-A1.5.
+**Status:** PARTIAL — first-pass 36-card catalog screen and standardized exploratory evidence index implemented; see [`PLANT_CATALOG_SCREEN.md`](doc/research/experiments/card-balance/PLANT_CATALOG_SCREEN.md). Full research-grade reports (uncertainty, adapted/countersearch, broader effect attribution and multi-Grove validation) remain open.
 
 Create one generic result layout and schema so later A2-A5 work can consume results without knowing whether the historical origin was R2, R3A or R3B.
 
