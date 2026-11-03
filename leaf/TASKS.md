@@ -6,6 +6,12 @@ This is the **active top-level backlog**. It is intentionally shorter than the m
 
 A historical task ID appearing in an older document does **not** mean that task is still open. Inspect current source/tests/results, then use this file as the current prioritization unless the user explicitly changes it.
 
+## Current immediate follow-up — Human weak-Plant Refresh judgment
+
+A focused Cultivation Human Baseline adjustment adds bounded, seeded strategy variability for activating weak/no-effect cards when other cards are spent, with a modest long-horizon Refresh nudge. Worm Flip works in both directions, and Human Baseline can spend it to flip the last face-up Plant down and enable natural Cleanup Refresh; Water still provides immediate group Refresh. See `doc/policies/human-baseline/WEAK_PLANT_REFRESH_JUDGMENT.md`.
+
+**Next single gate:** Run targeted regression tests and a small paired question pilot, inspect the weak-Plant/Refresh decision traces and changes in outcome, and then resume the 36-Plant research. Do not use the earlier 36-card suppression results as conclusive balance verdicts.
+
 ## Current priority: all-card sanity and pricing audit
 
 The next major design goal is to examine the current Plant catalog and answer two separate questions for every card:

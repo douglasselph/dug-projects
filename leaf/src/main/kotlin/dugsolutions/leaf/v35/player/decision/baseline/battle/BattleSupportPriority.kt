@@ -58,7 +58,13 @@ class BattleSupportPriority(
                 legalSupports = legalSupports
             )
         }
-        if (enabling != null) return enabling.priority
+        if (enabling != null) {
+            val worm = (action as? BattleSupportAction.Shared)?.action as? SupportAction.UseWormFlip
+            val card = worm?.let { id -> context.self.board.creature.firstOrNull { it.id == id.cardId } }
+            if (card == null || card.isFaceDown) return enabling.priority
+            // A face-up Worm target is a Refresh setup, not an immediately
+            // enabled Final Main, so evaluate through the ordinary Support scorer.
+        }
         return scoreNonDirect(context, action)
     }
 
@@ -116,8 +122,21 @@ class BattleSupportPriority(
 
                 is SupportAction.UseWormFlip -> {
                     val card = context.self.board.creature.firstOrNull { it.id == shared.cardId }
-                    val preserve = card?.let { cardScorers.forPlant(it).lossValue(context, it) } ?: 30
-                    PriorityScore(25 + preserve / 3).adjusted(10, "Refreshes a spent Plant")
+                    if (card == null) {
+                        PriorityScore(-30)
+                    } else if (card.isFaceUp) {
+                        val spent = context.self.board.creature.count { it.isFaceDown }
+                        val remainingFaceUp = context.self.board.creature.count { it.isFaceUp } - 1
+                        if (remainingFaceUp == 0 && spent > 0) {
+                            PriorityScore(45 + spent * 8)
+                                .adjusted(0, "Flip last face-up Plant down for Cleanup Refresh")
+                        } else {
+                            PriorityScore(-30)
+                        }
+                    } else {
+                        val preserve = cardScorers.forPlant(card).lossValue(context, card)
+                        PriorityScore(25 + preserve / 3).adjusted(10, "Refreshes a spent Plant")
+                    }
                 }
 
                 is SupportAction.UseWaterReroll,

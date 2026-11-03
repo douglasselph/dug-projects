@@ -122,6 +122,25 @@ class SupportActionExecutorTest {
     }
 
     @Test
+    fun wormFlip_canFlipFaceUpPlantDown() {
+        val player = player()
+        player.critters.add(Critter.WORM)
+        val grafted = player.creature.graft(
+            plant("Vine"),
+            GraftPlacement(CreatureSide.LEFT, CreaturePosition(-1, 0))
+        )
+        player.creature.faceUp(grafted.id)
+        val fixture = fixture(player)
+        val before = fixture.game.grove.critters.count(Critter.WORM)
+        fixture.executor.executeCultivation(
+            fixture.game, player, SupportAction.UseWormFlip(grafted.id)
+        )
+        assertTrue(player.creature.get(grafted.id)!!.isFaceDown)
+        assertTrue(player.critters.isEmpty)
+        assertEquals(before + 1, fixture.game.grove.critters.count(Critter.WORM))
+    }
+
+    @Test
     fun butterfly_rejectedOne_restoresOriginal_andDoesNotGrantCritter() {
         val die = FixedRollDie(8, initial = 7, rolled = 1)
         val player = player(

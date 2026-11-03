@@ -124,7 +124,7 @@ class HumanBaselineCultivationStrategy(
             candidates = mulch.legalChoices.map { choice ->
                 DecisionCandidate(
                     choice = choice,
-                    score = score(request, choice, compost),
+                    score = scoreWithRefreshUncertainty(request, choice, compost),
                     tags = tags(request, choice),
                     observations = calibrationObservations(request, choice)
                 )
@@ -149,7 +149,7 @@ class HumanBaselineCultivationStrategy(
     private fun chooseModernAction(request: ChooseCultivationActionRequest): CultivationAction {
         val configuration = requireNotNull(modernScoring)
         val candidates = request.legalChoices.map { choice ->
-            val original = score(request, choice, CultivationCompostGate(request.legalChoices))
+            val original = scoreWithRefreshUncertainty(request, choice, CultivationCompostGate(request.legalChoices))
             val actionId = actionScoreId(request, choice)
             val builder = DecisionScoreBuilder(actionId, strategyRandomizer)
             builder.add(configuration.influence(
@@ -475,6 +475,40 @@ class HumanBaselineCultivationStrategy(
             }
         }
 
+
+    /**
+     * Ordinary-player uncertainty about spending a weak Plant to advance the
+     * all-face-down Refresh cycle. This is strategy RNG, never mechanical RNG.
+     * Strong effects keep their existing valuation; learned policies do not use
+     * this Human Baseline strategy.
+     *
+     * The bounded range is applied once per legal activation candidate in a
+     * decision. It supplements, rather than replaces, CreatureRefreshValue.
+     */
+    private fun scoreWithRefreshUncertainty(
+        request: ChooseCultivationActionRequest,
+        choice: CultivationAction,
+        compostGate: CultivationCompostGate
+    ): PriorityScore {
+        val ordinary = score(request, choice, compostGate)
+        val activation = (choice as? CultivationAction.Main)?.action as?
+            CultivationMainAction.ActivatePlant ?: return ordinary
+        val creature = request.context.self.board.creature
+        val selected = creature.firstOrNull { it.id == activation.card.id } ?: return ordinary
+        if (!selected.isFaceUp || creature.none { it.isFaceDown }) return ordinary
+        val weak = selected.effect == GameEffect.RESEARCH_NO_EFFECT ||
+            selected.effect == GameEffect.RAISE_ANY_DIE_PLUS_1
+        if (!weak) return ordinary
+        // Humans differ on how eagerly to consume an almost-useless Plant
+        // merely to approach the next group Refresh. A modest band prevents
+        // this judgment from becoming an absolute, deterministic rule.
+        val swing = strategyRandomizer.nextInt(17) - 8
+        val planningNudge = if (creature.count { it.isFaceUp } > 2) 8 else 0
+        return ordinary.adjusted(
+            planningNudge + swing,
+            "Weak-Plant long-horizon Refresh judgment (human strategy)"
+        )
+    }
 
     /** Compact, immutable facts used only when decision reasoning is enabled. */
     private fun calibrationObservations(

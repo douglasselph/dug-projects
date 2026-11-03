@@ -62,13 +62,29 @@ class CultivationSupportPriorityTest {
     }
 
     @Test
-    fun `Worm does not flip an already face-up Plant`() {
+    fun `Worm conserves resource when flipping face-up does not enable Refresh`() {
         val card = plantView(faceUp = true)
         val context = context(worms = 2, creature = listOf(card))
 
         val result = score(context, SupportAction.UseWormFlip(card.id))
 
         assertTrue(result.total < 0)
+    }
+
+    @Test
+    fun `Worm flips the final face-up Plant down to enable group Refresh`() {
+        val weak = plantView(faceUp = true)
+        val spent = plantView(faceUp = false).copy(id = CreatureCardId(8))
+        val context = context(worms = 2, creature = listOf(weak, spent))
+        val result = score(context, SupportAction.UseWormFlip(weak.id))
+        assertTrue(result.total > policy.cultivationDoneScore(context))
+    }
+
+    @Test
+    fun `Worm avoids wasting itself on face-up Plant when all cards already ready`() {
+        val ready = plantView(faceUp = true)
+        val context = context(worms = 2, creature = listOf(ready))
+        assertTrue(score(context, SupportAction.UseWormFlip(ready.id)).total < 0)
     }
 
     @Test

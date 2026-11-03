@@ -85,13 +85,29 @@ object CultivationSupportPriority {
 
             is SupportAction.UseWormFlip -> {
                 val card = context.self.board.creature.firstOrNull { it.id == action.cardId }
-                if (card == null || card.isFaceUp) {
-                    PriorityScore(0).adjusted(-30, "No spent Plant to refresh")
-                } else {
+                if (card == null) {
+                    PriorityScore(-30)
+                } else if (card.isFaceDown) {
                     val cardValue = cardScorers.forPlant(card).lossValue(context, card)
                     PriorityScore(
                         WORM_FLIP_BASE + cardValue / WORM_FLIP_CARD_VALUE_DIVISOR
                     ).withReservePenalty(context, ReserveResource.WORM, policy)
+                } else {
+                    val otherFaceUp = context.self.board.creature.count { it.isFaceUp } - 1
+                    val spent = context.self.board.creature.filter { it.isFaceDown }
+                    // Flip down is most useful when it completes the natural Cleanup Refresh.
+                    // With other face-up Plants remaining, conserve the Worm instead of
+                    // repeatedly flipping cards back and forth.
+                    if (otherFaceUp == 0 && spent.isNotEmpty()) {
+                        val recoveredValue = spent.sumOf {
+                            cardScorers.forPlant(it).lossValue(context, it).coerceAtLeast(0)
+                        }
+                        PriorityScore(45 + recoveredValue / 4)
+                            .adjusted(0, "Flip last face-up Plant down to enable Cleanup Refresh")
+                            .withReservePenalty(context, ReserveResource.WORM, policy)
+                    } else {
+                        PriorityScore(-30).adjusted(0, "Does not complete group Refresh")
+                    }
                 }
             }
 
