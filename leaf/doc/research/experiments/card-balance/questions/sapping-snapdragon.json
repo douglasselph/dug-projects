@@ -30,7 +30,7 @@
       2,
       2
     ],
-    "battle_structure": "CANONICAL",
+    "battle_structure": "LEGACY_WHOLE_BATTLE",
     "plant_data": "data/research/resync/resync-current.csv",
     "round_data": "data/research/resync/round-resync-current.csv",
     "wisp_data": "data/Wisp_Cards.csv"

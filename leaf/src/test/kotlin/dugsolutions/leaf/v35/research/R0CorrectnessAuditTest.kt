@@ -5,6 +5,7 @@ import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
@@ -128,6 +129,7 @@ class R0CorrectnessAuditTest {
                 selectedPlantCards = grove,
                 playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
                 roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 1),
+                battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                 seed = 300721L,
                 strategySeed = 400721L
             )
@@ -135,6 +137,7 @@ class R0CorrectnessAuditTest {
                 selectedPlantCards = grove,
                 playerDecisionFactories = listOf(observedFactory, PlayerDecisionFactory.humanBaseline()),
                 roundSetup = GameRoundSetup.Ordered(cultivationRounds = 2, battleRounds = 1),
+                battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                 seed = 300721L,
                 strategySeed = 400721L
             )

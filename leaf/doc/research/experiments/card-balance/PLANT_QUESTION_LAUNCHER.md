@@ -14,7 +14,7 @@ python3 -m unittest discover -s bin/tests -p 'test_plant_question*.py' -v
 
 ## Execution adapter and critical limitations
 
-`--run-r3a-official --condition official --players 2` invokes the preserved R3A script **only when** the question's selected stages are exactly `targeted_discovery`, `unrestricted_discovery`, `heldout_evaluation`; rules are CANONICAL, policies are Buy/Human with full seat rotation and no frozen weights; and the explicitly declared Grove exactly equals the legacy R3A context-zero Grove. The caller must use an intentionally restricted question file satisfying these conditions; the two full research example files do **not** qualify because they request additional stages and player counts. Failing the gate produces an error before any build or game. No hidden stages or alternative Groves are substituted.
+`--run-r3a-official --condition official --players 2` invokes the preserved R3A script **only when** the question's selected stages are exactly `targeted_discovery`, `unrestricted_discovery`, `heldout_evaluation`; rules are LEGACY_WHOLE_BATTLE, policies are Buy/Human with full seat rotation and no frozen weights; and the explicitly declared Grove exactly equals the legacy R3A context-zero Grove. The caller must use an intentionally restricted question file satisfying these conditions; the two full research example files do **not** qualify because they request additional stages and player counts. Failing the gate produces an error before any build or game. No hidden stages or alternative Groves are substituted.
 
 The legacy R3A adapter owns the compile-once/direct-Java process model, its separate training/evaluation JVMs, locks, checkpoint/resume validation, manifests, progress/ETA, and verified `.tgz` archive. The launcher verifies held-out evidence in that archive and copies it to `~/Downloads`, printing `UPLOAD THIS FILE:`. Do not claim this adapter executes target-seat effect isolation, cost changes, noncanonical Battle, multiplayer, frozen comparisons, adapted comparisons or countersearch. Those require explicit implementations and verification in A1.5. A1.4 remains **partially complete** until the full planned execution path works; status is deliberately not overstated.
 
@@ -100,3 +100,10 @@ is produced. Countersearch in this slice tests the strongest available
 policy diversity, countersearch against the adapted specialist, full
 condition coverage, and 3-/4-player cohorts remain for later A1.5/A2.
 The new Kotlin execution path has not been run in this packaging environment.
+
+**Ruleset migration (v38):** Historical R3A execution is pinned to
+`LEGACY_WHOLE_BATTLE` in both training and evaluation code, regardless of the
+current `game-rules-current.properties` default. The generic research question
+validator accepts `THREE_ENGAGEMENTS` for future studies, but the historical
+R3A/paired/countersearch adapters reject it until a v38-capable adapter is
+implemented. Do not relabel pre-v38 research as v38 evidence.

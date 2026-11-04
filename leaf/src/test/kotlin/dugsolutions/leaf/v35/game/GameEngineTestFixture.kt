@@ -29,7 +29,8 @@ internal object GameEngineTestFixture {
         players: List<Player>? = null,
         populateWispDeck: Boolean = false,
         plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
-        roundValues: RoundValueResolver = RoundValueResolver.CANONICAL
+        roundValues: RoundValueResolver = RoundValueResolver.CANONICAL,
+        battleStructure: BattleStructure = BattleStructure.LEGACY_WHOLE_BATTLE
     ): Game {
         val gamePlayers = players ?: listOf(player(1), player(2))
         val randomizer = Randomizer.create(seed)
@@ -38,6 +39,7 @@ internal object GameEngineTestFixture {
             selectedPlantCards = selectedCards(),
             playerDecisionFactories = List(gamePlayers.size) { PlayerDecisionFactory.humanBaseline() },
             roundSetup = setup,
+            battleStructure = battleStructure, // Historical tests default to the main-source legacy executor.
             seed = seed,
             plantValues = plantValues,
             roundValues = roundValues

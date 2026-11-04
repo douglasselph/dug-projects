@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.BattleStructure
+import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.plant.PlantCardManager
@@ -39,9 +41,10 @@ class GameIsolationLifecycleTest {
             koin.get<RoundCardManager>().loadCards(roundRegistry)
 
             val plants = FirstGameDefault.PLANT_NAMES.map { requireNotNull(plantRegistry.getCard(it)) }
-            val config = GameConfig.baseline(
+            val config = GameConfig(
                 selectedPlantCards = plants,
-                numPlayers = 2,
+                playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
+                battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                 roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
                 seed = 12345L
             )
@@ -66,9 +69,10 @@ class GameIsolationLifecycleTest {
 
             // Different seeded games share the application services but not a live graph.
             repeat(12) { index ->
-                val independent = factory(GameConfig.baseline(
+                val independent = factory(GameConfig(
                     selectedPlantCards = plants,
-                    numPlayers = 2,
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
+                    battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                     roundSetup = GameRoundSetup.Ordered(cultivationRounds = 1, battleRounds = 1),
                     seed = 60000L + index
                 ))

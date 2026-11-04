@@ -6,12 +6,12 @@ import dugsolutions.leaf.v35.game.round.RoundExecutor
 import dugsolutions.leaf.v35.game.round.battle.BattleRound
 import dugsolutions.leaf.v35.round.domain.RoundCard
 
-/** Simulation-only bridge: production source never depends on experimental policy classes. */
-class ThreeEngagementRoundExecutor(private val canonical: BattleRound) : RoundExecutor {
+/** Simulation-layer bridge for the adopted v38 scheduler; main source stays policy-agnostic. */
+class ThreeEngagementRoundExecutor(private val legacyBattle: BattleRound) : RoundExecutor {
     override fun execute(game: Game, roundCard: RoundCard) {
-        canonical.executeOpeningDraw(game)
-        val rank = canonical.executeRankAndPlace(game)
-        ThreeEngagementBattle(canonical).execute(
+        legacyBattle.executeOpeningDraw(game)
+        val rank = legacyBattle.executeRankAndPlace(game)
+        ThreeEngagementBattle(legacyBattle).execute(
             game, rank.battleState, HumanGuidedEngagementPolicy(game)
         )
     }
@@ -20,23 +20,23 @@ class ThreeEngagementRoundExecutor(private val canonical: BattleRound) : RoundEx
 /** Use this in a normal simulation's coordinator when selecting THREE_ENGAGEMENTS. */
 fun configuredSimulationRoundCoordinator(
     cultivation: RoundExecutor,
-    canonicalBattle: BattleRound
+    legacyBattle: BattleRound
 ): RoundCoordinator = RoundCoordinator(
     cultivation = cultivation,
-    battle = canonicalBattle,
-    threeEngagements = ThreeEngagementRoundExecutor(canonicalBattle)
+    battle = legacyBattle,
+    threeEngagements = ThreeEngagementRoundExecutor(legacyBattle)
 )
 
 /** Construct a full normal-game runner using the selectable simulation Battle engine. */
 fun configuredSimulationGameRunner(
     cultivation: RoundExecutor,
-    canonicalBattle: BattleRound
+    legacyBattle: BattleRound
 ): dugsolutions.leaf.v35.game.GameRunner = dugsolutions.leaf.v35.game.GameRunner(
-    configuredSimulationRoundCoordinator(cultivation, canonicalBattle)
+    configuredSimulationRoundCoordinator(cultivation, legacyBattle)
 )
 
 /** Discovered automatically by the production coordinator when simulation is on the classpath. */
 class SimulationBattleStructureProvider : dugsolutions.leaf.v35.game.round.BattleStructureProvider {
-    override fun create(canonical: RoundExecutor): RoundExecutor =
-        ThreeEngagementRoundExecutor(canonical as BattleRound)
+    override fun create(legacyBattle: RoundExecutor): RoundExecutor =
+        ThreeEngagementRoundExecutor(legacyBattle as BattleRound)
 }

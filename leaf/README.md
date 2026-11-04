@@ -107,10 +107,10 @@ R3B.1a added effect-aware Human Baseline handling for the simple research contro
 
 ### Battle pacing experiment
 
-The row-by-row **Three Engagements** Battle system remains a research candidate, not an adopted game rule. Current source supports both:
+The v38-01 **Three Engagements** Battle system is the adopted default. The previous whole-Battle system remains selectable for historical comparisons:
 
-- `CANONICAL`
-- `THREE_ENGAGEMENTS`
+- `THREE_ENGAGEMENTS` (default)
+- `LEGACY_WHOLE_BATTLE` (explicit override)
 
 for newly constructed simulation games through:
 
@@ -118,7 +118,7 @@ for newly constructed simulation games through:
 data/research/resync/game-rules-current.properties
 ```
 
-The default is `CANONICAL`. The explicit Battle pacing A/B runner intentionally selects A and B directly and does not depend on that file.
+If the file or property is absent, the default is `THREE_ENGAGEMENTS`. The historical Battle pacing A/B runner intentionally selects A and B directly and does not depend on that file. The Three Engagements implementation currently requires the simulation runtime source set on the classpath; main-only tests and integrations explicitly choose the legacy engine.
 
 The Battle pacing implementation progressed well beyond the original experiment brief: scheduling/execution, paired statistics, Human-guided policy parity work, rules-fidelity repairs, tactical cohorts, and modeled pacing/downtime instrumentation exist. Task 6 has documented executed acceptance. The Task 7 fairness/counterfactual extension exists but its own status document says it is **not yet a validated acceptance package**. See [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md).
 

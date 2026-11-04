@@ -1,3 +1,5 @@
+> **Historical research record (v37-03):** This document describes the original A/B pacing experiment as of November 2, 2026. Under v38-01, `THREE_ENGAGEMENTS` is adopted by default and the old `CANONICAL` label has been renamed `LEGACY_WHOLE_BATTLE`. See [BATTLE_STRUCTURE_CONFIGURATION.md](BATTLE_STRUCTURE_CONFIGURATION.md) for current routing. The historical settings shown below are not current instructions.
+
 # Leaf & Let Die - Battle Pacing / Three Engagements Research Status
 
 **Status date:** November 2, 2026  

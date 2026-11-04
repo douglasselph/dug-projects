@@ -18,6 +18,7 @@ class GameConfigTest {
         val config = GameConfig.humanBaseline()
 
         assertEquals(4, config.numPlayers)
+        assertEquals(BattleStructure.THREE_ENGAGEMENTS, config.battleStructure)
         assertEquals(emptyList(), config.selectedPlantCards)
         val rounds = config.roundSetup as GameRoundSetup.Patterned
         assertEquals(listOf(3, 2, 2), rounds.cultivationBlocks)

@@ -4,6 +4,7 @@ import dugsolutions.leaf.v35.chronicle.domain.GameEntry
 import dugsolutions.leaf.v35.chronicle.domain.Moment
 import dugsolutions.leaf.v35.game.Game
 import dugsolutions.leaf.v35.game.GameEngineTestFixture
+import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.effect.RoundEffectSlot
 import dugsolutions.leaf.v35.round.RoundValueResolver
@@ -248,6 +249,40 @@ class RoundCoordinatorTest {
         )
         assertEquals(2, cultivation.cards.size)
         assertEquals(2, battle.cards.size)
+    }
+
+    @Test
+    fun executeNext_threeEngagementsRoutesToSelectedExecutor() {
+        val game = GameEngineTestFixture.game(
+            cultivationRounds = 0,
+            battleRounds = 1,
+            battleStructure = BattleStructure.THREE_ENGAGEMENTS
+        )
+        val legacy = RecordingExecutor()
+        val current = RecordingExecutor()
+        val coordinator = RoundCoordinator(RecordingExecutor(), legacy, current)
+
+        val execution = coordinator.executeNext(game)!!
+
+        assertEquals(listOf(execution.card), current.cards)
+        assertTrue(legacy.cards.isEmpty())
+    }
+
+    @Test
+    fun executeNext_explicitLegacyRoutesToWholeBattleExecutor() {
+        val game = GameEngineTestFixture.game(
+            cultivationRounds = 0,
+            battleRounds = 1,
+            battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE
+        )
+        val legacy = RecordingExecutor()
+        val current = RecordingExecutor()
+        val coordinator = RoundCoordinator(RecordingExecutor(), legacy, current)
+
+        val execution = coordinator.executeNext(game)!!
+
+        assertEquals(listOf(execution.card), legacy.cards)
+        assertTrue(current.cards.isEmpty())
     }
 
     private fun coordinator(

@@ -4,6 +4,8 @@ import dugsolutions.leaf.v35.common.CardDataFiles
 import dugsolutions.leaf.v35.common.FirstGameDefault
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.BattleStructure
+import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.round.RoundCoordinator
@@ -68,9 +70,10 @@ class GameModuleWiringTest {
             }
 
             val game = koin.get<GameFactory>()(
-                GameConfig.baseline(
+                GameConfig(
                     selectedPlantCards = selectedPlants,
-                    numPlayers = 2,
+                    playerDecisionFactories = List(2) { PlayerDecisionFactory.humanBaseline() },
+                    battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                     roundSetup = GameRoundSetup.Ordered(
                         cultivationRounds = 1,
                         battleRounds = 1

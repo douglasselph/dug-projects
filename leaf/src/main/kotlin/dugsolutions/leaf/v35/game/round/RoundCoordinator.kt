@@ -80,7 +80,7 @@ class RoundCoordinator(
         when (effectiveCard.type) {
             RoundCardType.CULTIVATION -> cultivation.execute(game, effectiveCard)
             RoundCardType.BATTLE -> when (game.config.battleStructure) {
-                BattleStructure.CANONICAL -> battle.execute(game, effectiveCard)
+                BattleStructure.LEGACY_WHOLE_BATTLE -> battle.execute(game, effectiveCard)
                 BattleStructure.THREE_ENGAGEMENTS -> {
                     val candidate = threeEngagements ?: java.util.ServiceLoader.load(
                         BattleStructureProvider::class.java

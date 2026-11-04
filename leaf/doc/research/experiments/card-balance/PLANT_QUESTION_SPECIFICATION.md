@@ -17,7 +17,7 @@ All top-level keys are required. Unknown keys and unexpected condition fields fa
 | `target` | exact `id`, `title`, and `fingerprint` (SHA-256 of canonical JSON with `id,title,type,cost,effect_text,quantity`); all must agree with current official CSV |
 | `grove` | exactly nine distinct existing card IDs, one per `Root 5/7/9`, `Vine 7/9/11`, `Flower 11/14/17`, including target |
 | `player_counts` | nonempty, distinct values from 2, 3, 4 |
-| `rules` | `round_pattern: [3,2,2]`, `battle_structure: CANONICAL` or `THREE_ENGAGEMENTS`, `plant_data`, `round_data`, `wisp_data`; v1 pins these paths to current research layers and official Wisp CSV |
+| `rules` | `round_pattern: [3,2,2]`, `battle_structure: LEGACY_WHOLE_BATTLE` (historical v37) or `THREE_ENGAGEMENTS` (default v38), `plant_data`, `round_data`, `wisp_data`; v1 pins these paths to current research layers and official Wisp CSV |
 | `conditions` | at least two named objects (`name`, `kind`, `scope`) with an `official` condition. Kinds: `official`, `suppressed`, `effect_override` (requires `effect` named in current Kotlin `GameEffect` enum), `plant_override` (requires `override_file`). Scope: `all_players` or `target_seat` |
 | `stages` | selected from `targeted_discovery`, `unrestricted_discovery`, `frozen_comparison`, `adapted_comparison`, `heldout_evaluation`, `countersearch`. Held-out is required; countersearch requires targeted discovery; frozen comparison requires discovery or supplied weights |
 | `policies` | `search_family: buy`, `companion: human_baseline`, `frozen_weights: []` or repo-relative existing paths, `seat_rotation: all` or `none` |

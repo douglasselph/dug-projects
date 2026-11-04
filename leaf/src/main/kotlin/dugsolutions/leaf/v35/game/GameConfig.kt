@@ -101,6 +101,7 @@ class GameConfig(
     selectedPlantCards: List<PlantCard> = emptyList(),
     playerDecisionFactories: List<PlayerDecisionFactory>,
     val roundSetup: GameRoundSetup = GameRoundSetup.standard(),
+    /** v38 Three Engagements by default; explicit LEGACY_WHOLE_BATTLE reproduces older Battles. */
     val battleStructure: BattleStructure = BattleStructureSettings.load(
         java.nio.file.Paths.get("data/research/resync/game-rules-current.properties")
     ),

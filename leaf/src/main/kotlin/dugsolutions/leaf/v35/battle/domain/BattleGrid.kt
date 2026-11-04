@@ -524,7 +524,7 @@ class BattleGrid(
                 StrikeRow.entries.forEach { row ->
                     ensureNotLocked(row)
                     square(playerId, row).drainDice().forEach { die ->
-                        if (postBattleRemoval || placement.row in rowsBeingReclaimed) die.unlockAfterBattle()
+                        if (postBattleRemoval || row in rowsBeingReclaimed) die.unlockAfterBattle()
                         add(BattleDiePlacement(playerId, row, die))
                     }
                 }

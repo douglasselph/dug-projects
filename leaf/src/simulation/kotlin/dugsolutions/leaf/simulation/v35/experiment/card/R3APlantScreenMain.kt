@@ -14,6 +14,7 @@ import dugsolutions.leaf.v35.chronicle.domain.PurchaseKind
 import dugsolutions.leaf.v35.di.appModules
 import dugsolutions.leaf.v35.effect.GameEffect
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.game.GameRunner
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.di.GameFactory
@@ -207,6 +208,7 @@ object R3APlantScreenMain {
                         } }
                         val game = factory(GameConfig(
                             selectedPlantCards = grove, playerDecisionFactories = policies,
+                            battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                             seed = o.seed + sample, strategySeed = o.strategySeed + sample,
                             plantValues = values,
                             researchPlantEffectsBySeat = if (o.effectAudience == "targeted" && calibratedEffect != null)
@@ -290,6 +292,7 @@ object R3APlantScreenMain {
                     val game = factory(GameConfig(
                         selectedPlantCards = grove,
                         playerDecisionFactories = roleAt.map { role -> getWeights(role)?.let(::buyFactory) ?: PlayerDecisionFactory.humanBaseline() },
+                        battleStructure = BattleStructure.LEGACY_WHOLE_BATTLE,
                         seed = o.seed + 1000000L + mi * o.holdoutGames + sample,
                         strategySeed = o.strategySeed + 1000000L + mi * o.holdoutGames + sample,
                         plantValues = values,

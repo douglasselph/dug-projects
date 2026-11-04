@@ -1,6 +1,7 @@
 package dugsolutions.leaf.integration.v35.support
 
 import dugsolutions.leaf.v35.game.GameConfig
+import dugsolutions.leaf.v35.game.BattleStructure
 import dugsolutions.leaf.v35.game.GameRoundSetup
 import dugsolutions.leaf.v35.game.PlayerDecisionFactory
 import dugsolutions.leaf.v35.game.intervention.MechanicalInterventionFactory
@@ -42,7 +43,9 @@ data class GameScenario(
     /** Optional experiment-only mechanical intervention; fresh state per Game. */
     val mechanicalInterventionFactory: MechanicalInterventionFactory = MechanicalInterventionFactory.NONE,
     /** Optional explicit per-game Plant value/effect resolver for integration research scenarios. */
-    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL
+    val plantValues: PlantValueResolver = PlantValueResolver.CANONICAL,
+    /** Historical integration suite validates the main-source whole-Battle executor. */
+    val battleStructure: BattleStructure = BattleStructure.LEGACY_WHOLE_BATTLE
 ) {
     init {
         require(numPlayers in 2..4) {
@@ -72,6 +75,7 @@ data class GameScenario(
             selectedPlantCards = catalog.plants(selectedPlantNames),
             playerDecisionFactories = factories,
             roundSetup = roundSetup,
+            battleStructure = battleStructure,
             seed = seed,
             dieConfig = dieConfig,
             strategySeed = strategySeed,
