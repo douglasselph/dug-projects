@@ -8,13 +8,13 @@ The repository [README](../README.md) explains the purpose and working agreement
 - [Operational readiness](engineering/SIMULATION_OPERATIONAL_READINESS.md) — verified gates versus unvalidated balance conclusions
 - [Launch architecture](engineering/SIMULATION_LAUNCH_ARCHITECTURE.md) — direct Java, persistent JVMs, checkpoints and long-run contracts
 - [How to use the simulator](engineering/USING_THE_SIMULATOR.md) and [architecture](engineering/CODE_ARCHITECTURE.md)
-- [Current tabletop rulebook v37-03](rules/Leaf_and_Let_Die_v37-03.pdf) — tabletop rules; research overrides are distinct
+- [Current tabletop rulebook v38-01](rules/Leaf_and_Let_Die_v38-01.pdf) — adopted tabletop rules; [v37-03](legacy/Leaf_and_Let_Die_v37-03.pdf) is retained for historical comparison; research overrides are distinct
 
 ## By subject
 
 | Directory | What belongs there |
 | --- | --- |
-| [battle/](battle/) | Battle pacing, Candidate B, fairness analyses, configuration, implementation checkpoints and report tools |
+| [battle/](battle/) | Adopted v38 Battle status, ruleset configuration, historical Candidate-B pacing/fairness analysis, implementation checkpoints and reports |
 | [policies/human-baseline/](policies/human-baseline/) | Human Baseline policy, C04 calibration and decision verification |
 | [policies/learning/](policies/learning/) | Trained/frozen strategy research and policy-family investigations |
 | [research/experiments/](research/experiments/) | Card-effect experiment methods, Sapping work, sanity controls and R-series implementation records |
@@ -28,7 +28,7 @@ The repository [README](../README.md) explains the purpose and working agreement
 
 ## Active pointers
 
-- [Battle research status](battle/BATTLE_PACING_RESEARCH_STATUS.md) and [Battle rules configuration](battle/BATTLE_STRUCTURE_CONFIGURATION.md)
+- [Current v38 Battle implementation/verification status](battle/V38_01_CURRENT_STATUS.md), [Battle rules configuration](battle/BATTLE_STRUCTURE_CONFIGURATION.md), and [historical v37 pacing A/B status](battle/BATTLE_PACING_RESEARCH_STATUS.md)
 - [Human Baseline](policies/human-baseline/HUMAN_BASELINE.md) and [Battle baseline](policies/human-baseline/HUMAN_BASELINE_BATTLE.md)
 - [Effect sanity gate](research/experiments/card-balance/EFFECT_SANITY_GATE.md) and [effect-aware decisions](research/experiments/card-balance/EFFECT_AWARE_DECISIONS.md)
 - [Protected baseline](research/provenance/protected-baseline/PROTECTED_BASELINE.json) — deliberately remains at its established path because verification tools consume it

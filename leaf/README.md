@@ -11,7 +11,7 @@ Before proposing code changes or experiments:
 3. Read [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) for the governing research philosophy and evidence standards.
 4. Read [`doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md) before changing launchers, runners, training/evaluation scripts, checkpointing, or long-running experiments.
 5. Read [`doc/engineering/SIMULATION_OPERATIONAL_READINESS.md`](doc/engineering/SIMULATION_OPERATIONAL_READINESS.md) before making claims about the current simulator's operational readiness.
-6. For Battle pacing / Candidate B work, read [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) and [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md).
+6. For current v38 Battle work, read [`doc/battle/V38_01_CURRENT_STATUS.md`](doc/battle/V38_01_CURRENT_STATUS.md) and [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md). The older [`BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) documents the pre-adoption v37 research, not current rules.
 7. Inspect the **current source and data files themselves** before claiming a mechanic, policy, effect, task, or experiment is implemented or current.
 
 Do **not** treat every older task/checkpoint document under `doc/` as an active task. Many are retained implementation or research records. [`doc/README.md`](doc/README.md) distinguishes current governing documents from historical detail.
@@ -89,7 +89,7 @@ Important rules for interpreting evidence:
 
 ---
 
-## Current state - November 2, 2026
+## Current state - November 4, 2026
 
 ### Operational simulator
 
@@ -105,22 +105,24 @@ The source contains R0/R1/R2/R3-era research infrastructure, including targeted/
 
 R3B.1a added effect-aware Human Baseline handling for the simple research controls (no-op, +20 VP, Raise +20 and Draw 4), closing an important calibration defect. The remaining limitation is broader: **mechanical execution and local effect-aware scoring are still not the same as discovering the strongest strategy built around an arbitrary effect**. An evaluation must establish that the tested policies can recognize and exploit the relevant effect/combination well enough before making strong underpowered/dominant claims.
 
-### Battle pacing experiment
+The v38 official card-text synchronization changed **definition fingerprints** even where card effect semantics were unchanged. The Root Four More and Sapping Snapdragon *example question specifications* have been deliberately re-fingerprinted to the current official CSV rows (without changing their explicit historical `LEGACY_WHOLE_BATTLE` selection). Their old fingerprints remain historical provenance, not current valid inputs. On this documentation checkpoint, **80 Python research-tool tests passed** after the example correction; these do not exercise the Kotlin game engine or certify the old experiment artifacts against v38.
 
-The v38-01 **Three Engagements** Battle system is the adopted default. The previous whole-Battle system remains selectable for historical comparisons:
+### v38-01 Battle rules migration and validation
 
-- `THREE_ENGAGEMENTS` (default)
-- `LEGACY_WHOLE_BATTLE` (explicit override)
+The **Three Engagements** Battle system is now the **adopted rule and code default**, not merely experimental Candidate B. The existing whole-Battle implementation remains selectable strictly for historical comparisons:
 
-for newly constructed simulation games through:
+- `THREE_ENGAGEMENTS` — v38 default, even if the optional settings file/property is missing.
+- `LEGACY_WHOLE_BATTLE` — explicit pre-v38 whole-Battle override. The former `CANONICAL` selector is invalid and rejected with a migration hint.
 
-```text
-data/research/resync/game-rules-current.properties
-```
+The optional setting is `battle.structure` in `data/research/resync/game-rules-current.properties`. A game can also override the choice via `GameConfig`.
 
-If the file or property is absent, the default is `THREE_ENGAGEMENTS`. The historical Battle pacing A/B runner intentionally selects A and B directly and does not depend on that file. The Three Engagements implementation currently requires the simulation runtime source set on the classpath; main-only tests and integrations explicitly choose the legacy engine.
+Source-level changes now include separate **Resolve → Doom → Cleanup** for each High/Middle/Low Strike, lowest-value-only row Doom, row-scoped dice/Critter cleanup, a **single final Refresh**, and Wisp's Resolve finishing an unresolved Strike immediately. The authoritative Root and Vine/Flower CSV wordings were synchronized (15 entries; 14 added converter mappings); the Wisp's Resolve text is present; and Compost has an unavailable-next-size Trash fallback. These changes are implemented and have focused tests, but **do not interpret their presence as complete execution or tabletop rules-fidelity certification**.
 
-The Battle pacing implementation progressed well beyond the original experiment brief: scheduling/execution, paired statistics, Human-guided policy parity work, rules-fidelity repairs, tactical cohorts, and modeled pacing/downtime instrumentation exist. Task 6 has documented executed acceptance. The Task 7 fairness/counterfactual extension exists but its own status document says it is **not yet a validated acceptance package**. See [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md).
+The new [`V38BattleStructureFullGameRegressionTest`](src/simulationTest/kotlin/dugsolutions/leaf/simulation/v35/experiment/battlepacing/V38BattleStructureFullGameRegressionTest.kt) runs **2/3/4 players × both Battle structures**, replayed with identical seeds, for the standard 3/2/2 ten-round game. **As of this archive there is no attached Ubuntu test output establishing that all six cases passed.** Run the matrix and full regression suite before declaring the v38 migration verified. Additional special-effect interaction tests and a full v38 rules-compliance audit remain open.
+
+**Runtime limitation:** the adopted scheduler is still in `src/simulation/` and requires the simulation runtime provider. A main-only runtime cannot execute the adopted default; tests that intentionally cover the old production path explicitly select legacy behavior. This is an architectural follow-up, not a reason to silently run legacy when v38 is selected.
+
+The historical v37 Battle-pacing A/B studies and R3A research adapters remain useful, but are **not automatically valid evidence about v38 gameplay**; historical R3A runs are explicitly pinned to legacy. Task 6 modeled pacing estimates remain uncalibrated against human minutes, and Task 7 fairness/counterfactual acceptance remains open. See [`doc/battle/V38_01_CURRENT_STATUS.md`](doc/battle/V38_01_CURRENT_STATUS.md) for current status and [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) for the historical experiment record.
 
 ---
 
@@ -157,7 +159,7 @@ The intended current research/game structure is **3/2/2**:
 
 ### Rulebook
 
-For rules questions where code/data and old notes disagree, [`doc/rules/Leaf_and_Let_Die_v37-03.pdf`](doc/rules/Leaf_and_Let_Die_v37-03.pdf) is the authoritative tabletop rules reference unless a newer approved rule source is explicitly supplied. The repository's older `doc/legacy/Leaf_and_Let_Die_v36-01.pdf` is historical and must not silently override v37-03.
+The **authoritative current tabletop rulebook** is [`doc/rules/Leaf_and_Let_Die_v38-01.pdf`](doc/rules/Leaf_and_Let_Die_v38-01.pdf). The previous [`v37-03`](doc/legacy/Leaf_and_Let_Die_v37-03.pdf) and [`v36-01`](doc/legacy/Leaf_and_Let_Die_v36-01.pdf) rulebooks are historical references only. For the simulator, the official CSVs above are the card-definition source of truth; a research override is **never** automatically an official rule.
 
 ---
 
@@ -244,7 +246,16 @@ A convenient combined regression is:
 ./gradlew test integrationTest simulationTest
 ```
 
-Do not treat an operational PASS as proof of balance, statistical power, policy optimality, or human pacing.
+For the required v38 deterministic full-game matrix (**six cases, two seeded executions each**):
+
+```bash
+set -o pipefail
+./gradlew simulationTest \
+  --tests '*V38BattleStructureFullGameRegressionTest' \
+  --rerun-tasks |& tee ~/Downloads/leaf-v38-full-game-regression.log
+```
+
+The matrix is **present, not independently confirmed passing** in this archive. Preserve the resulting JUnit report/log and record any failures in `TASKS.md` before running large research batches. The old readiness gate predates the v38 migration; its October 30 PASS is not a v38 certificate. Do not treat an operational PASS as proof of balance, statistical power, policy optimality, or human pacing.
 
 ---
 
@@ -257,8 +268,9 @@ For current work, use these as the front door:
 - [`doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md`](doc/LEAF_RESEARCH_GOALS_AND_EXPERIMENT_DESIGN.md) - research mission, evidence standards, card assessment method, strategy-diversity goals.
 - [`doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md`](doc/engineering/SIMULATION_LAUNCH_ARCHITECTURE.md) - execution architecture and operational constraints.
 - [`doc/engineering/SIMULATION_OPERATIONAL_READINESS.md`](doc/engineering/SIMULATION_OPERATIONAL_READINESS.md) - stop-and-use-it gate.
-- [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) - current Battle pacing experiment state.
+- [`doc/battle/V38_01_CURRENT_STATUS.md`](doc/battle/V38_01_CURRENT_STATUS.md) - current Battle adoption, migration, verification and open work.
 - [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md) - current simulation Battle-selection configuration.
+- [`doc/battle/BATTLE_PACING_RESEARCH_STATUS.md`](doc/battle/BATTLE_PACING_RESEARCH_STATUS.md) - historical v37 pacing A/B research status; not the v38 adoption status.
 - [`doc/engineering/CODE_ARCHITECTURE.md`](doc/engineering/CODE_ARCHITECTURE.md) - programming architecture.
 - [`doc/engineering/USING_THE_SIMULATOR.md`](doc/engineering/USING_THE_SIMULATOR.md) - practical simulator workflow.
 - [`doc/engineering/TESTING_AND_VERIFICATION.md`](doc/engineering/TESTING_AND_VERIFICATION.md) - verification boundaries and commands.

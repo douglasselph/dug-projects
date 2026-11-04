@@ -1,20 +1,47 @@
 # Leaf & Let Die - Active Research and Engineering Tasks
 
-**Status date:** November 2, 2026
+**Status date:** November 4, 2026
 
 This is the **active top-level backlog**. It is intentionally shorter than the many historical phase/checkpoint documents under `doc/`.
 
 A historical task ID appearing in an older document does **not** mean that task is still open. Inspect current source/tests/results, then use this file as the current prioritization unless the user explicitly changes it.
 
-## Current immediate follow-up — Human weak-Plant Refresh judgment
+## Immediate engineering gate — validate the adopted v38-01 rules
+
+The current source contains the following **implemented** v38 changes. They still require the precise validation below; source presence, converter parsing, isolated smoke tests, and historical October 30 readiness do **not** establish end-to-end v38 compliance.
+
+| ID | Work | Source status / acceptance |
+| --- | --- | --- |
+| **V38-1** | Per-Strike **Resolve → Doom → Cleanup**, lowest-value-only Doom, row-only dice/Critter return, final Refresh, Wisp's Resolve early finish | **Implemented in source** with focused tests; full regression results not supplied in this archive |
+| **V38-2** | Make `THREE_ENGAGEMENTS` the default and preserve `LEGACY_WHOLE_BATTLE` explicitly | **Implemented**, including missing-file fallback and rejection of old `CANONICAL`; production-only runtime remains limited |
+| **V38-3** | Synchronize two official Plant CSVs, 14 converter additions, Wisp's Resolve definition and Compost unavailable-upgrade Trash fallback | **Implemented**; prior focused converter/valuation smoke checks passed, but complete Gradle regression verification is not recorded here |
+| **V38-4** | Execute deterministic **2/3/4-player × both Battle structures** 3/2/2 full-game matrix (two identical-seed runs each), plus `test integrationTest simulationTest` | **TESTS ADDED / EXECUTION UNVERIFIED**. Run on Ubuntu, retain JUnit XML/logs, fix failures and record exact pass counts before claiming acceptance |
+| **V38-5** | Audit special interactions not proved by the matrix (Wisp's Resolve mid-action and multiple uses; Wispquake locked rows; Pollen Theft ownership; Root & Scoot withdrawal; Sunlight action accounting; per-row cleanup/Refresh and other card targeting) | **OPEN** — use legal deterministic fixtures and v38 rulebook, not aggregate win rates |
+| **V38-6** | Decide whether/how to move the adopted scheduler into `src/main/` so a main-only runtime can execute the default | **OPEN** architectural limitation; never silently fall back to legacy |
+| **V38-7** | Record rulebook/CSV/ruleset fingerprints and distinguish archived v37 cohorts from new v38 research | **OPEN research provenance gate** for new comparative studies; existing historical R3A adapters intentionally force legacy |
+
+**Run next on Ubuntu from the repository root:**
+
+```bash
+set -o pipefail
+./gradlew simulationTest \
+  --tests '*V38BattleStructureFullGameRegressionTest' \
+  --rerun-tasks |& tee ~/Downloads/leaf-v38-full-game-regression.log
+./gradlew test integrationTest simulationTest \
+  |& tee ~/Downloads/leaf-v38-all-regressions.log
+```
+
+Do not treat authored test classes as passed tests. The current authority is [`doc/rules/Leaf_and_Let_Die_v38-01.pdf`](doc/rules/Leaf_and_Let_Die_v38-01.pdf) together with the official card CSVs. Current-state details are in [`doc/battle/V38_01_CURRENT_STATUS.md`](doc/battle/V38_01_CURRENT_STATUS.md).
+
+## Parallel research follow-up — Human weak-Plant Refresh judgment
 
 A focused Cultivation Human Baseline adjustment adds bounded, seeded strategy variability for activating weak/no-effect cards when other cards are spent, with a modest long-horizon Refresh nudge. Worm Flip works in both directions, and Human Baseline can spend it to flip the last face-up Plant down and enable natural Cleanup Refresh; Water still provides immediate group Refresh. See `doc/policies/human-baseline/WEAK_PLANT_REFRESH_JUDGMENT.md`.
 
-**Next single gate:** Run targeted regression tests and a small paired question pilot, inspect the weak-Plant/Refresh decision traces and changes in outcome, and then resume the 36-Plant research. Do not use the earlier 36-card suppression results as conclusive balance verdicts.
+**Research gate after v38 mechanical acceptance:** Run targeted regression tests and a small paired question pilot, inspect weak-Plant/Refresh decision traces and outcome changes, then resume exploratory 36-Plant screening under an explicitly recorded ruleset. Earlier suppression results are not conclusive balance verdicts and legacy-rule cohorts must not be relabeled as v38 evidence.
 
 ## Current priority: all-card sanity and pricing audit
 
-The next major design goal is to examine the current Plant catalog and answer two separate questions for every card:
+After the v38 correctness gate, the next major design goal is to examine the current Plant catalog and answer two separate questions for every card:
 
 1. **Effect sanity:** Is the effect meaningfully useful somewhere, effectively dead, or so strong that credible alternatives/counters cannot compete?
 2. **Purchase/pricing sanity:** At the card's actual cost, printed VP, grafting constraints, timing, and opportunity cost, is acquiring it strategically worthwhile relative to legal alternatives?
@@ -23,11 +50,11 @@ Do not collapse these into one metric. A good effect can be overpriced; a weak e
 
 ### A1 - Generalize the question runner beyond one bespoke card study
 
-**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 partial; A1.6 exploratory 36-card foundation available. Next: run the small catalog pilot, then the all-36 first pass.**
+**Status:** IN PROGRESS — A1.1–A1.3 complete; A1.4/A1.5 partial and awaiting broader JVM validation; A1.6 exploratory 36-card foundation exists. Once v38 is mechanically verified, run the small catalog pilot under an explicitly supported/recorded Battle structure before any all-36 exploratory first pass. The current legacy R3A adapters do not yet execute v38 questions.**
 
 This is the correct next step for the current repository. The source already contains much of the machinery needed for reusable Plant research, but it is spread across several generations of focused experiments:
 
-- `R3APlantScreenMain` already accepts an arbitrary current Plant target and legal nine-card Grove, and can run targeted versus unrestricted Buy-policy searches;
+- `R3APlantScreenMain` already accepts an arbitrary current Plant target and legal nine-card Grove, and can run targeted versus unrestricted Buy-policy searches, **but its historical runner is pinned to LEGACY_WHOLE_BATTLE**;
 - `PlantExperimentConfig` / `PlantExperimentConfigLoader` already provide generic research-only Plant overrides without mutating canonical card data;
 - R3B/R3B.1 already provide disabled/positive controls, seat-scoped effect isolation, actual mechanical-output telemetry, fixed-policy comparisons, resumability and provenance safeguards;
 - R1/R2 remain Sapping-specific, while R3B/R3B.1 orchestration and the R3A `effect-variant` path still contain card-specific control names/guards for Root Four More and Queen's Blossom;
@@ -53,7 +80,7 @@ Required work:
 
 #### A1.2 - Add a declarative Plant question specification and strict validator
 
-**Status:** COMPLETE — schema v1 validator, two example questions, and negative tests; see [`PLANT_QUESTION_SPECIFICATION.md`](doc/research/experiments/card-balance/PLANT_QUESTION_SPECIFICATION.md). Execution deliberately remains for A1.3–A1.4.
+**Status:** COMPLETE — schema v1 validator, two example questions, and negative tests; see [`PLANT_QUESTION_SPECIFICATION.md`](doc/research/experiments/card-balance/PLANT_QUESTION_SPECIFICATION.md). The two example target fingerprints were deliberately updated to match v38 official card-text definitions; **80 Python research-tool tests passed** after this correction. Stage execution is still partial under A1.4–A1.5 and remains pinned to legacy in historical R3A adapters.
 
 Introduce one human-readable question definition that is data, not a new launcher script. Keep the format deliberately small; do not invent a large experiment DSL.
 
@@ -61,7 +88,7 @@ The specification must be able to identify/record:
 
 - stable `question_id`, human question/hypothesis and target Plant title plus current ID/fingerprint;
 - exact legal nine-card Grove and player count(s);
-- Round/Wisp/game-rule configuration, including the current 3/2/2 setup and canonical versus explicitly selected experimental game rules;
+- Round/Wisp/game-rule configuration, including the current 3/2/2 setup and **adopted v38 THREE_ENGAGEMENTS** versus explicitly selected historical **LEGACY_WHOLE_BATTLE** rules;
 - named comparison conditions such as official, suppressed/no-effect, candidate effect, and later price/cost alternatives;
 - whether an intervention applies to all players or only a target seat/role;
 - requested research stages: targeted discovery, unrestricted discovery, frozen-policy comparison, adapted/reoptimized comparison, held-out evaluation and countersearch;
@@ -146,7 +173,7 @@ Do not make A1 invent missing causal measurements just to fill columns. Missing 
 
 #### A1.7 - Prove the generalized path with two unrelated Plant questions
 
-**Status:** BLOCKED on A1.2-A1.6.
+**Status:** BLOCKED on accepted A1.4–A1.6 JVM execution, stage coverage and evidence-bundle contracts (A1.2–A1.3 are complete).
 
 Run a deliberately small engineering/functional vertical slice, not a balance study.
 
@@ -276,66 +303,37 @@ The desired direction is **question-driven experiments on shared machinery**, no
 
 ---
 
-## Parallel research stream: Battle pacing / Three Engagements
+## Parallel research stream: evaluate the adopted Three Engagements rules
 
-Candidate B remains an experiment, not an adopted game rule.
+The designer **adopted THREE_ENGAGEMENTS in rulebook v38-01**, independently of whether the earlier v37 pacing/fairness research reached statistical acceptance. This section is now about **post-adoption evidence**, not an adoption decision. Mechanical verification is tracked by V38-1–V38-7 above.
 
 ### B1 - Battle-structure runtime selection
 
-**Status:** IMPLEMENTED IN CURRENT SOURCE; verify in the user's checkout before relying on it.
+**Status:** IMPLEMENTED; main-only runtime limitation is V38-6.
 
-`data/research/resync/game-rules-current.properties` supports:
+`battle.structure=THREE_ENGAGEMENTS` is the default with or without the optional properties file. `battle.structure=LEGACY_WHOLE_BATTLE` explicitly selects the historical engine. The stale `CANONICAL` enum value is rejected. The research A/B runner selects conditions independently; R3A-based historical research is pinned to legacy. See [`doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md`](doc/battle/BATTLE_STRUCTURE_CONFIGURATION.md).
 
-```properties
-battle.structure=CANONICAL
-# or THREE_ENGAGEMENTS
-```
+### B2 - Validate Task 7 fairness/counterfactual extension on the current rules
 
-The default is canonical. New `GameConfig` instances read the setting. Candidate B requires the simulation runtime provider; production-only use must remain canonical. The explicit A/B experiment runner still selects A/B directly and intentionally ignores this file.
+**Status:** OPEN; the existing Task 7 package was not fully validated and predates adoption.
 
-See `doc/BATTLE_STRUCTURE_CONFIGURATION.md`.
-
-### B2 - Validate Task 7 fairness/counterfactual extension
-
-**Status:** OPEN.
-
-Task 7 source/reporting exists, but `doc/TASK7_STATUS.md` explicitly says the package was not fully validated.
-
-If Battle pacing becomes the current design priority, next work is to:
-
-- compile/run the Task 7 extension against the current source;
-- validate all paired cohorts without dropped failures;
-- condition last-actor outcomes on starting row strength/resources rather than reading raw rates causally;
-- compare reference B versus controlled ordering changes carefully;
-- add/confirm canonical-A comparators where required;
-- measure High-row Wound cascade into later Engagements.
+- Compile and execute the Task 7 extension on the current code; clearly label whether cohorts are v37 legacy or v38.
+- Reproduce full 2-/3-/4-player cohorts, including early/mid/final Battles, without dropping failed runs.
+- Condition last-actor outcomes on starting row strength, resources, player seat/order and initial Strike status before interpreting advantages.
+- Compare the adopted scheduler with controlled order perturbations, while retaining truly comparable legacy A cohorts if useful.
+- Measure High-Strike Wound cascades, resource stranding, Wisp effects and per-row Doom under **v38** rather than extrapolating from Candidate B's older end-of-Battle Doom.
 
 ### B3 - Human pacing calibration before tabletop-time claims
 
 **Status:** OPEN / empirical.
 
-Task 6 provides transparent pacing proxies, not measured human minutes. Before making a real-world duration claim:
+Task 6 provides transparent pacing proxies, not observed human minutes. Calibrate handoff/execution/reassessment/decision coefficients against playtest video/audio, compare passive-finished waiting separately from consequential observation, report fast/base/slow sensitivity ranges, and never equate JVM CPU time with tabletop time.
 
-- calibrate handoff/execution/reassessment/decision coefficients from playtest video/audio timestamps where available;
-- compare passive-finished waiting separately from tactically consequential observation;
-- report fast/base/slow sensitivity ranges;
-- do not equate JVM CPU time with tabletop time.
+### B4 - Post-adoption balance and experience review
 
-### B4 - Adoption decision
+**Status:** OPEN; adoption is completed, evaluation is not.
 
-**Status:** NOT READY / design decision, not code completion.
-
-Do not make Three Engagements canonical merely because it runs. Adoption should consider:
-
-- human downtime improvement;
-- last-actor/order advantage;
-- High-row Wound cascade;
-- support-resource stranding;
-- card/resource balance changes;
-- learning burden;
-- whether the three-row tactical puzzle remains strong.
-
-Until adopted explicitly, `CANONICAL` remains the default.
+Test actual effects of v38 on last-actor/order bias, High-row Wounds, Support caps, Wisp's Resolve, Doom attrition, card/resource synergies, strategic diversity, learning burden and tabletop downtime. If results reveal a problem, propose a *new, explicit* rule experiment; do not silently revert to the legacy default or claim that earlier v37 measurements proved v38 safe.
 
 ---
 
@@ -383,11 +381,11 @@ Do not require one universal expert policy across 2/3/4 players. Each supported 
 
 ## Invariants for all future work
 
-- Preserve canonical game mechanics unless the user explicitly approves a rule change.
+- Preserve the **adopted v38-01 tabletop game mechanics** unless the user explicitly approves another rule change; do not restore older v37 behavior from historical notes.
 - Current standard Round structure is **3/2/2**.
 - Sunlight Round effects gain a **Sunlight token**, never legacy Raise +3.
 - Roll Reward 1 -> Critter and 2 -> Wisp applies according to current rules in both Cultivation and Battle; do not restore obsolete restrictions from old notes.
-- Keep canonical data, research overrides, and game-level experimental rules distinct.
+- Keep official card data, research overrides and game-level rules selection distinct; new v38 balance cohorts must never silently use legacy-only R3A adapters.
 - Use current card names as primary report labels and IDs/fingerprints for traceability.
 - Do not silently change frozen weights or promote experimental effects to canonical.
 - Do not claim balance from Human Baseline comparisons alone.

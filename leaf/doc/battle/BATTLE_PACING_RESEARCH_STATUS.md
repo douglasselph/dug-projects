@@ -1,4 +1,4 @@
-> **Historical research record (v37-03):** This document describes the original A/B pacing experiment as of November 2, 2026. Under v38-01, `THREE_ENGAGEMENTS` is adopted by default and the old `CANONICAL` label has been renamed `LEGACY_WHOLE_BATTLE`. See [BATTLE_STRUCTURE_CONFIGURATION.md](BATTLE_STRUCTURE_CONFIGURATION.md) for current routing. The historical settings shown below are not current instructions.
+> **ARCHIVED RESEARCH SNAPSHOT — NOT CURRENT RULES:** This document records the v37-03 Candidate-B A/B experiment as of November 2, 2026. The designer subsequently adopted Three Engagements under v38-01, with different per-Strike Doom/cleanup and Wisp's Resolve rules. **For current status, commands, and open work, use [V38_01_CURRENT_STATUS.md](V38_01_CURRENT_STATUS.md) and [BATTLE_STRUCTURE_CONFIGURATION.md](BATTLE_STRUCTURE_CONFIGURATION.md).** All `CANONICAL`, end-of-Battle Doom, experimental/adoption-status and default references below are **historical statements**, not current instructions.
 
 # Leaf & Let Die - Battle Pacing / Three Engagements Research Status
 
