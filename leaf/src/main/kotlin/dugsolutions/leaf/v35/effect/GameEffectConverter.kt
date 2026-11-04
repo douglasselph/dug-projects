@@ -69,6 +69,24 @@ class GameEffectConverter(
         private val effectsByText: Map<String, GameEffect> = buildMap {
             // Explicit aliases for the October/November 2026 card files.
             // Do not replace these with approximate/fuzzy text matching.
+            // v38-01 official Plant CSVs (Nov 2026).  These are deliberate text
+            // mappings, not a global rule stripping dice symbols from effects.
+            // The older strings remain registered for historical research snapshots.
+            register("""Raise ×2 one die""", GameEffect.DOUBLE_ONE_DIE)
+            register("""Raise a die +4""", GameEffect.RAISE_DIE_PLUS_4)
+            register("""Raise any die +1. <battle/> Remove all your dice from one Strike Square, you no longer participate in that strike.""", GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE)
+            register("""<cultivation/> Discard up to 2 dice; draw that many. <battle/> Reroll 1 die.""", GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE)
+            register("""Raise any die +1""", GameEffect.RAISE_ANY_DIE_PLUS_1)
+            register("""Raise all your dice +2""", GameEffect.RAISE_ALL_DICE_PLUS_2)
+            register("""Trash a worm or bee to Raise any die by 5""", GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5)
+            register("""Raise all your D8s +1""", GameEffect.RAISE_ALL_D8S_PLUS_1)
+            register("""For each Root or Vine, Raise any die +1""", GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE)
+            register("""For each grafted Vine or Flower, Raise any die +1""", GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER)
+            register("""Raise any die +2. <battle/> In its Strike Row, reduce all opposing dice by 2; Raise it by the total reduced.""", GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW)
+            register("""Draw 1 die. <battle/> You must swap 2 of your dice; Raise 1 of them +2.""", GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE)
+            register("""Raise a die +1. <battle/> Flip each opposing die higher than it in its Strike Row.""", GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW)
+            register("""Raise a die +1 then for each die showing its maximum value, draw 1 die""", GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE)
+
             register("""Gain 1 worm. Each worm <worm/> is worth 1 more this round.""", GameEffect.GAIN_WORM_AND_BOOST_WORMS_PLUS_1_THIS_ROUND)
             register("""Gain 1 VP per 1 showing""", GameEffect.GAIN_VP_PER_ONE_SHOWING)
             register("""<cultivation/> Discard up to 2 dice dice; draw that many. <battle/> Reroll 1 die.""", GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE)

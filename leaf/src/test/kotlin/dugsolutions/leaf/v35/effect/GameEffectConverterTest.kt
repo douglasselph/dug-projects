@@ -91,6 +91,38 @@ class GameEffectConverterTest {
         assertEquals("This is not a real Leaf & Let Die effect.", reportedText)
     }
 
+    @Test
+    fun novemberV38PlantTextChanges_remainOnTheirExistingMechanics() {
+        val expected = listOf(
+            "Raise ×2 one die" to GameEffect.DOUBLE_ONE_DIE,
+            "Raise a die +4" to GameEffect.RAISE_DIE_PLUS_4,
+            "Raise any die +1. <battle/> Remove all your dice from one Strike Square, you no longer participate in that strike." to GameEffect.RAISE_DIE_PLUS_1_AND_WITHDRAW_FROM_STRIKE_SQUARE,
+            "<cultivation/> Discard up to 2 dice; draw that many. <battle/> Reroll 1 die." to GameEffect.DISCARD_UP_TO_2_DICE_AND_REDRAW_OR_REROLL_ONE_IN_BATTLE,
+            "<cultivation/> Reroll 1 die. On a 3, draw a die. <battle/> Choose 1 Strike row. Reduce all opponent dice there by 3." to GameEffect.REROLL_DIE_ON_3_DRAW_ONE_CULTIVATION_OR_REDUCE_OPPOSING_STRIKE_ROW_BY_3,
+            "Raise any die +1" to GameEffect.RAISE_ANY_DIE_PLUS_1,
+            "Raise all your dice +2" to GameEffect.RAISE_ALL_DICE_PLUS_2,
+            "Trash a worm or bee to Raise any die by 5" to GameEffect.TRASH_CRITTER_TO_RAISE_DIE_PLUS_5,
+            "Raise all your D8s +1" to GameEffect.RAISE_ALL_D8S_PLUS_1,
+            "For each Root or Vine, Raise any die +1" to GameEffect.RAISE_DIE_PLUS_1_PER_ROOT_OR_VINE,
+            "For each grafted Vine or Flower, Raise any die +1" to GameEffect.RAISE_DIE_PLUS_1_PER_GRAFTED_VINE_OR_FLOWER,
+            "Raise any die +2. <battle/> In its Strike Row, reduce all opposing dice by 2; Raise it by the total reduced." to GameEffect.RAISE_DIE_PLUS_2_AND_REDUCE_OPPOSING_DICE_IN_STRIKE_ROW,
+            "Draw 1 die. <battle/> You must swap 2 of your dice; Raise 1 of them +2." to GameEffect.DRAW_ONE_DIE_AND_SWAP_TWO_OWN_DICE_RAISE_ONE_PLUS_2_IN_BATTLE,
+            "Raise a die +1. <battle/> Flip each opposing die higher than it in its Strike Row." to GameEffect.RAISE_DIE_PLUS_1_AND_FLIP_HIGHER_OPPOSING_DICE_IN_STRIKE_ROW,
+            "Raise a die +1 then for each die showing its maximum value, draw 1 die" to GameEffect.RAISE_DIE_PLUS_1_AND_DRAW_ONE_PER_MAX_DIE
+        )
+        expected.forEach { (wording, effect) ->
+            assertEquals(effect, converter(wording), "v38 changed wording: $wording")
+        }
+    }
+
+    @Test
+    fun v38WispResolveText_mapsToTheExistingEarlyStrikeEffect() {
+        assertEquals(
+            GameEffect.RESOLVE_STRIKE_IMMEDIATELY_AND_CLEAR_ROW,
+            converter("<battle/> Battle Only: Immediately finish 1 Strike: Resolve → Doom → Cleanup.")
+        )
+    }
+
     /**
      * Contract test against the v35 CSV source of truth.
      *

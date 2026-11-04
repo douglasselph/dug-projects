@@ -12,6 +12,7 @@ import dugsolutions.leaf.v35.effect.GameEffectSource
 import dugsolutions.leaf.v35.game.operation.RollRewardPolicy
 import dugsolutions.leaf.v35.game.operation.RollResolver
 import dugsolutions.leaf.v35.game.operation.UpgradeResolver
+import dugsolutions.leaf.v35.game.operation.TrashResolver
 import dugsolutions.leaf.v35.player.decision.effect.EffectDieChoice
 import dugsolutions.leaf.v35.random.die.DieSides
 
@@ -23,15 +24,18 @@ import dugsolutions.leaf.v35.random.die.DieSides
  * availability, D4 return, replacement creation, and destination.
  */
 class UpgradeEffectHandler(
-    private val upgradeResolver: UpgradeResolver = UpgradeResolver()
+    private val upgradeResolver: UpgradeResolver = UpgradeResolver(),
+    private val trashResolver: TrashResolver = TrashResolver()
 ) : EffectHandler {
 
     override fun canExecute(
         request: GameEffectRequest
     ): Boolean =
         when (request.effect) {
+            // v38 Compost may Trash its chosen die if its next normal size is
+            // unavailable (including D20, which has no larger size).
             GameEffect.UPGRADE_DIE_FROM_HAND ->
-                upgradeChoices(request).isNotEmpty()
+                request.actor.dice.hand.isNotEmpty()
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,
             GameEffect.UPGRADE_DIE_AND_USE_NOW_NO_REWARDS ->
@@ -50,16 +54,28 @@ class UpgradeEffectHandler(
 
         when (request.effect) {
             GameEffect.UPGRADE_DIE_FROM_HAND -> {
+                // The player chooses from *all* Hand dice: an available next
+                // size upgrades as before, or an unavailable one may be Trashed
+                // instead. Choosing that target is the decision to use Trash.
                 val die = chooseRequiredHandDie(
                     request = request,
-                    legalChoices = upgradeChoices(request)
+                    legalChoices = handChoices(request.actor)
                 )
 
-                upgradeResolver.upgradeFromHandToDiscard(
-                    game = request.game,
-                    player = request.actor,
-                    die = die
-                )
+                if (upgradeResolver.canUpgradeNormalStep(request.game, die)) {
+                    upgradeResolver.upgradeFromHandToDiscard(
+                        game = request.game,
+                        player = request.actor,
+                        die = die
+                    )
+                } else {
+                    trashResolver.trashDieFromHand(
+                        game = request.game,
+                        player = request.actor,
+                        die = die,
+                        reason = "COMPOST"
+                    )
+                }
             }
 
             GameEffect.UPGRADE_DIE_AND_USE_NOW,

@@ -167,21 +167,19 @@ class CultivationMainPriorityTest {
             )
         )
 
-        assertEquals(
-            null,
-            CompostPriority.targetScore(
-                context = context,
-                die = context.self.board.hand[0],
-                normalPurchasingPower = 3
-            )
-        )
-        assertTrue(
-            CompostPriority.targetScore(
-                context = context,
-                die = context.self.board.hand[1],
-                normalPurchasingPower = 3
-            ) != null
-        )
+        val trashFallback = requireNotNull(CompostPriority.targetScore(
+            context = context,
+            die = context.self.board.hand[0],
+            normalPurchasingPower = 3
+        ))
+        val normalUpgrade = requireNotNull(CompostPriority.targetScore(
+            context = context,
+            die = context.self.board.hand[1],
+            normalPurchasingPower = 3
+        ))
+        assertTrue(trashFallback.adjustments.any { "Trash" in it.reason })
+        assertTrue(normalUpgrade.adjustments.any { "Permanent" in it.reason })
+        assertTrue(trashFallback.total < normalUpgrade.total)
     }
 
 

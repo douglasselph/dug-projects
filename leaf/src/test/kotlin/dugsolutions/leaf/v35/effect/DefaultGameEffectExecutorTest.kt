@@ -133,7 +133,7 @@ class DefaultGameEffectExecutorTest {
     }
 
     @Test
-    fun compost_upgradeUsesOnlyDiceWithAvailableImmediateNextSize() {
+    fun compost_offersUpgradeableAndUnavailableDiceForTrashFallback() {
         val d6 = FixedDie(6, 5)
         val d8 = FixedDie(8, 4)
         val strategy = RecordingLastChoiceStrategy()
@@ -150,11 +150,38 @@ class DefaultGameEffectExecutorTest {
 
         executor.execute(request(game, actor, GameEffect.UPGRADE_DIE_FROM_HAND))
 
+        // v38: D6 can upgrade to D8, while D8 can be chosen for Trash
+        // because the next size (D10) is unavailable. LastChoice chooses D8.
         val offered = strategy.requiredRequests.single().legalChoices
-        assertEquals(1, offered.size)
-        assertEquals(6, offered.single().sides)
+        assertEquals(listOf(6, 8), offered.map { it.sides })
+        assertEquals(listOf(d6), actor.dice.hand)
+        assertTrue(actor.dice.discard.isEmpty())
+        assertEquals(0, game.grove.graftBed.count(DieSides.D10))
+        assertTrue(game.chronicle.entries.any {
+            it is GameEntry.TrashDie && it.playerId == actor.id && it.sides == DieSides.D8
+        })
+    }
+
+    @Test
+    fun compost_stillUpgradesWhenChosenDieHasAvailableNextSize() {
+        val d6 = FixedDie(6, 5)
+        val d8 = FixedDie(8, 4)
+        val actor = player(
+            id = 1,
+            hand = listOf(d6, d8),
+            effectStrategy = FirstChoiceStrategy()
+        )
+        val game = game(actor)
+
+        repeat(9) {
+            assertTrue(game.grove.graftBed.take(DieSides.D10))
+        }
+
+        executor.execute(request(game, actor, GameEffect.UPGRADE_DIE_FROM_HAND))
+
         assertEquals(listOf(d8), actor.dice.hand)
         assertEquals(8, actor.dice.discard.single().sides)
+        assertFalse(game.chronicle.entries.any { it is GameEntry.TrashDie })
     }
 
     @Test

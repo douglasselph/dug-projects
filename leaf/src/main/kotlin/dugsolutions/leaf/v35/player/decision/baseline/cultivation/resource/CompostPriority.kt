@@ -8,7 +8,8 @@ import dugsolutions.leaf.v35.player.decision.context.DieView
 import dugsolutions.leaf.v35.random.die.DieSides
 
 /**
- * Scores Compost from the best legal permanent die upgrade currently available.
+ * Scores v38 Compost from an available one-step Upgrade, or its optional
+ * Trash fallback when the chosen die has no available next size.
  *
  * [normalPurchasingPower] is supplied by the injected Human Baseline policy so
  * protected Critters are not silently treated as ordinary spending power.
@@ -78,7 +79,9 @@ object CompostPriority {
         val next = current?.let(::nextNormalStep)
         return CertificationObservation(
             target = target?.die,
-            permanentUpgradeSides = if (current != null && next != null) next.value - current.value else null,
+            permanentUpgradeSides = if (current != null && next != null &&
+                (context.grove.graftBed[next] ?: 0) > 0
+            ) next.value - current.value else null,
             currentRollOpportunityCost = target?.die?.value,
             cultivationRoundsRemaining = context.progress.cultivationRoundsRemaining,
             battleIsNext = PhaseProximity.battleIsNext(context),
@@ -100,17 +103,25 @@ object CompostPriority {
         val bestTarget = bestTarget(context, normalPurchasingPower)
             ?: return PriorityScore(NO_TARGET_SCORE)
 
-        var score = PriorityScore(
-            base = BASE_SCORE,
-            adjustments = bestTarget.score.adjustments
-        ).adjusted(
-            (context.progress.cultivationRoundsRemaining ?: 0)
-                .coerceAtMost(MAX_FUTURE_ROUNDS_BONUS_ROUNDS) * POINTS_PER_FUTURE_CULTIVATION_ROUND,
-            "Future rounds benefit from upgrade"
-        )
+        val chosen = DieSides.entries.firstOrNull { it.value == bestTarget.die.sides }
+        val next = chosen?.let(::nextNormalStep)
+        val isUpgrade = next != null && (context.grove.graftBed[next] ?: 0) > 0
 
-        if (developmentBonus > 0) {
-            score = score.adjusted(developmentBonus, "Dice development is behind target")
+        // Only an actual upgrade receives the permanent-dice development
+        // premium. Trashing a die is legal but has a distinct opportunity cost.
+        var score = PriorityScore(
+            base = if (isUpgrade) BASE_SCORE else 0,
+            adjustments = bestTarget.score.adjustments
+        )
+        if (isUpgrade) {
+            score = score.adjusted(
+                (context.progress.cultivationRoundsRemaining ?: 0)
+                    .coerceAtMost(MAX_FUTURE_ROUNDS_BONUS_ROUNDS) * POINTS_PER_FUTURE_CULTIVATION_ROUND,
+                "Future rounds benefit from upgrade"
+            )
+            if (developmentBonus > 0) {
+                score = score.adjusted(developmentBonus, "Dice development is behind target")
+            }
         }
         return score
     }
@@ -175,8 +186,8 @@ object CompostPriority {
 
     /**
      * Scores one concrete Compost target using only target-specific value.
-     * Returns null when the die cannot make the exact normal one-step upgrade
-     * that the real Upgrade rules require.
+     * A missing next size allows the optional Trash fallback, not a skipped
+     * upgrade step. Only unsupported die sizes are rejected.
      */
     fun targetScore(
         context: DecisionContext,
@@ -186,10 +197,8 @@ object CompostPriority {
         require(normalPurchasingPower >= 0) { "Normal purchasing power cannot be negative" }
 
         val current = DieSides.entries.firstOrNull { it.value == die.sides } ?: return null
-        val next = nextNormalStep(current) ?: return null
-        if ((context.grove.graftBed[next] ?: 0) <= 0) return null
-
-        val upgrade = next.value - current.value
+        val next = nextNormalStep(current)
+        val canUpgrade = next != null && (context.grove.graftBed[next] ?: 0) > 0
         val afterRemovingCurrentDie = (normalPurchasingPower - die.value).coerceAtLeast(0)
         val handDicePowerAfter = (context.self.board.hand.sumOf { it.value } - die.value).coerceAtLeast(0)
         val thresholdLoss = PurchaseThresholdHeuristics.thresholdBonus(
@@ -199,9 +208,19 @@ object CompostPriority {
             pointsPerTier = POINTS_PER_BUY_TIER
         )
 
-        var score = PriorityScore(0)
-            .adjusted(upgrade * POINTS_PER_UPGRADE_SIDE, "Permanent D${current.value} to D${next.value} upgrade")
-            .adjusted(thresholdLoss, "Current-round Buy threshold impact")
+        var score = if (canUpgrade) {
+            val nextSize = requireNotNull(next)
+            PriorityScore(0).adjusted(
+                (nextSize.value - current.value) * POINTS_PER_UPGRADE_SIDE,
+                "Permanent D${current.value} to D${nextSize.value} upgrade"
+            )
+        } else {
+            PriorityScore(0).adjusted(
+                -10,
+                "Optional Trash of D${current.value}; next normal Upgrade unavailable"
+            )
+        }
+        score = score.adjusted(thresholdLoss, "Current-round Buy threshold impact")
 
         if (handDicePowerAfter < MIN_HAND_DICE_BUY_POWER_AFTER_COMPOST) {
             score = score.adjusted(
